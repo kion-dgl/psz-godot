@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/game_controller.gd" id="1_controller"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_controller")
+starting_map = "s01a_ga1"
+starting_spawn = 0
