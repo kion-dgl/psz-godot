@@ -208,17 +208,39 @@ func on_trigger_activated(target_map: String, spawn_index: int) -> void:
 
 
 func _setup_map_collision(root: Node) -> void:
-	# Process the imported scene tree
-	# Godot auto-creates StaticBody3D from meshes with -colonly suffix
-	# We just need to set the correct collision layers
-	_configure_collision_nodes(root)
+	## Configure collision from exported map GLBs.
+	##
+	## REQUIRED CONVENTION: Map GLBs must be exported from the stage-editor with:
+	##   - "collision_floor-colonly" mesh: Defines walkable floor areas
+	##     Godot auto-converts this to StaticBody3D named "collision_floor"
+	##   - Optional "trigger_*_box-colonly" meshes: Trigger zones
+	##
+	## The -colonly suffix tells Godot to:
+	##   1. Create a StaticBody3D with trimesh collision shape
+	##   2. Remove the -colonly suffix from the node name
+	##   3. Hide the visual mesh (collision only)
+	##
+	## Without collision_floor, player will fall through the map!
+
+	var found_floor := _configure_collision_nodes(root)
+
+	# Validate that required collision was found
+	if not found_floor:
+		push_warning("[GameController] No 'collision_floor' found in map! " +
+			"Map must be exported from stage-editor with collision_floor-colonly mesh.")
 
 
-func _configure_collision_nodes(node: Node) -> void:
+func _configure_collision_nodes(node: Node) -> bool:
+	var found_floor := false
+
 	# Configure auto-created StaticBody3D nodes from -colonly meshes
 	if node is StaticBody3D:
+		# Check if this is the required floor collision
+		if node.name == "collision_floor":
+			found_floor = true
+
 		# Set collision layer for floor/obstacle detection
-		node.collision_layer = 1  # Environment layer
+		node.collision_layer = 1  # Environment layer (player raycasts use mask 1)
 		node.collision_mask = 0   # Doesn't need to detect anything
 
 	# Hide debug markers from stage editor export
@@ -229,4 +251,7 @@ func _configure_collision_nodes(node: Node) -> void:
 
 	# Process children
 	for child in node.get_children():
-		_configure_collision_nodes(child)
+		if _configure_collision_nodes(child):
+			found_floor = true
+
+	return found_floor

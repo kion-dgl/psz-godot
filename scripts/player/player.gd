@@ -45,7 +45,8 @@ const TEXTURE_PATH := "res://assets/player/pc_000/textures/pc_000_000.png"
 @onready var nav_agent: NavigationAgent3D = $NavigationAgent3D
 
 # Floor detection (raycast-based)
-const FLOOR_CHECK_DISTANCE: float = 2.0  # How far ahead to check for floor
+const FLOOR_CHECK_DISTANCE: float = 1.0  # How far ahead to check for floor
+const FLOOR_CHECK_SIDE: float = 0.5  # Side offset for corner checks
 const FLOOR_RAY_LENGTH: float = 5.0  # How far down to raycast
 
 # Animation references (found at runtime)
@@ -291,9 +292,9 @@ func _handle_movement(delta: float) -> void:
 		var move_dir := Vector3(sin(player_rotation), 0, cos(player_rotation))
 		var desired_velocity := move_dir * MOVE_SPEED
 
-		# Check if movement would stay on floor using raycast
-		var target_pos := global_position + move_dir * FLOOR_CHECK_DISTANCE
-		if _has_floor_ahead(target_pos):
+		# Check if movement would stay on floor using raycasts
+		# Check three points: center, left, and right of movement direction
+		if _can_move_to(move_dir):
 			velocity.x = desired_velocity.x
 			velocity.z = desired_velocity.z
 		else:
@@ -314,7 +315,21 @@ func _handle_movement(delta: float) -> void:
 			transition_to(PlayerState.IDLE)
 
 
-func _has_floor_ahead(check_pos: Vector3) -> bool:
+func _can_move_to(move_dir: Vector3) -> bool:
+	# Check multiple points to prevent walking off edges at any angle
+	# This ensures consistent edge detection regardless of approach angle
+	var center := global_position + move_dir * FLOOR_CHECK_DISTANCE
+
+	# Calculate perpendicular direction for side checks
+	var side_dir := Vector3(-move_dir.z, 0, move_dir.x)  # 90 degree rotation
+	var left := center + side_dir * FLOOR_CHECK_SIDE
+	var right := center - side_dir * FLOOR_CHECK_SIDE
+
+	# All three points must have floor
+	return _has_floor_at(center) and _has_floor_at(left) and _has_floor_at(right)
+
+
+func _has_floor_at(check_pos: Vector3) -> bool:
 	# Cast a ray downward from check_pos to see if there's floor
 	var space_state := get_world_3d().direct_space_state
 	var ray_origin := Vector3(check_pos.x, global_position.y + 1.0, check_pos.z)
