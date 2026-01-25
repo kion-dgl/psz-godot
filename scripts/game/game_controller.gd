@@ -217,6 +217,8 @@ func _generate_map_collision(root: Node) -> void:
 		if mesh_instance.mesh:
 			var static_body := StaticBody3D.new()
 			static_body.name = mesh_instance.name + "_col"
+			static_body.collision_layer = 1  # Environment layer (for player floor detection)
+			static_body.collision_mask = 0   # Doesn't need to detect anything
 
 			var shape := mesh_instance.mesh.create_trimesh_shape()
 			var collision_shape := CollisionShape3D.new()
