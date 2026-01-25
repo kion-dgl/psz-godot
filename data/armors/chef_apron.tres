@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chef_apron"
+name = "Chef Apron"
+japanese_name = "パティシエプロン"
+type = 3
+rarity = 4
+max_grind = 40
+level = 16
+resale_value = 10
+defense_base = 66
+defense_max = 146
+evasion_base = 82
+evasion_max = 162
+max_slots = 4
+resist_fire = 16
+resist_ice = 16
+resist_lightning = 16
+resist_light = 0
+resist_dark = 0
+usable_by = PackedStringArray()
+set_bonus = ""
+pso_world_id = 507

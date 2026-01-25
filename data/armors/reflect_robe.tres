@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "reflect_robe"
+name = "Reflect Robe"
+japanese_name = "リフレクトローブ"
+type = 2
+rarity = 5
+max_grind = 15
+level = 20
+resale_value = 1195
+defense_base = 86
+defense_max = 116
+evasion_base = 138
+evasion_max = 168
+max_slots = 4
+resist_fire = 16
+resist_ice = 16
+resist_lightning = 16
+resist_light = 16
+resist_dark = 16
+usable_by = PackedStringArray("Newman Hunter", "Human Ranger", "Human Force", "Newman Force")
+set_bonus = ""
+pso_world_id = 501

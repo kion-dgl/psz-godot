@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ein_cutter"
+name = "Ein Cutter"
+japanese_name = "アインカッター"
+rarity = 3
+weapon_type = 6
+max_grind = 50
+level = 5
+resale_value = 208
+attack_base = 0
+attack_max = 0
+accuracy_base = 86
+accuracy_max = 86
+element = ""
+element_level = 0
+photon_arts = [{"name": "Edge Riser", "attack_mod": 150, "accuracy_mod": 200, "pp_used": 15, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 400
+model_id = "wslc02"
+variant_id = "wslc02_1_o"

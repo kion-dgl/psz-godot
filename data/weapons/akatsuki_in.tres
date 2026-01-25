@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "akatsuki_in"
+name = "Akatsuki In"
+japanese_name = "アカツキ・印"
+rarity = 7
+weapon_type = 1
+max_grind = 10
+level = 80
+resale_value = 10
+attack_base = 412
+attack_max = 432
+accuracy_base = 200
+accuracy_max = 200
+element = "Heaven"
+element_level = 2
+photon_arts = [{"name": "Dynamo Spin", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 21, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 41
+model_id = "wswr03"
+variant_id = "wswr03_1_b"

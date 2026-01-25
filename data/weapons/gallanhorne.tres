@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "gallanhorne"
+name = "Gallanhorne"
+japanese_name = "ギャランホルン"
+rarity = 6
+weapon_type = 14
+max_grind = 25
+level = 32
+resale_value = 1682
+attack_base = 0
+attack_max = 0
+accuracy_base = 172
+accuracy_max = 172
+element = ""
+element_level = 0
+photon_arts = [{"name": "Beat Quake", "attack_mod": 140, "accuracy_mod": 150, "pp_used": 19, "element": "-"}, {"name": "Rolling Bar", "attack_mod": 90, "accuracy_mod": 100, "pp_used": 21, "element": "-"}, {"name": "Rodeo Drive", "attack_mod": 120, "accuracy_mod": 130, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Force Human", "Force Newman")
+pso_world_id = 280
+model_id = "wroh01"
+variant_id = ""

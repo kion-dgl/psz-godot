@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "carbine"
+name = "Carbine"
+japanese_name = "カービン"
+rarity = 1
+weapon_type = 11
+max_grind = 50
+level = 1
+resale_value = 31
+attack_base = 34
+attack_max = 134
+accuracy_base = 73
+accuracy_max = 73
+element = ""
+element_level = 0
+photon_arts = [{"name": "Wipeout", "attack_mod": 75, "accuracy_mod": 80, "pp_used": 21, "element": "Level 4 Heat"}, {"name": "Hollow Snipe", "attack_mod": 80, "accuracy_mod": 255, "pp_used": 26, "element": "-"}, {"name": "Mine Sneak", "attack_mod": 160, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 174
+model_id = "wrfh01"
+variant_id = "wrfh01_1_b"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "milias_breaker"
+name = "Milias Breaker"
+japanese_name = "ミリアスブレイカー"
+rarity = 7
+weapon_type = 1
+max_grind = 20
+level = 58
+resale_value = 10
+attack_base = 566
+attack_max = 606
+accuracy_base = 252
+accuracy_max = 252
+element = ""
+element_level = 0
+photon_arts = [{"name": "Over-end", "attack_mod": 250, "accuracy_mod": 255, "pp_used": 45, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 50
+model_id = "wswr04"
+variant_id = "wswr04_2_b"

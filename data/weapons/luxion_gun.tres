@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "luxion_gun"
+name = "Luxion Gun"
+japanese_name = "ルクシオンガン"
+rarity = 5
+weapon_type = 9
+max_grind = 40
+level = 24
+resale_value = 427
+attack_base = 132
+attack_max = 212
+accuracy_base = 166
+accuracy_max = 166
+element = ""
+element_level = 0
+photon_arts = [{"name": "Thriller Combo", "attack_mod": 150, "accuracy_mod": 120, "pp_used": 15, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 164
+model_id = "whgn02"
+variant_id = ""

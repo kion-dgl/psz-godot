@@ -7,7 +7,7 @@ class_name DropBase
 ## Amount of meseta (for meseta drops) or item quantity
 @export var amount: int = 1
 
-## Item ID (for item drops)
+## Item ID that references an ItemData resource in ItemRegistry
 @export var item_id: String = ""
 
 ## Spin speed (radians per second)

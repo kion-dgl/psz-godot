@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "pinky_hand"
+name = "Pinky Hand"
+japanese_name = "ピンキーハンド"
+rarity = 6
+weapon_type = 3
+max_grind = 40
+level = 40
+resale_value = 10
+attack_base = 236
+attack_max = 316
+accuracy_base = 278
+accuracy_max = 278
+element = "Heart"
+element_level = 2
+photon_arts = [{"name": "Slide End", "attack_mod": 75, "accuracy_mod": 120, "pp_used": 21, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Force Human", "Force Newman")
+pso_world_id = 89
+model_id = "wclr03"
+variant_id = ""

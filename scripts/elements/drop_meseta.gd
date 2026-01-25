@@ -10,6 +10,5 @@ func _init() -> void:
 
 
 func _give_reward() -> void:
-	print("[DropMeseta] Collected ", amount, " meseta")
-	# TODO: Add to player's meseta count
-	# GameState.add_meseta(amount)
+	GameState.add_meseta(amount)
+	print("[DropMeseta] Collected ", amount, " meseta (total: ", GameState.get_meseta(), ")")

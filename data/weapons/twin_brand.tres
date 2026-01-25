@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "twin_brand"
+name = "Twin Brand"
+japanese_name = "ツインブランド"
+rarity = 5
+weapon_type = 4
+max_grind = 40
+level = 28
+resale_value = 10
+attack_base = 229
+attack_max = 309
+accuracy_base = 194
+accuracy_max = 194
+element = "Ice"
+element_level = 3
+photon_arts = [{"name": "Cyclone Run", "attack_mod": 100, "accuracy_mod": 80, "pp_used": 20, "element": "-"}, {"name": "Tornado Dance", "attack_mod": 130, "accuracy_mod": 120, "pp_used": 30, "element": "-"}, {"name": "Million Rave", "attack_mod": 135, "accuracy_mod": 100, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 133
+model_id = "wdsr02"
+variant_id = "wdsr02_3_b"

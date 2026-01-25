@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cane"
+name = "Cane"
+japanese_name = "ケイン"
+rarity = 1
+weapon_type = 15
+max_grind = 40
+level = 1
+resale_value = 29
+attack_base = 0
+attack_max = 0
+accuracy_base = 85
+accuracy_max = 85
+element = ""
+element_level = 0
+photon_arts = [{"name": "Funny Dive", "attack_mod": 125, "accuracy_mod": 200, "pp_used": 11, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 384
+model_id = "wwan01"
+variant_id = "wwan01_1_o"

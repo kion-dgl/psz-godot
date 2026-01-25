@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "dragon_wing"
+name = "Dragon Wing"
+japanese_name = "ドラゴンウイング"
+type = 3
+rarity = 5
+max_grind = 40
+level = 24
+resale_value = 10
+defense_base = 115
+defense_max = 195
+evasion_base = 132
+evasion_max = 212
+max_slots = 4
+resist_fire = 24
+resist_ice = 0
+resist_lightning = 0
+resist_light = 0
+resist_dark = 0
+usable_by = PackedStringArray("Human Hunter", "Human Ranger", "Human Force")
+set_bonus = ""
+pso_world_id = 522

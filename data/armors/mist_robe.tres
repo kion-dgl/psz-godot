@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mist_robe"
+name = "Mist Robe"
+japanese_name = "ミストローブ"
+type = 2
+rarity = 4
+max_grind = 20
+level = 10
+resale_value = 703
+defense_base = 61
+defense_max = 101
+evasion_base = 98
+evasion_max = 138
+max_slots = 4
+resist_fire = 14
+resist_ice = 14
+resist_lightning = 14
+resist_light = 14
+resist_dark = 14
+usable_by = PackedStringArray("Newman Hunter", "Human Ranger", "Human Force", "Newman Force")
+set_bonus = ""
+pso_world_id = 500

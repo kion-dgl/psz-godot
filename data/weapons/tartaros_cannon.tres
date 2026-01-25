@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "tartaros_cannon"
+name = "Tartaros Cannon"
+japanese_name = "タルタロスカノン"
+rarity = 7
+weapon_type = 13
+max_grind = 20
+level = 64
+resale_value = 10
+attack_base = 325
+attack_max = 365
+accuracy_base = 280
+accuracy_max = 280
+element = "Ice"
+element_level = 3
+photon_arts = [{"name": "Divine Ray", "attack_mod": 250, "accuracy_mod": 200, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 272
+model_id = "wlcr01"
+variant_id = ""

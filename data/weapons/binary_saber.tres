@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "binary_saber"
+name = "Binary Saber"
+japanese_name = "ダブルセイバー"
+rarity = 3
+weapon_type = 4
+max_grind = 10
+level = 4
+resale_value = 10
+attack_base = 108
+attack_max = 128
+accuracy_base = 137
+accuracy_max = 137
+element = "Heart"
+element_level = 1
+photon_arts = [{"name": "Cyclone Run", "attack_mod": 100, "accuracy_mod": 80, "pp_used": 20, "element": "-"}, {"name": "Tornado Dance", "attack_mod": 130, "accuracy_mod": 120, "pp_used": 30, "element": "-"}, {"name": "Million Rave", "attack_mod": 135, "accuracy_mod": 100, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 131
+model_id = "wdsr02"
+variant_id = "wdsr02_1_b"

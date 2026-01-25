@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "diabolic_gauntlet"
+name = "Diabolic Gauntlet"
+japanese_name = "デアボリックガント"
+rarity = 5
+weapon_type = 3
+max_grind = 50
+level = 28
+resale_value = 10
+attack_base = 206
+attack_max = 306
+accuracy_base = 233
+accuracy_max = 233
+element = "Slow"
+element_level = 4
+photon_arts = [{"name": "Slide End", "attack_mod": 75, "accuracy_mod": 120, "pp_used": 21, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 103
+model_id = "wclr01"
+variant_id = "wclr01_1_o"

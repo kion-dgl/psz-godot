@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "big_hemera"
+name = "Big Hemera"
+japanese_name = "ビッグ・ヘーメラー"
+rarity = 7
+weapon_type = 5
+max_grind = 20
+level = 80
+resale_value = 10
+attack_base = 517
+attack_max = 557
+accuracy_base = 282
+accuracy_max = 282
+element = "Zalure"
+element_level = 3
+photon_arts = [{"name": "Speed Rain", "attack_mod": 80, "accuracy_mod": 70, "pp_used": 32, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 93
+model_id = "wspr02"
+variant_id = ""

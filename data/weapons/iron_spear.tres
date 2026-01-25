@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "iron_spear"
+name = "Iron Spear"
+japanese_name = "アイアンスピア"
+rarity = 2
+weapon_type = 5
+max_grind = 45
+level = 2
+resale_value = 89
+attack_base = 83
+attack_max = 173
+accuracy_base = 117
+accuracy_max = 117
+element = ""
+element_level = 0
+photon_arts = [{"name": "Spear Rider", "attack_mod": 145, "accuracy_mod": 160, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 73
+model_id = "wsph02"
+variant_id = "wsph02_1_b"

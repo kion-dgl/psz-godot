@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "jade_hulse"
+name = "Jade Hulse"
+japanese_name = "ジェイドハルス"
+rarity = 3
+weapon_type = 8
+max_grind = 35
+level = 5
+resale_value = 744
+attack_base = 82
+attack_max = 152
+accuracy_base = 169
+accuracy_max = 169
+element = "Ice"
+element_level = 5
+photon_arts = [{"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human")
+pso_world_id = 111
+model_id = "wshh02"
+variant_id = "wshh02_3_o"

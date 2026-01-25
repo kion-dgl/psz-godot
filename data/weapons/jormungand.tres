@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "jormungand"
+name = "Jormungand"
+japanese_name = "ヨルムンガルド"
+rarity = 5
+weapon_type = 2
+max_grind = 40
+level = 20
+resale_value = 817
+attack_base = 143
+attack_max = 223
+accuracy_base = 237
+accuracy_max = 237
+element = ""
+element_level = 0
+photon_arts = [{"name": "Air Ride", "attack_mod": 95, "accuracy_mod": 80, "pp_used": 19, "element": "-"}, {"name": "Reverse Kill", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 25, "element": "-"}, {"name": "Huge Cross", "attack_mod": 90, "accuracy_mod": 130, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human", "Force Newman")
+pso_world_id = 60
+model_id = "wdac01"
+variant_id = "wdac01_3_r"

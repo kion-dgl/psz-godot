@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "battle_armor"
+name = "Battle Armor"
+japanese_name = "バトルアーマー"
+type = 0
+rarity = 2
+max_grind = 45
+level = 2
+resale_value = 105
+defense_base = 49
+defense_max = 139
+evasion_base = 31
+evasion_max = 121
+max_slots = 4
+resist_fire = 4
+resist_ice = 4
+resist_lightning = 4
+resist_light = 0
+resist_dark = 0
+usable_by = PackedStringArray("Human Hunter", "Cast Hunter", "Cast Ranger")
+set_bonus = ""
+pso_world_id = 486

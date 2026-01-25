@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "scale_armor"
+name = "Scale Armor"
+japanese_name = "スケイルアーマー"
+type = 0
+rarity = 3
+max_grind = 40
+level = 5
+resale_value = 263
+defense_base = 73
+defense_max = 153
+evasion_base = 47
+evasion_max = 127
+max_slots = 4
+resist_fire = 5
+resist_ice = 5
+resist_lightning = 5
+resist_light = 0
+resist_dark = 0
+usable_by = PackedStringArray("Human Hunter", "Cast Hunter", "Cast Ranger")
+set_bonus = ""
+pso_world_id = 487

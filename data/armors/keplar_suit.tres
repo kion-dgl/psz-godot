@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "keplar_suit"
+name = "Keplar Suit"
+japanese_name = "ケプラースーツ"
+type = 3
+rarity = 7
+max_grind = 50
+level = 72
+resale_value = 10
+defense_base = 252
+defense_max = 352
+evasion_base = 178
+evasion_max = 278
+max_slots = 4
+resist_fire = 12
+resist_ice = 12
+resist_lightning = 12
+resist_light = 0
+resist_dark = 0
+usable_by = PackedStringArray("Human Ranger", "Cast Ranger")
+set_bonus = ""
+pso_world_id = 512

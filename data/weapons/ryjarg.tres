@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ryjarg"
+name = "Ryjarg"
+japanese_name = "ライジャルグ"
+rarity = 5
+weapon_type = 11
+max_grind = 40
+level = 20
+resale_value = 840
+attack_base = 160
+attack_max = 240
+accuracy_base = 173
+accuracy_max = 173
+element = ""
+element_level = 0
+photon_arts = [{"name": "Wipeout", "attack_mod": 75, "accuracy_mod": 80, "pp_used": 21, "element": "Level 4 Heat"}, {"name": "Hollow Snipe", "attack_mod": 80, "accuracy_mod": 255, "pp_used": 26, "element": "-"}, {"name": "Mine Sneak", "attack_mod": 160, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 180
+model_id = "wrfc01"
+variant_id = "wrfc01_3_b"
