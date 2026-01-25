@@ -75,6 +75,11 @@ var nearby_elements: Array = []  # Array of GameElement nodes
 var nearest_interactable: Node3D = null  # GameElement or null
 const INTERACTION_RADIUS: float = 2.0
 
+# Combat system
+var attack_hitbox: Hitbox
+const ATTACK_HITBOX_SIZE := Vector3(1.5, 1.0, 2.0)  # Width, height, depth
+const ATTACK_HITBOX_OFFSET := 1.5  # Forward offset from player
+
 # Signals
 signal state_changed(new_state: PlayerState)
 signal interacted_with(element: Node3D)
@@ -83,6 +88,8 @@ signal interacted_with(element: Node3D)
 func _ready() -> void:
 	# Set up interaction detection area
 	_setup_interaction_area()
+	# Set up attack hitbox
+	_setup_attack_hitbox()
 	# Store spawn position for respawn
 	spawn_position = global_position
 
@@ -386,6 +393,7 @@ func _handle_attack_state(delta: float) -> void:
 			# Combo window closed, return to idle
 			combo_window_open = false
 			combo_state = 0
+			_deactivate_attack_hitbox()
 			transition_to(PlayerState.IDLE)
 
 	# Stop horizontal movement during attacks
@@ -396,6 +404,7 @@ func _handle_attack_state(delta: float) -> void:
 func _play_attack_animation(attack_num: int) -> void:
 	var anim_name := "pmsa_atk" + str(attack_num)
 	play_animation(anim_name, false)
+	_activate_attack_hitbox()
 
 
 func transition_to(new_state: PlayerState) -> void:
@@ -424,6 +433,7 @@ func _on_animation_finished(_anim_name: String) -> void:
 		PlayerState.DODGING:
 			transition_to(PlayerState.IDLE)
 		PlayerState.ATTACKING:
+			_deactivate_attack_hitbox()
 			if combo_state >= 3:
 				# Combo finished, return to idle
 				combo_state = 0
@@ -437,9 +447,15 @@ func _on_animation_finished(_anim_name: String) -> void:
 
 
 # Public API for external systems
-func take_damage(amount: int, heavy: bool = false) -> void:
-	GameState.set_hp(GameState.hp - amount)
-	if heavy:
+func take_damage(damage: int, knockback: Vector3 = Vector3.ZERO) -> void:
+	GameState.set_hp(GameState.hp - damage)
+
+	# Apply knockback
+	if knockback.length() > 0:
+		velocity = knockback
+
+	# Play damage animation (heavy if damage > 20)
+	if damage > 20:
 		play_animation("pmsa_dam_h", false)
 	else:
 		play_animation("pmsa_dam_n", false)
@@ -452,6 +468,45 @@ func get_state() -> PlayerState:
 
 func get_combo_state() -> int:
 	return combo_state
+
+
+# Combat System
+func _setup_attack_hitbox() -> void:
+	attack_hitbox = Hitbox.new()
+	attack_hitbox.name = "AttackHitbox"
+	attack_hitbox.owner_node = self
+	attack_hitbox.damage = _get_attack_damage()
+
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = ATTACK_HITBOX_SIZE
+	shape.shape = box
+	shape.position = Vector3(0, ATTACK_HITBOX_SIZE.y / 2, ATTACK_HITBOX_OFFSET)
+	attack_hitbox.add_child(shape)
+
+	# Hitbox follows player rotation via model
+	model.add_child(attack_hitbox)
+
+
+func _get_attack_damage() -> int:
+	# Get equipped weapon damage, or use base damage
+	var weapon_id := GameState.get_equipped_item("weapon")
+	if not weapon_id.is_empty():
+		var weapon = WeaponRegistry.get_weapon(weapon_id)
+		if weapon:
+			return weapon.attack_base
+	return 10  # Base damage with no weapon
+
+
+func _activate_attack_hitbox() -> void:
+	if attack_hitbox:
+		attack_hitbox.damage = _get_attack_damage()
+		attack_hitbox.activate()
+
+
+func _deactivate_attack_hitbox() -> void:
+	if attack_hitbox:
+		attack_hitbox.deactivate()
 
 
 # Interaction System
