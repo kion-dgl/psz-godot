@@ -97,6 +97,9 @@ func load_map(map_id: String, spawn_index: int = 0) -> void:
 	var map_instance := packed_scene.instantiate() as Node3D
 	environment_container.add_child(map_instance)
 
+	# Generate collision for all meshes
+	_generate_map_collision(map_instance)
+
 	# Wait for map to be in tree
 	await get_tree().process_frame
 
@@ -108,6 +111,7 @@ func load_map(map_id: String, spawn_index: int = 0) -> void:
 	var spawn := cfg.get_spawn(spawn_index)
 
 	# Spawn or move player
+	print("[GameController] Spawning player at: ", spawn.position)
 	if not player:
 		_spawn_player(spawn.position, spawn.rotation)
 	else:
@@ -124,8 +128,12 @@ func load_map(map_id: String, spawn_index: int = 0) -> void:
 
 func _spawn_player(spawn_pos: Vector3, spawn_rot: float) -> void:
 	player = player_scene.instantiate() as CharacterBody3D
+	if not player:
+		push_error("[GameController] Failed to instantiate player!")
+		return
 	player.add_to_group("player")
 	add_child(player)
+	print("[GameController] Player added: ", player.name, " at ", spawn_pos)
 
 	# Set position after adding to tree
 	player.global_position = spawn_pos
@@ -139,8 +147,8 @@ func _spawn_player(spawn_pos: Vector3, spawn_rot: float) -> void:
 	camera = camera_scene.instantiate()
 	add_child(camera)
 
-	# Set camera target after both are in tree
-	camera.set("target_path", NodePath("../Player"))
+	# Set camera target directly (target_path is checked in _ready which already ran)
+	camera.set_target(player)
 
 
 func _move_player(spawn_pos: Vector3, spawn_rot: float) -> void:
@@ -197,3 +205,30 @@ func on_trigger_activated(target_map: String, spawn_index: int) -> void:
 	await get_tree().create_timer(0.1).timeout
 
 	load_map(target_map, spawn_index)
+
+
+func _generate_map_collision(root: Node) -> void:
+	# Collect all mesh instances first to avoid modifying tree during iteration
+	var mesh_instances: Array[MeshInstance3D] = []
+	_collect_mesh_instances(root, mesh_instances)
+
+	# Now add collision for each mesh
+	for mesh_instance in mesh_instances:
+		if mesh_instance.mesh:
+			var static_body := StaticBody3D.new()
+			static_body.name = mesh_instance.name + "_col"
+
+			var shape := mesh_instance.mesh.create_trimesh_shape()
+			var collision_shape := CollisionShape3D.new()
+			collision_shape.shape = shape
+
+			static_body.add_child(collision_shape)
+			mesh_instance.add_sibling(static_body)
+			static_body.global_transform = mesh_instance.global_transform
+
+
+func _collect_mesh_instances(node: Node, result: Array[MeshInstance3D]) -> void:
+	if node is MeshInstance3D:
+		result.append(node as MeshInstance3D)
+	for child in node.get_children():
+		_collect_mesh_instances(child, result)
