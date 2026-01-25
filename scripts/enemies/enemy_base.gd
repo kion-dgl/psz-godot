@@ -228,7 +228,7 @@ func _die() -> void:
 
 	# Drop meseta
 	if enemy_data:
-		var meseta := enemy_data.get_meseta_drop()
+		var meseta: int = enemy_data.get_meseta_drop()
 		_spawn_meseta_drop(meseta)
 
 	# Remove after delay
@@ -239,10 +239,10 @@ func _die() -> void:
 
 func _spawn_meseta_drop(amount: int) -> void:
 	# Spawn a meseta drop at our position
-	var drop_scene = load("res://scenes/elements/drop_meseta.tscn")
+	var drop_scene: PackedScene = load("res://scenes/elements/drop_meseta.tscn")
 	if drop_scene:
-		var drop := drop_scene.instantiate()
-		drop.amount = amount
+		var drop: Node3D = drop_scene.instantiate()
+		drop.set("amount", amount)
 		drop.global_position = global_position + Vector3(0, 0.5, 0)
 		get_parent().add_child(drop)
 	else:

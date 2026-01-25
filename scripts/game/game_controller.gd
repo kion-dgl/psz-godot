@@ -282,7 +282,7 @@ func _spawn_test_enemies(map_id: String) -> void:
 	]
 
 	for pos in spawn_positions:
-		var enemy := ghowl_scene.instantiate()
+		var enemy: Node3D = ghowl_scene.instantiate()
 		add_child(enemy)
 		enemy.global_position = pos
 		print("[GameController] Spawned Ghowl at ", pos)
