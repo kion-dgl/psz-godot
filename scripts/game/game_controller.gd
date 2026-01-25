@@ -97,8 +97,8 @@ func load_map(map_id: String, spawn_index: int = 0) -> void:
 	var map_instance := packed_scene.instantiate() as Node3D
 	environment_container.add_child(map_instance)
 
-	# Generate collision for all meshes
-	_generate_map_collision(map_instance)
+	# Configure collision from exported -colonly meshes
+	_setup_map_collision(map_instance)
 
 	# Wait for map to be in tree
 	await get_tree().process_frame
@@ -207,30 +207,26 @@ func on_trigger_activated(target_map: String, spawn_index: int) -> void:
 	load_map(target_map, spawn_index)
 
 
-func _generate_map_collision(root: Node) -> void:
-	# Collect all mesh instances first to avoid modifying tree during iteration
-	var mesh_instances: Array[MeshInstance3D] = []
-	_collect_mesh_instances(root, mesh_instances)
-
-	# Now add collision for each mesh
-	for mesh_instance in mesh_instances:
-		if mesh_instance.mesh:
-			var static_body := StaticBody3D.new()
-			static_body.name = mesh_instance.name + "_col"
-			static_body.collision_layer = 1  # Environment layer (for player floor detection)
-			static_body.collision_mask = 0   # Doesn't need to detect anything
-
-			var shape := mesh_instance.mesh.create_trimesh_shape()
-			var collision_shape := CollisionShape3D.new()
-			collision_shape.shape = shape
-
-			static_body.add_child(collision_shape)
-			mesh_instance.add_sibling(static_body)
-			static_body.global_transform = mesh_instance.global_transform
+func _setup_map_collision(root: Node) -> void:
+	# Process the imported scene tree
+	# Godot auto-creates StaticBody3D from meshes with -colonly suffix
+	# We just need to set the correct collision layers
+	_configure_collision_nodes(root)
 
 
-func _collect_mesh_instances(node: Node, result: Array[MeshInstance3D]) -> void:
+func _configure_collision_nodes(node: Node) -> void:
+	# Configure auto-created StaticBody3D nodes from -colonly meshes
+	if node is StaticBody3D:
+		# Set collision layer for floor/obstacle detection
+		node.collision_layer = 1  # Environment layer
+		node.collision_mask = 0   # Doesn't need to detect anything
+
+	# Hide debug markers from stage editor export
 	if node is MeshInstance3D:
-		result.append(node as MeshInstance3D)
+		var mesh_name := node.name
+		if mesh_name.begins_with("gate_") or mesh_name.begins_with("spawn_") or mesh_name.begins_with("trigger_"):
+			node.visible = false
+
+	# Process children
 	for child in node.get_children():
-		_collect_mesh_instances(child, result)
+		_configure_collision_nodes(child)
