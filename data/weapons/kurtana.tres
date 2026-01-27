@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "kurtana"
+name = "Kurtana"
+japanese_name = "クルタナ"
+rarity = 4
+weapon_type = 0
+max_grind = 35
+level = 12
+resale_value = 411
+attack_base = 118
+attack_max = 188
+accuracy_base = 182
+accuracy_max = 182
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cross Rave", "attack_mod": 160, "accuracy_mod": 120, "pp_used": 13, "element": "-"}, {"name": "Force Ride", "attack_mod": 125, "accuracy_mod": 100, "pp_used": 15, "element": "-"}, {"name": "Zeta Cutlass", "attack_mod": 130, "accuracy_mod": 140, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 11
+model_id = "wsah01"
+variant_id = "wsah01_3_o"

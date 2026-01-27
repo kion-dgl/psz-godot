@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "grow_shower"
+name = "Grow Shower"
+japanese_name = "スクスクシャワー"
+rarity = 2
+weapon_type = 9
+max_grind = 90
+level = 1
+resale_value = 10
+attack_base = 39
+attack_max = 219
+accuracy_base = 88
+accuracy_max = 88
+element = "Exp"
+element_level = 1
+photon_arts = [{"name": "Quick Draw", "attack_mod": 80, "accuracy_mod": 75, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 169
+model_id = "whgr02"
+variant_id = "whgr02_1_o"

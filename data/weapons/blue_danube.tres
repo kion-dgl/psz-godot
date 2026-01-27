@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "blue_danube"
+name = "Blue Danube"
+japanese_name = "ブルダニューブ"
+rarity = 6
+weapon_type = 12
+max_grind = 35
+level = 36
+resale_value = 1702
+attack_base = 363
+attack_max = 433
+accuracy_base = 210
+accuracy_max = 210
+element = ""
+element_level = 0
+photon_arts = [{"name": "Crush Bomb", "attack_mod": 210, "accuracy_mod": 100, "pp_used": 24, "element": "-"}, {"name": "Wild Blow", "attack_mod": 120, "accuracy_mod": 90, "pp_used": 28, "element": "-"}, {"name": "Crazy On", "attack_mod": 130, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 247
+model_id = "wbac01"
+variant_id = "wbac01_3_b"

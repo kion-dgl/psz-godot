@@ -79,6 +79,10 @@ func load_map(map_id: String, spawn_index: int = 0) -> void:
 		if child is TriggerZone:
 			child.queue_free()
 
+	# Clear existing enemies
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		enemy.queue_free()
+
 	# Clear existing map
 	for child in environment_container.get_children():
 		child.queue_free()
@@ -122,6 +126,9 @@ func load_map(map_id: String, spawn_index: int = 0) -> void:
 
 	# Set up triggers from the loaded map
 	_setup_triggers(map_instance, map_id)
+
+	# Spawn test enemies (temporary - will be data-driven later)
+	_spawn_test_enemies(map_id)
 
 	MapManager.map_changed.emit(map_id)
 
@@ -255,3 +262,28 @@ func _configure_collision_nodes(node: Node) -> bool:
 			found_floor = true
 
 	return found_floor
+
+
+func _spawn_test_enemies(map_id: String) -> void:
+	# Only spawn test enemies in the starting map for now
+	if map_id != "s01a_ga1":
+		return
+
+	var ghowl_scene = load("res://scenes/enemies/ghowl.tscn")
+	if not ghowl_scene:
+		push_warning("[GameController] Could not load ghowl.tscn")
+		return
+
+	# Spawn test enemies near player spawn
+	# Player spawns at (-6.3, 1.0, 23.47)
+	var spawn_positions := [
+		Vector3(-3, 1, 20),
+		Vector3(-8, 1, 18),
+		Vector3(0, 1, 15),
+	]
+
+	for pos in spawn_positions:
+		var enemy: Node3D = ghowl_scene.instantiate()
+		add_child(enemy)
+		enemy.global_position = pos
+		print("[GameController] Spawned Ghowl at ", pos)

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hollow_gimlet"
+name = "Hollow Gimlet"
+japanese_name = "ホローギムレット"
+rarity = 3
+weapon_type = 2
+max_grind = 10
+level = 6
+resale_value = 10
+attack_base = 89
+attack_max = 109
+accuracy_base = 167
+accuracy_max = 167
+element = "Dark"
+element_level = 1
+photon_arts = [{"name": "Huge Cross", "attack_mod": 90, "accuracy_mod": 130, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 59
+model_id = "wdar03"
+variant_id = "wdar03_1_r"

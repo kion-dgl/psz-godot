@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "double_blade"
+name = "Double Blade"
+japanese_name = "ダブルブレード"
+rarity = 3
+weapon_type = 4
+max_grind = 50
+level = 5
+resale_value = 219
+attack_base = 105
+attack_max = 205
+accuracy_base = 138
+accuracy_max = 138
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cyclone Run", "attack_mod": 100, "accuracy_mod": 80, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 135
+model_id = "wdsc01"
+variant_id = "wdsc01_1_b"

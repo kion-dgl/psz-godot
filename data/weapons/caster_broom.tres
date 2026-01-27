@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "caster_broom"
+name = "Caster Broom"
+japanese_name = "キャスターブルーム"
+rarity = 6
+weapon_type = 14
+max_grind = 30
+level = 36
+resale_value = 10
+attack_base = 0
+attack_max = 0
+accuracy_base = 174
+accuracy_max = 174
+element = "Chaos"
+element_level = 3
+photon_arts = [{"name": "Rodeo Drive", "attack_mod": 120, "accuracy_mod": 130, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Force Human", "Force Newman")
+pso_world_id = 293
+model_id = "wror02"
+variant_id = ""

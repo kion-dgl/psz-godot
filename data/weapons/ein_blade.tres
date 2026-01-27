@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ein_blade"
+name = "Ein Blade"
+japanese_name = "アインブレード"
+rarity = 3
+weapon_type = 0
+max_grind = 50
+level = 5
+resale_value = 170
+attack_base = 89
+attack_max = 189
+accuracy_base = 156
+accuracy_max = 156
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 8
+model_id = "wsac01"
+variant_id = ""

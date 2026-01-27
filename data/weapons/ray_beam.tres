@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ray_beam"
+name = "Ray Beam"
+japanese_name = "レイビーム"
+rarity = 3
+weapon_type = 13
+max_grind = 30
+level = 5
+resale_value = 233
+attack_base = 80
+attack_max = 140
+accuracy_base = 143
+accuracy_max = 143
+element = ""
+element_level = 0
+photon_arts = [{"name": "Bio Panic", "attack_mod": 100, "accuracy_mod": 180, "pp_used": 16, "element": "Level 3 Dark"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 263
+model_id = "wlcn02"
+variant_id = "wlcn02_1_b"

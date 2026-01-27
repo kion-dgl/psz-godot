@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "blade"
+name = "Blade"
+japanese_name = "ブレード"
+rarity = 1
+weapon_type = 0
+max_grind = 60
+level = 1
+resale_value = 27
+attack_base = 40
+attack_max = 160
+accuracy_base = 96
+accuracy_max = 96
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 3
+model_id = "wsac01"
+variant_id = "wsac01_1_o"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "featherhand"
+name = "Featherhand"
+japanese_name = "フェザーハンド"
+rarity = 5
+weapon_type = 2
+max_grind = 20
+level = 24
+resale_value = 845
+attack_base = 151
+attack_max = 191
+accuracy_base = 243
+accuracy_max = 243
+element = ""
+element_level = 0
+photon_arts = [{"name": "Air Ride", "attack_mod": 95, "accuracy_mod": 80, "pp_used": 19, "element": "-"}, {"name": "Reverse Kill", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 25, "element": "-"}, {"name": "Huge Cross", "attack_mod": 90, "accuracy_mod": 130, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Newman")
+pso_world_id = 64
+model_id = "wdan01"
+variant_id = "wdan01_3_r"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "lieucon_stihl"
+name = "Lieucon Stihl"
+japanese_name = "レウコンスティル"
+rarity = 5
+weapon_type = 8
+max_grind = 60
+level = 28
+resale_value = 10
+attack_base = 120
+attack_max = 240
+accuracy_base = 266
+accuracy_max = 266
+element = ""
+element_level = 0
+photon_arts = [{"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Cast")
+pso_world_id = 124
+model_id = "wshr05"
+variant_id = "wshr05_1_o"

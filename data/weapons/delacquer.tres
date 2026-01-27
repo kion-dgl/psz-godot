@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "delacquer"
+name = "Delacquer"
+japanese_name = "ディラッカー"
+rarity = 4
+weapon_type = 9
+max_grind = 45
+level = 12
+resale_value = 412
+attack_base = 91
+attack_max = 181
+accuracy_base = 137
+accuracy_max = 137
+element = ""
+element_level = 0
+photon_arts = [{"name": "Quick Draw", "attack_mod": 80, "accuracy_mod": 75, "pp_used": 24, "element": "-"}, {"name": "Flame Hit", "attack_mod": 145, "accuracy_mod": 100, "pp_used": 19, "element": "Level 4 Heat"}, {"name": "Thriller Combo", "attack_mod": 150, "accuracy_mod": 120, "pp_used": 15, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 157
+model_id = "whgc01"
+variant_id = "whgc01_3_o"

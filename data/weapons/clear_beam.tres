@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clear_beam"
+name = "Clear Beam"
+japanese_name = "クリアビーム"
+rarity = 4
+weapon_type = 13
+max_grind = 25
+level = 12
+resale_value = 581
+attack_base = 112
+attack_max = 162
+accuracy_base = 172
+accuracy_max = 172
+element = ""
+element_level = 0
+photon_arts = [{"name": "Bio Panic", "attack_mod": 100, "accuracy_mod": 180, "pp_used": 16, "element": "Level 3 Dark"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 264
+model_id = "wlcn02"
+variant_id = ""

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "garland_zwei"
+name = "Garland Zwei"
+japanese_name = "ガーラントツヴァイ"
+rarity = 5
+weapon_type = 11
+max_grind = 40
+level = 24
+resale_value = 10
+attack_base = 165
+attack_max = 245
+accuracy_base = 176
+accuracy_max = 176
+element = "Draw"
+element_level = 2
+photon_arts = [{"name": "Hollow Snipe", "attack_mod": 80, "accuracy_mod": 255, "pp_used": 26, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Cast")
+pso_world_id = 187
+model_id = "wrfr03"
+variant_id = ""

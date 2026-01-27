@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "noble_cloak"
+name = "Noble Cloak"
+japanese_name = "ジンバオリ"
+type = 3
+rarity = 7
+max_grind = 40
+level = 66
+resale_value = 10
+defense_base = 178
+defense_max = 258
+evasion_base = 239
+evasion_max = 319
+max_slots = 4
+resist_fire = 6
+resist_ice = 6
+resist_lightning = 6
+resist_light = 14
+resist_dark = 14
+usable_by = PackedStringArray()
+set_bonus = ""
+pso_world_id = 515

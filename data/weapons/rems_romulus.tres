@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rems_romulus"
+name = "Rems Romulus"
+japanese_name = "レムスロムルス"
+rarity = 5
+weapon_type = 4
+max_grind = 40
+level = 24
+resale_value = 567
+attack_base = 212
+attack_max = 292
+accuracy_base = 201
+accuracy_max = 201
+element = ""
+element_level = 0
+photon_arts = [{"name": "Million Rave", "attack_mod": 135, "accuracy_mod": 100, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Newman", "Force Newman")
+pso_world_id = 129
+model_id = ""
+variant_id = ""

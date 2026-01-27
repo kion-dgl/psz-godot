@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "deo_mazurka"
+name = "Deo Mazurka"
+japanese_name = "デオマズルガ"
+rarity = 4
+weapon_type = 7
+max_grind = 45
+level = 12
+resale_value = 535
+attack_base = 100
+attack_max = 190
+accuracy_base = 132
+accuracy_max = 132
+element = ""
+element_level = 0
+photon_arts = [{"name": "Earth Bullet", "attack_mod": 170, "accuracy_mod": 150, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 207
+model_id = "wgbc01"
+variant_id = ""

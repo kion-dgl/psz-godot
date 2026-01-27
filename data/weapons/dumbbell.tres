@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "dumbbell"
+name = "Dumbbell"
+japanese_name = "ダンベル"
+rarity = 3
+weapon_type = 15
+max_grind = 70
+level = 5
+resale_value = 10
+attack_base = 0
+attack_max = 0
+accuracy_base = 128
+accuracy_max = 128
+element = "Life"
+element_level = 3
+photon_arts = [{"name": "Act Trick", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 2, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 386
+model_id = "wwar04"
+variant_id = "wwar04_1_o"

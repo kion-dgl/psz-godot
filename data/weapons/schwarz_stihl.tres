@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "schwarz_stihl"
+name = "Schwarz Stihl"
+japanese_name = "シュヴァルツスティル"
+rarity = 6
+weapon_type = 8
+max_grind = 50
+level = 42
+resale_value = 10
+attack_base = 163
+attack_max = 263
+accuracy_base = 301
+accuracy_max = 301
+element = ""
+element_level = 0
+photon_arts = [{"name": "Bull Smash", "attack_mod": 210, "accuracy_mod": 200, "pp_used": 18, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Cast")
+pso_world_id = 125
+model_id = "wshr05"
+variant_id = ""

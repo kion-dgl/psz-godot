@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "parpua"
+name = "Parpua"
+japanese_name = "バーピュア"
+rarity = 4
+weapon_type = 9
+max_grind = 50
+level = 14
+resale_value = 10
+attack_base = 104
+attack_max = 204
+accuracy_base = 142
+accuracy_max = 142
+element = "Dark"
+element_level = 2
+photon_arts = [{"name": "Quick Draw", "attack_mod": 80, "accuracy_mod": 75, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 166
+model_id = "whgr01"
+variant_id = "whgr01_1_o"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "eghesachs"
+name = "Eghesachs"
+japanese_name = "エッゲサックス"
+rarity = 4
+weapon_type = 1
+max_grind = 60
+level = 15
+resale_value = 10
+attack_base = 186
+attack_max = 306
+accuracy_base = 145
+accuracy_max = 145
+element = "Light"
+element_level = 3
+photon_arts = [{"name": "Sonic Raid", "attack_mod": 120, "accuracy_mod": 75, "pp_used": 23, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 45
+model_id = "wswr01"
+variant_id = "wswr01_1_b"

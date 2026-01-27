@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "deo_arm"
+name = "Deo Arm"
+japanese_name = "デオアーム"
+rarity = 3
+weapon_type = 3
+max_grind = 50
+level = 5
+resale_value = 203
+attack_base = 97
+attack_max = 197
+accuracy_base = 160
+accuracy_max = 160
+element = ""
+element_level = 0
+photon_arts = [{"name": "Bite Stamp", "attack_mod": 180, "accuracy_mod": 75, "pp_used": 26, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Cast")
+pso_world_id = 79
+model_id = "wclc01"
+variant_id = ""

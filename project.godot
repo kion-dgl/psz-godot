@@ -19,6 +19,11 @@ config/icon="res://icon.svg"
 
 GameState="*res://scripts/autoloads/game_state.gd"
 MapManager="*res://scripts/autoloads/map_manager.gd"
+ItemRegistry="*res://scripts/autoloads/item_registry.gd"
+WeaponRegistry="*res://scripts/autoloads/weapon_registry.gd"
+ArmorRegistry="*res://scripts/autoloads/armor_registry.gd"
+EnemyRegistry="*res://scripts/autoloads/enemy_registry.gd"
+Inventory="*res://scripts/autoloads/inventory.gd"
 
 [display]
 
@@ -84,6 +89,8 @@ dodge={
 3d_physics/layer_1="environment"
 3d_physics/layer_2="player"
 3d_physics/layer_3="triggers"
+3d_physics/layer_4="enemies"
+3d_physics/layer_5="hitboxes"
 
 [rendering]
 

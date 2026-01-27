@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "yonohate_in"
+name = "Yonohate In"
+japanese_name = "ヨノハテ・印"
+rarity = 7
+weapon_type = 1
+max_grind = 50
+level = 80
+resale_value = 10
+attack_base = 502
+attack_max = 602
+accuracy_base = 221
+accuracy_max = 221
+element = "Risk"
+element_level = 2
+photon_arts = [{"name": "Sonic Raid", "attack_mod": 120, "accuracy_mod": 75, "pp_used": 23, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 43
+model_id = "wswr03"
+variant_id = ""

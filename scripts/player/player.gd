@@ -52,6 +52,11 @@ const FLOOR_RAY_LENGTH: float = 5.0  # How far down to raycast
 # Animation references (found at runtime)
 var animation_player: AnimationPlayer
 var skeleton: Skeleton3D
+var weapon_node: Node3D  # Attached weapon model
+
+# Weapon attachment config
+const WEAPON_BONE_NAME: String = "070_RArm02"  # Right arm segment 2 (hand)
+var weapon_scene: PackedScene = preload("res://assets/weapons/saber/saber.glb")
 
 # State tracking
 var current_state: PlayerState = PlayerState.IDLE
@@ -75,6 +80,11 @@ var nearby_elements: Array = []  # Array of GameElement nodes
 var nearest_interactable: Node3D = null  # GameElement or null
 const INTERACTION_RADIUS: float = 2.0
 
+# Combat system
+var attack_hitbox: Hitbox
+const ATTACK_HITBOX_SIZE := Vector3(1.5, 1.0, 2.0)  # Width, height, depth
+const ATTACK_HITBOX_OFFSET := 1.5  # Forward offset from player
+
 # Signals
 signal state_changed(new_state: PlayerState)
 signal interacted_with(element: Node3D)
@@ -83,6 +93,8 @@ signal interacted_with(element: Node3D)
 func _ready() -> void:
 	# Set up interaction detection area
 	_setup_interaction_area()
+	# Set up attack hitbox
+	_setup_attack_hitbox()
 	# Store spawn position for respawn
 	spawn_position = global_position
 
@@ -91,6 +103,9 @@ func _ready() -> void:
 
 	# Set up animations
 	_setup_animations()
+
+	# Set up weapon attachment
+	_setup_weapon()
 
 	# Initialize animation player if we have one
 	if animation_player:
@@ -137,6 +152,48 @@ func _setup_animations() -> void:
 		lib.add_animation(anim_name, new_anim)
 
 	animation_player.add_animation_library("", lib)
+
+
+func _setup_weapon() -> void:
+	if not skeleton:
+		push_warning("[Player] No skeleton found, cannot attach weapon")
+		return
+
+	# Find the weapon bone
+	var bone_idx := skeleton.find_bone(WEAPON_BONE_NAME)
+	if bone_idx == -1:
+		# Try alternative bone names
+		for alt_name in ["R_Hand", "RightHand", "hand_R", "Wrist_R"]:
+			bone_idx = skeleton.find_bone(alt_name)
+			if bone_idx != -1:
+				break
+
+	if bone_idx == -1:
+		push_warning("[Player] Could not find weapon bone. Available bones: %s" % _get_bone_names())
+		return
+
+	# Create BoneAttachment3D
+	var bone_attachment := BoneAttachment3D.new()
+	bone_attachment.name = "WeaponAttachment"
+	bone_attachment.bone_name = skeleton.get_bone_name(bone_idx)
+	skeleton.add_child(bone_attachment)
+
+	# Instance and attach weapon
+	if weapon_scene:
+		weapon_node = weapon_scene.instantiate() as Node3D
+		bone_attachment.add_child(weapon_node)
+		# Adjust weapon position/rotation as needed
+		weapon_node.rotation_degrees = Vector3(0, 90, 0)  # Rotate to align with hand
+		weapon_node.scale = Vector3(1.5, 1.5, 1.5)  # Scale up if needed
+		print("[Player] Weapon attached to bone: ", bone_attachment.bone_name)
+
+
+func _get_bone_names() -> Array[String]:
+	var names: Array[String] = []
+	if skeleton:
+		for i in range(skeleton.get_bone_count()):
+			names.append(skeleton.get_bone_name(i))
+	return names
 
 
 func _remap_animation(source: Animation, skeleton_name: String) -> Animation:
@@ -225,6 +282,8 @@ func _physics_process(delta: float) -> void:
 			_handle_dodge(delta)
 		PlayerState.ATTACKING:
 			_handle_attack_state(delta)
+		PlayerState.DAMAGED:
+			_handle_damaged(delta)
 
 	# Apply movement
 	move_and_slide()
@@ -358,8 +417,15 @@ func _handle_dodge(delta: float) -> void:
 		return
 
 	# Move in the direction player was facing when dodge started
-	velocity.x = sin(dodge_direction) * DODGE_SPEED
-	velocity.z = cos(dodge_direction) * DODGE_SPEED
+	var dodge_dir := Vector3(sin(dodge_direction), 0, cos(dodge_direction))
+
+	# Check floor ahead - stop at edges to prevent dodging off
+	if _can_move_to(dodge_dir):
+		velocity.x = dodge_dir.x * DODGE_SPEED
+		velocity.z = dodge_dir.z * DODGE_SPEED
+	else:
+		velocity.x = 0
+		velocity.z = 0
 
 
 func _start_attack() -> void:
@@ -386,6 +452,7 @@ func _handle_attack_state(delta: float) -> void:
 			# Combo window closed, return to idle
 			combo_window_open = false
 			combo_state = 0
+			_deactivate_attack_hitbox()
 			transition_to(PlayerState.IDLE)
 
 	# Stop horizontal movement during attacks
@@ -393,9 +460,20 @@ func _handle_attack_state(delta: float) -> void:
 	velocity.z = 0
 
 
+func _handle_damaged(_delta: float) -> void:
+	# Check floor during knockback - stop at edges to prevent falling off
+	if velocity.length_squared() > 0.1:
+		var move_dir := velocity.normalized()
+		move_dir.y = 0
+		if move_dir.length() > 0.1 and not _can_move_to(move_dir):
+			velocity.x = 0
+			velocity.z = 0
+
+
 func _play_attack_animation(attack_num: int) -> void:
 	var anim_name := "pmsa_atk" + str(attack_num)
 	play_animation(anim_name, false)
+	_activate_attack_hitbox()
 
 
 func transition_to(new_state: PlayerState) -> void:
@@ -424,6 +502,7 @@ func _on_animation_finished(_anim_name: String) -> void:
 		PlayerState.DODGING:
 			transition_to(PlayerState.IDLE)
 		PlayerState.ATTACKING:
+			_deactivate_attack_hitbox()
 			if combo_state >= 3:
 				# Combo finished, return to idle
 				combo_state = 0
@@ -437,9 +516,15 @@ func _on_animation_finished(_anim_name: String) -> void:
 
 
 # Public API for external systems
-func take_damage(amount: int, heavy: bool = false) -> void:
-	GameState.set_hp(GameState.hp - amount)
-	if heavy:
+func take_damage(damage: int, knockback: Vector3 = Vector3.ZERO) -> void:
+	GameState.set_hp(GameState.hp - damage)
+
+	# Apply knockback
+	if knockback.length() > 0:
+		velocity = knockback
+
+	# Play damage animation (heavy if damage > 20)
+	if damage > 20:
 		play_animation("pmsa_dam_h", false)
 	else:
 		play_animation("pmsa_dam_n", false)
@@ -452,6 +537,41 @@ func get_state() -> PlayerState:
 
 func get_combo_state() -> int:
 	return combo_state
+
+
+# Combat System
+func _setup_attack_hitbox() -> void:
+	attack_hitbox = Hitbox.new()
+	attack_hitbox.name = "AttackHitbox"
+	attack_hitbox.owner_node = self
+	attack_hitbox.damage = _get_attack_damage()
+
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = ATTACK_HITBOX_SIZE
+	shape.shape = box
+	shape.position = Vector3(0, ATTACK_HITBOX_SIZE.y / 2, ATTACK_HITBOX_OFFSET)
+	attack_hitbox.add_child(shape)
+
+	# Hitbox follows player rotation via model
+	model.add_child(attack_hitbox)
+
+
+func _get_attack_damage() -> int:
+	# TODO: Implement proper damage calculation when combat is ready
+	# For now, use fixed damage while working on timing/animations
+	return 10
+
+
+func _activate_attack_hitbox() -> void:
+	if attack_hitbox:
+		attack_hitbox.damage = _get_attack_damage()
+		attack_hitbox.activate()
+
+
+func _deactivate_attack_hitbox() -> void:
+	if attack_hitbox:
+		attack_hitbox.deactivate()
 
 
 # Interaction System

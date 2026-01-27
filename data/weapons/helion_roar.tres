@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "helion_roar"
+name = "Helion Roar"
+japanese_name = "ヘリオンロアー"
+rarity = 2
+weapon_type = 8
+max_grind = 45
+level = 2
+resale_value = 70
+attack_base = 71
+attack_max = 161
+accuracy_base = 135
+accuracy_max = 135
+element = "Heat"
+element_level = 5
+photon_arts = [{"name": "Bull Smash", "attack_mod": 210, "accuracy_mod": 200, "pp_used": 18, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human")
+pso_world_id = 109
+model_id = "wshh02"
+variant_id = "wshh02_1_o"

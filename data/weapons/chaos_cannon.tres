@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chaos_cannon"
+name = "Chaos Cannon"
+japanese_name = "ケイオスカノン"
+rarity = 4
+weapon_type = 13
+max_grind = 60
+level = 20
+resale_value = 10
+attack_base = 116
+attack_max = 236
+accuracy_base = 186
+accuracy_max = 186
+element = "Slow"
+element_level = 2
+photon_arts = [{"name": "Divine Ray", "attack_mod": 250, "accuracy_mod": 200, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 271
+model_id = "wlcr01"
+variant_id = "wlcr01_1_b"

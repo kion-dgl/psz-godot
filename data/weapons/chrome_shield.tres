@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chrome_shield"
+name = "Chrome Shield"
+japanese_name = "クロムシールド"
+rarity = 4
+weapon_type = 8
+max_grind = 35
+level = 12
+resale_value = 438
+attack_base = 75
+attack_max = 145
+accuracy_base = 200
+accuracy_max = 200
+element = ""
+element_level = 0
+photon_arts = [{"name": "Bull Smash", "attack_mod": 210, "accuracy_mod": 200, "pp_used": 18, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human")
+pso_world_id = 106
+model_id = "wshr07"
+variant_id = "wshr07_1_o"

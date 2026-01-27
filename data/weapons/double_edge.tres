@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "double_edge"
+name = "Double Edge"
+japanese_name = "ダブルエッジ"
+rarity = 3
+weapon_type = 4
+max_grind = 30
+level = 5
+resale_value = 227
+attack_base = 111
+attack_max = 171
+accuracy_base = 116
+accuracy_max = 116
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cyclone Run", "attack_mod": 100, "accuracy_mod": 80, "pp_used": 20, "element": "-"}, {"name": "Tornado Dance", "attack_mod": 130, "accuracy_mod": 120, "pp_used": 30, "element": "-"}, {"name": "Million Rave", "attack_mod": 135, "accuracy_mod": 100, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 137
+model_id = "wdsn02"
+variant_id = "wdsn02_1_b"

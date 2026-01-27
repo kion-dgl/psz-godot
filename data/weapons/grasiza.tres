@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "grasiza"
+name = "Grasiza"
+japanese_name = "グラーシーザ"
+rarity = 5
+weapon_type = 5
+max_grind = 40
+level = 24
+resale_value = 978
+attack_base = 238
+attack_max = 318
+accuracy_base = 215
+accuracy_max = 215
+element = ""
+element_level = 0
+photon_arts = [{"name": "Hopping Run", "attack_mod": 90, "accuracy_mod": 130, "pp_used": 24, "element": "-"}, {"name": "Spear Rider", "attack_mod": 145, "accuracy_mod": 160, "pp_used": 20, "element": "-"}, {"name": "Speed Rain", "attack_mod": 80, "accuracy_mod": 70, "pp_used": 32, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 77
+model_id = "wspc01"
+variant_id = "wspc01_3_b"

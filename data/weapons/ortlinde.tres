@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ortlinde"
+name = "Ortlinde"
+japanese_name = "オルトリンデ"
+rarity = 6
+weapon_type = 11
+max_grind = 10
+level = 36
+resale_value = 1477
+attack_base = 231
+attack_max = 251
+accuracy_base = 205
+accuracy_max = 205
+element = ""
+element_level = 0
+photon_arts = [{"name": "Hollow Snipe", "attack_mod": 80, "accuracy_mod": 255, "pp_used": 26, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 185
+model_id = "wrfn01"
+variant_id = ""

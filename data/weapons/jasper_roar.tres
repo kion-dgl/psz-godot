@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "jasper_roar"
+name = "Jasper Roar"
+japanese_name = "ジャスパーロア"
+rarity = 6
+weapon_type = 2
+max_grind = 25
+level = 32
+resale_value = 1340
+attack_base = 182
+attack_max = 232
+accuracy_base = 266
+accuracy_max = 266
+element = ""
+element_level = 0
+photon_arts = [{"name": "Air Ride", "attack_mod": 95, "accuracy_mod": 80, "pp_used": 19, "element": "-"}, {"name": "Reverse Kill", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 25, "element": "-"}, {"name": "Huge Cross", "attack_mod": 90, "accuracy_mod": 130, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human")
+pso_world_id = 56
+model_id = "wdah01"
+variant_id = ""

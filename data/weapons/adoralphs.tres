@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "adoralphs"
+name = "Adoralphs"
+japanese_name = "アドラアルフス"
+rarity = 7
+weapon_type = 3
+max_grind = 20
+level = 50
+resale_value = 3823
+attack_base = 328
+attack_max = 368
+accuracy_base = 283
+accuracy_max = 283
+element = ""
+element_level = 0
+photon_arts = [{"name": "Serpent Air", "attack_mod": 115, "accuracy_mod": 80, "pp_used": 18, "element": "-"}, {"name": "Bite Stamp", "attack_mod": 180, "accuracy_mod": 75, "pp_used": 26, "element": "-"}, {"name": "Slide End", "attack_mod": 75, "accuracy_mod": 120, "pp_used": 21, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 96
+model_id = "wclh01"
+variant_id = ""

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chrome_claws"
+name = "Chrome Claws"
+japanese_name = "クロムクロー"
+rarity = 4
+weapon_type = 3
+max_grind = 35
+level = 12
+resale_value = 490
+attack_base = 129
+attack_max = 199
+accuracy_base = 187
+accuracy_max = 187
+element = ""
+element_level = 0
+photon_arts = [{"name": "Serpent Air", "attack_mod": 115, "accuracy_mod": 80, "pp_used": 18, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 72
+model_id = "wclr04"
+variant_id = "wclr04_1_o"

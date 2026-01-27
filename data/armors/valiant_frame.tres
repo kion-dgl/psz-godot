@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "valiant_frame"
+name = "Valiant Frame"
+japanese_name = "ヴァリアントフレーム"
+type = 1
+rarity = 5
+max_grind = 20
+level = 20
+resale_value = 1155
+defense_base = 120
+defense_max = 160
+evasion_base = 115
+evasion_max = 155
+max_slots = 3
+resist_fire = 0
+resist_ice = 0
+resist_lightning = 0
+resist_light = 12
+resist_dark = 12
+usable_by = PackedStringArray()
+set_bonus = ""
+pso_world_id = 495

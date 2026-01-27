@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "phyteuma"
+name = "Phyteuma"
+japanese_name = "フィテウーマ"
+rarity = 6
+weapon_type = 3
+max_grind = 35
+level = 36
+resale_value = 1467
+attack_base = 257
+attack_max = 327
+accuracy_base = 264
+accuracy_max = 264
+element = ""
+element_level = 0
+photon_arts = [{"name": "Slide End", "attack_mod": 75, "accuracy_mod": 120, "pp_used": 21, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Cast")
+pso_world_id = 102
+model_id = "wclc01"
+variant_id = ""

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "phobos_shoot"
+name = "Phobos Shoot"
+japanese_name = "フォボスシュート"
+rarity = 5
+weapon_type = 11
+max_grind = 35
+level = 28
+resale_value = 10
+attack_base = 176
+attack_max = 246
+accuracy_base = 171
+accuracy_max = 171
+element = "Slow"
+element_level = 3
+photon_arts = [{"name": "Wipeout", "attack_mod": 75, "accuracy_mod": 80, "pp_used": 21, "element": "Level 4 Heat"}, {"name": "Hollow Snipe", "attack_mod": 80, "accuracy_mod": 255, "pp_used": 26, "element": "-"}, {"name": "Mine Sneak", "attack_mod": 160, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 192
+model_id = "wrfr01"
+variant_id = "wrfr01_1_b"

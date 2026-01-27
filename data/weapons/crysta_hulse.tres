@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "crysta_hulse"
+name = "Crysta Hulse"
+japanese_name = "クリスタハルス"
+rarity = 6
+weapon_type = 8
+max_grind = 20
+level = 36
+resale_value = 1264
+attack_base = 150
+attack_max = 190
+accuracy_base = 280
+accuracy_max = 280
+element = "Ice"
+element_level = 5
+photon_arts = [{"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human")
+pso_world_id = 112
+model_id = "wshh02"
+variant_id = ""

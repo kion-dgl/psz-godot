@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/item_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "key_valley"
+name = "Valley Key"
+type = 3
+rarity = 1
+model_path = "valley/o0c_key.glb"
+stats = {}
+value = 0
+description = "A key that opens doors in the Valley area."
+stackable = true
+max_stack = 99

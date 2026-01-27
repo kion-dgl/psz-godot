@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ein_rocket"
+name = "Ein Rocket"
+japanese_name = "アインロケット"
+rarity = 3
+weapon_type = 12
+max_grind = 50
+level = 5
+resale_value = 236
+attack_base = 137
+attack_max = 237
+accuracy_base = 127
+accuracy_max = 127
+element = ""
+element_level = 0
+photon_arts = [{"name": "Crazy On", "attack_mod": 130, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 245
+model_id = "wbac01"
+variant_id = "wbac01_1_b"

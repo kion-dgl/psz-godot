@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "star_slicer"
+name = "Star Slicer"
+japanese_name = "スタースライサー"
+rarity = 6
+weapon_type = 6
+max_grind = 20
+level = 40
+resale_value = 10
+attack_base = 0
+attack_max = 0
+accuracy_base = 164
+accuracy_max = 164
+element = "Risk"
+element_level = 3
+photon_arts = [{"name": "Bright Sign", "attack_mod": 110, "accuracy_mod": 120, "pp_used": 14, "element": "Level 3 Stun"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 417
+model_id = "wslr03"
+variant_id = "wslr03_1_o"

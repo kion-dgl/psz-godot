@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ray_knife"
+name = "Ray Knife"
+japanese_name = "レイナイフ"
+rarity = 2
+weapon_type = 2
+max_grind = 35
+level = 2
+resale_value = 80
+attack_base = 51
+attack_max = 121
+accuracy_base = 135
+accuracy_max = 135
+element = ""
+element_level = 0
+photon_arts = [{"name": "Huge Cross", "attack_mod": 90, "accuracy_mod": 130, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Newman")
+pso_world_id = 49
+model_id = "wdan01"
+variant_id = "wdan01_1_r"

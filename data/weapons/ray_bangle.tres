@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ray_bangle"
+name = "Ray Bangle"
+japanese_name = "レイバングル"
+rarity = 2
+weapon_type = 8
+max_grind = 35
+level = 2
+resale_value = 75
+attack_base = 40
+attack_max = 110
+accuracy_base = 140
+accuracy_max = 140
+element = ""
+element_level = 0
+photon_arts = [{"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Newman")
+pso_world_id = 113
+model_id = "wshn01"
+variant_id = "wshn01_1_o"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "handgun"
+name = "Handgun"
+japanese_name = "ハンドガン"
+rarity = 1
+weapon_type = 9
+max_grind = 50
+level = 1
+resale_value = 25
+attack_base = 27
+attack_max = 127
+accuracy_base = 70
+accuracy_max = 70
+element = ""
+element_level = 0
+photon_arts = [{"name": "Quick Draw", "attack_mod": 80, "accuracy_mod": 75, "pp_used": 24, "element": "-"}, {"name": "Flame Hit", "attack_mod": 145, "accuracy_mod": 100, "pp_used": 19, "element": "Level 4 Heat"}, {"name": "Thriller Combo", "attack_mod": 150, "accuracy_mod": 120, "pp_used": 15, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 151
+model_id = "whgh01"
+variant_id = "whgh01_1_o"

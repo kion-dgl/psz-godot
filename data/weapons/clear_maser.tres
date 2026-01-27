@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clear_maser"
+name = "Clear Maser"
+japanese_name = "クリアメーザー"
+rarity = 4
+weapon_type = 13
+max_grind = 25
+level = 12
+resale_value = 581
+attack_base = 98
+attack_max = 148
+accuracy_base = 163
+accuracy_max = 163
+element = ""
+element_level = 0
+photon_arts = [{"name": "Sector Line", "attack_mod": 150, "accuracy_mod": 80, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 268
+model_id = "wlcn01"
+variant_id = ""

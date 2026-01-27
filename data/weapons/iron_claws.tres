@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "iron_claws"
+name = "Iron Claws"
+japanese_name = "アイアンクロー"
+rarity = 3
+weapon_type = 3
+max_grind = 40
+level = 5
+resale_value = 196
+attack_base = 92
+attack_max = 172
+accuracy_base = 156
+accuracy_max = 156
+element = ""
+element_level = 0
+photon_arts = [{"name": "Serpent Air", "attack_mod": 115, "accuracy_mod": 80, "pp_used": 18, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Cast")
+pso_world_id = 69
+model_id = "wclh01"
+variant_id = "wclh01_1_o"

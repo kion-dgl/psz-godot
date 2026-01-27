@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "gun_slash"
+name = "Gun Slash"
+japanese_name = "ガンスラッシュ"
+rarity = 2
+weapon_type = 7
+max_grind = 45
+level = 2
+resale_value = 83
+attack_base = 45
+attack_max = 135
+accuracy_base = 86
+accuracy_max = 86
+element = ""
+element_level = 0
+photon_arts = [{"name": "Bullet Dance", "attack_mod": 125, "accuracy_mod": 70, "pp_used": 16, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Ranger Human", "Ranger Cast")
+pso_world_id = 202
+model_id = "wgbh01"
+variant_id = "wgbh01_1_o"

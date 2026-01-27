@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "8_ouncer"
+name = "8-Ouncer"
+japanese_name = "エイトオンス"
+rarity = 2
+weapon_type = 2
+max_grind = 80
+level = 2
+resale_value = 10
+attack_base = 45
+attack_max = 205
+accuracy_base = 139
+accuracy_max = 139
+element = "Exp"
+element_level = 1
+photon_arts = [{"name": "Reverse Kill", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 44
+model_id = "wdar02"
+variant_id = "wdar02_1_r"

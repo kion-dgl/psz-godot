@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ein_pistol"
+name = "Ein Pistol"
+japanese_name = "アインピストル"
+rarity = 1
+weapon_type = 9
+max_grind = 60
+level = 1
+resale_value = 26
+attack_base = 29
+attack_max = 149
+accuracy_base = 72
+accuracy_max = 72
+element = ""
+element_level = 0
+photon_arts = [{"name": "Quick Draw", "attack_mod": 80, "accuracy_mod": 75, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 155
+model_id = "whgc01"
+variant_id = "whgc01_1_o"

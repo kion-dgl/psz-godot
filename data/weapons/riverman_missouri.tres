@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "riverman_missouri"
+name = "Riverman Missouri"
+japanese_name = "リヴァマンミズーリ"
+rarity = 6
+weapon_type = 10
+max_grind = 45
+level = 42
+resale_value = 10
+attack_base = 138
+attack_max = 228
+accuracy_base = 172
+accuracy_max = 172
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cool Style", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 23, "element": "-"}, {"name": "Spinning Death", "attack_mod": 85, "accuracy_mod": 150, "pp_used": 20, "element": "-"}, {"name": "Acro Step", "attack_mod": 85, "accuracy_mod": 100, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 240
+model_id = "wmgr04"
+variant_id = "wmgr04_1_r"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clear_bangle"
+name = "Clear Bangle"
+japanese_name = "クリアバングル"
+rarity = 3
+weapon_type = 8
+max_grind = 30
+level = 5
+resale_value = 188
+attack_base = 60
+attack_max = 120
+accuracy_base = 176
+accuracy_max = 176
+element = ""
+element_level = 0
+photon_arts = [{"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Newman")
+pso_world_id = 114
+model_id = "wshn01"
+variant_id = ""

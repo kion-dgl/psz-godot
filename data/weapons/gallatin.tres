@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "gallatin"
+name = "Gallatin"
+japanese_name = "ガラティーン"
+rarity = 7
+weapon_type = 13
+max_grind = 10
+level = 54
+resale_value = 4535
+attack_base = 287
+attack_max = 307
+accuracy_base = 260
+accuracy_max = 260
+element = ""
+element_level = 0
+photon_arts = [{"name": "Sector Line", "attack_mod": 150, "accuracy_mod": 80, "pp_used": 22, "element": "-"}, {"name": "Bio Panic", "attack_mod": 100, "accuracy_mod": 180, "pp_used": 16, "element": "Level 3 Dark"}, {"name": "Divine Ray", "attack_mod": 250, "accuracy_mod": 200, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 266
+model_id = "wlcn02"
+variant_id = ""

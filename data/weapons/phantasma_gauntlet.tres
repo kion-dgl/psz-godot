@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "phantasma_gauntlet"
+name = "Phantasma Gauntlet"
+japanese_name = "ファンタズマガント"
+rarity = 7
+weapon_type = 3
+max_grind = 30
+level = 58
+resale_value = 10
+attack_base = 316
+attack_max = 376
+accuracy_base = 277
+accuracy_max = 277
+element = "Heaven"
+element_level = 3
+photon_arts = [{"name": "Slide End", "attack_mod": 75, "accuracy_mod": 120, "pp_used": 21, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 104
+model_id = "wclr01"
+variant_id = ""

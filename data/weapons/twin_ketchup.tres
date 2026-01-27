@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "twin_ketchup"
+name = "Twin Ketchup"
+japanese_name = "ツインケチャップ"
+rarity = 2
+weapon_type = 10
+max_grind = 30
+level = 2
+resale_value = 10
+attack_base = 27
+attack_max = 87
+accuracy_base = 70
+accuracy_max = 70
+element = "Jellen"
+element_level = 3
+photon_arts = [{"name": "Cool Style", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 23, "element": "-"}, {"name": "Spinning Death", "attack_mod": 85, "accuracy_mod": 150, "pp_used": 20, "element": "-"}, {"name": "Acro Step", "attack_mod": 85, "accuracy_mod": 100, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 238
+model_id = "wmgr02"
+variant_id = "wmgr02_1_r"

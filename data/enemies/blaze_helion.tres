@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "blaze_helion"
+name = "Blaze Helion"
+japanese_name = "ブレイズヘリオン"
+element = 1
+locations = PackedStringArray("Gurhacia Valley", "Eternal Tower")
+is_rare = true
+is_boss = false
+model_id = "lion_rare"
+hp_base = 200
+attack_base = 15
+defense_base = 8
+move_speed = 3.0
+attack_range = 2.0
+detection_range = 15.0
+exp_reward = 50
+meseta_min = 20
+meseta_max = 50
+behavior = 0
+attack_cooldown = 1.5
+collision_radius = 0.5
+collision_height = 1.5

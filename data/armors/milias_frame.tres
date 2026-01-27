@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "milias_frame"
+name = "Milias Frame"
+japanese_name = "ミリアスフレーム"
+type = 1
+rarity = 6
+max_grind = 35
+level = 48
+resale_value = 10
+defense_base = 186
+defense_max = 256
+evasion_base = 116
+evasion_max = 186
+max_slots = 3
+resist_fire = 0
+resist_ice = 0
+resist_lightning = 12
+resist_light = 12
+resist_dark = 0
+usable_by = PackedStringArray("Cast Hunter", "Cast Ranger")
+set_bonus = ""
+pso_world_id = 516

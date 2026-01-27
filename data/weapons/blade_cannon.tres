@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "blade_cannon"
+name = "Blade Cannon"
+japanese_name = "砲剣ブレイドカノン"
+rarity = 5
+weapon_type = 7
+max_grind = 40
+level = 20
+resale_value = 10
+attack_base = 160
+attack_max = 240
+accuracy_base = 138
+accuracy_max = 138
+element = "Heat"
+element_level = 1
+photon_arts = [{"name": "Earth Bullet", "attack_mod": 170, "accuracy_mod": 150, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 221
+model_id = "wgbr04"
+variant_id = "wgbr04_1_o"

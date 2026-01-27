@@ -49,12 +49,17 @@ func _apply_state() -> void:
 			set_process(false)
 
 
-func _on_collected(player: Node3D) -> void:
+func _on_collected(_player: Node3D) -> void:
 	if element_state == "collected":
 		return
 
 	set_state("collected")
-	print("[Key] Collected key: ", key_id)
 
-	# TODO: Add to player inventory / game state
-	# GameState.add_key(key_id)
+	# Add to inventory using item_id if set, otherwise use key_id as item
+	var item_to_add = key_id if key_id != "default" else "key_valley"
+	if Inventory.add_item(item_to_add, 1):
+		var item_data = ItemRegistry.get_item(item_to_add)
+		var item_name = item_data.name if item_data else item_to_add
+		print("[Key] Collected key: ", item_name)
+	else:
+		print("[Key] Failed to add key to inventory: ", item_to_add)

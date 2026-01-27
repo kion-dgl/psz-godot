@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "deo_cannon"
+name = "Deo Cannon"
+japanese_name = "デオカノン"
+rarity = 4
+weapon_type = 13
+max_grind = 45
+level = 12
+resale_value = 562
+attack_base = 105
+attack_max = 195
+accuracy_base = 163
+accuracy_max = 163
+element = ""
+element_level = 0
+photon_arts = [{"name": "Sector Line", "attack_mod": 150, "accuracy_mod": 80, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 260
+model_id = "wlcc01"
+variant_id = ""

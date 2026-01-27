@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ein_glaive"
+name = "Ein Glaive"
+japanese_name = "アイングレイブ"
+rarity = 2
+weapon_type = 5
+max_grind = 55
+level = 2
+resale_value = 92
+attack_base = 81
+attack_max = 191
+accuracy_base = 120
+accuracy_max = 120
+element = ""
+element_level = 0
+photon_arts = [{"name": "Spear Rider", "attack_mod": 145, "accuracy_mod": 160, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 66
+model_id = ""
+variant_id = ""

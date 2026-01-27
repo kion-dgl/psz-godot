@@ -8,6 +8,9 @@ var max_hp: int = 100
 var mp: int = 50
 var max_mp: int = 50
 
+# Currency
+var meseta: int = 0
+
 # Equipment slots
 var equipment: Dictionary = {
 	"weapon": "",
@@ -30,6 +33,7 @@ signal pause_menu_toggled(is_open: bool)
 signal shop_opened(npc_name: String)
 signal shop_closed()
 signal game_state_reset()
+signal meseta_changed(new_amount: int)
 
 
 func _ready() -> void:
@@ -101,6 +105,7 @@ func reset_game_state() -> void:
 	max_hp = 100
 	mp = 50
 	max_mp = 50
+	meseta = 0
 	equipment = {
 		"weapon": "",
 		"armor": "",
@@ -135,3 +140,22 @@ func get_mp_percentage() -> float:
 	if max_mp <= 0:
 		return 0.0
 	return float(mp) / float(max_mp)
+
+
+# Meseta (currency) management
+func add_meseta(amount: int) -> void:
+	if amount > 0:
+		meseta += amount
+		meseta_changed.emit(meseta)
+
+
+func remove_meseta(amount: int) -> bool:
+	if amount > 0 and meseta >= amount:
+		meseta -= amount
+		meseta_changed.emit(meseta)
+		return true
+	return false
+
+
+func get_meseta() -> int:
+	return meseta

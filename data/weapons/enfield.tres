@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "enfield"
+name = "Enfield"
+japanese_name = "エンフィールド"
+rarity = 6
+weapon_type = 11
+max_grind = 25
+level = 32
+resale_value = 1378
+attack_base = 201
+attack_max = 251
+accuracy_base = 194
+accuracy_max = 194
+element = ""
+element_level = 0
+photon_arts = [{"name": "Wipeout", "attack_mod": 75, "accuracy_mod": 80, "pp_used": 21, "element": "Level 4 Heat"}, {"name": "Hollow Snipe", "attack_mod": 80, "accuracy_mod": 255, "pp_used": 26, "element": "-"}, {"name": "Mine Sneak", "attack_mod": 160, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 177
+model_id = "wrfh01"
+variant_id = ""

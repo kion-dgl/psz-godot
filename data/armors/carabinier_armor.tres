@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "carabinier_armor"
+name = "Carabinier Armor"
+japanese_name = "カラビニエルアーマー"
+type = 0
+rarity = 7
+max_grind = 20
+level = 50
+resale_value = 5121
+defense_base = 261
+defense_max = 301
+evasion_base = 167
+evasion_max = 207
+max_slots = 4
+resist_fire = 9
+resist_ice = 9
+resist_lightning = 9
+resist_light = 0
+resist_dark = 0
+usable_by = PackedStringArray("Human Hunter", "Cast Hunter", "Cast Ranger")
+set_bonus = ""
+pso_world_id = 491

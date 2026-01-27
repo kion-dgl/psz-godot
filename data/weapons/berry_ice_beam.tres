@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "berry_ice_beam"
+name = "Berry Ice Beam"
+japanese_name = "ベリーアイスビーム"
+rarity = 3
+weapon_type = 13
+max_grind = 70
+level = 6
+resale_value = 10
+attack_base = 67
+attack_max = 207
+accuracy_base = 138
+accuracy_max = 138
+element = "Ice"
+element_level = 2
+photon_arts = [{"name": "Sector Line", "attack_mod": 150, "accuracy_mod": 80, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 275
+model_id = "wlcr03"
+variant_id = "wlcr03_1_b"

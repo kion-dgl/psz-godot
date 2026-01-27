@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chronos_scythe"
+name = "Chronos Scythe"
+japanese_name = "クロノスサイズ"
+rarity = 6
+weapon_type = 4
+max_grind = 30
+level = 42
+resale_value = 10
+attack_base = 302
+attack_max = 362
+accuracy_base = 186
+accuracy_max = 186
+element = "Slow"
+element_level = 3
+photon_arts = [{"name": "Tornado Dance", "attack_mod": 130, "accuracy_mod": 120, "pp_used": 30, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 148
+model_id = ""
+variant_id = ""

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rikas_claw"
+name = "Rika's Claw"
+japanese_name = "ファルクロー"
+rarity = 7
+weapon_type = 3
+max_grind = 20
+level = 80
+resale_value = 10
+attack_base = 386
+attack_max = 426
+accuracy_base = 309
+accuracy_max = 309
+element = "Stun"
+element_level = 3
+photon_arts = [{"name": "Bite Stamp", "attack_mod": 180, "accuracy_mod": 75, "pp_used": 26, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 83
+model_id = "wclr02"
+variant_id = "wclr02_1_o"

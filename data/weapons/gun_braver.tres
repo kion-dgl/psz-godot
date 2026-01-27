@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "gun_braver"
+name = "Gun Braver"
+japanese_name = "ガンブレイバー"
+rarity = 3
+weapon_type = 7
+max_grind = 40
+level = 5
+resale_value = 207
+attack_base = 67
+attack_max = 147
+accuracy_base = 107
+accuracy_max = 107
+element = ""
+element_level = 0
+photon_arts = [{"name": "Bullet Dance", "attack_mod": 125, "accuracy_mod": 70, "pp_used": 16, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Ranger Human", "Ranger Cast")
+pso_world_id = 203
+model_id = "wgbh01"
+variant_id = ""

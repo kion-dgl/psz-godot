@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "crimsonfield"
+name = "Crimsonfield"
+japanese_name = "クリムゾンフィールド"
+rarity = 4
+weapon_type = 8
+max_grind = 60
+level = 12
+resale_value = 10
+attack_base = 98
+attack_max = 218
+accuracy_base = 208
+accuracy_max = 208
+element = "Heart"
+element_level = 2
+photon_arts = [{"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 118
+model_id = "wshr02"
+variant_id = "wshr02_1_o"

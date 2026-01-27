@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bloody_gimlet"
+name = "Bloody Gimlet"
+japanese_name = "ブラッディギムレット"
+rarity = 6
+weapon_type = 2
+max_grind = 40
+level = 40
+resale_value = 10
+attack_base = 209
+attack_max = 289
+accuracy_base = 276
+accuracy_max = 276
+element = "Draw"
+element_level = 3
+photon_arts = [{"name": "Air Ride", "attack_mod": 95, "accuracy_mod": 80, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 61
+model_id = "wdar03"
+variant_id = ""

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "eaten_pizza"
+name = "Eaten Pizza"
+japanese_name = "イートピッツァ"
+rarity = 4
+weapon_type = 6
+max_grind = 60
+level = 12
+resale_value = 10
+attack_base = 0
+attack_max = 0
+accuracy_base = 112
+accuracy_max = 112
+element = "Draw"
+element_level = 2
+photon_arts = [{"name": "Edge Riser", "attack_mod": 150, "accuracy_mod": 200, "pp_used": 15, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 402
+model_id = "wslr02"
+variant_id = "wslr02_2_o"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "filamare"
+name = "Filamare"
+japanese_name = "フィラメア"
+rarity = 5
+weapon_type = 3
+max_grind = 40
+level = 24
+resale_value = 863
+attack_base = 191
+attack_max = 271
+accuracy_base = 230
+accuracy_max = 230
+element = ""
+element_level = 0
+photon_arts = [{"name": "Slide End", "attack_mod": 75, "accuracy_mod": 120, "pp_used": 21, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Cast")
+pso_world_id = 101
+model_id = "wclc01"
+variant_id = "wclc01_3_o"

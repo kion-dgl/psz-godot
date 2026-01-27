@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "celesta_laser"
+name = "Celesta Laser"
+japanese_name = "セレスタレイザー"
+rarity = 7
+weapon_type = 7
+max_grind = 20
+level = 62
+resale_value = 10
+attack_base = 283
+attack_max = 323
+accuracy_base = 213
+accuracy_max = 213
+element = "Chaos"
+element_level = 3
+photon_arts = [{"name": "Bullet Dance", "attack_mod": 125, "accuracy_mod": 70, "pp_used": 16, "element": "-"}, {"name": "Impact Zero", "attack_mod": 180, "accuracy_mod": 135, "pp_used": 17, "element": "-"}, {"name": "Earth Bullet", "attack_mod": 170, "accuracy_mod": 150, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 218
+model_id = "wgbr01"
+variant_id = ""

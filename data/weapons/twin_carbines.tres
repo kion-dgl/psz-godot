@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "twin_carbines"
+name = "Twin Carbines"
+japanese_name = "ツインカービン"
+rarity = 3
+weapon_type = 10
+max_grind = 50
+level = 5
+resale_value = 180
+attack_base = 42
+attack_max = 142
+accuracy_base = 94
+accuracy_max = 94
+element = ""
+element_level = 0
+photon_arts = [{"name": "Acro Step", "attack_mod": 85, "accuracy_mod": 100, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast", "Force Human")
+pso_world_id = 226
+model_id = "wmgh02"
+variant_id = "wmgh02_1_r"

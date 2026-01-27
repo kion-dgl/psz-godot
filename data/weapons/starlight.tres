@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "starlight"
+name = "Starlight"
+japanese_name = "スターライト"
+rarity = 7
+weapon_type = 15
+max_grind = 20
+level = 60
+resale_value = 10
+attack_base = 0
+attack_max = 0
+accuracy_base = 239
+accuracy_max = 239
+element = "Dark"
+element_level = 5
+photon_arts = [{"name": "Act Trick", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 2, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 396
+model_id = "wwar03"
+variant_id = ""
