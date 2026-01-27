@@ -2,12 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_base.gd" id="1"]
 [ext_resource type="Resource" path="res://data/enemies/ghowl.tres" id="2_ghowl"]
+[ext_resource type="PackedScene" path="res://assets/enemies/lizard/s_001.glb" id="3_model"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
-radius = 0.5
-height = 1.5
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_1"]
 radius = 0.5
 height = 1.5
 
@@ -21,8 +18,4 @@ enemy_data = ExtResource("2_ghowl")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
 shape = SubResource("CapsuleShape3D_1")
 
-[node name="Model" type="Node3D" parent="."]
-
-[node name="PlaceholderMesh" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-mesh = SubResource("CapsuleMesh_1")
+[node name="Model" parent="." instance=ExtResource("3_model")]

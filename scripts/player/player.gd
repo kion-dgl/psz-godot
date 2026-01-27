@@ -52,6 +52,11 @@ const FLOOR_RAY_LENGTH: float = 5.0  # How far down to raycast
 # Animation references (found at runtime)
 var animation_player: AnimationPlayer
 var skeleton: Skeleton3D
+var weapon_node: Node3D  # Attached weapon model
+
+# Weapon attachment config
+const WEAPON_BONE_NAME: String = "070_RArm02"  # Right arm segment 2 (hand)
+var weapon_scene: PackedScene = preload("res://assets/weapons/saber/saber.glb")
 
 # State tracking
 var current_state: PlayerState = PlayerState.IDLE
@@ -99,6 +104,9 @@ func _ready() -> void:
 	# Set up animations
 	_setup_animations()
 
+	# Set up weapon attachment
+	_setup_weapon()
+
 	# Initialize animation player if we have one
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
@@ -144,6 +152,48 @@ func _setup_animations() -> void:
 		lib.add_animation(anim_name, new_anim)
 
 	animation_player.add_animation_library("", lib)
+
+
+func _setup_weapon() -> void:
+	if not skeleton:
+		push_warning("[Player] No skeleton found, cannot attach weapon")
+		return
+
+	# Find the weapon bone
+	var bone_idx := skeleton.find_bone(WEAPON_BONE_NAME)
+	if bone_idx == -1:
+		# Try alternative bone names
+		for alt_name in ["R_Hand", "RightHand", "hand_R", "Wrist_R"]:
+			bone_idx = skeleton.find_bone(alt_name)
+			if bone_idx != -1:
+				break
+
+	if bone_idx == -1:
+		push_warning("[Player] Could not find weapon bone. Available bones: %s" % _get_bone_names())
+		return
+
+	# Create BoneAttachment3D
+	var bone_attachment := BoneAttachment3D.new()
+	bone_attachment.name = "WeaponAttachment"
+	bone_attachment.bone_name = skeleton.get_bone_name(bone_idx)
+	skeleton.add_child(bone_attachment)
+
+	# Instance and attach weapon
+	if weapon_scene:
+		weapon_node = weapon_scene.instantiate() as Node3D
+		bone_attachment.add_child(weapon_node)
+		# Adjust weapon position/rotation as needed
+		weapon_node.rotation_degrees = Vector3(0, 90, 0)  # Rotate to align with hand
+		weapon_node.scale = Vector3(1.5, 1.5, 1.5)  # Scale up if needed
+		print("[Player] Weapon attached to bone: ", bone_attachment.bone_name)
+
+
+func _get_bone_names() -> Array[String]:
+	var names: Array[String] = []
+	if skeleton:
+		for i in range(skeleton.get_bone_count()):
+			names.append(skeleton.get_bone_name(i))
+	return names
 
 
 func _remap_animation(source: Animation, skeleton_name: String) -> Animation:
@@ -489,13 +539,9 @@ func _setup_attack_hitbox() -> void:
 
 
 func _get_attack_damage() -> int:
-	# Get equipped weapon damage, or use base damage
-	var weapon_id := GameState.get_equipped_item("weapon")
-	if not weapon_id.is_empty():
-		var weapon = WeaponRegistry.get_weapon(weapon_id)
-		if weapon:
-			return weapon.attack_base
-	return 10  # Base damage with no weapon
+	# TODO: Implement proper damage calculation when combat is ready
+	# For now, use fixed damage while working on timing/animations
+	return 10
 
 
 func _activate_attack_hitbox() -> void:

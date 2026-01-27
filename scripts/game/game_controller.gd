@@ -274,11 +274,12 @@ func _spawn_test_enemies(map_id: String) -> void:
 		push_warning("[GameController] Could not load ghowl.tscn")
 		return
 
-	# Spawn a few test enemies near the spawn point
+	# Spawn a few test enemies near the player spawn area
+	# Player spawns at (-6.3, 1.0, 23.47), so spawn enemies nearby on the path
 	var spawn_positions := [
-		Vector3(0, 1, 10),
-		Vector3(5, 1, 15),
-		Vector3(-5, 1, 12),
+		Vector3(-3, 1, 18),
+		Vector3(-8, 1, 15),
+		Vector3(0, 1, 12),
 	]
 
 	for pos in spawn_positions:
