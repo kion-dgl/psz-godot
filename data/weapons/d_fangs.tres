@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "d_fangs"
+name = "D-Fangs"
+japanese_name = "ディーファング"
+rarity = 2
+weapon_type = 3
+max_grind = 45
+level = 2
+resale_value = 78
+attack_base = 68
+attack_max = 158
+accuracy_base = 126
+accuracy_max = 126
+element = ""
+element_level = 0
+photon_arts = [{"name": "Serpent Air", "attack_mod": 115, "accuracy_mod": 80, "pp_used": 18, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 97
+model_id = "wclh02"
+variant_id = "wclh02_1_o"

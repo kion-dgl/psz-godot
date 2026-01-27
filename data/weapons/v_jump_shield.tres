@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "v_jump_shield"
+name = "V-Jump Shield"
+japanese_name = "Vジャンプシールド"
+rarity = 4
+weapon_type = 8
+max_grind = 50
+level = 20
+resale_value = 10
+attack_base = 71
+attack_max = 171
+accuracy_base = 216
+accuracy_max = 216
+element = "Heat"
+element_level = 3
+photon_arts = [{"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 127
+model_id = ""
+variant_id = ""

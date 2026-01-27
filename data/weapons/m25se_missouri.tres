@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "m25se_missouri"
+name = "M25SE Missouri"
+japanese_name = "Ｍ２５ＳＥミズーリ"
+rarity = 7
+weapon_type = 11
+max_grind = 10
+level = 80
+resale_value = 10
+attack_base = 309
+attack_max = 329
+accuracy_base = 267
+accuracy_max = 267
+element = ""
+element_level = 0
+photon_arts = [{"name": "Hollow Snipe", "attack_mod": 80, "accuracy_mod": 255, "pp_used": 26, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 197
+model_id = "wrfr04"
+variant_id = ""

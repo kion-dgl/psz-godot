@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "devil_bazooka"
+name = "Devil Bazooka"
+japanese_name = "デビルバズーカ"
+rarity = 6
+weapon_type = 12
+max_grind = 30
+level = 40
+resale_value = 10
+attack_base = 400
+attack_max = 460
+accuracy_base = 218
+accuracy_max = 218
+element = "Slow"
+element_level = 3
+photon_arts = [{"name": "Wild Blow", "attack_mod": 120, "accuracy_mod": 90, "pp_used": 28, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 254
+model_id = "wbar01"
+variant_id = ""

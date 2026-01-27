@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "iron_lance"
+name = "Iron Lance"
+japanese_name = "アイアンランス"
+rarity = 3
+weapon_type = 5
+max_grind = 40
+level = 5
+resale_value = 222
+attack_base = 115
+attack_max = 195
+accuracy_base = 153
+accuracy_max = 153
+element = ""
+element_level = 0
+photon_arts = [{"name": "Hopping Run", "attack_mod": 90, "accuracy_mod": 130, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 67
+model_id = "wsph01"
+variant_id = "wsph01_1_b"

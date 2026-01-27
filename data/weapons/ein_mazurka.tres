@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ein_mazurka"
+name = "Ein Mazurka"
+japanese_name = "アインマズルガ"
+rarity = 2
+weapon_type = 7
+max_grind = 55
+level = 2
+resale_value = 86
+attack_base = 48
+attack_max = 158
+accuracy_base = 88
+accuracy_max = 88
+element = ""
+element_level = 0
+photon_arts = [{"name": "Earth Bullet", "attack_mod": 170, "accuracy_mod": 150, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 206
+model_id = "wgbc01"
+variant_id = "wgbc01_1_o"

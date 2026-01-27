@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "doppel_scythe"
+name = "Doppel Scythe"
+japanese_name = "ドッペルサイズ"
+rarity = 4
+weapon_type = 4
+max_grind = 10
+level = 14
+resale_value = 10
+attack_base = 183
+attack_max = 203
+accuracy_base = 135
+accuracy_max = 135
+element = "Risk"
+element_level = 1
+photon_arts = [{"name": "Tornado Dance", "attack_mod": 130, "accuracy_mod": 120, "pp_used": 30, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 147
+model_id = "wdsr01"
+variant_id = "wdsr01_1_b"

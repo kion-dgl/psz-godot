@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mobius_guarder"
+name = "Mobius Guarder"
+japanese_name = "メビウスガーダー"
+type = 3
+rarity = 4
+max_grind = 45
+level = 1
+resale_value = 0
+defense_base = 98
+defense_max = 188
+evasion_base = 61
+evasion_max = 151
+max_slots = 4
+resist_fire = 0
+resist_ice = 0
+resist_lightning = 18
+resist_light = 18
+resist_dark = 0
+usable_by = PackedStringArray("Cast Hunter", "Cast Ranger")
+set_bonus = ""
+pso_world_id = 510

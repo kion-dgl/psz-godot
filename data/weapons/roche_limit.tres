@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "roche_limit"
+name = "Roche Limit"
+japanese_name = "ロシェリミット"
+rarity = 6
+weapon_type = 4
+max_grind = 35
+level = 36
+resale_value = 1585
+attack_base = 279
+attack_max = 349
+accuracy_base = 229
+accuracy_max = 229
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cyclone Run", "attack_mod": 100, "accuracy_mod": 80, "pp_used": 20, "element": "-"}, {"name": "Tornado Dance", "attack_mod": 130, "accuracy_mod": 120, "pp_used": 30, "element": "-"}, {"name": "Million Rave", "attack_mod": 135, "accuracy_mod": 100, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 142
+model_id = "wdsc01"
+variant_id = ""

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "blackhawk"
+name = "Blackhawk"
+japanese_name = "ブラックホーク"
+rarity = 6
+weapon_type = 10
+max_grind = 35
+level = 32
+resale_value = 1349
+attack_base = 121
+attack_max = 191
+accuracy_base = 160
+accuracy_max = 160
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cool Style", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 23, "element": "-"}, {"name": "Spinning Death", "attack_mod": 85, "accuracy_mod": 150, "pp_used": 20, "element": "-"}, {"name": "Acro Step", "attack_mod": 85, "accuracy_mod": 100, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human")
+pso_world_id = 233
+model_id = "wmgc01"
+variant_id = ""

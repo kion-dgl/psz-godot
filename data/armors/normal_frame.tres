@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "normal_frame"
+name = "Normal Frame"
+japanese_name = "ノーマルフレーム"
+type = 1
+rarity = 1
+max_grind = 40
+level = 1
+resale_value = 44
+defense_base = 27
+defense_max = 107
+evasion_base = 26
+evasion_max = 106
+max_slots = 3
+resist_fire = 0
+resist_ice = 0
+resist_lightning = 0
+resist_light = 4
+resist_dark = 4
+usable_by = PackedStringArray()
+set_bonus = ""
+pso_world_id = 485

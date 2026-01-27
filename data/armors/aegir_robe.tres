@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "aegir_robe"
+name = "Aegir Robe"
+japanese_name = "エーギルローブ"
+type = 2
+rarity = 6
+max_grind = 10
+level = 35
+resale_value = 2032
+defense_base = 116
+defense_max = 136
+evasion_base = 186
+evasion_max = 206
+max_slots = 4
+resist_fire = 18
+resist_ice = 18
+resist_lightning = 18
+resist_light = 18
+resist_dark = 18
+usable_by = PackedStringArray("Newman Hunter", "Human Ranger", "Human Force", "Newman Force")
+set_bonus = ""
+pso_world_id = 502

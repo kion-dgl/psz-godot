@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "scarred_tatami"
+name = "Scarred Tatami"
+japanese_name = "レキセンノタタミ"
+rarity = 6
+weapon_type = 8
+max_grind = 50
+level = 40
+resale_value = 10
+attack_base = 138
+attack_max = 238
+accuracy_base = 272
+accuracy_max = 272
+element = "Risk"
+element_level = 2
+photon_arts = [{"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 121
+model_id = "wshr03"
+variant_id = "wshr03_2_o"

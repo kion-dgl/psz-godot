@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clear_duplex"
+name = "Clear Duplex"
+japanese_name = "クリアデュプル"
+rarity = 4
+weapon_type = 7
+max_grind = 25
+level = 12
+resale_value = 553
+attack_base = 107
+attack_max = 157
+accuracy_base = 136
+accuracy_max = 136
+element = ""
+element_level = 0
+photon_arts = [{"name": "Bullet Dance", "attack_mod": 125, "accuracy_mod": 70, "pp_used": 16, "element": "-"}]
+usable_by = PackedStringArray("Hunter Newman", "Ranger Human", "Ranger Cast")
+pso_world_id = 211
+model_id = "wgbn01"
+variant_id = ""

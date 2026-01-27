@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "magi_processor"
+name = "Magi Processor"
+japanese_name = "マギプロセッサ"
+rarity = 4
+weapon_type = 15
+max_grind = 45
+level = 12
+resale_value = 440
+attack_base = 0
+attack_max = 0
+accuracy_base = 161
+accuracy_max = 161
+element = ""
+element_level = 0
+photon_arts = [{"name": "Funny Dive", "attack_mod": 125, "accuracy_mod": 200, "pp_used": 11, "element": "-"}, {"name": "Magical Sign", "attack_mod": 140, "accuracy_mod": 160, "pp_used": 13, "element": "Level 3 Slow"}, {"name": "Act Trick", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 2, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 406
+model_id = "wwac01"
+variant_id = "wwac01_3_o"

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chrome_daggers"
+name = "Chrome Daggers"
+japanese_name = "クロムダガー"
+rarity = 3
+weapon_type = 2
+max_grind = 40
+level = 5
+resale_value = 186
+attack_base = 69
+attack_max = 149
+accuracy_base = 161
+accuracy_max = 161
+element = ""
+element_level = 0
+photon_arts = [{"name": "Huge Cross", "attack_mod": 90, "accuracy_mod": 130, "pp_used": 22, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human")
+pso_world_id = 51
+model_id = "wdah01"
+variant_id = ""

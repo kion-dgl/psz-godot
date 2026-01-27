@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "nemesis"
+name = "Nemesis"
+japanese_name = "ネメシス"
+rarity = 7
+weapon_type = 12
+max_grind = 35
+level = 50
+resale_value = 4596
+attack_base = 523
+attack_max = 593
+accuracy_base = 237
+accuracy_max = 237
+element = ""
+element_level = 0
+photon_arts = [{"name": "Crush Bomb", "attack_mod": 210, "accuracy_mod": 100, "pp_used": 24, "element": "-"}, {"name": "Wild Blow", "attack_mod": 120, "accuracy_mod": 90, "pp_used": 28, "element": "-"}, {"name": "Crazy On", "attack_mod": 130, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 252
+model_id = "wbac02"
+variant_id = ""

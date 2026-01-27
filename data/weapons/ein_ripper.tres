@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ein_ripper"
+name = "Ein Ripper"
+japanese_name = "アインリッパー"
+rarity = 2
+weapon_type = 2
+max_grind = 55
+level = 2
+resale_value = 77
+attack_base = 49
+attack_max = 159
+accuracy_base = 132
+accuracy_max = 132
+element = ""
+element_level = 0
+photon_arts = [{"name": "Reverse Kill", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human", "Force Newman")
+pso_world_id = 46
+model_id = "wdac01"
+variant_id = "wdac01_1_r"

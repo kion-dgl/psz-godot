@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "kouga_shuriken"
+name = "Kouga Shuriken"
+japanese_name = "コウガシュリケン"
+rarity = 7
+weapon_type = 6
+max_grind = 30
+level = 64
+resale_value = 10
+attack_base = 0
+attack_max = 0
+accuracy_base = 171
+accuracy_max = 171
+element = "Dark"
+element_level = 3
+photon_arts = [{"name": "Bright Sign", "attack_mod": 110, "accuracy_mod": 120, "pp_used": 14, "element": "Level 3 Stun"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human", "Force Newman")
+pso_world_id = 426
+model_id = "wslr04"
+variant_id = ""

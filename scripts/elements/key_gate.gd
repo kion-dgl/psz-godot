@@ -53,19 +53,18 @@ func _apply_state() -> void:
 				collision_body.collision_layer = 0
 
 
-func _on_interact(player: Node3D) -> void:
+func _on_interact(_player: Node3D) -> void:
 	if element_state == "unlocked":
 		return
 
-	# Check if player has the required key
-	# TODO: Check GameState for key
-	# if GameState.has_key(required_key_id):
-	#     unlock()
-	# else:
-	#     print("[KeyGate] Requires key: ", required_key_id)
-
-	# For now, just unlock for testing
-	unlock()
+	# Check if player has the required key in inventory
+	if Inventory.has_item(required_key_id):
+		Inventory.remove_item(required_key_id, 1)
+		unlock()
+	else:
+		var item_data = ItemRegistry.get_item(required_key_id)
+		var key_name = item_data.name if item_data else required_key_id
+		print("[KeyGate] Requires key: ", key_name)
 
 
 ## Unlock the gate

@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "white_saber"
+name = "White Saber"
+japanese_name = "白のセイバー"
+rarity = 6
+weapon_type = 0
+max_grind = 20
+level = 38
+resale_value = 10
+attack_base = 210
+attack_max = 250
+accuracy_base = 213
+accuracy_max = 213
+element = "Risk"
+element_level = 2
+photon_arts = [{"name": "Cross Rave", "attack_mod": 160, "accuracy_mod": 120, "pp_used": 13, "element": "-"}, {"name": "Force Ride", "attack_mod": 125, "accuracy_mod": 100, "pp_used": 15, "element": "-"}, {"name": "Zeta Cutlass", "attack_mod": 130, "accuracy_mod": 140, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast")
+pso_world_id = 16
+model_id = "wsar01"
+variant_id = ""

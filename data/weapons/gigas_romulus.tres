@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "gigas_romulus"
+name = "Gigas Romulus"
+japanese_name = "ギガスロムルス"
+rarity = 7
+weapon_type = 4
+max_grind = 30
+level = 54
+resale_value = 1639
+attack_base = 387
+attack_max = 447
+accuracy_base = 235
+accuracy_max = 235
+element = ""
+element_level = 0
+photon_arts = [{"name": "Million Rave", "attack_mod": 135, "accuracy_mod": 100, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Newman", "Force Newman")
+pso_world_id = 130
+model_id = ""
+variant_id = ""

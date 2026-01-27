@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chrome_cannon"
+name = "Chrome Cannon"
+japanese_name = "クロムキャノン"
+rarity = 3
+weapon_type = 12
+max_grind = 40
+level = 5
+resale_value = 228
+attack_base = 128
+attack_max = 208
+accuracy_base = 124
+accuracy_max = 124
+element = ""
+element_level = 0
+photon_arts = [{"name": "Crush Bomb", "attack_mod": 210, "accuracy_mod": 100, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Ranger Human", "Ranger Cast", "Force Human")
+pso_world_id = 242
+model_id = "wbah01"
+variant_id = ""

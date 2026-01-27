@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "witchs_broom"
+name = "Witch's Broom"
+japanese_name = "ウィッチブルーム"
+rarity = 3
+weapon_type = 14
+max_grind = 70
+level = 5
+resale_value = 10
+attack_base = 0
+attack_max = 0
+accuracy_base = 105
+accuracy_max = 105
+element = "Slow"
+element_level = 2
+photon_arts = [{"name": "Rolling Bar", "attack_mod": 90, "accuracy_mod": 100, "pp_used": 21, "element": "-"}]
+usable_by = PackedStringArray("Force Human", "Force Newman")
+pso_world_id = 292
+model_id = ""
+variant_id = ""

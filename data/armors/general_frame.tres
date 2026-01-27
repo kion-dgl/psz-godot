@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "general_frame"
+name = "General Frame"
+japanese_name = "ジェネラルフレーム"
+type = 1
+rarity = 4
+max_grind = 25
+level = 10
+resale_value = 680
+defense_base = 86
+defense_max = 136
+evasion_base = 82
+evasion_max = 132
+max_slots = 3
+resist_fire = 0
+resist_ice = 0
+resist_lightning = 0
+resist_light = 10
+resist_dark = 10
+usable_by = PackedStringArray()
+set_bonus = ""
+pso_world_id = 494

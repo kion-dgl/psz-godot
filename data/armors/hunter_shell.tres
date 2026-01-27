@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hunter_shell"
+name = "Hunter Shell"
+japanese_name = "ハンターズシェル"
+type = 3
+rarity = 5
+max_grind = 35
+level = 20
+resale_value = 10
+defense_base = 126
+defense_max = 196
+evasion_base = 97
+evasion_max = 167
+max_slots = 4
+resist_fire = 4
+resist_ice = 4
+resist_lightning = 4
+resist_light = 4
+resist_dark = 4
+usable_by = PackedStringArray("Human Hunter", "Newman Hunter", "Cast Hunter")
+set_bonus = ""
+pso_world_id = 521

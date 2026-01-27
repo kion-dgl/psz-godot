@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "emerald_tablet"
+name = "Emerald Tablet"
+japanese_name = "エメラルドタブレット"
+rarity = 5
+weapon_type = 15
+max_grind = 50
+level = 24
+resale_value = 10
+attack_base = 0
+attack_max = 0
+accuracy_base = 203
+accuracy_max = 203
+element = "Exp"
+element_level = 2
+photon_arts = [{"name": "Magical Sign", "attack_mod": 140, "accuracy_mod": 160, "pp_used": 13, "element": "Level 3 Slow"}]
+usable_by = PackedStringArray("Force Human", "Force Newman")
+pso_world_id = 411
+model_id = "wwar01"
+variant_id = "wwar01_1_o"

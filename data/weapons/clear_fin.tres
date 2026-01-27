@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clear_fin"
+name = "Clear Fin"
+japanese_name = "クリアフィン"
+rarity = 5
+weapon_type = 6
+max_grind = 20
+level = 24
+resale_value = 916
+attack_base = 0
+attack_max = 0
+accuracy_base = 131
+accuracy_max = 131
+element = ""
+element_level = 0
+photon_arts = [{"name": "Edge Riser", "attack_mod": 150, "accuracy_mod": 200, "pp_used": 15, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human", "Force Newman")
+pso_world_id = 414
+model_id = "wsln01"
+variant_id = ""

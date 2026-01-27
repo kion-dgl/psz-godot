@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "deo_rocket"
+name = "Deo Rocket"
+japanese_name = "デオロケット"
+rarity = 4
+weapon_type = 12
+max_grind = 45
+level = 12
+resale_value = 589
+attack_base = 192
+attack_max = 282
+accuracy_base = 152
+accuracy_max = 152
+element = ""
+element_level = 0
+photon_arts = [{"name": "Crazy On", "attack_mod": 130, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 246
+model_id = "wbac01"
+variant_id = ""

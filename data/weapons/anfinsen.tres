@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "anfinsen"
+name = "Anfinsen"
+japanese_name = "アンフィンセン"
+rarity = 6
+weapon_type = 0
+max_grind = 35
+level = 32
+resale_value = 1231
+attack_base = 236
+attack_max = 306
+accuracy_base = 258
+accuracy_max = 258
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cross Rave", "attack_mod": 160, "accuracy_mod": 120, "pp_used": 13, "element": "-"}, {"name": "Force Ride", "attack_mod": 125, "accuracy_mod": 100, "pp_used": 15, "element": "-"}, {"name": "Zeta Cutlass", "attack_mod": 130, "accuracy_mod": 140, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 15
+model_id = "wsac01"
+variant_id = ""

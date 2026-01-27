@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "chrome_gun"
+name = "Chrome Gun"
+japanese_name = "クロムガン"
+rarity = 2
+weapon_type = 9
+max_grind = 45
+level = 2
+resale_value = 64
+attack_base = 41
+attack_max = 131
+accuracy_base = 89
+accuracy_max = 89
+element = ""
+element_level = 0
+photon_arts = [{"name": "Thriller Combo", "attack_mod": 150, "accuracy_mod": 120, "pp_used": 15, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 152
+model_id = "whgh01"
+variant_id = ""

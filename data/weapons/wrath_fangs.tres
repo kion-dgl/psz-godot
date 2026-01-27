@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "wrath_fangs"
+name = "Wrath Fangs"
+japanese_name = "ラースファング"
+rarity = 4
+weapon_type = 3
+max_grind = 35
+level = 12
+resale_value = 490
+attack_base = 144
+attack_max = 214
+accuracy_base = 189
+accuracy_max = 189
+element = ""
+element_level = 0
+photon_arts = [{"name": "Serpent Air", "attack_mod": 115, "accuracy_mod": 80, "pp_used": 18, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 98
+model_id = "wclh02"
+variant_id = ""

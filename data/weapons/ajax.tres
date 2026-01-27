@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ajax"
+name = "Ajax"
+japanese_name = "エイジャックス"
+rarity = 7
+weapon_type = 8
+max_grind = 30
+level = 65
+resale_value = 10
+attack_base = 248
+attack_max = 308
+accuracy_base = 344
+accuracy_max = 344
+element = ""
+element_level = 0
+photon_arts = [{"name": "Linear Shave", "attack_mod": 160, "accuracy_mod": 160, "pp_used": 18, "element": "-"}, {"name": "Barrier Shift", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 20, "element": "-"}, {"name": "Bull Smash", "attack_mod": 210, "accuracy_mod": 200, "pp_used": 18, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Cast")
+pso_world_id = 123
+model_id = "wshr04"
+variant_id = ""

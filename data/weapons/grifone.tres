@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "grifone"
+name = "Grifone"
+japanese_name = "グリフォーネ"
+rarity = 5
+weapon_type = 10
+max_grind = 40
+level = 24
+resale_value = 793
+attack_base = 90
+attack_max = 170
+accuracy_base = 139
+accuracy_max = 139
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cool Style", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 23, "element": "-"}, {"name": "Spinning Death", "attack_mod": 85, "accuracy_mod": 150, "pp_used": 20, "element": "-"}, {"name": "Acro Step", "attack_mod": 85, "accuracy_mod": 100, "pp_used": 24, "element": "-"}]
+usable_by = PackedStringArray("Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human")
+pso_world_id = 232
+model_id = "wmgc01"
+variant_id = "wmgc01_3_r"

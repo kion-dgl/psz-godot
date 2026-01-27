@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mobius_plate"
+name = "Mobius Plate"
+japanese_name = "メビウスプレート"
+type = 3
+rarity = 7
+max_grind = 30
+level = 64
+resale_value = 10
+defense_base = 251
+defense_max = 311
+evasion_base = 157
+evasion_max = 217
+max_slots = 4
+resist_fire = 18
+resist_ice = 18
+resist_lightning = 0
+resist_light = 0
+resist_dark = 18
+usable_by = PackedStringArray("Cast Hunter", "Cast Ranger")
+set_bonus = ""
+pso_world_id = 513

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "shield_robe"
+name = "Shield Robe"
+japanese_name = "シールドローブ"
+type = 2
+rarity = 3
+max_grind = 25
+level = 5
+resale_value = 281
+defense_base = 44
+defense_max = 94
+evasion_base = 70
+evasion_max = 120
+max_slots = 4
+resist_fire = 12
+resist_ice = 12
+resist_lightning = 12
+resist_light = 12
+resist_dark = 12
+usable_by = PackedStringArray("Newman Hunter", "Human Ranger", "Human Force", "Newman Force")
+set_bonus = ""
+pso_world_id = 499

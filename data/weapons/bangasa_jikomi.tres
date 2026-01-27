@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bangasa_jikomi"
+name = "Bangasa Jikomi"
+japanese_name = "バンガサジコミ"
+rarity = 6
+weapon_type = 7
+max_grind = 30
+level = 40
+resale_value = 10
+attack_base = 170
+attack_max = 230
+accuracy_base = 159
+accuracy_max = 159
+element = "Light"
+element_level = 3
+photon_arts = [{"name": "Bullet Dance", "attack_mod": 125, "accuracy_mod": 70, "pp_used": 16, "element": "-"}, {"name": "Impact Zero", "attack_mod": 180, "accuracy_mod": 135, "pp_used": 17, "element": "-"}, {"name": "Earth Bullet", "attack_mod": 170, "accuracy_mod": 150, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 220
+model_id = "wgbr03"
+variant_id = ""

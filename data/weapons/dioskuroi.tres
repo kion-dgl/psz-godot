@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "dioskuroi"
+name = "Dioskuroi"
+japanese_name = "ディオスクロイ"
+rarity = 7
+weapon_type = 4
+max_grind = 40
+level = 63
+resale_value = 10
+attack_base = 366
+attack_max = 446
+accuracy_base = 261
+accuracy_max = 261
+element = "Jellen"
+element_level = 3
+photon_arts = [{"name": "Million Rave", "attack_mod": 135, "accuracy_mod": 100, "pp_used": 25, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 150
+model_id = "wdsr03"
+variant_id = ""

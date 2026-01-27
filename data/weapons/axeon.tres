@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "axeon"
+name = "Axeon"
+japanese_name = "アキシオン"
+rarity = 3
+weapon_type = 7
+max_grind = 10
+level = 5
+resale_value = 10
+attack_base = 94
+attack_max = 114
+accuracy_base = 112
+accuracy_max = 112
+element = "Heat"
+element_level = 3
+photon_arts = [{"name": "Earth Bullet", "attack_mod": 170, "accuracy_mod": 150, "pp_used": 20, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Ranger Human", "Force Human")
+pso_world_id = 214
+model_id = "wgbr02"
+variant_id = "wgbr02_1_o"

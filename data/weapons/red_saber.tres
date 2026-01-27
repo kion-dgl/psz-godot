@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "red_saber"
+name = "Red Saber"
+japanese_name = "赤のセイバー"
+rarity = 4
+weapon_type = 0
+max_grind = 40
+level = 14
+resale_value = 10
+attack_base = 111
+attack_max = 191
+accuracy_base = 148
+accuracy_max = 148
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 9
+model_id = "wsar01"
+variant_id = ""

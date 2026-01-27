@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hocho"
+name = "Hocho"
+japanese_name = "包丁"
+rarity = 5
+weapon_type = 1
+max_grind = 30
+level = 20
+resale_value = 10
+attack_base = 233
+attack_max = 293
+accuracy_base = 192
+accuracy_max = 192
+element = ""
+element_level = 0
+photon_arts = [{"name": "Dynamo Spin", "attack_mod": 80, "accuracy_mod": 80, "pp_used": 21, "element": "-"}, {"name": "Sonic Raid", "attack_mod": 120, "accuracy_mod": 75, "pp_used": 23, "element": "-"}, {"name": "Over-end", "attack_mod": 250, "accuracy_mod": 255, "pp_used": 45, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 52
+model_id = "wswr05"
+variant_id = "wswr05_1_b"

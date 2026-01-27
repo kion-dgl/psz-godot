@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clear_sabre"
+name = "Clear Sabre"
+japanese_name = "クリアサーベル"
+rarity = 4
+weapon_type = 0
+max_grind = 25
+level = 12
+resale_value = 441
+attack_base = 132
+attack_max = 182
+accuracy_base = 192
+accuracy_max = 192
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cross Rave", "attack_mod": 160, "accuracy_mod": 120, "pp_used": 13, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 20
+model_id = "wsan01"
+variant_id = ""

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "stage_outfit"
+name = "Stage Outfit"
+japanese_name = "芸の正装"
+type = 3
+rarity = 5
+max_grind = 45
+level = 26
+resale_value = 10
+defense_base = 97
+defense_max = 187
+evasion_base = 109
+evasion_max = 199
+max_slots = 4
+resist_fire = 8
+resist_ice = 8
+resist_lightning = 8
+resist_light = 8
+resist_dark = 8
+usable_by = PackedStringArray()
+set_bonus = ""
+pso_world_id = 524

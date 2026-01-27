@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "artturi"
+name = "Artturi"
+japanese_name = "アルトゥーリ"
+rarity = 4
+weapon_type = 0
+max_grind = 45
+level = 12
+resale_value = 426
+attack_base = 125
+attack_max = 215
+accuracy_base = 187
+accuracy_max = 187
+element = ""
+element_level = 0
+photon_arts = [{"name": "Cross Rave", "attack_mod": 160, "accuracy_mod": 120, "pp_used": 13, "element": "-"}, {"name": "Force Ride", "attack_mod": 125, "accuracy_mod": 100, "pp_used": 15, "element": "-"}, {"name": "Zeta Cutlass", "attack_mod": 130, "accuracy_mod": 140, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 14
+model_id = "wsac01"
+variant_id = "wsac01_3_o"

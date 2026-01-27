@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cannon_rouge"
+name = "Cannon Rouge"
+japanese_name = "カノンルージュ"
+rarity = 5
+weapon_type = 12
+max_grind = 50
+level = 28
+resale_value = 10
+attack_base = 306
+attack_max = 406
+accuracy_base = 173
+accuracy_max = 173
+element = "Light"
+element_level = 4
+photon_arts = [{"name": "Crush Bomb", "attack_mod": 210, "accuracy_mod": 100, "pp_used": 24, "element": "-"}, {"name": "Wild Blow", "attack_mod": 120, "accuracy_mod": 90, "pp_used": 28, "element": "-"}, {"name": "Crazy On", "attack_mod": 130, "accuracy_mod": 200, "pp_used": 19, "element": "-"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 255
+model_id = ""
+variant_id = ""

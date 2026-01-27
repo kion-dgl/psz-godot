@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clear_shot"
+name = "Clear Shot"
+japanese_name = "クリアショット"
+rarity = 3
+weapon_type = 11
+max_grind = 30
+level = 5
+resale_value = 204
+attack_base = 87
+attack_max = 147
+accuracy_base = 124
+accuracy_max = 124
+element = ""
+element_level = 0
+photon_arts = [{"name": "Wipeout", "attack_mod": 75, "accuracy_mod": 80, "pp_used": 21, "element": "Level 4 Heat"}]
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 183
+model_id = "wrfn01"
+variant_id = ""
