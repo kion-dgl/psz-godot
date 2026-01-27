@@ -282,6 +282,8 @@ func _physics_process(delta: float) -> void:
 			_handle_dodge(delta)
 		PlayerState.ATTACKING:
 			_handle_attack_state(delta)
+		PlayerState.DAMAGED:
+			_handle_damaged(delta)
 
 	# Apply movement
 	move_and_slide()
@@ -415,8 +417,15 @@ func _handle_dodge(delta: float) -> void:
 		return
 
 	# Move in the direction player was facing when dodge started
-	velocity.x = sin(dodge_direction) * DODGE_SPEED
-	velocity.z = cos(dodge_direction) * DODGE_SPEED
+	var dodge_dir := Vector3(sin(dodge_direction), 0, cos(dodge_direction))
+
+	# Check floor ahead - stop at edges to prevent dodging off
+	if _can_move_to(dodge_dir):
+		velocity.x = dodge_dir.x * DODGE_SPEED
+		velocity.z = dodge_dir.z * DODGE_SPEED
+	else:
+		velocity.x = 0
+		velocity.z = 0
 
 
 func _start_attack() -> void:
@@ -449,6 +458,16 @@ func _handle_attack_state(delta: float) -> void:
 	# Stop horizontal movement during attacks
 	velocity.x = 0
 	velocity.z = 0
+
+
+func _handle_damaged(_delta: float) -> void:
+	# Check floor during knockback - stop at edges to prevent falling off
+	if velocity.length_squared() > 0.1:
+		var move_dir := velocity.normalized()
+		move_dir.y = 0
+		if move_dir.length() > 0.1 and not _can_move_to(move_dir):
+			velocity.x = 0
+			velocity.z = 0
 
 
 func _play_attack_animation(attack_num: int) -> void:
