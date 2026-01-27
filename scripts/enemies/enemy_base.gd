@@ -18,6 +18,7 @@ enum EnemyState {
 	IDLE,
 	CHASING,
 	ATTACKING,
+	LOAFING,  # Backing off after attack
 	HURT,
 	DEAD,
 }
@@ -47,6 +48,20 @@ const WANDER_INTERVAL_MAX: float = 5.0  # Max time before changing direction
 const WANDER_PAUSE_CHANCE: float = 0.3  # Chance to pause instead of walk
 const WANDER_SPEED_MULT: float = 0.5  # Wander at half chase speed
 
+## Loafing behavior (semi-circle walk after attack)
+var loaf_timer: float = 0.0
+var loaf_direction: Vector3 = Vector3.ZERO
+var loaf_curve_rate: float = 0.0  # How fast to curve (positive = right, negative = left)
+const LOAF_DURATION_MIN: float = 2.5  # Min time to loaf
+const LOAF_DURATION_MAX: float = 4.0  # Max time to loaf
+const LOAF_SPEED_MULT: float = 0.5  # Loaf at half speed
+const LOAF_CURVE_RATE: float = 0.8  # Radians per second to curve path
+
+## Charge behavior (short burst before attack)
+const CHARGE_RANGE_MULT: float = 2.0  # Start charging at 2x attack range
+const CHARGE_SPEED_MULT: float = 1.5  # Run faster during charge
+const WALK_SPEED_MULT: float = 0.5  # Walk at half speed during normal approach
+
 ## Movement
 const GRAVITY: float = 20.0
 
@@ -70,7 +85,6 @@ func _ready() -> void:
 
 	# Randomize initial wander timer so enemies don't sync up
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
-	print("[Enemy] Ready: ", name, " at ", global_position, " | AnimPlayer: ", animation_player != null)
 
 
 func _setup_from_data() -> void:
@@ -90,7 +104,6 @@ func _setup_model() -> void:
 	animation_player = _find_animation_player(model)
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
-		print("[Enemy] Found AnimationPlayer with animations: ", animation_player.get_animation_list())
 	else:
 		push_warning("[Enemy] No AnimationPlayer found in model")
 
@@ -141,7 +154,6 @@ func _find_target() -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if players.size() > 0:
 		target = players[0]
-		print("[Enemy] Found player target: ", target.name)
 
 
 func _physics_process(delta: float) -> void:
@@ -160,6 +172,8 @@ func _physics_process(delta: float) -> void:
 			_process_chasing(delta)
 		EnemyState.ATTACKING:
 			_process_attacking(delta)
+		EnemyState.LOAFING:
+			_process_loafing(delta)
 		EnemyState.HURT:
 			_process_hurt(delta)
 
@@ -244,8 +258,15 @@ func _process_chasing(_delta: float) -> void:
 		_start_attack()
 		return
 
-	# Play run animation while chasing
-	_play_animation("run")
+	# Determine if charging (close to target) or walking (far from target)
+	var charge_range := attack_range * CHARGE_RANGE_MULT
+	var is_charging := dist <= charge_range
+
+	# Use appropriate animation and speed
+	if is_charging:
+		_play_animation("run")
+	else:
+		_play_animation("wlk")
 
 	# Calculate direction to target (horizontal only, properly normalized)
 	var to_target := target.global_position - global_position
@@ -262,10 +283,14 @@ func _process_chasing(_delta: float) -> void:
 		if nav_dir.length() > 0.5:
 			direction = nav_dir.normalized()
 
-	# Apply movement
-	var speed := 3.0
+	# Apply movement - walk normally, run when charging
+	var base_speed := 3.0
 	if enemy_data:
-		speed = enemy_data.move_speed
+		base_speed = enemy_data.move_speed
+
+	var speed := base_speed * WALK_SPEED_MULT
+	if is_charging:
+		speed = base_speed * CHARGE_SPEED_MULT
 
 	# Apply movement if we have a valid direction and floor ahead
 	if direction.length() > 0.1 and _can_move_to(direction):
@@ -279,9 +304,62 @@ func _process_attacking(_delta: float) -> void:
 	velocity.x = 0
 	velocity.z = 0
 
-	# Wait for attack animation to finish
+	# Wait for attack animation to finish, then loaf off
 	if not is_attacking:
+		_start_loafing()
+
+
+func _process_loafing(delta: float) -> void:
+	loaf_timer -= delta
+
+	# When loaf time is up, go back to chasing
+	if loaf_timer <= 0:
 		current_state = EnemyState.CHASING
+		return
+
+	# Curve the direction over time (creates semi-circle path)
+	var angle_change := loaf_curve_rate * delta
+	loaf_direction = loaf_direction.rotated(Vector3.UP, angle_change)
+
+	# Move in loaf direction
+	var speed := 3.0
+	if enemy_data:
+		speed = enemy_data.move_speed * LOAF_SPEED_MULT
+
+	# Check if we can move in loaf direction
+	if loaf_direction.length() > 0.1 and _can_move_to(loaf_direction):
+		velocity.x = loaf_direction.x * speed
+		velocity.z = loaf_direction.z * speed
+		_face_direction(loaf_direction)  # Face movement direction (away from player)
+		_play_animation("wlk")
+	else:
+		# Can't move that way, try reversing curve direction
+		loaf_curve_rate = -loaf_curve_rate
+		velocity.x = 0
+		velocity.z = 0
+		_play_animation("wat")
+
+
+func _start_loafing() -> void:
+	current_state = EnemyState.LOAFING
+	loaf_timer = randf_range(LOAF_DURATION_MIN, LOAF_DURATION_MAX)
+
+	# Start moving perpendicular to player (left or right randomly)
+	if target and is_instance_valid(target):
+		var away_from_target := global_position - target.global_position
+		var away_dir := Vector3(away_from_target.x, 0, away_from_target.z).normalized()
+
+		# Rotate 90 degrees left or right to get perpendicular direction
+		var side := 1.0 if randf() > 0.5 else -1.0
+		loaf_direction = away_dir.rotated(Vector3.UP, side * PI * 0.5)
+
+		# Curve back toward the "away" direction over time (creates arc)
+		loaf_curve_rate = -side * LOAF_CURVE_RATE
+	else:
+		# No target, pick random direction
+		var angle := randf() * TAU
+		loaf_direction = Vector3(sin(angle), 0, cos(angle))
+		loaf_curve_rate = LOAF_CURVE_RATE if randf() > 0.5 else -LOAF_CURVE_RATE
 
 
 func _process_hurt(delta: float) -> void:
@@ -450,6 +528,11 @@ func _play_animation(anim_name: String, force: bool = false) -> void:
 	if full_name.is_empty():
 		return
 
+	# Ensure looping animations actually loop
+	var anim := animation_player.get_animation(full_name)
+	if anim and anim_name in ["run", "wlk", "wat"]:
+		anim.loop_mode = Animation.LOOP_LINEAR
+
 	animation_player.play(full_name)
 	current_anim = anim_name
 
@@ -487,7 +570,8 @@ func _on_animation_finished(anim_name: String) -> void:
 	# Extract short name (e.g., "s_001_atk" -> "atk")
 	var short_name := anim_name
 	if "_" in anim_name:
-		short_name = anim_name.get_slice("_", -1)  # Get last part after underscore
+		var parts := anim_name.split("_")
+		short_name = parts[parts.size() - 1]  # Get last part after underscore
 
 	match short_name:
 		"atk":
@@ -495,4 +579,4 @@ func _on_animation_finished(anim_name: String) -> void:
 		"tht":
 			# After threat animation, start chasing
 			if current_state == EnemyState.CHASING:
-				_play_animation("run")
+				_play_animation("wlk")
