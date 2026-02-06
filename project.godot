@@ -11,19 +11,32 @@ config_version=5
 [application]
 
 config/name="PSZ Godot"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/2d/title.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
 GameState="*res://scripts/autoloads/game_state.gd"
-MapManager="*res://scripts/autoloads/map_manager.gd"
 ItemRegistry="*res://scripts/autoloads/item_registry.gd"
 WeaponRegistry="*res://scripts/autoloads/weapon_registry.gd"
 ArmorRegistry="*res://scripts/autoloads/armor_registry.gd"
 EnemyRegistry="*res://scripts/autoloads/enemy_registry.gd"
 Inventory="*res://scripts/autoloads/inventory.gd"
+SceneManager="*res://scripts/autoloads/scene_manager.gd"
+ClassRegistry="*res://scripts/autoloads/class_registry.gd"
+CharacterManager="*res://scripts/autoloads/character_manager.gd"
+SaveManager="*res://scripts/autoloads/save_manager.gd"
+ConsumableRegistry="*res://scripts/autoloads/consumable_registry.gd"
+ShopRegistry="*res://scripts/autoloads/shop_registry.gd"
+ShopManager="*res://scripts/autoloads/shop_manager.gd"
+UnitRegistry="*res://scripts/autoloads/unit_registry.gd"
+PhotonArtRegistry="*res://scripts/autoloads/photon_art_registry.gd"
+MissionRegistry="*res://scripts/autoloads/mission_registry.gd"
+DropRegistry="*res://scripts/autoloads/drop_registry.gd"
+EnemySpawner="*res://scripts/autoloads/enemy_spawner.gd"
+CombatManager="*res://scripts/autoloads/combat_manager.gd"
+SessionManager="*res://scripts/autoloads/session_manager.gd"
 
 [display]
 

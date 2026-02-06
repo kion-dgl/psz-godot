@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Theme" path="res://themes/terminal_theme.tres" id="1_theme"]
+[ext_resource type="Script" path="res://scripts/2d/components/menu_list.gd" id="2_script"]
+
+[node name="MenuList" type="VBoxContainer"]
+theme = ExtResource("1_theme")
+script = ExtResource("2_script")

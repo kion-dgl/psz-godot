@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ice_resist_lv5"
+name = "Ice Resist Lv5"
+japanese_name = "アイスレジストLv5"
+rarity = 7
+category = "Resistance"
+effect = "Ice Resist +10"
+effect_value = 10
+pso_world_id = 447

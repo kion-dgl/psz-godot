@@ -1,0 +1,508 @@
+[gd_resource type="Resource" script_class="ExperienceTable" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/experience_table.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+levels = [
+  {
+    "level": 1,
+    "totalExp": 0,
+    "expToNext": 70
+  },
+  {
+    "level": 2,
+    "totalExp": 70,
+    "expToNext": 90
+  },
+  {
+    "level": 3,
+    "totalExp": 160,
+    "expToNext": 130
+  },
+  {
+    "level": 4,
+    "totalExp": 290,
+    "expToNext": 210
+  },
+  {
+    "level": 5,
+    "totalExp": 500,
+    "expToNext": 300
+  },
+  {
+    "level": 6,
+    "totalExp": 800,
+    "expToNext": 400
+  },
+  {
+    "level": 7,
+    "totalExp": 1200,
+    "expToNext": 510
+  },
+  {
+    "level": 8,
+    "totalExp": 1710,
+    "expToNext": 630
+  },
+  {
+    "level": 9,
+    "totalExp": 2340,
+    "expToNext": 760
+  },
+  {
+    "level": 10,
+    "totalExp": 3100,
+    "expToNext": 900
+  },
+  {
+    "level": 11,
+    "totalExp": 4000,
+    "expToNext": 1050
+  },
+  {
+    "level": 12,
+    "totalExp": 5050,
+    "expToNext": 1210
+  },
+  {
+    "level": 13,
+    "totalExp": 6260,
+    "expToNext": 1380
+  },
+  {
+    "level": 14,
+    "totalExp": 7640,
+    "expToNext": 1560
+  },
+  {
+    "level": 15,
+    "totalExp": 9200,
+    "expToNext": 1750
+  },
+  {
+    "level": 16,
+    "totalExp": 10950,
+    "expToNext": 1950
+  },
+  {
+    "level": 17,
+    "totalExp": 12900,
+    "expToNext": 2160
+  },
+  {
+    "level": 18,
+    "totalExp": 15060,
+    "expToNext": 2380
+  },
+  {
+    "level": 19,
+    "totalExp": 17440,
+    "expToNext": 2610
+  },
+  {
+    "level": 20,
+    "totalExp": 20050,
+    "expToNext": 2860
+  },
+  {
+    "level": 21,
+    "totalExp": 22910,
+    "expToNext": 3130
+  },
+  {
+    "level": 22,
+    "totalExp": 26040,
+    "expToNext": 3420
+  },
+  {
+    "level": 23,
+    "totalExp": 29460,
+    "expToNext": 3730
+  },
+  {
+    "level": 24,
+    "totalExp": 33190,
+    "expToNext": 4060
+  },
+  {
+    "level": 25,
+    "totalExp": 37250,
+    "expToNext": 4410
+  },
+  {
+    "level": 26,
+    "totalExp": 41660,
+    "expToNext": 4780
+  },
+  {
+    "level": 27,
+    "totalExp": 46440,
+    "expToNext": 5170
+  },
+  {
+    "level": 28,
+    "totalExp": 51610,
+    "expToNext": 5580
+  },
+  {
+    "level": 29,
+    "totalExp": 57190,
+    "expToNext": 6010
+  },
+  {
+    "level": 30,
+    "totalExp": 63200,
+    "expToNext": 6460
+  },
+  {
+    "level": 31,
+    "totalExp": 69660,
+    "expToNext": 6930
+  },
+  {
+    "level": 32,
+    "totalExp": 76590,
+    "expToNext": 7420
+  },
+  {
+    "level": 33,
+    "totalExp": 84010,
+    "expToNext": 7930
+  },
+  {
+    "level": 34,
+    "totalExp": 91940,
+    "expToNext": 8460
+  },
+  {
+    "level": 35,
+    "totalExp": 100400,
+    "expToNext": 9010
+  },
+  {
+    "level": 36,
+    "totalExp": 109410,
+    "expToNext": 9580
+  },
+  {
+    "level": 37,
+    "totalExp": 118990,
+    "expToNext": 10170
+  },
+  {
+    "level": 38,
+    "totalExp": 129160,
+    "expToNext": 10780
+  },
+  {
+    "level": 39,
+    "totalExp": 139940,
+    "expToNext": 11410
+  },
+  {
+    "level": 40,
+    "totalExp": 151350,
+    "expToNext": 12070
+  },
+  {
+    "level": 41,
+    "totalExp": 163420,
+    "expToNext": 12760
+  },
+  {
+    "level": 42,
+    "totalExp": 176180,
+    "expToNext": 13480
+  },
+  {
+    "level": 43,
+    "totalExp": 189660,
+    "expToNext": 14230
+  },
+  {
+    "level": 44,
+    "totalExp": 203890,
+    "expToNext": 15010
+  },
+  {
+    "level": 45,
+    "totalExp": 218900,
+    "expToNext": 15820
+  },
+  {
+    "level": 46,
+    "totalExp": 234820,
+    "expToNext": 16660
+  },
+  {
+    "level": 47,
+    "totalExp": 251380,
+    "expToNext": 17530
+  },
+  {
+    "level": 48,
+    "totalExp": 268910,
+    "expToNext": 18430
+  },
+  {
+    "level": 49,
+    "totalExp": 287340,
+    "expToNext": 19360
+  },
+  {
+    "level": 50,
+    "totalExp": 306700,
+    "expToNext": 20320
+  },
+  {
+    "level": 51,
+    "totalExp": 327020,
+    "expToNext": 21310
+  },
+  {
+    "level": 52,
+    "totalExp": 348330,
+    "expToNext": 22330
+  },
+  {
+    "level": 53,
+    "totalExp": 370660,
+    "expToNext": 23380
+  },
+  {
+    "level": 54,
+    "totalExp": 394040,
+    "expToNext": 24460
+  },
+  {
+    "level": 55,
+    "totalExp": 418500,
+    "expToNext": 25570
+  },
+  {
+    "level": 56,
+    "totalExp": 444070,
+    "expToNext": 26710
+  },
+  {
+    "level": 57,
+    "totalExp": 470780,
+    "expToNext": 27880
+  },
+  {
+    "level": 58,
+    "totalExp": 498660,
+    "expToNext": 29080
+  },
+  {
+    "level": 59,
+    "totalExp": 527740,
+    "expToNext": 30310
+  },
+  {
+    "level": 60,
+    "totalExp": 558050,
+    "expToNext": 31580
+  },
+  {
+    "level": 61,
+    "totalExp": 589630,
+    "expToNext": 32890
+  },
+  {
+    "level": 62,
+    "totalExp": 622520,
+    "expToNext": 34240
+  },
+  {
+    "level": 63,
+    "totalExp": 656760,
+    "expToNext": 35630
+  },
+  {
+    "level": 64,
+    "totalExp": 692390,
+    "expToNext": 37060
+  },
+  {
+    "level": 65,
+    "totalExp": 729450,
+    "expToNext": 38530
+  },
+  {
+    "level": 66,
+    "totalExp": 767980,
+    "expToNext": 40040
+  },
+  {
+    "level": 67,
+    "totalExp": 808020,
+    "expToNext": 41590
+  },
+  {
+    "level": 68,
+    "totalExp": 849610,
+    "expToNext": 43180
+  },
+  {
+    "level": 69,
+    "totalExp": 892790,
+    "expToNext": 44810
+  },
+  {
+    "level": 70,
+    "totalExp": 937600,
+    "expToNext": 46480
+  },
+  {
+    "level": 71,
+    "totalExp": 984080,
+    "expToNext": 48190
+  },
+  {
+    "level": 72,
+    "totalExp": 1032270,
+    "expToNext": 49940
+  },
+  {
+    "level": 73,
+    "totalExp": 1082210,
+    "expToNext": 51730
+  },
+  {
+    "level": 74,
+    "totalExp": 1133940,
+    "expToNext": 53560
+  },
+  {
+    "level": 75,
+    "totalExp": 1187500,
+    "expToNext": 55430
+  },
+  {
+    "level": 76,
+    "totalExp": 1242930,
+    "expToNext": 57340
+  },
+  {
+    "level": 77,
+    "totalExp": 1300270,
+    "expToNext": 59290
+  },
+  {
+    "level": 78,
+    "totalExp": 1359560,
+    "expToNext": 61280
+  },
+  {
+    "level": 79,
+    "totalExp": 1420840,
+    "expToNext": 65070
+  },
+  {
+    "level": 80,
+    "totalExp": 1485910,
+    "expToNext": 70660
+  },
+  {
+    "level": 81,
+    "totalExp": 1556570,
+    "expToNext": 78050
+  },
+  {
+    "level": 82,
+    "totalExp": 1634620,
+    "expToNext": 87240
+  },
+  {
+    "level": 83,
+    "totalExp": 1721860,
+    "expToNext": 98230
+  },
+  {
+    "level": 84,
+    "totalExp": 1820090,
+    "expToNext": 111020
+  },
+  {
+    "level": 85,
+    "totalExp": 1931110,
+    "expToNext": 125610
+  },
+  {
+    "level": 86,
+    "totalExp": 2056720,
+    "expToNext": 142000
+  },
+  {
+    "level": 87,
+    "totalExp": 2198720,
+    "expToNext": 160190
+  },
+  {
+    "level": 88,
+    "totalExp": 2358910,
+    "expToNext": 180180
+  },
+  {
+    "level": 89,
+    "totalExp": 2539090,
+    "expToNext": 201970
+  },
+  {
+    "level": 90,
+    "totalExp": 2741060,
+    "expToNext": 225560
+  },
+  {
+    "level": 91,
+    "totalExp": 2966620,
+    "expToNext": 250950
+  },
+  {
+    "level": 92,
+    "totalExp": 3217570,
+    "expToNext": 278140
+  },
+  {
+    "level": 93,
+    "totalExp": 3495710,
+    "expToNext": 307130
+  },
+  {
+    "level": 94,
+    "totalExp": 3802840,
+    "expToNext": 337920
+  },
+  {
+    "level": 95,
+    "totalExp": 4140760,
+    "expToNext": 370510
+  },
+  {
+    "level": 96,
+    "totalExp": 4511270,
+    "expToNext": 404900
+  },
+  {
+    "level": 97,
+    "totalExp": 4916170,
+    "expToNext": 441090
+  },
+  {
+    "level": 98,
+    "totalExp": 5357260,
+    "expToNext": 479080
+  },
+  {
+    "level": 99,
+    "totalExp": 5836340,
+    "expToNext": 518870
+  },
+  {
+    "level": 100,
+    "totalExp": 6355210,
+    "expToNext": 0
+  }
+]

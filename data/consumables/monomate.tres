@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ConsumableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/consumable_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "monomate"
+name = "Monomate"
+japanese_name = "モノメイト"
+details = "Restores 30% of HP."
+rarity = 1
+max_stack = 10
+pso_world_id = 299

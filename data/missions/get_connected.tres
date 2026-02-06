@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "get_connected"
+name = "Get Connected"
+area = "Gurhacia Valley"
+is_main = false
+is_secret = false
+requires = PackedStringArray()
+rewards = {
+  "normal": {
+    "item": "Ace/PP",
+    "quantity": 1,
+    "meseta": 1000
+  },
+  "hard": {
+    "item": "Hero/PP",
+    "quantity": 1,
+    "meseta": 2000
+  },
+  "superHard": {
+    "item": "Master/PP",
+    "quantity": 1,
+    "meseta": 4000
+  }
+}

@@ -1,0 +1,275 @@
+[gd_resource type="Resource" script_class="ShopData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/shop_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "photon_collector"
+name = "Photon Collector"
+description = "Trades items in exchange for Photon Drops. Stock rotates randomly and weapon attributes vary."
+items = [
+  {
+    "item": "8-Ouncer",
+    "category": "Weapons",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Animal Hand",
+    "category": "Weapons",
+    "cost": 10,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Berry Ice Beam",
+    "category": "Weapons",
+    "cost": 20,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Bloom Shower",
+    "category": "Weapons",
+    "cost": 60,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Doppel Scythe",
+    "category": "Weapons",
+    "cost": 30,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Dumbbell",
+    "category": "Weapons",
+    "cost": 10,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Grow Shower",
+    "category": "Weapons",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Harisen",
+    "category": "Weapons",
+    "cost": 10,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Hocho",
+    "category": "Weapons",
+    "cost": 99,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Imperial Rod",
+    "category": "Weapons",
+    "cost": 45,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Missouri CX4",
+    "category": "Weapons",
+    "cost": 50,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Twinkle Star",
+    "category": "Weapons",
+    "cost": 40,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Witch's Broom",
+    "category": "Weapons",
+    "cost": 15,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Gardening Wear",
+    "category": "Armors",
+    "cost": 35,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Miyabi Hakama",
+    "category": "Armors",
+    "cost": 40,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Mag",
+    "category": "Mags",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Celeb Element",
+    "category": "Elements",
+    "cost": 12,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Dark Element",
+    "category": "Elements",
+    "cost": 4,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Draw Element",
+    "category": "Elements",
+    "cost": 8,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Heat Element",
+    "category": "Elements",
+    "cost": 4,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Heart Element",
+    "category": "Elements",
+    "cost": 8,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Ice Element",
+    "category": "Elements",
+    "cost": 12,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Jell Element",
+    "category": "Elements",
+    "cost": 8,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Life Element",
+    "category": "Elements",
+    "cost": 12,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Light Element",
+    "category": "Elements",
+    "cost": 4,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Meseta Element",
+    "category": "Elements",
+    "cost": 8,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Risk Element",
+    "category": "Elements",
+    "cost": 12,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Slow Element",
+    "category": "Elements",
+    "cost": 4,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Soul Element",
+    "category": "Elements",
+    "cost": 8,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Stun Element",
+    "category": "Elements",
+    "cost": 4,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "X-Element",
+    "category": "Elements",
+    "cost": 8,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Zalure Element",
+    "category": "Elements",
+    "cost": 8,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Digrinder",
+    "category": "Weapon Modifiers",
+    "cost": 3,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Monogrinder",
+    "category": "Weapon Modifiers",
+    "cost": 1,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Trigrinder",
+    "category": "Weapon Modifiers",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Guard Material",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Hit Material",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "HP Material",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Mind Material",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Power Material",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "PP Material",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Reset Material",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Scape Doll",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  },
+  {
+    "item": "Swift Material",
+    "category": "Consumables",
+    "cost": 5,
+    "currency": "Photon Drop"
+  }
+]

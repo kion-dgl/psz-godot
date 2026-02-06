@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "a_far_journey"
+quest_id = "a_far_journey"
+quest_name = "A Far Journey"
+quest_type = "story"
+area = "Makara"
+description = "Chapter 5: Cross the treacherous desert to reach the ancient Makara ruins. The artifacts discovered in Paru point to something hidden there."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 30,
+    "rewards": {
+      "meseta": 5000,
+      "experience": 2500,
+      "items": [
+        {
+          "itemId": "sol_atomizer",
+          "itemName": "Sol Atomizer",
+          "quantity": 5
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 48,
+    "rewards": {
+      "meseta": 11000,
+      "experience": 5500,
+      "items": [
+        {
+          "itemId": "moon_atomizer",
+          "itemName": "Moon Atomizer",
+          "quantity": 3
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 70,
+    "rewards": {
+      "meseta": 22000,
+      "experience": 12000,
+      "items": [
+        {
+          "itemId": "star_atomizer",
+          "itemName": "Star Atomizer",
+          "quantity": 5
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 30,
+  "prerequisiteQuests": [
+    "artifacts"
+  ]
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Survive the desert creatures",
+    "target": "desert_enemy",
+    "required": 35
+  },
+  {
+    "type": "reach_location",
+    "description": "Navigate the sandstorm"
+  },
+  {
+    "type": "reach_location",
+    "description": "Reach the Makara entrance"
+  },
+  {
+    "type": "defeat_boss",
+    "description": "Defeat the Desert Colossus",
+    "target": "desert_colossus"
+  }
+]
+is_repeatable = true
+is_secret = false

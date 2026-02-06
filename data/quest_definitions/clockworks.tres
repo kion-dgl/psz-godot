@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "clockworks"
+quest_id = "clockworks"
+quest_name = "Clockworks"
+quest_type = "story"
+area = "Ozette Wetlands"
+description = "Chapter 3: Ancient machines have awakened in the wetlands, attacking everything in sight. Discover what activated them and shut it down."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 15,
+    "rewards": {
+      "meseta": 3000,
+      "experience": 1500,
+      "items": [
+        {
+          "itemId": "monogrinder",
+          "itemName": "Monogrinder",
+          "quantity": 5
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 32,
+    "rewards": {
+      "meseta": 7000,
+      "experience": 3500,
+      "items": [
+        {
+          "itemId": "digrinder",
+          "itemName": "Digrinder",
+          "quantity": 3
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 60,
+    "rewards": {
+      "meseta": 15000,
+      "experience": 8000,
+      "items": [
+        {
+          "itemId": "trigrinder",
+          "itemName": "Trigrinder",
+          "quantity": 2
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 15,
+  "prerequisiteQuests": [
+    "snowbound_rescue"
+  ]
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Destroy rogue machines",
+    "target": "machine_enemy",
+    "required": 25
+  },
+  {
+    "type": "collect_items",
+    "description": "Collect machine core samples",
+    "target": "machine_core",
+    "required": 3
+  },
+  {
+    "type": "reach_location",
+    "description": "Find the control center"
+  },
+  {
+    "type": "defeat_boss",
+    "description": "Defeat the Master Control Unit",
+    "target": "control_unit_boss"
+  }
+]
+is_repeatable = true
+is_secret = false

@@ -1,0 +1,528 @@
+[gd_resource type="Resource" script_class="DropTableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/drop_table_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hard"
+difficulty = "hard"
+area_drops = {
+  "gurhacia-valley": {
+    "Ghowl": [
+      "Goof Swatter",
+      "Kurtana",
+      "Kutune Sirka"
+    ],
+    "Vulkure": [
+      "Bergmann",
+      "Riverman Missouri",
+      "Schmeisser"
+    ],
+    "Garapython": [
+      "Clear Fin",
+      "Garapython Fang",
+      "Rose Quartz"
+    ],
+    "Garahadan": [
+      "Clear Staff",
+      "Gallanhorne",
+      "M14 Missouri"
+    ],
+    "Grimble": [
+      "Carl Gustav",
+      "Gun Diva",
+      "Pinky Beam"
+    ],
+    "Tormatible": [
+      "Gun Diva",
+      "Master/Swift",
+      "Pinky Beam"
+    ],
+    "Helion": [
+      "Ace/Guard",
+      "Askalon",
+      "Chrome Shield",
+      "Hero/Power",
+      "Zahhak"
+    ],
+    "Blaze Helion": [
+      "Ace/Power",
+      "Askalon",
+      "Burning Mane",
+      "Master/HP",
+      "Zahhak"
+    ],
+    "Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ]
+  },
+  "rioh-snowfield": {
+    "Usanny": [
+      "Delacquer",
+      "H10 Missouri",
+      "Ryjarg"
+    ],
+    "Usanimere": [
+      "Blue Danube",
+      "Master/Hit",
+      "Mellow Ice Beam"
+    ],
+    "Reyhound": [
+      "Magi Circuit",
+      "Magi Processor",
+      "Tri-Magenta"
+    ],
+    "Stagg": [
+      "Argares",
+      "Artturi",
+      "Filamare"
+    ],
+    "Hildegao": [
+      "Ace/HP",
+      "Avenlote",
+      "Lapis Fang",
+      "Pinky Hand"
+    ],
+    "Hildegigas": [
+      "Ace/Mind",
+      "All Resist Lv4",
+      "Avenlote",
+      "Blackhawk",
+      "Heavy Dumbbell",
+      "Pinky Hand"
+    ],
+    "Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ]
+  },
+  "ozette-wetland": {
+    "Porel": [
+      "Egalta",
+      "Ray Fin",
+      "Star Slicer"
+    ],
+    "Pomarr": [
+      "Alias",
+      "Clear Sabre",
+      "Stormer"
+    ],
+    "Hypao": [
+      "Clear Scissor Twins",
+      "Gerhilde",
+      "Nersir"
+    ],
+    "Vespao": [
+      "Clear Scissor Twins",
+      "Holy Sort",
+      "Master/Guard"
+    ],
+    "Pelcatraz": [
+      "Ace/Swift",
+      "Annasans",
+      "Caster Broom"
+    ],
+    "Pelcatobur": [
+      "Ace/Hit",
+      "Annasans",
+      "Asclepios",
+      "Caster Broom",
+      "Master/PP"
+    ],
+    "Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "oblivion-city-paru": {
+    "Pobomma": [
+      "Diopside",
+      "Pretty Parasol",
+      "Salvador"
+    ],
+    "Bolix": [
+      "Abraham",
+      "Grasiza",
+      "Scarred Tatami"
+    ],
+    "Goldix": [
+      "Crimsonfield",
+      "Scarred Tatami",
+      "Vanguard"
+    ],
+    "Izhirak-S6": [
+      "Kleingold",
+      "Parpua",
+      "Radiant"
+    ],
+    "Azherowa-B2": [
+      "Enfield",
+      "M&A33",
+      "Vraolet"
+    ],
+    "Froutang": [
+      "Giacobini",
+      "Hero/HP",
+      "Roche Limit",
+      "Stag Cutlery"
+    ],
+    "Frunaked": [
+      "Giacobini",
+      "Hero/PP",
+      "Master/Power",
+      "Roche Limit",
+      "Stag Cutlery"
+    ],
+    "Ar Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "makara-ruins": {
+    "Batt": [
+      "Bright Moon",
+      "Fenrir",
+      "Magi Circuit"
+    ],
+    "Bullbatt": [
+      "Crescent Cast",
+      "Imperial Rod",
+      "Remjees"
+    ],
+    "Rumole": [
+      "Featherhand",
+      "Jasper Roar",
+      "Tonfa"
+    ],
+    "Kapantha": [
+      "Chrome Twins",
+      "Chronos Scythe",
+      "Grifone"
+    ],
+    "Rohjade": [
+      "Egalta",
+      "Hero/Swift",
+      "St. Kilda",
+      "Vthraghna"
+    ],
+    "Rohcrysta": [
+      "Hero/Guard",
+      "Master/Mind",
+      "Rohcrysta Scales",
+      "St. Kilda"
+    ],
+    "Ar Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "arca-plant": {
+    "Korse": [
+      "Blue Bulletta",
+      "Rose Quartz",
+      "Sonic Laser"
+    ],
+    "Akorse": [
+      "Salvador",
+      "Sasarai",
+      "Starfish Slicer"
+    ],
+    "Finjer R": [
+      "Gale Bringer",
+      "Ka Vorg",
+      "Orgaclaw"
+    ],
+    "Finjer G": [
+      "Curse Answerer",
+      "Deo Bazooka",
+      "Emerald Sin"
+    ],
+    "Finjer B": [
+      "Alucart",
+      "Schwarz Stihl",
+      "Undulate"
+    ],
+    "Rab Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "dark-shrine": {
+    "Rab Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "eternal-tower": {
+    "Ghowl": [
+      "Goof Swatter",
+      "Kurtana",
+      "Kutune Sirka"
+    ],
+    "Vulkure": [
+      "Bergmann",
+      "Riverman Missouri",
+      "Schmeisser"
+    ],
+    "Usanny": [
+      "Delacquer",
+      "H10 Missouri",
+      "Ryjarg"
+    ],
+    "Usanimere": [
+      "Blue Danube",
+      "Master/Hit",
+      "Mellow Ice Beam"
+    ],
+    "Porel": [
+      "Egalta",
+      "Ray Fin",
+      "Star Slicer"
+    ],
+    "Pomarr": [
+      "Alias",
+      "Clear Sabre",
+      "Stormer"
+    ],
+    "Pobomma": [
+      "Diopside",
+      "Pretty Parasol",
+      "Salvador"
+    ],
+    "Bolix": [
+      "Abraham",
+      "Grasiza",
+      "Scarred Tatami"
+    ],
+    "Goldix": [
+      "Crimsonfield",
+      "Scarred Tatami",
+      "Vanguard"
+    ],
+    "Batt": [
+      "Bright Moon",
+      "Fenrir",
+      "Magi Circuit"
+    ],
+    "Bullbatt": [
+      "Crescent Cast",
+      "Imperial Rod",
+      "Remjees"
+    ],
+    "Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Ar Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Rab Rappy": [
+      "PA save Lv2",
+      "Rappy Soul",
+      "Tech Save Lv2"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ],
+    "Garapython": [
+      "Clear Fin",
+      "Garapython Fang",
+      "Rose Quartz"
+    ],
+    "Garahadan": [
+      "Clear Staff",
+      "Gallanhorne",
+      "M14 Missouri"
+    ],
+    "Grimble": [
+      "Carl Gustav",
+      "Gun Diva",
+      "Pinky Beam"
+    ],
+    "Tormatible": [
+      "Gun Diva",
+      "Master/Swift",
+      "Pinky Beam"
+    ],
+    "Reyhound": [
+      "Magi Circuit",
+      "Magi Processor",
+      "Tri-Magenta"
+    ],
+    "Stagg": [
+      "Argares",
+      "Artturi",
+      "Filamare"
+    ],
+    "Hypao": [
+      "Clear Scissor Twins",
+      "Gerhilde",
+      "Nersir"
+    ],
+    "Vespao": [
+      "Clear Scissor Twins",
+      "Holy Sort",
+      "Master/Guard"
+    ],
+    "Rumole": [
+      "Featherhand",
+      "Jasper Roar",
+      "Tonfa"
+    ],
+    "Kapantha": [
+      "Chrome Twins",
+      "Chronos Scythe",
+      "Grifone"
+    ],
+    "Helion": [
+      "Ace/Guard",
+      "Askalon",
+      "Chrome Shield",
+      "Hero/Power",
+      "Zahhak"
+    ],
+    "Blaze Helion": [
+      "Ace/Power",
+      "Askalon",
+      "Burning Mane",
+      "Master/HP",
+      "Zahhak"
+    ],
+    "Hildegao": [
+      "Ace/HP",
+      "Avenlote",
+      "Lapis Fang",
+      "Pinky Hand"
+    ],
+    "Hildegigas": [
+      "Ace/Mind",
+      "All Resist Lv4",
+      "Avenlote",
+      "Blackhawk",
+      "Heavy Dumbbell",
+      "Pinky Hand"
+    ],
+    "Pelcatraz": [
+      "Ace/Swift",
+      "Annasans",
+      "Caster Broom"
+    ],
+    "Pelcatobur": [
+      "Ace/Hit",
+      "Annasans",
+      "Asclepios",
+      "Caster Broom",
+      "Master/PP"
+    ],
+    "Froutang": [
+      "Giacobini",
+      "Hero/HP",
+      "Roche Limit",
+      "Stag Cutlery"
+    ],
+    "Frunaked": [
+      "Giacobini",
+      "Hero/PP",
+      "Master/Power",
+      "Roche Limit",
+      "Stag Cutlery"
+    ],
+    "Rohjade": [
+      "Egalta",
+      "Hero/Swift",
+      "St. Kilda",
+      "Vthraghna"
+    ],
+    "Rohcrysta": [
+      "Hero/Guard",
+      "Master/Mind",
+      "Rohcrysta Scales",
+      "St. Kilda"
+    ],
+    "Korse": [
+      "Blue Bulletta",
+      "Rose Quartz",
+      "Sonic Laser"
+    ],
+    "Akorse": [
+      "Salvador",
+      "Sasarai",
+      "Starfish Slicer"
+    ],
+    "Izhirak-S6": [
+      "Kleingold",
+      "Parpua",
+      "Radiant"
+    ],
+    "Azherowa-B2": [
+      "Enfield",
+      "M&A33",
+      "Vraolet"
+    ],
+    "Finjer R": [
+      "Gale Bringer",
+      "Ka Vorg",
+      "Orgaclaw"
+    ],
+    "Finjer G": [
+      "Curse Answerer",
+      "Deo Bazooka",
+      "Emerald Sin"
+    ],
+    "Finjer B": [
+      "Alucart",
+      "Schwarz Stihl",
+      "Undulate"
+    ]
+  }
+}

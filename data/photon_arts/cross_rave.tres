@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cross_rave"
+name = "Cross Rave"
+weapon_type = "Saber"
+class_type = "Hunter"
+attack_mod = 160.0
+accuracy_mod = 120.0
+pp_cost = 13
+targets = 2
+hit_range = 3.0
+area = 120.0
+hits = 3
+notes = ""

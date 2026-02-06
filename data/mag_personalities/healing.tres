@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "healing"
+name = "Healing"
+japanese_name = "いやしけい"
+category = "recovery"
+tier = "basic"
+unlock_level = 10
+favorite_food = "Force Weapons and Enemy Parts"
+switch_from = ""
+triggers = {
+  "walking": {
+    "effect": "Resta",
+    "strength": "Weak",
+    "chance": "Low"
+  },
+  "lowHealth": {
+    "effect": "Resta",
+    "strength": "Weak",
+    "chance": "Low"
+  },
+  "statusCondition": {
+    "effect": "Anti",
+    "chance": 10
+  },
+  "bossEncounter": 0,
+  "playerDeath": 0,
+  "photonBlastFull": {
+    "effect": "Resta",
+    "strength": "Strong",
+    "chance": "Large"
+  }
+}

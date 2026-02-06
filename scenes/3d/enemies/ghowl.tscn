@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/3d/enemies/enemy_base.gd" id="1"]
+[ext_resource type="Resource" path="res://data/enemies/ghowl.tres" id="2_ghowl"]
+[ext_resource type="PackedScene" path="res://assets/enemies/lizard/s_001.glb" id="3_model"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.5
+height = 1.5
+
+[node name="Ghowl" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1")
+enemy_data = ExtResource("2_ghowl")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("3_model")]

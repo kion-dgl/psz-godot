@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SetBonusData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/set_bonus_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "keplar_suit"
+armor = "Keplar Suit"
+weapons = PackedStringArray("H10 Missouri", "H44 Missouri", "M&A33", "M&A41", "M14 Missouri", "M25SE Missouri", "Missouri CX4", "Missouri RX4", "Riverman Missouri", "Yasminkov M95", "Yasminkov M109")
+bonuses = {
+  "attack": 0,
+  "mental": 0,
+  "accuracy": 25,
+  "defense": 0,
+  "evasion": 50
+}

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "soul_element"
+name = "Soul Element"
+japanese_name = "ソウルエレメント"
+details = "Grants a weapon the element of \"Soul\", granting a boost to your Attack Power and Mental Strength when your remaining HP is below 33%. However, this is ineffective with Techniques.
+
+The stat increase percentage at each level of Soul is as follows:
+Lv 1: 10%
+Lv 2: 15%
+Lv 3: 20%
+Lv 4: 25%
+Lv 5: 30%"
+rarity = 5
+pso_world_id = 544

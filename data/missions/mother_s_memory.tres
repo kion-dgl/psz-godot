@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mother_s_memory"
+name = "Mother's Memory"
+area = "Dark Shrine"
+is_main = false
+is_secret = false
+requires = PackedStringArray()
+rewards = {
+  "normal": {
+    "item": "Spirit Garb",
+    "quantity": 1,
+    "meseta": 2500
+  },
+  "hard": {
+    "item": "Spirit Garb",
+    "quantity": 1,
+    "meseta": 5000
+  },
+  "superHard": {
+    "item": "Spirit Garb",
+    "quantity": 1,
+    "meseta": 10000
+  }
+}

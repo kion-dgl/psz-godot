@@ -1,0 +1,85 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "deep_dive"
+quest_id = "deep_dive"
+quest_name = "Deep Dive"
+quest_type = "side"
+area = "Paru"
+description = "The deepest sections of Paru remain unexplored. Researchers want data from the abyss."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 25,
+    "rewards": {
+      "meseta": 5000,
+      "experience": 2500,
+      "items": [
+        {
+          "itemId": "def_material",
+          "itemName": "Def Material",
+          "quantity": 1
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 42,
+    "rewards": {
+      "meseta": 10000,
+      "experience": 5000,
+      "items": [
+        {
+          "itemId": "evade_material",
+          "itemName": "Evade Material",
+          "quantity": 1
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 68,
+    "rewards": {
+      "meseta": 20000,
+      "experience": 10000,
+      "items": [
+        {
+          "itemId": "luck_material",
+          "itemName": "Luck Material",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 25,
+  "prerequisiteQuests": [
+    "artifacts"
+  ]
+}
+objectives = [
+  {
+    "type": "reach_location",
+    "description": "Descend to the deepest level"
+  },
+  {
+    "type": "collect_items",
+    "description": "Collect deep sea samples",
+    "target": "deep_sample",
+    "required": 3
+  },
+  {
+    "type": "defeat_enemies",
+    "description": "Survive the abyss creatures",
+    "target": "abyss_creature",
+    "required": 25
+  }
+]
+is_repeatable = true
+is_secret = false

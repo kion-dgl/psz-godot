@@ -1,0 +1,74 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "third_daughter"
+quest_id = "third_daughter"
+quest_name = "Third Daughter"
+quest_type = "side"
+area = "Rioh Snowfield"
+description = "A secret mission involving the Naura Cake Shop. Help the third daughter complete her task."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 8,
+    "rewards": {
+      "meseta": 5000,
+      "experience": 1000,
+      "items": [
+        {
+          "itemId": "chef_apron",
+          "itemName": "Chef Apron",
+          "quantity": 1
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 15,
+    "rewards": {
+      "meseta": 10000,
+      "experience": 2500,
+      "items": [
+        {
+          "itemId": "chef_apron",
+          "itemName": "Chef Apron",
+          "quantity": 1
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 25,
+    "rewards": {
+      "meseta": 20000,
+      "experience": 5000,
+      "items": [
+        {
+          "itemId": "chef_apron",
+          "itemName": "Chef Apron",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 8,
+  "prerequisiteQuests": [],
+  "unlockCondition": "Find Naura Cake Shop rare block"
+}
+objectives = [
+  {
+    "type": "collect_items",
+    "description": "Collect special ingredients",
+    "target": "special_ingredient",
+    "required": 5
+  }
+]
+is_repeatable = true
+is_secret = true

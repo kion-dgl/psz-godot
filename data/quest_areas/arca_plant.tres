@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestAreaData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_area_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "arca_plant"
+area_id = "arca-plant"
+area_name = "Arca Plant"
+description = "A massive orbital facility overrun by rogue machines. The truth awaits at the core."
+unlock_condition = "Complete 'A Far Journey' story quest"
+recommended_level = 45
+environment = "space station"
+quest_count = 3

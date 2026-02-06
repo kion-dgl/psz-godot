@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/class_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "racast"
+name = "RAcast"
+race = "Cast"
+gender = "Male"
+type = "Ranger"
+bonuses = PackedStringArray("Natural HP recovery (+1% every 5 seconds; +5% at rest)", "Immune to poison status attribute", "Can see and destroy traps")
+material_limit = 80
+stats = {
+  "hp": {
+    "1": 86,
+    "20": 245,
+    "40": 411,
+    "60": 537,
+    "80": 671,
+    "100": 775
+  },
+  "pp": {
+    "1": 62,
+    "20": 171,
+    "40": 246,
+    "60": 303,
+    "80": 359,
+    "100": 397
+  },
+  "attack": {
+    "1": 47,
+    "20": 114,
+    "40": 184,
+    "60": 255,
+    "80": 325,
+    "100": 396
+  },
+  "defense": {
+    "1": 9,
+    "20": 60,
+    "40": 97,
+    "60": 134,
+    "80": 171,
+    "100": 207
+  },
+  "accuracy": {
+    "1": 165,
+    "20": 212,
+    "40": 262,
+    "60": 308,
+    "80": 325,
+    "100": 342
+  },
+  "evasion": {
+    "1": 9,
+    "20": 49,
+    "40": 84,
+    "60": 112,
+    "80": 140,
+    "100": 168
+  },
+  "technique": {
+    "1": 27,
+    "20": 71,
+    "40": 118,
+    "60": 164,
+    "80": 211,
+    "100": 257
+  }
+}
+technique_limits = {}
+trap_limits = {
+  "fire": [5, 6, 7, 8, 9, 10],
+  "freeze": [5, 6, 7, 8, 9, 10],
+  "confuse": [5, 5, 5, 5, 5, 5],
+  "heal": [5, 5, 5, 5, 5, 5]
+}

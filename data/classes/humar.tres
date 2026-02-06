@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/class_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "humar"
+name = "HUmar"
+race = "Human"
+gender = "Male"
+type = "Hunter"
+bonuses = PackedStringArray()
+material_limit = 100
+stats = {
+  "hp": {
+    "1": 82,
+    "20": 258,
+    "40": 432,
+    "60": 532,
+    "80": 630,
+    "100": 700
+  },
+  "pp": {
+    "1": 67,
+    "20": 200,
+    "40": 299,
+    "60": 339,
+    "80": 378,
+    "100": 408
+  },
+  "attack": {
+    "1": 56,
+    "20": 145,
+    "40": 238,
+    "60": 321,
+    "80": 394,
+    "100": 468
+  },
+  "defense": {
+    "1": 10,
+    "20": 76,
+    "40": 129,
+    "60": 171,
+    "80": 208,
+    "100": 244
+  },
+  "accuracy": {
+    "1": 110,
+    "20": 148,
+    "40": 191,
+    "60": 224,
+    "80": 233,
+    "100": 243
+  },
+  "evasion": {
+    "1": 13,
+    "20": 75,
+    "40": 135,
+    "60": 174,
+    "80": 207,
+    "100": 240
+  },
+  "technique": {
+    "1": 33,
+    "20": 84,
+    "40": 135,
+    "60": 186,
+    "80": 237,
+    "100": 288
+  }
+}
+technique_limits = {
+  "foieBartaZonde": 10,
+  "grants": 0,
+  "megid": 0,
+  "restaReverser": 10,
+  "shiftaDeband": 10,
+  "jellenZalure": 0
+}
+trap_limits = {}

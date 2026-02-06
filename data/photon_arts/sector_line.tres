@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sector_line"
+name = "Sector Line"
+weapon_type = "Laser Cannon"
+class_type = "Ranger"
+attack_mod = 150.0
+accuracy_mod = 80.0
+pp_cost = 22
+targets = 3
+hit_range = 16.0
+area = 240.0
+hits = 1
+notes = ""

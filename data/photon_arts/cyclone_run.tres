@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cyclone_run"
+name = "Cyclone Run"
+weapon_type = "Double Saber"
+class_type = "Hunter"
+attack_mod = 100.0
+accuracy_mod = 80.0
+pp_cost = 20
+targets = 4
+hit_range = 3.5
+area = 360.0
+hits = 5
+notes = ""

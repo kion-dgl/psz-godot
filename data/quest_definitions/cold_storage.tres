@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cold_storage"
+quest_id = "cold_storage"
+quest_name = "Cold Storage"
+quest_type = "side"
+area = "Rioh Snowfield"
+description = "A supply cache was buried under an avalanche. Recover the goods before the creatures pick it clean."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 12,
+    "rewards": {
+      "meseta": 1800,
+      "experience": 900,
+      "items": [
+        {
+          "itemId": "monomate",
+          "itemName": "Monomate",
+          "quantity": 10
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 30,
+    "rewards": {
+      "meseta": 4500,
+      "experience": 2200,
+      "items": [
+        {
+          "itemId": "dimate",
+          "itemName": "Dimate",
+          "quantity": 5
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 60,
+    "rewards": {
+      "meseta": 10000,
+      "experience": 5000,
+      "items": [
+        {
+          "itemId": "trimate",
+          "itemName": "Trimate",
+          "quantity": 3
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 12,
+  "prerequisiteQuests": [
+    "snowbound_rescue"
+  ]
+}
+objectives = [
+  {
+    "type": "collect_items",
+    "description": "Recover supply crates",
+    "target": "supply_crate",
+    "required": 5
+  },
+  {
+    "type": "defeat_enemies",
+    "description": "Fend off scavengers",
+    "target": "snowfield_creature",
+    "required": 12
+  }
+]
+is_repeatable = true
+is_secret = false

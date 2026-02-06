@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "i_love_ruins"
+name = "I Love Ruins!"
+area = "Makura Ruins"
+is_main = false
+is_secret = false
+requires = PackedStringArray()
+rewards = {
+  "normal": {
+    "item": "Rookie/Swift",
+    "quantity": 1,
+    "meseta": 1500
+  },
+  "hard": {
+    "item": "Ace/Swift",
+    "quantity": 1,
+    "meseta": 3000
+  },
+  "superHard": {
+    "item": "Hero/Swift",
+    "quantity": 1,
+    "meseta": 6000
+  }
+}

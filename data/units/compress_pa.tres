@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "compress_pa"
+name = "Compress PA"
+japanese_name = "コンプレスアーツ"
+rarity = 7
+category = "Special"
+effect = "Reduces PA charge time by 33%"
+effect_value = 0
+pso_world_id = 482

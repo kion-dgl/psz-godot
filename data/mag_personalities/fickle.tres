@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fickle"
+name = "Fickle"
+japanese_name = "きまぐれ"
+category = "special"
+tier = "advanced"
+unlock_level = 60
+favorite_food = "Anything"
+switch_from = "Feed 5 consecutive Hunter or Ranger Weapons"
+triggers = {
+  "walking": {
+    "effect": "Offensive Boost",
+    "strength": "Large",
+    "chance": 5,
+    "duration": 60
+  },
+  "lowHealth": {
+    "effect": "Resta",
+    "strength": "Strong",
+    "chance": 10
+  },
+  "statusCondition": {
+    "effect": "Anti",
+    "chance": 10
+  },
+  "bossEncounter": {
+    "effect": "Defensive Boost",
+    "strength": "Large",
+    "chance": 10,
+    "duration": 60
+  },
+  "playerDeath": {
+    "effect": "Revival",
+    "chance": 5
+  },
+  "photonBlastFull": {
+    "effect": "Invincibility",
+    "chance": 100,
+    "duration": 15
+  }
+}

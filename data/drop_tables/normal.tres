@@ -1,0 +1,532 @@
+[gd_resource type="Resource" script_class="DropTableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/drop_table_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "normal"
+difficulty = "normal"
+area_drops = {
+  "gurhacia-valley": {
+    "Ghowl": [
+      "Chrome Cutlass",
+      "Cutlass"
+    ],
+    "Vulkure": [
+      "Chrome Carbine",
+      "Gun Slash",
+      "Twin Fire"
+    ],
+    "Garapython": [
+      "Chrome Rod",
+      "Iron Spear",
+      "Rod"
+    ],
+    "Garahadan": [
+      "Chrome Gun",
+      "Chrome Wand",
+      "Wand"
+    ],
+    "Grimble": [
+      "Cannon",
+      "Carbine",
+      "Gun Braver"
+    ],
+    "Tormatible": [
+      "Gun Braver",
+      "Gun Slash",
+      "Hero/Swift"
+    ],
+    "Helion": [
+      "Chrome Sword",
+      "Ein Calibur",
+      "Ein Glaive",
+      "Helion's Mane",
+      "Rookie/Guard"
+    ],
+    "Blaze Helion": [
+      "Chrome Sword",
+      "Ein Calibur",
+      "Ein Glaive",
+      "Hero/HP",
+      "Rookie/Power",
+      "Shield"
+    ],
+    "Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ]
+  },
+  "rioh-snowfield": {
+    "Usanny": [
+      "Deo Pistol",
+      "Ein Pistol",
+      "Ein Rifle"
+    ],
+    "Usanimere": [
+      "Deo Twins",
+      "Ein Rocket",
+      "Hero/Hit"
+    ],
+    "Reyhound": [
+      "Chrome Rod",
+      "Ein Tact",
+      "Tact"
+    ],
+    "Stagg": [
+      "Blade",
+      "Ein Arm",
+      "Ein Blade"
+    ],
+    "Hildegao": [
+      "Deo Ripper",
+      "Ein Bazooka",
+      "Ein Ripper",
+      "Rookie/HP"
+    ],
+    "Hildegigas": [
+      "All Resist Lv3",
+      "Chrome Wand",
+      "Deo Ripper",
+      "Ein Bazooka",
+      "Rookie/Mind",
+      "Twin Assault"
+    ],
+    "Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ]
+  },
+  "ozette-wetland": {
+    "Porel": [
+      "Cane",
+      "Clear Cane",
+      "Ray Bangle"
+    ],
+    "Pomarr": [
+      "Clear Saber",
+      "Saber",
+      "Sabre"
+    ],
+    "Hypao": [
+      "Ray Duplex",
+      "Ray Shot"
+    ],
+    "Vespao": [
+      "Clear Pulse",
+      "Hero/Guard",
+      "Ray Duplex"
+    ],
+    "Pelcatraz": [
+      "Ray Staff",
+      "Ray Wandstick",
+      "Rookie/Swift"
+    ],
+    "Pelcatobur": [
+      "Claymore",
+      "Hero/PP",
+      "Ray Staff",
+      "Rookie/Hit"
+    ],
+    "Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "oblivion-city-paru": {
+    "Pobomma": [
+      "Ein Cutter",
+      "Magi Processor",
+      "Pretty Parasol"
+    ],
+    "Bolix": [
+      "Deo Calibur",
+      "Iron Lance",
+      "Tatami Mat"
+    ],
+    "Goldix": [
+      "Chrome Shield",
+      "Crimsonfield",
+      "Tatami Mat"
+    ],
+    "Izhirak-S6": [
+      "Chrome Gun",
+      "Clear Pulse",
+      "Parpua"
+    ],
+    "Azherowa-B2": [
+      "Deo Rifle",
+      "Ein Mazurka",
+      "Liese Garland"
+    ],
+    "Froutang": [
+      "Ace/PP",
+      "Deo Slicer",
+      "Double Blade",
+      "Double Edge",
+      "Stag Cutlery"
+    ],
+    "Frunaked": [
+      "Ace/PP",
+      "Deo Slicer",
+      "Double Edge",
+      "Hero/Power",
+      "Stag Cutlery"
+    ],
+    "Ar Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "makara-ruins": {
+    "Batt": [
+      "Bright Moon",
+      "Chrome Rod",
+      "Clear Staff"
+    ],
+    "Bullbatt": [
+      "Chrome Lance",
+      "Clear Bangle",
+      "Witch's Broom"
+    ],
+    "Rumole": [
+      "Deo Ripper",
+      "Hollow Gimlet",
+      "Ray Knife"
+    ],
+    "Kapantha": [
+      "Binary Saber",
+      "Chrome Twins",
+      "Clear Shot"
+    ],
+    "Rohjade": [
+      "Ace/Swift",
+      "Clear Beam",
+      "Ray Maser",
+      "Rohjade Scales",
+      "Slicer"
+    ],
+    "Rohcrysta": [
+      "Ace/Guard",
+      "Chrome Shield",
+      "Clear Beam",
+      "Hero/Mind",
+      "Rohcrysta Scales",
+      "Slicer"
+    ],
+    "Ar Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "arca-plant": {
+    "Korse": [
+      "Clear Knife",
+      "Deo Twins",
+      "Sonic Laser"
+    ],
+    "Akorse": [
+      "Magi Processor",
+      "Sasarai",
+      "Slicer"
+    ],
+    "Finjer R": [
+      "Chrome Sword",
+      "Jamshid",
+      "Orgaclaw"
+    ],
+    "Finjer G": [
+      "Chrome Carbine",
+      "Delacquer",
+      "Deo Bazooka"
+    ],
+    "Finjer B": [
+      "Chrome Spear",
+      "Deo Cutter",
+      "Tonfa"
+    ],
+    "Rab Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "dark-shrine": {
+    "Rab Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ]
+  },
+  "eternal-tower": {
+    "Ghowl": [
+      "Chrome Cutlass",
+      "Cutlass"
+    ],
+    "Vulkure": [
+      "Chrome Carbine",
+      "Gun Slash",
+      "Twin Fire"
+    ],
+    "Usanny": [
+      "Deo Pistol",
+      "Ein Pistol",
+      "Ein Rifle"
+    ],
+    "Usanimere": [
+      "Deo Twins",
+      "Ein Rocket",
+      "Hero/Hit"
+    ],
+    "Porel": [
+      "Cane",
+      "Clear Cane",
+      "Ray Bangle"
+    ],
+    "Pomarr": [
+      "Clear Saber",
+      "Saber",
+      "Sabre"
+    ],
+    "Pobomma": [
+      "Ein Cutter",
+      "Magi Processor",
+      "Pretty Parasol"
+    ],
+    "Bolix": [
+      "Deo Calibur",
+      "Iron Lance",
+      "Tatami Mat"
+    ],
+    "Goldix": [
+      "Chrome Shield",
+      "Crimsonfield",
+      "Tatami Mat"
+    ],
+    "Batt": [
+      "Bright Moon",
+      "Chrome Rod",
+      "Clear Staff"
+    ],
+    "Bullbatt": [
+      "Chrome Lance",
+      "Clear Bangle",
+      "Witch's Broom"
+    ],
+    "Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Ar Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Rab Rappy": [
+      "PA save Lv1",
+      "Rappy Soul",
+      "Tech Save Lv1"
+    ],
+    "Booma Origin": [
+      "Element Boost"
+    ],
+    "Gigobooma Origin": [
+      "Tech Level Boost"
+    ],
+    "Garapython": [
+      "Chrome Rod",
+      "Iron Spear",
+      "Rod"
+    ],
+    "Garahadan": [
+      "Chrome Gun",
+      "Chrome Wand",
+      "Wand"
+    ],
+    "Grimble": [
+      "Cannon",
+      "Carbine",
+      "Gun Braver"
+    ],
+    "Tormatible": [
+      "Gun Braver",
+      "Gun Slash",
+      "Hero/Swift"
+    ],
+    "Reyhound": [
+      "Chrome Rod",
+      "Ein Tact",
+      "Tact"
+    ],
+    "Stagg": [
+      "Blade",
+      "Ein Arm",
+      "Ein Blade"
+    ],
+    "Hypao": [
+      "Ray Duplex",
+      "Ray Shot"
+    ],
+    "Vespao": [
+      "Clear Pulse",
+      "Hero/Guard",
+      "Ray Duplex"
+    ],
+    "Rumole": [
+      "Deo Ripper",
+      "Hollow Gimlet",
+      "Ray Knife"
+    ],
+    "Kapantha": [
+      "Binary Saber",
+      "Chrome Twins",
+      "Clear Shot"
+    ],
+    "Helion": [
+      "Chrome Sword",
+      "Ein Calibur",
+      "Ein Glaive",
+      "Helion's Mane",
+      "Rookie/Guard"
+    ],
+    "Blaze Helion": [
+      "Chrome Sword",
+      "Ein Calibur",
+      "Ein Glaive",
+      "Hero/HP",
+      "Rookie/Power",
+      "Shield"
+    ],
+    "Hildegao": [
+      "Deo Ripper",
+      "Ein Bazooka",
+      "Ein Ripper",
+      "Rookie/HP"
+    ],
+    "Hildegigas": [
+      "All Resist Lv3",
+      "Chrome Wand",
+      "Deo Ripper",
+      "Ein Bazooka",
+      "Rookie/Mind",
+      "Twin Assault"
+    ],
+    "Pelcatraz": [
+      "Ray Staff",
+      "Ray Wandstick",
+      "Rookie/Swift"
+    ],
+    "Pelcatobur": [
+      "Claymore",
+      "Hero/PP",
+      "Ray Staff",
+      "Rookie/Hit"
+    ],
+    "Froutang": [
+      "Ace/PP",
+      "Deo Slicer",
+      "Double Blade",
+      "Double Edge",
+      "Stag Cutlery"
+    ],
+    "Frunaked": [
+      "Ace/PP",
+      "Deo Slicer",
+      "Double Edge",
+      "Hero/Power",
+      "Stag Cutlery"
+    ],
+    "Rohjade": [
+      "Ace/Swift",
+      "Clear Beam",
+      "Ray Maser",
+      "Rohjade Scales",
+      "Slicer"
+    ],
+    "Rohcrysta": [
+      "Ace/Guard",
+      "Chrome Shield",
+      "Clear Beam",
+      "Hero/Mind",
+      "Rohcrysta Scales",
+      "Slicer"
+    ],
+    "Korse": [
+      "Clear Knife",
+      "Deo Twins",
+      "Sonic Laser"
+    ],
+    "Akorse": [
+      "Magi Processor",
+      "Sasarai",
+      "Slicer"
+    ],
+    "Izhirak-S6": [
+      "Chrome Gun",
+      "Clear Pulse",
+      "Parpua"
+    ],
+    "Azherowa-B2": [
+      "Deo Rifle",
+      "Ein Mazurka",
+      "Liese Garland"
+    ],
+    "Finjer R": [
+      "Chrome Sword",
+      "Jamshid",
+      "Orgaclaw"
+    ],
+    "Finjer G": [
+      "Chrome Carbine",
+      "Delacquer",
+      "Deo Bazooka"
+    ],
+    "Finjer B": [
+      "Chrome Spear",
+      "Deo Cutter",
+      "Tonfa"
+    ]
+  }
+}

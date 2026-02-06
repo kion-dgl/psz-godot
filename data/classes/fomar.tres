@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/class_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fomar"
+name = "FOmar"
+race = "Human"
+gender = "Male"
+type = "Force"
+bonuses = PackedStringArray("75% damage reduction from technique attacks", "20% boost to Foie, Barta, Zonde, Rafoie, Rabarta, and Razonde")
+material_limit = 100
+stats = {
+  "hp": {
+    "1": 73,
+    "20": 234,
+    "40": 366,
+    "60": 460,
+    "80": 548,
+    "100": 602
+  },
+  "pp": {
+    "1": 102,
+    "20": 297,
+    "40": 438,
+    "60": 511,
+    "80": 582,
+    "100": 633
+  },
+  "attack": {
+    "1": 37,
+    "20": 98,
+    "40": 162,
+    "60": 217,
+    "80": 261,
+    "100": 306
+  },
+  "defense": {
+    "1": 7,
+    "20": 54,
+    "40": 93,
+    "60": 122,
+    "80": 144,
+    "100": 167
+  },
+  "accuracy": {
+    "1": 105,
+    "20": 136,
+    "40": 167,
+    "60": 189,
+    "80": 195,
+    "100": 203
+  },
+  "evasion": {
+    "1": 14,
+    "20": 82,
+    "40": 147,
+    "60": 190,
+    "80": 227,
+    "100": 264
+  },
+  "technique": {
+    "1": 49,
+    "20": 136,
+    "40": 228,
+    "60": 309,
+    "80": 381,
+    "100": 452
+  }
+}
+technique_limits = {
+  "foieBartaZonde": 15,
+  "grants": 15,
+  "megid": 15,
+  "restaReverser": 15,
+  "shiftaDeband": 15,
+  "jellenZalure": 15
+}
+trap_limits = {}

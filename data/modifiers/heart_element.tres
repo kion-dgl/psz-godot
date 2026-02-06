@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "heart_element"
+name = "Heart Element"
+japanese_name = "ハートエレメント"
+details = "Grants a weapon the element of \"Heart\", allowing you to absorb a percentage of the damage you deal as PP.
+
+The percentage drawn at each level of Heart is as follows:
+Lv 1: 5%
+Lv 2: 10%
+Lv 3: 15%
+Lv 4: 20%
+Lv 5: 25%"
+rarity = 5
+pso_world_id = 542

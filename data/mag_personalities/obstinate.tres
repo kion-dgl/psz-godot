@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "obstinate"
+name = "Obstinate"
+japanese_name = "いじっぱり"
+category = "defensive"
+tier = "advanced"
+unlock_level = 60
+favorite_food = "Armors and Atomizers"
+switch_from = "Feed 5 consecutive Hunter Weapons or Armors"
+triggers = {
+  "walking": {
+    "effect": "Defensive Boost",
+    "strength": "Small",
+    "chance": "Low",
+    "duration": "Medium"
+  },
+  "lowHealth": {
+    "effect": "Defensive Boost",
+    "strength": "Large",
+    "chance": "Low",
+    "duration": "Medium"
+  },
+  "statusCondition": 0,
+  "bossEncounter": {
+    "effect": "Defensive Boost",
+    "strength": "Large",
+    "chance": "Medium",
+    "duration": "Medium"
+  },
+  "playerDeath": {
+    "effect": "Revival",
+    "chance": 10
+  },
+  "photonBlastFull": {
+    "effect": "Invincibility",
+    "duration": "Short"
+  }
+}

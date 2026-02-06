@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "crazy_on"
+name = "Crazy On"
+weapon_type = "Bazooka"
+class_type = "Ranger"
+attack_mod = 130.0
+accuracy_mod = 200.0
+pp_cost = 19
+targets = 2
+hit_range = 4.5
+area = 120.0
+hits = 2
+notes = ""

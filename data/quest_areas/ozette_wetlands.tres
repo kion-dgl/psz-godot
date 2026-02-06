@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestAreaData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_area_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ozette_wetlands"
+area_id = "ozette_wetlands"
+area_name = "Ozette Wetlands"
+description = "A murky swamp filled with dangerous creatures and treacherous terrain."
+unlock_condition = "Complete Human story quest"
+recommended_level = 5
+environment = "swamp"
+quest_count = 4

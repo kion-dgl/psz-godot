@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MagData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "beork"
+name = "Beork"
+japanese_name = "ベオーク"
+stage = "4"
+evolution_level = 60
+evolution_requirement = {
+  "type": "stat",
+  "primary": "Guard",
+  "secondary": "Hit"
+}
+photon_blast = "Pacifal"
+pso_world_id = 368

@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hungry"
+name = "Hungry"
+japanese_name = "くいしんぼ"
+category = "special"
+tier = "basic"
+unlock_level = 10
+favorite_food = "Anything"
+switch_from = ""
+triggers = {
+  "walking": {
+    "effect": "PP Recovery",
+    "strength": "Small",
+    "chance": 8
+  },
+  "lowHealth": 0,
+  "statusCondition": 0,
+  "bossEncounter": 0,
+  "playerDeath": 0,
+  "photonBlastFull": {
+    "effect": "PP Recovery",
+    "strength": "Small",
+    "chance": 100
+  }
+}

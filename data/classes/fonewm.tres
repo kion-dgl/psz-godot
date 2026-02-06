@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/class_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fonewm"
+name = "FOnewm"
+race = "Newman"
+gender = "Male"
+type = "Force"
+bonuses = PackedStringArray("75% damage reduction from technique attacks", "15% boost to ALL attack techniques and 30% reduction to Resta", "Natural PP recovery (+1% every 5 seconds; +5% at rest)")
+material_limit = 80
+stats = {
+  "hp": {
+    "1": 68,
+    "20": 209,
+    "40": 338,
+    "60": 427,
+    "80": 515,
+    "100": 568
+  },
+  "pp": {
+    "1": 97,
+    "20": 261,
+    "40": 368,
+    "60": 447,
+    "80": 544,
+    "100": 618
+  },
+  "attack": {
+    "1": 33,
+    "20": 75,
+    "40": 115,
+    "60": 154,
+    "80": 219,
+    "100": 279
+  },
+  "defense": {
+    "1": 6,
+    "20": 35,
+    "40": 50,
+    "60": 75,
+    "80": 109,
+    "100": 140
+  },
+  "accuracy": {
+    "1": 93,
+    "20": 115,
+    "40": 133,
+    "60": 152,
+    "80": 156,
+    "100": 160
+  },
+  "evasion": {
+    "1": 14,
+    "20": 72,
+    "40": 117,
+    "60": 162,
+    "80": 216,
+    "100": 266
+  },
+  "technique": {
+    "1": 56,
+    "20": 142,
+    "40": 233,
+    "60": 319,
+    "80": 402,
+    "100": 484
+  }
+}
+technique_limits = {
+  "foieBartaZonde": 15,
+  "grants": 15,
+  "megid": 15,
+  "restaReverser": 15,
+  "shiftaDeband": 15,
+  "jellenZalure": 15
+}
+trap_limits = {}
