@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MagData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rappy"
+name = "Rappy"
+japanese_name = "ラッピー"
+stage = "rare"
+evolution_level = 60
+evolution_requirement = {
+  "type": "soul",
+  "item": "Rappy Soul"
+}
+photon_blast = "inherited"
+pso_world_id = 374

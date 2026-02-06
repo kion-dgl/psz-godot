@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "timid"
+name = "Timid"
+japanese_name = "ひっこみ"
+category = "defensive"
+tier = "basic"
+unlock_level = 10
+favorite_food = "Armors and Atomizers"
+switch_from = ""
+triggers = {
+  "walking": {
+    "effect": "Defensive Boost",
+    "strength": "Small",
+    "chance": "Low",
+    "duration": "Medium"
+  },
+  "lowHealth": 0,
+  "statusCondition": 0,
+  "bossEncounter": {
+    "effect": "Defensive Boost",
+    "strength": "Small",
+    "chance": "Medium",
+    "duration": "Medium"
+  },
+  "playerDeath": 0,
+  "photonBlastFull": {
+    "effect": "Invincibility",
+    "duration": "Short"
+  }
+}

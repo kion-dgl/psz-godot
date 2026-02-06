@@ -1,0 +1,107 @@
+[gd_resource type="Resource" script_class="ShopData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/shop_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "enemy_collector"
+name = "Enemy Collector"
+description = "Converts enemy parts into weapons for Meseta. Weapon attributes are random - save before trading rare parts."
+items = [
+  {
+    "item": "Black Phobos",
+    "tradeIn": "Black Shard",
+    "cost": 50000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Blaze Roar",
+    "tradeIn": "Burning Mane",
+    "cost": 25000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Chaos Cannon",
+    "tradeIn": "Black Barrel",
+    "cost": 5000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Crysta Hulse",
+    "tradeIn": "Rohcrysta Scales",
+    "cost": 50000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Devil Bazooka",
+    "tradeIn": "Squirmy Tentacle",
+    "cost": 50000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Dragon Horn",
+    "tradeIn": "Dragon's Horn",
+    "cost": 50000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Hadan Bite",
+    "tradeIn": "Garahadan Fang",
+    "cost": 100000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Hemera Drill",
+    "tradeIn": "White Drill",
+    "cost": 50000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Helion Roar",
+    "tradeIn": "Helion's Mane",
+    "cost": 500,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Jade Hulse",
+    "tradeIn": "Rohjade Scales",
+    "cost": 2500,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Mobius Drill",
+    "tradeIn": "Black Drill",
+    "cost": 5000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Octo Bazooka",
+    "tradeIn": "Slimy Tentacle",
+    "cost": 5000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Phobos Shoot",
+    "tradeIn": "Phobos Shard",
+    "cost": 25000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Python Bite",
+    "tradeIn": "Garapython Fang",
+    "cost": 25000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Scarred Horn",
+    "tradeIn": "Broken Horn",
+    "cost": 5000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Tartaros Cannon",
+    "tradeIn": "White Barrel",
+    "cost": 100000,
+    "currency": "Meseta"
+  }
+]

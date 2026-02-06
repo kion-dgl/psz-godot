@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestAreaData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_area_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "eternal_tower"
+area_id = "eternal_tower"
+area_name = "Eternal Tower"
+description = "A mysterious 101-floor tower that serves as the ultimate endgame challenge. Bosses appear every 10 floors."
+unlock_condition = "Complete all main story quests"
+recommended_level = 30
+environment = "tower"
+quest_count = 1

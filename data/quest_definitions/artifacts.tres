@@ -1,0 +1,86 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "artifacts"
+quest_id = "artifacts"
+quest_name = "Artifacts"
+quest_type = "story"
+area = "Paru"
+description = "Chapter 4: The underwater ruins of Paru hold secrets from a civilization lost to time. Dive deep to uncover artifacts that may explain the current crisis."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 22,
+    "rewards": {
+      "meseta": 4000,
+      "experience": 2000,
+      "items": [
+        {
+          "itemId": "hp_material",
+          "itemName": "HP Material",
+          "quantity": 2
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 40,
+    "rewards": {
+      "meseta": 9000,
+      "experience": 4500,
+      "items": [
+        {
+          "itemId": "power_material",
+          "itemName": "Power Material",
+          "quantity": 2
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 65,
+    "rewards": {
+      "meseta": 18000,
+      "experience": 10000,
+      "items": [
+        {
+          "itemId": "luck_material",
+          "itemName": "Luck Material",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 22,
+  "prerequisiteQuests": [
+    "clockworks"
+  ]
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Clear the sunken corridors",
+    "target": "paru_creature",
+    "required": 30
+  },
+  {
+    "type": "collect_items",
+    "description": "Recover ancient artifacts",
+    "target": "ancient_artifact",
+    "required": 5
+  },
+  {
+    "type": "defeat_boss",
+    "description": "Defeat the Guardian of Paru",
+    "target": "paru_guardian"
+  }
+]
+is_repeatable = true
+is_secret = false

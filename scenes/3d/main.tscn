@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/3d/game/game_controller.gd" id="1_controller"]
+[ext_resource type="PackedScene" path="res://scenes/3d/ui/hud.tscn" id="2_hud"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_controller")
+starting_map = "s01a_ga1"
+starting_spawn = 0
+
+[node name="HUD" parent="." instance=ExtResource("2_hud")]

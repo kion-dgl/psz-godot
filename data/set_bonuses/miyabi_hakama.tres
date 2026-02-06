@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SetBonusData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/set_bonus_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "miyabi_hakama"
+armor = "Miyabi Hakama"
+weapons = PackedStringArray("Bangasa Jikomi", "Karakasa Jikomi")
+bonuses = {
+  "attack": 25,
+  "mental": 0,
+  "accuracy": 50,
+  "defense": 0,
+  "evasion": 0
+}

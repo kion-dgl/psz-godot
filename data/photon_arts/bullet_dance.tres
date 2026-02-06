@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bullet_dance"
+name = "Bullet Dance"
+weapon_type = "Gunblade"
+class_type = "Ranger"
+attack_mod = 125.0
+accuracy_mod = 70.0
+pp_cost = 16
+targets = 0
+hit_range = 10.0
+area = 360.0
+hits = 15
+notes = ""

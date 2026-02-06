@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Theme" path="res://themes/terminal_theme.tres" id="1_theme"]
+[ext_resource type="Script" path="res://scripts/2d/components/stat_bar.gd" id="2_script"]
+
+[node name="StatBar" type="HBoxContainer"]
+theme = ExtResource("1_theme")
+script = ExtResource("2_script")
+
+[node name="NameLabel" type="Label" parent="."]
+layout_mode = 2
+custom_minimum_size = Vector2(32, 0)
+text = "HP"
+
+[node name="BarLabel" type="Label" parent="."]
+layout_mode = 2
+text = "██████████"
+
+[node name="ValueLabel" type="Label" parent="."]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 0)
+text = "100/100"
+horizontal_alignment = 2

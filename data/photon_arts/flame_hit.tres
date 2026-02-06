@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "flame_hit"
+name = "Flame Hit"
+weapon_type = "Handgun"
+class_type = "Ranger"
+attack_mod = 145.0
+accuracy_mod = 100.0
+pp_cost = 19
+targets = 3
+hit_range = 6.0
+area = 120.0
+hits = 3
+notes = "20% chance for Level 4 Burn"

@@ -1,0 +1,87 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "system_failure"
+quest_id = "system_failure"
+quest_name = "System Failure"
+quest_type = "side"
+area = "Arca Plant"
+description = "Critical systems are failing throughout the plant. Someone needs to manually restart the backup generators."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 42,
+    "rewards": {
+      "meseta": 8000,
+      "experience": 4000,
+      "items": [
+        {
+          "itemId": "trigrinder",
+          "itemName": "Trigrinder",
+          "quantity": 2
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 58,
+    "rewards": {
+      "meseta": 16000,
+      "experience": 8000,
+      "items": [
+        {
+          "itemId": "photon_drop",
+          "itemName": "Photon Drop",
+          "quantity": 2
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 78,
+    "rewards": {
+      "meseta": 32000,
+      "experience": 16000,
+      "items": [
+        {
+          "itemId": "photon_sphere",
+          "itemName": "Photon Sphere",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 42,
+  "prerequisiteQuests": [
+    "truth_revealed"
+  ]
+}
+objectives = [
+  {
+    "type": "reach_location",
+    "description": "Reach generator room A"
+  },
+  {
+    "type": "reach_location",
+    "description": "Reach generator room B"
+  },
+  {
+    "type": "reach_location",
+    "description": "Reach generator room C"
+  },
+  {
+    "type": "defeat_enemies",
+    "description": "Clear security drones",
+    "target": "security_drone",
+    "required": 30
+  }
+]
+is_repeatable = true
+is_secret = false

@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "eternal_tower"
+quest_id = "eternal_tower"
+quest_name = "Eternal Tower"
+quest_type = "post_game"
+area = "Eternal Tower"
+description = "The ultimate endgame challenge. Climb 101 floors of increasingly difficult enemies and bosses. Accessible after completing the main story."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 60,
+    "rewards": {
+      "meseta": 50000,
+      "experience": 20000
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 75,
+    "rewards": {
+      "meseta": 100000,
+      "experience": 50000
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 90,
+    "rewards": {
+      "meseta": 200000,
+      "experience": 100000
+    }
+  }
+]
+requirements = {
+  "minLevel": 60,
+  "prerequisiteQuests": [
+    "curtain_call"
+  ]
+}
+objectives = [
+  {
+    "type": "reach_location",
+    "description": "Reach floor 101",
+    "target": "floor_101"
+  }
+]
+is_repeatable = true
+is_secret = false

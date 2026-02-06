@@ -1,0 +1,90 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "truth_revealed"
+quest_id = "truth_revealed"
+quest_name = "Truth Revealed"
+quest_type = "story"
+area = "Arca Plant"
+description = "Chapter 6: Board the orbital Arca Plant to uncover the truth behind the awakening machines and the dark force manipulating events from the shadows."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 40,
+    "rewards": {
+      "meseta": 7000,
+      "experience": 3500,
+      "items": [
+        {
+          "itemId": "telepipe",
+          "itemName": "Telepipe",
+          "quantity": 10
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 55,
+    "rewards": {
+      "meseta": 14000,
+      "experience": 7000,
+      "items": [
+        {
+          "itemId": "scape_doll",
+          "itemName": "Scape Doll",
+          "quantity": 1
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 75,
+    "rewards": {
+      "meseta": 28000,
+      "experience": 15000,
+      "items": [
+        {
+          "itemId": "scape_doll",
+          "itemName": "Scape Doll",
+          "quantity": 2
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 40,
+  "prerequisiteQuests": [
+    "a_far_journey"
+  ]
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Fight through security systems",
+    "target": "arca_machine",
+    "required": 40
+  },
+  {
+    "type": "collect_items",
+    "description": "Download data logs",
+    "target": "data_log",
+    "required": 4
+  },
+  {
+    "type": "reach_location",
+    "description": "Access the central core"
+  },
+  {
+    "type": "defeat_boss",
+    "description": "Defeat the Corrupted AI",
+    "target": "corrupted_ai"
+  }
+]
+is_repeatable = true
+is_secret = false

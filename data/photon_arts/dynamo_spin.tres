@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "dynamo_spin"
+name = "Dynamo Spin"
+weapon_type = "Sword"
+class_type = "Hunter"
+attack_mod = 80.0
+accuracy_mod = 80.0
+pp_cost = 21
+targets = 0
+hit_range = 4.0
+area = 360.0
+hits = 4
+notes = ""

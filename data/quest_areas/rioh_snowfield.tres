@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestAreaData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_area_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rioh_snowfield"
+area_id = "rioh_snowfield"
+area_name = "Rioh Snowfield"
+description = "A frozen tundra with ice caves and blizzard conditions. Home to the CAST storyline."
+unlock_condition = "Complete Newman story quest"
+recommended_level = 8
+environment = "snow"
+quest_count = 4

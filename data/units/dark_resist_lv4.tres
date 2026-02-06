@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "dark_resist_lv4"
+name = "Dark Resist Lv4"
+japanese_name = "ダークレジストLv4"
+rarity = 6
+category = "Resistance"
+effect = "Dark Resist +8"
+effect_value = 8
+pso_world_id = 461

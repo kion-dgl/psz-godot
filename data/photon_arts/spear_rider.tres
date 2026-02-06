@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "spear_rider"
+name = "Spear Rider"
+weapon_type = "Spear"
+class_type = "Hunter"
+attack_mod = 145.0
+accuracy_mod = 160.0
+pp_cost = 20
+targets = 2
+hit_range = 3.5
+area = 180.0
+hits = 3
+notes = ""

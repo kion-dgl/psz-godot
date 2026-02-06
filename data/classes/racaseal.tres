@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/class_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "racaseal"
+name = "RAcaseal"
+race = "Cast"
+gender = "Female"
+type = "Ranger"
+bonuses = PackedStringArray("Natural HP recovery (+1% every 5 seconds; +5% at rest)", "Immune to poison status attribute", "Can see and destroy traps")
+material_limit = 80
+stats = {
+  "hp": {
+    "1": 83,
+    "20": 238,
+    "40": 399,
+    "60": 522,
+    "80": 652,
+    "100": 754
+  },
+  "pp": {
+    "1": 66,
+    "20": 180,
+    "40": 259,
+    "60": 319,
+    "80": 378,
+    "100": 418
+  },
+  "attack": {
+    "1": 44,
+    "20": 106,
+    "40": 172,
+    "60": 237,
+    "80": 303,
+    "100": 369
+  },
+  "defense": {
+    "1": 8,
+    "20": 58,
+    "40": 94,
+    "60": 129,
+    "80": 165,
+    "100": 201
+  },
+  "accuracy": {
+    "1": 171,
+    "20": 221,
+    "40": 273,
+    "60": 321,
+    "80": 339,
+    "100": 357
+  },
+  "evasion": {
+    "1": 9,
+    "20": 52,
+    "40": 90,
+    "60": 120,
+    "80": 150,
+    "100": 180
+  },
+  "technique": {
+    "1": 29,
+    "20": 76,
+    "40": 126,
+    "60": 176,
+    "80": 225,
+    "100": 275
+  }
+}
+technique_limits = {}
+trap_limits = {
+  "fire": [5, 6, 7, 8, 9, 10],
+  "freeze": [5, 5, 5, 5, 5, 5],
+  "confuse": [5, 5, 5, 5, 5, 5],
+  "heal": [5, 6, 7, 8, 9, 10]
+}

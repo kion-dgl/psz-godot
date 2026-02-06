@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ice_element"
+name = "Ice Element"
+japanese_name = "アイスエレメント"
+details = "Grants a weapon the element of \"Ice\", allowing you to inflict Freeze on enemies. Under the effects of Freeze, enemies will take 20% more damage.
+
+The strength of Freeze increases with the element level."
+rarity = 4
+pso_world_id = 537

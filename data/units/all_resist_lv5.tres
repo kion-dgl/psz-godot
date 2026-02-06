@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "all_resist_lv5"
+name = "All Resist Lv5"
+japanese_name = "オールレジストLv5"
+rarity = 7
+category = "Resistance"
+effect = "All Resist +6"
+effect_value = 6
+pso_world_id = 467

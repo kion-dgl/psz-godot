@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mayors_mission"
+quest_id = "mayors_mission"
+quest_name = "Mayor's Mission"
+quest_type = "side"
+area = "Gurhacia Valley"
+description = "Help the mayor by completing tasks in Gurhacia Valley."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 3,
+    "rewards": {
+      "meseta": 500,
+      "experience": 200,
+      "items": [
+        {
+          "itemId": "grow_shower",
+          "itemName": "Grow Shower",
+          "quantity": 1
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 10,
+    "rewards": {
+      "meseta": 1000,
+      "experience": 500,
+      "items": [
+        {
+          "itemId": "bloom_shower",
+          "itemName": "Bloom Shower",
+          "quantity": 1
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 20,
+    "rewards": {
+      "meseta": 2000,
+      "experience": 1000,
+      "items": [
+        {
+          "itemId": "bloom_shower",
+          "itemName": "Bloom Shower",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 3,
+  "prerequisiteQuests": []
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Defeat 15 enemies in the valley",
+    "target": "any",
+    "required": 15
+  }
+]
+is_repeatable = true
+is_secret = false

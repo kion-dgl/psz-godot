@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mayor_s_quest"
+name = "Mayor's Quest"
+area = "Ozette Wetland"
+is_main = false
+is_secret = false
+requires = PackedStringArray()
+rewards = {
+  "normal": {
+    "item": "Ace/HP",
+    "quantity": 1,
+    "meseta": 1500
+  },
+  "hard": {
+    "item": "Hero/HP",
+    "quantity": 1,
+    "meseta": 3000
+  },
+  "superHard": {
+    "item": "Master/HP",
+    "quantity": 1,
+    "meseta": 6000
+  }
+}

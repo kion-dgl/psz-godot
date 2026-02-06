@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ruffian"
+name = "Ruffian"
+japanese_name = "あられんぼ"
+category = "offensive"
+tier = "advanced"
+unlock_level = 60
+favorite_food = "Hunter Weapons and Elements"
+switch_from = "Feed 5 consecutive Hunter or Ranged Weapons"
+triggers = {
+  "walking": {
+    "effect": "Offensive Boost",
+    "strength": "Large",
+    "chance": 10,
+    "duration": 30
+  },
+  "lowHealth": 0,
+  "statusCondition": {
+    "effect": "Anti",
+    "chance": 8
+  },
+  "bossEncounter": {
+    "effect": "Offensive Boost",
+    "strength": "Large",
+    "chance": 50,
+    "duration": 30
+  },
+  "playerDeath": {
+    "effect": "Revival",
+    "chance": 10
+  },
+  "photonBlastFull": {
+    "effect": "Shifta",
+    "strength": "Level 10",
+    "chance": 100,
+    "duration": 45
+  }
+}

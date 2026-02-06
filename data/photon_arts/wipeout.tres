@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "wipeout"
+name = "Wipeout"
+weapon_type = "Rifle"
+class_type = "Ranger"
+attack_mod = 75.0
+accuracy_mod = 80.0
+pp_cost = 21
+targets = 0
+hit_range = 12.5
+area = 40.0
+hits = 11
+notes = "20% chance of Level 4 Burn"

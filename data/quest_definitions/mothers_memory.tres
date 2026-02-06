@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mothers_memory"
+quest_id = "mothers_memory"
+quest_name = "Mother's Memory"
+quest_type = "side"
+area = "Gurhacia Valley"
+description = "A child has lost a precious memento of their late mother somewhere in the valley. Help find it before the creatures destroy it."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 5,
+    "rewards": {
+      "meseta": 800,
+      "experience": 400,
+      "items": [
+        {
+          "itemId": "monofluid",
+          "itemName": "Monofluid",
+          "quantity": 3
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 22,
+    "rewards": {
+      "meseta": 2000,
+      "experience": 1000,
+      "items": [
+        {
+          "itemId": "difluid",
+          "itemName": "Difluid",
+          "quantity": 2
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 52,
+    "rewards": {
+      "meseta": 5000,
+      "experience": 2500,
+      "items": [
+        {
+          "itemId": "trifluid",
+          "itemName": "Trifluid",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 5,
+  "prerequisiteQuests": [
+    "mayors_mission"
+  ]
+}
+objectives = [
+  {
+    "type": "collect_items",
+    "description": "Search for the memento",
+    "target": "mothers_locket",
+    "required": 1
+  },
+  {
+    "type": "defeat_enemies",
+    "description": "Protect the memento from creatures",
+    "target": "valley_creature",
+    "required": 8
+  }
+]
+is_repeatable = true
+is_secret = false

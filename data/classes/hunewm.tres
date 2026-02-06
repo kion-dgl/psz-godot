@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/class_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hunewm"
+name = "HUnewm"
+race = "Newman"
+gender = "Male"
+type = "Hunter"
+bonuses = PackedStringArray("Natural PP recovery (+1% every 5 seconds; +5% at rest)")
+material_limit = 80
+stats = {
+  "hp": {
+    "1": 77,
+    "20": 231,
+    "40": 376,
+    "60": 486,
+    "80": 598,
+    "100": 674
+  },
+  "pp": {
+    "1": 75,
+    "20": 202,
+    "40": 282,
+    "60": 341,
+    "80": 419,
+    "100": 480
+  },
+  "attack": {
+    "1": 50,
+    "20": 117,
+    "40": 182,
+    "60": 247,
+    "80": 337,
+    "100": 423
+  },
+  "defense": {
+    "1": 9,
+    "20": 56,
+    "40": 84,
+    "60": 121,
+    "80": 169,
+    "100": 212
+  },
+  "accuracy": {
+    "1": 121,
+    "20": 150,
+    "40": 177,
+    "60": 214,
+    "80": 242,
+    "100": 266
+  },
+  "evasion": {
+    "1": 21,
+    "20": 95,
+    "40": 161,
+    "60": 211,
+    "80": 255,
+    "100": 297
+  },
+  "technique": {
+    "1": 43,
+    "20": 109,
+    "40": 178,
+    "60": 242,
+    "80": 302,
+    "100": 359
+  }
+}
+technique_limits = {
+  "foieBartaZonde": 10,
+  "grants": 0,
+  "megid": 0,
+  "restaReverser": 10,
+  "shiftaDeband": 10,
+  "jellenZalure": 0
+}
+trap_limits = {}

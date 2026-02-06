@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "divine_hit"
+name = "Divine/Hit"
+japanese_name = "ゴッド／ヒット"
+rarity = 7
+category = "Hit"
+effect = "ACC+15"
+effect_value = 15
+pso_world_id = 335

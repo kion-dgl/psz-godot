@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MagData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "teroo"
+name = "Teroo"
+japanese_name = "テルー"
+stage = "3"
+evolution_level = 30
+evolution_requirement = {
+  "type": "pure",
+  "stat": "Hit"
+}
+photon_blast = "Pacifal"
+pso_world_id = 362

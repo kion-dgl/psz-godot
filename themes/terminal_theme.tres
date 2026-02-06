@@ -1,0 +1,56 @@
+[gd_resource type="Theme" load_steps=5 format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/JetBrainsMono-Regular.ttf" id="1_font"]
+[ext_resource type="FontFile" path="res://assets/fonts/JetBrainsMono-Bold.ttf" id="2_bold"]
+
+[sub_resource type="StyleBoxFlat" id="panel_normal"]
+bg_color = Color(0.04, 0.04, 0.04, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 1, 0.533, 1)
+corner_radius_top_left = 0
+corner_radius_top_right = 0
+corner_radius_bottom_right = 0
+corner_radius_bottom_left = 0
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="button_normal"]
+bg_color = Color(0.08, 0.08, 0.08, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 1, 0.533, 1)
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 4.0
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 16
+
+Label/colors/font_color = Color(0, 1, 0.533, 1)
+Label/font_sizes/font_size = 16
+
+Button/colors/font_color = Color(0, 1, 0.533, 1)
+Button/colors/font_focus_color = Color(1, 0.8, 0, 1)
+Button/colors/font_hover_color = Color(1, 0.8, 0, 1)
+Button/colors/font_pressed_color = Color(1, 1, 1, 1)
+Button/font_sizes/font_size = 16
+
+PanelContainer/styles/panel = SubResource("panel_normal")
+
+RichTextLabel/colors/default_color = Color(0, 1, 0.533, 1)
+RichTextLabel/font_sizes/normal_font_size = 16
+
+LineEdit/colors/font_color = Color(0, 1, 0.533, 1)
+LineEdit/colors/caret_color = Color(0, 1, 0.533, 1)
+LineEdit/font_sizes/font_size = 16
+
+ProgressBar/font_sizes/font_size = 14

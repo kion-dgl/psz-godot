@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rookie_swift"
+name = "Rookie/Swift"
+japanese_name = "ルーキー／スイフト"
+rarity = 1
+category = "Swift"
+effect = "EVA+5"
+effect_value = 5
+pso_world_id = 326

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mayor_s_mission"
+name = "Mayor's Mission"
+area = "Gurhacia Valley"
+is_main = false
+is_secret = false
+requires = PackedStringArray()
+rewards = {
+  "normal": {
+    "item": "Grow Shower",
+    "quantity": 1,
+    "meseta": 500
+  },
+  "hard": {
+    "item": "Bloom Shower",
+    "quantity": 1,
+    "meseta": 1000
+  },
+  "superHard": {
+    "item": "Bloom Shower",
+    "quantity": 1,
+    "meseta": 2000
+  }
+}
