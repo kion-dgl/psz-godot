@@ -103,7 +103,7 @@ func _refresh_display() -> void:
 			for i in range(_missions.size()):
 				var mission = _missions[i]
 				var label := Label.new()
-				var tag := "[MAIN] " if mission.is_main else ""
+				var tag: String = "[MAIN] " if mission.is_main else ""
 				label.text = "%s%-20s %s" % [tag, mission.name, mission.area]
 				if i == _selected_index:
 					label.text = "> " + label.text

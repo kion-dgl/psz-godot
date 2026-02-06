@@ -74,14 +74,14 @@ func next_stage() -> bool:
 
 
 ## Add rewards to running session totals
-func add_rewards(exp: int, meseta: int) -> void:
-	_session["total_exp"] = int(_session.get("total_exp", 0)) + exp
+func add_rewards(exp_amount: int, meseta: int) -> void:
+	_session["total_exp"] = int(_session.get("total_exp", 0)) + exp_amount
 	_session["total_meseta"] = int(_session.get("total_meseta", 0)) + meseta
 
 
 ## Return to city and end session
 func return_to_city() -> Dictionary:
-	var summary := _session.duplicate()
+	var summary: Dictionary = _session.duplicate()
 	_session.clear()
 	_location = "city"
 	session_ended.emit()

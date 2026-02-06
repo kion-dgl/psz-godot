@@ -61,7 +61,7 @@ func _refresh_slots() -> void:
 		slot_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(slot_header)
 
-		var character := CharacterManager.get_character(i)
+		var character = CharacterManager.get_character(i)
 		if character != null:
 			var name_label := Label.new()
 			name_label.text = character.get("name", "???")
@@ -98,7 +98,7 @@ func _refresh_slots() -> void:
 
 
 func _select_slot() -> void:
-	var character := CharacterManager.get_character(_current_slot)
+	var character = CharacterManager.get_character(_current_slot)
 	if character != null:
 		CharacterManager.set_active_slot(_current_slot)
 		SceneManager.goto_scene("res://scenes/2d/city.tscn")
@@ -107,7 +107,7 @@ func _select_slot() -> void:
 
 
 func _delete_slot() -> void:
-	var character := CharacterManager.get_character(_current_slot)
+	var character = CharacterManager.get_character(_current_slot)
 	if character == null:
 		return
 	# TODO: Add confirm dialog before deletion

@@ -28,7 +28,7 @@ func _refresh_info() -> void:
 	for child in content_panel.get_children():
 		child.queue_free()
 
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
@@ -41,7 +41,7 @@ func _refresh_info() -> void:
 	vbox.add_child(name_label)
 
 	var class_id: String = str(character.get("class_id", "???"))
-	var class_data = ClassRegistry.get_class(class_id)
+	var class_data = ClassRegistry.get_class_data(class_id)
 	var class_name_str: String = class_data.name if class_data else class_id
 
 	var class_label := Label.new()
@@ -54,7 +54,7 @@ func _refresh_info() -> void:
 	vbox.add_child(level_label)
 
 	# EXP bar
-	var exp_progress := CharacterManager.get_exp_progress()
+	var exp_progress: Dictionary = CharacterManager.get_exp_progress()
 	var exp_label := Label.new()
 	var current_exp: int = int(exp_progress.get("current", 0))
 	var needed_exp: int = int(exp_progress.get("needed", 1))
@@ -127,7 +127,7 @@ func _refresh_stats() -> void:
 	for child in stats_panel.get_children():
 		child.queue_free()
 
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
@@ -197,7 +197,7 @@ func _calculate_equipment_bonuses(character: Dictionary) -> Dictionary:
 	# Weapon bonuses
 	var weapon_id: String = str(equipment.get("weapon", ""))
 	if not weapon_id.is_empty():
-		var weapon := WeaponRegistry.get_weapon(weapon_id)
+		var weapon = WeaponRegistry.get_weapon(weapon_id)
 		if weapon:
 			bonuses["atk"] += int(weapon.attack)
 			bonuses["acc"] += int(weapon.accuracy)
@@ -205,7 +205,7 @@ func _calculate_equipment_bonuses(character: Dictionary) -> Dictionary:
 	# Frame bonuses
 	var frame_id: String = str(equipment.get("frame", ""))
 	if not frame_id.is_empty():
-		var armor := ArmorRegistry.get_armor(frame_id)
+		var armor = ArmorRegistry.get_armor(frame_id)
 		if armor:
 			bonuses["def"] += int(armor.defense)
 			bonuses["eva"] += int(armor.evasion)
@@ -214,7 +214,7 @@ func _calculate_equipment_bonuses(character: Dictionary) -> Dictionary:
 	for slot in ["unit1", "unit2", "unit3", "unit4"]:
 		var unit_id: String = str(equipment.get(slot, ""))
 		if not unit_id.is_empty():
-			var unit := UnitRegistry.get_unit(unit_id)
+			var unit = UnitRegistry.get_unit(unit_id)
 			if unit:
 				var effect: String = str(unit.effect).to_lower()
 				var value: int = int(unit.effect_value)
@@ -226,11 +226,11 @@ func _calculate_equipment_bonuses(character: Dictionary) -> Dictionary:
 
 func _get_item_name(slot_type: String, item_id: String) -> String:
 	if slot_type == "weapon":
-		var weapon := WeaponRegistry.get_weapon(item_id)
+		var weapon = WeaponRegistry.get_weapon(item_id)
 		return weapon.name if weapon else item_id
 	elif slot_type == "frame":
-		var armor := ArmorRegistry.get_armor(item_id)
+		var armor = ArmorRegistry.get_armor(item_id)
 		return armor.name if armor else item_id
 	else:
-		var unit := UnitRegistry.get_unit(item_id)
+		var unit = UnitRegistry.get_unit(item_id)
 		return unit.name if unit else item_id

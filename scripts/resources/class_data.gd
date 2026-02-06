@@ -48,7 +48,7 @@ func get_stat_at_level(stat_name: String, level: int) -> int:
 
 ## Get all stats at a level as a dictionary
 func get_stats_at_level(level: int) -> Dictionary:
-	var result := {}
+	var result: Dictionary = {}
 	for stat_name in ["hp", "pp", "attack", "defense", "accuracy", "evasion", "technique"]:
 		result[stat_name] = get_stat_at_level(stat_name, level)
 	return result

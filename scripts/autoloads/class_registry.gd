@@ -34,7 +34,7 @@ func _load_all_classes() -> void:
 	classes_loaded.emit()
 
 
-func get_class(class_id: String):
+func get_class_data(class_id: String):
 	return _classes.get(class_id, null)
 
 

@@ -56,7 +56,7 @@ func pop_scene(data: Dictionary = {}) -> void:
 	if _scene_stack.is_empty():
 		return
 	_transition_data = data
-	var prev_scene := _scene_stack.pop_back()
+	var prev_scene: String = _scene_stack.pop_back()
 	await _fade_to_scene(prev_scene)
 
 

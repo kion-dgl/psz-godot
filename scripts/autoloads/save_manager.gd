@@ -42,7 +42,7 @@ func load_game() -> void:
 		push_warning("[SaveManager] Could not open save file for reading")
 		return
 
-	var json_str := file.get_as_text()
+	var json_str: String = file.get_as_text()
 	file.close()
 
 	var json := JSON.new()

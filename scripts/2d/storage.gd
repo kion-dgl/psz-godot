@@ -25,14 +25,14 @@ func _load_items() -> void:
 
 
 func _get_storage_items() -> Array:
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return []
 	return character.get("storage", [])
 
 
 func _set_storage_items(items: Array) -> void:
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character:
 		character["storage"] = items
 

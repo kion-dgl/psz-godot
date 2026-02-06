@@ -14,5 +14,5 @@ pp_cost = 2
 targets = 0
 hit_range = 0.0
 area = 0.0
-hits = None
+hits = 0
 notes = "Triggers a random technique"
