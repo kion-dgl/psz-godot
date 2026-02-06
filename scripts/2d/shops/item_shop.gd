@@ -175,7 +175,7 @@ func _refresh_detail() -> void:
 
 
 func _get_meseta_str() -> String:
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character:
 		return str(int(character.get("meseta", 0)))
 	return "0"

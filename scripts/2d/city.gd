@@ -82,11 +82,11 @@ func _update_char_info() -> void:
 	for child in char_panel.get_children():
 		child.queue_free()
 
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
-	var class_data = ClassRegistry.get_class(str(character.get("class_id", "")))
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
 	var stats: Dictionary = {}
 	if class_data:
 		stats = class_data.get_stats_at_level(int(character.get("level", 1)))

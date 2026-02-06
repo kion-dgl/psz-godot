@@ -29,13 +29,13 @@ func create_character(slot: int, class_id: String, char_name: String) -> Diction
 		push_warning("[CharacterManager] Slot already occupied: ", slot)
 		return {}
 
-	var class_data = ClassRegistry.get_class(class_id)
+	var class_data = ClassRegistry.get_class_data(class_id)
 	if class_data == null:
 		push_warning("[CharacterManager] Unknown class: ", class_id)
 		return {}
 
-	var stats := class_data.get_stats_at_level(1)
-	var character := {
+	var stats: Dictionary = class_data.get_stats_at_level(1)
+	var character: Dictionary = {
 		"name": char_name,
 		"class_id": class_id,
 		"level": 1,
@@ -106,7 +106,7 @@ func delete_character(slot: int) -> void:
 
 ## Add experience to the active character. Returns {leveled_up: bool, new_level: int}
 func add_experience(amount: int) -> Dictionary:
-	var character := get_active_character()
+	var character = get_active_character()
 	if character == null:
 		return {"leveled_up": false, "new_level": 0}
 
@@ -117,9 +117,9 @@ func add_experience(amount: int) -> Dictionary:
 
 	if leveled_up:
 		character["level"] = new_level
-		var class_data = ClassRegistry.get_class(character["class_id"])
+		var class_data = ClassRegistry.get_class_data(character["class_id"])
 		if class_data:
-			var stats := class_data.get_stats_at_level(new_level)
+			var stats: Dictionary = class_data.get_stats_at_level(new_level)
 			character["max_hp"] = stats.get("hp", character["max_hp"])
 			character["max_pp"] = stats.get("pp", character["max_pp"])
 			character["hp"] = character["max_hp"]
@@ -132,7 +132,7 @@ func add_experience(amount: int) -> Dictionary:
 
 ## Get stats at a specific level for a class
 func get_stats_at_level(class_id: String, level: int) -> Dictionary:
-	var class_data = ClassRegistry.get_class(class_id)
+	var class_data = ClassRegistry.get_class_data(class_id)
 	if class_data == null:
 		return {}
 	return class_data.get_stats_at_level(level)
@@ -140,7 +140,7 @@ func get_stats_at_level(class_id: String, level: int) -> Dictionary:
 
 ## Get experience progress for active character
 func get_exp_progress() -> Dictionary:
-	var character := get_active_character()
+	var character = get_active_character()
 	if character == null:
 		return {"current": 0, "needed": 0, "percent": 0.0}
 
@@ -150,8 +150,8 @@ func get_exp_progress() -> Dictionary:
 	if exp_table == null:
 		return {"current": total_exp, "needed": 100, "percent": 0.0}
 
-	var current_level_exp := exp_table.get_exp_for_level(level)
-	var next_level_exp := exp_table.get_exp_to_next(level)
+	var current_level_exp: int = exp_table.get_exp_for_level(level)
+	var next_level_exp: int = exp_table.get_exp_to_next(level)
 	var progress: int = total_exp - current_level_exp
 	var percent := 0.0
 	if next_level_exp > 0:
@@ -178,7 +178,7 @@ func get_save_data() -> Array:
 
 ## Heal the active character
 func heal_character(hp_amount: int, pp_amount: int = 0) -> void:
-	var character := get_active_character()
+	var character = get_active_character()
 	if character == null:
 		return
 	character["hp"] = mini(int(character["hp"]) + hp_amount, int(character["max_hp"]))
@@ -203,7 +203,7 @@ func _get_exp_table():
 
 
 func _sync_to_game_state() -> void:
-	var character := get_active_character()
+	var character = get_active_character()
 	if character == null:
 		return
 	GameState.set_max_hp(int(character["max_hp"]))

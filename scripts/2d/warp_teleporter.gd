@@ -152,7 +152,7 @@ func _refresh_info() -> void:
 	vbox.add_child(stages_label)
 
 	# Show enemy types
-	var pool := EnemySpawner.get_enemy_pool(str(area["id"]))
+	var pool: Dictionary = EnemySpawner.get_enemy_pool(str(area["id"]))
 	if not pool.is_empty():
 		var sep := Label.new()
 		sep.text = ""

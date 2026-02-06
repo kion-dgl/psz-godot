@@ -37,7 +37,7 @@ func buy_item(shop_id: String, item_name: String, quantity: int = 1) -> bool:
 		# Non-meseta currencies not yet implemented
 		return false
 
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return false
 
@@ -58,7 +58,7 @@ func buy_item(shop_id: String, item_name: String, quantity: int = 1) -> bool:
 ## Sell an item for meseta
 func sell_item(item_name: String, sell_price: int, quantity: int = 1) -> int:
 	var meseta_gained := sell_price * quantity
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return 0
 

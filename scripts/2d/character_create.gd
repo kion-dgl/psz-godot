@@ -107,7 +107,7 @@ func _update_class_info() -> void:
 		return
 
 	var cls = _class_list[_selected_class_index]
-	var stats := cls.get_stats_at_level(1)
+	var stats: Dictionary = cls.get_stats_at_level(1)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
@@ -130,7 +130,7 @@ func _update_class_info() -> void:
 	# Stats at level 1
 	for stat_name in ["hp", "pp", "attack", "defense", "accuracy", "evasion", "technique"]:
 		var stat_label := Label.new()
-		var display_name := stat_name.to_upper().substr(0, 3) if stat_name.length() > 3 else stat_name.to_upper()
+		var display_name: String = stat_name.to_upper().substr(0, 3) if stat_name.length() > 3 else stat_name.to_upper()
 		if stat_name == "technique":
 			display_name = "TEC"
 		elif stat_name == "accuracy":
@@ -238,7 +238,7 @@ func _show_confirm() -> void:
 
 
 func _create_character() -> void:
-	var character := CharacterManager.create_character(_slot, _selected_class_id, _char_name)
+	var character: Dictionary = CharacterManager.create_character(_slot, _selected_class_id, _char_name)
 	if character.is_empty():
 		push_warning("[CharCreate] Failed to create character")
 		return

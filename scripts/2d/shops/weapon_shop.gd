@@ -27,7 +27,7 @@ func _load_items() -> void:
 				break
 	# If still empty, show available weapons from registry
 	if _items.is_empty():
-		var weapons := WeaponRegistry.get_all_weapon_ids()
+		var weapons: Array = WeaponRegistry.get_all_weapon_ids()
 		for i in range(mini(weapons.size(), 20)):
 			var w = WeaponRegistry.get_weapon(weapons[i])
 			if w:
@@ -62,7 +62,7 @@ func _buy_selected() -> void:
 		return
 	var item: Dictionary = _items[_selected_index]
 	var cost: int = int(item.get("cost", 0))
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 	if int(character.get("meseta", 0)) < cost:
@@ -163,7 +163,7 @@ func _add_detail_line(parent: VBoxContainer, text: String, color: Color = Color(
 
 
 func _get_meseta_str() -> String:
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character:
 		return str(int(character.get("meseta", 0)))
 	return "0"

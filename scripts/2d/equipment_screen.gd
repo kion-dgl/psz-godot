@@ -36,7 +36,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _toggle_equip() -> void:
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 	var equipment: Dictionary = character.get("equipment", {})
@@ -54,7 +54,7 @@ func _toggle_equip() -> void:
 
 
 func _refresh_display() -> void:
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
@@ -106,16 +106,16 @@ func _refresh_stats() -> void:
 	for child in stats_panel.get_children():
 		child.queue_free()
 
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
-	var class_data = ClassRegistry.get_class(str(character.get("class_id", "")))
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
 	if class_data == null:
 		return
 
 	var level: int = int(character.get("level", 1))
-	var base_stats := class_data.get_stats_at_level(level)
+	var base_stats: Dictionary = class_data.get_stats_at_level(level)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)

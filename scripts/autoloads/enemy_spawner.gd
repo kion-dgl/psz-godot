@@ -103,16 +103,16 @@ func generate_wave(area_id: String, difficulty: String, stage: int, wave: int) -
 	if stage >= 3 and wave >= 3:
 		var boss_list: Array = pool.get("bosses", [])
 		if not boss_list.is_empty():
-			var enemies: Array = []
+			var boss_wave: Array = []
 			var boss_id: String = boss_list[randi() % boss_list.size()]
-			enemies.append(_create_enemy_instance(boss_id, "boss", diff_mult, stage))
+			boss_wave.append(_create_enemy_instance(boss_id, "boss", diff_mult, stage))
 			# Add some regular enemies alongside boss
 			for i in range(randi_range(2, 4)):
 				var common_list: Array = pool.get("common", [])
 				if not common_list.is_empty():
 					var enemy_id: String = common_list[randi() % common_list.size()]
-					enemies.append(_create_enemy_instance(enemy_id, "normal", diff_mult, stage))
-			return enemies
+					boss_wave.append(_create_enemy_instance(enemy_id, "normal", diff_mult, stage))
+			return boss_wave
 
 	var enemies: Array = []
 	for i in range(num_enemies):

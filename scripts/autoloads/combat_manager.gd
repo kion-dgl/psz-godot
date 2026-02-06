@@ -85,11 +85,11 @@ func attack(target_index: int) -> Dictionary:
 	if not enemy.get("alive", false):
 		return {"hit": false, "message": "Target already defeated"}
 
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return {"hit": false, "message": "No active character"}
 
-	var class_data = ClassRegistry.get_class(str(character.get("class_id", "")))
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
 	var level: int = int(character.get("level", 1))
 	var stats: Dictionary = {}
 	if class_data:
@@ -153,7 +153,7 @@ func attack(target_index: int) -> Dictionary:
 	# Apply damage
 	enemy["hp"] = maxi(int(enemy["hp"]) - final_damage, 0)
 
-	var result := {
+	var result: Dictionary = {
 		"hit": true,
 		"damage": final_damage,
 		"critical": is_critical,
@@ -210,11 +210,11 @@ func enemy_attack(enemy_index: int) -> Dictionary:
 		if skip_chance > 0.0 and randf() < skip_chance:
 			return {"hit": false, "damage": 0, "message": "%s is %s!" % [str(enemy.get("name", "Enemy")), str(effect.get("type", "stunned"))]}
 
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return {"hit": false, "damage": 0, "message": ""}
 
-	var class_data = ClassRegistry.get_class(str(character.get("class_id", "")))
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
 	var level: int = int(character.get("level", 1))
 	var stats: Dictionary = {}
 	if class_data:
@@ -222,7 +222,7 @@ func enemy_attack(enemy_index: int) -> Dictionary:
 
 	var player_evasion: int = stats.get("evasion", 100)
 	var player_defense: int = stats.get("defense", 50)
-	var enemy_attack: int = int(enemy.get("attack", 15))
+	var enemy_atk: int = int(enemy.get("attack", 15))
 
 	# Hit check
 	var hit_chance := clampf(BASE_HIT_CHANCE + (50 - player_evasion) * 0.003, MIN_HIT_CHANCE, MAX_HIT_CHANCE)
@@ -230,7 +230,7 @@ func enemy_attack(enemy_index: int) -> Dictionary:
 		return {"hit": false, "damage": 0, "message": "%s attacks! Miss!" % str(enemy.get("name", "Enemy"))}
 
 	# Damage calculation
-	var raw_damage := float(enemy_attack)
+	var raw_damage := float(enemy_atk)
 	var after_defense := raw_damage - (float(player_defense) * 0.25) - (raw_damage * float(player_defense) / 600.0)
 	after_defense = maxf(after_defense, 1.0)
 
@@ -242,7 +242,7 @@ func enemy_attack(enemy_index: int) -> Dictionary:
 	character["hp"] = maxi(int(character["hp"]) - final_damage, 0)
 	CharacterManager._sync_to_game_state()
 
-	var result := {
+	var result: Dictionary = {
 		"hit": true,
 		"damage": final_damage,
 		"message": "%s attacks! %d damage!" % [str(enemy.get("name", "Enemy")), final_damage],

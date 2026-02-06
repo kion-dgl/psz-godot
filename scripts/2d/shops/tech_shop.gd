@@ -48,7 +48,7 @@ func _buy_selected() -> void:
 		return
 	var item: Dictionary = _items[_selected_index]
 	var cost: int = int(item.get("cost", 0))
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 	if int(character.get("meseta", 0)) < cost:
@@ -111,7 +111,7 @@ func _refresh_display() -> void:
 
 
 func _get_meseta_str() -> String:
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character:
 		return str(int(character.get("meseta", 0)))
 	return "0"

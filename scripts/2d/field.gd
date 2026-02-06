@@ -26,7 +26,7 @@ func _ready() -> void:
 
 
 func _start_wave() -> void:
-	var session := SessionManager.get_session()
+	var session: Dictionary = SessionManager.get_session()
 	if session.is_empty():
 		SceneManager.goto_scene("res://scenes/2d/city.tscn")
 		return
@@ -114,7 +114,7 @@ func _select_action() -> void:
 
 
 func _move_target(direction: int) -> void:
-	var alive := CombatManager.get_alive_enemies()
+	var alive: Array = CombatManager.get_alive_enemies()
 	if alive.is_empty():
 		return
 	# Find current target in alive list
@@ -167,7 +167,7 @@ func _execute_action() -> void:
 
 func _process_enemy_turns() -> void:
 	# Process status effects first
-	var ticks := CombatManager.process_enemy_status_effects()
+	var ticks: Array = CombatManager.process_enemy_status_effects()
 	for tick in ticks:
 		_add_log(str(tick.get("message", "")))
 
@@ -175,7 +175,7 @@ func _process_enemy_turns() -> void:
 	for i in range(_enemies.size()):
 		if not _enemies[i].get("alive", false):
 			continue
-		var result := CombatManager.enemy_attack(i)
+		var result: Dictionary = CombatManager.enemy_attack(i)
 		if not str(result.get("message", "")).is_empty():
 			_add_log(str(result.get("message", "")))
 
@@ -197,15 +197,15 @@ func _process_enemy_turns() -> void:
 
 func _on_wave_cleared() -> void:
 	_state = State.WAVE_CLEAR
-	var rewards := CombatManager.get_wave_rewards()
+	var rewards: Dictionary = CombatManager.get_wave_rewards()
 	var exp: int = int(rewards.get("exp", 0))
 	var meseta: int = int(rewards.get("meseta", 0))
 
 	SessionManager.add_rewards(exp, meseta)
 
 	# Apply rewards
-	var level_result := CharacterManager.add_experience(exp)
-	var character := CharacterManager.get_active_character()
+	var level_result: Dictionary = CharacterManager.add_experience(exp)
+	var character = CharacterManager.get_active_character()
 	if character:
 		character["meseta"] = int(character.get("meseta", 0)) + meseta
 		GameState.meseta = int(character["meseta"])
@@ -226,7 +226,7 @@ func _advance_or_complete() -> void:
 		_start_wave()
 	else:
 		_state = State.SESSION_COMPLETE
-		var session := SessionManager.get_session()
+		var session: Dictionary = SessionManager.get_session()
 		_add_log("══════ SESSION COMPLETE ══════")
 		_add_log("Total EXP: %d" % int(session.get("total_exp", 0)))
 		_add_log("Total Meseta: %d" % int(session.get("total_meseta", 0)))
@@ -248,7 +248,7 @@ func _add_log(message: String) -> void:
 
 
 func _refresh_display() -> void:
-	var session := SessionManager.get_session()
+	var session: Dictionary = SessionManager.get_session()
 	var area_name: String = str(session.get("area_id", "???")).capitalize()
 	header_label.text = "─── %s ─── Stage %d/%d ─── Wave %d/%d ───" % [
 		area_name,
@@ -316,7 +316,7 @@ func _refresh_player() -> void:
 	for child in player_panel.get_children():
 		child.queue_free()
 
-	var character := CharacterManager.get_active_character()
+	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
