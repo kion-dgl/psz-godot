@@ -1,0 +1,353 @@
+[gd_resource type="Resource" script_class="ShopData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/shop_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "tech_shop"
+name = "Tech Shop"
+description = "Sells technique disks for learning and upgrading techniques."
+items = [
+  {
+    "item": "Disk: Foie Lv.1",
+    "category": "Attack",
+    "cost": 100,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Foie Lv.2",
+    "category": "Attack",
+    "cost": 150,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Foie Lv.3",
+    "category": "Attack",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Foie Lv.4",
+    "category": "Attack",
+    "cost": 250,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Foie Lv.5",
+    "category": "Attack",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Barta Lv.1",
+    "category": "Attack",
+    "cost": 100,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Barta Lv.2",
+    "category": "Attack",
+    "cost": 150,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Barta Lv.3",
+    "category": "Attack",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Barta Lv.4",
+    "category": "Attack",
+    "cost": 250,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Barta Lv.5",
+    "category": "Attack",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zonde Lv.1",
+    "category": "Attack",
+    "cost": 100,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zonde Lv.2",
+    "category": "Attack",
+    "cost": 150,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zonde Lv.3",
+    "category": "Attack",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zonde Lv.4",
+    "category": "Attack",
+    "cost": 250,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zonde Lv.5",
+    "category": "Attack",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Resta Lv.1",
+    "category": "Support",
+    "cost": 150,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Resta Lv.2",
+    "category": "Support",
+    "cost": 225,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Resta Lv.3",
+    "category": "Support",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Resta Lv.4",
+    "category": "Support",
+    "cost": 375,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Resta Lv.5",
+    "category": "Support",
+    "cost": 450,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Anti Lv.1",
+    "category": "Support",
+    "cost": 150,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Anti Lv.2",
+    "category": "Support",
+    "cost": 225,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Anti Lv.3",
+    "category": "Support",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Anti Lv.4",
+    "category": "Support",
+    "cost": 375,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Anti Lv.5",
+    "category": "Support",
+    "cost": 450,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Shifta Lv.1",
+    "category": "Buff",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Shifta Lv.2",
+    "category": "Buff",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Shifta Lv.3",
+    "category": "Buff",
+    "cost": 400,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Shifta Lv.4",
+    "category": "Buff",
+    "cost": 500,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Shifta Lv.5",
+    "category": "Buff",
+    "cost": 600,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Deband Lv.1",
+    "category": "Buff",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Deband Lv.2",
+    "category": "Buff",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Deband Lv.3",
+    "category": "Buff",
+    "cost": 400,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Deband Lv.4",
+    "category": "Buff",
+    "cost": 500,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Deband Lv.5",
+    "category": "Buff",
+    "cost": 600,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Jellen Lv.1",
+    "category": "Debuff",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Jellen Lv.2",
+    "category": "Debuff",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Jellen Lv.3",
+    "category": "Debuff",
+    "cost": 400,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Jellen Lv.4",
+    "category": "Debuff",
+    "cost": 500,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Jellen Lv.5",
+    "category": "Debuff",
+    "cost": 600,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zalure Lv.1",
+    "category": "Debuff",
+    "cost": 200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zalure Lv.2",
+    "category": "Debuff",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zalure Lv.3",
+    "category": "Debuff",
+    "cost": 400,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zalure Lv.4",
+    "category": "Debuff",
+    "cost": 500,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Zalure Lv.5",
+    "category": "Debuff",
+    "cost": 600,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gifoie Lv.1",
+    "category": "Attack",
+    "cost": 400,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gifoie Lv.2",
+    "category": "Attack",
+    "cost": 600,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gifoie Lv.3",
+    "category": "Attack",
+    "cost": 800,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gibarta Lv.1",
+    "category": "Attack",
+    "cost": 400,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gibarta Lv.2",
+    "category": "Attack",
+    "cost": 600,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gibarta Lv.3",
+    "category": "Attack",
+    "cost": 800,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gizonde Lv.1",
+    "category": "Attack",
+    "cost": 400,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gizonde Lv.2",
+    "category": "Attack",
+    "cost": 600,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Gizonde Lv.3",
+    "category": "Attack",
+    "cost": 800,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Reverser Lv.1",
+    "category": "Support",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Reverser Lv.2",
+    "category": "Support",
+    "cost": 450,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Disk: Reverser Lv.3",
+    "category": "Support",
+    "cost": 600,
+    "currency": "Meseta"
+  }
+]

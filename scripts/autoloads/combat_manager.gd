@@ -414,6 +414,17 @@ func generate_drops(enemy: Dictionary) -> Array:
 			var drop_name: String = weapon_drops[randi() % weapon_drops.size()]
 			drops.append(drop_name.to_lower().replace(" ", "_").replace("'", ""))
 
+	# 3. Technique disk drops
+	var disk_chance := 0.05  # 5% for normal enemies
+	if is_rare:
+		disk_chance = 0.12
+	if is_boss:
+		disk_chance = 0.30
+	if randf() < disk_chance:
+		var disk: Dictionary = TechniqueManager.generate_random_disk(_difficulty, _area_id, is_boss, is_rare)
+		if not disk.is_empty():
+			drops.append("disk:" + str(disk.get("technique_id", "")) + ":" + str(disk.get("level", 1)))
+
 	return drops
 
 
@@ -432,6 +443,21 @@ func add_drops(items: Array) -> void:
 func pickup_all() -> Array:
 	var results: Array = []
 	for item_id in _dropped_items:
+		# Handle technique disk drops (format: "disk:technique_id:level")
+		if str(item_id).begins_with("disk:"):
+			var parts: PackedStringArray = str(item_id).split(":")
+			if parts.size() >= 3:
+				var technique_id: String = parts[1]
+				var level: int = int(parts[2])
+				var disk := TechniqueManager.create_disk(technique_id, level)
+				var character = CharacterManager.get_active_character()
+				if character:
+					var disk_result := TechniqueManager.use_disk(character, disk)
+					results.append({"id": item_id, "name": disk.get("name", "Disk"), "picked_up": true, "disk": true, "learned": disk_result["success"], "message": disk_result["message"]})
+				else:
+					results.append({"id": item_id, "name": disk.get("name", "Disk"), "picked_up": false, "disk": true})
+			continue
+
 		var info: Dictionary = Inventory._lookup_item(item_id)
 		if Inventory.can_add_item(item_id):
 			Inventory.add_item(item_id, 1)

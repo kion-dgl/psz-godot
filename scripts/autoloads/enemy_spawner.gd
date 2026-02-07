@@ -169,7 +169,29 @@ func _create_enemy_instance(enemy_id: String, stat_tier: String, diff_mult: floa
 	}
 
 
+## Name overrides for enemies whose IDs don't format cleanly
+## (Godot's capitalize() splits letter-digit boundaries like "S6" → "S 6")
+const ENEMY_NAME_OVERRIDES := {
+	"izhirak-s6": "Izhirak-S6",
+	"azherowa-b2": "Azherowa-B2",
+	"arkzein-r": "Arkzein-R",
+	"blaze-helion": "Blaze Helion",
+	"booma-origin": "Booma Origin",
+	"gigobooma-origin": "Gigobooma Origin",
+	"ar-rappy": "Ar Rappy",
+	"rab-rappy": "Rab Rappy",
+	"octo-diablo": "Octo Diablo",
+	"dark-falz": "Dark Falz",
+	"chaos-mobius": "Chaos Mobius",
+	"blade-mother": "Blade Mother",
+	"finjer-r": "Finjer R",
+	"finjer-g": "Finjer G",
+	"finjer-b": "Finjer B",
+}
+
 func _format_enemy_name(enemy_id: String) -> String:
+	if ENEMY_NAME_OVERRIDES.has(enemy_id):
+		return ENEMY_NAME_OVERRIDES[enemy_id]
 	return enemy_id.replace("-", " ").capitalize()
 
 
