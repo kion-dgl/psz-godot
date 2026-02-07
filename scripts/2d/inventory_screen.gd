@@ -51,6 +51,12 @@ func _use_selected() -> void:
 		_refresh_items()
 		_selected_index = clampi(_selected_index, 0, maxi(_items.size() - 1, 0))
 		_refresh_display()
+	elif CombatManager.MATERIAL_STAT_MAP.has(item_id):
+		var result: Dictionary = CombatManager.use_material(item_id)
+		hint_label.text = result.get("message", "Can't use that item.")
+		_refresh_items()
+		_selected_index = clampi(_selected_index, 0, maxi(_items.size() - 1, 0))
+		_refresh_display()
 	else:
 		hint_label.text = "Can't use that item."
 
@@ -204,6 +210,26 @@ func _refresh_detail() -> void:
 		_add_detail_line(vbox, "Type: Unit")
 		if unit.effect and not str(unit.effect).is_empty():
 			_add_detail_line(vbox, "Effect: %s" % unit.effect)
+
+	# Material details
+	if CombatManager.MATERIAL_STAT_MAP.has(item_id):
+		var mat = MaterialRegistry.get_material(item_id)
+		if mat:
+			_add_detail_line(vbox, "Type: Material")
+			if not mat.details.is_empty():
+				var detail_label := Label.new()
+				detail_label.text = mat.details
+				detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+				vbox.add_child(detail_label)
+		var stat_name: String = CombatManager.MATERIAL_STAT_MAP[item_id]
+		if stat_name == "reset":
+			_add_detail_line(vbox, "Resets all material bonuses")
+		else:
+			_add_detail_line(vbox, "Stat: %s +2" % stat_name.capitalize())
+		var character3 = CharacterManager.get_active_character()
+		if character3:
+			var used: int = int(character3.get("materials_used", 0))
+			_add_detail_line(vbox, "Materials used: %d/%d" % [used, CombatManager.MAX_MATERIALS])
 
 	detail_panel.add_child(vbox)
 
