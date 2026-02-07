@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SetBonusData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/set_bonus_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "pizza_box"
+armor = "Pizza Box"
+weapons = PackedStringArray("Eaten Pizza", "Pizza", "Twin Ketchup", "Twin Mustard")
+bonuses = {
+  "attack": 0,
+  "mental": 50,
+  "accuracy": 0,
+  "defense": 25,
+  "evasion": 0
+}

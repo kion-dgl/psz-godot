@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "tech_level_boost"
+name = "Tech Level Boost"
+japanese_name = "テクレベルブース"
+rarity = 5
+category = "Special"
+effect = "Technique Level +1"
+effect_value = 1
+pso_world_id = 480

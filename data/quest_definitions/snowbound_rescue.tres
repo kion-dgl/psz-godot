@@ -1,0 +1,89 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "snowbound_rescue"
+quest_id = "snowbound_rescue"
+quest_name = "Snowbound Rescue"
+quest_type = "story"
+area = "Rioh Snowfield"
+description = "Chapter 2: An expedition team has gone missing in the frozen wastes. Brave the blizzards and hostile wildlife to find them before it's too late."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 8,
+    "rewards": {
+      "meseta": 2000,
+      "experience": 1000,
+      "items": [
+        {
+          "itemId": "antifreeze",
+          "itemName": "Antifreeze",
+          "quantity": 5
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 25,
+    "rewards": {
+      "meseta": 5000,
+      "experience": 2500,
+      "items": [
+        {
+          "itemId": "antifreeze",
+          "itemName": "Antifreeze",
+          "quantity": 10
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 55,
+    "rewards": {
+      "meseta": 12000,
+      "experience": 6000,
+      "items": [
+        {
+          "itemId": "star_atomizer",
+          "itemName": "Star Atomizer",
+          "quantity": 3
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 8,
+  "prerequisiteQuests": [
+    "the_valley_king"
+  ]
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Fight through the snowfield creatures",
+    "target": "snowfield_beast",
+    "required": 20
+  },
+  {
+    "type": "reach_location",
+    "description": "Find the expedition camp"
+  },
+  {
+    "type": "escort_npc",
+    "description": "Escort survivors to safety",
+    "target": "survivors"
+  },
+  {
+    "type": "defeat_boss",
+    "description": "Defeat the ice beast blocking escape",
+    "target": "ice_boss"
+  }
+]
+is_repeatable = true
+is_secret = false

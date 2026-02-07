@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "mine_sneak"
+name = "Mine Sneak"
+weapon_type = "Rifle"
+class_type = "Ranger"
+attack_mod = 160.0
+accuracy_mod = 200.0
+pp_cost = 19
+targets = 4
+hit_range = 8.0
+area = 360.0
+hits = 4
+notes = ""

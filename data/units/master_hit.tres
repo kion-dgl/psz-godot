@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "master_hit"
+name = "Master/Hit"
+japanese_name = "マスター／ヒット"
+rarity = 6
+category = "Hit"
+effect = "ACC+12"
+effect_value = 12
+pso_world_id = 334

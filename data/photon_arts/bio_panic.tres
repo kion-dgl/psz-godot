@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "bio_panic"
+name = "Bio-Panic"
+weapon_type = "Laser Cannon"
+class_type = "Ranger"
+attack_mod = 100.0
+accuracy_mod = 180.0
+pp_cost = 16
+targets = 3
+hit_range = 12.0
+area = 180.0
+hits = 3
+notes = "50% chance of Level 3 Poison"

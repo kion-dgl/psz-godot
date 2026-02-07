@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hp_recovery_lv5"
+name = "HP Recovery Lv5"
+japanese_name = "HPリカバリーLv5"
+rarity = 7
+category = "Special"
+effect = "Recover 5 HP every 5 seconds"
+effect_value = 5
+pso_world_id = 432

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "wild_blow"
+name = "Wild Blow"
+weapon_type = "Bazooka"
+class_type = "Ranger"
+attack_mod = 120.0
+accuracy_mod = 90.0
+pp_cost = 28
+targets = 2
+hit_range = 3.5
+area = 120.0
+hits = 4
+notes = ""

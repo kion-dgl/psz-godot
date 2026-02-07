@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "heaven_element"
+name = "Heaven Element"
+japanese_name = "ヘブンエレメント"
+details = "Grants a weapon the element of \"Heaven\", giving you a chance to instantly incapacitate an enemy.
+
+The chance of incapacitation increases with the element level.
+
+This item is acquired by completing all other titles."
+rarity = 5
+pso_world_id = 543

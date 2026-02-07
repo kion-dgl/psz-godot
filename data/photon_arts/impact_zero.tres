@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "impact_zero"
+name = "Impact Zero"
+weapon_type = "Gunblade"
+class_type = "Ranger"
+attack_mod = 180.0
+accuracy_mod = 135.0
+pp_cost = 17
+targets = 3
+hit_range = 3.0
+area = 360.0
+hits = 2
+notes = ""

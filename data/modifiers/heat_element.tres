@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "heat_element"
+name = "Heat Element"
+japanese_name = "ヒートエレメント"
+details = "Grants a weapon the element of \"Heat\", allowing you to inflict Burn on enemies. Under the effects of Burn, enemies will take constant damage over time. While the damage taken is higher than Poison's, the duration is shorter.
+
+The strength of Burn increases with the element level."
+rarity = 4
+pso_world_id = 536

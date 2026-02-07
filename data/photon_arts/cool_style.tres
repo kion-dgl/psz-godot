@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cool_style"
+name = "Cool Style"
+weapon_type = "Mech Gun"
+class_type = "Ranger"
+attack_mod = 80.0
+accuracy_mod = 80.0
+pp_cost = 23
+targets = 0
+hit_range = 6.0
+area = 90.0
+hits = 30
+notes = ""

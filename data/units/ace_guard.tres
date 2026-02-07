@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ace_guard"
+name = "Ace/Guard"
+japanese_name = "エース／ガード"
+rarity = 3
+category = "Guard"
+effect = "DEF+10"
+effect_value = 10
+pso_world_id = 322

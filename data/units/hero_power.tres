@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hero_power"
+name = "Hero/Power"
+japanese_name = "ヒーロー／パワー"
+rarity = 5
+category = "Power"
+effect = "ATK+15"
+effect_value = 15
+pso_world_id = 318

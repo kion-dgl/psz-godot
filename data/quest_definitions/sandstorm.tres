@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sandstorm"
+quest_id = "sandstorm"
+quest_name = "Sandstorm"
+quest_type = "side"
+area = "Makara"
+description = "A massive sandstorm has trapped travelers in the ruins. Guide them to safety."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 32,
+    "rewards": {
+      "meseta": 6000,
+      "experience": 3000,
+      "items": [
+        {
+          "itemId": "telepipe",
+          "itemName": "Telepipe",
+          "quantity": 5
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 50,
+    "rewards": {
+      "meseta": 12000,
+      "experience": 6000,
+      "items": [
+        {
+          "itemId": "moon_atomizer",
+          "itemName": "Moon Atomizer",
+          "quantity": 3
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 72,
+    "rewards": {
+      "meseta": 24000,
+      "experience": 12000,
+      "items": [
+        {
+          "itemId": "scape_doll",
+          "itemName": "Scape Doll",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 32,
+  "prerequisiteQuests": [
+    "a_far_journey"
+  ]
+}
+objectives = [
+  {
+    "type": "escort_npc",
+    "description": "Guide travelers through the storm",
+    "target": "trapped_travelers"
+  },
+  {
+    "type": "defeat_enemies",
+    "description": "Protect from desert predators",
+    "target": "desert_predator",
+    "required": 20
+  }
+]
+is_repeatable = true
+is_secret = false

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "divine_ray"
+name = "Divine Ray"
+weapon_type = "Laser Cannon"
+class_type = "Ranger"
+attack_mod = 250.0
+accuracy_mod = 200.0
+pp_cost = 24
+targets = 3
+hit_range = 10.0
+area = 120.0
+hits = 1
+notes = ""

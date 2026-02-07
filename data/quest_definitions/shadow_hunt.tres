@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "shadow_hunt"
+quest_id = "shadow_hunt"
+quest_name = "Shadow Hunt"
+quest_type = "side"
+area = "Dark Shrine"
+description = "Dark manifestations continue to emerge from the shrine. Hunt them before they spread corruption further."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 52,
+    "rewards": {
+      "meseta": 12000,
+      "experience": 6000,
+      "items": [
+        {
+          "itemId": "photon_drop",
+          "itemName": "Photon Drop",
+          "quantity": 3
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 68,
+    "rewards": {
+      "meseta": 24000,
+      "experience": 12000,
+      "items": [
+        {
+          "itemId": "photon_sphere",
+          "itemName": "Photon Sphere",
+          "quantity": 1
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 85,
+    "rewards": {
+      "meseta": 50000,
+      "experience": 25000,
+      "items": [
+        {
+          "itemId": "photon_crystal",
+          "itemName": "Photon Crystal",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 52,
+  "prerequisiteQuests": [
+    "curtain_call"
+  ]
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Destroy shadow manifestations",
+    "target": "shadow_creature",
+    "required": 40
+  },
+  {
+    "type": "defeat_boss",
+    "description": "Defeat the Shadow Lord",
+    "target": "shadow_lord"
+  }
+]
+is_repeatable = true
+is_secret = false

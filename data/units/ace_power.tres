@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ace_power"
+name = "Ace/Power"
+japanese_name = "エース／パワー"
+rarity = 3
+category = "Power"
+effect = "ATK+10"
+effect_value = 10
+pso_world_id = 317

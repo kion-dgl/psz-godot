@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "fallen_flowers"
+name = "Fallen Flowers"
+area = "Makura Ruins"
+is_main = true
+is_secret = false
+requires = PackedStringArray("a_small_friend")
+rewards = {
+  "normal": {
+    "item": "Doppel Scythe",
+    "quantity": 1,
+    "meseta": 2000
+  },
+  "hard": {
+    "item": "Chronos Scythe",
+    "quantity": 1,
+    "meseta": 4000
+  },
+  "superHard": {
+    "item": "Chronos Scythe",
+    "quantity": 1,
+    "meseta": 8000
+  }
+}

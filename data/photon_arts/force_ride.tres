@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "force_ride"
+name = "Force Ride"
+weapon_type = "Saber"
+class_type = "Hunter"
+attack_mod = 125.0
+accuracy_mod = 100.0
+pp_cost = 15
+targets = 1
+hit_range = 2.5
+area = 220.0
+hits = 5
+notes = ""

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ConsumableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/consumable_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "star_atomizer"
+name = "Star Atomizer"
+japanese_name = "スターアトマイザー"
+details = "Removes status effects from the party and restores 50% of HP."
+rarity = 5
+max_stack = 5
+pso_world_id = 307

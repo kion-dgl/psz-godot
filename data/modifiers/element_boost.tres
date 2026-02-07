@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/modifier_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "element_boost"
+name = "Element Boost"
+japanese_name = "エレメントブースト"
+details = "Increases a weapon's element level by +1. This item cannot be stacked."
+rarity = 5
+pso_world_id = 481

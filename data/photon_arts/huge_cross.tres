@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "huge_cross"
+name = "Huge Cross"
+weapon_type = "Dagger"
+class_type = "Hunter"
+attack_mod = 90.0
+accuracy_mod = 130.0
+pp_cost = 22
+targets = 3
+hit_range = 3.5
+area = 180.0
+hits = 3
+notes = ""

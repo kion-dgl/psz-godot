@@ -1,0 +1,78 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/class_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "hucaseal"
+name = "HUcaseal"
+race = "Cast"
+gender = "Female"
+type = "Hunter"
+bonuses = PackedStringArray("Natural HP recovery (+1% every 5 seconds; +5% at rest)", "Immune to poison status attribute", "Can see and destroy traps")
+material_limit = 80
+stats = {
+  "hp": {
+    "1": 95,
+    "20": 271,
+    "40": 454,
+    "60": 593,
+    "80": 740,
+    "100": 853
+  },
+  "pp": {
+    "1": 59,
+    "20": 162,
+    "40": 233,
+    "60": 287,
+    "80": 340,
+    "100": 386
+  },
+  "attack": {
+    "1": 58,
+    "20": 141,
+    "40": 228,
+    "60": 316,
+    "80": 403,
+    "100": 490
+  },
+  "defense": {
+    "1": 11,
+    "20": 76,
+    "40": 122,
+    "60": 172,
+    "80": 224,
+    "100": 277
+  },
+  "accuracy": {
+    "1": 138,
+    "20": 172,
+    "40": 220,
+    "60": 260,
+    "80": 277,
+    "100": 294
+  },
+  "evasion": {
+    "1": 8,
+    "20": 44,
+    "40": 76,
+    "60": 102,
+    "80": 128,
+    "100": 153
+  },
+  "technique": {
+    "1": 28,
+    "20": 74,
+    "40": 122,
+    "60": 170,
+    "80": 218,
+    "100": 266
+  }
+}
+technique_limits = {}
+trap_limits = {
+  "fire": [5, 5, 5, 5, 5, 5],
+  "freeze": [5, 5, 5, 5, 5, 5],
+  "confuse": [5, 6, 7, 8, 9, 10],
+  "heal": [5, 6, 7, 8, 9, 10]
+}

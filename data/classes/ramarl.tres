@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="ClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/class_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "ramarl"
+name = "RAmarl"
+race = "Human"
+gender = "Female"
+type = "Ranger"
+bonuses = PackedStringArray()
+material_limit = 100
+stats = {
+  "hp": {
+    "1": 71,
+    "20": 227,
+    "40": 354,
+    "60": 445,
+    "80": 529,
+    "100": 581
+  },
+  "pp": {
+    "1": 76,
+    "20": 225,
+    "40": 335,
+    "60": 383,
+    "80": 430,
+    "100": 466
+  },
+  "attack": {
+    "1": 39,
+    "20": 103,
+    "40": 171,
+    "60": 228,
+    "80": 276,
+    "100": 324
+  },
+  "defense": {
+    "1": 7,
+    "20": 56,
+    "40": 96,
+    "60": 126,
+    "80": 150,
+    "100": 174
+  },
+  "accuracy": {
+    "1": 158,
+    "20": 213,
+    "40": 257,
+    "60": 298,
+    "80": 318,
+    "100": 338
+  },
+  "evasion": {
+    "1": 14,
+    "20": 86,
+    "40": 153,
+    "60": 198,
+    "80": 237,
+    "100": 276
+  },
+  "technique": {
+    "1": 33,
+    "20": 94,
+    "40": 158,
+    "60": 213,
+    "80": 257,
+    "100": 301
+  }
+}
+technique_limits = {
+  "foieBartaZonde": 10,
+  "grants": 0,
+  "megid": 0,
+  "restaReverser": 10,
+  "shiftaDeband": 0,
+  "jellenZalure": 10
+}
+trap_limits = {}

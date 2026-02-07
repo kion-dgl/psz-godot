@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "rookie_hit"
+name = "Rookie/Hit"
+japanese_name = "ルーキー／ヒット"
+rarity = 1
+category = "Hit"
+effect = "ACC+3"
+effect_value = 3
+pso_world_id = 331
