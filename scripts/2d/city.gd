@@ -30,10 +30,10 @@ func _ready() -> void:
 	title_label.text = "══════ CITY ══════"
 	hint_label.text = "[↑/↓] Navigate  [ENTER] Select  [ESC] Quick Save & Quit"
 
-	var disabled_mask: Array[bool] = []
+	var disabled_mask: Array = []
 	for i in range(MENU_ITEMS.size()):
 		disabled_mask.append(i in DISABLED_ITEMS)
-	menu_list.set_items(MENU_ITEMS as Array[String], disabled_mask)
+	menu_list.set_items(MENU_ITEMS, disabled_mask)
 	menu_list.item_selected.connect(_on_menu_selected)
 
 	_update_char_info()

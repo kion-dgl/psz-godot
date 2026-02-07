@@ -1,8 +1,8 @@
 extends Control
 ## Equipment screen — view and manage equipped items (weapon, frame, unit1-4).
 
-const EQUIPMENT_SLOTS := ["weapon", "frame", "unit1", "unit2", "unit3", "unit4"]
-const SLOT_NAMES := ["Weapon", "Frame", "Unit 1", "Unit 2", "Unit 3", "Unit 4"]
+const EQUIPMENT_SLOTS := ["weapon", "frame", "mag", "unit1", "unit2", "unit3", "unit4"]
+const SLOT_NAMES := ["Weapon", "Frame", "Mag", "Unit 1", "Unit 2", "Unit 3", "Unit 4"]
 
 var _selected_slot: int = 0
 
@@ -75,11 +75,17 @@ func _refresh_display() -> void:
 	for i in range(EQUIPMENT_SLOTS.size()):
 		var slot_key: String = EQUIPMENT_SLOTS[i]
 		var equipped: String = str(equipment.get(slot_key, ""))
-		var display_name: String = SLOT_NAMES[i]
+		var slot_label: String = SLOT_NAMES[i]
+
+		# Resolve display name from registries
+		var item_display: String = equipped
+		if not equipped.is_empty():
+			var info: Dictionary = Inventory._lookup_item(equipped)
+			item_display = info.name
 
 		var label := Label.new()
 		if equipped.is_empty():
-			label.text = "%-8s [Empty]" % display_name
+			label.text = "%-8s [Empty]" % slot_label
 			if i == _selected_slot:
 				label.text = "> " + label.text
 				label.modulate = Color(1, 0.8, 0)
@@ -87,7 +93,7 @@ func _refresh_display() -> void:
 				label.text = "  " + label.text
 				label.modulate = Color(0.333, 0.333, 0.333)
 		else:
-			label.text = "%-8s %s" % [display_name, equipped]
+			label.text = "%-8s %s" % [slot_label, item_display]
 			if i == _selected_slot:
 				label.text = "> " + label.text
 				label.modulate = Color(1, 0.8, 0)
@@ -139,7 +145,7 @@ func _refresh_stats() -> void:
 	vbox.add_child(sep)
 
 	for stat_name in ["hp", "pp", "attack", "defense", "accuracy", "evasion", "technique"]:
-		var display := stat_name.to_upper().substr(0, 3)
+		var display: String = stat_name.to_upper().substr(0, 3)
 		match stat_name:
 			"technique": display = "TEC"
 			"accuracy": display = "ACC"

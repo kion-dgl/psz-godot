@@ -46,6 +46,7 @@ var _dropped_items: Array = []
 signal combat_started()
 signal combat_ended()
 signal enemy_defeated(enemy_index: int, enemy_data: Dictionary)
+signal enemy_aggroed(enemy_index: int, enemy_data: Dictionary)
 signal wave_cleared()
 
 
@@ -307,6 +308,47 @@ func get_wave_rewards() -> Dictionary:
 			total_exp += int(enemy.get("exp_reward", 0))
 			total_meseta += int(enemy.get("meseta_reward", 0))
 	return {"exp": total_exp, "meseta": total_meseta}
+
+
+## Process aggro rolls for idle enemies. Returns array of newly aggroed enemy messages.
+func process_aggro() -> Array:
+	var messages: Array = []
+	for i in range(_enemies.size()):
+		var enemy: Dictionary = _enemies[i]
+		if not enemy.get("alive", false):
+			continue
+		if enemy.get("aggroed", false):
+			continue
+		# Roll to notice the player
+		var chance: float = float(enemy.get("aggro_chance", 0.15))
+		if randf() < chance:
+			enemy["aggroed"] = true
+			messages.append("%s notices you!" % str(enemy.get("name", "Enemy")))
+			enemy_aggroed.emit(i, enemy)
+	return messages
+
+
+## Force aggro on a specific enemy and nearby allies (called when player attacks)
+func aggro_on_attack(target_index: int) -> void:
+	if target_index < 0 or target_index >= _enemies.size():
+		return
+	# The attacked enemy always aggros
+	_enemies[target_index]["aggroed"] = true
+	# Nearby enemies (adjacent indices ±1) have a high chance to also aggro
+	for offset in [-1, 1]:
+		var idx: int = target_index + offset
+		if idx >= 0 and idx < _enemies.size():
+			var neighbor: Dictionary = _enemies[idx]
+			if neighbor.get("alive", false) and not neighbor.get("aggroed", false):
+				if randf() < 0.5:
+					neighbor["aggroed"] = true
+
+
+## Check if an enemy is aggroed (for UI display)
+func is_enemy_aggroed(index: int) -> bool:
+	if index < 0 or index >= _enemies.size():
+		return false
+	return _enemies[index].get("aggroed", false)
 
 
 ## Clear combat state

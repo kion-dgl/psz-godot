@@ -38,12 +38,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 
-func set_items(items: Array[String], disabled_mask: Array[bool] = []) -> void:
-	_items = items
+func set_items(items: Array, disabled_mask: Array = []) -> void:
+	_items.clear()
+	for item in items:
+		_items.append(str(item))
 	_disabled.clear()
 	for i in range(items.size()):
 		if i < disabled_mask.size():
-			_disabled.append(disabled_mask[i])
+			_disabled.append(bool(disabled_mask[i]))
 		else:
 			_disabled.append(false)
 	_current_index = 0
