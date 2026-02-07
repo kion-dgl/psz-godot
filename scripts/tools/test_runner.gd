@@ -384,6 +384,24 @@ func test_session_manager() -> void:
 	assert_true(SessionManager.has_active_session(), "Mission session active")
 	assert_eq(mission_session.get("type"), "mission", "Type = mission")
 	SessionManager.return_to_city()
+
+	# Mission rewards test
+	print("")
+	print("── Mission Rewards ──")
+	var mission = MissionRegistry.get_mission("mayor_s_mission")
+	if mission:
+		assert_true(not mission.rewards.is_empty(), "Mayor's Mission has rewards")
+		var normal_reward: Dictionary = mission.rewards.get("normal", {})
+		print("  INFO: Normal reward = %s x%s + %s M" % [
+			str(normal_reward.get("item", "???")),
+			str(normal_reward.get("quantity", 0)),
+			str(normal_reward.get("meseta", 0))])
+		assert_true(not str(normal_reward.get("item", "")).is_empty(), "Has reward item")
+		assert_gt(int(normal_reward.get("meseta", 0)), 0, "Has reward meseta")
+	else:
+		print("  INFO: mayor_s_mission not found, checking available missions:")
+		for m in MissionRegistry.get_all_missions():
+			print("    - %s (%s)" % [m.id, m.name])
 	print("")
 
 
