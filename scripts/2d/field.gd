@@ -362,15 +362,63 @@ func _advance_or_complete() -> void:
 	else:
 		_state = State.SESSION_COMPLETE
 		var session: Dictionary = SessionManager.get_session()
-		# Mark mission as completed
-		var mission_id: String = session.get("mission_id", "")
-		if not mission_id.is_empty():
-			GameState.complete_mission(mission_id)
 		_add_log("══════ SESSION COMPLETE ══════")
 		_add_log("Total EXP: %d" % int(session.get("total_exp", 0)))
 		_add_log("Total Meseta: %d" % int(session.get("total_meseta", 0)))
+
+		# Mark mission as completed and grant rewards
+		var mission_id: String = session.get("mission_id", "")
+		if not mission_id.is_empty():
+			GameState.complete_mission(mission_id)
+			_grant_mission_rewards(mission_id, session.get("difficulty", "normal"))
+
 		hint_label.text = "[ENTER] Return to City"
 		_refresh_display()
+
+
+func _grant_mission_rewards(mission_id: String, difficulty: String) -> void:
+	var mission = MissionRegistry.get_mission(mission_id)
+	if mission == null or mission.rewards.is_empty():
+		return
+
+	# Map session difficulty to reward key: "normal" → "normal", "hard" → "hard", "super-hard" → "superHard"
+	var reward_key: String = difficulty
+	if difficulty == "super-hard":
+		reward_key = "superHard"
+
+	var reward: Dictionary = mission.rewards.get(reward_key, {})
+	if reward.is_empty():
+		# Fallback to first available difficulty
+		for key in mission.rewards:
+			reward = mission.rewards[key]
+			break
+
+	if reward.is_empty():
+		return
+
+	_add_log("")
+	_add_log("── Mission Rewards ──")
+
+	# Grant reward meseta
+	var reward_meseta: int = int(reward.get("meseta", 0))
+	if reward_meseta > 0:
+		var character = CharacterManager.get_active_character()
+		if character:
+			character["meseta"] = int(character.get("meseta", 0)) + reward_meseta
+			GameState.meseta = int(character["meseta"])
+		_add_log("Meseta: +%d" % reward_meseta)
+
+	# Grant reward item
+	var item_name: String = str(reward.get("item", ""))
+	var quantity: int = int(reward.get("quantity", 1))
+	if not item_name.is_empty():
+		var item_id: String = item_name.to_lower().replace(" ", "_").replace("'", "")
+		for _i in range(quantity):
+			if Inventory.can_add_item(item_id):
+				Inventory.add_item(item_id, 1)
+				_add_log("Received: %s" % item_name)
+			else:
+				_add_log("Inventory full! Could not receive: %s" % item_name)
 
 
 func _return_to_city() -> void:
