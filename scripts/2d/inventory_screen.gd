@@ -1,8 +1,11 @@
 extends Control
 ## Inventory screen — 40-slot grid with item details and actions.
 
+const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Consumable", "Material", "Modifier", "Key Item", "Other"]
+
 var _selected_index: int = 0
 var _items: Array = []
+var _item_labels: Array = []  # maps item index -> Label node for scroll-to
 
 @onready var title_label: Label = $VBox/TitleLabel
 @onready var grid_panel: PanelContainer = $VBox/HBox/GridPanel
@@ -39,6 +42,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _refresh_items() -> void:
 	_items = Inventory.get_all_items()
+	_items.sort_custom(func(a, b):
+		var ca: int = CATEGORY_ORDER.find(_get_item_category(a.get("id", "")))
+		var cb: int = CATEGORY_ORDER.find(_get_item_category(b.get("id", "")))
+		if ca != cb:
+			return ca < cb
+		return str(a.get("name", "")) < str(b.get("name", ""))
+	)
 
 
 func _use_selected() -> void:
@@ -77,10 +87,12 @@ func _refresh_display() -> void:
 	# Grid panel
 	for child in grid_panel.get_children():
 		child.queue_free()
+	_item_labels.clear()
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
@@ -106,10 +118,21 @@ func _refresh_display() -> void:
 		empty.modulate = Color(0.333, 0.333, 0.333)
 		vbox.add_child(empty)
 	else:
+		var current_category := ""
 		for i in range(_items.size()):
 			var item: Dictionary = _items[i]
-			var label := Label.new()
 			var item_id: String = item.get("id", "???")
+
+			# Category header
+			var cat: String = _get_item_category(item_id)
+			if cat != current_category:
+				current_category = cat
+				var cat_label := Label.new()
+				cat_label.text = "── %s ──" % cat
+				cat_label.modulate = Color(0, 0.733, 0.8)
+				vbox.add_child(cat_label)
+
+			var label := Label.new()
 			var item_name: String = item.get("name", item_id)
 			var qty: int = int(item.get("quantity", 1))
 			var equip_tag: String = " [E]" if item_id in equipped_ids else ""
@@ -125,9 +148,14 @@ func _refresh_display() -> void:
 			else:
 				label.text = "  " + label.text
 			vbox.add_child(label)
+			_item_labels.append(label)
 
 	scroll.add_child(vbox)
 	grid_panel.add_child(scroll)
+
+	# Scroll to selected item after layout
+	if _selected_index >= 0 and _selected_index < _item_labels.size():
+		scroll.ensure_control_visible.call_deferred(_item_labels[_selected_index])
 
 	# Detail panel
 	_refresh_detail()
@@ -232,6 +260,25 @@ func _refresh_detail() -> void:
 			_add_detail_line(vbox, "Materials used: %d/%d" % [used, CombatManager.MAX_MATERIALS])
 
 	detail_panel.add_child(vbox)
+
+
+func _get_item_category(item_id: String) -> String:
+	if WeaponRegistry.get_weapon(item_id):
+		return "Weapon"
+	if ArmorRegistry.get_armor(item_id):
+		return "Armor"
+	if UnitRegistry.get_unit(item_id):
+		return "Unit"
+	if ConsumableRegistry.get_consumable(item_id):
+		return "Consumable"
+	if CombatManager.MATERIAL_STAT_MAP.has(item_id) or MaterialRegistry.get_material(item_id):
+		return "Material"
+	if ModifierRegistry.get_modifier(item_id):
+		return "Modifier"
+	var item_data = ItemRegistry.get_item(item_id)
+	if item_data:
+		return "Key Item"
+	return "Other"
 
 
 func _add_detail_line(parent: VBoxContainer, text: String) -> void:
