@@ -3,7 +3,7 @@ extends Node
 ## Tracks item quantities and provides add/remove functionality.
 
 ## Maximum number of unique items (0 = unlimited)
-@export var capacity: int = 0
+@export var capacity: int = 40
 
 ## Dictionary of item_id -> quantity
 var _items: Dictionary = {}

@@ -14,11 +14,14 @@ func _ready() -> void:
 
 	test_registries()
 	test_inventory()
+	test_inventory_capacity()
 	test_character_creation()
 	test_equipment()
 	test_combat_math()
+	test_combat_drops()
 	test_combat_simulation()
 	test_session_manager()
+	test_mission_progression()
 	test_shops()
 
 	print("\n══════════════════════════════════")
@@ -114,6 +117,48 @@ func test_inventory() -> void:
 	var info2 = Inventory._lookup_item("monomate")
 	assert_eq(info2.name, "Monomate", "Lookup monomate name")
 	assert_gt(info2.max_stack, 1, "Monomate is stackable")
+
+	Inventory.clear_inventory()
+	print("")
+
+
+# ── Inventory capacity tests ───────────────────────────────
+
+func test_inventory_capacity() -> void:
+	print("── Inventory Capacity (40 items) ──")
+	Inventory.clear_inventory()
+	assert_eq(Inventory.capacity, 40, "Inventory capacity is 40")
+
+	# Fill inventory with 40 unique items using weapon IDs (all max_stack=1)
+	var all_weapons: Array = WeaponRegistry.get_all_weapon_ids()
+	var added_count := 0
+	for i in range(mini(40, all_weapons.size())):
+		var wid: String = all_weapons[i]
+		if Inventory.add_item(wid, 1):
+			added_count += 1
+
+	assert_eq(added_count, 40, "Added exactly 40 unique items")
+	assert_eq(Inventory.get_unique_item_count(), 40, "Inventory has 40 unique items")
+
+	# 41st unique item should be rejected
+	var overflow_id: String = all_weapons[40] if all_weapons.size() > 40 else "test_overflow"
+	assert_true(not Inventory.can_add_item(overflow_id), "Can't add 41st unique item")
+	assert_true(not Inventory.add_item(overflow_id, 1), "41st item add returns false")
+	assert_eq(Inventory.get_unique_item_count(), 40, "Still 40 after rejected add")
+
+	# But CAN add more of an existing item if it's stackable
+	Inventory.clear_inventory()
+	Inventory.add_item("monomate", 1)
+	assert_true(Inventory.can_add_item("monomate"), "Can add more monomates to existing stack")
+	Inventory.add_item("monomate", 5)
+	assert_eq(Inventory.get_item_count("monomate"), 6, "Stacked to 6 monomates")
+
+	# Fill remaining 39 slots
+	for i in range(39):
+		Inventory.add_item(all_weapons[i], 1)
+	assert_eq(Inventory.get_unique_item_count(), 40, "40 items (1 consumable + 39 weapons)")
+	assert_true(not Inventory.can_add_item(all_weapons[39]), "Can't add 41st unique item")
+	assert_true(Inventory.can_add_item("monomate"), "Can still stack existing monomate")
 
 	Inventory.clear_inventory()
 	print("")
@@ -254,6 +299,76 @@ func test_combat_math() -> void:
 	# Restore player HP
 	character["hp"] = int(character.get("max_hp", 100))
 	CharacterManager._sync_to_game_state()
+	print("")
+
+
+# ── Combat drops test ──────────────────────────────────────
+
+func test_combat_drops() -> void:
+	print("── Combat Drops ──")
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		print("  SKIP: No active character")
+		return
+
+	# Run many drop rolls across different enemy types and areas to verify drops happen
+	var consumable_drops := 0
+	var weapon_drops := 0
+	var total_drops := 0
+	var areas := ["gurhacia", "rioh", "ozette", "paru", "makara", "arca", "dark"]
+
+	for area_id in areas:
+		CombatManager.init_combat(area_id, "normal")
+
+		# Test normal enemy drops (10% consumable, 3% weapon) — run 200 trials per area
+		for _trial in range(200):
+			var enemy := EnemySpawner._create_enemy_instance("ghowl", "normal", 1.0, 1)
+			var drops: Array = CombatManager.generate_drops(enemy)
+			for drop_id in drops:
+				total_drops += 1
+				# Check if it's a consumable
+				var consumable = ConsumableRegistry.get_consumable(drop_id)
+				if consumable:
+					consumable_drops += 1
+				else:
+					weapon_drops += 1
+
+		# Test boss enemy drops (35% consumable, 25% weapon) — run 100 trials
+		for _trial in range(100):
+			var boss := EnemySpawner._create_enemy_instance("reyburn", "boss", 1.0, 3)
+			var drops: Array = CombatManager.generate_drops(boss)
+			for drop_id in drops:
+				total_drops += 1
+				var consumable = ConsumableRegistry.get_consumable(drop_id)
+				if consumable:
+					consumable_drops += 1
+				else:
+					weapon_drops += 1
+
+		CombatManager.clear_combat()
+
+	print("  INFO: %d total drops across %d areas (1400 normal + 700 boss trials)" % [total_drops, areas.size()])
+	print("  INFO: %d consumable drops, %d weapon/other drops" % [consumable_drops, weapon_drops])
+
+	assert_gt(total_drops, 0, "Some items dropped overall")
+	assert_gt(consumable_drops, 0, "Consumables (monomate/monofluid) drop")
+	assert_gt(weapon_drops, 0, "Weapons/items drop from enemies")
+
+	# Verify consumable drop rate is roughly correct (10% of 1400 = ~140 expected from normal)
+	print("  INFO: Consumable rate = %.1f%% (expected ~15%%)" % [float(consumable_drops) / float(2100) * 100.0])
+	assert_gt(consumable_drops, 50, "Consumable drop count is reasonable (>50 out of 2100 trials)")
+
+	# Verify drops can be picked up into inventory
+	Inventory.clear_inventory()
+	CombatManager.init_combat("gurhacia", "normal")
+	CombatManager.add_drops(["monomate", "monomate", "saber"])
+	var pickup_results: Array = CombatManager.pickup_all()
+	assert_eq(pickup_results.size(), 3, "Picked up 3 items")
+	assert_true(Inventory.has_item("monomate"), "Monomate in inventory after pickup")
+	assert_eq(Inventory.get_item_count("monomate"), 2, "2 monomates picked up")
+	assert_true(Inventory.has_item("saber"), "Saber in inventory after pickup")
+	CombatManager.clear_combat()
+	Inventory.clear_inventory()
 	print("")
 
 
@@ -403,6 +518,122 @@ func test_session_manager() -> void:
 		for m in MissionRegistry.get_all_missions():
 			print("    - %s (%s)" % [m.id, m.name])
 	print("")
+
+
+# ── Mission progression tests ──────────────────────────────
+
+func test_mission_progression() -> void:
+	print("── Mission Progression (Area Unlock Chain) ──")
+
+	# Area progression order (from guild_counter.gd)
+	var area_order := {
+		"Gurhacia Valley": 0,
+		"Rioh Snowfield": 1,
+		"Ozette Wetland": 2,
+		"Oblivion City Paru": 3,
+		"Makura Ruins": 4, "Makara Ruins": 4,
+		"Arca Plant": 5,
+		"Dark Shrine": 6,
+		"Eternal Tower": 7,
+	}
+
+	# Reset completed missions
+	GameState.completed_missions.clear()
+
+	# Get all missions sorted by area
+	var missions: Array = MissionRegistry.get_all_missions()
+	assert_gt(missions.size(), 0, "Have missions to test")
+
+	# Group missions by area index
+	var missions_by_area: Dictionary = {}  # area_idx → [mission, ...]
+	for m in missions:
+		var area_idx: int = area_order.get(m.area, 99)
+		if not missions_by_area.has(area_idx):
+			missions_by_area[area_idx] = []
+		missions_by_area[area_idx].append(m)
+
+	# Get sorted area indices
+	var area_indices: Array = missions_by_area.keys()
+	area_indices.sort()
+
+	print("  INFO: %d missions across %d areas" % [missions.size(), area_indices.size()])
+
+	# Verify area 0 (Gurhacia) missions are initially unlocked
+	var area_0_missions: Array = missions_by_area.get(0, [])
+	assert_gt(area_0_missions.size(), 0, "Gurhacia has missions")
+	for m in area_0_missions:
+		assert_true(_is_mission_available(m, missions, area_order), "Area 0: %s is unlocked" % m.name)
+
+	# Verify area 1+ missions are initially LOCKED
+	if area_indices.size() > 1:
+		var area_1_missions: Array = missions_by_area.get(area_indices[1], [])
+		if not area_1_missions.is_empty():
+			assert_true(not _is_mission_available(area_1_missions[0], missions, area_order),
+				"Area 1: %s is locked initially" % area_1_missions[0].name)
+
+	# Now progressively unlock by completing one mission per area
+	var areas_completed := 0
+	for area_idx in area_indices:
+		var area_missions: Array = missions_by_area.get(area_idx, [])
+		if area_missions.is_empty():
+			continue
+
+		# All missions in this area should now be available
+		for m in area_missions:
+			var available := _is_mission_available(m, missions, area_order)
+			if not available and not m.requires.is_empty():
+				# Has explicit requires — may not be unlocked yet, skip
+				continue
+			assert_true(available, "Area %d: %s is unlocked" % [area_idx, m.name])
+
+		# Complete one mission from this area to unlock the next
+		var completed_mission = area_missions[0]
+		GameState.complete_mission(completed_mission.id)
+		areas_completed += 1
+		print("  Completed: %s (%s) → Area %d done" % [completed_mission.name, completed_mission.area, area_idx])
+
+		# Verify the next area is now unlocked
+		var next_idx_pos: int = area_indices.find(area_idx) + 1
+		if next_idx_pos < area_indices.size():
+			var next_area_idx: int = area_indices[next_idx_pos]
+			var next_missions: Array = missions_by_area.get(next_area_idx, [])
+			if not next_missions.is_empty():
+				var next_available := _is_mission_available(next_missions[0], missions, area_order)
+				assert_true(next_available,
+					"Area %d: %s unlocked after completing area %d" % [next_area_idx, next_missions[0].name, area_idx])
+
+	assert_eq(areas_completed, area_indices.size(), "Completed missions in all %d areas" % area_indices.size())
+
+	# Verify all missions show as completed or available now
+	var all_accessible := 0
+	for m in missions:
+		if GameState.is_mission_completed(m.id) or _is_mission_available(m, missions, area_order):
+			all_accessible += 1
+	assert_eq(all_accessible, missions.size(), "All %d missions accessible after full progression" % missions.size())
+
+	# Clean up
+	GameState.completed_missions.clear()
+	print("")
+
+
+## Check if a mission is available (mirrors guild_counter.gd logic)
+func _is_mission_available(mission, all_missions: Array, area_order: Dictionary) -> bool:
+	if not mission.requires.is_empty():
+		for req in mission.requires:
+			if not GameState.is_mission_completed(req):
+				return false
+		return true
+
+	var area_idx: int = area_order.get(mission.area, 0)
+	if area_idx == 0:
+		return true  # First area always available
+
+	# Check if any mission from the previous area is completed
+	for m in all_missions:
+		var m_area: int = area_order.get(m.area, 99)
+		if m_area == area_idx - 1 and GameState.is_mission_completed(m.id):
+			return true
+	return false
 
 
 # ── Shop tests ──────────────────────────────────────────────
