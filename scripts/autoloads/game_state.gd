@@ -22,6 +22,10 @@ var equipment: Dictionary = {
 # Completed missions tracking
 var completed_missions: Array = []  # Array of mission IDs
 
+# Shared storage (across all characters)
+var shared_storage: Array = []  # Array of {id, name, quantity}
+var stored_meseta: int = 0
+
 # UI state
 var is_pause_menu_open: bool = false
 var active_shop_npc: String = ""

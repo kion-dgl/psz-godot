@@ -44,9 +44,63 @@ const DISK_LEVEL_RANGES := {
 const BOSS_LEVEL_BONUS := 5
 const RARE_LEVEL_BONUS := 3
 
+## Techniques available in the shop (exclude advanced tier — field drops only)
+const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
+const SHOP_MID_TECHS := ["gifoie", "gibarta", "gizonde", "reverser"]
+
 
 func _ready() -> void:
 	pass
+
+
+## Get required player level to use a disk of a given level
+func get_disk_required_level(disk_level: int) -> int:
+	if disk_level <= 5:
+		return disk_level
+	return disk_level * 2 - 5
+
+
+## Generate a randomized shop inventory based on character level
+func generate_shop_inventory(char_level: int) -> Array:
+	var max_basic_level: int = clampi(ceili(float(char_level) * 0.6), 1, 15)
+	var max_mid_level: int = clampi(ceili(float(char_level) * 0.4), 1, 10)
+
+	var items: Array = []
+	var seen: Dictionary = {}
+	var attempts := 0
+
+	while items.size() < 15 and attempts < 60:
+		attempts += 1
+		var is_mid: bool = randf() < 0.3 and max_mid_level >= 1
+		var tech_id: String
+		var max_lv: int
+		if is_mid:
+			tech_id = SHOP_MID_TECHS[randi() % SHOP_MID_TECHS.size()]
+			max_lv = max_mid_level
+		else:
+			tech_id = SHOP_BASIC_TECHS[randi() % SHOP_BASIC_TECHS.size()]
+			max_lv = max_basic_level
+
+		var level: int = randi_range(1, max_lv)
+		var key: String = "%s:%d" % [tech_id, level]
+		if seen.has(key):
+			continue
+		seen[key] = true
+
+		var tech: Dictionary = TECHNIQUES[tech_id]
+		items.append({
+			"technique_id": tech_id,
+			"name": "Disk: %s Lv.%d" % [tech["name"], level],
+			"level": level,
+			"cost": get_disk_price(tech_id, level),
+		})
+
+	items.sort_custom(func(a, b):
+		if a["technique_id"] != b["technique_id"]:
+			return str(a["technique_id"]) < str(b["technique_id"])
+		return int(a["level"]) < int(b["level"])
+	)
+	return items
 
 
 ## Create a disk dictionary for a given technique and level
@@ -94,6 +148,12 @@ func can_learn(character: Dictionary, technique_id: String, level: int) -> Dicti
 
 	if level > max_level:
 		return {"allowed": false, "reason": "%s can only learn %s up to Lv.%d" % [class_data.name, tech["name"], max_level]}
+
+	# Check player level requirement
+	var required_level: int = get_disk_required_level(level)
+	var char_level: int = int(character.get("level", 1))
+	if char_level < required_level:
+		return {"allowed": false, "reason": "Requires level %d (you are Lv.%d)" % [required_level, char_level]}
 
 	# Check current level — reject downgrades
 	var techniques: Dictionary = character.get("techniques", {})

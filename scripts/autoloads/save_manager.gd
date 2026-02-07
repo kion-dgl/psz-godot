@@ -18,6 +18,8 @@ func save_game() -> void:
 		"characters": CharacterManager.get_save_data(),
 		"inventory": Inventory._items.duplicate(),
 		"completed_missions": GameState.completed_missions.duplicate(),
+		"shared_storage": GameState.shared_storage.duplicate(),
+		"stored_meseta": GameState.stored_meseta,
 		"timestamp": Time.get_unix_time_from_system(),
 	}
 
@@ -69,6 +71,10 @@ func load_game() -> void:
 	# Load completed missions
 	var missions_data: Array = save_data.get("completed_missions", [])
 	GameState.completed_missions = missions_data.duplicate()
+
+	# Load shared storage
+	GameState.shared_storage = save_data.get("shared_storage", []).duplicate()
+	GameState.stored_meseta = int(save_data.get("stored_meseta", 0))
 
 	print("[SaveManager] Game loaded (version %d)" % int(save_data.get("version", 0)))
 	game_loaded.emit()
