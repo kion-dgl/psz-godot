@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ConsumableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/consumable_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "heat_trap"
+name = "Heat Trap"
+japanese_name = "ヒートトラップ"
+details = "Inflicts Burn Status effect on enemies."
+rarity = 1
+max_stack = 10
+pso_world_id = 311

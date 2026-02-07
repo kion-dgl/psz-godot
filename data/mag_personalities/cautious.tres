@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "cautious"
+name = "Cautious"
+japanese_name = "しんちょう"
+category = "offensive"
+tier = "advanced"
+unlock_level = 60
+favorite_food = "Hunter Weapons and Elements"
+switch_from = "Feed 5 consecutive Force Weapons or Armors"
+triggers = {
+  "walking": {
+    "effect": "Offensive Boost",
+    "strength": "Small",
+    "chance": 10,
+    "duration": 45
+  },
+  "lowHealth": {
+    "effect": "Resta",
+    "strength": "Weak"
+  },
+  "statusCondition": {
+    "effect": "Anti",
+    "chance": 12
+  },
+  "bossEncounter": {
+    "effect": "Offensive Boost",
+    "strength": "Small",
+    "chance": 50,
+    "duration": 45
+  },
+  "playerDeath": {
+    "effect": "Revival",
+    "chance": 5
+  },
+  "photonBlastFull": {
+    "effect": "Offensive Boost",
+    "strength": "Large",
+    "chance": 100,
+    "duration": 30
+  }
+}

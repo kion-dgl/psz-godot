@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MagData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "urado"
+name = "Urado"
+japanese_name = "ウラド"
+stage = "4"
+evolution_level = 60
+evolution_requirement = {
+  "type": "stat",
+  "primary": "Power",
+  "secondary": "Guard"
+}
+photon_blast = "Midgul"
+pso_world_id = 364

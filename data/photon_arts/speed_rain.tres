@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "speed_rain"
+name = "Speed Rain"
+weapon_type = "Spear"
+class_type = "Hunter"
+attack_mod = 80.0
+accuracy_mod = 70.0
+pp_cost = 32
+targets = 2
+hit_range = 4.5
+area = 100.0
+hits = 6
+notes = ""

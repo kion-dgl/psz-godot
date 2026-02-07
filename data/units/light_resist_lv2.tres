@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "light_resist_lv2"
+name = "Light Resist Lv2"
+japanese_name = "ライトレジストLv2"
+rarity = 3
+category = "Resistance"
+effect = "Light Resist +6"
+effect_value = 6
+pso_world_id = 454

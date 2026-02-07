@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "magical_sign"
+name = "Magical Sign"
+weapon_type = "Wand"
+class_type = "Force"
+attack_mod = 140.0
+accuracy_mod = 160.0
+pp_cost = 13
+targets = 3
+hit_range = 3.5
+area = 360.0
+hits = 2
+notes = "Causes Slow Effect"

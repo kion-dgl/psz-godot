@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "eccentric"
+name = "Eccentric"
+japanese_name = "かわり"
+category = "special"
+tier = "advanced"
+unlock_level = 60
+favorite_food = "Anything"
+switch_from = "Feed 5 consecutive Ranger Weapons or Armors"
+triggers = {
+  "walking": {
+    "effect": "PP Recovery",
+    "strength": "Small",
+    "chance": 10
+  },
+  "lowHealth": {
+    "effect": "Resta",
+    "strength": "Weak",
+    "chance": 10
+  },
+  "statusCondition": {
+    "effect": "Anti",
+    "chance": 5
+  },
+  "bossEncounter": 0,
+  "playerDeath": {
+    "effect": "Revival",
+    "chance": 8
+  },
+  "photonBlastFull": {
+    "effect": "Invincibility",
+    "chance": 100,
+    "duration": 15
+  }
+}

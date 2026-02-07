@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "to_the_future"
+name = "To the Future"
+area = "Dark Shrine"
+is_main = false
+is_secret = false
+requires = PackedStringArray("mother_s_memory")
+rewards = {
+  "normal": {
+    "item": "Taxion Gun",
+    "quantity": 1,
+    "meseta": 3000
+  },
+  "hard": {
+    "item": "Luxion Gun",
+    "quantity": 1,
+    "meseta": 6000
+  },
+  "superHard": {
+    "item": "Tachyon Gun",
+    "quantity": 1,
+    "meseta": 12000
+  }
+}

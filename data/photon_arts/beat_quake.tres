@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PhotonArtData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/photon_art_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "beat_quake"
+name = "Beat Quake"
+weapon_type = "Rod"
+class_type = "Force"
+attack_mod = 140.0
+accuracy_mod = 150.0
+pp_cost = 19
+targets = 4
+hit_range = 4.0
+area = 360.0
+hits = 1
+notes = ""

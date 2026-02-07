@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "a_small_friend"
+name = "A Small Friend"
+area = "Oblivion City Paru"
+is_main = true
+is_secret = false
+requires = PackedStringArray("devilish_return")
+rewards = {
+  "normal": {
+    "item": "All Resist Lv1",
+    "quantity": 1,
+    "meseta": 1000
+  },
+  "hard": {
+    "item": "All Resist Lv2",
+    "quantity": 1,
+    "meseta": 2000
+  },
+  "superHard": {
+    "item": "All Resist Lv3",
+    "quantity": 1,
+    "meseta": 4000
+  }
+}

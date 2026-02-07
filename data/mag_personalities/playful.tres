@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "playful"
+name = "Playful"
+japanese_name = "やんちゃ"
+category = "offensive"
+tier = "basic"
+unlock_level = 10
+favorite_food = "Hunter Weapons and Elements"
+switch_from = ""
+triggers = {
+  "walking": {
+    "effect": "Offensive Boost",
+    "strength": "Small",
+    "chance": 10,
+    "duration": 30
+  },
+  "lowHealth": 0,
+  "statusCondition": 0,
+  "bossEncounter": {
+    "effect": "Offensive Boost",
+    "strength": "Small",
+    "chance": 50,
+    "duration": 30
+  },
+  "playerDeath": 0,
+  "photonBlastFull": {
+    "effect": "Offensive Boost",
+    "strength": "Large",
+    "chance": 100,
+    "duration": 30
+  }
+}

@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mission_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "2_sets_of_heroes"
+name = "2 Sets of Heroes"
+area = "Arca Plant"
+is_main = false
+is_secret = false
+requires = PackedStringArray("ana_s_request")
+rewards = {
+  "normal": {
+    "item": "Harisen",
+    "quantity": 1,
+    "meseta": 3000
+  },
+  "hard": {
+    "item": "Goof Swatter",
+    "quantity": 1,
+    "meseta": 6000
+  },
+  "superHard": {
+    "item": "Goof Swatter",
+    "quantity": 1,
+    "meseta": 12000
+  }
+}

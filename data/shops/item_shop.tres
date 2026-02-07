@@ -1,0 +1,71 @@
+[gd_resource type="Resource" script_class="ShopData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/shop_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "item_shop"
+name = "Item Shop"
+description = "Sells consumable items like healing mates, fluids, and atomizers."
+items = [
+  {
+    "item": "Monomate",
+    "category": "Healing",
+    "cost": 50,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Dimate",
+    "category": "Healing",
+    "cost": 500,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Trimate",
+    "category": "Healing",
+    "cost": 2500,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Monofluid",
+    "category": "PP Recovery",
+    "cost": 100,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Difluid",
+    "category": "PP Recovery",
+    "cost": 1000,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Sol Atomizer",
+    "category": "Atomizers",
+    "cost": 50,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Moon Atomizer",
+    "category": "Atomizers",
+    "cost": 300,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Star Atomizer",
+    "category": "Atomizers",
+    "cost": 1200,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Trap Vision",
+    "category": "Utility",
+    "cost": 50,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Telepipe",
+    "category": "Utility",
+    "cost": 100,
+    "currency": "Meseta"
+  }
+]

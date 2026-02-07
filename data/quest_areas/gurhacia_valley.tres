@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="QuestAreaData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_area_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "gurhacia_valley"
+area_id = "gurhacia_valley"
+area_name = "Gurhacia Valley"
+description = "A lush valley with grasslands and forests. The starting area for most adventurers."
+unlock_condition = ""
+recommended_level = 1
+environment = "grasslands"
+quest_count = 5

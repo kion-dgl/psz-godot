@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MagData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "soniti"
+name = "Soniti"
+japanese_name = "ソニチ"
+stage = "rare"
+evolution_level = 70
+evolution_requirement = {
+  "type": "soul",
+  "item": "Sonichi Soul"
+}
+photon_blast = "inherited"
+pso_world_id = 378

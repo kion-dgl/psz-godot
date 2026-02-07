@@ -1,0 +1,82 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "the_valley_king"
+quest_id = "the_valley_king"
+quest_name = "The Valley King"
+quest_type = "story"
+area = "Gurhacia Valley"
+description = "Chapter 1: A great beast terrorizes the valley, threatening the settlements. As a new hunter, prove yourself by confronting this menace."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 1,
+    "rewards": {
+      "meseta": 1000,
+      "experience": 500,
+      "items": [
+        {
+          "itemId": "monomate",
+          "itemName": "Monomate",
+          "quantity": 10
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 20,
+    "rewards": {
+      "meseta": 3000,
+      "experience": 1500,
+      "items": [
+        {
+          "itemId": "dimate",
+          "itemName": "Dimate",
+          "quantity": 5
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 50,
+    "rewards": {
+      "meseta": 8000,
+      "experience": 4000,
+      "items": [
+        {
+          "itemId": "trimate",
+          "itemName": "Trimate",
+          "quantity": 3
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 1,
+  "prerequisiteQuests": []
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Clear the path through the valley",
+    "target": "valley_native",
+    "required": 15
+  },
+  {
+    "type": "reach_location",
+    "description": "Reach the Valley King's lair"
+  },
+  {
+    "type": "defeat_boss",
+    "description": "Defeat De Rol Le, the Valley King",
+    "target": "de_rol_le"
+  }
+]
+is_repeatable = true
+is_secret = false

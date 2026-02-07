@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MagData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/mag_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "peoth"
+name = "Peoth"
+japanese_name = "ペオース"
+stage = "3"
+evolution_level = 30
+evolution_requirement = {
+  "type": "stat",
+  "primary": "Hit"
+}
+photon_blast = "Granir"
+pso_world_id = 358

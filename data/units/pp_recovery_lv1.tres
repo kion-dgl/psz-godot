@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/unit_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "pp_recovery_lv1"
+name = "PP Recovery Lv1"
+japanese_name = "PPリカバリーLv1"
+rarity = 2
+category = "Special"
+effect = "Recover 1 PP every 5 seconds"
+effect_value = 1
+pso_world_id = 433

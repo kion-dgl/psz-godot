@@ -1,0 +1,79 @@
+[gd_resource type="Resource" script_class="QuestDefinitionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/quest_definition_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "machine_malfunction"
+quest_id = "machine_malfunction"
+quest_name = "Machine Malfunction"
+quest_type = "side"
+area = "Ozette Wetlands"
+description = "Rogue machines are spreading beyond the wetlands. Stop them before they reach the settlements."
+difficulties = [
+  {
+    "difficulty": "Normal",
+    "recommendedLevel": 18,
+    "rewards": {
+      "meseta": 3500,
+      "experience": 1800,
+      "items": [
+        {
+          "itemId": "monogrinder",
+          "itemName": "Monogrinder",
+          "quantity": 3
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Hard",
+    "recommendedLevel": 35,
+    "rewards": {
+      "meseta": 8000,
+      "experience": 4000,
+      "items": [
+        {
+          "itemId": "digrinder",
+          "itemName": "Digrinder",
+          "quantity": 2
+        }
+      ]
+    }
+  },
+  {
+    "difficulty": "Super Hard",
+    "recommendedLevel": 62,
+    "rewards": {
+      "meseta": 16000,
+      "experience": 8000,
+      "items": [
+        {
+          "itemId": "trigrinder",
+          "itemName": "Trigrinder",
+          "quantity": 1
+        }
+      ]
+    }
+  }
+]
+requirements = {
+  "minLevel": 18,
+  "prerequisiteQuests": [
+    "snowbound_rescue"
+  ]
+}
+objectives = [
+  {
+    "type": "defeat_enemies",
+    "description": "Destroy rogue machines",
+    "target": "rogue_machine",
+    "required": 20
+  },
+  {
+    "type": "reach_location",
+    "description": "Find and disable their power source"
+  }
+]
+is_repeatable = true
+is_secret = false

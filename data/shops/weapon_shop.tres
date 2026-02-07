@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="ShopData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/shop_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "weapon_shop"
+name = "Weapon Shop"
+description = "Sells randomized base weapons. Price, element %, accuracy adjustment, element type/level, and photon arts are all randomized per visit."
+items = [
+  {
+    "item": "Blade",
+    "category": "Saber",
+    "notes": "Base price ~300"
+  },
+  {
+    "item": "Sabre",
+    "category": "Saber",
+    "notes": "Base price ~350"
+  },
+  {
+    "item": "Daggers",
+    "category": "Daggers",
+    "notes": "Base price ~300"
+  },
+  {
+    "item": "Shield",
+    "category": "Shield",
+    "notes": "Base price ~400"
+  },
+  {
+    "item": "Handgun",
+    "category": "Handgun",
+    "notes": "Base price ~550"
+  },
+  {
+    "item": "Rod",
+    "category": "Rod",
+    "notes": "Base price ~370"
+  },
+  {
+    "item": "Wandstick",
+    "category": "Wand",
+    "notes": "Base price ~600"
+  },
+  {
+    "item": "Wand",
+    "category": "Wand",
+    "notes": "Base price ~480"
+  },
+  {
+    "item": "Tact",
+    "category": "Rod",
+    "notes": "Base price ~400"
+  },
+  {
+    "item": "Cane",
+    "category": "Wand",
+    "notes": "Base price ~370"
+  }
+]
