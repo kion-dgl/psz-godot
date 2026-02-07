@@ -116,7 +116,7 @@ func _refresh_display() -> void:
 			if _mode == Mode.BUY:
 				var item: Dictionary = list[i]
 				var shop_name: String = str(item.get("item", "???"))
-				var item_id: String = shop_name.to_lower().replace(" ", "_")
+				var item_id: String = shop_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
 				var held: int = Inventory.get_item_count(item_id)
 				var held_str: String = " (%d)" % held if held > 0 else ""
 				label.text = "%-18s%s %5d M" % [shop_name, held_str, int(item.get("cost", 0))]
@@ -167,7 +167,7 @@ func _refresh_detail() -> void:
 
 		# Look up consumable details
 		var consumable = ConsumableRegistry.get_consumable(
-			str(item.get("item", "")).to_lower().replace(" ", "_")
+			str(item.get("item", "")).to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
 		)
 		if consumable:
 			var details_label := Label.new()

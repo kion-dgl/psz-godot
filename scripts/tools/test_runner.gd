@@ -481,7 +481,7 @@ func test_drop_tables() -> void:
 		for enemy_name in enemies:
 			var items: Array = enemies[enemy_name]
 			for item_name in items:
-				var item_id: String = str(item_name).to_lower().replace(" ", "_").replace("'", "")
+				var item_id: String = str(item_name).to_lower().replace(" ", "_").replace("'", "").replace("-", "_").replace("/", "_")
 				if checked_ids.has(item_id):
 					if checked_ids[item_id]:
 						valid_items += 1

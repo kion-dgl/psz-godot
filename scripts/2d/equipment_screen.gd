@@ -5,6 +5,10 @@ extends Control
 const ALL_SLOTS := ["weapon", "frame", "mag", "unit1", "unit2", "unit3", "unit4"]
 const ALL_SLOT_NAMES := ["Weapon", "Frame", "Mag", "Unit 1", "Unit 2", "Unit 3", "Unit 4"]
 const UNEQUIP_SENTINEL := "__unequip__"
+const UNIT_CATEGORY_TO_BONUS := {
+	"Power": "atk", "Guard": "def", "HP": "hp", "PP": "pp",
+	"Hit": "acc", "Mind": "tech", "Swift": "eva",
+}
 
 var _selected_slot: int = 0
 var _choosing_item: bool = false
@@ -322,6 +326,46 @@ func _get_item_brief(item_id: String) -> String:
 	return ""
 
 
+## Calculate equipment stat bonuses for a given equipment dict and character.
+func _calc_equip_bonuses(equip: Dictionary, character: Dictionary) -> Dictionary:
+	var bonuses := {"hp": 0, "pp": 0, "atk": 0, "def": 0, "acc": 0, "eva": 0, "tech": 0}
+
+	# Weapon bonuses (with grind)
+	var weapon_id: String = str(equip.get("weapon", ""))
+	if not weapon_id.is_empty():
+		var weapon = WeaponRegistry.get_weapon(weapon_id)
+		if weapon:
+			var grind: int = int(character.get("weapon_grinds", {}).get(weapon_id, 0))
+			bonuses["atk"] += weapon.get_attack_at_grind(grind)
+			bonuses["acc"] += weapon.get_accuracy_at_grind(grind)
+
+	# Armor bonuses
+	var frame_id: String = str(equip.get("frame", ""))
+	if not frame_id.is_empty():
+		var armor = ArmorRegistry.get_armor(frame_id)
+		if armor:
+			bonuses["def"] += int(armor.defense_base)
+			bonuses["eva"] += int(armor.evasion_base)
+
+	# Unit bonuses
+	for slot in ["unit1", "unit2", "unit3", "unit4"]:
+		var unit_id: String = str(equip.get(slot, ""))
+		if not unit_id.is_empty():
+			var unit = UnitRegistry.get_unit(unit_id)
+			if unit:
+				var bonus_key: String = UNIT_CATEGORY_TO_BONUS.get(unit.category, "")
+				if not bonus_key.is_empty() and bonus_key in bonuses:
+					bonuses[bonus_key] += int(unit.effect_value)
+
+	# Material bonuses
+	var mat_bonuses: Dictionary = character.get("material_bonuses", {})
+	var mat_map := {"attack": "atk", "defense": "def", "accuracy": "acc", "evasion": "eva", "technique": "tech", "hp": "hp", "pp": "pp"}
+	for mat_key in mat_map:
+		bonuses[mat_map[mat_key]] += int(mat_bonuses.get(mat_key, 0))
+
+	return bonuses
+
+
 func _refresh_stats() -> void:
 	for child in stats_panel.get_children():
 		child.queue_free()
@@ -336,6 +380,36 @@ func _refresh_stats() -> void:
 
 	var level: int = int(character.get("level", 1))
 	var base_stats: Dictionary = class_data.get_stats_at_level(level)
+	var equipment: Dictionary = character.get("equipment", {})
+	var current_bonuses: Dictionary = _calc_equip_bonuses(equipment, character)
+
+	# Build preview bonuses if browsing items
+	var preview_bonuses: Dictionary = {}
+	var has_preview: bool = false
+	if _choosing_item and _equippable_items.size() > 0 and _selected_item < _equippable_items.size():
+		var item: Dictionary = _equippable_items[_selected_item]
+		var item_id: String = str(item.get("id", ""))
+		var is_equipped: bool = item.get("equipped", false)
+		if not is_equipped:
+			var visible_slots: Array = _get_visible_slots()
+			if _selected_slot < visible_slots.size():
+				var slot_key: String = visible_slots[_selected_slot]
+				var preview_equip: Dictionary = equipment.duplicate()
+				if item_id == UNEQUIP_SENTINEL:
+					preview_equip[slot_key] = ""
+					if slot_key == "frame":
+						for i in range(4):
+							preview_equip["unit%d" % (i + 1)] = ""
+				else:
+					preview_equip[slot_key] = item_id
+					if slot_key == "frame":
+						var armor = ArmorRegistry.get_armor(item_id)
+						var new_max: int = armor.max_slots if armor else 0
+						for i in range(4):
+							if i >= new_max:
+								preview_equip["unit%d" % (i + 1)] = ""
+				preview_bonuses = _calc_equip_bonuses(preview_equip, character)
+				has_preview = true
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
@@ -358,17 +432,31 @@ func _refresh_stats() -> void:
 	sep.text = ""
 	vbox.add_child(sep)
 
-	for stat_name in ["hp", "pp", "attack", "defense", "accuracy", "evasion", "technique"]:
-		var display: String = stat_name.to_upper().substr(0, 3)
-		match stat_name:
-			"technique": display = "TEC"
-			"accuracy": display = "ACC"
-			"evasion": display = "EVA"
-			"defense": display = "DEF"
-			"attack": display = "ATK"
-		var val: int = base_stats.get(stat_name, 0)
+	var stat_order := ["hp", "pp", "attack", "defense", "accuracy", "evasion", "technique"]
+	var display_names := ["HP", "PP", "ATK", "DEF", "ACC", "EVA", "TEC"]
+	var bonus_keys := ["hp", "pp", "atk", "def", "acc", "eva", "tech"]
+
+	for i in range(stat_order.size()):
+		var base: int = int(base_stats.get(stat_order[i], 0))
+		var cur_bonus: int = int(current_bonuses.get(bonus_keys[i], 0))
+		var effective: int = base + cur_bonus
 		var stat_label := Label.new()
-		stat_label.text = "  %-4s %d" % [display, val]
+
+		if has_preview:
+			var pre_bonus: int = int(preview_bonuses.get(bonus_keys[i], 0))
+			var preview_val: int = base + pre_bonus
+			var diff: int = preview_val - effective
+			if diff > 0:
+				stat_label.text = "  %-4s %d → %d (+%d)" % [display_names[i], effective, preview_val, diff]
+				stat_label.modulate = Color(0.2, 1.0, 0.2)
+			elif diff < 0:
+				stat_label.text = "  %-4s %d → %d (%d)" % [display_names[i], effective, preview_val, diff]
+				stat_label.modulate = Color(1.0, 0.3, 0.3)
+			else:
+				stat_label.text = "  %-4s %d" % [display_names[i], effective]
+		else:
+			stat_label.text = "  %-4s %d" % [display_names[i], effective]
+
 		vbox.add_child(stat_label)
 
 	stats_panel.add_child(vbox)

@@ -801,7 +801,7 @@ func generate_drops(enemy: Dictionary) -> Array:
 			weapon_chance = 0.25
 		if randf() < weapon_chance:
 			var drop_name: String = weapon_drops[randi() % weapon_drops.size()]
-			var weapon_id: String = drop_name.to_lower().replace(" ", "_").replace("'", "")
+			var weapon_id: String = drop_name.to_lower().replace(" ", "_").replace("'", "").replace("-", "_").replace("/", "_")
 			# Check if high-rarity weapon should be unidentified
 			var weapon = WeaponRegistry.get_weapon(weapon_id)
 			if weapon and weapon.rarity >= 5:

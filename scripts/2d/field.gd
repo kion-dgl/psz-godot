@@ -662,7 +662,7 @@ func _grant_mission_rewards(mission_id: String, difficulty: String) -> void:
 	var item_name: String = str(reward.get("item", ""))
 	var quantity: int = int(reward.get("quantity", 1))
 	if not item_name.is_empty():
-		var item_id: String = item_name.to_lower().replace(" ", "_").replace("'", "")
+		var item_id: String = item_name.to_lower().replace(" ", "_").replace("'", "").replace("-", "_").replace("/", "_")
 		for _i in range(quantity):
 			if Inventory.can_add_item(item_id):
 				Inventory.add_item(item_id, 1)
