@@ -107,16 +107,17 @@ func _update_display() -> void:
 
 	for i in range(_items.size()):
 		var label := Label.new()
+		var color: Color
 		if i == _current_index and _active:
 			label.text = cursor_char + _items[i]
-			if _disabled[i]:
-				label.modulate = COLOR_MUTED
-			else:
-				label.modulate = COLOR_HIGHLIGHT
+			color = COLOR_MUTED if _disabled[i] else COLOR_HIGHLIGHT
 		else:
 			label.text = indent_char + _items[i]
-			if _disabled[i]:
-				label.modulate = COLOR_MUTED
-			else:
-				label.modulate = COLOR_NORMAL
+			color = COLOR_MUTED if _disabled[i] else COLOR_NORMAL
+		var settings := LabelSettings.new()
+		settings.font_color = color
+		settings.shadow_color = Color(0, 0, 0, 0.7)
+		settings.shadow_offset = Vector2(2, 2)
+		settings.shadow_size = 3
+		label.label_settings = settings
 		add_child(label)
