@@ -39,6 +39,9 @@ CombatManager="*res://scripts/autoloads/combat_manager.gd"
 SessionManager="*res://scripts/autoloads/session_manager.gd"
 MagManager="*res://scripts/autoloads/mag_manager.gd"
 TechniqueManager="*res://scripts/autoloads/technique_manager.gd"
+MaterialRegistry="*res://scripts/autoloads/material_registry.gd"
+ModifierRegistry="*res://scripts/autoloads/modifier_registry.gd"
+SetBonusRegistry="*res://scripts/autoloads/set_bonus_registry.gd"
 
 [display]
 

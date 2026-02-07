@@ -8,11 +8,18 @@ var _selected_action: int = 0
 var _selected_target: int = 0
 var _choosing_target: bool = false
 var _choosing_item: bool = false
+var _choosing_technique: bool = false
+var _choosing_pa: bool = false
 var _selected_item: int = 0
+var _selected_technique: int = 0
+var _selected_pa: int = 0
 var _usable_items: Array = []  # Array of {id, name, quantity}
+var _available_techniques: Array = []  # Array of {id, name, level, pp_cost}
+var _available_pas: Array = []  # Array of PhotonArtData refs
+var _pending_action: String = ""  # "technique" or "pa" — what target selection is for
 var _enemies: Array = []
 
-const ACTIONS := ["Attack", "Special Attack", "Item", "Run"]
+const ACTIONS := ["Attack", "Special Attack", "Technique", "Photon Art", "Item", "Run"]
 
 @onready var header_label: Label = $VBox/HeaderLabel
 @onready var enemy_panel: PanelContainer = $VBox/HBox/LeftVBox/EnemyPanel
@@ -47,6 +54,8 @@ func _start_wave() -> void:
 	_selected_action = 0
 	_selected_target = 0
 	_choosing_target = false
+	_choosing_technique = false
+	_choosing_pa = false
 
 	_add_log("── Stage %d Wave %d ──" % [stage, wave])
 	_add_log("%d enemies appeared!" % _enemies.size())
@@ -74,61 +83,226 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _handle_player_input(event: InputEvent) -> void:
 	if _choosing_item:
-		if event.is_action_pressed("ui_up"):
-			_selected_item = wrapi(_selected_item - 1, 0, maxi(_usable_items.size(), 1))
-			_refresh_display()
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_down"):
-			_selected_item = wrapi(_selected_item + 1, 0, maxi(_usable_items.size(), 1))
-			_refresh_display()
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_accept"):
-			_use_selected_item()
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_cancel"):
-			_choosing_item = false
-			_refresh_display()
-			get_viewport().set_input_as_handled()
+		_handle_item_input(event)
+	elif _choosing_technique:
+		_handle_technique_input(event)
+	elif _choosing_pa:
+		_handle_pa_input(event)
 	elif _choosing_target:
-		if event.is_action_pressed("ui_up"):
-			_move_target(-1)
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_down"):
-			_move_target(1)
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_accept"):
-			_execute_action()
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_cancel"):
-			_choosing_target = false
-			_refresh_display()
-			get_viewport().set_input_as_handled()
+		_handle_target_input(event)
 	else:
-		if event.is_action_pressed("ui_up"):
-			_selected_action = wrapi(_selected_action - 1, 0, ACTIONS.size())
-			_refresh_display()
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_down"):
-			_selected_action = wrapi(_selected_action + 1, 0, ACTIONS.size())
-			_refresh_display()
-			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("ui_accept"):
-			_select_action()
-			get_viewport().set_input_as_handled()
+		_handle_action_input(event)
+
+
+func _handle_action_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_selected_action = wrapi(_selected_action - 1, 0, ACTIONS.size())
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_down"):
+		_selected_action = wrapi(_selected_action + 1, 0, ACTIONS.size())
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_select_action()
+		get_viewport().set_input_as_handled()
+
+
+func _handle_target_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_move_target(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_down"):
+		_move_target(1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_execute_action()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		_choosing_target = false
+		_pending_action = ""
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+
+
+func _handle_item_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_selected_item = wrapi(_selected_item - 1, 0, maxi(_usable_items.size(), 1))
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_down"):
+		_selected_item = wrapi(_selected_item + 1, 0, maxi(_usable_items.size(), 1))
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_use_selected_item()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		_choosing_item = false
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+
+
+func _handle_technique_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_selected_technique = wrapi(_selected_technique - 1, 0, maxi(_available_techniques.size(), 1))
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_down"):
+		_selected_technique = wrapi(_selected_technique + 1, 0, maxi(_available_techniques.size(), 1))
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_select_technique()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		_choosing_technique = false
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+
+
+func _handle_pa_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_selected_pa = wrapi(_selected_pa - 1, 0, maxi(_available_pas.size(), 1))
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_down"):
+		_selected_pa = wrapi(_selected_pa + 1, 0, maxi(_available_pas.size(), 1))
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_select_pa()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		_choosing_pa = false
+		_refresh_display()
+		get_viewport().set_input_as_handled()
 
 
 func _select_action() -> void:
 	match ACTIONS[_selected_action]:
 		"Attack", "Special Attack":
+			_pending_action = ACTIONS[_selected_action]
 			_choosing_target = true
 			_selected_target = _find_first_alive_enemy()
 			_refresh_display()
+		"Technique":
+			_open_technique_menu()
+		"Photon Art":
+			_open_pa_menu()
 		"Item":
 			_open_item_menu()
 		"Run":
 			_add_log("Escaped from battle!")
 			SessionManager.return_to_city()
 			SceneManager.goto_scene("res://scenes/2d/city.tscn")
+
+
+func _open_technique_menu() -> void:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+	var techniques: Dictionary = character.get("techniques", {})
+	if techniques.is_empty():
+		_add_log("No techniques learned!")
+		_refresh_display()
+		return
+
+	_available_techniques.clear()
+	for tech_id in techniques:
+		var level: int = int(techniques[tech_id])
+		if level <= 0:
+			continue
+		var tech: Dictionary = TechniqueManager.get_technique(tech_id)
+		if tech.is_empty():
+			continue
+		var pp_cost: int = maxi(1, int(tech["pp"]) - int(float(level) / 5.0))
+		_available_techniques.append({
+			"id": tech_id,
+			"name": tech.get("name", tech_id),
+			"level": level,
+			"pp_cost": pp_cost,
+			"target": tech.get("target", "single"),
+		})
+
+	if _available_techniques.is_empty():
+		_add_log("No techniques available!")
+		_refresh_display()
+		return
+
+	_choosing_technique = true
+	_selected_technique = 0
+	hint_label.text = "[↑/↓] Select Technique  [ENTER] Cast  [ESC] Back"
+	_refresh_display()
+
+
+func _select_technique() -> void:
+	if _available_techniques.is_empty() or _selected_technique >= _available_techniques.size():
+		return
+	var tech_info: Dictionary = _available_techniques[_selected_technique]
+	var target_type: String = str(tech_info.get("target", "single"))
+
+	_choosing_technique = false
+	_pending_action = "technique"
+
+	# Area/party/self techniques don't need target selection
+	if target_type in ["area", "party", "self"]:
+		_selected_target = _find_first_alive_enemy()
+		_execute_action()
+	else:
+		_choosing_target = true
+		_selected_target = _find_first_alive_enemy()
+		_refresh_display()
+
+
+func _open_pa_menu() -> void:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+
+	var equipment: Dictionary = character.get("equipment", {})
+	var weapon_id: String = str(equipment.get("weapon", ""))
+	if weapon_id.is_empty():
+		_add_log("No weapon equipped!")
+		_refresh_display()
+		return
+
+	var weapon = WeaponRegistry.get_weapon(weapon_id)
+	if weapon == null:
+		_add_log("Unknown weapon!")
+		_refresh_display()
+		return
+
+	var weapon_type_name: String = weapon.get_weapon_type_name()
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+	var class_type: String = class_data.type if class_data else ""
+
+	_available_pas.clear()
+	var all_arts: Array = PhotonArtRegistry.get_arts_by_weapon_type(weapon_type_name)
+	for art in all_arts:
+		if art.class_type == "" or art.class_type == class_type:
+			_available_pas.append(art)
+
+	if _available_pas.is_empty():
+		_add_log("No photon arts available for %s!" % weapon_type_name)
+		_refresh_display()
+		return
+
+	_choosing_pa = true
+	_selected_pa = 0
+	hint_label.text = "[↑/↓] Select PA  [ENTER] Use  [ESC] Back"
+	_refresh_display()
+
+
+func _select_pa() -> void:
+	if _available_pas.is_empty() or _selected_pa >= _available_pas.size():
+		return
+
+	_choosing_pa = false
+	_pending_action = "pa"
+	_choosing_target = true
+	_selected_target = _find_first_alive_enemy()
+	_refresh_display()
 
 
 func _open_item_menu() -> void:
@@ -139,6 +313,10 @@ func _open_item_menu() -> void:
 		var item_id: String = item.get("id", "")
 		var consumable = ConsumableRegistry.get_consumable(item_id)
 		if consumable:
+			_usable_items.append(item)
+		elif item_id == "telepipe":
+			_usable_items.append(item)
+		elif CombatManager.MATERIAL_STAT_MAP.has(item_id):
 			_usable_items.append(item)
 
 	if _usable_items.is_empty():
@@ -159,8 +337,28 @@ func _use_selected_item() -> void:
 	var item: Dictionary = _usable_items[_selected_item]
 	var item_id: String = item.get("id", "")
 	var item_name: String = item.get("name", item_id)
-	var consumable = ConsumableRegistry.get_consumable(item_id)
 
+	# Handle telepipe
+	if item_id == "telepipe":
+		Inventory.remove_item("telepipe", 1)
+		_add_log("Used Telepipe! Warping to city...")
+		_choosing_item = false
+		SessionManager.suspend_session()
+		SceneManager.goto_scene("res://scenes/2d/city.tscn")
+		return
+
+	# Handle materials
+	if CombatManager.MATERIAL_STAT_MAP.has(item_id):
+		var result: Dictionary = CombatManager.use_material(item_id)
+		_add_log(str(result.get("message", "")))
+		_choosing_item = false
+		_refresh_display()
+		_state = State.ENEMY_TURN
+		await get_tree().create_timer(0.3).timeout
+		_process_enemy_turns()
+		return
+
+	var consumable = ConsumableRegistry.get_consumable(item_id)
 	if consumable == null:
 		return
 
@@ -243,9 +441,48 @@ func _find_first_alive_enemy() -> int:
 
 func _execute_action() -> void:
 	_choosing_target = false
-	var action: String = ACTIONS[_selected_action]
 
 	var result: Dictionary
+
+	if _pending_action == "technique":
+		# Cast selected technique
+		var tech_info: Dictionary = _available_techniques[_selected_technique]
+		result = CombatManager.cast_technique(str(tech_info["id"]), _selected_target)
+		_add_log(str(result.get("message", "")))
+		if result.get("defeated", false):
+			var drops: Array = CombatManager.generate_drops(_enemies[_selected_target])
+			CombatManager.add_drops(drops)
+		_pending_action = ""
+		_refresh_display()
+		if CombatManager.is_wave_cleared():
+			_on_wave_cleared()
+			return
+		_state = State.ENEMY_TURN
+		await get_tree().create_timer(0.3).timeout
+		_process_enemy_turns()
+		return
+
+	if _pending_action == "pa":
+		# Use selected photon art
+		var art = _available_pas[_selected_pa]
+		result = CombatManager.use_photon_art(art.id, _selected_target)
+		_add_log(str(result.get("message", "")))
+		if result.get("defeated", false):
+			var drops: Array = CombatManager.generate_drops(_enemies[_selected_target])
+			CombatManager.add_drops(drops)
+		_pending_action = ""
+		_refresh_display()
+		if CombatManager.is_wave_cleared():
+			_on_wave_cleared()
+			return
+		_state = State.ENEMY_TURN
+		await get_tree().create_timer(0.3).timeout
+		_process_enemy_turns()
+		return
+
+	var action: String = _pending_action if not _pending_action.is_empty() else ACTIONS[_selected_action]
+	_pending_action = ""
+
 	if action == "Attack":
 		result = CombatManager.attack(_selected_target)
 	elif action == "Special Attack":
@@ -282,6 +519,11 @@ func _execute_action() -> void:
 
 
 func _process_enemy_turns() -> void:
+	# Process player buff ticks
+	var buff_msgs: Array = CombatManager.process_player_buffs()
+	for msg in buff_msgs:
+		_add_log(msg)
+
 	# Process status effects first
 	var ticks: Array = CombatManager.process_enemy_status_effects()
 	for tick in ticks:
@@ -466,7 +708,7 @@ func _refresh_display() -> void:
 	if _state == State.PLAYER_TURN:
 		if _choosing_target:
 			hint_label.text = "[↑/↓] Select Target  [ENTER] Confirm  [ESC] Back"
-		else:
+		elif not _choosing_item and not _choosing_technique and not _choosing_pa:
 			hint_label.text = "[↑/↓] Select Action  [ENTER] Confirm"
 
 	_refresh_enemies()
@@ -574,6 +816,18 @@ func _refresh_player() -> void:
 	meseta_label.modulate = Color(1, 0.8, 0)
 	vbox.add_child(meseta_label)
 
+	# Active buffs
+	var buffs: Dictionary = character.get("combat_buffs", {})
+	if not buffs.is_empty():
+		for buff_name in buffs:
+			var buff: Dictionary = buffs[buff_name]
+			var turns: int = int(buff.get("turns", 0))
+			if turns > 0:
+				var buff_label := Label.new()
+				buff_label.text = "%s (%d turns)" % [buff_name.capitalize(), turns]
+				buff_label.modulate = Color(0.5, 1, 0.5)
+				vbox.add_child(buff_label)
+
 	player_panel.add_child(vbox)
 
 
@@ -585,7 +839,6 @@ func _refresh_actions() -> void:
 	vbox.add_theme_constant_override("separation", 2)
 
 	if _choosing_item:
-		# Show item selection list
 		var header := Label.new()
 		header.text = "── ITEMS ──"
 		header.modulate = Color(0, 0.733, 0.8)
@@ -601,6 +854,46 @@ func _refresh_actions() -> void:
 				label.modulate = Color(1, 0.8, 0)
 			else:
 				label.text = "  " + display
+			vbox.add_child(label)
+	elif _choosing_technique:
+		var header := Label.new()
+		header.text = "── TECHNIQUES ──"
+		header.modulate = Color(0, 0.733, 0.8)
+		vbox.add_child(header)
+
+		var character = CharacterManager.get_active_character()
+		var current_pp: int = int(character.get("pp", 0)) if character else 0
+		for i in range(_available_techniques.size()):
+			var tech: Dictionary = _available_techniques[i]
+			var label := Label.new()
+			var display: String = "%s Lv.%d (%d PP)" % [tech["name"], tech["level"], tech["pp_cost"]]
+			if i == _selected_technique:
+				label.text = "> " + display
+				label.modulate = Color(1, 0.8, 0) if current_pp >= int(tech["pp_cost"]) else Color(1, 0.267, 0.267)
+			else:
+				label.text = "  " + display
+				if current_pp < int(tech["pp_cost"]):
+					label.modulate = Color(0.5, 0.5, 0.5)
+			vbox.add_child(label)
+	elif _choosing_pa:
+		var header := Label.new()
+		header.text = "── PHOTON ARTS ──"
+		header.modulate = Color(0, 0.733, 0.8)
+		vbox.add_child(header)
+
+		var character = CharacterManager.get_active_character()
+		var current_pp: int = int(character.get("pp", 0)) if character else 0
+		for i in range(_available_pas.size()):
+			var art = _available_pas[i]
+			var label := Label.new()
+			var display: String = "%s (%d PP, %dx)" % [art.name, art.pp_cost, art.hits]
+			if i == _selected_pa:
+				label.text = "> " + display
+				label.modulate = Color(1, 0.8, 0) if current_pp >= art.pp_cost else Color(1, 0.267, 0.267)
+			else:
+				label.text = "  " + display
+				if current_pp < art.pp_cost:
+					label.modulate = Color(0.5, 0.5, 0.5)
 			vbox.add_child(label)
 	else:
 		var header := Label.new()

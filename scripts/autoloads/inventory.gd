@@ -167,6 +167,16 @@ func _lookup_item(item_id: String) -> Dictionary:
 	if unit:
 		return {"name": unit.name, "max_stack": 1}
 
+	# MaterialRegistry (stackable materials)
+	var material = MaterialRegistry.get_material(item_id)
+	if material:
+		return {"name": material.name, "max_stack": 99}
+
+	# ModifierRegistry (grinders, elements)
+	var modifier = ModifierRegistry.get_modifier(item_id)
+	if modifier:
+		return {"name": modifier.name, "max_stack": 99}
+
 	# Mags (load directly, no registry)
 	var mag_path := "res://data/mags/%s.tres" % item_id
 	if ResourceLoader.exists(mag_path):
