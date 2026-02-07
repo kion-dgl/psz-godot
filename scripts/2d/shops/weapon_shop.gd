@@ -100,6 +100,43 @@ func _unit_price(u) -> int:
 	return maxi(base, 100)
 
 
+## Build "Type Race" string for the active character (e.g., "Hunter Human").
+func _get_class_use_string() -> String:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return ""
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+	if class_data == null:
+		return ""
+	return "%s %s" % [class_data.type, class_data.race]
+
+
+## Check equippability of an item. Returns {can_equip: bool, reason: String}.
+func _check_equippability(item_id: String, cat: String) -> Dictionary:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return {"can_equip": false, "reason": ""}
+	var class_str: String = _get_class_use_string()
+	var char_level: int = int(character.get("level", 1))
+
+	if cat == "weapon":
+		var w = WeaponRegistry.get_weapon(item_id)
+		if w:
+			if not class_str.is_empty() and not w.can_be_used_by(class_str):
+				return {"can_equip": false, "reason": "class"}
+			if w.level > char_level:
+				return {"can_equip": false, "reason": "level", "req_level": w.level}
+	elif cat == "armor":
+		var a = ArmorRegistry.get_armor(item_id)
+		if a:
+			if not class_str.is_empty() and not a.can_be_used_by(class_str):
+				return {"can_equip": false, "reason": "class"}
+			if a.level > char_level:
+				return {"can_equip": false, "reason": "level", "req_level": a.level}
+
+	return {"can_equip": true, "reason": ""}
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		SceneManager.pop_scene()
@@ -123,9 +160,21 @@ func _buy_selected() -> void:
 	var item: Dictionary = _items[_selected_index]
 	var cost: int = int(item.get("cost", 0))
 	var item_id: String = str(item.get("id", ""))
+	var cat: String = str(item.get("category", ""))
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
+
+	# Check class/level restrictions before purchase
+	var equip_check: Dictionary = _check_equippability(item_id, cat)
+	if not equip_check.get("can_equip", true):
+		var reason: String = str(equip_check.get("reason", ""))
+		if reason == "class":
+			hint_label.text = "Your class cannot use this!"
+		elif reason == "level":
+			hint_label.text = "Requires level %d!" % int(equip_check.get("req_level", 1))
+		return
+
 	if int(character.get("meseta", 0)) < cost:
 		hint_label.text = "Not enough meseta!"
 		return
@@ -145,6 +194,9 @@ func _refresh_display() -> void:
 	for child in list_panel.get_children():
 		child.queue_free()
 
+	var character = CharacterManager.get_active_character()
+	var current_meseta: int = int(character.get("meseta", 0)) if character else 0
+
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -156,6 +208,8 @@ func _refresh_display() -> void:
 	meseta_label.modulate = Color(1, 0.8, 0)
 	vbox.add_child(meseta_label)
 
+	var selected_label: Label = null
+
 	if _items.is_empty():
 		var empty := Label.new()
 		empty.text = "  (Nothing for sale)"
@@ -165,7 +219,9 @@ func _refresh_display() -> void:
 		var last_cat := ""
 		for i in range(_items.size()):
 			var item: Dictionary = _items[i]
+			var item_id: String = str(item.get("id", ""))
 			var cat: String = str(item.get("category", ""))
+			var cost: int = int(item.get("cost", 0))
 			# Category headers
 			if cat != last_cat:
 				if not last_cat.is_empty():
@@ -179,18 +235,48 @@ func _refresh_display() -> void:
 				last_cat = cat
 
 			var label := Label.new()
-			var held: int = int(Inventory._items.get(str(item.get("id", "")), 0))
+			var held: int = int(Inventory._items.get(item_id, 0))
 			var held_str: String = " (%d)" % held if held > 0 else ""
-			label.text = "%-20s%s %6d M" % [str(item.get("name", "???")), held_str, int(item.get("cost", 0))]
+
+			# Check restrictions for color-coding
+			var equip_check: Dictionary = _check_equippability(item_id, cat)
+			var can_equip: bool = equip_check.get("can_equip", true)
+			var reason: String = str(equip_check.get("reason", ""))
+			var cant_afford: bool = current_meseta < cost
+
+			# Build label with restriction tag
+			var restriction_tag := ""
+			if not can_equip:
+				if reason == "class":
+					restriction_tag = " [Class]"
+				elif reason == "level":
+					restriction_tag = " [Lv.%d]" % int(equip_check.get("req_level", 1))
+
+			label.text = "%-20s%s %6d M%s" % [str(item.get("name", "???")), held_str, cost, restriction_tag]
 			if i == _selected_index:
 				label.text = "> " + label.text
-				label.modulate = Color(1, 0.8, 0)
+				if not can_equip:
+					label.modulate = Color(0.8, 0.267, 0.267)
+				elif cant_afford:
+					label.modulate = Color(0.8, 0.8, 0.267)
+				else:
+					label.modulate = Color(1, 0.8, 0)
+				selected_label = label
 			else:
 				label.text = "  " + label.text
+				if not can_equip:
+					label.modulate = Color(0.5, 0.2, 0.2)
+				elif cant_afford:
+					label.modulate = Color(0.5, 0.5, 0.2)
 			vbox.add_child(label)
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)
+
+	# Scroll to selected item after layout settles
+	if selected_label != null:
+		scroll.ensure_control_visible.call_deferred(selected_label)
+
 	_refresh_detail()
 
 
@@ -259,6 +345,24 @@ func _refresh_detail() -> void:
 	sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
 	sell_label.modulate = Color(0.5, 0.5, 0.5)
 	vbox.add_child(sell_label)
+
+	# Equippability status
+	var equip_check: Dictionary = _check_equippability(item_id, cat)
+	if cat in ["weapon", "armor"]:
+		var equip_status := Label.new()
+		if equip_check.get("can_equip", true):
+			equip_status.text = "Can equip"
+			equip_status.modulate = Color(0.5, 1, 0.5)
+		else:
+			var reason: String = str(equip_check.get("reason", ""))
+			if reason == "class":
+				equip_status.text = "Cannot equip: class"
+			elif reason == "level":
+				equip_status.text = "Cannot equip: Lv.%d required" % int(equip_check.get("req_level", 1))
+			else:
+				equip_status.text = "Cannot equip"
+			equip_status.modulate = Color(1, 0.267, 0.267)
+		vbox.add_child(equip_status)
 
 	detail_panel.add_child(vbox)
 

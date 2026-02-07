@@ -587,7 +587,15 @@ func _on_wave_cleared() -> void:
 		_add_log("── Picking up loot ──")
 		var pickup_results: Array = CombatManager.pickup_all()
 		for pr in pickup_results:
-			if pr.get("picked_up", false):
+			if pr.get("disk", false):
+				# Technique disk — show learn result message
+				_add_log("  %s" % str(pr.get("message", "Found a disk!")))
+			elif pr.get("unidentified", false):
+				if pr.get("picked_up", false):
+					_add_log("  Found ??? (unidentified weapon)")
+				else:
+					_add_log("  Inventory full! Left: ??? weapon")
+			elif pr.get("picked_up", false):
 				_add_log("  Picked up: %s" % str(pr.get("name", "???")))
 			else:
 				_add_log("  Inventory full! Left: %s" % str(pr.get("name", "???")))
