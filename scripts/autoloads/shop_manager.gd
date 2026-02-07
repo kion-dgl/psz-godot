@@ -47,7 +47,7 @@ func buy_item(shop_id: String, item_name: String, quantity: int = 1) -> bool:
 		return false
 
 	# Convert shop item name to registry ID (e.g. "Monomate" → "monomate")
-	var item_id: String = item_name.to_lower().replace(" ", "_")
+	var item_id: String = item_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
 
 	# Check if inventory can hold the item
 	if not Inventory.can_add_item(item_id):
