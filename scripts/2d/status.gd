@@ -107,8 +107,8 @@ func _refresh_info() -> void:
 	vbox.add_child(equip_header)
 
 	var equipment: Dictionary = character.get("equipment", {})
-	var slots := ["weapon", "frame", "unit1", "unit2", "unit3", "unit4"]
-	var slot_names := ["Weapon", "Frame", "Unit 1", "Unit 2", "Unit 3", "Unit 4"]
+	var slots := ["weapon", "frame", "mag", "unit1", "unit2", "unit3", "unit4"]
+	var slot_names := ["Weapon", "Frame", "Mag", "Unit 1", "Unit 2", "Unit 3", "Unit 4"]
 	for i in range(slots.size()):
 		var slot_label := Label.new()
 		var item_id: String = str(equipment.get(slots[i], ""))
@@ -117,6 +117,11 @@ func _refresh_info() -> void:
 			slot_label.modulate = Color(0.333, 0.333, 0.333)
 		else:
 			var item_name := _get_item_name(slots[i], item_id)
+			# Show grind level for weapons
+			if slots[i] == "weapon":
+				var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0))
+				if grind > 0:
+					item_name += " +%d" % grind
 			slot_label.text = "  %-8s %s" % [slot_names[i], item_name]
 		vbox.add_child(slot_label)
 
@@ -194,21 +199,22 @@ func _calculate_equipment_bonuses(character: Dictionary) -> Dictionary:
 	var bonuses := {"hp": 0, "pp": 0, "atk": 0, "def": 0, "acc": 0, "eva": 0, "tech": 0}
 	var equipment: Dictionary = character.get("equipment", {})
 
-	# Weapon bonuses
+	# Weapon bonuses (with grind)
 	var weapon_id: String = str(equipment.get("weapon", ""))
 	if not weapon_id.is_empty():
 		var weapon = WeaponRegistry.get_weapon(weapon_id)
 		if weapon:
-			bonuses["atk"] += int(weapon.attack)
-			bonuses["acc"] += int(weapon.accuracy)
+			var grind: int = int(character.get("weapon_grinds", {}).get(weapon_id, 0))
+			bonuses["atk"] += weapon.get_attack_at_grind(grind)
+			bonuses["acc"] += weapon.get_accuracy_at_grind(grind)
 
 	# Frame bonuses
 	var frame_id: String = str(equipment.get("frame", ""))
 	if not frame_id.is_empty():
 		var armor = ArmorRegistry.get_armor(frame_id)
 		if armor:
-			bonuses["def"] += int(armor.defense)
-			bonuses["eva"] += int(armor.evasion)
+			bonuses["def"] += int(armor.defense_base)
+			bonuses["eva"] += int(armor.evasion_base)
 
 	# Unit bonuses
 	for slot in ["unit1", "unit2", "unit3", "unit4"]:
@@ -231,6 +237,13 @@ func _get_item_name(slot_type: String, item_id: String) -> String:
 	elif slot_type == "frame":
 		var armor = ArmorRegistry.get_armor(item_id)
 		return armor.name if armor else item_id
+	elif slot_type == "mag":
+		var mag_path := "res://data/mags/%s.tres" % item_id
+		if ResourceLoader.exists(mag_path):
+			var mag = load(mag_path)
+			if mag:
+				return mag.name
+		return item_id
 	else:
 		var unit = UnitRegistry.get_unit(item_id)
 		return unit.name if unit else item_id
