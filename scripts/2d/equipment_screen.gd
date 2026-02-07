@@ -294,6 +294,11 @@ func _refresh_display() -> void:
 			if not equipped.is_empty():
 				var info: Dictionary = Inventory._lookup_item(equipped)
 				item_display = info.name
+				# Show grind level for weapons
+				if slot_key == "weapon":
+					var grind: int = int(character.get("weapon_grinds", {}).get(equipped, 0))
+					if grind > 0:
+						item_display += " +%d" % grind
 
 			var label := Label.new()
 			label.text = "%-8s %s" % [slot_name, item_display]
@@ -316,6 +321,10 @@ func _refresh_display() -> void:
 func _get_item_brief(item_id: String) -> String:
 	var w = WeaponRegistry.get_weapon(item_id)
 	if w:
+		var character = CharacterManager.get_active_character()
+		var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0)) if character else 0
+		if grind > 0:
+			return "ATK %d (+%d)" % [w.attack_base + grind, grind]
 		return "ATK %d" % w.attack_base
 	var a = ArmorRegistry.get_armor(item_id)
 	if a:

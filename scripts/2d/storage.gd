@@ -275,10 +275,17 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 			var qty: int = int(item.get("quantity", 1))
 			var equip_tag: String = " [E]" if item_id in equipped_ids else ""
 
+			# Add grind level for weapons
+			var grind_tag := ""
+			if weapon and character:
+				var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0))
+				if grind > 0:
+					grind_tag = " +%d" % grind
+
 			# Stars and type for weapons/armor
 			var suffix := ""
 			if weapon:
-				suffix = " %s [%s]" % [weapon.get_rarity_string(), weapon.get_weapon_type_name()]
+				suffix = "%s %s [%s]" % [grind_tag, weapon.get_rarity_string(), weapon.get_weapon_type_name()]
 			elif armor_data:
 				suffix = " %s [%s]" % [armor_data.get_rarity_string(), armor_data.get_type_name()]
 
