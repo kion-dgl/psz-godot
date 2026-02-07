@@ -2,13 +2,13 @@ extends Control
 ## Warp Teleporter — select area and difficulty to enter the field.
 
 const AREAS := [
-	{"id": "gurhacia", "name": "Gurhacia Valley", "rec_level": 1},
-	{"id": "rioh", "name": "Rioh Snowfield", "rec_level": 15},
-	{"id": "ozette", "name": "Ozette Wetlands", "rec_level": 30},
-	{"id": "paru", "name": "Paru Waterfall", "rec_level": 45},
-	{"id": "makara", "name": "Makara Ruins", "rec_level": 60},
-	{"id": "arca", "name": "Arca Plant", "rec_level": 75},
-	{"id": "dark", "name": "Dark Shrine", "rec_level": 90},
+	{"id": "gurhacia", "name": "Gurhacia Valley", "rec_level": [1, 35, 70]},
+	{"id": "rioh", "name": "Rioh Snowfield", "rec_level": [10, 40, 75]},
+	{"id": "ozette", "name": "Ozette Wetlands", "rec_level": [20, 45, 80]},
+	{"id": "paru", "name": "Paru Waterfall", "rec_level": [30, 50, 85]},
+	{"id": "makara", "name": "Makara Ruins", "rec_level": [40, 55, 90]},
+	{"id": "arca", "name": "Arca Plant", "rec_level": [50, 60, 95]},
+	{"id": "dark", "name": "Dark Shrine", "rec_level": [60, 70, 100]},
 ]
 
 ## Story mission that must be completed to unlock each warp area.
@@ -122,7 +122,8 @@ func _show_area_select() -> void:
 		var unlocked: bool = _is_area_unlocked(str(area["id"]))
 		var label := Label.new()
 		var status_tag: String = "" if unlocked else " [LOCKED]"
-		label.text = "%-24s Lv.%d+%s" % [str(area["name"]), int(area["rec_level"]), status_tag]
+		var levels: Array = area["rec_level"]
+		label.text = "%-24s Lv.%d+%s" % [str(area["name"]), int(levels[0]), status_tag]
 		if i == _selected_area:
 			label.text = "> " + label.text
 			if unlocked:
@@ -188,9 +189,14 @@ func _refresh_info() -> void:
 		info_panel.add_child(vbox)
 		return
 
+	var levels: Array = area["rec_level"]
 	var level_label := Label.new()
-	level_label.text = "Recommended Level: %d+" % int(area["rec_level"])
+	level_label.text = "Recommended Level:"
 	vbox.add_child(level_label)
+	for i in range(DIFFICULTIES.size()):
+		var diff_label := Label.new()
+		diff_label.text = "  %-12s Lv.%d+" % [DIFFICULTIES[i], int(levels[i])]
+		vbox.add_child(diff_label)
 
 	var stages_label := Label.new()
 	stages_label.text = "Stages: 3 (3 waves each)"
