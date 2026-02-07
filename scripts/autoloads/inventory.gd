@@ -20,27 +20,36 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 	if quantity <= 0:
 		return false
 
-	# Check capacity (if limited)
-	if capacity > 0 and not has_item(item_id) and _items.size() >= capacity:
-		inventory_full.emit()
-		return false
-
-	# Determine stack limit and display name from registries
 	var info = _lookup_item(item_id)
-	var max_stack: int = info.max_stack
 	var item_name: String = info.name
 
-	var current = _items.get(item_id, 0)
-	var max_add = mini(quantity, max_stack - current)
-
-	if max_add <= 0:
-		return false
-
-	_items[item_id] = current + max_add
-	var new_total = _items[item_id]
-	item_added.emit(item_id, max_add, new_total)
-	print("[Inventory] Added ", max_add, "x ", item_name, " (total: ", new_total, ")")
-	return true
+	if _is_per_slot(item_id):
+		# Per-slot items (weapons, armor, units, mags): each copy takes 1 slot
+		var available: int = capacity - get_total_slots() if capacity > 0 else quantity
+		var max_add: int = mini(quantity, available)
+		if max_add <= 0:
+			inventory_full.emit()
+			return false
+		_items[item_id] = int(_items.get(item_id, 0)) + max_add
+		var new_total: int = int(_items[item_id])
+		item_added.emit(item_id, max_add, new_total)
+		print("[Inventory] Added ", max_add, "x ", item_name, " (total: ", new_total, ")")
+		return true
+	else:
+		# Stackable items: 1 stack = 1 slot, limited by max_stack
+		if capacity > 0 and not has_item(item_id) and get_total_slots() >= capacity:
+			inventory_full.emit()
+			return false
+		var max_stack: int = info.max_stack
+		var current: int = int(_items.get(item_id, 0))
+		var max_add: int = mini(quantity, max_stack - current)
+		if max_add <= 0:
+			return false
+		_items[item_id] = current + max_add
+		var new_total: int = int(_items[item_id])
+		item_added.emit(item_id, max_add, new_total)
+		print("[Inventory] Added ", max_add, "x ", item_name, " (total: ", new_total, ")")
+		return true
 
 
 ## Remove an item from inventory by ID
@@ -103,16 +112,44 @@ func get_items_by_type(type: int) -> Array:
 
 ## Check if inventory has room for an item
 func can_add_item(item_id: String) -> bool:
-	# Already have it — check stack limit
+	if _is_per_slot(item_id):
+		# Per-slot: just need a free slot
+		return capacity <= 0 or get_total_slots() < capacity
+	# Stackable: check stack limit
 	if has_item(item_id):
 		var info = _lookup_item(item_id)
-		return _items[item_id] < info.max_stack
-
-	# Check capacity
-	if capacity > 0 and _items.size() >= capacity:
+		return int(_items[item_id]) < info.max_stack
+	# New stackable item: need a free slot
+	if capacity > 0 and get_total_slots() >= capacity:
 		return false
-
 	return true
+
+
+## Count total inventory slots used. Per-slot items count each copy as 1 slot.
+func get_total_slots() -> int:
+	var total := 0
+	for item_id in _items:
+		if _is_per_slot(item_id):
+			total += int(_items[item_id])  # each copy = 1 slot
+		else:
+			total += 1  # entire stack = 1 slot
+	return total
+
+
+## Check if an item is per-slot (each copy takes 1 inventory slot)
+func _is_per_slot(item_id: String) -> bool:
+	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
+	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
+		return true
+	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
+		return true
+	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
+		return true
+	if ResourceLoader.exists("res://data/mags/%s.tres" % item_id):
+		return true
+	if item_id.begins_with("disk_"):
+		return true
+	return false
 
 
 ## Use a consumable item (removes it and applies effect)
@@ -176,6 +213,17 @@ func _lookup_item(item_id: String) -> Dictionary:
 	var modifier = ModifierRegistry.get_modifier(item_id)
 	if modifier:
 		return {"name": modifier.name, "max_stack": 99}
+
+	# Technique disks (per-slot, format: disk_<tech_id>_<level>)
+	if item_id.begins_with("disk_"):
+		var parts: PackedStringArray = item_id.split("_", false, 2)
+		if parts.size() >= 3:
+			var tech_id: String = parts[1]
+			var level: int = int(parts[2])
+			var tech: Dictionary = TechniqueManager.TECHNIQUES.get(tech_id, {})
+			var tech_name: String = str(tech.get("name", tech_id))
+			return {"name": "Disk: %s Lv.%d" % [tech_name, level], "max_stack": 1}
+		return {"name": item_id, "max_stack": 1}
 
 	# Mags (load directly, no registry)
 	var mag_path := "res://data/mags/%s.tres" % item_id

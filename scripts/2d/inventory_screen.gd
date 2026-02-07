@@ -1,7 +1,7 @@
 extends Control
 ## Inventory screen — 40-slot grid with item details and actions.
 
-const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Consumable", "Material", "Modifier", "Key Item", "Other"]
+const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable", "Material", "Modifier", "Key Item", "Other"]
 
 var _selected_index: int = 0
 var _items: Array = []
@@ -67,6 +67,8 @@ func _use_selected() -> void:
 		_refresh_items()
 		_selected_index = clampi(_selected_index, 0, maxi(_items.size() - 1, 0))
 		_refresh_display()
+	elif item_id.begins_with("disk_"):
+		_use_disk(item_id)
 	else:
 		hint_label.text = "Can't use that item."
 
@@ -83,6 +85,30 @@ func _drop_selected() -> void:
 	_refresh_display()
 
 
+func _use_disk(item_id: String) -> void:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		hint_label.text = "No active character!"
+		return
+	# Parse disk ID: disk_<tech_id>_<level>
+	var parts: PackedStringArray = item_id.split("_", false, 2)
+	if parts.size() < 3:
+		hint_label.text = "Invalid disk!"
+		return
+	var tech_id: String = parts[1]
+	var level: int = int(parts[2])
+	var disk := {"technique_id": tech_id, "level": level}
+	var result: Dictionary = TechniqueManager.use_disk(character, disk)
+	if result.get("success", false):
+		Inventory.remove_item(item_id, 1)
+		hint_label.text = str(result.get("message", "Learned!"))
+		_refresh_items()
+		_selected_index = clampi(_selected_index, 0, maxi(_items.size() - 1, 0))
+		_refresh_display()
+	else:
+		hint_label.text = str(result.get("message", "Can't use that disk."))
+
+
 func _refresh_display() -> void:
 	# Grid panel
 	for child in grid_panel.get_children():
@@ -96,7 +122,7 @@ func _refresh_display() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var slot_count := "%d/40 slots" % _items.size()
+	var slot_count := "%d/40 slots" % Inventory.get_total_slots()
 	var header := Label.new()
 	header.text = slot_count
 	header.modulate = Color(0.333, 0.333, 0.333)
@@ -336,6 +362,41 @@ func _refresh_detail() -> void:
 		if unit.effect and not str(unit.effect).is_empty():
 			_add_detail_line(vbox, "Effect: %s" % unit.effect)
 
+	# Disk details
+	if item_id.begins_with("disk_"):
+		var parts: PackedStringArray = item_id.split("_", false, 2)
+		if parts.size() >= 3:
+			var tech_id: String = parts[1]
+			var level: int = int(parts[2])
+			var tech: Dictionary = TechniqueManager.get_technique(tech_id)
+			if not tech.is_empty():
+				_add_detail_line(vbox, "Type: Technique Disk")
+				_add_detail_line(vbox, "Element: %s" % str(tech.get("element", "none")).capitalize())
+				_add_detail_line(vbox, "Target: %s" % str(tech.get("target", "single")).capitalize())
+				var power: int = int(tech.get("power", 0))
+				if power > 0:
+					var scaled_power: int = int(float(power) * (1.0 + float(level) / 10.0))
+					_add_detail_line(vbox, "Power: %d (Lv.%d)" % [scaled_power, level])
+				var pp_cost: int = maxi(1, int(tech.get("pp", 5)) - int(float(level) / 5.0))
+				_add_detail_line(vbox, "PP Cost: %d" % pp_cost)
+				var required_level: int = TechniqueManager.get_disk_required_level(level)
+				var req_label := Label.new()
+				req_label.text = "Req. Level: %d" % required_level
+				if char_level < required_level:
+					req_label.modulate = Color(0.7, 0.5, 0.15)
+				vbox.add_child(req_label)
+				if character2:
+					var current_tech_level: int = TechniqueManager.get_technique_level(character2, tech_id)
+					if current_tech_level > 0:
+						var cur_label := Label.new()
+						if current_tech_level >= level:
+							cur_label.text = "Known: Lv.%d (already higher)" % current_tech_level
+							cur_label.modulate = Color(0.5, 0.5, 0.5)
+						else:
+							cur_label.text = "Known: Lv.%d → Lv.%d" % [current_tech_level, level]
+							cur_label.modulate = Color(0.5, 1, 0.5)
+						vbox.add_child(cur_label)
+
 	# Material details
 	if CombatManager.MATERIAL_STAT_MAP.has(item_id):
 		var mat = MaterialRegistry.get_material(item_id)
@@ -370,6 +431,8 @@ func _get_item_category(item_id: String) -> String:
 		return "Unit"
 	if ResourceLoader.exists("res://data/mags/%s.tres" % item_id) or ResourceLoader.exists("res://data/mags/%s.tres" % norm_id):
 		return "Mag"
+	if item_id.begins_with("disk_"):
+		return "Disk"
 	if ConsumableRegistry.get_consumable(item_id) or ConsumableRegistry.get_consumable(norm_id):
 		return "Consumable"
 	if CombatManager.MATERIAL_STAT_MAP.has(item_id) or MaterialRegistry.get_material(item_id):

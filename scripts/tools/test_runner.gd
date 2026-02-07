@@ -127,8 +127,11 @@ func test_inventory() -> void:
 
 	assert_true(Inventory.add_item("saber", 1), "Add saber")
 	assert_eq(Inventory.get_item_count("saber"), 1, "Saber count = 1")
-	# Weapons don't stack
-	assert_true(not Inventory.can_add_item("saber"), "Can't add second saber (max_stack=1)")
+	# Per-slot weapons: can add another if slots available
+	assert_true(Inventory.can_add_item("saber"), "Can add second saber (per-slot)")
+	assert_true(Inventory.add_item("saber", 1), "Add second saber")
+	assert_eq(Inventory.get_item_count("saber"), 2, "Saber count = 2")
+	Inventory.remove_item("saber", 1)  # remove extra for rest of tests
 
 	assert_true(Inventory.remove_item("monomate", 1), "Remove 1 monomate")
 	assert_eq(Inventory.get_item_count("monomate"), 2, "Monomate count = 2")
@@ -1494,6 +1497,7 @@ func test_technique_disks() -> void:
 		print("  SKIP: Could not create FOmar")
 		print("")
 		return
+	fomar["level"] = 20  # High enough for disk level requirements
 	CharacterManager.set_active_slot(0)
 
 	# Verify techniques dict exists
@@ -1548,6 +1552,7 @@ func test_technique_disks() -> void:
 	CharacterManager._characters[2] = null
 	var ramar := CharacterManager.create_character(2, "ramar", "TestRanger2")
 	if ramar != null:
+		ramar["level"] = 30  # High enough for level requirement checks
 		var limit_check := TechniqueManager.can_learn(ramar, "foie", 15)
 		assert_true(not limit_check["allowed"], "RAmar can't learn Foie Lv.15 (limit=10)")
 		print("  INFO: %s" % limit_check["reason"])

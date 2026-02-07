@@ -236,7 +236,26 @@ func _refresh_display() -> void:
 
 			var label := Label.new()
 			var held: int = int(Inventory._items.get(item_id, 0))
-			var held_str: String = " (%d)" % held if held > 0 else ""
+
+			# Get rarity stars
+			var stars := ""
+			if cat == "weapon":
+				var w = WeaponRegistry.get_weapon(item_id)
+				if w:
+					stars = " " + w.get_rarity_string()
+			elif cat == "armor":
+				var a = ArmorRegistry.get_armor(item_id)
+				if a:
+					stars = " " + a.get_rarity_string()
+			elif cat == "unit":
+				var u = UnitRegistry.get_unit(item_id)
+				if u:
+					stars = " " + u.get_rarity_string() if u.has_method("get_rarity_string") else " " + "*".repeat(int(u.rarity))
+
+			# Show held count only for stackable items
+			var held_str := ""
+			if held > 1:
+				held_str = " x%d" % held
 
 			# Check restrictions for color-coding
 			var equip_check: Dictionary = _check_equippability(item_id, cat)
@@ -252,7 +271,7 @@ func _refresh_display() -> void:
 				elif reason == "level":
 					restriction_tag = " [Lv.%d]" % int(equip_check.get("req_level", 1))
 
-			label.text = "%-20s%s %6d M%s" % [str(item.get("name", "???")), held_str, cost, restriction_tag]
+			label.text = "%-18s%s%s %6d M%s" % [str(item.get("name", "???")), stars, held_str, cost, restriction_tag]
 			if i == _selected_index:
 				label.text = "> " + label.text
 				if not can_equip:
