@@ -270,4 +270,4 @@ func _create_character() -> void:
 		return
 	CharacterManager.set_active_slot(_slot)
 	SaveManager.save_game()
-	SceneManager.goto_scene("res://scenes/2d/city.tscn")
+	SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")

@@ -101,7 +101,7 @@ func _select_slot() -> void:
 	var character = CharacterManager.get_character(_current_slot)
 	if character != null:
 		CharacterManager.set_active_slot(_current_slot)
-		SceneManager.goto_scene("res://scenes/2d/city.tscn")
+		SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 	else:
 		SceneManager.goto_scene("res://scenes/2d/character_create.tscn", {"slot": _current_slot})
 
