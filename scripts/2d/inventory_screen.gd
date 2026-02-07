@@ -188,10 +188,17 @@ func _refresh_display() -> void:
 			var qty: int = int(item.get("quantity", 1))
 			var equip_tag: String = " [E]" if item_id in equipped_ids else ""
 
+			# Add grind level for weapons
+			var grind_tag := ""
+			if weapon and character:
+				var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0))
+				if grind > 0:
+					grind_tag = " +%d" % grind
+
 			# Add stars and type for weapons/armor
 			var suffix := ""
 			if weapon:
-				suffix = " %s [%s]" % [weapon.get_rarity_string(), weapon.get_weapon_type_name()]
+				suffix = "%s %s [%s]" % [grind_tag, weapon.get_rarity_string(), weapon.get_weapon_type_name()]
 			elif armor_data:
 				suffix = " %s [%s]" % [armor_data.get_rarity_string(), armor_data.get_type_name()]
 
@@ -313,7 +320,11 @@ func _refresh_detail() -> void:
 		weapon = WeaponRegistry.get_weapon(norm_id)
 	if weapon:
 		_add_detail_line(vbox, "Type: %s" % weapon.get_weapon_type_name())
-		_add_detail_line(vbox, "ATK: %d" % weapon.attack_base)
+		var grind: int = int(character2.get("weapon_grinds", {}).get(item_id, 0)) if character2 else 0
+		if grind > 0:
+			_add_detail_line(vbox, "ATK: %d (+%d)" % [weapon.attack_base + grind, grind])
+		else:
+			_add_detail_line(vbox, "ATK: %d" % weapon.attack_base)
 		_add_detail_line(vbox, "ACC: %d" % weapon.accuracy_base)
 		if not weapon.element.is_empty() and weapon.element != "None":
 			_add_detail_line(vbox, "Element: %s" % weapon.element)
