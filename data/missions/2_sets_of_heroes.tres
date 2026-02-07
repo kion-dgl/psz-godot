@@ -9,7 +9,7 @@ name = "2 Sets of Heroes"
 area = "Arca Plant"
 is_main = false
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("ana_s_request")
 rewards = {
   "normal": {
     "item": "Harisen",

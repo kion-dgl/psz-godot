@@ -7,9 +7,9 @@ script = ExtResource("1")
 id = "waltz_of_rage"
 name = "Waltz of Rage"
 area = "Rioh Snowfield"
-is_main = false
+is_main = true
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("mayor_s_mission")
 rewards = {
   "normal": {
     "item": "8-Ouncer",

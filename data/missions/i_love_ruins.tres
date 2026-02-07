@@ -9,7 +9,7 @@ name = "I Love Ruins!"
 area = "Makura Ruins"
 is_main = false
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("fallen_flowers")
 rewards = {
   "normal": {
     "item": "Rookie/Swift",

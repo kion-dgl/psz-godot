@@ -9,7 +9,7 @@ name = "Get Connected"
 area = "Gurhacia Valley"
 is_main = false
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("mayor_s_mission")
 rewards = {
   "normal": {
     "item": "Ace/PP",

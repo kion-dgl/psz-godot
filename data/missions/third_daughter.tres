@@ -9,7 +9,7 @@ name = "Third Daughter"
 area = "Rioh Snowfield"
 is_main = false
 is_secret = true
-requires = PackedStringArray()
+requires = PackedStringArray("waltz_of_rage")
 rewards = {
   "normal": {
     "item": "Chef Apron",
