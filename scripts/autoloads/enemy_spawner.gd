@@ -26,9 +26,9 @@ const DIFFICULTY_MULTIPLIERS := {
 
 ## Base stats for generated enemy instances
 const BASE_STATS := {
-	"normal": {"hp": 50, "attack": 15, "defense": 8, "evasion": 50, "exp": 10, "meseta_min": 5, "meseta_max": 15},
-	"elite": {"hp": 100, "attack": 25, "defense": 15, "evasion": 80, "exp": 30, "meseta_min": 15, "meseta_max": 40},
-	"boss": {"hp": 500, "attack": 50, "defense": 30, "evasion": 120, "exp": 100, "meseta_min": 50, "meseta_max": 200},
+	"normal": {"hp": 40, "attack": 12, "defense": 5, "evasion": 40, "exp": 10, "meseta_min": 5, "meseta_max": 15},
+	"elite": {"hp": 80, "attack": 18, "defense": 10, "evasion": 60, "exp": 30, "meseta_min": 15, "meseta_max": 40},
+	"boss": {"hp": 250, "attack": 30, "defense": 15, "evasion": 60, "exp": 100, "meseta_min": 50, "meseta_max": 200},
 }
 
 
