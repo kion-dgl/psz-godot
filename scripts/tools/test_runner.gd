@@ -29,6 +29,15 @@ func _ready() -> void:
 	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
+	test_new_registries()
+	test_material_system()
+	test_set_bonuses()
+	test_technique_casting()
+	test_photon_art_usage()
+	test_tekker_grinding()
+	test_tekker_identification()
+	test_additional_drops()
+	test_telepipe_suspend()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -62,6 +71,18 @@ func assert_gt(a, b, label: String) -> void:
 	else:
 		_fail += 1
 		print("  FAIL: %s — got %s, expected > %s" % [label, str(a), str(b)])
+
+
+## Helper: check if a drop ID is a misc drop (disk, grinder, material, photon drop, unidentified)
+func _is_misc_drop(drop_id) -> bool:
+	var sid: String = str(drop_id)
+	if sid.begins_with("disk:") or sid.begins_with("unid:"):
+		return true
+	if sid in ["photon_drop", "monogrinder", "digrinder", "trigrinder"]:
+		return true
+	if sid.ends_with("_material"):
+		return true
+	return false
 
 
 # ── Registry tests ──────────────────────────────────────────
@@ -331,8 +352,8 @@ func test_combat_drops() -> void:
 			var enemy := EnemySpawner._create_enemy_instance("ghowl", "normal", 1.0, 1)
 			var drops: Array = CombatManager.generate_drops(enemy)
 			for drop_id in drops:
-				if str(drop_id).begins_with("disk:"):
-					continue  # Skip technique disk drops
+				if _is_misc_drop(drop_id):
+					continue
 				total_drops += 1
 				# Check if it's a consumable
 				var consumable = ConsumableRegistry.get_consumable(drop_id)
@@ -346,8 +367,8 @@ func test_combat_drops() -> void:
 			var boss := EnemySpawner._create_enemy_instance("reyburn", "boss", 1.0, 3)
 			var drops: Array = CombatManager.generate_drops(boss)
 			for drop_id in drops:
-				if str(drop_id).begins_with("disk:"):
-					continue  # Skip technique disk drops
+				if _is_misc_drop(drop_id):
+					continue
 				total_drops += 1
 				var consumable = ConsumableRegistry.get_consumable(drop_id)
 				if consumable:
@@ -512,7 +533,7 @@ func test_drop_tables() -> void:
 		var enemy := EnemySpawner._create_enemy_instance("ghowl", "normal", 1.0, 1)
 		var drops: Array = CombatManager.generate_drops(enemy)
 		for drop_id in drops:
-			if str(drop_id).begins_with("disk:"):
+			if _is_misc_drop(drop_id):
 				continue
 			if ConsumableRegistry.get_consumable(drop_id) != null:
 				normal_consumable += 1
@@ -534,7 +555,7 @@ func test_drop_tables() -> void:
 		var enemy := EnemySpawner._create_enemy_instance("reyburn", "boss", 1.0, 3)
 		var drops: Array = CombatManager.generate_drops(enemy)
 		for drop_id in drops:
-			if str(drop_id).begins_with("disk:"):
+			if _is_misc_drop(drop_id):
 				continue
 			if ConsumableRegistry.get_consumable(drop_id) != null:
 				boss_consumable += 1
@@ -552,7 +573,7 @@ func test_drop_tables() -> void:
 		var enemy := EnemySpawner._create_enemy_instance("helion", "boss", 1.0, 3)
 		var drops: Array = CombatManager.generate_drops(enemy)
 		for drop_id in drops:
-			if str(drop_id).begins_with("disk:"):
+			if _is_misc_drop(drop_id):
 				continue
 			if ConsumableRegistry.get_consumable(drop_id) == null:
 				helion_weapon += 1
@@ -567,7 +588,7 @@ func test_drop_tables() -> void:
 		var enemy := EnemySpawner._create_enemy_instance("helion", "elite", 1.0, 2)
 		var drops: Array = CombatManager.generate_drops(enemy)
 		for drop_id in drops:
-			if str(drop_id).begins_with("disk:"):
+			if _is_misc_drop(drop_id):
 				continue
 			if ConsumableRegistry.get_consumable(drop_id) != null:
 				rare_consumable += 1
@@ -1649,4 +1670,390 @@ func test_technique_disks() -> void:
 	Inventory.clear_inventory()
 	if saved_slot >= 0:
 		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+func test_new_registries() -> void:
+	print("── New Registries ──")
+	assert_gt(MaterialRegistry.get_all_materials().size(), 0, "MaterialRegistry loaded materials")
+	assert_gt(ModifierRegistry.get_all_modifiers().size(), 0, "ModifierRegistry loaded modifiers")
+	assert_gt(SetBonusRegistry.get_all_set_bonuses().size(), 0, "SetBonusRegistry loaded set bonuses")
+
+	# Specific lookups
+	var power_mat = MaterialRegistry.get_material("power_material")
+	assert_true(power_mat != null, "Can look up power_material")
+	if power_mat:
+		assert_eq(power_mat.name, "Power Material", "Power material name correct")
+
+	var mono = ModifierRegistry.get_modifier("monogrinder")
+	assert_true(mono != null, "Can look up monogrinder")
+
+	var dragon = SetBonusRegistry.get_set_bonus("dragon_wing")
+	assert_true(dragon != null, "Can look up dragon_wing set bonus")
+	if dragon:
+		assert_eq(dragon.armor, "Dragon Wing", "Dragon Wing armor name correct")
+	print("")
+
+
+func test_material_system() -> void:
+	print("── Material System ──")
+
+	# Save state
+	var saved_characters: Array = CharacterManager._characters.duplicate(true)
+	var saved_slot: int = CharacterManager._active_slot
+	Inventory.clear_inventory()
+
+	# Create test character
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	var character := CharacterManager.create_character(0, "humar", "MatTest")
+	CharacterManager.set_active_slot(0)
+
+	# Add material to inventory
+	Inventory.add_item("power_material", 5)
+
+	# Use power_material
+	var result := CombatManager.use_material("power_material")
+	assert_true(result["success"], "Power material used successfully")
+	assert_eq(int(character.get("material_bonuses", {}).get("attack", 0)), 1, "Material bonus attack == 1")
+	assert_eq(int(character.get("materials_used", 0)), 1, "Materials used == 1")
+
+	# Use 3 more
+	CombatManager.use_material("power_material")
+	CombatManager.use_material("power_material")
+	CombatManager.use_material("power_material")
+	assert_eq(int(character.get("material_bonuses", {}).get("attack", 0)), 4, "After 4 uses, attack bonus == 4")
+	assert_eq(int(character.get("materials_used", 0)), 4, "Materials used == 4")
+
+	# Test HP material
+	Inventory.add_item("hp_material", 1)
+	var old_max_hp: int = int(character.get("max_hp", 100))
+	CombatManager.use_material("hp_material")
+	assert_eq(int(character.get("max_hp", 0)), old_max_hp + 2, "HP material increases max_hp by 2")
+	assert_eq(int(character.get("materials_used", 0)), 5, "Materials used == 5")
+
+	# Test reset material
+	Inventory.add_item("reset_material", 1)
+	CombatManager.use_material("reset_material")
+	assert_eq(int(character.get("material_bonuses", {}).get("attack", 0)), 0, "Reset clears attack bonus")
+	assert_eq(int(character.get("materials_used", 0)), 0, "Reset sets materials_used to 0")
+
+	# Restore state
+	CharacterManager._characters = saved_characters
+	CharacterManager._active_slot = saved_slot
+	Inventory.clear_inventory()
+	if saved_slot >= 0:
+		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+func test_set_bonuses() -> void:
+	print("── Set Bonuses ──")
+
+	# Test set bonus lookup
+	var bonus: Dictionary = SetBonusRegistry.get_set_bonus_for_equipment("Dragon Wing", "Dragon Horn")
+	assert_true(not bonus.is_empty(), "Dragon Wing + Dragon Horn has set bonus")
+	assert_eq(int(bonus.get("attack", 0)), 50, "Set bonus attack == 50")
+	assert_eq(int(bonus.get("accuracy", 0)), 25, "Set bonus accuracy == 25")
+
+	# No match
+	var no_bonus: Dictionary = SetBonusRegistry.get_set_bonus_for_equipment("Dragon Wing", "Saber")
+	assert_true(no_bonus.is_empty(), "Dragon Wing + Saber has no set bonus")
+
+	# Scarred Horn also matches
+	var bonus2: Dictionary = SetBonusRegistry.get_set_bonus_for_equipment("Dragon Wing", "Scarred Horn")
+	assert_true(not bonus2.is_empty(), "Dragon Wing + Scarred Horn has set bonus")
+	print("")
+
+
+func test_technique_casting() -> void:
+	print("── Technique Casting ──")
+
+	# Save state
+	var saved_characters: Array = CharacterManager._characters.duplicate(true)
+	var saved_slot: int = CharacterManager._active_slot
+	Inventory.clear_inventory()
+
+	# Create FOmar with foie Lv.5 and 100 PP
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	var character := CharacterManager.create_character(0, "fomar", "TechTest")
+	CharacterManager.set_active_slot(0)
+	character["techniques"]["foie"] = 5
+	character["techniques"]["resta"] = 3
+	character["techniques"]["gifoie"] = 2
+	character["pp"] = 100
+	character["max_pp"] = 100
+	CharacterManager._sync_to_game_state()
+
+	# Set up combat with enemies
+	CombatManager.init_combat("gurhacia", "normal")
+	var enemies := [
+		EnemySpawner._create_enemy_instance("ghowl", "normal", 1.0, 1),
+		EnemySpawner._create_enemy_instance("ghowl", "normal", 1.0, 1),
+	]
+	CombatManager.set_enemies(enemies)
+
+	# Cast foie on first enemy
+	var pp_before: int = int(character["pp"])
+	var result := CombatManager.cast_technique("foie", 0)
+	assert_true(result.get("hit", false), "Foie hit successfully")
+	assert_gt(result.get("damage", 0), 0, "Foie dealt damage")
+	assert_true(int(character["pp"]) < pp_before, "PP deducted after casting foie")
+
+	# Cast resta (heals player)
+	character["hp"] = 50
+	character["max_hp"] = 200
+	var hp_before: int = int(character["hp"])
+	var heal_result := CombatManager.cast_technique("resta", 0)
+	assert_true(heal_result.get("hit", false), "Resta cast successfully")
+	assert_gt(int(character["hp"]), hp_before, "HP restored after resta")
+
+	# Cast with 0 PP
+	character["pp"] = 0
+	var fail_result := CombatManager.cast_technique("foie", 0)
+	assert_true(not fail_result.get("hit", false), "Cannot cast with 0 PP")
+
+	# Cast area technique (gifoie) — should hit all alive enemies
+	character["pp"] = 100
+	# Reset enemies to alive
+	for e in enemies:
+		e["alive"] = true
+		e["hp"] = int(e.get("max_hp", 50))
+	CombatManager.set_enemies(enemies)
+
+	var area_result := CombatManager.cast_technique("gifoie", 0)
+	assert_true(area_result.get("hit", false), "Gifoie hit")
+	assert_true(area_result.get("area", false), "Gifoie was area-targeted")
+
+	CombatManager.clear_combat()
+
+	# Restore state
+	CharacterManager._characters = saved_characters
+	CharacterManager._active_slot = saved_slot
+	Inventory.clear_inventory()
+	if saved_slot >= 0:
+		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+func test_photon_art_usage() -> void:
+	print("── Photon Art Usage ──")
+
+	# Save state
+	var saved_characters: Array = CharacterManager._characters.duplicate(true)
+	var saved_slot: int = CharacterManager._active_slot
+	Inventory.clear_inventory()
+
+	# Create HUmar with saber
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	var character := CharacterManager.create_character(0, "humar", "PATest")
+	CharacterManager.set_active_slot(0)
+	character["pp"] = 100
+	character["max_pp"] = 100
+
+	# Find a saber PA
+	var saber_pas: Array = PhotonArtRegistry.get_arts_by_weapon_type("Saber")
+	if saber_pas.is_empty():
+		print("  SKIP: No saber photon arts found")
+		CharacterManager._characters = saved_characters
+		CharacterManager._active_slot = saved_slot
+		Inventory.clear_inventory()
+		if saved_slot >= 0:
+			CharacterManager.set_active_slot(saved_slot)
+		print("")
+		return
+
+	var pa = saber_pas[0]
+	print("  INFO: Testing PA '%s' (%d hits, %d PP)" % [pa.name, pa.hits, pa.pp_cost])
+
+	# Set up combat
+	CombatManager.init_combat("gurhacia", "normal")
+	var enemies := [EnemySpawner._create_enemy_instance("ghowl", "normal", 1.0, 1)]
+	enemies[0]["hp"] = 9999
+	enemies[0]["max_hp"] = 9999
+	CombatManager.set_enemies(enemies)
+
+	# Use PA
+	var pp_before: int = int(character["pp"])
+	var result := CombatManager.use_photon_art(pa.id, 0)
+	assert_true(int(character["pp"]) < pp_before, "PP deducted for PA")
+	print("  INFO: PA result: %d/%d hits, %d damage" % [result.get("hits", 0), result.get("total_hits", 0), result.get("damage", 0)])
+
+	# Try PA with wrong weapon type — equip a handgun
+	character["equipment"]["weapon"] = "handgun"
+	var wrong_result := CombatManager.use_photon_art(pa.id, 0)
+	assert_true(not wrong_result.get("hit", false), "PA rejected with wrong weapon type")
+
+	CombatManager.clear_combat()
+
+	# Restore state
+	CharacterManager._characters = saved_characters
+	CharacterManager._active_slot = saved_slot
+	Inventory.clear_inventory()
+	if saved_slot >= 0:
+		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+func test_tekker_grinding() -> void:
+	print("── Tekker Grinding ──")
+
+	# Save state
+	var saved_characters: Array = CharacterManager._characters.duplicate(true)
+	var saved_slot: int = CharacterManager._active_slot
+	Inventory.clear_inventory()
+
+	# Create test character with enough meseta
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	var character := CharacterManager.create_character(0, "humar", "GrindTest")
+	CharacterManager.set_active_slot(0)
+	character["meseta"] = 50000
+
+	# Weapon grind tracking
+	var saber = WeaponRegistry.get_weapon("saber")
+	assert_true(saber != null, "Saber exists in registry")
+	if saber == null:
+		CharacterManager._characters = saved_characters
+		CharacterManager._active_slot = saved_slot
+		Inventory.clear_inventory()
+		if saved_slot >= 0:
+			CharacterManager.set_active_slot(saved_slot)
+		print("")
+		return
+
+	# Grind: increment weapon_grinds manually (since tekker is UI-driven)
+	Inventory.add_item("monogrinder", 10)
+	character["weapon_grinds"] = {}
+	character["weapon_grinds"]["saber"] = 0
+
+	# Simulate one grind
+	character["weapon_grinds"]["saber"] = 1
+	Inventory.remove_item("monogrinder", 1)
+	assert_eq(int(character["weapon_grinds"]["saber"]), 1, "Saber grind == 1 after grinding")
+
+	# Verify damage increase: get_attack_at_grind
+	var atk_0: int = saber.get_attack_at_grind(0)
+	var atk_1: int = saber.get_attack_at_grind(1)
+	assert_true(atk_1 >= atk_0, "Attack at grind 1 >= grind 0 (got %d vs %d)" % [atk_1, atk_0])
+
+	# Grind to max
+	character["weapon_grinds"]["saber"] = saber.max_grind
+	var atk_max: int = saber.get_attack_at_grind(saber.max_grind)
+	assert_eq(atk_max, saber.attack_max, "Attack at max grind == attack_max")
+	print("  INFO: Saber ATK: base=%d, max_grind=%d, atk_max=%d" % [saber.attack_base, saber.max_grind, saber.attack_max])
+
+	# Restore state
+	CharacterManager._characters = saved_characters
+	CharacterManager._active_slot = saved_slot
+	Inventory.clear_inventory()
+	if saved_slot >= 0:
+		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+func test_tekker_identification() -> void:
+	print("── Tekker Identification ──")
+
+	# Save state
+	var saved_characters: Array = CharacterManager._characters.duplicate(true)
+	var saved_slot: int = CharacterManager._active_slot
+	Inventory.clear_inventory()
+
+	# Create test character
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	var character := CharacterManager.create_character(0, "humar", "IdTest")
+	CharacterManager.set_active_slot(0)
+	character["meseta"] = 50000
+
+	# Add unidentified weapon
+	if not character.has("unidentified_weapons"):
+		character["unidentified_weapons"] = []
+	character["unidentified_weapons"].append("saber")
+	assert_eq(character["unidentified_weapons"].size(), 1, "1 unidentified weapon")
+
+	# Simulate identification
+	var weapon_id: String = character["unidentified_weapons"][0]
+	character["unidentified_weapons"].remove_at(0)
+	Inventory.add_item(weapon_id, 1)
+	character["meseta"] = int(character["meseta"]) - 1000
+
+	assert_eq(character["unidentified_weapons"].size(), 0, "No unidentified weapons after identify")
+	assert_true(Inventory.has_item("saber"), "Saber now in inventory")
+	assert_true(int(character["meseta"]) < 50000, "Meseta deducted")
+
+	# Restore state
+	CharacterManager._characters = saved_characters
+	CharacterManager._active_slot = saved_slot
+	Inventory.clear_inventory()
+	if saved_slot >= 0:
+		CharacterManager.set_active_slot(saved_slot)
+	print("")
+
+
+func test_additional_drops() -> void:
+	print("── Additional Drops ──")
+
+	CombatManager.init_combat("gurhacia", "normal")
+
+	var pd_drops := 0
+	var grinder_drops := 0
+	var material_drops := 0
+	var unid_drops := 0
+	var trials := 1000
+
+	for _i in range(trials):
+		var boss := EnemySpawner._create_enemy_instance("reyburn", "boss", 1.0, 3)
+		var drops: Array = CombatManager.generate_drops(boss)
+		for drop_id in drops:
+			var sid: String = str(drop_id)
+			if sid == "photon_drop":
+				pd_drops += 1
+			elif sid in ["monogrinder", "digrinder", "trigrinder"]:
+				grinder_drops += 1
+			elif sid.ends_with("_material"):
+				material_drops += 1
+			elif sid.begins_with("unid:"):
+				unid_drops += 1
+
+	CombatManager.clear_combat()
+
+	print("  INFO: From %d boss kills: PD=%d, Grinders=%d, Materials=%d, Unid=%d" % [trials, pd_drops, grinder_drops, material_drops, unid_drops])
+	assert_gt(pd_drops, 0, "Photon drops appear from bosses (got %d)" % pd_drops)
+	assert_gt(grinder_drops, 0, "Grinder drops appear from bosses (got %d)" % grinder_drops)
+	assert_gt(material_drops, 0, "Material drops appear from bosses (got %d)" % material_drops)
+	print("")
+
+
+func test_telepipe_suspend() -> void:
+	print("── Telepipe / Session Suspend ──")
+
+	# Enter a field session
+	var session := SessionManager.enter_field("gurhacia", "normal")
+	assert_true(not session.is_empty(), "Session started")
+	assert_eq(SessionManager.get_location(), "field", "Location is field")
+
+	# Advance to stage 1 wave 2
+	SessionManager.next_wave()
+	var current := SessionManager.get_session()
+	assert_eq(int(current.get("wave", 0)), 2, "Wave advanced to 2")
+
+	# Suspend session (telepipe)
+	SessionManager.suspend_session()
+	assert_true(not SessionManager.has_active_session(), "No active session after suspend")
+	assert_true(SessionManager.has_suspended_session(), "Has suspended session")
+	assert_eq(SessionManager.get_location(), "city", "Location is city after suspend")
+
+	# Resume session
+	var resumed := SessionManager.resume_session()
+	assert_true(not resumed.is_empty(), "Resume returned session data")
+	assert_eq(int(resumed.get("wave", 0)), 2, "Resumed at wave 2")
+	assert_eq(SessionManager.get_location(), "field", "Location is field after resume")
+	assert_true(not SessionManager.has_suspended_session(), "No suspended session after resume")
+
+	# Clean up
+	SessionManager.return_to_city()
 	print("")

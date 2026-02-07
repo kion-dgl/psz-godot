@@ -1,7 +1,7 @@
 extends Control
 ## City hub — main navigation menu with character info sidebar.
 
-const MENU_ITEMS := [
+const BASE_MENU_ITEMS := [
 	"Item Shop",
 	"Weapon Shop",
 	"Tech Shop",
@@ -18,12 +18,13 @@ const MENU_ITEMS := [
 	"Return to Title",
 ]
 
-const DISABLED_ITEMS := [7, 11]  # Separator indices
-
 @onready var title_label: Label = $HBox/LeftPanel/TitleLabel
 @onready var menu_list = $HBox/LeftPanel/MenuList
 @onready var char_panel: VBoxContainer = $HBox/RightPanel/CharInfo
 @onready var hint_label: Label = $HintLabel
+
+var _menu_items: Array = []
+var _disabled_items: Array = []
 
 
 func _ready() -> void:
@@ -37,13 +38,28 @@ func _ready() -> void:
 		character["pp"] = int(character.get("max_pp", 50))
 		CharacterManager._sync_to_game_state()
 
-	var disabled_mask: Array = []
-	for i in range(MENU_ITEMS.size()):
-		disabled_mask.append(i in DISABLED_ITEMS)
-	menu_list.set_items(MENU_ITEMS, disabled_mask)
-	menu_list.item_selected.connect(_on_menu_selected)
-
+	_build_menu()
 	_update_char_info()
+
+
+func _build_menu() -> void:
+	_menu_items = BASE_MENU_ITEMS.duplicate()
+	_disabled_items = []
+
+	# Insert "Resume Session" at index 0 if there's a suspended session
+	if SessionManager.has_suspended_session():
+		_menu_items.insert(0, "Resume Session")
+
+	# Build disabled mask — separators are disabled
+	var disabled_mask: Array = []
+	for i in range(_menu_items.size()):
+		var is_sep: bool = _menu_items[i].begins_with("────")
+		disabled_mask.append(is_sep)
+		if is_sep:
+			_disabled_items.append(i)
+
+	menu_list.set_items(_menu_items, disabled_mask)
+	menu_list.item_selected.connect(_on_menu_selected)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -54,7 +70,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_menu_selected(index: int) -> void:
-	match MENU_ITEMS[index]:
+	match _menu_items[index]:
+		"Resume Session":
+			SessionManager.resume_session()
+			SceneManager.goto_scene("res://scenes/2d/field.tscn")
 		"Item Shop":
 			SceneManager.push_scene("res://scenes/2d/shops/item_shop.tscn")
 		"Weapon Shop":

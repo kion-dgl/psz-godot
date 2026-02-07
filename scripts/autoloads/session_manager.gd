@@ -11,6 +11,7 @@ const MAX_STAGES := 3
 const MAX_WAVES := 3
 
 var _session: Dictionary = {}
+var _suspended_session: Dictionary = {}
 var _location: String = "city"
 
 
@@ -117,6 +118,32 @@ func get_session() -> Dictionary:
 ## Get current location
 func get_location() -> String:
 	return _location
+
+
+## Suspend current session (telepipe — return to city but keep session)
+func suspend_session() -> Dictionary:
+	_suspended_session = _session.duplicate(true)
+	var summary: Dictionary = _session.duplicate()
+	_session.clear()
+	_location = "city"
+	session_ended.emit()
+	return summary
+
+
+## Resume a suspended session
+func resume_session() -> Dictionary:
+	if _suspended_session.is_empty():
+		return {}
+	_session = _suspended_session.duplicate(true)
+	_suspended_session.clear()
+	_location = "field"
+	session_started.emit(_session)
+	return _session
+
+
+## Check if there is a suspended session to resume
+func has_suspended_session() -> bool:
+	return not _suspended_session.is_empty()
 
 
 ## Check if a session is active

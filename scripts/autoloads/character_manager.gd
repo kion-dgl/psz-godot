@@ -65,6 +65,10 @@ func create_character(slot: int, class_id: String, char_name: String) -> Diction
 			"unit4": "",
 		},
 		"techniques": {},
+		"weapon_grinds": {},
+		"unidentified_weapons": [],
+		"material_bonuses": {},
+		"combat_buffs": {},
 		"storage": [],
 		"created_at": Time.get_unix_time_from_system(),
 	}
