@@ -14,8 +14,10 @@ func _ready() -> void:
 ## Save all game data to disk
 func save_game() -> void:
 	var save_data := {
-		"version": 1,
+		"version": 2,
 		"characters": CharacterManager.get_save_data(),
+		"inventory": Inventory._items.duplicate(),
+		"completed_missions": GameState.completed_missions.duplicate(),
 		"timestamp": Time.get_unix_time_from_system(),
 	}
 
@@ -59,6 +61,14 @@ func load_game() -> void:
 	# Load characters
 	var characters: Array = save_data.get("characters", [])
 	CharacterManager.load_from_save(characters)
+
+	# Load inventory
+	var inv_data: Dictionary = save_data.get("inventory", {})
+	Inventory._items = inv_data.duplicate()
+
+	# Load completed missions
+	var missions_data: Array = save_data.get("completed_missions", [])
+	GameState.completed_missions = missions_data.duplicate()
 
 	print("[SaveManager] Game loaded (version %d)" % int(save_data.get("version", 0)))
 	game_loaded.emit()

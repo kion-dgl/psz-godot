@@ -33,9 +33,15 @@ func enter_field(area_id: String, difficulty: String) -> Dictionary:
 
 ## Enter a mission
 func enter_mission(mission_id: String, difficulty: String) -> Dictionary:
+	# Look up area from mission data and convert to spawner area_id
+	var area_id := "gurhacia"
+	var mission = MissionRegistry.get_mission(mission_id)
+	if mission:
+		area_id = _area_name_to_id(mission.area)
 	_session = {
 		"type": "mission",
 		"mission_id": mission_id,
+		"area_id": area_id,
 		"difficulty": difficulty,
 		"stage": 1,
 		"wave": 1,
@@ -46,6 +52,21 @@ func enter_mission(mission_id: String, difficulty: String) -> Dictionary:
 	_location = "field"
 	session_started.emit(_session)
 	return _session
+
+
+## Convert display area name to spawner area_id
+func _area_name_to_id(area_name: String) -> String:
+	var mapping := {
+		"Gurhacia Valley": "gurhacia",
+		"Rioh Snowfield": "rioh",
+		"Ozette Wetland": "ozette",
+		"Oblivion City Paru": "paru",
+		"Makura Ruins": "makara", "Makara Ruins": "makara",
+		"Arca Plant": "arca",
+		"Dark Shrine": "dark",
+		"Eternal Tower": "dark",
+	}
+	return mapping.get(area_name, "gurhacia")
 
 
 ## Advance to next wave. Returns true if there's a next wave, false if stage complete.

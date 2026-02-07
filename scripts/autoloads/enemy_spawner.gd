@@ -165,7 +165,7 @@ func _create_enemy_instance(enemy_id: String, stat_tier: String, diff_mult: floa
 		"alive": true,
 		# Aggro system: enemies wander before noticing the player
 		"aggroed": is_boss,  # Bosses always start aggroed
-		"aggro_chance": 0.35 if is_boss else (0.25 if is_elite else 0.15),  # Per-turn chance to notice player
+		"aggro_chance": 0.35 if is_boss else (0.12 if is_elite else 0.07),  # Per-turn chance to notice player
 	}
 
 

@@ -2,11 +2,24 @@ extends Control
 ## Guild counter — accept and complete missions.
 
 var _missions: Array = []
+var _available: Array = []  # bool per mission — is it unlocked?
 var _selected_index: int = 0
 var _selecting_difficulty: bool = false
 var _selected_difficulty: int = 0
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
+
+## Progression order by area
+const AREA_ORDER := {
+	"Gurhacia Valley": 0,
+	"Rioh Snowfield": 1,
+	"Ozette Wetland": 2,
+	"Oblivion City Paru": 3,
+	"Makura Ruins": 4, "Makara Ruins": 4,
+	"Arca Plant": 5,
+	"Dark Shrine": 6,
+	"Eternal Tower": 7,
+}
 
 @onready var title_label: Label = $VBox/TitleLabel
 @onready var list_panel: PanelContainer = $VBox/HBox/ListPanel
@@ -23,7 +36,16 @@ func _ready() -> void:
 
 func _load_missions() -> void:
 	_missions = MissionRegistry.get_all_missions()
-	_missions.sort_custom(func(a, b): return a.name < b.name)
+	# Sort by area progression, then main missions first
+	_missions.sort_custom(func(a, b):
+		var aa: int = AREA_ORDER.get(a.area, 99)
+		var ab: int = AREA_ORDER.get(b.area, 99)
+		if aa != ab: return aa < ab
+		if a.is_main != b.is_main: return a.is_main
+		return a.name < b.name
+	)
+	# Determine which missions are unlocked
+	_update_availability()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -58,8 +80,42 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _update_availability() -> void:
+	_available.clear()
+	# First mission in each area is always unlocked; later ones require the previous
+	for i in range(_missions.size()):
+		var mission = _missions[i]
+		if mission.requires.is_empty():
+			# No explicit requires — unlock based on previous area being completed
+			var area_idx: int = AREA_ORDER.get(mission.area, 0)
+			if area_idx == 0:
+				_available.append(true)  # First area always available
+			else:
+				# Check if any mission from the previous area is completed
+				var prev_completed := false
+				for m in _missions:
+					var m_area: int = AREA_ORDER.get(m.area, 99)
+					if m_area == area_idx - 1 and GameState.is_mission_completed(m.id):
+						prev_completed = true
+						break
+				_available.append(prev_completed)
+		else:
+			# Has explicit requirements
+			var all_met := true
+			for req in mission.requires:
+				if not GameState.is_mission_completed(req):
+					all_met = false
+					break
+			_available.append(all_met)
+
+
 func _accept_mission() -> void:
 	if _missions.is_empty() or _selected_index >= _missions.size():
+		return
+	if not _available[_selected_index]:
+		hint_label.text = "Mission locked! Complete earlier missions first."
+		_selecting_difficulty = false
+		_refresh_display()
 		return
 	var mission = _missions[_selected_index]
 	var difficulty: String = DIFFICULTIES[_selected_difficulty].to_lower().replace(" ", "-")
@@ -100,18 +156,38 @@ func _refresh_display() -> void:
 			empty.modulate = Color(0.333, 0.333, 0.333)
 			vbox.add_child(empty)
 		else:
+			var last_area := ""
 			for i in range(_missions.size()):
 				var mission = _missions[i]
+				# Area headers
+				if mission.area != last_area:
+					if not last_area.is_empty():
+						var spacer := Label.new()
+						spacer.text = ""
+						vbox.add_child(spacer)
+					var area_header := Label.new()
+					area_header.text = "── %s ──" % mission.area
+					area_header.modulate = Color(0, 0.733, 0.8)
+					vbox.add_child(area_header)
+					last_area = mission.area
 				var label := Label.new()
-				var tag: String = "[MAIN] " if mission.is_main else ""
-				label.text = "%s%-20s %s" % [tag, mission.name, mission.area]
+				var unlocked: bool = _available[i] if i < _available.size() else true
+				var completed: bool = GameState.is_mission_completed(mission.id)
+				var status_tag: String = ""
+				if completed:
+					status_tag = " [CLEAR]"
+				elif not unlocked:
+					status_tag = " [LOCKED]"
+				label.text = "%-24s%s" % [mission.name, status_tag]
 				if i == _selected_index:
 					label.text = "> " + label.text
 					label.modulate = Color(1, 0.8, 0)
 				else:
 					label.text = "  " + label.text
-					if mission.is_main:
-						label.modulate = Color(0, 0.733, 0.8)
+					if not unlocked:
+						label.modulate = Color(0.333, 0.333, 0.333)
+					elif completed:
+						label.modulate = Color(0.5, 0.8, 0.5)
 				vbox.add_child(label)
 		hint_label.text = "[↑/↓] Select  [ENTER] Choose  [ESC] Leave"
 

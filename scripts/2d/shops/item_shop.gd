@@ -115,10 +115,14 @@ func _refresh_display() -> void:
 			var label := Label.new()
 			if _mode == Mode.BUY:
 				var item: Dictionary = list[i]
-				label.text = "%-20s %6d M" % [str(item.get("item", "???")), int(item.get("cost", 0))]
+				var shop_name: String = str(item.get("item", "???"))
+				var item_id: String = shop_name.to_lower().replace(" ", "_")
+				var held: int = Inventory.get_item_count(item_id)
+				var held_str: String = " (%d)" % held if held > 0 else ""
+				label.text = "%-18s%s %5d M" % [shop_name, held_str, int(item.get("cost", 0))]
 			else:
 				var item: Dictionary = list[i]
-				label.text = "%-20s x%d" % [str(item.get("id", "???")), int(item.get("quantity", 0))]
+				label.text = "%-20s x%d" % [str(item.get("name", item.get("id", "???"))), int(item.get("quantity", 0))]
 
 			if i == _selected_index:
 				label.text = "> " + label.text
