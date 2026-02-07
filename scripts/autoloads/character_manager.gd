@@ -64,6 +64,7 @@ func create_character(slot: int, class_id: String, char_name: String) -> Diction
 			"unit3": "",
 			"unit4": "",
 		},
+		"techniques": {},
 		"storage": [],
 		"created_at": Time.get_unix_time_from_system(),
 	}

@@ -54,10 +54,50 @@ func _buy_selected() -> void:
 	if int(character.get("meseta", 0)) < cost:
 		hint_label.text = "Not enough meseta!"
 		return
+
+	# Parse technique_id and level from disk name ("Disk: Foie Lv.5" → "foie", 5)
+	var item_name: String = str(item.get("item", ""))
+	var parsed := _parse_disk_name(item_name)
+	if parsed.is_empty():
+		hint_label.text = "Invalid disk!"
+		return
+
+	var technique_id: String = parsed["technique_id"]
+	var level: int = parsed["level"]
+
+	# Check if character can learn this technique
+	var check := TechniqueManager.can_learn(character, technique_id, level)
+	if not check["allowed"]:
+		hint_label.text = str(check["reason"])
+		return
+
+	# Deduct meseta
 	character["meseta"] = int(character["meseta"]) - cost
 	GameState.meseta = int(character["meseta"])
-	hint_label.text = "Bought %s!" % str(item.get("item", "???"))
+
+	# Learn the technique (disks are used immediately, not added to inventory)
+	var disk := TechniqueManager.create_disk(technique_id, level)
+	var result := TechniqueManager.use_disk(character, disk)
+	hint_label.text = str(result["message"])
 	_refresh_display()
+
+
+## Parse "Disk: Foie Lv.5" → {technique_id: "foie", level: 5}
+func _parse_disk_name(disk_name: String) -> Dictionary:
+	if not disk_name.begins_with("Disk: "):
+		return {}
+	var rest := disk_name.substr(6)  # Remove "Disk: "
+	var lv_pos := rest.find(" Lv.")
+	if lv_pos < 0:
+		return {}
+	var tech_name := rest.substr(0, lv_pos)
+	var level_str := rest.substr(lv_pos + 4)
+	var level := int(level_str)
+	# Find technique_id by matching name
+	for tech_id in TechniqueManager.TECHNIQUES:
+		if TechniqueManager.TECHNIQUES[tech_id]["name"] == tech_name:
+			return {"technique_id": tech_id, "level": level}
+	return {}
 
 
 func _refresh_display() -> void:

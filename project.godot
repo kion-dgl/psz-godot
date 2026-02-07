@@ -37,6 +37,8 @@ DropRegistry="*res://scripts/autoloads/drop_registry.gd"
 EnemySpawner="*res://scripts/autoloads/enemy_spawner.gd"
 CombatManager="*res://scripts/autoloads/combat_manager.gd"
 SessionManager="*res://scripts/autoloads/session_manager.gd"
+MagManager="*res://scripts/autoloads/mag_manager.gd"
+TechniqueManager="*res://scripts/autoloads/technique_manager.gd"
 
 [display]
 

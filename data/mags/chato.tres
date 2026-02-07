@@ -9,6 +9,10 @@ name = "Chato"
 japanese_name = "シャト"
 stage = "4"
 evolution_level = 60
-evolution_requirement = {}
-photon_blast = "None"
+evolution_requirement = {
+"type": "stat",
+"primary": "Power",
+"secondary": "Mind"
+}
+photon_blast = "Flozir"
 pso_world_id = 366
