@@ -25,7 +25,21 @@ func _ready() -> void:
 
 func _load_classes() -> void:
 	_class_list = ClassRegistry.get_all_classes()
-	_class_list.sort_custom(func(a, b): return a.name < b.name)
+	# Sort by type (Hunter, Ranger, Force), then gender (Male, Female), then race
+	var type_order := {"Hunter": 0, "Ranger": 1, "Force": 2}
+	var gender_order := {"Male": 0, "Female": 1}
+	var race_order := {"Human": 0, "Newman": 1, "Cast": 2}
+	_class_list.sort_custom(func(a, b):
+		var ta: int = type_order.get(a.type, 9)
+		var tb: int = type_order.get(b.type, 9)
+		if ta != tb: return ta < tb
+		var ga: int = gender_order.get(a.gender, 9)
+		var gb: int = gender_order.get(b.gender, 9)
+		if ga != gb: return ga < gb
+		var ra: int = race_order.get(a.race, 9)
+		var rb: int = race_order.get(b.race, 9)
+		return ra < rb
+	)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -82,14 +96,26 @@ func _update_class_select() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
+	var last_type := ""
 	for i in range(_class_list.size()):
 		var cls = _class_list[i]
+		# Add type header when group changes
+		if cls.type != last_type:
+			if not last_type.is_empty():
+				var spacer := Label.new()
+				spacer.text = ""
+				vbox.add_child(spacer)
+			var type_header := Label.new()
+			type_header.text = "── %s ──" % cls.type
+			type_header.modulate = Color(0, 0.733, 0.8)
+			vbox.add_child(type_header)
+			last_type = cls.type
 		var label := Label.new()
 		if i == _selected_class_index:
-			label.text = "> %s" % cls.name
+			label.text = "> %-12s %s %s" % [cls.name, cls.race, cls.gender]
 			label.modulate = Color(1, 0.8, 0)
 		else:
-			label.text = "  %s" % cls.name
+			label.text = "  %-12s %s %s" % [cls.name, cls.race, cls.gender]
 		vbox.add_child(label)
 
 	scroll.add_child(vbox)

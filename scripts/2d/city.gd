@@ -30,6 +30,13 @@ func _ready() -> void:
 	title_label.text = "══════ CITY ══════"
 	hint_label.text = "[↑/↓] Navigate  [ENTER] Select  [ESC] Quick Save & Quit"
 
+	# Heal character to full on entering the city
+	var character = CharacterManager.get_active_character()
+	if character:
+		character["hp"] = int(character.get("max_hp", 100))
+		character["pp"] = int(character.get("max_pp", 50))
+		CharacterManager._sync_to_game_state()
+
 	var disabled_mask: Array = []
 	for i in range(MENU_ITEMS.size()):
 		disabled_mask.append(i in DISABLED_ITEMS)

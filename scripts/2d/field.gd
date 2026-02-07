@@ -40,7 +40,7 @@ func _start_wave() -> void:
 	var wave: int = int(session.get("wave", 1))
 
 	_enemies = EnemySpawner.generate_wave(area_id, difficulty, stage, wave)
-	CombatManager.init_combat()
+	CombatManager.init_combat(area_id, difficulty)
 	CombatManager.set_enemies(_enemies)
 
 	_state = State.PLAYER_TURN
@@ -258,6 +258,13 @@ func _execute_action() -> void:
 
 	if result.get("hit", false):
 		_add_log("You attack %s! %s" % [str(_enemies[_selected_target].get("name", "Enemy")), str(result.get("message", ""))])
+		# Generate drops if enemy was defeated
+		if result.get("defeated", false):
+			var drops: Array = CombatManager.generate_drops(_enemies[_selected_target])
+			CombatManager.add_drops(drops)
+			for drop_id in drops:
+				var info: Dictionary = Inventory._lookup_item(drop_id)
+				_add_log("  Dropped: %s" % info.name)
 	else:
 		_add_log("You attack %s... Miss!" % str(_enemies[_selected_target].get("name", "Enemy")))
 
@@ -331,6 +338,18 @@ func _on_wave_cleared() -> void:
 	if level_result.get("leveled_up", false):
 		_add_log("LEVEL UP! Now Level %d!" % int(level_result.get("new_level", 1)))
 
+	# Pick up all dropped items
+	var dropped: Array = CombatManager.get_dropped_items()
+	if not dropped.is_empty():
+		_add_log("")
+		_add_log("── Picking up loot ──")
+		var pickup_results: Array = CombatManager.pickup_all()
+		for pr in pickup_results:
+			if pr.get("picked_up", false):
+				_add_log("  Picked up: %s" % str(pr.get("name", "???")))
+			else:
+				_add_log("  Inventory full! Left: %s" % str(pr.get("name", "???")))
+
 	hint_label.text = "[ENTER] Continue"
 	_refresh_display()
 
@@ -343,6 +362,10 @@ func _advance_or_complete() -> void:
 	else:
 		_state = State.SESSION_COMPLETE
 		var session: Dictionary = SessionManager.get_session()
+		# Mark mission as completed
+		var mission_id: String = session.get("mission_id", "")
+		if not mission_id.is_empty():
+			GameState.complete_mission(mission_id)
 		_add_log("══════ SESSION COMPLETE ══════")
 		_add_log("Total EXP: %d" % int(session.get("total_exp", 0)))
 		_add_log("Total Meseta: %d" % int(session.get("total_meseta", 0)))
@@ -351,9 +374,29 @@ func _advance_or_complete() -> void:
 
 
 func _return_to_city() -> void:
+	# On death: set HP to 50% as penalty
+	if _state == State.GAME_OVER:
+		var character = CharacterManager.get_active_character()
+		if character:
+			var max_hp: int = int(character.get("max_hp", 100))
+			character["hp"] = int(max_hp * 0.5)
+			character["pp"] = int(character.get("max_pp", 50))
+			CharacterManager._sync_to_game_state()
+	else:
+		# Normal return (completed or ran): full heal
+		_heal_to_full()
+
 	SessionManager.return_to_city()
 	SaveManager.auto_save()
 	SceneManager.goto_scene("res://scenes/2d/city.tscn")
+
+
+func _heal_to_full() -> void:
+	var character = CharacterManager.get_active_character()
+	if character:
+		character["hp"] = int(character.get("max_hp", 100))
+		character["pp"] = int(character.get("max_pp", 50))
+		CharacterManager._sync_to_game_state()
 
 
 func _add_log(message: String) -> void:

@@ -38,10 +38,23 @@ const STATUS_EFFECTS := {
 	"burn": {"duration": 3, "dot_percent": 0.03, "defense_mod": -0.1},
 }
 
+## Area ID mapping for drop table lookups
+const AREA_DROP_NAMES := {
+	"gurhacia": "gurhacia-valley",
+	"rioh": "rioh-snowfield",
+	"ozette": "ozette-wetland",
+	"paru": "oblivion-city-paru",
+	"makara": "makara-ruins",
+	"arca": "arca-plant",
+	"dark": "dark-shrine",
+}
+
 ## Current combat state
 var _enemies: Array = []
 var _combat_active: bool = false
 var _dropped_items: Array = []
+var _area_id: String = ""
+var _difficulty: String = "normal"
 
 signal combat_started()
 signal combat_ended()
@@ -51,10 +64,12 @@ signal wave_cleared()
 
 
 ## Initialize combat state
-func init_combat() -> void:
+func init_combat(area_id: String = "", difficulty: String = "normal") -> void:
 	_enemies.clear()
 	_dropped_items.clear()
 	_combat_active = true
+	_area_id = area_id
+	_difficulty = difficulty
 	combat_started.emit()
 
 
@@ -334,13 +349,13 @@ func aggro_on_attack(target_index: int) -> void:
 		return
 	# The attacked enemy always aggros
 	_enemies[target_index]["aggroed"] = true
-	# Nearby enemies (adjacent indices ±1) have a high chance to also aggro
+	# Nearby enemies (adjacent indices ±1) have a small chance to also aggro
 	for offset in [-1, 1]:
 		var idx: int = target_index + offset
 		if idx >= 0 and idx < _enemies.size():
 			var neighbor: Dictionary = _enemies[idx]
 			if neighbor.get("alive", false) and not neighbor.get("aggroed", false):
-				if randf() < 0.5:
+				if randf() < 0.2:
 					neighbor["aggroed"] = true
 
 
@@ -349,6 +364,64 @@ func is_enemy_aggroed(index: int) -> bool:
 	if index < 0 or index >= _enemies.size():
 		return false
 	return _enemies[index].get("aggroed", false)
+
+
+## Generate drops when an enemy is defeated
+func generate_drops(enemy: Dictionary) -> Array:
+	var drops: Array = []
+	var enemy_name: String = str(enemy.get("name", ""))
+	var is_boss: bool = enemy.get("is_boss", false)
+	var is_rare: bool = enemy.get("is_rare", false)
+
+	# 1. Consumable drops (10% chance, higher for bosses)
+	var consumable_chance := 0.10
+	if is_rare:
+		consumable_chance = 0.20
+	if is_boss:
+		consumable_chance = 0.35
+	if randf() < consumable_chance:
+		var consumables := ["monomate", "monofluid"]
+		drops.append(consumables[randi() % consumables.size()])
+
+	# 2. Weapon drops from drop table
+	var drop_area: String = AREA_DROP_NAMES.get(_area_id, _area_id)
+	var weapon_drops: Array = DropRegistry.get_enemy_drops(_difficulty, drop_area, enemy_name)
+	if not weapon_drops.is_empty():
+		var weapon_chance := 0.03  # 3% for normal enemies
+		if is_rare:
+			weapon_chance = 0.12
+		if is_boss:
+			weapon_chance = 0.25
+		if randf() < weapon_chance:
+			var drop_name: String = weapon_drops[randi() % weapon_drops.size()]
+			drops.append(drop_name.to_lower().replace(" ", "_").replace("'", ""))
+
+	return drops
+
+
+## Get all pending dropped items on the field
+func get_dropped_items() -> Array:
+	return _dropped_items
+
+
+## Add drops to the field
+func add_drops(items: Array) -> void:
+	for item in items:
+		_dropped_items.append(item)
+
+
+## Pick up all dropped items. Returns array of {id, name, picked_up: bool}
+func pickup_all() -> Array:
+	var results: Array = []
+	for item_id in _dropped_items:
+		var info: Dictionary = Inventory._lookup_item(item_id)
+		if Inventory.can_add_item(item_id):
+			Inventory.add_item(item_id, 1)
+			results.append({"id": item_id, "name": info.name, "picked_up": true})
+		else:
+			results.append({"id": item_id, "name": info.name, "picked_up": false})
+	_dropped_items.clear()
+	return results
 
 
 ## Clear combat state

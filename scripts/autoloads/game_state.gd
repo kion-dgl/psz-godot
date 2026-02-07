@@ -19,6 +19,9 @@ var equipment: Dictionary = {
 	"accessory2": "",
 }
 
+# Completed missions tracking
+var completed_missions: Array = []  # Array of mission IDs
+
 # UI state
 var is_pause_menu_open: bool = false
 var active_shop_npc: String = ""
@@ -124,6 +127,15 @@ func heal(amount: int) -> void:
 
 func restore_mp(amount: int) -> void:
 	set_mp(mp + amount)
+
+
+func complete_mission(mission_id: String) -> void:
+	if mission_id not in completed_missions:
+		completed_missions.append(mission_id)
+
+
+func is_mission_completed(mission_id: String) -> bool:
+	return mission_id in completed_missions
 
 
 func is_alive() -> bool:
