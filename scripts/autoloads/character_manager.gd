@@ -35,6 +35,15 @@ func create_character(slot: int, class_id: String, char_name: String) -> Diction
 		return {}
 
 	var stats: Dictionary = class_data.get_stats_at_level(1)
+
+	# Determine starter weapon from class type
+	var starter_weapon: String = "saber"
+	match class_data.type:
+		"Ranger":
+			starter_weapon = "handgun"
+		"Force":
+			starter_weapon = "rod"
+
 	var character: Dictionary = {
 		"name": char_name,
 		"class_id": class_id,
@@ -47,19 +56,30 @@ func create_character(slot: int, class_id: String, char_name: String) -> Diction
 		"max_pp": stats.get("pp", 50),
 		"materials_used": 0,
 		"equipment": {
-			"weapon": "",
-			"frame": "",
+			"weapon": starter_weapon,
+			"frame": "normal_frame",
+			"mag": "mag",
 			"unit1": "",
 			"unit2": "",
 			"unit3": "",
 			"unit4": "",
 		},
-		"inventory": [],
+		"storage": [],
 		"created_at": Time.get_unix_time_from_system(),
 	}
 
 	_characters[slot] = character
 	character_created.emit(slot)
+
+	# Grant starter equipment (takes inventory space)
+	Inventory.add_item(starter_weapon, 1)
+	Inventory.add_item("normal_frame", 1)
+	Inventory.add_item("mag", 1)
+
+	# Grant starter consumables
+	Inventory.add_item("monomate", 5)
+	Inventory.add_item("monofluid", 5)
+
 	print("[CharacterManager] Created %s (%s) in slot %d" % [char_name, class_id, slot])
 	return character
 

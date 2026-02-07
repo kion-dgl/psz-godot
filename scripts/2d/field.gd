@@ -7,6 +7,9 @@ var _state: int = State.PLAYER_TURN
 var _selected_action: int = 0
 var _selected_target: int = 0
 var _choosing_target: bool = false
+var _choosing_item: bool = false
+var _selected_item: int = 0
+var _usable_items: Array = []  # Array of {id, name, quantity}
 var _enemies: Array = []
 
 const ACTIONS := ["Attack", "Special Attack", "Item", "Run"]
@@ -70,7 +73,23 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_player_input(event: InputEvent) -> void:
-	if _choosing_target:
+	if _choosing_item:
+		if event.is_action_pressed("ui_up"):
+			_selected_item = wrapi(_selected_item - 1, 0, maxi(_usable_items.size(), 1))
+			_refresh_display()
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_down"):
+			_selected_item = wrapi(_selected_item + 1, 0, maxi(_usable_items.size(), 1))
+			_refresh_display()
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_accept"):
+			_use_selected_item()
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_cancel"):
+			_choosing_item = false
+			_refresh_display()
+			get_viewport().set_input_as_handled()
+	elif _choosing_target:
 		if event.is_action_pressed("ui_up"):
 			_move_target(-1)
 			get_viewport().set_input_as_handled()
@@ -105,12 +124,99 @@ func _select_action() -> void:
 			_selected_target = _find_first_alive_enemy()
 			_refresh_display()
 		"Item":
-			_add_log("No items in inventory.")
-			_refresh_display()
+			_open_item_menu()
 		"Run":
 			_add_log("Escaped from battle!")
 			SessionManager.return_to_city()
 			SceneManager.goto_scene("res://scenes/2d/city.tscn")
+
+
+func _open_item_menu() -> void:
+	# Build list of usable consumables from inventory
+	_usable_items.clear()
+	var all_items: Array = Inventory.get_all_items()
+	for item in all_items:
+		var item_id: String = item.get("id", "")
+		var consumable = ConsumableRegistry.get_consumable(item_id)
+		if consumable:
+			_usable_items.append(item)
+
+	if _usable_items.is_empty():
+		_add_log("No usable items!")
+		_refresh_display()
+		return
+
+	_choosing_item = true
+	_selected_item = 0
+	hint_label.text = "[↑/↓] Select Item  [ENTER] Use  [ESC] Back"
+	_refresh_display()
+
+
+func _use_selected_item() -> void:
+	if _usable_items.is_empty() or _selected_item >= _usable_items.size():
+		return
+
+	var item: Dictionary = _usable_items[_selected_item]
+	var item_id: String = item.get("id", "")
+	var item_name: String = item.get("name", item_id)
+	var consumable = ConsumableRegistry.get_consumable(item_id)
+
+	if consumable == null:
+		return
+
+	# Apply consumable effect by parsing the details string
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+
+	var details: String = consumable.details.to_lower()
+	var applied := false
+
+	# Parse "Restores X% of HP/TP"
+	var regex = RegEx.new()
+	regex.compile("restores\\s+(\\d+)%\\s+of\\s+(hp|tp)")
+	var result = regex.search(details)
+	if result:
+		var percent: int = int(result.get_string(1))
+		var stat_type: String = result.get_string(2)
+		if stat_type == "hp":
+			var max_hp: int = int(character.get("max_hp", 100))
+			var heal_amount: int = int(float(max_hp) * float(percent) / 100.0)
+			character["hp"] = mini(int(character["hp"]) + heal_amount, max_hp)
+			_add_log("Used %s! Restored %d HP." % [item_name, heal_amount])
+			applied = true
+		elif stat_type == "tp":
+			var max_pp: int = int(character.get("max_pp", 50))
+			var restore_amount: int = int(float(max_pp) * float(percent) / 100.0)
+			character["pp"] = mini(int(character["pp"]) + restore_amount, max_pp)
+			_add_log("Used %s! Restored %d PP." % [item_name, restore_amount])
+			applied = true
+
+	# Check for "Restores all HP" / full restore
+	if not applied and "restores all" in details:
+		if "hp" in details:
+			character["hp"] = int(character.get("max_hp", 100))
+			_add_log("Used %s! Fully restored HP." % item_name)
+			applied = true
+		if "tp" in details:
+			character["pp"] = int(character.get("max_pp", 50))
+			_add_log("Used %s! Fully restored PP." % item_name)
+			applied = true
+
+	if not applied:
+		_add_log("Used %s." % item_name)
+
+	# Remove from inventory
+	Inventory.remove_item(item_id, 1)
+	CharacterManager._sync_to_game_state()
+
+	_choosing_item = false
+	_refresh_display()
+
+	# Using an item takes a turn — enemies act next
+	_state = State.ENEMY_TURN
+	await get_tree().create_timer(0.3).timeout
+	_process_enemy_turns()
 
 
 func _move_target(direction: int) -> void:
@@ -147,6 +253,9 @@ func _execute_action() -> void:
 	else:
 		return
 
+	# Attacking draws aggro from the target and nearby enemies
+	CombatManager.aggro_on_attack(_selected_target)
+
 	if result.get("hit", false):
 		_add_log("You attack %s! %s" % [str(_enemies[_selected_target].get("name", "Enemy")), str(result.get("message", ""))])
 	else:
@@ -171,10 +280,17 @@ func _process_enemy_turns() -> void:
 	for tick in ticks:
 		_add_log(str(tick.get("message", "")))
 
-	# Each alive enemy attacks
+	# Process aggro — idle enemies may notice the player
+	var aggro_msgs: Array = CombatManager.process_aggro()
+	for msg in aggro_msgs:
+		_add_log(msg)
+
+	# Only aggroed enemies attack
 	for i in range(_enemies.size()):
 		if not _enemies[i].get("alive", false):
 			continue
+		if not _enemies[i].get("aggroed", false):
+			continue  # Still wandering, doesn't attack
 		var result: Dictionary = CombatManager.enemy_attack(i)
 		if not str(result.get("message", "")).is_empty():
 			_add_log(str(result.get("message", "")))
@@ -198,20 +314,20 @@ func _process_enemy_turns() -> void:
 func _on_wave_cleared() -> void:
 	_state = State.WAVE_CLEAR
 	var rewards: Dictionary = CombatManager.get_wave_rewards()
-	var exp: int = int(rewards.get("exp", 0))
+	var exp_gained: int = int(rewards.get("exp", 0))
 	var meseta: int = int(rewards.get("meseta", 0))
 
-	SessionManager.add_rewards(exp, meseta)
+	SessionManager.add_rewards(exp_gained, meseta)
 
 	# Apply rewards
-	var level_result: Dictionary = CharacterManager.add_experience(exp)
+	var level_result: Dictionary = CharacterManager.add_experience(exp_gained)
 	var character = CharacterManager.get_active_character()
 	if character:
 		character["meseta"] = int(character.get("meseta", 0)) + meseta
 		GameState.meseta = int(character["meseta"])
 
 	_add_log("── Wave Cleared! ──")
-	_add_log("EXP: +%d  Meseta: +%d" % [exp, meseta])
+	_add_log("EXP: +%d  Meseta: +%d" % [exp_gained, meseta])
 	if level_result.get("leveled_up", false):
 		_add_log("LEVEL UP! Now Level %d!" % int(level_result.get("new_level", 1)))
 
@@ -286,10 +402,20 @@ func _refresh_enemies() -> void:
 		var hp: int = int(enemy.get("hp", 0))
 		var max_hp: int = int(enemy.get("max_hp", 1))
 		var alive: bool = enemy.get("alive", false)
+		var aggroed: bool = enemy.get("aggroed", false)
 
 		if not alive:
 			label.text = "  %-12s [DEFEATED]" % name_str
 			label.modulate = Color(0.333, 0.333, 0.333)
+		elif not aggroed:
+			# Wandering — not yet hostile
+			label.text = "%-14s (wandering)" % name_str
+			if _choosing_target and i == _selected_target:
+				label.text = "> " + label.text
+				label.modulate = Color(1, 0.8, 0)
+			else:
+				label.text = "  " + label.text
+				label.modulate = Color(0.5, 0.5, 0.5)
 		else:
 			var ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
 			var bar_len := 6
@@ -367,26 +493,45 @@ func _refresh_actions() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 2)
 
-	var header := Label.new()
-	header.text = "── ACTIONS ──"
-	header.modulate = Color(0, 0.733, 0.8)
-	vbox.add_child(header)
+	if _choosing_item:
+		# Show item selection list
+		var header := Label.new()
+		header.text = "── ITEMS ──"
+		header.modulate = Color(0, 0.733, 0.8)
+		vbox.add_child(header)
 
-	if _state != State.PLAYER_TURN or _choosing_target:
-		for action in ACTIONS:
+		for i in range(_usable_items.size()):
+			var item: Dictionary = _usable_items[i]
 			var label := Label.new()
-			label.text = "  " + action
-			label.modulate = Color(0.333, 0.333, 0.333)
-			vbox.add_child(label)
-	else:
-		for i in range(ACTIONS.size()):
-			var label := Label.new()
-			if i == _selected_action:
-				label.text = "> " + ACTIONS[i]
+			var qty: int = int(item.get("quantity", 1))
+			var display: String = "%s x%d" % [item.get("name", item.get("id", "???")), qty]
+			if i == _selected_item:
+				label.text = "> " + display
 				label.modulate = Color(1, 0.8, 0)
 			else:
-				label.text = "  " + ACTIONS[i]
+				label.text = "  " + display
 			vbox.add_child(label)
+	else:
+		var header := Label.new()
+		header.text = "── ACTIONS ──"
+		header.modulate = Color(0, 0.733, 0.8)
+		vbox.add_child(header)
+
+		if _state != State.PLAYER_TURN or _choosing_target:
+			for action in ACTIONS:
+				var label := Label.new()
+				label.text = "  " + action
+				label.modulate = Color(0.333, 0.333, 0.333)
+				vbox.add_child(label)
+		else:
+			for i in range(ACTIONS.size()):
+				var label := Label.new()
+				if i == _selected_action:
+					label.text = "> " + ACTIONS[i]
+					label.modulate = Color(1, 0.8, 0)
+				else:
+					label.text = "  " + ACTIONS[i]
+				vbox.add_child(label)
 
 	action_panel.add_child(vbox)
 

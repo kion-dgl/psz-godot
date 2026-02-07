@@ -44,12 +44,20 @@ func buy_item(shop_id: String, item_name: String, quantity: int = 1) -> bool:
 	if int(character.get("meseta", 0)) < cost:
 		return false
 
+	# Convert shop item name to registry ID (e.g. "Monomate" → "monomate")
+	var item_id: String = item_name.to_lower().replace(" ", "_")
+
+	# Check if inventory can hold the item
+	if not Inventory.can_add_item(item_id):
+		return false
+
 	# Deduct meseta
 	character["meseta"] = int(character["meseta"]) - cost
 	GameState.meseta = int(character["meseta"])
 
-	# TODO: Add item to inventory based on category
-	# For now, just track the transaction
+	# Add item to inventory
+	Inventory.add_item(item_id, quantity)
+
 	item_bought.emit(item_name, cost)
 	print("[ShopManager] Bought %dx %s for %d meseta" % [quantity, item_name, cost])
 	return true

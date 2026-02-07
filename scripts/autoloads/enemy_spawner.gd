@@ -146,6 +146,9 @@ func _create_enemy_instance(enemy_id: String, stat_tier: String, diff_mult: floa
 	var defense := int(float(base["defense"]) * diff_mult * stage_mult)
 	var evasion := int(float(base["evasion"]) * diff_mult)
 
+	var is_boss: bool = stat_tier == "boss"
+	var is_elite: bool = stat_tier == "elite"
+
 	return {
 		"id": enemy_id,
 		"name": _format_enemy_name(enemy_id),
@@ -156,10 +159,13 @@ func _create_enemy_instance(enemy_id: String, stat_tier: String, diff_mult: floa
 		"evasion": evasion,
 		"exp_reward": int(float(base["exp"]) * diff_mult * stage_mult),
 		"meseta_reward": randi_range(int(base["meseta_min"]), int(base["meseta_max"])),
-		"is_boss": stat_tier == "boss",
-		"is_rare": stat_tier == "elite",
+		"is_boss": is_boss,
+		"is_rare": is_elite,
 		"status_effects": [],
 		"alive": true,
+		# Aggro system: enemies wander before noticing the player
+		"aggroed": is_boss,  # Bosses always start aggroed
+		"aggro_chance": 0.35 if is_boss else (0.25 if is_elite else 0.15),  # Per-turn chance to notice player
 	}
 
 

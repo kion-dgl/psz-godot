@@ -84,6 +84,16 @@ func _refresh_display() -> void:
 	header.modulate = Color(0.333, 0.333, 0.333)
 	vbox.add_child(header)
 
+	# Get equipped item IDs for marking
+	var equipped_ids: Array = []
+	var character = CharacterManager.get_active_character()
+	if character:
+		var equip: Dictionary = character.get("equipment", {})
+		for slot_key in equip:
+			var eid: String = str(equip.get(slot_key, ""))
+			if not eid.is_empty():
+				equipped_ids.append(eid)
+
 	if _items.is_empty():
 		var empty := Label.new()
 		empty.text = "\n  (Inventory is empty)"
@@ -94,11 +104,14 @@ func _refresh_display() -> void:
 			var item: Dictionary = _items[i]
 			var label := Label.new()
 			var item_id: String = item.get("id", "???")
+			var item_name: String = item.get("name", item_id)
 			var qty: int = int(item.get("quantity", 1))
+			var equip_tag: String = " [E]" if item_id in equipped_ids else ""
+
 			if qty > 1:
-				label.text = "%-24s x%d" % [item_id, qty]
+				label.text = "%-24s x%d%s" % [item_name, qty, equip_tag]
 			else:
-				label.text = item_id
+				label.text = "%s%s" % [item_name, equip_tag]
 
 			if i == _selected_index:
 				label.text = "> " + label.text
@@ -126,14 +139,28 @@ func _refresh_detail() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 
+	var item_name: String = item.get("name", item_id)
+
 	var name_label := Label.new()
-	name_label.text = "── %s ──" % item_id
+	name_label.text = "── %s ──" % item_name
 	name_label.modulate = Color(0, 0.733, 0.8)
 	vbox.add_child(name_label)
 
 	var qty_label := Label.new()
 	qty_label.text = "Quantity: %d" % int(item.get("quantity", 1))
 	vbox.add_child(qty_label)
+
+	# Check if equipped
+	var character2 = CharacterManager.get_active_character()
+	if character2:
+		var equip2: Dictionary = character2.get("equipment", {})
+		for slot_key in equip2:
+			if str(equip2.get(slot_key, "")) == item_id:
+				var equip_label := Label.new()
+				equip_label.text = "[Equipped]"
+				equip_label.modulate = Color(1, 0.8, 0)
+				vbox.add_child(equip_label)
+				break
 
 	# Look up item data from registries
 	var item_data = ItemRegistry.get_item(item_id)
@@ -154,4 +181,34 @@ func _refresh_detail() -> void:
 		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(details)
 
+	# Weapon details
+	var weapon = WeaponRegistry.get_weapon(item_id)
+	if weapon:
+		_add_detail_line(vbox, "Type: %s" % weapon.get_weapon_type_name())
+		_add_detail_line(vbox, "ATK: %d" % weapon.attack_base)
+		_add_detail_line(vbox, "ACC: %d" % weapon.accuracy_base)
+		if not weapon.element.is_empty() and weapon.element != "None":
+			_add_detail_line(vbox, "Element: %s" % weapon.element)
+		_add_detail_line(vbox, "Rarity: %s" % weapon.get_rarity_string())
+
+	# Armor details
+	var armor = ArmorRegistry.get_armor(item_id)
+	if armor:
+		_add_detail_line(vbox, "Type: %s" % armor.get_type_name())
+		_add_detail_line(vbox, "DEF: %d" % armor.defense_base)
+		_add_detail_line(vbox, "EVA: %d" % armor.evasion_base)
+
+	# Unit details
+	var unit = UnitRegistry.get_unit(item_id)
+	if unit:
+		_add_detail_line(vbox, "Type: Unit")
+		if unit.effect and not str(unit.effect).is_empty():
+			_add_detail_line(vbox, "Effect: %s" % unit.effect)
+
 	detail_panel.add_child(vbox)
+
+
+func _add_detail_line(parent: VBoxContainer, text: String) -> void:
+	var label := Label.new()
+	label.text = text
+	parent.add_child(label)
