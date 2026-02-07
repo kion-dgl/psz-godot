@@ -1680,14 +1680,14 @@ func test_material_system() -> void:
 	# Use power_material
 	var result := CombatManager.use_material("power_material")
 	assert_true(result["success"], "Power material used successfully")
-	assert_eq(int(character.get("material_bonuses", {}).get("attack", 0)), 1, "Material bonus attack == 1")
+	assert_eq(int(character.get("material_bonuses", {}).get("attack", 0)), 2, "Material bonus attack == 2")
 	assert_eq(int(character.get("materials_used", 0)), 1, "Materials used == 1")
 
 	# Use 3 more
 	CombatManager.use_material("power_material")
 	CombatManager.use_material("power_material")
 	CombatManager.use_material("power_material")
-	assert_eq(int(character.get("material_bonuses", {}).get("attack", 0)), 4, "After 4 uses, attack bonus == 4")
+	assert_eq(int(character.get("material_bonuses", {}).get("attack", 0)), 8, "After 4 uses, attack bonus == 8")
 	assert_eq(int(character.get("materials_used", 0)), 4, "Materials used == 4")
 
 	# Test HP material

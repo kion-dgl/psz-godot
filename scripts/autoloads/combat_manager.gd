@@ -22,7 +22,7 @@ const MATERIAL_STAT_MAP := {
 	"reset_material":  "reset",
 }
 
-const MAX_MATERIALS := 150
+const MAX_MATERIALS := 100
 
 ## Element weakness matrix: attacker_element -> defender_weak_to
 const ELEMENT_WEAKNESS := {
@@ -216,7 +216,7 @@ func use_material(material_id: String) -> Dictionary:
 	if not character.has("material_bonuses"):
 		character["material_bonuses"] = {}
 	var bonuses: Dictionary = character["material_bonuses"]
-	bonuses[stat] = int(bonuses.get(stat, 0)) + 1
+	bonuses[stat] = int(bonuses.get(stat, 0)) + 2
 	character["materials_used"] = used + 1
 
 	# For HP/PP materials, also increase max_hp/max_pp
@@ -231,7 +231,7 @@ func use_material(material_id: String) -> Dictionary:
 	CharacterManager._sync_to_game_state()
 
 	var mat_name: String = material_id.replace("_", " ").capitalize()
-	return {"success": true, "message": "Used %s! %s +1 (%d/%d materials)" % [mat_name, stat.capitalize(), used + 1, MAX_MATERIALS]}
+	return {"success": true, "message": "Used %s! %s +2 (%d/%d materials)" % [mat_name, stat.capitalize(), used + 1, MAX_MATERIALS]}
 
 
 ## Player attacks an enemy. Returns result dict.
