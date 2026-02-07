@@ -115,6 +115,15 @@ func attack(target_index: int) -> Dictionary:
 	var player_accuracy: int = stats.get("accuracy", 100)
 	var enemy_evasion: int = int(enemy.get("evasion", 50))
 
+	# Add weapon ATK from equipped weapon
+	var weapon_attack := 0
+	var equipment: Dictionary = character.get("equipment", {})
+	var weapon_id: String = str(equipment.get("weapon", ""))
+	if not weapon_id.is_empty():
+		var weapon = WeaponRegistry.get_weapon(weapon_id)
+		if weapon:
+			weapon_attack = weapon.attack_base
+
 	# Calculate hit chance
 	var net_accuracy := player_accuracy - enemy_evasion
 	var hit_chance := clampf(BASE_HIT_CHANCE + net_accuracy * 0.005, MIN_HIT_CHANCE, MAX_HIT_CHANCE)
@@ -129,7 +138,6 @@ func attack(target_index: int) -> Dictionary:
 		return {"hit": false, "damage": 0, "critical": false, "message": "Miss!"}
 
 	# Calculate damage
-	var weapon_attack := 0  # TODO: get from equipment
 	var grind_bonus := 0
 	var base_damage := player_attack + weapon_attack + grind_bonus
 
@@ -238,6 +246,16 @@ func enemy_attack(enemy_index: int) -> Dictionary:
 
 	var player_evasion: int = stats.get("evasion", 100)
 	var player_defense: int = stats.get("defense", 50)
+
+	# Add armor DEF from equipped frame
+	var equipment: Dictionary = character.get("equipment", {})
+	var frame_id: String = str(equipment.get("frame", ""))
+	if not frame_id.is_empty():
+		var armor = ArmorRegistry.get_armor(frame_id)
+		if armor:
+			player_defense += armor.defense_base
+			player_evasion += armor.evasion_base
+
 	var enemy_atk: int = int(enemy.get("attack", 15))
 
 	# Hit check
