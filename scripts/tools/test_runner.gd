@@ -816,91 +816,63 @@ func test_session_manager() -> void:
 # ── Mission progression tests ──────────────────────────────
 
 func test_mission_progression() -> void:
-	print("── Mission Progression (Area Unlock Chain) ──")
+	print("── Mission Progression (Story Chain) ──")
 
-	# Area progression order (from guild_counter.gd)
-	var area_order := {
-		"Gurhacia Valley": 0,
-		"Rioh Snowfield": 1,
-		"Ozette Wetland": 2,
-		"Oblivion City Paru": 3,
-		"Makura Ruins": 4, "Makara Ruins": 4,
-		"Arca Plant": 5,
-		"Dark Shrine": 6,
-		"Eternal Tower": 7,
+	# Story chain in order — each requires the previous
+	var story_chain := [
+		"mayor_s_mission", "waltz_of_rage", "devilish_return",
+		"a_small_friend", "fallen_flowers", "ana_s_request",
+		"mother_s_memory", "the_eternal",
+	]
+
+	# Side quests and which story mission they require
+	var side_quests := {
+		"get_connected": "mayor_s_mission",
+		"third_daughter": "waltz_of_rage",
+		"mayor_s_quest": "devilish_return",
+		"future_hunters": "a_small_friend",
+		"i_love_ruins": "fallen_flowers",
+		"2_sets_of_heroes": "ana_s_request",
+		"to_the_future": "mother_s_memory",
 	}
 
 	# Reset completed missions
 	GameState.completed_missions.clear()
 
-	# Get all missions sorted by area
 	var missions: Array = MissionRegistry.get_all_missions()
 	assert_gt(missions.size(), 0, "Have missions to test")
+	print("  INFO: %d missions (%d story, %d side)" % [missions.size(), story_chain.size(), side_quests.size()])
 
-	# Group missions by area index
-	var missions_by_area: Dictionary = {}  # area_idx → [mission, ...]
-	for m in missions:
-		var area_idx: int = area_order.get(m.area, 99)
-		if not missions_by_area.has(area_idx):
-			missions_by_area[area_idx] = []
-		missions_by_area[area_idx].append(m)
+	# Verify only the root mission is initially available
+	assert_true(_is_mission_available_v2(story_chain[0]), "Root mission (Mayor's Mission) is unlocked")
+	assert_true(not _is_mission_available_v2(story_chain[1]), "Second story mission is locked initially")
 
-	# Get sorted area indices
-	var area_indices: Array = missions_by_area.keys()
-	area_indices.sort()
+	# Side quest for first area should also be locked (requires story completion)
+	assert_true(not _is_mission_available_v2("get_connected"), "Side quest locked before story completion")
 
-	print("  INFO: %d missions across %d areas" % [missions.size(), area_indices.size()])
+	# Walk through story chain
+	for i in range(story_chain.size()):
+		var mission_id: String = story_chain[i]
+		assert_true(_is_mission_available_v2(mission_id), "Story %d: %s is unlocked" % [i, mission_id])
 
-	# Verify area 0 (Gurhacia) missions are initially unlocked
-	var area_0_missions: Array = missions_by_area.get(0, [])
-	assert_gt(area_0_missions.size(), 0, "Gurhacia has missions")
-	for m in area_0_missions:
-		assert_true(_is_mission_available(m, missions, area_order), "Area 0: %s is unlocked" % m.name)
+		# Complete story mission
+		GameState.complete_mission(mission_id)
+		print("  Completed: %s" % mission_id)
 
-	# Verify area 1+ missions are initially LOCKED
-	if area_indices.size() > 1:
-		var area_1_missions: Array = missions_by_area.get(area_indices[1], [])
-		if not area_1_missions.is_empty():
-			assert_true(not _is_mission_available(area_1_missions[0], missions, area_order),
-				"Area 1: %s is locked initially" % area_1_missions[0].name)
+		# Verify side quest in this area is now unlocked
+		for sq_id in side_quests:
+			if side_quests[sq_id] == mission_id:
+				assert_true(_is_mission_available_v2(sq_id), "Side quest %s unlocked" % sq_id)
 
-	# Now progressively unlock by completing one mission per area
-	var areas_completed := 0
-	for area_idx in area_indices:
-		var area_missions: Array = missions_by_area.get(area_idx, [])
-		if area_missions.is_empty():
-			continue
+		# Verify next story mission is now unlocked (if any)
+		if i + 1 < story_chain.size():
+			assert_true(_is_mission_available_v2(story_chain[i + 1]),
+				"Next story %s unlocked after %s" % [story_chain[i + 1], mission_id])
 
-		# All missions in this area should now be available
-		for m in area_missions:
-			var available := _is_mission_available(m, missions, area_order)
-			if not available and not m.requires.is_empty():
-				# Has explicit requires — may not be unlocked yet, skip
-				continue
-			assert_true(available, "Area %d: %s is unlocked" % [area_idx, m.name])
-
-		# Complete one mission from this area to unlock the next
-		var completed_mission = area_missions[0]
-		GameState.complete_mission(completed_mission.id)
-		areas_completed += 1
-		print("  Completed: %s (%s) → Area %d done" % [completed_mission.name, completed_mission.area, area_idx])
-
-		# Verify the next area is now unlocked
-		var next_idx_pos: int = area_indices.find(area_idx) + 1
-		if next_idx_pos < area_indices.size():
-			var next_area_idx: int = area_indices[next_idx_pos]
-			var next_missions: Array = missions_by_area.get(next_area_idx, [])
-			if not next_missions.is_empty():
-				var next_available := _is_mission_available(next_missions[0], missions, area_order)
-				assert_true(next_available,
-					"Area %d: %s unlocked after completing area %d" % [next_area_idx, next_missions[0].name, area_idx])
-
-	assert_eq(areas_completed, area_indices.size(), "Completed missions in all %d areas" % area_indices.size())
-
-	# Verify all missions show as completed or available now
+	# Verify all missions are now accessible
 	var all_accessible := 0
 	for m in missions:
-		if GameState.is_mission_completed(m.id) or _is_mission_available(m, missions, area_order):
+		if GameState.is_mission_completed(m.id) or _is_mission_available_v2(m.id):
 			all_accessible += 1
 	assert_eq(all_accessible, missions.size(), "All %d missions accessible after full progression" % missions.size())
 
@@ -909,24 +881,17 @@ func test_mission_progression() -> void:
 	print("")
 
 
-## Check if a mission is available (mirrors guild_counter.gd logic)
-func _is_mission_available(mission, all_missions: Array, area_order: Dictionary) -> bool:
-	if not mission.requires.is_empty():
-		for req in mission.requires:
-			if not GameState.is_mission_completed(req):
-				return false
+## Check if a mission is available by its requires list
+func _is_mission_available_v2(mission_id: String) -> bool:
+	var mission = MissionRegistry.get_mission(mission_id)
+	if mission == null:
+		return false
+	if mission.requires.is_empty():
 		return true
-
-	var area_idx: int = area_order.get(mission.area, 0)
-	if area_idx == 0:
-		return true  # First area always available
-
-	# Check if any mission from the previous area is completed
-	for m in all_missions:
-		var m_area: int = area_order.get(m.area, 99)
-		if m_area == area_idx - 1 and GameState.is_mission_completed(m.id):
-			return true
-	return false
+	for req in mission.requires:
+		if not GameState.is_mission_completed(req):
+			return false
+	return true
 
 
 # ── Mag feeding tests ──────────────────────────────────────

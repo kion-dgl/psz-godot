@@ -223,8 +223,12 @@ func _refresh_detail() -> void:
 	vbox.add_child(type_label)
 
 	if not mission.requires.is_empty():
+		var req_names := PackedStringArray()
+		for req_id in mission.requires:
+			var req_mission = MissionRegistry.get_mission(req_id)
+			req_names.append(req_mission.name if req_mission else req_id)
 		var req_label := Label.new()
-		req_label.text = "Requires: %s" % ", ".join(PackedStringArray(mission.requires))
+		req_label.text = "Requires: %s" % ", ".join(req_names)
 		req_label.modulate = Color(1, 0.267, 0.267)
 		vbox.add_child(req_label)
 

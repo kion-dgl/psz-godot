@@ -9,7 +9,7 @@ name = "To the Future"
 area = "Dark Shrine"
 is_main = false
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("mother_s_memory")
 rewards = {
   "normal": {
     "item": "Taxion Gun",

@@ -9,7 +9,7 @@ name = "Mayor's Quest"
 area = "Ozette Wetland"
 is_main = false
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("devilish_return")
 rewards = {
   "normal": {
     "item": "Ace/HP",

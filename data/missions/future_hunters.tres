@@ -9,7 +9,7 @@ name = "Future Hunters"
 area = "Oblivion City Paru"
 is_main = false
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("a_small_friend")
 rewards = {
   "normal": {
     "item": "Rookie/Guard",

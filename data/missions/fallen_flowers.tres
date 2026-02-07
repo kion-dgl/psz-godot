@@ -7,9 +7,9 @@ script = ExtResource("1")
 id = "fallen_flowers"
 name = "Fallen Flowers"
 area = "Makura Ruins"
-is_main = false
+is_main = true
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("a_small_friend")
 rewards = {
   "normal": {
     "item": "Doppel Scythe",

@@ -7,9 +7,9 @@ script = ExtResource("1")
 id = "mother_s_memory"
 name = "Mother's Memory"
 area = "Dark Shrine"
-is_main = false
+is_main = true
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("ana_s_request")
 rewards = {
   "normal": {
     "item": "Spirit Garb",

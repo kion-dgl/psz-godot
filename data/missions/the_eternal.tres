@@ -7,9 +7,9 @@ script = ExtResource("1")
 id = "the_eternal"
 name = "The Eternal"
 area = "Eternal Tower"
-is_main = false
+is_main = true
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("mother_s_memory")
 rewards = {
   "normal": {
     "item": "Monogrinder",

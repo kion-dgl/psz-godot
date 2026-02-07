@@ -7,9 +7,9 @@ script = ExtResource("1")
 id = "ana_s_request"
 name = "Ana's Request"
 area = "Arca Plant"
-is_main = false
+is_main = true
 is_secret = false
-requires = PackedStringArray()
+requires = PackedStringArray("fallen_flowers")
 rewards = {
   "normal": {
     "item": "Lieucon Stihl",

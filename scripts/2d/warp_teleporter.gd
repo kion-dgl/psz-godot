@@ -11,6 +11,17 @@ const AREAS := [
 	{"id": "dark", "name": "Dark Shrine", "rec_level": 90},
 ]
 
+## Story mission that must be completed to unlock each warp area.
+const AREA_UNLOCK_MISSIONS := {
+	"gurhacia": "mayor_s_mission",
+	"rioh": "waltz_of_rage",
+	"ozette": "devilish_return",
+	"paru": "a_small_friend",
+	"makara": "fallen_flowers",
+	"arca": "ana_s_request",
+	"dark": "mother_s_memory",
+}
+
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
 enum Step { AREA_SELECT, DIFFICULTY_SELECT }
@@ -28,6 +39,13 @@ var _selected_difficulty: int = 0
 func _ready() -> void:
 	title_label.text = "══════ WARP TELEPORTER ══════"
 	_refresh_display()
+
+
+func _is_area_unlocked(area_id: String) -> bool:
+	var mission_id: String = AREA_UNLOCK_MISSIONS.get(area_id, "")
+	if mission_id.is_empty():
+		return true
+	return GameState.is_mission_completed(mission_id)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -54,6 +72,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if _step == Step.AREA_SELECT:
+			var area: Dictionary = AREAS[_selected_area]
+			if not _is_area_unlocked(str(area["id"])):
+				var mission_id: String = AREA_UNLOCK_MISSIONS.get(str(area["id"]), "")
+				var mission = MissionRegistry.get_mission(mission_id)
+				var mission_name: String = mission.name if mission else mission_id
+				hint_label.text = "Area locked! Complete \"%s\" to unlock." % mission_name
+				get_viewport().set_input_as_handled()
+				return
 			_step = Step.DIFFICULTY_SELECT
 			_selected_difficulty = 0
 		else:
@@ -93,13 +119,20 @@ func _show_area_select() -> void:
 
 	for i in range(AREAS.size()):
 		var area: Dictionary = AREAS[i]
+		var unlocked: bool = _is_area_unlocked(str(area["id"]))
 		var label := Label.new()
-		label.text = "%-24s Lv.%d+" % [str(area["name"]), int(area["rec_level"])]
+		var status_tag: String = "" if unlocked else " [LOCKED]"
+		label.text = "%-24s Lv.%d+%s" % [str(area["name"]), int(area["rec_level"]), status_tag]
 		if i == _selected_area:
 			label.text = "> " + label.text
-			label.modulate = Color(1, 0.8, 0)
+			if unlocked:
+				label.modulate = Color(1, 0.8, 0)
+			else:
+				label.modulate = Color(0.6, 0.3, 0.3)
 		else:
 			label.text = "  " + label.text
+			if not unlocked:
+				label.modulate = Color(0.333, 0.333, 0.333)
 		vbox.add_child(label)
 
 	content_panel.add_child(vbox)
@@ -135,6 +168,7 @@ func _refresh_info() -> void:
 		child.queue_free()
 
 	var area: Dictionary = AREAS[_selected_area]
+	var unlocked: bool = _is_area_unlocked(str(area["id"]))
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 
@@ -142,6 +176,17 @@ func _refresh_info() -> void:
 	name_label.text = "── %s ──" % str(area["name"])
 	name_label.modulate = Color(0, 0.733, 0.8)
 	vbox.add_child(name_label)
+
+	if not unlocked:
+		var lock_label := Label.new()
+		var mission_id: String = AREA_UNLOCK_MISSIONS.get(str(area["id"]), "")
+		var mission = MissionRegistry.get_mission(mission_id)
+		var mission_name: String = mission.name if mission else mission_id
+		lock_label.text = "Complete \"%s\" to unlock" % mission_name
+		lock_label.modulate = Color(1, 0.267, 0.267)
+		vbox.add_child(lock_label)
+		info_panel.add_child(vbox)
+		return
 
 	var level_label := Label.new()
 	level_label.text = "Recommended Level: %d+" % int(area["rec_level"])
