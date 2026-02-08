@@ -1,5 +1,7 @@
-extends Control
+extends Node3D
 ## Character creation screen — class selection, appearance, name entry, confirmation.
+## Uses Node3D root so 3D preview renders in the main viewport (works on web).
+## 2D UI is on a CanvasLayer overlay.
 
 enum Step { CLASS_SELECT, APPEARANCE, NAME_ENTRY, CONFIRM }
 
@@ -11,7 +13,7 @@ var _selected_class_id: String = ""
 var _char_name: String = ""
 
 # Appearance selection state
-var _appearance_row: int = 0  # 0=head, 1=body color, 2=hair color, 3=skin tone
+var _appearance_row: int = 0  # 0=head, 1=hair/bodyA, 2=costume/bodyB, 3=skin/bodyC
 var _appearance := {
 	"variation_index": 0,
 	"body_color_index": 0,
@@ -22,13 +24,14 @@ var _appearance := {
 # 3D preview state
 var _preview_model: Node3D = null
 var _preview_pivot: Node3D = null
-var _preview_viewport: SubViewport = null
+var _preview_nodes: Array = []
 var _preview_active := false
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var content_panel: PanelContainer = $VBox/HBox/ContentPanel
-@onready var info_panel: PanelContainer = $VBox/HBox/InfoPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $UILayer/UI/VBox/TitleLabel
+@onready var content_panel: PanelContainer = $UILayer/UI/VBox/HBox/ContentPanel
+@onready var info_panel: PanelContainer = $UILayer/UI/VBox/HBox/InfoPanel
+@onready var hint_label: Label = $UILayer/UI/VBox/HintLabel
+@onready var _bg: ColorRect = $UILayer/UI/BG
 
 
 func _ready() -> void:
@@ -55,6 +58,12 @@ func _load_classes() -> void:
 		var rb: int = race_order.get(b.race, 9)
 		return ra < rb
 	)
+
+
+func _is_cast_class() -> bool:
+	if _class_list.is_empty():
+		return false
+	return _class_list[_selected_class_index].race == "Cast"
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -124,16 +133,16 @@ func _handle_appearance_input(event: InputEvent) -> void:
 
 func _cycle_appearance_value(direction: int) -> void:
 	match _appearance_row:
-		0:  # Head type
+		0:  # Head type / Head parts
 			_appearance["variation_index"] = wrapi(
 				int(_appearance["variation_index"]) + direction, 0, PlayerConfig.HEAD_VARIATIONS)
-		1:  # Body color
-			_appearance["body_color_index"] = wrapi(
-				int(_appearance["body_color_index"]) + direction, 0, PlayerConfig.BODY_COLORS.size())
-		2:  # Hair color
+		1:  # Hair color / Body color A
 			_appearance["hair_color_index"] = wrapi(
 				int(_appearance["hair_color_index"]) + direction, 0, PlayerConfig.HAIR_COLORS.size())
-		3:  # Skin tone
+		2:  # Costume color / Body color B
+			_appearance["body_color_index"] = wrapi(
+				int(_appearance["body_color_index"]) + direction, 0, PlayerConfig.BODY_COLORS.size())
+		3:  # Skin tone / Body color C
 			_appearance["skin_tone_index"] = wrapi(
 				int(_appearance["skin_tone_index"]) + direction, 0, PlayerConfig.SKIN_TONES.size())
 
@@ -257,66 +266,54 @@ func _update_class_info() -> void:
 	info_panel.add_child(vbox)
 
 
-# ── 3D Preview ───────────────────────────────────────────────────
+# ── 3D Preview (main viewport) ──────────────────────────────────
 
 func _process(delta: float) -> void:
 	if _preview_active and _preview_pivot:
 		# Space + Left/Right to rotate the preview model
-		if Input.is_action_pressed("dodge"):  # Space bar
+		if Input.is_action_pressed("dodge"):
 			if Input.is_action_pressed("ui_left"):
 				_preview_pivot.rotate_y(delta * 3.0)
 			elif Input.is_action_pressed("ui_right"):
 				_preview_pivot.rotate_y(-delta * 3.0)
 
 
-func _build_preview_viewport() -> SubViewportContainer:
-	# SubViewportContainer fills the info panel
-	var container := SubViewportContainer.new()
-	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	container.stretch = true
-
-	_preview_viewport = SubViewport.new()
-	_preview_viewport.size = Vector2i(400, 500)
-	_preview_viewport.transparent_bg = true
-	_preview_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	container.add_child(_preview_viewport)
-
-	# Camera looking at model
-	var camera := Camera3D.new()
-	camera.position = Vector3(0, 0.0, 2.2)
-	camera.rotation_degrees = Vector3(-3, 0, 0)
-	camera.fov = 30
-	_preview_viewport.add_child(camera)
-
-	# Lighting
-	var light := DirectionalLight3D.new()
-	light.rotation_degrees = Vector3(-40, 30, 0)
-	light.light_energy = 1.2
-	_preview_viewport.add_child(light)
-
-	var fill := DirectionalLight3D.new()
-	fill.rotation_degrees = Vector3(-20, -120, 0)
-	fill.light_energy = 0.4
-	_preview_viewport.add_child(fill)
-
-	# World environment for ambient
+func _build_preview_scene() -> void:
+	# Environment — background matches the UI dark color
 	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.04, 0.06, 0.12)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.3, 0.35, 0.45)
 	env.ambient_light_energy = 0.8
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.06, 0.08, 0.14)
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
-	_preview_viewport.add_child(world_env)
 
-	# Pivot node for rotation
+	# Camera — offset left so model appears in the right panel area
+	var camera := Camera3D.new()
+	camera.position = Vector3(-0.3, 0.0, 2.2)
+	camera.rotation_degrees = Vector3(-3, 0, 0)
+	camera.fov = 30
+
+	# Key light
+	var light := DirectionalLight3D.new()
+	light.rotation_degrees = Vector3(-40, 30, 0)
+	light.light_energy = 1.2
+
+	# Fill light
+	var fill := DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-20, -120, 0)
+	fill.light_energy = 0.4
+
+	# Pivot for model rotation
 	_preview_pivot = Node3D.new()
 	_preview_pivot.name = "PreviewPivot"
-	_preview_viewport.add_child(_preview_pivot)
 
-	return container
+	_preview_nodes = [world_env, camera, light, fill, _preview_pivot]
+	for node in _preview_nodes:
+		add_child(node)
+
+	_preview_active = true
 
 
 func _update_preview_model() -> void:
@@ -325,8 +322,7 @@ func _update_preview_model() -> void:
 
 	# Remove old model
 	if _preview_model:
-		_preview_model.get_parent().remove_child(_preview_model)
-		_preview_model.free()
+		_preview_model.queue_free()
 		_preview_model = null
 
 	var vi: int = int(_appearance["variation_index"])
@@ -381,22 +377,32 @@ func _teardown_preview() -> void:
 	_preview_active = false
 	_preview_model = null
 	_preview_pivot = null
-	_preview_viewport = null
+	for node in _preview_nodes:
+		if is_instance_valid(node):
+			node.queue_free()
+	_preview_nodes.clear()
+	# Restore UI
+	_bg.visible = true
+	info_panel.remove_theme_stylebox_override("panel")
 
 
 # ── Appearance Step ──────────────────────────────────────────────
 
 func _show_appearance() -> void:
 	_step = Step.APPEARANCE
-
 	hint_label.text = "[↑/↓] Row  [←/→] Change  [SPACE+←/→] Rotate  [ENTER] Next  [ESC] Back"
 
-	# Build the 3D preview in the info panel
+	# Hide BG so 3D shows through the transparent info panel
+	_bg.visible = false
+	# Make info panel transparent to show 3D preview behind it
+	var transparent_style := StyleBoxEmpty.new()
+	info_panel.add_theme_stylebox_override("panel", transparent_style)
 	for child in info_panel.get_children():
 		child.queue_free()
-	var viewport_container := _build_preview_viewport()
-	info_panel.add_child(viewport_container)
-	_preview_active = true
+
+	# Build the 3D preview in the main viewport
+	if not _preview_active:
+		_build_preview_scene()
 
 	_update_appearance()
 	_update_preview_model()
@@ -419,22 +425,33 @@ func _update_appearance() -> void:
 	spacer.text = ""
 	vbox.add_child(spacer)
 
+	var is_cast := _is_cast_class()
+
 	# Row data: [label, current_value_text]
-	var rows := [
-		["Head Type", "Type %d" % (int(_appearance["variation_index"]) + 1)],
-		["Body Color", PlayerConfig.BODY_COLORS[int(_appearance["body_color_index"])]],
-		["Hair Color", PlayerConfig.HAIR_COLORS[int(_appearance["hair_color_index"])]],
-		["Skin Tone", PlayerConfig.SKIN_TONES[int(_appearance["skin_tone_index"])]],
-	]
+	var rows: Array
+	if is_cast:
+		rows = [
+			["Head Parts", str(int(_appearance["variation_index"]) + 1)],
+			["Body Color A", str(int(_appearance["hair_color_index"]) + 1)],
+			["Body Color B", str(int(_appearance["body_color_index"]) + 1)],
+			["Body Color C", str(int(_appearance["skin_tone_index"]) + 1)],
+		]
+	else:
+		rows = [
+			["Head Type", str(int(_appearance["variation_index"]) + 1)],
+			["Hair Color", str(int(_appearance["hair_color_index"]) + 1)],
+			["Costume Color", str(int(_appearance["body_color_index"]) + 1)],
+			["Skin Tone", str(int(_appearance["skin_tone_index"]) + 1)],
+		]
 
 	for i in range(rows.size()):
 		var row_label := Label.new()
 		var is_selected := (i == _appearance_row)
 		if is_selected:
-			row_label.text = "  %-14s < %s >" % [rows[i][0] + ":", rows[i][1]]
+			row_label.text = "  %-16s < %s >" % [rows[i][0] + ":", rows[i][1]]
 			row_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 		else:
-			row_label.text = "  %-14s   %s  " % [rows[i][0] + ":", rows[i][1]]
+			row_label.text = "  %-16s   %s  " % [rows[i][0] + ":", rows[i][1]]
 		vbox.add_child(row_label)
 
 	# Show variation ID
@@ -537,14 +554,23 @@ func _show_confirm() -> void:
 	vbox.add_child(type_label)
 
 	# Appearance summary
+	var is_cast := _is_cast_class()
 	var appear_label := Label.new()
 	var variation: String = PlayerConfig.get_variation(_selected_class_id, int(_appearance["variation_index"]))
-	appear_label.text = "  Look:  %s  %s / %s / %s" % [
-		variation,
-		PlayerConfig.BODY_COLORS[int(_appearance["body_color_index"])],
-		PlayerConfig.HAIR_COLORS[int(_appearance["hair_color_index"])],
-		PlayerConfig.SKIN_TONES[int(_appearance["skin_tone_index"])],
-	]
+	if is_cast:
+		appear_label.text = "  Look:  %s  A:%d / B:%d / C:%d" % [
+			variation,
+			int(_appearance["hair_color_index"]) + 1,
+			int(_appearance["body_color_index"]) + 1,
+			int(_appearance["skin_tone_index"]) + 1,
+		]
+	else:
+		appear_label.text = "  Look:  %s  Hair:%d / Costume:%d / Skin:%d" % [
+			variation,
+			int(_appearance["hair_color_index"]) + 1,
+			int(_appearance["body_color_index"]) + 1,
+			int(_appearance["skin_tone_index"]) + 1,
+		]
 	appear_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(appear_label)
 
