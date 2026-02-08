@@ -1,65 +1,148 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/3d/ui/hud.gd" id="1"]
+[ext_resource type="Theme" path="res://themes/rpg_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/2d/components/stat_bar.gd" id="3_statbar"]
+
+[sub_resource type="StyleBoxFlat" id="hud_panel"]
+bg_color = Color(0.165, 0.227, 0.353, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.753, 0.816, 0.878, 0.6)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="TopLeft" type="MarginContainer" parent="."]
 anchors_preset = 0
-offset_right = 200.0
-offset_bottom = 100.0
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 10
+offset_right = 250.0
+offset_bottom = 90.0
+theme = ExtResource("2_theme")
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="Panel" type="PanelContainer" parent="TopLeft"]
 layout_mode = 2
-theme_override_constants/separation = 4
+theme_override_styles/panel = SubResource("hud_panel")
 
-[node name="HPBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(180, 20)
+[node name="VBox" type="VBoxContainer" parent="TopLeft/Panel"]
 layout_mode = 2
-max_value = 100.0
-value = 100.0
-show_percentage = false
+theme_override_constants/separation = 2
 
-[node name="HPLabel" type="Label" parent="MarginContainer/VBoxContainer/HPBar"]
-layout_mode = 1
-anchors_preset = 15
+[node name="HPBar" type="HBoxContainer" parent="TopLeft/Panel/VBox"]
+layout_mode = 2
+script = ExtResource("3_statbar")
+stat_name = "HP"
+bar_width = 12
+fill_color = Color(0.188, 0.753, 0.314, 1)
+bg_color = Color(0.102, 0.188, 0.125, 1)
+
+[node name="NameLabel" type="Label" parent="TopLeft/Panel/VBox/HPBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(28, 0)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "HP"
+
+[node name="BarLabel" type="Label" parent="TopLeft/Panel/VBox/HPBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "████████████"
+
+[node name="ValueLabel" type="Label" parent="TopLeft/Panel/VBox/HPBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 0)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "100/100"
+horizontal_alignment = 2
+
+[node name="PPBar" type="HBoxContainer" parent="TopLeft/Panel/VBox"]
+layout_mode = 2
+script = ExtResource("3_statbar")
+stat_name = "PP"
+bar_width = 12
+fill_color = Color(0.251, 0.502, 0.878, 1)
+bg_color = Color(0.102, 0.125, 0.251, 1)
+show_danger_color = false
+
+[node name="NameLabel" type="Label" parent="TopLeft/Panel/VBox/PPBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(28, 0)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "PP"
+
+[node name="BarLabel" type="Label" parent="TopLeft/Panel/VBox/PPBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "████████████"
+
+[node name="ValueLabel" type="Label" parent="TopLeft/Panel/VBox/PPBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 0)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+text = "50/50"
+horizontal_alignment = 2
+
+[node name="TopRight" type="MarginContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
 anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "100 / 100"
-horizontal_alignment = 1
-vertical_alignment = 1
+offset_left = -170.0
+offset_bottom = 50.0
+grow_horizontal = 0
+theme = ExtResource("2_theme")
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_top = 12
 
-[node name="MPBar" type="ProgressBar" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(180, 20)
+[node name="MesetaPanel" type="PanelContainer" parent="TopRight"]
 layout_mode = 2
-max_value = 50.0
-value = 50.0
-show_percentage = false
+theme_override_styles/panel = SubResource("hud_panel")
 
-[node name="MPLabel" type="Label" parent="MarginContainer/VBoxContainer/MPBar"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "50 / 50"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="MesetaContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+[node name="HBox" type="HBoxContainer" parent="TopRight/MesetaPanel"]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="MesetaIcon" type="Label" parent="MarginContainer/VBoxContainer/MesetaContainer"]
+[node name="MesetaIcon" type="Label" parent="TopRight/MesetaPanel/HBox"]
 layout_mode = 2
-text = "Meseta:"
+theme_override_colors/font_color = Color(0.878, 0.627, 0.063, 1)
+text = "M"
 
-[node name="MesetaLabel" type="Label" parent="MarginContainer/VBoxContainer/MesetaContainer"]
+[node name="MesetaLabel" type="Label" parent="TopRight/MesetaPanel/HBox"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "0"
+horizontal_alignment = 2
+
+[node name="BottomCenter" type="MarginContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -160.0
+offset_top = -50.0
+offset_right = 160.0
+grow_horizontal = 2
+grow_vertical = 0
+theme = ExtResource("2_theme")
+theme_override_constants/margin_bottom = 16
+
+[node name="InteractionPrompt" type="PanelContainer" parent="BottomCenter"]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("hud_panel")
+
+[node name="PromptLabel" type="Label" parent="BottomCenter/InteractionPrompt"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+horizontal_alignment = 1

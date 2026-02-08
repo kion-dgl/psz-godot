@@ -19,14 +19,14 @@ const RARITY_COST_MULT := {1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0, 5: 4.0, 6: 6.0, 7: 10
 
 const IDENTIFY_COST := {5: 1000, 6: 2500, 7: 5000}
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var mode_label: Label = $VBox/ModeLabel
-@onready var content_panel: PanelContainer = $VBox/ContentPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var mode_label: Label = $Panel/VBox/ModeLabel
+@onready var content_panel: PanelContainer = $Panel/VBox/ContentPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:
-	title_label.text = "══════ TEKKER ══════"
+	title_label.text = "TEKKER"
 	hint_label.text = "[←/→] Switch Mode  [↑/↓] Select  [ENTER] Confirm  [ESC] Leave"
 	_build_lists()
 	_refresh_display()
@@ -185,7 +185,7 @@ func _refresh_display() -> void:
 	var character = CharacterManager.get_active_character()
 	var meseta_label := Label.new()
 	meseta_label.text = "Meseta: %d" % (int(character.get("meseta", 0)) if character else 0)
-	meseta_label.modulate = Color(1, 0.8, 0)
+	meseta_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(meseta_label)
 
 	if _mode == Mode.GRIND:
@@ -197,7 +197,7 @@ func _refresh_display() -> void:
 		if _grindable_weapons.is_empty():
 			var placeholder := Label.new()
 			placeholder.text = "(No grindable weapons in inventory)"
-			placeholder.modulate = Color(0.333, 0.333, 0.333)
+			placeholder.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 			vbox.add_child(placeholder)
 		else:
 			for i in range(_grindable_weapons.size()):
@@ -209,11 +209,11 @@ func _refresh_display() -> void:
 				label.text = "%-18s +%d/%d  %d M  [%s]" % [w["name"], w["grind"], w["max_grind"], cost, grinder_id.replace("_", " ")]
 				if i == _selected_index:
 					label.text = "> " + label.text
-					label.modulate = Color(1, 0.8, 0) if has_grinder else Color(1, 0.267, 0.267)
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT if has_grinder else ThemeColors.DANGER)
 				else:
 					label.text = "  " + label.text
 					if not has_grinder:
-						label.modulate = Color(0.5, 0.5, 0.5)
+						label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 				vbox.add_child(label)
 	else:
 		var desc := Label.new()
@@ -224,7 +224,7 @@ func _refresh_display() -> void:
 		if _unidentified_weapons.is_empty():
 			var placeholder := Label.new()
 			placeholder.text = "(No unidentified weapons)"
-			placeholder.modulate = Color(0.333, 0.333, 0.333)
+			placeholder.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 			vbox.add_child(placeholder)
 		else:
 			for i in range(_unidentified_weapons.size()):
@@ -234,7 +234,7 @@ func _refresh_display() -> void:
 				label.text = "%-18s %s★  %d M" % [w["name"], str(w["rarity"]), cost]
 				if i == _selected_index:
 					label.text = "> " + label.text
-					label.modulate = Color(1, 0.8, 0)
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 				else:
 					label.text = "  " + label.text
 				vbox.add_child(label)

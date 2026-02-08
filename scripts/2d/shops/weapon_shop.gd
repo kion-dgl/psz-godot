@@ -1,8 +1,17 @@
 extends Control
-## Weapon shop — browse and buy weapons, armor, and units.
+## Weapon shop — browse and buy weapons, armor, and units via tabs.
 
-var _items: Array = []  # Array of dicts: {id, name, category, cost, sell_price}
+enum Tab { WEAPONS, ARMOR, UNITS }
+
+const TAB_NAMES := ["WEAPONS", "ARMOR", "UNITS"]
+const TAB_COUNT := 3
+
+var _tab: int = Tab.WEAPONS
 var _selected_index: int = 0
+
+var _weapons: Array = []
+var _armors: Array = []
+var _units: Array = []
 
 ## Shop weapon pool — basic and mid-tier weapons
 const SHOP_WEAPON_IDS := [
@@ -23,84 +32,79 @@ const SHOP_UNIT_IDS := [
 	"heat_resist_lv1", "ice_resist_lv1", "light_resist_lv1", "dark_resist_lv1",
 ]
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var list_panel: PanelContainer = $VBox/HBox/ListPanel
-@onready var detail_panel: PanelContainer = $VBox/HBox/DetailPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
+@onready var list_panel: PanelContainer = $Panel/VBox/HBox/ListPanel
+@onready var detail_panel: PanelContainer = $Panel/VBox/HBox/DetailPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:
-	title_label.text = "══════ WEAPON SHOP ══════"
-	hint_label.text = "[↑/↓] Select  [ENTER] Buy  [ESC] Leave"
+	title_label.text = "WEAPON SHOP"
+	hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Buy  [ESC] Leave"
 	_generate_inventory()
 	_refresh_display()
 
 
 func _generate_inventory() -> void:
-	_items.clear()
+	_weapons.clear()
+	_armors.clear()
+	_units.clear()
 
-	# Weapons
 	for wid in SHOP_WEAPON_IDS:
 		var w = WeaponRegistry.get_weapon(wid)
 		if w == null:
 			continue
 		var price: int = _weapon_price(w)
-		_items.append({
-			"id": w.id,
-			"name": w.name,
-			"category": "weapon",
-			"cost": price,
-			"sell_price": int(price * 0.25),
+		_weapons.append({
+			"id": w.id, "name": w.name, "category": "weapon",
+			"cost": price, "sell_price": int(price * 0.25),
 		})
 
-	# Armors
 	for aid in SHOP_ARMOR_IDS:
 		var a = ArmorRegistry.get_armor(aid)
 		if a == null:
 			continue
 		var price: int = _armor_price(a)
-		_items.append({
-			"id": a.id,
-			"name": a.name,
-			"category": "armor",
-			"cost": price,
-			"sell_price": int(price * 0.25),
+		_armors.append({
+			"id": a.id, "name": a.name, "category": "armor",
+			"cost": price, "sell_price": int(price * 0.25),
 		})
 
-	# Units
 	for uid in SHOP_UNIT_IDS:
 		var u = UnitRegistry.get_unit(uid)
 		if u == null:
 			continue
 		var price: int = _unit_price(u)
-		_items.append({
-			"id": u.id,
-			"name": u.name,
-			"category": "unit",
-			"cost": price,
-			"sell_price": int(price * 0.25),
+		_units.append({
+			"id": u.id, "name": u.name, "category": "unit",
+			"cost": price, "sell_price": int(price * 0.25),
 		})
 
 
-## Price formula: (ATK_base × 15) + (rarity - 1) × 500
 func _weapon_price(w) -> int:
 	var base: int = int(w.attack_base) * 15 + (int(w.rarity) - 1) * 500
 	return maxi(base, 50)
 
 
-## Price formula: (DEF_base × 12) + (rarity - 1) × 400 + slots × 500
 func _armor_price(a) -> int:
 	var base: int = int(a.defense_base) * 12 + (int(a.rarity) - 1) * 400 + int(a.max_slots) * 500
 	return maxi(base, 50)
 
 
-## Price formula: (effect_value × 100) + (rarity - 1) × 300
 func _unit_price(u) -> int:
 	var base: int = int(u.effect_value) * 100 + (int(u.rarity) - 1) * 300
 	return maxi(base, 100)
 
 
-## Build "Type Race" string for the active character (e.g., "Hunter Human").
+func _get_current_list() -> Array:
+	match _tab:
+		Tab.WEAPONS: return _weapons
+		Tab.ARMOR: return _armors
+		Tab.UNITS: return _units
+	return _weapons
+
+
 func _get_class_use_string() -> String:
 	var character = CharacterManager.get_active_character()
 	if character == null:
@@ -111,7 +115,6 @@ func _get_class_use_string() -> String:
 	return "%s %s" % [class_data.type, class_data.race]
 
 
-## Check equippability of an item. Returns {can_equip: bool, reason: String}.
 func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	var character = CharacterManager.get_active_character()
 	if character == null:
@@ -141,12 +144,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_left"):
+		_tab = wrapi(_tab - 1, 0, TAB_COUNT)
+		_selected_index = 0
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_right"):
+		_tab = wrapi(_tab + 1, 0, TAB_COUNT)
+		_selected_index = 0
+		_refresh_display()
+		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
-		_selected_index = wrapi(_selected_index - 1, 0, maxi(_items.size(), 1))
+		_selected_index = wrapi(_selected_index - 1, 0, maxi(_get_current_list().size(), 1))
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
-		_selected_index = wrapi(_selected_index + 1, 0, maxi(_items.size(), 1))
+		_selected_index = wrapi(_selected_index + 1, 0, maxi(_get_current_list().size(), 1))
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
@@ -155,9 +168,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _buy_selected() -> void:
-	if _items.is_empty() or _selected_index >= _items.size():
+	var list := _get_current_list()
+	if list.is_empty() or _selected_index >= list.size():
 		return
-	var item: Dictionary = _items[_selected_index]
+	var item: Dictionary = list[_selected_index]
 	var cost: int = int(item.get("cost", 0))
 	var item_id: String = str(item.get("id", ""))
 	var cat: String = str(item.get("category", ""))
@@ -165,7 +179,6 @@ func _buy_selected() -> void:
 	if character == null:
 		return
 
-	# Check class/level restrictions before purchase
 	var equip_check: Dictionary = _check_equippability(item_id, cat)
 	if not equip_check.get("can_equip", true):
 		var reason: String = str(equip_check.get("reason", ""))
@@ -181,63 +194,57 @@ func _buy_selected() -> void:
 	if not Inventory.can_add_item(item_id):
 		hint_label.text = "Inventory full!"
 		return
-	# Deduct meseta
+
 	character["meseta"] = int(character["meseta"]) - cost
 	GameState.meseta = int(character["meseta"])
-	# Add item to inventory
 	Inventory.add_item(item_id, 1)
 	hint_label.text = "Bought %s for %d M!" % [str(item.get("name", "???")), cost]
 	_refresh_display()
 
 
 func _refresh_display() -> void:
+	# Mode bar — highlight active tab
+	var parts := []
+	for i in range(TAB_COUNT):
+		if i == _tab:
+			parts.append("[◄ %s ►]" % TAB_NAMES[i])
+		else:
+			parts.append("   %s   " % TAB_NAMES[i])
+	mode_label.text = "%s |  Meseta: %s" % ["  ".join(PackedStringArray(parts)), _get_meseta_str()]
+
+	# List panel
 	for child in list_panel.get_children():
 		child.queue_free()
 
 	var character = CharacterManager.get_active_character()
 	var current_meseta: int = int(character.get("meseta", 0)) if character else 0
+	var list := _get_current_list()
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	var meseta_label := Label.new()
-	meseta_label.text = "Meseta: %s" % _get_meseta_str()
-	meseta_label.modulate = Color(1, 0.8, 0)
-	vbox.add_child(meseta_label)
-
 	var selected_label: Label = null
 
-	if _items.is_empty():
+	if list.is_empty():
 		var empty := Label.new()
 		empty.text = "  (Nothing for sale)"
-		empty.modulate = Color(0.333, 0.333, 0.333)
+		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		vbox.add_child(empty)
 	else:
-		var last_cat := ""
-		for i in range(_items.size()):
-			var item: Dictionary = _items[i]
+		for i in range(list.size()):
+			var item: Dictionary = list[i]
 			var item_id: String = str(item.get("id", ""))
 			var cat: String = str(item.get("category", ""))
 			var cost: int = int(item.get("cost", 0))
-			# Category headers
-			if cat != last_cat:
-				if not last_cat.is_empty():
-					var spacer := Label.new()
-					spacer.text = ""
-					vbox.add_child(spacer)
-				var header := Label.new()
-				header.text = "── %s ──" % cat.to_upper()
-				header.modulate = Color(0, 0.733, 0.8)
-				vbox.add_child(header)
-				last_cat = cat
 
 			var label := Label.new()
 			var held: int = int(Inventory._items.get(item_id, 0))
 
-			# Get rarity stars
+			# Rarity stars
 			var stars := ""
 			if cat == "weapon":
 				var w = WeaponRegistry.get_weapon(item_id)
@@ -252,18 +259,15 @@ func _refresh_display() -> void:
 				if u:
 					stars = " " + u.get_rarity_string() if u.has_method("get_rarity_string") else " " + "*".repeat(int(u.rarity))
 
-			# Show held count only for stackable items
 			var held_str := ""
 			if held > 1:
 				held_str = " x%d" % held
 
-			# Check restrictions for color-coding
 			var equip_check: Dictionary = _check_equippability(item_id, cat)
 			var can_equip: bool = equip_check.get("can_equip", true)
 			var reason: String = str(equip_check.get("reason", ""))
 			var cant_afford: bool = current_meseta < cost
 
-			# Build label with restriction tag
 			var restriction_tag := ""
 			if not can_equip:
 				if reason == "class":
@@ -275,24 +279,23 @@ func _refresh_display() -> void:
 			if i == _selected_index:
 				label.text = "> " + label.text
 				if not can_equip:
-					label.modulate = Color(0.8, 0.267, 0.267)
+					label.add_theme_color_override("font_color", ThemeColors.DANGER)
 				elif cant_afford:
-					label.modulate = Color(0.8, 0.8, 0.267)
+					label.add_theme_color_override("font_color", ThemeColors.WARNING)
 				else:
-					label.modulate = Color(1, 0.8, 0)
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 				selected_label = label
 			else:
 				label.text = "  " + label.text
 				if not can_equip:
-					label.modulate = Color(0.5, 0.2, 0.2)
+					label.add_theme_color_override("font_color", ThemeColors.RESTRICT_CLASS)
 				elif cant_afford:
-					label.modulate = Color(0.5, 0.5, 0.2)
+					label.add_theme_color_override("font_color", ThemeColors.WARNING)
 			vbox.add_child(label)
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)
 
-	# Scroll to selected item after layout settles
 	if selected_label != null:
 		scroll.ensure_control_visible.call_deferred(selected_label)
 
@@ -303,10 +306,11 @@ func _refresh_detail() -> void:
 	for child in detail_panel.get_children():
 		child.queue_free()
 
-	if _items.is_empty() or _selected_index >= _items.size():
+	var list := _get_current_list()
+	if list.is_empty() or _selected_index >= list.size():
 		return
 
-	var item: Dictionary = _items[_selected_index]
+	var item: Dictionary = list[_selected_index]
 	var item_id: String = str(item.get("id", ""))
 	var cat: String = str(item.get("category", ""))
 	var vbox := VBoxContainer.new()
@@ -314,14 +318,14 @@ func _refresh_detail() -> void:
 
 	var name_label := Label.new()
 	name_label.text = "── %s ──" % str(item.get("name", "???"))
-	name_label.modulate = Color(0, 0.733, 0.8)
+	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(name_label)
 
 	if cat == "weapon":
 		var w = WeaponRegistry.get_weapon(item_id)
 		if w:
 			_add_line(vbox, "Type: %s" % w.get_weapon_type_name())
-			_add_line(vbox, "Rarity: %s" % w.get_rarity_string(), Color(1, 0.8, 0))
+			_add_line(vbox, "Rarity: %s" % w.get_rarity_string(), ThemeColors.TEXT_HIGHLIGHT)
 			_add_line(vbox, "ATK: %d-%d" % [w.attack_base, w.attack_max])
 			_add_line(vbox, "ACC: %d" % w.accuracy_base)
 			if not w.element.is_empty():
@@ -331,12 +335,11 @@ func _refresh_detail() -> void:
 	elif cat == "armor":
 		var a = ArmorRegistry.get_armor(item_id)
 		if a:
-			_add_line(vbox, "Rarity: %s" % a.get_rarity_string(), Color(1, 0.8, 0))
+			_add_line(vbox, "Rarity: %s" % a.get_rarity_string(), ThemeColors.TEXT_HIGHLIGHT)
 			_add_line(vbox, "DEF: %d-%d" % [a.defense_base, a.defense_max])
 			_add_line(vbox, "EVA: %d-%d" % [a.evasion_base, a.evasion_max])
 			_add_line(vbox, "Unit Slots: %d" % a.max_slots)
 			_add_line(vbox, "Req. Level: %d" % a.level)
-			# Resistances
 			var resists: Array = []
 			if a.resist_fire > 0: resists.append("Fire %d" % a.resist_fire)
 			if a.resist_ice > 0: resists.append("Ice %d" % a.resist_ice)
@@ -348,9 +351,9 @@ func _refresh_detail() -> void:
 	elif cat == "unit":
 		var u = UnitRegistry.get_unit(item_id)
 		if u:
-			_add_line(vbox, "Rarity: %s" % ("*".repeat(int(u.rarity))), Color(1, 0.8, 0))
+			_add_line(vbox, "Rarity: %s" % ("*".repeat(int(u.rarity))), ThemeColors.TEXT_HIGHLIGHT)
 			_add_line(vbox, "Category: %s" % u.category)
-			_add_line(vbox, "Effect: %s" % u.effect, Color(0.5, 1, 0.5))
+			_add_line(vbox, "Effect: %s" % u.effect, ThemeColors.EQUIPPABLE)
 
 	# Price / sell info
 	var sep := Label.new()
@@ -358,20 +361,20 @@ func _refresh_detail() -> void:
 	vbox.add_child(sep)
 	var cost_label := Label.new()
 	cost_label.text = "Buy: %d M" % int(item.get("cost", 0))
-	cost_label.modulate = Color(1, 0.8, 0)
+	cost_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(cost_label)
 	var sell_label := Label.new()
 	sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
-	sell_label.modulate = Color(0.5, 0.5, 0.5)
+	sell_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(sell_label)
 
 	# Equippability status
-	var equip_check: Dictionary = _check_equippability(item_id, cat)
 	if cat in ["weapon", "armor"]:
+		var equip_check: Dictionary = _check_equippability(item_id, cat)
 		var equip_status := Label.new()
 		if equip_check.get("can_equip", true):
 			equip_status.text = "Can equip"
-			equip_status.modulate = Color(0.5, 1, 0.5)
+			equip_status.add_theme_color_override("font_color", ThemeColors.EQUIPPABLE)
 		else:
 			var reason: String = str(equip_check.get("reason", ""))
 			if reason == "class":
@@ -380,16 +383,16 @@ func _refresh_detail() -> void:
 				equip_status.text = "Cannot equip: Lv.%d required" % int(equip_check.get("req_level", 1))
 			else:
 				equip_status.text = "Cannot equip"
-			equip_status.modulate = Color(1, 0.267, 0.267)
+			equip_status.add_theme_color_override("font_color", ThemeColors.DANGER)
 		vbox.add_child(equip_status)
 
 	detail_panel.add_child(vbox)
 
 
-func _add_line(parent: VBoxContainer, text: String, color: Color = Color(0, 1, 0.533)) -> void:
+func _add_line(parent: VBoxContainer, text: String, color: Color = ThemeColors.TEXT_PRIMARY) -> void:
 	var label := Label.new()
 	label.text = text
-	label.modulate = color
+	label.add_theme_color_override("font_color", color)
 	parent.add_child(label)
 
 

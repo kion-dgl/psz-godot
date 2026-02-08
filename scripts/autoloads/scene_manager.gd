@@ -11,6 +11,10 @@ var _transitioning: bool = false
 ## Overlay for fade transitions
 var _fade_rect: ColorRect
 
+## Overlay system — overlays render on a CanvasLayer above the base scene
+var _overlay_canvas: CanvasLayer
+var _overlay_stack: Array = []  # [{scene: Node, dim: ColorRect, path: String}]
+
 
 func _ready() -> void:
 	_fade_rect = ColorRect.new()
@@ -23,46 +27,118 @@ func _ready() -> void:
 	canvas.add_child(_fade_rect)
 	add_child(canvas)
 
+	_overlay_canvas = CanvasLayer.new()
+	_overlay_canvas.layer = 50
+	add_child(_overlay_canvas)
+
 
 ## Get data passed from the previous scene
 func get_transition_data() -> Dictionary:
 	return _transition_data
 
 
-## Full scene change — clears stack
+## Full scene change — clears all overlays and stack, then fades to new scene
 func goto_scene(scene_path: String, data: Dictionary = {}) -> void:
 	if _transitioning:
 		return
 	_transition_data = data
+
+	# Instantly clear all overlays (no animation)
+	for entry in _overlay_stack:
+		if is_instance_valid(entry.dim):
+			entry.dim.queue_free()
+		if is_instance_valid(entry.scene):
+			entry.scene.queue_free()
+	_overlay_stack.clear()
 	_scene_stack.clear()
+
+	# Re-enable base scene if it was disabled
+	var base: Node = get_tree().current_scene
+	if base:
+		base.process_mode = Node.PROCESS_MODE_INHERIT
+
 	await _fade_to_scene(scene_path)
 
 
-## Push a scene onto the stack (for overlays like inventory, shops)
+## Push an overlay scene on top of the current scene (no scene replacement)
 func push_scene(scene_path: String, data: Dictionary = {}) -> void:
 	if _transitioning:
 		return
+	_transitioning = true
 	_transition_data = data
-	var current := get_tree().current_scene.scene_file_path
-	if not current.is_empty():
-		_scene_stack.append(current)
-	await _fade_to_scene(scene_path)
+
+	# Disable input on current top (base scene or previous overlay)
+	var current_top: Node = _get_current_top()
+	if current_top:
+		current_top.process_mode = Node.PROCESS_MODE_DISABLED
+
+	# Load and instantiate the overlay scene
+	var packed: PackedScene = load(scene_path)
+	var scene_instance: Node = packed.instantiate()
+
+	# Create dim ColorRect (full screen, blocks input behind)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	dim.anchors_preset = Control.PRESET_FULL_RECT
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	# Start overlay invisible
+	scene_instance.modulate.a = 0.0
+
+	# Add to overlay canvas
+	_overlay_canvas.add_child(dim)
+	_overlay_canvas.add_child(scene_instance)
+
+	# Track in stacks
+	var entry := {scene = scene_instance, dim = dim, path = scene_path}
+	_overlay_stack.append(entry)
+	_scene_stack.append(scene_path)
+
+	# Animate in: dim fades to 0.5, scene fades to 1.0
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(dim, "color:a", 0.5, 0.15)
+	tween.tween_property(scene_instance, "modulate:a", 1.0, 0.15)
+	await tween.finished
+
+	scene_changed.emit(scene_path)
+	_transitioning = false
 
 
-## Pop back to the previous scene
+## Pop the top overlay scene
 func pop_scene(data: Dictionary = {}) -> void:
 	if _transitioning:
 		return
-	if _scene_stack.is_empty():
+	if _overlay_stack.is_empty():
 		return
+	_transitioning = true
 	_transition_data = data
-	var prev_scene: String = _scene_stack.pop_back()
-	await _fade_to_scene(prev_scene)
+
+	var entry: Dictionary = _overlay_stack.pop_back()
+	_scene_stack.pop_back()
+
+	# Animate out
+	if is_instance_valid(entry.scene) and is_instance_valid(entry.dim):
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(entry.dim, "color:a", 0.0, 0.15)
+		tween.tween_property(entry.scene, "modulate:a", 0.0, 0.15)
+		await tween.finished
+		entry.dim.queue_free()
+		entry.scene.queue_free()
+
+	# Re-enable previous top (overlay or base scene)
+	var new_top: Node = _get_current_top()
+	if new_top:
+		new_top.process_mode = Node.PROCESS_MODE_INHERIT
+
+	_transitioning = false
 
 
-## Check if we can pop
+## Check if we can pop (have overlays open)
 func can_pop() -> bool:
-	return not _scene_stack.is_empty()
+	return not _overlay_stack.is_empty()
 
 
 func _fade_to_scene(scene_path: String) -> void:
@@ -86,3 +162,10 @@ func _fade_to_scene(scene_path: String) -> void:
 
 	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_transitioning = false
+
+
+## Get the current top-most node (latest overlay, or base scene if no overlays)
+func _get_current_top() -> Node:
+	if not _overlay_stack.is_empty():
+		return _overlay_stack.back().scene
+	return get_tree().current_scene

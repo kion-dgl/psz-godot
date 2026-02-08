@@ -4,9 +4,9 @@ extends GridContainer
 signal item_selected(index: int)
 signal item_focused(index: int)
 
-const COLOR_NORMAL := Color(0, 1, 0.533)
-const COLOR_HIGHLIGHT := Color(1, 0.8, 0)
-const COLOR_EMPTY := Color(0.333, 0.333, 0.333)
+const COLOR_NORMAL := ThemeColors.TEXT_PRIMARY
+const COLOR_HIGHLIGHT := ThemeColors.TEXT_HIGHLIGHT
+const COLOR_EMPTY := ThemeColors.TEXT_SECONDARY
 
 var _items: Array[Dictionary] = []  # {text: String, empty: bool}
 var _current_index: int = 0
@@ -73,9 +73,9 @@ func _update_display() -> void:
 
 		if i == _current_index and _active:
 			label.text = "> " + text
-			label.modulate = COLOR_HIGHLIGHT
+			label.add_theme_color_override("font_color", COLOR_HIGHLIGHT)
 		else:
 			label.text = "  " + text
-			label.modulate = COLOR_EMPTY if is_empty else COLOR_NORMAL
+			label.add_theme_color_override("font_color", COLOR_EMPTY if is_empty else COLOR_NORMAL)
 		label.custom_minimum_size = Vector2(200, 0)
 		add_child(label)

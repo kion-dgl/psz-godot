@@ -1,14 +1,14 @@
 extends Control
 ## Status screen — full character stat breakdown.
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var content_panel: PanelContainer = $VBox/HBox/ContentPanel
-@onready var stats_panel: PanelContainer = $VBox/HBox/StatsPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var content_panel: PanelContainer = $Panel/VBox/HBox/ContentPanel
+@onready var stats_panel: PanelContainer = $Panel/VBox/HBox/StatsPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:
-	title_label.text = "══════ CHARACTER STATUS ══════"
+	title_label.text = "CHARACTER STATUS"
 	hint_label.text = "[ESC] Back"
 	_refresh_display()
 
@@ -37,7 +37,7 @@ func _refresh_info() -> void:
 
 	var name_label := Label.new()
 	name_label.text = "── %s ──" % str(character.get("name", "???"))
-	name_label.modulate = Color(0, 0.733, 0.8)
+	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(name_label)
 
 	var class_id: String = str(character.get("class_id", "???"))
@@ -76,7 +76,7 @@ func _refresh_info() -> void:
 		"█".repeat(hp_filled) + "░".repeat(20 - hp_filled), hp, max_hp
 	]
 	if hp_ratio < 0.25:
-		hp_label.modulate = Color(1, 0.267, 0.267)
+		hp_label.add_theme_color_override("font_color", ThemeColors.DANGER)
 	vbox.add_child(hp_label)
 
 	# PP
@@ -93,7 +93,7 @@ func _refresh_info() -> void:
 	# Meseta
 	var meseta_label := Label.new()
 	meseta_label.text = "Meseta: %d" % int(character.get("meseta", 0))
-	meseta_label.modulate = Color(1, 0.8, 0)
+	meseta_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(meseta_label)
 
 	# Equipment section
@@ -103,7 +103,7 @@ func _refresh_info() -> void:
 
 	var equip_header := Label.new()
 	equip_header.text = "── EQUIPMENT ──"
-	equip_header.modulate = Color(0, 0.733, 0.8)
+	equip_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(equip_header)
 
 	var equipment: Dictionary = character.get("equipment", {})
@@ -114,7 +114,7 @@ func _refresh_info() -> void:
 		var item_id: String = str(equipment.get(slots[i], ""))
 		if item_id.is_empty():
 			slot_label.text = "  %-8s [Empty]" % slot_names[i]
-			slot_label.modulate = Color(0.333, 0.333, 0.333)
+			slot_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		else:
 			var item_name := _get_item_name(slots[i], item_id)
 			# Show grind level for weapons
@@ -141,7 +141,7 @@ func _refresh_stats() -> void:
 
 	var header := Label.new()
 	header.text = "── STATS ──"
-	header.modulate = Color(0, 0.733, 0.8)
+	header.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(header)
 
 	var stats: Dictionary = character.get("stats", {})
@@ -164,14 +164,14 @@ func _refresh_stats() -> void:
 
 		var bonus_header := Label.new()
 		bonus_header.text = "── EQUIP BONUS ──"
-		bonus_header.modulate = Color(0, 0.733, 0.8)
+		bonus_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 		vbox.add_child(bonus_header)
 
 		for key in equip_bonuses:
 			if int(equip_bonuses[key]) != 0:
 				var label := Label.new()
 				label.text = "  %-6s +%d" % [key.to_upper(), int(equip_bonuses[key])]
-				label.modulate = Color(0, 1, 0.533)
+				label.add_theme_color_override("font_color", ThemeColors.EQUIPPABLE)
 				vbox.add_child(label)
 
 	# Effective stats
@@ -181,7 +181,7 @@ func _refresh_stats() -> void:
 
 	var eff_header := Label.new()
 	eff_header.text = "── EFFECTIVE ──"
-	eff_header.modulate = Color(1, 0.8, 0)
+	eff_header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(eff_header)
 
 	for i in range(stat_order.size()):

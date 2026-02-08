@@ -38,7 +38,7 @@ func _ready() -> void:
 func _start_wave() -> void:
 	var session: Dictionary = SessionManager.get_session()
 	if session.is_empty():
-		SceneManager.goto_scene("res://scenes/2d/city.tscn")
+		SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 		return
 
 	var area_id: String = session.get("area_id", "gurhacia")
@@ -195,7 +195,7 @@ func _select_action() -> void:
 		"Run":
 			_add_log("Escaped from battle!")
 			SessionManager.return_to_city()
-			SceneManager.goto_scene("res://scenes/2d/city.tscn")
+			SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 
 
 func _open_technique_menu() -> void:
@@ -344,7 +344,7 @@ func _use_selected_item() -> void:
 		_add_log("Used Telepipe! Warping to city...")
 		_choosing_item = false
 		SessionManager.suspend_session()
-		SceneManager.goto_scene("res://scenes/2d/city.tscn")
+		SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 		return
 
 	# Handle materials
@@ -686,7 +686,7 @@ func _return_to_city() -> void:
 
 	SessionManager.return_to_city()
 	SaveManager.auto_save()
-	SceneManager.goto_scene("res://scenes/2d/city.tscn")
+	SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 
 
 func _heal_to_full() -> void:
