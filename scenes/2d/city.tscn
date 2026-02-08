@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3]
 
-[ext_resource type="Theme" path="res://themes/terminal_theme.tres" id="1_theme"]
+[ext_resource type="Theme" path="res://themes/rpg_theme.tres" id="1_theme"]
 [ext_resource type="Script" path="res://scripts/2d/city.gd" id="2_script"]
 [ext_resource type="Script" path="res://scripts/2d/components/menu_list.gd" id="3_menu"]
 [ext_resource type="PackedScene" path="res://scenes/3d/maps/city_market.tscn" id="4_city_market"]

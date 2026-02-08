@@ -30,7 +30,7 @@ const SHOP_UNIT_IDS := [
 
 
 func _ready() -> void:
-	title_label.text = "══════ WEAPON SHOP ══════"
+	title_label.text = "WEAPON SHOP"
 	hint_label.text = "[↑/↓] Select  [ENTER] Buy  [ESC] Leave"
 	_generate_inventory()
 	_refresh_display()
@@ -205,7 +205,7 @@ func _refresh_display() -> void:
 
 	var meseta_label := Label.new()
 	meseta_label.text = "Meseta: %s" % _get_meseta_str()
-	meseta_label.modulate = Color(1, 0.8, 0)
+	meseta_label.modulate = ThemeColors.TEXT_HIGHLIGHT
 	vbox.add_child(meseta_label)
 
 	var selected_label: Label = null
@@ -213,7 +213,7 @@ func _refresh_display() -> void:
 	if _items.is_empty():
 		var empty := Label.new()
 		empty.text = "  (Nothing for sale)"
-		empty.modulate = Color(0.333, 0.333, 0.333)
+		empty.modulate = ThemeColors.TEXT_SECONDARY
 		vbox.add_child(empty)
 	else:
 		var last_cat := ""
@@ -230,7 +230,7 @@ func _refresh_display() -> void:
 					vbox.add_child(spacer)
 				var header := Label.new()
 				header.text = "── %s ──" % cat.to_upper()
-				header.modulate = Color(0, 0.733, 0.8)
+				header.modulate = ThemeColors.HEADER
 				vbox.add_child(header)
 				last_cat = cat
 
@@ -275,18 +275,18 @@ func _refresh_display() -> void:
 			if i == _selected_index:
 				label.text = "> " + label.text
 				if not can_equip:
-					label.modulate = Color(0.8, 0.267, 0.267)
+					label.modulate = ThemeColors.DANGER
 				elif cant_afford:
-					label.modulate = Color(0.8, 0.8, 0.267)
+					label.modulate = ThemeColors.WARNING
 				else:
-					label.modulate = Color(1, 0.8, 0)
+					label.modulate = ThemeColors.TEXT_HIGHLIGHT
 				selected_label = label
 			else:
 				label.text = "  " + label.text
 				if not can_equip:
-					label.modulate = Color(0.5, 0.2, 0.2)
+					label.modulate = ThemeColors.RESTRICT_CLASS
 				elif cant_afford:
-					label.modulate = Color(0.5, 0.5, 0.2)
+					label.modulate = ThemeColors.WARNING
 			vbox.add_child(label)
 
 	scroll.add_child(vbox)
@@ -314,14 +314,14 @@ func _refresh_detail() -> void:
 
 	var name_label := Label.new()
 	name_label.text = "── %s ──" % str(item.get("name", "???"))
-	name_label.modulate = Color(0, 0.733, 0.8)
+	name_label.modulate = ThemeColors.HEADER
 	vbox.add_child(name_label)
 
 	if cat == "weapon":
 		var w = WeaponRegistry.get_weapon(item_id)
 		if w:
 			_add_line(vbox, "Type: %s" % w.get_weapon_type_name())
-			_add_line(vbox, "Rarity: %s" % w.get_rarity_string(), Color(1, 0.8, 0))
+			_add_line(vbox, "Rarity: %s" % w.get_rarity_string(), ThemeColors.TEXT_HIGHLIGHT)
 			_add_line(vbox, "ATK: %d-%d" % [w.attack_base, w.attack_max])
 			_add_line(vbox, "ACC: %d" % w.accuracy_base)
 			if not w.element.is_empty():
@@ -331,7 +331,7 @@ func _refresh_detail() -> void:
 	elif cat == "armor":
 		var a = ArmorRegistry.get_armor(item_id)
 		if a:
-			_add_line(vbox, "Rarity: %s" % a.get_rarity_string(), Color(1, 0.8, 0))
+			_add_line(vbox, "Rarity: %s" % a.get_rarity_string(), ThemeColors.TEXT_HIGHLIGHT)
 			_add_line(vbox, "DEF: %d-%d" % [a.defense_base, a.defense_max])
 			_add_line(vbox, "EVA: %d-%d" % [a.evasion_base, a.evasion_max])
 			_add_line(vbox, "Unit Slots: %d" % a.max_slots)
@@ -348,9 +348,9 @@ func _refresh_detail() -> void:
 	elif cat == "unit":
 		var u = UnitRegistry.get_unit(item_id)
 		if u:
-			_add_line(vbox, "Rarity: %s" % ("*".repeat(int(u.rarity))), Color(1, 0.8, 0))
+			_add_line(vbox, "Rarity: %s" % ("*".repeat(int(u.rarity))), ThemeColors.TEXT_HIGHLIGHT)
 			_add_line(vbox, "Category: %s" % u.category)
-			_add_line(vbox, "Effect: %s" % u.effect, Color(0.5, 1, 0.5))
+			_add_line(vbox, "Effect: %s" % u.effect, ThemeColors.EQUIPPABLE)
 
 	# Price / sell info
 	var sep := Label.new()
@@ -358,11 +358,11 @@ func _refresh_detail() -> void:
 	vbox.add_child(sep)
 	var cost_label := Label.new()
 	cost_label.text = "Buy: %d M" % int(item.get("cost", 0))
-	cost_label.modulate = Color(1, 0.8, 0)
+	cost_label.modulate = ThemeColors.TEXT_HIGHLIGHT
 	vbox.add_child(cost_label)
 	var sell_label := Label.new()
 	sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
-	sell_label.modulate = Color(0.5, 0.5, 0.5)
+	sell_label.modulate = ThemeColors.TEXT_SECONDARY
 	vbox.add_child(sell_label)
 
 	# Equippability status
@@ -371,7 +371,7 @@ func _refresh_detail() -> void:
 		var equip_status := Label.new()
 		if equip_check.get("can_equip", true):
 			equip_status.text = "Can equip"
-			equip_status.modulate = Color(0.5, 1, 0.5)
+			equip_status.modulate = ThemeColors.EQUIPPABLE
 		else:
 			var reason: String = str(equip_check.get("reason", ""))
 			if reason == "class":
@@ -380,13 +380,13 @@ func _refresh_detail() -> void:
 				equip_status.text = "Cannot equip: Lv.%d required" % int(equip_check.get("req_level", 1))
 			else:
 				equip_status.text = "Cannot equip"
-			equip_status.modulate = Color(1, 0.267, 0.267)
+			equip_status.modulate = ThemeColors.DANGER
 		vbox.add_child(equip_status)
 
 	detail_panel.add_child(vbox)
 
 
-func _add_line(parent: VBoxContainer, text: String, color: Color = Color(0, 1, 0.533)) -> void:
+func _add_line(parent: VBoxContainer, text: String, color: Color = ThemeColors.TEXT_PRIMARY) -> void:
 	var label := Label.new()
 	label.text = text
 	label.modulate = color

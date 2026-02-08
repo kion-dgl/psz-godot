@@ -53,11 +53,11 @@ func _update_display() -> void:
 	var no_label := Label.new()
 	if _selected == 0:
 		yes_label.text = "> Yes"
-		yes_label.modulate = Color(1, 0.8, 0)
+		yes_label.modulate = ThemeColors.TEXT_HIGHLIGHT
 		no_label.text = "  No"
 	else:
 		yes_label.text = "  Yes"
 		no_label.text = "> No"
-		no_label.modulate = Color(1, 0.8, 0)
+		no_label.modulate = ThemeColors.TEXT_HIGHLIGHT
 	menu.add_child(yes_label)
 	menu.add_child(no_label)

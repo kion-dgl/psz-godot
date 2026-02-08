@@ -14,7 +14,7 @@ var _item_labels: Array = []  # maps item index -> Label node for scroll-to
 
 
 func _ready() -> void:
-	title_label.text = "══════ INVENTORY ══════"
+	title_label.text = "INVENTORY"
 	hint_label.text = "[↑/↓] Select  [ENTER] Use/Equip  [D] Drop  [ESC] Back"
 	_refresh_items()
 	_refresh_display()
@@ -125,7 +125,7 @@ func _refresh_display() -> void:
 	var slot_count := "%d/40 slots" % Inventory.get_total_slots()
 	var header := Label.new()
 	header.text = slot_count
-	header.modulate = Color(0.333, 0.333, 0.333)
+	header.modulate = ThemeColors.TEXT_SECONDARY
 	vbox.add_child(header)
 
 	# Get equipped item IDs for marking
@@ -150,7 +150,7 @@ func _refresh_display() -> void:
 	if _items.is_empty():
 		var empty := Label.new()
 		empty.text = "\n  (Inventory is empty)"
-		empty.modulate = Color(0.333, 0.333, 0.333)
+		empty.modulate = ThemeColors.TEXT_SECONDARY
 		vbox.add_child(empty)
 	else:
 		var current_category := ""
@@ -166,7 +166,7 @@ func _refresh_display() -> void:
 				current_category = cat
 				var cat_label := Label.new()
 				cat_label.text = "── %s ──" % cat
-				cat_label.modulate = Color(0, 0.733, 0.8)
+				cat_label.modulate = ThemeColors.HEADER
 				vbox.add_child(cat_label)
 
 			# Try to resolve weapon/armor data (raw ID first, then normalized)
@@ -209,22 +209,22 @@ func _refresh_display() -> void:
 
 			if i == _selected_index:
 				label.text = "> " + label.text
-				label.modulate = Color(1, 0.8, 0)
+				label.modulate = ThemeColors.TEXT_HIGHLIGHT
 			else:
 				label.text = "  " + label.text
 				# Color coding for equippability and unresolved refs
 				if is_unresolved:
-					label.modulate = Color(0.7, 0.3, 0.7)  # magenta — mismatched ID
+					label.modulate = ThemeColors.RESTRICT_ID
 				elif weapon and not class_type_race.is_empty():
 					if not weapon.can_be_used_by(class_type_race):
-						label.modulate = Color(0.5, 0.2, 0.2)  # dim red — wrong class
+						label.modulate = ThemeColors.RESTRICT_CLASS
 					elif char_level < weapon.level:
-						label.modulate = Color(0.7, 0.5, 0.15)  # dim orange — level too low
+						label.modulate = ThemeColors.RESTRICT_LEVEL
 				elif armor_data and not class_type_race.is_empty():
 					if not armor_data.can_be_used_by(class_type_race):
-						label.modulate = Color(0.5, 0.2, 0.2)
+						label.modulate = ThemeColors.RESTRICT_CLASS
 					elif char_level < armor_data.level:
-						label.modulate = Color(0.7, 0.5, 0.15)
+						label.modulate = ThemeColors.RESTRICT_LEVEL
 			vbox.add_child(label)
 			_item_labels.append(label)
 
@@ -255,8 +255,8 @@ func _refresh_detail() -> void:
 	var item_name: String = item.get("name", item_id)
 
 	var name_label := Label.new()
-	name_label.text = "── %s ──" % item_name
-	name_label.modulate = Color(0, 0.733, 0.8)
+	name_label.text = item_name
+	name_label.modulate = ThemeColors.TEXT_HIGHLIGHT
 	vbox.add_child(name_label)
 
 	var qty_label := Label.new()
@@ -271,7 +271,7 @@ func _refresh_detail() -> void:
 			if str(equip2.get(slot_key, "")) == item_id:
 				var equip_label := Label.new()
 				equip_label.text = "[Equipped]"
-				equip_label.modulate = Color(1, 0.8, 0)
+				equip_label.modulate = ThemeColors.TEXT_HIGHLIGHT
 				vbox.add_child(equip_label)
 				break
 
@@ -279,7 +279,7 @@ func _refresh_detail() -> void:
 	if item_id != norm_id:
 		var warn_label := Label.new()
 		warn_label.text = "[Mismatched ID: %s]" % item_id
-		warn_label.modulate = Color(0.7, 0.3, 0.7)
+		warn_label.modulate = ThemeColors.RESTRICT_ID
 		vbox.add_child(warn_label)
 
 	# Look up item data from registries (try raw then normalized)
@@ -333,13 +333,13 @@ func _refresh_detail() -> void:
 			var lvl_label := Label.new()
 			lvl_label.text = "Req. Lv: %d" % weapon.level
 			if char_level < weapon.level:
-				lvl_label.modulate = Color(0.7, 0.5, 0.15)
+				lvl_label.modulate = ThemeColors.RESTRICT_LEVEL
 			vbox.add_child(lvl_label)
 		if not weapon.usable_by.is_empty() and not class_type_race.is_empty():
 			if not weapon.can_be_used_by(class_type_race):
 				var restrict_label := Label.new()
 				restrict_label.text = "[Cannot equip — wrong class]"
-				restrict_label.modulate = Color(0.5, 0.2, 0.2)
+				restrict_label.modulate = ThemeColors.RESTRICT_CLASS
 				vbox.add_child(restrict_label)
 
 	# Armor details
@@ -355,13 +355,13 @@ func _refresh_detail() -> void:
 			var lvl_label := Label.new()
 			lvl_label.text = "Req. Lv: %d" % armor.level
 			if char_level < armor.level:
-				lvl_label.modulate = Color(0.7, 0.5, 0.15)
+				lvl_label.modulate = ThemeColors.RESTRICT_LEVEL
 			vbox.add_child(lvl_label)
 		if not armor.usable_by.is_empty() and not class_type_race.is_empty():
 			if not armor.can_be_used_by(class_type_race):
 				var restrict_label := Label.new()
 				restrict_label.text = "[Cannot equip — wrong class]"
-				restrict_label.modulate = Color(0.5, 0.2, 0.2)
+				restrict_label.modulate = ThemeColors.RESTRICT_CLASS
 				vbox.add_child(restrict_label)
 
 	# Unit details
@@ -394,7 +394,7 @@ func _refresh_detail() -> void:
 				var req_label := Label.new()
 				req_label.text = "Req. Level: %d" % required_level
 				if char_level < required_level:
-					req_label.modulate = Color(0.7, 0.5, 0.15)
+					req_label.modulate = ThemeColors.RESTRICT_LEVEL
 				vbox.add_child(req_label)
 				if character2:
 					var current_tech_level: int = TechniqueManager.get_technique_level(character2, tech_id)
@@ -402,10 +402,10 @@ func _refresh_detail() -> void:
 						var cur_label := Label.new()
 						if current_tech_level >= level:
 							cur_label.text = "Known: Lv.%d (already higher)" % current_tech_level
-							cur_label.modulate = Color(0.5, 0.5, 0.5)
+							cur_label.modulate = ThemeColors.TEXT_SECONDARY
 						else:
 							cur_label.text = "Known: Lv.%d → Lv.%d" % [current_tech_level, level]
-							cur_label.modulate = Color(0.5, 1, 0.5)
+							cur_label.modulate = ThemeColors.EQUIPPABLE
 						vbox.add_child(cur_label)
 
 	# Material details

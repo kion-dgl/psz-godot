@@ -22,7 +22,7 @@ var _selected_item: int = 0
 
 
 func _ready() -> void:
-	title_label.text = "══════ EQUIPMENT ══════"
+	title_label.text = "EQUIPMENT"
 	hint_label.text = "[↑/↓] Select Slot  [ENTER] Equip/Unequip  [ESC] Back"
 	_refresh_display()
 
@@ -241,14 +241,14 @@ func _refresh_display() -> void:
 
 	var header := Label.new()
 	header.text = "── Equipment Slots ──"
-	header.modulate = Color(0, 0.733, 0.8)
+	header.modulate = ThemeColors.HEADER
 	vbox.add_child(header)
 
 	if _choosing_item:
 		# Show item selection list
 		var slot_label := Label.new()
 		slot_label.text = "Select %s:" % visible_names[_selected_slot]
-		slot_label.modulate = Color(0, 0.733, 0.8)
+		slot_label.modulate = ThemeColors.HEADER
 		vbox.add_child(slot_label)
 
 		for i in range(_equippable_items.size()):
@@ -271,17 +271,17 @@ func _refresh_display() -> void:
 			if i == _selected_item:
 				label.text = "> " + label.text
 				if is_equipped:
-					label.modulate = Color(1, 0.8, 0)
+					label.modulate = ThemeColors.TEXT_HIGHLIGHT
 				elif is_unequip:
-					label.modulate = Color(1, 0.4, 0.4)
+					label.modulate = ThemeColors.DANGER
 				else:
-					label.modulate = Color(1, 0.8, 0)
+					label.modulate = ThemeColors.TEXT_HIGHLIGHT
 			else:
 				label.text = "  " + label.text
 				if is_equipped:
-					label.modulate = Color(0.8, 0.8, 0)
+					label.modulate = ThemeColors.TEXT_HIGHLIGHT
 				elif is_unequip:
-					label.modulate = Color(0.6, 0.3, 0.3)
+					label.modulate = ThemeColors.DANGER
 			vbox.add_child(label)
 	else:
 		# Show equipment slots (dynamic based on armor)
@@ -304,11 +304,11 @@ func _refresh_display() -> void:
 			label.text = "%-8s %s" % [slot_name, item_display]
 			if i == _selected_slot:
 				label.text = "> " + label.text
-				label.modulate = Color(1, 0.8, 0)
+				label.modulate = ThemeColors.TEXT_HIGHLIGHT
 			else:
 				label.text = "  " + label.text
 				if equipped.is_empty():
-					label.modulate = Color(0.333, 0.333, 0.333)
+					label.modulate = ThemeColors.TEXT_SECONDARY
 
 			vbox.add_child(label)
 
@@ -425,7 +425,7 @@ func _refresh_stats() -> void:
 
 	var stat_header := Label.new()
 	stat_header.text = "── Stats ──"
-	stat_header.modulate = Color(0, 0.733, 0.8)
+	stat_header.modulate = ThemeColors.HEADER
 	vbox.add_child(stat_header)
 
 	var name_label := Label.new()
@@ -434,7 +434,7 @@ func _refresh_stats() -> void:
 		str(character.get("class_id", "???")),
 		level
 	]
-	name_label.modulate = Color(1, 0.8, 0)
+	name_label.modulate = ThemeColors.TEXT_HIGHLIGHT
 	vbox.add_child(name_label)
 
 	var sep := Label.new()
@@ -457,10 +457,10 @@ func _refresh_stats() -> void:
 			var diff: int = preview_val - effective
 			if diff > 0:
 				stat_label.text = "  %-4s %d → %d (+%d)" % [display_names[i], effective, preview_val, diff]
-				stat_label.modulate = Color(0.2, 1.0, 0.2)
+				stat_label.modulate = ThemeColors.STAT_POSITIVE
 			elif diff < 0:
 				stat_label.text = "  %-4s %d → %d (%d)" % [display_names[i], effective, preview_val, diff]
-				stat_label.modulate = Color(1.0, 0.3, 0.3)
+				stat_label.modulate = ThemeColors.STAT_NEGATIVE
 			else:
 				stat_label.text = "  %-4s %d" % [display_names[i], effective]
 		else:
