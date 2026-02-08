@@ -285,7 +285,7 @@ func _build_preview_viewport() -> SubViewportContainer:
 
 	# Camera looking at model
 	var camera := Camera3D.new()
-	camera.position = Vector3(0, 0.15, 2.2)
+	camera.position = Vector3(0, 0.0, 2.2)
 	camera.rotation_degrees = Vector3(-3, 0, 0)
 	camera.fov = 30
 	_preview_viewport.add_child(camera)
@@ -342,7 +342,7 @@ func _update_preview_model() -> void:
 
 	_preview_model = packed.instantiate() as Node3D
 	_preview_model.scale = Vector3(0.6, 0.6, 0.6)
-	_preview_model.position.y = -0.45
+	_preview_model.position.y = -0.7
 	_preview_pivot.add_child(_preview_model)
 
 	# Apply texture
