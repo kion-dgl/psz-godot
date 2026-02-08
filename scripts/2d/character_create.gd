@@ -64,7 +64,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		Step.APPEARANCE:
 			_handle_appearance_input(event)
 		Step.NAME_ENTRY:
-			pass  # LineEdit handles its own input
+			_handle_name_entry_input(event)
 		Step.CONFIRM:
 			_handle_confirm_input(event)
 
@@ -452,9 +452,15 @@ func _update_appearance() -> void:
 
 # ── Name Entry ───────────────────────────────────────────────────
 
+func _handle_name_entry_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_show_appearance()
+		get_viewport().set_input_as_handled()
+
+
 func _show_name_entry() -> void:
 	_step = Step.NAME_ENTRY
-	hint_label.text = "Type a name (max 16 characters) and press ENTER"
+	hint_label.text = "[ENTER] Confirm  [ESC] Back to Appearance"
 
 	for child in content_panel.get_children():
 		child.queue_free()
@@ -475,6 +481,7 @@ func _show_name_entry() -> void:
 	line_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	line_edit.custom_minimum_size = Vector2(300, 40)
 	line_edit.text_submitted.connect(_on_name_submitted)
+	line_edit.gui_input.connect(_on_name_gui_input)
 	vbox.add_child(line_edit)
 
 	content_panel.add_child(vbox)
@@ -482,6 +489,12 @@ func _show_name_entry() -> void:
 	# Focus the line edit
 	await get_tree().process_frame
 	line_edit.grab_focus()
+
+
+func _on_name_gui_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		_show_appearance()
+		get_viewport().set_input_as_handled()
 
 
 func _on_name_submitted(text: String) -> void:
