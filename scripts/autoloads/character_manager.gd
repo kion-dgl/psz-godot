@@ -21,7 +21,7 @@ func _ready() -> void:
 
 
 ## Create a new character in the given slot
-func create_character(slot: int, class_id: String, char_name: String) -> Dictionary:
+func create_character(slot: int, class_id: String, char_name: String, appearance: Dictionary = {}) -> Dictionary:
 	if slot < 0 or slot >= MAX_SLOTS:
 		push_warning("[CharacterManager] Invalid slot: ", slot)
 		return {}
@@ -55,6 +55,12 @@ func create_character(slot: int, class_id: String, char_name: String) -> Diction
 		"pp": stats.get("pp", 50),
 		"max_pp": stats.get("pp", 50),
 		"materials_used": 0,
+		"appearance": {
+			"variation_index": int(appearance.get("variation_index", 0)),
+			"body_color_index": int(appearance.get("body_color_index", 0)),
+			"hair_color_index": int(appearance.get("hair_color_index", 0)),
+			"skin_tone_index": int(appearance.get("skin_tone_index", 0)),
+		},
 		"equipment": {
 			"weapon": starter_weapon,
 			"frame": "normal_frame",
