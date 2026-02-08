@@ -98,12 +98,12 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		_appearance_row = wrapi(_appearance_row + 1, 0, 4)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left"):
+	elif event.is_action_pressed("ui_left") and not Input.is_action_pressed("dodge"):
 		_cycle_appearance_value(-1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right"):
+	elif event.is_action_pressed("ui_right") and not Input.is_action_pressed("dodge"):
 		_cycle_appearance_value(1)
 		_update_appearance()
 		_update_preview_model()
@@ -258,7 +258,12 @@ func _update_class_info() -> void:
 
 func _process(delta: float) -> void:
 	if _preview_active and _preview_pivot:
-		_preview_pivot.rotate_y(delta * 0.8)
+		# Space + Left/Right to rotate the preview model
+		if Input.is_action_pressed("dodge"):  # Space bar
+			if Input.is_action_pressed("ui_left"):
+				_preview_pivot.rotate_y(delta * 3.0)
+			elif Input.is_action_pressed("ui_right"):
+				_preview_pivot.rotate_y(-delta * 3.0)
 
 
 func _build_preview_viewport() -> SubViewportContainer:
@@ -275,11 +280,11 @@ func _build_preview_viewport() -> SubViewportContainer:
 	_preview_viewport.msaa_3d = Viewport.MSAA_2X
 	container.add_child(_preview_viewport)
 
-	# Camera looking at model
+	# Camera looking at model — pulled back to show full body
 	var camera := Camera3D.new()
-	camera.position = Vector3(0, 0.8, 2.2)
-	camera.rotation_degrees = Vector3(-5, 0, 0)
-	camera.fov = 35
+	camera.position = Vector3(0, 0.7, 3.0)
+	camera.rotation_degrees = Vector3(-3, 0, 0)
+	camera.fov = 30
 	_preview_viewport.add_child(camera)
 
 	# Lighting
@@ -379,7 +384,7 @@ func _teardown_preview() -> void:
 
 func _show_appearance() -> void:
 	_step = Step.APPEARANCE
-	hint_label.text = "[↑/↓] Row  [←/→] Change  [ENTER] Next  [ESC] Back"
+	hint_label.text = "[↑/↓] Row  [←/→] Change  [SPACE+←/→] Rotate  [ENTER] Next  [ESC] Back"
 
 	# Build the 3D preview in the info panel
 	for child in info_panel.get_children():
