@@ -2,9 +2,8 @@ extends Control
 ## City hub — main navigation menu with character info sidebar.
 
 const BASE_MENU_ITEMS := [
-	"Item Shop",
+	"Shop",
 	"Weapon Shop",
-	"Tech Shop",
 	"Tekker",
 	"Storage",
 	"Guild Counter",
@@ -79,12 +78,10 @@ func _on_menu_selected(index: int) -> void:
 		"Resume Session":
 			SessionManager.resume_session()
 			SceneManager.goto_scene("res://scenes/2d/field.tscn")
-		"Item Shop":
+		"Shop":
 			SceneManager.push_scene("res://scenes/2d/shops/item_shop.tscn")
 		"Weapon Shop":
 			SceneManager.push_scene("res://scenes/2d/shops/weapon_shop.tscn")
-		"Tech Shop":
-			SceneManager.push_scene("res://scenes/2d/shops/tech_shop.tscn")
 		"Tekker":
 			SceneManager.push_scene("res://scenes/2d/shops/tekker.tscn")
 		"Storage":

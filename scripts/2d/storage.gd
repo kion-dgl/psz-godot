@@ -3,17 +3,17 @@ extends Control
 
 const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable", "Material", "Modifier", "Key Item", "Other"]
 
-enum Mode { ITEMS, MESETA }
+enum Tab { ITEMS, MESETA }
 
-var _mode: int = Mode.ITEMS
-var _selected_side: int = 0  # 0 = inventory, 1 = storage
+var _tab: int = Tab.ITEMS
+var _selected_side: int = 0  # 0 = inventory, 1 = storage (items tab)
 var _selected_index: int = 0
+var _meseta_action: int = 0  # 0 = deposit, 1 = withdraw (meseta tab)
 var _inventory_items: Array = []
 var _storage_items: Array = []
-var _inv_labels: Array = []
-var _sto_labels: Array = []
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
 @onready var inventory_panel: PanelContainer = $Panel/VBox/HBox/InventoryPanel
 @onready var storage_panel: PanelContainer = $Panel/VBox/HBox/StoragePanel
 @onready var hint_label: Label = $Panel/VBox/HintLabel
@@ -21,16 +21,8 @@ var _sto_labels: Array = []
 
 func _ready() -> void:
 	title_label.text = "STORAGE"
-	_update_hint()
 	_load_items()
 	_refresh_display()
-
-
-func _update_hint() -> void:
-	if _mode == Mode.ITEMS:
-		hint_label.text = "[←/→] Switch  [↑/↓] Select  [ENTER] Move  [M] Meseta  [ESC] Back"
-	else:
-		hint_label.text = "[←] Deposit  [→] Withdraw  [M] Items  [ESC] Back"
 
 
 func _load_items() -> void:
@@ -56,27 +48,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_M:
-		_mode = Mode.MESETA if _mode == Mode.ITEMS else Mode.ITEMS
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		_tab = Tab.MESETA if _tab == Tab.ITEMS else Tab.ITEMS
 		_selected_index = 0
-		_update_hint()
+		_meseta_action = 0
 		_refresh_display()
 		get_viewport().set_input_as_handled()
-	elif _mode == Mode.MESETA:
-		_handle_meseta_input(event)
-	else:
+	elif _tab == Tab.ITEMS:
 		_handle_items_input(event)
+	else:
+		_handle_meseta_input(event)
 
 
 func _handle_items_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_left"):
-		_selected_side = 0
-		_selected_index = clampi(_selected_index, 0, maxi(_inventory_items.size() - 1, 0))
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right"):
-		_selected_side = 1
-		_selected_index = clampi(_selected_index, 0, maxi(_storage_items.size() - 1, 0))
+	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
+		# Switch between inventory and storage panels
+		_selected_side = 1 - _selected_side
+		_selected_index = clampi(_selected_index, 0, maxi(_get_current_list_size() - 1, 0))
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
@@ -95,12 +83,22 @@ func _handle_items_input(event: InputEvent) -> void:
 
 
 func _handle_meseta_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
+		_meseta_action = 1 - _meseta_action
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_do_meseta_transfer()
+		get_viewport().set_input_as_handled()
+
+
+func _do_meseta_transfer() -> void:
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 	var amount := 100
-	if event.is_action_pressed("ui_left"):
-		# Deposit meseta
+	if _meseta_action == 0:
+		# Deposit
 		var char_meseta: int = int(character.get("meseta", 0))
 		var deposit: int = mini(amount, char_meseta)
 		if deposit > 0:
@@ -110,10 +108,8 @@ func _handle_meseta_input(event: InputEvent) -> void:
 			hint_label.text = "Deposited %d M (Bank: %d M)" % [deposit, GameState.stored_meseta]
 		else:
 			hint_label.text = "No meseta to deposit!"
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right"):
-		# Withdraw meseta
+	else:
+		# Withdraw
 		var withdraw: int = mini(amount, GameState.stored_meseta)
 		if withdraw > 0:
 			GameState.stored_meseta -= withdraw
@@ -122,8 +118,7 @@ func _handle_meseta_input(event: InputEvent) -> void:
 			hint_label.text = "Withdrew %d M (Bank: %d M)" % [withdraw, GameState.stored_meseta]
 		else:
 			hint_label.text = "No meseta in storage!"
-		_refresh_display()
-		get_viewport().set_input_as_handled()
+	_refresh_display()
 
 
 func _get_current_list_size() -> int:
@@ -140,7 +135,6 @@ func _move_item() -> void:
 			return
 		var item: Dictionary = _inventory_items[_selected_index]
 		var item_id: String = str(item.get("id", ""))
-		# Add to shared storage (merge if stackable and already stored)
 		var found := false
 		for s_item in GameState.shared_storage:
 			if str(s_item.get("id", "")) == item_id and not Inventory._is_per_slot(item_id):
@@ -161,7 +155,6 @@ func _move_item() -> void:
 			hint_label.text = "Inventory full!"
 			return
 		Inventory.add_item(item_id, 1)
-		# Reduce from shared storage
 		for s_item in GameState.shared_storage:
 			if str(s_item.get("id", "")) == item_id:
 				s_item["quantity"] = int(s_item.get("quantity", 0)) - 1
@@ -176,11 +169,19 @@ func _move_item() -> void:
 
 
 func _refresh_display() -> void:
-	_refresh_panel(inventory_panel, _inventory_items, "INVENTORY (%d/40)" % Inventory.get_total_slots(), 0)
-	_refresh_panel(storage_panel, _storage_items, "STORAGE (%d)" % _storage_items.size(), 1)
+	# Mode bar
+	if _tab == Tab.ITEMS:
+		mode_label.text = "[◄ STORE ITEMS ►]    STORE MESETA"
+		hint_label.text = "[←/→] Switch Tab  [TAB] Switch Panel  [↑/↓] Select  [ENTER] Move  [ESC] Back"
+	else:
+		mode_label.text = "   STORE ITEMS    [◄ STORE MESETA ►]"
+		hint_label.text = "[←/→] Switch Tab  [↑/↓] Select  [ENTER] Transfer 100M  [ESC] Back"
+
+	_refresh_items_panel(inventory_panel, _inventory_items, "INVENTORY (%d/40)" % Inventory.get_total_slots(), 0)
+	_refresh_items_panel(storage_panel, _storage_items, "STORAGE (%d)" % _storage_items.size(), 1)
 
 
-func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, side: int) -> void:
+func _refresh_items_panel(panel: PanelContainer, items: Array, header_text: String, side: int) -> void:
 	for child in panel.get_children():
 		child.queue_free()
 
@@ -195,7 +196,7 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 
 	# Header
 	var header := Label.new()
-	if _mode == Mode.MESETA:
+	if _tab == Tab.MESETA:
 		var character = CharacterManager.get_active_character()
 		if side == 0:
 			var char_meseta: int = int(character.get("meseta", 0)) if character else 0
@@ -211,21 +212,30 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 			header.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(header)
 
-	if _mode == Mode.MESETA:
-		var info := Label.new()
+	if _tab == Tab.MESETA:
+		# Meseta mode: show deposit/withdraw options
 		if side == 0:
-			info.text = "\n  [←] Deposit 100 M"
+			var dep_label := Label.new()
+			if _meseta_action == 0:
+				dep_label.text = "> Deposit 100 M"
+				dep_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+			else:
+				dep_label.text = "  Deposit 100 M"
+			vbox.add_child(dep_label)
 		else:
-			info.text = "\n  [→] Withdraw 100 M"
-		info.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-		vbox.add_child(info)
+			var wit_label := Label.new()
+			if _meseta_action == 1:
+				wit_label.text = "> Withdraw 100 M"
+				wit_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+			else:
+				wit_label.text = "  Withdraw 100 M"
+			vbox.add_child(wit_label)
 	elif items.is_empty():
 		var empty := Label.new()
 		empty.text = "  (Empty)"
 		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		vbox.add_child(empty)
 	else:
-		# Get character info for equip checks
 		var character = CharacterManager.get_active_character()
 		var class_type_race := ""
 		var char_level := 0
@@ -248,7 +258,6 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 			var norm_id: String = item_id.replace("-", "_").replace("/", "_")
 			var is_unresolved: bool = (item_id != norm_id)
 
-			# Category header
 			var cat: String = _get_item_category(item_id)
 			if cat != current_category:
 				current_category = cat
@@ -257,7 +266,6 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 				cat_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 				vbox.add_child(cat_label)
 
-			# Resolve weapon/armor data
 			var weapon = WeaponRegistry.get_weapon(item_id)
 			if weapon == null and is_unresolved:
 				weapon = WeaponRegistry.get_weapon(norm_id)
@@ -275,14 +283,12 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 			var qty: int = int(item.get("quantity", 1))
 			var equip_tag: String = " [E]" if item_id in equipped_ids else ""
 
-			# Add grind level for weapons
 			var grind_tag := ""
 			if weapon and character:
 				var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0))
 				if grind > 0:
 					grind_tag = " +%d" % grind
 
-			# Stars and type for weapons/armor
 			var suffix := ""
 			if weapon:
 				suffix = "%s %s [%s]" % [grind_tag, weapon.get_rarity_string(), weapon.get_weapon_type_name()]
@@ -317,8 +323,7 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 	scroll.add_child(vbox)
 	panel.add_child(scroll)
 
-	# Scroll to selected
-	if _selected_side == side and _selected_index >= 0 and _selected_index < labels_ref.size():
+	if _tab == Tab.ITEMS and _selected_side == side and _selected_index >= 0 and _selected_index < labels_ref.size():
 		scroll.ensure_control_visible.call_deferred(labels_ref[_selected_index])
 
 

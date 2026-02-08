@@ -78,7 +78,7 @@ func _ready() -> void:
 		"ShopNPC", Vector3(-10.34, 0, 27.67), PI,
 		"res://assets/npcs/np_003_00_0/np_003_00_0.glb",
 		"Shop",
-		"res://scenes/3d/city/services_menu.tscn"
+		"res://scenes/2d/shops/item_shop.tscn"
 	)
 	_add_npc(
 		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), PI,
