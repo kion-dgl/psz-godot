@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project
+        run: godot --headless --path . --import --quit || true
+
+      - name: Export Web build
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --export-release "Web" build/web/index.html
+
+      - name: Export Linux x86_64 build
+        run: |
+          mkdir -p build/linux
+          godot --headless --path . --export-release "Linux x86_64" build/linux/psz-godot.x86_64
+
+      - name: Export Windows x86_64 build
+        run: |
+          mkdir -p build/windows
+          godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
+
+      - name: Package builds
+        run: |
+          cd build/web && zip -r ../../psz-godot-web.zip . && cd ../..
+          cd build/linux && zip -r ../../psz-godot-linux-x86_64.zip . && cd ../..
+          cd build/windows && zip -r ../../psz-godot-windows-x86_64.zip . && cd ../..
+
+      - name: Create release tag
+        id: tag
+        run: echo "tag=build-$(date -u +%Y%m%d-%H%M%S)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Build ${{ steps.tag.outputs.tag }}
+          files: |
+            psz-godot-web.zip
+            psz-godot-linux-x86_64.zip
+            psz-godot-windows-x86_64.zip
+          generate_release_notes: true
