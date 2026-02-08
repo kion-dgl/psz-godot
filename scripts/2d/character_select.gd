@@ -71,9 +71,9 @@ func _refresh_slots() -> void:
 		var hbox := HBoxContainer.new()
 		hbox.add_theme_constant_override("separation", 12)
 
-		# 3D preview on the left
+		# 3D preview on the left (skip on web — SubViewport 3D causes WebGL issues)
 		var character = CharacterManager.get_character(i)
-		if character != null:
+		if character != null and not OS.has_feature("web"):
 			var preview := _build_slot_preview(character)
 			hbox.add_child(preview)
 
