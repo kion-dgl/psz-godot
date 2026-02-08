@@ -1,6 +1,7 @@
 extends Node
 ## Autoload that provides access to all ConsumableData resources by ID.
 
+const _RU = preload("res://scripts/utils/resource_utils.gd")
 const CONSUMABLES_PATH = "res://data/consumables/"
 
 var _consumables: Dictionary = {}
@@ -14,20 +15,10 @@ func _ready() -> void:
 
 func _load_all() -> void:
 	_consumables.clear()
-	var dir = DirAccess.open(CONSUMABLES_PATH)
-	if dir == null:
-		push_warning("[ConsumableRegistry] Could not open directory: ", CONSUMABLES_PATH)
-		consumables_loaded.emit()
-		return
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var res = load(CONSUMABLES_PATH + file_name)
-			if res and not res.id.is_empty():
-				_consumables[res.id] = res
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	for path in _RU.list_resources(CONSUMABLES_PATH):
+		var res = load(path)
+		if res and not res.id.is_empty():
+			_consumables[res.id] = res
 	print("[ConsumableRegistry] Loaded ", _consumables.size(), " consumables")
 	consumables_loaded.emit()
 

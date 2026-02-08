@@ -2,6 +2,8 @@ extends Node
 ## MagManager — handles mag feeding, leveling, and evolution.
 ## Ported from psz-sketch/src/systems/mag-feeder + mag-evolutions
 
+const _RU = preload("res://scripts/utils/resource_utils.gd")
+
 signal mag_fed(item_id: String, stat_changes: Dictionary)
 signal mag_leveled_up(new_level: int)
 signal mag_evolved(old_form: String, new_form: String)
@@ -34,20 +36,10 @@ func _ready() -> void:
 
 
 func _load_mag_forms() -> void:
-	var dir := DirAccess.open("res://data/mags/")
-	if dir == null:
-		push_warning("[MagManager] Could not open data/mags/")
-		return
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while not file_name.is_empty():
-		if file_name.ends_with(".tres"):
-			var path := "res://data/mags/%s" % file_name
-			var mag_data = load(path)
-			if mag_data:
-				_mag_forms[mag_data.id] = mag_data
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	for path in _RU.list_resources("res://data/mags/"):
+		var mag_data = load(path)
+		if mag_data:
+			_mag_forms[mag_data.id] = mag_data
 	print("[MagManager] Loaded %d mag forms" % _mag_forms.size())
 
 
