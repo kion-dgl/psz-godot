@@ -36,8 +36,8 @@ const ANIMATION_MAP: Dictionary = {
 	"pmsa_tec": "tec",
 }
 
-# Asset paths
-const TEXTURE_PATH := "res://assets/player/pc_000/textures/pc_000_000.png"
+# Default asset paths (fallback when no character data)
+const DEFAULT_TEXTURE_PATH := "res://assets/player/pc_000/textures/pc_000_000.png"
 
 # Node references
 @onready var model: Node3D = $PlayerModel
@@ -98,8 +98,8 @@ func _ready() -> void:
 	# Store spawn position for respawn
 	spawn_position = global_position
 
-	# Apply texture to player model
-	_apply_player_texture()
+	# Load character model/texture based on active character appearance
+	_load_character_model()
 
 	# Set up animations
 	_setup_animations()
@@ -229,14 +229,62 @@ func _find_node_of_type(root: Node, type_name: String) -> Node:
 	return null
 
 
-func _apply_player_texture() -> void:
-	# Load texture
-	var texture := load(TEXTURE_PATH) as Texture2D
-	if not texture:
-		push_warning("Failed to load player texture: " + TEXTURE_PATH)
+func _load_character_model() -> void:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		# No active character — use default texture on existing model
+		_apply_player_texture_from_path(DEFAULT_TEXTURE_PATH)
 		return
 
-	# Apply texture to existing materials (preserves normals and mesh properties)
+	var paths: Dictionary = PlayerConfig.get_paths_for_character(character)
+	var model_path: String = paths["model_path"]
+	var texture_path: String = paths["texture_path"]
+
+	# Swap model if different from default pc_000
+	if ResourceLoader.exists(model_path):
+		_swap_model(model_path)
+	else:
+		push_warning("[Player] Model not found: %s, using default" % model_path)
+
+	# Apply texture
+	if ResourceLoader.exists(texture_path):
+		_apply_player_texture_from_path(texture_path)
+	else:
+		# Fallback: try default texture for this variation
+		var variation: String = PlayerConfig.get_variation(
+			character.get("class_id", "humar"),
+			int(character.get("appearance", {}).get("variation_index", 0)))
+		var fallback := "res://assets/player/%s/textures/%s_000.png" % [variation, variation]
+		if ResourceLoader.exists(fallback):
+			_apply_player_texture_from_path(fallback)
+		else:
+			_apply_player_texture_from_path(DEFAULT_TEXTURE_PATH)
+
+
+func _swap_model(model_path: String) -> void:
+	var model_node := $PlayerModel/Model
+	if model_node:
+		model_node.get_parent().remove_child(model_node)
+		model_node.free()
+
+	var packed: PackedScene = load(model_path) as PackedScene
+	if packed == null:
+		push_warning("[Player] Failed to load model: " + model_path)
+		return
+
+	var new_model := packed.instantiate() as Node3D
+	new_model.name = "Model"
+	$PlayerModel.add_child(new_model)
+	# Move Model before Animations to maintain child order
+	$PlayerModel.move_child(new_model, 0)
+	print("[Player] Loaded model: %s" % model_path)
+
+
+func _apply_player_texture_from_path(texture_path: String) -> void:
+	var texture := load(texture_path) as Texture2D
+	if not texture:
+		push_warning("[Player] Failed to load texture: " + texture_path)
+		return
 	_apply_texture_to_materials(model, texture)
 
 

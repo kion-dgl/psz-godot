@@ -1,7 +1,7 @@
 extends Control
-## Character creation screen — class selection, name entry, confirmation.
+## Character creation screen — class selection, appearance, name entry, confirmation.
 
-enum Step { CLASS_SELECT, NAME_ENTRY, CONFIRM }
+enum Step { CLASS_SELECT, APPEARANCE, NAME_ENTRY, CONFIRM }
 
 var _step: int = Step.CLASS_SELECT
 var _slot: int = 0
@@ -9,6 +9,15 @@ var _class_list: Array = []
 var _selected_class_index: int = 0
 var _selected_class_id: String = ""
 var _char_name: String = ""
+
+# Appearance selection state
+var _appearance_row: int = 0  # 0=head, 1=body color, 2=hair color, 3=skin tone
+var _appearance := {
+	"variation_index": 0,
+	"body_color_index": 0,
+	"hair_color_index": 0,
+	"skin_tone_index": 0,
+}
 
 @onready var title_label: Label = $VBox/TitleLabel
 @onready var content_panel: PanelContainer = $VBox/HBox/ContentPanel
@@ -46,6 +55,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	match _step:
 		Step.CLASS_SELECT:
 			_handle_class_select_input(event)
+		Step.APPEARANCE:
+			_handle_appearance_input(event)
 		Step.NAME_ENTRY:
 			pass  # LineEdit handles its own input
 		Step.CONFIRM:
@@ -63,11 +74,54 @@ func _handle_class_select_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		_selected_class_id = _class_list[_selected_class_index].id
-		_show_name_entry()
+		_appearance = {"variation_index": 0, "body_color_index": 0, "hair_color_index": 0, "skin_tone_index": 0}
+		_appearance_row = 0
+		_show_appearance()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		SceneManager.goto_scene("res://scenes/2d/character_select.tscn")
 		get_viewport().set_input_as_handled()
+
+
+func _handle_appearance_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_up"):
+		_appearance_row = wrapi(_appearance_row - 1, 0, 4)
+		_update_appearance()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_down"):
+		_appearance_row = wrapi(_appearance_row + 1, 0, 4)
+		_update_appearance()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_left"):
+		_cycle_appearance_value(-1)
+		_update_appearance()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_right"):
+		_cycle_appearance_value(1)
+		_update_appearance()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_show_name_entry()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		_show_class_select()
+		get_viewport().set_input_as_handled()
+
+
+func _cycle_appearance_value(direction: int) -> void:
+	match _appearance_row:
+		0:  # Head type
+			_appearance["variation_index"] = wrapi(
+				int(_appearance["variation_index"]) + direction, 0, PlayerConfig.HEAD_VARIATIONS)
+		1:  # Body color
+			_appearance["body_color_index"] = wrapi(
+				int(_appearance["body_color_index"]) + direction, 0, PlayerConfig.BODY_COLORS.size())
+		2:  # Hair color
+			_appearance["hair_color_index"] = wrapi(
+				int(_appearance["hair_color_index"]) + direction, 0, PlayerConfig.HAIR_COLORS.size())
+		3:  # Skin tone
+			_appearance["skin_tone_index"] = wrapi(
+				int(_appearance["skin_tone_index"]) + direction, 0, PlayerConfig.SKIN_TONES.size())
 
 
 func _handle_confirm_input(event: InputEvent) -> void:
@@ -189,6 +243,67 @@ func _update_class_info() -> void:
 	info_panel.add_child(vbox)
 
 
+# ── Appearance Step ──────────────────────────────────────────────
+
+func _show_appearance() -> void:
+	_step = Step.APPEARANCE
+	hint_label.text = "[↑/↓] Row  [←/→] Change  [ENTER] Next  [ESC] Back"
+	_update_appearance()
+
+
+func _update_appearance() -> void:
+	for child in content_panel.get_children():
+		child.queue_free()
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+
+	var header := Label.new()
+	header.text = "\nCustomize Appearance"
+	header.add_theme_color_override("font_color", ThemeColors.HEADER)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(header)
+
+	var spacer := Label.new()
+	spacer.text = ""
+	vbox.add_child(spacer)
+
+	# Row data: [label, current_value_text]
+	var rows := [
+		["Head Type", "Type %d" % (int(_appearance["variation_index"]) + 1)],
+		["Body Color", PlayerConfig.BODY_COLORS[int(_appearance["body_color_index"])]],
+		["Hair Color", PlayerConfig.HAIR_COLORS[int(_appearance["hair_color_index"])]],
+		["Skin Tone", PlayerConfig.SKIN_TONES[int(_appearance["skin_tone_index"])]],
+	]
+
+	for i in range(rows.size()):
+		var row_label := Label.new()
+		var is_selected := (i == _appearance_row)
+		if is_selected:
+			row_label.text = "  %-14s < %s >" % [rows[i][0] + ":", rows[i][1]]
+			row_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+		else:
+			row_label.text = "  %-14s   %s  " % [rows[i][0] + ":", rows[i][1]]
+		vbox.add_child(row_label)
+
+	# Show variation ID preview
+	var preview_spacer := Label.new()
+	preview_spacer.text = ""
+	vbox.add_child(preview_spacer)
+	var preview := Label.new()
+	var variation: String = PlayerConfig.get_variation(_selected_class_id, int(_appearance["variation_index"]))
+	preview.text = "  Model: %s" % variation
+	preview.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
+	vbox.add_child(preview)
+
+	content_panel.add_child(vbox)
+
+	# Keep the class info panel showing
+	_update_class_info()
+
+
+# ── Name Entry ───────────────────────────────────────────────────
+
 func _show_name_entry() -> void:
 	_step = Step.NAME_ENTRY
 	hint_label.text = "Type a name (max 16 characters) and press ENTER"
@@ -260,11 +375,24 @@ func _show_confirm() -> void:
 	type_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(type_label)
 
+	# Appearance summary
+	var appear_label := Label.new()
+	var variation: String = PlayerConfig.get_variation(_selected_class_id, int(_appearance["variation_index"]))
+	appear_label.text = "  Look:  %s  %s / %s / %s" % [
+		variation,
+		PlayerConfig.BODY_COLORS[int(_appearance["body_color_index"])],
+		PlayerConfig.HAIR_COLORS[int(_appearance["hair_color_index"])],
+		PlayerConfig.SKIN_TONES[int(_appearance["skin_tone_index"])],
+	]
+	appear_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
+	vbox.add_child(appear_label)
+
 	content_panel.add_child(vbox)
 
 
 func _create_character() -> void:
-	var character: Dictionary = CharacterManager.create_character(_slot, _selected_class_id, _char_name)
+	var character: Dictionary = CharacterManager.create_character(
+		_slot, _selected_class_id, _char_name, _appearance)
 	if character.is_empty():
 		push_warning("[CharCreate] Failed to create character")
 		return
