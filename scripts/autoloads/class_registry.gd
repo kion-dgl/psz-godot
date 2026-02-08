@@ -1,6 +1,7 @@
 extends Node
 ## Autoload that provides access to all ClassData resources by ID.
 
+const _RU = preload("res://scripts/utils/resource_utils.gd")
 const CLASSES_PATH = "res://data/classes/"
 
 var _classes: Dictionary = {}
@@ -14,22 +15,12 @@ func _ready() -> void:
 
 func _load_all_classes() -> void:
 	_classes.clear()
-	var dir = DirAccess.open(CLASSES_PATH)
-	if dir == null:
-		push_warning("[ClassRegistry] Could not open classes directory: ", CLASSES_PATH)
-		classes_loaded.emit()
-		return
-
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var full_path = CLASSES_PATH + file_name
-			var class_res = load(full_path)
-			if class_res and not class_res.id.is_empty():
-				_classes[class_res.id] = class_res
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	for path in _RU.list_resources(CLASSES_PATH):
+		var class_res = load(path)
+		if class_res and not class_res.id.is_empty():
+			_classes[class_res.id] = class_res
+	if _classes.is_empty():
+		push_warning("[ClassRegistry] Could not load any classes from: ", CLASSES_PATH)
 	print("[ClassRegistry] Loaded ", _classes.size(), " classes")
 	classes_loaded.emit()
 
