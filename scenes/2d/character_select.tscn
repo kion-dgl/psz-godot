@@ -33,7 +33,7 @@ offset_right = -20.0
 offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 12
 
 [node name="TitleLabel" type="Label" parent="VBox"]
 layout_mode = 2
@@ -41,19 +41,12 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 20)
-size_flags_vertical = 3
-
-[node name="SlotsContainer" type="HBoxContainer" parent="VBox"]
-layout_mode = 2
-theme_override_constants/separation = 16
-alignment = 1
-
-[node name="Spacer2" type="Control" parent="VBox"]
+[node name="SlotsGrid" type="GridContainer" parent="VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 2
 
 [node name="HintLabel" type="Label" parent="VBox"]
 layout_mode = 2

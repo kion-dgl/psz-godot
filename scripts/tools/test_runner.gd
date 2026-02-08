@@ -38,6 +38,7 @@ func _ready() -> void:
 	test_tekker_identification()
 	test_additional_drops()
 	test_telepipe_suspend()
+	test_character_appearance()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -2026,4 +2027,80 @@ func test_telepipe_suspend() -> void:
 
 	# Clean up
 	SessionManager.return_to_city()
+	print("")
+
+
+# ── Character Appearance tests ─────────────────────────────────
+
+func test_character_appearance() -> void:
+	print("── Character Appearance ──")
+
+	# Reset state
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	Inventory.clear_inventory()
+
+	# --- PlayerConfig variation mapping ---
+	assert_eq(PlayerConfig.get_variation("humar", 0), "pc_000", "HUmar variation 0 = pc_000")
+	assert_eq(PlayerConfig.get_variation("humar", 3), "pc_003", "HUmar variation 3 = pc_003")
+	assert_eq(PlayerConfig.get_variation("ramarl", 2), "pc_032", "RAmarl variation 2 = pc_032")
+	assert_eq(PlayerConfig.get_variation("racaseal", 3), "pc_133", "RAcaseal variation 3 = pc_133")
+	assert_eq(PlayerConfig.get_variation("fonewearl", 1), "pc_091", "FOnewearl variation 1 = pc_091")
+
+	# All 14 classes have valid prefixes
+	for class_id in PlayerConfig.CLASS_PREFIX.keys():
+		var v: String = PlayerConfig.get_variation(class_id, 0)
+		assert_true(v.begins_with("pc_"), "Class %s has valid variation prefix" % class_id)
+
+	# --- Model path generation ---
+	var model_path: String = PlayerConfig.get_model_path("ramarl", 2)
+	assert_eq(model_path, "res://assets/player/pc_032/pc_032_000.glb", "RAmarl model path correct")
+
+	# --- Texture index calculation ---
+	# hair=0, skin=0, body=0 → skinTone=0 → idx=000
+	var tex0: String = PlayerConfig.get_texture_path("humar", 0, 0, 0, 0)
+	assert_true(tex0.ends_with("pc_000_000.png"), "Texture idx 000 (hair0 skin0 body0)")
+
+	# hair=1, skin=2, body=3 → skinTone=5 → idx = (5/3)*100 + (5%3)*10 + 3 = 100+20+3 = 123
+	var tex123: String = PlayerConfig.get_texture_path("humar", 0, 1, 2, 3)
+	assert_true(tex123.ends_with("pc_000_123.png"), "Texture idx 123 (hair1 skin2 body3)")
+
+	# hair=2, skin=2, body=4 → skinTone=8 → idx = (8/3)*100 + (8%3)*10 + 4 = 200+20+4 = 224
+	var tex224: String = PlayerConfig.get_texture_path("humar", 0, 2, 2, 4)
+	assert_true(tex224.ends_with("pc_000_224.png"), "Texture idx 224 (hair2 skin2 body4)")
+
+	# --- Full path generation via get_paths_for_character ---
+	var char_data := {
+		"class_id": "ramarl",
+		"appearance": {
+			"variation_index": 2,
+			"hair_color_index": 1,
+			"skin_tone_index": 2,
+			"body_color_index": 3,
+		}
+	}
+	var paths: Dictionary = PlayerConfig.get_paths_for_character(char_data)
+	assert_eq(paths["model_path"], "res://assets/player/pc_032/pc_032_000.glb", "Full model path via get_paths_for_character")
+	assert_true(str(paths["texture_path"]).ends_with("pc_032_123.png"), "Full texture path via get_paths_for_character")
+
+	# --- Appearance stored on character creation ---
+	var appearance := {"variation_index": 2, "body_color_index": 1, "hair_color_index": 1, "skin_tone_index": 2}
+	var result: Dictionary = CharacterManager.create_character(0, "ramarl", "AppearTest", appearance)
+	assert_true(not result.is_empty(), "Character created with appearance")
+	var stored: Dictionary = result.get("appearance", {})
+	assert_eq(int(stored.get("variation_index", -1)), 2, "Appearance variation_index stored")
+	assert_eq(int(stored.get("body_color_index", -1)), 1, "Appearance body_color_index stored")
+	assert_eq(int(stored.get("hair_color_index", -1)), 1, "Appearance hair_color_index stored")
+	assert_eq(int(stored.get("skin_tone_index", -1)), 2, "Appearance skin_tone_index stored")
+
+	# --- Backward compatibility (old save without appearance) ---
+	var old_char := {"class_id": "humar", "name": "OldChar"}
+	var old_paths: Dictionary = PlayerConfig.get_paths_for_character(old_char)
+	assert_eq(old_paths["model_path"], "res://assets/player/pc_000/pc_000_000.glb", "Old char defaults to pc_000 model")
+	assert_true(str(old_paths["texture_path"]).ends_with("pc_000_000.png"), "Old char defaults to 000 texture")
+
+	# Clean up
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	Inventory.clear_inventory()
 	print("")
