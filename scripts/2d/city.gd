@@ -31,22 +31,10 @@ func _ready() -> void:
 	title_label.text = "CITY"
 	hint_label.text = "[↑/↓] Navigate  [ENTER] Select  [ESC] Quick Save & Quit"
 
-	# Add text shadows for readability over 3D background
-	var title_settings := LabelSettings.new()
-	title_settings.font_color = ThemeColors.HEADER
-	title_settings.font_size = 18
-	title_settings.shadow_color = Color(0, 0, 0, 0.7)
-	title_settings.shadow_offset = Vector2(2, 2)
-	title_settings.shadow_size = 3
-	title_label.label_settings = title_settings
-
-	var hint_settings := LabelSettings.new()
-	hint_settings.font_color = ThemeColors.TEXT_SECONDARY
-	hint_settings.font_size = 14
-	hint_settings.shadow_color = Color(0, 0, 0, 0.7)
-	hint_settings.shadow_offset = Vector2(2, 2)
-	hint_settings.shadow_size = 3
-	hint_label.label_settings = hint_settings
+	title_label.add_theme_color_override("font_color", ThemeColors.HEADER_TEXT)
+	title_label.add_theme_font_size_override("font_size", 18)
+	hint_label.add_theme_color_override("font_color", ThemeColors.HINT_TEXT)
+	hint_label.add_theme_font_size_override("font_size", 14)
 
 	# Heal character to full on entering the city
 	var character = CharacterManager.get_active_character()
@@ -170,12 +158,7 @@ func _update_char_info() -> void:
 func _add_info_line(text: String, color: Color = ThemeColors.TEXT_PRIMARY) -> void:
 	var label := Label.new()
 	label.text = text
-	var settings := LabelSettings.new()
-	settings.font_color = color
-	settings.shadow_color = Color(0, 0, 0, 0.7)
-	settings.shadow_offset = Vector2(2, 2)
-	settings.shadow_size = 3
-	label.label_settings = settings
+	label.add_theme_color_override("font_color", color)
 	char_panel.add_child(label)
 
 

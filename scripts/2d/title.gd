@@ -14,14 +14,14 @@ func _ready() -> void:
 
 	# Add text shadows for readability over the background image
 	var prompt_settings := LabelSettings.new()
-	prompt_settings.font_color = ThemeColors.TEXT_PRIMARY
+	prompt_settings.font_color = ThemeColors.HEADER_TEXT
 	prompt_settings.shadow_color = Color(0, 0, 0, 0.8)
 	prompt_settings.shadow_offset = Vector2(2, 2)
 	prompt_settings.shadow_size = 3
 	prompt_label.label_settings = prompt_settings
 
 	var version_settings := LabelSettings.new()
-	version_settings.font_color = ThemeColors.TEXT_SECONDARY
+	version_settings.font_color = ThemeColors.HINT_TEXT
 	version_settings.shadow_color = Color(0, 0, 0, 0.8)
 	version_settings.shadow_offset = Vector2(2, 2)
 	version_settings.shadow_size = 3
@@ -34,7 +34,7 @@ func _process(delta: float) -> void:
 		_blink_timer = 0.0
 		_prompt_visible = not _prompt_visible
 		if prompt_label.label_settings:
-			prompt_label.label_settings.font_color = ThemeColors.TEXT_HIGHLIGHT if _prompt_visible else ThemeColors.TEXT_PRIMARY
+			prompt_label.label_settings.font_color = ThemeColors.TEXT_HIGHLIGHT if _prompt_visible else ThemeColors.HEADER_TEXT
 
 
 func _unhandled_input(event: InputEvent) -> void:

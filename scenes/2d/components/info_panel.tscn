@@ -4,12 +4,16 @@
 [ext_resource type="Script" path="res://scripts/2d/components/info_panel.gd" id="2_script"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
-bg_color = Color(0.04, 0.04, 0.04, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0, 1, 0.533, 1)
+bg_color = Color(0.878, 0.910, 0.941, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.753, 0.816, 0.878, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -25,11 +29,11 @@ layout_mode = 2
 
 [node name="TitleLabel" type="Label" parent="VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0.733, 0.8, 1)
+theme_override_colors/font_color = Color(0.165, 0.227, 0.353, 1)
 
 [node name="Separator" type="Label" parent="VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.333, 0.333, 0.333, 1)
+theme_override_colors/font_color = Color(0.690, 0.710, 0.740, 1)
 text = "────────────────────"
 
 [node name="BodyLabel" type="RichTextLabel" parent="VBox"]

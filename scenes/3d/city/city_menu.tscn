@@ -21,7 +21,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.4)
 
 [node name="CenterPanel" type="PanelContainer" parent="."]
 layout_mode = 1
@@ -43,7 +43,7 @@ theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="CenterPanel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.251, 0.627, 0.816, 1)
+theme_override_colors/font_color = Color(0.165, 0.227, 0.353, 1)
 theme_override_font_sizes/font_size = 18
 text = "MENU"
 horizontal_alignment = 1
@@ -56,7 +56,7 @@ script = ExtResource("3_menu")
 [node name="FeedbackLabel" type="Label" parent="CenterPanel/VBox"]
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.878, 0.910, 0.941, 1)
+theme_override_colors/font_color = Color(0.125, 0.125, 0.125, 1)
 horizontal_alignment = 1
 
 [node name="HintLabel" type="Label" parent="."]
@@ -68,6 +68,6 @@ anchor_bottom = 1.0
 offset_top = -30.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_colors/font_color = Color(0.502, 0.565, 0.659, 1)
+theme_override_colors/font_color = Color(0.816, 0.847, 0.878, 1)
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1

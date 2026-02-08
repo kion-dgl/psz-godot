@@ -108,7 +108,7 @@ func _refresh_display() -> void:
 	if list.is_empty():
 		var empty := Label.new()
 		empty.text = "  (No items)"
-		empty.modulate = ThemeColors.TEXT_SECONDARY
+		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		vbox.add_child(empty)
 	else:
 		for i in range(list.size()):
@@ -126,7 +126,7 @@ func _refresh_display() -> void:
 
 			if i == _selected_index:
 				label.text = "> " + label.text
-				label.modulate = ThemeColors.TEXT_HIGHLIGHT
+				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 			else:
 				label.text = "  " + label.text
 			vbox.add_child(label)
@@ -153,7 +153,7 @@ func _refresh_detail() -> void:
 		var item: Dictionary = list[_selected_index]
 		var name_label := Label.new()
 		name_label.text = "── %s ──" % str(item.get("item", "???"))
-		name_label.modulate = ThemeColors.HEADER
+		name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 		vbox.add_child(name_label)
 
 		var cat_label := Label.new()
@@ -162,7 +162,7 @@ func _refresh_detail() -> void:
 
 		var cost_label := Label.new()
 		cost_label.text = "Cost: %d %s" % [int(item.get("cost", 0)), str(item.get("currency", "Meseta"))]
-		cost_label.modulate = ThemeColors.TEXT_HIGHLIGHT
+		cost_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 		vbox.add_child(cost_label)
 
 		# Look up consumable details

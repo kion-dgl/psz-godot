@@ -185,7 +185,7 @@ func _refresh_display() -> void:
 	var character = CharacterManager.get_active_character()
 	var meseta_label := Label.new()
 	meseta_label.text = "Meseta: %d" % (int(character.get("meseta", 0)) if character else 0)
-	meseta_label.modulate = ThemeColors.TEXT_HIGHLIGHT
+	meseta_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(meseta_label)
 
 	if _mode == Mode.GRIND:
@@ -197,7 +197,7 @@ func _refresh_display() -> void:
 		if _grindable_weapons.is_empty():
 			var placeholder := Label.new()
 			placeholder.text = "(No grindable weapons in inventory)"
-			placeholder.modulate = ThemeColors.TEXT_SECONDARY
+			placeholder.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 			vbox.add_child(placeholder)
 		else:
 			for i in range(_grindable_weapons.size()):
@@ -209,11 +209,11 @@ func _refresh_display() -> void:
 				label.text = "%-18s +%d/%d  %d M  [%s]" % [w["name"], w["grind"], w["max_grind"], cost, grinder_id.replace("_", " ")]
 				if i == _selected_index:
 					label.text = "> " + label.text
-					label.modulate = ThemeColors.TEXT_HIGHLIGHT if has_grinder else ThemeColors.DANGER
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT if has_grinder else ThemeColors.DANGER)
 				else:
 					label.text = "  " + label.text
 					if not has_grinder:
-						label.modulate = ThemeColors.TEXT_SECONDARY
+						label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 				vbox.add_child(label)
 	else:
 		var desc := Label.new()
@@ -224,7 +224,7 @@ func _refresh_display() -> void:
 		if _unidentified_weapons.is_empty():
 			var placeholder := Label.new()
 			placeholder.text = "(No unidentified weapons)"
-			placeholder.modulate = ThemeColors.TEXT_SECONDARY
+			placeholder.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 			vbox.add_child(placeholder)
 		else:
 			for i in range(_unidentified_weapons.size()):
@@ -234,7 +234,7 @@ func _refresh_display() -> void:
 				label.text = "%-18s %s★  %d M" % [w["name"], str(w["rarity"]), cost]
 				if i == _selected_index:
 					label.text = "> " + label.text
-					label.modulate = ThemeColors.TEXT_HIGHLIGHT
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 				else:
 					label.text = "  " + label.text
 				vbox.add_child(label)

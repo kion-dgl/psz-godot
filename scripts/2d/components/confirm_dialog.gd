@@ -53,11 +53,13 @@ func _update_display() -> void:
 	var no_label := Label.new()
 	if _selected == 0:
 		yes_label.text = "> Yes"
-		yes_label.modulate = ThemeColors.TEXT_HIGHLIGHT
+		yes_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 		no_label.text = "  No"
+		no_label.add_theme_color_override("font_color", ThemeColors.TEXT_PRIMARY)
 	else:
 		yes_label.text = "  Yes"
+		yes_label.add_theme_color_override("font_color", ThemeColors.TEXT_PRIMARY)
 		no_label.text = "> No"
-		no_label.modulate = ThemeColors.TEXT_HIGHLIGHT
+		no_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	menu.add_child(yes_label)
 	menu.add_child(no_label)

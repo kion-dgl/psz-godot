@@ -202,13 +202,13 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 			header.text = "── WALLET: %d M ──" % char_meseta
 		else:
 			header.text = "── BANK: %d M ──" % GameState.stored_meseta
-		header.modulate = ThemeColors.TEXT_HIGHLIGHT
+		header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	else:
 		header.text = "── %s ──" % header_text
 		if _selected_side == side:
-			header.modulate = ThemeColors.TEXT_HIGHLIGHT
+			header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 		else:
-			header.modulate = ThemeColors.HEADER
+			header.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(header)
 
 	if _mode == Mode.MESETA:
@@ -217,12 +217,12 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 			info.text = "\n  [←] Deposit 100 M"
 		else:
 			info.text = "\n  [→] Withdraw 100 M"
-		info.modulate = ThemeColors.TEXT_SECONDARY
+		info.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		vbox.add_child(info)
 	elif items.is_empty():
 		var empty := Label.new()
 		empty.text = "  (Empty)"
-		empty.modulate = ThemeColors.TEXT_SECONDARY
+		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		vbox.add_child(empty)
 	else:
 		# Get character info for equip checks
@@ -254,7 +254,7 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 				current_category = cat
 				var cat_label := Label.new()
 				cat_label.text = "── %s ──" % cat
-				cat_label.modulate = ThemeColors.HEADER
+				cat_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 				vbox.add_child(cat_label)
 
 			# Resolve weapon/armor data
@@ -296,21 +296,21 @@ func _refresh_panel(panel: PanelContainer, items: Array, header_text: String, si
 
 			if _selected_side == side and i == _selected_index:
 				label.text = "> " + label.text
-				label.modulate = ThemeColors.TEXT_HIGHLIGHT
+				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 			else:
 				label.text = "  " + label.text
 				if is_unresolved:
-					label.modulate = ThemeColors.RESTRICT_ID
+					label.add_theme_color_override("font_color", ThemeColors.RESTRICT_ID)
 				elif weapon and not class_type_race.is_empty():
 					if not weapon.can_be_used_by(class_type_race):
-						label.modulate = ThemeColors.RESTRICT_CLASS
+						label.add_theme_color_override("font_color", ThemeColors.RESTRICT_CLASS)
 					elif char_level < weapon.level:
-						label.modulate = ThemeColors.RESTRICT_LEVEL
+						label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
 				elif armor_data and not class_type_race.is_empty():
 					if not armor_data.can_be_used_by(class_type_race):
-						label.modulate = ThemeColors.RESTRICT_CLASS
+						label.add_theme_color_override("font_color", ThemeColors.RESTRICT_CLASS)
 					elif char_level < armor_data.level:
-						label.modulate = ThemeColors.RESTRICT_LEVEL
+						label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
 			vbox.add_child(label)
 			labels_ref.append(label)
 

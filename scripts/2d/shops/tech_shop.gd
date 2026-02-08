@@ -89,7 +89,7 @@ func _refresh_display() -> void:
 
 	var meseta_label := Label.new()
 	meseta_label.text = "Meseta: %d  Slots: %d/40" % [current_meseta, Inventory.get_total_slots()]
-	meseta_label.modulate = ThemeColors.TEXT_HIGHLIGHT
+	meseta_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(meseta_label)
 
 	var selected_label: Label = null
@@ -97,7 +97,7 @@ func _refresh_display() -> void:
 	if _items.is_empty():
 		var empty := Label.new()
 		empty.text = "  (No techniques available)"
-		empty.modulate = ThemeColors.TEXT_SECONDARY
+		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		vbox.add_child(empty)
 	else:
 		for i in range(_items.size()):
@@ -133,22 +133,22 @@ func _refresh_display() -> void:
 			if i == _selected_index:
 				label.text = "> " + label.text
 				if already_higher:
-					label.modulate = ThemeColors.TEXT_SECONDARY
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 				elif too_low_level:
-					label.modulate = ThemeColors.RESTRICT_LEVEL
+					label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
 				elif cant_afford:
-					label.modulate = ThemeColors.WARNING
+					label.add_theme_color_override("font_color", ThemeColors.WARNING)
 				else:
-					label.modulate = ThemeColors.TEXT_HIGHLIGHT
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 				selected_label = label
 			else:
 				label.text = "  " + label.text
 				if already_higher:
-					label.modulate = ThemeColors.TEXT_SECONDARY
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 				elif too_low_level:
-					label.modulate = ThemeColors.RESTRICT_LEVEL
+					label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
 				elif cant_afford:
-					label.modulate = ThemeColors.WARNING
+					label.add_theme_color_override("font_color", ThemeColors.WARNING)
 			vbox.add_child(label)
 
 	scroll.add_child(vbox)
@@ -180,7 +180,7 @@ func _refresh_detail() -> void:
 
 	var name_label := Label.new()
 	name_label.text = "── %s ──" % str(item.get("name", "???"))
-	name_label.modulate = ThemeColors.HEADER
+	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(name_label)
 
 	_add_line(vbox, "Element: %s" % str(tech.get("element", "none")).capitalize())
@@ -201,7 +201,7 @@ func _refresh_detail() -> void:
 	var req_label := Label.new()
 	req_label.text = "Req. Level: %d" % required_level
 	if char_level < required_level:
-		req_label.modulate = ThemeColors.RESTRICT_LEVEL
+		req_label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
 	vbox.add_child(req_label)
 
 	# Current technique level
@@ -211,10 +211,10 @@ func _refresh_detail() -> void:
 			var cur_label := Label.new()
 			if current_level >= level:
 				cur_label.text = "Known: Lv.%d (already higher)" % current_level
-				cur_label.modulate = ThemeColors.TEXT_SECONDARY
+				cur_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 			else:
 				cur_label.text = "Known: Lv.%d → Lv.%d" % [current_level, level]
-				cur_label.modulate = ThemeColors.EQUIPPABLE
+				cur_label.add_theme_color_override("font_color", ThemeColors.EQUIPPABLE)
 			vbox.add_child(cur_label)
 
 	# Price
@@ -223,13 +223,13 @@ func _refresh_detail() -> void:
 	vbox.add_child(sep)
 	var cost_label := Label.new()
 	cost_label.text = "Price: %d M" % int(item.get("cost", 0))
-	cost_label.modulate = ThemeColors.TEXT_HIGHLIGHT
+	cost_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(cost_label)
 
 	# Note about usage
 	var note := Label.new()
 	note.text = "Use from inventory to learn"
-	note.modulate = ThemeColors.TEXT_SECONDARY
+	note.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(note)
 
 	detail_panel.add_child(vbox)

@@ -4,12 +4,16 @@
 [ext_resource type="Script" path="res://scripts/2d/shops/weapon_shop.gd" id="2_script"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
-bg_color = Color(0.078, 0.118, 0.208, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.165, 0.361, 0.541, 1)
+bg_color = Color(0.878, 0.910, 0.941, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.753, 0.816, 0.878, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 content_margin_left = 12.0
 content_margin_top = 12.0
 content_margin_right = 12.0
@@ -32,7 +36,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.04, 0.04, 0.04, 1)
+color = Color(0.478, 0.722, 0.878, 1)
 
 [node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -49,7 +53,7 @@ theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.251, 0.627, 0.816, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 
@@ -72,6 +76,6 @@ theme_override_styles/panel = SubResource("panel_style")
 
 [node name="HintLabel" type="Label" parent="VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.502, 0.565, 0.659, 1)
+theme_override_colors/font_color = Color(0.816, 0.847, 0.878, 1)
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1
