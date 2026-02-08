@@ -108,7 +108,7 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
+	elif event.is_action_pressed("ui_accept") and not Input.is_action_pressed("dodge"):
 		_teardown_preview()
 		_show_name_entry()
 		_update_class_info()
@@ -116,6 +116,9 @@ func _handle_appearance_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_cancel"):
 		_teardown_preview()
 		_show_class_select()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("dodge"):
+		# Consume Space press so it doesn't trigger ui_accept
 		get_viewport().set_input_as_handled()
 
 
@@ -280,9 +283,9 @@ func _build_preview_viewport() -> SubViewportContainer:
 	_preview_viewport.msaa_3d = Viewport.MSAA_2X
 	container.add_child(_preview_viewport)
 
-	# Camera looking at model — pulled back to show full body
+	# Camera looking at model
 	var camera := Camera3D.new()
-	camera.position = Vector3(0, 0.7, 3.0)
+	camera.position = Vector3(0, 0.15, 2.2)
 	camera.rotation_degrees = Vector3(-3, 0, 0)
 	camera.fov = 30
 	_preview_viewport.add_child(camera)
@@ -338,6 +341,8 @@ func _update_preview_model() -> void:
 		return
 
 	_preview_model = packed.instantiate() as Node3D
+	_preview_model.scale = Vector3(0.6, 0.6, 0.6)
+	_preview_model.position.y = -0.45
 	_preview_pivot.add_child(_preview_model)
 
 	# Apply texture
