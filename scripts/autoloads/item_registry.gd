@@ -3,6 +3,7 @@ extends Node
 ## Loads all .tres files from data/items/ on startup.
 
 const ItemDataScript = preload("res://scripts/resources/item_data.gd")
+const _RU = preload("res://scripts/utils/resource_utils.gd")
 const ITEMS_PATH = "res://data/items/"
 
 ## Dictionary of item_id -> ItemData
@@ -19,28 +20,13 @@ func _ready() -> void:
 ## Load all ItemData resources from the items directory
 func _load_all_items() -> void:
 	_items.clear()
-
-	var dir = DirAccess.open(ITEMS_PATH)
-	if dir == null:
-		push_warning("[ItemRegistry] Could not open items directory: ", ITEMS_PATH)
-		items_loaded.emit()
-		return
-
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var full_path = ITEMS_PATH + file_name
-			var item = load(full_path)
-			if item and not item.id.is_empty():
-				_items[item.id] = item
-				print("[ItemRegistry] Loaded: ", item.id, " (", item.name, ")")
-			else:
-				push_warning("[ItemRegistry] Invalid item at: ", full_path)
-		file_name = dir.get_next()
-
-	dir.list_dir_end()
+	for path in _RU.list_resources(ITEMS_PATH):
+		var item = load(path)
+		if item and not item.id.is_empty():
+			_items[item.id] = item
+			print("[ItemRegistry] Loaded: ", item.id, " (", item.name, ")")
+		else:
+			push_warning("[ItemRegistry] Invalid item at: ", path)
 	print("[ItemRegistry] Loaded ", _items.size(), " items")
 	items_loaded.emit()
 

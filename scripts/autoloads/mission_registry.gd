@@ -1,6 +1,7 @@
 extends Node
 ## Autoload that provides access to MissionData, QuestAreaData, and QuestDefinitionData.
 
+const _RU = preload("res://scripts/utils/resource_utils.gd")
 const MISSIONS_PATH = "res://data/missions/"
 const QUEST_AREAS_PATH = "res://data/quest_areas/"
 const QUEST_DEFS_PATH = "res://data/quest_definitions/"
@@ -18,18 +19,10 @@ func _ready() -> void:
 	data_loaded.emit()
 
 func _load_dir(path: String, dict: Dictionary, label: String) -> void:
-	var dir = DirAccess.open(path)
-	if dir == null:
-		return
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var res = load(path + file_name)
-			if res and not res.id.is_empty():
-				dict[res.id] = res
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	for res_path in _RU.list_resources(path):
+		var res = load(res_path)
+		if res and not res.id.is_empty():
+			dict[res.id] = res
 	print("[%s] Loaded %d" % [label, dict.size()])
 
 func get_mission(id: String):
