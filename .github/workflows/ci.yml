@@ -25,3 +25,34 @@ jobs:
 
       - name: Run tests
         run: godot --headless --path . res://scripts/tools/test_runner.tscn
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.5.1
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project
+        run: godot --headless --path . --import --quit || true
+
+      - name: Export Web
+        run: |
+          mkdir -p build/web
+          godot --headless --path . --export-release "Web" build/web/index.html
+
+      - name: Export Linux x86_64
+        run: |
+          mkdir -p build/linux
+          godot --headless --path . --export-release "Linux x86_64" build/linux/psz-godot.x86_64
+
+      - name: Export Windows x86_64
+        run: |
+          mkdir -p build/windows
+          godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
