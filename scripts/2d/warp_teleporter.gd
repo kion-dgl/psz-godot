@@ -37,7 +37,7 @@ var _selected_difficulty: int = 0
 
 
 func _ready() -> void:
-	title_label.text = "══════ WARP TELEPORTER ══════"
+	title_label.text = "WARP TELEPORTER"
 	_refresh_display()
 
 
@@ -113,8 +113,8 @@ func _show_area_select() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 
 	var header := Label.new()
-	header.text = "── Select Destination ──"
-	header.modulate = Color(0, 0.733, 0.8)
+	header.text = "Select Destination"
+	header.modulate = ThemeColors.HEADER
 	vbox.add_child(header)
 
 	for i in range(AREAS.size()):
@@ -127,13 +127,13 @@ func _show_area_select() -> void:
 		if i == _selected_area:
 			label.text = "> " + label.text
 			if unlocked:
-				label.modulate = Color(1, 0.8, 0)
+				label.modulate = ThemeColors.TEXT_HIGHLIGHT
 			else:
-				label.modulate = Color(0.6, 0.3, 0.3)
+				label.modulate = ThemeColors.DANGER
 		else:
 			label.text = "  " + label.text
 			if not unlocked:
-				label.modulate = Color(0.333, 0.333, 0.333)
+				label.modulate = ThemeColors.TEXT_DISABLED
 		vbox.add_child(label)
 
 	content_panel.add_child(vbox)
@@ -147,8 +147,8 @@ func _show_difficulty_select() -> void:
 	vbox.add_theme_constant_override("separation", 6)
 
 	var header := Label.new()
-	header.text = "── %s ──\n\nSelect Difficulty:" % str(AREAS[_selected_area]["name"])
-	header.modulate = Color(0, 0.733, 0.8)
+	header.text = "%s\n\nSelect Difficulty:" % str(AREAS[_selected_area]["name"])
+	header.modulate = ThemeColors.HEADER
 	vbox.add_child(header)
 
 	for i in range(DIFFICULTIES.size()):
@@ -156,7 +156,7 @@ func _show_difficulty_select() -> void:
 		label.text = DIFFICULTIES[i]
 		if i == _selected_difficulty:
 			label.text = "> " + label.text
-			label.modulate = Color(1, 0.8, 0)
+			label.modulate = ThemeColors.TEXT_HIGHLIGHT
 		else:
 			label.text = "  " + label.text
 		vbox.add_child(label)
@@ -174,8 +174,8 @@ func _refresh_info() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 
 	var name_label := Label.new()
-	name_label.text = "── %s ──" % str(area["name"])
-	name_label.modulate = Color(0, 0.733, 0.8)
+	name_label.text = str(area["name"])
+	name_label.modulate = ThemeColors.HEADER
 	vbox.add_child(name_label)
 
 	if not unlocked:
@@ -184,7 +184,7 @@ func _refresh_info() -> void:
 		var mission = MissionRegistry.get_mission(mission_id)
 		var mission_name: String = mission.name if mission else mission_id
 		lock_label.text = "Complete \"%s\" to unlock" % mission_name
-		lock_label.modulate = Color(1, 0.267, 0.267)
+		lock_label.modulate = ThemeColors.DANGER
 		vbox.add_child(lock_label)
 		info_panel.add_child(vbox)
 		return
@@ -210,7 +210,7 @@ func _refresh_info() -> void:
 		vbox.add_child(sep)
 		var enemies_header := Label.new()
 		enemies_header.text = "Enemies:"
-		enemies_header.modulate = Color(0, 0.733, 0.8)
+		enemies_header.modulate = ThemeColors.HEADER
 		vbox.add_child(enemies_header)
 		for enemy_id in pool.get("common", []):
 			var e := Label.new()

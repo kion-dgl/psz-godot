@@ -5,9 +5,9 @@ extends VBoxContainer
 signal item_selected(index: int)
 signal item_focused(index: int)
 
-const COLOR_NORMAL := Color(0, 1, 0.533)  # Terminal green
-const COLOR_HIGHLIGHT := Color(1, 0.8, 0)  # Yellow
-const COLOR_MUTED := Color(0.333, 0.333, 0.333)  # Gray
+const COLOR_NORMAL := Color(0.878, 0.910, 0.941)   # RPG text primary
+const COLOR_HIGHLIGHT := Color(1.0, 0.816, 0.251)  # RPG gold highlight
+const COLOR_MUTED := Color(0.251, 0.282, 0.345)    # RPG disabled gray
 
 var _items: Array[String] = []
 var _disabled: Array[bool] = []

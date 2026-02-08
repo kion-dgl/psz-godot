@@ -33,7 +33,7 @@ func _ready() -> void:
 
 	# Add text shadows for readability over 3D background
 	var title_settings := LabelSettings.new()
-	title_settings.font_color = Color(0, 0.733, 0.8)
+	title_settings.font_color = ThemeColors.HEADER
 	title_settings.font_size = 18
 	title_settings.shadow_color = Color(0, 0, 0, 0.7)
 	title_settings.shadow_offset = Vector2(2, 2)
@@ -41,7 +41,7 @@ func _ready() -> void:
 	title_label.label_settings = title_settings
 
 	var hint_settings := LabelSettings.new()
-	hint_settings.font_color = Color(0.333, 0.333, 0.333)
+	hint_settings.font_color = ThemeColors.TEXT_SECONDARY
 	hint_settings.font_size = 14
 	hint_settings.shadow_color = Color(0, 0, 0, 0.7)
 	hint_settings.shadow_offset = Vector2(2, 2)
@@ -134,9 +134,9 @@ func _update_char_info() -> void:
 	if class_data:
 		stats = class_data.get_stats_at_level(int(character.get("level", 1)))
 
-	_add_info_line("── CHARACTER ──", Color(0, 0.733, 0.8))
+	_add_info_line("CHARACTER", ThemeColors.HEADER)
 	_add_info_line("")
-	_add_info_line(str(character.get("name", "???")), Color(1, 0.8, 0))
+	_add_info_line(str(character.get("name", "???")), ThemeColors.TEXT_HIGHLIGHT)
 	_add_info_line("%s  Lv.%d" % [str(character.get("class_id", "???")), int(character.get("level", 1))])
 	_add_info_line("")
 
@@ -155,11 +155,11 @@ func _update_char_info() -> void:
 	_add_info_line("PP %s %d/%d" % ["█".repeat(pp_filled) + "░".repeat(10 - pp_filled), pp, max_pp])
 
 	_add_info_line("")
-	_add_info_line("Meseta: %s" % _format_number(int(character.get("meseta", 0))), Color(1, 0.8, 0))
+	_add_info_line("Meseta: %s" % _format_number(int(character.get("meseta", 0))), ThemeColors.MESETA_GOLD)
 
 	# Stats
 	_add_info_line("")
-	_add_info_line("── STATS ──", Color(0, 0.733, 0.8))
+	_add_info_line("STATS", ThemeColors.HEADER)
 	_add_info_line("  ATK  %d" % stats.get("attack", 0))
 	_add_info_line("  DEF  %d" % stats.get("defense", 0))
 	_add_info_line("  ACC  %d" % stats.get("accuracy", 0))
@@ -167,7 +167,7 @@ func _update_char_info() -> void:
 	_add_info_line("  TEC  %d" % stats.get("technique", 0))
 
 
-func _add_info_line(text: String, color: Color = Color(0, 1, 0.533)) -> void:
+func _add_info_line(text: String, color: Color = ThemeColors.TEXT_PRIMARY) -> void:
 	var label := Label.new()
 	label.text = text
 	var settings := LabelSettings.new()

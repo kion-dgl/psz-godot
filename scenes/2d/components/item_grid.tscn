@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Theme" path="res://themes/terminal_theme.tres" id="1_theme"]
+[ext_resource type="Theme" path="res://themes/rpg_theme.tres" id="1_theme"]
 [ext_resource type="Script" path="res://scripts/2d/components/item_grid.gd" id="2_script"]
 
 [node name="ItemGrid" type="GridContainer"]
