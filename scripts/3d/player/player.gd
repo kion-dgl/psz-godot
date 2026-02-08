@@ -104,8 +104,9 @@ func _ready() -> void:
 	# Set up animations
 	_setup_animations()
 
-	# Set up weapon attachment
-	_setup_weapon()
+	# Set up weapon attachment (skip in city — no combat there)
+	if not _is_in_city():
+		_setup_weapon()
 
 	# Initialize animation player if we have one
 	if animation_player:
@@ -215,6 +216,11 @@ func _remap_animation(source: Animation, skeleton_name: String) -> Animation:
 				anim.track_set_path(i, NodePath(new_path))
 
 	return anim
+
+
+func _is_in_city() -> bool:
+	var parent := get_parent()
+	return parent is CityAreaBase
 
 
 func _find_node_of_type(root: Node, type_name: String) -> Node:
