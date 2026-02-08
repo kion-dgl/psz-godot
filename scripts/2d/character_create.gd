@@ -107,13 +107,13 @@ func _update_class_select() -> void:
 				vbox.add_child(spacer)
 			var type_header := Label.new()
 			type_header.text = cls.type
-			type_header.modulate = ThemeColors.HEADER
+			type_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 			vbox.add_child(type_header)
 			last_type = cls.type
 		var label := Label.new()
 		if i == _selected_class_index:
 			label.text = "> %-12s %s %s" % [cls.name, cls.race, cls.gender]
-			label.modulate = ThemeColors.TEXT_HIGHLIGHT
+			label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 		else:
 			label.text = "  %-12s %s %s" % [cls.name, cls.race, cls.gender]
 		vbox.add_child(label)
@@ -140,17 +140,17 @@ func _update_class_info() -> void:
 
 	var name_label := Label.new()
 	name_label.text = cls.name
-	name_label.modulate = ThemeColors.HEADER
+	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(name_label)
 
 	var desc_label := Label.new()
 	desc_label.text = "%s %s %s" % [cls.race, cls.gender, cls.type]
-	desc_label.modulate = ThemeColors.TEXT_SECONDARY
+	desc_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(desc_label)
 
 	var sep := Label.new()
 	sep.text = "────────────────────"
-	sep.modulate = ThemeColors.TEXT_SECONDARY
+	sep.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(sep)
 
 	# Stats at level 1
@@ -177,7 +177,7 @@ func _update_class_info() -> void:
 		vbox.add_child(bonus_sep)
 		var bonus_header := Label.new()
 		bonus_header.text = "Bonuses:"
-		bonus_header.modulate = ThemeColors.HEADER
+		bonus_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 		vbox.add_child(bonus_header)
 		for bonus in cls.bonuses:
 			var b_label := Label.new()
@@ -242,13 +242,13 @@ func _show_confirm() -> void:
 
 	var header := Label.new()
 	header.text = "\nConfirm Character"
-	header.modulate = ThemeColors.HEADER
+	header.add_theme_color_override("font_color", ThemeColors.HEADER)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(header)
 
 	var name_label := Label.new()
 	name_label.text = "\n  Name:  %s" % _char_name
-	name_label.modulate = ThemeColors.TEXT_HIGHLIGHT
+	name_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(name_label)
 
 	var class_label := Label.new()
@@ -257,7 +257,7 @@ func _show_confirm() -> void:
 
 	var type_label := Label.new()
 	type_label.text = "  Type:  %s %s %s" % [cls.race, cls.gender, cls.type]
-	type_label.modulate = ThemeColors.TEXT_SECONDARY
+	type_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(type_label)
 
 	content_panel.add_child(vbox)

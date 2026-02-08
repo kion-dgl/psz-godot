@@ -75,11 +75,11 @@ func _apply_bar_color() -> void:
 	bar_label.label_settings = settings
 
 	var name_settings := LabelSettings.new()
-	name_settings.font_color = ThemeColors.TEXT_PRIMARY
+	name_settings.font_color = ThemeColors.HEADER_TEXT
 	name_settings.font_size = 14
 	name_label.label_settings = name_settings
 
 	var val_settings := LabelSettings.new()
-	val_settings.font_color = ThemeColors.TEXT_SECONDARY
+	val_settings.font_color = ThemeColors.HINT_TEXT
 	val_settings.font_size = 14
 	value_label.label_settings = val_settings

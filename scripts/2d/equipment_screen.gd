@@ -241,14 +241,14 @@ func _refresh_display() -> void:
 
 	var header := Label.new()
 	header.text = "── Equipment Slots ──"
-	header.modulate = ThemeColors.HEADER
+	header.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(header)
 
 	if _choosing_item:
 		# Show item selection list
 		var slot_label := Label.new()
 		slot_label.text = "Select %s:" % visible_names[_selected_slot]
-		slot_label.modulate = ThemeColors.HEADER
+		slot_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 		vbox.add_child(slot_label)
 
 		for i in range(_equippable_items.size()):
@@ -271,17 +271,17 @@ func _refresh_display() -> void:
 			if i == _selected_item:
 				label.text = "> " + label.text
 				if is_equipped:
-					label.modulate = ThemeColors.TEXT_HIGHLIGHT
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 				elif is_unequip:
-					label.modulate = ThemeColors.DANGER
+					label.add_theme_color_override("font_color", ThemeColors.DANGER)
 				else:
-					label.modulate = ThemeColors.TEXT_HIGHLIGHT
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 			else:
 				label.text = "  " + label.text
 				if is_equipped:
-					label.modulate = ThemeColors.TEXT_HIGHLIGHT
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 				elif is_unequip:
-					label.modulate = ThemeColors.DANGER
+					label.add_theme_color_override("font_color", ThemeColors.DANGER)
 			vbox.add_child(label)
 	else:
 		# Show equipment slots (dynamic based on armor)
@@ -304,11 +304,11 @@ func _refresh_display() -> void:
 			label.text = "%-8s %s" % [slot_name, item_display]
 			if i == _selected_slot:
 				label.text = "> " + label.text
-				label.modulate = ThemeColors.TEXT_HIGHLIGHT
+				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 			else:
 				label.text = "  " + label.text
 				if equipped.is_empty():
-					label.modulate = ThemeColors.TEXT_SECONDARY
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 
 			vbox.add_child(label)
 
@@ -425,7 +425,7 @@ func _refresh_stats() -> void:
 
 	var stat_header := Label.new()
 	stat_header.text = "── Stats ──"
-	stat_header.modulate = ThemeColors.HEADER
+	stat_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(stat_header)
 
 	var name_label := Label.new()
@@ -434,7 +434,7 @@ func _refresh_stats() -> void:
 		str(character.get("class_id", "???")),
 		level
 	]
-	name_label.modulate = ThemeColors.TEXT_HIGHLIGHT
+	name_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(name_label)
 
 	var sep := Label.new()
@@ -457,10 +457,10 @@ func _refresh_stats() -> void:
 			var diff: int = preview_val - effective
 			if diff > 0:
 				stat_label.text = "  %-4s %d → %d (+%d)" % [display_names[i], effective, preview_val, diff]
-				stat_label.modulate = ThemeColors.STAT_POSITIVE
+				stat_label.add_theme_color_override("font_color", ThemeColors.STAT_POSITIVE)
 			elif diff < 0:
 				stat_label.text = "  %-4s %d → %d (%d)" % [display_names[i], effective, preview_val, diff]
-				stat_label.modulate = ThemeColors.STAT_NEGATIVE
+				stat_label.add_theme_color_override("font_color", ThemeColors.STAT_NEGATIVE)
 			else:
 				stat_label.text = "  %-4s %d" % [display_names[i], effective]
 		else:

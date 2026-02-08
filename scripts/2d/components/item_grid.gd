@@ -73,9 +73,9 @@ func _update_display() -> void:
 
 		if i == _current_index and _active:
 			label.text = "> " + text
-			label.modulate = COLOR_HIGHLIGHT
+			label.add_theme_color_override("font_color", COLOR_HIGHLIGHT)
 		else:
 			label.text = "  " + text
-			label.modulate = COLOR_EMPTY if is_empty else COLOR_NORMAL
+			label.add_theme_color_override("font_color", COLOR_EMPTY if is_empty else COLOR_NORMAL)
 		label.custom_minimum_size = Vector2(200, 0)
 		add_child(label)

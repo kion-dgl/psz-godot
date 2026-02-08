@@ -57,7 +57,7 @@ func _refresh_slots() -> void:
 
 		var slot_header := Label.new()
 		slot_header.text = "Slot %d" % (i + 1)
-		slot_header.modulate = ThemeColors.HEADER
+		slot_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 		slot_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(slot_header)
 
@@ -65,13 +65,13 @@ func _refresh_slots() -> void:
 		if character != null:
 			var name_label := Label.new()
 			name_label.text = character.get("name", "???")
-			name_label.modulate = ThemeColors.TEXT_HIGHLIGHT if i == _current_slot else ThemeColors.TEXT_PRIMARY
+			name_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT if i == _current_slot else ThemeColors.TEXT_PRIMARY)
 			name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(name_label)
 
 			var class_label := Label.new()
 			class_label.text = character.get("class_id", "Unknown")
-			class_label.modulate = ThemeColors.HEADER
+			class_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 			class_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(class_label)
 
@@ -82,14 +82,14 @@ func _refresh_slots() -> void:
 		else:
 			var empty_label := Label.new()
 			empty_label.text = "\n[ Empty Slot ]"
-			empty_label.modulate = ThemeColors.TEXT_DISABLED
+			empty_label.add_theme_color_override("font_color", ThemeColors.TEXT_DISABLED)
 			empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(empty_label)
 
 		if i == _current_slot:
 			var cursor := Label.new()
 			cursor.text = "▲"
-			cursor.modulate = ThemeColors.TEXT_HIGHLIGHT
+			cursor.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 			cursor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(cursor)
 

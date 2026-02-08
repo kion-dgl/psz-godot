@@ -137,14 +137,14 @@ func _refresh_display() -> void:
 		var mission = _missions[_selected_index]
 		var header := Label.new()
 		header.text = "── %s ──\n\nSelect Difficulty:" % mission.name
-		header.modulate = ThemeColors.HEADER
+		header.add_theme_color_override("font_color", ThemeColors.HEADER)
 		vbox.add_child(header)
 
 		for i in range(DIFFICULTIES.size()):
 			var label := Label.new()
 			if i == _selected_difficulty:
 				label.text = "> " + DIFFICULTIES[i]
-				label.modulate = ThemeColors.TEXT_HIGHLIGHT
+				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 			else:
 				label.text = "  " + DIFFICULTIES[i]
 			vbox.add_child(label)
@@ -153,7 +153,7 @@ func _refresh_display() -> void:
 		if _missions.is_empty():
 			var empty := Label.new()
 			empty.text = "  (No missions available)"
-			empty.modulate = ThemeColors.TEXT_SECONDARY
+			empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 			vbox.add_child(empty)
 		else:
 			var last_area := ""
@@ -167,7 +167,7 @@ func _refresh_display() -> void:
 						vbox.add_child(spacer)
 					var area_header := Label.new()
 					area_header.text = "── %s ──" % mission.area
-					area_header.modulate = ThemeColors.HEADER
+					area_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 					vbox.add_child(area_header)
 					last_area = mission.area
 				var label := Label.new()
@@ -181,13 +181,13 @@ func _refresh_display() -> void:
 				label.text = "%-24s%s" % [mission.name, status_tag]
 				if i == _selected_index:
 					label.text = "> " + label.text
-					label.modulate = ThemeColors.TEXT_HIGHLIGHT
+					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 				else:
 					label.text = "  " + label.text
 					if not unlocked:
-						label.modulate = ThemeColors.TEXT_SECONDARY
+						label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 					elif completed:
-						label.modulate = ThemeColors.COMPLETED
+						label.add_theme_color_override("font_color", ThemeColors.COMPLETED)
 				vbox.add_child(label)
 		hint_label.text = "[↑/↓] Select  [ENTER] Choose  [ESC] Leave"
 
@@ -211,7 +211,7 @@ func _refresh_detail() -> void:
 
 	var name_label := Label.new()
 	name_label.text = "── %s ──" % mission.name
-	name_label.modulate = ThemeColors.HEADER
+	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(name_label)
 
 	var area_label := Label.new()
@@ -229,7 +229,7 @@ func _refresh_detail() -> void:
 			req_names.append(req_mission.name if req_mission else req_id)
 		var req_label := Label.new()
 		req_label.text = "Requires: %s" % ", ".join(req_names)
-		req_label.modulate = ThemeColors.DANGER
+		req_label.add_theme_color_override("font_color", ThemeColors.DANGER)
 		vbox.add_child(req_label)
 
 	# Rewards
@@ -239,7 +239,7 @@ func _refresh_detail() -> void:
 		vbox.add_child(sep)
 		var rewards_header := Label.new()
 		rewards_header.text = "Rewards:"
-		rewards_header.modulate = ThemeColors.TEXT_HIGHLIGHT
+		rewards_header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 		vbox.add_child(rewards_header)
 		for diff_key in mission.rewards:
 			var reward: Dictionary = mission.rewards[diff_key]
