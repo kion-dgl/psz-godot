@@ -4,12 +4,12 @@
 [ext_resource type="Script" path="res://scripts/2d/field.gd" id="2_script"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
-bg_color = Color(0.878, 0.910, 0.941, 0.9)
+bg_color = Color(0.08, 0.14, 0.25, 0.95)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.753, 0.816, 0.878, 1)
+border_color = Color(0.20, 0.35, 0.55, 0.6)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
@@ -36,7 +36,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.478, 0.722, 0.878, 1)
+color = Color(0.04, 0.06, 0.12, 1)
 
 [node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 1

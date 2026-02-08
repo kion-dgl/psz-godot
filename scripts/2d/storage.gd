@@ -13,10 +13,10 @@ var _storage_items: Array = []
 var _inv_labels: Array = []
 var _sto_labels: Array = []
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var inventory_panel: PanelContainer = $VBox/HBox/InventoryPanel
-@onready var storage_panel: PanelContainer = $VBox/HBox/StoragePanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var inventory_panel: PanelContainer = $Panel/VBox/HBox/InventoryPanel
+@onready var storage_panel: PanelContainer = $Panel/VBox/HBox/StoragePanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:
