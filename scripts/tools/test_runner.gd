@@ -43,7 +43,7 @@ func _ready() -> void:
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
 	print("══════════════════════════════════\n")
 
-	get_tree().quit()
+	get_tree().quit(1 if _fail > 0 else 0)
 
 
 func assert_true(condition: bool, label: String) -> void:
