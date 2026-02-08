@@ -1,5 +1,7 @@
-extends Control
+extends Node3D
 ## Character creation screen — class selection, appearance, name entry, confirmation.
+## Uses Node3D root so 3D preview renders in the main viewport (works on web).
+## 2D UI is on a CanvasLayer overlay.
 
 enum Step { CLASS_SELECT, APPEARANCE, NAME_ENTRY, CONFIRM }
 
@@ -19,10 +21,17 @@ var _appearance := {
 	"skin_tone_index": 0,
 }
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var content_panel: PanelContainer = $VBox/HBox/ContentPanel
-@onready var info_panel: PanelContainer = $VBox/HBox/InfoPanel
-@onready var hint_label: Label = $VBox/HintLabel
+# 3D preview state
+var _preview_model: Node3D = null
+var _preview_pivot: Node3D = null
+var _preview_nodes: Array = []
+var _preview_active := false
+
+@onready var title_label: Label = $UILayer/UI/VBox/TitleLabel
+@onready var content_panel: PanelContainer = $UILayer/UI/VBox/HBox/ContentPanel
+@onready var info_panel: PanelContainer = $UILayer/UI/VBox/HBox/InfoPanel
+@onready var hint_label: Label = $UILayer/UI/VBox/HintLabel
+@onready var _bg: ColorRect = $UILayer/UI/BG
 
 
 func _ready() -> void:
@@ -98,20 +107,27 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		_appearance_row = wrapi(_appearance_row + 1, 0, 4)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left"):
+	elif event.is_action_pressed("ui_left") and not Input.is_action_pressed("dodge"):
 		_cycle_appearance_value(-1)
 		_update_appearance()
+		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right"):
+	elif event.is_action_pressed("ui_right") and not Input.is_action_pressed("dodge"):
 		_cycle_appearance_value(1)
 		_update_appearance()
+		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
+	elif event.is_action_pressed("ui_accept") and not Input.is_action_pressed("dodge"):
+		_teardown_preview()
 		_show_name_entry()
 		_update_class_info()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
+		_teardown_preview()
 		_show_class_select()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("dodge"):
+		# Consume Space press so it doesn't trigger ui_accept
 		get_viewport().set_input_as_handled()
 
 
@@ -250,15 +266,146 @@ func _update_class_info() -> void:
 	info_panel.add_child(vbox)
 
 
+# ── 3D Preview (main viewport) ──────────────────────────────────
+
+func _process(delta: float) -> void:
+	if _preview_active and _preview_pivot:
+		# Space + Left/Right to rotate the preview model
+		if Input.is_action_pressed("dodge"):
+			if Input.is_action_pressed("ui_left"):
+				_preview_pivot.rotate_y(delta * 3.0)
+			elif Input.is_action_pressed("ui_right"):
+				_preview_pivot.rotate_y(-delta * 3.0)
+
+
+func _build_preview_scene() -> void:
+	# Environment — background matches the UI dark color
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.04, 0.06, 0.12)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.3, 0.35, 0.45)
+	env.ambient_light_energy = 0.8
+	var world_env := WorldEnvironment.new()
+	world_env.environment = env
+
+	# Camera — offset left so model appears in the right panel area
+	var camera := Camera3D.new()
+	camera.position = Vector3(-0.3, 0.0, 2.2)
+	camera.rotation_degrees = Vector3(-3, 0, 0)
+	camera.fov = 30
+
+	# Key light
+	var light := DirectionalLight3D.new()
+	light.rotation_degrees = Vector3(-40, 30, 0)
+	light.light_energy = 1.2
+
+	# Fill light
+	var fill := DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-20, -120, 0)
+	fill.light_energy = 0.4
+
+	# Pivot for model rotation
+	_preview_pivot = Node3D.new()
+	_preview_pivot.name = "PreviewPivot"
+
+	_preview_nodes = [world_env, camera, light, fill, _preview_pivot]
+	for node in _preview_nodes:
+		add_child(node)
+
+	_preview_active = true
+
+
+func _update_preview_model() -> void:
+	if not _preview_pivot:
+		return
+
+	# Remove old model
+	if _preview_model:
+		_preview_model.queue_free()
+		_preview_model = null
+
+	var vi: int = int(_appearance["variation_index"])
+	var model_path: String = PlayerConfig.get_model_path(_selected_class_id, vi)
+
+	if not ResourceLoader.exists(model_path):
+		return
+
+	var packed: PackedScene = load(model_path) as PackedScene
+	if packed == null:
+		return
+
+	_preview_model = packed.instantiate() as Node3D
+	_preview_model.scale = Vector3(0.6, 0.6, 0.6)
+	_preview_model.position.y = -0.7
+	_preview_pivot.add_child(_preview_model)
+
+	# Apply texture
+	var hair: int = int(_appearance["hair_color_index"])
+	var skin: int = int(_appearance["skin_tone_index"])
+	var body: int = int(_appearance["body_color_index"])
+	var tex_path: String = PlayerConfig.get_texture_path(_selected_class_id, vi, hair, skin, body)
+
+	if ResourceLoader.exists(tex_path):
+		var texture := load(tex_path) as Texture2D
+		if texture:
+			_apply_texture_recursive(_preview_model, texture)
+
+
+func _apply_texture_recursive(node: Node, texture: Texture2D) -> void:
+	if node is MeshInstance3D:
+		var mesh_instance := node as MeshInstance3D
+		var mesh := mesh_instance.mesh
+		if mesh:
+			for surface_idx in range(mesh.get_surface_count()):
+				var mat := mesh_instance.get_active_material(surface_idx)
+				if mat is StandardMaterial3D:
+					var new_mat := mat.duplicate() as StandardMaterial3D
+					new_mat.albedo_texture = texture
+					new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+					mesh_instance.set_surface_override_material(surface_idx, new_mat)
+				elif mat == null:
+					var new_mat := StandardMaterial3D.new()
+					new_mat.albedo_texture = texture
+					new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+					mesh_instance.set_surface_override_material(surface_idx, new_mat)
+	for child in node.get_children():
+		_apply_texture_recursive(child, texture)
+
+
+func _teardown_preview() -> void:
+	_preview_active = false
+	_preview_model = null
+	_preview_pivot = null
+	for node in _preview_nodes:
+		if is_instance_valid(node):
+			node.queue_free()
+	_preview_nodes.clear()
+	# Restore UI
+	_bg.visible = true
+	info_panel.remove_theme_stylebox_override("panel")
+
+
 # ── Appearance Step ──────────────────────────────────────────────
 
 func _show_appearance() -> void:
 	_step = Step.APPEARANCE
-	hint_label.text = "[↑/↓] Row  [←/→] Change  [ENTER] Next  [ESC] Back"
+	hint_label.text = "[↑/↓] Row  [←/→] Change  [SPACE+←/→] Rotate  [ENTER] Next  [ESC] Back"
 
-	# Show class info in the info panel
-	_update_class_info()
+	# Hide BG so 3D shows through the transparent info panel
+	_bg.visible = false
+	# Make info panel transparent to show 3D preview behind it
+	var transparent_style := StyleBoxEmpty.new()
+	info_panel.add_theme_stylebox_override("panel", transparent_style)
+	for child in info_panel.get_children():
+		child.queue_free()
+
+	# Build the 3D preview in the main viewport
+	if not _preview_active:
+		_build_preview_scene()
+
 	_update_appearance()
+	_update_preview_model()
 
 
 func _update_appearance() -> void:
