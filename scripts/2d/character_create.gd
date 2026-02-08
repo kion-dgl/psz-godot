@@ -280,7 +280,6 @@ func _build_preview_viewport() -> SubViewportContainer:
 	_preview_viewport.size = Vector2i(400, 500)
 	_preview_viewport.transparent_bg = true
 	_preview_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	_preview_viewport.msaa_3d = Viewport.MSAA_2X
 	container.add_child(_preview_viewport)
 
 	# Camera looking at model
@@ -389,17 +388,21 @@ func _teardown_preview() -> void:
 
 func _show_appearance() -> void:
 	_step = Step.APPEARANCE
-	hint_label.text = "[↑/↓] Row  [←/→] Change  [SPACE+←/→] Rotate  [ENTER] Next  [ESC] Back"
 
-	# Build the 3D preview in the info panel
+	# Build the 3D preview in the info panel (skip on web — SubViewport 3D causes WebGL issues)
 	for child in info_panel.get_children():
 		child.queue_free()
-	var viewport_container := _build_preview_viewport()
-	info_panel.add_child(viewport_container)
-	_preview_active = true
+	if OS.has_feature("web"):
+		hint_label.text = "[↑/↓] Row  [←/→] Change  [ENTER] Next  [ESC] Back"
+		_update_class_info()
+	else:
+		hint_label.text = "[↑/↓] Row  [←/→] Change  [SPACE+←/→] Rotate  [ENTER] Next  [ESC] Back"
+		var viewport_container := _build_preview_viewport()
+		info_panel.add_child(viewport_container)
+		_preview_active = true
+		_update_preview_model()
 
 	_update_appearance()
-	_update_preview_model()
 
 
 func _update_appearance() -> void:
