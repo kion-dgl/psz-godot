@@ -1,6 +1,7 @@
 extends Node
 ## Autoload that provides access to all WeaponData resources by ID.
 
+const _RU = preload("res://scripts/utils/resource_utils.gd")
 const WEAPONS_PATH = "res://data/weapons/"
 
 var _weapons: Dictionary = {}
@@ -14,25 +15,10 @@ func _ready() -> void:
 
 func _load_all_weapons() -> void:
 	_weapons.clear()
-
-	var dir = DirAccess.open(WEAPONS_PATH)
-	if dir == null:
-		push_warning("[WeaponRegistry] Could not open weapons directory: ", WEAPONS_PATH)
-		weapons_loaded.emit()
-		return
-
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var full_path = WEAPONS_PATH + file_name
-			var weapon = load(full_path)
-			if weapon and not weapon.id.is_empty():
-				_weapons[weapon.id] = weapon
-		file_name = dir.get_next()
-
-	dir.list_dir_end()
+	for path in _RU.list_resources(WEAPONS_PATH):
+		var weapon = load(path)
+		if weapon and not weapon.id.is_empty():
+			_weapons[weapon.id] = weapon
 	print("[WeaponRegistry] Loaded ", _weapons.size(), " weapons")
 	weapons_loaded.emit()
 

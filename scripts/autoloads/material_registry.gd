@@ -1,6 +1,7 @@
 extends Node
 ## Autoload that provides access to all MaterialData resources by ID.
 
+const _RU = preload("res://scripts/utils/resource_utils.gd")
 const MATERIALS_PATH = "res://data/materials/"
 
 var _materials: Dictionary = {}
@@ -14,20 +15,10 @@ func _ready() -> void:
 
 func _load_all() -> void:
 	_materials.clear()
-	var dir = DirAccess.open(MATERIALS_PATH)
-	if dir == null:
-		push_warning("[MaterialRegistry] Could not open directory: ", MATERIALS_PATH)
-		materials_loaded.emit()
-		return
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var res = load(MATERIALS_PATH + file_name)
-			if res and not res.id.is_empty():
-				_materials[res.id] = res
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	for path in _RU.list_resources(MATERIALS_PATH):
+		var res = load(path)
+		if res and not res.id.is_empty():
+			_materials[res.id] = res
 	print("[MaterialRegistry] Loaded ", _materials.size(), " materials")
 	materials_loaded.emit()
 

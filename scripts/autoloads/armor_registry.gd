@@ -1,6 +1,7 @@
 extends Node
 ## Autoload that provides access to all ArmorData resources by ID.
 
+const _RU = preload("res://scripts/utils/resource_utils.gd")
 const ARMORS_PATH = "res://data/armors/"
 
 var _armors: Dictionary = {}
@@ -14,25 +15,10 @@ func _ready() -> void:
 
 func _load_all_armors() -> void:
 	_armors.clear()
-
-	var dir = DirAccess.open(ARMORS_PATH)
-	if dir == null:
-		push_warning("[ArmorRegistry] Could not open armors directory: ", ARMORS_PATH)
-		armors_loaded.emit()
-		return
-
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-
-	while file_name != "":
-		if not dir.current_is_dir() and file_name.ends_with(".tres"):
-			var full_path = ARMORS_PATH + file_name
-			var armor = load(full_path)
-			if armor and not armor.id.is_empty():
-				_armors[armor.id] = armor
-		file_name = dir.get_next()
-
-	dir.list_dir_end()
+	for path in _RU.list_resources(ARMORS_PATH):
+		var armor = load(path)
+		if armor and not armor.id.is_empty():
+			_armors[armor.id] = armor
 	print("[ArmorRegistry] Loaded ", _armors.size(), " armors")
 	armors_loaded.emit()
 
