@@ -2,9 +2,8 @@ extends Control
 ## City hub — main navigation menu with character info sidebar.
 
 const BASE_MENU_ITEMS := [
-	"Item Shop",
+	"Shop",
 	"Weapon Shop",
-	"Tech Shop",
 	"Tekker",
 	"Storage",
 	"Guild Counter",
@@ -28,8 +27,13 @@ var _disabled_items: Array = []
 
 
 func _ready() -> void:
-	title_label.text = "══════ CITY ══════"
+	title_label.text = "CITY"
 	hint_label.text = "[↑/↓] Navigate  [ENTER] Select  [ESC] Quick Save & Quit"
+
+	title_label.add_theme_color_override("font_color", ThemeColors.HEADER_TEXT)
+	title_label.add_theme_font_size_override("font_size", 18)
+	hint_label.add_theme_color_override("font_color", ThemeColors.HINT_TEXT)
+	hint_label.add_theme_font_size_override("font_size", 14)
 
 	# Heal character to full on entering the city
 	var character = CharacterManager.get_active_character()
@@ -74,12 +78,10 @@ func _on_menu_selected(index: int) -> void:
 		"Resume Session":
 			SessionManager.resume_session()
 			SceneManager.goto_scene("res://scenes/2d/field.tscn")
-		"Item Shop":
+		"Shop":
 			SceneManager.push_scene("res://scenes/2d/shops/item_shop.tscn")
 		"Weapon Shop":
 			SceneManager.push_scene("res://scenes/2d/shops/weapon_shop.tscn")
-		"Tech Shop":
-			SceneManager.push_scene("res://scenes/2d/shops/tech_shop.tscn")
 		"Tekker":
 			SceneManager.push_scene("res://scenes/2d/shops/tekker.tscn")
 		"Storage":
@@ -117,9 +119,9 @@ func _update_char_info() -> void:
 	if class_data:
 		stats = class_data.get_stats_at_level(int(character.get("level", 1)))
 
-	_add_info_line("── CHARACTER ──", Color(0, 0.733, 0.8))
+	_add_info_line("CHARACTER", ThemeColors.HEADER)
 	_add_info_line("")
-	_add_info_line(str(character.get("name", "???")), Color(1, 0.8, 0))
+	_add_info_line(str(character.get("name", "???")), ThemeColors.TEXT_HIGHLIGHT)
 	_add_info_line("%s  Lv.%d" % [str(character.get("class_id", "???")), int(character.get("level", 1))])
 	_add_info_line("")
 
@@ -138,11 +140,11 @@ func _update_char_info() -> void:
 	_add_info_line("PP %s %d/%d" % ["█".repeat(pp_filled) + "░".repeat(10 - pp_filled), pp, max_pp])
 
 	_add_info_line("")
-	_add_info_line("Meseta: %s" % _format_number(int(character.get("meseta", 0))), Color(1, 0.8, 0))
+	_add_info_line("Meseta: %s" % _format_number(int(character.get("meseta", 0))), ThemeColors.MESETA_GOLD)
 
 	# Stats
 	_add_info_line("")
-	_add_info_line("── STATS ──", Color(0, 0.733, 0.8))
+	_add_info_line("STATS", ThemeColors.HEADER)
 	_add_info_line("  ATK  %d" % stats.get("attack", 0))
 	_add_info_line("  DEF  %d" % stats.get("defense", 0))
 	_add_info_line("  ACC  %d" % stats.get("accuracy", 0))
@@ -150,10 +152,10 @@ func _update_char_info() -> void:
 	_add_info_line("  TEC  %d" % stats.get("technique", 0))
 
 
-func _add_info_line(text: String, color: Color = Color(0, 1, 0.533)) -> void:
+func _add_info_line(text: String, color: Color = ThemeColors.TEXT_PRIMARY) -> void:
 	var label := Label.new()
 	label.text = text
-	label.modulate = color
+	label.add_theme_color_override("font_color", color)
 	char_panel.add_child(label)
 
 

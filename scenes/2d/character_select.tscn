@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Theme" path="res://themes/terminal_theme.tres" id="1_theme"]
+[ext_resource type="Theme" path="res://themes/rpg_theme.tres" id="1_theme"]
 [ext_resource type="Script" path="res://scripts/2d/character_select.gd" id="2_script"]
 
 [node name="CharacterSelect" type="Control"]
@@ -20,7 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.04, 0.04, 0.04, 1)
+color = Color(0.04, 0.06, 0.12, 1)
 
 [node name="VBox" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -37,7 +37,7 @@ theme_override_constants/separation = 20
 
 [node name="TitleLabel" type="Label" parent="VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0.733, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 
@@ -57,6 +57,6 @@ size_flags_vertical = 3
 
 [node name="HintLabel" type="Label" parent="VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.333, 0.333, 0.333, 1)
+theme_override_colors/font_color = Color(0.816, 0.847, 0.878, 1)
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1

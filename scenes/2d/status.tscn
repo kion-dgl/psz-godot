@@ -1,19 +1,39 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
-[ext_resource type="Theme" path="res://themes/terminal_theme.tres" id="1_theme"]
+[ext_resource type="Theme" path="res://themes/rpg_theme.tres" id="1_theme"]
 [ext_resource type="Script" path="res://scripts/2d/status.gd" id="2_script"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
-bg_color = Color(0.04, 0.04, 0.04, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0, 1, 0.533, 1)
+bg_color = Color(0.04, 0.07, 0.15, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.20, 0.35, 0.55, 0.5)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 content_margin_left = 12.0
 content_margin_top = 12.0
 content_margin_right = 12.0
 content_margin_bottom = 12.0
+
+[sub_resource type="StyleBoxFlat" id="outer_panel_style"]
+bg_color = Color(0.06, 0.10, 0.20, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.25, 0.45, 0.70, 0.8)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
 
 [node name="Status" type="Control"]
 layout_mode = 3
@@ -25,51 +45,46 @@ grow_vertical = 2
 theme = ExtResource("1_theme")
 script = ExtResource("2_script")
 
-[node name="BG" type="ColorRect" parent="."]
+[node name="Panel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = 40.0
+offset_right = -60.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.04, 0.04, 0.04, 1)
+theme_override_styles/panel = SubResource("outer_panel_style")
 
-[node name="VBox" type="VBoxContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = -20.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TitleLabel" type="Label" parent="VBox"]
+[node name="TitleLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0, 0.733, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 
-[node name="HBox" type="HBoxContainer" parent="VBox"]
+[node name="HBox" type="HBoxContainer" parent="Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="ContentPanel" type="PanelContainer" parent="VBox/HBox"]
+[node name="ContentPanel" type="PanelContainer" parent="Panel/VBox/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("panel_style")
 
-[node name="StatsPanel" type="PanelContainer" parent="VBox/HBox"]
+[node name="StatsPanel" type="PanelContainer" parent="Panel/VBox/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("panel_style")
 
-[node name="HintLabel" type="Label" parent="VBox"]
+[node name="HintLabel" type="Label" parent="Panel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.333, 0.333, 0.333, 1)
+theme_override_colors/font_color = Color(0.816, 0.847, 0.878, 1)
 theme_override_font_sizes/font_size = 14
 horizontal_alignment = 1

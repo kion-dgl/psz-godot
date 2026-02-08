@@ -1,14 +1,18 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Theme" path="res://themes/terminal_theme.tres" id="1_theme"]
+[ext_resource type="Theme" path="res://themes/rpg_theme.tres" id="1_theme"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
-bg_color = Color(0.04, 0.04, 0.04, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0, 1, 0.533, 1)
+bg_color = Color(0.04, 0.07, 0.15, 0.6)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.20, 0.35, 0.55, 0.5)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0

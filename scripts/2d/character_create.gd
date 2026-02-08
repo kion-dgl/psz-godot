@@ -18,7 +18,7 @@ var _char_name: String = ""
 
 func _ready() -> void:
 	_slot = SceneManager.get_transition_data().get("slot", 0)
-	title_label.text = "── CREATE CHARACTER (Slot %d) ──" % (_slot + 1)
+	title_label.text = "CREATE CHARACTER (Slot %d)" % (_slot + 1)
 	_load_classes()
 	_show_class_select()
 
@@ -106,14 +106,14 @@ func _update_class_select() -> void:
 				spacer.text = ""
 				vbox.add_child(spacer)
 			var type_header := Label.new()
-			type_header.text = "── %s ──" % cls.type
-			type_header.modulate = Color(0, 0.733, 0.8)
+			type_header.text = cls.type
+			type_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 			vbox.add_child(type_header)
 			last_type = cls.type
 		var label := Label.new()
 		if i == _selected_class_index:
 			label.text = "> %-12s %s %s" % [cls.name, cls.race, cls.gender]
-			label.modulate = Color(1, 0.8, 0)
+			label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 		else:
 			label.text = "  %-12s %s %s" % [cls.name, cls.race, cls.gender]
 		vbox.add_child(label)
@@ -139,18 +139,18 @@ func _update_class_info() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 
 	var name_label := Label.new()
-	name_label.text = "── %s ──" % cls.name
-	name_label.modulate = Color(0, 0.733, 0.8)
+	name_label.text = cls.name
+	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(name_label)
 
 	var desc_label := Label.new()
 	desc_label.text = "%s %s %s" % [cls.race, cls.gender, cls.type]
-	desc_label.modulate = Color(0.333, 0.333, 0.333)
+	desc_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(desc_label)
 
 	var sep := Label.new()
 	sep.text = "────────────────────"
-	sep.modulate = Color(0.333, 0.333, 0.333)
+	sep.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(sep)
 
 	# Stats at level 1
@@ -177,7 +177,7 @@ func _update_class_info() -> void:
 		vbox.add_child(bonus_sep)
 		var bonus_header := Label.new()
 		bonus_header.text = "Bonuses:"
-		bonus_header.modulate = Color(0, 0.733, 0.8)
+		bonus_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 		vbox.add_child(bonus_header)
 		for bonus in cls.bonuses:
 			var b_label := Label.new()
@@ -241,14 +241,14 @@ func _show_confirm() -> void:
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 
 	var header := Label.new()
-	header.text = "\n── Confirm Character ──"
-	header.modulate = Color(0, 0.733, 0.8)
+	header.text = "\nConfirm Character"
+	header.add_theme_color_override("font_color", ThemeColors.HEADER)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(header)
 
 	var name_label := Label.new()
 	name_label.text = "\n  Name:  %s" % _char_name
-	name_label.modulate = Color(1, 0.8, 0)
+	name_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 	vbox.add_child(name_label)
 
 	var class_label := Label.new()
@@ -257,7 +257,7 @@ func _show_confirm() -> void:
 
 	var type_label := Label.new()
 	type_label.text = "  Type:  %s %s %s" % [cls.race, cls.gender, cls.type]
-	type_label.modulate = Color(0.333, 0.333, 0.333)
+	type_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(type_label)
 
 	content_panel.add_child(vbox)
@@ -270,4 +270,4 @@ func _create_character() -> void:
 		return
 	CharacterManager.set_active_slot(_slot)
 	SaveManager.save_game()
-	SceneManager.goto_scene("res://scenes/2d/city.tscn")
+	SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")

@@ -633,9 +633,11 @@ func _update_nearest_interactable() -> void:
 
 func _try_interact() -> void:
 	if nearest_interactable and is_instance_valid(nearest_interactable):
-		nearest_interactable.interact(self)
-		interacted_with.emit(nearest_interactable)
-		print("[Player] Interacted with: ", nearest_interactable.name)
+		var target := nearest_interactable
+		target.interact(self)
+		interacted_with.emit(target)
+		if is_instance_valid(target):
+			print("[Player] Interacted with: ", target.name)
 
 
 func get_nearest_interactable() -> Node3D:

@@ -11,7 +11,7 @@ var _current_slot: int = 0
 
 
 func _ready() -> void:
-	title_label.text = "── SELECT CHARACTER ──"
+	title_label.text = "SELECT CHARACTER"
 	hint_label.text = "[←/→] Navigate  [ENTER] Select  [DELETE] Delete  [ESC] Back"
 	_refresh_slots()
 
@@ -46,8 +46,8 @@ func _refresh_slots() -> void:
 		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 		var style := StyleBoxFlat.new()
-		style.bg_color = Color(0.04, 0.04, 0.04)
-		style.border_color = Color(1, 0.8, 0) if i == _current_slot else Color(0, 1, 0.533)
+		style.bg_color = ThemeColors.BG_DARK
+		style.border_color = ThemeColors.TEXT_HIGHLIGHT if i == _current_slot else ThemeColors.BORDER
 		style.set_border_width_all(2 if i == _current_slot else 1)
 		style.set_content_margin_all(12)
 		panel.add_theme_stylebox_override("panel", style)
@@ -56,8 +56,8 @@ func _refresh_slots() -> void:
 		vbox.add_theme_constant_override("separation", 6)
 
 		var slot_header := Label.new()
-		slot_header.text = "── Slot %d ──" % (i + 1)
-		slot_header.modulate = Color(0, 0.733, 0.8)
+		slot_header.text = "Slot %d" % (i + 1)
+		slot_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 		slot_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		vbox.add_child(slot_header)
 
@@ -65,13 +65,13 @@ func _refresh_slots() -> void:
 		if character != null:
 			var name_label := Label.new()
 			name_label.text = character.get("name", "???")
-			name_label.modulate = Color(1, 0.8, 0) if i == _current_slot else Color(0, 1, 0.533)
+			name_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT if i == _current_slot else ThemeColors.TEXT_PRIMARY)
 			name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(name_label)
 
 			var class_label := Label.new()
 			class_label.text = character.get("class_id", "Unknown")
-			class_label.modulate = Color(0, 0.733, 0.8)
+			class_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 			class_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(class_label)
 
@@ -82,14 +82,14 @@ func _refresh_slots() -> void:
 		else:
 			var empty_label := Label.new()
 			empty_label.text = "\n[ Empty Slot ]"
-			empty_label.modulate = Color(0.333, 0.333, 0.333)
+			empty_label.add_theme_color_override("font_color", ThemeColors.TEXT_DISABLED)
 			empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(empty_label)
 
 		if i == _current_slot:
 			var cursor := Label.new()
 			cursor.text = "▲"
-			cursor.modulate = Color(1, 0.8, 0)
+			cursor.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
 			cursor.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			vbox.add_child(cursor)
 
@@ -101,7 +101,7 @@ func _select_slot() -> void:
 	var character = CharacterManager.get_character(_current_slot)
 	if character != null:
 		CharacterManager.set_active_slot(_current_slot)
-		SceneManager.goto_scene("res://scenes/2d/city.tscn")
+		SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 	else:
 		SceneManager.goto_scene("res://scenes/2d/character_create.tscn", {"slot": _current_slot})
 

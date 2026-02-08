@@ -1,24 +1,18 @@
 extends VBoxContainer
-## Keyboard-navigable text menu for terminal UI.
+## Keyboard-navigable menu with PSZ DS-style pill-shaped rows.
 ## Use add_item() to populate, then arrow keys + enter to navigate.
 
 signal item_selected(index: int)
 signal item_focused(index: int)
-
-const COLOR_NORMAL := Color(0, 1, 0.533)  # Terminal green
-const COLOR_HIGHLIGHT := Color(1, 0.8, 0)  # Yellow
-const COLOR_MUTED := Color(0.333, 0.333, 0.333)  # Gray
 
 var _items: Array[String] = []
 var _disabled: Array[bool] = []
 var _current_index: int = 0
 var _active: bool = true
 
-@export var cursor_char: String = "> "
-@export var indent_char: String = "  "
-
 
 func _ready() -> void:
+	add_theme_constant_override("separation", 4)
 	_update_display()
 
 
@@ -101,22 +95,53 @@ func _skip_to_enabled(direction: int) -> void:
 
 
 func _update_display() -> void:
-	# Remove old labels
+	# Remove old children
 	for child in get_children():
 		child.queue_free()
 
 	for i in range(_items.size()):
-		var label := Label.new()
-		if i == _current_index and _active:
-			label.text = cursor_char + _items[i]
-			if _disabled[i]:
-				label.modulate = COLOR_MUTED
-			else:
-				label.modulate = COLOR_HIGHLIGHT
+		var is_selected: bool = (i == _current_index and _active)
+		var is_disabled: bool = _disabled[i]
+		var is_separator: bool = _items[i].begins_with("────")
+
+		# Separators render as simple labels (no panel)
+		if is_separator:
+			var sep_label := Label.new()
+			sep_label.text = _items[i]
+			var sep_settings := LabelSettings.new()
+			sep_settings.font_color = ThemeColors.TEXT_DISABLED
+			sep_label.label_settings = sep_settings
+			add_child(sep_label)
+			continue
+
+		var panel := PanelContainer.new()
+		var style := StyleBoxFlat.new()
+
+		if is_selected:
+			style.bg_color = ThemeColors.MENU_SELECTED
+		elif is_disabled:
+			style.bg_color = Color(ThemeColors.MENU_BG, 0.5)
 		else:
-			label.text = indent_char + _items[i]
-			if _disabled[i]:
-				label.modulate = COLOR_MUTED
-			else:
-				label.modulate = COLOR_NORMAL
-		add_child(label)
+			style.bg_color = ThemeColors.MENU_BG
+
+		style.corner_radius_top_left = 12
+		style.corner_radius_top_right = 12
+		style.corner_radius_bottom_right = 12
+		style.corner_radius_bottom_left = 12
+		style.content_margin_left = 12
+		style.content_margin_right = 12
+		style.content_margin_top = 6
+		style.content_margin_bottom = 6
+		panel.add_theme_stylebox_override("panel", style)
+
+		var label := Label.new()
+		label.text = _items[i]
+		var settings := LabelSettings.new()
+		if is_disabled:
+			settings.font_color = ThemeColors.TEXT_DISABLED
+		else:
+			settings.font_color = ThemeColors.MENU_TEXT
+		label.label_settings = settings
+		panel.add_child(label)
+
+		add_child(panel)
