@@ -1,10 +1,10 @@
 extends Control
 ## Status screen — full character stat breakdown.
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var content_panel: PanelContainer = $VBox/HBox/ContentPanel
-@onready var stats_panel: PanelContainer = $VBox/HBox/StatsPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var content_panel: PanelContainer = $Panel/VBox/HBox/ContentPanel
+@onready var stats_panel: PanelContainer = $Panel/VBox/HBox/StatsPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:

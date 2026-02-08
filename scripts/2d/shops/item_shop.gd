@@ -7,11 +7,11 @@ var _mode: int = Mode.BUY
 var _shop_items: Array = []
 var _selected_index: int = 0
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var mode_label: Label = $VBox/ModeBar/ModeLabel
-@onready var shop_panel: PanelContainer = $VBox/HBox/ShopPanel
-@onready var detail_panel: PanelContainer = $VBox/HBox/DetailPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
+@onready var shop_panel: PanelContainer = $Panel/VBox/HBox/ShopPanel
+@onready var detail_panel: PanelContainer = $Panel/VBox/HBox/DetailPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:

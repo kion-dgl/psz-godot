@@ -14,15 +14,6 @@ grow_vertical = 2
 theme = ExtResource("1_theme")
 script = ExtResource("2_script")
 
-[node name="DimBG" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.4)
-
 [node name="CenterPanel" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 8
@@ -43,7 +34,7 @@ theme_override_constants/separation = 8
 
 [node name="TitleLabel" type="Label" parent="CenterPanel/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.165, 0.227, 0.353, 1)
+theme_override_colors/font_color = Color(0.40, 0.75, 0.85, 1)
 theme_override_font_sizes/font_size = 18
 text = "MENU"
 horizontal_alignment = 1
@@ -56,7 +47,7 @@ script = ExtResource("3_menu")
 [node name="FeedbackLabel" type="Label" parent="CenterPanel/VBox"]
 visible = false
 layout_mode = 2
-theme_override_colors/font_color = Color(0.125, 0.125, 0.125, 1)
+theme_override_colors/font_color = Color(0.88, 0.90, 0.94, 1)
 horizontal_alignment = 1
 
 [node name="HintLabel" type="Label" parent="."]

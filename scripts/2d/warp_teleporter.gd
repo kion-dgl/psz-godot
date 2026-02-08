@@ -30,10 +30,10 @@ var _step: int = Step.AREA_SELECT
 var _selected_area: int = 0
 var _selected_difficulty: int = 0
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var content_panel: PanelContainer = $VBox/HBox/ContentPanel
-@onready var info_panel: PanelContainer = $VBox/HBox/InfoPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var content_panel: PanelContainer = $Panel/VBox/HBox/ContentPanel
+@onready var info_panel: PanelContainer = $Panel/VBox/HBox/InfoPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:

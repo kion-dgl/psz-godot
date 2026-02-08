@@ -4,10 +4,10 @@ extends Control
 var _items: Array = []
 var _selected_index: int = 0
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var list_panel: PanelContainer = $VBox/HBox/ListPanel
-@onready var detail_panel: PanelContainer = $VBox/HBox/DetailPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var list_panel: PanelContainer = $Panel/VBox/HBox/ListPanel
+@onready var detail_panel: PanelContainer = $Panel/VBox/HBox/DetailPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:

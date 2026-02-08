@@ -15,10 +15,10 @@ var _choosing_item: bool = false
 var _equippable_items: Array = []  # Array of {id, name} for current slot
 var _selected_item: int = 0
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var equip_panel: PanelContainer = $VBox/HBox/EquipPanel
-@onready var stats_panel: PanelContainer = $VBox/HBox/StatsPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var equip_panel: PanelContainer = $Panel/VBox/HBox/EquipPanel
+@onready var stats_panel: PanelContainer = $Panel/VBox/HBox/StatsPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:

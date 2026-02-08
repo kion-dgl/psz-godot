@@ -19,10 +19,10 @@ const RARITY_COST_MULT := {1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0, 5: 4.0, 6: 6.0, 7: 10
 
 const IDENTIFY_COST := {5: 1000, 6: 2500, 7: 5000}
 
-@onready var title_label: Label = $VBox/TitleLabel
-@onready var mode_label: Label = $VBox/ModeLabel
-@onready var content_panel: PanelContainer = $VBox/ContentPanel
-@onready var hint_label: Label = $VBox/HintLabel
+@onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var mode_label: Label = $Panel/VBox/ModeLabel
+@onready var content_panel: PanelContainer = $Panel/VBox/ContentPanel
+@onready var hint_label: Label = $Panel/VBox/HintLabel
 
 
 func _ready() -> void:
