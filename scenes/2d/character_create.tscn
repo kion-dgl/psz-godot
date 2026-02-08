@@ -19,7 +19,12 @@ content_margin_top = 12.0
 content_margin_right = 12.0
 content_margin_bottom = 12.0
 
-[node name="CharacterCreate" type="Control"]
+[node name="CharacterCreate" type="Node3D"]
+script = ExtResource("2_script")
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="UI" type="Control" parent="UILayer"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,9 +32,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_theme")
-script = ExtResource("2_script")
 
-[node name="BG" type="ColorRect" parent="."]
+[node name="BG" type="ColorRect" parent="UILayer/UI"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,7 +42,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.04, 0.06, 0.12, 1)
 
-[node name="VBox" type="VBoxContainer" parent="."]
+[node name="VBox" type="VBoxContainer" parent="UILayer/UI"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -51,30 +55,30 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="TitleLabel" type="Label" parent="VBox"]
+[node name="TitleLabel" type="Label" parent="UILayer/UI/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 
-[node name="HBox" type="HBoxContainer" parent="VBox"]
+[node name="HBox" type="HBoxContainer" parent="UILayer/UI/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 12
 
-[node name="ContentPanel" type="PanelContainer" parent="VBox/HBox"]
+[node name="ContentPanel" type="PanelContainer" parent="UILayer/UI/VBox/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.0
 theme_override_styles/panel = SubResource("panel_style")
 
-[node name="InfoPanel" type="PanelContainer" parent="VBox/HBox"]
+[node name="InfoPanel" type="PanelContainer" parent="UILayer/UI/VBox/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 1.2
 theme_override_styles/panel = SubResource("panel_style")
 
-[node name="HintLabel" type="Label" parent="VBox"]
+[node name="HintLabel" type="Label" parent="UILayer/UI/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.816, 0.847, 0.878, 1)
 theme_override_font_sizes/font_size = 14
