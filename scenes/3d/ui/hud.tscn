@@ -39,6 +39,12 @@ theme_override_styles/panel = SubResource("hud_panel")
 layout_mode = 2
 theme_override_constants/separation = 2
 
+[node name="CharInfoLabel" type="Label" parent="TopLeft/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.878, 0.502, 0.063, 1)
+theme_override_font_sizes/font_size = 12
+text = ""
+
 [node name="HPBar" type="HBoxContainer" parent="TopLeft/Panel/VBox"]
 layout_mode = 2
 script = ExtResource("3_statbar")

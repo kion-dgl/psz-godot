@@ -1,6 +1,7 @@
 extends CanvasLayer
 ## Main HUD displaying player HP, PP, meseta, and interaction prompts.
 
+@onready var char_info_label: Label = $TopLeft/Panel/VBox/CharInfoLabel
 @onready var hp_bar = $TopLeft/Panel/VBox/HPBar
 @onready var pp_bar = $TopLeft/Panel/VBox/PPBar
 @onready var meseta_label: Label = $TopRight/MesetaPanel/HBox/MesetaLabel
@@ -16,6 +17,7 @@ func _ready() -> void:
 	GameState.mp_changed.connect(_on_mp_changed)
 	GameState.max_mp_changed.connect(_on_max_mp_changed)
 	GameState.meseta_changed.connect(_on_meseta_changed)
+	CharacterManager.level_up.connect(_on_level_up)
 
 	# Style the meseta icon
 	var icon_settings := LabelSettings.new()
@@ -28,6 +30,7 @@ func _ready() -> void:
 	meseta_label.label_settings = meseta_settings
 
 	# Initialize display
+	_update_char_info()
 	_update_hp_display()
 	_update_mp_display()
 	_update_meseta_display()
@@ -78,3 +81,24 @@ func _on_max_mp_changed(_new_max_mp: int) -> void:
 
 func _on_meseta_changed(_new_amount: int) -> void:
 	_update_meseta_display()
+
+
+func _on_level_up(_new_level: int) -> void:
+	_update_char_info()
+
+
+func _update_char_info() -> void:
+	if not char_info_label:
+		return
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		char_info_label.text = ""
+		return
+	var char_name: String = character.get("name", "???")
+	var level: int = int(character.get("level", 1))
+	var class_id: String = character.get("class_id", "")
+	var class_display := class_id
+	var class_data = ClassRegistry.get_class_data(class_id)
+	if class_data:
+		class_display = class_data.name
+	char_info_label.text = "%s  Lv.%d  %s" % [char_name, level, class_display]
