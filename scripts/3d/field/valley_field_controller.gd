@@ -58,6 +58,7 @@ func _ready() -> void:
 	_map_root.rotation.y = deg_to_rad(rotation_deg)
 
 	add_child(_map_root)
+	_fix_texture_repeat(_map_root)
 	await get_tree().process_frame
 
 	# Setup collision from GLB -colonly meshes
@@ -66,6 +67,9 @@ func _ready() -> void:
 
 	# Discover portal nodes from scene tree
 	_portal_data = _find_portal_data(_map_root)
+	print("[ValleyField] Portal data keys: %s" % str(_portal_data.keys()))
+	for key in _portal_data:
+		print("[ValleyField]   %s: spawn_pos=%s" % [key, _portal_data[key]["spawn_pos"]])
 
 	# Spawn player
 	var spawn_pos := Vector3.ZERO
@@ -74,8 +78,14 @@ func _ready() -> void:
 		spawn_pos = _portal_data[spawn_edge]["spawn_pos"]
 		# Face away from spawn edge (into the room)
 		spawn_rot = _dir_to_yaw(OPPOSITE[spawn_edge])
+	elif _portal_data.has("default"):
+		# Standalone default spawn (boss rooms / gateless areas / fresh entry)
+		spawn_pos = _portal_data["default"]["spawn_pos"]
+		var arrow: Node3D = _find_child_by_name(_map_root, "spawn_default_arrow")
+		if arrow:
+			spawn_rot = arrow.rotation.y
 	elif _portal_data.has("south"):
-		# Default: spawn at south portal (start cell enters from south)
+		# Legacy fallback: spawn at south portal (start cell enters from south)
 		spawn_pos = _portal_data["south"]["spawn_pos"]
 		spawn_rot = _dir_to_yaw("north")
 	else:
@@ -114,8 +124,8 @@ func _ready() -> void:
 		if not key_for.is_empty() and not _keys_collected.has(key_for):
 			_create_key_pickup(key_for)
 
-	# Hide debug marker meshes
-	_hide_debug_markers(_map_root)
+	# Hide debug marker meshes (disabled for testing portal visibility)
+	#_hide_debug_markers(_map_root)
 
 
 func _find_cell(cells: Array, pos: String) -> Dictionary:
@@ -135,19 +145,28 @@ func _find_portal_data(map_root: Node3D) -> Dictionary:
 
 	for dir in ["north", "east", "south", "west"]:
 		var spawn_node: Node3D = portals_node.get_node_or_null("spawn_" + dir)
+		if not spawn_node:
+			spawn_node = _find_child_by_name(portals_node, "spawn_" + dir)
 		var trigger_area: Node3D = portals_node.get_node_or_null("trigger_" + dir + "-area")
+		if not trigger_area:
+			trigger_area = _find_child_by_name(portals_node, "trigger_" + dir + "-area")
 		if spawn_node:
-			var trigger_pos: Vector3 = spawn_node.global_position
-			if trigger_area:
-				var trigger_box: Node3D = trigger_area.get_node_or_null("trigger_" + dir + "_box")
-				if trigger_box:
-					trigger_pos = trigger_box.global_position
-				else:
-					trigger_pos = trigger_area.global_position
+			# Use area's base position (y=0), not the box child (y=1.5)
+			# since _create_gate_trigger adds its own y offset for the collision shape
+			var trigger_pos: Vector3 = trigger_area.global_position if trigger_area else spawn_node.global_position
 			portals[dir] = {
 				"spawn_pos": spawn_node.global_position,
 				"trigger_pos": trigger_pos,
 			}
+
+	# Look for standalone default spawn (boss rooms / gateless areas)
+	var default_spawn: Node3D = _find_child_by_name(portals_node, "spawn_default")
+	if default_spawn:
+		portals["default"] = {
+			"spawn_pos": default_spawn.global_position,
+			"trigger_pos": default_spawn.global_position,
+		}
+
 	return portals
 
 
@@ -191,13 +210,32 @@ func _setup_map_collision(root: Node) -> void:
 	_configure_collision_nodes(root)
 
 
+func _fix_texture_repeat(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				if not mat.texture_repeat:
+					var new_mat := mat.duplicate() as StandardMaterial3D
+					new_mat.texture_repeat = true
+					mesh_inst.set_surface_override_material(i, new_mat)
+	for child in node.get_children():
+		_fix_texture_repeat(child)
+
+
 func _configure_collision_nodes(node: Node) -> bool:
 	var found_floor := false
 	if node is StaticBody3D:
 		if node.name == "collision_floor":
 			found_floor = true
-		node.collision_layer = 1
-		node.collision_mask = 0
+		# Skip trigger boxes — they define portal positions, not walls
+		if str(node.name).begins_with("trigger_"):
+			node.collision_layer = 0
+			node.collision_mask = 0
+		else:
+			node.collision_layer = 1
+			node.collision_mask = 0
 	for child in node.get_children():
 		if _configure_collision_nodes(child):
 			found_floor = true
@@ -219,7 +257,6 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, portal: Di
 	trigger.name = "GateTrigger_%s" % direction
 	trigger.collision_layer = 0
 	trigger.collision_mask = 2  # Player layer
-	trigger.global_position = portal["trigger_pos"]
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -227,21 +264,34 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, portal: Di
 	shape.shape = box
 	shape.position.y = 1.5
 	trigger.add_child(shape)
+
+	# Visible debug indicator
+	var vis := MeshInstance3D.new()
+	var vis_box := BoxMesh.new()
+	vis_box.size = Vector3(6, 3, 6)
+	vis.mesh = vis_box
+	vis.position.y = 1.5
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.4, 0.0, 0.35)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	vis.material_override = mat
+	trigger.add_child(vis)
 
 	var entry_edge: String = OPPOSITE[direction]
 	trigger.body_entered.connect(func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
+			print("[ValleyField] Player entered gate trigger: %s → cell %s" % [direction, target_cell_pos])
 			_transition_to_cell(target_cell_pos, entry_edge)
 	)
 	add_child(trigger)
+	trigger.global_position = portal["trigger_pos"]
 
 
-func _create_exit_trigger(direction: String, portal: Dictionary) -> void:
+func _create_exit_trigger(_direction: String, portal: Dictionary) -> void:
 	var trigger := Area3D.new()
 	trigger.name = "ExitTrigger"
 	trigger.collision_layer = 0
 	trigger.collision_mask = 2
-	trigger.global_position = portal["trigger_pos"]
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -250,11 +300,25 @@ func _create_exit_trigger(direction: String, portal: Dictionary) -> void:
 	shape.position.y = 1.5
 	trigger.add_child(shape)
 
+	# Visible debug indicator
+	var vis := MeshInstance3D.new()
+	var vis_box := BoxMesh.new()
+	vis_box.size = Vector3(6, 3, 6)
+	vis.mesh = vis_box
+	vis.position.y = 1.5
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 0.4, 0.0, 0.35)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	vis.material_override = mat
+	trigger.add_child(vis)
+
 	trigger.body_entered.connect(func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
+			print("[ValleyField] Player entered exit trigger")
 			_on_end_reached()
 	)
 	add_child(trigger)
+	trigger.global_position = portal["trigger_pos"]
 
 
 func _create_key_pickup(key_for_cell: String) -> void:
