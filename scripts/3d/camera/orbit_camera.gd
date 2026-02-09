@@ -1,12 +1,14 @@
 extends Node3D
 ## Third-person orbit camera controller.
-## Left/Right arrows orbit horizontally at fixed radius. Home re-centers behind player.
+## Left/Right arrows or mouse drag orbit horizontally at fixed radius.
+## Home re-centers behind player.
 ## Player movement is camera-relative (handled in player.gd via get_viewport().get_camera_3d()).
 
 # Camera settings
 @export var distance: float = 6.0
 @export var height: float = 3.0
 @export var rotation_speed: float = 0.05
+@export var mouse_sensitivity: float = 0.005
 
 # Target to follow
 @export var target_path: NodePath
@@ -14,6 +16,9 @@ var target: Node3D
 
 # Camera rotation state (horizontal orbit angle)
 var camera_rotation: float = 0.0
+
+# Mouse drag state
+var _mouse_dragging := false
 
 # Node references
 @onready var camera: Camera3D = $Camera3D
@@ -42,6 +47,21 @@ func _process(_delta: float) -> void:
 
 	if target and camera:
 		_update_camera_position()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_RIGHT:
+			_mouse_dragging = mb.pressed
+			# Capture mouse while dragging for smooth movement
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if _mouse_dragging else Input.MOUSE_MODE_VISIBLE
+		elif mb.button_index == MOUSE_BUTTON_MIDDLE:
+			_mouse_dragging = mb.pressed
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if _mouse_dragging else Input.MOUSE_MODE_VISIBLE
+	elif event is InputEventMouseMotion and _mouse_dragging:
+		var motion := event as InputEventMouseMotion
+		camera_rotation += motion.relative.x * mouse_sensitivity
 
 
 func _update_camera_position() -> void:
