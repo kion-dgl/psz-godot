@@ -1,52 +1,31 @@
 extends Node
-## Test launcher for valley field — sets up SessionManager with a simple 2-cell
-## layout using s01a_sa1, then transitions to the 3D valley field scene.
+## Test launcher for valley field — uses GridGenerator to create a full
+## multi-section field (a→e→b→z) and transitions to the 3D valley field scene.
+
+const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 
 func _ready() -> void:
 	# Set up a field session
 	SessionManager.enter_field("gurhacia", "normal")
 
-	# Cell 0,0: player enters here (start). South gate connects to cell 0,1.
-	# Cell 0,1: player enters from north. South warp_edge exits the section.
-	var cells := [
-		{
-			"pos": "0,0",
-			"stage_id": "s01a_sa1",
-			"rotation": 0,
-			"is_start": true,
-			"is_end": false,
-			"connections": {"south": "0,1"},
-			"has_key": false,
-		},
-		{
-			"pos": "0,1",
-			"stage_id": "s01a_sa1",
-			"rotation": 0,
-			"is_start": false,
-			"is_end": true,
-			"connections": {"north": "0,0"},
-			"has_key": false,
-			"warp_edge": "south",
-		},
-	]
+	# Generate a full field with 4 sections
+	var gen := GridGenerator.new()
+	var field: Dictionary = gen.generate_field("normal")
+	var sections: Array = field["sections"]
 
-	var sections := [
-		{
-			"type": "grid",
-			"area": "a",
-			"cells": cells,
-			"start_pos": "0,0",
-			"end_pos": "0,1",
-		},
-	]
+	print("[ValleyFieldTest] Generated %d sections:" % sections.size())
+	for i in range(sections.size()):
+		var s: Dictionary = sections[i]
+		var cell_count: int = s.get("cells", []).size()
+		print("  Section %d: type=%s area=%s cells=%d start=%s" % [
+			i, s.get("type", "?"), s.get("area", "?"), cell_count, s.get("start_pos", "?")])
 
 	SessionManager.set_field_sections(sections)
 
-	# Transition to the 3D valley field scene
-	# spawn_edge="" → cell 0,0 has south portal, so player spawns at south spawn point.
-	# Cell 0,1 entry with spawn_edge="north" → no north portal → falls to default spawn.
+	# Start at the first section's start cell
+	var first_section: Dictionary = sections[0]
 	SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-		"current_cell_pos": "0,0",
+		"current_cell_pos": str(first_section["start_pos"]),
 		"spawn_edge": "",
 		"keys_collected": {},
 	})
