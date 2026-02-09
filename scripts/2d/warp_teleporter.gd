@@ -100,8 +100,10 @@ func _warp_to_field() -> void:
 		var sections: Array = field["sections"]
 		SessionManager.set_field_sections(sections)
 		var first_section: Dictionary = sections[0]
-		SceneManager.goto_scene("res://scenes/2d/valley_field.tscn", {
+		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 			"current_cell_pos": str(first_section["start_pos"]),
+			"spawn_edge": "",
+			"keys_collected": {},
 		})
 	else:
 		SceneManager.goto_scene("res://scenes/2d/field.tscn")
