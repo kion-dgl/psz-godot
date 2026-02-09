@@ -195,6 +195,8 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	add_child(player)
 	player.global_position = pos
 
+	# Set player facing direction (both model visual and movement state)
+	player.player_rotation = rot
 	var model := player.get_node_or_null("PlayerModel") as Node3D
 	if model:
 		model.rotation.y = rot
@@ -204,6 +206,8 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	orbit_camera = ORBIT_CAMERA_SCENE.instantiate()
 	add_child(orbit_camera)
 	orbit_camera.set_target(player)
+	# Place camera behind the player's facing direction
+	orbit_camera.camera_rotation = rot + PI
 
 
 func _setup_map_collision(root: Node) -> void:
@@ -252,44 +256,104 @@ func _hide_debug_markers(node: Node) -> void:
 		_hide_debug_markers(child)
 
 
-func _create_gate_trigger(direction: String, target_cell_pos: String, portal: Dictionary) -> void:
-	var trigger := Area3D.new()
-	trigger.name = "GateTrigger_%s" % direction
-	trigger.collision_layer = 0
-	trigger.collision_mask = 2  # Player layer
-
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(6, 3, 6)
-	shape.shape = box
-	shape.position.y = 1.5
-	trigger.add_child(shape)
-
-	# Visible debug indicator
-	var vis := MeshInstance3D.new()
-	var vis_box := BoxMesh.new()
-	vis_box.size = Vector3(6, 3, 6)
-	vis.mesh = vis_box
-	vis.position.y = 1.5
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.4, 0.0, 0.35)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	vis.material_override = mat
-	trigger.add_child(vis)
-
+func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: Dictionary) -> void:
 	var entry_edge: String = OPPOSITE[direction]
-	trigger.body_entered.connect(func(_body: Node3D) -> void:
+	var callback := func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
 			print("[ValleyField] Player entered gate trigger: %s → cell %s" % [direction, target_cell_pos])
 			_transition_to_cell(target_cell_pos, entry_edge)
-	)
-	add_child(trigger)
-	trigger.global_position = portal["trigger_pos"]
+
+	# Try to repurpose the GLB's trigger node
+	var trigger_name := "trigger_" + direction + "-area"
+	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
+	if not trigger_group:
+		trigger_group = _find_child_by_name(_map_root, "trigger_" + direction)
+	if trigger_group:
+		var area := _convert_static_to_area(trigger_group)
+		if area:
+			area.name = "GateTrigger_%s" % direction
+			area.body_entered.connect(callback)
+			return
+
+	# Fallback: create programmatic trigger at portal position
+	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback)
 
 
-func _create_exit_trigger(_direction: String, portal: Dictionary) -> void:
+func _create_exit_trigger(direction: String, _portal: Dictionary) -> void:
+	var callback := func(_body: Node3D) -> void:
+		if _body.is_in_group("player"):
+			print("[ValleyField] Player entered exit trigger")
+			_on_end_reached()
+
+	# Try to repurpose the GLB's trigger node
+	var trigger_name := "trigger_" + direction + "-area"
+	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
+	if not trigger_group:
+		trigger_group = _find_child_by_name(_map_root, "trigger_" + direction)
+	if trigger_group:
+		var area := _convert_static_to_area(trigger_group)
+		if area:
+			area.name = "ExitTrigger"
+			area.body_entered.connect(callback)
+			return
+
+	# Fallback: create programmatic trigger at portal position
+	_create_fallback_trigger("ExitTrigger", _portal["trigger_pos"], callback)
+
+
+## Convert a GLB trigger group's -colonly StaticBody3D into a functional Area3D.
+## The GLB structure is: trigger_{dir}-area (Node3D group)
+##   ├── trigger_{dir}_box-colonly (StaticBody3D with CollisionShape3D)
+##   └── trigger_{dir}_vis / trigger_{dir}_wire (MeshInstance3D, visual)
+## We reparent the CollisionShape3D into a new Area3D and free the StaticBody3D.
+func _convert_static_to_area(trigger_group: Node3D) -> Area3D:
+	var static_body: StaticBody3D = null
+	for child in trigger_group.get_children():
+		if child is StaticBody3D:
+			static_body = child
+			break
+	if not static_body:
+		# Also search recursively in case of extra nesting
+		static_body = _find_static_body(trigger_group)
+	if not static_body:
+		return null
+
+	var area := Area3D.new()
+	area.collision_layer = 0
+	area.collision_mask = 2  # Player layer
+
+	# Move collision shapes from StaticBody3D to Area3D
+	var shapes: Array = []
+	for child in static_body.get_children():
+		if child is CollisionShape3D:
+			shapes.append(child)
+	for shape in shapes:
+		static_body.remove_child(shape)
+		area.add_child(shape)
+
+	# Place Area3D at the same position as the StaticBody3D
+	trigger_group.add_child(area)
+	area.global_position = static_body.global_position
+
+	# Remove the now-empty StaticBody3D
+	static_body.queue_free()
+	return area
+
+
+func _find_static_body(node: Node) -> StaticBody3D:
+	for child in node.get_children():
+		if child is StaticBody3D:
+			return child
+		var found := _find_static_body(child)
+		if found:
+			return found
+	return null
+
+
+## Fallback trigger when no GLB trigger node exists.
+func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Callable) -> void:
 	var trigger := Area3D.new()
-	trigger.name = "ExitTrigger"
+	trigger.name = trigger_name
 	trigger.collision_layer = 0
 	trigger.collision_mask = 2
 
@@ -300,25 +364,9 @@ func _create_exit_trigger(_direction: String, portal: Dictionary) -> void:
 	shape.position.y = 1.5
 	trigger.add_child(shape)
 
-	# Visible debug indicator
-	var vis := MeshInstance3D.new()
-	var vis_box := BoxMesh.new()
-	vis_box.size = Vector3(6, 3, 6)
-	vis.mesh = vis_box
-	vis.position.y = 1.5
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.4, 0.0, 0.35)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	vis.material_override = mat
-	trigger.add_child(vis)
-
-	trigger.body_entered.connect(func(_body: Node3D) -> void:
-		if _body.is_in_group("player"):
-			print("[ValleyField] Player entered exit trigger")
-			_on_end_reached()
-	)
+	trigger.body_entered.connect(callback)
 	add_child(trigger)
-	trigger.global_position = portal["trigger_pos"]
+	trigger.global_position = pos
 
 
 func _create_key_pickup(key_for_cell: String) -> void:
