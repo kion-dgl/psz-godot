@@ -44,6 +44,7 @@ ModifierRegistry="*res://scripts/autoloads/modifier_registry.gd"
 SetBonusRegistry="*res://scripts/autoloads/set_bonus_registry.gd"
 CityState="*res://scripts/autoloads/city_state.gd"
 PlayerConfig="*res://scripts/autoloads/player_config.gd"
+TimeManager="*res://scripts/autoloads/time_manager.gd"
 
 [display]
 
