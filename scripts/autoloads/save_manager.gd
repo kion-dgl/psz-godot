@@ -13,10 +13,12 @@ func _ready() -> void:
 
 ## Save all game data to disk
 func save_game() -> void:
+	# Sync current inventory into active character's data
+	CharacterManager.sync_inventory_to_active()
+
 	var save_data := {
-		"version": 2,
+		"version": 3,
 		"characters": CharacterManager.get_save_data(),
-		"inventory": Inventory._items.duplicate(),
 		"completed_missions": GameState.completed_missions.duplicate(),
 		"shared_storage": GameState.shared_storage.duplicate(),
 		"stored_meseta": GameState.stored_meseta,
@@ -64,9 +66,11 @@ func load_game() -> void:
 	var characters: Array = save_data.get("characters", [])
 	CharacterManager.load_from_save(characters)
 
-	# Load inventory
-	var inv_data: Dictionary = save_data.get("inventory", {})
-	Inventory._items = inv_data.duplicate()
+	# Migrate v2 global inventory to per-character
+	var version := int(save_data.get("version", 0))
+	if version < 3 and save_data.has("inventory"):
+		var inv_data: Dictionary = save_data.get("inventory", {})
+		CharacterManager.migrate_global_inventory(inv_data)
 
 	# Load completed missions
 	var missions_data: Array = save_data.get("completed_missions", [])

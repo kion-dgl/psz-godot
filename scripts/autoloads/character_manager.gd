@@ -70,6 +70,13 @@ func create_character(slot: int, class_id: String, char_name: String, appearance
 			"unit3": "",
 			"unit4": "",
 		},
+		"inventory": {
+			starter_weapon: 1,
+			"normal_frame": 1,
+			"mag": 1,
+			"monomate": 5,
+			"monofluid": 5,
+		},
 		"techniques": {},
 		"weapon_grinds": {},
 		"unidentified_weapons": [],
@@ -81,15 +88,6 @@ func create_character(slot: int, class_id: String, char_name: String, appearance
 
 	_characters[slot] = character
 	character_created.emit(slot)
-
-	# Grant starter equipment (takes inventory space)
-	Inventory.add_item(starter_weapon, 1)
-	Inventory.add_item("normal_frame", 1)
-	Inventory.add_item("mag", 1)
-
-	# Grant starter consumables
-	Inventory.add_item("monomate", 5)
-	Inventory.add_item("monofluid", 5)
 
 	print("[CharacterManager] Created %s (%s) in slot %d" % [char_name, class_id, slot])
 	return character
@@ -109,13 +107,18 @@ func get_active_character():
 	return _characters[_active_slot]
 
 
-## Set the active character slot
+## Set the active character slot (swaps inventory)
 func set_active_slot(slot: int) -> void:
-	if slot >= 0 and slot < MAX_SLOTS and _characters[slot] != null:
-		_active_slot = slot
-		active_character_changed.emit(slot)
-		# Sync stats with GameState
-		_sync_to_game_state()
+	if slot < 0 or slot >= MAX_SLOTS or _characters[slot] == null:
+		return
+	# Save current inventory to outgoing character
+	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
+		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
+	_active_slot = slot
+	# Load incoming character's inventory
+	Inventory._items = _characters[slot].get("inventory", {}).duplicate()
+	active_character_changed.emit(slot)
+	_sync_to_game_state()
 
 
 ## Get all characters (array of 4, with nulls for empty slots)
@@ -132,6 +135,7 @@ func delete_character(slot: int) -> void:
 	_characters[slot] = null
 	if _active_slot == slot:
 		_active_slot = -1
+		Inventory.clear_inventory()
 	character_deleted.emit(slot)
 
 
@@ -200,11 +204,27 @@ func get_active_slot() -> int:
 func load_from_save(data: Array) -> void:
 	for i in range(mini(data.size(), MAX_SLOTS)):
 		_characters[i] = data[i]
+		# Ensure inventory key exists for old saves
+		if _characters[i] != null and not _characters[i].has("inventory"):
+			_characters[i]["inventory"] = {}
 
 
 ## Get save data
 func get_save_data() -> Array:
 	return _characters.duplicate(true)
+
+
+## Sync current Inventory to active character dict (call before saving)
+func sync_inventory_to_active() -> void:
+	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
+		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
+
+
+## Migrate v2 global inventory to all existing characters
+func migrate_global_inventory(inv_data: Dictionary) -> void:
+	for i in range(MAX_SLOTS):
+		if _characters[i] != null and _characters[i].get("inventory", {}).is_empty():
+			_characters[i]["inventory"] = inv_data.duplicate()
 
 
 ## Heal the active character
