@@ -389,8 +389,18 @@ func _handle_movement(delta: float) -> void:
 		# Normalize input
 		input_dir = input_dir.normalized()
 
-		# Calculate target rotation from input
-		var target_rotation := atan2(input_dir.x, input_dir.y)
+		# Camera-relative movement: transform input by camera orientation
+		# so W always moves "into the screen" regardless of camera angle.
+		var target_rotation: float
+		var cam := get_viewport().get_camera_3d()
+		if cam:
+			var cam_basis := cam.get_global_transform().basis
+			var move_3d := cam_basis * Vector3(input_dir.x, 0, input_dir.y)
+			move_3d.y = 0
+			move_3d = move_3d.normalized()
+			target_rotation = atan2(move_3d.x, move_3d.z)
+		else:
+			target_rotation = atan2(input_dir.x, input_dir.y)
 
 		# Smoothly rotate toward target
 		var rot_diff := target_rotation - player_rotation

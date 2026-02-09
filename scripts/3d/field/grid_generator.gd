@@ -56,14 +56,14 @@ const GATES := {
 
 ## ── TUNING PARAMETERS ──
 ##
-## GRID_SIZE (int, default 5):
+## grid_size (int, default 5):
 ##   The NxN grid dimensions. Stages are placed on this grid. Larger grids
 ##   allow longer, more winding paths but may feel sparse. Range: 3–7.
 ##
 ## path_length (int):
 ##   Number of cells on the MAIN path from start to end (including start/end).
 ##   This is the critical path the player must follow to complete the section.
-##   More cells = longer section. Must be >= 3, max = GRID_SIZE * GRID_SIZE.
+##   More cells = longer section. Must be >= 3, max = grid_size * grid_size.
 ##   Normal: 5, Hard: 7, Super-Hard: 9.
 ##
 ## key_gates (int):
@@ -95,7 +95,42 @@ const DIFFICULTY_PARAMS := {
 	},
 }
 
-const GRID_SIZE := 5
+var grid_size: int = 5
+
+
+## Load grid generation parameters from config file.
+## Priority: user://field_config.cfg > res://data/field_config.cfg > hardcoded DIFFICULTY_PARAMS.
+static func load_params() -> Dictionary:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://field_config.cfg") != OK:
+		if cfg.load("res://data/field_config.cfg") != OK:
+			return DIFFICULTY_PARAMS
+	var params := {}
+	for difficulty in ["normal", "hard", "super-hard"]:
+		if not cfg.has_section(difficulty):
+			params[difficulty] = DIFFICULTY_PARAMS.get(difficulty, DIFFICULTY_PARAMS["normal"])
+			continue
+		params[difficulty] = {
+			"a": {
+				"path_length": cfg.get_value(difficulty, "a_path_length", 5),
+				"key_gates": cfg.get_value(difficulty, "a_key_gates", 0),
+				"branches": cfg.get_value(difficulty, "a_branches", 1),
+			},
+			"b": {
+				"path_length": cfg.get_value(difficulty, "b_path_length", 5),
+				"key_gates": cfg.get_value(difficulty, "b_key_gates", 0),
+				"branches": cfg.get_value(difficulty, "b_branches", 1),
+			},
+		}
+	return params
+
+
+## Load grid size from config file.
+static func load_grid_size() -> int:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://field_config.cfg") != OK:
+		cfg.load("res://data/field_config.cfg")
+	return cfg.get_value("grid", "grid_size", 5)
 
 
 ## Rotate a direction clockwise by rotation degrees (0, 90, 180, 270).
@@ -117,7 +152,9 @@ func get_rotated_gates(stage_id: String, rotation: int) -> Array[String]:
 
 ## Generate a complete field with 4 sections: a (grid), e (transition), b (grid), z (boss).
 func generate_field(difficulty: String) -> Dictionary:
-	var params: Dictionary = DIFFICULTY_PARAMS.get(difficulty, DIFFICULTY_PARAMS["normal"])
+	var all_params: Dictionary = load_params()
+	var params: Dictionary = all_params.get(difficulty, all_params.get("normal", DIFFICULTY_PARAMS["normal"]))
+	grid_size = load_grid_size()
 	var sections: Array[Dictionary] = []
 
 	# Section 1: Valley A grid
@@ -157,10 +194,12 @@ func generate_field(difficulty: String) -> Dictionary:
 ## area: "a" or "b"
 ## params: {"path_length": int, "key_gates": int, "branches": int}
 func generate(area: String, params: Dictionary) -> Dictionary:
+	if grid_size <= 0:
+		grid_size = load_grid_size()
 	var path_length: int = int(params.get("path_length", 5))
 	var key_gates: int = int(params.get("key_gates", 0))
 	var branches: int = int(params.get("branches", 0))
-	path_length = clampi(path_length, 3, GRID_SIZE * GRID_SIZE)
+	path_length = clampi(path_length, 3, grid_size * grid_size)
 
 	for attempt in range(200):
 		var result: Dictionary = _try_generate(area, path_length, key_gates, branches)
@@ -184,7 +223,7 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 
 	# Place sa1 at top-center, exiting south
 	var sa1_row := 0
-	var sa1_col: int = GRID_SIZE / 2
+	var sa1_col: int = grid_size / 2
 
 	var sa1_rotation := -1
 	for rot in [0, 90, 180, 270]:
@@ -804,7 +843,7 @@ func _make_output_cell(pos: Vector2i, stage_id: String, rotation: int,
 
 
 func _is_valid_pos(row: int, col: int) -> bool:
-	return row >= 0 and row < GRID_SIZE and col >= 0 and col < GRID_SIZE
+	return row >= 0 and row < grid_size and col >= 0 and col < grid_size
 
 
 func _pos_key(pos: Vector2i) -> String:

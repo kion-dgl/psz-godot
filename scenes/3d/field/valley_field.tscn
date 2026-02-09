@@ -1,0 +1,30 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/3d/field/valley_field_controller.gd" id="1_script"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0.3, 0.55, 0.65, 1)
+sky_horizon_color = Color(0.6, 0.7, 0.6, 1)
+ground_bottom_color = Color(0.15, 0.12, 0.08, 1)
+ground_horizon_color = Color(0.45, 0.42, 0.35, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.85, 0.9, 0.85, 1)
+ambient_light_energy = 0.7
+
+[node name="ValleyField" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, 0.25, -0.433, 0, 0.866, 0.5, 0.5, -0.433, 0.75, 10, 20, 10)
+light_energy = 0.8
+shadow_enabled = true
