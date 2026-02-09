@@ -213,20 +213,20 @@ func test_character_creation() -> void:
 		assert_eq(result.get("level"), 1, "Starts at level 1")
 		assert_gt(int(result.get("hp", 0)), 0, "Has HP")
 
-	# Should have starter items in inventory
-	assert_true(Inventory.has_item("saber"), "Starter weapon: saber")
-	assert_true(Inventory.has_item("normal_frame"), "Starter armor: normal_frame")
-	assert_true(Inventory.has_item("monomate"), "Starter item: monomate")
-
 	# Equipment should be set
 	var equip: Dictionary = result.get("equipment", {})
 	assert_eq(equip.get("weapon"), "saber", "Weapon equipped = saber")
 	assert_eq(equip.get("frame"), "normal_frame", "Frame equipped = normal_frame")
 
-	# Active character
+	# Active character — inventory loads on set_active_slot
 	CharacterManager.set_active_slot(0)
 	var active = CharacterManager.get_active_character()
 	assert_true(active != null, "Active character set")
+
+	# Should have starter items in inventory (loaded from character data)
+	assert_true(Inventory.has_item("saber"), "Starter weapon: saber")
+	assert_true(Inventory.has_item("normal_frame"), "Starter armor: normal_frame")
+	assert_true(Inventory.has_item("monomate"), "Starter item: monomate")
 	print("")
 
 
