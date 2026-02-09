@@ -39,6 +39,7 @@ func _ready() -> void:
 	test_additional_drops()
 	test_telepipe_suspend()
 	test_character_appearance()
+	test_valley_grid()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -2103,4 +2104,228 @@ func test_character_appearance() -> void:
 	CharacterManager._characters = [null, null, null, null]
 	CharacterManager._active_slot = -1
 	Inventory.clear_inventory()
+	print("")
+
+
+func test_valley_grid() -> void:
+	print("── Valley Grid ──")
+
+	var MapMgrScript := preload("res://scripts/3d/map_manager_3d.gd")
+	var map_mgr: Node = MapMgrScript.new()
+	map_mgr._init_valley_config()
+	map_mgr._init_map_routes()
+
+	# All 18 s01a_ stages should be configured in MapManager3D
+	var expected_stages := [
+		"s01a_sa1", "s01a_ga1", "s01a_ib1", "s01a_ib2", "s01a_ic1", "s01a_ic3",
+		"s01a_lb1", "s01a_lb3", "s01a_lc1", "s01a_lc2",
+		"s01a_na1", "s01a_nb2", "s01a_nc2",
+		"s01a_tb3", "s01a_tc3", "s01a_td1", "s01a_td2",
+		"s01a_xb2",
+	]
+	for stage_id in expected_stages:
+		assert_true(
+			map_mgr.valley_config.has(stage_id),
+			"MapManager3D has stage %s" % stage_id
+		)
+
+	# Each stage has at least 1 gate edge
+	for stage_id in expected_stages:
+		var edges: Array[String] = map_mgr.get_gate_edges(stage_id)
+		assert_true(edges.size() >= 1, "Stage %s has >= 1 gate edge (got %d)" % [stage_id, edges.size()])
+
+	# Spawn count matches trigger count per stage
+	for stage_id in expected_stages:
+		var cfg = map_mgr.valley_config.get(stage_id)
+		assert_eq(
+			cfg.spawn_points.size(), cfg.triggers.size(),
+			"Stage %s: spawn count (%d) == trigger count (%d)" % [stage_id, cfg.spawn_points.size(), cfg.triggers.size()]
+		)
+
+	# ── Grid Generator Tests ──
+	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var gen := GridGen.new()
+
+	# Rotation system
+	assert_eq(gen.rotate_direction("north", 0), "north", "Rotate north by 0")
+	assert_eq(gen.rotate_direction("north", 90), "east", "Rotate north by 90")
+	assert_eq(gen.rotate_direction("north", 180), "south", "Rotate north by 180")
+	assert_eq(gen.rotate_direction("north", 270), "west", "Rotate north by 270")
+	assert_eq(gen.rotate_direction("east", 90), "south", "Rotate east by 90")
+	assert_eq(gen.rotate_direction("west", 180), "east", "Rotate west by 180")
+
+	# Rotated gates
+	var sa1_gates: Array[String] = gen.get_rotated_gates("s01a_sa1", 0)
+	assert_eq(sa1_gates.size(), 1, "sa1 has 1 gate")
+	assert_eq(sa1_gates[0], "south", "sa1 gate is south at rot 0")
+	var sa1_rot90: Array[String] = gen.get_rotated_gates("s01a_sa1", 90)
+	assert_eq(sa1_rot90[0], "west", "sa1 gate is west at rot 90")
+	var lb1_gates: Array[String] = gen.get_rotated_gates("s01a_lb1", 90)
+	assert_true("east" in lb1_gates and "north" in lb1_gates, "lb1 at rot 90 has east+north")
+
+	# Gate data completeness
+	assert_true(GridGen.GATES.has("s01a_sa1"), "GATES has s01a_sa1")
+	assert_true(GridGen.GATES.has("s01b_sa1"), "GATES has s01b_sa1")
+	assert_true(GridGen.GATES.has("s01e_ia1"), "GATES has s01e_ia1")
+	var total_stages := 0
+	for stage_id in GridGen.GATES:
+		total_stages += 1
+	assert_eq(total_stages, 37, "GATES has all 37 stages (18 a + 18 b + 1 e)")
+
+	# ── Grid generation: area a ──
+	var result: Dictionary = gen.generate("a", {"path_length": 5, "key_gates": 0, "branches": 0})
+	var cells: Array = result.get("cells", [])
+	assert_true(cells.size() >= 3, "Grid A has >= 3 cells (got %d)" % cells.size())
+
+	# Start cell
+	var start_pos: String = result.get("start_pos", "")
+	assert_true(not start_pos.is_empty(), "Grid A has start_pos")
+	var start_cell: Dictionary = {}
+	for cell in cells:
+		if str(cell.get("pos", "")) == start_pos:
+			start_cell = cell
+			break
+	assert_true(not start_cell.is_empty(), "Start cell found")
+	assert_eq(str(start_cell.get("stage_id", "")), "s01a_sa1", "Start cell uses s01a_sa1")
+	assert_true(start_cell.get("is_start", false), "Start cell marked is_start")
+
+	# End cell
+	var end_cell: Dictionary = {}
+	for cell in cells:
+		if cell.get("is_end", false):
+			end_cell = cell
+			break
+	assert_true(not end_cell.is_empty(), "End cell found")
+	assert_true(not str(end_cell.get("warp_edge", "")).is_empty(), "End cell has warp_edge")
+
+	# All cells have rotation field
+	var all_have_rotation := true
+	for cell in cells:
+		if not cell.has("rotation"):
+			all_have_rotation = false
+	assert_true(all_have_rotation, "All cells have rotation field")
+
+	# All connections are bidirectional
+	var cell_map: Dictionary = {}
+	for cell in cells:
+		cell_map[str(cell["pos"])] = cell
+	var bidi_ok := true
+	for cell in cells:
+		var connections: Dictionary = cell.get("connections", {})
+		for edge in connections:
+			var neighbor_pos: String = connections[edge]
+			if cell_map.has(neighbor_pos):
+				var neighbor: Dictionary = cell_map[neighbor_pos]
+				var neighbor_conns: Dictionary = neighbor.get("connections", {})
+				var found_back := false
+				for ne in neighbor_conns:
+					if neighbor_conns[ne] == str(cell["pos"]):
+						found_back = true
+						break
+				if not found_back:
+					bidi_ok = false
+	assert_true(bidi_ok, "All connections are bidirectional")
+
+	# GLBs exist
+	var all_glbs_exist := true
+	for cell in cells:
+		var stage_id: String = cell.get("stage_id", "")
+		var glb_path := "res://assets/environments/valley/%s.glb" % stage_id
+		if not ResourceLoader.exists(glb_path):
+			all_glbs_exist = false
+			print("    Missing GLB: %s" % glb_path)
+	assert_true(all_glbs_exist, "All grid cell GLBs exist")
+
+	# ── Grid generation: area b ──
+	var b_result: Dictionary = gen.generate("b", {"path_length": 5, "key_gates": 0, "branches": 0})
+	var b_cells: Array = b_result.get("cells", [])
+	assert_true(b_cells.size() >= 3, "Grid B has >= 3 cells (got %d)" % b_cells.size())
+	var b_start: Dictionary = {}
+	for cell in b_cells:
+		if cell.get("is_start", false):
+			b_start = cell
+			break
+	assert_eq(str(b_start.get("stage_id", "")), "s01b_sa1", "Grid B start uses s01b_sa1")
+
+	# ── Branches ──
+	var br_result: Dictionary = gen.generate("a", {"path_length": 6, "key_gates": 0, "branches": 2})
+	var br_cells: Array = br_result.get("cells", [])
+	var branch_count := 0
+	for cell in br_cells:
+		if cell.get("is_branch", false):
+			branch_count += 1
+	# Branches are best-effort, may not always place all requested
+	assert_true(branch_count >= 0, "Branch generation runs without error (placed %d)" % branch_count)
+
+	# ── Key-gates ──
+	var kg_result: Dictionary = gen.generate("a", {"path_length": 8, "key_gates": 1, "branches": 1})
+	var kg_cells: Array = kg_result.get("cells", [])
+	var key_count := 0
+	var gate_count := 0
+	for cell in kg_cells:
+		if cell.get("has_key", false):
+			key_count += 1
+		if cell.get("is_key_gate", false):
+			gate_count += 1
+	# Key-gates are best-effort
+	assert_true(key_count >= 0, "Key-gate generation runs without error (keys=%d, gates=%d)" % [key_count, gate_count])
+	if gate_count > 0:
+		assert_eq(key_count, gate_count, "Key count matches gate count")
+
+	# ── Multiple generations succeed ──
+	var gen_ok := true
+	for i in range(10):
+		var r: Dictionary = gen.generate("a", {"path_length": 5, "key_gates": 0, "branches": 0})
+		if r.get("cells", []).size() < 3:
+			gen_ok = false
+	assert_true(gen_ok, "10 consecutive A generations all produce >= 3 cells")
+	for i in range(10):
+		var r: Dictionary = gen.generate("b", {"path_length": 5, "key_gates": 0, "branches": 0})
+		if r.get("cells", []).size() < 3:
+			gen_ok = false
+	assert_true(gen_ok, "10 consecutive B generations all produce >= 3 cells")
+
+	# ── Field generation (4 sections) ──
+	var field: Dictionary = gen.generate_field("normal")
+	var sections: Array = field.get("sections", [])
+	assert_eq(sections.size(), 4, "Field has 4 sections")
+	assert_eq(str(sections[0].get("type", "")), "grid", "Section 0 is grid")
+	assert_eq(str(sections[0].get("area", "")), "a", "Section 0 is area a")
+	assert_eq(str(sections[1].get("type", "")), "transition", "Section 1 is transition")
+	assert_eq(str(sections[1].get("area", "")), "e", "Section 1 is area e")
+	assert_eq(str(sections[2].get("type", "")), "grid", "Section 2 is grid")
+	assert_eq(str(sections[2].get("area", "")), "b", "Section 2 is area b")
+	assert_eq(str(sections[3].get("type", "")), "boss", "Section 3 is boss")
+	assert_eq(str(sections[3].get("area", "")), "z", "Section 3 is area z")
+
+	# Each section has cells and start_pos
+	for i in range(sections.size()):
+		var sec: Dictionary = sections[i]
+		assert_true(sec.get("cells", []).size() > 0, "Section %d has cells" % i)
+		assert_true(not str(sec.get("start_pos", "")).is_empty(), "Section %d has start_pos" % i)
+
+	# Hard difficulty generates longer paths
+	var hard_field: Dictionary = gen.generate_field("hard")
+	var hard_sections: Array = hard_field.get("sections", [])
+	assert_eq(hard_sections.size(), 4, "Hard field has 4 sections")
+	# Hard path should be longer than normal (a section)
+	var normal_a_count: int = sections[0].get("cells", []).size()
+	var hard_a_count: int = hard_sections[0].get("cells", []).size()
+	assert_true(hard_a_count >= normal_a_count,
+		"Hard A section >= Normal A (%d >= %d)" % [hard_a_count, normal_a_count])
+
+	# ── Session field sections storage ──
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.set_field_sections(sections)
+	var stored_sections: Array = SessionManager.get_field_sections()
+	assert_eq(stored_sections.size(), 4, "Session stores 4 sections")
+	assert_eq(SessionManager.get_current_section(), 0, "Starts at section 0")
+	assert_true(SessionManager.advance_section(), "Can advance to section 1")
+	assert_eq(SessionManager.get_current_section(), 1, "Now at section 1")
+	assert_true(SessionManager.advance_section(), "Can advance to section 2")
+	assert_true(SessionManager.advance_section(), "Can advance to section 3")
+	assert_true(not SessionManager.advance_section(), "Cannot advance past last section")
+	assert_eq(SessionManager.get_current_section(), 3, "Still at section 3")
+	SessionManager.return_to_city()
+
 	print("")

@@ -76,6 +76,12 @@ func _init_valley_config() -> void:
 
 	# ==================== VALLEY ROUTE A ====================
 
+	# s01a_sa1 - Start area (1-gate: south)
+	cfg = MapConfig.new()
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(-2, 1, 24), PI, "south", true))
+	cfg.triggers.append(TriggerData.new(Vector3(-2, 1, 29), PI))
+	valley_config["s01a_sa1"] = cfg
+
 	# s01a_ga1 - Entry stage
 	cfg = MapConfig.new()
 	cfg.spawn_points.append(SpawnPoint.new(Vector3(-6.3, 1, 23.47), PI, "south", true))
@@ -148,11 +154,43 @@ func _init_valley_config() -> void:
 	cfg.triggers.append(TriggerData.new(Vector3(13.75, 1, -28.63)))
 	valley_config["s01a_lc2"] = cfg
 
-	# s01a_na1 - Narrow A1 (boss area entrance)
+	# s01a_na1 - Narrow A1 (boss area entrance, 1-gate: south)
 	cfg = MapConfig.new()
 	cfg.spawn_points.append(SpawnPoint.new(Vector3(19, 1, 17.12), PI, "south", true))
 	cfg.triggers.append(TriggerData.new(Vector3(19.1, 1, 21.87)))
 	valley_config["s01a_na1"] = cfg
+
+	# s01a_nb2 - Narrow B2 (dead-end, 1-gate: south)
+	cfg = MapConfig.new()
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(17, 1, 24), PI, "south", true))
+	cfg.triggers.append(TriggerData.new(Vector3(17, 1, 29), PI))
+	valley_config["s01a_nb2"] = cfg
+
+	# s01a_nc2 - Narrow C2 (dead-end, 1-gate: south)
+	cfg = MapConfig.new()
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(-14, 1, 24), PI, "south", true))
+	cfg.triggers.append(TriggerData.new(Vector3(-14, 1, 29), PI))
+	valley_config["s01a_nc2"] = cfg
+
+	# s01a_td1 - T-shaped D1 (3-gate: east, south, west)
+	cfg = MapConfig.new()
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(24, 1, 1), -PI / 2, "east", true))
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(-14, 1, 24), PI, "south", false))
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(-24, 1, -16), PI / 2, "west", false))
+	cfg.triggers.append(TriggerData.new(Vector3(29, 1, 1), -PI / 2))
+	cfg.triggers.append(TriggerData.new(Vector3(-14, 1, 29), PI))
+	cfg.triggers.append(TriggerData.new(Vector3(-29, 1, -16), PI / 2))
+	valley_config["s01a_td1"] = cfg
+
+	# s01a_td2 - T-shaped D2 (3-gate: east, west, south)
+	cfg = MapConfig.new()
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(24, 1, 6.5), -PI / 2, "east", true))
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(-24, 1, -0.5), PI / 2, "west", false))
+	cfg.spawn_points.append(SpawnPoint.new(Vector3(-14.5, 1, 24), PI, "south", false))
+	cfg.triggers.append(TriggerData.new(Vector3(29, 1, 6.5), -PI / 2))
+	cfg.triggers.append(TriggerData.new(Vector3(-29, 1, -0.5), PI / 2))
+	cfg.triggers.append(TriggerData.new(Vector3(-14.5, 1, 29), PI))
+	valley_config["s01a_td2"] = cfg
 
 	# s01a_tb3 - T-shaped B3
 	cfg = MapConfig.new()
@@ -272,4 +310,39 @@ func get_trigger_data(map_id: String, trigger_index: int) -> TriggerData:
 	var cfg := get_map_config(map_id)
 	if trigger_index >= 0 and trigger_index < cfg.triggers.size():
 		return cfg.triggers[trigger_index]
+	return null
+
+
+## Get list of gate edge names for a stage (e.g. ["north", "south"])
+func get_gate_edges(stage_id: String) -> Array[String]:
+	var cfg: MapConfig = valley_config.get(stage_id)
+	if cfg == null:
+		return []
+	var edges: Array[String] = []
+	for sp in cfg.spawn_points:
+		if not sp.label.is_empty() and sp.label not in edges:
+			edges.append(sp.label)
+	return edges
+
+
+## Get spawn point by label (gate edge name)
+func get_spawn_by_label(stage_id: String, label: String) -> SpawnPoint:
+	var cfg: MapConfig = valley_config.get(stage_id)
+	if cfg == null:
+		return null
+	for sp in cfg.spawn_points:
+		if sp.label == label:
+			return sp
+	return null
+
+
+## Get trigger by index matching a spawn label
+func get_trigger_for_label(stage_id: String, label: String) -> TriggerData:
+	var cfg: MapConfig = valley_config.get(stage_id)
+	if cfg == null:
+		return null
+	for i in range(cfg.spawn_points.size()):
+		if cfg.spawn_points[i].label == label:
+			if i < cfg.triggers.size():
+				return cfg.triggers[i]
 	return null
