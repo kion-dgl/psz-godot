@@ -5,8 +5,10 @@ extends Node3D
 const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
 const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
+const MapOverlayScript := preload("res://scripts/3d/field/map_overlay.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
+const ROTATE_CW := {"north": "east", "east": "south", "south": "west", "west": "north"}
 
 var player: CharacterBody3D
 var orbit_camera: Node3D
@@ -15,6 +17,8 @@ var _transitioning := false
 var _keys_collected: Dictionary = {}
 var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
+var _rotation_deg: int = 0
+var _map_overlay: CanvasLayer
 
 
 func _ready() -> void:
@@ -54,8 +58,8 @@ func _ready() -> void:
 	_map_root.name = "Map"
 
 	# Apply grid rotation
-	var rotation_deg: int = int(_current_cell.get("rotation", 0))
-	_map_root.rotation.y = deg_to_rad(rotation_deg)
+	_rotation_deg = int(_current_cell.get("rotation", 0))
+	_map_root.rotation.y = deg_to_rad(_rotation_deg)
 
 	add_child(_map_root)
 	_fix_texture_repeat(_map_root)
@@ -65,11 +69,14 @@ func _ready() -> void:
 	_setup_map_collision(_map_root)
 	await get_tree().process_frame
 
-	# Discover portal nodes from scene tree
+	# Discover portal nodes (returns original GLB direction keys)
 	_portal_data = _find_portal_data(_map_root)
-	print("[ValleyField] Portal data keys: %s" % str(_portal_data.keys()))
-	for key in _portal_data:
-		print("[ValleyField]   %s: spawn_pos=%s" % [key, _portal_data[key]["spawn_pos"]])
+
+	# Remap portal keys from original GLB directions to grid directions
+	if _rotation_deg != 0:
+		_portal_data = _remap_portal_directions(_portal_data, _rotation_deg)
+
+	print("[ValleyField] Portal data keys (grid): %s" % str(_portal_data.keys()))
 
 	# Spawn player
 	var spawn_pos := Vector3.ZERO
@@ -95,11 +102,9 @@ func _ready() -> void:
 	_spawn_player(spawn_pos, spawn_rot)
 	await get_tree().process_frame
 
-	# Create gate triggers for each connection (skip the entry edge)
+	# Create gate triggers for each connection (entry edge gets delayed activation)
 	var connections: Dictionary = _current_cell.get("connections", {})
 	for dir in connections:
-		if dir == spawn_edge:
-			continue
 		if not _portal_data.has(dir):
 			continue
 
@@ -111,7 +116,8 @@ func _ready() -> void:
 				is_locked = true
 
 		if not is_locked:
-			_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir])
+			var is_entry: bool = (dir == spawn_edge)
+			_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry)
 
 	# Create exit trigger on end cell warp_edge
 	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
@@ -123,6 +129,18 @@ func _ready() -> void:
 		var key_for: String = str(_current_cell.get("key_for_cell", ""))
 		if not key_for.is_empty() and not _keys_collected.has(key_for):
 			_create_key_pickup(key_for)
+
+	# Map overlay (toggle with Tab)
+	_map_overlay = CanvasLayer.new()
+	_map_overlay.layer = 100
+	_map_overlay.visible = false
+	_map_overlay.name = "MapOverlay"
+	add_child(_map_overlay)
+	var map_panel := MapOverlayScript.new()
+	map_panel.cells = cells
+	map_panel.current_pos = str(_current_cell.get("pos", ""))
+	map_panel.section_info = "Section %d (%s)" % [section_idx + 1, str(section.get("type", "?"))]
+	_map_overlay.add_child(map_panel)
 
 	# Hide debug marker meshes (disabled for testing portal visibility)
 	#_hide_debug_markers(_map_root)
@@ -152,7 +170,6 @@ func _find_portal_data(map_root: Node3D) -> Dictionary:
 			trigger_area = _find_child_by_name(portals_node, "trigger_" + dir + "-area")
 		if spawn_node:
 			# Use area's base position (y=0), not the box child (y=1.5)
-			# since _create_gate_trigger adds its own y offset for the collision shape
 			var trigger_pos: Vector3 = trigger_area.global_position if trigger_area else spawn_node.global_position
 			portals[dir] = {
 				"spawn_pos": spawn_node.global_position,
@@ -168,6 +185,36 @@ func _find_portal_data(map_root: Node3D) -> Dictionary:
 		}
 
 	return portals
+
+
+## Remap portal data keys from original GLB directions to grid (rotated) directions.
+func _remap_portal_directions(portals: Dictionary, rotation_deg: int) -> Dictionary:
+	var remapped := {}
+	for dir in portals:
+		if dir == "default":
+			remapped["default"] = portals["default"]
+		else:
+			var grid_dir := _original_to_grid_dir(dir, rotation_deg)
+			remapped[grid_dir] = portals[dir]
+	return remapped
+
+
+## Convert original GLB direction to grid direction (apply CW rotation).
+func _original_to_grid_dir(original_dir: String, rotation_deg: int) -> String:
+	var dir := original_dir
+	var steps: int = int(rotation_deg / 90) % 4
+	for _i in range(steps):
+		dir = ROTATE_CW[dir]
+	return dir
+
+
+## Convert grid direction to original GLB direction (undo rotation = rotate CCW).
+func _grid_to_original_dir(grid_dir: String, rotation_deg: int) -> String:
+	var dir := grid_dir
+	var steps: int = int(((360 - rotation_deg) % 360) / 90)
+	for _i in range(steps):
+		dir = ROTATE_CW[dir]
+	return dir
 
 
 func _find_child_by_name(node: Node, child_name: String) -> Node:
@@ -256,27 +303,35 @@ func _hide_debug_markers(node: Node) -> void:
 		_hide_debug_markers(child)
 
 
-func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: Dictionary) -> void:
+func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: Dictionary, delayed: bool = false) -> void:
 	var entry_edge: String = OPPOSITE[direction]
 	var callback := func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
-			print("[ValleyField] Player entered gate trigger: %s → cell %s" % [direction, target_cell_pos])
+			print("[ValleyField] Player entered gate trigger: %s -> cell %s" % [direction, target_cell_pos])
 			_transition_to_cell(target_cell_pos, entry_edge)
 
-	# Try to repurpose the GLB's trigger node
-	var trigger_name := "trigger_" + direction + "-area"
+	# Convert grid direction to original GLB direction for node lookup
+	var original_dir := _grid_to_original_dir(direction, _rotation_deg)
+	var trigger_name := "trigger_" + original_dir + "-area"
 	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
 	if not trigger_group:
-		trigger_group = _find_child_by_name(_map_root, "trigger_" + direction)
+		trigger_group = _find_child_by_name(_map_root, "trigger_" + original_dir)
 	if trigger_group:
 		var area := _convert_static_to_area(trigger_group)
 		if area:
 			area.name = "GateTrigger_%s" % direction
+			if delayed:
+				area.monitoring = false
 			area.body_entered.connect(callback)
+			if delayed:
+				get_tree().create_timer(1.0).timeout.connect(func() -> void:
+					if is_instance_valid(area):
+						area.monitoring = true
+				)
 			return
 
 	# Fallback: create programmatic trigger at portal position
-	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback)
+	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback, delayed)
 
 
 func _create_exit_trigger(direction: String, _portal: Dictionary) -> void:
@@ -285,11 +340,12 @@ func _create_exit_trigger(direction: String, _portal: Dictionary) -> void:
 			print("[ValleyField] Player entered exit trigger")
 			_on_end_reached()
 
-	# Try to repurpose the GLB's trigger node
-	var trigger_name := "trigger_" + direction + "-area"
+	# Convert grid direction to original GLB direction for node lookup
+	var original_dir := _grid_to_original_dir(direction, _rotation_deg)
+	var trigger_name := "trigger_" + original_dir + "-area"
 	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
 	if not trigger_group:
-		trigger_group = _find_child_by_name(_map_root, "trigger_" + direction)
+		trigger_group = _find_child_by_name(_map_root, "trigger_" + original_dir)
 	if trigger_group:
 		var area := _convert_static_to_area(trigger_group)
 		if area:
@@ -303,8 +359,8 @@ func _create_exit_trigger(direction: String, _portal: Dictionary) -> void:
 
 ## Convert a GLB trigger group's -colonly StaticBody3D into a functional Area3D.
 ## The GLB structure is: trigger_{dir}-area (Node3D group)
-##   ├── trigger_{dir}_box-colonly (StaticBody3D with CollisionShape3D)
-##   └── trigger_{dir}_vis / trigger_{dir}_wire (MeshInstance3D, visual)
+##   - trigger_{dir}_box-colonly (StaticBody3D with CollisionShape3D)
+##   - trigger_{dir}_vis / trigger_{dir}_wire (MeshInstance3D, visual)
 ## We reparent the CollisionShape3D into a new Area3D and free the StaticBody3D.
 func _convert_static_to_area(trigger_group: Node3D) -> Area3D:
 	var static_body: StaticBody3D = null
@@ -351,11 +407,13 @@ func _find_static_body(node: Node) -> StaticBody3D:
 
 
 ## Fallback trigger when no GLB trigger node exists.
-func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Callable) -> void:
+func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Callable, delayed: bool = false) -> void:
 	var trigger := Area3D.new()
 	trigger.name = trigger_name
 	trigger.collision_layer = 0
 	trigger.collision_mask = 2
+	if delayed:
+		trigger.monitoring = false
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -367,6 +425,12 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 	trigger.body_entered.connect(callback)
 	add_child(trigger)
 	trigger.global_position = pos
+
+	if delayed:
+		get_tree().create_timer(1.0).timeout.connect(func() -> void:
+			if is_instance_valid(trigger):
+				trigger.monitoring = true
+		)
 
 
 func _create_key_pickup(key_for_cell: String) -> void:
@@ -460,4 +524,8 @@ func _return_to_city() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_return_to_city()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_TAB:
+		if _map_overlay:
+			_map_overlay.visible = not _map_overlay.visible
 		get_viewport().set_input_as_handled()
