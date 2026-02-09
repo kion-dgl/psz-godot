@@ -149,3 +149,39 @@ func has_suspended_session() -> bool:
 ## Check if a session is active
 func has_active_session() -> bool:
 	return not _session.is_empty()
+
+
+## Store grid layout for field exploration
+func set_grid(grid: Array) -> void:
+	_session["grid"] = grid
+
+
+## Get stored grid layout
+func get_grid() -> Array:
+	return _session.get("grid", [])
+
+
+## Store field sections (a→e→b→z progression)
+func set_field_sections(sections: Array) -> void:
+	_session["sections"] = sections
+	_session["current_section"] = 0
+
+
+## Get field sections
+func get_field_sections() -> Array:
+	return _session.get("sections", [])
+
+
+## Get current section index
+func get_current_section() -> int:
+	return int(_session.get("current_section", 0))
+
+
+## Advance to next section. Returns true if there is a next section.
+func advance_section() -> bool:
+	var idx: int = get_current_section()
+	var sections: Array = get_field_sections()
+	if idx + 1 < sections.size():
+		_session["current_section"] = idx + 1
+		return true
+	return false
