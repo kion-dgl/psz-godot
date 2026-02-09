@@ -22,8 +22,7 @@ var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _rotation_deg: int = 0
 var _map_overlay: CanvasLayer
-var _player_light: OmniLight3D
-var _shadow_catcher: MeshInstance3D
+var _blob_shadow: MeshInstance3D
 
 
 func _ready() -> void:
@@ -229,11 +228,8 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if _world_env and _sky_material and _dir_light:
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light)
-	if _player_light:
-		var cfg: Dictionary = TimeManager.get_lighting()
-		_player_light.light_energy = cfg["player_light"]
-	if _shadow_catcher and player:
-		_shadow_catcher.global_position = Vector3(player.global_position.x, 0.02, player.global_position.z)
+	if _blob_shadow and player:
+		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
 
 
 func _find_cell(cells: Array, pos: String) -> Dictionary:
@@ -348,30 +344,29 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	# Place camera behind the player's facing direction
 	orbit_camera.camera_rotation = rot + PI
 
-	# Warm OmniLight3D near player — glows at night, off during day
-	_player_light = OmniLight3D.new()
-	_player_light.light_color = Color(1.0, 0.9, 0.7)
-	_player_light.light_energy = 0.0
-	_player_light.omni_range = 5.0
-	_player_light.omni_attenuation = 1.5
-	_player_light.shadow_enabled = false
-	_player_light.position = Vector3(0, 2.0, 0)
-	player.add_child(_player_light)
-
-	# Shadow-catcher plane — multiply-blended shaded surface that shows the
-	# player shadow from the DirectionalLight3D on top of unshaded stage geometry.
-	_shadow_catcher = MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(8, 8)
-	_shadow_catcher.mesh = plane
-	_shadow_catcher.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	# Blob shadow — dark circle under the player (unshaded, always visible)
+	_blob_shadow = MeshInstance3D.new()
+	var shadow_quad := QuadMesh.new()
+	shadow_quad.size = Vector2(1.8, 1.8)
+	shadow_quad.orientation = PlaneMesh.FACE_Y
+	_blob_shadow.mesh = shadow_quad
+	_blob_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var shadow_shader := Shader.new()
-	shadow_shader.code = "shader_type spatial;\nrender_mode blend_mul, ambient_light_disabled, cull_disabled;\n\nvoid fragment() {\n\tALBEDO = vec3(1.0);\n}\n\nvoid light() {\n\tDIFFUSE_LIGHT = max(DIFFUSE_LIGHT, vec3(mix(0.6, 1.0, ATTENUATION)));\n}\n"
+	shadow_shader.code = \
+		"shader_type spatial;\n" + \
+		"render_mode unshaded, cull_disabled, depth_test_disabled;\n\n" + \
+		"void fragment() {\n" + \
+		"\tfloat dist = length(UV - vec2(0.5)) * 2.0;\n" + \
+		"\tfloat alpha = (1.0 - smoothstep(0.5, 1.0, dist)) * 0.35;\n" + \
+		"\tALBEDO = vec3(0.0);\n" + \
+		"\tALPHA = alpha;\n" + \
+		"}\n"
 	var shadow_mat := ShaderMaterial.new()
 	shadow_mat.shader = shadow_shader
-	_shadow_catcher.material_override = shadow_mat
-	_shadow_catcher.global_position = Vector3(pos.x, 0.02, pos.z)
-	add_child(_shadow_catcher)
+	_blob_shadow.material_override = shadow_mat
+	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
+	add_child(_blob_shadow)
+
 
 
 func _setup_map_collision(root: Node) -> void:
