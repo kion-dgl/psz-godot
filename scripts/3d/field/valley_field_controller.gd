@@ -26,6 +26,7 @@ func _ready() -> void:
 	var current_cell_pos: String = str(data.get("current_cell_pos", ""))
 	var spawn_edge: String = str(data.get("spawn_edge", ""))
 	_keys_collected = data.get("keys_collected", {})
+	var map_overlay_visible: bool = data.get("map_overlay_visible", false)
 
 	# Get sections and current cell
 	var sections: Array = SessionManager.get_field_sections()
@@ -57,7 +58,8 @@ func _ready() -> void:
 	_map_root = packed_scene.instantiate() as Node3D
 	_map_root.name = "Map"
 
-	# Apply grid rotation
+	# Apply grid rotation — positive Y rotation matches ROTATE_CW for the
+	# model's coordinate convention (east=-X, west=+X, north=-Z, south=+Z).
 	_rotation_deg = int(_current_cell.get("rotation", 0))
 	_map_root.rotation.y = deg_to_rad(_rotation_deg)
 
@@ -72,38 +74,105 @@ func _ready() -> void:
 	# Discover portal nodes (returns original GLB direction keys)
 	_portal_data = _find_portal_data(_map_root)
 
+	print("[ValleyField] ══════════════════════════════════════════")
+	print("[ValleyField] CELL LOAD: %s  stage=%s" % [
+		str(_current_cell.get("pos", "?")), stage_id])
+	print("[ValleyField]   section: %d/%d (%s, area=%s)" % [
+		section_idx + 1, sections.size(),
+		str(section.get("type", "?")), str(section.get("area", "?"))])
+	print("[ValleyField]   rotation_deg=%d  map_root.rotation.y=%.4f rad (%.1f°)" % [
+		_rotation_deg, _map_root.rotation.y, rad_to_deg(_map_root.rotation.y)])
+	print("[ValleyField]   spawn_edge='%s'" % spawn_edge)
+
+	# Log raw portal data BEFORE remapping
+	print("[ValleyField]   ── Raw portals (original GLB keys) ──")
+	for key in _portal_data:
+		var pd: Dictionary = _portal_data[key]
+		print("[ValleyField]     '%s': spawn_global=%s  trigger_global=%s" % [
+			key, pd["spawn_pos"], pd["trigger_pos"]])
+
+	# Log portal node details (local vs global positions)
+	var portals_node: Node3D = _find_child_by_name(_map_root, "portals")
+	if portals_node:
+		print("[ValleyField]   portals_node path: %s" % portals_node.get_path())
+		print("[ValleyField]   portals_node global_pos=%s  local_pos=%s" % [
+			portals_node.global_position, portals_node.position])
+		for dir in ["north", "east", "south", "west"]:
+			var sn: Node3D = _find_child_by_name(portals_node, "spawn_" + dir)
+			if sn:
+				print("[ValleyField]     spawn_%s: local=%s  global=%s  parent=%s" % [
+					dir, sn.position, sn.global_position, sn.get_parent().name])
+
 	# Remap portal keys from original GLB directions to grid directions
 	if _rotation_deg != 0:
+		print("[ValleyField]   ── Remapping (rotation=%d°) ──" % _rotation_deg)
+		for dir in _portal_data:
+			if dir != "default":
+				var grid_dir := _original_to_grid_dir(dir, _rotation_deg)
+				print("[ValleyField]     '%s' → '%s'" % [dir, grid_dir])
 		_portal_data = _remap_portal_directions(_portal_data, _rotation_deg)
 
-	print("[ValleyField] Portal data keys (grid): %s" % str(_portal_data.keys()))
+	# Log remapped portal data
+	print("[ValleyField]   ── Final portals (grid keys) ──")
+	for key in _portal_data:
+		print("[ValleyField]     '%s': spawn=%s" % [key, _portal_data[key]["spawn_pos"]])
+
+	# Determine warp_edge early (needed for spawn resolution)
+	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
 
 	# Spawn player
 	var spawn_pos := Vector3.ZERO
 	var spawn_rot := 0.0
+	var spawn_reason := ""
 	if not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
 		spawn_pos = _portal_data[spawn_edge]["spawn_pos"]
-		# Face away from spawn edge (into the room)
 		spawn_rot = _dir_to_yaw(OPPOSITE[spawn_edge])
+		spawn_reason = "entry from %s, facing %s" % [spawn_edge, OPPOSITE[spawn_edge]]
 	elif _portal_data.has("default"):
-		# Standalone default spawn (boss rooms / gateless areas / fresh entry)
 		spawn_pos = _portal_data["default"]["spawn_pos"]
 		var arrow: Node3D = _find_child_by_name(_map_root, "spawn_default_arrow")
 		if arrow:
 			spawn_rot = arrow.rotation.y
+		spawn_reason = "default spawn"
+	elif not warp_edge.is_empty() and _portal_data.has(OPPOSITE.get(warp_edge, "")):
+		var entry_dir: String = OPPOSITE[warp_edge]
+		spawn_pos = _portal_data[entry_dir]["spawn_pos"]
+		spawn_rot = _dir_to_yaw(warp_edge)
+		spawn_reason = "opposite of warp_edge=%s, spawn at %s facing %s" % [warp_edge, entry_dir, warp_edge]
+	elif _portal_data.has("north"):
+		spawn_pos = _portal_data["north"]["spawn_pos"]
+		spawn_rot = _dir_to_yaw("south")
+		spawn_reason = "fallback north portal, facing south"
 	elif _portal_data.has("south"):
-		# Legacy fallback: spawn at south portal (start cell enters from south)
 		spawn_pos = _portal_data["south"]["spawn_pos"]
 		spawn_rot = _dir_to_yaw("north")
+		spawn_reason = "fallback south portal, facing north"
 	else:
-		# Fallback: center of map
 		spawn_pos = Vector3(0, 1, 0)
+		spawn_reason = "center fallback"
+
+	print("[ValleyField]   ── Spawn Resolution ──")
+	print("[ValleyField]     pos=%s  rot=%.2f rad (%.1f°)" % [
+		spawn_pos, spawn_rot, rad_to_deg(spawn_rot)])
+	print("[ValleyField]     reason: %s" % spawn_reason)
+	print("[ValleyField]     _dir_to_yaw table: N=%.2f E=%.2f S=%.2f W=%.2f" % [
+		_dir_to_yaw("north"), _dir_to_yaw("east"), _dir_to_yaw("south"), _dir_to_yaw("west")])
+
+	var connections: Dictionary = _current_cell.get("connections", {})
+	print("[ValleyField]   ── Grid Cell Data ──")
+	print("[ValleyField]     connections: %s" % str(connections))
+	print("[ValleyField]     warp_edge: '%s'" % warp_edge)
+	print("[ValleyField]     cell keys: %s" % str(_current_cell.keys()))
+	# Log the full cell dict (truncated for readability)
+	for ck in _current_cell:
+		if ck != "connections":
+			print("[ValleyField]     cell.%s = %s" % [ck, str(_current_cell[ck])])
+	print("[ValleyField] ══════════════════════════════════════════")
 
 	_spawn_player(spawn_pos, spawn_rot)
 	await get_tree().process_frame
 
 	# Create gate triggers for each connection (entry edge gets delayed activation)
-	var connections: Dictionary = _current_cell.get("connections", {})
 	for dir in connections:
 		if not _portal_data.has(dir):
 			continue
@@ -120,7 +189,6 @@ func _ready() -> void:
 			_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry)
 
 	# Create exit trigger on end cell warp_edge
-	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
 	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
 		_create_exit_trigger(warp_edge, _portal_data[warp_edge])
 
@@ -130,10 +198,10 @@ func _ready() -> void:
 		if not key_for.is_empty() and not _keys_collected.has(key_for):
 			_create_key_pickup(key_for)
 
-	# Map overlay (toggle with Tab)
+	# Map overlay (toggle with Tab, persists across cell transitions)
 	_map_overlay = CanvasLayer.new()
 	_map_overlay.layer = 100
-	_map_overlay.visible = false
+	_map_overlay.visible = map_overlay_visible
 	_map_overlay.name = "MapOverlay"
 	add_child(_map_overlay)
 	var map_panel := MapOverlayScript.new()
@@ -228,11 +296,13 @@ func _find_child_by_name(node: Node, child_name: String) -> Node:
 
 
 func _dir_to_yaw(dir: String) -> float:
+	# Model coordinate convention: east=-X, west=+X, north=-Z, south=+Z
+	# Player movement: Vector3(sin(rot), 0, cos(rot))
 	match dir:
-		"north": return 0.0
-		"east": return -PI / 2.0
-		"south": return PI
-		"west": return PI / 2.0
+		"north": return PI        # sin(PI)=0,  cos(PI)=-1  → -Z
+		"south": return 0.0       # sin(0)=0,   cos(0)=1    → +Z
+		"east": return -PI / 2.0  # sin(-PI/2)=-1, cos=0    → -X
+		"west": return PI / 2.0   # sin(PI/2)=1,  cos=0     → +X
 	return 0.0
 
 
@@ -307,16 +377,20 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 	var entry_edge: String = OPPOSITE[direction]
 	var callback := func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
-			print("[ValleyField] Player entered gate trigger: %s -> cell %s" % [direction, target_cell_pos])
+			print("[ValleyField] ▶ TRIGGER: grid_dir=%s → cell %s (entry_edge=%s)" % [
+				direction, target_cell_pos, entry_edge])
 			_transition_to_cell(target_cell_pos, entry_edge)
 
 	# Convert grid direction to original GLB direction for node lookup
 	var original_dir := _grid_to_original_dir(direction, _rotation_deg)
+	print("[ValleyField]   trigger: grid=%s → original=%s  target=%s  delayed=%s" % [
+		direction, original_dir, target_cell_pos, delayed])
 	var trigger_name := "trigger_" + original_dir + "-area"
 	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
 	if not trigger_group:
 		trigger_group = _find_child_by_name(_map_root, "trigger_" + original_dir)
 	if trigger_group:
+		print("[ValleyField]     found '%s' at global=%s" % [trigger_name, trigger_group.global_position])
 		var area := _convert_static_to_area(trigger_group)
 		if area:
 			area.name = "GateTrigger_%s" % direction
@@ -329,8 +403,11 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 						area.monitoring = true
 				)
 			return
+	else:
+		print("[ValleyField]     WARNING: no trigger node '%s' found!" % trigger_name)
 
 	# Fallback: create programmatic trigger at portal position
+	print("[ValleyField]     using fallback trigger at %s" % _portal["trigger_pos"])
 	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback, delayed)
 
 
@@ -496,6 +573,7 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 		"current_cell_pos": target_pos,
 		"spawn_edge": spawn_edge,
 		"keys_collected": _keys_collected,
+		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 	})
 
 
@@ -511,6 +589,7 @@ func _on_end_reached() -> void:
 			"current_cell_pos": str(new_section.get("start_pos", "")),
 			"spawn_edge": "",
 			"keys_collected": {},
+			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 		})
 	else:
 		_return_to_city()
