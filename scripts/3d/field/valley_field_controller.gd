@@ -13,15 +13,26 @@ const ROTATE_CW := {"north": "east", "east": "south", "south": "west", "west": "
 var player: CharacterBody3D
 var orbit_camera: Node3D
 var _map_root: Node3D
+var _world_env: WorldEnvironment
+var _dir_light: DirectionalLight3D
+var _sky_material: ProceduralSkyMaterial
 var _transitioning := false
 var _keys_collected: Dictionary = {}
 var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _rotation_deg: int = 0
 var _map_overlay: CanvasLayer
+var _player_light: OmniLight3D
+var _shadow_catcher: MeshInstance3D
 
 
 func _ready() -> void:
+	# Grab lighting nodes immediately so _process() applies TimeManager from frame 1
+	_world_env = $WorldEnvironment
+	_dir_light = $DirectionalLight3D
+	_sky_material = _world_env.environment.sky.sky_material as ProceduralSkyMaterial
+	TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light)
+
 	var data: Dictionary = SceneManager.get_transition_data()
 	var current_cell_pos: String = str(data.get("current_cell_pos", ""))
 	var spawn_edge: String = str(data.get("spawn_edge", ""))
@@ -64,7 +75,8 @@ func _ready() -> void:
 	_map_root.rotation.y = deg_to_rad(_rotation_deg)
 
 	add_child(_map_root)
-	_fix_texture_repeat(_map_root)
+	_strip_embedded_lights(_map_root)
+	_fix_materials(_map_root)
 	await get_tree().process_frame
 
 	# Setup collision from GLB -colonly meshes
@@ -214,6 +226,16 @@ func _ready() -> void:
 	#_hide_debug_markers(_map_root)
 
 
+func _process(_delta: float) -> void:
+	if _world_env and _sky_material and _dir_light:
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light)
+	if _player_light:
+		var cfg: Dictionary = TimeManager.get_lighting()
+		_player_light.light_energy = cfg["player_light"]
+	if _shadow_catcher and player:
+		_shadow_catcher.global_position = Vector3(player.global_position.x, 0.02, player.global_position.z)
+
+
 func _find_cell(cells: Array, pos: String) -> Dictionary:
 	for cell in cells:
 		if str(cell.get("pos", "")) == pos:
@@ -326,23 +348,70 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	# Place camera behind the player's facing direction
 	orbit_camera.camera_rotation = rot + PI
 
+	# Warm OmniLight3D near player — glows at night, off during day
+	_player_light = OmniLight3D.new()
+	_player_light.light_color = Color(1.0, 0.9, 0.7)
+	_player_light.light_energy = 0.0
+	_player_light.omni_range = 5.0
+	_player_light.omni_attenuation = 1.5
+	_player_light.shadow_enabled = false
+	_player_light.position = Vector3(0, 2.0, 0)
+	player.add_child(_player_light)
+
+	# Shadow-catcher plane — multiply-blended shaded surface that shows the
+	# player shadow from the DirectionalLight3D on top of unshaded stage geometry.
+	_shadow_catcher = MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(8, 8)
+	_shadow_catcher.mesh = plane
+	_shadow_catcher.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var shadow_shader := Shader.new()
+	shadow_shader.code = "shader_type spatial;\nrender_mode blend_mul, ambient_light_disabled, cull_disabled;\n\nvoid fragment() {\n\tALBEDO = vec3(1.0);\n}\n\nvoid light() {\n\tDIFFUSE_LIGHT = max(DIFFUSE_LIGHT, vec3(mix(0.6, 1.0, ATTENUATION)));\n}\n"
+	var shadow_mat := ShaderMaterial.new()
+	shadow_mat.shader = shadow_shader
+	_shadow_catcher.material_override = shadow_mat
+	_shadow_catcher.global_position = Vector3(pos.x, 0.02, pos.z)
+	add_child(_shadow_catcher)
+
 
 func _setup_map_collision(root: Node) -> void:
 	_configure_collision_nodes(root)
 
 
-func _fix_texture_repeat(node: Node) -> void:
+func _strip_embedded_lights(node: Node) -> void:
+	## Remove any lights or environments baked into GLB models so the scene-level
+	## WorldEnvironment + DirectionalLight3D (controlled by TimeManager) are the
+	## sole authority on lighting.
+	var to_remove: Array[Node] = []
+	_collect_embedded_lights(node, to_remove)
+	for n in to_remove:
+		n.queue_free()
+
+
+func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
+	if node is DirectionalLight3D or node is OmniLight3D or node is SpotLight3D or node is WorldEnvironment:
+		out.append(node)
+		return
+	for child in node.get_children():
+		_collect_embedded_lights(child, out)
+
+
+func _fix_materials(node: Node) -> void:
+	## Make stage materials unshaded so pre-baked vertex colors display at full
+	## brightness regardless of mesh normals or enclosure geometry.  TimeManager
+	## applies a screen-space tint overlay for day/night atmosphere instead.
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
+		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		for i in range(mesh_inst.get_surface_override_material_count()):
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
-				if not mat.texture_repeat:
-					var new_mat := mat.duplicate() as StandardMaterial3D
-					new_mat.texture_repeat = true
-					mesh_inst.set_surface_override_material(i, new_mat)
+				var new_mat := mat.duplicate() as StandardMaterial3D
+				new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				new_mat.texture_repeat = true
+				mesh_inst.set_surface_override_material(i, new_mat)
 	for child in node.get_children():
-		_fix_texture_repeat(child)
+		_fix_materials(child)
 
 
 func _configure_collision_nodes(node: Node) -> bool:
