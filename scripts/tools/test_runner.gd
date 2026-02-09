@@ -40,6 +40,7 @@ func _ready() -> void:
 	test_telepipe_suspend()
 	test_character_appearance()
 	test_valley_grid()
+	test_field_config()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -73,6 +74,17 @@ func assert_gt(a, b, label: String) -> void:
 	else:
 		_fail += 1
 		print("  FAIL: %s — got %s, expected > %s" % [label, str(a), str(b)])
+
+
+## Helper: recursively find a child node by name.
+func _find_child_recursive(node: Node, child_name: String) -> Node:
+	for child in node.get_children():
+		if child.name == child_name:
+			return child
+		var found := _find_child_recursive(child, child_name)
+		if found:
+			return found
+	return null
 
 
 ## Helper: check if a drop ID is a misc drop (disk, grinder, material, photon drop, unidentified)
@@ -2327,5 +2339,88 @@ func test_valley_grid() -> void:
 	assert_true(not SessionManager.advance_section(), "Cannot advance past last section")
 	assert_eq(SessionManager.get_current_section(), 3, "Still at section 3")
 	SessionManager.return_to_city()
+
+	print("")
+
+
+func test_field_config() -> void:
+	print("── Field Config ──")
+	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+
+	# ── Bundled config file exists and loads ──
+	var cfg := ConfigFile.new()
+	var load_ok: int = cfg.load("res://data/field_config.cfg")
+	assert_eq(load_ok, OK, "Bundled field_config.cfg loads successfully")
+
+	# ── Config has expected sections ──
+	assert_true(cfg.has_section("grid"), "Config has [grid] section")
+	assert_true(cfg.has_section("normal"), "Config has [normal] section")
+	assert_true(cfg.has_section("hard"), "Config has [hard] section")
+	assert_true(cfg.has_section("super-hard"), "Config has [super-hard] section")
+
+	# ── Grid size from config ──
+	var grid_size: int = cfg.get_value("grid", "grid_size", 0)
+	assert_eq(grid_size, 5, "Config grid_size is 5")
+
+	# ── load_params returns matching values ──
+	var params: Dictionary = GridGen.load_params()
+	assert_true(not params.is_empty(), "load_params returns non-empty dict")
+	assert_true(params.has("normal"), "Params has normal difficulty")
+	assert_true(params.has("hard"), "Params has hard difficulty")
+	assert_true(params.has("super-hard"), "Params has super-hard difficulty")
+	assert_eq(int(params["normal"]["a"]["path_length"]), 5, "Normal A path_length is 5")
+	assert_eq(int(params["hard"]["a"]["path_length"]), 7, "Hard A path_length is 7")
+	assert_eq(int(params["super-hard"]["a"]["path_length"]), 9, "Super-Hard A path_length is 9")
+	assert_eq(int(params["normal"]["a"]["key_gates"]), 0, "Normal A key_gates is 0")
+	assert_eq(int(params["hard"]["a"]["key_gates"]), 1, "Hard A key_gates is 1")
+
+	# ── load_grid_size returns expected value ──
+	var loaded_size: int = GridGen.load_grid_size()
+	assert_eq(loaded_size, 5, "load_grid_size returns 5")
+
+	# ── Grid generation uses config params ──
+	var gen := GridGen.new()
+	var field: Dictionary = gen.generate_field("normal")
+	var sections: Array = field.get("sections", [])
+	assert_eq(sections.size(), 4, "Config-based field has 4 sections")
+	assert_true(sections[0].get("cells", []).size() >= 3, "Config-based A section has >= 3 cells")
+
+	# ── Hard difficulty still works through config ──
+	var hard_field: Dictionary = gen.generate_field("hard")
+	var hard_sections: Array = hard_field.get("sections", [])
+	assert_eq(hard_sections.size(), 4, "Config-based hard field has 4 sections")
+
+	# ── GLB stage files exist for all referenced stages ──
+	var all_stages_exist := true
+	for stage_id in GridGen.GATES:
+		var path := "res://assets/environments/valley/%s.glb" % str(stage_id)
+		if not ResourceLoader.exists(path):
+			print("  INFO: Missing GLB: %s" % path)
+			all_stages_exist = false
+	assert_true(all_stages_exist, "All GATES stage GLBs exist")
+
+	# ── Portal node discovery (check first GLB) ──
+	# GLB tree: AuxScene > {stage_id} > portals > spawn_{dir}, trigger_{dir}-area
+	var test_glb := load("res://assets/environments/valley/s01a_ga1.glb") as PackedScene
+	if test_glb:
+		var instance: Node3D = test_glb.instantiate()
+		var portals_node: Node3D = _find_child_recursive(instance, "portals")
+		assert_true(portals_node != null, "s01a_ga1.glb has portals node (nested)")
+		if portals_node:
+			var has_spawn := false
+			for dir in ["north", "south", "east", "west"]:
+				if portals_node.get_node_or_null("spawn_" + dir):
+					has_spawn = true
+					break
+			assert_true(has_spawn, "s01a_ga1.glb has at least one spawn_{dir} node")
+			# Verify trigger area structure
+			var trigger_area: Node3D = portals_node.get_node_or_null("trigger_north-area")
+			assert_true(trigger_area != null, "s01a_ga1.glb has trigger_north-area")
+			if trigger_area:
+				var trigger_box = trigger_area.get_node_or_null("trigger_north_box")
+				assert_true(trigger_box != null, "trigger_north-area has trigger_north_box")
+		instance.free()
+	else:
+		print("  SKIP: Could not load s01a_ga1.glb for portal test")
 
 	print("")
