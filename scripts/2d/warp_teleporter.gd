@@ -92,7 +92,19 @@ func _warp_to_field() -> void:
 	var area: Dictionary = AREAS[_selected_area]
 	var difficulty: String = DIFFICULTIES[_selected_difficulty].to_lower().replace(" ", "-")
 	SessionManager.enter_field(area["id"], difficulty)
-	SceneManager.goto_scene("res://scenes/2d/field.tscn")
+
+	if area["id"] == "gurhacia":
+		var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+		var gen := GridGen.new()
+		var field: Dictionary = gen.generate_field(difficulty)
+		var sections: Array = field["sections"]
+		SessionManager.set_field_sections(sections)
+		var first_section: Dictionary = sections[0]
+		SceneManager.goto_scene("res://scenes/2d/valley_field.tscn", {
+			"current_cell_pos": str(first_section["start_pos"]),
+		})
+	else:
+		SceneManager.goto_scene("res://scenes/2d/field.tscn")
 
 
 func _refresh_display() -> void:
