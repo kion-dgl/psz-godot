@@ -1,19 +1,24 @@
 extends Node
-## Test launcher for valley field — uses GridGenerator to create a full
-## multi-section field (a→e→b→z) and transitions to the 3D valley field scene.
+## Test launcher for field — uses GridGenerator to create a full
+## multi-section field (a→e→b→z) and transitions to the 3D field scene.
+## Change _area_id to test different areas (e.g. "gurhacia", "ozette").
 
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 
+## Change this to test different areas.
+var _area_id: String = "gurhacia"
+
 func _ready() -> void:
 	# Set up a field session
-	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.enter_field(_area_id, "normal")
 
 	# Generate a full field with 4 sections
 	var gen := GridGenerator.new()
-	var field: Dictionary = gen.generate_field("normal")
+	var field: Dictionary = gen.generate_field("normal", _area_id)
 	var sections: Array = field["sections"]
 
-	print("[ValleyFieldTest] Generated %d sections:" % sections.size())
+	var area_name: String = GridGenerator.AREA_CONFIG.get(_area_id, {}).get("name", _area_id)
+	print("[FieldTest] %s — Generated %d sections:" % [area_name, sections.size()])
 	for i in range(sections.size()):
 		var s: Dictionary = sections[i]
 		var cell_count: int = s.get("cells", []).size()

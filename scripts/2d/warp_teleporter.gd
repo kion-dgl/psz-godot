@@ -90,13 +90,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _warp_to_field() -> void:
 	var area: Dictionary = AREAS[_selected_area]
+	var area_id: String = str(area["id"])
 	var difficulty: String = DIFFICULTIES[_selected_difficulty].to_lower().replace(" ", "-")
-	SessionManager.enter_field(area["id"], difficulty)
+	SessionManager.enter_field(area_id, difficulty)
 
-	if area["id"] == "gurhacia":
-		var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	if GridGen.AREA_CONFIG.has(area_id):
 		var gen := GridGen.new()
-		var field: Dictionary = gen.generate_field(difficulty)
+		var field: Dictionary = gen.generate_field(difficulty, area_id)
 		var sections: Array = field["sections"]
 		SessionManager.set_field_sections(sections)
 		var first_section: Dictionary = sections[0]

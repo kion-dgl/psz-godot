@@ -1,6 +1,8 @@
 extends RefCounted
 ## GridGenerator — generates 5x5 grid layouts with rotation, branches, key-gates.
 ## Faithfully ports psz-sketch's GridViewer.tsx algorithm.
+## Area-agnostic: reads portal directions from *_config.json when available,
+## falls back to hardcoded GATES for valley (s01).
 
 const DIRECTIONS := ["north", "east", "south", "west"]
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
@@ -9,8 +11,14 @@ const DIR_OFFSET := {
 	"east": Vector2i(0, 1), "west": Vector2i(0, -1),
 }
 
+## Area configuration: maps area_id → prefix, folder, display name.
+const AREA_CONFIG := {
+	"gurhacia": {"prefix": "s01", "folder": "valley", "name": "Gurhacia Valley"},
+	"ozette":   {"prefix": "s02", "folder": "wetlands", "name": "Ozette Wetlands"},
+}
+
 ## Gate definitions per stage (original/unrotated directions).
-## Source of truth: gate_* nodes embedded in exported GLB files from stage-editor.
+## Used as fallback for areas without *_config.json files (valley/s01).
 const GATES := {
 	# s01a_ stages
 	"s01a_sa1": ["south"],
@@ -53,6 +61,72 @@ const GATES := {
 	# s01e_ stages
 	"s01e_ia1": ["north", "south"],
 }
+
+## Cache for dynamically loaded gates (avoids re-reading JSON each generation).
+var _gates_cache: Dictionary = {}
+
+## Active gates dict for the current generation run.
+var _active_gates: Dictionary = GATES
+
+
+## Load gates dict for an area by reading *_config.json files from the assets folder.
+## Falls back to hardcoded GATES for areas without config JSONs (valley/s01).
+func load_gates(area_id: String) -> Dictionary:
+	if _gates_cache.has(area_id):
+		return _gates_cache[area_id]
+
+	var cfg: Dictionary = AREA_CONFIG.get(area_id, {})
+	if cfg.is_empty():
+		_gates_cache[area_id] = GATES
+		return GATES
+
+	var prefix: String = cfg["prefix"]
+	var folder: String = cfg["folder"]
+	var base_path := "res://assets/environments/%s/" % folder
+
+	# Check if config JSONs exist for this area
+	var test_path := "%s%sa_sa1_config.json" % [base_path, prefix]
+	if not FileAccess.file_exists(test_path):
+		# No config JSONs — use hardcoded GATES (valley)
+		_gates_cache[area_id] = GATES
+		return GATES
+
+	var gates := {}
+	# Scan for all config JSONs in the folder
+	var dir := DirAccess.open(base_path)
+	if not dir:
+		_gates_cache[area_id] = GATES
+		return GATES
+
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while not file_name.is_empty():
+		if file_name.ends_with("_config.json"):
+			var stage_id: String = file_name.replace("_config.json", "")
+			var json_path := base_path + file_name
+			var fa := FileAccess.open(json_path, FileAccess.READ)
+			if fa:
+				var json := JSON.new()
+				if json.parse(fa.get_as_text()) == OK:
+					var data: Dictionary = json.data
+					var portals: Array = data.get("portals", [])
+					var dirs: Array[String] = []
+					for portal in portals:
+						var d: String = str(portal.get("direction", ""))
+						if not d.is_empty() and d not in dirs:
+							dirs.append(d)
+					if not dirs.is_empty():
+						gates[stage_id] = dirs
+				fa.close()
+		file_name = dir.get_next()
+	dir.list_dir_end()
+
+	if gates.is_empty():
+		_gates_cache[area_id] = GATES
+		return GATES
+
+	_gates_cache[area_id] = gates
+	return gates
 
 ## ── TUNING PARAMETERS ──
 ##
@@ -142,8 +216,9 @@ func rotate_direction(dir: String, rotation: int) -> String:
 
 
 ## Get rotated gate directions for a stage.
+## Uses _active_gates (set by generate_field/generate) for lookups.
 func get_rotated_gates(stage_id: String, rotation: int) -> Array[String]:
-	var original: Array = GATES.get(stage_id, [])
+	var original: Array = _active_gates.get(stage_id, [])
 	var rotated: Array[String] = []
 	for gate in original:
 		rotated.append(rotate_direction(str(gate), rotation))
@@ -151,36 +226,46 @@ func get_rotated_gates(stage_id: String, rotation: int) -> Array[String]:
 
 
 ## Generate a complete field with 4 sections: a (grid), e (transition), b (grid), z (boss).
-func generate_field(difficulty: String) -> Dictionary:
+## area_id: "gurhacia", "ozette", etc. Defaults to "gurhacia" for backwards compatibility.
+func generate_field(difficulty: String, area_id: String = "gurhacia") -> Dictionary:
 	var all_params: Dictionary = load_params()
 	var params: Dictionary = all_params.get(difficulty, all_params.get("normal", DIFFICULTY_PARAMS["normal"]))
 	grid_size = load_grid_size()
+
+	var area_cfg: Dictionary = AREA_CONFIG.get(area_id, AREA_CONFIG["gurhacia"])
+	var prefix: String = area_cfg["prefix"]
+	_active_gates = load_gates(area_id)
 	var sections: Array[Dictionary] = []
 
-	# Section 1: Valley A grid
-	var a_result: Dictionary = generate("a", params["a"])
+	# Section 1: Area A grid
+	var a_result: Dictionary = generate("a", params["a"], prefix)
 	sections.append({
 		"type": "grid", "area": "a", "cells": a_result["cells"],
 		"start_pos": a_result["start_pos"], "end_pos": a_result.get("end_pos", ""),
 	})
 
-	# Section 2: Valley E transition (single room)
-	var e_cell := _make_output_cell(Vector2i(0, 0), "s01e_ia1", 0, true, true, false, 0)
+	# Section 2: Area E transition (single room)
+	var e_stage := "%se_ia1" % prefix
+	var e_cell := _make_output_cell(Vector2i(0, 0), e_stage, 0, true, true, false, 0)
 	e_cell["warp_edge"] = "south"
 	sections.append({
 		"type": "transition", "area": "e", "cells": [e_cell],
 		"start_pos": "0,0", "end_pos": "0,0",
 	})
 
-	# Section 3: Valley B grid
-	var b_result: Dictionary = generate("b", params["b"])
+	# Section 3: Area B grid
+	var b_result: Dictionary = generate("b", params["b"], prefix)
 	sections.append({
 		"type": "grid", "area": "b", "cells": b_result["cells"],
 		"start_pos": b_result["start_pos"], "end_pos": b_result.get("end_pos", ""),
 	})
 
-	# Section 4: Valley Z boss arena (single room)
-	var z_cell := _make_output_cell(Vector2i(0, 0), "s01a_na1", 0, true, true, false, 0)
+	# Section 4: Area Z boss arena (single room)
+	# Prefer {prefix}z_na1 (wetlands has s02z_na1), fall back to {prefix}a_na1 (valley lacks s01z_na1)
+	var z_stage := "%sz_na1" % prefix
+	if not _active_gates.has(z_stage):
+		z_stage = "%sa_na1" % prefix
+	var z_cell := _make_output_cell(Vector2i(0, 0), z_stage, 0, true, true, false, 0)
 	z_cell["warp_edge"] = "south"
 	sections.append({
 		"type": "boss", "area": "z", "cells": [z_cell],
@@ -193,7 +278,8 @@ func generate_field(difficulty: String) -> Dictionary:
 ## Generate a single grid section.
 ## area: "a" or "b"
 ## params: {"path_length": int, "key_gates": int, "branches": int}
-func generate(area: String, params: Dictionary) -> Dictionary:
+## area_prefix: e.g. "s01" or "s02". Defaults to "s01" for backwards compatibility.
+func generate(area: String, params: Dictionary, area_prefix: String = "s01") -> Dictionary:
 	if grid_size <= 0:
 		grid_size = load_grid_size()
 	var path_length: int = int(params.get("path_length", 5))
@@ -202,23 +288,23 @@ func generate(area: String, params: Dictionary) -> Dictionary:
 	path_length = clampi(path_length, 3, grid_size * grid_size)
 
 	for attempt in range(200):
-		var result: Dictionary = _try_generate(area, path_length, key_gates, branches)
+		var result: Dictionary = _try_generate(area, path_length, key_gates, branches, area_prefix)
 		if not result.is_empty():
 			return result
 
 	push_warning("GridGenerator: Failed to generate after 200 attempts, using fallback")
-	return _generate_fallback(area)
+	return _generate_fallback(area, area_prefix)
 
 
 ## Single attempt at generating a valid grid.
 func _try_generate(area: String, path_length: int, key_gates_count: int,
-		branches_count: int) -> Dictionary:
+		branches_count: int, area_prefix: String = "s01") -> Dictionary:
 	var grid: Dictionary = {}  # "row,col" → cell dict
 	var path: Array[Vector2i] = []
-	var prefix: String = "s01a_" if area == "a" else "s01b_"
+	var prefix: String = "%s%s_" % [area_prefix, area]
 	var start_stage: String = prefix + "sa1"
 
-	if not GATES.has(start_stage):
+	if not _active_gates.has(start_stage):
 		return {}
 
 	# Place sa1 at top-center, exiting south
@@ -263,7 +349,7 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 	var last_exit_dir := "south"
 
 	var all_stages: Array[String] = []
-	for stage_id in GATES:
+	for stage_id in _active_gates:
 		if str(stage_id).begins_with(prefix) and stage_id != start_stage:
 			all_stages.append(str(stage_id))
 
@@ -789,8 +875,8 @@ func _to_output(grid: Dictionary, path: Array[Vector2i],
 
 
 ## Fallback: generate a minimal straight-line grid.
-func _generate_fallback(area: String) -> Dictionary:
-	var prefix: String = "s01a_" if area == "a" else "s01b_"
+func _generate_fallback(area: String, area_prefix: String = "s01") -> Dictionary:
+	var prefix: String = "%s%s_" % [area_prefix, area]
 	var cells: Array[Dictionary] = []
 
 	# Start cell
@@ -800,9 +886,9 @@ func _generate_fallback(area: String) -> Dictionary:
 	# 3 middle cells (straight N/S stages)
 	var mid_stages: Array[String]
 	if area == "a":
-		mid_stages = ["s01a_ga1", "s01a_ib1", "s01a_ib2"]
+		mid_stages = [prefix + "ga1", prefix + "ib1", prefix + "ib2"]
 	else:
-		mid_stages = ["s01b_ib1", "s01b_ib2", "s01b_ic1"]
+		mid_stages = [prefix + "ib1", prefix + "ib2", prefix + "ic1"]
 	for i in range(3):
 		cells.append(_make_output_cell(
 			Vector2i(i + 1, 2), mid_stages[i], 0, false, false, false, i + 1))
