@@ -1,0 +1,25 @@
+{
+  "mapId": "s03b_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770726423430_7ck6f1jmn",
+      "direction": "south",
+      "position": [
+        -0.23323369482076206,
+        0,
+        22.49715289346679
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-10T12:27:03.938Z",
+  "exportedAt": "2026-02-10T13:36:07.343Z"
+}

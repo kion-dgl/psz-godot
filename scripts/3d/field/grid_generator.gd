@@ -15,6 +15,7 @@ const DIR_OFFSET := {
 const AREA_CONFIG := {
 	"gurhacia": {"prefix": "s01", "folder": "valley", "name": "Gurhacia Valley"},
 	"ozette":   {"prefix": "s02", "folder": "wetlands", "name": "Ozette Wetlands"},
+	"rioh":     {"prefix": "s03", "folder": "snowfield", "name": "Rioh Snowfield"},
 }
 
 ## Gate definitions per stage (original/unrotated directions).
