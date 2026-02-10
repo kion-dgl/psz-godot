@@ -1,0 +1,25 @@
+{
+  "mapId": "s05a_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770760954951_cldar2pe9",
+      "direction": "south",
+      "position": [
+        0.18679951294885289,
+        0,
+        18.91774682452428
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-10T22:02:35.462Z",
+  "exportedAt": "2026-02-10T22:41:31.380Z"
+}
