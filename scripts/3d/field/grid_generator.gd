@@ -17,6 +17,7 @@ const AREA_CONFIG := {
 	"ozette":   {"prefix": "s02", "folder": "wetlands", "name": "Ozette Wetlands"},
 	"rioh":     {"prefix": "s03", "folder": "snowfield", "name": "Rioh Snowfield"},
 	"makara":   {"prefix": "s04", "folder": "makara", "name": "Makara Ruins"},
+	"paru":     {"prefix": "s05", "folder": "paru", "name": "Paru Waterfall"},
 }
 
 ## Gate definitions per stage (original/unrotated directions).
