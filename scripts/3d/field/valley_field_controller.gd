@@ -416,8 +416,8 @@ func _configure_collision_nodes(node: Node) -> bool:
 	if node is StaticBody3D:
 		if node.name == "collision_floor":
 			found_floor = true
-		# Skip trigger boxes — they define portal positions, not walls
-		if str(node.name).begins_with("trigger_"):
+		# Skip trigger boxes and gate markers — not walls
+		if str(node.name).begins_with("trigger_") or str(node.name).begins_with("gate_"):
 			node.collision_layer = 0
 			node.collision_mask = 0
 		else:
@@ -427,6 +427,7 @@ func _configure_collision_nodes(node: Node) -> bool:
 		if _configure_collision_nodes(child):
 			found_floor = true
 	return found_floor
+
 
 
 func _hide_debug_markers(node: Node) -> void:
