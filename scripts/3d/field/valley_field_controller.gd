@@ -56,9 +56,11 @@ func _ready() -> void:
 		_return_to_city()
 		return
 
-	# Load GLB
+	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
-	var map_path := "res://assets/environments/valley/%s.glb" % stage_id
+	var area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
+	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
+	var map_path := "res://assets/environments/%s/%s.glb" % [area_cfg["folder"], stage_id]
 	var packed_scene := load(map_path) as PackedScene
 	if not packed_scene:
 		push_error("[ValleyField] Failed to load map: %s" % map_path)

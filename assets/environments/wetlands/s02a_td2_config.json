@@ -1,0 +1,105 @@
+{
+  "mapId": "s02a_td2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [],
+  "textureFixes": [],
+  "obstacles": [
+    {
+      "id": "obs_1770695789322_0oij0h60x",
+      "type": "box",
+      "position": [
+        15.622622643422005,
+        0,
+        -1.2430861585733464
+      ],
+      "rotation": [
+        0,
+        4.71238898038469,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2.6,
+      "height": 1.6,
+      "depth": 8.6
+    },
+    {
+      "id": "obs_1770695810779_wbsvfqm5r",
+      "type": "box",
+      "position": [
+        -7.137095915807301,
+        0,
+        -0.8758840447850069
+      ],
+      "rotation": [
+        0,
+        3.141592653589793,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2.6,
+      "height": 1.6,
+      "depth": 13.6
+    },
+    {
+      "id": "obs_1770695827152_bvnqmitz4",
+      "type": "box",
+      "position": [
+        -12.867606251174642,
+        0,
+        -8.63364579080118
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2.6,
+      "height": 1.6,
+      "depth": 13.6
+    },
+    {
+      "id": "obs_1770695856189_k6hnsu5xz",
+      "type": "box",
+      "position": [
+        10.13141740373467,
+        0,
+        14.965151826699362
+      ],
+      "rotation": [
+        0,
+        0.2617993877991494,
+        0
+      ],
+      "label": "Boulder",
+      "width": 1.1,
+      "height": 1.6,
+      "depth": 9.1
+    },
+    {
+      "id": "obs_1770695878593_xg7z70j8y",
+      "type": "box",
+      "position": [
+        11.001908905257542,
+        0,
+        9.19862367181404
+      ],
+      "rotation": [
+        0,
+        2.6179938779914944,
+        0
+      ],
+      "label": "Boulder",
+      "width": 1.1,
+      "height": 1.6,
+      "depth": 7.6
+    }
+  ],
+  "lastModified": "2026-02-10T03:57:59.105Z",
+  "exportedAt": "2026-02-10T11:27:52.723Z"
+}
