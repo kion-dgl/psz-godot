@@ -1,0 +1,22 @@
+{
+  "mapId": "s04z_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.35,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-10T21:29:02.452Z",
+  "defaultSpawn": {
+    "position": [
+      0.004132419985517943,
+      0,
+      -15.489357211180248
+    ],
+    "direction": "north"
+  },
+  "exportedAt": "2026-02-10T21:30:07.805Z"
+}

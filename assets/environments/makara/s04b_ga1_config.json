@@ -1,0 +1,25 @@
+{
+  "mapId": "s04b_ga1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770752633608_6nch4xgal",
+      "direction": "south",
+      "position": [
+        -0.14407358297563716,
+        0,
+        31.16929684366579
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-10T19:43:54.116Z",
+  "exportedAt": "2026-02-10T21:30:05.909Z"
+}

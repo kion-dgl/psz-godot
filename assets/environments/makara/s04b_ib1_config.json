@@ -1,0 +1,35 @@
+{
+  "mapId": "s04b_ib1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770752697255_depfakwo2",
+      "direction": "south",
+      "position": [
+        -0.026143860225849025,
+        0,
+        21.30150541021868
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1770752710424_h95o8nta3",
+      "direction": "north",
+      "position": [
+        -0.07052718534363223,
+        0,
+        -20.932817947892957
+      ],
+      "label": "north"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-10T19:45:10.932Z",
+  "exportedAt": "2026-02-10T21:30:06.013Z"
+}

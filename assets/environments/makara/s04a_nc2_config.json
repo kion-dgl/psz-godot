@@ -1,0 +1,25 @@
+{
+  "mapId": "s04a_nc2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770745887420_n5w8w9gw7",
+      "direction": "south",
+      "position": [
+        -1.9687995291051585,
+        0,
+        22.273950465285303
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-10T17:51:27.928Z",
+  "exportedAt": "2026-02-10T21:30:05.325Z"
+}
