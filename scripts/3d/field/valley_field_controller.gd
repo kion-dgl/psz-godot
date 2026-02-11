@@ -60,6 +60,7 @@ func _ready() -> void:
 
 	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
+	TimeManager.stage_label = stage_id
 	var area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
 	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
 	var map_path := "res://assets/environments/%s/%s.glb" % [area_cfg["folder"], stage_id]
