@@ -1,0 +1,68 @@
+{
+  "mapId": "s07z_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [],
+  "textureFixes": [
+    {
+      "textureFile": "s07_0_kaidan.png",
+      "meshNames": [
+        "s07z_na1_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_0_zjime.png",
+      "meshNames": [
+        "s07z_na1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s07_1_ztou01.png",
+      "meshNames": [
+        "s07z_na1_m_10"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_1_saku1.png",
+      "meshNames": [
+        "s07z_na1_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T14:53:43.764Z",
+  "defaultSpawn": {
+    "position": [
+      -0.1214719115327334,
+      0,
+      5.3869627529335915
+    ],
+    "direction": "south"
+  },
+  "exportedAt": "2026-02-11T15:05:08.762Z"
+}

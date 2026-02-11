@@ -1,0 +1,79 @@
+{
+  "mapId": "s07a_sa1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770820945204_h8r8u5zrh",
+      "direction": "south",
+      "position": [
+        -0.08072562278612949,
+        0,
+        18.74093286805664
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s07_0_ayuka2.png",
+      "meshNames": [
+        "s07a_sa1_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s07_0_edan.png",
+      "meshNames": [
+        "s07a_sa1_m_12"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_1_doore.png",
+      "meshNames": [
+        "s07a_sa1_m_14"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_1_saku1.png",
+      "meshNames": [
+        "s07a_sa1_m_10"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T14:42:25.716Z",
+  "defaultSpawn": {
+    "position": [
+      0.234327244921964,
+      0,
+      10.400166662374808
+    ],
+    "direction": "north"
+  },
+  "exportedAt": "2026-02-11T15:05:05.456Z"
+}

@@ -1,0 +1,103 @@
+{
+  "mapId": "s07b_tb3",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770821368580_xb64n19lq",
+      "direction": "east",
+      "position": [
+        -19.398445954481474,
+        0,
+        0.21896511450843992
+      ],
+      "label": "east"
+    },
+    {
+      "id": "portal_1770821379571_7two93w77",
+      "direction": "south",
+      "position": [
+        0.06736649377744364,
+        0,
+        19.786692763518268
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1770821388215_vvaynr262",
+      "direction": "west",
+      "position": [
+        19.46277861568815,
+        0,
+        -0.05231917502579808
+      ],
+      "label": "west"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s07_0_door.png",
+      "meshNames": [
+        "s07b_tb3_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s07_0_lined.png",
+      "meshNames": [
+        "s07b_tb3_m_14"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_0_yuka2.png",
+      "meshNames": [
+        "s07b_tb3_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s07_0_yukas.png",
+      "meshNames": [
+        "s07b_tb3_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_1_saku1.png",
+      "meshNames": [
+        "s07b_tb3_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T14:49:48.723Z",
+  "exportedAt": "2026-02-11T15:05:07.510Z"
+}
