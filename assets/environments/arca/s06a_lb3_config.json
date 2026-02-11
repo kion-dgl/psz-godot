@@ -1,0 +1,66 @@
+{
+  "mapId": "s06a_lb3",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_99": false,
+      "tri_100": false,
+      "tri_98": false,
+      "tri_102": false,
+      "tri_108": false,
+      "tri_107": false,
+      "tri_101": false,
+      "tri_109": false,
+      "tri_123": false,
+      "tri_118": false,
+      "tri_117": false,
+      "tri_110": false,
+      "tri_104": false,
+      "tri_103": false,
+      "tri_105": false,
+      "tri_130": false,
+      "tri_106": false,
+      "tri_97": false,
+      "tri_113": false,
+      "tri_112": false,
+      "tri_111": false,
+      "tri_127": false,
+      "tri_131": false,
+      "tri_124": false,
+      "tri_128": false,
+      "tri_132": false,
+      "tri_126": false,
+      "tri_114": false,
+      "tri_90": true,
+      "tri_125": false
+    }
+  },
+  "portals": [
+    {
+      "id": "portal_1770800718552_blmxn4ufl",
+      "direction": "north",
+      "position": [
+        0.12725002477955258,
+        0,
+        -19.85451372523443
+      ],
+      "label": "north"
+    },
+    {
+      "id": "portal_1770800737434_hntn1f52t",
+      "direction": "west",
+      "position": [
+        19.774538094660084,
+        0,
+        -0.02281820134258128
+      ],
+      "label": "west"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-11T09:05:37.974Z",
+  "exportedAt": "2026-02-11T10:00:19.962Z"
+}

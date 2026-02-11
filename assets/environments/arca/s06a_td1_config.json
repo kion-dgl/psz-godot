@@ -1,0 +1,202 @@
+{
+  "mapId": "s06a_td1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_107": false,
+      "tri_106": false,
+      "tri_30": true,
+      "tri_109": false,
+      "tri_108": false,
+      "tri_103": false,
+      "tri_104": false,
+      "tri_94": false,
+      "tri_93": false,
+      "tri_92": false,
+      "tri_125": false,
+      "tri_96": false,
+      "tri_105": false,
+      "tri_95": false,
+      "tri_100": false,
+      "tri_47": false,
+      "tri_101": false,
+      "tri_121": false,
+      "tri_122": false,
+      "tri_99": false,
+      "tri_98": false,
+      "tri_87": false,
+      "tri_89": false,
+      "tri_88": false,
+      "tri_124": false,
+      "tri_91": false,
+      "tri_90": false,
+      "tri_86": false,
+      "tri_45": false
+    }
+  },
+  "portals": [
+    {
+      "id": "portal_1770802232525_v72nkckjm",
+      "direction": "east",
+      "position": [
+        -19.90795256521756,
+        0,
+        0.01662061108681101
+      ],
+      "label": "east"
+    },
+    {
+      "id": "portal_1770802244126_9akzwcm2h",
+      "direction": "west",
+      "position": [
+        19.964938634269323,
+        0,
+        0.36483667637477346
+      ],
+      "label": "west"
+    },
+    {
+      "id": "portal_1770802255083_4yevc0lew",
+      "direction": "south",
+      "position": [
+        -0.12253531790540784,
+        0,
+        19.901030971105225
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [
+    {
+      "id": "obs_1770802058564_lrxntipc4",
+      "type": "box",
+      "position": [
+        1.1578890891839322,
+        0,
+        7.88168999212067
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2,
+      "height": 2,
+      "depth": 21.1
+    },
+    {
+      "id": "obs_1770802088968_4xtbh5vhr",
+      "type": "box",
+      "position": [
+        10.716761726618099,
+        0,
+        -0.28291069475645436
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2,
+      "height": 2,
+      "depth": 17.6
+    },
+    {
+      "id": "obs_1770802101996_r9kjaazu3",
+      "type": "box",
+      "position": [
+        -10.35761461250356,
+        0,
+        -16.862520816574097
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2,
+      "height": 2,
+      "depth": 17.6
+    },
+    {
+      "id": "obs_1770802134042_djs8xf05v",
+      "type": "box",
+      "position": [
+        -2.1071702838906,
+        0,
+        -25.6976435794263
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2,
+      "height": 2,
+      "depth": 17.6
+    },
+    {
+      "id": "obs_1770802152012_crq3m5s57",
+      "type": "box",
+      "position": [
+        7.154752883785104,
+        0,
+        -8.292477361333338
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2,
+      "height": 2,
+      "depth": 8.1
+    },
+    {
+      "id": "obs_1770802162380_ou68ky9pn",
+      "type": "box",
+      "position": [
+        -7.342845225008677,
+        0,
+        -8.666510096979783
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2,
+      "height": 2,
+      "depth": 8.1
+    },
+    {
+      "id": "obs_1770802206155_20gv53diy",
+      "type": "box",
+      "position": [
+        -0.580848160851037,
+        0,
+        -8.384479523504009
+      ],
+      "rotation": [
+        0,
+        0.7853981633974483,
+        0
+      ],
+      "label": "Boulder",
+      "width": 5.1,
+      "height": 2,
+      "depth": 5.1
+    }
+  ],
+  "lastModified": "2026-02-11T09:30:55.603Z",
+  "exportedAt": "2026-02-11T10:00:21.029Z"
+}

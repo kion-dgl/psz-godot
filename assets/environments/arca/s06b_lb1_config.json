@@ -1,0 +1,35 @@
+{
+  "mapId": "s06b_lb1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770802787558_vnm9b5knj",
+      "direction": "north",
+      "position": [
+        -0.07549332166915335,
+        0,
+        -20.191446792462063
+      ],
+      "label": "north"
+    },
+    {
+      "id": "portal_1770802805270_ccrnp2bg2",
+      "direction": "west",
+      "position": [
+        20.152060038490447,
+        0,
+        -0.005864593467464374
+      ],
+      "label": "west"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-11T09:40:05.784Z",
+  "exportedAt": "2026-02-11T10:00:22.167Z"
+}
