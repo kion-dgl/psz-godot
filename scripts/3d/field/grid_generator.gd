@@ -19,6 +19,7 @@ const AREA_CONFIG := {
 	"makara":   {"prefix": "s04", "folder": "makara", "name": "Makara Ruins"},
 	"paru":     {"prefix": "s05", "folder": "paru", "name": "Paru Waterfall"},
 	"arca":     {"prefix": "s06", "folder": "arca", "name": "Arca Plant"},
+	"dark":     {"prefix": "s07", "folder": "shrine", "name": "Dark Shrine"},
 }
 
 ## Gate definitions per stage (original/unrotated directions).
