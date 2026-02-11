@@ -63,7 +63,31 @@
       "label": "east"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_etc1.png",
+      "meshNames": [
+        "s05b_td2_m_11"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0.97,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s05_0_hasi1.png",
+      "meshNames": [
+        "s05b_td2_m_5"
+      ],
+      "repeatX": 1,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1.08,
+      "wrapT": "mirror"
+    }
+  ],
   "obstacles": [
     {
       "id": "obs_1770762731004_xhl2lp92t",
@@ -139,5 +163,5 @@
     }
   ],
   "lastModified": "2026-02-10T22:37:43.000Z",
-  "exportedAt": "2026-02-10T22:41:55.350Z"
+  "exportedAt": "2026-02-11T10:32:00.304Z"
 }

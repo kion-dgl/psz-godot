@@ -28,8 +28,43 @@
       "label": "west"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s06_1_tree01.png",
+      "meshNames": [
+        "s06a_lc2_m_9"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_1_door02.png",
+      "meshNames": [
+        "s06a_lc2_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_wall02.png",
+      "meshNames": [
+        "s06a_lc2_m_3"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-11T09:10:44.161Z",
-  "exportedAt": "2026-02-11T10:00:20.267Z"
+  "exportedAt": "2026-02-11T10:32:02.107Z"
 }

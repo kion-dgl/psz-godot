@@ -28,8 +28,31 @@
       "label": "north"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_road1.png",
+      "meshNames": [
+        "s05e_ia1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s05_0_hasi1.png",
+      "meshNames": [
+        "s05e_ia1_m_5"
+      ],
+      "repeatX": 1,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1.08,
+      "wrapT": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-10T22:40:07.471Z",
-  "exportedAt": "2026-02-10T22:41:57.511Z"
+  "exportedAt": "2026-02-11T10:32:00.558Z"
 }

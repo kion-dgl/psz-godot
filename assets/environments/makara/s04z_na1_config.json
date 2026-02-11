@@ -7,7 +7,31 @@
     "triangles": {}
   },
   "portals": [],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s04_0_zdan.png",
+      "meshNames": [
+        "s04z_na1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s04_0_zyuka3.png",
+      "meshNames": [
+        "s04z_na1_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-10T21:29:02.452Z",
   "defaultSpawn": {
@@ -18,5 +42,5 @@
     ],
     "direction": "north"
   },
-  "exportedAt": "2026-02-10T21:30:07.805Z"
+  "exportedAt": "2026-02-11T10:31:56.863Z"
 }

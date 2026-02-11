@@ -7,7 +7,42 @@
     "triangles": {}
   },
   "portals": [],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_road3.png",
+      "meshNames": [
+        "s05a_td1_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s05_0_road1.png",
+      "meshNames": [
+        "s05a_td1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s05_0_etc1.png",
+      "meshNames": [
+        "s05a_td1_m_9"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0.97,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    }
+  ],
   "obstacles": [
     {
       "id": "obs_1770761267513_n1agitx7a",
@@ -65,5 +100,5 @@
     }
   ],
   "lastModified": "2026-02-10T22:08:25.554Z",
-  "exportedAt": "2026-02-10T22:41:34.805Z"
+  "exportedAt": "2026-02-11T10:31:58.189Z"
 }

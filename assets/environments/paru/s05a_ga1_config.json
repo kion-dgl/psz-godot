@@ -28,8 +28,20 @@
       "label": "south"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_road1.png",
+      "meshNames": [
+        "s05a_ga1_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-10T21:53:34.506Z",
-  "exportedAt": "2026-02-10T22:41:30.066Z"
+  "exportedAt": "2026-02-11T10:31:56.932Z"
 }

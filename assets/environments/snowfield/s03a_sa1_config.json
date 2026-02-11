@@ -8,19 +8,31 @@
   },
   "portals": [
     {
-      "id": "portal_1770724480059_rqrq4jlnp",
+      "id": "portal_1770733436575_0jjzynv4j",
       "direction": "south",
       "position": [
-        0.0736494610680074,
+        -0.23399896560005207,
         0,
-        19.86951155993273
+        13.126552565417734
       ],
       "label": "south"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s03_1_lamp1.png",
+      "meshNames": [
+        "s03a_sa1_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
-  "lastModified": "2026-02-10T13:35:40.648Z",
+  "lastModified": "2026-02-10T14:23:57.083Z",
   "defaultSpawn": {
     "position": [
       -0.039507129645320216,
@@ -29,5 +41,5 @@
     ],
     "direction": "north"
   },
-  "exportedAt": "2026-02-10T13:36:05.279Z"
+  "exportedAt": "2026-02-11T10:31:51.635Z"
 }

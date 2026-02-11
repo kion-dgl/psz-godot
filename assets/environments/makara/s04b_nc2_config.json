@@ -18,8 +18,32 @@
       "label": "south"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s04_0_yukam1.png",
+      "meshNames": [
+        "s04b_nc2_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s04_0_kaidan.png",
+      "meshNames": [
+        "s04b_nc2_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-10T21:21:40.822Z",
-  "exportedAt": "2026-02-10T21:30:06.954Z"
+  "exportedAt": "2026-02-11T10:31:56.384Z"
 }

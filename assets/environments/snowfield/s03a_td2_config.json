@@ -7,7 +7,19 @@
     "triangles": {}
   },
   "portals": [],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s03_1_lamp1.png",
+      "meshNames": [
+        "s03a_td2_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [
     {
       "id": "obs_1770725455936_0b94cweay",
@@ -83,5 +95,5 @@
     }
   ],
   "lastModified": "2026-02-10T12:11:37.967Z",
-  "exportedAt": "2026-02-10T13:36:06.607Z"
+  "exportedAt": "2026-02-11T10:31:51.951Z"
 }

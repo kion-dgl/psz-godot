@@ -53,8 +53,20 @@
       "label": "west"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_hasi1.png",
+      "meshNames": [
+        "s05b_lc1_m_4"
+      ],
+      "repeatX": 1,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1.08,
+      "wrapT": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-10T22:25:54.080Z",
-  "exportedAt": "2026-02-10T22:41:45.772Z"
+  "exportedAt": "2026-02-11T10:31:59.262Z"
 }

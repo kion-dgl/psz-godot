@@ -18,7 +18,19 @@
       "label": "south"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s04_0_yukas.png",
+      "meshNames": [
+        "s04a_sa1_m_3"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0.83,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-10T19:18:04.468Z",
   "defaultSpawn": {
@@ -29,5 +41,5 @@
     ],
     "direction": "north"
   },
-  "exportedAt": "2026-02-10T21:30:05.379Z"
+  "exportedAt": "2026-02-11T10:31:54.896Z"
 }

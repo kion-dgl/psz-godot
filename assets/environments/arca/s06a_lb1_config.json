@@ -153,8 +153,67 @@
       "label": "north"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s06_0_kaza01.png",
+      "meshNames": [
+        "s06a_lb1_m_6"
+      ],
+      "repeatX": 1.9,
+      "repeatY": 1,
+      "offsetX": 0.04,
+      "offsetY": 0.93,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_0_yuka01.png",
+      "meshNames": [
+        "s06a_lb1_m_3"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_1_door01.png",
+      "meshNames": [
+        "s06a_lb1_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_1_lamp01.png",
+      "meshNames": [
+        "s06a_lb1_m_8"
+      ],
+      "repeatX": 2.1,
+      "repeatY": 2,
+      "offsetX": -0.05,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_0_wall02.png",
+      "meshNames": [
+        "s06a_lb1_m_4"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-11T09:03:53.648Z",
-  "exportedAt": "2026-02-11T10:00:19.886Z"
+  "exportedAt": "2026-02-11T10:32:01.522Z"
 }

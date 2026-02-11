@@ -28,8 +28,30 @@
       "label": "north"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s06_0_eyuk04.png",
+      "meshNames": [
+        "s06e_ia1_m_6"
+      ],
+      "repeatX": 1.4,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0
+    },
+    {
+      "textureFile": "s06_0_ekaid1.png",
+      "meshNames": [
+        "s06e_ia1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-11T09:51:12.903Z",
-  "exportedAt": "2026-02-11T10:00:24.158Z"
+  "exportedAt": "2026-02-11T10:32:05.524Z"
 }

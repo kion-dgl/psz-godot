@@ -38,8 +38,31 @@
       "label": "south"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s06_0_bdoo04.png",
+      "meshNames": [
+        "s06b_tc3_m_8"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_byuk04.png",
+      "meshNames": [
+        "s06b_tc3_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-11T09:47:50.029Z",
-  "exportedAt": "2026-02-11T10:00:23.203Z"
+  "exportedAt": "2026-02-11T10:32:05.010Z"
 }

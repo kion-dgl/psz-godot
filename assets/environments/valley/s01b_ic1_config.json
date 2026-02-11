@@ -1,0 +1,87 @@
+{
+  "mapId": "s01b_ic1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_0": true,
+      "tri_1": true,
+      "tri_2": true,
+      "tri_3": true,
+      "tri_4": true,
+      "tri_5": true,
+      "tri_6": true,
+      "tri_7": true,
+      "tri_8": true,
+      "tri_9": true,
+      "tri_10": true,
+      "tri_11": true,
+      "tri_12": true,
+      "tri_13": false,
+      "tri_14": false,
+      "tri_15": false,
+      "tri_16": false,
+      "tri_17": false,
+      "tri_18": false,
+      "tri_19": false,
+      "tri_20": false,
+      "tri_21": false,
+      "tri_22": false,
+      "tri_23": false,
+      "tri_24": false,
+      "tri_25": false,
+      "tri_26": false,
+      "tri_27": false,
+      "tri_28": false,
+      "tri_29": false,
+      "tri_30": false,
+      "tri_31": false,
+      "tri_32": false,
+      "tri_50": false,
+      "tri_49": false,
+      "tri_106": true,
+      "tri_51": false,
+      "tri_52": false
+    }
+  },
+  "portals": [
+    {
+      "id": "portal_1769177200197_453qitwyk",
+      "direction": "north",
+      "position": [
+        -17.00151705239006,
+        0,
+        -12.377816285363494
+      ],
+      "label": "north"
+    },
+    {
+      "id": "portal_1769177210743_wtit3fab2",
+      "direction": "south",
+      "position": [
+        16.976967544322793,
+        0,
+        18.85774126508261
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s01_0_bri2.png",
+      "meshNames": [
+        "s01b_ic1_m_11"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-01-23T14:07:22.225Z",
+  "exportedAt": "2026-02-11T10:31:45.729Z"
+}

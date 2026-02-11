@@ -28,8 +28,32 @@
       "label": "south"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s06_1_tree01.png",
+      "meshNames": [
+        "s06a_ic3_m_8"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_1_door02.png",
+      "meshNames": [
+        "s06a_ic3_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-11T09:00:10.200Z",
-  "exportedAt": "2026-02-11T10:00:19.792Z"
+  "exportedAt": "2026-02-11T10:32:01.443Z"
 }

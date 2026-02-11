@@ -7,7 +7,30 @@
     "triangles": {}
   },
   "portals": [],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s02_0_hasim.png",
+      "meshNames": [
+        "s02a_td2_m_15"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s02_1_light.png",
+      "meshNames": [
+        "s02a_td2_m_13"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [
     {
       "id": "obs_1770695789322_0oij0h60x",
@@ -101,5 +124,5 @@
     }
   ],
   "lastModified": "2026-02-10T03:57:59.105Z",
-  "exportedAt": "2026-02-10T13:36:02.965Z"
+  "exportedAt": "2026-02-11T10:31:48.671Z"
 }

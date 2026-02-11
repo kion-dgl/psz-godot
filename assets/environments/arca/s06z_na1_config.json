@@ -48,7 +48,53 @@
     }
   },
   "portals": [],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s06_0_zdoo01.png",
+      "meshNames": [
+        "s06z_na1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_zhass1.png",
+      "meshNames": [
+        "s06z_na1_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_0_zkaid1.png",
+      "meshNames": [
+        "s06z_na1_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_zturo1.png",
+      "meshNames": [
+        "s06z_na1_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-11T09:53:52.256Z",
   "defaultSpawn": {
@@ -59,5 +105,5 @@
     ],
     "direction": "north"
   },
-  "exportedAt": "2026-02-11T10:00:24.223Z"
+  "exportedAt": "2026-02-11T10:32:05.710Z"
 }

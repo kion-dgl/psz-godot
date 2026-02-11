@@ -28,8 +28,64 @@
       "label": "south"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s06_0_kaid1.png",
+      "meshNames": [
+        "s06a_ga1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_kazae1.png",
+      "meshNames": [
+        "s06a_ga1_m_8"
+      ],
+      "repeatX": 2,
+      "repeatY": 1.9,
+      "offsetX": 0,
+      "offsetY": 1.06,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_1_door02.png",
+      "meshNames": [
+        "s06a_ga1_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_wall02.png",
+      "meshNames": [
+        "s06a_ga1_m_4"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_zkaid1.png",
+      "meshNames": [
+        "s06a_ga1_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-11T01:01:00.987Z",
-  "exportedAt": "2026-02-11T10:00:19.368Z"
+  "exportedAt": "2026-02-11T10:32:00.825Z"
 }

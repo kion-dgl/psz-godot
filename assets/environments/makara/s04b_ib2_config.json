@@ -28,8 +28,20 @@
       "label": "south"
     }
   ],
-  "textureFixes": [],
+  "textureFixes": [
+    {
+      "textureFile": "s04_0_kaidan.png",
+      "meshNames": [
+        "s04b_ib2_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
   "obstacles": [],
   "lastModified": "2026-02-10T19:45:39.531Z",
-  "exportedAt": "2026-02-10T21:30:06.099Z"
+  "exportedAt": "2026-02-11T10:31:55.602Z"
 }
