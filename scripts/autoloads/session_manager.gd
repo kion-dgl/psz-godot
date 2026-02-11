@@ -65,7 +65,7 @@ func _area_name_to_id(area_name: String) -> String:
 		"Makura Ruins": "makara", "Makara Ruins": "makara",
 		"Arca Plant": "arca",
 		"Dark Shrine": "dark",
-		"Eternal Tower": "dark",
+		"Eternal Tower": "tower",
 	}
 	return mapping.get(area_name, "gurhacia")
 

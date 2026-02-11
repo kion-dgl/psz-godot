@@ -20,6 +20,16 @@ const AREA_CONFIG := {
 	"paru":     {"prefix": "s05", "folder": "paru", "name": "Paru Waterfall"},
 	"arca":     {"prefix": "s06", "folder": "arca", "name": "Arca Plant"},
 	"dark":     {"prefix": "s07", "folder": "shrine", "name": "Dark Shrine"},
+	"tower":    {"prefix": "s08", "folder": "tower", "name": "Eternal Tower"},
+}
+
+## Tower-specific constants.
+const TOWER_FLOOR_STYLES := ["s081", "s082", "s083", "s084", "s085", "s086"]
+const TOWER_ROOM_TYPES := ["ga1", "sa1", "ib1", "lb1"]
+const TOWER_DIFFICULTY_PARAMS := {
+	"normal":     {"tower_floors": 2, "tower_rooms_per_floor": 3},
+	"hard":       {"tower_floors": 4, "tower_rooms_per_floor": 4},
+	"super-hard": {"tower_floors": 6, "tower_rooms_per_floor": 4},
 }
 
 ## Gate definitions per stage (original/unrotated directions).
@@ -274,6 +284,97 @@ func generate_field(difficulty: String, area_id: String = "gurhacia") -> Diction
 	z_cell["warp_edge"] = "south"
 	sections.append({
 		"type": "boss", "area": "z", "cells": [z_cell],
+		"start_pos": "0,0", "end_pos": "0,0",
+	})
+
+	return {"sections": sections}
+
+
+## Generate a linear tower field: entrance → floor rooms → transition → floor rooms → boss.
+## tower_floors and tower_rooms_per_floor are read from config, falling back to difficulty defaults.
+func generate_tower_field(difficulty: String) -> Dictionary:
+	var tower_floors: int
+	var tower_rooms_per_floor: int
+
+	# Try config file first
+	var cfg := ConfigFile.new()
+	var has_cfg := false
+	if cfg.load("user://field_config.cfg") == OK:
+		has_cfg = true
+	elif cfg.load("res://data/field_config.cfg") == OK:
+		has_cfg = true
+
+	if has_cfg and cfg.has_section("tower"):
+		var defaults: Dictionary = TOWER_DIFFICULTY_PARAMS.get(difficulty, TOWER_DIFFICULTY_PARAMS["normal"])
+		tower_floors = int(cfg.get_value("tower", "tower_floors", defaults["tower_floors"]))
+		tower_rooms_per_floor = int(cfg.get_value("tower", "tower_rooms_per_floor", defaults["tower_rooms_per_floor"]))
+	else:
+		var params: Dictionary = TOWER_DIFFICULTY_PARAMS.get(difficulty, TOWER_DIFFICULTY_PARAMS["normal"])
+		tower_floors = int(params["tower_floors"])
+		tower_rooms_per_floor = int(params["tower_rooms_per_floor"])
+
+	tower_floors = clampi(tower_floors, 1, 100)
+	tower_rooms_per_floor = clampi(tower_rooms_per_floor, 1, 4)
+
+	var sections: Array[Dictionary] = []
+	var section_idx := 0
+
+	# Entrance
+	var entrance_cell := _make_output_cell(Vector2i(0, 0), "s080_sa0", 0, true, false, false, 0)
+	entrance_cell["warp_edge"] = "south"
+	sections.append({
+		"type": "tower", "area": "entrance", "cells": [entrance_cell],
+		"start_pos": "0,0", "end_pos": "0,0",
+	})
+	section_idx += 1
+
+	# Split floors into pre-transition and post-transition halves
+	var mid_floor: int = ceili(tower_floors / 2.0)
+
+	# First half of floors
+	for f in range(mid_floor):
+		var style: String = TOWER_FLOOR_STYLES[f % TOWER_FLOOR_STYLES.size()]
+		for r in range(tower_rooms_per_floor):
+			var room_type: String = TOWER_ROOM_TYPES[r]
+			var stage_id := "%s_%s" % [style, room_type]
+			var warp: String = "west" if room_type == "lb1" else "south"
+			var cell := _make_output_cell(Vector2i(0, 0), stage_id, 0, false, false, false, section_idx)
+			cell["warp_edge"] = warp
+			sections.append({
+				"type": "tower", "area": "floor", "cells": [cell],
+				"start_pos": "0,0", "end_pos": "0,0",
+			})
+			section_idx += 1
+
+	# Mid-tower transition
+	var trans_cell := _make_output_cell(Vector2i(0, 0), "s08e_ib1", 0, false, false, false, section_idx)
+	trans_cell["warp_edge"] = "south"
+	sections.append({
+		"type": "transition", "area": "e", "cells": [trans_cell],
+		"start_pos": "0,0", "end_pos": "0,0",
+	})
+	section_idx += 1
+
+	# Second half of floors
+	for f in range(mid_floor, tower_floors):
+		var style: String = TOWER_FLOOR_STYLES[f % TOWER_FLOOR_STYLES.size()]
+		for r in range(tower_rooms_per_floor):
+			var room_type: String = TOWER_ROOM_TYPES[r]
+			var stage_id := "%s_%s" % [style, room_type]
+			var warp: String = "west" if room_type == "lb1" else "south"
+			var cell := _make_output_cell(Vector2i(0, 0), stage_id, 0, false, false, false, section_idx)
+			cell["warp_edge"] = warp
+			sections.append({
+				"type": "tower", "area": "floor", "cells": [cell],
+				"start_pos": "0,0", "end_pos": "0,0",
+			})
+			section_idx += 1
+
+	# Boss
+	var boss_cell := _make_output_cell(Vector2i(0, 0), "s087_na1", 0, false, true, false, section_idx)
+	boss_cell["warp_edge"] = ""
+	sections.append({
+		"type": "boss", "area": "z", "cells": [boss_cell],
 		"start_pos": "0,0", "end_pos": "0,0",
 	})
 
