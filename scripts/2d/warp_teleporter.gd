@@ -9,6 +9,7 @@ const AREAS := [
 	{"id": "makara", "name": "Makara Ruins", "rec_level": [40, 55, 90]},
 	{"id": "arca", "name": "Arca Plant", "rec_level": [50, 60, 95]},
 	{"id": "dark", "name": "Dark Shrine", "rec_level": [60, 70, 100]},
+	{"id": "tower", "name": "Eternal Tower", "rec_level": [70, 80, 100]},
 ]
 
 ## Story mission that must be completed to unlock each warp area.
@@ -20,6 +21,7 @@ const AREA_UNLOCK_MISSIONS := {
 	"makara": "fallen_flowers",
 	"arca": "ana_s_request",
 	"dark": "mother_s_memory",
+	"tower": "mother_s_memory",
 }
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
@@ -97,7 +99,11 @@ func _warp_to_field() -> void:
 	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
 	if GridGen.AREA_CONFIG.has(area_id):
 		var gen := GridGen.new()
-		var field: Dictionary = gen.generate_field(difficulty, area_id)
+		var field: Dictionary
+		if area_id == "tower":
+			field = gen.generate_tower_field(difficulty)
+		else:
+			field = gen.generate_field(difficulty, area_id)
 		var sections: Array = field["sections"]
 		SessionManager.set_field_sections(sections)
 		var first_section: Dictionary = sections[0]

@@ -42,6 +42,7 @@ func _ready() -> void:
 	test_valley_grid()
 	test_field_config()
 	test_wetlands_field()
+	test_tower_field()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -2553,5 +2554,136 @@ func test_wetlands_field() -> void:
 	assert_true(GridGen.AREA_CONFIG.has("ozette"), "AREA_CONFIG has ozette")
 	assert_eq(str(GridGen.AREA_CONFIG["gurhacia"]["prefix"]), "s01", "Gurhacia prefix is s01")
 	assert_eq(str(GridGen.AREA_CONFIG["ozette"]["prefix"]), "s02", "Ozette prefix is s02")
+
+	print("")
+
+
+func test_tower_field() -> void:
+	print("── Tower Field ──")
+	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var gen := GridGen.new()
+
+	# ── AREA_CONFIG has tower ──
+	assert_true(GridGen.AREA_CONFIG.has("tower"), "AREA_CONFIG has tower")
+	assert_eq(str(GridGen.AREA_CONFIG["tower"]["prefix"]), "s08", "Tower prefix is s08")
+	assert_eq(str(GridGen.AREA_CONFIG["tower"]["folder"]), "tower", "Tower folder is tower")
+
+	# ── Normal difficulty: 2 floors × 3 rooms + 3 fixed = 9 sections ──
+	var normal_field: Dictionary = gen.generate_tower_field("normal")
+	var normal_sections: Array = normal_field.get("sections", [])
+	assert_eq(normal_sections.size(), 9, "Normal tower has 9 sections (got %d)" % normal_sections.size())
+
+	# First section is always entrance s080_sa0
+	var entrance: Dictionary = normal_sections[0]
+	var entrance_cells: Array = entrance.get("cells", [])
+	assert_true(entrance_cells.size() > 0, "Entrance has cells")
+	assert_eq(str(entrance_cells[0].get("stage_id", "")), "s080_sa0", "Entrance is s080_sa0")
+	assert_eq(str(entrance.get("type", "")), "tower", "Entrance type is tower")
+
+	# Last section is always boss s087_na1
+	var boss: Dictionary = normal_sections[normal_sections.size() - 1]
+	var boss_cells: Array = boss.get("cells", [])
+	assert_true(boss_cells.size() > 0, "Boss has cells")
+	assert_eq(str(boss_cells[0].get("stage_id", "")), "s087_na1", "Boss is s087_na1")
+	assert_eq(str(boss.get("type", "")), "boss", "Boss type is boss")
+	assert_eq(str(boss_cells[0].get("warp_edge", "X")), "", "Boss has no warp_edge")
+
+	# Transition exists somewhere in the middle
+	var trans_count := 0
+	var trans_idx := -1
+	for i in range(normal_sections.size()):
+		if str(normal_sections[i].get("type", "")) == "transition":
+			trans_count += 1
+			trans_idx = i
+	assert_eq(trans_count, 1, "Exactly 1 transition section")
+	assert_true(trans_idx > 0 and trans_idx < normal_sections.size() - 1,
+		"Transition is between entrance and boss (idx=%d)" % trans_idx)
+	var trans_cells: Array = normal_sections[trans_idx].get("cells", [])
+	assert_eq(str(trans_cells[0].get("stage_id", "")), "s08e_ib1", "Transition is s08e_ib1")
+
+	# ── Hard difficulty: 4 floors × 4 rooms + 3 fixed = 19 sections ──
+	var hard_field: Dictionary = gen.generate_tower_field("hard")
+	var hard_sections: Array = hard_field.get("sections", [])
+	assert_eq(hard_sections.size(), 19, "Hard tower has 19 sections (got %d)" % hard_sections.size())
+
+	# ── Super-Hard difficulty: 6 floors × 4 rooms + 3 fixed = 27 sections ──
+	var sh_field: Dictionary = gen.generate_tower_field("super-hard")
+	var sh_sections: Array = sh_field.get("sections", [])
+	assert_eq(sh_sections.size(), 27, "Super-Hard tower has 27 sections (got %d)" % sh_sections.size())
+
+	# ── All cells have rotation=0 ──
+	var all_rot_zero := true
+	for sec in sh_sections:
+		for cell in sec.get("cells", []):
+			if int(cell.get("rotation", -1)) != 0:
+				all_rot_zero = false
+	assert_true(all_rot_zero, "All tower cells have rotation=0")
+
+	# ── Straight rooms have warp_edge=south, lb1 has warp_edge=west ──
+	var warp_ok := true
+	for sec in sh_sections:
+		for cell in sec.get("cells", []):
+			var sid: String = str(cell.get("stage_id", ""))
+			var warp: String = str(cell.get("warp_edge", ""))
+			if sid == "s087_na1":
+				if warp != "":
+					warp_ok = false
+			elif sid.ends_with("_lb1"):
+				if warp != "west":
+					warp_ok = false
+			elif sid == "s080_sa0" or sid == "s08e_ib1":
+				if warp != "south":
+					warp_ok = false
+			elif sid.ends_with("_ga1") or sid.ends_with("_sa1") or sid.ends_with("_ib1"):
+				if warp != "south":
+					warp_ok = false
+	assert_true(warp_ok, "Warp edges correct: south for straight, west for lb1, empty for boss")
+
+	# ── Floor styles cycle correctly ──
+	# Normal (2 floors): s081, s082
+	var normal_floor_ids: Array[String] = []
+	for i in range(1, normal_sections.size()):
+		var sec: Dictionary = normal_sections[i]
+		if str(sec.get("area", "")) == "floor":
+			var sid: String = str(sec["cells"][0].get("stage_id", ""))
+			var floor_id: String = sid.substr(0, 4)  # e.g. "s081"
+			if floor_id not in normal_floor_ids:
+				normal_floor_ids.append(floor_id)
+	assert_true("s081" in normal_floor_ids, "Normal tower uses s081")
+	assert_true("s082" in normal_floor_ids, "Normal tower uses s082")
+
+	# Super-Hard (6 floors): all s081-s086
+	var sh_floor_ids: Array[String] = []
+	for i in range(1, sh_sections.size()):
+		var sec: Dictionary = sh_sections[i]
+		if str(sec.get("area", "")) == "floor":
+			var sid: String = str(sec["cells"][0].get("stage_id", ""))
+			var floor_id: String = sid.substr(0, 4)
+			if floor_id not in sh_floor_ids:
+				sh_floor_ids.append(floor_id)
+	assert_eq(sh_floor_ids.size(), 6, "Super-Hard uses all 6 floor styles (got %d)" % sh_floor_ids.size())
+
+	# ── All stage_ids reference valid tower GLBs ──
+	var all_glbs_exist := true
+	for sec in sh_sections:
+		for cell in sec.get("cells", []):
+			var stage_id: String = str(cell.get("stage_id", ""))
+			var glb_path := "res://assets/environments/tower/%s.glb" % stage_id
+			if not FileAccess.file_exists(glb_path):
+				all_glbs_exist = false
+				print("    Missing tower GLB: %s" % glb_path)
+	assert_true(all_glbs_exist, "All tower stage GLBs exist")
+
+	# ── Deterministic: same structure every time ──
+	var consistent := true
+	for i in range(5):
+		var f: Dictionary = gen.generate_tower_field("normal")
+		if f.get("sections", []).size() != 9:
+			consistent = false
+	assert_true(consistent, "Tower generation is deterministic (always 9 sections for normal)")
+
+	# ── Valley still works after tower changes (regression) ──
+	var valley_field: Dictionary = gen.generate_field("normal", "gurhacia")
+	assert_eq(valley_field.get("sections", []).size(), 4, "Valley still generates 4 sections")
 
 	print("")

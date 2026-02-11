@@ -13,6 +13,7 @@ var paused: bool = false
 ## HUD
 var _hud_layer: CanvasLayer
 var _hud_label: Label
+var stage_label: String = ""  # Set by field controller for debug display
 
 ## Screen tint overlay (multiply blend for day/night atmosphere on unshaded geometry)
 var _tint_layer: CanvasLayer
@@ -82,8 +83,8 @@ func _ready() -> void:
 	_hud_label.anchor_right = 0.5
 	_hud_label.anchor_top = 0.0
 	_hud_label.anchor_bottom = 0.0
-	_hud_label.offset_left = -80
-	_hud_label.offset_right = 80
+	_hud_label.offset_left = -140
+	_hud_label.offset_right = 140
 	_hud_label.offset_top = 8
 	_hud_label.offset_bottom = 32
 	_hud_label.add_theme_font_size_override("font_size", 16)
@@ -196,7 +197,10 @@ func _update_hud() -> void:
 	var h: int = int(current_hour) % 24
 	var m: int = int(fmod(current_hour, 1.0) * 60.0)
 	var phase: String = get_phase().capitalize()
-	_hud_label.text = "%02d:%02d - %s" % [h, m, phase]
+	if stage_label.is_empty():
+		_hud_label.text = "%02d:%02d - %s" % [h, m, phase]
+	else:
+		_hud_label.text = "%02d:%02d - %s  [%s]" % [h, m, phase, stage_label]
 
 
 func _unhandled_input(event: InputEvent) -> void:
