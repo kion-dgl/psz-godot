@@ -3,7 +3,8 @@ extends Control
 ## Sections: Valley A (grid) → Valley E (transition) → Valley B (grid) → Valley Z (boss)
 ## Shows ASCII map, navigate with arrow keys, collect keys to unlock gates.
 
-const SECTION_NAMES := {"a": "Valley A", "e": "Valley E (Transition)", "b": "Valley B", "z": "Valley Z (Boss)"}
+const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
+const SECTION_LABELS := {"a": "A", "e": "E (Transition)", "b": "B", "z": "Z (Boss)"}
 
 var _grid: Array = []
 var _cell_map: Dictionary = {}  # "row,col" → cell dict
@@ -132,11 +133,15 @@ func _refresh_display() -> void:
 	var session: Dictionary = SessionManager.get_session()
 	var sections: Array = SessionManager.get_field_sections()
 	var section_idx: int = SessionManager.get_current_section()
-	var section_label: String = SECTION_NAMES.get(_section_area, "Valley")
+	var area_id: String = str(session.get("area_id", "gurhacia"))
+	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
+	var area_name: String = area_cfg["name"]
+	var section_suffix: String = SECTION_LABELS.get(_section_area, "")
+	var section_label: String = "%s %s" % [area_name.split(" ")[-1], section_suffix] if not section_suffix.is_empty() else area_name
 	var progress := ""
 	if sections.size() > 1:
 		progress = " (%d/%d)" % [section_idx + 1, sections.size()]
-	header_label.text = "─── Gurhacia Valley ─── %s%s ───" % [section_label, progress]
+	header_label.text = "─── %s ─── %s%s ───" % [area_name, section_label, progress]
 
 	_refresh_map()
 	_refresh_info()
@@ -328,7 +333,7 @@ func _refresh_info() -> void:
 
 	var cell: Dictionary = _cell_map.get(_current_pos, {})
 	var stage_id: String = cell.get("stage_id", "???")
-	var stage_short: String = stage_id.replace("s01a_", "").replace("s01b_", "").replace("s01e_", "").to_upper()
+	var stage_short: String = stage_id.substr(5).to_upper()
 
 	var stage_label := Label.new()
 	stage_label.text = "Section: %s" % stage_short
@@ -406,7 +411,7 @@ func _refresh_info() -> void:
 		for edge in connections:
 			var target_cell: Dictionary = _cell_map.get(connections[edge], {})
 			var target_stage: String = str(target_cell.get("stage_id", "???"))
-			target_stage = target_stage.replace("s01a_", "").replace("s01b_", "").replace("s01e_", "").to_upper()
+			target_stage = target_stage.substr(5).to_upper()
 			var dir_label := Label.new()
 			var locked := ""
 			if cell.get("is_key_gate", false) \

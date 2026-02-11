@@ -132,6 +132,7 @@ func _refresh_display() -> void:
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var selected_control: Control = null
 
 	if _selecting_difficulty and not _missions.is_empty():
 		var mission = _missions[_selected_index]
@@ -145,6 +146,7 @@ func _refresh_display() -> void:
 			if i == _selected_difficulty:
 				label.text = "> " + DIFFICULTIES[i]
 				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+				selected_control = label
 			else:
 				label.text = "  " + DIFFICULTIES[i]
 			vbox.add_child(label)
@@ -182,6 +184,7 @@ func _refresh_display() -> void:
 				if i == _selected_index:
 					label.text = "> " + label.text
 					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+					selected_control = label
 				else:
 					label.text = "  " + label.text
 					if not unlocked:
@@ -193,6 +196,10 @@ func _refresh_display() -> void:
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)
+
+	# Scroll to selected item after layout
+	if selected_control:
+		scroll.ensure_control_visible.call_deferred(selected_control)
 
 	# Detail panel
 	_refresh_detail()

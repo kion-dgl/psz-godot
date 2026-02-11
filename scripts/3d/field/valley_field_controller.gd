@@ -6,6 +6,7 @@ const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
 const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 const MapOverlayScript := preload("res://scripts/3d/field/map_overlay.gd")
+const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const ROTATE_CW := {"north": "east", "east": "south", "south": "west", "west": "north"}
@@ -23,6 +24,7 @@ var _portal_data: Dictionary = {}
 var _rotation_deg: int = 0
 var _map_overlay: CanvasLayer
 var _blob_shadow: MeshInstance3D
+var _texture_fixes: Array = []
 
 
 func _ready() -> void:
@@ -56,9 +58,11 @@ func _ready() -> void:
 		_return_to_city()
 		return
 
-	# Load GLB
+	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
-	var map_path := "res://assets/environments/valley/%s.glb" % stage_id
+	var area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
+	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
+	var map_path := "res://assets/environments/%s/%s.glb" % [area_cfg["folder"], stage_id]
 	var packed_scene := load(map_path) as PackedScene
 	if not packed_scene:
 		push_error("[ValleyField] Failed to load map: %s" % map_path)
@@ -67,6 +71,9 @@ func _ready() -> void:
 
 	_map_root = packed_scene.instantiate() as Node3D
 	_map_root.name = "Map"
+
+	# Load texture fixes from config JSON
+	_texture_fixes = _load_texture_fixes(area_cfg["folder"], stage_id)
 
 	# Apply grid rotation — positive Y rotation matches ROTATE_CW for the
 	# model's coordinate convention (east=-X, west=+X, north=-Z, south=+Z).
@@ -391,6 +398,39 @@ func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
 		_collect_embedded_lights(child, out)
 
 
+func _load_texture_fixes(folder: String, stage_id: String) -> Array:
+	var config_path := "res://assets/environments/%s/%s_config.json" % [folder, stage_id]
+	if not FileAccess.file_exists(config_path):
+		return []
+	var file := FileAccess.open(config_path, FileAccess.READ)
+	if not file:
+		return []
+	var json := JSON.new()
+	if json.parse(file.get_as_text()) != OK:
+		return []
+	var data: Dictionary = json.data
+	var fixes: Array = data.get("textureFixes", [])
+	if fixes.size() > 0:
+		print("[ValleyField] Loaded %d texture fixes from %s" % [fixes.size(), config_path])
+	return fixes
+
+
+func _find_texture_fix_for_mesh(mesh_name: String) -> Dictionary:
+	for fix in _texture_fixes:
+		var mesh_names: Array = fix.get("meshNames", [])
+		for mn in mesh_names:
+			if str(mn) == mesh_name:
+				return fix
+	return {}
+
+
+static func _wrap_mode_int(mode: String) -> int:
+	match mode:
+		"mirror": return 1
+		"clamp": return 2
+	return 0  # repeat
+
+
 func _fix_materials(node: Node) -> void:
 	## Make stage materials unshaded so pre-baked vertex colors display at full
 	## brightness regardless of mesh normals or enclosure geometry.  TimeManager
@@ -398,13 +438,36 @@ func _fix_materials(node: Node) -> void:
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
 		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var fix := _find_texture_fix_for_mesh(mesh_inst.name)
+		var needs_shader := not fix.is_empty() and (
+			str(fix.get("wrapS", "repeat")) == "mirror" or
+			str(fix.get("wrapT", "repeat")) == "mirror")
 		for i in range(mesh_inst.get_surface_override_material_count()):
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
-				var new_mat := mat.duplicate() as StandardMaterial3D
-				new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-				new_mat.texture_repeat = true
-				mesh_inst.set_surface_override_material(i, new_mat)
+				var std_mat := mat as StandardMaterial3D
+				if needs_shader:
+					# Use custom shader for mirror wrap support
+					var shader_mat := ShaderMaterial.new()
+					shader_mat.shader = TEXTURE_FIX_SHADER
+					if std_mat.albedo_texture:
+						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
+					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
+					shader_mat.set_shader_parameter("wrap_s", _wrap_mode_int(str(fix.get("wrapS", "repeat"))))
+					shader_mat.set_shader_parameter("wrap_t", _wrap_mode_int(str(fix.get("wrapT", "repeat"))))
+					mesh_inst.set_surface_override_material(i, shader_mat)
+				else:
+					var new_mat := std_mat.duplicate() as StandardMaterial3D
+					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					new_mat.texture_repeat = true
+					if not fix.is_empty():
+						new_mat.uv1_scale = Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0)
+						new_mat.uv1_offset = Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0)
+						if str(fix.get("wrapS", "repeat")) == "clamp" or str(fix.get("wrapT", "repeat")) == "clamp":
+							new_mat.texture_repeat = false
+					mesh_inst.set_surface_override_material(i, new_mat)
 	for child in node.get_children():
 		_fix_materials(child)
 
@@ -414,8 +477,8 @@ func _configure_collision_nodes(node: Node) -> bool:
 	if node is StaticBody3D:
 		if node.name == "collision_floor":
 			found_floor = true
-		# Skip trigger boxes — they define portal positions, not walls
-		if str(node.name).begins_with("trigger_"):
+		# Skip trigger boxes and gate markers — not walls
+		if str(node.name).begins_with("trigger_") or str(node.name).begins_with("gate_"):
 			node.collision_layer = 0
 			node.collision_mask = 0
 		else:
@@ -425,6 +488,7 @@ func _configure_collision_nodes(node: Node) -> bool:
 		if _configure_collision_nodes(child):
 			found_floor = true
 	return found_floor
+
 
 
 func _hide_debug_markers(node: Node) -> void:
