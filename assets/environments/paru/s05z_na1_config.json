@@ -1,0 +1,37 @@
+{
+  "mapId": "s05z_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_102": false,
+      "tri_103": false
+    }
+  },
+  "portals": [],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_hasi1.png",
+      "meshNames": [
+        "s05z_na1_m_13"
+      ],
+      "repeatX": 1,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1.08,
+      "wrapT": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-10T22:41:08.249Z",
+  "defaultSpawn": {
+    "position": [
+      0.6342739403327684,
+      0,
+      9.44873756006344
+    ],
+    "direction": "south"
+  },
+  "exportedAt": "2026-02-11T10:32:00.714Z"
+}

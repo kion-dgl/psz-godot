@@ -1,0 +1,102 @@
+{
+  "mapId": "s07b_xb2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770821520875_spj37nyll",
+      "direction": "west",
+      "position": [
+        19.920492789605007,
+        0,
+        -0.17582112507728453
+      ],
+      "label": "west"
+    },
+    {
+      "id": "portal_1770821529370_yf1wwgl7f",
+      "direction": "south",
+      "position": [
+        0.022126224472820866,
+        0,
+        19.82515271064299
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1770821538440_01uy5y9am",
+      "direction": "east",
+      "position": [
+        -19.809163183679146,
+        0,
+        0.067414642250889
+      ],
+      "label": "east"
+    },
+    {
+      "id": "portal_1770821547402_lfjqkv2mr",
+      "direction": "north",
+      "position": [
+        0.01066077382881403,
+        0,
+        -19.532334622273893
+      ],
+      "label": "north"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s07_0_door.png",
+      "meshNames": [
+        "s07b_xb2_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s07_0_yuka3.png",
+      "meshNames": [
+        "s07b_xb2_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_0_lined.png",
+      "meshNames": [
+        "s07b_xb2_m_12"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_0_yuka2.png",
+      "meshNames": [
+        "s07b_xb2_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T14:52:27.912Z",
+  "exportedAt": "2026-02-11T15:05:08.200Z"
+}

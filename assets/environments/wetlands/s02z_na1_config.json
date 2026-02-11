@@ -1,0 +1,22 @@
+{
+  "mapId": "s02z_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-10T11:27:25.909Z",
+  "defaultSpawn": {
+    "position": [
+      -1.0128439588357026,
+      0,
+      -17.273760232697438
+    ],
+    "direction": "north"
+  },
+  "exportedAt": "2026-02-11T10:31:50.325Z"
+}

@@ -1,0 +1,38 @@
+{
+  "mapId": "s07a_nc2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770820892702_6ea4g8qcu",
+      "direction": "south",
+      "position": [
+        0.2846533108861804,
+        0,
+        17.165955326957402
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s07_0_adoor.png",
+      "meshNames": [
+        "s07a_nc2_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T14:41:33.213Z",
+  "exportedAt": "2026-02-11T15:05:05.382Z"
+}

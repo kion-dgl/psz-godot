@@ -1,0 +1,48 @@
+{
+  "mapId": "s05a_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770760954951_cldar2pe9",
+      "direction": "south",
+      "position": [
+        0.18679951294885289,
+        0,
+        18.91774682452428
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_road3.png",
+      "meshNames": [
+        "s05a_na1_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s05_0_road1.png",
+      "meshNames": [
+        "s05a_na1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-10T22:02:35.462Z",
+  "exportedAt": "2026-02-11T10:31:57.641Z"
+}

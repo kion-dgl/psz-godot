@@ -1,0 +1,109 @@
+{
+  "mapId": "s06z_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_22": true,
+      "tri_23": true,
+      "tri_24": true,
+      "tri_25": true,
+      "tri_26": true,
+      "tri_27": true,
+      "tri_28": true,
+      "tri_29": true,
+      "tri_30": true,
+      "tri_31": true,
+      "tri_32": true,
+      "tri_33": true,
+      "tri_34": true,
+      "tri_35": true,
+      "tri_36": true,
+      "tri_37": true,
+      "tri_38": true,
+      "tri_39": true,
+      "tri_0": true,
+      "tri_1": true,
+      "tri_2": true,
+      "tri_3": true,
+      "tri_4": true,
+      "tri_5": true,
+      "tri_6": true,
+      "tri_7": true,
+      "tri_8": true,
+      "tri_9": true,
+      "tri_10": true,
+      "tri_11": true,
+      "tri_12": true,
+      "tri_13": true,
+      "tri_14": true,
+      "tri_15": true,
+      "tri_16": true,
+      "tri_17": true,
+      "tri_18": true,
+      "tri_19": true,
+      "tri_20": true,
+      "tri_21": true
+    }
+  },
+  "portals": [],
+  "textureFixes": [
+    {
+      "textureFile": "s06_0_zdoo01.png",
+      "meshNames": [
+        "s06z_na1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_zhass1.png",
+      "meshNames": [
+        "s06z_na1_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_0_zkaid1.png",
+      "meshNames": [
+        "s06z_na1_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_zturo1.png",
+      "meshNames": [
+        "s06z_na1_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T09:53:52.256Z",
+  "defaultSpawn": {
+    "position": [
+      -0.057862300818911694,
+      0,
+      -10.745014504469651
+    ],
+    "direction": "north"
+  },
+  "exportedAt": "2026-02-11T10:32:05.710Z"
+}

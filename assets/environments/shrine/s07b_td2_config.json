@@ -1,0 +1,104 @@
+{
+  "mapId": "s07b_td2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770821463750_ay6d42d3o",
+      "direction": "south",
+      "position": [
+        -0.04767463652651571,
+        0,
+        17.147296471589804
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1770821474601_66in1k6c6",
+      "direction": "west",
+      "position": [
+        17.344024740446393,
+        0,
+        0.11360162958106312
+      ],
+      "label": "west"
+    },
+    {
+      "id": "portal_1770821482619_ccs97svv2",
+      "direction": "east",
+      "position": [
+        -17.144943110886963,
+        0,
+        -0.17577008732037847
+      ],
+      "label": "east"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s07_0_door.png",
+      "meshNames": [
+        "s07b_td2_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s07_0_lined.png",
+      "meshNames": [
+        "s07b_td2_m_13"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s07_0_yuka2.png",
+      "meshNames": [
+        "s07b_td2_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s07_1_btable.png",
+      "meshNames": [
+        "s07b_td2_m_14"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s07_1_saku1.png",
+      "meshNames": [
+        "s07b_td2_m_5"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T14:51:23.129Z",
+  "exportedAt": "2026-02-11T15:05:08.012Z"
+}

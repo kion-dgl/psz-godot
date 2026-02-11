@@ -1,0 +1,25 @@
+{
+  "mapId": "s03b_nb2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770726458075_bz9f98pru",
+      "direction": "south",
+      "position": [
+        13.06367109897288,
+        0,
+        21.73389211827243
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [],
+  "obstacles": [],
+  "lastModified": "2026-02-10T12:27:38.583Z",
+  "exportedAt": "2026-02-11T10:31:52.828Z"
+}

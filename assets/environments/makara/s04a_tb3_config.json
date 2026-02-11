@@ -1,0 +1,57 @@
+{
+  "mapId": "s04a_tb3",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770751103697_6gtystxvs",
+      "direction": "south",
+      "position": [
+        5.458594990539375,
+        0,
+        20.34620421567257
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1770751110868_0qo4cir0u",
+      "direction": "east",
+      "position": [
+        -19.372068546908707,
+        0,
+        4.918024748327184
+      ],
+      "label": "east"
+    },
+    {
+      "id": "portal_1770751117052_9mmvfmt6n",
+      "direction": "west",
+      "position": [
+        21.118303325326174,
+        0,
+        -0.14944369419000658
+      ],
+      "label": "west"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s04_0_kaidan.png",
+      "meshNames": [
+        "s04a_tb3_m_8"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-10T19:18:37.560Z",
+  "exportedAt": "2026-02-11T10:31:54.982Z"
+}

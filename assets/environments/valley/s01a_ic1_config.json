@@ -1,0 +1,89 @@
+{
+  "mapId": "s01a_ic1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_46": false,
+      "tri_47": false,
+      "tri_49": false,
+      "tri_42": false,
+      "tri_43": false,
+      "tri_40": false
+    }
+  },
+  "portals": [
+    {
+      "id": "portal_1769090970268_79fl50z0t",
+      "direction": "north",
+      "position": [
+        -13.449602969279258,
+        0,
+        -20.55208210758127
+      ],
+      "label": "north"
+    },
+    {
+      "id": "portal_1769090993555_xrh9frw4y",
+      "direction": "south",
+      "position": [
+        19.090108831121928,
+        0,
+        20.02412218298251
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s01_0_pass1.png",
+      "meshNames": [
+        "s01a_ic1_m_9"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "obs_1769091036569_wi9vpc17x",
+      "type": "cylinder",
+      "position": [
+        1.1574936946699061,
+        0,
+        -4.66569737330903
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "radius": 3.6,
+      "cylinderHeight": 2
+    },
+    {
+      "id": "obs_1769091049578_weweyxwsr",
+      "type": "cylinder",
+      "position": [
+        -22.550939159626644,
+        0,
+        18.462153014729644
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "radius": 2.6,
+      "cylinderHeight": 2
+    }
+  ],
+  "lastModified": "2026-01-22T14:10:50.086Z",
+  "exportedAt": "2026-02-11T10:31:44.138Z"
+}

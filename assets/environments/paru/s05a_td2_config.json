@@ -1,0 +1,104 @@
+{
+  "mapId": "s05a_td2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_road3.png",
+      "meshNames": [
+        "s05a_td2_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s05_0_road1.png",
+      "meshNames": [
+        "s05a_td2_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s05_0_etc1.png",
+      "meshNames": [
+        "s05a_td2_m_8"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0.97,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "obs_1770761887320_f6zm6wqr9",
+      "type": "box",
+      "position": [
+        13.163778451835851,
+        0,
+        5.3113987543393435
+      ],
+      "rotation": [
+        0,
+        0.6108652381980153,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2.1,
+      "height": 1.6,
+      "depth": 15.6
+    },
+    {
+      "id": "obs_1770761905535_6gcphluhf",
+      "type": "box",
+      "position": [
+        -10.531672730838963,
+        0,
+        -14.426887508267335
+      ],
+      "rotation": [
+        0,
+        0.6108652381980153,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2.1,
+      "height": 1.6,
+      "depth": 9.6
+    },
+    {
+      "id": "obs_1770761931075_o5wcmeu5f",
+      "type": "box",
+      "position": [
+        -7.490470147685315,
+        0,
+        -7.519827419283185
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "width": 2.1,
+      "height": 1.6,
+      "depth": 6.1
+    }
+  ],
+  "lastModified": "2026-02-10T22:18:51.586Z",
+  "exportedAt": "2026-02-11T10:31:58.250Z"
+}

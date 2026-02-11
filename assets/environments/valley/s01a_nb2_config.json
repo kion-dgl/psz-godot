@@ -1,0 +1,43 @@
+{
+  "mapId": "s01a_nb2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_34": false,
+      "tri_14": false,
+      "tri_33": false,
+      "tri_15": false,
+      "tri_32": false
+    }
+  },
+  "portals": [
+    {
+      "id": "portal_1769092327993_a9mir3dem",
+      "direction": "south",
+      "position": [
+        16.911599785069214,
+        0,
+        20.3311972088096
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s01_0_pass1.png",
+      "meshNames": [
+        "s01a_nb2_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-01-22T14:32:19.670Z",
+  "exportedAt": "2026-02-11T10:31:44.725Z"
+}

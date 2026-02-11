@@ -1,0 +1,99 @@
+{
+  "mapId": "s03a_td2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [],
+  "textureFixes": [
+    {
+      "textureFile": "s03_1_lamp1.png",
+      "meshNames": [
+        "s03a_td2_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "obs_1770725455936_0b94cweay",
+      "type": "box",
+      "position": [
+        11.705484647812334,
+        0,
+        -0.3930792395666298
+      ],
+      "rotation": [
+        0,
+        1.0471975511965976,
+        0
+      ],
+      "label": "Boulder",
+      "width": 3.1,
+      "height": 2,
+      "depth": 7.6
+    },
+    {
+      "id": "obs_1770725469773_73key2ur2",
+      "type": "box",
+      "position": [
+        5.134075088578594,
+        0,
+        -2.1621339902574066
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "label": "Boulder",
+      "width": 3.1,
+      "height": 2,
+      "depth": 7.6
+    },
+    {
+      "id": "obs_1770725488040_0pzzxpdkw",
+      "type": "box",
+      "position": [
+        -11.827057425590946,
+        0,
+        14.105801651782873
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "width": 3.1,
+      "height": 2,
+      "depth": 7.6
+    },
+    {
+      "id": "obs_1770725497455_lvi9296ek",
+      "type": "box",
+      "position": [
+        -8.665287288641208,
+        0,
+        14.956947703915954
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "width": 3.1,
+      "height": 2,
+      "depth": 7.6
+    }
+  ],
+  "lastModified": "2026-02-10T12:11:37.967Z",
+  "exportedAt": "2026-02-11T10:31:51.951Z"
+}

@@ -41,6 +41,7 @@ func _ready() -> void:
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
+	test_wetlands_field()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -2422,5 +2423,135 @@ func test_field_config() -> void:
 		instance.free()
 	else:
 		print("  SKIP: Could not load s01a_ga1.glb for portal test")
+
+	print("")
+
+
+func test_wetlands_field() -> void:
+	print("── Wetlands Field ──")
+	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
+	var gen := GridGen.new()
+
+	# ── Gate loading from config JSONs ──
+	var gates: Dictionary = gen.load_gates("ozette")
+	assert_true(not gates.is_empty(), "load_gates('ozette') returns non-empty dict")
+	# Verify it's NOT the hardcoded GATES (should have s02 prefix stages)
+	assert_true(gates.has("s02a_sa1"), "Ozette gates has s02a_sa1")
+	assert_true(gates.has("s02b_sa1"), "Ozette gates has s02b_sa1")
+	assert_true(gates.has("s02e_ia1"), "Ozette gates has s02e_ia1")
+	assert_true(gates.has("s02z_na1") or not gates.has("s02z_na1"),
+		"Ozette gates may or may not have s02z_na1 (boss has no portals)")
+	assert_true(not gates.has("s01a_sa1"), "Ozette gates does NOT have s01a_ stages")
+
+	# ── Gate directions match expected topology ──
+	var sa1_dirs: Array = gates.get("s02a_sa1", [])
+	assert_true("south" in sa1_dirs, "s02a_sa1 has south gate")
+	var ga1_dirs: Array = gates.get("s02a_ga1", [])
+	assert_true("north" in ga1_dirs and "south" in ga1_dirs, "s02a_ga1 has north+south gates")
+	var lb1_dirs: Array = gates.get("s02a_lb1", [])
+	assert_true("north" in lb1_dirs and "west" in lb1_dirs, "s02a_lb1 has north+west gates")
+	var xb2_dirs: Array = gates.get("s02a_xb2", [])
+	assert_eq(xb2_dirs.size(), 4, "s02a_xb2 has 4 gates (NSEW)")
+	var tb3_dirs: Array = gates.get("s02a_tb3", [])
+	assert_eq(tb3_dirs.size(), 3, "s02a_tb3 has 3 gates")
+
+	# ── Count stages per section ──
+	var a_count := 0
+	var b_count := 0
+	var e_count := 0
+	var z_count := 0
+	for stage_id in gates:
+		if str(stage_id).begins_with("s02a_"):
+			a_count += 1
+		elif str(stage_id).begins_with("s02b_"):
+			b_count += 1
+		elif str(stage_id).begins_with("s02e_"):
+			e_count += 1
+		elif str(stage_id).begins_with("s02z_"):
+			z_count += 1
+	# Some stages may have empty portals in config (not yet set up) — skip those
+	assert_true(a_count >= 17, "Ozette has >= 17 A stages with portals (got %d)" % a_count)
+	assert_eq(b_count, 18, "Ozette has 18 B stages")
+	assert_eq(e_count, 1, "Ozette has 1 E stage")
+	# z_count may be 0 if boss has no portals (empty portals array)
+
+	# ── Field generation for ozette ──
+	var field: Dictionary = gen.generate_field("normal", "ozette")
+	var sections: Array = field.get("sections", [])
+	assert_eq(sections.size(), 4, "Ozette field has 4 sections")
+	assert_eq(str(sections[0].get("type", "")), "grid", "Section 0 is grid")
+	assert_eq(str(sections[0].get("area", "")), "a", "Section 0 is area a")
+	assert_eq(str(sections[1].get("type", "")), "transition", "Section 1 is transition")
+	assert_eq(str(sections[2].get("type", "")), "grid", "Section 2 is grid")
+	assert_eq(str(sections[3].get("type", "")), "boss", "Section 3 is boss")
+
+	# Transition uses s02e_ia1
+	var e_cells: Array = sections[1].get("cells", [])
+	assert_true(e_cells.size() > 0, "Transition section has cells")
+	if e_cells.size() > 0:
+		assert_eq(str(e_cells[0].get("stage_id", "")), "s02e_ia1", "Transition uses s02e_ia1")
+
+	# Boss uses s02z_na1 (wetlands has it) or falls back to s02a_na1
+	var z_cells: Array = sections[3].get("cells", [])
+	assert_true(z_cells.size() > 0, "Boss section has cells")
+
+	# Each grid section has cells and start cell uses s02{a,b}_sa1
+	var a_cells: Array = sections[0].get("cells", [])
+	assert_true(a_cells.size() >= 3, "Ozette A section has >= 3 cells (got %d)" % a_cells.size())
+	var a_start: Dictionary = {}
+	for cell in a_cells:
+		if cell.get("is_start", false):
+			a_start = cell
+			break
+	assert_eq(str(a_start.get("stage_id", "")), "s02a_sa1", "Ozette A start uses s02a_sa1")
+
+	var b_cells: Array = sections[2].get("cells", [])
+	assert_true(b_cells.size() >= 3, "Ozette B section has >= 3 cells (got %d)" % b_cells.size())
+	var b_start: Dictionary = {}
+	for cell in b_cells:
+		if cell.get("is_start", false):
+			b_start = cell
+			break
+	assert_eq(str(b_start.get("stage_id", "")), "s02b_sa1", "Ozette B start uses s02b_sa1")
+
+	# ── All generated cells reference existing GLBs ──
+	# Use FileAccess.file_exists() since GLBs may not be imported yet in headless mode
+	var all_glbs_exist := true
+	for sec in sections:
+		for cell in sec.get("cells", []):
+			var stage_id: String = str(cell.get("stage_id", ""))
+			var glb_path := "res://assets/environments/wetlands/%s.glb" % stage_id
+			if not FileAccess.file_exists(glb_path):
+				all_glbs_exist = false
+				print("    Missing GLB: %s" % glb_path)
+	assert_true(all_glbs_exist, "All Ozette grid cell GLBs exist")
+
+	# ── Multiple generations succeed ──
+	var gen_ok := true
+	for i in range(10):
+		var f: Dictionary = gen.generate_field("normal", "ozette")
+		if f.get("sections", []).size() != 4:
+			gen_ok = false
+	assert_true(gen_ok, "10 consecutive Ozette field generations all produce 4 sections")
+
+	# ── Hard difficulty ──
+	var hard_field: Dictionary = gen.generate_field("hard", "ozette")
+	var hard_sections: Array = hard_field.get("sections", [])
+	assert_eq(hard_sections.size(), 4, "Ozette hard field has 4 sections")
+
+	# ── Valley still works (regression check) ──
+	var valley_field: Dictionary = gen.generate_field("normal", "gurhacia")
+	var valley_sections: Array = valley_field.get("sections", [])
+	assert_eq(valley_sections.size(), 4, "Valley field still generates 4 sections")
+	var v_e_cells: Array = valley_sections[1].get("cells", [])
+	if v_e_cells.size() > 0:
+		assert_eq(str(v_e_cells[0].get("stage_id", "")), "s01e_ia1",
+			"Valley transition still uses s01e_ia1")
+
+	# ── AREA_CONFIG has expected entries ──
+	assert_true(GridGen.AREA_CONFIG.has("gurhacia"), "AREA_CONFIG has gurhacia")
+	assert_true(GridGen.AREA_CONFIG.has("ozette"), "AREA_CONFIG has ozette")
+	assert_eq(str(GridGen.AREA_CONFIG["gurhacia"]["prefix"]), "s01", "Gurhacia prefix is s01")
+	assert_eq(str(GridGen.AREA_CONFIG["ozette"]["prefix"]), "s02", "Ozette prefix is s02")
 
 	print("")

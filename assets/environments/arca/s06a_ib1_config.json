@@ -1,0 +1,94 @@
+{
+  "mapId": "s06a_ib1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770771836526_ylramksa0",
+      "direction": "south",
+      "position": [
+        -0.053988154668533905,
+        0,
+        19.929477165509244
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1770771848340_n8f2eedbz",
+      "direction": "north",
+      "position": [
+        0.04482418181694392,
+        0,
+        -19.985637622955313
+      ],
+      "label": "north"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s06_0_kaza01.png",
+      "meshNames": [
+        "s06a_ib1_m_8"
+      ],
+      "repeatX": 1.9,
+      "repeatY": 1,
+      "offsetX": 0.04,
+      "offsetY": 0.93,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_0_yuka01.png",
+      "meshNames": [
+        "s06a_ib1_m_3"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_1_door01.png",
+      "meshNames": [
+        "s06a_ib1_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_1_lamp01.png",
+      "meshNames": [
+        "s06a_ib1_m_5"
+      ],
+      "repeatX": 2.1,
+      "repeatY": 2,
+      "offsetX": -0.05,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s06_0_wall02.png",
+      "meshNames": [
+        "s06a_ib1_m_4"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T01:04:08.848Z",
+  "exportedAt": "2026-02-11T10:32:00.985Z"
+}

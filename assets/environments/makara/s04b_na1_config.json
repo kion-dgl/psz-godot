@@ -1,0 +1,37 @@
+{
+  "mapId": "s04b_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770758482431_92sesiygw",
+      "direction": "south",
+      "position": [
+        -0.3425544237242344,
+        0,
+        20.79802846560863
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s04_0_kaidan.png",
+      "meshNames": [
+        "s04b_na1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-10T21:21:22.939Z",
+  "exportedAt": "2026-02-11T10:31:56.244Z"
+}

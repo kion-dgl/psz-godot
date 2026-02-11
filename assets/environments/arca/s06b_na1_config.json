@@ -1,0 +1,48 @@
+{
+  "mapId": "s06b_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770802950720_ot6f2jmur",
+      "direction": "south",
+      "position": [
+        -0.05554759092563,
+        0,
+        19.846171978143456
+      ],
+      "label": "south"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s06_0_byuk00.png",
+      "meshNames": [
+        "s06b_na1_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s06_0_bdoo06.png",
+      "meshNames": [
+        "s06b_na1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T09:42:31.233Z",
+  "exportedAt": "2026-02-11T10:32:04.338Z"
+}

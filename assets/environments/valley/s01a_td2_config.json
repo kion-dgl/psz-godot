@@ -1,0 +1,125 @@
+{
+  "mapId": "s01a_td2",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_54": false
+    }
+  },
+  "portals": [
+    {
+      "id": "portal_1769141384116_jfj4idsey",
+      "direction": "south",
+      "position": [
+        -14.407504801452728,
+        0,
+        20.79703592575092
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1769141392815_vqgwz57g6",
+      "direction": "east",
+      "position": [
+        -19.85393486216931,
+        0,
+        -0.9987831435796366
+      ],
+      "label": "east"
+    },
+    {
+      "id": "portal_1769141410283_2nme55ig1",
+      "direction": "west",
+      "position": [
+        20.5968225079054,
+        0,
+        6.432234233671835
+      ],
+      "label": "west"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s01_0_pass1.png",
+      "meshNames": [
+        "s01a_td2_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s01_1_toro.png",
+      "meshNames": [
+        "s01a_td2_m_12"
+      ],
+      "repeatX": 2.1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0.88,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [
+    {
+      "id": "obs_1769141500475_hsctvie5g",
+      "type": "box",
+      "position": [
+        -3.523354260476406,
+        0,
+        15.182544979534189
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "width": 3.1,
+      "height": 2,
+      "depth": 15.1
+    },
+    {
+      "id": "obs_1769141523815_ftn10bhep",
+      "type": "box",
+      "position": [
+        7.568864987547414,
+        0,
+        11.847843149784325
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "label": "Boulder",
+      "width": 3.1,
+      "height": 2,
+      "depth": 21.1
+    },
+    {
+      "id": "obs_1769141540612_lpeq2fg5d",
+      "type": "box",
+      "position": [
+        -0.7999844012923845,
+        0,
+        -7.467979278662992
+      ],
+      "rotation": [
+        0,
+        1.5707963267948966,
+        0
+      ],
+      "label": "Boulder",
+      "width": 3.1,
+      "height": 2,
+      "depth": 21.1
+    }
+  ],
+  "lastModified": "2026-01-23T04:12:21.123Z",
+  "exportedAt": "2026-02-11T10:31:45.290Z"
+}

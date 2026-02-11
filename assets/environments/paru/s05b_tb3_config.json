@@ -1,0 +1,90 @@
+{
+  "mapId": "s05b_tb3",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {
+      "tri_18": true,
+      "tri_19": true,
+      "tri_20": true,
+      "tri_21": true,
+      "tri_22": true,
+      "tri_23": true,
+      "tri_24": true,
+      "tri_25": true,
+      "tri_26": true,
+      "tri_27": true,
+      "tri_28": true,
+      "tri_29": true,
+      "tri_30": true,
+      "tri_31": true,
+      "tri_0": false,
+      "tri_1": false,
+      "tri_2": false,
+      "tri_3": false,
+      "tri_4": false,
+      "tri_5": false,
+      "tri_6": false,
+      "tri_7": false,
+      "tri_8": false,
+      "tri_9": false,
+      "tri_10": false,
+      "tri_11": false,
+      "tri_12": false,
+      "tri_13": false,
+      "tri_14": false,
+      "tri_15": false,
+      "tri_16": false,
+      "tri_17": false
+    }
+  },
+  "portals": [
+    {
+      "id": "portal_1770762531421_11k1p8yus",
+      "direction": "south",
+      "position": [
+        3.87011454981718,
+        0,
+        15.8807149837619
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1770762568180_9ii509fip",
+      "direction": "west",
+      "position": [
+        19.60963135774073,
+        0,
+        7.959715253315659
+      ],
+      "label": "west"
+    },
+    {
+      "id": "portal_1770762578652_5huw2cn9x",
+      "direction": "east",
+      "position": [
+        -19.976752699315494,
+        0,
+        -7.937893486688701
+      ],
+      "label": "east"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s05_0_hasi1.png",
+      "meshNames": [
+        "s05b_tb3_m_9"
+      ],
+      "repeatX": 1,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1.08,
+      "wrapT": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-10T22:29:39.162Z",
+  "exportedAt": "2026-02-11T10:31:59.964Z"
+}
