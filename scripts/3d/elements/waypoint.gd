@@ -6,11 +6,11 @@ class_name Waypoint
 ## Target map ID this waypoint leads to
 @export var target_map: String = ""
 
-## Texture offset X values for different states (based on o0c_point.imd texture)
-const STATE_OFFSETS: Dictionary = {
-	"new": 0.00,
-	"unvisited": 0.12,
-	"visited": 0.40,
+## Pure colors per state — texture is stripped so only this color shows
+const STATE_COLORS: Dictionary = {
+	"new": Color(0.3, 1.0, 0.4),       # bright green — unvisited destination
+	"unvisited": Color(1.0, 0.7, 0.15), # amber — visited prior
+	"visited": Color(0.6, 0.25, 0.25),  # dark red — came from
 }
 
 ## Bob animation settings
@@ -42,12 +42,35 @@ func _apply_state() -> void:
 	if not model:
 		return
 
-	var offset_x: float = STATE_OFFSETS.get(element_state, 0.12)
-	apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
-		if mat is StandardMaterial3D:
-			var std_mat := mat as StandardMaterial3D
-			std_mat.uv1_offset.x = offset_x
-	)
+	var tint: Color = STATE_COLORS.get(element_state, Color.WHITE)
+	# Each waypoint instance gets its own material with texture stripped
+	# so the pure state color is unmistakable.
+	_apply_unique_materials(model, tint)
+
+
+func _apply_unique_materials(node: Node, tint: Color) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var own_mat: StandardMaterial3D
+				var override := mesh_inst.get_surface_override_material(i)
+				if override and override is StandardMaterial3D:
+					own_mat = override as StandardMaterial3D
+				else:
+					own_mat = (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+					mesh_inst.set_surface_override_material(i, own_mat)
+				# Remove texture so albedo_color is the sole color source
+				own_mat.albedo_texture = null
+				own_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				own_mat.albedo_color = Color(tint.r, tint.g, tint.b, 0.85)
+				own_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				own_mat.emission_enabled = true
+				own_mat.emission = tint
+				own_mat.emission_energy_multiplier = 0.5
+	for child in node.get_children():
+		_apply_unique_materials(child, tint)
 
 
 ## Mark as new area
