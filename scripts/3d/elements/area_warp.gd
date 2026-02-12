@@ -6,8 +6,11 @@ class_name AreaWarp
 ## Animated warp surface texture identifier
 const WARP_TEXTURE_NAME := "fwarp2"
 const WARP_SCROLL_SPEED := 1.35
+const MIRROR_SHADER = preload("res://scripts/3d/shaders/mirror_repeat_alpha.gdshader")
 
-var _warp_material: StandardMaterial3D = null
+var _warp_shader_mat: ShaderMaterial = null
+var _scroll_offset_x: float = 0.0
+var _base_offset_y: float = 0.0
 
 
 func _init() -> void:
@@ -28,25 +31,34 @@ func _setup_warp_material() -> void:
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
 			if std_mat.albedo_texture and WARP_TEXTURE_NAME in std_mat.albedo_texture.resource_path:
-				var dup := std_mat.duplicate() as StandardMaterial3D
-				dup.texture_repeat = true
-				mesh.set_surface_override_material(surface, dup)
-				_warp_material = dup
+				var smat := ShaderMaterial.new()
+				smat.shader = MIRROR_SHADER
+				smat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+				smat.set_shader_parameter("mirror_x", true)
+				smat.set_shader_parameter("mirror_y", true)
+				mesh.set_surface_override_material(surface, smat)
+				_warp_shader_mat = smat
 	)
 	_apply_warp_offset()
 
 
 func _apply_warp_offset() -> void:
-	if _warp_material:
-		if element_state == "active":
-			_warp_material.uv1_offset.y = 1.34
-		else:
-			_warp_material.uv1_offset.y = 0.0
+	if element_state == "active":
+		_base_offset_y = 1.34
+	else:
+		_base_offset_y = 0.0
+	_update_shader_offset()
+
+
+func _update_shader_offset() -> void:
+	if _warp_shader_mat:
+		_warp_shader_mat.set_shader_parameter("uv_offset", Vector2(_scroll_offset_x, _base_offset_y))
 
 
 func _update_animation(delta: float) -> void:
-	if _warp_material:
-		_warp_material.uv1_offset.x -= WARP_SCROLL_SPEED * delta
+	if _warp_shader_mat:
+		_scroll_offset_x -= WARP_SCROLL_SPEED * delta
+		_update_shader_offset()
 
 
 func _apply_state() -> void:
