@@ -1,7 +1,7 @@
 extends GameElement
 class_name Gate
 ## Blocks passage between stages. Opens when all enemies are defeated.
-## States: closed, open
+## States: locked, open
 
 ## Laser texture identifier (used to find the laser surface)
 const LASER_TEXTURE_NAME := "o0c_1_gate"
@@ -16,7 +16,7 @@ var _laser_material: StandardMaterial3D = null
 
 func _init() -> void:
 	model_path = "valley/o0c_gate.glb"
-	element_state = "closed"
+	element_state = "locked"
 	collision_size = Vector3(2, 3, 0.5)
 
 
@@ -65,7 +65,7 @@ func _apply_state() -> void:
 	# Toggle laser via material transparency (can't hide individual surfaces)
 	if _laser_material:
 		match element_state:
-			"closed":
+			"locked":
 				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 				_laser_material.albedo_color.a = 1.0
 			"open":
@@ -74,7 +74,7 @@ func _apply_state() -> void:
 
 	if collision_body:
 		match element_state:
-			"closed":
+			"locked":
 				collision_body.collision_layer = 1
 			"open":
 				collision_body.collision_layer = 0
@@ -85,14 +85,14 @@ func open() -> void:
 	set_state("open")
 
 
-## Close the gate
-func close() -> void:
-	set_state("closed")
+## Lock the gate
+func lock() -> void:
+	set_state("locked")
 
 
 ## Toggle gate state
 func toggle() -> void:
-	if element_state == "closed":
+	if element_state == "locked":
 		open()
 	else:
-		close()
+		lock()

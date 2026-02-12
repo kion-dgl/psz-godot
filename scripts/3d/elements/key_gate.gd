@@ -1,7 +1,7 @@
 extends GameElement
 class_name KeyGate
 ## Gate that requires a specific key to open.
-## States: locked, unlocked
+## States: locked, open
 
 ## Key ID required to unlock this gate
 @export var required_key_id: String = "default"
@@ -70,7 +70,7 @@ func _apply_state() -> void:
 			"locked":
 				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 				_laser_material.albedo_color.a = 1.0
-			"unlocked":
+			"open":
 				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 				_laser_material.albedo_color.a = 0.0
 
@@ -78,27 +78,27 @@ func _apply_state() -> void:
 		match element_state:
 			"locked":
 				collision_body.collision_layer = 1
-			"unlocked":
+			"open":
 				collision_body.collision_layer = 0
 
 
 func _on_interact(_player: Node3D) -> void:
-	if element_state == "unlocked":
+	if element_state == "open":
 		return
 
 	if Inventory.has_item(required_key_id):
 		Inventory.remove_item(required_key_id, 1)
-		unlock()
+		open()
 	else:
 		var item_data = ItemRegistry.get_item(required_key_id)
 		var key_name = item_data.name if item_data else required_key_id
 		print("[KeyGate] Requires key: ", key_name)
 
 
-## Unlock the gate
-func unlock() -> void:
-	set_state("unlocked")
-	print("[KeyGate] Unlocked with key: ", required_key_id)
+## Open the gate
+func open() -> void:
+	set_state("open")
+	print("[KeyGate] Opened with key: ", required_key_id)
 
 
 ## Lock the gate
