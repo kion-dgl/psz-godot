@@ -22,13 +22,13 @@ func _apply_state() -> void:
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
 			if element_state == "off":
-				std_mat.uv1_offset.y = 0.5
+				std_mat.uv1_offset.x = 0.5
 				std_mat.emission_enabled = false
 			else:  # on
-				std_mat.uv1_offset.y = 0.0
+				std_mat.uv1_offset.x = 0.0
 				std_mat.emission_enabled = true
-				std_mat.emission = Color(0, 1, 0)
-				std_mat.emission_energy_multiplier = 0.3
+				std_mat.emission = Color(0.267, 0.667, 1.0)  # #44aaff blue
+				std_mat.emission_energy_multiplier = 0.5
 	)
 
 

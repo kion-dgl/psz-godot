@@ -29,8 +29,6 @@ const LASER_SCROLL_CONFIG := {
 	"start_warp": {"axis": "y", "speed": -1.35},
 	"fence": {"axis": "x", "speed": -0.70},
 	"fence4": {"axis": "x", "speed": -0.70},
-	"fence_short": {"axis": "x", "speed": -0.70},
-	"fence_diagonal": {"axis": "x", "speed": -0.70},
 }
 
 # Per-element texture fixups matching psz-sketch TEXTURE_CONFIG.
@@ -65,14 +63,6 @@ const CATEGORIES := [
 			 "script": "res://scripts/3d/elements/fence.gd",
 			 "states": ["active", "disabled"], "default": "active",
 			 "props": {"variant": 1}},
-			{"id": "fence_short", "title": "Fence (Short)", "desc": "Short fence variant.",
-			 "script": "res://scripts/3d/elements/fence.gd",
-			 "states": ["active", "disabled"], "default": "active",
-			 "props": {"variant": 2}},
-			{"id": "fence_diagonal", "title": "Fence (Diagonal)", "desc": "Diagonal fence variant.",
-			 "script": "res://scripts/3d/elements/fence.gd",
-			 "states": ["active", "disabled"], "default": "active",
-			 "props": {"variant": 3}},
 		]
 	},
 	{
@@ -475,6 +465,8 @@ func _spawn_element() -> void:
 		element._setup_laser_materials()
 	if element.has_method("_setup_warp_material"):
 		element._setup_warp_material()
+	if element.has_method("_setup_textures"):
+		element._setup_textures()
 
 	var default_state: String = data.default
 	_state_cursor = 0
