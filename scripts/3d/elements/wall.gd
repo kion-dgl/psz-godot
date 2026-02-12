@@ -18,6 +18,7 @@ func _init() -> void:
 func _ready() -> void:
 	super._ready()
 	_setup_wall_collision()
+	_setup_textures()
 
 
 func _setup_wall_collision() -> void:
@@ -34,6 +35,17 @@ func _setup_wall_collision() -> void:
 	collision_body.add_child(shape)
 
 	add_child(collision_body)
+
+
+func _setup_textures() -> void:
+	if not model:
+		return
+	apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
+		if mat is StandardMaterial3D:
+			var std_mat := mat as StandardMaterial3D
+			std_mat.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_MIRROR
+			std_mat.uv1_scale = Vector3(2, 2, 1)
+	)
 
 
 func _apply_state() -> void:
