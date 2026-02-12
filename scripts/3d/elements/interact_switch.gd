@@ -29,7 +29,8 @@ func _update_material(mat: Material, _mesh: MeshInstance3D, _surface: int) -> vo
 	if mat is StandardMaterial3D:
 		var std_mat := mat as StandardMaterial3D
 
-		# Texture scale: tile 2x horizontally (matches psz-sketch repeat.x=2)
+		# Texture: tile 2x horizontally with mirrored repeat (matches psz-sketch)
+		std_mat.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_MIRROR
 		std_mat.uv1_scale.x = 2.0
 
 		# Apply UV offset for state indication

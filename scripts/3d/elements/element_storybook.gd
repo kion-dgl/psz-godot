@@ -121,7 +121,7 @@ const CATEGORIES := [
 	{
 		"name": "Navigation",
 		"elements": [
-			{"id": "waypoint", "title": "Waypoint", "desc": "Shows destination visit status.",
+			{"id": "waypoint", "title": "Waypoint", "desc": "New area / origin area / previously visited.",
 			 "script": "res://scripts/3d/elements/waypoint.gd",
 			 "states": ["new", "unvisited", "visited"], "default": "new"},
 			{"id": "start_warp", "title": "Start Warp", "desc": "Small stage entry/exit portal.",
