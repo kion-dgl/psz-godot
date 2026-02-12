@@ -9,6 +9,7 @@ const MARGIN := 20.0
 var cells: Array = []
 var current_pos: String = ""
 var section_info: String = ""
+var top_offset: float = 0.0
 
 
 func _ready() -> void:
@@ -39,7 +40,7 @@ func _draw() -> void:
 	var grid_w: float = (max_c - min_c + 1) * step
 	var grid_h: float = (max_r - min_r + 1) * step
 	var viewport_size := get_viewport_rect().size
-	var origin := Vector2(viewport_size.x - grid_w - MARGIN, MARGIN + 20)
+	var origin := Vector2(viewport_size.x - grid_w - MARGIN, MARGIN + 20 + top_offset)
 
 	# Header
 	draw_string(ThemeDB.fallback_font, Vector2(origin.x, origin.y - 4),
