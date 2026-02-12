@@ -57,7 +57,7 @@ func _setup_textures() -> void:
 	apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
-			std_mat.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_MIRROR
+			std_mat.texture_repeat = true
 			std_mat.uv1_scale = Vector3(2, 2, 1)
 			if is_rare:
 				std_mat.uv1_offset = Vector3(0, 1, 0)
