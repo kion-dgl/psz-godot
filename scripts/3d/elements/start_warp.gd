@@ -28,7 +28,7 @@ func _setup_warp_material() -> void:
 			var std_mat := mat as StandardMaterial3D
 			if std_mat.albedo_texture and WARP_TEXTURE_NAME in std_mat.albedo_texture.resource_path:
 				var dup := std_mat.duplicate() as StandardMaterial3D
-				dup.texture_repeat = BaseMaterial3D.TEXTURE_REPEAT_MIRROR
+				dup.texture_repeat = true
 				mesh.set_surface_override_material(surface, dup)
 				_warp_material = dup
 	)
