@@ -11,6 +11,7 @@ const StartWarpScript := preload("res://scripts/3d/elements/start_warp.gd")
 const AreaWarpScript := preload("res://scripts/3d/elements/area_warp.gd")
 const GateScript := preload("res://scripts/3d/elements/gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
+const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const ROTATE_CW := {"north": "east", "east": "south", "south": "west", "west": "north"}
@@ -27,13 +28,14 @@ var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _rotation_deg: int = 0
 var _map_overlay: CanvasLayer
+var _room_minimap: Control
 var _blob_shadow: MeshInstance3D
 var _texture_fixes: Array = []
 var _spawn_edge: String = ""
 
 # Debug toggle state
-var _show_triggers := true
-var _show_gate_markers := true
+var _show_triggers := false
+var _show_gate_markers := false
 var _show_floor_collision := false
 var _debug_trigger_meshes: Array = []
 var _debug_gate_meshes: Array = []
@@ -247,6 +249,13 @@ func _ready() -> void:
 	map_panel.section_info = "Section %d (%s)" % [section_idx + 1, str(section.get("type", "?"))]
 	_map_overlay.add_child(map_panel)
 
+	_room_minimap = RoomMinimapScript.new()
+	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
+		_rotation_deg, _current_cell.get("connections", {}),
+		str(_current_cell.get("warp_edge", "")), _map_root)
+	_map_overlay.add_child(_room_minimap)
+	map_panel.top_offset = 200.0
+
 	# Hide debug marker meshes (disabled for testing portal visibility)
 	#_hide_debug_markers(_map_root)
 
@@ -256,6 +265,8 @@ func _process(_delta: float) -> void:
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light)
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
+	if _room_minimap and player and _map_root:
+		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
 
 
 func _find_cell(cells: Array, pos: String) -> Dictionary:
@@ -771,8 +782,8 @@ func _spawn_field_elements() -> void:
 		area_warp.auto_collect = false
 		area_warp.element_state = "open"
 		add_child(area_warp)
-		area_warp.global_position = _portal_data[warp_edge]["trigger_pos"]
-		area_warp.rotation.y = _dir_to_yaw(warp_edge)
+		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
+		area_warp.rotation.y = _dir_to_yaw(warp_edge) + PI
 
 	# Gates and Waypoints at each connection trigger (skip warp_edge)
 	print("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
@@ -865,8 +876,10 @@ func _collect_debug_meshes(node: Node) -> void:
 		var n: String = node.name
 		if n.begins_with("trigger_"):
 			_debug_trigger_meshes.append(node)
+			node.visible = _show_triggers
 		elif n.begins_with("gate_"):
 			_debug_gate_meshes.append(node)
+			node.visible = _show_gate_markers
 	for child in node.get_children():
 		_collect_debug_meshes(child)
 
