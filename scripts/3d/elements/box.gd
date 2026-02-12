@@ -5,6 +5,8 @@ class_name Box
 
 signal destroyed_box
 
+const MIRROR_SHADER = preload("res://scripts/3d/shaders/mirror_repeat.gdshader")
+
 ## Whether this box is a rare variant (uses o0c_recont instead of o01_cont)
 @export var is_rare: bool = false
 
@@ -54,13 +56,19 @@ func _setup_box_collision() -> void:
 func _setup_textures() -> void:
 	if not model:
 		return
-	apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
+	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
-			std_mat.texture_repeat = true
-			std_mat.uv1_scale = Vector3(2, 2, 1)
-			if is_rare:
-				std_mat.uv1_offset = Vector3(0, 1, 0)
+			if std_mat.albedo_texture:
+				var smat := ShaderMaterial.new()
+				smat.shader = MIRROR_SHADER
+				smat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+				smat.set_shader_parameter("uv_scale", Vector2(2, 2))
+				smat.set_shader_parameter("mirror_x", true)
+				smat.set_shader_parameter("mirror_y", true)
+				if is_rare:
+					smat.set_shader_parameter("uv_offset", Vector2(0, 1))
+				mesh.set_surface_override_material(surface, smat)
 	)
 
 
