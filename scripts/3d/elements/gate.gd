@@ -3,11 +3,15 @@ class_name Gate
 ## Blocks passage between stages. Opens when all enemies are defeated.
 ## States: closed, open
 
-## The laser/beam mesh that gets hidden when open
-const LASER_MESH_NAME := "o0c_gate_3"
+## Laser texture identifier (used to find the laser surface)
+const LASER_TEXTURE_NAME := "o0c_1_gate"
+
+## Laser scroll speed (offset.x, units/sec)
+const LASER_SCROLL_SPEED := 0.40
 
 ## Collision body for blocking when closed
 var collision_body: StaticBody3D
+var _laser_material: StandardMaterial3D = null
 
 
 func _init() -> void:
@@ -19,13 +23,13 @@ func _init() -> void:
 func _ready() -> void:
 	super._ready()
 	_setup_gate_collision()
+	_setup_laser_material()
 
 
 func _setup_gate_collision() -> void:
-	# Create static body for physical blocking
 	collision_body = StaticBody3D.new()
 	collision_body.name = "GateCollision"
-	collision_body.collision_layer = 1  # Environment layer
+	collision_body.collision_layer = 1
 	collision_body.collision_mask = 0
 
 	var shape := CollisionShape3D.new()
@@ -38,16 +42,42 @@ func _setup_gate_collision() -> void:
 	add_child(collision_body)
 
 
+func _setup_laser_material() -> void:
+	if not model:
+		return
+	# Find the surface with the laser texture (Godot merges meshes into one MeshInstance3D)
+	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
+		if mat is StandardMaterial3D:
+			var std_mat := mat as StandardMaterial3D
+			if std_mat.albedo_texture and LASER_TEXTURE_NAME in std_mat.albedo_texture.resource_path:
+				var dup := std_mat.duplicate() as StandardMaterial3D
+				mesh.set_surface_override_material(surface, dup)
+				_laser_material = dup
+	)
+
+
+func _update_animation(delta: float) -> void:
+	if _laser_material:
+		_laser_material.uv1_offset.x -= LASER_SCROLL_SPEED * delta
+
+
 func _apply_state() -> void:
-	match element_state:
-		"closed":
-			set_mesh_visible(LASER_MESH_NAME, true)
-			if collision_body:
-				collision_body.collision_layer = 1  # Block player
-		"open":
-			set_mesh_visible(LASER_MESH_NAME, false)
-			if collision_body:
-				collision_body.collision_layer = 0  # Allow passage
+	# Toggle laser via material transparency (can't hide individual surfaces)
+	if _laser_material:
+		match element_state:
+			"closed":
+				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+				_laser_material.albedo_color.a = 1.0
+			"open":
+				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				_laser_material.albedo_color.a = 0.0
+
+	if collision_body:
+		match element_state:
+			"closed":
+				collision_body.collision_layer = 1
+			"open":
+				collision_body.collision_layer = 0
 
 
 ## Open the gate
