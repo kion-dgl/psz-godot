@@ -6,9 +6,13 @@ class_name InteractSwitch
 signal activated
 signal deactivated
 
+const MIRROR_SHADER = preload("res://scripts/3d/shaders/mirror_repeat.gdshader")
+
 ## Emissive color when switch is on
 const ON_EMISSION_COLOR := Color(0, 1, 0)  # Green
 const ON_EMISSION_ENERGY: float = 0.3
+
+var _shader_materials: Array[ShaderMaterial] = []
 
 
 func _init() -> void:
@@ -18,30 +22,42 @@ func _init() -> void:
 	element_state = "off"
 
 
-func _apply_state() -> void:
+func _ready() -> void:
+	super._ready()
+	_setup_mirror_materials()
+	_apply_state()
+
+
+func _setup_mirror_materials() -> void:
+	_shader_materials.clear()
 	if not model:
 		return
+	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
+		if mat is StandardMaterial3D:
+			var std_mat := mat as StandardMaterial3D
+			if std_mat.albedo_texture:
+				var smat := ShaderMaterial.new()
+				smat.shader = MIRROR_SHADER
+				smat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+				smat.set_shader_parameter("uv_scale", Vector2(2, 1))
+				smat.set_shader_parameter("mirror_x", true)
+				smat.set_shader_parameter("mirror_y", false)
+				mesh.set_surface_override_material(surface, smat)
+				_shader_materials.append(smat)
+	)
 
-	apply_to_all_materials(_update_material)
 
-
-func _update_material(mat: Material, _mesh: MeshInstance3D, _surface: int) -> void:
-	if mat is StandardMaterial3D:
-		var std_mat := mat as StandardMaterial3D
-
-		# Texture: tile 2x horizontally with repeat (matches psz-sketch)
-		std_mat.texture_repeat = true
-		std_mat.uv1_scale.x = 2.0
-
-		# Apply UV offset for state indication
-		if element_state == "off":
-			std_mat.uv1_offset.y = 0.5
-			std_mat.emission_enabled = false
-		else:  # on
-			std_mat.uv1_offset.y = 0.0
-			std_mat.emission_enabled = true
-			std_mat.emission = ON_EMISSION_COLOR
-			std_mat.emission_energy_multiplier = ON_EMISSION_ENERGY
+func _apply_state() -> void:
+	for mat in _shader_materials:
+		match element_state:
+			"off":
+				mat.set_shader_parameter("uv_offset", Vector2(0, 0.5))
+				mat.set_shader_parameter("emission_enabled", false)
+			"on":
+				mat.set_shader_parameter("uv_offset", Vector2(0, 0))
+				mat.set_shader_parameter("emission_enabled", true)
+				mat.set_shader_parameter("emission_color", ON_EMISSION_COLOR)
+				mat.set_shader_parameter("emission_energy", ON_EMISSION_ENERGY)
 
 
 func _on_interact(_player: Node3D) -> void:

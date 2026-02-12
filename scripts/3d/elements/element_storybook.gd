@@ -35,10 +35,6 @@ const LASER_SCROLL_CONFIG := {
 const TEXTURE_FIXUPS := {
 	"gate": [{"match": "o0c_0_gatet", "scale": Vector3(1, 2, 1), "offset": Vector3(0.56, 0.8, 0)}],
 	"key_gate": [{"match": "o0c_0_gatet", "scale": Vector3(1, 2, 1), "offset": Vector3(0.56, 0.8, 0)}],
-	"box": [{"scale": Vector3(2, 2, 1)}],
-	"rare_box": [{"scale": Vector3(2, 2, 1), "offset": Vector3(0, 1, 0)}],
-	"wall": [{"scale": Vector3(2, 2, 1)}],
-	"interact_switch": [{"scale": Vector3(2, 1, 1)}],
 }
 
 const CATEGORIES := [
