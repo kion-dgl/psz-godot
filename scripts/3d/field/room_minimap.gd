@@ -65,10 +65,21 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 	_parse_boundaries(svg_text)
 	var svg_gates := _parse_gates(svg_text)
 
+	print("[RoomMinimap] stage=%s  rotation=%d  svg_gates=%d  portals=%s" % [
+		stage_id, rotation_deg, svg_gates.size(), str(portal_data.keys())])
+	for i in range(svg_gates.size()):
+		print("[RoomMinimap]   svg_gate[%d] center=%s" % [i, svg_gates[i]])
+
 	# Match SVG gates to portal directions using GLB labels as source of truth
 	var gate_match := _match_gates(svg_gates, portal_data, rotation_deg)
+	print("[RoomMinimap]   gate_match=%s" % str(gate_match))
 	_compute_affine(svg_gates, gate_match, portal_data, map_root)
+	print("[RoomMinimap]   affine: ax=%.2f bx=%.2f ay=%.2f by=%.2f  tracking=%s" % [
+		_ax, _bx, _ay, _by, str(_has_player_tracking)])
 	_build_gate_entries(svg_gates, gate_match, connections, warp_edge)
+	for gate in _gate_entries:
+		print("[RoomMinimap]   gate_entry: center=%s  color=%s  label='%s'" % [
+			gate["center"], gate["color"], gate["label"]])
 
 
 func update_player(global_pos: Vector3, facing_rad: float, map_root: Node3D) -> void:

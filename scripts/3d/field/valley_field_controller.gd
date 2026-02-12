@@ -32,6 +32,7 @@ var _room_minimap: Control
 var _blob_shadow: MeshInstance3D
 var _texture_fixes: Array = []
 var _spawn_edge: String = ""
+var _visited_cells: Dictionary = {}  # cell_pos → true
 
 # Debug toggle state
 var _show_triggers := false
@@ -55,6 +56,7 @@ func _ready() -> void:
 	_spawn_edge = str(data.get("spawn_edge", ""))
 	var spawn_edge: String = _spawn_edge
 	_keys_collected = data.get("keys_collected", {})
+	_visited_cells = data.get("visited_cells", {})
 	var map_overlay_visible: bool = data.get("map_overlay_visible", false)
 
 	# Get sections and current cell
@@ -74,6 +76,9 @@ func _ready() -> void:
 		push_error("[ValleyField] Cell not found: %s" % current_cell_pos)
 		_return_to_city()
 		return
+
+	# Track visited cells
+	_visited_cells[current_cell_pos] = true
 
 	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
@@ -807,7 +812,7 @@ func _spawn_field_elements() -> void:
 		gate.collision_body.collision_layer = 0
 		_fix_gate_depth(gate)
 
-		# Waypoint — navigation marker (raised to y=1.5 so it's visible above terrain)
+		# Waypoint — navigation marker inside the load trigger area
 		var wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)
 		var waypoint := WaypointScript.new()
 		add_child(waypoint)
@@ -821,16 +826,29 @@ func _spawn_field_elements() -> void:
 			if mat is StandardMaterial3D:
 				(mat as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
 		)
+		# Determine waypoint state from visited history
+		# Visual mapping: new=bright (unvisited), unvisited=medium (visited prior), visited=dim (came from)
+		var target_cell_pos: String = str(connections[dir])
 		var wp_state: String
 		if dir == _spawn_edge:
-			waypoint.mark_unvisited()  # "unvisited" visual = last visited (came from here)
-			wp_state = "last_visited"
+			# Direction we came from — clearly visited
+			waypoint.mark_visited()
+			wp_state = "came_from"
+		elif _visited_cells.has(target_cell_pos):
+			# Been there in a prior transition
+			waypoint.mark_unvisited()
+			wp_state = "visited_prior"
 		else:
-			waypoint.mark_new()  # "new" visual = unvisited area
+			# Never been there — brightest, draws attention
+			waypoint.mark_new()
 			wp_state = "unvisited"
-		print("[FieldElements]   %s: gate@%s  waypoint@%s (%s) model=%s" % [
-			dir, gate_pos, wp_pos, wp_state,
+		print("[Waypoint] dir=%s → target_cell=%s  state=%s  spawn_edge=%s  visited=%s" % [
+			dir, target_cell_pos, wp_state, _spawn_edge,
+			"yes" if _visited_cells.has(target_cell_pos) else "no"])
+		print("[Waypoint]   gate@%s  waypoint@%s  model=%s" % [
+			gate_pos, wp_pos,
 			"loaded" if waypoint.model else "MISSING"])
+		print("[Waypoint]   visited_cells=%s" % str(_visited_cells.keys()))
 
 
 func _setup_debug_panel() -> void:
@@ -990,6 +1008,7 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 		"current_cell_pos": target_pos,
 		"spawn_edge": spawn_edge,
 		"keys_collected": _keys_collected,
+		"visited_cells": _visited_cells,
 		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 	})
 
@@ -1006,6 +1025,7 @@ func _on_end_reached() -> void:
 			"current_cell_pos": str(new_section.get("start_pos", "")),
 			"spawn_edge": "",
 			"keys_collected": {},
+			"visited_cells": {},
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 		})
 	else:
