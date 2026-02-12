@@ -43,10 +43,10 @@ const CATEGORIES := [
 		"elements": [
 			{"id": "gate", "title": "Gate", "desc": "Blocks passage. Opens when enemies defeated.",
 			 "script": "res://scripts/3d/elements/gate.gd",
-			 "states": ["closed", "open"], "default": "closed"},
+			 "states": ["locked", "open"], "default": "locked"},
 			{"id": "key_gate", "title": "Key Gate", "desc": "Requires key item to unlock.",
 			 "script": "res://scripts/3d/elements/key_gate.gd",
-			 "states": ["locked", "unlocked"], "default": "locked"},
+			 "states": ["locked", "open"], "default": "locked"},
 		]
 	},
 	{
@@ -125,7 +125,7 @@ const CATEGORIES := [
 			 "states": ["active", "inactive"], "default": "active"},
 			{"id": "area_warp", "title": "Area Warp", "desc": "Medium area transition portal.",
 			 "script": "res://scripts/3d/elements/area_warp.gd",
-			 "states": ["active", "inactive"], "default": "active"},
+			 "states": ["locked", "open"], "default": "locked"},
 		]
 	},
 ]
@@ -566,21 +566,29 @@ func _refresh_ui() -> void:
 
 func _refresh_left() -> void:
 	var bbcode := ""
+	var cursor_line := 0
+	var current_line := 0
 	for i in range(_items.size()):
 		var item: Dictionary = _items[i]
 		if item.type == "category":
 			if i > 0:
 				bbcode += "\n"
+				current_line += 1
 			bbcode += "[b][color=%s]%s[/color][/b]\n" % [C_HEADER, item.name.to_upper()]
+			current_line += 1
 		else:
+			if i == _cursor:
+				cursor_line = current_line
 			var title_text: String = item.data.title
 			if i == _cursor:
 				bbcode += "[color=%s]> %s[/color]\n" % [C_SELECTED, title_text]
 			else:
 				bbcode += "  [color=%s]%s[/color]\n" % [C_TEXT, title_text]
+			current_line += 1
 
 	_left_label.clear()
 	_left_label.append_text(bbcode)
+	_left_label.scroll_to_line(max(0, cursor_line - 3))
 
 
 func _refresh_right() -> void:
