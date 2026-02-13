@@ -8,6 +8,9 @@ uniform vec3 uv_offset = vec3(0.0, 0.0, 0.0);
 // Wrap mode per axis: 0 = repeat, 1 = mirror, 2 = clamp
 uniform int wrap_s = 0;
 uniform int wrap_t = 0;
+uniform vec2 uv_scroll = vec2(0.0, 0.0);
+// 0 = alpha scissor (opaque), 1 = alpha blend (transparent)
+uniform int alpha_mode = 0;
 
 float apply_wrap(float coord, int mode) {
 	if (mode == 2) {
@@ -23,12 +26,13 @@ float apply_wrap(float coord, int mode) {
 }
 
 void fragment() {
-	vec2 uv = UV * uv_scale.xy + uv_offset.xy;
+	vec2 uv = UV * uv_scale.xy + uv_offset.xy + uv_scroll * TIME;
 	uv.x = apply_wrap(uv.x, wrap_s);
 	uv.y = apply_wrap(uv.y, wrap_t);
 	vec4 tex = texture(albedo_texture, uv);
 	ALBEDO = tex.rgb * COLOR.rgb * albedo_color.rgb;
-	// Alpha scissor: discard fully transparent pixels but stay in opaque pipeline
 	ALPHA = tex.a * COLOR.a * albedo_color.a;
-	ALPHA_SCISSOR_THRESHOLD = 0.1;
+	if (alpha_mode == 0) {
+		ALPHA_SCISSOR_THRESHOLD = 0.1;
+	}
 }
