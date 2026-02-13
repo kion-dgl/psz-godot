@@ -1,0 +1,58 @@
+{
+  "mapId": "s087_na1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [],
+  "textureFixes": [
+    {
+      "textureFile": "s08_1_en06.png",
+      "meshNames": [
+        "s087_na1_m_6"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s08_0_en05.png",
+      "meshNames": [
+        "s087_na1_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s08_0_en01.png",
+      "meshNames": [
+        "s087_na1_m_8"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T17:47:44.156Z",
+  "defaultSpawn": {
+    "position": [
+      0.3090187544444818,
+      0,
+      20.901798108295097
+    ],
+    "direction": "south"
+  },
+  "exportedAt": "2026-02-11T17:52:40.230Z"
+}

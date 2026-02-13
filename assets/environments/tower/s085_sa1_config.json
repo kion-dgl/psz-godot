@@ -1,0 +1,94 @@
+{
+  "mapId": "s085_sa1",
+  "version": 1,
+  "floorCollision": {
+    "yTolerance": 0.25,
+    "excludedMeshPatterns": [],
+    "triangles": {}
+  },
+  "portals": [
+    {
+      "id": "portal_1770831914882_jivrvow40",
+      "direction": "south",
+      "position": [
+        -0.4609001956915435,
+        0,
+        17.260895663906414
+      ],
+      "label": "south"
+    },
+    {
+      "id": "portal_1770831923043_8s1hp816g",
+      "direction": "north",
+      "position": [
+        -0.3654138559211848,
+        0,
+        3.2329497994204424
+      ],
+      "label": "north"
+    }
+  ],
+  "textureFixes": [
+    {
+      "textureFile": "s08_0_dw09.png",
+      "meshNames": [
+        "s085_sa1_m_3"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    },
+    {
+      "textureFile": "s08_0_dw05.png",
+      "meshNames": [
+        "s085_sa1_m_10"
+      ],
+      "repeatX": 1,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s08_2_dw07.png",
+      "meshNames": [
+        "s085_sa1_m_14"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 1,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s08_1_dw12.png",
+      "meshNames": [
+        "s085_sa1_m_7"
+      ],
+      "repeatX": 2,
+      "repeatY": 2,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror",
+      "wrapT": "mirror"
+    },
+    {
+      "textureFile": "s08_0_dr05.png",
+      "meshNames": [
+        "s085_sa1_m_4"
+      ],
+      "repeatX": 2,
+      "repeatY": 1,
+      "offsetX": 0,
+      "offsetY": 0,
+      "wrapS": "mirror"
+    }
+  ],
+  "obstacles": [],
+  "lastModified": "2026-02-11T17:45:23.553Z",
+  "exportedAt": "2026-02-11T17:52:39.750Z"
+}
