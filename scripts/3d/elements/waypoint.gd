@@ -43,11 +43,27 @@ func _apply_state() -> void:
 		return
 
 	var offset_x: float = STATE_OFFSETS.get(element_state, 0.12)
-	apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
-		if mat is StandardMaterial3D:
-			var std_mat := mat as StandardMaterial3D
-			std_mat.uv1_offset.x = offset_x
-	)
+	# Each waypoint instance needs its own material copy so UV offsets
+	# don't bleed across instances sharing the same GLB mesh resource.
+	_apply_unique_materials(model, offset_x)
+
+
+func _apply_unique_materials(node: Node, offset_x: float) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var own_mat: StandardMaterial3D
+				var override := mesh_inst.get_surface_override_material(i)
+				if override and override is StandardMaterial3D:
+					own_mat = override as StandardMaterial3D
+				else:
+					own_mat = (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+					mesh_inst.set_surface_override_material(i, own_mat)
+				own_mat.uv1_offset = Vector3(offset_x, own_mat.uv1_offset.y, own_mat.uv1_offset.z)
+	for child in node.get_children():
+		_apply_unique_materials(child, offset_x)
 
 
 ## Mark as new area
