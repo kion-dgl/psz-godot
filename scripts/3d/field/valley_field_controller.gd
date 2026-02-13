@@ -7,6 +7,7 @@ const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 const MapOverlayScript := preload("res://scripts/3d/field/map_overlay.gd")
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
+const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 const StartWarpScript := preload("res://scripts/3d/elements/start_warp.gd")
 const AreaWarpScript := preload("res://scripts/3d/elements/area_warp.gd")
 const GateScript := preload("res://scripts/3d/elements/gate.gd")
@@ -472,6 +473,17 @@ static func _wrap_mode_int(mode: String) -> int:
 	return 0  # repeat
 
 
+func _load_fix_texture(tex_file: String) -> Texture2D:
+	if tex_file.is_empty():
+		return null
+	var area_id_local: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
+	var area_cfg_local: Dictionary = GridGenerator.AREA_CONFIG.get(area_id_local, GridGenerator.AREA_CONFIG["gurhacia"])
+	var tex_path := "res://assets/environments/%s/%s" % [area_cfg_local["folder"], tex_file]
+	if ResourceLoader.exists(tex_path):
+		return load(tex_path) as Texture2D
+	return null
+
+
 func _fix_materials(node: Node) -> void:
 	## Make stage materials unshaded so pre-baked vertex colors display at full
 	## brightness regardless of mesh normals or enclosure geometry.  TimeManager
@@ -490,21 +502,37 @@ func _fix_materials(node: Node) -> void:
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std_mat := mat as StandardMaterial3D
-				if needs_shader:
-					# Use custom shader for mirror wrap / waterfall support
+				if is_waterfall:
+					# Waterfall: additive blend + scrolling UV + replacement texture
+					var shader_mat := ShaderMaterial.new()
+					shader_mat.shader = WATERFALL_SHADER
+					var fix_tex: Texture2D = _load_fix_texture(tex_file)
+					if fix_tex:
+						print("[FixMat] Waterfall texture: %s (%dx%d)" % [
+							tex_file, fix_tex.get_width(), fix_tex.get_height()])
+						shader_mat.set_shader_parameter("albedo_texture", fix_tex)
+					elif std_mat.albedo_texture:
+						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
+					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
+					shader_mat.set_shader_parameter("uv_scroll", Vector2(0.0, -0.25))
+					shader_mat.render_priority = 1
+					mesh_inst.set_surface_override_material(i, shader_mat)
+				elif needs_shader:
+					# Mirror wrap: custom shader with wrap modes
 					var shader_mat := ShaderMaterial.new()
 					shader_mat.shader = TEXTURE_FIX_SHADER
-					if std_mat.albedo_texture:
+					var fix_tex: Texture2D = _load_fix_texture(tex_file)
+					if fix_tex:
+						shader_mat.set_shader_parameter("albedo_texture", fix_tex)
+					elif std_mat.albedo_texture:
 						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
 					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
 					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
 					shader_mat.set_shader_parameter("wrap_s", _wrap_mode_int(str(fix.get("wrapS", "repeat"))))
 					shader_mat.set_shader_parameter("wrap_t", _wrap_mode_int(str(fix.get("wrapT", "repeat"))))
-					if is_waterfall:
-						shader_mat.set_shader_parameter("alpha_mode", 1)
-						shader_mat.set_shader_parameter("uv_scroll", Vector2(0.0, -0.25))
-						shader_mat.render_priority = -1
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
