@@ -38,9 +38,11 @@ var _visited_cells: Dictionary = {}  # cell_pos → true
 var _show_triggers := false
 var _show_gate_markers := false
 var _show_floor_collision := false
+var _show_spawn_points := false
 var _debug_trigger_meshes: Array = []
 var _debug_gate_meshes: Array = []
 var _debug_collision_meshes: Array = []
+var _debug_spawn_meshes: Array = []
 var _debug_panel: PanelContainer
 
 
@@ -500,6 +502,9 @@ func _fix_materials(node: Node) -> void:
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
 					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					new_mat.alpha_scissor_threshold = 0.5
+					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 					new_mat.texture_repeat = true
 					if not fix.is_empty():
 						new_mat.uv1_scale = Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0)
@@ -898,6 +903,9 @@ func _collect_debug_meshes(node: Node) -> void:
 		elif n.begins_with("gate_"):
 			_debug_gate_meshes.append(node)
 			node.visible = _show_gate_markers
+		elif n.begins_with("spawn_"):
+			_debug_spawn_meshes.append(node)
+			node.visible = _show_spawn_points
 	for child in node.get_children():
 		_collect_debug_meshes(child)
 
@@ -986,6 +994,14 @@ func _toggle_floor_collision() -> void:
 	_update_debug_label()
 
 
+func _toggle_spawn_points() -> void:
+	_show_spawn_points = not _show_spawn_points
+	for m in _debug_spawn_meshes:
+		if is_instance_valid(m):
+			m.visible = _show_spawn_points
+	_update_debug_label()
+
+
 func _update_debug_label() -> void:
 	if not _debug_panel:
 		return
@@ -997,7 +1013,8 @@ func _update_debug_label() -> void:
 	label.text = "Debug (F3)\n" \
 		+ "F5  Triggers  %s\n" % (on if _show_triggers else off) \
 		+ "F6  Gate cols  %s\n" % (on if _show_gate_markers else off) \
-		+ "F7  Floor col  %s" % (on if _show_floor_collision else off)
+		+ "F7  Floor col  %s\n" % (on if _show_floor_collision else off) \
+		+ "F8  Spawns     %s" % (on if _show_spawn_points else off)
 
 
 func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
@@ -1058,4 +1075,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_F7:
 				_toggle_floor_collision()
+				get_viewport().set_input_as_handled()
+			KEY_F8:
+				_toggle_spawn_points()
 				get_viewport().set_input_as_handled()
