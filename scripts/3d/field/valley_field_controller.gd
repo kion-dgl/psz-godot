@@ -503,7 +503,7 @@ func _fix_materials(node: Node) -> void:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
 					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-					new_mat.alpha_scissor_threshold = 0.5
+					new_mat.alpha_scissor_threshold = 0.1
 					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 					new_mat.texture_repeat = true
 					if not fix.is_empty():
