@@ -480,7 +480,10 @@ func _fix_materials(node: Node) -> void:
 		var mesh_inst := node as MeshInstance3D
 		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var fix := _find_texture_fix_for_mesh(mesh_inst.name)
+		var tex_file: String = str(fix.get("textureFile", ""))
+		var is_waterfall := "_fall" in tex_file
 		var needs_shader := not fix.is_empty() and (
+			is_waterfall or
 			str(fix.get("wrapS", "repeat")) == "mirror" or
 			str(fix.get("wrapT", "repeat")) == "mirror")
 		for i in range(mesh_inst.get_surface_override_material_count()):
@@ -488,7 +491,7 @@ func _fix_materials(node: Node) -> void:
 			if mat is StandardMaterial3D:
 				var std_mat := mat as StandardMaterial3D
 				if needs_shader:
-					# Use custom shader for mirror wrap support
+					# Use custom shader for mirror wrap / waterfall support
 					var shader_mat := ShaderMaterial.new()
 					shader_mat.shader = TEXTURE_FIX_SHADER
 					if std_mat.albedo_texture:
@@ -498,6 +501,10 @@ func _fix_materials(node: Node) -> void:
 					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
 					shader_mat.set_shader_parameter("wrap_s", _wrap_mode_int(str(fix.get("wrapS", "repeat"))))
 					shader_mat.set_shader_parameter("wrap_t", _wrap_mode_int(str(fix.get("wrapT", "repeat"))))
+					if is_waterfall:
+						shader_mat.set_shader_parameter("alpha_mode", 1)
+						shader_mat.set_shader_parameter("uv_scroll", Vector2(0.0, -0.25))
+						shader_mat.render_priority = -1
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
