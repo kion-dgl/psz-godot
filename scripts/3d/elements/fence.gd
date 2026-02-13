@@ -11,11 +11,14 @@ enum FenceVariant { DEFAULT, FENCE4, SHORT, DIAGONAL }
 ## Texture name that identifies laser meshes (to be hidden when disabled)
 const LASER_TEXTURE_NAME := "o0c_1_fence2"
 
+## Laser scroll speed (offset.x, units/sec)
+const LASER_SCROLL_SPEED := 0.70
+
 ## Collision body for blocking when active
 var collision_body: StaticBody3D
 
-## Cached list of laser meshes
-var _laser_meshes: Array[MeshInstance3D] = []
+## Laser materials for scroll animation and state toggle
+var _laser_materials: Array[StandardMaterial3D] = []
 
 
 func _init() -> void:
@@ -37,7 +40,7 @@ func _ready() -> void:
 
 	super._ready()
 	_setup_fence_collision()
-	_find_laser_meshes()
+	_setup_laser_materials()
 
 
 func _setup_fence_collision() -> void:
@@ -56,51 +59,41 @@ func _setup_fence_collision() -> void:
 	add_child(collision_body)
 
 
-func _find_laser_meshes() -> void:
+func _setup_laser_materials() -> void:
 	if not model:
 		return
-
-	_laser_meshes.clear()
-	_find_laser_meshes_recursive(model)
-
-
-func _find_laser_meshes_recursive(node: Node) -> void:
-	if node is MeshInstance3D:
-		var mesh_inst := node as MeshInstance3D
-		if _has_laser_texture(mesh_inst):
-			_laser_meshes.append(mesh_inst)
-
-	for child in node.get_children():
-		_find_laser_meshes_recursive(child)
-
-
-func _has_laser_texture(mesh_inst: MeshInstance3D) -> bool:
-	for i in range(mesh_inst.get_surface_override_material_count()):
-		var mat := mesh_inst.get_active_material(i)
+	_laser_materials.clear()
+	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
-			if std_mat.albedo_texture:
-				var tex_path := std_mat.albedo_texture.resource_path
-				if LASER_TEXTURE_NAME in tex_path:
-					return true
-	return false
+			if std_mat.albedo_texture and LASER_TEXTURE_NAME in std_mat.albedo_texture.resource_path:
+				var dup := std_mat.duplicate() as StandardMaterial3D
+				mesh.set_surface_override_material(surface, dup)
+				_laser_materials.append(dup)
+	)
+
+
+func _update_animation(delta: float) -> void:
+	for mat in _laser_materials:
+		mat.uv1_offset.x -= LASER_SCROLL_SPEED * delta
 
 
 func _apply_state() -> void:
-	match element_state:
-		"active":
-			_set_lasers_visible(true)
-			if collision_body:
+	for mat in _laser_materials:
+		match element_state:
+			"active":
+				mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+				mat.albedo_color.a = 1.0
+			"disabled":
+				mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				mat.albedo_color.a = 0.0
+
+	if collision_body:
+		match element_state:
+			"active":
 				collision_body.collision_layer = 1
-		"disabled":
-			_set_lasers_visible(false)
-			if collision_body:
+			"disabled":
 				collision_body.collision_layer = 0
-
-
-func _set_lasers_visible(is_visible: bool) -> void:
-	for mesh in _laser_meshes:
-		mesh.visible = is_visible
 
 
 ## Activate the fence (block passage)

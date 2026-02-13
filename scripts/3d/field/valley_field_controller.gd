@@ -7,6 +7,12 @@ const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 const MapOverlayScript := preload("res://scripts/3d/field/map_overlay.gd")
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
+const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
+const StartWarpScript := preload("res://scripts/3d/elements/start_warp.gd")
+const AreaWarpScript := preload("res://scripts/3d/elements/area_warp.gd")
+const GateScript := preload("res://scripts/3d/elements/gate.gd")
+const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
+const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const ROTATE_CW := {"north": "east", "east": "south", "south": "west", "west": "north"}
@@ -23,8 +29,22 @@ var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _rotation_deg: int = 0
 var _map_overlay: CanvasLayer
+var _room_minimap: Control
 var _blob_shadow: MeshInstance3D
 var _texture_fixes: Array = []
+var _spawn_edge: String = ""
+var _visited_cells: Dictionary = {}  # cell_pos → true
+
+# Debug toggle state
+var _show_triggers := false
+var _show_gate_markers := false
+var _show_floor_collision := false
+var _show_spawn_points := false
+var _debug_trigger_meshes: Array = []
+var _debug_gate_meshes: Array = []
+var _debug_collision_meshes: Array = []
+var _debug_spawn_meshes: Array = []
+var _debug_panel: PanelContainer
 
 
 func _ready() -> void:
@@ -36,8 +56,10 @@ func _ready() -> void:
 
 	var data: Dictionary = SceneManager.get_transition_data()
 	var current_cell_pos: String = str(data.get("current_cell_pos", ""))
-	var spawn_edge: String = str(data.get("spawn_edge", ""))
+	_spawn_edge = str(data.get("spawn_edge", ""))
+	var spawn_edge: String = _spawn_edge
 	_keys_collected = data.get("keys_collected", {})
+	_visited_cells = data.get("visited_cells", {})
 	var map_overlay_visible: bool = data.get("map_overlay_visible", false)
 
 	# Get sections and current cell
@@ -57,6 +79,9 @@ func _ready() -> void:
 		push_error("[ValleyField] Cell not found: %s" % current_cell_pos)
 		_return_to_city()
 		return
+
+	# Track visited cells
+	_visited_cells[current_cell_pos] = true
 
 	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
@@ -217,6 +242,9 @@ func _ready() -> void:
 		if not key_for.is_empty() and not _keys_collected.has(key_for):
 			_create_key_pickup(key_for)
 
+	_spawn_field_elements()
+	_setup_debug_panel()
+
 	# Map overlay (toggle with Tab, persists across cell transitions)
 	_map_overlay = CanvasLayer.new()
 	_map_overlay.layer = 100
@@ -229,6 +257,13 @@ func _ready() -> void:
 	map_panel.section_info = "Section %d (%s)" % [section_idx + 1, str(section.get("type", "?"))]
 	_map_overlay.add_child(map_panel)
 
+	_room_minimap = RoomMinimapScript.new()
+	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
+		_rotation_deg, _current_cell.get("connections", {}),
+		str(_current_cell.get("warp_edge", "")), _map_root)
+	_map_overlay.add_child(_room_minimap)
+	map_panel.top_offset = 200.0
+
 	# Hide debug marker meshes (disabled for testing portal visibility)
 	#_hide_debug_markers(_map_root)
 
@@ -238,6 +273,8 @@ func _process(_delta: float) -> void:
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light)
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
+	if _room_minimap and player and _map_root:
+		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
 
 
 func _find_cell(cells: Array, pos: String) -> Dictionary:
@@ -265,9 +302,13 @@ func _find_portal_data(map_root: Node3D) -> Dictionary:
 		if spawn_node:
 			# Use area's base position (y=0), not the box child (y=1.5)
 			var trigger_pos: Vector3 = trigger_area.global_position if trigger_area else spawn_node.global_position
+			# Find gate marker node (gate_{dir} or gate_{dir}-colonly)
+			var gate_node: Node3D = _find_child_by_name(map_root, "gate_" + dir)
+			var gate_pos: Vector3 = gate_node.global_position if gate_node else trigger_pos
 			portals[dir] = {
 				"spawn_pos": spawn_node.global_position,
 				"trigger_pos": trigger_pos,
+				"gate_pos": gate_pos,
 			}
 
 	# Look for standalone default spawn (boss rooms / gateless areas)
@@ -432,6 +473,17 @@ static func _wrap_mode_int(mode: String) -> int:
 	return 0  # repeat
 
 
+func _load_fix_texture(tex_file: String) -> Texture2D:
+	if tex_file.is_empty():
+		return null
+	var area_id_local: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
+	var area_cfg_local: Dictionary = GridGenerator.AREA_CONFIG.get(area_id_local, GridGenerator.AREA_CONFIG["gurhacia"])
+	var tex_path := "res://assets/environments/%s/%s" % [area_cfg_local["folder"], tex_file]
+	if ResourceLoader.exists(tex_path):
+		return load(tex_path) as Texture2D
+	return null
+
+
 func _fix_materials(node: Node) -> void:
 	## Make stage materials unshaded so pre-baked vertex colors display at full
 	## brightness regardless of mesh normals or enclosure geometry.  TimeManager
@@ -440,18 +492,41 @@ func _fix_materials(node: Node) -> void:
 		var mesh_inst := node as MeshInstance3D
 		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var fix := _find_texture_fix_for_mesh(mesh_inst.name)
+		var tex_file: String = str(fix.get("textureFile", ""))
+		var is_waterfall := "_fall" in tex_file
 		var needs_shader := not fix.is_empty() and (
+			is_waterfall or
 			str(fix.get("wrapS", "repeat")) == "mirror" or
 			str(fix.get("wrapT", "repeat")) == "mirror")
 		for i in range(mesh_inst.get_surface_override_material_count()):
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std_mat := mat as StandardMaterial3D
-				if needs_shader:
-					# Use custom shader for mirror wrap support
+				if is_waterfall:
+					# Waterfall: additive blend + scrolling UV + replacement texture
+					var shader_mat := ShaderMaterial.new()
+					shader_mat.shader = WATERFALL_SHADER
+					var fix_tex: Texture2D = _load_fix_texture(tex_file)
+					if fix_tex:
+						print("[FixMat] Waterfall texture: %s (%dx%d)" % [
+							tex_file, fix_tex.get_width(), fix_tex.get_height()])
+						shader_mat.set_shader_parameter("albedo_texture", fix_tex)
+					elif std_mat.albedo_texture:
+						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
+					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
+					shader_mat.set_shader_parameter("uv_scroll", Vector2(0.0, -0.25))
+					shader_mat.render_priority = 1
+					mesh_inst.set_surface_override_material(i, shader_mat)
+				elif needs_shader:
+					# Mirror wrap: custom shader with wrap modes
 					var shader_mat := ShaderMaterial.new()
 					shader_mat.shader = TEXTURE_FIX_SHADER
-					if std_mat.albedo_texture:
+					var fix_tex: Texture2D = _load_fix_texture(tex_file)
+					if fix_tex:
+						shader_mat.set_shader_parameter("albedo_texture", fix_tex)
+					elif std_mat.albedo_texture:
 						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
 					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
@@ -462,6 +537,9 @@ func _fix_materials(node: Node) -> void:
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
 					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					new_mat.alpha_scissor_threshold = 0.1
+					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 					new_mat.texture_repeat = true
 					if not fix.is_empty():
 						new_mat.uv1_scale = Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0)
@@ -694,6 +772,286 @@ func _unlock_gates_for(key_for_cell: String) -> void:
 	_create_gate_trigger(locked_dir, str(connections[locked_dir]), _portal_data[locked_dir])
 
 
+## Force all materials on a gate element to opaque depth draw so they don't
+## break depth buffer for geometry behind/below them (e.g. water plane).
+## GLB textures often have alpha channels causing auto-imported transparency.
+func _fix_gate_depth(gate: Node3D) -> void:
+	if not gate is GameElement:
+		return
+	var ge: GameElement = gate as GameElement
+	ge.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
+		if mat is StandardMaterial3D:
+			var std_mat := mat as StandardMaterial3D
+			# Skip the laser material (identified by texture name)
+			if std_mat.albedo_texture and "o0c_1_gate" in std_mat.albedo_texture.resource_path:
+				return
+			# Force fully opaque rendering
+			std_mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+			std_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+	)
+
+
+func _spawn_field_elements() -> void:
+	var connections: Dictionary = _current_cell.get("connections", {})
+	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
+
+	# StartWarp on is_start cells at the entry portal
+	if _current_cell.get("is_start", false):
+		var start_warp := StartWarpScript.new()
+		start_warp.auto_collect = false
+		var start_pos := Vector3.ZERO
+		var start_rot := 0.0
+		if _portal_data.has("default"):
+			start_pos = _portal_data["default"]["spawn_pos"]
+			var arrow: Node3D = _find_child_by_name(_map_root, "spawn_default_arrow")
+			if arrow:
+				start_rot = arrow.rotation.y
+		else:
+			var entry_dir: String = str(OPPOSITE.get(warp_edge, ""))
+			if not entry_dir.is_empty() and _portal_data.has(entry_dir):
+				start_pos = _portal_data[entry_dir]["spawn_pos"]
+				start_rot = _dir_to_yaw(warp_edge)
+			else:
+				for dir in _portal_data:
+					if dir != "default":
+						start_pos = _portal_data[dir]["spawn_pos"]
+						start_rot = _dir_to_yaw(str(OPPOSITE.get(dir, "south")))
+						break
+		add_child(start_warp)
+		start_warp.global_position = Vector3(start_pos.x, 0.0, start_pos.z)
+		start_warp.rotation.y = start_rot
+
+	# AreaWarp on end cells at warp_edge exit
+	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
+		var area_warp := AreaWarpScript.new()
+		area_warp.auto_collect = false
+		area_warp.element_state = "open"
+		add_child(area_warp)
+		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
+		area_warp.rotation.y = _dir_to_yaw(warp_edge) + PI
+
+	# Gates and Waypoints at each connection trigger (skip warp_edge)
+	print("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
+		_spawn_edge, warp_edge, str(connections)])
+	for dir in connections:
+		if dir == warp_edge:
+			print("[FieldElements]   skip %s (warp_edge)" % dir)
+			continue
+		if not _portal_data.has(dir):
+			print("[FieldElements]   skip %s (no portal data)" % dir)
+			continue
+		var trigger_pos: Vector3 = _portal_data[dir]["trigger_pos"]
+		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
+
+		# Gate — visual only (laser visible, collision disabled)
+		var gate := GateScript.new()
+		add_child(gate)
+		gate.global_position = gate_pos
+		if dir == "east" or dir == "west":
+			gate.rotation.y = PI / 2.0
+		gate.collision_body.collision_layer = 0
+		_fix_gate_depth(gate)
+
+		# Waypoint — navigation marker inside the load trigger area
+		var wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)
+		var waypoint := WaypointScript.new()
+		add_child(waypoint)
+		waypoint.global_position = wp_pos
+		waypoint._base_y = waypoint.position.y  # Re-capture after repositioning
+		# Face into the room (opposite of exit direction) so front faces the player
+		var opp_dir: String = OPPOSITE[dir]
+		waypoint.rotation.y = _dir_to_yaw(opp_dir)
+		# Disable backface culling so it's visible from any angle
+		waypoint.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
+			if mat is StandardMaterial3D:
+				(mat as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
+		)
+		# Determine waypoint state from visited history
+		# Visual mapping: new=bright (unvisited), unvisited=medium (visited prior), visited=dim (came from)
+		var target_cell_pos: String = str(connections[dir])
+		var wp_state: String
+		if dir == _spawn_edge:
+			# Direction we came from — clearly visited
+			waypoint.mark_visited()
+			wp_state = "came_from"
+		elif _visited_cells.has(target_cell_pos):
+			# Been there in a prior transition
+			waypoint.mark_unvisited()
+			wp_state = "visited_prior"
+		else:
+			# Never been there — brightest, draws attention
+			waypoint.mark_new()
+			wp_state = "unvisited"
+		print("[Waypoint] dir=%s → target_cell=%s  state=%s  spawn_edge=%s  visited=%s" % [
+			dir, target_cell_pos, wp_state, _spawn_edge,
+			"yes" if _visited_cells.has(target_cell_pos) else "no"])
+		print("[Waypoint]   gate@%s  waypoint@%s  model=%s" % [
+			gate_pos, wp_pos,
+			"loaded" if waypoint.model else "MISSING"])
+		print("[Waypoint]   visited_cells=%s" % str(_visited_cells.keys()))
+
+
+func _setup_debug_panel() -> void:
+	# Collect GLB debug meshes by category
+	_collect_debug_meshes(_map_root)
+	# Build collision debug visualizations (hidden by default)
+	_build_collision_debug_meshes(_map_root)
+
+	# Debug HUD panel (top-right corner)
+	var canvas := CanvasLayer.new()
+	canvas.layer = 99
+	canvas.name = "DebugOverlay"
+	add_child(canvas)
+
+	_debug_panel = PanelContainer.new()
+	_debug_panel.visible = false
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.7)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 4
+	style.content_margin_bottom = 4
+	_debug_panel.add_theme_stylebox_override("panel", style)
+	_debug_panel.anchor_left = 1.0
+	_debug_panel.anchor_right = 1.0
+	_debug_panel.anchor_top = 0.0
+	_debug_panel.anchor_bottom = 0.0
+	_debug_panel.offset_left = -220
+	_debug_panel.offset_right = -8
+	_debug_panel.offset_top = 8
+
+	var label := Label.new()
+	label.name = "DebugLabel"
+	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_color_override("font_color", Color(0.0, 1.0, 0.4))
+	_debug_panel.add_child(label)
+	canvas.add_child(_debug_panel)
+	_update_debug_label()
+
+
+func _collect_debug_meshes(node: Node) -> void:
+	if node is MeshInstance3D:
+		var n: String = node.name
+		if n.begins_with("trigger_"):
+			_debug_trigger_meshes.append(node)
+			node.visible = _show_triggers
+		elif n.begins_with("gate_"):
+			_debug_gate_meshes.append(node)
+			node.visible = _show_gate_markers
+		elif n.begins_with("spawn_"):
+			_debug_spawn_meshes.append(node)
+			node.visible = _show_spawn_points
+	for child in node.get_children():
+		_collect_debug_meshes(child)
+
+
+func _build_collision_debug_meshes(node: Node) -> void:
+	if node is StaticBody3D:
+		if not str(node.name).begins_with("trigger_") and not str(node.name).begins_with("gate_"):
+			for child in node.get_children():
+				if child is CollisionShape3D and child.shape:
+					var debug_mesh := _collision_shape_to_debug_mesh(child)
+					if debug_mesh:
+						debug_mesh.visible = _show_floor_collision
+						add_child(debug_mesh)
+						_debug_collision_meshes.append(debug_mesh)
+	for child in node.get_children():
+		_build_collision_debug_meshes(child)
+
+
+func _collision_shape_to_debug_mesh(col_shape: CollisionShape3D) -> MeshInstance3D:
+	var shape := col_shape.shape
+	var mesh_inst := MeshInstance3D.new()
+
+	if shape is BoxShape3D:
+		var box_mesh := BoxMesh.new()
+		box_mesh.size = shape.size
+		mesh_inst.mesh = box_mesh
+	elif shape is ConcavePolygonShape3D:
+		var faces: PackedVector3Array = shape.get_faces()
+		if faces.is_empty():
+			return null
+		var arrays := []
+		arrays.resize(Mesh.ARRAY_MAX)
+		arrays[Mesh.ARRAY_VERTEX] = faces
+		var normals := PackedVector3Array()
+		normals.resize(faces.size())
+		for i in range(0, faces.size(), 3):
+			if i + 2 < faces.size():
+				var normal := (faces[i + 1] - faces[i]).cross(faces[i + 2] - faces[i]).normalized()
+				normals[i] = normal
+				normals[i + 1] = normal
+				normals[i + 2] = normal
+		arrays[Mesh.ARRAY_NORMAL] = normals
+		var array_mesh := ArrayMesh.new()
+		array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		mesh_inst.mesh = array_mesh
+	else:
+		return null
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.0, 1.0, 0.3, 0.25)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mesh_inst.material_override = mat
+	mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mesh_inst.global_transform = col_shape.global_transform
+	return mesh_inst
+
+
+func _toggle_debug_panel() -> void:
+	if _debug_panel:
+		_debug_panel.visible = not _debug_panel.visible
+
+
+func _toggle_triggers() -> void:
+	_show_triggers = not _show_triggers
+	for m in _debug_trigger_meshes:
+		if is_instance_valid(m):
+			m.visible = _show_triggers
+	_update_debug_label()
+
+
+func _toggle_gate_markers() -> void:
+	_show_gate_markers = not _show_gate_markers
+	for m in _debug_gate_meshes:
+		if is_instance_valid(m):
+			m.visible = _show_gate_markers
+	_update_debug_label()
+
+
+func _toggle_floor_collision() -> void:
+	_show_floor_collision = not _show_floor_collision
+	for m in _debug_collision_meshes:
+		if is_instance_valid(m):
+			m.visible = _show_floor_collision
+	_update_debug_label()
+
+
+func _toggle_spawn_points() -> void:
+	_show_spawn_points = not _show_spawn_points
+	for m in _debug_spawn_meshes:
+		if is_instance_valid(m):
+			m.visible = _show_spawn_points
+	_update_debug_label()
+
+
+func _update_debug_label() -> void:
+	if not _debug_panel:
+		return
+	var label: Label = _debug_panel.get_node_or_null("DebugLabel")
+	if not label:
+		return
+	var on := "[ON]"
+	var off := "[OFF]"
+	label.text = "Debug (F3)\n" \
+		+ "F5  Triggers  %s\n" % (on if _show_triggers else off) \
+		+ "F6  Gate cols  %s\n" % (on if _show_gate_markers else off) \
+		+ "F7  Floor col  %s\n" % (on if _show_floor_collision else off) \
+		+ "F8  Spawns     %s" % (on if _show_spawn_points else off)
+
+
 func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 	if _transitioning:
 		return
@@ -702,6 +1060,7 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 		"current_cell_pos": target_pos,
 		"spawn_edge": spawn_edge,
 		"keys_collected": _keys_collected,
+		"visited_cells": _visited_cells,
 		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 	})
 
@@ -718,6 +1077,7 @@ func _on_end_reached() -> void:
 			"current_cell_pos": str(new_section.get("start_pos", "")),
 			"spawn_edge": "",
 			"keys_collected": {},
+			"visited_cells": {},
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 		})
 	else:
@@ -733,7 +1093,24 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_return_to_city()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_TAB:
-		if _map_overlay:
-			_map_overlay.visible = not _map_overlay.visible
-		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo:
+		match event.keycode:
+			KEY_TAB:
+				if _map_overlay:
+					_map_overlay.visible = not _map_overlay.visible
+				get_viewport().set_input_as_handled()
+			KEY_F3:
+				_toggle_debug_panel()
+				get_viewport().set_input_as_handled()
+			KEY_F5:
+				_toggle_triggers()
+				get_viewport().set_input_as_handled()
+			KEY_F6:
+				_toggle_gate_markers()
+				get_viewport().set_input_as_handled()
+			KEY_F7:
+				_toggle_floor_collision()
+				get_viewport().set_input_as_handled()
+			KEY_F8:
+				_toggle_spawn_points()
+				get_viewport().set_input_as_handled()
