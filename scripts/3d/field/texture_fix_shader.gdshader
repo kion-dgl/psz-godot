@@ -30,8 +30,10 @@ void fragment() {
 	uv.x = apply_wrap(uv.x, wrap_s);
 	uv.y = apply_wrap(uv.y, wrap_t);
 	vec4 tex = texture(albedo_texture, uv);
+	// Use vertex color for RGB tint only — Three.js ignores vertex alpha for
+	// transparency, and GLB meshes often have COLOR.a=0 which would hide geometry.
 	ALBEDO = tex.rgb * COLOR.rgb * albedo_color.rgb;
-	ALPHA = tex.a * COLOR.a * albedo_color.a;
+	ALPHA = tex.a * albedo_color.a;
 	if (alpha_mode == 0) {
 		ALPHA_SCISSOR_THRESHOLD = 0.1;
 	}
