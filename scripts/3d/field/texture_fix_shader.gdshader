@@ -28,5 +28,7 @@ void fragment() {
 	uv.y = apply_wrap(uv.y, wrap_t);
 	vec4 tex = texture(albedo_texture, uv);
 	ALBEDO = tex.rgb * COLOR.rgb * albedo_color.rgb;
+	// Alpha scissor: discard fully transparent pixels but stay in opaque pipeline
 	ALPHA = tex.a * COLOR.a * albedo_color.a;
+	ALPHA_SCISSOR_THRESHOLD = 0.5;
 }
