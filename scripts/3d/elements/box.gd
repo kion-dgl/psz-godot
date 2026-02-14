@@ -149,6 +149,7 @@ func _spawn_drop() -> void:
 			return
 
 	if drop:
-		drop.position = global_position
-		drop.position.y += 0.5  # Spawn slightly above ground
+		var world_pos := global_position
+		world_pos.y += 0.5  # Spawn slightly above ground
+		drop.position = parent.to_local(world_pos)
 		parent.call_deferred("add_child", drop)
