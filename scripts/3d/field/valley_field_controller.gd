@@ -21,9 +21,22 @@ const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
 const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
 const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
 const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
+const MessagePackScript := preload("res://scripts/3d/elements/message_pack.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
+
+## Maps session area_id → DropRegistry area key for enemy drop lookups
+const AREA_DROP_KEYS := {
+	"gurhacia": "gurhacia-valley",
+	"ozette": "ozette-wetland",
+	"rioh": "rioh-snowfield",
+	"makara": "makara-ruins",
+	"paru": "oblivion-city-paru",
+	"arca": "arca-plant",
+	"dark": "dark-shrine",
+	"tower": "eternal-tower",
+}
 
 var player: CharacterBody3D
 var orbit_camera: Node3D
@@ -53,8 +66,14 @@ var _total_keys_in_field: int = 0
 var _room_enemies: Array = []  # EnemySpawn nodes in current room
 var _room_boxes: Array = []    # Box nodes in current room
 var _room_drops: Array = []    # Drop nodes spawned from boxes
+var _room_messages: Array = [] # MessagePack nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
+
+# Wave spawning
+var _current_wave: int = 1
+var _max_wave: int = 1
+var _wave_enemy_data: Dictionary = {}  # wave_num → [obj data]
 
 # Debug toggle state
 var _show_triggers := false
@@ -976,6 +995,7 @@ func _fix_gate_depth(gate: Node3D) -> void:
 
 
 ## Check if a cell has living enemies (from quest data or saved state).
+## For wave-based cells, any living enemy in any wave counts.
 func _cell_has_enemies(cell: Dictionary) -> bool:
 	var cell_pos: String = str(cell.get("pos", ""))
 	var saved: Dictionary = _cell_states.get(cell_pos, {})
@@ -1187,12 +1207,15 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 	print("[FieldElements] End cell exit warp at %s (dir=%s)" % [exit_pos, exit_dir])
 
 
-## Spawn placed objects (boxes, enemies, fences, switches) from quest cell data.
+## Spawn placed objects (boxes, enemies, fences, switches, messages) from quest cell data.
 ## If the cell was previously visited, restore saved state instead.
 func _spawn_cell_objects() -> void:
 	var cell_pos: String = str(_current_cell.get("pos", ""))
 	var saved: Dictionary = _cell_states.get(cell_pos, {})
 	var objects: Array = _current_cell.get("objects", [])
+
+	# Reset room tracking arrays
+	_room_messages.clear()
 
 	if objects.is_empty() and saved.is_empty():
 		return
@@ -1218,6 +1241,10 @@ func _spawn_cell_objects() -> void:
 ## Spawn objects fresh (first visit to a cell).
 func _spawn_fresh_cell_objects(objects: Array) -> void:
 	print("[CellObjects] Spawning %d objects (fresh)" % objects.size())
+	_wave_enemy_data.clear()
+	_current_wave = 1
+	_max_wave = 1
+
 	for obj in objects:
 		var obj_type: String = str(obj.get("type", ""))
 		var pos_arr: Array = obj.get("position", [0, 0, 0])
@@ -1228,21 +1255,40 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 			"box", "rare_box":
 				_spawn_box(pos, obj_type == "rare_box")
 			"enemy":
-				var enemy_id: String = str(obj.get("enemy_id", "lizard"))
-				_spawn_enemy(pos, enemy_id)
+				var wave: int = int(obj.get("wave", 1))
+				if wave < 1:
+					wave = 1
+				if wave > _max_wave:
+					_max_wave = wave
+				if wave == 1:
+					var enemy_id: String = str(obj.get("enemy_id", "lizard"))
+					_spawn_enemy(pos, enemy_id)
+				else:
+					if not _wave_enemy_data.has(wave):
+						_wave_enemy_data[wave] = []
+					_wave_enemy_data[wave].append(obj)
 			"fence":
 				var link_id: String = str(obj.get("link_id", ""))
 				_spawn_fence(pos, obj_rot, link_id)
 			"step_switch":
 				var link_id: String = str(obj.get("link_id", ""))
 				_spawn_switch(pos, link_id)
+			"message":
+				var text: String = str(obj.get("text", ""))
+				_spawn_message(pos, text)
+
+	if _max_wave > 1:
+		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
 
 
 ## Restore objects from saved cell state (revisiting a cell).
 func _restore_cell_objects(saved: Dictionary) -> void:
 	var obj_states: Array = saved.get("objects", [])
 	var drop_states: Array = saved.get("drops", [])
-	print("[CellObjects] Restoring %d objects + %d drops from saved state" % [obj_states.size(), drop_states.size()])
+	_current_wave = int(saved.get("current_wave", 1))
+	_max_wave = int(saved.get("max_wave", 1))
+	print("[CellObjects] Restoring %d objects + %d drops from saved state (wave %d/%d)" % [
+		obj_states.size(), drop_states.size(), _current_wave, _max_wave])
 
 	for obj in obj_states:
 		var obj_type: String = str(obj.get("type", ""))
@@ -1274,6 +1320,10 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 						for s in _fence_links[lid]["switches"]:
 							if (s as StepSwitch).position.distance_to(pos) < 0.1:
 								(s as StepSwitch).set_state("on")
+			"message":
+				var text: String = str(obj.get("text", ""))
+				var msg_state: String = state if not state.is_empty() else "available"
+				_spawn_message(pos, text, msg_state)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -1341,24 +1391,45 @@ func _save_cell_state() -> void:
 					"state": "destroyed",
 				})
 
-	# Save enemy states
+	# Save enemy states (current wave enemies that have been spawned)
 	for obj in objects:
 		if str(obj.get("type", "")) == "enemy":
+			var wave: int = int(obj.get("wave", 1))
 			var pos_arr: Array = obj.get("position", [0, 0, 0])
 			var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 			var enemy_id: String = str(obj.get("enemy_id", "lizard"))
-			# Check if the enemy at this position is dead
-			var is_dead := true  # Assume dead unless found alive
-			for e in _room_enemies:
-				if is_instance_valid(e) and e.position.distance_to(pos) < 0.1:
-					is_dead = (e.element_state == "dead")
-					break
-			obj_states.append({
-				"type": "enemy",
-				"px": pos.x, "py": pos.y, "pz": pos.z,
-				"state": "dead" if is_dead else "alive",
-				"enemy_id": enemy_id,
-			})
+			if wave > _current_wave:
+				# Future wave — not yet spawned, save as alive
+				obj_states.append({
+					"type": "enemy",
+					"px": pos.x, "py": pos.y, "pz": pos.z,
+					"state": "alive",
+					"enemy_id": enemy_id,
+					"wave": wave,
+				})
+			elif wave < _current_wave:
+				# Past wave — already cleared
+				obj_states.append({
+					"type": "enemy",
+					"px": pos.x, "py": pos.y, "pz": pos.z,
+					"state": "dead",
+					"enemy_id": enemy_id,
+					"wave": wave,
+				})
+			else:
+				# Current wave — check spawned enemies
+				var is_dead := true
+				for e in _room_enemies:
+					if is_instance_valid(e) and e.position.distance_to(pos) < 0.1:
+						is_dead = (e.element_state == "dead")
+						break
+				obj_states.append({
+					"type": "enemy",
+					"px": pos.x, "py": pos.y, "pz": pos.z,
+					"state": "dead" if is_dead else "alive",
+					"enemy_id": enemy_id,
+					"wave": wave,
+				})
 
 	# Save fence/switch states
 	for obj in objects:
@@ -1399,9 +1470,22 @@ func _save_cell_state() -> void:
 				entry["item_id"] = d.item_id
 			drop_states.append(entry)
 
-	_cell_states[cell_pos] = {"objects": obj_states, "drops": drop_states}
-	print("[CellObjects] Saved state for cell %s: %d objects, %d drops" % [
-		cell_pos, obj_states.size(), drop_states.size()])
+	# Save message states
+	for msg in _room_messages:
+		if is_instance_valid(msg):
+			obj_states.append({
+				"type": "message",
+				"px": msg.position.x, "py": msg.position.y, "pz": msg.position.z,
+				"state": msg.element_state,
+				"text": msg.message_text,
+			})
+
+	_cell_states[cell_pos] = {
+		"objects": obj_states, "drops": drop_states,
+		"current_wave": _current_wave, "max_wave": _max_wave,
+	}
+	print("[CellObjects] Saved state for cell %s: %d objects, %d drops (wave %d/%d)" % [
+		cell_pos, obj_states.size(), drop_states.size(), _current_wave, _max_wave])
 
 
 func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type: String = "", drop_value: String = "") -> void:
@@ -1434,7 +1518,10 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 	_map_root.add_child(enemy)
 	enemy.position = pos
 	_room_enemies.append(enemy)
+	var spawn_pos := pos
+	var spawn_id := enemy_id
 	enemy.defeated.connect(func() -> void:
+		_spawn_enemy_drops(spawn_pos, spawn_id)
 		_check_room_clear()
 	)
 	print("[CellObjects] Enemy '%s' at %s" % [enemy_id, pos])
@@ -1465,6 +1552,58 @@ func _spawn_switch(pos: Vector3, link_id: String) -> void:
 			_fence_links[link_id] = {"fences": [], "switches": []}
 		_fence_links[link_id]["switches"].append(sw)
 	print("[CellObjects] Switch at %s link='%s'" % [pos, link_id])
+
+
+## Spawn drops when an enemy is defeated.
+func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
+	var enemy_data = EnemyRegistry.get_enemy(enemy_id)
+	var meseta_min: int = 5
+	var meseta_max: int = 20
+	var enemy_name: String = enemy_id.capitalize()
+	if enemy_data:
+		meseta_min = int(enemy_data.meseta_min) if int(enemy_data.meseta_min) > 0 else 5
+		meseta_max = int(enemy_data.meseta_max) if int(enemy_data.meseta_max) > 0 else 20
+		enemy_name = str(enemy_data.name)
+
+	# Always drop meseta
+	var dm := DropMesetaScript.new()
+	dm.amount = randi_range(meseta_min, meseta_max)
+	var offset := Vector3(randf_range(-0.8, 0.8), 0.5, randf_range(-0.8, 0.8))
+	_map_root.add_child(dm)
+	dm.position = pos + offset
+	_room_drops.append(dm)
+	print("[EnemyDrop] Meseta %d at %s" % [dm.amount, dm.position])
+
+	# Roll for item drop (15% chance)
+	if randf() < 0.15:
+		var area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
+		var difficulty: String = str(SessionManager.get_session().get("difficulty", "normal"))
+		var drop_area: String = AREA_DROP_KEYS.get(area_id, "gurhacia-valley")
+		var drop_list: Array = DropRegistry.get_enemy_drops(difficulty, drop_area, enemy_name)
+		if drop_list.size() > 0:
+			var item_name: String = str(drop_list[randi() % drop_list.size()])
+			var item_id: String = item_name.to_lower().replace(" ", "_").replace("/", "_")
+			var di := DropItemScript.new()
+			di.item_id = item_id
+			di.amount = 1
+			var item_offset := Vector3(randf_range(-0.8, 0.8), 0.5, randf_range(-0.8, 0.8))
+			_map_root.add_child(di)
+			di.position = pos + item_offset
+			_room_drops.append(di)
+			print("[EnemyDrop] Item '%s' (id=%s) at %s" % [item_name, item_id, di.position])
+
+
+## Spawn a message pack element.
+func _spawn_message(pos: Vector3, text: String, state: String = "available") -> void:
+	var msg := MessagePackScript.new()
+	msg.message_text = text
+	_map_root.add_child(msg)
+	msg.position = pos
+	_fixup_element_materials(msg)
+	if state == "read":
+		msg.set_state("read")
+	_room_messages.append(msg)
+	print("[CellObjects] Message at %s (text=%d chars)" % [pos, text.length()])
 
 
 ## Wire switch.activated → linked fences.disable()
@@ -1512,6 +1651,13 @@ func _check_room_clear() -> void:
 		if is_instance_valid(enemy) and enemy.element_state != "dead":
 			return  # Still alive enemies
 
+	# Check for next wave
+	if _current_wave < _max_wave:
+		_current_wave += 1
+		print("[CellObjects] Wave %d cleared! Spawning wave %d" % [_current_wave - 1, _current_wave])
+		_spawn_wave(_current_wave)
+		return
+
 	print("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
 	for gate in _room_gates_locked:
 		if is_instance_valid(gate):
@@ -1521,6 +1667,18 @@ func _check_room_clear() -> void:
 			if trigger:
 				trigger.monitoring = true
 	_room_gates_locked.clear()
+
+
+## Spawn enemies for a specific wave number.
+func _spawn_wave(wave_num: int) -> void:
+	_room_enemies.clear()
+	var wave_objs: Array = _wave_enemy_data.get(wave_num, [])
+	for obj in wave_objs:
+		var pos_arr: Array = obj.get("position", [0, 0, 0])
+		var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+		var enemy_id: String = str(obj.get("enemy_id", "lizard"))
+		_spawn_enemy(pos, enemy_id)
+	print("[CellObjects] Wave %d: spawned %d enemies" % [wave_num, wave_objs.size()])
 
 
 ## Guess gate direction from position (for gate unlock)
