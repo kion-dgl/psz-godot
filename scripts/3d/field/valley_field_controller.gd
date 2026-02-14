@@ -26,7 +26,8 @@ var _world_env: WorldEnvironment
 var _dir_light: DirectionalLight3D
 var _sky_material: ProceduralSkyMaterial
 var _transitioning := false
-var _keys_collected: Dictionary = {}
+var _keys_collected: Dictionary = {}  # cell_pos → true (key pickup, prevents respawn)
+var _gates_opened: Dictionary = {}   # cell_pos → true (gate opened by player, stays open on re-entry)
 var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _map_overlay: CanvasLayer
@@ -237,7 +238,7 @@ func _ready() -> void:
 		if not _portal_data.has(dir):
 			continue
 		var is_entry: bool = (dir == spawn_edge)
-		var is_locked_gate: bool = is_key_gate and dir == key_gate_dir and not _keys_collected.has(str(_current_cell.get("pos", "")))
+		var is_locked_gate: bool = is_key_gate and dir == key_gate_dir and not _gates_opened.has(str(_current_cell.get("pos", "")))
 		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
 	# Create exit trigger on end cell warp_edge
@@ -1000,8 +1001,8 @@ func _spawn_field_elements() -> void:
 			print("[FieldElements] ── SPAWNING KEY GATE ──")
 			print("[FieldElements]   dir=%s  gate_pos=%s  trigger_pos=%s" % [dir, gate_pos, trigger_pos])
 			print("[FieldElements]   key_for_cell=%s  key_item_id=%s" % [key_for_cell, key_item_id])
-			print("[FieldElements]   _keys_collected=%s  has_key=%s" % [
-				_keys_collected, _keys_collected.has(key_for_cell)])
+			print("[FieldElements]   _keys_collected=%s  _gates_opened=%s" % [
+				_keys_collected, _gates_opened])
 			var kg := KeyGateScript.new()
 			kg.required_key_id = key_item_id
 			kg.name = "KeyGate_%s" % dir
@@ -1030,18 +1031,22 @@ func _spawn_field_elements() -> void:
 				print("[FieldElements]   collision: layer=%s  children=%d" % [
 					kg.collision_body.collision_layer, kg.collision_body.get_child_count()])
 			_fix_gate_depth(kg)
-			# If key already collected, open immediately
-			if _keys_collected.has(key_for_cell):
-				print("[FieldElements]   KEY ALREADY COLLECTED → opening gate")
+			# Only auto-open if gate was previously opened by player (re-entry)
+			if _gates_opened.has(key_for_cell):
+				print("[FieldElements]   GATE PREVIOUSLY OPENED → opening gate")
 				kg.open()
+			else:
+				print("[FieldElements]   Gate locked — player must interact with key")
 			# Enable the locked gate trigger when the key gate opens
 			var gate_trigger_name := "GateTrigger_%s" % dir
+			var cell_pos_for_gate := key_for_cell
 			kg.state_changed.connect(func(_old: String, new_state: String) -> void:
 				if new_state == "open":
+					_gates_opened[cell_pos_for_gate] = true
 					var trigger := _find_child_by_name(self, gate_trigger_name) as Area3D
 					if trigger:
 						trigger.monitoring = true
-						print("[ValleyField] KeyGate opened → trigger '%s' enabled" % gate_trigger_name)
+						print("[ValleyField] KeyGate opened → trigger '%s' enabled, gate tracked" % gate_trigger_name)
 			)
 			print("[FieldElements] ── KEY GATE DONE ──")
 		elif dir == _spawn_edge:
