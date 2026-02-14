@@ -1101,10 +1101,10 @@ func _spawn_field_elements() -> void:
 		var target_cell_pos: String = str(connections[dir])
 		var wp_state: String
 		if dir == _spawn_edge:
-			waypoint.mark_visited()
+			waypoint.mark_unvisited()
 			wp_state = "came_from"
 		elif _visited_cells.has(target_cell_pos):
-			waypoint.mark_unvisited()
+			waypoint.mark_visited()
 			wp_state = "visited_prior"
 		else:
 			waypoint.mark_new()
