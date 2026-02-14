@@ -411,11 +411,8 @@ func _remap_quest_directions(_stage_id: String, _area_id: String) -> void:
 	elif kgd == "west":
 		_current_cell["key_gate_direction"] = "east"
 
-	# Swap east↔west in spawn_edge
-	if _spawn_edge == "east":
-		_spawn_edge = "west"
-	elif _spawn_edge == "west":
-		_spawn_edge = "east"
+	# NOTE: Do NOT remap _spawn_edge — it comes from the previous cell's
+	# transition (OPPOSITE of a remapped direction), so it's already in GLB convention.
 
 	print("[ValleyField] Quest E↔W remap: connections=%s  key_gate_dir=%s  spawn_edge=%s" % [
 		str(new_connections), str(_current_cell.get("key_gate_direction", "")), _spawn_edge])
