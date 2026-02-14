@@ -997,20 +997,42 @@ func _spawn_field_elements() -> void:
 		if is_key_gate and dir == key_gate_dir:
 			var key_for_cell: String = str(_current_cell.get("pos", ""))
 			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
+			print("[FieldElements] ── SPAWNING KEY GATE ──")
+			print("[FieldElements]   dir=%s  gate_pos=%s  trigger_pos=%s" % [dir, gate_pos, trigger_pos])
+			print("[FieldElements]   key_for_cell=%s  key_item_id=%s" % [key_for_cell, key_item_id])
+			print("[FieldElements]   _keys_collected=%s  has_key=%s" % [
+				_keys_collected, _keys_collected.has(key_for_cell)])
 			var kg := KeyGateScript.new()
 			kg.required_key_id = key_item_id
 			kg.name = "KeyGate_%s" % dir
+			print("[FieldElements]   before add_child: state=%s" % kg.element_state)
 			add_child(kg)
+			print("[FieldElements]   after add_child: state=%s  pos=%s  rot=%s" % [
+				kg.element_state, kg.global_position, kg.rotation])
+			print("[FieldElements]   laser_material=%s  collision_body=%s" % [
+				kg._laser_material != null, kg.collision_body != null])
 			kg.global_position = gate_pos
 			if dir == "east" or dir == "west":
 				kg.rotation.y = PI / 2.0
+			print("[FieldElements]   after position/rotation: pos=%s  rot=%s" % [
+				kg.global_position, kg.rotation])
 			# Apply storybook-style material fixup (duplicate + UV fix for frame texture)
 			_fixup_gate_materials(kg)
+			print("[FieldElements]   after _fixup_gate_materials")
 			kg._setup_laser_material()
+			print("[FieldElements]   after re-setup laser: _laser_material=%s" % (kg._laser_material != null))
 			kg._apply_state()
+			print("[FieldElements]   after _apply_state: state=%s" % kg.element_state)
+			if kg._laser_material:
+				print("[FieldElements]   laser: transparency=%s  alpha=%.2f" % [
+					kg._laser_material.transparency, kg._laser_material.albedo_color.a])
+			if kg.collision_body:
+				print("[FieldElements]   collision: layer=%s  children=%d" % [
+					kg.collision_body.collision_layer, kg.collision_body.get_child_count()])
 			_fix_gate_depth(kg)
 			# If key already collected, open immediately
 			if _keys_collected.has(key_for_cell):
+				print("[FieldElements]   KEY ALREADY COLLECTED → opening gate")
 				kg.open()
 			# Enable the locked gate trigger when the key gate opens
 			var gate_trigger_name := "GateTrigger_%s" % dir
@@ -1021,8 +1043,7 @@ func _spawn_field_elements() -> void:
 						trigger.monitoring = true
 						print("[ValleyField] KeyGate opened → trigger '%s' enabled" % gate_trigger_name)
 			)
-			print("[FieldElements]   KeyGate at %s dir=%s key=%s model=%s" % [
-				gate_pos, dir, key_item_id, kg.model_path])
+			print("[FieldElements] ── KEY GATE DONE ──")
 		elif dir == _spawn_edge:
 			# Entry direction — show gate in open state (laser off, no collision)
 			var gate := GateScript.new()
