@@ -841,6 +841,33 @@ func _unlock_key_gates(_key_item_id: String) -> void:
 	pass
 
 
+## Apply storybook-style material fixup to gate elements.
+## Duplicates all materials (prevents shared-resource mutation) and applies
+## UV scale/offset correction for the o0c_0_gatet frame texture.
+func _fixup_gate_materials(element: GameElement) -> void:
+	if not element.model:
+		return
+	_fixup_gate_recursive(element.model)
+
+
+func _fixup_gate_recursive(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if not mat is StandardMaterial3D:
+				continue
+			var std_mat := mat as StandardMaterial3D
+			var dup := std_mat.duplicate() as StandardMaterial3D
+			mesh_inst.set_surface_override_material(i, dup)
+			# UV fixup for gate frame texture (matches storybook TEXTURE_FIXUPS)
+			if dup.albedo_texture and "o0c_0_gatet" in dup.albedo_texture.resource_path:
+				dup.uv1_scale = Vector3(1, 2, 1)
+				dup.uv1_offset = Vector3(0.56, 0.8, 0)
+	for child in node.get_children():
+		_fixup_gate_recursive(child)
+
+
 ## Force all materials on a gate element to opaque depth draw so they don't
 ## break depth buffer for geometry behind/below them (e.g. water plane).
 ## GLB textures often have alpha channels causing auto-imported transparency.
@@ -918,7 +945,7 @@ func _spawn_field_elements() -> void:
 		var trigger_pos: Vector3 = _portal_data[dir]["trigger_pos"]
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
 
-		# Key-gate — use KeyGate element with collision blocking
+		# Key-gate — use KeyGate element (o0c_gatet.glb) with collision blocking
 		if is_key_gate and dir == key_gate_dir:
 			var key_for_cell: String = str(_current_cell.get("pos", ""))
 			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
@@ -929,11 +956,15 @@ func _spawn_field_elements() -> void:
 			kg.global_position = gate_pos
 			if dir == "east" or dir == "west":
 				kg.rotation.y = PI / 2.0
+			# Apply storybook-style material fixup (duplicate + UV fix for frame texture)
+			_fixup_gate_materials(kg)
+			kg._setup_laser_material()
 			_fix_gate_depth(kg)
 			# If key already collected, open immediately
 			if _keys_collected.has(key_for_cell):
 				kg.open()
-			print("[FieldElements]   KeyGate at %s dir=%s key=%s" % [gate_pos, dir, key_item_id])
+			print("[FieldElements]   KeyGate at %s dir=%s key=%s model=%s" % [
+				gate_pos, dir, key_item_id, kg.model_path])
 		elif dir == _spawn_edge:
 			# Entry direction — show gate in open state (laser off, no collision)
 			var gate := GateScript.new()
@@ -941,6 +972,8 @@ func _spawn_field_elements() -> void:
 			gate.global_position = gate_pos
 			if dir == "east" or dir == "west":
 				gate.rotation.y = PI / 2.0
+			_fixup_gate_materials(gate)
+			gate._setup_laser_material()
 			gate.open()
 			_fix_gate_depth(gate)
 		else:
@@ -950,6 +983,8 @@ func _spawn_field_elements() -> void:
 			gate.global_position = gate_pos
 			if dir == "east" or dir == "west":
 				gate.rotation.y = PI / 2.0
+			_fixup_gate_materials(gate)
+			gate._setup_laser_material()
 			gate.collision_body.collision_layer = 0
 			_fix_gate_depth(gate)
 
