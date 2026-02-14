@@ -1004,6 +1004,7 @@ func _spawn_field_elements() -> void:
 			# Apply storybook-style material fixup (duplicate + UV fix for frame texture)
 			_fixup_gate_materials(kg)
 			kg._setup_laser_material()
+			kg._apply_state()
 			_fix_gate_depth(kg)
 			# If key already collected, open immediately
 			if _keys_collected.has(key_for_cell):

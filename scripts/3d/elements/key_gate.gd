@@ -31,6 +31,9 @@ func _ready() -> void:
 	_setup_gate_collision()
 	_setup_laser_material()
 	_setup_prompt()
+	# Re-apply state now that laser material and collision are set up
+	# (super._ready() calls _apply_state before _setup_laser_material runs)
+	_apply_state()
 
 
 func _setup_gate_collision() -> void:
