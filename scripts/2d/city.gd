@@ -1,6 +1,8 @@
 extends Control
 ## City hub — main navigation menu with character info sidebar.
 
+const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
+
 const BASE_MENU_ITEMS := [
 	"Shop",
 	"Weapon Shop",
@@ -46,6 +48,11 @@ func _ready() -> void:
 	_update_char_info()
 
 
+func _has_active_quest() -> bool:
+	return SessionManager.has_accepted_quest() or SessionManager.has_suspended_session() \
+		or SessionManager.has_completed_quest()
+
+
 func _build_menu() -> void:
 	_menu_items = BASE_MENU_ITEMS.duplicate()
 	_disabled_items = []
@@ -54,12 +61,21 @@ func _build_menu() -> void:
 	if SessionManager.has_suspended_session():
 		_menu_items.insert(0, "Resume Session")
 
-	# Build disabled mask — separators are disabled
+	# Quest status hints
+	if SessionManager.has_completed_quest():
+		hint_label.text = "Quest complete! Visit the Guild Counter to report."
+	elif SessionManager.has_accepted_quest():
+		var aq: Dictionary = SessionManager.get_accepted_quest()
+		hint_label.text = "Quest active: %s — Head to the warp area." % str(aq.get("name", ""))
+
+	# Build disabled mask — separators + warp teleporter during quest
 	var disabled_mask: Array = []
 	for i in range(_menu_items.size()):
 		var is_sep: bool = _menu_items[i].begins_with("────")
-		disabled_mask.append(is_sep)
-		if is_sep:
+		var is_warp_disabled: bool = _menu_items[i] == "Warp Teleporter" and _has_active_quest()
+		var disabled: bool = is_sep or is_warp_disabled
+		disabled_mask.append(disabled)
+		if disabled:
 			_disabled_items.append(i)
 
 	menu_list.set_items(_menu_items, disabled_mask)
@@ -77,7 +93,21 @@ func _on_menu_selected(index: int) -> void:
 	match _menu_items[index]:
 		"Resume Session":
 			SessionManager.resume_session()
-			SceneManager.goto_scene("res://scenes/2d/field.tscn")
+			var sections: Array = SessionManager.get_field_sections()
+			if not sections.is_empty():
+				var field_area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
+				if GridGenerator.AREA_CONFIG.has(field_area_id):
+					var section_idx: int = SessionManager.get_current_section()
+					var section: Dictionary = sections[section_idx] if section_idx < sections.size() else sections[0]
+					SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+						"current_cell_pos": str(section.get("start_pos", "")),
+						"spawn_edge": "",
+						"keys_collected": {},
+					})
+				else:
+					SceneManager.goto_scene("res://scenes/2d/field.tscn")
+			else:
+				SceneManager.goto_scene("res://scenes/2d/field.tscn")
 		"Shop":
 			SceneManager.push_scene("res://scenes/2d/shops/item_shop.tscn")
 		"Weapon Shop":
