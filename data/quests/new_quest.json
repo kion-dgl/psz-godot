@@ -42,7 +42,12 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "key_position": [
+            9,
+            1,
+            8
+          ]
         },
         {
           "pos": "2,1",
