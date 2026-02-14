@@ -49,9 +49,7 @@ func _ready() -> void:
 	# Show quest status hints
 	if SessionManager.has_completed_quest():
 		var cq: Dictionary = SessionManager.get_completed_quest()
-		hint_label.text = "Quest \"%s\" complete! Select Report to claim rewards." % str(cq.get("name", ""))
-	elif SessionManager.has_accepted_quest() or SessionManager.has_suspended_session():
-		hint_label.text = "[C] Cancel Quest  [↑/↓] Select  [ESC] Leave"
+		hint_label.text = "Quest \"%s\" complete! Press ENTER to report." % str(cq.get("name", ""))
 
 
 func _has_active_quest() -> bool:
@@ -62,7 +60,7 @@ func _has_active_quest() -> bool:
 func _load_entries() -> void:
 	_entries.clear()
 
-	# Insert report option if quest completed
+	# When a quest is active, only show report or cancel — no other entries
 	if SessionManager.has_completed_quest():
 		var cq: Dictionary = SessionManager.get_completed_quest()
 		_entries.append({
@@ -75,8 +73,27 @@ func _load_entries() -> void:
 			"rewards": {},
 			"available": true,
 		})
+		return
 
-	# Load missions
+	if SessionManager.has_accepted_quest() or SessionManager.has_suspended_session():
+		var quest_name := ""
+		if SessionManager.has_accepted_quest():
+			quest_name = str(SessionManager.get_accepted_quest().get("name", "Quest"))
+		else:
+			quest_name = str(SessionManager._suspended_session.get("quest_id", "Quest"))
+		_entries.append({
+			"type": "cancel",
+			"id": "",
+			"name": "Cancel Quest: %s" % quest_name,
+			"area": "",
+			"is_main": false,
+			"requires": [],
+			"rewards": {},
+			"available": true,
+		})
+		return
+
+	# Normal mode — load missions and quests
 	var missions := MissionRegistry.get_all_missions()
 	missions.sort_custom(func(a, b):
 		var aa: int = AREA_ORDER.get(a.area, 99)
@@ -142,24 +159,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_accept"):
 		if _selecting_difficulty:
 			_accept_entry()
-		else:
-			# Check if selected entry is a report
-			if not _entries.is_empty() and _selected_index < _entries.size():
-				if _entries[_selected_index]["type"] == "report":
-					_report_quest()
-					return
-			_selecting_difficulty = true
-			_selected_difficulty = 0
+		elif not _entries.is_empty() and _selected_index < _entries.size():
+			var entry_type: String = str(_entries[_selected_index]["type"])
+			if entry_type == "report":
+				_report_quest()
+				return
+			elif entry_type == "cancel":
+				SessionManager.cancel_accepted_quest()
+				hint_label.text = "Quest cancelled."
+				_selected_index = 0
+				_load_entries()
+				_refresh_display()
+				return
+			else:
+				_selecting_difficulty = true
+				_selected_difficulty = 0
 		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_C:
-		if _has_active_quest() and not SessionManager.has_completed_quest():
-			SessionManager.cancel_accepted_quest()
-			hint_label.text = "Quest cancelled."
-			_selected_index = 0
-			_selecting_difficulty = false
-			_load_entries()
-			_refresh_display()
 		get_viewport().set_input_as_handled()
 
 
@@ -299,13 +314,14 @@ func _refresh_display() -> void:
 					last_area = area
 				var label := Label.new()
 				var unlocked: bool = entry.get("available", true)
-				var is_quest: bool = entry["type"] == "quest"
-				var is_report: bool = entry["type"] == "report"
-				var completed: bool = not is_quest and not is_report and GameState.is_mission_completed(entry["id"])
+				var entry_type: String = str(entry["type"])
+				var completed: bool = entry_type == "mission" and GameState.is_mission_completed(entry["id"])
 				var status_tag: String = ""
-				if is_report:
+				if entry_type == "report":
 					status_tag = " [REPORT]"
-				elif is_quest:
+				elif entry_type == "cancel":
+					status_tag = ""
+				elif entry_type == "quest":
 					status_tag = " [QUEST]"
 				elif completed:
 					status_tag = " [CLEAR]"
@@ -318,19 +334,18 @@ func _refresh_display() -> void:
 					selected_control = label
 				else:
 					label.text = "  " + label.text
-					if is_report:
+					if entry_type == "report":
 						label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+					elif entry_type == "cancel":
+						label.add_theme_color_override("font_color", ThemeColors.DANGER)
 					elif not unlocked:
 						label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 					elif completed:
 						label.add_theme_color_override("font_color", ThemeColors.COMPLETED)
-					elif is_quest:
+					elif entry_type == "quest":
 						label.add_theme_color_override("font_color", ThemeColors.QUEST)
 				vbox.add_child(label)
-		if _has_active_quest() and not SessionManager.has_completed_quest():
-			hint_label.text = "[C] Cancel Quest  [↑/↓] Select  [ESC] Leave"
-		else:
-			hint_label.text = "[↑/↓] Select  [ENTER] Choose  [ESC] Leave"
+		hint_label.text = "[↑/↓] Select  [ENTER] Choose  [ESC] Leave"
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)

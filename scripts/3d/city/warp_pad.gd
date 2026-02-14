@@ -10,6 +10,7 @@ const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 
 var _prompt_label: Label3D
 var _player_ref: Node3D
+var _is_dimmed: bool = false
 
 
 func _init() -> void:
@@ -22,6 +23,7 @@ func _init() -> void:
 func _ready() -> void:
 	super._ready()
 	_setup_prompt()
+	_update_dim_state()
 
 
 func _setup_prompt() -> void:
@@ -41,6 +43,50 @@ func _setup_prompt() -> void:
 
 func _get_my_area() -> String:
 	return SessionManager.WARP_TO_AREA.get(area_id, "")
+
+
+func _is_pad_active() -> bool:
+	var my_area: String = _get_my_area()
+	if SessionManager.has_completed_quest():
+		return false
+	if SessionManager.has_suspended_session():
+		var susp_area: String = str(SessionManager._suspended_session.get("area_id", ""))
+		return susp_area == my_area
+	if SessionManager.has_accepted_quest():
+		return SessionManager.get_accepted_quest_area() == my_area
+	return true  # No quest — all pads active
+
+
+func _update_dim_state() -> void:
+	if not model:
+		return
+	var quest_active: bool = SessionManager.has_accepted_quest() \
+		or SessionManager.has_suspended_session() \
+		or SessionManager.has_completed_quest()
+	var should_dim: bool = quest_active and not _is_pad_active()
+	if should_dim == _is_dimmed:
+		return
+	_is_dimmed = should_dim
+	_apply_dim_materials(model, should_dim)
+
+
+func _apply_dim_materials(node: Node, dim: bool) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std_mat := mat as StandardMaterial3D
+				if dim:
+					var dup := std_mat.duplicate() as StandardMaterial3D
+					dup.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+					dup.albedo_color.a = 0.35
+					mesh_inst.set_surface_override_material(i, dup)
+				else:
+					# Restore original — remove override
+					mesh_inst.set_surface_override_material(i, null)
+	for child in node.get_children():
+		_apply_dim_materials(child, dim)
 
 
 func _process(delta: float) -> void:
