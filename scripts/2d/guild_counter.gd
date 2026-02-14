@@ -46,10 +46,35 @@ func _ready() -> void:
 	hint_label.text = "[↑/↓] Select  [ENTER] Accept  [ESC] Leave"
 	_load_entries()
 	_refresh_display()
+	# Show quest status hints
+	if SessionManager.has_completed_quest():
+		var cq: Dictionary = SessionManager.get_completed_quest()
+		hint_label.text = "Quest \"%s\" complete! Select Report to claim rewards." % str(cq.get("name", ""))
+	elif SessionManager.has_accepted_quest() or SessionManager.has_suspended_session():
+		hint_label.text = "[C] Cancel Quest  [↑/↓] Select  [ESC] Leave"
+
+
+func _has_active_quest() -> bool:
+	return SessionManager.has_accepted_quest() or SessionManager.has_suspended_session() \
+		or SessionManager.has_completed_quest()
 
 
 func _load_entries() -> void:
 	_entries.clear()
+
+	# Insert report option if quest completed
+	if SessionManager.has_completed_quest():
+		var cq: Dictionary = SessionManager.get_completed_quest()
+		_entries.append({
+			"type": "report",
+			"id": str(cq.get("quest_id", "")),
+			"name": "Report: %s" % str(cq.get("name", "Quest")),
+			"area": "",
+			"is_main": false,
+			"requires": [],
+			"rewards": {},
+			"available": true,
+		})
 
 	# Load missions
 	var missions := MissionRegistry.get_all_missions()
@@ -118,9 +143,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _selecting_difficulty:
 			_accept_entry()
 		else:
+			# Check if selected entry is a report
+			if not _entries.is_empty() and _selected_index < _entries.size():
+				if _entries[_selected_index]["type"] == "report":
+					_report_quest()
+					return
 			_selecting_difficulty = true
 			_selected_difficulty = 0
 		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_C:
+		if _has_active_quest() and not SessionManager.has_completed_quest():
+			SessionManager.cancel_accepted_quest()
+			hint_label.text = "Quest cancelled."
+			_selected_index = 0
+			_selecting_difficulty = false
+			_load_entries()
+			_refresh_display()
 		get_viewport().set_input_as_handled()
 
 
@@ -159,6 +198,9 @@ func _accept_entry() -> void:
 	if _entries.is_empty() or _selected_index >= _entries.size():
 		return
 	var entry: Dictionary = _entries[_selected_index]
+	if entry["type"] == "report":
+		_report_quest()
+		return
 	if not entry.get("available", true):
 		hint_label.text = "Mission locked! Complete earlier missions first."
 		_selecting_difficulty = false
@@ -166,10 +208,43 @@ func _accept_entry() -> void:
 		return
 	var difficulty: String = DIFFICULTIES[_selected_difficulty].to_lower().replace(" ", "-")
 	if entry["type"] == "quest":
-		SessionManager.enter_quest(entry["quest_id"], difficulty)
+		# Block if another quest is already active
+		if _has_active_quest():
+			hint_label.text = "Complete your current quest first."
+			_selecting_difficulty = false
+			_refresh_display()
+			return
+		# Accept quest — don't start session yet, player must walk to warp
+		var area_id: String = AREA_DISPLAY.keys()[AREA_DISPLAY.values().find(entry["area"])] \
+			if AREA_DISPLAY.values().has(entry["area"]) else "gurhacia"
+		SessionManager.accept_quest(entry["quest_id"], difficulty)
+		hint_label.text = "Quest accepted! Head to %s warp." % entry["area"]
+		_selecting_difficulty = false
+		_refresh_display()
+		# Brief delay then pop back to city
+		await get_tree().create_timer(1.5).timeout
+		SceneManager.pop_scene()
 	else:
+		# Missions go directly to field as before
 		SessionManager.enter_mission(entry["id"], difficulty)
-	SceneManager.goto_scene("res://scenes/2d/field.tscn")
+		SceneManager.goto_scene("res://scenes/2d/field.tscn")
+
+
+func _report_quest() -> void:
+	var data: Dictionary = SessionManager.report_quest()
+	if data.is_empty():
+		return
+	# Mark quest completed in GameState
+	var quest_id: String = str(data.get("quest_id", ""))
+	if not quest_id.is_empty():
+		GameState.complete_mission(quest_id)
+	# Show completion message
+	hint_label.text = "Quest complete! EXP: %d  Meseta: %d" % [
+		int(data.get("total_exp", 0)), int(data.get("total_meseta", 0))]
+	_selected_index = 0
+	_selecting_difficulty = false
+	_load_entries()
+	_refresh_display()
 
 
 func _refresh_display() -> void:
@@ -225,9 +300,12 @@ func _refresh_display() -> void:
 				var label := Label.new()
 				var unlocked: bool = entry.get("available", true)
 				var is_quest: bool = entry["type"] == "quest"
-				var completed: bool = not is_quest and GameState.is_mission_completed(entry["id"])
+				var is_report: bool = entry["type"] == "report"
+				var completed: bool = not is_quest and not is_report and GameState.is_mission_completed(entry["id"])
 				var status_tag: String = ""
-				if is_quest:
+				if is_report:
+					status_tag = " [REPORT]"
+				elif is_quest:
 					status_tag = " [QUEST]"
 				elif completed:
 					status_tag = " [CLEAR]"
@@ -240,14 +318,19 @@ func _refresh_display() -> void:
 					selected_control = label
 				else:
 					label.text = "  " + label.text
-					if not unlocked:
+					if is_report:
+						label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+					elif not unlocked:
 						label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 					elif completed:
 						label.add_theme_color_override("font_color", ThemeColors.COMPLETED)
 					elif is_quest:
 						label.add_theme_color_override("font_color", ThemeColors.QUEST)
 				vbox.add_child(label)
-		hint_label.text = "[↑/↓] Select  [ENTER] Choose  [ESC] Leave"
+		if _has_active_quest() and not SessionManager.has_completed_quest():
+			hint_label.text = "[C] Cancel Quest  [↑/↓] Select  [ESC] Leave"
+		else:
+			hint_label.text = "[↑/↓] Select  [ENTER] Choose  [ESC] Leave"
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)

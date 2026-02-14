@@ -10,9 +10,23 @@ signal session_ended()
 const MAX_STAGES := 3
 const MAX_WAVES := 3
 
+## Warp pad area_id → quest/field area_id mapping
+const WARP_TO_AREA := {
+	"gurhacia-valley": "gurhacia",
+	"ozette-wetland": "ozette",
+	"rioh-snowfield": "rioh",
+	"makara-ruins": "makara",
+	"oblivion-city-paru": "paru",
+	"arca-plant": "arca",
+	"dark-shrine": "dark",
+	"eternal-tower": "tower",
+}
+
 var _session: Dictionary = {}
 var _suspended_session: Dictionary = {}
 var _location: String = "city"
+var _accepted_quest: Dictionary = {}   # {quest_id, area_id, difficulty, name}
+var _completed_quest: Dictionary = {}  # {quest_id, area_id, name} — awaiting guild report
 
 
 ## Enter a field area
@@ -207,3 +221,78 @@ func advance_section() -> bool:
 		_session["current_section"] = idx + 1
 		return true
 	return false
+
+
+# ── Quest Lifecycle ─────────────────────────────────────────────
+
+## Accept a quest at the guild counter (does NOT start the session yet).
+func accept_quest(quest_id: String, difficulty: String) -> Dictionary:
+	var quest := QuestLoader.load_quest(quest_id)
+	if quest.is_empty():
+		return {}
+	_accepted_quest = {
+		"quest_id": quest_id,
+		"area_id": quest.get("area_id", "gurhacia"),
+		"difficulty": difficulty,
+		"name": quest.get("name", quest_id),
+	}
+	return _accepted_quest
+
+
+func has_accepted_quest() -> bool:
+	return not _accepted_quest.is_empty()
+
+
+func get_accepted_quest() -> Dictionary:
+	return _accepted_quest
+
+
+func get_accepted_quest_area() -> String:
+	return str(_accepted_quest.get("area_id", ""))
+
+
+func cancel_accepted_quest() -> void:
+	_accepted_quest.clear()
+	# Also clear any suspended session from this quest
+	if not _suspended_session.is_empty() and _suspended_session.get("type") == "quest":
+		_suspended_session.clear()
+
+
+## Start the accepted quest — calls enter_quest() and clears acceptance.
+func start_accepted_quest() -> Dictionary:
+	if _accepted_quest.is_empty():
+		return {}
+	var quest_id: String = str(_accepted_quest["quest_id"])
+	var difficulty: String = str(_accepted_quest["difficulty"])
+	_accepted_quest.clear()
+	return enter_quest(quest_id, difficulty)
+
+
+## Mark quest as complete — stores completion data, returns to city.
+func complete_quest() -> void:
+	if _session.is_empty() or _session.get("type") != "quest":
+		return
+	_completed_quest = {
+		"quest_id": str(_session.get("quest_id", "")),
+		"area_id": str(_session.get("area_id", "")),
+		"name": str(_session.get("quest_id", "")),
+		"total_exp": int(_session.get("total_exp", 0)),
+		"total_meseta": int(_session.get("total_meseta", 0)),
+		"items_collected": _session.get("items_collected", []),
+	}
+	return_to_city()
+
+
+func has_completed_quest() -> bool:
+	return not _completed_quest.is_empty()
+
+
+func get_completed_quest() -> Dictionary:
+	return _completed_quest
+
+
+## Report quest completion at guild — returns completion data, clears state.
+func report_quest() -> Dictionary:
+	var data: Dictionary = _completed_quest.duplicate()
+	_completed_quest.clear()
+	return data

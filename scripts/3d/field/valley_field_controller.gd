@@ -1073,7 +1073,12 @@ func _on_end_reached() -> void:
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 		})
 	else:
-		_return_to_city()
+		# All sections complete
+		if SessionManager.get_session().get("type") == "quest":
+			SessionManager.complete_quest()
+		else:
+			SessionManager.return_to_city()
+		SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
 
 
 func _return_to_city() -> void:

@@ -39,6 +39,10 @@ var _selected_difficulty: int = 0
 
 
 func _ready() -> void:
+	# Safety: shouldn't be reachable during quest, but close if so
+	if SessionManager.has_accepted_quest() or SessionManager.has_completed_quest():
+		SceneManager.pop_scene()
+		return
 	title_label.text = "WARP TELEPORTER"
 	_refresh_display()
 
