@@ -95,8 +95,9 @@ func _ready() -> void:
 	var section: Dictionary = sections[section_idx]
 	var cells: Array = section.get("cells", [])
 
-	# Find current cell
-	_current_cell = _find_cell(cells, current_cell_pos)
+	# Find current cell (deep copy so remap mutations don't affect session data)
+	var found_cell: Dictionary = _find_cell(cells, current_cell_pos)
+	_current_cell = found_cell.duplicate(true)
 	if _current_cell.is_empty():
 		push_error("[ValleyField] Cell not found: %s" % current_cell_pos)
 		_return_to_city()
