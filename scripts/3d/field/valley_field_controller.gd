@@ -15,7 +15,7 @@ const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
-const ROTATE_CW := {"north": "east", "east": "south", "south": "west", "west": "north"}
+const DIRECTIONS := ["north", "east", "south", "west"]
 
 var player: CharacterBody3D
 var orbit_camera: Node3D
@@ -27,12 +27,12 @@ var _transitioning := false
 var _keys_collected: Dictionary = {}
 var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
-var _rotation_deg: int = 0
 var _map_overlay: CanvasLayer
 var _room_minimap: Control
 var _blob_shadow: MeshInstance3D
 var _texture_fixes: Array = []
 var _spawn_edge: String = ""
+var _rotation_deg: int = 0
 var _visited_cells: Dictionary = {}  # cell_pos → true
 
 # Debug toggle state
@@ -98,13 +98,13 @@ func _ready() -> void:
 	_map_root = packed_scene.instantiate() as Node3D
 	_map_root.name = "Map"
 
+	# Apply cell rotation to the GLB model
+	_rotation_deg = int(_current_cell.get("rotation", 0))
+	if _rotation_deg != 0:
+		_map_root.rotation.y = deg_to_rad(_rotation_deg)
+
 	# Load texture fixes from config JSON
 	_texture_fixes = _load_texture_fixes(area_cfg["folder"], stage_id)
-
-	# Apply grid rotation — positive Y rotation matches ROTATE_CW for the
-	# model's coordinate convention (east=-X, west=+X, north=-Z, south=+Z).
-	_rotation_deg = int(_current_cell.get("rotation", 0))
-	_map_root.rotation.y = deg_to_rad(_rotation_deg)
 
 	add_child(_map_root)
 	_strip_embedded_lights(_map_root)
@@ -116,7 +116,20 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	# Discover portal nodes (returns original GLB direction keys)
-	_portal_data = _find_portal_data(_map_root)
+	var original_portal_data: Dictionary = _find_portal_data(_map_root)
+
+	# Remap portal keys from original GLB directions to grid-space directions.
+	# Portal positions are already correct (global_position reflects the rotated model).
+	if _rotation_deg != 0:
+		_portal_data = {}
+		for orig_dir in original_portal_data:
+			if orig_dir == "default":
+				_portal_data["default"] = original_portal_data["default"]
+			else:
+				var grid_dir: String = _rotate_dir(orig_dir, _rotation_deg)
+				_portal_data[grid_dir] = original_portal_data[orig_dir]
+	else:
+		_portal_data = original_portal_data
 
 	print("[ValleyField] ══════════════════════════════════════════")
 	print("[ValleyField] CELL LOAD: %s  stage=%s" % [
@@ -124,8 +137,6 @@ func _ready() -> void:
 	print("[ValleyField]   section: %d/%d (%s, area=%s)" % [
 		section_idx + 1, sections.size(),
 		str(section.get("type", "?")), str(section.get("area", "?"))])
-	print("[ValleyField]   rotation_deg=%d  map_root.rotation.y=%.4f rad (%.1f°)" % [
-		_rotation_deg, _map_root.rotation.y, rad_to_deg(_map_root.rotation.y)])
 	print("[ValleyField]   spawn_edge='%s'" % spawn_edge)
 
 	# Log raw portal data BEFORE remapping
@@ -147,17 +158,8 @@ func _ready() -> void:
 				print("[ValleyField]     spawn_%s: local=%s  global=%s  parent=%s" % [
 					dir, sn.position, sn.global_position, sn.get_parent().name])
 
-	# Remap portal keys from original GLB directions to grid directions
-	if _rotation_deg != 0:
-		print("[ValleyField]   ── Remapping (rotation=%d°) ──" % _rotation_deg)
-		for dir in _portal_data:
-			if dir != "default":
-				var grid_dir := _original_to_grid_dir(dir, _rotation_deg)
-				print("[ValleyField]     '%s' → '%s'" % [dir, grid_dir])
-		_portal_data = _remap_portal_directions(_portal_data, _rotation_deg)
-
-	# Log remapped portal data
-	print("[ValleyField]   ── Final portals (grid keys) ──")
+	# Log portal data
+	print("[ValleyField]   ── Final portals ──")
 	for key in _portal_data:
 		print("[ValleyField]     '%s': spawn=%s" % [key, _portal_data[key]["spawn_pos"]])
 
@@ -259,8 +261,8 @@ func _ready() -> void:
 
 	_room_minimap = RoomMinimapScript.new()
 	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
-		_rotation_deg, _current_cell.get("connections", {}),
-		str(_current_cell.get("warp_edge", "")), _map_root)
+		_current_cell.get("connections", {}),
+		str(_current_cell.get("warp_edge", "")), _map_root, _rotation_deg)
 	_map_overlay.add_child(_room_minimap)
 	map_panel.top_offset = 200.0
 
@@ -322,36 +324,6 @@ func _find_portal_data(map_root: Node3D) -> Dictionary:
 	return portals
 
 
-## Remap portal data keys from original GLB directions to grid (rotated) directions.
-func _remap_portal_directions(portals: Dictionary, rotation_deg: int) -> Dictionary:
-	var remapped := {}
-	for dir in portals:
-		if dir == "default":
-			remapped["default"] = portals["default"]
-		else:
-			var grid_dir := _original_to_grid_dir(dir, rotation_deg)
-			remapped[grid_dir] = portals[dir]
-	return remapped
-
-
-## Convert original GLB direction to grid direction (apply CW rotation).
-func _original_to_grid_dir(original_dir: String, rotation_deg: int) -> String:
-	var dir := original_dir
-	var steps: int = int(rotation_deg / 90) % 4
-	for _i in range(steps):
-		dir = ROTATE_CW[dir]
-	return dir
-
-
-## Convert grid direction to original GLB direction (undo rotation = rotate CCW).
-func _grid_to_original_dir(grid_dir: String, rotation_deg: int) -> String:
-	var dir := grid_dir
-	var steps: int = int(((360 - rotation_deg) % 360) / 90)
-	for _i in range(steps):
-		dir = ROTATE_CW[dir]
-	return dir
-
-
 func _find_child_by_name(node: Node, child_name: String) -> Node:
 	for child in node.get_children():
 		if child.name == child_name:
@@ -371,6 +343,25 @@ func _dir_to_yaw(dir: String) -> float:
 		"east": return -PI / 2.0  # sin(-PI/2)=-1, cos=0    → -X
 		"west": return PI / 2.0   # sin(PI/2)=1,  cos=0     → +X
 	return 0.0
+
+
+## Rotate a direction CW by degrees (0/90/180/270).
+func _rotate_dir(dir: String, rotation: int) -> String:
+	if rotation == 0:
+		return dir
+	var idx: int = DIRECTIONS.find(dir)
+	if idx < 0:
+		return dir
+	var steps: int = (rotation / 90) % 4
+	return DIRECTIONS[(idx + steps) % 4]
+
+
+## Convert a grid-space direction back to the original GLB direction.
+## Reverse rotation: apply (360 - rotation) CW.
+func _grid_to_original_dir(grid_dir: String, rotation: int) -> String:
+	if rotation == 0:
+		return grid_dir
+	return _rotate_dir(grid_dir, (360 - rotation) % 360)
 
 
 func _spawn_player(pos: Vector3, rot: float) -> void:
@@ -588,14 +579,14 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 				direction, target_cell_pos, entry_edge])
 			_transition_to_cell(target_cell_pos, entry_edge)
 
-	# Convert grid direction to original GLB direction for node lookup
-	var original_dir := _grid_to_original_dir(direction, _rotation_deg)
-	print("[ValleyField]   trigger: grid=%s → original=%s  target=%s  delayed=%s" % [
-		direction, original_dir, target_cell_pos, delayed])
-	var trigger_name := "trigger_" + original_dir + "-area"
+	# Convert grid direction to original GLB direction for node name lookup
+	var orig_dir: String = _grid_to_original_dir(direction, _rotation_deg)
+	print("[ValleyField]   trigger: dir=%s  orig=%s  target=%s  delayed=%s" % [
+		direction, orig_dir, target_cell_pos, delayed])
+	var trigger_name := "trigger_" + orig_dir + "-area"
 	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
 	if not trigger_group:
-		trigger_group = _find_child_by_name(_map_root, "trigger_" + original_dir)
+		trigger_group = _find_child_by_name(_map_root, "trigger_" + orig_dir)
 	if trigger_group:
 		print("[ValleyField]     found '%s' at global=%s" % [trigger_name, trigger_group.global_position])
 		var area := _convert_static_to_area(trigger_group)
@@ -624,12 +615,12 @@ func _create_exit_trigger(direction: String, _portal: Dictionary) -> void:
 			print("[ValleyField] Player entered exit trigger")
 			_on_end_reached()
 
-	# Convert grid direction to original GLB direction for node lookup
-	var original_dir := _grid_to_original_dir(direction, _rotation_deg)
-	var trigger_name := "trigger_" + original_dir + "-area"
+	# Convert grid direction to original GLB direction for node name lookup
+	var orig_dir: String = _grid_to_original_dir(direction, _rotation_deg)
+	var trigger_name := "trigger_" + orig_dir + "-area"
 	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
 	if not trigger_group:
-		trigger_group = _find_child_by_name(_map_root, "trigger_" + original_dir)
+		trigger_group = _find_child_by_name(_map_root, "trigger_" + orig_dir)
 	if trigger_group:
 		var area := _convert_static_to_area(trigger_group)
 		if area:
