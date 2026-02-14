@@ -834,14 +834,15 @@ func _spawn_field_elements() -> void:
 		var trigger_pos: Vector3 = _portal_data[dir]["trigger_pos"]
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
 
-		# Gate — visual only (laser visible, collision disabled)
-		var gate := GateScript.new()
-		add_child(gate)
-		gate.global_position = gate_pos
-		if dir == "east" or dir == "west":
-			gate.rotation.y = PI / 2.0
-		gate.collision_body.collision_layer = 0
-		_fix_gate_depth(gate)
+		# Gate — visual laser fence (skip at entry direction, player already passed through)
+		if dir != _spawn_edge:
+			var gate := GateScript.new()
+			add_child(gate)
+			gate.global_position = gate_pos
+			if dir == "east" or dir == "west":
+				gate.rotation.y = PI / 2.0
+			gate.collision_body.collision_layer = 0
+			_fix_gate_depth(gate)
 
 		# Waypoint — navigation marker inside the load trigger area
 		var wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)
