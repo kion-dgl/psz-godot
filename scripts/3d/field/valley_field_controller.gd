@@ -1067,25 +1067,20 @@ func _spawn_field_elements() -> void:
 						print("[ValleyField] KeyGate opened → trigger '%s' enabled, gate tracked" % gate_trigger_name)
 			)
 			print("[FieldElements] ── KEY GATE DONE ──")
-		elif dir == _spawn_edge:
-			# Entry direction — show gate in open state (laser off, no collision)
-			var gate := GateScript.new()
-			add_child(gate)
-			gate.global_position = gate_pos
-			gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
-			_fixup_gate_materials(gate)
-			gate._setup_laser_material()
-			gate.open()
-			_fix_gate_depth(gate)
 		else:
-			# Normal gate — visual laser fence, no collision (enemies don't exist yet)
+			# Regular gate — open if entry direction or target cell already visited
+			var target_visited: bool = _visited_cells.has(str(connections[dir]))
+			var is_open: bool = (dir == _spawn_edge) or target_visited
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
 			gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 			_fixup_gate_materials(gate)
 			gate._setup_laser_material()
-			gate.collision_body.collision_layer = 0
+			if is_open:
+				gate.open()
+			else:
+				gate.collision_body.collision_layer = 0
 			_fix_gate_depth(gate)
 
 		# Waypoint — navigation marker inside the load trigger area
