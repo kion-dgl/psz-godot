@@ -315,10 +315,19 @@ func _find_portal_data(map_root: Node3D) -> Dictionary:
 			# Find gate marker node (gate_{dir} or gate_{dir}-colonly)
 			var gate_node: Node3D = _find_child_by_name(map_root, "gate_" + dir)
 			var gate_pos: Vector3 = gate_node.global_position if gate_node else trigger_pos
+			var gate_rot: Vector3 = gate_node.rotation if gate_node else Vector3.ZERO
+			# Find gate_box mesh for collision generation
+			var gate_box_node: MeshInstance3D = null
+			if gate_node:
+				var box_child: Node = _find_child_by_name(gate_node, "gate_" + dir + "_box")
+				if box_child is MeshInstance3D:
+					gate_box_node = box_child as MeshInstance3D
 			portals[dir] = {
 				"spawn_pos": spawn_node.global_position,
 				"trigger_pos": trigger_pos,
 				"gate_pos": gate_pos,
+				"gate_rot": gate_rot,
+				"gate_box_node": gate_box_node,
 			}
 
 	# Look for standalone default spawn (boss rooms / gateless areas)
@@ -994,49 +1003,42 @@ func _spawn_field_elements() -> void:
 		var trigger_pos: Vector3 = _portal_data[dir]["trigger_pos"]
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
 
-		# Key-gate — use KeyGate element (o0c_gatet.glb) with collision blocking
+		# Key-gate — use KeyGate element (o0c_gatet.glb) with collision from GLB gate_box
 		if is_key_gate and dir == key_gate_dir:
 			var key_for_cell: String = str(_current_cell.get("pos", ""))
 			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
-			print("[FieldElements] ── SPAWNING KEY GATE ──")
-			print("[FieldElements]   dir=%s  gate_pos=%s  trigger_pos=%s" % [dir, gate_pos, trigger_pos])
-			print("[FieldElements]   key_for_cell=%s  key_item_id=%s" % [key_for_cell, key_item_id])
-			print("[FieldElements]   _keys_collected=%s  _gates_opened=%s" % [
-				_keys_collected, _gates_opened])
+			var gate_rot: Vector3 = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 			var kg := KeyGateScript.new()
 			kg.required_key_id = key_item_id
 			kg.name = "KeyGate_%s" % dir
-			print("[FieldElements]   before add_child: state=%s" % kg.element_state)
 			add_child(kg)
-			print("[FieldElements]   after add_child: state=%s  pos=%s  rot=%s" % [
-				kg.element_state, kg.global_position, kg.rotation])
-			print("[FieldElements]   laser_material=%s  collision_body=%s" % [
-				kg._laser_material != null, kg.collision_body != null])
 			kg.global_position = gate_pos
-			if dir == "east" or dir == "west":
-				kg.rotation.y = PI / 2.0
-			print("[FieldElements]   after position/rotation: pos=%s  rot=%s" % [
-				kg.global_position, kg.rotation])
+			# Use GLB gate node's rotation (not hardcoded)
+			kg.rotation = gate_rot
+			# Create collision from GLB gate_box mesh
+			var gate_box_node: MeshInstance3D = _portal_data[dir].get("gate_box_node", null) as MeshInstance3D
+			if gate_box_node and gate_box_node.mesh:
+				var collision := StaticBody3D.new()
+				collision.name = "KeyGateCollision_%s" % dir
+				collision.collision_layer = 1
+				collision.collision_mask = 0
+				var trimesh_shape := gate_box_node.mesh.create_trimesh_shape()
+				var shape_node := CollisionShape3D.new()
+				shape_node.shape = trimesh_shape
+				collision.add_child(shape_node)
+				# Position collision at the gate_box's global transform
+				gate_box_node.get_parent().add_child(collision)
+				collision.global_transform = gate_box_node.global_transform
+				kg.collision_body = collision
+				print("[FieldElements]   GLB gate_box collision created at %s" % collision.global_position)
 			# Apply storybook-style material fixup (duplicate + UV fix for frame texture)
 			_fixup_gate_materials(kg)
-			print("[FieldElements]   after _fixup_gate_materials")
 			kg._setup_laser_material()
-			print("[FieldElements]   after re-setup laser: _laser_material=%s" % (kg._laser_material != null))
 			kg._apply_state()
-			print("[FieldElements]   after _apply_state: state=%s" % kg.element_state)
-			if kg._laser_material:
-				print("[FieldElements]   laser: transparency=%s  alpha=%.2f" % [
-					kg._laser_material.transparency, kg._laser_material.albedo_color.a])
-			if kg.collision_body:
-				print("[FieldElements]   collision: layer=%s  children=%d" % [
-					kg.collision_body.collision_layer, kg.collision_body.get_child_count()])
 			_fix_gate_depth(kg)
 			# Only auto-open if gate was previously opened by player (re-entry)
 			if _gates_opened.has(key_for_cell):
-				print("[FieldElements]   GATE PREVIOUSLY OPENED → opening gate")
 				kg.open()
-			else:
-				print("[FieldElements]   Gate locked — player must interact with key")
 			# Enable the locked gate trigger when the key gate opens
 			var gate_trigger_name := "GateTrigger_%s" % dir
 			var cell_pos_for_gate := key_for_cell
@@ -1054,8 +1056,7 @@ func _spawn_field_elements() -> void:
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
-			if dir == "east" or dir == "west":
-				gate.rotation.y = PI / 2.0
+			gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 			_fixup_gate_materials(gate)
 			gate._setup_laser_material()
 			gate.open()
@@ -1065,8 +1066,7 @@ func _spawn_field_elements() -> void:
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
-			if dir == "east" or dir == "west":
-				gate.rotation.y = PI / 2.0
+			gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 			_fixup_gate_materials(gate)
 			gate._setup_laser_material()
 			gate.collision_body.collision_layer = 0
