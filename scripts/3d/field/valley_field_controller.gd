@@ -974,6 +974,23 @@ func _fix_gate_depth(gate: Node3D) -> void:
 	)
 
 
+## Check if a cell has living enemies (from quest data or saved state).
+func _cell_has_enemies(cell: Dictionary) -> bool:
+	var cell_pos: String = str(cell.get("pos", ""))
+	var saved: Dictionary = _cell_states.get(cell_pos, {})
+	if not saved.is_empty():
+		# Check saved state — are any enemies still alive?
+		for obj in saved.get("objects", []):
+			if str(obj.get("type", "")) == "enemy" and str(obj.get("state", "")) == "alive":
+				return true
+		return false
+	# Check raw quest data for enemy objects
+	for obj in cell.get("objects", []):
+		if str(obj.get("type", "")) == "enemy":
+			return true
+	return false
+
+
 func _spawn_field_elements() -> void:
 	var connections: Dictionary = _current_cell.get("connections", {})
 	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
@@ -1081,9 +1098,10 @@ func _spawn_field_elements() -> void:
 			)
 			print("[FieldElements] ── KEY GATE DONE ──")
 		else:
-			# Regular gate — open if entry direction or target cell already visited
+			# Regular gate — open if entry, visited, or room has no enemies
 			var target_visited: bool = _visited_cells.has(str(connections[dir]))
-			var is_open: bool = (dir == _spawn_edge) or target_visited
+			var room_has_enemies: bool = _cell_has_enemies(_current_cell)
+			var is_open: bool = (dir == _spawn_edge) or target_visited or not room_has_enemies
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
