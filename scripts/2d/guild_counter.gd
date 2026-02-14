@@ -125,6 +125,7 @@ func _load_entries() -> void:
 			"id": qid,
 			"quest_id": qid,
 			"name": quest.get("name", qid),
+			"description": quest.get("description", ""),
 			"area": AREA_DISPLAY.get(area_id, area_id),
 			"is_main": false,
 			"requires": [],
@@ -383,6 +384,12 @@ func _refresh_detail() -> void:
 		type_label.text = "Type: Quest"
 		type_label.add_theme_color_override("font_color", ThemeColors.QUEST)
 		vbox.add_child(type_label)
+		var desc: String = str(entry.get("description", ""))
+		if not desc.is_empty():
+			var desc_label := Label.new()
+			desc_label.text = desc
+			desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			vbox.add_child(desc_label)
 	else:
 		var type_label := Label.new()
 		type_label.text = "Type: %s" % ("Main Story" if entry["is_main"] else "Side Quest")
