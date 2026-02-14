@@ -230,12 +230,15 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	# Create gate triggers for each connection (entry edge gets delayed activation)
-	# KeyGate elements provide physical collision — triggers always created
+	# Key-gate direction trigger starts disabled — enabled when gate opens
+	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
+	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
 	for dir in connections:
 		if not _portal_data.has(dir):
 			continue
 		var is_entry: bool = (dir == spawn_edge)
-		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry)
+		var is_locked_gate: bool = is_key_gate and dir == key_gate_dir and not _keys_collected.has(str(_current_cell.get("pos", "")))
+		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
 	# Create exit trigger on end cell warp_edge
 	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
@@ -627,7 +630,7 @@ func _hide_debug_markers(node: Node) -> void:
 		_hide_debug_markers(child)
 
 
-func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: Dictionary, delayed: bool = false) -> void:
+func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: Dictionary, delayed: bool = false, locked: bool = false) -> void:
 	var entry_edge: String = OPPOSITE[direction]
 	var callback := func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
@@ -637,8 +640,8 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 
 	# Convert grid direction to original GLB direction for node name lookup
 	var orig_dir: String = _grid_to_original_dir(direction, _rotation_deg)
-	print("[ValleyField]   trigger: dir=%s  orig=%s  target=%s  delayed=%s" % [
-		direction, orig_dir, target_cell_pos, delayed])
+	print("[ValleyField]   trigger: dir=%s  orig=%s  target=%s  delayed=%s  locked=%s" % [
+		direction, orig_dir, target_cell_pos, delayed, locked])
 	var trigger_name := "trigger_" + orig_dir + "-area"
 	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
 	if not trigger_group:
@@ -648,10 +651,10 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 		var area := _convert_static_to_area(trigger_group)
 		if area:
 			area.name = "GateTrigger_%s" % direction
-			if delayed:
+			if delayed or locked:
 				area.monitoring = false
 			area.body_entered.connect(callback)
-			if delayed:
+			if delayed and not locked:
 				get_tree().create_timer(1.0).timeout.connect(func() -> void:
 					if is_instance_valid(area):
 						area.monitoring = true
@@ -1009,6 +1012,15 @@ func _spawn_field_elements() -> void:
 			# If key already collected, open immediately
 			if _keys_collected.has(key_for_cell):
 				kg.open()
+			# Enable the locked gate trigger when the key gate opens
+			var gate_trigger_name := "GateTrigger_%s" % dir
+			kg.state_changed.connect(func(_old: String, new_state: String) -> void:
+				if new_state == "open":
+					var trigger := _find_child_by_name(self, gate_trigger_name) as Area3D
+					if trigger:
+						trigger.monitoring = true
+						print("[ValleyField] KeyGate opened → trigger '%s' enabled" % gate_trigger_name)
+			)
 			print("[FieldElements]   KeyGate at %s dir=%s key=%s model=%s" % [
 				gate_pos, dir, key_item_id, kg.model_path])
 		elif dir == _spawn_edge:
