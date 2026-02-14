@@ -1231,6 +1231,8 @@ func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String) -> void:
 	fence.position = pos
 	fence.rotation.y = deg_to_rad(rotation_deg)
 	_fixup_element_materials(fence)
+	# Re-run laser material setup after fixup replaced materials (storybook pattern)
+	fence._setup_laser_materials()
 	if not link_id.is_empty():
 		if not _fence_links.has(link_id):
 			_fence_links[link_id] = {"fences": [], "switches": []}
