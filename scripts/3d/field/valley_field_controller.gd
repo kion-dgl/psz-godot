@@ -143,6 +143,18 @@ func _ready() -> void:
 	# to match actual portal data keys so gates/triggers are placed correctly.
 	_remap_quest_directions(stage_id, area_id)
 
+	# For quest mode: derive spawn_edge from target cell's own connections.
+	# The source cell's OPPOSITE[exit_dir] may not match target portal data keys
+	# due to rotation-dependent direction conventions.
+	var from_cell_pos: String = str(data.get("from_cell_pos", ""))
+	if not from_cell_pos.is_empty() and str(SessionManager.get_session().get("type", "")) == "quest":
+		var connections: Dictionary = _current_cell.get("connections", {})
+		for dir in connections:
+			if str(connections[dir]) == from_cell_pos:
+				spawn_edge = dir
+				_spawn_edge = dir
+				break
+
 	print("[ValleyField] ══════════════════════════════════════════")
 	print("[ValleyField] CELL LOAD: %s  stage=%s" % [
 		str(_current_cell.get("pos", "?")), stage_id])
@@ -315,7 +327,7 @@ func _find_portal_data(map_root: Node3D) -> Dictionary:
 			# Find gate marker node (gate_{dir} or gate_{dir}-colonly)
 			var gate_node: Node3D = _find_child_by_name(map_root, "gate_" + dir)
 			var gate_pos: Vector3 = gate_node.global_position if gate_node else trigger_pos
-			var gate_rot: Vector3 = gate_node.rotation if gate_node else Vector3.ZERO
+			var gate_rot: Vector3 = gate_node.global_rotation if gate_node else Vector3.ZERO
 			# Find gate_box mesh for collision generation
 			var gate_box_node: MeshInstance3D = null
 			if gate_node:
@@ -393,29 +405,36 @@ func _remap_quest_directions(_stage_id: String, _area_id: String) -> void:
 	if connections.is_empty():
 		return
 
-	# Swap east↔west in connections
+	# psz-sketch uses east=+X, GLB uses west=+X (E↔W mirrored).
+	# The effective swap after rotation R is:
+	#   R=0°/180° (even 90° steps): swap east↔west
+	#   R=90°/270° (odd 90° steps): swap north↔south
+	var rotation_steps: int = (_rotation_deg / 90) % 4
+	var swap_ns: bool = (rotation_steps % 2 == 1)
+
 	var new_connections: Dictionary = {}
 	for dir in connections:
-		var mapped: String = dir
-		if dir == "east":
-			mapped = "west"
-		elif dir == "west":
-			mapped = "east"
-		new_connections[mapped] = connections[dir]
+		new_connections[_psz_to_glb_dir(dir, swap_ns)] = connections[dir]
 	_current_cell["connections"] = new_connections
 
-	# Swap east↔west in key_gate_direction
 	var kgd: String = str(_current_cell.get("key_gate_direction", ""))
-	if kgd == "east":
-		_current_cell["key_gate_direction"] = "west"
-	elif kgd == "west":
-		_current_cell["key_gate_direction"] = "east"
+	if not kgd.is_empty():
+		_current_cell["key_gate_direction"] = _psz_to_glb_dir(kgd, swap_ns)
 
-	# NOTE: Do NOT remap _spawn_edge — it comes from the previous cell's
-	# transition (OPPOSITE of a remapped direction), so it's already in GLB convention.
+	print("[ValleyField] Quest remap (rot=%d°, swap_%s): connections=%s  key_gate_dir=%s" % [
+		_rotation_deg, "ns" if swap_ns else "ew",
+		str(new_connections), str(_current_cell.get("key_gate_direction", ""))])
 
-	print("[ValleyField] Quest E↔W remap: connections=%s  key_gate_dir=%s  spawn_edge=%s" % [
-		str(new_connections), str(_current_cell.get("key_gate_direction", "")), _spawn_edge])
+
+## Convert a psz-sketch direction label to GLB portal data convention.
+func _psz_to_glb_dir(dir: String, swap_ns: bool) -> String:
+	if swap_ns:
+		if dir == "north": return "south"
+		elif dir == "south": return "north"
+	else:
+		if dir == "east": return "west"
+		elif dir == "west": return "east"
+	return dir
 
 
 ## Rotate a point around Y axis by degrees (CW when viewed from above).
@@ -1311,6 +1330,7 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 	SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 		"current_cell_pos": target_pos,
 		"spawn_edge": spawn_edge,
+		"from_cell_pos": str(_current_cell.get("pos", "")),
 		"keys_collected": _keys_collected,
 		"visited_cells": _visited_cells,
 		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
