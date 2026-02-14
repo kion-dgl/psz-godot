@@ -5,18 +5,24 @@ class_name EnemySpawn
 
 signal defeated
 
-## Enemy type ID (matches EnemyRegistry keys, e.g. "lizard", "booma")
-@export var enemy_id: String = "lizard"
+## Enemy type ID (EnemyRegistry key like "ghowl", or model_id like "lizard")
+@export var enemy_id: String = "ghowl"
 
-## Hit points
-@export var hp: int = 30
-@export var max_hp: int = 30
+## Hit points (defaults to 1 for one-hit-kill static spawns)
+@export var hp: int = 1
+@export var max_hp: int = 1
+
+## Whether to load HP from EnemyRegistry (false for quest static spawns)
+@export var use_registry_hp: bool = false
 
 ## Collision body for physical presence
 var collision_body: StaticBody3D
 
 ## Hurtbox for receiving hits from player attack hitbox
 var hurtbox: Hurtbox
+
+## Resolved model folder name (set in _ready)
+var _model_id: String = ""
 
 
 func _init() -> void:
@@ -26,9 +32,15 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	# Look up enemy data for HP stats
+	# Resolve enemy data — enemy_id can be a registry key or a model_id
 	var enemy_data = EnemyRegistry.get_enemy(enemy_id)
 	if enemy_data:
+		_model_id = str(enemy_data.model_id) if not str(enemy_data.model_id).is_empty() else enemy_id
+	else:
+		# Try treating enemy_id as a model_id (e.g. "lizard" instead of "ghowl")
+		_model_id = enemy_id
+
+	if use_registry_hp and enemy_data:
 		hp = int(enemy_data.hp_base)
 		max_hp = hp
 
@@ -43,19 +55,34 @@ func _ready() -> void:
 
 
 func _load_enemy_model() -> void:
-	var enemy_data = EnemyRegistry.get_enemy(enemy_id)
-	var model_id: String = enemy_id
-	if enemy_data and not str(enemy_data.model_id).is_empty():
-		model_id = str(enemy_data.model_id)
-
-	var full_path := "res://assets/enemies/%s/%s.glb" % [model_id, model_id]
-	if not ResourceLoader.exists(full_path):
-		push_warning("[EnemySpawn] Model not found: %s" % full_path)
+	var dir_path := "res://assets/enemies/%s/" % _model_id
+	if not DirAccess.dir_exists_absolute(dir_path):
+		push_warning("[EnemySpawn] Model dir not found: %s" % dir_path)
 		return
 
-	var packed := load(full_path) as PackedScene
+	# Find first imported GLB in the directory
+	var glb_path := ""
+	var dir := DirAccess.open(dir_path)
+	if dir:
+		dir.list_dir_begin()
+		var fname := dir.get_next()
+		while not fname.is_empty():
+			if fname.ends_with(".glb") and not fname.ends_with(".import"):
+				# Check that it has been imported (ResourceLoader can load it)
+				var candidate := dir_path + fname
+				if ResourceLoader.exists(candidate):
+					glb_path = candidate
+					break
+			fname = dir.get_next()
+		dir.list_dir_end()
+
+	if glb_path.is_empty():
+		push_warning("[EnemySpawn] No imported GLB in: %s" % dir_path)
+		return
+
+	var packed := load(glb_path) as PackedScene
 	if not packed:
-		push_warning("[EnemySpawn] Failed to load model: %s" % full_path)
+		push_warning("[EnemySpawn] Failed to load model: %s" % glb_path)
 		return
 
 	model = packed.instantiate()
@@ -96,13 +123,7 @@ func _setup_hurtbox() -> void:
 func _apply_enemy_texture() -> void:
 	if not model:
 		return
-	# Enemy GLBs have their texture alongside; load and apply it
-	var enemy_data = EnemyRegistry.get_enemy(enemy_id)
-	var model_id: String = enemy_id
-	if enemy_data:
-		model_id = str(enemy_data.model_id) if not str(enemy_data.model_id).is_empty() else enemy_id
-	var tex_dir := "res://assets/enemies/" + model_id + "/"
-	# Find first PNG that isn't the GLB
+	var tex_dir := "res://assets/enemies/" + _model_id + "/"
 	if DirAccess.dir_exists_absolute(tex_dir):
 		var dir := DirAccess.open(tex_dir)
 		if dir:

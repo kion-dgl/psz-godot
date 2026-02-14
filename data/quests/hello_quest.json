@@ -107,6 +107,33 @@
                 0,
                 16.5
               ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.7,
+                0,
+                15.3
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.1,
+                0,
+                13.4
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.9,
+                0,
+                13.2
+              ],
+              "enemy_id": "lizard"
             }
           ]
         },
@@ -145,7 +172,36 @@
           "is_key_gate": true,
           "key_gate_direction": "south",
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                8.6,
+                0,
+                10.2
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.8,
+                0,
+                6.8
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.5,
+                0,
+                3.2
+              ],
+              "enemy_id": "lizard"
+            }
+          ]
         },
         {
           "pos": "2,3",
@@ -218,6 +274,24 @@
                 0,
                 -13.9
               ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.8,
+                0,
+                13
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.9,
+                0,
+                -0.7
+              ],
+              "enemy_id": "lizard"
             }
           ]
         },
