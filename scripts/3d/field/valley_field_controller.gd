@@ -818,10 +818,7 @@ func _create_key_pickup(key_for_cell: String) -> void:
 	if authored_pos.size() == 3:
 		# Use authored position from quest editor (stage-local coordinates)
 		key_pos = Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
-		# Apply cell rotation if the stage is rotated
-		if _rotation_deg != 0:
-			key_pos = _rotate_point(key_pos, _rotation_deg)
-		print("[ValleyField] Key using authored position: %s (rotated %d°)" % [key_pos, _rotation_deg])
+		print("[ValleyField] Key using authored position: %s (rotation handled by _map_root)" % key_pos)
 	else:
 		# Fallback: midpoint between portal spawns
 		var portal_positions: Array[Vector3] = []
@@ -838,8 +835,8 @@ func _create_key_pickup(key_for_cell: String) -> void:
 		key_pos.y = 0.5
 		print("[ValleyField] Key using fallback midpoint: %s" % key_pos)
 
-	add_child(key)
-	key.global_position = key_pos
+	_map_root.add_child(key)
+	key.position = key_pos
 
 	# Track collection for grid state and update HUD
 	key.interacted.connect(func(_player: Node3D) -> void:
@@ -1181,14 +1178,8 @@ func _spawn_cell_objects() -> void:
 		var pos_arr: Array = obj.get("position", [0, 0, 0])
 		var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 
-		# Apply cell rotation to object position
-		if _rotation_deg != 0:
-			pos = _rotate_point(pos, _rotation_deg)
-
+		# Object rotation (fence direction etc.) — cell rotation handled by _map_root parenting
 		var obj_rot: float = float(obj.get("rotation", 0))
-		# Add cell rotation to object rotation
-		if _rotation_deg != 0:
-			obj_rot += _rotation_deg
 
 		match obj_type:
 			"box", "rare_box":
@@ -1216,8 +1207,8 @@ func _spawn_box(pos: Vector3, is_rare: bool) -> void:
 	box.is_rare = is_rare
 	box.drop_type = "meseta"
 	box.drop_value = str(randi_range(10, 50)) if not is_rare else str(randi_range(50, 200))
-	add_child(box)
-	box.global_position = pos
+	_map_root.add_child(box)
+	box.position = pos
 	_fixup_element_materials(box)
 	print("[CellObjects] Box at %s (rare=%s)" % [pos, is_rare])
 
@@ -1225,8 +1216,8 @@ func _spawn_box(pos: Vector3, is_rare: bool) -> void:
 func _spawn_enemy(pos: Vector3, enemy_id: String) -> void:
 	var enemy := EnemySpawnScript.new()
 	enemy.enemy_id = enemy_id
-	add_child(enemy)
-	enemy.global_position = pos
+	_map_root.add_child(enemy)
+	enemy.position = pos
 	_room_enemies.append(enemy)
 	enemy.defeated.connect(func() -> void:
 		_check_room_clear()
@@ -1236,8 +1227,8 @@ func _spawn_enemy(pos: Vector3, enemy_id: String) -> void:
 
 func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String) -> void:
 	var fence := FenceScript.new()
-	add_child(fence)
-	fence.global_position = pos
+	_map_root.add_child(fence)
+	fence.position = pos
 	fence.rotation.y = deg_to_rad(rotation_deg)
 	_fixup_element_materials(fence)
 	if not link_id.is_empty():
@@ -1249,8 +1240,8 @@ func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String) -> void:
 
 func _spawn_switch(pos: Vector3, link_id: String) -> void:
 	var sw := StepSwitchScript.new()
-	add_child(sw)
-	sw.global_position = pos
+	_map_root.add_child(sw)
+	sw.position = pos
 	_fixup_element_materials(sw)
 	if not link_id.is_empty():
 		if not _fence_links.has(link_id):
