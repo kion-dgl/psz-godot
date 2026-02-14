@@ -1,0 +1,318 @@
+{
+  "id": "7c6923a4-4ca4-436f-aec6-5272cf4adbb8",
+  "name": "Hello Quest",
+  "description": "Walk through the first example quest",
+  "area_id": "gurhacia",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,1",
+      "end_pos": "3,2",
+      "cells": [
+        {
+          "pos": "0,1",
+          "stage_id": "s01a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,1"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -10.1,
+                0,
+                9.5
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -8.1,
+                0,
+                10.7
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s01a_ib2",
+          "rotation": 0,
+          "connections": {
+            "north": "0,1",
+            "south": "2,1"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "2,1",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1,
+          "key_position": [
+            9,
+            1,
+            8
+          ],
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -20.9,
+                0,
+                7.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -21.8,
+                0,
+                4.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -7.9,
+                0,
+                18.4
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -5.7,
+                0,
+                19.3
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -6.1,
+                0,
+                16.5
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.7,
+                0,
+                15.3
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.1,
+                0,
+                13.4
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.9,
+                0,
+                13.2
+              ],
+              "enemy_id": "lizard"
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s01a_lb3",
+          "rotation": 0,
+          "connections": {
+            "north": "1,1",
+            "east": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s01a_tb3",
+          "rotation": 0,
+          "connections": {
+            "west": "2,1",
+            "east": "2,3",
+            "south": "3,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                8.6,
+                0,
+                10.2
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.8,
+                0,
+                6.8
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.5,
+                0,
+                3.2
+              ],
+              "enemy_id": "lizard"
+            }
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s01a_nb2",
+          "rotation": 90,
+          "connections": {
+            "west": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "2,2",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 4,
+          "key_position": [
+            -6.9,
+            1,
+            -8.7
+          ],
+          "objects": [
+            {
+              "type": "fence",
+              "position": [
+                19.9,
+                0,
+                -2.1
+              ],
+              "link_id": "one"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                14.9,
+                0,
+                3.4
+              ],
+              "link_id": "one"
+            },
+            {
+              "type": "box",
+              "position": [
+                20.7,
+                0,
+                -6.8
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -2.8,
+                0,
+                -16.2
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.7,
+                0,
+                -15.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                0.2,
+                0,
+                -13.9
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.8,
+                0,
+                13
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.9,
+                0,
+                -0.7
+              ],
+              "enemy_id": "lizard"
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s01a_lc2",
+          "rotation": 0,
+          "connections": {
+            "north": "2,2"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 5
+        }
+      ]
+    }
+  ]
+}

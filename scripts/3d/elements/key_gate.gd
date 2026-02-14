@@ -2,6 +2,9 @@ extends GameElement
 class_name KeyGate
 ## Gate that requires a specific key to open.
 ## States: locked, open
+##
+## Collision is provided by the GLB gate_box node (managed by field controller),
+## NOT by this element. This element handles: model, laser material, interaction prompt.
 
 ## Key ID required to unlock this gate
 @export var required_key_id: String = "default"
@@ -12,38 +15,25 @@ const LASER_TEXTURE_NAME := "o0c_1_gate"
 ## Laser scroll speed (offset.x, units/sec)
 const LASER_SCROLL_SPEED := 0.40
 
-## Collision body for blocking when locked
+## Reference to GLB gate_box collision body (set by field controller)
 var collision_body: StaticBody3D
 var _laser_material: StandardMaterial3D = null
+var _prompt_label: Label3D
+var _player_nearby: bool = false
 
 
 func _init() -> void:
 	model_path = "valley/o0c_gatet.glb"
 	interactable = true
 	element_state = "locked"
-	collision_size = Vector3(2, 3, 0.5)
+	collision_size = Vector3(3, 3, 1.5)
 
 
 func _ready() -> void:
 	super._ready()
-	_setup_gate_collision()
 	_setup_laser_material()
-
-
-func _setup_gate_collision() -> void:
-	collision_body = StaticBody3D.new()
-	collision_body.name = "KeyGateCollision"
-	collision_body.collision_layer = 1
-	collision_body.collision_mask = 0
-
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(2, 3, 0.3)
-	shape.shape = box
-	shape.position.y = 1.5
-	collision_body.add_child(shape)
-
-	add_child(collision_body)
+	_setup_prompt()
+	_apply_state()
 
 
 func _setup_laser_material() -> void:
@@ -57,6 +47,21 @@ func _setup_laser_material() -> void:
 				mesh.set_surface_override_material(surface, dup)
 				_laser_material = dup
 	)
+
+
+func _setup_prompt() -> void:
+	_prompt_label = Label3D.new()
+	_prompt_label.text = "[E] Unlock"
+	_prompt_label.font_size = 28
+	_prompt_label.pixel_size = 0.01
+	_prompt_label.position = Vector3(0, 3.0, 0)
+	_prompt_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_prompt_label.no_depth_test = true
+	_prompt_label.modulate = Color(1.0, 0.4, 0.4)
+	_prompt_label.outline_size = 8
+	_prompt_label.outline_modulate = Color(0, 0, 0)
+	_prompt_label.visible = false
+	add_child(_prompt_label)
 
 
 func _update_animation(delta: float) -> void:
@@ -81,6 +86,23 @@ func _apply_state() -> void:
 			"open":
 				collision_body.collision_layer = 0
 
+	if _prompt_label:
+		if element_state == "open":
+			_prompt_label.visible = false
+
+
+func _on_body_entered(body: Node3D) -> void:
+	if body.is_in_group("player") or body.name == "Player":
+		_player_nearby = true
+		if element_state == "locked":
+			_prompt_label.visible = true
+
+
+func _on_body_exited(body: Node3D) -> void:
+	if body.is_in_group("player") or body.name == "Player":
+		_player_nearby = false
+		_prompt_label.visible = false
+
 
 func _on_interact(_player: Node3D) -> void:
 	if element_state == "open":
@@ -90,15 +112,12 @@ func _on_interact(_player: Node3D) -> void:
 		Inventory.remove_item(required_key_id, 1)
 		open()
 	else:
-		var item_data = ItemRegistry.get_item(required_key_id)
-		var key_name = item_data.name if item_data else required_key_id
-		print("[KeyGate] Requires key: ", key_name)
+		print("[KeyGate] Requires key: ", required_key_id)
 
 
 ## Open the gate
 func open() -> void:
 	set_state("open")
-	print("[KeyGate] Opened with key: ", required_key_id)
 
 
 ## Lock the gate
