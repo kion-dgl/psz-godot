@@ -358,6 +358,18 @@ func _grid_to_original_dir(grid_dir: String, rotation: int) -> String:
 	return _rotate_dir(grid_dir, (360 - rotation) % 360)
 
 
+## Rotate a point around Y axis by degrees (CW when viewed from above).
+func _rotate_point(point: Vector3, degrees: int) -> Vector3:
+	var rad := deg_to_rad(float(degrees))
+	var cos_a := cos(rad)
+	var sin_a := sin(rad)
+	return Vector3(
+		point.x * cos_a - point.z * sin_a,
+		point.y,
+		point.x * sin_a + point.z * cos_a
+	)
+
+
 func _spawn_player(pos: Vector3, rot: float) -> void:
 	player = PLAYER_SCENE.instantiate() as CharacterBody3D
 	player.add_to_group("player")
@@ -709,22 +721,31 @@ func _create_key_pickup(key_for_cell: String) -> void:
 	key.key_id = key_item_id
 	key.name = "KeyPickup_%s" % key_for_cell
 
-	# Place key at a walkable position — use the midpoint between portal spawns
-	# to avoid spawning over water/gaps at room center
+	# Place key at authored position from quest editor, or fall back to heuristic
 	var key_pos := Vector3.ZERO
-	var portal_positions: Array[Vector3] = []
-	for dir in _portal_data:
-		if dir != "default":
-			portal_positions.append(_portal_data[dir]["spawn_pos"])
-	if portal_positions.size() >= 2:
-		# Average of all portal spawn positions
-		var sum := Vector3.ZERO
-		for p in portal_positions:
-			sum += p
-		key_pos = sum / float(portal_positions.size())
-	elif portal_positions.size() == 1:
-		key_pos = portal_positions[0]
-	key_pos.y = 0.5  # Slightly above floor
+	var authored_pos: Array = _current_cell.get("key_position", [])
+	if authored_pos.size() == 3:
+		# Use authored position from quest editor (stage-local coordinates)
+		key_pos = Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
+		# Apply cell rotation if the stage is rotated
+		if _rotation_deg != 0:
+			key_pos = _rotate_point(key_pos, _rotation_deg)
+		print("[ValleyField] Key using authored position: %s (rotated %d°)" % [key_pos, _rotation_deg])
+	else:
+		# Fallback: midpoint between portal spawns
+		var portal_positions: Array[Vector3] = []
+		for dir in _portal_data:
+			if dir != "default":
+				portal_positions.append(_portal_data[dir]["spawn_pos"])
+		if portal_positions.size() >= 2:
+			var sum := Vector3.ZERO
+			for p in portal_positions:
+				sum += p
+			key_pos = sum / float(portal_positions.size())
+		elif portal_positions.size() == 1:
+			key_pos = portal_positions[0]
+		key_pos.y = 0.5
+		print("[ValleyField] Key using fallback midpoint: %s" % key_pos)
 
 	add_child(key)
 	key.global_position = key_pos
