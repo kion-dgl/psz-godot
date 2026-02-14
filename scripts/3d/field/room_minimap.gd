@@ -12,15 +12,12 @@ const GATE_CONNECTED := Color(0.27, 1.0, 0.27)
 const GATE_EXIT := Color(0.29, 0.62, 1.0)
 const GATE_WALL := Color(0.4, 0.4, 0.4)
 
-const ROTATE_CW := {"north": "east", "east": "south", "south": "west", "west": "north"}
-
 var _floor_triangles: Array = []   # Array[PackedVector2Array] — 3 verts each
 var _boundary_lines: Array = []    # Array[[Vector2, Vector2]]
 var _gate_entries: Array = []      # Array[{center, color, label}]
 var _player_display_pos := Vector2.ZERO
 var _player_facing := 0.0
 var _has_player_tracking := false
-var _rotation_deg: int = 0
 
 # Affine transform: svg_x = local_x * _ax + _bx,  svg_y = local_z * _ay + _by
 var _ax := 0.0
@@ -31,11 +28,14 @@ var _by := 0.0
 # Permutation search state (used by _find_best_assignment)
 var _best_score: float
 var _best_perm: Array
+var _rotation_deg: int = 0
+
+const MINIMAP_DIRECTIONS := ["north", "east", "south", "west"]
 
 
 func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
-		rotation_deg: int, connections: Dictionary, warp_edge: String,
-		map_root: Node3D) -> void:
+		connections: Dictionary, warp_edge: String,
+		map_root: Node3D, rotation_deg: int = 0) -> void:
 	_rotation_deg = rotation_deg
 	mouse_filter = MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(DISPLAY_SIZE, DISPLAY_SIZE)
@@ -65,13 +65,13 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 	_parse_boundaries(svg_text)
 	var svg_gates := _parse_gates(svg_text)
 
-	print("[RoomMinimap] stage=%s  rotation=%d  svg_gates=%d  portals=%s" % [
-		stage_id, rotation_deg, svg_gates.size(), str(portal_data.keys())])
+	print("[RoomMinimap] stage=%s  svg_gates=%d  portals=%s" % [
+		stage_id, svg_gates.size(), str(portal_data.keys())])
 	for i in range(svg_gates.size()):
 		print("[RoomMinimap]   svg_gate[%d] center=%s" % [i, svg_gates[i]])
 
 	# Match SVG gates to portal directions using GLB labels as source of truth
-	var gate_match := _match_gates(svg_gates, portal_data, rotation_deg)
+	var gate_match := _match_gates(svg_gates, portal_data)
 	print("[RoomMinimap]   gate_match=%s" % str(gate_match))
 	_compute_affine(svg_gates, gate_match, portal_data, map_root)
 	print("[RoomMinimap]   affine: ax=%.2f bx=%.2f ay=%.2f by=%.2f  tracking=%s" % [
@@ -138,11 +138,8 @@ func _draw() -> void:
 # ── SVG → Display transform ─────────────────────────────────────────────────
 
 func _svg_to_display(svg_pos: Vector2) -> Vector2:
-	## Rotate SVG coordinates by -rotation_deg around center (200,200) so the
-	## minimap layout matches the rotated 3D view, then scale to display size.
-	var centered := svg_pos - Vector2(200.0, 200.0)
-	var rotated := centered.rotated(-deg_to_rad(_rotation_deg))
-	return rotated * (DISPLAY_SIZE / 400.0) + Vector2(DISPLAY_SIZE / 2.0, DISPLAY_SIZE / 2.0)
+	## Scale SVG coordinates (400x400 canvas) to display size.
+	return svg_pos * (DISPLAY_SIZE / 400.0)
 
 
 # ── SVG parsing ─────────────────────────────────────────────────────────────
@@ -220,15 +217,25 @@ func _parse_gates(svg_text: String) -> Array:
 # by how well its position matches each expected direction.  Exhaustive search
 # over all possible assignments (N ≤ 4 → max 24 permutations).
 
-func _match_gates(svg_centers: Array, portal_data: Dictionary,
-		rot_deg: int) -> Dictionary:
-	## Returns { gate_index: grid_dir, ... } — maps each matched SVG gate to
-	## its grid direction from portal_data.
+## Convert a grid-space direction back to the original GLB direction.
+func _grid_to_original(grid_dir: String, rotation: int) -> String:
+	if rotation == 0:
+		return grid_dir
+	var idx: int = MINIMAP_DIRECTIONS.find(grid_dir)
+	if idx < 0:
+		return grid_dir
+	var steps: int = ((360 - rotation) / 90) % 4
+	return MINIMAP_DIRECTIONS[(idx + steps) % 4]
+
+
+func _match_gates(svg_centers: Array, portal_data: Dictionary) -> Dictionary:
+	## Returns { gate_index: dir, ... } — maps each matched SVG gate to
+	## its direction from portal_data.
 	var dirs: Array = []  # [{grid: String, orig: String}, ...]
 	for grid_dir in portal_data:
 		if grid_dir == "default":
 			continue
-		dirs.append({"grid": grid_dir, "orig": _grid_to_original(grid_dir, rot_deg)})
+		dirs.append({"grid": grid_dir, "orig": _grid_to_original(grid_dir, _rotation_deg)})
 
 	if dirs.is_empty() or svg_centers.is_empty():
 		return {}
@@ -377,15 +384,6 @@ func _build_gate_entries(svg_centers: Array, gate_match: Dictionary,
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
-
-func _grid_to_original(grid_dir: String, rot_deg: int) -> String:
-	## Undo rotation: rotate CCW to recover original GLB direction.
-	var dir := grid_dir
-	var steps: int = ((360 - rot_deg) % 360) / 90
-	for _i in range(steps):
-		dir = ROTATE_CW[dir]
-	return dir
-
 
 func _attr(line: String, attr_name: String) -> String:
 	var key := attr_name + '="'
