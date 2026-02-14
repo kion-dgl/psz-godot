@@ -36,6 +36,10 @@ var _texture_fixes: Array = []
 var _spawn_edge: String = ""
 var _rotation_deg: int = 0
 var _visited_cells: Dictionary = {}  # cell_pos → true
+var _key_hud_label: Label
+var _key_hud_icon: Label
+var _key_hud_panel: PanelContainer
+var _total_keys_in_field: int = 0
 
 # Debug toggle state
 var _show_triggers := false
@@ -240,6 +244,7 @@ func _ready() -> void:
 
 	_spawn_field_elements()
 	_setup_debug_panel()
+	_setup_key_hud(cells)
 
 	# Map overlay (toggle with Tab, persists across cell transitions)
 	_map_overlay = CanvasLayer.new()
@@ -750,13 +755,84 @@ func _create_key_pickup(key_for_cell: String) -> void:
 	add_child(key)
 	key.global_position = key_pos
 
-	key.auto_collect = true
-	# Track collection for grid state (in addition to Inventory from KeyPickup)
-	key.collected.connect(func(_element: GameElement) -> void:
+	# Track collection for grid state and update HUD
+	key.interacted.connect(func(_player: Node3D) -> void:
 		_keys_collected[key_for_cell] = true
+		_update_key_hud()
 	)
 	print("[ValleyField] Key pickup spawned for cell %s at %s (id=%s)" % [
 		key_for_cell, key_pos, key_item_id])
+
+
+func _setup_key_hud(cells: Array) -> void:
+	# Count total keys in this field section
+	_total_keys_in_field = 0
+	for cell in cells:
+		if cell.get("has_key", false):
+			_total_keys_in_field += 1
+
+	if _total_keys_in_field == 0:
+		return
+
+	var canvas := CanvasLayer.new()
+	canvas.layer = 98
+	canvas.name = "KeyHUD"
+	add_child(canvas)
+
+	# Panel in top-right, below meseta
+	_key_hud_panel = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.3, 0.08, 0.08, 0.85)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.9, 0.3, 0.3, 0.6)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_right = 8
+	style.corner_radius_bottom_left = 8
+	style.content_margin_left = 10.0
+	style.content_margin_top = 6.0
+	style.content_margin_right = 10.0
+	style.content_margin_bottom = 6.0
+	_key_hud_panel.add_theme_stylebox_override("panel", style)
+	_key_hud_panel.anchor_left = 1.0
+	_key_hud_panel.anchor_right = 1.0
+	_key_hud_panel.offset_left = -120
+	_key_hud_panel.offset_right = -12
+	_key_hud_panel.offset_top = 56
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	_key_hud_panel.add_child(hbox)
+
+	_key_hud_icon = Label.new()
+	_key_hud_icon.text = "KEY"
+	var icon_settings := LabelSettings.new()
+	icon_settings.font_color = Color(1.0, 0.3, 0.3)
+	icon_settings.font_size = 13
+	_key_hud_icon.label_settings = icon_settings
+	hbox.add_child(_key_hud_icon)
+
+	_key_hud_label = Label.new()
+	_key_hud_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_key_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	var label_settings := LabelSettings.new()
+	label_settings.font_color = Color(1.0, 1.0, 1.0)
+	label_settings.font_size = 14
+	_key_hud_label.label_settings = label_settings
+	hbox.add_child(_key_hud_label)
+
+	canvas.add_child(_key_hud_panel)
+	_update_key_hud()
+
+
+func _update_key_hud() -> void:
+	if not _key_hud_label or _total_keys_in_field == 0:
+		return
+	var collected: int = _keys_collected.size()
+	_key_hud_label.text = "%d / %d" % [collected, _total_keys_in_field]
 
 
 func _unlock_key_gates(_key_item_id: String) -> void:
