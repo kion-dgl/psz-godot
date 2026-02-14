@@ -1,5 +1,5 @@
 extends RefCounted
-## GridGenerator — generates 5x5 grid layouts with rotation, branches, key-gates.
+## GridGenerator — generates 5x5 grid layouts with branches and key-gates.
 ## Faithfully ports psz-sketch's GridViewer.tsx algorithm.
 ## Area-agnostic: reads portal directions from *_config.json when available,
 ## falls back to hardcoded GATES for valley (s01).
@@ -10,6 +10,31 @@ const DIR_OFFSET := {
 	"north": Vector2i(-1, 0), "south": Vector2i(1, 0),
 	"east": Vector2i(0, 1), "west": Vector2i(0, -1),
 }
+
+
+## Rotate a direction clockwise by the given degrees (0, 90, 180, 270).
+## CW from above: 90 → N→E, E→S, S→W, W→N.
+static func _rotate_direction(dir: String, rotation: int) -> String:
+	if rotation == 0:
+		return dir
+	var idx: int = DIRECTIONS.find(dir)
+	if idx < 0:
+		return dir
+	var steps: int = (rotation / 90) % 4
+	return DIRECTIONS[(idx + steps) % 4]
+
+
+## Get gate directions in grid-space for a cell, applying its rotation.
+func _get_rotated_gates(cell: Dictionary) -> Array[String]:
+	var stage_id: String = str(cell.get("stage_id", ""))
+	var rotation: int = int(cell.get("rotation", 0))
+	var original: Array[String] = _get_gates(stage_id)
+	if rotation == 0:
+		return original
+	var rotated: Array[String] = []
+	for g in original:
+		rotated.append(_rotate_direction(g, rotation))
+	return rotated
 
 ## Area configuration: maps area_id → prefix, folder, display name.
 const AREA_CONFIG := {
@@ -32,7 +57,7 @@ const TOWER_DIFFICULTY_PARAMS := {
 	"super-hard": {"tower_floors": 6, "tower_rooms_per_floor": 4},
 }
 
-## Gate definitions per stage (original/unrotated directions).
+## Gate definitions per stage (original directions).
 ## Used as fallback for areas without *_config.json files (valley/s01).
 const GATES := {
 	# s01a_ stages
@@ -222,22 +247,13 @@ static func load_grid_size() -> int:
 	return cfg.get_value("grid", "grid_size", 5)
 
 
-## Rotate a direction clockwise by rotation degrees (0, 90, 180, 270).
-func rotate_direction(dir: String, rotation: int) -> String:
-	var idx: int = DIRECTIONS.find(dir)
-	if idx < 0:
-		return dir
-	return DIRECTIONS[(idx + rotation / 90) % 4]
-
-
-## Get rotated gate directions for a stage.
-## Uses _active_gates (set by generate_field/generate) for lookups.
-func get_rotated_gates(stage_id: String, rotation: int) -> Array[String]:
+## Get gate directions for a stage from the active gates dict.
+func _get_gates(stage_id: String) -> Array[String]:
 	var original: Array = _active_gates.get(stage_id, [])
-	var rotated: Array[String] = []
-	for gate in original:
-		rotated.append(rotate_direction(str(gate), rotation))
-	return rotated
+	var result: Array[String] = []
+	for g in original:
+		result.append(str(g))
+	return result
 
 
 ## Generate a complete field with 4 sections: a (grid), e (transition), b (grid), z (boss).
@@ -417,31 +433,25 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 	var sa1_row := 0
 	var sa1_col: int = grid_size / 2
 
-	var sa1_rotation := -1
-	for rot in [0, 90, 180, 270]:
-		var rotated: Array[String] = get_rotated_gates(start_stage, rot)
-		if "south" not in rotated:
+	# Check sa1's original gates: must have south, other gates must point outside grid
+	var sa1_gates: Array[String] = _get_gates(start_stage)
+	if "south" not in sa1_gates:
+		return {}
+	var sa1_valid := true
+	for gate in sa1_gates:
+		if gate == "south":
 			continue
-		# Other gates must point outside the grid
-		var valid := true
-		for gate in rotated:
-			if gate == "south":
-				continue
-			var offset: Vector2i = DIR_OFFSET[gate]
-			if _is_valid_pos(sa1_row + offset.x, sa1_col + offset.y):
-				valid = false
-				break
-		if valid:
-			sa1_rotation = rot
+		var offset: Vector2i = DIR_OFFSET[gate]
+		if _is_valid_pos(sa1_row + offset.x, sa1_col + offset.y):
+			sa1_valid = false
 			break
-
-	if sa1_rotation < 0:
+	if not sa1_valid:
 		return {}
 
 	# Place start cell
 	var start_key := _pos_key(Vector2i(sa1_row, sa1_col))
 	grid[start_key] = {
-		"stage_id": start_stage, "rotation": sa1_rotation,
+		"stage_id": start_stage, "rotation": 0,
 		"entry_direction": "", "is_start": true, "is_end": false,
 		"is_branch": false, "has_key": false, "key_for_cell": "",
 		"is_key_gate": false, "key_gate_direction": "",
@@ -477,41 +487,40 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 		# Find valid stages for this position
 		var candidates: Array[Dictionary] = []
 		for stage_id in all_stages:
-			for rot in [0, 90, 180, 270]:
-				var rotated: Array[String] = get_rotated_gates(stage_id, rot)
-				if entry_dir not in rotated:
-					continue
-				var other_gates: Array[String] = []
-				for g in rotated:
-					if g != entry_dir:
-						other_gates.append(g)
+			var gates: Array[String] = _get_gates(stage_id)
+			if entry_dir not in gates:
+				continue
+			var other_gates: Array[String] = []
+			for g in gates:
+				if g != entry_dir:
+					other_gates.append(g)
 
-				if is_last_cell:
-					# End cell: exactly 1 other gate pointing outside grid
-					if other_gates.size() != 1:
-						continue
-					var eo: Vector2i = DIR_OFFSET[other_gates[0]]
-					if _is_valid_pos(next_row + eo.x, next_col + eo.y):
-						continue
-					candidates.append({
-						"stage": stage_id, "rotation": rot,
-						"exit_dir": other_gates[0],
-					})
-				else:
-					# Middle cell: exactly 1 other gate → empty cell inside grid
-					if other_gates.size() != 1:
-						continue
-					var eo: Vector2i = DIR_OFFSET[other_gates[0]]
-					var er: int = next_row + eo.x
-					var ec: int = next_col + eo.y
-					if not _is_valid_pos(er, ec):
-						continue
-					if grid.has(_pos_key(Vector2i(er, ec))):
-						continue
-					candidates.append({
-						"stage": stage_id, "rotation": rot,
-						"exit_dir": other_gates[0],
-					})
+			if is_last_cell:
+				# End cell: exactly 1 other gate pointing outside grid
+				if other_gates.size() != 1:
+					continue
+				var eo: Vector2i = DIR_OFFSET[other_gates[0]]
+				if _is_valid_pos(next_row + eo.x, next_col + eo.y):
+					continue
+				candidates.append({
+					"stage": stage_id, "rotation": 0,
+					"exit_dir": other_gates[0],
+				})
+			else:
+				# Middle cell: exactly 1 other gate → empty cell inside grid
+				if other_gates.size() != 1:
+					continue
+				var eo: Vector2i = DIR_OFFSET[other_gates[0]]
+				var er: int = next_row + eo.x
+				var ec: int = next_col + eo.y
+				if not _is_valid_pos(er, ec):
+					continue
+				if grid.has(_pos_key(Vector2i(er, ec))):
+					continue
+				candidates.append({
+					"stage": stage_id, "rotation": 0,
+					"exit_dir": other_gates[0],
+				})
 
 		if candidates.is_empty():
 			# Try to end early if we have enough cells
@@ -524,7 +533,7 @@ func _try_generate(area: String, path_length: int, key_gates_count: int,
 
 		grid[next_key] = {
 			"stage_id": str(chosen["stage"]),
-			"rotation": int(chosen["rotation"]),
+			"rotation": 0,
 			"entry_direction": entry_dir,
 			"is_start": false,
 			"is_end": is_last_cell,
@@ -582,29 +591,28 @@ func _try_place_end_cell(grid: Dictionary, path: Array[Vector2i],
 		all_stages: Array[String], row: int, col: int, entry_dir: String) -> bool:
 	var key := _pos_key(Vector2i(row, col))
 	for stage_id in all_stages:
-		for rot in [0, 90, 180, 270]:
-			var rotated: Array[String] = get_rotated_gates(stage_id, rot)
-			if entry_dir not in rotated:
-				continue
-			var other: Array[String] = []
-			for g in rotated:
-				if g != entry_dir:
-					other.append(g)
-			if other.size() != 1:
-				continue
-			var eo: Vector2i = DIR_OFFSET[other[0]]
-			if _is_valid_pos(row + eo.x, col + eo.y):
-				continue
-			grid[key] = {
-				"stage_id": stage_id, "rotation": rot,
-				"entry_direction": entry_dir, "is_start": false,
-				"is_end": true, "is_branch": false,
-				"has_key": false, "key_for_cell": "",
-				"is_key_gate": false, "key_gate_direction": other[0],
-				"path_order": path.size(),
-			}
-			path.append(Vector2i(row, col))
-			return true
+		var gates: Array[String] = _get_gates(stage_id)
+		if entry_dir not in gates:
+			continue
+		var other: Array[String] = []
+		for g in gates:
+			if g != entry_dir:
+				other.append(g)
+		if other.size() != 1:
+			continue
+		var eo: Vector2i = DIR_OFFSET[other[0]]
+		if _is_valid_pos(row + eo.x, col + eo.y):
+			continue
+		grid[key] = {
+			"stage_id": stage_id, "rotation": 0,
+			"entry_direction": entry_dir, "is_start": false,
+			"is_end": true, "is_branch": false,
+			"has_key": false, "key_for_cell": "",
+			"is_key_gate": false, "key_gate_direction": other[0],
+			"path_order": path.size(),
+		}
+		path.append(Vector2i(row, col))
+		return true
 	return false
 
 
@@ -616,34 +624,32 @@ func _fix_end_cell(grid: Dictionary, end_cell: Dictionary, end_pos: Vector2i,
 		return false
 
 	for stage_id in all_stages:
-		for rot in [0, 90, 180, 270]:
-			var rotated: Array[String] = get_rotated_gates(stage_id, rot)
-			if entry_dir not in rotated:
+		var gates: Array[String] = _get_gates(stage_id)
+		if entry_dir not in gates:
+			continue
+		var warp_dir := ""
+		var has_orphan := false
+		for gate in gates:
+			if gate == entry_dir:
 				continue
-			var warp_dir := ""
-			var has_orphan := false
-			for gate in rotated:
-				if gate == entry_dir:
-					continue
-				var offset: Vector2i = DIR_OFFSET[gate]
-				var nr: int = end_pos.x + offset.x
-				var nc: int = end_pos.y + offset.y
-				if not _is_valid_pos(nr, nc):
-					warp_dir = gate
-				elif grid.has(_pos_key(Vector2i(nr, nc))):
-					var neighbor: Dictionary = grid[_pos_key(Vector2i(nr, nc))]
-					var n_gates: Array[String] = get_rotated_gates(
-						str(neighbor["stage_id"]), int(neighbor["rotation"]))
-					if OPPOSITE[gate] not in n_gates:
-						has_orphan = true
-						break
-			if has_orphan or warp_dir.is_empty():
-				continue
-			end_cell["stage_id"] = stage_id
-			end_cell["rotation"] = rot
-			end_cell["is_end"] = true
-			end_cell["key_gate_direction"] = warp_dir
-			return true
+			var offset: Vector2i = DIR_OFFSET[gate]
+			var nr: int = end_pos.x + offset.x
+			var nc: int = end_pos.y + offset.y
+			if not _is_valid_pos(nr, nc):
+				warp_dir = gate
+			elif grid.has(_pos_key(Vector2i(nr, nc))):
+				var neighbor: Dictionary = grid[_pos_key(Vector2i(nr, nc))]
+				var n_gates: Array[String] = _get_gates(str(neighbor["stage_id"]))
+				if OPPOSITE[gate] not in n_gates:
+					has_orphan = true
+					break
+		if has_orphan or warp_dir.is_empty():
+			continue
+		end_cell["stage_id"] = stage_id
+		end_cell["rotation"] = 0
+		end_cell["is_end"] = true
+		end_cell["key_gate_direction"] = warp_dir
+		return true
 	return false
 
 
@@ -658,8 +664,7 @@ func _add_branches(grid: Dictionary, path: Array[Vector2i],
 		if cell.get("is_start", false) or cell.get("is_end", false):
 			continue
 
-		var current_gates: Array[String] = get_rotated_gates(
-			str(cell["stage_id"]), int(cell["rotation"]))
+		var current_gates: Array[String] = _get_gates(str(cell["stage_id"]))
 		var entry_dir: String = str(cell.get("entry_direction", ""))
 		# Find exit direction (the gate that's not entry)
 		var exit_dir := ""
@@ -706,7 +711,7 @@ func _add_branches(grid: Dictionary, path: Array[Vector2i],
 		if c.get("needs_replacement", false):
 			var old_cell: Dictionary = grid[_pos_key(c["path_pos"])]
 			old_cell["stage_id"] = str(c["replacement_stage"])
-			old_cell["rotation"] = int(c["replacement_rotation"])
+			old_cell["rotation"] = 0
 
 		var branch_entry: String = OPPOSITE[str(c["branch_dir"])]
 		if _place_dead_end(grid, bkey, branch_entry, all_stages):
@@ -722,56 +727,53 @@ func _find_branch_replacement(candidates: Array[Dictionary], grid: Dictionary,
 		entry_dir: String, exit_dir: String, branch_dir: String,
 		branch_pos: Vector2i) -> void:
 	for stage_id in all_stages:
-		var found := false
-		for rot in [0, 90, 180, 270]:
-			var rotated: Array[String] = get_rotated_gates(stage_id, rot)
-			if entry_dir not in rotated or exit_dir not in rotated or branch_dir not in rotated:
+		var gates: Array[String] = _get_gates(stage_id)
+		if entry_dir not in gates or exit_dir not in gates or branch_dir not in gates:
+			continue
+		# Check extra gates don't create orphans
+		var valid := true
+		for gate in gates:
+			if gate == entry_dir or gate == exit_dir or gate == branch_dir:
 				continue
-			# Check extra gates don't create orphans
-			var valid := true
-			for gate in rotated:
-				if gate == entry_dir or gate == exit_dir or gate == branch_dir:
-					continue
-				var offset: Vector2i = DIR_OFFSET[gate]
-				var gr: int = path_pos.x + offset.x
-				var gc: int = path_pos.y + offset.y
-				if _is_valid_pos(gr, gc) and grid.has(_pos_key(Vector2i(gr, gc))):
-					valid = false
-					break
-			if not valid:
-				continue
-			candidates.append({
-				"path_pos": path_pos, "branch_dir": branch_dir,
-				"branch_pos": branch_pos, "needs_replacement": true,
-				"replacement_stage": stage_id, "replacement_rotation": rot,
-			})
-			found = true
-			break
-		if found:
-			break
+			var offset: Vector2i = DIR_OFFSET[gate]
+			var gr: int = path_pos.x + offset.x
+			var gc: int = path_pos.y + offset.y
+			if _is_valid_pos(gr, gc) and grid.has(_pos_key(Vector2i(gr, gc))):
+				valid = false
+				break
+		if not valid:
+			continue
+		candidates.append({
+			"path_pos": path_pos, "branch_dir": branch_dir,
+			"branch_pos": branch_pos, "needs_replacement": true,
+			"replacement_stage": stage_id, "replacement_rotation": 0,
+		})
+		break
 
 
 ## Place a dead-end (1-gate) stage at the given position.
+## For single-gate stages, tries rotations [0, 90, 180, 270] so that the
+## original gate direction rotates to match entry_dir.
 func _place_dead_end(grid: Dictionary, pos_key: String, entry_dir: String,
 		all_stages: Array[String]) -> bool:
 	var shuffled: Array[String] = all_stages.duplicate()
 	shuffled.shuffle()
 	for stage_id in shuffled:
+		var gates: Array[String] = _get_gates(stage_id)
+		if gates.size() != 1:
+			continue
+		# Try each rotation to see if the single gate maps to entry_dir
 		for rot in [0, 90, 180, 270]:
-			var rotated: Array[String] = get_rotated_gates(stage_id, rot)
-			if rotated.size() != 1:
-				continue
-			if rotated[0] != entry_dir:
-				continue
-			grid[pos_key] = {
-				"stage_id": stage_id, "rotation": rot,
-				"entry_direction": entry_dir, "is_start": false,
-				"is_end": false, "is_branch": true,
-				"has_key": false, "key_for_cell": "",
-				"is_key_gate": false, "key_gate_direction": "",
-				"path_order": -1,
-			}
-			return true
+			if _rotate_direction(gates[0], rot) == entry_dir:
+				grid[pos_key] = {
+					"stage_id": stage_id, "rotation": rot,
+					"entry_direction": entry_dir, "is_start": false,
+					"is_end": false, "is_branch": true,
+					"has_key": false, "key_for_cell": "",
+					"is_key_gate": false, "key_gate_direction": "",
+					"path_order": -1,
+				}
+				return true
 	return false
 
 
@@ -839,8 +841,7 @@ func _add_key_gates(grid: Dictionary, path: Array[Vector2i],
 		var key_pos: Vector2i = key_candidates[randi() % key_candidates.size()]
 
 		# Find which gate direction to lock
-		var gates: Array[String] = get_rotated_gates(
-			str(gate_cell["stage_id"]), int(gate_cell["rotation"]))
+		var gates: Array[String] = _get_gates(str(gate_cell["stage_id"]))
 		var exit_gates: Array[String] = []
 		for g in gates:
 			if g != str(gate_cell.get("entry_direction", "")):
@@ -864,9 +865,8 @@ func _validate_gates(grid: Dictionary) -> bool:
 	for key in grid:
 		var cell: Dictionary = grid[key]
 		var pos: Vector2i = _parse_pos(key)
-		var rotated: Array[String] = get_rotated_gates(
-			str(cell["stage_id"]), int(cell["rotation"]))
-		for dir in rotated:
+		var gates: Array[String] = _get_rotated_gates(cell)
+		for dir in gates:
 			var offset: Vector2i = DIR_OFFSET[dir]
 			var nr: int = pos.x + offset.x
 			var nc: int = pos.y + offset.y
@@ -876,8 +876,7 @@ func _validate_gates(grid: Dictionary) -> bool:
 			if not grid.has(nkey):
 				return false
 			var neighbor: Dictionary = grid[nkey]
-			var n_gates: Array[String] = get_rotated_gates(
-				str(neighbor["stage_id"]), int(neighbor["rotation"]))
+			var n_gates: Array[String] = _get_rotated_gates(neighbor)
 			if OPPOSITE[dir] not in n_gates:
 				return false
 	return true
@@ -907,8 +906,7 @@ func _validate_reachability(grid: Dictionary, start_pos: Vector2i,
 			if not kfc.is_empty():
 				keys[kfc] = true
 
-		var gates: Array[String] = get_rotated_gates(
-			str(cell["stage_id"]), int(cell["rotation"]))
+		var gates: Array[String] = _get_rotated_gates(cell)
 		for dir in gates:
 			if cell.get("is_key_gate", false) \
 					and str(cell.get("key_gate_direction", "")) == dir \
@@ -924,8 +922,7 @@ func _validate_reachability(grid: Dictionary, start_pos: Vector2i,
 				continue
 
 			var neighbor: Dictionary = grid[nkey]
-			var n_gates: Array[String] = get_rotated_gates(
-				str(neighbor["stage_id"]), int(neighbor["rotation"]))
+			var n_gates: Array[String] = _get_rotated_gates(neighbor)
 			if OPPOSITE[dir] not in n_gates:
 				continue
 
@@ -943,11 +940,10 @@ func _to_output(grid: Dictionary, path: Array[Vector2i],
 	for key in grid:
 		var cell: Dictionary = grid[key]
 		var pos: Vector2i = _parse_pos(key)
-		var rotated: Array[String] = get_rotated_gates(
-			str(cell["stage_id"]), int(cell["rotation"]))
+		var gates: Array[String] = _get_rotated_gates(cell)
 
 		var connections: Dictionary = {}
-		for dir in rotated:
+		for dir in gates:
 			var offset: Vector2i = DIR_OFFSET[dir]
 			var nkey := _pos_key(Vector2i(pos.x + offset.x, pos.y + offset.y))
 			if grid.has(nkey):
@@ -960,7 +956,7 @@ func _to_output(grid: Dictionary, path: Array[Vector2i],
 		cells.append({
 			"pos": key,
 			"stage_id": str(cell["stage_id"]),
-			"rotation": int(cell["rotation"]),
+			"rotation": int(cell.get("rotation", 0)),
 			"connections": connections,
 			"is_start": cell.get("is_start", false),
 			"is_end": cell.get("is_end", false),

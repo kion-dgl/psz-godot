@@ -43,6 +43,7 @@ func _ready() -> void:
 	test_field_config()
 	test_wetlands_field()
 	test_tower_field()
+	test_quest_lifecycle()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -2686,4 +2687,115 @@ func test_tower_field() -> void:
 	var valley_field: Dictionary = gen.generate_field("normal", "gurhacia")
 	assert_eq(valley_field.get("sections", []).size(), 4, "Valley still generates 4 sections")
 
+	print("")
+
+
+# ── Quest Lifecycle tests ──────────────────────────────────────
+
+func test_quest_lifecycle() -> void:
+	print("── Quest Lifecycle ──")
+
+	# Clean state
+	SessionManager.return_to_city()
+	SessionManager._accepted_quest.clear()
+	SessionManager._completed_quest.clear()
+	SessionManager._suspended_session.clear()
+
+	# ── WARP_TO_AREA mapping ──
+	assert_eq(SessionManager.WARP_TO_AREA.get("gurhacia-valley"), "gurhacia", "WARP_TO_AREA: gurhacia-valley → gurhacia")
+	assert_eq(SessionManager.WARP_TO_AREA.get("eternal-tower"), "tower", "WARP_TO_AREA: eternal-tower → tower")
+	assert_eq(SessionManager.WARP_TO_AREA.get("ozette-wetland"), "ozette", "WARP_TO_AREA: ozette-wetland → ozette")
+
+	# ── Initial state ──
+	assert_true(not SessionManager.has_accepted_quest(), "No accepted quest initially")
+	assert_true(not SessionManager.has_completed_quest(), "No completed quest initially")
+	assert_eq(SessionManager.get_accepted_quest_area(), "", "Accepted quest area empty initially")
+
+	# ── Accept quest ──
+	var quest_ids := QuestLoader.list_quests()
+	if quest_ids.is_empty():
+		print("  INFO: No quest files found, skipping quest lifecycle tests")
+		print("")
+		return
+
+	var test_quest_id: String = quest_ids[0]
+	var accepted: Dictionary = SessionManager.accept_quest(test_quest_id, "normal")
+	assert_true(not accepted.is_empty(), "accept_quest returns data")
+	assert_true(SessionManager.has_accepted_quest(), "Has accepted quest after accept")
+	assert_eq(str(accepted.get("quest_id", "")), test_quest_id, "Accepted quest has correct ID")
+	assert_eq(str(accepted.get("difficulty", "")), "normal", "Accepted quest has correct difficulty")
+	assert_true(not str(accepted.get("area_id", "")).is_empty(), "Accepted quest has area_id")
+	assert_true(not str(accepted.get("name", "")).is_empty(), "Accepted quest has name")
+
+	# ── get_accepted_quest / get_accepted_quest_area ──
+	var aq: Dictionary = SessionManager.get_accepted_quest()
+	assert_eq(str(aq.get("quest_id", "")), test_quest_id, "get_accepted_quest returns correct quest")
+	assert_eq(SessionManager.get_accepted_quest_area(), str(accepted.get("area_id", "")), "get_accepted_quest_area matches")
+
+	# ── No session started yet ──
+	assert_true(not SessionManager.has_active_session(), "No active session while quest only accepted")
+	assert_eq(SessionManager.get_location(), "city", "Still in city after accepting quest")
+
+	# ── Cancel quest ──
+	SessionManager.cancel_accepted_quest()
+	assert_true(not SessionManager.has_accepted_quest(), "No accepted quest after cancel")
+	assert_eq(SessionManager.get_accepted_quest_area(), "", "Quest area empty after cancel")
+
+	# ── Accept and start quest ──
+	SessionManager.accept_quest(test_quest_id, "hard")
+	assert_true(SessionManager.has_accepted_quest(), "Quest re-accepted")
+	var started: Dictionary = SessionManager.start_accepted_quest()
+	assert_true(not started.is_empty(), "start_accepted_quest returns session data")
+	assert_true(SessionManager.has_active_session(), "Session active after starting quest")
+	assert_true(not SessionManager.has_accepted_quest(), "Accepted quest cleared after starting")
+	assert_eq(str(started.get("type", "")), "quest", "Session type is quest")
+	assert_eq(SessionManager.get_location(), "field", "Location is field after starting quest")
+
+	# ── Field sections set ──
+	var sections: Array = SessionManager.get_field_sections()
+	assert_true(not sections.is_empty(), "Field sections set after starting quest")
+
+	# ── Complete quest ──
+	SessionManager.complete_quest()
+	assert_true(not SessionManager.has_active_session(), "No active session after complete_quest")
+	assert_true(SessionManager.has_completed_quest(), "Has completed quest")
+	assert_eq(SessionManager.get_location(), "city", "Location is city after complete_quest")
+
+	var cq: Dictionary = SessionManager.get_completed_quest()
+	assert_eq(str(cq.get("quest_id", "")), test_quest_id, "Completed quest has correct ID")
+
+	# ── Report quest ──
+	var report: Dictionary = SessionManager.report_quest()
+	assert_true(not report.is_empty(), "report_quest returns data")
+	assert_eq(str(report.get("quest_id", "")), test_quest_id, "Report has correct quest ID")
+	assert_true(not SessionManager.has_completed_quest(), "No completed quest after report")
+
+	# ── Cancel with suspended session ──
+	SessionManager.accept_quest(test_quest_id, "normal")
+	SessionManager.start_accepted_quest()
+	SessionManager.suspend_session()
+	assert_true(SessionManager.has_suspended_session(), "Session suspended after telepipe")
+	# Re-accept to track (simulating quest state stored alongside suspension)
+	SessionManager._accepted_quest = {
+		"quest_id": test_quest_id,
+		"area_id": "gurhacia",
+		"difficulty": "normal",
+		"name": "Test",
+	}
+	SessionManager.cancel_accepted_quest()
+	assert_true(not SessionManager.has_accepted_quest(), "Accepted quest cleared on cancel")
+	assert_true(not SessionManager.has_suspended_session(), "Suspended session cleared on cancel (quest type)")
+
+	# ── Death clears quest (session ends, no re-accept) ──
+	SessionManager.accept_quest(test_quest_id, "normal")
+	SessionManager.start_accepted_quest()
+	SessionManager.return_to_city()  # Simulates death → return to city
+	assert_true(not SessionManager.has_active_session(), "No session after death")
+	assert_true(not SessionManager.has_accepted_quest(), "No accepted quest after death (cleared by start)")
+	assert_true(not SessionManager.has_completed_quest(), "No completed quest after death")
+
+	# Clean up
+	SessionManager._accepted_quest.clear()
+	SessionManager._completed_quest.clear()
+	SessionManager._suspended_session.clear()
 	print("")

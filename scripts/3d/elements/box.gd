@@ -19,6 +19,9 @@ const MIRROR_SHADER = preload("res://scripts/3d/shaders/mirror_repeat.gdshader")
 ## Collision body for physical presence
 var collision_body: StaticBody3D
 
+## Hurtbox for receiving hits from player attack hitbox
+var hurtbox: Hurtbox
+
 
 func _init() -> void:
 	interactable = false  # Destroyed by attacking, not interacting
@@ -34,6 +37,7 @@ func _ready() -> void:
 
 	super._ready()
 	_setup_box_collision()
+	_setup_hurtbox()
 	_setup_textures()
 
 
@@ -51,6 +55,19 @@ func _setup_box_collision() -> void:
 	collision_body.add_child(shape)
 
 	add_child(collision_body)
+
+
+func _setup_hurtbox() -> void:
+	hurtbox = Hurtbox.new()
+	hurtbox.name = "BoxHurtbox"
+	hurtbox.owner_node = self
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = collision_size
+	shape.shape = box
+	shape.position.y = collision_size.y / 2
+	hurtbox.add_child(shape)
+	add_child(hurtbox)
 
 
 func _setup_textures() -> void:
@@ -78,14 +95,18 @@ func _apply_state() -> void:
 			set_element_visible(true)
 			if collision_body:
 				collision_body.collision_layer = 1
+			if hurtbox:
+				hurtbox.monitorable = true
 		"destroyed":
 			set_element_visible(false)
 			if collision_body:
 				collision_body.collision_layer = 0
+			if hurtbox:
+				hurtbox.monitorable = false
 
 
-## Called when the box takes damage (from player attacks)
-func take_damage(_amount: int = 1) -> void:
+## Called when the box takes damage (from player attacks via Hurtbox)
+func take_damage(_amount: int = 1, _knockback: Vector3 = Vector3.ZERO) -> void:
 	if element_state == "destroyed":
 		return
 
@@ -119,11 +140,16 @@ func _spawn_drop() -> void:
 		"meseta":
 			drop = DropMeseta.new()
 			drop.amount = int(drop_value) if not drop_value.is_empty() else 10
-		# Add other drop types as needed
+		"item", "weapon", "armor":
+			if not drop_value.is_empty():
+				drop = DropItem.new()
+				drop.item_id = drop_value
+				drop.amount = 1
 		_:
 			return
 
 	if drop:
-		drop.position = global_position
-		drop.position.y += 0.5  # Spawn slightly above ground
+		var world_pos := global_position
+		world_pos.y += 0.5  # Spawn slightly above ground
+		drop.position = parent.to_local(world_pos)
 		parent.call_deferred("add_child", drop)

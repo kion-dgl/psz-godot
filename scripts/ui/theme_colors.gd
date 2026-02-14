@@ -60,3 +60,4 @@ const STAT_NEGATIVE := Color(0.85, 0.2, 0.2)              # red — stat decreas
 # Category headers
 const HEADER := Color(0.40, 0.75, 0.85)                   # #66bfd9 — bright teal section headers
 const COMPLETED := Color(0.3, 0.65, 0.35)                 # green — cleared missions
+const QUEST := Color(0.55, 0.65, 0.90)                    # #8ca6e6 — quest entries (light blue)

@@ -45,6 +45,7 @@ SetBonusRegistry="*res://scripts/autoloads/set_bonus_registry.gd"
 CityState="*res://scripts/autoloads/city_state.gd"
 PlayerConfig="*res://scripts/autoloads/player_config.gd"
 TimeManager="*res://scripts/autoloads/time_manager.gd"
+QuestLoader="*res://scripts/autoloads/quest_loader.gd"
 
 [display]
 
