@@ -1,8 +1,10 @@
 extends Control
-## Guild counter — accept and complete missions.
+## Guild counter — accept missions and quests.
 
-var _missions: Array = []
-var _available: Array = []  # bool per mission — is it unlocked?
+## Each entry: { "type": "mission"|"quest", "id": String, "name": String,
+##   "area": String, "is_main": bool, "available": bool,
+##   "requires": Array, "rewards": Dictionary, "quest_id": String }
+var _entries: Array = []
 var _selected_index: int = 0
 var _selecting_difficulty: bool = false
 var _selected_difficulty: int = 0
@@ -21,6 +23,18 @@ const AREA_ORDER := {
 	"Eternal Tower": 7,
 }
 
+## area_id → display area name
+const AREA_DISPLAY := {
+	"gurhacia": "Gurhacia Valley",
+	"rioh": "Rioh Snowfield",
+	"ozette": "Ozette Wetland",
+	"paru": "Oblivion City Paru",
+	"makara": "Makara Ruins",
+	"arca": "Arca Plant",
+	"dark": "Dark Shrine",
+	"tower": "Eternal Tower",
+}
+
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var list_panel: PanelContainer = $Panel/VBox/HBox/ListPanel
 @onready var detail_panel: PanelContainer = $Panel/VBox/HBox/DetailPanel
@@ -30,21 +44,51 @@ const AREA_ORDER := {
 func _ready() -> void:
 	title_label.text = "GUILD COUNTER"
 	hint_label.text = "[↑/↓] Select  [ENTER] Accept  [ESC] Leave"
-	_load_missions()
+	_load_entries()
 	_refresh_display()
 
 
-func _load_missions() -> void:
-	_missions = MissionRegistry.get_all_missions()
-	# Sort by area progression, then main missions first
-	_missions.sort_custom(func(a, b):
+func _load_entries() -> void:
+	_entries.clear()
+
+	# Load missions
+	var missions := MissionRegistry.get_all_missions()
+	missions.sort_custom(func(a, b):
 		var aa: int = AREA_ORDER.get(a.area, 99)
 		var ab: int = AREA_ORDER.get(b.area, 99)
 		if aa != ab: return aa < ab
 		if a.is_main != b.is_main: return a.is_main
 		return a.name < b.name
 	)
-	# Determine which missions are unlocked
+	for mission in missions:
+		_entries.append({
+			"type": "mission",
+			"id": mission.id,
+			"name": mission.name,
+			"area": mission.area,
+			"is_main": mission.is_main,
+			"requires": mission.requires,
+			"rewards": mission.rewards,
+		})
+
+	# Load quests
+	var quest_ids := QuestLoader.list_quests()
+	for qid in quest_ids:
+		var quest := QuestLoader.load_quest(qid)
+		if quest.is_empty():
+			continue
+		var area_id: String = quest.get("area_id", "gurhacia")
+		_entries.append({
+			"type": "quest",
+			"id": qid,
+			"quest_id": qid,
+			"name": quest.get("name", qid),
+			"area": AREA_DISPLAY.get(area_id, area_id),
+			"is_main": false,
+			"requires": [],
+			"rewards": {},
+		})
+
 	_update_availability()
 
 
@@ -60,19 +104,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _selecting_difficulty:
 			_selected_difficulty = wrapi(_selected_difficulty - 1, 0, DIFFICULTIES.size())
 		else:
-			_selected_index = wrapi(_selected_index - 1, 0, maxi(_missions.size(), 1))
+			_selected_index = wrapi(_selected_index - 1, 0, maxi(_entries.size(), 1))
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
 		if _selecting_difficulty:
 			_selected_difficulty = wrapi(_selected_difficulty + 1, 0, DIFFICULTIES.size())
 		else:
-			_selected_index = wrapi(_selected_index + 1, 0, maxi(_missions.size(), 1))
+			_selected_index = wrapi(_selected_index + 1, 0, maxi(_entries.size(), 1))
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if _selecting_difficulty:
-			_accept_mission()
+			_accept_entry()
 		else:
 			_selecting_difficulty = true
 			_selected_difficulty = 0
@@ -81,45 +125,50 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _update_availability() -> void:
-	_available.clear()
-	# First mission in each area is always unlocked; later ones require the previous
-	for i in range(_missions.size()):
-		var mission = _missions[i]
-		if mission.requires.is_empty():
-			# No explicit requires — unlock based on previous area being completed
-			var area_idx: int = AREA_ORDER.get(mission.area, 0)
+	for i in range(_entries.size()):
+		var entry: Dictionary = _entries[i]
+		if entry["type"] == "quest":
+			entry["available"] = true
+			continue
+		# Mission availability logic
+		var requires: Array = entry["requires"]
+		if requires.is_empty():
+			var area_idx: int = AREA_ORDER.get(entry["area"], 0)
 			if area_idx == 0:
-				_available.append(true)  # First area always available
+				entry["available"] = true
 			else:
-				# Check if any mission from the previous area is completed
 				var prev_completed := false
-				for m in _missions:
-					var m_area: int = AREA_ORDER.get(m.area, 99)
-					if m_area == area_idx - 1 and GameState.is_mission_completed(m.id):
+				for e in _entries:
+					if e["type"] != "mission":
+						continue
+					var e_area: int = AREA_ORDER.get(e["area"], 99)
+					if e_area == area_idx - 1 and GameState.is_mission_completed(e["id"]):
 						prev_completed = true
 						break
-				_available.append(prev_completed)
+				entry["available"] = prev_completed
 		else:
-			# Has explicit requirements
 			var all_met := true
-			for req in mission.requires:
+			for req in requires:
 				if not GameState.is_mission_completed(req):
 					all_met = false
 					break
-			_available.append(all_met)
+			entry["available"] = all_met
 
 
-func _accept_mission() -> void:
-	if _missions.is_empty() or _selected_index >= _missions.size():
+func _accept_entry() -> void:
+	if _entries.is_empty() or _selected_index >= _entries.size():
 		return
-	if not _available[_selected_index]:
+	var entry: Dictionary = _entries[_selected_index]
+	if not entry.get("available", true):
 		hint_label.text = "Mission locked! Complete earlier missions first."
 		_selecting_difficulty = false
 		_refresh_display()
 		return
-	var mission = _missions[_selected_index]
 	var difficulty: String = DIFFICULTIES[_selected_difficulty].to_lower().replace(" ", "-")
-	SessionManager.enter_mission(mission.id, difficulty)
+	if entry["type"] == "quest":
+		SessionManager.enter_quest(entry["quest_id"], difficulty)
+	else:
+		SessionManager.enter_mission(entry["id"], difficulty)
 	SceneManager.goto_scene("res://scenes/2d/field.tscn")
 
 
@@ -134,10 +183,10 @@ func _refresh_display() -> void:
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var selected_control: Control = null
 
-	if _selecting_difficulty and not _missions.is_empty():
-		var mission = _missions[_selected_index]
+	if _selecting_difficulty and not _entries.is_empty():
+		var entry: Dictionary = _entries[_selected_index]
 		var header := Label.new()
-		header.text = "── %s ──\n\nSelect Difficulty:" % mission.name
+		header.text = "── %s ──\n\nSelect Difficulty:" % entry["name"]
 		header.add_theme_color_override("font_color", ThemeColors.HEADER)
 		vbox.add_child(header)
 
@@ -152,35 +201,39 @@ func _refresh_display() -> void:
 			vbox.add_child(label)
 		hint_label.text = "[↑/↓] Select Difficulty  [ENTER] Accept  [ESC] Back"
 	else:
-		if _missions.is_empty():
+		if _entries.is_empty():
 			var empty := Label.new()
 			empty.text = "  (No missions available)"
 			empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 			vbox.add_child(empty)
 		else:
 			var last_area := ""
-			for i in range(_missions.size()):
-				var mission = _missions[i]
+			for i in range(_entries.size()):
+				var entry: Dictionary = _entries[i]
 				# Area headers
-				if mission.area != last_area:
+				var area: String = entry["area"]
+				if area != last_area:
 					if not last_area.is_empty():
 						var spacer := Label.new()
 						spacer.text = ""
 						vbox.add_child(spacer)
 					var area_header := Label.new()
-					area_header.text = "── %s ──" % mission.area
+					area_header.text = "── %s ──" % area
 					area_header.add_theme_color_override("font_color", ThemeColors.HEADER)
 					vbox.add_child(area_header)
-					last_area = mission.area
+					last_area = area
 				var label := Label.new()
-				var unlocked: bool = _available[i] if i < _available.size() else true
-				var completed: bool = GameState.is_mission_completed(mission.id)
+				var unlocked: bool = entry.get("available", true)
+				var is_quest: bool = entry["type"] == "quest"
+				var completed: bool = not is_quest and GameState.is_mission_completed(entry["id"])
 				var status_tag: String = ""
-				if completed:
+				if is_quest:
+					status_tag = " [QUEST]"
+				elif completed:
 					status_tag = " [CLEAR]"
 				elif not unlocked:
 					status_tag = " [LOCKED]"
-				label.text = "%-24s%s" % [mission.name, status_tag]
+				label.text = "%-24s%s" % [entry["name"], status_tag]
 				if i == _selected_index:
 					label.text = "> " + label.text
 					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
@@ -191,6 +244,8 @@ func _refresh_display() -> void:
 						label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 					elif completed:
 						label.add_theme_color_override("font_color", ThemeColors.COMPLETED)
+					elif is_quest:
+						label.add_theme_color_override("font_color", ThemeColors.QUEST)
 				vbox.add_child(label)
 		hint_label.text = "[↑/↓] Select  [ENTER] Choose  [ESC] Leave"
 
@@ -209,54 +264,62 @@ func _refresh_detail() -> void:
 	for child in detail_panel.get_children():
 		child.queue_free()
 
-	if _missions.is_empty() or _selected_index >= _missions.size():
+	if _entries.is_empty() or _selected_index >= _entries.size():
 		return
 
-	var mission = _missions[_selected_index]
+	var entry: Dictionary = _entries[_selected_index]
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 
 	var name_label := Label.new()
-	name_label.text = "── %s ──" % mission.name
+	name_label.text = "── %s ──" % entry["name"]
 	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(name_label)
 
 	var area_label := Label.new()
-	area_label.text = "Area: %s" % mission.area
+	area_label.text = "Area: %s" % entry["area"]
 	vbox.add_child(area_label)
 
-	var type_label := Label.new()
-	type_label.text = "Type: %s" % ("Main Story" if mission.is_main else "Side Quest")
-	vbox.add_child(type_label)
+	if entry["type"] == "quest":
+		var type_label := Label.new()
+		type_label.text = "Type: Quest"
+		type_label.add_theme_color_override("font_color", ThemeColors.QUEST)
+		vbox.add_child(type_label)
+	else:
+		var type_label := Label.new()
+		type_label.text = "Type: %s" % ("Main Story" if entry["is_main"] else "Side Quest")
+		vbox.add_child(type_label)
 
-	if not mission.requires.is_empty():
-		var req_names := PackedStringArray()
-		for req_id in mission.requires:
-			var req_mission = MissionRegistry.get_mission(req_id)
-			req_names.append(req_mission.name if req_mission else req_id)
-		var req_label := Label.new()
-		req_label.text = "Requires: %s" % ", ".join(req_names)
-		req_label.add_theme_color_override("font_color", ThemeColors.DANGER)
-		vbox.add_child(req_label)
+		var requires: Array = entry["requires"]
+		if not requires.is_empty():
+			var req_names := PackedStringArray()
+			for req_id in requires:
+				var req_mission = MissionRegistry.get_mission(req_id)
+				req_names.append(req_mission.name if req_mission else req_id)
+			var req_label := Label.new()
+			req_label.text = "Requires: %s" % ", ".join(req_names)
+			req_label.add_theme_color_override("font_color", ThemeColors.DANGER)
+			vbox.add_child(req_label)
 
-	# Rewards
-	if not mission.rewards.is_empty():
-		var sep := Label.new()
-		sep.text = ""
-		vbox.add_child(sep)
-		var rewards_header := Label.new()
-		rewards_header.text = "Rewards:"
-		rewards_header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-		vbox.add_child(rewards_header)
-		for diff_key in mission.rewards:
-			var reward: Dictionary = mission.rewards[diff_key]
-			var r := Label.new()
-			r.text = "  %s: %s x%s, %s M" % [
-				str(diff_key).capitalize(),
-				str(reward.get("item", "???")),
-				str(reward.get("quantity", 1)),
-				str(reward.get("meseta", 0)),
-			]
-			vbox.add_child(r)
+		# Rewards
+		var rewards: Dictionary = entry["rewards"]
+		if not rewards.is_empty():
+			var sep := Label.new()
+			sep.text = ""
+			vbox.add_child(sep)
+			var rewards_header := Label.new()
+			rewards_header.text = "Rewards:"
+			rewards_header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+			vbox.add_child(rewards_header)
+			for diff_key in rewards:
+				var reward: Dictionary = rewards[diff_key]
+				var r := Label.new()
+				r.text = "  %s: %s x%s, %s M" % [
+					str(diff_key).capitalize(),
+					str(reward.get("item", "???")),
+					str(reward.get("quantity", 1)),
+					str(reward.get("meseta", 0)),
+				]
+				vbox.add_child(r)
 
 	detail_panel.add_child(vbox)

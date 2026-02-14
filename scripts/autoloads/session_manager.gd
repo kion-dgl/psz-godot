@@ -55,6 +55,28 @@ func enter_mission(mission_id: String, difficulty: String) -> Dictionary:
 	return _session
 
 
+## Enter a quest (hand-authored fixed layout)
+func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
+	var quest := QuestLoader.load_quest(quest_id)
+	if quest.is_empty():
+		return {}
+	_session = {
+		"type": "quest",
+		"quest_id": quest_id,
+		"area_id": quest.get("area_id", "gurhacia"),
+		"difficulty": difficulty,
+		"stage": 1,
+		"wave": 1,
+		"total_exp": 0,
+		"total_meseta": 0,
+		"items_collected": [],
+	}
+	set_field_sections(quest["sections"])
+	_location = "field"
+	session_started.emit(_session)
+	return _session
+
+
 ## Convert display area name to spawner area_id
 func _area_name_to_id(area_name: String) -> String:
 	var mapping := {
