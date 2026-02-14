@@ -137,6 +137,11 @@ func _ready() -> void:
 	else:
 		_portal_data = original_portal_data
 
+	# Quest editor uses mirrored east/west convention (east=+X) while GLB nodes
+	# use standard convention (west=+X). Remap cell connections and key_gate_direction
+	# to match actual portal data keys so gates/triggers are placed correctly.
+	_remap_quest_directions(stage_id, area_id)
+
 	print("[ValleyField] ══════════════════════════════════════════")
 	print("[ValleyField] CELL LOAD: %s  stage=%s" % [
 		str(_current_cell.get("pos", "?")), stage_id])
@@ -361,6 +366,46 @@ func _grid_to_original_dir(grid_dir: String, rotation: int) -> String:
 	if rotation == 0:
 		return grid_dir
 	return _rotate_dir(grid_dir, (360 - rotation) % 360)
+
+
+## Remap quest cell directions from psz-sketch convention to GLB convention.
+## The quest editor uses mirrored east/west (east=+X, west=-X) while GLB portal
+## nodes use standard convention (east=-X, west=+X). North/south are the same.
+## Only applies to quest sessions — generated fields already use GLB directions.
+func _remap_quest_directions(_stage_id: String, _area_id: String) -> void:
+	if str(SessionManager.get_session().get("type", "")) != "quest":
+		return
+
+	var connections: Dictionary = _current_cell.get("connections", {})
+	if connections.is_empty():
+		return
+
+	# Swap east↔west in connections
+	var new_connections: Dictionary = {}
+	for dir in connections:
+		var mapped: String = dir
+		if dir == "east":
+			mapped = "west"
+		elif dir == "west":
+			mapped = "east"
+		new_connections[mapped] = connections[dir]
+	_current_cell["connections"] = new_connections
+
+	# Swap east↔west in key_gate_direction
+	var kgd: String = str(_current_cell.get("key_gate_direction", ""))
+	if kgd == "east":
+		_current_cell["key_gate_direction"] = "west"
+	elif kgd == "west":
+		_current_cell["key_gate_direction"] = "east"
+
+	# Swap east↔west in spawn_edge
+	if _spawn_edge == "east":
+		_spawn_edge = "west"
+	elif _spawn_edge == "west":
+		_spawn_edge = "east"
+
+	print("[ValleyField] Quest E↔W remap: connections=%s  key_gate_dir=%s  spawn_edge=%s" % [
+		str(new_connections), str(_current_cell.get("key_gate_direction", "")), _spawn_edge])
 
 
 ## Rotate a point around Y axis by degrees (CW when viewed from above).
