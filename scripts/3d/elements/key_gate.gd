@@ -1,7 +1,6 @@
 extends GameElement
 class_name KeyGate
 ## Gate that requires a specific key to open.
-## Uses the same model as Gate but with a red/magenta laser.
 ## States: locked, open
 
 ## Key ID required to unlock this gate
@@ -13,9 +12,6 @@ const LASER_TEXTURE_NAME := "o0c_1_gate"
 ## Laser scroll speed (offset.x, units/sec)
 const LASER_SCROLL_SPEED := 0.40
 
-## Key gate laser color (red/magenta to distinguish from normal gates)
-const LASER_COLOR := Color(1.0, 0.2, 0.3)
-
 ## Collision body for blocking when locked
 var collision_body: StaticBody3D
 var _laser_material: StandardMaterial3D = null
@@ -24,7 +20,7 @@ var _player_nearby: bool = false
 
 
 func _init() -> void:
-	model_path = "valley/o0c_gate.glb"
+	model_path = "valley/o0c_gatet.glb"
 	interactable = true
 	element_state = "locked"
 	collision_size = Vector3(3, 3, 1.5)
@@ -61,8 +57,6 @@ func _setup_laser_material() -> void:
 			var std_mat := mat as StandardMaterial3D
 			if std_mat.albedo_texture and LASER_TEXTURE_NAME in std_mat.albedo_texture.resource_path:
 				var dup := std_mat.duplicate() as StandardMaterial3D
-				# Tint laser red to distinguish from normal gates
-				dup.albedo_color = LASER_COLOR
 				mesh.set_surface_override_material(surface, dup)
 				_laser_material = dup
 	)
@@ -93,7 +87,7 @@ func _apply_state() -> void:
 		match element_state:
 			"locked":
 				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
-				_laser_material.albedo_color = LASER_COLOR
+				_laser_material.albedo_color.a = 1.0
 			"open":
 				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 				_laser_material.albedo_color.a = 0.0
