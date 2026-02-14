@@ -11,6 +11,8 @@ const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdsha
 const StartWarpScript := preload("res://scripts/3d/elements/start_warp.gd")
 const AreaWarpScript := preload("res://scripts/3d/elements/area_warp.gd")
 const GateScript := preload("res://scripts/3d/elements/gate.gd")
+const KeyPickupScript := preload("res://scripts/3d/elements/key_pickup.gd")
+const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
 
@@ -219,20 +221,12 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	# Create gate triggers for each connection (entry edge gets delayed activation)
+	# KeyGate elements provide physical collision — triggers always created
 	for dir in connections:
 		if not _portal_data.has(dir):
 			continue
-
-		# Check key-gate lock
-		var is_locked := false
-		if _current_cell.get("is_key_gate", false):
-			var locked_dir: String = str(_current_cell.get("key_gate_direction", ""))
-			if locked_dir == dir and not _keys_collected.has(_current_cell.get("pos", "")):
-				is_locked = true
-
-		if not is_locked:
-			var is_entry: bool = (dir == spawn_edge)
-			_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry)
+		var is_entry: bool = (dir == spawn_edge)
+		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry)
 
 	# Create exit trigger on end cell warp_edge
 	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
@@ -709,58 +703,45 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 
 
 func _create_key_pickup(key_for_cell: String) -> void:
-	# Floating key indicator at center of room
-	var key_area := Area3D.new()
-	key_area.name = "KeyPickup"
-	key_area.collision_layer = 0
-	key_area.collision_mask = 2
-	key_area.global_position = Vector3(0, 1.5, 0)
+	# Use proper KeyPickup element with o0c_key.glb model
+	var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
+	var key := KeyPickupScript.new()
+	key.key_id = key_item_id
+	key.name = "KeyPickup_%s" % key_for_cell
 
-	var shape := CollisionShape3D.new()
-	var sphere := SphereShape3D.new()
-	sphere.radius = 2.0
-	shape.shape = sphere
-	key_area.add_child(shape)
+	# Place key at a walkable position — use the midpoint between portal spawns
+	# to avoid spawning over water/gaps at room center
+	var key_pos := Vector3.ZERO
+	var portal_positions: Array[Vector3] = []
+	for dir in _portal_data:
+		if dir != "default":
+			portal_positions.append(_portal_data[dir]["spawn_pos"])
+	if portal_positions.size() >= 2:
+		# Average of all portal spawn positions
+		var sum := Vector3.ZERO
+		for p in portal_positions:
+			sum += p
+		key_pos = sum / float(portal_positions.size())
+	elif portal_positions.size() == 1:
+		key_pos = portal_positions[0]
+	key_pos.y = 0.5  # Slightly above floor
 
-	# Visual indicator
-	var mesh := MeshInstance3D.new()
-	var box_mesh := BoxMesh.new()
-	box_mesh.size = Vector3(0.5, 0.5, 0.5)
-	mesh.mesh = box_mesh
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.85, 0.0)
-	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.85, 0.0)
-	mat.emission_energy_multiplier = 2.0
-	mesh.material_override = mat
-	key_area.add_child(mesh)
+	add_child(key)
+	key.global_position = key_pos
 
-	key_area.body_entered.connect(func(_body: Node3D) -> void:
-		if _body.is_in_group("player"):
-			_keys_collected[key_for_cell] = true
-			key_area.queue_free()
-			# Unlock any gate triggers that were blocked
-			_unlock_gates_for(key_for_cell)
+	key.auto_collect = true
+	# Track collection for grid state (in addition to Inventory from KeyPickup)
+	key.collected.connect(func(_element: GameElement) -> void:
+		_keys_collected[key_for_cell] = true
 	)
-	add_child(key_area)
+	print("[ValleyField] Key pickup spawned for cell %s at %s (id=%s)" % [
+		key_for_cell, key_pos, key_item_id])
 
 
-func _unlock_gates_for(key_for_cell: String) -> void:
-	# If this cell IS the key-gate cell, create the previously locked trigger
-	var cell_pos: String = str(_current_cell.get("pos", ""))
-	if cell_pos != key_for_cell:
-		return
-	if not _current_cell.get("is_key_gate", false):
-		return
-	var locked_dir: String = str(_current_cell.get("key_gate_direction", ""))
-	if locked_dir.is_empty():
-		return
-	var connections: Dictionary = _current_cell.get("connections", {})
-	if not connections.has(locked_dir):
-		return
-	if not _portal_data.has(locked_dir):
-		return
-	_create_gate_trigger(locked_dir, str(connections[locked_dir]), _portal_data[locked_dir])
+func _unlock_key_gates(_key_item_id: String) -> void:
+	# KeyGates are opened by player interaction (E key), not automatically.
+	# This is kept as a no-op for potential future use.
+	pass
 
 
 ## Force all materials on a gate element to opaque depth draw so they don't
@@ -785,6 +766,8 @@ func _fix_gate_depth(gate: Node3D) -> void:
 func _spawn_field_elements() -> void:
 	var connections: Dictionary = _current_cell.get("connections", {})
 	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
+	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
+	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
 
 	# StartWarp on is_start cells at the entry portal
 	if _current_cell.get("is_start", false):
@@ -821,6 +804,10 @@ func _spawn_field_elements() -> void:
 		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
 		area_warp.rotation.y = _dir_to_yaw(warp_edge) + PI
 
+	# Exit warp on end cells WITHOUT warp_edge (quest dead-end rooms)
+	if _current_cell.get("is_end", false) and warp_edge.is_empty():
+		_spawn_end_cell_exit(connections)
+
 	# Gates and Waypoints at each connection trigger (skip warp_edge)
 	print("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
 		_spawn_edge, warp_edge, str(connections)])
@@ -834,8 +821,33 @@ func _spawn_field_elements() -> void:
 		var trigger_pos: Vector3 = _portal_data[dir]["trigger_pos"]
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
 
-		# Gate — visual laser fence (skip at entry direction, player already passed through)
-		if dir != _spawn_edge:
+		# Key-gate — use KeyGate element with collision blocking
+		if is_key_gate and dir == key_gate_dir:
+			var key_for_cell: String = str(_current_cell.get("pos", ""))
+			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
+			var kg := KeyGateScript.new()
+			kg.required_key_id = key_item_id
+			kg.name = "KeyGate_%s" % dir
+			add_child(kg)
+			kg.global_position = gate_pos
+			if dir == "east" or dir == "west":
+				kg.rotation.y = PI / 2.0
+			_fix_gate_depth(kg)
+			# If key already collected, open immediately
+			if _keys_collected.has(key_for_cell):
+				kg.open()
+			print("[FieldElements]   KeyGate at %s dir=%s key=%s" % [gate_pos, dir, key_item_id])
+		elif dir == _spawn_edge:
+			# Entry direction — show gate in open state (laser off, no collision)
+			var gate := GateScript.new()
+			add_child(gate)
+			gate.global_position = gate_pos
+			if dir == "east" or dir == "west":
+				gate.rotation.y = PI / 2.0
+			gate.open()
+			_fix_gate_depth(gate)
+		else:
+			# Normal gate — visual laser fence, no collision (enemies don't exist yet)
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
@@ -859,28 +871,63 @@ func _spawn_field_elements() -> void:
 				(mat as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
 		)
 		# Determine waypoint state from visited history
-		# Visual mapping: new=bright (unvisited), unvisited=medium (visited prior), visited=dim (came from)
 		var target_cell_pos: String = str(connections[dir])
 		var wp_state: String
 		if dir == _spawn_edge:
-			# Direction we came from — clearly visited
 			waypoint.mark_visited()
 			wp_state = "came_from"
 		elif _visited_cells.has(target_cell_pos):
-			# Been there in a prior transition
 			waypoint.mark_unvisited()
 			wp_state = "visited_prior"
 		else:
-			# Never been there — brightest, draws attention
 			waypoint.mark_new()
 			wp_state = "unvisited"
-		print("[Waypoint] dir=%s → target_cell=%s  state=%s  spawn_edge=%s  visited=%s" % [
-			dir, target_cell_pos, wp_state, _spawn_edge,
-			"yes" if _visited_cells.has(target_cell_pos) else "no"])
-		print("[Waypoint]   gate@%s  waypoint@%s  model=%s" % [
-			gate_pos, wp_pos,
-			"loaded" if waypoint.model else "MISSING"])
-		print("[Waypoint]   visited_cells=%s" % str(_visited_cells.keys()))
+		print("[Waypoint] dir=%s → target_cell=%s  state=%s" % [dir, target_cell_pos, wp_state])
+
+
+func _spawn_end_cell_exit(connections: Dictionary) -> void:
+	## Spawn an AreaWarp + exit trigger on quest end cells that have no warp_edge.
+	## Finds a dead-end portal direction (not used by connections) for placement,
+	## or falls back to default spawn / room center.
+	var exit_pos := Vector3.ZERO
+	var exit_rot := 0.0
+	var exit_dir := ""
+
+	# Try to find a portal direction that isn't a connection (dead-end side)
+	for dir in ["south", "east", "west", "north"]:
+		if not connections.has(dir) and _portal_data.has(dir):
+			exit_dir = dir
+			exit_pos = _portal_data[dir].get("gate_pos", _portal_data[dir]["trigger_pos"])
+			exit_rot = _dir_to_yaw(dir) + PI
+			break
+
+	# Fallback to default spawn
+	if exit_dir.is_empty() and _portal_data.has("default"):
+		exit_pos = _portal_data["default"]["spawn_pos"]
+		var arrow: Node3D = _find_child_by_name(_map_root, "spawn_default_arrow")
+		if arrow:
+			exit_rot = arrow.rotation.y
+
+	# Fallback to room center
+	if exit_dir.is_empty() and not _portal_data.has("default"):
+		exit_pos = Vector3(0, 0, 0)
+
+	# Spawn AreaWarp
+	var area_warp := AreaWarpScript.new()
+	area_warp.auto_collect = false
+	area_warp.element_state = "open"
+	add_child(area_warp)
+	area_warp.global_position = exit_pos
+	area_warp.rotation.y = exit_rot
+
+	# Create exit trigger at same position
+	var callback := func(_body: Node3D) -> void:
+		if _body.is_in_group("player"):
+			print("[ValleyField] Player entered end-cell exit warp")
+			_on_end_reached()
+
+	_create_fallback_trigger("EndCellExit", exit_pos, callback, true)
+	print("[FieldElements] End cell exit warp at %s (dir=%s)" % [exit_pos, exit_dir])
 
 
 func _setup_debug_panel() -> void:
