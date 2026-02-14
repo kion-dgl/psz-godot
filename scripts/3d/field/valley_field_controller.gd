@@ -34,6 +34,7 @@ var _sky_material: ProceduralSkyMaterial
 var _transitioning := false
 var _keys_collected: Dictionary = {}  # cell_pos → true (key pickup, prevents respawn)
 var _gates_opened: Dictionary = {}   # cell_pos → true (gate opened by player, stays open on re-entry)
+var _cell_states: Dictionary = {}    # cell_pos → { objects: [{state, ...}], drops: [{type, pos, ...}] }
 var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _map_overlay: CanvasLayer
@@ -50,6 +51,8 @@ var _total_keys_in_field: int = 0
 
 # Room objects
 var _room_enemies: Array = []  # EnemySpawn nodes in current room
+var _room_boxes: Array = []    # Box nodes in current room
+var _room_drops: Array = []    # Drop nodes spawned from boxes
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
 
@@ -78,6 +81,7 @@ func _ready() -> void:
 	var spawn_edge: String = _spawn_edge
 	_keys_collected = data.get("keys_collected", {})
 	_visited_cells = data.get("visited_cells", {})
+	_cell_states = data.get("cell_states", {})
 	var map_overlay_visible: bool = data.get("map_overlay_visible", false)
 
 	# Get sections and current cell
@@ -1088,8 +1092,6 @@ func _spawn_field_elements() -> void:
 			gate._setup_laser_material()
 			if is_open:
 				gate.open()
-			else:
-				gate.collision_body.collision_layer = 0
 			_fix_gate_depth(gate)
 
 		# Waypoint — navigation marker inside the load trigger area
@@ -1167,18 +1169,40 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 
 
 ## Spawn placed objects (boxes, enemies, fences, switches) from quest cell data.
+## If the cell was previously visited, restore saved state instead.
 func _spawn_cell_objects() -> void:
+	var cell_pos: String = str(_current_cell.get("pos", ""))
+	var saved: Dictionary = _cell_states.get(cell_pos, {})
 	var objects: Array = _current_cell.get("objects", [])
-	if objects.is_empty():
+
+	if objects.is_empty() and saved.is_empty():
 		return
 
-	print("[CellObjects] Spawning %d objects" % objects.size())
+	if not saved.is_empty():
+		_restore_cell_objects(saved)
+	else:
+		_spawn_fresh_cell_objects(objects)
+
+	# Wire fence↔switch links
+	_wire_fence_links()
+
+	# Count living enemies for gate locking
+	var alive_enemies: int = 0
+	for e in _room_enemies:
+		if is_instance_valid(e) and e.element_state != "dead":
+			alive_enemies += 1
+
+	if alive_enemies > 0:
+		_lock_gates_for_enemies()
+
+
+## Spawn objects fresh (first visit to a cell).
+func _spawn_fresh_cell_objects(objects: Array) -> void:
+	print("[CellObjects] Spawning %d objects (fresh)" % objects.size())
 	for obj in objects:
 		var obj_type: String = str(obj.get("type", ""))
 		var pos_arr: Array = obj.get("position", [0, 0, 0])
 		var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
-
-		# Object rotation (fence direction etc.) — cell rotation handled by _map_root parenting
 		var obj_rot: float = float(obj.get("rotation", 0))
 
 		match obj_type:
@@ -1194,26 +1218,198 @@ func _spawn_cell_objects() -> void:
 				var link_id: String = str(obj.get("link_id", ""))
 				_spawn_switch(pos, link_id)
 
-	# Wire fence↔switch links
-	_wire_fence_links()
 
-	# If room has enemies, lock non-entry gates until cleared
-	if _room_enemies.size() > 0:
-		_lock_gates_for_enemies()
+## Restore objects from saved cell state (revisiting a cell).
+func _restore_cell_objects(saved: Dictionary) -> void:
+	var obj_states: Array = saved.get("objects", [])
+	var drop_states: Array = saved.get("drops", [])
+	print("[CellObjects] Restoring %d objects + %d drops from saved state" % [obj_states.size(), drop_states.size()])
+
+	for obj in obj_states:
+		var obj_type: String = str(obj.get("type", ""))
+		var pos := Vector3(float(obj.get("px", 0)), float(obj.get("py", 0)), float(obj.get("pz", 0)))
+		var state: String = str(obj.get("state", ""))
+		var obj_rot: float = float(obj.get("rotation", 0))
+
+		match obj_type:
+			"box", "rare_box":
+				_spawn_box(pos, obj_type == "rare_box", state,
+					str(obj.get("drop_type", "")), str(obj.get("drop_value", "")))
+			"enemy":
+				_spawn_enemy(pos, str(obj.get("enemy_id", "lizard")), state)
+			"fence":
+				var link_id: String = str(obj.get("link_id", ""))
+				_spawn_fence(pos, obj_rot, link_id)
+				# Restore fence state if disabled
+				if state == "disabled" and not _fence_links.is_empty():
+					for lid in _fence_links:
+						for f in _fence_links[lid]["fences"]:
+							if (f as Fence).position.distance_to(pos) < 0.1:
+								(f as Fence).disable()
+			"step_switch":
+				var link_id: String = str(obj.get("link_id", ""))
+				_spawn_switch(pos, link_id)
+				# Restore switch state
+				if state == "on":
+					for lid in _fence_links:
+						for s in _fence_links[lid]["switches"]:
+							if (s as StepSwitch).position.distance_to(pos) < 0.1:
+								(s as StepSwitch).set_state("on")
+
+	# Restore uncollected drops
+	for d in drop_states:
+		var pos := Vector3(float(d.get("px", 0)), float(d.get("py", 0)), float(d.get("pz", 0)))
+		var drop_kind: String = str(d.get("kind", ""))
+		var drop: DropBase = null
+		match drop_kind:
+			"meseta":
+				var dm := DropMesetaScript.new()
+				dm.amount = int(d.get("amount", 10))
+				drop = dm
+			"item":
+				var di := DropItemScript.new()
+				di.item_id = str(d.get("item_id", ""))
+				di.amount = int(d.get("amount", 1))
+				drop = di
+		if drop:
+			_map_root.add_child(drop)
+			drop.position = pos
+			_room_drops.append(drop)
 
 
-func _spawn_box(pos: Vector3, is_rare: bool) -> void:
+## Save current cell's object states before transitioning away.
+func _save_cell_state() -> void:
+	var cell_pos: String = str(_current_cell.get("pos", ""))
+	if cell_pos.is_empty():
+		return
+
+	var obj_states: Array = []
+	var drop_states: Array = []
+
+	# Save box states
+	for box in _room_boxes:
+		if not is_instance_valid(box):
+			# Box was destroyed — save as destroyed
+			continue
+		var b: Box = box as Box
+		obj_states.append({
+			"type": "rare_box" if b.is_rare else "box",
+			"px": b.position.x, "py": b.position.y, "pz": b.position.z,
+			"state": b.element_state,
+			"drop_type": b.drop_type,
+			"drop_value": b.drop_value,
+		})
+	# Also record destroyed boxes from the original quest data
+	var objects: Array = _current_cell.get("objects", [])
+	var intact_box_positions: Array = []
+	for box in _room_boxes:
+		if is_instance_valid(box):
+			intact_box_positions.append(box.position)
+	for obj in objects:
+		var obj_type: String = str(obj.get("type", ""))
+		if obj_type in ["box", "rare_box"]:
+			var pos_arr: Array = obj.get("position", [0, 0, 0])
+			var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+			var found := false
+			for intact_pos in intact_box_positions:
+				if intact_pos.distance_to(pos) < 0.1:
+					found = true
+					break
+			if not found:
+				obj_states.append({
+					"type": obj_type,
+					"px": pos.x, "py": pos.y, "pz": pos.z,
+					"state": "destroyed",
+				})
+
+	# Save enemy states
+	for obj in objects:
+		if str(obj.get("type", "")) == "enemy":
+			var pos_arr: Array = obj.get("position", [0, 0, 0])
+			var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+			var enemy_id: String = str(obj.get("enemy_id", "lizard"))
+			# Check if the enemy at this position is dead
+			var is_dead := true  # Assume dead unless found alive
+			for e in _room_enemies:
+				if is_instance_valid(e) and e.position.distance_to(pos) < 0.1:
+					is_dead = (e.element_state == "dead")
+					break
+			obj_states.append({
+				"type": "enemy",
+				"px": pos.x, "py": pos.y, "pz": pos.z,
+				"state": "dead" if is_dead else "alive",
+				"enemy_id": enemy_id,
+			})
+
+	# Save fence/switch states
+	for obj in objects:
+		var obj_type: String = str(obj.get("type", ""))
+		if obj_type in ["fence", "step_switch"]:
+			var pos_arr: Array = obj.get("position", [0, 0, 0])
+			var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+			var state: String = ""
+			if obj_type == "fence":
+				for lid in _fence_links:
+					for f in _fence_links[lid]["fences"]:
+						if is_instance_valid(f) and (f as Node3D).position.distance_to(pos) < 0.5:
+							state = (f as Fence).element_state
+			elif obj_type == "step_switch":
+				for lid in _fence_links:
+					for s in _fence_links[lid]["switches"]:
+						if is_instance_valid(s) and (s as Node3D).position.distance_to(pos) < 0.5:
+							state = (s as StepSwitch).element_state
+			obj_states.append({
+				"type": obj_type,
+				"px": pos.x, "py": pos.y, "pz": pos.z,
+				"state": state,
+				"rotation": float(obj.get("rotation", 0)),
+				"link_id": str(obj.get("link_id", "")),
+			})
+
+	# Save uncollected drops
+	for drop in _room_drops:
+		if is_instance_valid(drop) and drop.element_state == "available":
+			var d: DropBase = drop as DropBase
+			var kind := "meseta" if d is DropMeseta else "item"
+			var entry := {
+				"kind": kind,
+				"px": d.position.x, "py": d.position.y, "pz": d.position.z,
+				"amount": d.amount,
+			}
+			if kind == "item":
+				entry["item_id"] = d.item_id
+			drop_states.append(entry)
+
+	_cell_states[cell_pos] = {"objects": obj_states, "drops": drop_states}
+	print("[CellObjects] Saved state for cell %s: %d objects, %d drops" % [
+		cell_pos, obj_states.size(), drop_states.size()])
+
+
+func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type: String = "", drop_value: String = "") -> void:
+	if state == "destroyed":
+		return  # Don't spawn destroyed boxes
 	var box := BoxScript.new()
 	box.is_rare = is_rare
-	box.drop_type = "meseta"
-	box.drop_value = str(randi_range(10, 50)) if not is_rare else str(randi_range(50, 200))
+	box.drop_type = drop_type if not drop_type.is_empty() else "meseta"
+	box.drop_value = drop_value if not drop_value.is_empty() else (str(randi_range(10, 50)) if not is_rare else str(randi_range(50, 200)))
 	_map_root.add_child(box)
 	box.position = pos
 	_fixup_element_materials(box)
+	_room_boxes.append(box)
+	# Track drops spawned from this box
+	box.destroyed_box.connect(func() -> void:
+		# Find new drop children added after destruction
+		await get_tree().process_frame
+		for child in _map_root.get_children():
+			if child is DropBase and not _room_drops.has(child):
+				_room_drops.append(child)
+	)
 	print("[CellObjects] Box at %s (rare=%s)" % [pos, is_rare])
 
 
-func _spawn_enemy(pos: Vector3, enemy_id: String) -> void:
+func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> void:
+	if state == "dead":
+		return  # Don't spawn dead enemies
 	var enemy := EnemySpawnScript.new()
 	enemy.enemy_id = enemy_id
 	_map_root.add_child(enemy)
@@ -1496,12 +1692,14 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 	if _transitioning:
 		return
 	_transitioning = true
+	_save_cell_state()
 	SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 		"current_cell_pos": target_pos,
 		"spawn_edge": spawn_edge,
 		"from_cell_pos": str(_current_cell.get("pos", "")),
 		"keys_collected": _keys_collected,
 		"visited_cells": _visited_cells,
+		"cell_states": _cell_states,
 		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 	})
 
