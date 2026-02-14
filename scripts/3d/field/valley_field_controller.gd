@@ -15,6 +15,12 @@ const KeyPickupScript := preload("res://scripts/3d/elements/key_pickup.gd")
 const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
+const BoxScript := preload("res://scripts/3d/elements/box.gd")
+const FenceScript := preload("res://scripts/3d/elements/fence.gd")
+const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
+const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
+const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
+const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -41,6 +47,11 @@ var _key_hud_label: Label
 var _key_hud_icon: Label
 var _key_hud_panel: PanelContainer
 var _total_keys_in_field: int = 0
+
+# Room objects
+var _room_enemies: Array = []  # EnemySpawn nodes in current room
+var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
+var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
 
 # Debug toggle state
 var _show_triggers := false
@@ -264,6 +275,7 @@ func _ready() -> void:
 			_create_key_pickup(key_for)
 
 	_spawn_field_elements()
+	_spawn_cell_objects()
 	_setup_debug_panel()
 	_setup_key_hud(cells)
 
@@ -1155,6 +1167,175 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 
 	_create_fallback_trigger("EndCellExit", exit_pos, callback, true)
 	print("[FieldElements] End cell exit warp at %s (dir=%s)" % [exit_pos, exit_dir])
+
+
+## Spawn placed objects (boxes, enemies, fences, switches) from quest cell data.
+func _spawn_cell_objects() -> void:
+	var objects: Array = _current_cell.get("objects", [])
+	if objects.is_empty():
+		return
+
+	print("[CellObjects] Spawning %d objects" % objects.size())
+	for obj in objects:
+		var obj_type: String = str(obj.get("type", ""))
+		var pos_arr: Array = obj.get("position", [0, 0, 0])
+		var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+
+		# Apply cell rotation to object position
+		if _rotation_deg != 0:
+			pos = _rotate_point(pos, _rotation_deg)
+
+		var obj_rot: float = float(obj.get("rotation", 0))
+		# Add cell rotation to object rotation
+		if _rotation_deg != 0:
+			obj_rot += _rotation_deg
+
+		match obj_type:
+			"box", "rare_box":
+				_spawn_box(pos, obj_type == "rare_box")
+			"enemy":
+				var enemy_id: String = str(obj.get("enemy_id", "lizard"))
+				_spawn_enemy(pos, enemy_id)
+			"fence":
+				var link_id: String = str(obj.get("link_id", ""))
+				_spawn_fence(pos, obj_rot, link_id)
+			"step_switch":
+				var link_id: String = str(obj.get("link_id", ""))
+				_spawn_switch(pos, link_id)
+
+	# Wire fence↔switch links
+	_wire_fence_links()
+
+	# If room has enemies, lock non-entry gates until cleared
+	if _room_enemies.size() > 0:
+		_lock_gates_for_enemies()
+
+
+func _spawn_box(pos: Vector3, is_rare: bool) -> void:
+	var box := BoxScript.new()
+	box.is_rare = is_rare
+	box.drop_type = "meseta"
+	box.drop_value = str(randi_range(10, 50)) if not is_rare else str(randi_range(50, 200))
+	add_child(box)
+	box.global_position = pos
+	_fixup_element_materials(box)
+	print("[CellObjects] Box at %s (rare=%s)" % [pos, is_rare])
+
+
+func _spawn_enemy(pos: Vector3, enemy_id: String) -> void:
+	var enemy := EnemySpawnScript.new()
+	enemy.enemy_id = enemy_id
+	add_child(enemy)
+	enemy.global_position = pos
+	_room_enemies.append(enemy)
+	enemy.defeated.connect(func() -> void:
+		_check_room_clear()
+	)
+	print("[CellObjects] Enemy '%s' at %s" % [enemy_id, pos])
+
+
+func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String) -> void:
+	var fence := FenceScript.new()
+	add_child(fence)
+	fence.global_position = pos
+	fence.rotation.y = deg_to_rad(rotation_deg)
+	_fixup_element_materials(fence)
+	if not link_id.is_empty():
+		if not _fence_links.has(link_id):
+			_fence_links[link_id] = {"fences": [], "switches": []}
+		_fence_links[link_id]["fences"].append(fence)
+	print("[CellObjects] Fence at %s rot=%.0f° link='%s'" % [pos, rotation_deg, link_id])
+
+
+func _spawn_switch(pos: Vector3, link_id: String) -> void:
+	var sw := StepSwitchScript.new()
+	add_child(sw)
+	sw.global_position = pos
+	_fixup_element_materials(sw)
+	if not link_id.is_empty():
+		if not _fence_links.has(link_id):
+			_fence_links[link_id] = {"fences": [], "switches": []}
+		_fence_links[link_id]["switches"].append(sw)
+	print("[CellObjects] Switch at %s link='%s'" % [pos, link_id])
+
+
+## Wire switch.activated → linked fences.disable()
+func _wire_fence_links() -> void:
+	for link_id in _fence_links:
+		var link: Dictionary = _fence_links[link_id]
+		var fences: Array = link["fences"]
+		var switches: Array = link["switches"]
+		for sw in switches:
+			var step_sw: StepSwitch = sw as StepSwitch
+			for fence in fences:
+				var fence_ref: Fence = fence as Fence
+				step_sw.activated.connect(func() -> void:
+					fence_ref.disable()
+				)
+		if fences.size() > 0 and switches.size() > 0:
+			print("[CellObjects] Wired link '%s': %d switches → %d fences" % [
+				link_id, switches.size(), fences.size()])
+
+
+## Lock non-entry/non-visited gates when room has enemies.
+func _lock_gates_for_enemies() -> void:
+	var connections: Dictionary = _current_cell.get("connections", {})
+	for dir in connections:
+		if dir == _spawn_edge:
+			continue  # Don't lock entry gate
+		if _visited_cells.has(str(connections[dir])):
+			continue  # Don't lock gates to visited cells
+		# Find the gate element for this direction
+		var gate_name := "Gate"  # Gates are children of self
+		for child in get_children():
+			if child is Gate and child.global_position.distance_to(
+				_portal_data.get(dir, {}).get("gate_pos", Vector3.INF)) < 2.0:
+				var gate: Gate = child as Gate
+				if gate.element_state != "open":
+					gate.lock()
+					_room_gates_locked.append(gate)
+					print("[CellObjects] Gate %s locked (enemies present)" % dir)
+					break
+
+
+## Called when an enemy is defeated — check if all cleared.
+func _check_room_clear() -> void:
+	for enemy in _room_enemies:
+		if is_instance_valid(enemy) and enemy.element_state != "dead":
+			return  # Still alive enemies
+
+	print("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
+	for gate in _room_gates_locked:
+		if is_instance_valid(gate):
+			gate.open()
+			# Enable the gate's trigger
+			var trigger := _find_child_by_name(self, "GateTrigger_%s" % _gate_direction(gate)) as Area3D
+			if trigger:
+				trigger.monitoring = true
+	_room_gates_locked.clear()
+
+
+## Guess gate direction from position (for gate unlock)
+func _gate_direction(gate: Node3D) -> String:
+	for dir in _portal_data:
+		if dir == "default":
+			continue
+		var gp: Vector3 = _portal_data[dir].get("gate_pos", Vector3.INF)
+		if gate.global_position.distance_to(gp) < 2.0:
+			return dir
+	return ""
+
+
+## Apply storybook-style material fixup to any placed element.
+func _fixup_element_materials(element: GameElement) -> void:
+	if not element.model:
+		return
+	element.apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
+		if mat is StandardMaterial3D:
+			var std_mat := mat as StandardMaterial3D
+			var dup := std_mat.duplicate() as StandardMaterial3D
+			mesh.set_surface_override_material(surface, dup)
+	)
 
 
 func _setup_debug_panel() -> void:
