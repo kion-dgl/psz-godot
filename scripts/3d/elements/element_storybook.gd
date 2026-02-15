@@ -19,7 +19,7 @@ const ORBIT_HEIGHT := 2.5
 const ORBIT_LOOK_Y := 0.8
 
 # Laser/animated texture identification (by texture path substring)
-const LASER_TEXTURE_IDS := ["o0c_1_gate", "o0c_1_fence2", "fwarp2", "swarp3"]
+const LASER_TEXTURE_IDS := ["o0c_1_gate", "o0c_1_fence2", "fwarp2", "swarp3", "o0c_1_mspack"]
 
 # Per-element laser scroll config: axis ("x" or "y") + speed
 const LASER_SCROLL_CONFIG := {
@@ -29,6 +29,7 @@ const LASER_SCROLL_CONFIG := {
 	"start_warp": {"axis": "y", "speed": -1.35},
 	"fence": {"axis": "x", "speed": -0.70},
 	"fence4": {"axis": "x", "speed": -0.70},
+	"message_pack": {"axis": "y", "speed": 0.45},
 }
 
 # Per-element texture fixups matching psz-sketch TEXTURE_CONFIG.
@@ -112,6 +113,15 @@ const CATEGORIES := [
 			 "script": "res://scripts/3d/elements/drop_base.gd",
 			 "states": ["available", "collected"], "default": "available",
 			 "props": {"model_path": "valley/o0c_dropra.glb"}},
+		]
+	},
+	{
+		"name": "Interactables",
+		"elements": [
+			{"id": "message_pack", "title": "Message Pack", "desc": "Press E to read a text message.",
+			 "script": "res://scripts/3d/elements/message_pack.gd",
+			 "states": ["available", "read"], "default": "available",
+			 "props": {"message_text": "The ancient runes speak of a great calamity..."}},
 		]
 	},
 	{

@@ -1,0 +1,798 @@
+[
+  {
+    "id": "akorse",
+    "name": "Akorse",
+    "model_id": "shooter_leader",
+    "element": "Machine",
+    "locations": [
+      "arca",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "ar_rappy",
+    "name": "Ar Rappy",
+    "model_id": "rappy_blue",
+    "element": "Native",
+    "locations": [
+      "paru",
+      "makara",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "arkzein",
+    "name": "Arkzein",
+    "model_id": "swordman",
+    "element": "Machine",
+    "locations": [
+      "arca",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "arkzein_r",
+    "name": "Arkzein R",
+    "model_id": "swordman_rare",
+    "element": "Machine",
+    "locations": [
+      "arca",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "azherowa_b2",
+    "name": "Azherowa-B2",
+    "model_id": "quad_rare",
+    "element": "Machine",
+    "locations": [
+      "paru",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "batt",
+    "name": "Batt",
+    "model_id": "bat",
+    "element": "Native",
+    "locations": [
+      "makara",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "blade_mother",
+    "name": "Blade Mother",
+    "model_id": "mother_sword",
+    "element": "Dark",
+    "locations": [
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "blaze_helion",
+    "name": "Blaze Helion",
+    "model_id": "lion_rare",
+    "element": "Beast",
+    "locations": [
+      "valley",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "bolix",
+    "name": "Bolix",
+    "model_id": "shrimp",
+    "element": "Native",
+    "locations": [
+      "paru",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "booma_origin",
+    "name": "Booma Origin",
+    "model_id": "booma",
+    "element": "Native",
+    "locations": [
+      "valley",
+      "snowfield",
+      "wetlands",
+      "paru",
+      "makara",
+      "arca",
+      "shrine",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "bullbatt",
+    "name": "Bullbatt",
+    "model_id": "bat_blue",
+    "element": "Native",
+    "locations": [
+      "makara",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "chaos_mobius",
+    "name": "Chaos & Mobius",
+    "model_id": "boss_robot",
+    "element": "Machine",
+    "locations": [
+      "paru"
+    ],
+    "is_rare": false,
+    "is_boss": true
+  },
+  {
+    "id": "dark_falz",
+    "name": "Dark Falz",
+    "model_id": "boss_darkfalz",
+    "element": "Dark",
+    "locations": [
+      "shrine"
+    ],
+    "is_rare": false,
+    "is_boss": true
+  },
+  {
+    "id": "derreo",
+    "name": "Derreo",
+    "model_id": "leg",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "eulada",
+    "name": "Eulada",
+    "model_id": "circle",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "euladaveil",
+    "name": "Euladaveil",
+    "model_id": "circle_black",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "eulid",
+    "name": "Eulid",
+    "model_id": "lower",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "eulidveil",
+    "name": "Eulidveil",
+    "model_id": "lower_black",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "finjer_b",
+    "name": "Finjer B",
+    "model_id": "board_blue",
+    "element": "Machine",
+    "locations": [
+      "arca",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "finjer_g",
+    "name": "Finjer G",
+    "model_id": "board_green",
+    "element": "Machine",
+    "locations": [
+      "arca",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "finjer_r",
+    "name": "Finjer R",
+    "model_id": "board",
+    "element": "Machine",
+    "locations": [
+      "arca",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "force_mother",
+    "name": "Force Mother",
+    "model_id": "mother_tech",
+    "element": "Native",
+    "locations": [
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "froutang",
+    "name": "Froutang",
+    "model_id": "orangutan",
+    "element": "Beast",
+    "locations": [
+      "paru",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "frunaked",
+    "name": "Frunaked",
+    "model_id": "orangutan_rare",
+    "element": "Beast",
+    "locations": [
+      "paru",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "garahadan",
+    "name": "Garahadan",
+    "model_id": "snake_rare",
+    "element": "Native",
+    "locations": [
+      "valley",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "garapython",
+    "name": "Garapython",
+    "model_id": "snake",
+    "element": "Native",
+    "locations": [
+      "valley",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "ghowl",
+    "name": "Ghowl",
+    "model_id": "lizard",
+    "element": "Native",
+    "locations": [
+      "valley",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "gigobooma_origin",
+    "name": "Gigobooma Origin",
+    "model_id": "jigobooma",
+    "element": "Native",
+    "locations": [
+      "wetlands",
+      "paru",
+      "makara",
+      "arca",
+      "shrine",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "goldix",
+    "name": "Goldix",
+    "model_id": "shrimp_rare",
+    "element": "Native",
+    "locations": [
+      "paru",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "grimble",
+    "name": "Grimble",
+    "model_id": "hyena",
+    "element": "Native",
+    "locations": [
+      "valley",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "heavens_mother",
+    "name": "Heaven's Mother",
+    "model_id": "",
+    "element": "Dark",
+    "locations": [
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": true
+  },
+  {
+    "id": "helion",
+    "name": "Helion",
+    "model_id": "lion",
+    "element": "Beast",
+    "locations": [
+      "valley",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "hildegao",
+    "name": "Hildegao",
+    "model_id": "gorilla",
+    "element": "Beast",
+    "locations": [
+      "snowfield",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "hildeghana",
+    "name": "Hildeghana",
+    "model_id": "gorilla_female",
+    "element": "Beast",
+    "locations": [
+      "snowfield",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "hildegigas",
+    "name": "Hildegigas",
+    "model_id": "gorilla_rare",
+    "element": "Beast",
+    "locations": [
+      "snowfield",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "humilias",
+    "name": "Humilias",
+    "model_id": "boss_mother",
+    "element": "Machine",
+    "locations": [
+      "arca"
+    ],
+    "is_rare": false,
+    "is_boss": true
+  },
+  {
+    "id": "hypao",
+    "name": "Hypao",
+    "model_id": "seal",
+    "element": "Native",
+    "locations": [
+      "wetlands",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "izhirak_s6",
+    "name": "Izhirak-S6",
+    "model_id": "quad",
+    "element": "Machine",
+    "locations": [
+      "paru",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "kapantha",
+    "name": "Kapantha",
+    "model_id": "tiger",
+    "element": "Native",
+    "locations": [
+      "makara",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "korse",
+    "name": "Korse",
+    "model_id": "shooter",
+    "element": "Machine",
+    "locations": [
+      "arca",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "mother_trinity",
+    "name": "Mother Trinity",
+    "model_id": "mother",
+    "element": "Dark",
+    "locations": [
+      "shrine"
+    ],
+    "is_rare": false,
+    "is_boss": true
+  },
+  {
+    "id": "octo_diablo",
+    "name": "Octo Diablo",
+    "model_id": "boss_octopus",
+    "element": "Beast",
+    "locations": [
+      "wetlands"
+    ],
+    "is_rare": false,
+    "is_boss": true
+  },
+  {
+    "id": "pelcatobur",
+    "name": "Pelcatobur",
+    "model_id": "roc_rare",
+    "element": "Beast",
+    "locations": [
+      "wetlands",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "pelcatraz",
+    "name": "Pelcatraz",
+    "model_id": "roc",
+    "element": "Beast",
+    "locations": [
+      "wetlands",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "phobos",
+    "name": "Phobos",
+    "model_id": "tank",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "phobos_dyna",
+    "name": "Phobos Dyna",
+    "model_id": "tank_rare",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "pobomma",
+    "name": "Pobomma",
+    "model_id": "frog_bomb",
+    "element": "Native",
+    "locations": [
+      "paru",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "pomarr",
+    "name": "Pomarr",
+    "model_id": "frog_rare",
+    "element": "Native",
+    "locations": [
+      "wetlands",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "porel",
+    "name": "Porel",
+    "model_id": "frog",
+    "element": "Native",
+    "locations": [
+      "wetlands",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "rab_rappy",
+    "name": "Rab Rappy",
+    "model_id": "rappy_red",
+    "element": "Native",
+    "locations": [
+      "arca",
+      "shrine",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "rappy",
+    "name": "Rappy",
+    "model_id": "rappy",
+    "element": "Native",
+    "locations": [
+      "valley",
+      "snowfield",
+      "wetlands",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "reyburn",
+    "name": "Reyburn",
+    "model_id": "boss_dragon",
+    "element": "Native",
+    "locations": [
+      "valley"
+    ],
+    "is_rare": false,
+    "is_boss": true
+  },
+  {
+    "id": "reyhound",
+    "name": "Reyhound",
+    "model_id": "wolf",
+    "element": "Native",
+    "locations": [
+      "snowfield",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "rohcrysta",
+    "name": "Rohcrysta",
+    "model_id": "armadillo_rare",
+    "element": "Beast",
+    "locations": [
+      "makara",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "rohjade",
+    "name": "Rohjade",
+    "model_id": "armadillo",
+    "element": "Beast",
+    "locations": [
+      "makara",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "rumole",
+    "name": "Rumole",
+    "model_id": "mole",
+    "element": "Native",
+    "locations": [
+      "makara",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "shot_mother",
+    "name": "Shot Mother",
+    "model_id": "mother_gun",
+    "element": "Dark",
+    "locations": [
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "stagg",
+    "name": "Stagg",
+    "model_id": "deer",
+    "element": "Native",
+    "locations": [
+      "snowfield",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "tormatible",
+    "name": "Tormatible",
+    "model_id": "hyena_rare",
+    "element": "Native",
+    "locations": [
+      "valley",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "usanimere",
+    "name": "Usanimere",
+    "model_id": "rabbit_rare",
+    "element": "Native",
+    "locations": [
+      "snowfield",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "usanny",
+    "name": "Usanny",
+    "model_id": "rabbit",
+    "element": "Native",
+    "locations": [
+      "snowfield",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "vespao",
+    "name": "Vespao",
+    "model_id": "seal_rare",
+    "element": "Native",
+    "locations": [
+      "wetlands",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "vulkure",
+    "name": "Vulkure",
+    "model_id": "vulture",
+    "element": "Native",
+    "locations": [
+      "valley",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "zaphobos",
+    "name": "Zaphobos",
+    "model_id": "swordman_b",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
+    "id": "zaphobos_dyna",
+    "name": "Zaphobos Dyna",
+    "model_id": "swordman_rare_b",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": true,
+    "is_boss": false
+  },
+  {
+    "id": "zerreo",
+    "name": "Zerreo",
+    "model_id": "leg_black",
+    "element": "Dark",
+    "locations": [
+      "shrine",
+      "tower"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  }
+]
