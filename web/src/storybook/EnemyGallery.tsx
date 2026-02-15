@@ -1,8 +1,9 @@
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Environment } from '@react-three/drei';
-import { Suspense, useState, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { ErrorBoundary } from '../utils/ErrorBoundary';
 import {
   ENEMY_CATEGORIES,
   ALL_ENEMY_IDS,
@@ -16,6 +17,20 @@ import {
   type EnemyCategory,
   type EnemyElement,
 } from './enemyData';
+
+function disposeObject(obj: THREE.Object3D) {
+  obj.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.geometry?.dispose();
+      if (Array.isArray(child.material)) {
+        child.material.forEach((m) => { m.map?.dispose(); m.dispose(); });
+      } else if (child.material) {
+        child.material.map?.dispose();
+        child.material.dispose();
+      }
+    }
+  });
+}
 
 function EnemyModel({
   enemyId,
@@ -70,6 +85,7 @@ function EnemyModel({
     return () => {
       mixerRef.current?.stopAllAction();
       mixerRef.current = null;
+      disposeObject(clonedScene);
     };
   }, [clonedScene]);
 
@@ -251,25 +267,28 @@ export default function EnemyGallery() {
           </div>
         )}
 
-        <div style={{ flex: 1, background: '#0a0a12' }}>
-          {selectedEnemy ? (
-            <Canvas camera={{ position: [3, 2, 3], fov: 45 }}>
-              <ambientLight intensity={0.5} />
-              <directionalLight position={[5, 5, 5]} intensity={1} />
-              <directionalLight position={[-5, -5, -5]} intensity={0.3} />
-              <Suspense fallback={<LoadingSpinner />}>
-                <EnemyModel key={selectedEnemy} enemyId={selectedEnemy}
-                  animationSourcePath={animationSourcePath}
-                  selectedAnimation={selectedAnimation}
-                  isPlaying={isPlaying}
-                  onAnimationsLoaded={setGlbAnimationNames} />
-              </Suspense>
-              <OrbitControls makeDefault />
-              <Environment preset="studio" />
-              <gridHelper args={[10, 10, '#333', '#222']} />
-            </Canvas>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666' }}>
+        <div style={{ flex: 1, background: '#0a0a12', position: 'relative' }}>
+          <Canvas camera={{ position: [3, 2, 3], fov: 45 }}>
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[5, 5, 5]} intensity={1} />
+            <directionalLight position={[-5, -5, -5]} intensity={0.3} />
+            {selectedEnemy && (
+              <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <EnemyModel key={selectedEnemy} enemyId={selectedEnemy}
+                    animationSourcePath={animationSourcePath}
+                    selectedAnimation={selectedAnimation}
+                    isPlaying={isPlaying}
+                    onAnimationsLoaded={setGlbAnimationNames} />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+            <OrbitControls makeDefault />
+            <Environment preset="studio" />
+            <gridHelper args={[10, 10, '#333', '#222']} />
+          </Canvas>
+          {!selectedEnemy && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', pointerEvents: 'none' }}>
               Select an enemy to preview
             </div>
           )}

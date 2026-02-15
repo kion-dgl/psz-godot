@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Environment } from '@react-three/drei';
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { ErrorBoundary } from '../utils/ErrorBoundary';
 import {
   WEAPON_CATEGORIES,
   ALL_WEAPON_IDS,
@@ -44,6 +45,20 @@ interface WeaponVariant {
   displayName: string;
 }
 
+function disposeObject(obj: THREE.Object3D) {
+  obj.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.geometry?.dispose();
+      if (Array.isArray(child.material)) {
+        child.material.forEach((m) => { m.map?.dispose(); m.dispose(); });
+      } else if (child.material) {
+        child.material.map?.dispose();
+        child.material.dispose();
+      }
+    }
+  });
+}
+
 function WeaponModel({ weaponId, variant, settings }: {
   weaponId: string; variant: string; settings: MaterialSettings;
 }) {
@@ -60,6 +75,10 @@ function WeaponModel({ weaponId, variant, settings }: {
     clone.position.sub(center);
     return clone;
   }, [scene]);
+
+  useEffect(() => {
+    return () => { disposeObject(clonedScene); };
+  }, [clonedScene]);
 
   useEffect(() => {
     clonedScene.traverse((obj) => {
@@ -242,25 +261,28 @@ export default function WeaponGallery() {
             </div>
           </div>
         )}
-        <div style={{ flex: 1, background: '#0a0a12' }}>
-          {selectedVariant ? (
-            <Canvas camera={{ position: [2, 1, 2], fov: 45 }}>
-              <ambientLight intensity={0.5} />
-              <directionalLight position={[5, 5, 5]} intensity={1} />
-              <directionalLight position={[-5, -5, -5]} intensity={0.3} />
-              <Suspense fallback={<LoadingSpinner />}>
-                <WeaponModel
-                  key={`${selectedVariant.weaponId}-${selectedVariant.variant}-${JSON.stringify(materialSettings)}`}
-                  weaponId={selectedVariant.weaponId}
-                  variant={selectedVariant.variant}
-                  settings={materialSettings} />
-              </Suspense>
-              <OrbitControls makeDefault />
-              <Environment preset="studio" />
-              <gridHelper args={[10, 10, '#333', '#222']} />
-            </Canvas>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666' }}>
+        <div style={{ flex: 1, background: '#0a0a12', position: 'relative' }}>
+          <Canvas camera={{ position: [2, 1, 2], fov: 45 }}>
+            <ambientLight intensity={0.5} />
+            <directionalLight position={[5, 5, 5]} intensity={1} />
+            <directionalLight position={[-5, -5, -5]} intensity={0.3} />
+            {selectedVariant && (
+              <ErrorBoundary>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <WeaponModel
+                    key={`${selectedVariant.weaponId}-${selectedVariant.variant}`}
+                    weaponId={selectedVariant.weaponId}
+                    variant={selectedVariant.variant}
+                    settings={materialSettings} />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+            <OrbitControls makeDefault />
+            <Environment preset="studio" />
+            <gridHelper args={[10, 10, '#333', '#222']} />
+          </Canvas>
+          {!selectedVariant && (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', pointerEvents: 'none' }}>
               Select a weapon to preview
             </div>
           )}
