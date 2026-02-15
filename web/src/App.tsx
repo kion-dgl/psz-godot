@@ -7,6 +7,7 @@ const StorybookViewer = lazy(() => import('./storybook/StorybookViewer'));
 const EnemyGallery = lazy(() => import('./storybook/EnemyGallery'));
 const WeaponGallery = lazy(() => import('./storybook/WeaponGallery'));
 const PlayerAnimationStorybook = lazy(() => import('./storybook/PlayerAnimationStorybook'));
+const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
 
 function NavBar() {
   const location = useLocation();
@@ -60,6 +61,12 @@ function NavBar() {
       }}>
         Animations
       </Link>
+      <Link to="/stage-editor" style={{
+        color: isActive('/stage-editor') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Stage Editor
+      </Link>
     </nav>
   );
 }
@@ -77,6 +84,7 @@ export default function App() {
             <Route path="/storybook/enemies" element={<EnemyGallery />} />
             <Route path="/storybook/weapons" element={<WeaponGallery />} />
             <Route path="/storybook/player-animations" element={<PlayerAnimationStorybook />} />
+            <Route path="/stage-editor" element={<StageEditor />} />
           </Routes>
         </Suspense>
       </div>
