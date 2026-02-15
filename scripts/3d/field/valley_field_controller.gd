@@ -22,6 +22,9 @@ const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
 const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
 const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
 const MessagePackScript := preload("res://scripts/3d/elements/message_pack.gd")
+const StoryPropScript := preload("res://scripts/3d/elements/story_prop.gd")
+const DialogTriggerScript := preload("res://scripts/3d/elements/dialog_trigger.gd")
+const FieldNpcScript := preload("res://scripts/3d/elements/field_npc.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -67,6 +70,9 @@ var _room_enemies: Array = []  # EnemySpawn nodes in current room
 var _room_boxes: Array = []    # Box nodes in current room
 var _room_drops: Array = []    # Drop nodes spawned from boxes
 var _room_messages: Array = [] # MessagePack nodes in current room
+var _room_props: Array = []    # StoryProp nodes in current room
+var _room_triggers: Array = [] # DialogTrigger nodes in current room
+var _room_npcs: Array = []     # FieldNpc nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
 
@@ -1216,6 +1222,9 @@ func _spawn_cell_objects() -> void:
 
 	# Reset room tracking arrays
 	_room_messages.clear()
+	_room_props.clear()
+	_room_triggers.clear()
+	_room_npcs.clear()
 
 	if objects.is_empty() and saved.is_empty():
 		return
@@ -1276,6 +1285,18 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 			"message":
 				var text: String = str(obj.get("text", ""))
 				_spawn_message(pos, text)
+			"story_prop":
+				var prop_path: String = str(obj.get("prop_path", ""))
+				_spawn_story_prop(pos, prop_path, obj_rot)
+			"dialog_trigger":
+				var trigger_id: String = str(obj.get("trigger_id", ""))
+				var dlg: Array = obj.get("dialog", [])
+				_spawn_dialog_trigger(pos, trigger_id, dlg)
+			"npc":
+				var npc_id: String = str(obj.get("npc_id", ""))
+				var npc_name: String = str(obj.get("npc_name", ""))
+				var dlg: Array = obj.get("dialog", [])
+				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -1324,6 +1345,18 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var text: String = str(obj.get("text", ""))
 				var msg_state: String = state if not state.is_empty() else "available"
 				_spawn_message(pos, text, msg_state)
+			"story_prop":
+				var prop_path: String = str(obj.get("prop_path", ""))
+				_spawn_story_prop(pos, prop_path, obj_rot)
+			"dialog_trigger":
+				var trigger_id: String = str(obj.get("trigger_id", ""))
+				var dlg: Array = obj.get("dialog", [])
+				_spawn_dialog_trigger(pos, trigger_id, dlg, state)
+			"npc":
+				var npc_id: String = str(obj.get("npc_id", ""))
+				var npc_name: String = str(obj.get("npc_name", ""))
+				var dlg: Array = obj.get("dialog", [])
+				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -1480,6 +1513,39 @@ func _save_cell_state() -> void:
 				"text": msg.message_text,
 			})
 
+	# Save story prop states
+	for prop in _room_props:
+		if is_instance_valid(prop):
+			obj_states.append({
+				"type": "story_prop",
+				"px": prop.position.x, "py": prop.position.y, "pz": prop.position.z,
+				"state": prop.element_state,
+				"prop_path": prop.prop_path,
+			})
+
+	# Save dialog trigger states
+	for trigger in _room_triggers:
+		if is_instance_valid(trigger):
+			obj_states.append({
+				"type": "dialog_trigger",
+				"px": trigger.position.x, "py": trigger.position.y, "pz": trigger.position.z,
+				"state": trigger.element_state,
+				"trigger_id": trigger.trigger_id,
+				"dialog": trigger.dialog,
+			})
+
+	# Save NPC states
+	for npc in _room_npcs:
+		if is_instance_valid(npc):
+			obj_states.append({
+				"type": "npc",
+				"px": npc.position.x, "py": npc.position.y, "pz": npc.position.z,
+				"state": npc.element_state,
+				"npc_id": npc.npc_id,
+				"npc_name": npc.npc_name,
+				"dialog": npc.dialog,
+			})
+
 	_cell_states[cell_pos] = {
 		"objects": obj_states, "drops": drop_states,
 		"current_wave": _current_wave, "max_wave": _max_wave,
@@ -1606,6 +1672,42 @@ func _spawn_message(pos: Vector3, text: String, state: String = "available") -> 
 		msg.set_state("read")
 	_room_messages.append(msg)
 	print("[CellObjects] Message at %s (text=%d chars)" % [pos, text.length()])
+
+
+func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0) -> void:
+	var prop := StoryPropScript.new()
+	prop.prop_path = prop_path
+	_map_root.add_child(prop)
+	prop.position = pos
+	if rot_deg != 0:
+		prop.rotation.y = deg_to_rad(rot_deg)
+	_room_props.append(prop)
+	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
+
+
+func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready") -> void:
+	if state == "triggered":
+		return  # Already triggered — don't respawn
+	var trigger := DialogTriggerScript.new()
+	trigger.trigger_id = trigger_id
+	trigger.dialog = dlg
+	_map_root.add_child(trigger)
+	trigger.position = pos
+	_room_triggers.append(trigger)
+	print("[CellObjects] DialogTrigger at %s (id=%s, pages=%d)" % [pos, trigger_id, dlg.size()])
+
+
+func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array, rot_deg: float = 0) -> void:
+	var npc := FieldNpcScript.new()
+	npc.npc_id = npc_id
+	npc.npc_name = npc_name
+	npc.dialog = dlg
+	_map_root.add_child(npc)
+	npc.position = pos
+	if rot_deg != 0:
+		npc.rotation.y = deg_to_rad(rot_deg)
+	_room_npcs.append(npc)
+	print("[CellObjects] FieldNpc '%s' (%s) at %s (dialog=%d pages)" % [npc_name, npc_id, pos, dlg.size()])
 
 
 ## Wire switch.activated → linked fences.disable()
