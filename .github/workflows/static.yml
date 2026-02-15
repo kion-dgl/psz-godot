@@ -24,20 +24,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Godot
-        uses: chickensoft-games/setup-godot@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          version: 4.5.1
-          use-dotnet: false
-          include-templates: true
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
 
-      - name: Import project
-        run: godot --headless --path . --import --quit || true
+      - name: Install and build web app
+        run: cd web && npm ci && npm run build
 
-      - name: Export Web build
+      - name: Copy shared assets into build
         run: |
-          mkdir -p build/web
-          godot --headless --path . --export-release "Web" build/web/index.html
+          cp -r assets/environments/ web/dist/assets/environments/
+          cp -r assets/enemies/ web/dist/assets/enemies/
+          cp -r assets/objects/ web/dist/assets/objects/
+          cp -r assets/npcs/ web/dist/assets/npcs/
+          cp -r data/ web/dist/data/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -45,7 +48,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build/web
+          path: web/dist
 
       - name: Deploy to GitHub Pages
         id: deployment
