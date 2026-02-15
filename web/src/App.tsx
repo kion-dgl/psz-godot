@@ -4,6 +4,9 @@ import Landing from './pages/Landing';
 
 const QuestEditor = lazy(() => import('./quest-editor/QuestEditor'));
 const StorybookViewer = lazy(() => import('./storybook/StorybookViewer'));
+const EnemyGallery = lazy(() => import('./storybook/EnemyGallery'));
+const WeaponGallery = lazy(() => import('./storybook/WeaponGallery'));
+const PlayerAnimationStorybook = lazy(() => import('./storybook/PlayerAnimationStorybook'));
 
 function NavBar() {
   const location = useLocation();
@@ -37,7 +40,25 @@ function NavBar() {
         color: isActive('/storybook') ? '#fff' : '#888',
         textDecoration: 'none',
       }}>
-        Storybook
+        Elements
+      </Link>
+      <Link to="/storybook/enemies" style={{
+        color: isActive('/storybook/enemies') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Enemies
+      </Link>
+      <Link to="/storybook/weapons" style={{
+        color: isActive('/storybook/weapons') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Weapons
+      </Link>
+      <Link to="/storybook/player-animations" style={{
+        color: isActive('/storybook/player-animations') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Animations
       </Link>
     </nav>
   );
@@ -53,6 +74,9 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/quest-editor" element={<QuestEditor />} />
             <Route path="/storybook" element={<StorybookViewer />} />
+            <Route path="/storybook/enemies" element={<EnemyGallery />} />
+            <Route path="/storybook/weapons" element={<WeaponGallery />} />
+            <Route path="/storybook/player-animations" element={<PlayerAnimationStorybook />} />
           </Routes>
         </Suspense>
       </div>
