@@ -1600,6 +1600,8 @@ func _spawn_message(pos: Vector3, text: String, state: String = "available") -> 
 	_map_root.add_child(msg)
 	msg.position = pos
 	_fixup_element_materials(msg)
+	# Re-run scroll material setup after fixup replaced materials
+	msg._setup_scroll_material()
 	if state == "read":
 		msg.set_state("read")
 	_room_messages.append(msg)
