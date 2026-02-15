@@ -26,6 +26,28 @@ jobs:
       - name: Run tests
         run: godot --headless --path . res://scripts/tools/test_runner.tscn
 
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: cd web && npm ci
+
+      - name: Type check
+        run: cd web && npx tsc --noEmit
+
+      - name: Build
+        run: cd web && npm run build
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
