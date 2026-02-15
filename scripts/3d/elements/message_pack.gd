@@ -95,6 +95,8 @@ func _on_interact(_player: Node3D) -> void:
 	_show_popup()
 	set_state("read")
 	message_read.emit(message_text)
+	# Consume the input so the same E key doesn't immediately close the popup
+	get_viewport().set_input_as_handled()
 
 
 func _show_popup() -> void:
@@ -177,10 +179,11 @@ func _close_popup() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not _popup:
-		return
-
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_E or event.keycode == KEY_ESCAPE:
-			_close_popup()
-			get_viewport().set_input_as_handled()
+	if _popup:
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_E or event.keycode == KEY_ESCAPE:
+				_close_popup()
+				get_viewport().set_input_as_handled()
+	elif _player_nearby and event.is_action_pressed("interact"):
+		_on_interact(null)
+		get_viewport().set_input_as_handled()
