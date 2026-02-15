@@ -5,3 +5,7 @@
 # Web app
 web/node_modules/
 web/dist/
+# Dev-only symlinks to psz-sketch (absolute, not portable)
+web/public/weapons
+web/public/player
+web/public/enemies
