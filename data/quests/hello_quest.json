@@ -42,6 +42,15 @@
                 0,
                 10.7
               ]
+            },
+            {
+              "type": "message",
+              "position": [
+                -4.2,
+                0,
+                11.4
+              ],
+              "text": "Welcome to psz!!"
             }
           ]
         },
@@ -115,7 +124,7 @@
                 0,
                 15.3
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
@@ -124,7 +133,7 @@
                 0,
                 13.4
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "grimble"
             },
             {
               "type": "enemy",
@@ -133,7 +142,7 @@
                 0,
                 13.2
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "garahadan"
             }
           ]
         },
@@ -153,7 +162,66 @@
           "is_key_gate": true,
           "key_gate_direction": "east",
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6.1,
+                0,
+                -0.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2,
+                0,
+                -0.9
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2,
+                0,
+                -2.5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.4,
+                0,
+                15.1
+              ],
+              "enemy_id": "vulkure",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                12.9
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10,
+                0,
+                8.1
+              ],
+              "enemy_id": "rappy",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -282,7 +350,7 @@
                 0,
                 13
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "rappy"
             },
             {
               "type": "enemy",
@@ -291,7 +359,16 @@
                 0,
                 -0.7
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "rappy"
+            },
+            {
+              "type": "message",
+              "position": [
+                -1.6,
+                0,
+                -12
+              ],
+              "text": "itchy tasty"
             }
           ]
         },
@@ -310,7 +387,67 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -10.5,
+                0,
+                13.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -12.2,
+                0,
+                16.2
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -14.5,
+                0,
+                12.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                4,
+                0,
+                19.5
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                6.3,
+                0,
+                21.8
+              ]
+            },
+            {
+              "type": "fence",
+              "position": [
+                -18.9,
+                0,
+                -0.1
+              ],
+              "link_id": "b"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                12.6,
+                0,
+                14.5
+              ],
+              "link_id": "b"
+            }
+          ]
         }
       ]
     }
