@@ -287,15 +287,15 @@ func _match_gates(svg_centers: Array, portal_data: Dictionary) -> Dictionary:
 
 
 func _direction_score(svg_center: Vector2, orig_dir: String) -> float:
-	## Score how well an SVG gate position matches a model-space direction.
-	## Higher = better fit.  Uses mirrored-X convention (east = low SVG X).
+	## Score how well an SVG gate position matches a config direction.
+	## Higher = better fit.  Configs use standard convention (east = +X = high SVG X).
 	var dx: float = svg_center.x - 200.0
 	var dy: float = svg_center.y - 200.0
 	match orig_dir:
 		"north": return -dy   # prefer small Y (top)
 		"south": return dy    # prefer large Y (bottom)
-		"east":  return -dx   # prefer small X (left, mirrored)
-		"west":  return dx    # prefer large X (right, mirrored)
+		"east":  return dx    # prefer large X (right)
+		"west":  return -dx   # prefer small X (left)
 	return 0.0
 
 
@@ -381,9 +381,9 @@ func _compute_affine(svg_centers: Array, gate_match: Dictionary,
 		_ay = (pairs[zj]["svg"].y - pairs[zi]["svg"].y) / (pairs[zj]["local"].z - pairs[zi]["local"].z)
 		_by = pairs[zi]["svg"].y - pairs[zi]["local"].z * _ay
 
-	# Coordinate convention requires positive scale (east=-X→low SVG X,
-	# south=+Z→high SVG Y).  Centroid fallback can produce wrong signs when
-	# the model origin doesn't match the geometric center.  Fix by enforcing
+	# SVG maps model coordinates directly (X→svgX, Z→svgY), so affine scale
+	# should be positive.  Centroid fallback can produce wrong signs when the
+	# model origin doesn't match the geometric center.  Fix by enforcing
 	# positive scale and recomputing offset from the gate pair (pairs[0]).
 	if _ax < 0.0:
 		_ax = -_ax
