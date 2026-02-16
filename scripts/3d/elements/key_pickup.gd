@@ -89,9 +89,6 @@ func _on_interact(_player: Node3D) -> void:
 
 	set_state("collected")
 
-	# Add to inventory
+	# Store as quest key (separate from main inventory)
 	var item_to_add = key_id if key_id != "default" else "key_valley"
-	if Inventory.add_item(item_to_add, 1):
-		print("[Key] Collected key: ", item_to_add)
-	else:
-		print("[Key] Failed to add key to inventory: ", item_to_add)
+	Inventory.add_key(item_to_add)
