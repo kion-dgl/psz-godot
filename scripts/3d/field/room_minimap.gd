@@ -419,7 +419,7 @@ func _build_gate_entries(svg_centers: Array, gate_match: Dictionary,
 				label = "EXIT"
 			elif connections.has(grid_dir):
 				color = GATE_OPEN
-				label = _visual_label(svg_centers[i])
+				label = grid_dir.substr(0, 1).to_upper()
 			else:
 				color = GATE_WALL
 				label = ""
@@ -447,19 +447,6 @@ func _svg_floor_centroid() -> Vector2:
 	if total_area > 0.0:
 		return sum / total_area
 	return Vector2(200.0, 200.0)
-
-
-func _visual_label(svg_center: Vector2) -> String:
-	## Determine compass label from the gate's final display position.
-	## Whichever axis has the larger offset from center wins.
-	var dp: Vector2 = _svg_to_display(svg_center)
-	var half := DISPLAY_SIZE * 0.5
-	var dx: float = dp.x - half
-	var dy: float = dp.y - half
-	if absf(dx) >= absf(dy):
-		return "E" if dx > 0 else "W"
-	else:
-		return "S" if dy > 0 else "N"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
