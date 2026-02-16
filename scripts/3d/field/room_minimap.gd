@@ -420,12 +420,14 @@ func _build_gate_entries(svg_centers: Array, gate_match: Dictionary,
 				label = "EXIT"
 			elif connections.has(grid_dir):
 				color = GATE_OPEN
-				# GLB mirrored convention puts east on the left and west on the
-				# right.  Swap E↔W for standard compass display labels.
-				match grid_dir:
-					"east":  label = "W"
-					"west":  label = "E"
-					_:       label = grid_dir.substr(0, 1).to_upper()
+				# GLB mirrored X convention: east=-X (left), west=+X (right).
+				# Swap E↔W labels only when the original (pre-rotation) direction
+				# was east/west.  N/S gates rotated into E/W don't need the swap.
+				var orig := _grid_to_original(grid_dir, _rotation_deg)
+				if (grid_dir == "east" or grid_dir == "west") and (orig == "east" or orig == "west"):
+					label = "W" if grid_dir == "east" else "E"
+				else:
+					label = grid_dir.substr(0, 1).to_upper()
 			else:
 				color = GATE_WALL
 				label = ""
