@@ -8,6 +8,9 @@ extends Node
 ## Dictionary of item_id -> quantity
 var _items: Dictionary = {}
 
+## Separate key storage (field-scoped, doesn't count toward capacity)
+var _keys: Dictionary = {}
+
 ## Signals
 signal item_added(item_id: String, quantity: int, total: int)
 signal item_removed(item_id: String, quantity: int, remaining: int)
@@ -239,4 +242,26 @@ func _lookup_item(item_id: String) -> Dictionary:
 ## Clear all items
 func clear_inventory() -> void:
 	_items.clear()
+	_keys.clear()
 	print("[Inventory] Cleared")
+
+
+## Add a key (separate from main inventory, no capacity limit)
+func add_key(key_id: String) -> void:
+	_keys[key_id] = int(_keys.get(key_id, 0)) + 1
+	print("[Inventory] Key collected: ", key_id)
+
+
+## Check if a key is held
+func has_key(key_id: String) -> bool:
+	return _keys.has(key_id) and int(_keys[key_id]) > 0
+
+
+## Remove a key (consumed when opening a gate)
+func remove_key(key_id: String) -> void:
+	if _keys.has(key_id):
+		var remaining: int = int(_keys[key_id]) - 1
+		if remaining <= 0:
+			_keys.erase(key_id)
+		else:
+			_keys[key_id] = remaining
