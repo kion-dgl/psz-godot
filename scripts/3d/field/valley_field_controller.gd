@@ -15,6 +15,7 @@ const KeyPickupScript := preload("res://scripts/3d/elements/key_pickup.gd")
 const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
+const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 const BoxScript := preload("res://scripts/3d/elements/box.gd")
 const FenceScript := preload("res://scripts/3d/elements/fence.gd")
 const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
@@ -55,6 +56,7 @@ var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _map_overlay: CanvasLayer
 var _room_minimap: Control
+var _field_hud: CanvasLayer
 var _blob_shadow: MeshInstance3D
 var _stage_config: Dictionary = {}
 var _texture_fixes: Array = []
@@ -315,12 +317,28 @@ func _ready() -> void:
 	map_panel.section_info = "Section %d (%s)" % [section_idx + 1, str(section.get("type", "?"))]
 	_map_overlay.add_child(map_panel)
 
+	# Field HUD (always visible — stats panel + meseta + minimap)
+	_field_hud = FieldHudScript.new()
+	add_child(_field_hud)
+
 	_room_minimap = RoomMinimapScript.new()
 	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
 		_current_cell.get("connections", {}),
 		str(_current_cell.get("warp_edge", "")), _map_root, _rotation_deg)
-	_map_overlay.add_child(_room_minimap)
+	_field_hud.add_child(_room_minimap)
 	map_panel.top_offset = 200.0
+
+	# Sync initial gate lock states to minimap (gates were created before minimap)
+	for gate in _room_gates_locked:
+		if is_instance_valid(gate):
+			var dir := _gate_direction(gate)
+			if not dir.is_empty():
+				_room_minimap.set_gate_locked(dir, true)
+	# Key-gate starts locked unless previously opened
+	var is_key_gate_cell: bool = _current_cell.get("is_key_gate", false)
+	var kg_dir: String = str(_current_cell.get("key_gate_direction", ""))
+	if is_key_gate_cell and not kg_dir.is_empty() and not _gates_opened.has(str(_current_cell.get("pos", ""))):
+		_room_minimap.set_gate_locked(kg_dir, true)
 
 
 
@@ -1072,6 +1090,7 @@ func _spawn_field_elements() -> void:
 			# Enable the locked gate trigger when the key gate opens
 			var gate_trigger_name := "GateTrigger_%s" % dir
 			var cell_pos_for_gate := key_for_cell
+			var gate_dir_for_minimap: String = str(dir)
 			kg.state_changed.connect(func(_old: String, new_state: String) -> void:
 				if new_state == "open":
 					_gates_opened[cell_pos_for_gate] = true
@@ -1079,6 +1098,8 @@ func _spawn_field_elements() -> void:
 					if trigger:
 						trigger.monitoring = true
 						print("[ValleyField] KeyGate opened → trigger '%s' enabled, gate tracked" % gate_trigger_name)
+					if _room_minimap:
+						_room_minimap.set_gate_locked(gate_dir_for_minimap, false)
 			)
 			print("[FieldElements] ── KEY GATE DONE ──")
 		else:
@@ -1701,6 +1722,8 @@ func _lock_gates_for_enemies() -> void:
 				if gate.element_state != "open":
 					gate.lock()
 					_room_gates_locked.append(gate)
+					if _room_minimap:
+						_room_minimap.set_gate_locked(dir, true)
 					print("[CellObjects] Gate %s locked (enemies present)" % dir)
 					break
 
@@ -1722,10 +1745,13 @@ func _check_room_clear() -> void:
 	for gate in _room_gates_locked:
 		if is_instance_valid(gate):
 			gate.open()
+			var dir := _gate_direction(gate)
 			# Enable the gate's trigger
-			var trigger := _find_child_by_name(self, "GateTrigger_%s" % _gate_direction(gate)) as Area3D
+			var trigger := _find_child_by_name(self, "GateTrigger_%s" % dir) as Area3D
 			if trigger:
 				trigger.monitoring = true
+			if _room_minimap and not dir.is_empty():
+				_room_minimap.set_gate_locked(dir, false)
 	_room_gates_locked.clear()
 
 

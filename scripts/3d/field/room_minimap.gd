@@ -8,15 +8,17 @@ const BG_COLOR := Color(0.1, 0.1, 0.18, 0.85)
 const FLOOR_COLOR := Color(0.16, 0.16, 0.31)
 const BOUNDARY_COLOR := Color(1.0, 1.0, 1.0, 0.6)
 const PLAYER_COLOR := Color(0.0, 1.0, 0.0)
-const GATE_CONNECTED := Color(0.27, 1.0, 0.27)
+const GATE_OPEN := Color(0.27, 1.0, 0.27)
+const GATE_LOCKED := Color(1.0, 0.3, 0.3)
 const GATE_EXIT := Color(0.29, 0.62, 1.0)
 const GATE_WALL := Color(0.4, 0.4, 0.4)
 
 var _floor_triangles: Array = []   # Array[PackedVector2Array] — 3 verts each
 var _boundary_lines: Array = []    # Array[[Vector2, Vector2]]
-var _gate_entries: Array = []      # Array[{center, color, label}]
+var _gate_entries: Array = []      # Array[{center, color, label, dir}]
+var _gate_dir_index: Dictionary = {}  # direction → index in _gate_entries
 var _player_display_pos := Vector2.ZERO
-var _player_facing := 0.0
+var _player_display_dir := Vector2(0, 1)  # arrow direction in display space
 var _has_player_tracking := false
 
 # Affine transform: svg_x = local_x * _ax + _bx,  svg_y = local_z * _ay + _by
@@ -82,13 +84,35 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 			gate["center"], gate["color"], gate["label"]])
 
 
+func set_gate_locked(direction: String, locked: bool) -> void:
+	if not _gate_dir_index.has(direction):
+		return
+	var idx: int = _gate_dir_index[direction]
+	var entry: Dictionary = _gate_entries[idx]
+	# Don't override EXIT gates
+	if entry["color"] == GATE_EXIT:
+		return
+	entry["color"] = GATE_LOCKED if locked else GATE_OPEN
+	queue_redraw()
+
+
 func update_player(global_pos: Vector3, facing_rad: float, map_root: Node3D) -> void:
 	if not _has_player_tracking:
 		return
-	var local: Vector3 = map_root.global_transform.affine_inverse() * global_pos
+	var inv := map_root.global_transform.affine_inverse()
+	var local: Vector3 = inv * global_pos
 	var svg_pos := Vector2(local.x * _ax + _bx, local.z * _ay + _by)
 	_player_display_pos = _svg_to_display(svg_pos)
-	_player_facing = facing_rad
+
+	# Compute arrow direction by transforming a small forward step through the
+	# same pipeline (affine + mirror + rotation) so it matches the display.
+	var step_3d := global_pos + Vector3(sin(facing_rad), 0, cos(facing_rad)) * 0.5
+	var step_local: Vector3 = inv * step_3d
+	var step_svg := Vector2(step_local.x * _ax + _bx, step_local.z * _ay + _by)
+	var step_display := _svg_to_display(step_svg)
+	var dir := (step_display - _player_display_pos)
+	if dir.length_squared() > 0.0001:
+		_player_display_dir = dir.normalized()
 	queue_redraw()
 
 
@@ -126,7 +150,7 @@ func _draw() -> void:
 
 	# Player arrow
 	if _has_player_tracking:
-		var fwd := Vector2(sin(_player_facing), cos(_player_facing))
+		var fwd := _player_display_dir
 		var sz := 6.0
 		draw_polygon(PackedVector2Array([
 			_player_display_pos + fwd * sz,
@@ -138,8 +162,12 @@ func _draw() -> void:
 # ── SVG → Display transform ─────────────────────────────────────────────────
 
 func _svg_to_display(svg_pos: Vector2) -> Vector2:
-	## Scale SVG coordinates (400x400 canvas) to display size.
-	return svg_pos * (DISPLAY_SIZE / 400.0)
+	## Rotate SVG coordinates by cell rotation, then scale to display size.
+	var pos := svg_pos
+	if _rotation_deg != 0:
+		var center := Vector2(200.0, 200.0)
+		pos = (pos - center).rotated(deg_to_rad(float(_rotation_deg))) + center
+	return pos * (DISPLAY_SIZE / 400.0)
 
 
 # ── SVG parsing ─────────────────────────────────────────────────────────────
@@ -315,7 +343,12 @@ func _compute_affine(svg_centers: Array, gate_match: Dictionary,
 		pairs.append({"svg": svg_centers[gate_idx], "local": local})
 
 	if pairs.size() < 2:
-		return
+		if pairs.size() == 1 and not _floor_triangles.is_empty():
+			# Single gate: use SVG floor centroid mapped to model origin as
+			# a virtual second reference point for scale estimation.
+			pairs.append({"svg": _svg_floor_centroid(), "local": Vector3.ZERO})
+		else:
+			return
 
 	# Pick pair with max spread in local.x for solving X affine
 	var best_x := 0.0
@@ -348,6 +381,17 @@ func _compute_affine(svg_centers: Array, gate_match: Dictionary,
 		_ay = (pairs[zj]["svg"].y - pairs[zi]["svg"].y) / (pairs[zj]["local"].z - pairs[zi]["local"].z)
 		_by = pairs[zi]["svg"].y - pairs[zi]["local"].z * _ay
 
+	# Coordinate convention requires positive scale (east=-X→low SVG X,
+	# south=+Z→high SVG Y).  Centroid fallback can produce wrong signs when
+	# the model origin doesn't match the geometric center.  Fix by enforcing
+	# positive scale and recomputing offset from the gate pair (pairs[0]).
+	if _ax < 0.0:
+		_ax = -_ax
+		_bx = pairs[0]["svg"].x - pairs[0]["local"].x * _ax
+	if _ay < 0.0:
+		_ay = -_ay
+		_by = pairs[0]["svg"].y - pairs[0]["local"].z * _ay
+
 	# Full tracking if both axes solved; single-axis fallback uses same scale
 	if best_x > 0.1 and best_z > 0.1:
 		_has_player_tracking = true
@@ -366,21 +410,56 @@ func _build_gate_entries(svg_centers: Array, gate_match: Dictionary,
 	for i in range(svg_centers.size()):
 		var color: Color
 		var label: String
+		var dir: String = ""
 		if gate_match.has(i):
 			var grid_dir: String = gate_match[i]
+			dir = grid_dir
 			if grid_dir == warp_edge and not warp_edge.is_empty():
 				color = GATE_EXIT
 				label = "EXIT"
 			elif connections.has(grid_dir):
-				color = GATE_CONNECTED
-				label = grid_dir.substr(0, 1).to_upper()
+				color = GATE_OPEN
+				label = _visual_label(svg_centers[i])
 			else:
 				color = GATE_WALL
 				label = ""
 		else:
 			color = GATE_WALL
 			label = ""
-		_gate_entries.append({"center": svg_centers[i], "color": color, "label": label})
+		_gate_entries.append({"center": svg_centers[i], "color": color, "label": label, "dir": dir})
+		if not dir.is_empty():
+			_gate_dir_index[dir] = _gate_entries.size() - 1
+
+
+func _svg_floor_centroid() -> Vector2:
+	## Area-weighted centroid of all floor triangles in SVG coordinates.
+	var sum := Vector2.ZERO
+	var total_area := 0.0
+	for tri in _floor_triangles:
+		if tri.size() < 3:
+			continue
+		var a: Vector2 = tri[0]
+		var b: Vector2 = tri[1]
+		var c: Vector2 = tri[2]
+		var area := absf((b - a).cross(c - a)) * 0.5
+		sum += (a + b + c) / 3.0 * area
+		total_area += area
+	if total_area > 0.0:
+		return sum / total_area
+	return Vector2(200.0, 200.0)
+
+
+func _visual_label(svg_center: Vector2) -> String:
+	## Determine compass label from the gate's final display position.
+	## Whichever axis has the larger offset from center wins.
+	var dp: Vector2 = _svg_to_display(svg_center)
+	var half := DISPLAY_SIZE * 0.5
+	var dx: float = dp.x - half
+	var dy: float = dp.y - half
+	if absf(dx) >= absf(dy):
+		return "E" if dx > 0 else "W"
+	else:
+		return "S" if dy > 0 else "N"
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
