@@ -287,15 +287,16 @@ func _match_gates(svg_centers: Array, portal_data: Dictionary) -> Dictionary:
 
 
 func _direction_score(svg_center: Vector2, orig_dir: String) -> float:
-	## Score how well an SVG gate position matches a config direction.
-	## Higher = better fit.  Configs use standard convention (east = +X = high SVG X).
+	## Score how well an SVG gate position matches a direction in mirrored GLB
+	## convention (east=-X, west=+X).  SVG maps model X directly, so east
+	## gates appear at low SVG X (left) and west gates at high SVG X (right).
 	var dx: float = svg_center.x - 200.0
 	var dy: float = svg_center.y - 200.0
 	match orig_dir:
 		"north": return -dy   # prefer small Y (top)
 		"south": return dy    # prefer large Y (bottom)
-		"east":  return dx    # prefer large X (right)
-		"west":  return -dx   # prefer small X (left)
+		"east":  return -dx   # prefer small X (left, mirrored)
+		"west":  return dx    # prefer large X (right, mirrored)
 	return 0.0
 
 
@@ -419,7 +420,12 @@ func _build_gate_entries(svg_centers: Array, gate_match: Dictionary,
 				label = "EXIT"
 			elif connections.has(grid_dir):
 				color = GATE_OPEN
-				label = grid_dir.substr(0, 1).to_upper()
+				# GLB mirrored convention puts east on the left and west on the
+				# right.  Swap E↔W for standard compass display labels.
+				match grid_dir:
+					"east":  label = "W"
+					"west":  label = "E"
+					_:       label = grid_dir.substr(0, 1).to_upper()
 			else:
 				color = GATE_WALL
 				label = ""
