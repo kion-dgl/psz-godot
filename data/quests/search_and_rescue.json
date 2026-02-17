@@ -1,0 +1,146 @@
+{
+  "id": "search_and_rescue",
+  "name": "Search and Rescue",
+  "description": "Investigate reports of something falling from the sky in Gurhacia Valley.",
+  "area_id": "gurhacia",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,2",
+      "end_pos": "1,2",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s01a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -1.7,
+                0,
+                12.2
+              ],
+              "trigger_size": [
+                10.5,
+                5,
+                4.5
+              ],
+              "dialog": [
+                {
+                  "speaker": "kai:",
+                  "text": "is this your first time in the field?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s01a_na1",
+          "rotation": 180,
+          "connections": {
+            "north": "0,2"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "story_prop",
+              "position": [
+                -10.3,
+                0,
+                -5.4
+              ],
+              "prop_path": "assets/objects/story/dropship_crash.glb"
+            },
+            {
+              "type": "npc",
+              "position": [
+                4.9,
+                0,
+                -3.7
+              ],
+              "npc_id": "sarisa"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.3,
+                0,
+                2.7
+              ],
+              "enemy_id": "helion"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10,
+                0,
+                0.1
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.5,
+                0,
+                1.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "telepipe",
+              "position": [
+                -4,
+                0,
+                -15.2
+              ],
+              "spawn_condition": "room_clear"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "companions": [
+    "kai"
+  ],
+  "city_dialog": [
+    {
+      "npc_id": "kai",
+      "npc_name": "Kai",
+      "dialog": [
+        {
+          "speaker": "",
+          "text": "Hello there. "
+        },
+        {
+          "speaker": "Kai",
+          "text": "Let's go rookie "
+        }
+      ]
+    }
+  ]
+}

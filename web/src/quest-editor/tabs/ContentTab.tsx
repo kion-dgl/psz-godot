@@ -14,7 +14,14 @@ import type { QuestProject, Direction, CellObject, CellObjectType } from '../typ
 import { ROLE_COLORS, CELL_OBJECT_COLORS, CELL_OBJECT_LABELS } from '../types';
 import { getRotatedGates, getStageConfig, getStageSuffix } from '../hooks/useStageConfigs';
 import { getGlbPath, getAreaFromMapId } from '../constants';
+import { assetUrl } from '../../utils/assets';
 import type { GateConfig } from '../types';
+
+/** NPC ID → GLB asset path mapping (mirrors field_npc.gd NPC_MODELS) */
+const NPC_MODELS: Record<string, string> = {
+  sarisa: 'assets/npcs/sarisa/pc_a00_000.glb',
+  kai: 'assets/npcs/kai/pc_a01_000.glb',
+};
 
 // ============================================================================
 // Enemy Data (loaded from /data/enemies.json)
@@ -257,56 +264,119 @@ function MessageMarker({ obj, selected, onClick }: { obj: CellObject; selected: 
   );
 }
 
-/** Story prop marker — yellow cube */
+/** Story prop GLB model loader */
+function StoryPropModel({ propPath }: { propPath: string }) {
+  const url = assetUrl(`/${propPath}`);
+  const { scene } = useGLTF(url);
+  const cloned = useMemo(() => scene.clone(true), [scene]);
+  return <primitive object={cloned} />;
+}
+
+/** Story prop marker — loads GLB if available, falls back to yellow cube */
 function StoryPropMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  const yRot = ((obj.rotation || 0) * Math.PI) / 180;
+  return (
+    <group position={obj.position} rotation={[0, yRot, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      {obj.prop_path ? (
+        <Suspense fallback={
+          <mesh position={[0, 0.75, 0]}>
+            <boxGeometry args={[1.5, 1.5, 1.5]} />
+            <meshBasicMaterial color="#cccc44" transparent opacity={0.3} wireframe />
+          </mesh>
+        }>
+          <StoryPropModel propPath={obj.prop_path} />
+        </Suspense>
+      ) : (
+        <mesh position={[0, 0.75, 0]}>
+          <boxGeometry args={[1.5, 1.5, 1.5]} />
+          <meshBasicMaterial color="#cccc44" transparent opacity={selected ? 0.9 : 0.5} />
+        </mesh>
+      )}
+      {selected && (
+        <lineSegments position={[0, 0.75, 0]}>
+          <edgesGeometry args={[new THREE.BoxGeometry(1.5, 1.5, 1.5)]} />
+          <lineBasicMaterial color="#ffffff" />
+        </lineSegments>
+      )}
+    </group>
+  );
+}
+
+/** Dialog trigger marker — cyan wireframe box matching trigger_size */
+function DialogTriggerMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  const size = obj.trigger_size || [4, 3, 4];
   return (
     <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-      <mesh position={[0, 0.75, 0]}>
-        <boxGeometry args={[1.5, 1.5, 1.5]} />
-        <meshBasicMaterial color="#cccc44" transparent opacity={selected ? 0.9 : 0.5} />
+      <mesh position={[0, size[1] / 2, 0]}>
+        <boxGeometry args={[size[0], size[1], size[2]]} />
+        <meshBasicMaterial color="#44cccc" transparent opacity={selected ? 0.25 : 0.12} />
       </mesh>
-      <lineSegments position={[0, 0.75, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(1.5, 1.5, 1.5)]} />
-        <lineBasicMaterial color={selected ? '#ffffff' : '#cccc44'} />
+      <lineSegments position={[0, size[1] / 2, 0]}>
+        <edgesGeometry args={[new THREE.BoxGeometry(size[0], size[1], size[2])]} />
+        <lineBasicMaterial color={selected ? '#ffffff' : '#44cccc'} />
       </lineSegments>
     </group>
   );
 }
 
-/** Dialog trigger marker — cyan wireframe sphere */
-function DialogTriggerMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+/** NPC GLB model loader */
+function NpcModel({ npcId }: { npcId: string }) {
+  const glbPath = NPC_MODELS[npcId];
+  const url = glbPath ? assetUrl(`/${glbPath}`) : '';
+  const { scene } = useGLTF(url);
+  const cloned = useMemo(() => scene.clone(), [scene]);
+  return <primitive object={cloned} />;
+}
+
+/** NPC marker — loads GLB if known npc_id, falls back to green cylinder */
+function NpcMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  const yRot = ((obj.rotation || 0) * Math.PI) / 180;
+  const hasModel = obj.npc_id && NPC_MODELS[obj.npc_id];
   return (
-    <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-      <mesh position={[0, 1, 0]}>
-        <sphereGeometry args={[1.2, 16, 16]} />
-        <meshBasicMaterial color="#44cccc" wireframe transparent opacity={selected ? 0.9 : 0.5} />
-      </mesh>
+    <group position={obj.position} rotation={[0, yRot, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      {hasModel ? (
+        <Suspense fallback={
+          <mesh position={[0, 0.9, 0]}>
+            <cylinderGeometry args={[0.4, 0.4, 1.8, 12]} />
+            <meshBasicMaterial color="#44cc44" transparent opacity={0.3} wireframe />
+          </mesh>
+        }>
+          <NpcModel npcId={obj.npc_id!} />
+        </Suspense>
+      ) : (
+        <>
+          <mesh position={[0, 0.9, 0]}>
+            <cylinderGeometry args={[0.4, 0.4, 1.8, 12]} />
+            <meshBasicMaterial color="#44cc44" transparent opacity={selected ? 0.9 : 0.5} />
+          </mesh>
+          <mesh position={[0, 2.0, 0]}>
+            <sphereGeometry args={[0.4, 12, 12]} />
+            <meshBasicMaterial color="#44cc44" transparent opacity={selected ? 0.9 : 0.5} />
+          </mesh>
+        </>
+      )}
       {selected && (
-        <mesh position={[0, 1, 0]}>
-          <sphereGeometry args={[1.3, 16, 16]} />
-          <meshBasicMaterial color="#ffffff" wireframe transparent opacity={0.3} />
+        <mesh position={[0, 0.9, 0]}>
+          <cylinderGeometry args={[0.5, 0.5, 2.0, 12]} />
+          <meshBasicMaterial color="#ffffff" wireframe transparent opacity={0.4} />
         </mesh>
       )}
     </group>
   );
 }
 
-/** NPC marker — green cylinder */
-function NpcMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+/** Telepipe marker — cyan glowing cylinder */
+function TelepipeMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  const isDeferred = obj.spawn_condition === 'room_clear';
   return (
     <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-      <mesh position={[0, 0.9, 0]}>
-        <cylinderGeometry args={[0.4, 0.4, 1.8, 12]} />
-        <meshBasicMaterial color="#44cc44" transparent opacity={selected ? 0.9 : 0.5} />
-      </mesh>
-      {/* Head */}
-      <mesh position={[0, 2.0, 0]}>
-        <sphereGeometry args={[0.4, 12, 12]} />
-        <meshBasicMaterial color="#44cc44" transparent opacity={selected ? 0.9 : 0.5} />
+      <mesh position={[0, 1.5, 0]}>
+        <cylinderGeometry args={[0.8, 0.8, 3.0, 16]} />
+        <meshBasicMaterial color={isDeferred ? '#4488cc' : '#66ccff'} transparent opacity={selected ? 0.8 : 0.5} />
       </mesh>
       {selected && (
-        <mesh position={[0, 0.9, 0]}>
-          <cylinderGeometry args={[0.5, 0.5, 2.0, 12]} />
+        <mesh position={[0, 1.5, 0]}>
+          <cylinderGeometry args={[0.9, 0.9, 3.1, 16]} />
           <meshBasicMaterial color="#ffffff" wireframe transparent opacity={0.4} />
         </mesh>
       )}
@@ -334,6 +404,8 @@ function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: b
       return <DialogTriggerMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'npc':
       return <NpcMarker obj={obj} selected={selected} onClick={onClick} />;
+    case 'telepipe':
+      return <TelepipeMarker obj={obj} selected={selected} onClick={onClick} />;
     default:
       return null;
   }
@@ -410,6 +482,12 @@ function ObjectPlacementCursor({ objectType }: { objectType: CellObjectType }) {
             <meshBasicMaterial color={color} transparent opacity={0.3} />
           </mesh>
         </>
+      )}
+      {objectType === 'telepipe' && (
+        <mesh position={[0, 1.5, 0]}>
+          <cylinderGeometry args={[0.8, 0.8, 3.0, 16]} />
+          <meshBasicMaterial color={color} transparent opacity={0.3} />
+        </mesh>
       )}
       {/* Ground ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]}>
@@ -855,7 +933,7 @@ function CellContentInspector({
 
         {/* Object palette */}
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc'] as CellObjectType[]).map(type => (
+          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe'] as CellObjectType[]).map(type => (
             <button
               key={type}
               onClick={() => onSetPlacingObject(placingObject === type ? null : type)}
@@ -995,69 +1073,235 @@ function CellContentInspector({
                     </div>
                   )}
 
-                  {/* Story prop path */}
+                  {/* Story prop editor */}
                   {isSel && obj.type === 'story_prop' && (
-                    <div style={{ marginTop: '4px' }}>
+                    <div style={{ marginTop: '4px' }} onClick={(e) => e.stopPropagation()}>
+                      <span style={{ fontSize: '10px', color: '#888' }}>Prop GLB:</span>
+                      <select
+                        value={obj.prop_path || ''}
+                        onChange={(e) => onUpdateObject(obj.id, { prop_path: e.target.value || undefined })}
+                        style={{
+                          width: '100%', padding: '3px', background: '#111',
+                          border: '1px solid #444', borderRadius: '3px',
+                          color: '#fff', fontSize: '10px', fontFamily: 'monospace',
+                          marginBottom: '2px',
+                        }}
+                      >
+                        <option value="">-- select prop --</option>
+                        <option value="assets/objects/story/dropship_crash.glb">Dropship (crashed)</option>
+                      </select>
                       <input
                         type="text"
                         value={obj.prop_path || ''}
                         onChange={(e) => onUpdateObject(obj.id, { prop_path: e.target.value || undefined })}
-                        placeholder="assets/objects/story/dropship_crash.glb"
-                        onClick={(e) => e.stopPropagation()}
+                        placeholder="Or type custom path..."
                         style={{
                           width: '100%', padding: '4px', background: '#111',
                           border: '1px solid #444', borderRadius: '3px',
                           color: '#fff', fontSize: '11px', fontFamily: 'monospace',
+                          marginBottom: '4px',
                         }}
                       />
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Rot:</span>
+                        {[0, 90, 180, 270].map(deg => (
+                          <button
+                            key={deg}
+                            onClick={() => onUpdateObject(obj.id, { rotation: deg || undefined })}
+                            style={{
+                              ...btnStyle, padding: '2px 5px', fontSize: '9px',
+                              background: (obj.rotation || 0) === deg ? '#cccc44' : '#333',
+                            }}
+                          >
+                            {deg}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
-                  {/* Dialog trigger ID */}
+                  {/* Dialog trigger editor */}
                   {isSel && obj.type === 'dialog_trigger' && (
-                    <div style={{ marginTop: '4px' }}>
+                    <div style={{ marginTop: '4px' }} onClick={(e) => e.stopPropagation()}>
                       <input
                         type="text"
                         value={obj.trigger_id || ''}
                         onChange={(e) => onUpdateObject(obj.id, { trigger_id: e.target.value || undefined })}
-                        placeholder="trigger_id (e.g. crash_site_intro)"
-                        onClick={(e) => e.stopPropagation()}
+                        placeholder="trigger_id (e.g. post_battle)"
                         style={{
                           width: '100%', padding: '4px', background: '#111',
                           border: '1px solid #444', borderRadius: '3px',
                           color: '#fff', fontSize: '11px', fontFamily: 'monospace',
+                          marginBottom: '4px',
                         }}
                       />
+                      <div style={{ marginBottom: '4px' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Size (X / Y / Z):</span>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+                          {[0, 1, 2].map(axis => (
+                            <input
+                              key={axis}
+                              type="number"
+                              step={0.5}
+                              value={obj.trigger_size ? obj.trigger_size[axis] : [4, 3, 4][axis]}
+                              onChange={(e) => {
+                                const cur = obj.trigger_size ? [...obj.trigger_size] : [4, 3, 4];
+                                cur[axis] = parseFloat(e.target.value) || 0;
+                                const isDefault = cur[0] === 4 && cur[1] === 3 && cur[2] === 4;
+                                onUpdateObject(obj.id, { trigger_size: isDefault ? undefined : cur as [number, number, number] });
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                flex: 1, padding: '3px', background: '#111',
+                                border: '1px solid #444', borderRadius: '3px',
+                                color: '#fff', fontSize: '10px', fontFamily: 'monospace',
+                                textAlign: 'center', width: '50px',
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: '4px' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Condition:</span>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
+                          {(['enter', 'room_clear'] as const).map(cond => (
+                            <button
+                              key={cond}
+                              onClick={() => onUpdateObject(obj.id, { trigger_condition: cond })}
+                              style={{
+                                ...btnStyle, padding: '2px 8px', fontSize: '9px',
+                                background: (obj.trigger_condition || 'enter') === cond ? '#44cccc' : '#333',
+                              }}
+                            >
+                              {cond}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: '4px' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Actions:</span>
+                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '2px' }}>
+                          {['complete_quest', 'telepipe'].map(action => {
+                            const active = (obj.actions || []).includes(action);
+                            return (
+                              <button
+                                key={action}
+                                onClick={() => {
+                                  const current = obj.actions || [];
+                                  const updated = active ? current.filter(a => a !== action) : [...current, action];
+                                  onUpdateObject(obj.id, { actions: updated });
+                                }}
+                                style={{
+                                  ...btnStyle, padding: '2px 8px', fontSize: '9px',
+                                  background: active ? '#44cccc' : '#333',
+                                  border: `1px solid ${active ? '#44cccc' : '#555'}`,
+                                }}
+                              >
+                                {action}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  {/* NPC ID and name */}
+                  {/* NPC editor */}
                   {isSel && obj.type === 'npc' && (
-                    <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <input
-                        type="text"
-                        value={obj.npc_id || ''}
-                        onChange={(e) => onUpdateObject(obj.id, { npc_id: e.target.value || undefined })}
-                        placeholder="npc_id (e.g. sarisa)"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          width: '100%', padding: '4px', background: '#111',
-                          border: '1px solid #444', borderRadius: '3px',
-                          color: '#fff', fontSize: '11px', fontFamily: 'monospace',
-                        }}
-                      />
+                    <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
+                      <div>
+                        <span style={{ fontSize: '10px', color: '#888' }}>NPC Model:</span>
+                        <select
+                          value={obj.npc_id || ''}
+                          onChange={(e) => onUpdateObject(obj.id, { npc_id: e.target.value || undefined })}
+                          style={{
+                            width: '100%', padding: '3px', background: '#111',
+                            border: '1px solid #444', borderRadius: '3px',
+                            color: '#fff', fontSize: '10px', fontFamily: 'monospace',
+                          }}
+                        >
+                          <option value="">-- select --</option>
+                          <option value="kai">Kai</option>
+                          <option value="sarisa">Sarisa</option>
+                        </select>
+                      </div>
                       <input
                         type="text"
                         value={obj.npc_name || ''}
                         onChange={(e) => onUpdateObject(obj.id, { npc_name: e.target.value || undefined })}
                         placeholder="Display name (e.g. Sarisa)"
-                        onClick={(e) => e.stopPropagation()}
                         style={{
                           width: '100%', padding: '4px', background: '#111',
                           border: '1px solid #444', borderRadius: '3px',
                           color: '#fff', fontSize: '11px', fontFamily: 'monospace',
                         }}
                       />
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Rot:</span>
+                        {[0, 90, 180, 270].map(deg => (
+                          <button
+                            key={deg}
+                            onClick={() => onUpdateObject(obj.id, { rotation: deg || undefined })}
+                            style={{
+                              ...btnStyle, padding: '2px 5px', fontSize: '9px',
+                              background: (obj.rotation || 0) === deg ? '#44cc44' : '#333',
+                            }}
+                          >
+                            {deg}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '4px' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Anim:</span>
+                        <input
+                          type="text"
+                          value={obj.animation || ''}
+                          onChange={(e) => onUpdateObject(obj.id, { animation: e.target.value || undefined })}
+                          placeholder="e.g. dam_h"
+                          style={{
+                            flex: 1, padding: '3px', background: '#111',
+                            border: '1px solid #444', borderRadius: '3px',
+                            color: '#fff', fontSize: '10px', fontFamily: 'monospace',
+                          }}
+                        />
+                        <span style={{ fontSize: '10px', color: '#888' }}>Frame:</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={obj.animation_frame ?? ''}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            onUpdateObject(obj.id, { animation_frame: v === '' ? undefined : parseInt(v) });
+                          }}
+                          style={{
+                            width: '40px', padding: '3px', background: '#111',
+                            border: '1px solid #444', borderRadius: '3px',
+                            color: '#fff', fontSize: '10px', fontFamily: 'monospace',
+                            textAlign: 'center',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Telepipe spawn condition */}
+                  {isSel && obj.type === 'telepipe' && (
+                    <div style={{ marginTop: '4px' }}>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', color: '#888', minWidth: '60px' }}>Spawn</span>
+                        <select
+                          value={obj.spawn_condition || 'immediate'}
+                          onChange={(e) => onUpdateObject(obj.id, { spawn_condition: e.target.value as 'immediate' | 'room_clear' })}
+                          style={{
+                            flex: 1, padding: '2px 4px', background: '#111',
+                            border: '1px solid #444', borderRadius: '2px',
+                            color: '#fff', fontSize: '10px',
+                          }}
+                        >
+                          <option value="immediate">Immediate</option>
+                          <option value="room_clear">After Room Clear</option>
+                        </select>
+                      </div>
                     </div>
                   )}
 
@@ -1247,7 +1491,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
       if (placingObject === 'enemy') newObj.enemy_id = 'lizard';
       if (placingObject === 'message') newObj.text = '';
       if (placingObject === 'story_prop') newObj.prop_path = '';
-      if (placingObject === 'dialog_trigger') { newObj.trigger_id = ''; newObj.dialog = []; }
+      if (placingObject === 'dialog_trigger') { newObj.trigger_id = ''; newObj.trigger_condition = 'enter'; newObj.dialog = []; newObj.actions = []; }
       if (placingObject === 'npc') { newObj.npc_id = ''; newObj.npc_name = ''; newObj.dialog = []; }
       return {
         ...prev,

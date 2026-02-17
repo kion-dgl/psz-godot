@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import type { QuestProject, EditorGridCell, ValidationIssue, Direction } from '../types';
+import type { QuestProject, EditorGridCell, ValidationIssue, Direction, SectionType } from '../types';
 import { generateGrid, type GenParams } from '../shared/grid-generation';
 import GridCanvas from '../shared/GridCanvas';
 import CellInspector from '../shared/CellInspector';
@@ -13,6 +13,10 @@ import { getRotatedGates, getNeighbor, isValidPos, oppositeDirection } from '../
 interface LayoutTabProps {
   project: QuestProject;
   onUpdateProject: (updater: (prev: QuestProject) => QuestProject) => void;
+  sectionType?: SectionType;
+  entryDirection?: Direction;
+  exitDirection?: Direction;
+  onSetSectionDirection?: (field: 'entryDirection' | 'exitDirection', dir: Direction | undefined) => void;
 }
 
 /** Validate the current layout and return issues */
@@ -89,7 +93,7 @@ function validateLayout(project: QuestProject): ValidationIssue[] {
   return issues;
 }
 
-export default function LayoutTab({ project, onUpdateProject }: LayoutTabProps) {
+export default function LayoutTab({ project, onUpdateProject, sectionType, entryDirection, exitDirection, onSetSectionDirection }: LayoutTabProps) {
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [pickerTarget, setPickerTarget] = useState<string | null>(null);
   const [showGenDialog, setShowGenDialog] = useState(false);
@@ -115,20 +119,28 @@ export default function LayoutTab({ project, onUpdateProject }: LayoutTabProps) 
   // Place a stage in a cell
   const handlePlaceStage = useCallback((stageName: string, rotation: number) => {
     if (!pickerTarget) return;
-    onUpdateProject(prev => ({
-      ...prev,
-      cells: {
-        ...prev.cells,
-        [pickerTarget]: {
-          stageName,
-          rotation: rotation || undefined,
-          role: 'transit',
-          manual: true,
+    onUpdateProject(prev => {
+      const next = {
+        ...prev,
+        cells: {
+          ...prev.cells,
+          [pickerTarget]: {
+            stageName,
+            rotation: rotation || undefined,
+            role: 'transit' as const,
+            manual: true,
+          },
         },
-      },
-    }));
+      };
+      // Auto-set start/end for transition/boss sections (single-cell)
+      if (sectionType === 'transition' || sectionType === 'boss') {
+        next.startPos = pickerTarget;
+        next.endPos = pickerTarget;
+      }
+      return next;
+    });
     setPickerTarget(null);
-  }, [pickerTarget, onUpdateProject]);
+  }, [pickerTarget, onUpdateProject, sectionType]);
 
   // Update a cell's properties
   const handleUpdateCell = useCallback((pos: string, updates: Partial<EditorGridCell>) => {
@@ -237,8 +249,8 @@ export default function LayoutTab({ project, onUpdateProject }: LayoutTabProps) 
   }, []);
 
   // Generate grid
-  const handleGenerate = useCallback(() => {
-    const result = generateGrid(project.areaKey, project.variant, {
+  const handleGenerate = useCallback(async () => {
+    const result = await generateGrid(project.areaKey, project.variant, {
       ...genParams,
       gridSize: project.gridSize,
     });
@@ -399,6 +411,10 @@ export default function LayoutTab({ project, onUpdateProject }: LayoutTabProps) 
             onSetLockedGate={handleSetLockedGate}
             onClearCell={handleClearCell}
             onChangeStage={handleChangeStage}
+            sectionType={sectionType}
+            entryDirection={entryDirection}
+            exitDirection={exitDirection}
+            onSetSectionDirection={onSetSectionDirection}
           />
         ) : (
           <div style={{ padding: '1rem', color: '#888', fontSize: '13px' }}>

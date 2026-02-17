@@ -78,6 +78,8 @@ var _room_triggers: Array = [] # DialogTrigger nodes in current room
 var _room_npcs: Array = []     # FieldNpc nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
+var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
+var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 
 # Wave spawning
 var _current_wave: int = 1
@@ -1036,9 +1038,9 @@ func _spawn_field_elements() -> void:
 		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
 		area_warp.rotation.y = _dir_to_yaw(warp_edge) + PI
 
-	# Exit warp on end cells WITHOUT warp_edge (quest dead-end rooms)
+	# End cells WITHOUT warp_edge — defer telepipe until room clear
 	if _current_cell.get("is_end", false) and warp_edge.is_empty():
-		_spawn_end_cell_exit(connections)
+		_needs_telepipe = true
 
 	# Gates and Waypoints at each connection trigger (skip warp_edge)
 	print("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
@@ -1190,6 +1192,51 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 	print("[FieldElements] End cell exit warp at %s (dir=%s)" % [exit_pos, exit_dir])
 
 
+## Spawn a telepipe (cyan cylinder placeholder). Player steps into it to complete the section / quest.
+## If pos is zero, falls back to room center / default spawn.
+func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
+	print("[FieldElements] Spawning telepipe at %s" % pos)
+	var tp_pos := pos
+	if tp_pos == Vector3.ZERO and _portal_data.has("default"):
+		tp_pos = _portal_data["default"]["spawn_pos"]
+
+	# Cylinder mesh (placeholder telepipe)
+	var mesh_inst := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.8
+	cyl.bottom_radius = 0.8
+	cyl.height = 3.0
+	mesh_inst.mesh = cyl
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.2, 0.8, 1.0, 0.6)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.emission_enabled = true
+	mat.emission = Color(0.2, 0.8, 1.0)
+	mat.emission_energy_multiplier = 2.0
+	mesh_inst.material_override = mat
+	mesh_inst.name = "Telepipe"
+	add_child(mesh_inst)
+	mesh_inst.global_position = tp_pos + Vector3(0, 1.5, 0)
+
+	# Trigger area — player steps in to exit
+	var trigger := Area3D.new()
+	trigger.name = "TelepipeTrigger"
+	trigger.collision_layer = 0
+	trigger.collision_mask = 2  # Player layer
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(2.0, 4.0, 2.0)
+	shape.shape = box
+	trigger.add_child(shape)
+	add_child(trigger)
+	trigger.global_position = tp_pos + Vector3(0, 2.0, 0)
+	trigger.body_entered.connect(func(body: Node3D) -> void:
+		if body.is_in_group("player"):
+			print("[ValleyField] Player entered telepipe")
+			_on_end_reached()
+	)
+
+
 ## Spawn placed objects (boxes, enemies, fences, switches, messages) from quest cell data.
 ## If the cell was previously visited, restore saved state instead.
 func _spawn_cell_objects() -> void:
@@ -1202,6 +1249,7 @@ func _spawn_cell_objects() -> void:
 	_room_props.clear()
 	_room_triggers.clear()
 	_room_npcs.clear()
+	_deferred_telepipe = {}
 
 	if objects.is_empty() and saved.is_empty():
 		return
@@ -1222,6 +1270,10 @@ func _spawn_cell_objects() -> void:
 
 	if alive_enemies > 0:
 		_lock_gates_for_enemies()
+	elif _needs_telepipe:
+		# No enemies on end cell — spawn telepipe immediately
+		_needs_telepipe = false
+		_spawn_telepipe(Vector3.ZERO)
 
 
 ## Spawn objects fresh (first visit to a cell).
@@ -1268,12 +1320,25 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 			"dialog_trigger":
 				var trigger_id: String = str(obj.get("trigger_id", ""))
 				var dlg: Array = obj.get("dialog", [])
-				_spawn_dialog_trigger(pos, trigger_id, dlg)
+				var condition: String = str(obj.get("trigger_condition", "enter"))
+				var act: Array = obj.get("actions", [])
+				var tsize_arr: Array = obj.get("trigger_size", [])
+				var tsize := Vector3.ZERO
+				if tsize_arr.size() == 3:
+					tsize = Vector3(float(tsize_arr[0]), float(tsize_arr[1]), float(tsize_arr[2]))
+				_spawn_dialog_trigger(pos, trigger_id, dlg, "ready", condition, act, tsize)
 			"npc":
 				var npc_id: String = str(obj.get("npc_id", ""))
 				var npc_name: String = str(obj.get("npc_name", ""))
 				var dlg: Array = obj.get("dialog", [])
 				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot)
+			"telepipe":
+				var spawn_cond: String = str(obj.get("spawn_condition", "immediate"))
+				if spawn_cond == "room_clear":
+					# Defer — store data for _check_room_clear
+					_deferred_telepipe = { "position": pos }
+				else:
+					_spawn_telepipe(pos)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -1328,12 +1393,21 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 			"dialog_trigger":
 				var trigger_id: String = str(obj.get("trigger_id", ""))
 				var dlg: Array = obj.get("dialog", [])
-				_spawn_dialog_trigger(pos, trigger_id, dlg, state)
+				var condition: String = str(obj.get("trigger_condition", "enter"))
+				var act: Array = obj.get("actions", [])
+				var tsize_arr: Array = obj.get("trigger_size", [])
+				var tsize := Vector3.ZERO
+				if tsize_arr.size() == 3:
+					tsize = Vector3(float(tsize_arr[0]), float(tsize_arr[1]), float(tsize_arr[2]))
+				_spawn_dialog_trigger(pos, trigger_id, dlg, state, condition, act, tsize)
 			"npc":
 				var npc_id: String = str(obj.get("npc_id", ""))
 				var npc_name: String = str(obj.get("npc_name", ""))
 				var dlg: Array = obj.get("dialog", [])
 				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot)
+			"telepipe":
+				# Telepipes are always spawned on restore (player already cleared the room)
+				_spawn_telepipe(pos)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -1503,13 +1577,19 @@ func _save_cell_state() -> void:
 	# Save dialog trigger states
 	for trigger in _room_triggers:
 		if is_instance_valid(trigger):
-			obj_states.append({
+			var tdata := {
 				"type": "dialog_trigger",
 				"px": trigger.position.x, "py": trigger.position.y, "pz": trigger.position.z,
 				"state": trigger.element_state,
 				"trigger_id": trigger.trigger_id,
 				"dialog": trigger.dialog,
-			})
+				"trigger_condition": trigger.trigger_condition,
+				"actions": trigger.actions,
+			}
+			var cs: Vector3 = trigger.collision_size
+			if cs != Vector3(4.0, 3.0, 4.0):
+				tdata["trigger_size"] = [cs.x, cs.y, cs.z]
+			obj_states.append(tdata)
 
 	# Save NPC states
 	for npc in _room_npcs:
@@ -1521,6 +1601,17 @@ func _save_cell_state() -> void:
 				"npc_id": npc.npc_id,
 				"npc_name": npc.npc_name,
 				"dialog": npc.dialog,
+			})
+
+	# Save telepipe from original quest data (telepipes are procedural, just preserve placement)
+	for obj in objects:
+		if str(obj.get("type", "")) == "telepipe":
+			var pos_arr: Array = obj.get("position", [0, 0, 0])
+			obj_states.append({
+				"type": "telepipe",
+				"px": float(pos_arr[0]), "py": float(pos_arr[1]), "pz": float(pos_arr[2]),
+				"state": "spawned",
+				"spawn_condition": str(obj.get("spawn_condition", "immediate")),
 			})
 
 	_cell_states[cell_pos] = {
@@ -1662,16 +1753,20 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0) -> v
 	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
 
 
-func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready") -> void:
+func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready", condition: String = "enter", act: Array = [], size: Vector3 = Vector3.ZERO) -> void:
 	if state == "triggered":
 		return  # Already triggered — don't respawn
 	var trigger := DialogTriggerScript.new()
 	trigger.trigger_id = trigger_id
 	trigger.dialog = dlg
+	trigger.trigger_condition = condition
+	trigger.actions = act
+	if size != Vector3.ZERO:
+		trigger.collision_size = size
 	_map_root.add_child(trigger)
 	trigger.position = pos
 	_room_triggers.append(trigger)
-	print("[CellObjects] DialogTrigger at %s (id=%s, pages=%d)" % [pos, trigger_id, dlg.size()])
+	print("[CellObjects] DialogTrigger at %s (id=%s, condition=%s, pages=%d, actions=%s, size=%s)" % [pos, trigger_id, condition, dlg.size(), str(act), trigger.collision_size])
 
 
 func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array, rot_deg: float = 0) -> void:
@@ -1753,6 +1848,22 @@ func _check_room_clear() -> void:
 			if _room_minimap and not dir.is_empty():
 				_room_minimap.set_gate_locked(dir, false)
 	_room_gates_locked.clear()
+
+	# Fire room_clear dialog triggers
+	for rc_trigger in _room_triggers:
+		if is_instance_valid(rc_trigger) and rc_trigger.trigger_condition == "room_clear" and rc_trigger.element_state == "ready":
+			rc_trigger.activate()
+
+	# Spawn telepipe on end cells after room clear
+	if _needs_telepipe:
+		_needs_telepipe = false
+		_spawn_telepipe(Vector3.ZERO)
+
+	# Spawn deferred telepipe objects (spawn_condition=room_clear)
+	if not _deferred_telepipe.is_empty():
+		var tp_pos: Vector3 = _deferred_telepipe.get("position", Vector3.ZERO)
+		_spawn_telepipe(tp_pos)
+		_deferred_telepipe = {}
 
 
 ## Spawn enemies for a specific wave number.

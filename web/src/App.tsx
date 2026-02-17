@@ -2,6 +2,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import Landing from './pages/Landing';
 
+const QuestHome = lazy(() => import('./quest-editor/QuestHome'));
 const QuestEditor = lazy(() => import('./quest-editor/QuestEditor'));
 const StorybookViewer = lazy(() => import('./storybook/StorybookViewer'));
 const EnemyGallery = lazy(() => import('./storybook/EnemyGallery'));
@@ -11,7 +12,7 @@ const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
 
 function NavBar() {
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   return (
     <nav style={{
@@ -79,7 +80,8 @@ export default function App() {
         <Suspense fallback={<div style={{ padding: 32, color: '#888' }}>Loading...</div>}>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/quest-editor" element={<QuestEditor />} />
+            <Route path="/quest-editor" element={<QuestHome />} />
+            <Route path="/quest-editor/edit" element={<QuestEditor />} />
             <Route path="/storybook" element={<StorybookViewer />} />
             <Route path="/storybook/enemies" element={<EnemyGallery />} />
             <Route path="/storybook/weapons" element={<WeaponGallery />} />
