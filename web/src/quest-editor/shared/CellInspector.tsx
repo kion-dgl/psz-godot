@@ -5,7 +5,7 @@
  * start/end toggle, key/key-gate controls, notes.
  */
 
-import type { QuestProject, EditorGridCell, CellRole, Direction } from '../types';
+import type { QuestProject, EditorGridCell, CellRole, Direction, SectionType } from '../types';
 import { ROLE_COLORS, ROLE_LABELS } from '../types';
 import { getRotatedGates, getStageSuffix } from '../hooks/useStageConfigs';
 
@@ -20,6 +20,10 @@ interface CellInspectorProps {
   onSetLockedGate: (pos: string, dir: Direction | undefined) => void;
   onClearCell: (pos: string) => void;
   onChangeStage: (pos: string) => void;
+  sectionType?: SectionType;
+  entryDirection?: Direction;
+  exitDirection?: Direction;
+  onSetSectionDirection?: (field: 'entryDirection' | 'exitDirection', dir: Direction | undefined) => void;
 }
 
 const ALL_ROLES: CellRole[] = ['transit', 'guard', 'puzzle', 'cache', 'landmark', 'boss'];
@@ -47,6 +51,10 @@ export default function CellInspector({
   onSetLockedGate,
   onClearCell,
   onChangeStage,
+  sectionType,
+  entryDirection,
+  exitDirection,
+  onSetSectionDirection,
 }: CellInspectorProps) {
   const cell = project.cells[selectedCell];
   if (!cell) {
@@ -156,44 +164,101 @@ export default function CellInspector({
         </select>
       </div>
 
-      {/* Start / End */}
-      <div style={sectionStyle}>
-        <div style={labelStyle}>Markers</div>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={() => onSetStart(selectedCell)}
-            style={{
-              flex: 1,
-              padding: '8px',
-              background: isStart ? '#66aaff' : '#2a2a4a',
-              border: `1px solid ${isStart ? '#88ccff' : '#444'}`,
-              borderRadius: '4px',
-              color: '#fff',
-              fontSize: '12px',
-              fontWeight: isStart ? 700 : 400,
-              cursor: 'pointer',
-            }}
-          >
-            {isStart ? 'Start' : 'Set Start'}
-          </button>
-          <button
-            onClick={() => onSetEnd(selectedCell)}
-            style={{
-              flex: 1,
-              padding: '8px',
-              background: isEnd ? '#ffaa66' : '#2a2a4a',
-              border: `1px solid ${isEnd ? '#ffcc88' : '#444'}`,
-              borderRadius: '4px',
-              color: '#fff',
-              fontSize: '12px',
-              fontWeight: isEnd ? 700 : 400,
-              cursor: 'pointer',
-            }}
-          >
-            {isEnd ? 'End' : 'Set End'}
-          </button>
+      {/* Start / End — for grids: set start/end cell; for transition/boss: set entry/exit direction */}
+      {(sectionType === 'transition' || sectionType === 'boss') && onSetSectionDirection ? (
+        <div style={sectionStyle}>
+          <div style={labelStyle}>Entry Direction</div>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+            {(['north', 'south'] as Direction[]).map(dir => {
+              const active = entryDirection === dir;
+              return (
+                <button
+                  key={dir}
+                  onClick={() => onSetSectionDirection('entryDirection', active ? undefined : dir)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    background: active ? '#66aaff' : '#2a2a4a',
+                    border: `1px solid ${active ? '#88ccff' : '#444'}`,
+                    borderRadius: '4px',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: active ? 700 : 400,
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {dir}
+                </button>
+              );
+            })}
+          </div>
+          <div style={labelStyle}>Exit Direction</div>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['north', 'south'] as Direction[]).map(dir => {
+              const active = exitDirection === dir;
+              return (
+                <button
+                  key={dir}
+                  onClick={() => onSetSectionDirection('exitDirection', active ? undefined : dir)}
+                  style={{
+                    flex: 1,
+                    padding: '8px',
+                    background: active ? '#ffaa66' : '#2a2a4a',
+                    border: `1px solid ${active ? '#ffcc88' : '#444'}`,
+                    borderRadius: '4px',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: active ? 700 : 400,
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {dir}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={sectionStyle}>
+          <div style={labelStyle}>Markers</div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => onSetStart(selectedCell)}
+              style={{
+                flex: 1,
+                padding: '8px',
+                background: isStart ? '#66aaff' : '#2a2a4a',
+                border: `1px solid ${isStart ? '#88ccff' : '#444'}`,
+                borderRadius: '4px',
+                color: '#fff',
+                fontSize: '12px',
+                fontWeight: isStart ? 700 : 400,
+                cursor: 'pointer',
+              }}
+            >
+              {isStart ? 'Start' : 'Set Start'}
+            </button>
+            <button
+              onClick={() => onSetEnd(selectedCell)}
+              style={{
+                flex: 1,
+                padding: '8px',
+                background: isEnd ? '#ffaa66' : '#2a2a4a',
+                border: `1px solid ${isEnd ? '#ffcc88' : '#444'}`,
+                borderRadius: '4px',
+                color: '#fff',
+                fontSize: '12px',
+                fontWeight: isEnd ? 700 : 400,
+                cursor: 'pointer',
+              }}
+            >
+              {isEnd ? 'End' : 'Set End'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Key & Key-Gate */}
       <div style={sectionStyle}>

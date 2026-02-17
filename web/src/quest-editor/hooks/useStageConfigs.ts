@@ -20,7 +20,7 @@ const CONFIG_FILES = [
   'snowfield_configs',
 ];
 
-async function loadAllConfigs(): Promise<Record<string, StageConfig>> {
+export async function loadAllConfigs(): Promise<Record<string, StageConfig>> {
   if (_configCache) return _configCache;
   if (_configPromise) return _configPromise;
 
@@ -46,6 +46,9 @@ async function loadAllConfigs(): Promise<Record<string, StageConfig>> {
 
   return _configPromise;
 }
+
+// Eagerly start loading configs when this module is first imported
+loadAllConfigs();
 
 // ============================================================================
 // Gate helpers

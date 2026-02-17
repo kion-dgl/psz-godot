@@ -14,6 +14,7 @@ import {
   isValidPos,
   oppositeDirection,
   getStagesForArea,
+  loadAllConfigs,
 } from '../hooks/useStageConfigs';
 
 // ============================================================================
@@ -76,12 +77,15 @@ function emptyGenCell(): GenCell {
  * Generate a grid layout for a given area and variant.
  * Returns sparse EditorGridCell map suitable for QuestProject.
  */
-export function generateGrid(
+export async function generateGrid(
   areaKey: string,
   variant: string,
   params: GenParams,
   maxAttempts = 200
-): GenerationResult {
+): Promise<GenerationResult> {
+  // Ensure stage configs are loaded before attempting generation
+  await loadAllConfigs();
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const result = tryGenerateGrid(areaKey, variant, params);
     if (result) return result;

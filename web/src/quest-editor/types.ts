@@ -7,8 +7,6 @@
 // Inlined stage types (from psz-sketch systems/stage/types)
 // ============================================================================
 
-export type ContentDifficulty = 'normal' | 'hard' | 'super-hard';
-
 export type StageArea =
   | 'valley-a' | 'valley-b' | 'valley-e'
   | 'snowfield-a' | 'snowfield-b'
@@ -87,7 +85,7 @@ export const ROLE_LABELS: Record<CellRole, string> = {
 // Cell Objects (placed in 3D stage)
 // ============================================================================
 
-export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc';
+export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe';
 
 export interface CellObject {
   /** Unique ID within cell (e.g., "box_0", "enemy_1") */
@@ -116,6 +114,18 @@ export interface CellObject {
   dialog?: Array<{ speaker: string; text: string }>;
   /** Trigger identifier for type='dialog_trigger' (for one-shot tracking) */
   trigger_id?: string;
+  /** Trigger collision box size [x, y, z] for type='dialog_trigger' (default [4, 3, 4]) */
+  trigger_size?: [number, number, number];
+  /** When to fire for type='dialog_trigger': 'enter' (default) or 'room_clear' */
+  trigger_condition?: 'enter' | 'room_clear';
+  /** Post-dialog actions for type='dialog_trigger': "complete_quest", "telepipe" */
+  actions?: string[];
+  /** Animation name to freeze on for type='npc' (e.g., "dam_h" for lying face down) */
+  animation?: string;
+  /** Frame to freeze on for type='npc' (used with animation) */
+  animation_frame?: number;
+  /** When to spawn for type='telepipe': 'immediate' (default) or 'room_clear' */
+  spawn_condition?: 'immediate' | 'room_clear';
 }
 
 export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
@@ -128,6 +138,7 @@ export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
   story_prop: '#cccc44',
   dialog_trigger: '#44cccc',
   npc: '#44cc44',
+  telepipe: '#66aaff',
 };
 
 export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
@@ -140,6 +151,7 @@ export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
   story_prop: 'Story Prop',
   dialog_trigger: 'Dialog Trigger',
   npc: 'NPC',
+  telepipe: 'Telepipe',
 };
 
 // ============================================================================
@@ -179,11 +191,21 @@ export interface QuestSection {
   startPos: string | null;
   endPos: string | null;
   keyLinks: Record<string, string>;
+  /** Direction player enters from (transition/boss sections) */
+  entryDirection?: Direction;
+  /** Direction player exits to (transition/boss sections) */
+  exitDirection?: Direction;
 }
 
 // ============================================================================
 // Quest Project (top-level save state)
 // ============================================================================
+
+/** Tracks where a project was loaded from */
+export type QuestProjectSource =
+  | { type: 'new' }
+  | { type: 'game'; filename: string }
+  | { type: 'draft'; id: string };
 
 export interface QuestProject {
   id: string;
@@ -200,15 +222,35 @@ export interface QuestProject {
   cellContents: Record<string, StageContent>;
   lastModified: string;
   version: number;
+  source?: QuestProjectSource;
+}
+
+export interface CityDialogScene {
+  /** NPC who speaks (matches npc_id) */
+  npc_id: string;
+  /** Display name */
+  npc_name: string;
+  /** Dialog pages */
+  dialog: Array<{ speaker: string; text: string }>;
 }
 
 export interface QuestMetadata {
   questName: string;
   description: string;
-  questType: 'exploration' | 'hunt' | 'collection' | 'escort' | 'story';
-  difficulty: ContentDifficulty;
-  recommendedLevel: number;
+  companions?: string[];
+  /** Dialog scenes that play in the city before entering the field */
+  cityDialog?: CityDialogScene[];
 }
+
+export interface CompanionInfo {
+  id: string;
+  name: string;
+}
+
+export const AVAILABLE_COMPANIONS: CompanionInfo[] = [
+  { id: 'kai', name: 'Kai' },
+  { id: 'sarisa', name: 'Sarisa' },
+];
 
 // ============================================================================
 // Validation
@@ -261,9 +303,7 @@ export function createDefaultProject(id?: string): QuestProject {
     metadata: {
       questName: '',
       description: '',
-      questType: 'exploration',
-      difficulty: 'normal',
-      recommendedLevel: 1,
+      companions: [],
     },
     cellContents: {},
     lastModified: new Date().toISOString(),
