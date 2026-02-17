@@ -85,7 +85,7 @@ export const ROLE_LABELS: Record<CellRole, string> = {
 // Cell Objects (placed in 3D stage)
 // ============================================================================
 
-export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe';
+export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest';
 
 export interface CellObject {
   /** Unique ID within cell (e.g., "box_0", "enemy_1") */
@@ -126,6 +126,8 @@ export interface CellObject {
   animation_frame?: number;
   /** When to spawn for type='telepipe': 'immediate' (default) or 'room_clear' */
   spawn_condition?: 'immediate' | 'room_clear';
+  /** Export-only: resolved target position [x, y, z] for type='warp' */
+  warp_position?: [number, number, number];
 }
 
 export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
@@ -139,6 +141,8 @@ export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
   dialog_trigger: '#44cccc',
   npc: '#44cc44',
   telepipe: '#66aaff',
+  warp: '#aa66ff',
+  warp_dest: '#cc88ff',
 };
 
 export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
@@ -152,6 +156,8 @@ export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
   dialog_trigger: 'Dialog Trigger',
   npc: 'NPC',
   telepipe: 'Telepipe',
+  warp: 'Warp',
+  warp_dest: 'Warp Dest',
 };
 
 // ============================================================================

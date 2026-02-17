@@ -213,6 +213,11 @@ func get_current_section() -> int:
 	return int(_session.get("current_section", 0))
 
 
+## Set current section index (used by debug warp points)
+func set_current_section(idx: int) -> void:
+	_session["current_section"] = idx
+
+
 ## Advance to next section. Returns true if there is a next section.
 func advance_section() -> bool:
 	var idx: int = get_current_section()

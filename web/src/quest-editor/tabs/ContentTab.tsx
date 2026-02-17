@@ -264,12 +264,30 @@ function MessageMarker({ obj, selected, onClick }: { obj: CellObject; selected: 
   );
 }
 
-/** Story prop GLB model loader */
+/** Story prop GLB model loader — centers geometry so it renders at parent origin */
 function StoryPropModel({ propPath }: { propPath: string }) {
   const url = assetUrl(`/${propPath}`);
   const { scene } = useGLTF(url);
-  const cloned = useMemo(() => scene.clone(true), [scene]);
-  return <primitive object={cloned} />;
+  const centered = useMemo(() => {
+    const c = scene.clone(true);
+    // Center each mesh's geometry vertices around (0,0,0)
+    c.traverse((child: THREE.Object3D) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        // Clone geometry so we don't modify the cached original
+        mesh.geometry = mesh.geometry.clone();
+        mesh.geometry.computeBoundingBox();
+        const bb = mesh.geometry.boundingBox;
+        if (bb) {
+          const center = bb.getCenter(new THREE.Vector3());
+          // Keep Y floor at 0 instead of centering vertically
+          mesh.geometry.translate(-center.x, -bb.min.y, -center.z);
+        }
+      }
+    });
+    return c;
+  }, [scene]);
+  return <primitive object={centered} />;
 }
 
 /** Story prop marker — loads GLB if available, falls back to yellow cube */
@@ -384,6 +402,46 @@ function TelepipeMarker({ obj, selected, onClick }: { obj: CellObject; selected:
   );
 }
 
+/** Warp marker — purple cylinder (interactable warp entry point) */
+function WarpMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  return (
+    <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      <mesh position={[0, 1.5, 0]}>
+        <cylinderGeometry args={[0.8, 0.8, 3.0, 16]} />
+        <meshBasicMaterial color="#aa66ff" transparent opacity={selected ? 0.8 : 0.5} />
+      </mesh>
+      {selected && (
+        <mesh position={[0, 1.5, 0]}>
+          <cylinderGeometry args={[0.9, 0.9, 3.1, 16]} />
+          <meshBasicMaterial color="#ffffff" wireframe transparent opacity={0.4} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
+/** Warp destination marker — lighter purple flat ring on ground (editor-only landing marker) */
+function WarpDestMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  return (
+    <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+        <ringGeometry args={[0.6, 1.2, 32]} />
+        <meshBasicMaterial color="#cc88ff" side={THREE.DoubleSide} transparent opacity={selected ? 0.9 : 0.5} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+        <ringGeometry args={[0.3, 0.5, 16]} />
+        <meshBasicMaterial color="#cc88ff" side={THREE.DoubleSide} transparent opacity={selected ? 0.7 : 0.35} />
+      </mesh>
+      {selected && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.07, 0]}>
+          <ringGeometry args={[1.3, 1.5, 32]} />
+          <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} transparent opacity={0.5} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
 /** Renders the appropriate marker for a CellObject */
 function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
   switch (obj.type) {
@@ -406,6 +464,10 @@ function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: b
       return <NpcMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'telepipe':
       return <TelepipeMarker obj={obj} selected={selected} onClick={onClick} />;
+    case 'warp':
+      return <WarpMarker obj={obj} selected={selected} onClick={onClick} />;
+    case 'warp_dest':
+      return <WarpDestMarker obj={obj} selected={selected} onClick={onClick} />;
     default:
       return null;
   }
@@ -487,6 +549,18 @@ function ObjectPlacementCursor({ objectType }: { objectType: CellObjectType }) {
         <mesh position={[0, 1.5, 0]}>
           <cylinderGeometry args={[0.8, 0.8, 3.0, 16]} />
           <meshBasicMaterial color={color} transparent opacity={0.3} />
+        </mesh>
+      )}
+      {objectType === 'warp' && (
+        <mesh position={[0, 1.5, 0]}>
+          <cylinderGeometry args={[0.8, 0.8, 3.0, 16]} />
+          <meshBasicMaterial color={color} transparent opacity={0.3} />
+        </mesh>
+      )}
+      {objectType === 'warp_dest' && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+          <ringGeometry args={[0.6, 1.2, 32]} />
+          <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.3} />
         </mesh>
       )}
       {/* Ground ring */}
@@ -586,6 +660,14 @@ function StageModel({ mapId }: { mapId: string }) {
   const areaKey = getAreaFromMapId(mapId) || 'valley';
   const glbPath = getGlbPath(areaKey, mapId);
   const { scene } = useGLTF(glbPath);
+  // Disable raycasting so clicks pass through to the ObjectClickPlane
+  useEffect(() => {
+    scene.traverse((child: THREE.Object3D) => {
+      if ((child as THREE.Mesh).isMesh) {
+        child.raycast = () => {};
+      }
+    });
+  }, [scene]);
   return <primitive object={scene} />;
 }
 
@@ -933,7 +1015,7 @@ function CellContentInspector({
 
         {/* Object palette */}
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe'] as CellObjectType[]).map(type => (
+          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest'] as CellObjectType[]).map(type => (
             <button
               key={type}
               onClick={() => onSetPlacingObject(placingObject === type ? null : type)}
@@ -1305,6 +1387,24 @@ function CellContentInspector({
                     </div>
                   )}
 
+                  {/* Warp link_id editor */}
+                  {isSel && (obj.type === 'warp' || obj.type === 'warp_dest') && (
+                    <div style={{ marginTop: '4px' }}>
+                      <input
+                        type="text"
+                        value={obj.link_id || ''}
+                        onChange={(e) => onUpdateObject(obj.id, { link_id: e.target.value || undefined })}
+                        placeholder="link_id (e.g. a)"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%', padding: '4px', background: '#111',
+                          border: '1px solid #444', borderRadius: '3px',
+                          color: '#fff', fontSize: '11px', fontFamily: 'monospace',
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {/* Dialog editor for dialog_trigger and npc */}
                   {isSel && (obj.type === 'dialog_trigger' || obj.type === 'npc') && (
                     <div style={{ marginTop: '4px' }}>
@@ -1493,6 +1593,8 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
       if (placingObject === 'story_prop') newObj.prop_path = '';
       if (placingObject === 'dialog_trigger') { newObj.trigger_id = ''; newObj.trigger_condition = 'enter'; newObj.dialog = []; newObj.actions = []; }
       if (placingObject === 'npc') { newObj.npc_id = ''; newObj.npc_name = ''; newObj.dialog = []; }
+      if (placingObject === 'warp') { newObj.link_id = ''; }
+      if (placingObject === 'warp_dest') { newObj.link_id = ''; }
       return {
         ...prev,
         cells: {
