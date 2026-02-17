@@ -142,8 +142,36 @@ func _execute_actions() -> void:
 				print("[DialogTrigger] Action: complete_quest")
 				SessionManager.complete_quest()
 			"telepipe":
-				print("[DialogTrigger] Action: telepipe → city")
-				SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+				print("[DialogTrigger] Action: spawning telepipe at trigger position")
+				_spawn_telepipe_at_position()
+
+
+func _spawn_telepipe_at_position() -> void:
+	var TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
+	var telepipe := TelepipeScript.new()
+	telepipe.name = "Telepipe"
+	get_parent().add_child(telepipe)
+	telepipe.position = position
+	# Connect to field controller's end logic via tree
+	var field_controller := _find_field_controller()
+	if field_controller and field_controller.has_method("_on_end_reached"):
+		telepipe.activated.connect(func() -> void:
+			field_controller._on_end_reached()
+		)
+	else:
+		# Fallback: go to city directly
+		telepipe.activated.connect(func() -> void:
+			SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+		)
+
+
+func _find_field_controller() -> Node:
+	var node := get_parent()
+	while node:
+		if node.has_method("_on_end_reached"):
+			return node
+		node = node.get_parent()
+	return null
 
 
 func _find_hud() -> CanvasLayer:
