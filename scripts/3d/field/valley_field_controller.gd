@@ -26,6 +26,7 @@ const MessagePackScript := preload("res://scripts/3d/elements/message_pack.gd")
 const StoryPropScript := preload("res://scripts/3d/elements/story_prop.gd")
 const DialogTriggerScript := preload("res://scripts/3d/elements/dialog_trigger.gd")
 const FieldNpcScript := preload("res://scripts/3d/elements/field_npc.gd")
+const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -1200,40 +1201,13 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 	if tp_pos == Vector3.ZERO and _portal_data.has("default"):
 		tp_pos = _portal_data["default"]["spawn_pos"]
 
-	# Cylinder mesh (placeholder telepipe)
-	var mesh_inst := MeshInstance3D.new()
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.8
-	cyl.bottom_radius = 0.8
-	cyl.height = 3.0
-	mesh_inst.mesh = cyl
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.2, 0.8, 1.0, 0.6)
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.emission_enabled = true
-	mat.emission = Color(0.2, 0.8, 1.0)
-	mat.emission_energy_multiplier = 2.0
-	mesh_inst.material_override = mat
-	mesh_inst.name = "Telepipe"
-	add_child(mesh_inst)
-	mesh_inst.global_position = tp_pos + Vector3(0, 1.5, 0)
-
-	# Trigger area — player steps in to exit
-	var trigger := Area3D.new()
-	trigger.name = "TelepipeTrigger"
-	trigger.collision_layer = 0
-	trigger.collision_mask = 2  # Player layer
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(2.0, 4.0, 2.0)
-	shape.shape = box
-	trigger.add_child(shape)
-	add_child(trigger)
-	trigger.global_position = tp_pos + Vector3(0, 2.0, 0)
-	trigger.body_entered.connect(func(body: Node3D) -> void:
-		if body.is_in_group("player"):
-			print("[ValleyField] Player entered telepipe")
-			_on_end_reached()
+	var telepipe := TelepipeScript.new()
+	telepipe.name = "Telepipe"
+	_map_root.add_child(telepipe)
+	telepipe.position = tp_pos
+	telepipe.activated.connect(func() -> void:
+		print("[ValleyField] Player activated telepipe")
+		_on_end_reached()
 	)
 
 
