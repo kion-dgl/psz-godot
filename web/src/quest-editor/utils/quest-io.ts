@@ -141,7 +141,7 @@ function exportSectionCells(
         if (obj.animation_frame !== undefined) exported.animation_frame = obj.animation_frame;
         if (obj.spawn_condition && obj.spawn_condition !== 'immediate') exported.spawn_condition = obj.spawn_condition;
         return exported;
-      });
+      }).filter(obj => obj.type !== 'warp_dest');
     }
 
     cells.push(cellData);
@@ -177,6 +177,34 @@ export function projectToGodotQuest(project: QuestProject): object {
     if (sec.exitDirection) section.exit_direction = sec.exitDirection;
     return section;
   });
+
+  // Warp link resolution: scan all sections for warp_dest objects, then inject
+  // warp_section/warp_cell/warp_position into matching warp objects
+  const warpDestMap = new Map<string, { sectionIndex: number; cellPos: string; position: [number, number, number] }>();
+  for (let si = 0; si < projectSections.length; si++) {
+    for (const [cellPos, cell] of Object.entries(projectSections[si].cells)) {
+      for (const obj of cell.objects || []) {
+        if (obj.type === 'warp_dest' && obj.link_id) {
+          warpDestMap.set(obj.link_id, { sectionIndex: si, cellPos, position: obj.position });
+        }
+      }
+    }
+  }
+  for (const godotSection of godotSections) {
+    for (const cell of (godotSection as any).cells) {
+      if (!cell.objects) continue;
+      for (const obj of cell.objects) {
+        if (obj.type === 'warp' && obj.link_id) {
+          const dest = warpDestMap.get(obj.link_id);
+          if (dest) {
+            obj.warp_section = dest.sectionIndex;
+            obj.warp_cell = dest.cellPos;
+            obj.warp_position = dest.position;
+          }
+        }
+      }
+    }
+  }
 
   const quest: Record<string, unknown> = {
     id: project.id,
@@ -245,6 +273,7 @@ export function importGodotSection(section: any): QuestSection {
         if (obj.animation) co.animation = obj.animation;
         if (obj.animation_frame !== undefined) co.animation_frame = obj.animation_frame;
         if (obj.spawn_condition) co.spawn_condition = obj.spawn_condition;
+        // warp_section, warp_cell, warp_position are export-only (resolved at export time) — skip on import
         return co;
       });
     }

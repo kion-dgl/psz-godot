@@ -27,6 +27,7 @@ const StoryPropScript := preload("res://scripts/3d/elements/story_prop.gd")
 const DialogTriggerScript := preload("res://scripts/3d/elements/dialog_trigger.gd")
 const FieldNpcScript := preload("res://scripts/3d/elements/field_npc.gd")
 const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
+const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -235,7 +236,15 @@ func _ready() -> void:
 	var spawn_pos := Vector3.ZERO
 	var spawn_rot := 0.0
 	var spawn_reason := ""
-	if not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
+	var raw_spawn_pos: Array = data.get("spawn_position", [])
+	if raw_spawn_pos.size() == 3:
+		var sp := Vector3(raw_spawn_pos[0], raw_spawn_pos[1], raw_spawn_pos[2])
+		if sp != Vector3.ZERO:
+			spawn_pos = _map_root.to_global(sp)
+			spawn_reason = "warp spawn_position %s" % sp
+	if not spawn_reason.is_empty():
+		pass  # spawn_position already resolved above
+	elif not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
 		spawn_pos = _portal_data[spawn_edge]["spawn_pos"]
 		spawn_rot = _dir_to_yaw(OPPOSITE[spawn_edge])
 		spawn_reason = "entry from %s, facing %s" % [spawn_edge, OPPOSITE[spawn_edge]]
@@ -1313,6 +1322,12 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 					_deferred_telepipe = { "position": pos }
 				else:
 					_spawn_telepipe(pos)
+			"warp":
+				var w_section: int = int(obj.get("warp_section", 0))
+				var w_cell: String = str(obj.get("warp_cell", ""))
+				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
+				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
+				_spawn_warp_point(pos, w_section, w_cell, w_pos)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -1382,6 +1397,12 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 			"telepipe":
 				# Telepipes are always spawned on restore (player already cleared the room)
 				_spawn_telepipe(pos)
+			"warp":
+				var w_section: int = int(obj.get("warp_section", 0))
+				var w_cell: String = str(obj.get("warp_cell", ""))
+				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
+				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
+				_spawn_warp_point(pos, w_section, w_cell, w_pos)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -1754,6 +1775,29 @@ func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array
 		npc.rotation.y = deg_to_rad(rot_deg)
 	_room_npcs.append(npc)
 	print("[CellObjects] FieldNpc '%s' (%s) at %s (dialog=%d pages)" % [npc_name, npc_id, pos, dlg.size()])
+
+
+func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, target_position: Vector3) -> void:
+	var wp := WarpPointScript.new()
+	wp.warp_section = target_section
+	wp.warp_cell = target_cell
+	wp.warp_position = target_position
+	wp.name = "WarpPoint"
+	_map_root.add_child(wp)
+	wp.position = pos
+	wp.activated.connect(func() -> void:
+		print("[ValleyField] Warp activated → section %d, cell %s, position %s" % [target_section, target_cell, target_position])
+		SessionManager.set_current_section(target_section)
+		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+			"current_cell_pos": target_cell,
+			"spawn_edge": "",
+			"spawn_position": [target_position.x, target_position.y, target_position.z],
+			"keys_collected": {},
+			"visited_cells": {},
+			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+		})
+	)
+	print("[CellObjects] WarpPoint at %s → section %d, cell %s, position %s" % [pos, target_section, target_cell, target_position])
 
 
 ## Wire switch.activated → linked fences.disable()
