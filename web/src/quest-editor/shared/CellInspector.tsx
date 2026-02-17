@@ -91,11 +91,27 @@ export default function CellInspector({
             Manually placed
           </div>
         )}
-        {(cell.rotation ?? 0) !== 0 && (
-          <div style={{ fontSize: '10px', color: '#ffcc66', marginTop: '4px' }}>
-            Rotated {cell.rotation}&deg;
-          </div>
-        )}
+        {/* Rotation control */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+          <span style={{ fontSize: '11px', color: '#888' }}>Rotation:</span>
+          {[0, 90, 180, 270].map(rot => (
+            <button
+              key={rot}
+              onClick={() => onUpdateCell(selectedCell, { rotation: rot || undefined })}
+              style={{
+                padding: '3px 8px',
+                background: (cell.rotation ?? 0) === rot ? '#5588ff' : '#2a2a4a',
+                border: `1px solid ${(cell.rotation ?? 0) === rot ? '#88aaff' : '#444'}`,
+                borderRadius: '4px',
+                color: '#fff',
+                fontSize: '11px',
+                cursor: 'pointer',
+              }}
+            >
+              {rot}&deg;
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Gates visualization — click a gate to toggle key-lock */}
