@@ -1003,8 +1003,9 @@ func _spawn_field_elements() -> void:
 	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
 	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
 
-	# StartWarp on is_start cells at the entry portal
-	if _current_cell.get("is_start", false):
+	# StartWarp on is_start cells at the entry portal (only first section)
+	var section_idx_for_warp: int = SessionManager.get_current_section()
+	if _current_cell.get("is_start", false) and section_idx_for_warp == 0:
 		var start_warp := StartWarpScript.new()
 		start_warp.auto_collect = false
 		var start_pos := Vector3.ZERO
@@ -1301,7 +1302,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				_spawn_message(pos, text)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
-				_spawn_story_prop(pos, prop_path, obj_rot)
+				var prop_scale: float = float(obj.get("prop_scale", 1.0))
+				_spawn_story_prop(pos, prop_path, obj_rot, prop_scale)
 			"dialog_trigger":
 				var trigger_id: String = str(obj.get("trigger_id", ""))
 				var dlg: Array = obj.get("dialog", [])
@@ -1384,7 +1386,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_message(pos, text, msg_state)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
-				_spawn_story_prop(pos, prop_path, obj_rot)
+				var prop_scale: float = float(obj.get("prop_scale", 1.0))
+				_spawn_story_prop(pos, prop_path, obj_rot, prop_scale)
 			"dialog_trigger":
 				var trigger_id: String = str(obj.get("trigger_id", ""))
 				var dlg: Array = obj.get("dialog", [])
@@ -1578,6 +1581,7 @@ func _save_cell_state() -> void:
 				"px": prop.position.x, "py": prop.position.y, "pz": prop.position.z,
 				"state": prop.element_state,
 				"prop_path": prop.prop_path,
+				"prop_scale": prop.prop_scale,
 			})
 
 	# Save dialog trigger states
@@ -1759,9 +1763,10 @@ func _spawn_message(pos: Vector3, text: String, state: String = "available") -> 
 	print("[CellObjects] Message at %s (text=%d chars)" % [pos, text.length()])
 
 
-func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0) -> void:
+func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop_scale: float = 1.0) -> void:
 	var prop := StoryPropScript.new()
 	prop.prop_path = prop_path
+	prop.prop_scale = prop_scale
 	_map_root.add_child(prop)
 	prop.position = pos
 	if rot_deg != 0:

@@ -130,6 +130,7 @@ function exportSectionCells(
         if (obj.wave && obj.wave > 1) exported.wave = obj.wave;
         if (obj.text !== undefined && obj.text !== '') exported.text = obj.text;
         if (obj.prop_path) exported.prop_path = obj.prop_path;
+        if (obj.prop_scale && obj.prop_scale !== 1.0) exported.prop_scale = obj.prop_scale;
         if (obj.npc_id) exported.npc_id = obj.npc_id;
         if (obj.npc_name) exported.npc_name = obj.npc_name;
         if (obj.trigger_id) exported.trigger_id = obj.trigger_id;
@@ -269,6 +270,7 @@ export function importGodotSection(section: any): QuestSection {
         if (obj.wave) co.wave = obj.wave;
         if (obj.text) co.text = obj.text;
         if (obj.prop_path) co.prop_path = obj.prop_path;
+        if (obj.prop_scale) co.prop_scale = obj.prop_scale;
         if (obj.npc_id) co.npc_id = obj.npc_id;
         if (obj.npc_name) co.npc_name = obj.npc_name;
         if (obj.trigger_id) co.trigger_id = obj.trigger_id;

@@ -106,6 +106,8 @@ export interface CellObject {
   text?: string;
   /** GLB path for type='story_prop' (relative to project, e.g., "assets/objects/story/dropship_crash.glb") */
   prop_path?: string;
+  /** Scale multiplier for type='story_prop' (default 1.0) */
+  prop_scale?: number;
   /** NPC identifier for type='npc' (e.g., "sarisa", "kai") */
   npc_id?: string;
   /** Display name for type='npc' */
