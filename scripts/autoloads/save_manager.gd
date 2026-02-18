@@ -17,9 +17,8 @@ func save_game() -> void:
 	CharacterManager.sync_inventory_to_active()
 
 	var save_data := {
-		"version": 3,
+		"version": 4,
 		"characters": CharacterManager.get_save_data(),
-		"completed_missions": GameState.completed_missions.duplicate(),
 		"shared_storage": GameState.shared_storage.duplicate(),
 		"stored_meseta": GameState.stored_meseta,
 		"timestamp": Time.get_unix_time_from_system(),
@@ -72,9 +71,10 @@ func load_game() -> void:
 		var inv_data: Dictionary = save_data.get("inventory", {})
 		CharacterManager.migrate_global_inventory(inv_data)
 
-	# Load completed missions
-	var missions_data: Array = save_data.get("completed_missions", [])
-	GameState.completed_missions = missions_data.duplicate()
+	# Migrate v3 global completed_missions to per-character
+	if version < 4 and save_data.has("completed_missions"):
+		var missions_data: Array = save_data.get("completed_missions", [])
+		CharacterManager.migrate_global_missions(missions_data)
 
 	# Load shared storage
 	GameState.shared_storage = save_data.get("shared_storage", []).duplicate()

@@ -237,8 +237,6 @@ func _accept_entry() -> void:
 		hint_label.text = "Quest accepted! Head to %s warp." % entry["area"]
 		_selecting_difficulty = false
 		_refresh_display()
-		# Brief delay then pop back to city
-		await get_tree().create_timer(1.5).timeout
 		SceneManager.pop_scene()
 	else:
 		# Missions go directly to field as before
