@@ -85,7 +85,7 @@ export const ROLE_LABELS: Record<CellRole, string> = {
 // Cell Objects (placed in 3D stage)
 // ============================================================================
 
-export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest';
+export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest' | 'quest_item';
 
 export interface CellObject {
   /** Unique ID within cell (e.g., "box_0", "enemy_1") */
@@ -128,6 +128,10 @@ export interface CellObject {
   spawn_condition?: 'immediate' | 'room_clear';
   /** Export-only: resolved target position [x, y, z] for type='warp' */
   warp_position?: [number, number, number];
+  /** Item identifier for type='quest_item' (e.g., "sol_leaf") */
+  quest_item_id?: string;
+  /** Display label for type='quest_item' (e.g., "Sol Leaves") */
+  quest_item_label?: string;
 }
 
 export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
@@ -143,6 +147,7 @@ export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
   telepipe: '#66aaff',
   warp: '#aa66ff',
   warp_dest: '#cc88ff',
+  quest_item: '#ffdd44',
 };
 
 export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
@@ -158,6 +163,7 @@ export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
   telepipe: 'Telepipe',
   warp: 'Warp',
   warp_dest: 'Warp Dest',
+  quest_item: 'Quest Item',
 };
 
 // ============================================================================
@@ -240,12 +246,20 @@ export interface CityDialogScene {
   dialog: Array<{ speaker: string; text: string }>;
 }
 
+export interface QuestObjective {
+  item_id: string;
+  label: string;
+  target: number;
+}
+
 export interface QuestMetadata {
   questName: string;
   description: string;
   companions?: string[];
   /** Dialog scenes that play in the city before entering the field */
   cityDialog?: CityDialogScene[];
+  /** Quest item collection objectives */
+  objectives?: QuestObjective[];
 }
 
 export interface CompanionInfo {

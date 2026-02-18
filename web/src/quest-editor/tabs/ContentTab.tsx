@@ -442,6 +442,23 @@ function WarpDestMarker({ obj, selected, onClick }: { obj: CellObject; selected:
   );
 }
 
+function QuestItemMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  return (
+    <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.3, 0]}>
+        <circleGeometry args={[0.5, 6]} />
+        <meshBasicMaterial color="#ffdd44" side={THREE.DoubleSide} transparent opacity={selected ? 0.9 : 0.5} />
+      </mesh>
+      {selected && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.31, 0]}>
+          <ringGeometry args={[0.6, 0.8, 32]} />
+          <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} transparent opacity={0.5} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
 /** Renders the appropriate marker for a CellObject */
 function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
   switch (obj.type) {
@@ -468,6 +485,8 @@ function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: b
       return <WarpMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'warp_dest':
       return <WarpDestMarker obj={obj} selected={selected} onClick={onClick} />;
+    case 'quest_item':
+      return <QuestItemMarker obj={obj} selected={selected} onClick={onClick} />;
     default:
       return null;
   }
@@ -561,6 +580,12 @@ function ObjectPlacementCursor({ objectType }: { objectType: CellObjectType }) {
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
           <ringGeometry args={[0.6, 1.2, 32]} />
           <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.3} />
+        </mesh>
+      )}
+      {objectType === 'quest_item' && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.3, 0]}>
+          <circleGeometry args={[0.5, 6]} />
+          <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.4} />
         </mesh>
       )}
       {/* Ground ring */}
@@ -1015,7 +1040,7 @@ function CellContentInspector({
 
         {/* Object palette */}
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest'] as CellObjectType[]).map(type => (
+          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest', 'quest_item'] as CellObjectType[]).map(type => (
             <button
               key={type}
               onClick={() => onSetPlacingObject(placingObject === type ? null : type)}
@@ -1405,6 +1430,36 @@ function CellContentInspector({
                     </div>
                   )}
 
+                  {/* Quest item ID/label editor */}
+                  {isSel && obj.type === 'quest_item' && (
+                    <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <input
+                        type="text"
+                        value={obj.quest_item_id || ''}
+                        onChange={(e) => onUpdateObject(obj.id, { quest_item_id: e.target.value || undefined })}
+                        placeholder="item_id (e.g. sol_leaf)"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%', padding: '4px', background: '#111',
+                          border: '1px solid #444', borderRadius: '3px',
+                          color: '#fff', fontSize: '11px', fontFamily: 'monospace',
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={obj.quest_item_label || ''}
+                        onChange={(e) => onUpdateObject(obj.id, { quest_item_label: e.target.value || undefined })}
+                        placeholder="label (e.g. Sol Leaves)"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%', padding: '4px', background: '#111',
+                          border: '1px solid #444', borderRadius: '3px',
+                          color: '#fff', fontSize: '11px', fontFamily: 'monospace',
+                        }}
+                      />
+                    </div>
+                  )}
+
                   {/* Dialog editor for dialog_trigger and npc */}
                   {isSel && (obj.type === 'dialog_trigger' || obj.type === 'npc') && (
                     <div style={{ marginTop: '4px' }}>
@@ -1595,6 +1650,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
       if (placingObject === 'npc') { newObj.npc_id = ''; newObj.npc_name = ''; newObj.dialog = []; }
       if (placingObject === 'warp') { newObj.link_id = ''; }
       if (placingObject === 'warp_dest') { newObj.link_id = ''; }
+      if (placingObject === 'quest_item') { newObj.quest_item_id = ''; newObj.quest_item_label = ''; }
       return {
         ...prev,
         cells: {

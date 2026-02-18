@@ -21,6 +21,10 @@ var _player_display_pos := Vector2.ZERO
 var _player_display_dir := Vector2(0, 1)  # arrow direction in display space
 var _has_player_tracking := false
 
+# Key counter (drawn below minimap)
+var _keys_collected: int = 0
+var _keys_total: int = 0
+
 # Affine transform: svg_x = local_x * _ax + _bx,  svg_y = local_z * _ay + _by
 var _ax := 0.0
 var _bx := 0.0
@@ -157,6 +161,22 @@ func _draw() -> void:
 			_player_display_pos + fwd.rotated(2.4) * sz * 0.6,
 			_player_display_pos + fwd.rotated(-2.4) * sz * 0.6,
 		]), [PLAYER_COLOR])
+
+	# Key counter below minimap
+	if _keys_total > 0:
+		var key_y := DISPLAY_SIZE + 6.0
+		var key_color := Color(1.0, 0.3, 0.3)
+		var val_color := Color(1.0, 1.0, 1.0) if _keys_collected < _keys_total else Color(0.3, 1.0, 0.3)
+		draw_string(font, Vector2(2.0, key_y + 11.0), "KEY", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, key_color)
+		var key_text := "%d/%d" % [_keys_collected, _keys_total]
+		var tw: float = font.get_string_size(key_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+		draw_string(font, Vector2(DISPLAY_SIZE - tw - 2.0, key_y + 11.0), key_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, val_color)
+
+
+func update_keys(collected: int, total: int) -> void:
+	_keys_collected = collected
+	_keys_total = total
+	queue_redraw()
 
 
 # ── SVG → Display transform ─────────────────────────────────────────────────
