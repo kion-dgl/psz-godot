@@ -207,13 +207,12 @@ class _QuestLogPanel extends Control:
 		SessionManager.quest_item_collected.connect(_on_item_collected)
 		SessionManager.quest_completed.connect(_on_quest_completed)
 
-		# Log quest acceptance on start
+		# Log quest acceptance after a short delay so it fades like other entries
 		var objectives: Array = SessionManager.get_quest_objectives()
 		if not objectives.is_empty():
-			var session: Dictionary = SessionManager.get_session()
-			var quest_id: String = str(session.get("quest_id", ""))
-			if not quest_id.is_empty():
+			get_tree().create_timer(0.5).timeout.connect(func() -> void:
 				_add_entry("Quest accepted", QUEST_COLOR)
+			)
 
 	func _on_item_collected(item_id: String, new_count: int, target: int) -> void:
 		# Find the label for this item from objectives
