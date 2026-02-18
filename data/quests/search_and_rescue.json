@@ -373,6 +373,7 @@
               ],
               "trigger_condition": "room_clear",
               "actions": [
+                "complete_quest",
                 "telepipe"
               ],
               "dialog": [
