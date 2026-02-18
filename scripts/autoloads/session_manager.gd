@@ -6,6 +6,8 @@ signal session_started(data: Dictionary)
 signal stage_advanced(stage: int)
 signal wave_advanced(wave: int)
 signal session_ended()
+signal quest_item_collected(item_id: String, new_count: int, target: int)
+signal quest_completed()
 
 const MAX_STAGES := 3
 const MAX_WAVES := 3
@@ -27,6 +29,8 @@ var _suspended_session: Dictionary = {}
 var _location: String = "city"
 var _accepted_quest: Dictionary = {}   # {quest_id, area_id, difficulty, name}
 var _completed_quest: Dictionary = {}  # {quest_id, area_id, name} — awaiting guild report
+var _quest_objectives: Array = []      # [{item_id, label, target}] — loaded from quest JSON
+var _quest_item_counts: Dictionary = {} # {item_id: count} — runtime collection state
 
 
 ## Enter a field area
@@ -86,6 +90,11 @@ func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 		"items_collected": [],
 	}
 	set_field_sections(quest["sections"])
+	# Load quest objectives if present
+	_quest_objectives = quest.get("objectives", [])
+	_quest_item_counts.clear()
+	for obj in _quest_objectives:
+		_quest_item_counts[str(obj.get("item_id", ""))] = 0
 	_location = "field"
 	session_started.emit(_session)
 	return _session
@@ -141,6 +150,8 @@ func add_rewards(exp_amount: int, meseta: int) -> void:
 func return_to_city() -> Dictionary:
 	var summary: Dictionary = _session.duplicate()
 	_session.clear()
+	_quest_objectives.clear()
+	_quest_item_counts.clear()
 	_location = "city"
 	session_ended.emit()
 	return summary
@@ -159,6 +170,8 @@ func get_location() -> String:
 ## Suspend current session (telepipe — return to city but keep session)
 func suspend_session() -> Dictionary:
 	_suspended_session = _session.duplicate(true)
+	_suspended_session["_quest_objectives"] = _quest_objectives.duplicate(true)
+	_suspended_session["_quest_item_counts"] = _quest_item_counts.duplicate(true)
 	var summary: Dictionary = _session.duplicate()
 	_session.clear()
 	_location = "city"
@@ -171,6 +184,10 @@ func resume_session() -> Dictionary:
 	if _suspended_session.is_empty():
 		return {}
 	_session = _suspended_session.duplicate(true)
+	_quest_objectives = _session.get("_quest_objectives", [])
+	_quest_item_counts = _session.get("_quest_item_counts", {})
+	_session.erase("_quest_objectives")
+	_session.erase("_quest_item_counts")
 	_suspended_session.clear()
 	_location = "field"
 	session_started.emit(_session)
@@ -273,10 +290,13 @@ func start_accepted_quest() -> Dictionary:
 	return enter_quest(quest_id, difficulty)
 
 
-## Mark quest as complete — stores completion data, returns to city.
-func complete_quest() -> void:
+## Mark quest objectives as fulfilled — stores completion data but keeps session active.
+## The player can keep exploring; they return to city on their own terms.
+func mark_quest_complete() -> void:
 	if _session.is_empty() or _session.get("type") != "quest":
 		return
+	if not _completed_quest.is_empty():
+		return  # Already marked
 	_completed_quest = {
 		"quest_id": str(_session.get("quest_id", "")),
 		"area_id": str(_session.get("area_id", "")),
@@ -285,6 +305,12 @@ func complete_quest() -> void:
 		"total_meseta": int(_session.get("total_meseta", 0)),
 		"items_collected": _session.get("items_collected", []),
 	}
+	quest_completed.emit()
+
+
+## Mark quest as complete and return to city immediately.
+func complete_quest() -> void:
+	mark_quest_complete()
 	return_to_city()
 
 
@@ -301,3 +327,39 @@ func report_quest() -> Dictionary:
 	var data: Dictionary = _completed_quest.duplicate()
 	_completed_quest.clear()
 	return data
+
+
+# ── Quest Item Objectives ──────────────────────────────────────
+
+## Collect a quest item — increment count, emit signal, auto-complete if all met.
+func collect_quest_item(item_id: String) -> void:
+	var count: int = int(_quest_item_counts.get(item_id, 0)) + 1
+	_quest_item_counts[item_id] = count
+	var target: int = _get_objective_target(item_id)
+	quest_item_collected.emit(item_id, count, target)
+	if are_objectives_complete():
+		mark_quest_complete()
+
+
+func get_quest_item_count(item_id: String) -> int:
+	return int(_quest_item_counts.get(item_id, 0))
+
+
+func get_quest_objectives() -> Array:
+	return _quest_objectives
+
+
+func are_objectives_complete() -> bool:
+	for obj in _quest_objectives:
+		var item_id: String = str(obj.get("item_id", ""))
+		var target: int = int(obj.get("target", 1))
+		if get_quest_item_count(item_id) < target:
+			return false
+	return true
+
+
+func _get_objective_target(item_id: String) -> int:
+	for obj in _quest_objectives:
+		if str(obj.get("item_id", "")) == item_id:
+			return int(obj.get("target", 1))
+	return 0

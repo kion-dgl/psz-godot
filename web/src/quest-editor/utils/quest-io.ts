@@ -140,6 +140,8 @@ function exportSectionCells(
         if (obj.animation) exported.animation = obj.animation;
         if (obj.animation_frame !== undefined) exported.animation_frame = obj.animation_frame;
         if (obj.spawn_condition && obj.spawn_condition !== 'immediate') exported.spawn_condition = obj.spawn_condition;
+        if (obj.quest_item_id) exported.item_id = obj.quest_item_id;
+        if (obj.quest_item_label) exported.item_label = obj.quest_item_label;
         return exported;
       }).filter(obj => obj.type !== 'warp_dest');
     }
@@ -222,6 +224,10 @@ export function projectToGodotQuest(project: QuestProject): object {
     quest.city_dialog = project.metadata.cityDialog;
   }
 
+  if (project.metadata?.objectives && project.metadata.objectives.length > 0) {
+    quest.objectives = project.metadata.objectives;
+  }
+
   return quest;
 }
 
@@ -273,6 +279,8 @@ export function importGodotSection(section: any): QuestSection {
         if (obj.animation) co.animation = obj.animation;
         if (obj.animation_frame !== undefined) co.animation_frame = obj.animation_frame;
         if (obj.spawn_condition) co.spawn_condition = obj.spawn_condition;
+        if (obj.item_id) co.quest_item_id = obj.item_id;
+        if (obj.item_label) co.quest_item_label = obj.item_label;
         // warp_section, warp_cell, warp_position are export-only (resolved at export time) — skip on import
         return co;
       });
@@ -324,6 +332,7 @@ export function godotQuestToProject(quest: any): QuestProject {
       description: quest.description || '',
       companions: Array.isArray(quest.companions) ? quest.companions : [],
       cityDialog: Array.isArray(quest.city_dialog) ? quest.city_dialog : [],
+      objectives: Array.isArray(quest.objectives) ? quest.objectives : [],
     },
     cellContents: {},
     lastModified: new Date().toISOString(),

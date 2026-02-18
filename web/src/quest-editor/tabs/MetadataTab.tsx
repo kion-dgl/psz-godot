@@ -3,7 +3,7 @@
  */
 
 import { useCallback } from 'react';
-import type { QuestProject, QuestMetadata, CityDialogScene } from '../types';
+import type { QuestProject, QuestMetadata, CityDialogScene, QuestObjective } from '../types';
 import { AVAILABLE_COMPANIONS } from '../types';
 
 interface MetadataTabProps {
@@ -20,6 +20,7 @@ const NPC_OPTIONS = [
 export default function MetadataTab({ project, onUpdateProject }: MetadataTabProps) {
   const meta = project.metadata;
   const cityDialog = meta.cityDialog || [];
+  const objectives = meta.objectives || [];
 
   const updateMeta = useCallback(<K extends keyof QuestMetadata>(key: K, value: QuestMetadata[K]) => {
     onUpdateProject(prev => ({
@@ -79,6 +80,19 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
     const scene = cityDialog[sceneIdx];
     updateScene(sceneIdx, { dialog: scene.dialog.filter((_, i) => i !== pageIdx) });
   }, [cityDialog, updateScene]);
+
+  const addObjective = useCallback(() => {
+    updateMeta('objectives', [...objectives, { item_id: '', label: '', target: 1 }]);
+  }, [objectives, updateMeta]);
+
+  const updateObjective = useCallback((idx: number, updates: Partial<QuestObjective>) => {
+    const next = objectives.map((o, i) => i === idx ? { ...o, ...updates } : o);
+    updateMeta('objectives', next);
+  }, [objectives, updateMeta]);
+
+  const removeObjective = useCallback((idx: number) => {
+    updateMeta('objectives', objectives.filter((_, i) => i !== idx));
+  }, [objectives, updateMeta]);
 
   return (
     <div style={{
@@ -142,6 +156,103 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
           </div>
           <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
             NPCs that join the player's party for this quest.
+          </div>
+        </div>
+
+        {/* Quest Objectives */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label style={{ ...labelStyle, marginBottom: 0 }}>Quest Objectives</label>
+            <button
+              onClick={addObjective}
+              style={{
+                padding: '4px 10px',
+                background: '#224422',
+                border: '1px solid #446644',
+                borderRadius: '4px',
+                color: '#88cc88',
+                fontSize: '11px',
+                cursor: 'pointer',
+              }}
+            >
+              + Objective
+            </button>
+          </div>
+          <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>
+            Item collection objectives shown on the field HUD. Place matching quest_item objects in cells.
+          </div>
+
+          {objectives.length === 0 && (
+            <div style={{
+              padding: '16px',
+              background: '#1a1a2e',
+              border: '1px dashed #333',
+              borderRadius: '6px',
+              color: '#555',
+              fontSize: '12px',
+              textAlign: 'center',
+            }}>
+              No objectives. Click "+ Objective" to add one.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {objectives.map((obj, oi) => (
+              <div
+                key={oi}
+                style={{
+                  display: 'flex', gap: '6px', alignItems: 'center',
+                  padding: '8px',
+                  background: '#1a1a2e',
+                  border: '1px solid #333',
+                  borderRadius: '6px',
+                }}
+              >
+                <input
+                  type="text"
+                  value={obj.item_id}
+                  onChange={(e) => updateObjective(oi, { item_id: e.target.value })}
+                  placeholder="item_id"
+                  style={{
+                    width: '120px', padding: '4px 6px', background: '#111',
+                    border: '1px solid #444', borderRadius: '3px',
+                    color: '#ffdd44', fontSize: '11px', fontFamily: 'monospace',
+                  }}
+                />
+                <input
+                  type="text"
+                  value={obj.label}
+                  onChange={(e) => updateObjective(oi, { label: e.target.value })}
+                  placeholder="Display label"
+                  style={{
+                    flex: 1, padding: '4px 6px', background: '#111',
+                    border: '1px solid #444', borderRadius: '3px',
+                    color: '#fff', fontSize: '12px',
+                  }}
+                />
+                <input
+                  type="number"
+                  value={obj.target}
+                  onChange={(e) => updateObjective(oi, { target: Math.max(1, parseInt(e.target.value) || 1) })}
+                  min={1}
+                  style={{
+                    width: '50px', padding: '4px 6px', background: '#111',
+                    border: '1px solid #444', borderRadius: '3px',
+                    color: '#fff', fontSize: '12px', textAlign: 'center',
+                  }}
+                />
+                <button
+                  onClick={() => removeObjective(oi)}
+                  style={{
+                    padding: '2px 6px', background: '#442222',
+                    border: '1px solid #664444', borderRadius: '3px',
+                    color: '#aa6666', fontSize: '11px', cursor: 'pointer',
+                  }}
+                >
+                  X
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 

@@ -28,6 +28,7 @@ const DialogTriggerScript := preload("res://scripts/3d/elements/dialog_trigger.g
 const FieldNpcScript := preload("res://scripts/3d/elements/field_npc.gd")
 const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
+const QuestItemPickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -78,10 +79,12 @@ var _room_messages: Array = [] # MessagePack nodes in current room
 var _room_props: Array = []    # StoryProp nodes in current room
 var _room_triggers: Array = [] # DialogTrigger nodes in current room
 var _room_npcs: Array = []     # FieldNpc nodes in current room
+var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
+var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 
 # Wave spawning
 var _current_wave: int = 1
@@ -315,7 +318,6 @@ func _ready() -> void:
 	_spawn_field_elements()
 	_spawn_cell_objects()
 	_setup_debug_panel()
-	_setup_key_hud(cells)
 
 	# Map overlay (toggle with Tab, persists across cell transitions)
 	_map_overlay = CanvasLayer.new()
@@ -340,6 +342,9 @@ func _ready() -> void:
 	_field_hud.add_child(_room_minimap)
 	map_panel.top_offset = 200.0
 
+	# Key HUD (drawn below minimap)
+	_setup_key_hud(cells)
+
 	# Sync initial gate lock states to minimap (gates were created before minimap)
 	for gate in _room_gates_locked:
 		if is_instance_valid(gate):
@@ -352,6 +357,33 @@ func _ready() -> void:
 	if is_key_gate_cell and not kg_dir.is_empty() and not _gates_opened.has(str(_current_cell.get("pos", ""))):
 		_room_minimap.set_gate_locked(kg_dir, true)
 
+	# Lock warp_edge on minimap if objectives are pending
+	var warp_e: String = str(_current_cell.get("warp_edge", ""))
+	if not warp_e.is_empty() and _has_pending_objectives():
+		_room_minimap.set_gate_locked(warp_e, true)
+
+	# Connect quest completion signal
+	if not SessionManager.quest_completed.is_connected(_on_quest_completed):
+		SessionManager.quest_completed.connect(_on_quest_completed)
+
+
+func _on_quest_completed() -> void:
+	print("[ValleyField] Quest objectives complete — unlocking exits")
+	# Unlock objective-locked AreaWarps (red beam → blue beam)
+	for warp in _objective_locked_exits:
+		if is_instance_valid(warp):
+			warp.set_state("open")
+	_objective_locked_exits.clear()
+
+	# Enable objective-locked exit triggers
+	var exit_trigger := _find_child_by_name(self, "ExitTrigger") as Area3D
+	if exit_trigger and not exit_trigger.monitoring:
+		exit_trigger.monitoring = true
+
+	# Update minimap
+	var we: String = str(_current_cell.get("warp_edge", ""))
+	if not we.is_empty() and _room_minimap:
+		_room_minimap.set_gate_locked(we, false)
 
 
 func _process(_delta: float) -> void:
@@ -790,11 +822,25 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 
 
 func _create_exit_trigger(_direction: String, _portal: Dictionary) -> void:
+	var objectives_pending := _has_pending_objectives()
 	var callback := func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
 			print("[ValleyField] Player entered exit trigger")
 			_on_end_reached()
-	_create_fallback_trigger("ExitTrigger", _portal["trigger_pos"], callback)
+	_create_fallback_trigger("ExitTrigger", _portal["trigger_pos"], callback, false, objectives_pending)
+	if objectives_pending:
+		# Track for unlocking when objectives complete
+		print("[FieldElements] Exit trigger locked (quest objectives incomplete)")
+
+
+func _has_pending_objectives() -> bool:
+	var objectives: Array = SessionManager.get_quest_objectives()
+	if objectives.is_empty() or SessionManager.are_objectives_complete():
+		return false
+	# Only lock the exit on the final section — earlier sections must stay passable
+	var sections: Array = SessionManager.get_field_sections()
+	var section_idx: int = SessionManager.get_current_section()
+	return section_idx >= sections.size() - 1
 
 
 
@@ -873,69 +919,12 @@ func _setup_key_hud(cells: Array) -> void:
 	for cell in cells:
 		if cell.get("has_key", false):
 			_total_keys_in_field += 1
-
-	if _total_keys_in_field == 0:
-		return
-
-	var canvas := CanvasLayer.new()
-	canvas.layer = 98
-	canvas.name = "KeyHUD"
-	add_child(canvas)
-
-	# Panel in top-right, below meseta
-	_key_hud_panel = PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.3, 0.08, 0.08, 0.85)
-	style.border_width_left = 1
-	style.border_width_top = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
-	style.border_color = Color(0.9, 0.3, 0.3, 0.6)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
-	style.content_margin_left = 10.0
-	style.content_margin_top = 6.0
-	style.content_margin_right = 10.0
-	style.content_margin_bottom = 6.0
-	_key_hud_panel.add_theme_stylebox_override("panel", style)
-	_key_hud_panel.anchor_left = 1.0
-	_key_hud_panel.anchor_right = 1.0
-	_key_hud_panel.offset_left = -120
-	_key_hud_panel.offset_right = -12
-	_key_hud_panel.offset_top = 56
-
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
-	_key_hud_panel.add_child(hbox)
-
-	_key_hud_icon = Label.new()
-	_key_hud_icon.text = "KEY"
-	var icon_settings := LabelSettings.new()
-	icon_settings.font_color = Color(1.0, 0.3, 0.3)
-	icon_settings.font_size = 13
-	_key_hud_icon.label_settings = icon_settings
-	hbox.add_child(_key_hud_icon)
-
-	_key_hud_label = Label.new()
-	_key_hud_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_key_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	var label_settings := LabelSettings.new()
-	label_settings.font_color = Color(1.0, 1.0, 1.0)
-	label_settings.font_size = 14
-	_key_hud_label.label_settings = label_settings
-	hbox.add_child(_key_hud_label)
-
-	canvas.add_child(_key_hud_panel)
 	_update_key_hud()
 
 
 func _update_key_hud() -> void:
-	if not _key_hud_label or _total_keys_in_field == 0:
-		return
-	var collected: int = _keys_collected.size()
-	_key_hud_label.text = "%d / %d" % [collected, _total_keys_in_field]
+	if _room_minimap and _total_keys_in_field > 0:
+		_room_minimap.update_keys(_keys_collected.size(), _total_keys_in_field)
 
 
 func _unlock_key_gates(_key_item_id: String) -> void:
@@ -1043,10 +1032,13 @@ func _spawn_field_elements() -> void:
 	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
 		var area_warp := AreaWarpScript.new()
 		area_warp.auto_collect = false
-		area_warp.element_state = "open"
+		var objectives_pending := _has_pending_objectives()
+		area_warp.element_state = "locked" if objectives_pending else "open"
 		add_child(area_warp)
 		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
 		area_warp.rotation.y = _dir_to_yaw(warp_edge) + PI
+		if objectives_pending:
+			_objective_locked_exits.append(area_warp)
 
 	# End cells WITHOUT warp_edge — defer telepipe until room clear
 	if _current_cell.get("is_end", false) and warp_edge.is_empty():
@@ -1220,6 +1212,15 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 	)
 
 
+func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String) -> void:
+	var qi := QuestItemPickupScript.new()
+	qi.quest_item_id = item_id
+	qi.quest_item_label = item_label
+	_map_root.add_child(qi)
+	qi.position = pos
+	_room_quest_items.append(qi)
+
+
 ## Spawn placed objects (boxes, enemies, fences, switches, messages) from quest cell data.
 ## If the cell was previously visited, restore saved state instead.
 func _spawn_cell_objects() -> void:
@@ -1232,6 +1233,7 @@ func _spawn_cell_objects() -> void:
 	_room_props.clear()
 	_room_triggers.clear()
 	_room_npcs.clear()
+	_room_quest_items.clear()
 	_deferred_telepipe = {}
 
 	if objects.is_empty() and saved.is_empty():
@@ -1328,6 +1330,10 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				_spawn_warp_point(pos, w_section, w_cell, w_pos)
+			"quest_item":
+				var qi_id: String = str(obj.get("item_id", ""))
+				var qi_label: String = str(obj.get("item_label", ""))
+				_spawn_quest_item(pos, qi_id, qi_label)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -1403,6 +1409,11 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				_spawn_warp_point(pos, w_section, w_cell, w_pos)
+			"quest_item":
+				if state != "collected":
+					var qi_id: String = str(obj.get("item_id", ""))
+					var qi_label: String = str(obj.get("item_label", ""))
+					_spawn_quest_item(pos, qi_id, qi_label)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -1596,6 +1607,17 @@ func _save_cell_state() -> void:
 				"npc_id": npc.npc_id,
 				"npc_name": npc.npc_name,
 				"dialog": npc.dialog,
+			})
+
+	# Save quest item states
+	for qi in _room_quest_items:
+		if is_instance_valid(qi):
+			obj_states.append({
+				"type": "quest_item",
+				"px": qi.position.x, "py": qi.position.y, "pz": qi.position.z,
+				"state": qi.element_state,
+				"item_id": qi.quest_item_id,
+				"item_label": qi.quest_item_label,
 			})
 
 	# Save telepipe from original quest data (telepipes are procedural, just preserve placement)
