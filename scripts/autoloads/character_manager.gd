@@ -82,6 +82,7 @@ func create_character(slot: int, class_id: String, char_name: String, appearance
 		"unidentified_weapons": [],
 		"material_bonuses": {},
 		"combat_buffs": {},
+		"completed_missions": [],
 		"storage": [],
 		"created_at": Time.get_unix_time_from_system(),
 	}
@@ -111,12 +112,14 @@ func get_active_character():
 func set_active_slot(slot: int) -> void:
 	if slot < 0 or slot >= MAX_SLOTS or _characters[slot] == null:
 		return
-	# Save current inventory to outgoing character
+	# Save outgoing character's data
 	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
 		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
+		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
 	_active_slot = slot
-	# Load incoming character's inventory
+	# Load incoming character's data
 	Inventory._items = _characters[slot].get("inventory", {}).duplicate()
+	GameState.completed_missions = _characters[slot].get("completed_missions", []).duplicate()
 	active_character_changed.emit(slot)
 	_sync_to_game_state()
 
@@ -214,10 +217,18 @@ func get_save_data() -> Array:
 	return _characters.duplicate(true)
 
 
-## Sync current Inventory to active character dict (call before saving)
+## Sync current runtime state to active character dict (call before saving)
 func sync_inventory_to_active() -> void:
 	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
 		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
+		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
+
+
+## Migrate v3 global completed_missions to all existing characters
+func migrate_global_missions(missions_data: Array) -> void:
+	for i in range(MAX_SLOTS):
+		if _characters[i] != null and _characters[i].get("completed_missions", []).is_empty():
+			_characters[i]["completed_missions"] = missions_data.duplicate()
 
 
 ## Migrate v2 global inventory to all existing characters
