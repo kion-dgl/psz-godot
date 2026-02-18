@@ -113,6 +113,9 @@ const CATEGORIES := [
 			 "script": "res://scripts/3d/elements/drop_base.gd",
 			 "states": ["available", "collected"], "default": "available",
 			 "props": {"model_path": "valley/o0c_dropra.glb"}},
+			{"id": "quest_item", "title": "Quest Item", "desc": "Collectible quest objective. Gold spinning star.",
+			 "script": "res://scripts/3d/elements/quest_item_pickup.gd",
+			 "states": ["available", "collected"], "default": "available"},
 		]
 	},
 	{
@@ -138,13 +141,26 @@ const CATEGORIES := [
 			 "states": ["locked", "open"], "default": "locked"},
 		]
 	},
+	{
+		"name": "Story Props",
+		"elements": [
+			{"id": "campfire", "title": "Campfire", "desc": "Campfire prop for quest scenes.",
+			 "script": "res://scripts/3d/elements/story_prop.gd",
+			 "states": ["default"], "default": "default",
+			 "props": {"prop_path": "assets/objects/story/campfire.glb", "prop_scale": 1.5}},
+			{"id": "dropship_crash", "title": "Dropship Crash", "desc": "Crashed dropship wreckage.",
+			 "script": "res://scripts/3d/elements/story_prop.gd",
+			 "states": ["default"], "default": "default",
+			 "props": {"prop_path": "assets/objects/story/dropship_crash.glb"}},
+		]
+	},
 ]
 
 # Flattened item list
 var _items: Array = []
 var _cursor: int = 0
 var _state_cursor: int = 0
-var _current_element: GameElement = null
+var _current_element: Node3D = null
 var _element_container: Node3D
 var _camera: Camera3D
 var _preview_viewport: SubViewport
@@ -447,11 +463,14 @@ func _spawn_element() -> void:
 		for key in data.props:
 			element.set(key, data.props[key])
 
-	if data.id in ["key", "drop_meseta", "drop_item", "drop_weapon", "drop_armor", "drop_rare"]:
+	if data.id in ["key", "drop_meseta", "drop_item", "drop_weapon", "drop_armor", "drop_rare", "quest_item"]:
 		element.position.y = 0.5
 
 	_element_container.add_child(element)
 	_current_element = element
+
+	# StoryProp doesn't extend GameElement — skip material fixup for it
+	var is_game_element := element is GameElement
 
 	# Load per-element laser scroll config
 	if LASER_SCROLL_CONFIG.has(data.id):
@@ -462,17 +481,18 @@ func _spawn_element() -> void:
 		_laser_scroll_axis = "y"
 		_laser_scroll_speed = 0.5
 
-	_fixup_materials(element, data.id)
+	if is_game_element:
+		_fixup_materials(element as GameElement, data.id)
 
-	# Re-run element's material setup after storybook fixup replaced materials
-	if element.has_method("_setup_laser_material"):
-		element._setup_laser_material()
-	if element.has_method("_setup_laser_materials"):
-		element._setup_laser_materials()
-	if element.has_method("_setup_warp_material"):
-		element._setup_warp_material()
-	if element.has_method("_setup_textures"):
-		element._setup_textures()
+		# Re-run element's material setup after storybook fixup replaced materials
+		if element.has_method("_setup_laser_material"):
+			element._setup_laser_material()
+		if element.has_method("_setup_laser_materials"):
+			element._setup_laser_materials()
+		if element.has_method("_setup_warp_material"):
+			element._setup_warp_material()
+		if element.has_method("_setup_textures"):
+			element._setup_textures()
 
 	var default_state: String = data.default
 	_state_cursor = 0
@@ -628,13 +648,24 @@ func _refresh_right() -> void:
 	# Bottom: model/script info + texture debug
 	var bottom := ""
 	bottom += "[color=%s]Script: %s[/color]\n" % [C_MUTED, data.script.get_file()]
-	if _current_element and not _current_element.model_path.is_empty():
-		bottom += "[color=%s]Model: %s[/color]\n" % [C_MUTED, _current_element.model_path]
+	var el_model_path := ""
+	var el_model: Node3D = null
+	if _current_element is GameElement:
+		var ge := _current_element as GameElement
+		el_model_path = ge.model_path
+		el_model = ge.model
+	elif _current_element is StoryProp:
+		el_model_path = (_current_element as StoryProp).prop_path
+		# StoryProp adds the model as first child
+		if _current_element.get_child_count() > 0:
+			el_model = _current_element.get_child(0) as Node3D
+	if not el_model_path.is_empty():
+		bottom += "[color=%s]Model: %s[/color]\n" % [C_MUTED, el_model_path]
 
 	# Texture debug: list all meshes and their materials/textures
-	if _current_element and _current_element.model:
+	if el_model:
 		bottom += "\n[b][color=%s]Textures:[/color][/b]\n" % C_HEADER
-		bottom += _collect_texture_info(_current_element.model)
+		bottom += _collect_texture_info(el_model)
 
 	_right_bottom_label.clear()
 	_right_bottom_label.append_text(bottom)

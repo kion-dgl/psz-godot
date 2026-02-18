@@ -1196,6 +1196,7 @@ function CellContentInspector({
                       >
                         <option value="">-- select prop --</option>
                         <option value="assets/objects/story/dropship_crash.glb">Dropship (crashed)</option>
+                        <option value="assets/objects/story/campfire.glb">Campfire</option>
                       </select>
                       <input
                         type="text"
@@ -1223,6 +1224,24 @@ function CellContentInspector({
                             {deg}
                           </button>
                         ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '4px' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Scale:</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          value={obj.prop_scale != null ? obj.prop_scale : 1.0}
+                          onChange={(e) => {
+                            const v = parseFloat(e.target.value);
+                            if (!isNaN(v) && v > 0) onUpdateObject(obj.id, { prop_scale: v });
+                          }}
+                          style={{
+                            width: '60px', padding: '3px', background: '#111',
+                            border: '1px solid #444', borderRadius: '3px',
+                            color: '#fff', fontSize: '10px', fontFamily: 'monospace',
+                          }}
+                        />
                       </div>
                     </div>
                   )}

@@ -313,7 +313,7 @@ export default function QuestEditor() {
         {/* Variant selector */}
         {currentArea && currentArea.variants.length > 0 && (
           <select
-            value={project.variant}
+            value={sectionProject.variant}
             onChange={(e) => handleVariantChange(e.target.value)}
             style={{
               padding: '6px 10px',
@@ -332,7 +332,7 @@ export default function QuestEditor() {
 
         {/* Grid size */}
         <select
-          value={project.gridSize}
+          value={sectionProject.gridSize}
           onChange={(e) => handleGridSizeChange(parseInt(e.target.value))}
           style={{
             padding: '6px 10px',
