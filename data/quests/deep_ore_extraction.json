@@ -1,0 +1,565 @@
+{
+  "id": "deep_ore_extraction",
+  "name": "Deep Ore Extraction",
+  "description": "Requested by: Weapon Smith. Escort apprentice Dorn into the valley to recover iron ore from creature-infested deposits.",
+  "area_id": "gurhacia",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,2",
+      "end_pos": "3,0",
+      "warp_requires": [
+        { "item_id": "iron_ore", "target": 3 }
+      ],
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s01a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [0, 0, 0],
+              "trigger_id": "dorn_entry_a",
+              "dialog": [
+                {
+                  "speaker": "Dorn",
+                  "text": "The first vein should be just ahead. These creatures nest near mineral deposits \u2014 something in the ore attracts them. Clear the room, I'll handle the rest."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s01a_ga1",
+          "rotation": 180,
+          "connections": {
+            "south": "2,2",
+            "north": "0,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s01a_tb3",
+          "rotation": 90,
+          "connections": {
+            "north": "1,2",
+            "south": "3,2",
+            "west": "2,1"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s01a_ic3",
+          "rotation": 180,
+          "connections": {
+            "south": "4,2",
+            "north": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [-16, 0, 19.9],
+              "item_id": "iron_ore",
+              "item_label": "Iron Ore"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [-16, 0, 16],
+              "trigger_condition": "item_pickup",
+              "dialog": [
+                {
+                  "speaker": "Dorn",
+                  "text": "Good iron. You can tell by the weight \u2014 this hasn't oxidized at all. Most surface ore is rusted through, but the stuff buried deep stays pure."
+                },
+                {
+                  "speaker": "Dorn",
+                  "text": "A blade's only as good as what you forge it from. Junk iron makes junk steel \u2014 shatters on the first real hit. This? This'll hold an edge."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s01a_lc2",
+          "rotation": 90,
+          "connections": {
+            "east": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "4,2",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 4,
+          "key_position": [-15.5, 1, 10.8],
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [11.3, 0, 21.7],
+              "item_id": "iron_ore",
+              "item_label": "Iron Ore"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [11, 0, 18],
+              "trigger_condition": "item_pickup",
+              "dialog": [
+                {
+                  "speaker": "Dorn",
+                  "text": "Before the collapse, the smiths had furnaces running day and night. Swords, spears, shields \u2014 enough to outfit whole expeditions. All gone now."
+                },
+                {
+                  "speaker": "Dorn",
+                  "text": "Master says the trick isn't just heating the metal. It's knowing when to fold it, when to quench it. Temperature, timing \u2014 get it wrong and the grain structure falls apart. Get it right and you've got something that'll outlast you."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "4,2",
+          "stage_id": "s01a_tb3",
+          "rotation": 180,
+          "connections": {
+            "east": "4,3",
+            "west": "4,1",
+            "north": "3,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "4,3",
+          "stage_id": "s01a_nb2",
+          "rotation": 90,
+          "connections": {
+            "west": "4,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [-3.3, 0, -15.9],
+              "item_id": "iron_ore",
+              "item_label": "Iron Ore"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [-3, 0, -12],
+              "trigger_condition": "item_pickup",
+              "dialog": [
+                {
+                  "speaker": "Dorn",
+                  "text": "That's three. With this much raw stock, Master can forge something proper \u2014 not the salvage junk everyone's been carrying."
+                },
+                {
+                  "speaker": "Dorn",
+                  "text": "But I spotted traces of something deeper in. Darker ore, heavier. The kind you use for a weapon's core \u2014 the part that channels photon energy. Let's push through."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "4,1",
+          "stage_id": "s01a_ga1",
+          "rotation": 270,
+          "connections": {
+            "west": "4,0",
+            "east": "4,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 7
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s01a_lb1",
+          "rotation": 0,
+          "connections": {
+            "north": "3,0",
+            "east": "4,1"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 8
+        },
+        {
+          "pos": "3,0",
+          "stage_id": "s01a_lb3",
+          "rotation": 180,
+          "connections": {
+            "south": "4,0"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "west",
+          "path_order": 9
+        }
+      ]
+    },
+    {
+      "type": "transition",
+      "area": "e",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s01e_ia1",
+          "rotation": 0,
+          "connections": {},
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "north",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [-7.6, 0, -16.4],
+              "trigger_id": "dorn_transition",
+              "trigger_size": [9.5, 3, 4],
+              "dialog": [
+                {
+                  "speaker": "Dorn",
+                  "text": "See those tool marks on the walls? Miners worked this corridor. Before everything fell apart, this was a trade route. Now it's just us and whatever's living down here."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "entry_direction": "north",
+      "exit_direction": "south"
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "0,2",
+      "end_pos": "1,0",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s01b_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [0, 0, 0],
+              "trigger_id": "dorn_entry_b",
+              "dialog": [
+                {
+                  "speaker": "Dorn",
+                  "text": "The deeper veins are richer but the creatures are worse. Stay sharp."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s01b_tb3",
+          "rotation": 270,
+          "connections": {
+            "south": "2,2",
+            "east": "1,3",
+            "north": "0,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s01b_tb3",
+          "rotation": 90,
+          "connections": {
+            "north": "1,2",
+            "west": "2,1",
+            "south": "3,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s01b_nc2",
+          "rotation": 90,
+          "connections": {
+            "west": "1,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s01b_lb3",
+          "rotation": 0,
+          "connections": {
+            "north": "1,1",
+            "east": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 4
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s01b_ga1",
+          "rotation": 180,
+          "connections": {
+            "north": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "1,1",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [-10.4, 0, -7.7],
+              "item_id": "rich_ore",
+              "item_label": "Rich Ore"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [2.4, 0, -8.1],
+              "trigger_condition": "item_pickup",
+              "actions": ["complete_quest", "telepipe"],
+              "dialog": [
+                {
+                  "speaker": "Dorn",
+                  "text": "This one's got a dark streak through it \u2014 that's carbon banding. Makes for stronger steel. The old smiths would've killed for stock like this."
+                },
+                {
+                  "speaker": "Dorn",
+                  "text": "That's everything we need. Let's get back to the shop."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s01b_ic1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,1",
+            "south": "2,1"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "north",
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s01b_lc1",
+          "rotation": 180,
+          "connections": {
+            "south": "1,1",
+            "west": "0,0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 7
+        },
+        {
+          "pos": "0,0",
+          "stage_id": "s01b_lb1",
+          "rotation": 90,
+          "connections": {
+            "east": "0,1",
+            "south": "1,0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 8
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s01b_lb1",
+          "rotation": 270,
+          "connections": {
+            "north": "0,0"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "west",
+          "path_order": 9
+        }
+      ]
+    }
+  ],
+  "companions": ["dorn"],
+  "city_dialog": [
+    {
+      "speaker": "Dorn",
+      "text": "The forge has been cold for weeks. Can't make anything without raw iron, and the valley deposits are crawling with creatures now. I know where the veins are \u2014 I just need someone who can clear the way. That's where you come in."
+    },
+    {
+      "speaker": "Dorn",
+      "text": "I've marked four deposits on the map. We hit those, I can haul enough ore back to get the forge running again. Let's move."
+    }
+  ],
+  "objectives": [
+    {
+      "item_id": "iron_ore",
+      "label": "Iron Ore",
+      "target": 3
+    },
+    {
+      "item_id": "rich_ore",
+      "label": "Rich Ore",
+      "target": 1
+    }
+  ]
+}

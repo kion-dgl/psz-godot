@@ -365,10 +365,28 @@ func _ready() -> void:
 	# Connect quest completion signal
 	if not SessionManager.quest_completed.is_connected(_on_quest_completed):
 		SessionManager.quest_completed.connect(_on_quest_completed)
+	# Connect item collected signal for section-level warp_requires unlocking
+	if not SessionManager.quest_item_collected.is_connected(_on_quest_item_collected_check_exit):
+		SessionManager.quest_item_collected.connect(_on_quest_item_collected_check_exit)
+
+
+func _on_quest_item_collected_check_exit(_item_id: String, _new_count: int, _target: int) -> void:
+	# Check if section-level warp_requires are now satisfied
+	if _objective_locked_exits.is_empty():
+		return
+	if _has_pending_section_requirements():
+		return
+	# Section requirements met — unlock exits
+	print("[ValleyField] Section warp requirements met — unlocking exits")
+	_unlock_objective_exits()
 
 
 func _on_quest_completed() -> void:
 	print("[ValleyField] Quest objectives complete — unlocking exits")
+	_unlock_objective_exits()
+
+
+func _unlock_objective_exits() -> void:
 	# Unlock objective-locked AreaWarps (red beam → blue beam)
 	for warp in _objective_locked_exits:
 		if is_instance_valid(warp):
@@ -834,13 +852,33 @@ func _create_exit_trigger(_direction: String, _portal: Dictionary) -> void:
 
 
 func _has_pending_objectives() -> bool:
+	# Check section-level warp_requires first (locks exit until specific items collected)
+	if _has_pending_section_requirements():
+		return true
+	# Fall back to global objectives check on the final section
 	var objectives: Array = SessionManager.get_quest_objectives()
 	if objectives.is_empty() or SessionManager.are_objectives_complete():
 		return false
-	# Only lock the exit on the final section — earlier sections must stay passable
 	var sections: Array = SessionManager.get_field_sections()
 	var section_idx: int = SessionManager.get_current_section()
 	return section_idx >= sections.size() - 1
+
+
+func _has_pending_section_requirements() -> bool:
+	var sections: Array = SessionManager.get_field_sections()
+	var section_idx: int = SessionManager.get_current_section()
+	if section_idx < 0 or section_idx >= sections.size():
+		return false
+	var section: Dictionary = sections[section_idx]
+	var warp_requires: Array = section.get("warp_requires", [])
+	if warp_requires.is_empty():
+		return false
+	for req in warp_requires:
+		var item_id: String = str(req.get("item_id", ""))
+		var target: int = int(req.get("target", 1))
+		if SessionManager.get_quest_item_count(item_id) < target:
+			return true
+	return false
 
 
 

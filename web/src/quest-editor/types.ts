@@ -171,6 +171,11 @@ export interface EditorGridCell {
 
 export type SectionType = 'grid' | 'transition' | 'boss';
 
+export interface SectionObjectiveRequirement {
+  item_id: string;
+  target: number;
+}
+
 export interface QuestSection {
   type: SectionType;
   variant: string;
@@ -183,6 +188,8 @@ export interface QuestSection {
   entryDirection?: Direction;
   /** Direction player exits to (transition/boss sections) */
   exitDirection?: Direction;
+  /** Objectives that must be met before the section exit warp opens */
+  warpRequires?: SectionObjectiveRequirement[];
 }
 
 // ============================================================================

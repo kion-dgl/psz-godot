@@ -178,6 +178,7 @@ export function projectToGodotQuest(project: QuestProject): object {
     };
     if (sec.entryDirection) section.entry_direction = sec.entryDirection;
     if (sec.exitDirection) section.exit_direction = sec.exitDirection;
+    if (sec.warpRequires && sec.warpRequires.length > 0) section.warp_requires = sec.warpRequires;
     return section;
   });
 
@@ -311,6 +312,7 @@ export function importGodotSection(section: any): QuestSection {
   };
   if (section.entry_direction) result.entryDirection = section.entry_direction;
   if (section.exit_direction) result.exitDirection = section.exit_direction;
+  if (section.warp_requires && Array.isArray(section.warp_requires)) result.warpRequires = section.warp_requires;
   return result;
 }
 
