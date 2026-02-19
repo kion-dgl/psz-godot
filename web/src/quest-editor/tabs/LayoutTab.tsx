@@ -127,7 +127,6 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
           [pickerTarget]: {
             stageName,
             rotation: rotation || undefined,
-            role: 'transit' as const,
             manual: true,
           },
         },

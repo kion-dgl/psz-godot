@@ -6,6 +6,7 @@ class_name DialogTrigger
 ## trigger_condition controls WHEN this fires:
 ##   "enter" (default) — Area3D body_entered (walk into zone)
 ##   "room_clear"      — no Area3D; activate() must be called externally
+##   "item_pickup"     — fires when a quest item is collected in the same room
 ##
 ## actions[] runs after dialog finishes:
 ##   "complete_quest"  — SessionManager.complete_quest()
@@ -15,7 +16,7 @@ signal dialog_finished
 
 @export var trigger_id: String = ""
 @export var dialog: Array = []  # Array of {speaker: String, text: String}
-@export var trigger_condition: String = "enter"  # "enter" or "room_clear"
+@export var trigger_condition: String = "enter"  # "enter", "room_clear", or "item_pickup"
 @export var actions: Array = []  # ["complete_quest", "telepipe"]
 
 var _triggered: bool = false
@@ -33,7 +34,13 @@ func _ready() -> void:
 	# Skip model loading — this is invisible
 	if trigger_condition == "enter":
 		_setup_trigger_area()
+	elif trigger_condition == "item_pickup":
+		SessionManager.quest_item_collected.connect(_on_quest_item_collected)
 	_apply_state()
+
+
+func _on_quest_item_collected(_item_id: String, _new_count: int, _target: int) -> void:
+	activate()
 
 
 func _setup_trigger_area() -> void:
@@ -127,7 +134,13 @@ func _show_dialog() -> void:
 		dialog_box.name = "DialogBox"
 		hud.add_child(dialog_box)
 
-	dialog_box.show_dialog(dialog)
+	var pages: Array = dialog.duplicate(true)
+	# If this trigger has completion actions and objectives are now met, append completion text
+	var _objectives_met := _has_completion_actions() and SessionManager.are_objectives_complete()
+	if _objectives_met:
+		pages.append({"speaker": "", "text": "Quest complete! Please report to the Guild."})
+
+	dialog_box.show_dialog(pages)
 	dialog_box.dialog_complete.connect(func() -> void:
 		_unfreeze_player()
 		_execute_actions()
@@ -135,13 +148,25 @@ func _show_dialog() -> void:
 	, CONNECT_ONE_SHOT)
 
 
+func _has_completion_actions() -> bool:
+	for action in actions:
+		if str(action) in ["complete_quest", "telepipe"]:
+			return true
+	return false
+
+
 func _execute_actions() -> void:
+	var objectives_met := SessionManager.are_objectives_complete()
 	for action in actions:
 		match str(action):
 			"complete_quest":
+				if not objectives_met:
+					continue
 				print("[DialogTrigger] Action: complete_quest")
 				SessionManager.complete_quest()
 			"telepipe":
+				if not objectives_met:
+					continue
 				print("[DialogTrigger] Action: spawning telepipe at trigger position")
 				_spawn_telepipe_at_position()
 

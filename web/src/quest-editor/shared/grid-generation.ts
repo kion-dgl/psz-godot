@@ -5,7 +5,7 @@
  * Generates random grid layouts with linear paths, branches, and key-gates.
  */
 
-import type { Direction, EditorGridCell, CellRole } from '../types';
+import type { Direction, EditorGridCell } from '../types';
 import {
   getOriginalGates,
   getRotatedGates,
@@ -559,8 +559,6 @@ function tryGenerateGrid(
       if (!cell.stageName) continue;
 
       const pos = `${r},${c}`;
-      let role: CellRole = 'transit';
-      if (cell.isEnd) role = 'boss';
       if (cell.isStart) startPos = pos;
       if (cell.isEnd) endPos = pos;
 
@@ -568,7 +566,6 @@ function tryGenerateGrid(
         stageName: cell.stageName,
         rotation: cell.rotation || undefined,
         lockedGate: cell.isKeyGate && cell.keyGateDirection ? cell.keyGateDirection as Direction : undefined,
-        role,
         manual: false,
       };
     }
