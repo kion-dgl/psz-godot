@@ -187,8 +187,8 @@ class _QuestLogPanel extends Control:
 	const PAD := 8.0
 	const FONT_SIZE := 11
 	const MAX_ENTRIES := 6
-	const FADE_TIME := 8.0  # seconds before entries start fading
-	const FADE_DURATION := 2.0  # seconds to fully fade out
+	const FADE_TIME := 3.0  # seconds before entries start fading
+	const FADE_DURATION := 1.5  # seconds to fully fade out
 
 	const BG_COLOR := Color(0.08, 0.08, 0.15, 0.55)
 	const BORDER_COLOR := Color(0.4, 0.4, 0.5, 0.3)
