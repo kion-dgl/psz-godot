@@ -222,7 +222,10 @@ export function projectToGodotQuest(project: QuestProject): object {
   }
 
   if (project.metadata?.cityDialog && project.metadata.cityDialog.length > 0) {
-    quest.city_dialog = project.metadata.cityDialog;
+    // Flatten scenes back to Godot's flat city_dialog format
+    quest.city_dialog = project.metadata.cityDialog.flatMap(scene =>
+      (scene.dialog || []).map(page => ({ speaker: page.speaker, text: page.text }))
+    );
   }
 
   if (project.metadata?.objectives && project.metadata.objectives.length > 0) {
@@ -251,7 +254,6 @@ export function importGodotSection(section: any): QuestSection {
       stageName: cell.stage_id,
       rotation: cell.rotation || undefined,
       lockedGate: cell.key_gate_direction || undefined,
-      role: cell.is_end ? 'boss' : cell.is_start ? 'transit' : 'guard',
       manual: true,
     };
     if (cell.key_position && Array.isArray(cell.key_position)) {
@@ -312,6 +314,32 @@ export function importGodotSection(section: any): QuestSection {
   return result;
 }
 
+/** Convert Godot city_dialog (flat pages) to editor CityDialogScene format.
+ *  Groups consecutive pages by speaker into scenes. */
+function importCityDialog(raw: any): Array<{ npc_id: string; npc_name: string; dialog: Array<{ speaker: string; text: string }> }> {
+  if (!Array.isArray(raw) || raw.length === 0) return [];
+
+  // If already in scene format (has dialog array), pass through
+  if (raw[0].dialog && Array.isArray(raw[0].dialog)) {
+    return raw;
+  }
+
+  // Flat pages: group consecutive pages by speaker into scenes
+  const scenes: Array<{ npc_id: string; npc_name: string; dialog: Array<{ speaker: string; text: string }> }> = [];
+  let currentScene: typeof scenes[0] | null = null;
+
+  for (const page of raw) {
+    const speaker = page.speaker || '';
+    if (!currentScene || currentScene.npc_name !== speaker) {
+      currentScene = { npc_id: '', npc_name: speaker, dialog: [] };
+      scenes.push(currentScene);
+    }
+    currentScene.dialog.push({ speaker: page.speaker || '', text: page.text || '' });
+  }
+
+  return scenes;
+}
+
 export function godotQuestToProject(quest: any): QuestProject {
   const rawSections = quest.sections || [];
   const importedSections: QuestSection[] = rawSections.map(importGodotSection);
@@ -333,7 +361,7 @@ export function godotQuestToProject(quest: any): QuestProject {
       questName: quest.name || '',
       description: quest.description || '',
       companions: Array.isArray(quest.companions) ? quest.companions : [],
-      cityDialog: Array.isArray(quest.city_dialog) ? quest.city_dialog : [],
+      cityDialog: importCityDialog(quest.city_dialog),
       objectives: Array.isArray(quest.objectives) ? quest.objectives : [],
     },
     cellContents: {},

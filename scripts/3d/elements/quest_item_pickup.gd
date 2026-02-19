@@ -87,9 +87,9 @@ func _load_model() -> void:
 
 
 func _give_reward() -> void:
-	SessionManager.collect_quest_item(quest_item_id)
 	print("[QuestItem] Collected '%s' (%s)" % [quest_item_id, quest_item_label])
 	_show_pickup_dialog()
+	# Signal emitted AFTER pickup dialog so item_pickup triggers don't get overwritten
 
 
 func _show_pickup_dialog() -> void:
@@ -102,6 +102,7 @@ func _show_pickup_dialog() -> void:
 		# Find FieldHud by name
 		hud = get_tree().root.find_child("FieldHud", true, false) as CanvasLayer
 	if not hud:
+		SessionManager.collect_quest_item(quest_item_id)
 		return
 
 	var dialog_box := hud.get_node_or_null("DialogBox")
@@ -111,4 +112,8 @@ func _show_pickup_dialog() -> void:
 		dialog_box.name = "DialogBox"
 		hud.add_child(dialog_box)
 
+	var item_id := quest_item_id
+	dialog_box.dialog_complete.connect(func() -> void:
+		SessionManager.collect_quest_item(item_id)
+	, CONNECT_ONE_SHOT)
 	dialog_box.show_dialog([{"speaker": "", "text": "Picked up %s." % label}])

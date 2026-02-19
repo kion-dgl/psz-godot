@@ -5,8 +5,7 @@
  * start/end toggle, key/key-gate controls, notes.
  */
 
-import type { QuestProject, EditorGridCell, CellRole, Direction, SectionType } from '../types';
-import { ROLE_COLORS, ROLE_LABELS } from '../types';
+import type { QuestProject, EditorGridCell, Direction, SectionType } from '../types';
 import { getRotatedGates, getStageSuffix } from '../hooks/useStageConfigs';
 
 interface CellInspectorProps {
@@ -26,7 +25,7 @@ interface CellInspectorProps {
   onSetSectionDirection?: (field: 'entryDirection' | 'exitDirection', dir: Direction | undefined) => void;
 }
 
-const ALL_ROLES: CellRole[] = ['transit', 'guard', 'puzzle', 'cache', 'landmark', 'boss'];
+
 
 const labelStyle: React.CSSProperties = {
   fontSize: '11px',
@@ -150,34 +149,12 @@ export default function CellInspector({
           })}
           <div style={{
             gridArea: '2/2',
-            background: ROLE_COLORS[cell.role],
+            background: '#556',
             borderRadius: '2px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '9px', color: '#fff', fontWeight: 600,
           }}>{suffix}</div>
         </div>
-      </div>
-
-      {/* Role */}
-      <div style={sectionStyle}>
-        <div style={labelStyle}>Role</div>
-        <select
-          value={cell.role}
-          onChange={(e) => onUpdateCell(selectedCell, { role: e.target.value as CellRole })}
-          style={{
-            width: '100%',
-            padding: '8px',
-            background: '#2a2a4a',
-            border: `1px solid ${ROLE_COLORS[cell.role]}`,
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '13px',
-          }}
-        >
-          {ALL_ROLES.map(role => (
-            <option key={role} value={role}>{ROLE_LABELS[role]}</option>
-          ))}
-        </select>
       </div>
 
       {/* Start / End — for grids: set start/end cell; for transition/boss: set entry/exit direction */}

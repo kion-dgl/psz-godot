@@ -11,7 +11,7 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Grid } from '@react-three/drei';
 import * as THREE from 'three';
 import type { QuestProject, Direction, CellObject, CellObjectType } from '../types';
-import { ROLE_COLORS, CELL_OBJECT_COLORS, CELL_OBJECT_LABELS } from '../types';
+import { CELL_OBJECT_COLORS, CELL_OBJECT_LABELS } from '../types';
 import { getRotatedGates, getStageConfig, getStageSuffix } from '../hooks/useStageConfigs';
 import { getGlbPath, getAreaFromMapId } from '../constants';
 import { assetUrl } from '../../utils/assets';
@@ -752,7 +752,7 @@ function MiniGrid({
                   width: CELL_SIZE,
                   height: CELL_SIZE,
                   background: isSelected ? '#3a3a6a' : '#2a2a4a',
-                  border: `2px solid ${isSelected ? '#88aaff' : ROLE_COLORS[cell.role]}`,
+                  border: `2px solid ${isSelected ? '#88aaff' : '#556'}`,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -869,6 +869,8 @@ function CellContentInspector({
   onSelectObject,
   onDeleteObject,
   onUpdateObject,
+  repositioningObjectId,
+  onToggleRepositionObject,
 }: {
   project: QuestProject;
   selectedCell: string;
@@ -882,6 +884,8 @@ function CellContentInspector({
   onSelectObject: (id: string | null) => void;
   onDeleteObject: (id: string) => void;
   onUpdateObject: (id: string, updates: Partial<CellObject>) => void;
+  repositioningObjectId: string | null;
+  onToggleRepositionObject: (id: string) => void;
 }) {
   const cell = project.cells[selectedCell];
   if (!cell) {
@@ -916,7 +920,6 @@ function CellContentInspector({
           {isEnd && <span style={badgeStyle('#ffaa66')}>END</span>}
           {hasKey && <span style={badgeStyle('#ff66aa')}>KEY</span>}
           {isKeyGate && <span style={badgeStyle('#ff66ff')}>GATE</span>}
-          <span style={badgeStyle(ROLE_COLORS[cell.role])}>{cell.role.toUpperCase()}</span>
         </div>
       </div>
 
@@ -1095,6 +1098,28 @@ function CellContentInspector({
                   <div style={{ fontSize: '10px', color: '#888', fontFamily: 'monospace', marginTop: '2px' }}>
                     [{obj.position[0]}, {obj.position[1]}, {obj.position[2]}]
                   </div>
+
+                  {/* Reposition button for positionable objects */}
+                  {isSel && (obj.type === 'dialog_trigger' || obj.type === 'quest_item' || obj.type === 'story_prop' || obj.type === 'npc' || obj.type === 'enemy') && (
+                    <div style={{ marginTop: '4px' }}>
+                      {obj.position[0] === 0 && obj.position[1] === 0 && obj.position[2] === 0 && (
+                        <div style={{ fontSize: '11px', color: '#ff8888', marginBottom: '4px' }}>
+                          Position not set — click Reposition to place in 3D view.
+                        </div>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onToggleRepositionObject(obj.id); }}
+                        style={{
+                          ...btnStyle,
+                          padding: '3px 8px',
+                          fontSize: '9px',
+                          background: repositioningObjectId === obj.id ? '#ff8844' : (obj.position[0] === 0 && obj.position[1] === 0 && obj.position[2] === 0 ? '#884422' : '#555588'),
+                        }}
+                      >
+                        {repositioningObjectId === obj.id ? 'Placing...' : 'Reposition'}
+                      </button>
+                    </div>
+                  )}
 
                   {/* Enemy ID picker */}
                   {isSel && obj.type === 'enemy' && (
@@ -1290,7 +1315,7 @@ function CellContentInspector({
                       <div style={{ marginBottom: '4px' }}>
                         <span style={{ fontSize: '10px', color: '#888' }}>Condition:</span>
                         <div style={{ display: 'flex', gap: '4px', marginTop: '2px' }}>
-                          {(['enter', 'room_clear'] as const).map(cond => (
+                          {(['enter', 'room_clear', 'item_pickup'] as const).map(cond => (
                             <button
                               key={cond}
                               onClick={() => onUpdateObject(obj.id, { trigger_condition: cond })}
@@ -1612,6 +1637,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
   const [placingKey, setPlacingKey] = useState(false);
   const [placingObject, setPlacingObject] = useState<CellObjectType | null>(null);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const [repositioningObjectId, setRepositioningObjectId] = useState<string | null>(null);
 
   const cell = selectedCell ? project.cells[selectedCell] : null;
   const config = cell ? getStageConfig(cell.stageName) : null;
@@ -1644,12 +1670,40 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
   const handleTogglePlaceKey = useCallback(() => {
     setPlacingKey(p => !p);
     setPlacingObject(null);
+    setRepositioningObjectId(null);
   }, []);
 
   const handleSetPlacingObject = useCallback((type: CellObjectType | null) => {
     setPlacingObject(type);
     setPlacingKey(false);
+    setRepositioningObjectId(null);
   }, []);
+
+  const handleToggleRepositionObject = useCallback((objId: string) => {
+    setRepositioningObjectId(prev => prev === objId ? null : objId);
+    setPlacingKey(false);
+    setPlacingObject(null);
+  }, []);
+
+  const handleRepositionObject = useCallback((pos: [number, number, number]) => {
+    if (!selectedCell || !repositioningObjectId) return;
+    onUpdateProject(prev => {
+      const cellData = prev.cells[selectedCell];
+      return {
+        ...prev,
+        cells: {
+          ...prev.cells,
+          [selectedCell]: {
+            ...cellData,
+            objects: (cellData.objects || []).map(o =>
+              o.id === repositioningObjectId ? { ...o, position: pos } : o
+            ),
+          },
+        },
+      };
+    });
+    setRepositioningObjectId(null);
+  }, [selectedCell, repositioningObjectId, onUpdateProject]);
 
   const handlePlaceObject = useCallback((pos: [number, number, number]) => {
     if (!selectedCell || !placingObject) return;
@@ -1723,6 +1777,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
     setPlacingKey(false);
     setPlacingObject(null);
     setSelectedObjectId(null);
+    setRepositioningObjectId(null);
   }, []);
 
   return (
@@ -1831,6 +1886,14 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
                 </>
               )}
 
+              {/* Object reposition mode */}
+              {repositioningObjectId && (
+                <>
+                  <KeyPlacementCursor />
+                  <GroundClickPlane onPlace={handleRepositionObject} />
+                </>
+              )}
+
               <OrbitControls makeDefault />
             </Canvas>
 
@@ -1869,6 +1932,19 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
                 Click to place {CELL_OBJECT_LABELS[placingObject]} | Click here to cancel
               </div>
             )}
+
+            {repositioningObjectId && (
+              <div style={{
+                position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+                background: '#ff8844', padding: '8px 20px',
+                borderRadius: '20px', fontSize: '13px', color: '#fff', fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onClick={() => setRepositioningObjectId(null)}
+              >
+                Click to reposition object | Click here to cancel
+              </div>
+            )}
           </>
         ) : (
           <div style={{
@@ -1903,6 +1979,8 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
             onSelectObject={setSelectedObjectId}
             onDeleteObject={handleDeleteObject}
             onUpdateObject={handleUpdateObject}
+            repositioningObjectId={repositioningObjectId}
+            onToggleRepositionObject={handleToggleRepositionObject}
           />
         ) : (
           <div style={{ padding: '1rem', color: '#888', fontSize: '13px' }}>

@@ -58,30 +58,6 @@ export interface StageContent {
 export type Direction = 'north' | 'south' | 'east' | 'west';
 
 // ============================================================================
-// Cell Roles
-// ============================================================================
-
-export type CellRole = 'transit' | 'guard' | 'puzzle' | 'cache' | 'landmark' | 'boss';
-
-export const ROLE_COLORS: Record<CellRole, string> = {
-  transit: '#666',
-  guard: '#cc4444',
-  puzzle: '#ccaa44',
-  cache: '#44aa44',
-  landmark: '#4488cc',
-  boss: '#cc8844',
-};
-
-export const ROLE_LABELS: Record<CellRole, string> = {
-  transit: 'Transit',
-  guard: 'Guard',
-  puzzle: 'Puzzle',
-  cache: 'Cache',
-  landmark: 'Landmark',
-  boss: 'Boss',
-};
-
-// ============================================================================
 // Cell Objects (placed in 3D stage)
 // ============================================================================
 
@@ -118,8 +94,8 @@ export interface CellObject {
   trigger_id?: string;
   /** Trigger collision box size [x, y, z] for type='dialog_trigger' (default [4, 3, 4]) */
   trigger_size?: [number, number, number];
-  /** When to fire for type='dialog_trigger': 'enter' (default) or 'room_clear' */
-  trigger_condition?: 'enter' | 'room_clear';
+  /** When to fire for type='dialog_trigger': 'enter' (default), 'room_clear', or 'item_pickup' */
+  trigger_condition?: 'enter' | 'room_clear' | 'item_pickup';
   /** Post-dialog actions for type='dialog_trigger': "complete_quest", "telepipe" */
   actions?: string[];
   /** Animation name to freeze on for type='npc' (e.g., "dam_h" for lying face down) */
@@ -179,8 +155,6 @@ export interface EditorGridCell {
   rotation?: number;
   /** Which gate direction is key-locked on this cell */
   lockedGate?: Direction;
-  /** Cell role for visual and future content generation */
-  role: CellRole;
   /** Whether this cell was manually placed (vs generated) */
   manual: boolean;
   /** Optional designer notes */

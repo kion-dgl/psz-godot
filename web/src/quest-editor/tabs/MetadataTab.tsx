@@ -67,18 +67,18 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
 
   const updateDialogPage = useCallback((sceneIdx: number, pageIdx: number, field: 'speaker' | 'text', value: string) => {
     const scene = cityDialog[sceneIdx];
-    const pages = scene.dialog.map((p, i) => i === pageIdx ? { ...p, [field]: value } : p);
+    const pages = (scene.dialog || []).map((p, i) => i === pageIdx ? { ...p, [field]: value } : p);
     updateScene(sceneIdx, { dialog: pages });
   }, [cityDialog, updateScene]);
 
   const addDialogPage = useCallback((sceneIdx: number) => {
     const scene = cityDialog[sceneIdx];
-    updateScene(sceneIdx, { dialog: [...scene.dialog, { speaker: scene.npc_name || '', text: '' }] });
+    updateScene(sceneIdx, { dialog: [...(scene.dialog || []), { speaker: scene.npc_name || '', text: '' }] });
   }, [cityDialog, updateScene]);
 
   const removeDialogPage = useCallback((sceneIdx: number, pageIdx: number) => {
     const scene = cityDialog[sceneIdx];
-    updateScene(sceneIdx, { dialog: scene.dialog.filter((_, i) => i !== pageIdx) });
+    updateScene(sceneIdx, { dialog: (scene.dialog || []).filter((_, i) => i !== pageIdx) });
   }, [cityDialog, updateScene]);
 
   const addObjective = useCallback(() => {
@@ -361,7 +361,7 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
                 </div>
 
                 {/* Dialog pages */}
-                {scene.dialog.map((page, pi) => (
+                {(scene.dialog || []).map((page, pi) => (
                   <div
                     key={pi}
                     style={{
