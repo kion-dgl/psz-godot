@@ -115,6 +115,7 @@ func _ready() -> void:
 	_spawn_edge = str(data.get("spawn_edge", ""))
 	var spawn_edge: String = _spawn_edge
 	_keys_collected = data.get("keys_collected", {})
+	_gates_opened = data.get("gates_opened", {})
 	_visited_cells = data.get("visited_cells", {})
 	_cell_states = data.get("cell_states", {})
 	var map_overlay_visible: bool = data.get("map_overlay_visible", false)
@@ -536,9 +537,14 @@ func _remap_quest_directions(_stage_id: String, _area_id: String) -> void:
 	if not kgd.is_empty():
 		_current_cell["key_gate_direction"] = _psz_to_glb_dir(kgd, swap_ns)
 
-	print("[ValleyField] Quest remap (rot=%d°, swap_%s): connections=%s  key_gate_dir=%s" % [
+	var we: String = str(_current_cell.get("warp_edge", ""))
+	if not we.is_empty():
+		_current_cell["warp_edge"] = _psz_to_glb_dir(we, swap_ns)
+
+	print("[ValleyField] Quest remap (rot=%d°, swap_%s): connections=%s  key_gate_dir=%s  warp_edge=%s" % [
 		_rotation_deg, "ns" if swap_ns else "ew",
-		str(new_connections), str(_current_cell.get("key_gate_direction", ""))])
+		str(new_connections), str(_current_cell.get("key_gate_direction", "")),
+		str(_current_cell.get("warp_edge", ""))])
 
 
 ## Convert a psz-sketch direction label to GLB portal data convention.
@@ -1858,6 +1864,7 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 			"spawn_edge": "",
 			"spawn_position": [target_position.x, target_position.y, target_position.z],
 			"keys_collected": {},
+			"gates_opened": {},
 			"visited_cells": {},
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 		})
@@ -2155,6 +2162,7 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 		"spawn_edge": spawn_edge,
 		"from_cell_pos": str(_current_cell.get("pos", "")),
 		"keys_collected": _keys_collected,
+		"gates_opened": _gates_opened,
 		"visited_cells": _visited_cells,
 		"cell_states": _cell_states,
 		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
@@ -2173,6 +2181,7 @@ func _on_end_reached() -> void:
 			"current_cell_pos": str(new_section.get("start_pos", "")),
 			"spawn_edge": "",
 			"keys_collected": {},
+			"gates_opened": {},
 			"visited_cells": {},
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 		})

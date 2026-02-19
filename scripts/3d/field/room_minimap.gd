@@ -441,11 +441,14 @@ func _build_gate_entries(svg_centers: Array, gate_match: Dictionary,
 			elif connections.has(grid_dir):
 				color = GATE_OPEN
 				# GLB mirrored X convention: east=-X (left), west=+X (right).
-				# Swap E↔W labels only when the original (pre-rotation) direction
-				# was east/west.  N/S gates rotated into E/W don't need the swap.
+				# The E↔W mirror propagates through rotation, causing label inversions:
+				#   R=0°/180°: E/W orig stays E/W → swap E↔W labels
+				#   R=90°/270°: E/W orig rotates to N/S → swap N↔S labels
 				var orig := _grid_to_original(grid_dir, _rotation_deg)
 				if (grid_dir == "east" or grid_dir == "west") and (orig == "east" or orig == "west"):
 					label = "W" if grid_dir == "east" else "E"
+				elif (grid_dir == "north" or grid_dir == "south") and (orig == "east" or orig == "west"):
+					label = "S" if grid_dir == "north" else "N"
 				else:
 					label = grid_dir.substr(0, 1).to_upper()
 			else:
