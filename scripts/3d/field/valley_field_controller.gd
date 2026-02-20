@@ -15,6 +15,7 @@ const KeyPickupScript := preload("res://scripts/3d/elements/key_pickup.gd")
 const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
+const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 const BoxScript := preload("res://scripts/3d/elements/box.gd")
 const FenceScript := preload("res://scripts/3d/elements/fence.gd")
 const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
@@ -25,6 +26,9 @@ const MessagePackScript := preload("res://scripts/3d/elements/message_pack.gd")
 const StoryPropScript := preload("res://scripts/3d/elements/story_prop.gd")
 const DialogTriggerScript := preload("res://scripts/3d/elements/dialog_trigger.gd")
 const FieldNpcScript := preload("res://scripts/3d/elements/field_npc.gd")
+const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
+const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
+const QuestItemPickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -55,7 +59,9 @@ var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _map_overlay: CanvasLayer
 var _room_minimap: Control
+var _field_hud: CanvasLayer
 var _blob_shadow: MeshInstance3D
+var _stage_config: Dictionary = {}
 var _texture_fixes: Array = []
 var _spawn_edge: String = ""
 var _rotation_deg: int = 0
@@ -73,8 +79,12 @@ var _room_messages: Array = [] # MessagePack nodes in current room
 var _room_props: Array = []    # StoryProp nodes in current room
 var _room_triggers: Array = [] # DialogTrigger nodes in current room
 var _room_npcs: Array = []     # FieldNpc nodes in current room
+var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
+var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
+var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
+var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 
 # Wave spawning
 var _current_wave: int = 1
@@ -105,6 +115,7 @@ func _ready() -> void:
 	_spawn_edge = str(data.get("spawn_edge", ""))
 	var spawn_edge: String = _spawn_edge
 	_keys_collected = data.get("keys_collected", {})
+	_gates_opened = data.get("gates_opened", {})
 	_visited_cells = data.get("visited_cells", {})
 	_cell_states = data.get("cell_states", {})
 	var map_overlay_visible: bool = data.get("map_overlay_visible", false)
@@ -151,8 +162,11 @@ func _ready() -> void:
 	if _rotation_deg != 0:
 		_map_root.rotation.y = deg_to_rad(_rotation_deg)
 
-	# Load texture fixes from config JSON
-	_texture_fixes = _load_texture_fixes(area_cfg["folder"], stage_id)
+	# Load stage config JSON (texture fixes + portal data)
+	_stage_config = _load_stage_config(area_cfg["folder"], stage_id)
+	_texture_fixes = _stage_config.get("textureFixes", []) as Array
+	if _texture_fixes.size() > 0:
+		print("[ValleyField] Loaded %d texture fixes from config" % _texture_fixes.size())
 
 	add_child(_map_root)
 	_strip_embedded_lights(_map_root)
@@ -163,19 +177,27 @@ func _ready() -> void:
 	_setup_map_collision(_map_root)
 	await get_tree().process_frame
 
-	# Discover portal nodes (returns original GLB direction keys)
-	var original_portal_data: Dictionary = _find_portal_data(_map_root)
+	# Build portal data from config JSON (preferred) or fall back to GLB nodes
+	var original_portal_data: Dictionary = _build_portal_data_from_config(_stage_config)
+	if original_portal_data.is_empty():
+		original_portal_data = _find_portal_data_from_glb(_map_root)
+		print("[ValleyField] Config had no portals — fell back to GLB node discovery")
 
 	# Remap portal keys from original GLB directions to grid-space directions.
-	# Portal positions are already correct (global_position reflects the rotated model).
+	# Positions are already correct (to_global() applied cell rotation).
+	# Gate rotations need the cell rotation added since they're in config-local space.
 	if _rotation_deg != 0:
 		_portal_data = {}
+		var rot_rad := deg_to_rad(float(_rotation_deg))
 		for orig_dir in original_portal_data:
 			if orig_dir == "default":
 				_portal_data["default"] = original_portal_data["default"]
 			else:
 				var grid_dir: String = _rotate_dir(orig_dir, _rotation_deg)
-				_portal_data[grid_dir] = original_portal_data[orig_dir]
+				var pd: Dictionary = original_portal_data[orig_dir].duplicate()
+				if pd.has("gate_rot"):
+					pd["gate_rot"] = Vector3(pd["gate_rot"].x, pd["gate_rot"].y + rot_rad, pd["gate_rot"].z)
+				_portal_data[grid_dir] = pd
 	else:
 		_portal_data = original_portal_data
 
@@ -204,29 +226,12 @@ func _ready() -> void:
 		str(section.get("type", "?")), str(section.get("area", "?"))])
 	print("[ValleyField]   spawn_edge='%s'" % spawn_edge)
 
-	# Log raw portal data BEFORE remapping
-	print("[ValleyField]   ── Raw portals (original GLB keys) ──")
+	# Log portal data
+	print("[ValleyField]   ── Portal data ──")
 	for key in _portal_data:
 		var pd: Dictionary = _portal_data[key]
-		print("[ValleyField]     '%s': spawn_global=%s  trigger_global=%s" % [
+		print("[ValleyField]     '%s': spawn=%s  trigger=%s" % [
 			key, pd["spawn_pos"], pd["trigger_pos"]])
-
-	# Log portal node details (local vs global positions)
-	var portals_node: Node3D = _find_child_by_name(_map_root, "portals")
-	if portals_node:
-		print("[ValleyField]   portals_node path: %s" % portals_node.get_path())
-		print("[ValleyField]   portals_node global_pos=%s  local_pos=%s" % [
-			portals_node.global_position, portals_node.position])
-		for dir in ["north", "east", "south", "west"]:
-			var sn: Node3D = _find_child_by_name(portals_node, "spawn_" + dir)
-			if sn:
-				print("[ValleyField]     spawn_%s: local=%s  global=%s  parent=%s" % [
-					dir, sn.position, sn.global_position, sn.get_parent().name])
-
-	# Log portal data
-	print("[ValleyField]   ── Final portals ──")
-	for key in _portal_data:
-		print("[ValleyField]     '%s': spawn=%s" % [key, _portal_data[key]["spawn_pos"]])
 
 	# Determine warp_edge early (needed for spawn resolution)
 	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
@@ -235,15 +240,22 @@ func _ready() -> void:
 	var spawn_pos := Vector3.ZERO
 	var spawn_rot := 0.0
 	var spawn_reason := ""
-	if not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
+	var raw_spawn_pos: Array = data.get("spawn_position", [])
+	if raw_spawn_pos.size() == 3:
+		var sp := Vector3(raw_spawn_pos[0], raw_spawn_pos[1], raw_spawn_pos[2])
+		if sp != Vector3.ZERO:
+			spawn_pos = _map_root.to_global(sp)
+			spawn_reason = "warp spawn_position %s" % sp
+	if not spawn_reason.is_empty():
+		pass  # spawn_position already resolved above
+	elif not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
 		spawn_pos = _portal_data[spawn_edge]["spawn_pos"]
 		spawn_rot = _dir_to_yaw(OPPOSITE[spawn_edge])
 		spawn_reason = "entry from %s, facing %s" % [spawn_edge, OPPOSITE[spawn_edge]]
 	elif _portal_data.has("default"):
 		spawn_pos = _portal_data["default"]["spawn_pos"]
-		var arrow: Node3D = _find_child_by_name(_map_root, "spawn_default_arrow")
-		if arrow:
-			spawn_rot = arrow.rotation.y
+		if _portal_data["default"].has("default_rotation"):
+			spawn_rot = _portal_data["default"]["default_rotation"]
 		spawn_reason = "default spawn"
 	elif not warp_edge.is_empty() and _portal_data.has(OPPOSITE.get(warp_edge, "")):
 		var entry_dir: String = OPPOSITE[warp_edge]
@@ -307,7 +319,6 @@ func _ready() -> void:
 	_spawn_field_elements()
 	_spawn_cell_objects()
 	_setup_debug_panel()
-	_setup_key_hud(cells)
 
 	# Map overlay (toggle with Tab, persists across cell transitions)
 	_map_overlay = CanvasLayer.new()
@@ -321,15 +332,77 @@ func _ready() -> void:
 	map_panel.section_info = "Section %d (%s)" % [section_idx + 1, str(section.get("type", "?"))]
 	_map_overlay.add_child(map_panel)
 
+	# Field HUD (always visible — stats panel + meseta + minimap)
+	_field_hud = FieldHudScript.new()
+	add_child(_field_hud)
+
 	_room_minimap = RoomMinimapScript.new()
 	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
 		_current_cell.get("connections", {}),
 		str(_current_cell.get("warp_edge", "")), _map_root, _rotation_deg)
-	_map_overlay.add_child(_room_minimap)
+	_field_hud.add_child(_room_minimap)
 	map_panel.top_offset = 200.0
 
-	# Hide debug marker meshes (disabled for testing portal visibility)
-	#_hide_debug_markers(_map_root)
+	# Key HUD (drawn below minimap)
+	_setup_key_hud(cells)
+
+	# Sync initial gate lock states to minimap (gates were created before minimap)
+	for gate in _room_gates_locked:
+		if is_instance_valid(gate):
+			var dir := _gate_direction(gate)
+			if not dir.is_empty():
+				_room_minimap.set_gate_locked(dir, true)
+	# Key-gate starts locked unless previously opened
+	var is_key_gate_cell: bool = _current_cell.get("is_key_gate", false)
+	var kg_dir: String = str(_current_cell.get("key_gate_direction", ""))
+	if is_key_gate_cell and not kg_dir.is_empty() and not _gates_opened.has(str(_current_cell.get("pos", ""))):
+		_room_minimap.set_gate_locked(kg_dir, true)
+
+	# Lock warp_edge on minimap if objectives are pending
+	var warp_e: String = str(_current_cell.get("warp_edge", ""))
+	if not warp_e.is_empty() and _has_pending_objectives():
+		_room_minimap.set_gate_locked(warp_e, true)
+
+	# Connect quest completion signal
+	if not SessionManager.quest_completed.is_connected(_on_quest_completed):
+		SessionManager.quest_completed.connect(_on_quest_completed)
+	# Connect item collected signal for section-level warp_requires unlocking
+	if not SessionManager.quest_item_collected.is_connected(_on_quest_item_collected_check_exit):
+		SessionManager.quest_item_collected.connect(_on_quest_item_collected_check_exit)
+
+
+func _on_quest_item_collected_check_exit(_item_id: String, _new_count: int, _target: int) -> void:
+	# Check if section-level warp_requires are now satisfied
+	if _objective_locked_exits.is_empty():
+		return
+	if _has_pending_section_requirements():
+		return
+	# Section requirements met — unlock exits
+	print("[ValleyField] Section warp requirements met — unlocking exits")
+	_unlock_objective_exits()
+
+
+func _on_quest_completed() -> void:
+	print("[ValleyField] Quest objectives complete — unlocking exits")
+	_unlock_objective_exits()
+
+
+func _unlock_objective_exits() -> void:
+	# Unlock objective-locked AreaWarps (red beam → blue beam)
+	for warp in _objective_locked_exits:
+		if is_instance_valid(warp):
+			warp.set_state("open")
+	_objective_locked_exits.clear()
+
+	# Enable objective-locked exit triggers
+	var exit_trigger := _find_child_by_name(self, "ExitTrigger") as Area3D
+	if exit_trigger and not exit_trigger.monitoring:
+		exit_trigger.monitoring = true
+
+	# Update minimap
+	var we: String = str(_current_cell.get("warp_edge", ""))
+	if not we.is_empty() and _room_minimap:
+		_room_minimap.set_gate_locked(we, false)
 
 
 func _process(_delta: float) -> void:
@@ -348,7 +421,8 @@ func _find_cell(cells: Array, pos: String) -> Dictionary:
 	return {}
 
 
-func _find_portal_data(map_root: Node3D) -> Dictionary:
+## Fallback: discover portal nodes from GLB scene tree (kept for stages without config JSON).
+func _find_portal_data_from_glb(map_root: Node3D) -> Dictionary:
 	var portals := {}
 	var portals_node: Node3D = map_root.get_node_or_null("portals")
 	if not portals_node:
@@ -463,9 +537,14 @@ func _remap_quest_directions(_stage_id: String, _area_id: String) -> void:
 	if not kgd.is_empty():
 		_current_cell["key_gate_direction"] = _psz_to_glb_dir(kgd, swap_ns)
 
-	print("[ValleyField] Quest remap (rot=%d°, swap_%s): connections=%s  key_gate_dir=%s" % [
+	var we: String = str(_current_cell.get("warp_edge", ""))
+	if not we.is_empty():
+		_current_cell["warp_edge"] = _psz_to_glb_dir(we, swap_ns)
+
+	print("[ValleyField] Quest remap (rot=%d°, swap_%s): connections=%s  key_gate_dir=%s  warp_edge=%s" % [
 		_rotation_deg, "ns" if swap_ns else "ew",
-		str(new_connections), str(_current_cell.get("key_gate_direction", ""))])
+		str(new_connections), str(_current_cell.get("key_gate_direction", "")),
+		str(_current_cell.get("warp_edge", ""))])
 
 
 ## Convert a psz-sketch direction label to GLB portal data convention.
@@ -558,21 +637,84 @@ func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
 		_collect_embedded_lights(child, out)
 
 
-func _load_texture_fixes(folder: String, stage_id: String) -> Array:
+func _load_stage_config(folder: String, stage_id: String) -> Dictionary:
 	var config_path := "res://assets/environments/%s/%s_config.json" % [folder, stage_id]
 	if not FileAccess.file_exists(config_path):
-		return []
+		return {}
 	var file := FileAccess.open(config_path, FileAccess.READ)
 	if not file:
-		return []
+		return {}
 	var json := JSON.new()
 	if json.parse(file.get_as_text()) != OK:
-		return []
-	var data: Dictionary = json.data
-	var fixes: Array = data.get("textureFixes", [])
-	if fixes.size() > 0:
-		print("[ValleyField] Loaded %d texture fixes from %s" % [fixes.size(), config_path])
-	return fixes
+		return {}
+	return json.data as Dictionary
+
+
+## Direction base rotations for portal position math (matches ExportTab.tsx DIRECTION_ROTATIONS).
+## north=0, south=PI, east=PI/2, west=-PI/2.
+const DIRECTION_ROTATIONS := {
+	"north": 0.0,
+	"south": PI,
+	"east": PI / 2.0,
+	"west": -PI / 2.0,
+}
+
+
+## Build portal data from config JSON portals[] and defaultSpawn.
+## Computes spawn/trigger/gate positions using the same math as ExportTab.tsx computePortalPositions.
+## Positions are in stage-local space — caller transforms via _map_root.to_global() after add_child.
+func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
+	var portals_arr: Array = config.get("portals", [])
+	if portals_arr.is_empty() and not config.has("defaultSpawn"):
+		return {}
+
+	var result := {}
+	for portal in portals_arr:
+		var dir: String = str(portal.get("direction", ""))
+		if dir.is_empty():
+			continue
+		var pos_arr: Array = portal.get("position", [0, 0, 0])
+		var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+
+		# Compute rotation: base direction + optional offset (degrees)
+		var base_rot: float = DIRECTION_ROTATIONS.get(dir, 0.0)
+		var offset_deg: float = float(portal.get("rotationOffset", 0))
+		var rotation: float = base_rot + deg_to_rad(offset_deg)
+
+		# Outward vector (away from the room, into the corridor)
+		var sin_r := sin(rotation)
+		var cos_r := cos(rotation)
+
+		# Spawn = 3 units outside gate, y=1.0
+		var spawn_pos := Vector3(gate_pos.x - sin_r * 3.0, 1.0, gate_pos.z - cos_r * 3.0)
+		# Trigger = 7 units outside gate, y=0.0
+		var trigger_pos := Vector3(gate_pos.x - sin_r * 7.0, 0.0, gate_pos.z - cos_r * 7.0)
+		# Gate rotation as Vector3 for element placement (Y-axis only)
+		var gate_rot := Vector3(0.0, rotation, 0.0)
+
+		result[dir] = {
+			"spawn_pos": _map_root.to_global(spawn_pos),
+			"trigger_pos": _map_root.to_global(trigger_pos),
+			"gate_pos": _map_root.to_global(gate_pos),
+			"gate_rot": gate_rot,
+		}
+
+	# Default spawn point (boss rooms / gateless areas)
+	if config.has("defaultSpawn"):
+		var ds: Dictionary = config["defaultSpawn"]
+		var ds_pos_arr: Array = ds.get("position", [0, 0, 0])
+		var ds_pos := Vector3(float(ds_pos_arr[0]), 1.0, float(ds_pos_arr[2]))
+		var ds_dir: String = str(ds.get("direction", "north"))
+		var ds_rot: float = DIRECTION_ROTATIONS.get(ds_dir, 0.0)
+		result["default"] = {
+			"spawn_pos": _map_root.to_global(ds_pos),
+			"trigger_pos": _map_root.to_global(ds_pos),
+			"default_rotation": ds_rot,
+		}
+
+	print("[ValleyField] Built portal data from config: %d portals, default=%s" % [
+		portals_arr.size(), str(config.has("defaultSpawn"))])
+	return result
 
 
 func _find_texture_fix_for_mesh(mesh_name: String) -> Dictionary:
@@ -688,15 +830,6 @@ func _configure_collision_nodes(node: Node) -> bool:
 
 
 
-func _hide_debug_markers(node: Node) -> void:
-	if node is MeshInstance3D:
-		var mesh_name: String = node.name
-		if mesh_name.begins_with("gate_") or mesh_name.begins_with("spawn_") \
-				or mesh_name.begins_with("trigger_"):
-			node.visible = false
-	for child in node.get_children():
-		_hide_debug_markers(child)
-
 
 func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: Dictionary, delayed: bool = false, locked: bool = false) -> void:
 	var entry_edge: String = OPPOSITE[direction]
@@ -706,115 +839,62 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 				direction, target_cell_pos, entry_edge])
 			_transition_to_cell(target_cell_pos, entry_edge)
 
-	# Convert grid direction to original GLB direction for node name lookup
-	var orig_dir: String = _grid_to_original_dir(direction, _rotation_deg)
-	print("[ValleyField]   trigger: dir=%s  orig=%s  target=%s  delayed=%s  locked=%s" % [
-		direction, orig_dir, target_cell_pos, delayed, locked])
-	var trigger_name := "trigger_" + orig_dir + "-area"
-	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
-	if not trigger_group:
-		trigger_group = _find_child_by_name(_map_root, "trigger_" + orig_dir)
-	if trigger_group:
-		print("[ValleyField]     found '%s' at global=%s" % [trigger_name, trigger_group.global_position])
-		var area := _convert_static_to_area(trigger_group)
-		if area:
-			area.name = "GateTrigger_%s" % direction
-			if delayed or locked:
-				area.monitoring = false
-			area.body_entered.connect(callback)
-			if delayed and not locked:
-				get_tree().create_timer(1.0).timeout.connect(func() -> void:
-					if is_instance_valid(area):
-						area.monitoring = true
-				)
-			return
-	else:
-		print("[ValleyField]     WARNING: no trigger node '%s' found!" % trigger_name)
-
-	# Fallback: create programmatic trigger at portal position
-	print("[ValleyField]     using fallback trigger at %s" % _portal["trigger_pos"])
-	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback, delayed)
+	print("[ValleyField]   trigger: dir=%s  target=%s  delayed=%s  locked=%s  pos=%s" % [
+		direction, target_cell_pos, delayed, locked, _portal["trigger_pos"]])
+	# Locked triggers stay disabled until key gate opens; delayed triggers auto-enable after 1s
+	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback, delayed and not locked, locked)
 
 
-func _create_exit_trigger(direction: String, _portal: Dictionary) -> void:
+func _create_exit_trigger(_direction: String, _portal: Dictionary) -> void:
+	var objectives_pending := _has_pending_objectives()
 	var callback := func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
 			print("[ValleyField] Player entered exit trigger")
 			_on_end_reached()
-
-	# Convert grid direction to original GLB direction for node name lookup
-	var orig_dir: String = _grid_to_original_dir(direction, _rotation_deg)
-	var trigger_name := "trigger_" + orig_dir + "-area"
-	var trigger_group: Node3D = _find_child_by_name(_map_root, trigger_name)
-	if not trigger_group:
-		trigger_group = _find_child_by_name(_map_root, "trigger_" + orig_dir)
-	if trigger_group:
-		var area := _convert_static_to_area(trigger_group)
-		if area:
-			area.name = "ExitTrigger"
-			area.body_entered.connect(callback)
-			return
-
-	# Fallback: create programmatic trigger at portal position
-	_create_fallback_trigger("ExitTrigger", _portal["trigger_pos"], callback)
+	_create_fallback_trigger("ExitTrigger", _portal["trigger_pos"], callback, false, objectives_pending)
+	if objectives_pending:
+		# Track for unlocking when objectives complete
+		print("[FieldElements] Exit trigger locked (quest objectives incomplete)")
 
 
-## Convert a GLB trigger group's -colonly StaticBody3D into a functional Area3D.
-## The GLB structure is: trigger_{dir}-area (Node3D group)
-##   - trigger_{dir}_box-colonly (StaticBody3D with CollisionShape3D)
-##   - trigger_{dir}_vis / trigger_{dir}_wire (MeshInstance3D, visual)
-## We reparent the CollisionShape3D into a new Area3D and free the StaticBody3D.
-func _convert_static_to_area(trigger_group: Node3D) -> Area3D:
-	var static_body: StaticBody3D = null
-	for child in trigger_group.get_children():
-		if child is StaticBody3D:
-			static_body = child
-			break
-	if not static_body:
-		# Also search recursively in case of extra nesting
-		static_body = _find_static_body(trigger_group)
-	if not static_body:
-		return null
-
-	var area := Area3D.new()
-	area.collision_layer = 0
-	area.collision_mask = 2  # Player layer
-
-	# Move collision shapes from StaticBody3D to Area3D
-	var shapes: Array = []
-	for child in static_body.get_children():
-		if child is CollisionShape3D:
-			shapes.append(child)
-	for shape in shapes:
-		static_body.remove_child(shape)
-		area.add_child(shape)
-
-	# Place Area3D at the same position as the StaticBody3D
-	trigger_group.add_child(area)
-	area.global_position = static_body.global_position
-
-	# Remove the now-empty StaticBody3D
-	static_body.queue_free()
-	return area
+func _has_pending_objectives() -> bool:
+	# Check section-level warp_requires first (locks exit until specific items collected)
+	if _has_pending_section_requirements():
+		return true
+	# Fall back to global objectives check on the final section
+	var objectives: Array = SessionManager.get_quest_objectives()
+	if objectives.is_empty() or SessionManager.are_objectives_complete():
+		return false
+	var sections: Array = SessionManager.get_field_sections()
+	var section_idx: int = SessionManager.get_current_section()
+	return section_idx >= sections.size() - 1
 
 
-func _find_static_body(node: Node) -> StaticBody3D:
-	for child in node.get_children():
-		if child is StaticBody3D:
-			return child
-		var found := _find_static_body(child)
-		if found:
-			return found
-	return null
+func _has_pending_section_requirements() -> bool:
+	var sections: Array = SessionManager.get_field_sections()
+	var section_idx: int = SessionManager.get_current_section()
+	if section_idx < 0 or section_idx >= sections.size():
+		return false
+	var section: Dictionary = sections[section_idx]
+	var warp_requires: Array = section.get("warp_requires", [])
+	if warp_requires.is_empty():
+		return false
+	for req in warp_requires:
+		var item_id: String = str(req.get("item_id", ""))
+		var target: int = int(req.get("target", 1))
+		if SessionManager.get_quest_item_count(item_id) < target:
+			return true
+	return false
 
 
-## Fallback trigger when no GLB trigger node exists.
-func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Callable, delayed: bool = false) -> void:
+
+## Create a programmatic Area3D trigger at the given position.
+func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Callable, delayed: bool = false, locked: bool = false) -> void:
 	var trigger := Area3D.new()
 	trigger.name = trigger_name
 	trigger.collision_layer = 0
 	trigger.collision_mask = 2
-	if delayed:
+	if delayed or locked:
 		trigger.monitoring = false
 
 	var shape := CollisionShape3D.new()
@@ -828,7 +908,7 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 	add_child(trigger)
 	trigger.global_position = pos
 
-	if delayed:
+	if delayed and not locked:
 		get_tree().create_timer(1.0).timeout.connect(func() -> void:
 			if is_instance_valid(trigger):
 				trigger.monitoring = true
@@ -883,69 +963,12 @@ func _setup_key_hud(cells: Array) -> void:
 	for cell in cells:
 		if cell.get("has_key", false):
 			_total_keys_in_field += 1
-
-	if _total_keys_in_field == 0:
-		return
-
-	var canvas := CanvasLayer.new()
-	canvas.layer = 98
-	canvas.name = "KeyHUD"
-	add_child(canvas)
-
-	# Panel in top-right, below meseta
-	_key_hud_panel = PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.3, 0.08, 0.08, 0.85)
-	style.border_width_left = 1
-	style.border_width_top = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
-	style.border_color = Color(0.9, 0.3, 0.3, 0.6)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
-	style.content_margin_left = 10.0
-	style.content_margin_top = 6.0
-	style.content_margin_right = 10.0
-	style.content_margin_bottom = 6.0
-	_key_hud_panel.add_theme_stylebox_override("panel", style)
-	_key_hud_panel.anchor_left = 1.0
-	_key_hud_panel.anchor_right = 1.0
-	_key_hud_panel.offset_left = -120
-	_key_hud_panel.offset_right = -12
-	_key_hud_panel.offset_top = 56
-
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
-	_key_hud_panel.add_child(hbox)
-
-	_key_hud_icon = Label.new()
-	_key_hud_icon.text = "KEY"
-	var icon_settings := LabelSettings.new()
-	icon_settings.font_color = Color(1.0, 0.3, 0.3)
-	icon_settings.font_size = 13
-	_key_hud_icon.label_settings = icon_settings
-	hbox.add_child(_key_hud_icon)
-
-	_key_hud_label = Label.new()
-	_key_hud_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_key_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	var label_settings := LabelSettings.new()
-	label_settings.font_color = Color(1.0, 1.0, 1.0)
-	label_settings.font_size = 14
-	_key_hud_label.label_settings = label_settings
-	hbox.add_child(_key_hud_label)
-
-	canvas.add_child(_key_hud_panel)
 	_update_key_hud()
 
 
 func _update_key_hud() -> void:
-	if not _key_hud_label or _total_keys_in_field == 0:
-		return
-	var collected: int = _keys_collected.size()
-	_key_hud_label.text = "%d / %d" % [collected, _total_keys_in_field]
+	if _room_minimap and _total_keys_in_field > 0:
+		_room_minimap.update_keys(_keys_collected.size(), _total_keys_in_field)
 
 
 func _unlock_key_gates(_key_item_id: String) -> void:
@@ -1024,17 +1047,17 @@ func _spawn_field_elements() -> void:
 	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
 	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
 
-	# StartWarp on is_start cells at the entry portal
-	if _current_cell.get("is_start", false):
+	# StartWarp on is_start cells at the entry portal (only first section)
+	var section_idx_for_warp: int = SessionManager.get_current_section()
+	if _current_cell.get("is_start", false) and section_idx_for_warp == 0:
 		var start_warp := StartWarpScript.new()
 		start_warp.auto_collect = false
 		var start_pos := Vector3.ZERO
 		var start_rot := 0.0
 		if _portal_data.has("default"):
 			start_pos = _portal_data["default"]["spawn_pos"]
-			var arrow: Node3D = _find_child_by_name(_map_root, "spawn_default_arrow")
-			if arrow:
-				start_rot = arrow.rotation.y
+			if _portal_data["default"].has("default_rotation"):
+				start_rot = _portal_data["default"]["default_rotation"]
 		else:
 			var entry_dir: String = str(OPPOSITE.get(warp_edge, ""))
 			if not entry_dir.is_empty() and _portal_data.has(entry_dir):
@@ -1054,14 +1077,17 @@ func _spawn_field_elements() -> void:
 	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
 		var area_warp := AreaWarpScript.new()
 		area_warp.auto_collect = false
-		area_warp.element_state = "open"
+		var objectives_pending := _has_pending_objectives()
+		area_warp.element_state = "locked" if objectives_pending else "open"
 		add_child(area_warp)
 		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
 		area_warp.rotation.y = _dir_to_yaw(warp_edge) + PI
+		if objectives_pending:
+			_objective_locked_exits.append(area_warp)
 
-	# Exit warp on end cells WITHOUT warp_edge (quest dead-end rooms)
+	# End cells WITHOUT warp_edge — defer telepipe until room clear
 	if _current_cell.get("is_end", false) and warp_edge.is_empty():
-		_spawn_end_cell_exit(connections)
+		_needs_telepipe = true
 
 	# Gates and Waypoints at each connection trigger (skip warp_edge)
 	print("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
@@ -1086,24 +1112,22 @@ func _spawn_field_elements() -> void:
 			kg.name = "KeyGate_%s" % dir
 			add_child(kg)
 			kg.global_position = gate_pos
-			# Use GLB gate node's rotation (not hardcoded)
 			kg.rotation = gate_rot
-			# Create collision from GLB gate_box mesh
-			var gate_box_node: MeshInstance3D = _portal_data[dir].get("gate_box_node", null) as MeshInstance3D
-			if gate_box_node and gate_box_node.mesh:
-				var collision := StaticBody3D.new()
-				collision.name = "KeyGateCollision_%s" % dir
-				collision.collision_layer = 1
-				collision.collision_mask = 0
-				var trimesh_shape := gate_box_node.mesh.create_trimesh_shape()
-				var shape_node := CollisionShape3D.new()
-				shape_node.shape = trimesh_shape
-				collision.add_child(shape_node)
-				# Position collision at the gate_box's global transform
-				gate_box_node.get_parent().add_child(collision)
-				collision.global_transform = gate_box_node.global_transform
-				kg.collision_body = collision
-				print("[FieldElements]   GLB gate_box collision created at %s" % collision.global_position)
+			# Standard box collision for key gates (6.0 x 1.5 x 0.2)
+			var collision := StaticBody3D.new()
+			collision.name = "KeyGateCollision_%s" % dir
+			collision.collision_layer = 1
+			collision.collision_mask = 0
+			var box_shape := BoxShape3D.new()
+			box_shape.size = Vector3(6.0, 1.5, 0.2)
+			var shape_node := CollisionShape3D.new()
+			shape_node.shape = box_shape
+			shape_node.position.y = 0.75
+			collision.add_child(shape_node)
+			add_child(collision)
+			collision.global_position = gate_pos
+			collision.rotation = gate_rot
+			kg.collision_body = collision
 			# Apply storybook-style material fixup (duplicate + UV fix for frame texture)
 			_fixup_gate_materials(kg)
 			kg._setup_laser_material()
@@ -1115,6 +1139,7 @@ func _spawn_field_elements() -> void:
 			# Enable the locked gate trigger when the key gate opens
 			var gate_trigger_name := "GateTrigger_%s" % dir
 			var cell_pos_for_gate := key_for_cell
+			var gate_dir_for_minimap: String = str(dir)
 			kg.state_changed.connect(func(_old: String, new_state: String) -> void:
 				if new_state == "open":
 					_gates_opened[cell_pos_for_gate] = true
@@ -1122,6 +1147,8 @@ func _spawn_field_elements() -> void:
 					if trigger:
 						trigger.monitoring = true
 						print("[ValleyField] KeyGate opened → trigger '%s' enabled, gate tracked" % gate_trigger_name)
+					if _room_minimap:
+						_room_minimap.set_gate_locked(gate_dir_for_minimap, false)
 			)
 			print("[FieldElements] ── KEY GATE DONE ──")
 		else:
@@ -1187,9 +1214,8 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 	# Fallback to default spawn
 	if exit_dir.is_empty() and _portal_data.has("default"):
 		exit_pos = _portal_data["default"]["spawn_pos"]
-		var arrow: Node3D = _find_child_by_name(_map_root, "spawn_default_arrow")
-		if arrow:
-			exit_rot = arrow.rotation.y
+		if _portal_data["default"].has("default_rotation"):
+			exit_rot = _portal_data["default"]["default_rotation"]
 
 	# Fallback to room center
 	if exit_dir.is_empty() and not _portal_data.has("default"):
@@ -1213,6 +1239,33 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 	print("[FieldElements] End cell exit warp at %s (dir=%s)" % [exit_pos, exit_dir])
 
 
+## Spawn a telepipe (cyan cylinder placeholder). Player steps into it to complete the section / quest.
+## If pos is zero, falls back to room center / default spawn.
+func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
+	print("[FieldElements] Spawning telepipe at %s" % pos)
+	var tp_pos := pos
+	if tp_pos == Vector3.ZERO and _portal_data.has("default"):
+		tp_pos = _portal_data["default"]["spawn_pos"]
+
+	var telepipe := TelepipeScript.new()
+	telepipe.name = "Telepipe"
+	_map_root.add_child(telepipe)
+	telepipe.position = tp_pos
+	telepipe.activated.connect(func() -> void:
+		print("[ValleyField] Player activated telepipe")
+		_on_end_reached()
+	)
+
+
+func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String) -> void:
+	var qi := QuestItemPickupScript.new()
+	qi.quest_item_id = item_id
+	qi.quest_item_label = item_label
+	_map_root.add_child(qi)
+	qi.position = pos
+	_room_quest_items.append(qi)
+
+
 ## Spawn placed objects (boxes, enemies, fences, switches, messages) from quest cell data.
 ## If the cell was previously visited, restore saved state instead.
 func _spawn_cell_objects() -> void:
@@ -1225,6 +1278,8 @@ func _spawn_cell_objects() -> void:
 	_room_props.clear()
 	_room_triggers.clear()
 	_room_npcs.clear()
+	_room_quest_items.clear()
+	_deferred_telepipe = {}
 
 	if objects.is_empty() and saved.is_empty():
 		return
@@ -1245,6 +1300,10 @@ func _spawn_cell_objects() -> void:
 
 	if alive_enemies > 0:
 		_lock_gates_for_enemies()
+	elif _needs_telepipe:
+		# No enemies on end cell — spawn telepipe immediately
+		_needs_telepipe = false
+		_spawn_telepipe(Vector3.ZERO)
 
 
 ## Spawn objects fresh (first visit to a cell).
@@ -1287,16 +1346,40 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				_spawn_message(pos, text)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
-				_spawn_story_prop(pos, prop_path, obj_rot)
+				var prop_scale: float = float(obj.get("prop_scale", 1.0))
+				_spawn_story_prop(pos, prop_path, obj_rot, prop_scale)
 			"dialog_trigger":
 				var trigger_id: String = str(obj.get("trigger_id", ""))
 				var dlg: Array = obj.get("dialog", [])
-				_spawn_dialog_trigger(pos, trigger_id, dlg)
+				var condition: String = str(obj.get("trigger_condition", "enter"))
+				var act: Array = obj.get("actions", [])
+				var tsize_arr: Array = obj.get("trigger_size", [])
+				var tsize := Vector3.ZERO
+				if tsize_arr.size() == 3:
+					tsize = Vector3(float(tsize_arr[0]), float(tsize_arr[1]), float(tsize_arr[2]))
+				_spawn_dialog_trigger(pos, trigger_id, dlg, "ready", condition, act, tsize)
 			"npc":
 				var npc_id: String = str(obj.get("npc_id", ""))
 				var npc_name: String = str(obj.get("npc_name", ""))
 				var dlg: Array = obj.get("dialog", [])
 				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot)
+			"telepipe":
+				var spawn_cond: String = str(obj.get("spawn_condition", "immediate"))
+				if spawn_cond == "room_clear":
+					# Defer — store data for _check_room_clear
+					_deferred_telepipe = { "position": pos }
+				else:
+					_spawn_telepipe(pos)
+			"warp":
+				var w_section: int = int(obj.get("warp_section", 0))
+				var w_cell: String = str(obj.get("warp_cell", ""))
+				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
+				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
+				_spawn_warp_point(pos, w_section, w_cell, w_pos)
+			"quest_item":
+				var qi_id: String = str(obj.get("item_id", ""))
+				var qi_label: String = str(obj.get("item_label", ""))
+				_spawn_quest_item(pos, qi_id, qi_label)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -1347,16 +1430,37 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_message(pos, text, msg_state)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
-				_spawn_story_prop(pos, prop_path, obj_rot)
+				var prop_scale: float = float(obj.get("prop_scale", 1.0))
+				_spawn_story_prop(pos, prop_path, obj_rot, prop_scale)
 			"dialog_trigger":
 				var trigger_id: String = str(obj.get("trigger_id", ""))
 				var dlg: Array = obj.get("dialog", [])
-				_spawn_dialog_trigger(pos, trigger_id, dlg, state)
+				var condition: String = str(obj.get("trigger_condition", "enter"))
+				var act: Array = obj.get("actions", [])
+				var tsize_arr: Array = obj.get("trigger_size", [])
+				var tsize := Vector3.ZERO
+				if tsize_arr.size() == 3:
+					tsize = Vector3(float(tsize_arr[0]), float(tsize_arr[1]), float(tsize_arr[2]))
+				_spawn_dialog_trigger(pos, trigger_id, dlg, state, condition, act, tsize)
 			"npc":
 				var npc_id: String = str(obj.get("npc_id", ""))
 				var npc_name: String = str(obj.get("npc_name", ""))
 				var dlg: Array = obj.get("dialog", [])
 				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot)
+			"telepipe":
+				# Telepipes are always spawned on restore (player already cleared the room)
+				_spawn_telepipe(pos)
+			"warp":
+				var w_section: int = int(obj.get("warp_section", 0))
+				var w_cell: String = str(obj.get("warp_cell", ""))
+				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
+				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
+				_spawn_warp_point(pos, w_section, w_cell, w_pos)
+			"quest_item":
+				if state != "collected":
+					var qi_id: String = str(obj.get("item_id", ""))
+					var qi_label: String = str(obj.get("item_label", ""))
+					_spawn_quest_item(pos, qi_id, qi_label)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -1521,18 +1625,25 @@ func _save_cell_state() -> void:
 				"px": prop.position.x, "py": prop.position.y, "pz": prop.position.z,
 				"state": prop.element_state,
 				"prop_path": prop.prop_path,
+				"prop_scale": prop.prop_scale,
 			})
 
 	# Save dialog trigger states
 	for trigger in _room_triggers:
 		if is_instance_valid(trigger):
-			obj_states.append({
+			var tdata := {
 				"type": "dialog_trigger",
 				"px": trigger.position.x, "py": trigger.position.y, "pz": trigger.position.z,
 				"state": trigger.element_state,
 				"trigger_id": trigger.trigger_id,
 				"dialog": trigger.dialog,
-			})
+				"trigger_condition": trigger.trigger_condition,
+				"actions": trigger.actions,
+			}
+			var cs: Vector3 = trigger.collision_size
+			if cs != Vector3(4.0, 3.0, 4.0):
+				tdata["trigger_size"] = [cs.x, cs.y, cs.z]
+			obj_states.append(tdata)
 
 	# Save NPC states
 	for npc in _room_npcs:
@@ -1544,6 +1655,28 @@ func _save_cell_state() -> void:
 				"npc_id": npc.npc_id,
 				"npc_name": npc.npc_name,
 				"dialog": npc.dialog,
+			})
+
+	# Save quest item states
+	for qi in _room_quest_items:
+		if is_instance_valid(qi):
+			obj_states.append({
+				"type": "quest_item",
+				"px": qi.position.x, "py": qi.position.y, "pz": qi.position.z,
+				"state": qi.element_state,
+				"item_id": qi.quest_item_id,
+				"item_label": qi.quest_item_label,
+			})
+
+	# Save telepipe from original quest data (telepipes are procedural, just preserve placement)
+	for obj in objects:
+		if str(obj.get("type", "")) == "telepipe":
+			var pos_arr: Array = obj.get("position", [0, 0, 0])
+			obj_states.append({
+				"type": "telepipe",
+				"px": float(pos_arr[0]), "py": float(pos_arr[1]), "pz": float(pos_arr[2]),
+				"state": "spawned",
+				"spawn_condition": str(obj.get("spawn_condition", "immediate")),
 			})
 
 	_cell_states[cell_pos] = {
@@ -1674,9 +1807,10 @@ func _spawn_message(pos: Vector3, text: String, state: String = "available") -> 
 	print("[CellObjects] Message at %s (text=%d chars)" % [pos, text.length()])
 
 
-func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0) -> void:
+func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop_scale: float = 1.0) -> void:
 	var prop := StoryPropScript.new()
 	prop.prop_path = prop_path
+	prop.prop_scale = prop_scale
 	_map_root.add_child(prop)
 	prop.position = pos
 	if rot_deg != 0:
@@ -1685,16 +1819,20 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0) -> v
 	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
 
 
-func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready") -> void:
+func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready", condition: String = "enter", act: Array = [], size: Vector3 = Vector3.ZERO) -> void:
 	if state == "triggered":
 		return  # Already triggered — don't respawn
 	var trigger := DialogTriggerScript.new()
 	trigger.trigger_id = trigger_id
 	trigger.dialog = dlg
+	trigger.trigger_condition = condition
+	trigger.actions = act
+	if size != Vector3.ZERO:
+		trigger.collision_size = size
 	_map_root.add_child(trigger)
 	trigger.position = pos
 	_room_triggers.append(trigger)
-	print("[CellObjects] DialogTrigger at %s (id=%s, pages=%d)" % [pos, trigger_id, dlg.size()])
+	print("[CellObjects] DialogTrigger at %s (id=%s, condition=%s, pages=%d, actions=%s, size=%s)" % [pos, trigger_id, condition, dlg.size(), str(act), trigger.collision_size])
 
 
 func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array, rot_deg: float = 0) -> void:
@@ -1708,6 +1846,30 @@ func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array
 		npc.rotation.y = deg_to_rad(rot_deg)
 	_room_npcs.append(npc)
 	print("[CellObjects] FieldNpc '%s' (%s) at %s (dialog=%d pages)" % [npc_name, npc_id, pos, dlg.size()])
+
+
+func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, target_position: Vector3) -> void:
+	var wp := WarpPointScript.new()
+	wp.warp_section = target_section
+	wp.warp_cell = target_cell
+	wp.warp_position = target_position
+	wp.name = "WarpPoint"
+	_map_root.add_child(wp)
+	wp.position = pos
+	wp.activated.connect(func() -> void:
+		print("[ValleyField] Warp activated → section %d, cell %s, position %s" % [target_section, target_cell, target_position])
+		SessionManager.set_current_section(target_section)
+		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+			"current_cell_pos": target_cell,
+			"spawn_edge": "",
+			"spawn_position": [target_position.x, target_position.y, target_position.z],
+			"keys_collected": {},
+			"gates_opened": {},
+			"visited_cells": {},
+			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+		})
+	)
+	print("[CellObjects] WarpPoint at %s → section %d, cell %s, position %s" % [pos, target_section, target_cell, target_position])
 
 
 ## Wire switch.activated → linked fences.disable()
@@ -1745,6 +1907,8 @@ func _lock_gates_for_enemies() -> void:
 				if gate.element_state != "open":
 					gate.lock()
 					_room_gates_locked.append(gate)
+					if _room_minimap:
+						_room_minimap.set_gate_locked(dir, true)
 					print("[CellObjects] Gate %s locked (enemies present)" % dir)
 					break
 
@@ -1766,11 +1930,30 @@ func _check_room_clear() -> void:
 	for gate in _room_gates_locked:
 		if is_instance_valid(gate):
 			gate.open()
+			var dir := _gate_direction(gate)
 			# Enable the gate's trigger
-			var trigger := _find_child_by_name(self, "GateTrigger_%s" % _gate_direction(gate)) as Area3D
+			var trigger := _find_child_by_name(self, "GateTrigger_%s" % dir) as Area3D
 			if trigger:
 				trigger.monitoring = true
+			if _room_minimap and not dir.is_empty():
+				_room_minimap.set_gate_locked(dir, false)
 	_room_gates_locked.clear()
+
+	# Fire room_clear dialog triggers
+	for rc_trigger in _room_triggers:
+		if is_instance_valid(rc_trigger) and rc_trigger.trigger_condition == "room_clear" and rc_trigger.element_state == "ready":
+			rc_trigger.activate()
+
+	# Spawn telepipe on end cells after room clear
+	if _needs_telepipe:
+		_needs_telepipe = false
+		_spawn_telepipe(Vector3.ZERO)
+
+	# Spawn deferred telepipe objects (spawn_condition=room_clear)
+	if not _deferred_telepipe.is_empty():
+		var tp_pos: Vector3 = _deferred_telepipe.get("position", Vector3.ZERO)
+		_spawn_telepipe(tp_pos)
+		_deferred_telepipe = {}
 
 
 ## Spawn enemies for a specific wave number.
@@ -1979,6 +2162,7 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 		"spawn_edge": spawn_edge,
 		"from_cell_pos": str(_current_cell.get("pos", "")),
 		"keys_collected": _keys_collected,
+		"gates_opened": _gates_opened,
 		"visited_cells": _visited_cells,
 		"cell_states": _cell_states,
 		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
@@ -1997,6 +2181,7 @@ func _on_end_reached() -> void:
 			"current_cell_pos": str(new_section.get("start_pos", "")),
 			"spawn_edge": "",
 			"keys_collected": {},
+			"gates_opened": {},
 			"visited_cells": {},
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 		})

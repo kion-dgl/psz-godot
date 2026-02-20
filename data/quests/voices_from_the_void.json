@@ -1,0 +1,713 @@
+{
+  "id": "voices_from_the_void",
+  "name": "Voices from the Void",
+  "description": "Requested by: Research Division. Escort researcher Mira into classified Paru ruins to recover ancient data disks from before the Great Blank.",
+  "area_id": "paru",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,2",
+      "end_pos": "3,2",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s05a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0.3,
+                1,
+                6.6
+              ],
+              "trigger_id": "mira_entry_a",
+              "trigger_size": [
+                7.5,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Mira",
+                  "text": "The survey team turned back right around here. They weren't equipped for the automata. We are."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s05a_tb3",
+          "rotation": 270,
+          "connections": {
+            "south": "2,2",
+            "north": "0,2",
+            "east": "1,3"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s05a_tb3",
+          "rotation": 180,
+          "connections": {
+            "east": "2,3",
+            "west": "2,1",
+            "north": "1,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s05a_nc2",
+          "rotation": 90,
+          "connections": {
+            "west": "1,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [
+                -13.2,
+                1,
+                15.6
+              ],
+              "item_id": "data_disk",
+              "item_label": "Data Disk"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -8.6,
+                1,
+                14.9
+              ],
+              "trigger_id": "mira_after_disk1",
+              "trigger_condition": "item_pickup",
+              "actions": ["complete_quest", "telepipe"],
+              "dialog": [
+                {
+                  "speaker": "Mira",
+                  "text": "This is military. Something happened here on a scale we can't even imagine. Keep looking."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s05a_lc1",
+          "rotation": 180,
+          "connections": {
+            "south": "3,3",
+            "west": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 4
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s05a_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "3,3",
+          "stage_id": "s05a_lc2",
+          "rotation": 270,
+          "connections": {
+            "west": "3,2",
+            "north": "2,3"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s05a_ga1",
+          "rotation": 90,
+          "connections": {
+            "east": "3,3"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "west",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [
+                -6.1,
+                0,
+                -7.8
+              ],
+              "item_id": "data_disk",
+              "item_label": "Data Disk 1"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -9.1,
+                0,
+                -8.2
+              ],
+              "trigger_condition": "item_pickup",
+              "actions": ["complete_quest", "telepipe"],
+              "dialog": [
+                {
+                  "speaker": "Mira",
+                  "text": "\"...all pers\u2588\u2588nel to sh\u2588\u2588ters bel\u2588\u2588. Sur\u2588\u2588ce oper\u2588\u2588ions ce\u2588\u2588ed... re\u2588\u2588very ti\u2588\u2588line unk\u2588\u2588wn...\""
+                },
+                {
+                  "speaker": "Mira",
+                  "text": "Shelters? Recovery?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "transition",
+      "area": "e",
+      "start_pos": "1,1",
+      "end_pos": "1,1",
+      "cells": [
+        {
+          "pos": "1,1",
+          "stage_id": "s05e_ia1",
+          "rotation": 0,
+          "connections": {},
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "south",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "mira_transition",
+              "trigger_size": [
+                44.5,
+                5,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Mira",
+                  "text": "Everything past here is uncharted. The Guild doesn't even have maps. Whatever we find... we're the first to see it in centuries."
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "entry_direction": "north",
+      "exit_direction": "south"
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "0,2",
+      "end_pos": "4,2",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s05b_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "mira_entry_b",
+              "trigger_size": [
+                24.5,
+                3,
+                2
+              ],
+              "dialog": [
+                {
+                  "speaker": "Mira",
+                  "text": "People lived here. You can tell from the layout \u2014 corridors, junctions. This was a city. Then one day everyone just... left."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s05b_xb2",
+          "rotation": 0,
+          "connections": {
+            "east": "1,3",
+            "north": "0,2",
+            "west": "1,1",
+            "south": "2,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s05b_td1",
+          "rotation": 0,
+          "connections": {
+            "west": "1,2",
+            "south": "2,3",
+            "east": "1,4"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s05b_sa1",
+          "rotation": 90,
+          "connections": {
+            "east": "1,2",
+            "west": "1,0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s05b_ic3",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "south": "3,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "2,2",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "warp_edge": "",
+          "path_order": 4,
+          "key_position": [
+            14.5,
+            1,
+            -13.3
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s05b_na1",
+          "rotation": 180,
+          "connections": {
+            "north": "1,3"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [
+                10.6,
+                0,
+                -11
+              ],
+              "item_id": "data_disk",
+              "item_label": "Data Disk 4"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                3.9,
+                0,
+                -13
+              ],
+              "trigger_condition": "item_pickup",
+              "actions": ["complete_quest", "telepipe"],
+              "dialog": [
+                {
+                  "speaker": "Mira",
+                  "text": "\"...no\u2588\u2588ing le\u2588\u2588 to s\u2588\u2588e. we bu\u2588\u2588ed it \u2588\u2588l. ev\u2588\u2588y f\u2588\u2588ld, ev\u2588\u2588y c\u2588\u2588y. \u2588\u2588ey sa\u2588\u2588 it w\u2588\u2588 nec\u2588\u2588sary...\""
+                },
+                {
+                  "speaker": "Mira",
+                  "text": "Somehow it makes sense, but the truth is worse than i could have immagined."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,4",
+          "stage_id": "s05b_lb1",
+          "rotation": 180,
+          "connections": {
+            "west": "1,3",
+            "south": "2,4"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s05b_lb1",
+          "rotation": 90,
+          "connections": {
+            "south": "2,0",
+            "east": "1,1"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 7
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s05b_xb2",
+          "rotation": 0,
+          "connections": {
+            "east": "3,3",
+            "north": "2,2",
+            "west": "3,1",
+            "south": "4,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 8
+        },
+        {
+          "pos": "2,4",
+          "stage_id": "s05b_ic3",
+          "rotation": 0,
+          "connections": {
+            "north": "1,4",
+            "south": "3,4"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 9
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s05b_nb2",
+          "rotation": 180,
+          "connections": {
+            "north": "1,0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 10,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [
+                -18.5,
+                0,
+                -11
+              ],
+              "item_id": "data_disk",
+              "item_label": "Data Disk 2"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -14.9,
+                0,
+                -16.3
+              ],
+              "trigger_condition": "item_pickup",
+              "actions": ["complete_quest", "telepipe"],
+              "dialog": [
+                {
+                  "speaker": "Mira",
+                  "text": "\"...orb\u2588\u2588al plat\u2588\u2588rm 'Tri\u2588\u2588ty' w\u2588\u2588l res\u2588\u2588re... o\u2588\u2588e it's ov\u2588\u2588... \u2588\u2588\u2588 centu\u2588\u2588es t\u2588\u2588y say...\""
+                },
+                {
+                  "speaker": "Mira",
+                  "text": "Centuries? Just how long ago did this actually happen?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "3,3",
+          "stage_id": "s05b_ic3",
+          "rotation": 90,
+          "connections": {
+            "east": "3,4",
+            "west": "3,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 11
+        },
+        {
+          "pos": "3,1",
+          "stage_id": "s05b_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "3,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 12
+        },
+        {
+          "pos": "4,2",
+          "stage_id": "s05b_nc2",
+          "rotation": 180,
+          "connections": {
+            "north": "3,2"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 13,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -14.5,
+                1,
+                15.6
+              ],
+              "trigger_id": "corrupted_log",
+              "trigger_condition": "item_pickup",
+              "actions": [
+                "complete_quest",
+                "telepipe"
+              ],
+              "dialog": [
+                {
+                  "speaker": "",
+                  "text": "...we did this to ours\u2588\u2588ves... there was no one left to figh\u2588... just us, burning everything..."
+                },
+                {
+                  "speaker": "Mira",
+                  "text": "...They did this to themselves. I\u2014 I need to process this. Let's get back to the Guild."
+                }
+              ]
+            },
+            {
+              "type": "quest_item",
+              "position": [
+                -18.9,
+                0,
+                15.5
+              ],
+              "item_id": "data_disk",
+              "item_label": "Data Disk 3"
+            }
+          ]
+        },
+        {
+          "pos": "3,4",
+          "stage_id": "s05b_lb3",
+          "rotation": 270,
+          "connections": {
+            "west": "3,3",
+            "north": "2,4"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 14
+        }
+      ]
+    }
+  ],
+  "companions": [
+    "mira"
+  ],
+  "city_dialog": [
+    {
+      "speaker": "Mira",
+      "text": "The Guild keeps Paru classified for a reason. Automata, unstable structures... but there's data in there that could change everything we know about the Great Blank. I need someone who can handle themselves. That's you."
+    },
+    {
+      "speaker": "Mira",
+      "text": "The survey team recovered fragments \u2014 just enough to know there's more. I'm not going in blind. I'm going in prepared. Let's move."
+    }
+  ],
+  "objectives": [
+    {
+      "item_id": "data_disk",
+      "label": "Data Disks",
+      "target": 4
+    }
+  ]
+}

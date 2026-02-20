@@ -19,7 +19,8 @@ enum PlayerState {
 	DODGING,
 	DAMAGED,
 	DOWN,
-	STUNNED
+	STUNNED,
+	CUTSCENE
 }
 
 # Animation name mapping (from R3F ANIMATION_MAP)
@@ -338,6 +339,9 @@ func _physics_process(delta: float) -> void:
 			_handle_attack_state(delta)
 		PlayerState.DAMAGED:
 			_handle_damaged(delta)
+		PlayerState.CUTSCENE:
+			velocity.x = 0
+			velocity.z = 0
 
 	# Apply movement
 	move_and_slide()
@@ -357,6 +361,9 @@ func _respawn() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if current_state == PlayerState.CUTSCENE:
+		return
+
 	# Handle dodge input
 	if event.is_action_pressed("dodge"):
 		if current_state != PlayerState.DODGING and current_state != PlayerState.ATTACKING:
@@ -553,6 +560,8 @@ func transition_to(new_state: PlayerState) -> void:
 			play_animation("pmsa_esc_f", false)
 		PlayerState.DAMAGED:
 			play_animation("pmsa_dam_n", false)
+		PlayerState.CUTSCENE:
+			play_animation("pmsa_wait", true)
 
 
 func play_animation(anim_name: String, _loop: bool = true) -> void:

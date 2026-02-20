@@ -5,6 +5,7 @@ class_name CityAreaBase
 
 const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
 const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
+const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 
 var player: CharacterBody3D
 var orbit_camera: Node3D
@@ -31,6 +32,11 @@ func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dic
 
 	player.spawn_position = player.global_position
 	CityState.set_spawn_key("")
+
+	# Add field HUD (stats panel + meseta)
+	var field_hud := FieldHudScript.new()
+	add_child(field_hud)
+
 	return player
 
 

@@ -7,9 +7,7 @@
 import { useState, useMemo } from 'react';
 import type { QuestProject, Direction } from '../types';
 import {
-  getOriginalGates,
   getRotatedGates,
-  rotateDirection,
   getNeighbor,
   isValidPos,
   oppositeDirection,
@@ -129,15 +127,16 @@ export default function StagePicker({ project, targetPos, onSelect, onClose }: S
     const result: StageCandidate[] = [];
 
     for (const stageName of stages) {
-      const originalGates = getOriginalGates(stageName);
-      const isSingleGate = originalGates.size === 1;
+      // Try all 4 rotations, but deduplicate when rotation produces identical gate sets
+      const seenGateKeys = new Set<string>();
 
-      // Single-gate stages: try all 4 rotations
-      // Multi-gate stages: rotation=0 only
-      const rotations = isSingleGate ? [0, 90, 180, 270] : [0];
+      for (const rot of [0, 90, 180, 270]) {
+        const gates = getRotatedGates(stageName, rot);
 
-      for (const rot of rotations) {
-        const gates = isSingleGate ? getRotatedGates(stageName, rot) : originalGates;
+        // Deduplicate: skip if this rotation produces the same gate layout as a previous one
+        const gateKey = [...gates].sort().join(',');
+        if (seenGateKeys.has(gateKey)) continue;
+        seenGateKeys.add(gateKey);
 
         // Check required: must have gates in these directions
         let meetsRequired = true;

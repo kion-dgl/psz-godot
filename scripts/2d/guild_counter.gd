@@ -23,6 +23,18 @@ const AREA_ORDER := {
 	"Eternal Tower": 7,
 }
 
+## Quest numbering (matches GitHub issue order)
+const QUEST_ORDER := {
+	"search_and_rescue": 1,
+	"the_paru_pact": 2,
+	"apothecary_supply": 3,
+	"static_in_the_snow": 4,
+	"deep_ore_extraction": 5,
+	"voices_from_the_void": 6,
+	"the_pure_sample": 7,
+	"the_final_transmission": 8,
+}
+
 ## area_id → display area name
 const AREA_DISPLAY := {
 	"gurhacia": "Gurhacia Valley",
@@ -113,24 +125,48 @@ func _load_entries() -> void:
 			"rewards": mission.rewards,
 		})
 
-	# Load quests
+	# Load quests and merge into area-sorted list
 	var quest_ids := QuestLoader.list_quests()
+	var quest_entries: Array = []
 	for qid in quest_ids:
+		if qid == "hello_quest" or qid == "manifest":
+			continue
 		var quest := QuestLoader.load_quest(qid)
 		if quest.is_empty():
 			continue
 		var area_id: String = quest.get("area_id", "gurhacia")
-		_entries.append({
+		var display_name: String = quest.get("name", qid)
+		var quest_number: int = QUEST_ORDER.get(qid, 0)
+		if quest_number > 0:
+			display_name = "%d. %s" % [quest_number, display_name]
+		quest_entries.append({
 			"type": "quest",
 			"id": qid,
 			"quest_id": qid,
-			"name": quest.get("name", qid),
+			"name": display_name,
 			"description": quest.get("description", ""),
 			"area": AREA_DISPLAY.get(area_id, area_id),
 			"is_main": false,
 			"requires": [],
 			"rewards": {},
+			"_sort_order": quest_number,
 		})
+
+	# Merge quests into entries, sorted by area then by manifest order
+	_entries.append_array(quest_entries)
+	_entries.sort_custom(func(a, b):
+		var aa: int = AREA_ORDER.get(a["area"], 99)
+		var ab: int = AREA_ORDER.get(b["area"], 99)
+		if aa != ab: return aa < ab
+		# Within same area: missions first (main before side), then quests by manifest order
+		var a_is_quest: bool = a["type"] == "quest"
+		var b_is_quest: bool = b["type"] == "quest"
+		if a_is_quest != b_is_quest: return not a_is_quest
+		if a_is_quest and b_is_quest:
+			return a.get("_sort_order", 99) < b.get("_sort_order", 99)
+		if a.get("is_main", false) != b.get("is_main", false): return a["is_main"]
+		return a["name"] < b["name"]
+	)
 
 	_update_availability()
 
@@ -237,8 +273,6 @@ func _accept_entry() -> void:
 		hint_label.text = "Quest accepted! Head to %s warp." % entry["area"]
 		_selecting_difficulty = false
 		_refresh_display()
-		# Brief delay then pop back to city
-		await get_tree().create_timer(1.5).timeout
 		SceneManager.pop_scene()
 	else:
 		# Missions go directly to field as before
