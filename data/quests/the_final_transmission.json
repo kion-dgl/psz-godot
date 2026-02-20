@@ -29,13 +29,21 @@
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [0, 1, 6],
+              "position": [
+                -0.5,
+                1,
+                10.3
+              ],
               "trigger_id": "ren_entry_a",
-              "trigger_size": [24.5, 3, 4],
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
               "dialog": [
                 {
                   "speaker": "Ren",
-                  "text": "His signal was last tracked in this sector. Voss is the toughest hunter I know \u2014 if something took him down, we need to be careful."
+                  "text": "His signal was last tracked in this sector. Voss is the toughest hunter I know — if something took him down, we need to be careful."
                 }
               ]
             }
@@ -79,8 +87,12 @@
           "objects": [
             {
               "type": "message",
-              "position": [-10, 0, 8],
-              "text": "Voss, log one. Made it past the outer corridors. The ruins go deep \u2014 much deeper than anyone told me. Quiet so far. Should be back by morning."
+              "position": [
+                -10,
+                0,
+                8
+              ],
+              "text": "Voss, log one. Made it past the outer corridors. The ruins go deep — much deeper than anyone told me. Quiet so far. Should be back by morning."
             }
           ]
         },
@@ -95,8 +107,8 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "0,4",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
@@ -133,15 +145,19 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "west",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "warp_edge": "",
           "path_order": 5,
           "objects": [
             {
               "type": "message",
-              "position": [8, 0, -10],
-              "text": "Voss, log two. Took a bad hit from something I didn't see coming. Patched myself up but my leg's not right. The creatures down here are different \u2014 faster, more coordinated. They're not just wandering. They know I'm here."
+              "position": [
+                8,
+                0,
+                -10
+              ],
+              "text": "Voss, log two. Took a bad hit from something I didn't see coming. Patched myself up but my leg's not right. The creatures down here are different — faster, more coordinated. They're not just wandering. They know I'm here."
             }
           ]
         },
@@ -164,9 +180,17 @@
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [0, 1, -6],
+              "position": [
+                0,
+                1,
+                -6
+              ],
               "trigger_id": "ren_end_a",
-              "trigger_size": [24.5, 3, 4],
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
               "dialog": [
                 {
                   "speaker": "Ren",
@@ -203,9 +227,17 @@
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [0, 1, 6],
+              "position": [
+                0,
+                1,
+                6
+              ],
               "trigger_id": "ren_entry_b",
-              "trigger_size": [24.5, 3, 4],
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
               "dialog": [
                 {
                   "speaker": "Ren",
@@ -252,16 +284,18 @@
           "path_order": 2,
           "objects": [
             {
-              "type": "story_prop",
-              "position": [5, 0, 0],
-              "prop_path": "assets/objects/story/campfire.glb",
-              "prop_scale": 1.0
-            },
-            {
               "type": "dialog_trigger",
-              "position": [0, 1, 0],
+              "position": [
+                0,
+                1,
+                0
+              ],
               "trigger_id": "ren_voss_gun",
-              "trigger_size": [20, 4, 20],
+              "trigger_size": [
+                20,
+                4,
+                20
+              ],
               "dialog": [
                 {
                   "speaker": "Ren",
@@ -272,6 +306,16 @@
                   "text": "...we keep moving."
                 }
               ]
+            },
+            {
+              "type": "quest_item",
+              "position": [
+                0.4,
+                1,
+                -13.7
+              ],
+              "item_id": "voss_gun",
+              "item_label": "Voss Gun"
             }
           ]
         },
@@ -286,8 +330,8 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "2,0",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
@@ -324,8 +368,8 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "warp_edge": "",
           "path_order": 5
         },
@@ -358,8 +402,8 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "3,1",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
@@ -367,7 +411,11 @@
           "objects": [
             {
               "type": "message",
-              "position": [5, 0, 0],
+              "position": [
+                5,
+                0,
+                0
+              ],
               "text": "Voss... log three. Had to drop my weapon to squeeze through a collapsed passage. Bleeding through the bandages. They're still behind me. I can hear them. I just need to find somewhere they can't reach..."
             }
           ]
@@ -386,8 +434,8 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "warp_edge": "",
           "path_order": 8
         },
@@ -410,15 +458,30 @@
           "objects": [
             {
               "type": "npc",
-              "position": [-12, 0, -8],
+              "position": [
+                -12,
+                0,
+                -8
+              ],
               "npc_id": "voss"
             },
             {
               "type": "dialog_trigger",
-              "position": [-8, 1, -4],
+              "position": [
+                -8,
+                1,
+                -4
+              ],
               "trigger_id": "final_transmission",
-              "trigger_size": [12, 4, 12],
-              "actions": ["complete_quest", "telepipe"],
+              "trigger_size": [
+                12,
+                4,
+                12
+              ],
+              "actions": [
+                "complete_quest",
+                "telepipe"
+              ],
               "dialog": [
                 {
                   "speaker": "",
@@ -490,7 +553,7 @@
   "city_dialog": [
     {
       "speaker": "Ren",
-      "text": "My mentor \u2014 Voss \u2014 went into the Makara Ruins three days ago. He told me not to worry. That he'd be back by morning."
+      "text": "My mentor — Voss — went into the Makara Ruins three days ago. He told me not to worry. That he'd be back by morning."
     },
     {
       "speaker": "Ren",
