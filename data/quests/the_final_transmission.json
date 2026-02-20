@@ -1,0 +1,492 @@
+{
+  "id": "the_final_transmission",
+  "name": "The Final Transmission",
+  "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Voss, who went missing three days ago tracking a Blight anomaly.",
+  "area_id": "makara",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,2",
+      "end_pos": "0,3",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s04a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [0, 1, 6],
+              "trigger_id": "ren_entry_a",
+              "trigger_size": [24.5, 3, 4],
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "His signal was last tracked in this sector. Voss is the toughest hunter I know \u2014 if something took him down, we need to be careful."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s04a_tb3",
+          "rotation": 180,
+          "connections": {
+            "west": "1,1",
+            "east": "1,3",
+            "north": "0,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s04a_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "1,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "message",
+              "position": [-10, 0, 8],
+              "text": "Voss, log entry one. The ruins are reacting to my photon scanner. Energy readings are off the charts \u2014 this isn't residual. Something down here is still active."
+            }
+          ]
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s04a_ic1",
+          "rotation": 90,
+          "connections": {
+            "east": "1,4",
+            "west": "1,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "0,4",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "1,4",
+          "stage_id": "s04a_lb3",
+          "rotation": 270,
+          "connections": {
+            "west": "1,3",
+            "north": "0,4"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 4
+        },
+        {
+          "pos": "0,4",
+          "stage_id": "s04a_lc1",
+          "rotation": 180,
+          "connections": {
+            "south": "1,4",
+            "west": "0,3"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "west",
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "message",
+              "position": [8, 0, -10],
+              "text": "Voss, log two. I've been hearing movement behind the walls. Not creatures \u2014 something mechanical. The ruins themselves might be defending whatever's at the core."
+            }
+          ]
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s04a_lb1",
+          "rotation": 0,
+          "connections": {
+            "east": "0,4"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "north",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [0, 1, -6],
+              "trigger_id": "ren_end_a",
+              "trigger_size": [24.5, 3, 4],
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "The signal cuts out past this point. Whatever happened to him... it happened deeper in."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "0,2",
+      "end_pos": "4,1",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s04b_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [0, 1, 6],
+              "trigger_id": "ren_entry_b",
+              "trigger_size": [24.5, 3, 4],
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "It's too quiet. Even the automata have pulled back. Something drove them out."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s04b_tb3",
+          "rotation": 90,
+          "connections": {
+            "south": "2,2",
+            "north": "0,2",
+            "west": "1,1"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s04b_ga1",
+          "rotation": 180,
+          "connections": {
+            "north": "1,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "story_prop",
+              "position": [5, 0, 0],
+              "prop_path": "assets/objects/story/campfire.glb",
+              "prop_scale": 1.0
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [0, 1, 0],
+              "trigger_id": "ren_voss_gun",
+              "trigger_size": [20, 4, 20],
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "That's his gun. Voss would never leave his piece behind. Not unless..."
+                },
+                {
+                  "speaker": "Ren",
+                  "text": "...we keep moving."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s04b_ib1",
+          "rotation": 90,
+          "connections": {
+            "west": "1,0",
+            "east": "1,2"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "2,0",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s04b_lb3",
+          "rotation": 90,
+          "connections": {
+            "east": "1,1",
+            "south": "2,0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 4
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s04b_ic1",
+          "rotation": 180,
+          "connections": {
+            "south": "3,0",
+            "north": "1,0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "3,0",
+          "stage_id": "s04b_tb3",
+          "rotation": 270,
+          "connections": {
+            "north": "2,0",
+            "south": "4,0",
+            "east": "3,1"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s04b_ga1",
+          "rotation": 180,
+          "connections": {
+            "north": "3,0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "3,1",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "message",
+              "position": [5, 0, 0],
+              "text": "If anyone finds this... Voss told me to run. I should have listened. The creatures deeper in aren't just blighted \u2014 they're organized. Something is commanding them. Voss went ahead alone to buy me time. I couldn't..."
+            }
+          ]
+        },
+        {
+          "pos": "3,1",
+          "stage_id": "s04b_tb3",
+          "rotation": 90,
+          "connections": {
+            "south": "4,1",
+            "north": "2,1",
+            "west": "3,0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "warp_edge": "",
+          "path_order": 8
+        },
+        {
+          "pos": "4,1",
+          "stage_id": "s04b_na1",
+          "rotation": 180,
+          "connections": {
+            "north": "3,1"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 9,
+          "objects": [
+            {
+              "type": "npc",
+              "position": [-12, 0, -8],
+              "npc_id": "voss"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [-8, 1, -4],
+              "trigger_id": "final_transmission",
+              "trigger_size": [12, 4, 12],
+              "actions": ["complete_quest", "telepipe"],
+              "dialog": [
+                {
+                  "speaker": "",
+                  "text": "A terminal flickers in the darkness. Slumped against it, a ranger in a battered duster."
+                },
+                {
+                  "speaker": "",
+                  "text": "The terminal crackles to life with a recorded voice."
+                },
+                {
+                  "speaker": "Voss",
+                  "text": "This is Hunter Voss. Final transmission. The Blight source is beneath these ruins \u2014 not biological, mechanical. Something from before the Great Blank is still running, and it's producing the Blight deliberately."
+                },
+                {
+                  "speaker": "Voss",
+                  "text": "I can't make it back. Sending this data to the Guild relay. If anyone hears this \u2014 the Blight can be stopped. Find the source. Shut it down."
+                },
+                {
+                  "speaker": "",
+                  "text": "The recording ends. The terminal goes dark."
+                },
+                {
+                  "speaker": "Ren",
+                  "text": "...Voss."
+                },
+                {
+                  "speaker": "Ren",
+                  "text": "He finished the mission. Even at the end, he finished the mission."
+                },
+                {
+                  "speaker": "Ren",
+                  "text": "I'll make sure this transmission reaches the Guild. Every word. Let's go home."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s04b_ga1",
+          "rotation": 0,
+          "connections": {
+            "south": "3,1"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 10
+        }
+      ]
+    }
+  ],
+  "companions": [
+    "ren"
+  ],
+  "city_dialog": [
+    {
+      "speaker": "Ren",
+      "text": "I need help. My mentor \u2014 Voss \u2014 went into the Makara Ruins three days ago tracking a Blight anomaly. His transponder's barely registering."
+    },
+    {
+      "speaker": "Ren",
+      "text": "The Guild says it's too dangerous to send a team. But I'm going anyway. Will you come with me?"
+    }
+  ]
+}
