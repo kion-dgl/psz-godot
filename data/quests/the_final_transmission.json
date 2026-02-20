@@ -1,7 +1,7 @@
 {
   "id": "the_final_transmission",
   "name": "The Final Transmission",
-  "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Voss, who went missing three days ago tracking a Blight anomaly.",
+  "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Voss, who went missing three days ago and hasn't come back.",
   "area_id": "makara",
   "sections": [
     {
@@ -80,7 +80,7 @@
             {
               "type": "message",
               "position": [-10, 0, 8],
-              "text": "Voss, log entry one. The ruins are reacting to my photon scanner. Energy readings are off the charts \u2014 this isn't residual. Something down here is still active."
+              "text": "Voss, log one. Made it past the outer corridors. The ruins go deep \u2014 much deeper than anyone told me. Quiet so far. Should be back by morning."
             }
           ]
         },
@@ -141,7 +141,7 @@
             {
               "type": "message",
               "position": [8, 0, -10],
-              "text": "Voss, log two. I've been hearing movement behind the walls. Not creatures \u2014 something mechanical. The ruins themselves might be defending whatever's at the core."
+              "text": "Voss, log two. Took a bad hit from something I didn't see coming. Patched myself up but my leg's not right. The creatures down here are different \u2014 faster, more coordinated. They're not just wandering. They know I'm here."
             }
           ]
         },
@@ -368,7 +368,7 @@
             {
               "type": "message",
               "position": [5, 0, 0],
-              "text": "If anyone finds this... Voss told me to run. I should have listened. The creatures deeper in aren't just blighted \u2014 they're organized. Something is commanding them. Voss went ahead alone to buy me time. I couldn't..."
+              "text": "Voss... log three. Had to drop my weapon to squeeze through a collapsed passage. Bleeding through the bandages. They're still behind me. I can hear them. I just need to find somewhere they can't reach..."
             }
           ]
         },
@@ -422,35 +422,43 @@
               "dialog": [
                 {
                   "speaker": "",
-                  "text": "A terminal flickers in the darkness. Slumped against it, a ranger in a battered duster."
+                  "text": "A message pack lies on the ground next to a hunter slumped against the wall. His coat is torn. He isn't moving."
                 },
                 {
                   "speaker": "",
-                  "text": "The terminal crackles to life with a recorded voice."
+                  "text": "The recording is faint. Barely a whisper."
                 },
                 {
                   "speaker": "Voss",
-                  "text": "This is Hunter Voss. Final transmission. The Blight source is beneath these ruins \u2014 not biological, mechanical. Something from before the Great Blank is still running, and it's producing the Blight deliberately."
+                  "text": "...can't feel my hands anymore. It's cold down here. Didn't think it'd be this cold."
                 },
                 {
                   "speaker": "Voss",
-                  "text": "I can't make it back. Sending this data to the Guild relay. If anyone hears this \u2014 the Blight can be stopped. Find the source. Shut it down."
+                  "text": "Ren... I'm sorry, kid. I promised I'd come back."
+                },
+                {
+                  "speaker": "Voss",
+                  "text": "If only I could see you again."
                 },
                 {
                   "speaker": "",
-                  "text": "The recording ends. The terminal goes dark."
+                  "text": "The recording cuts out."
                 },
                 {
                   "speaker": "Ren",
-                  "text": "...Voss."
+                  "text": "..."
                 },
                 {
                   "speaker": "Ren",
-                  "text": "He finished the mission. Even at the end, he finished the mission."
+                  "text": "You idiot. You stupid, stubborn idiot."
                 },
                 {
                   "speaker": "Ren",
-                  "text": "I'll make sure this transmission reaches the Guild. Every word. Let's go home."
+                  "text": "...I'm here, Voss. I came."
+                },
+                {
+                  "speaker": "Ren",
+                  "text": "You can report to the Guild. I'm going to stay here for a while."
                 }
               ]
             }
@@ -482,11 +490,11 @@
   "city_dialog": [
     {
       "speaker": "Ren",
-      "text": "I need help. My mentor \u2014 Voss \u2014 went into the Makara Ruins three days ago tracking a Blight anomaly. His transponder's barely registering."
+      "text": "My mentor \u2014 Voss \u2014 went into the Makara Ruins three days ago. He told me not to worry. That he'd be back by morning."
     },
     {
       "speaker": "Ren",
-      "text": "The Guild says it's too dangerous to send a team. But I'm going anyway. Will you come with me?"
+      "text": "It's been three days. I'm going after him. Will you come with me?"
     }
   ]
 }
