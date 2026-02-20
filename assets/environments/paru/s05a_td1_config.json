@@ -6,7 +6,26 @@
     "excludedMeshPatterns": [],
     "triangles": {}
   },
-  "portals": [],
+  "portals": [
+    {
+      "id": "portal_td1_east",
+      "direction": "east",
+      "position": [-21.0, 0, 9.5],
+      "label": "east"
+    },
+    {
+      "id": "portal_td1_south",
+      "direction": "south",
+      "position": [6.0, 0, 21.0],
+      "label": "south"
+    },
+    {
+      "id": "portal_td1_west",
+      "direction": "west",
+      "position": [21.0, 0, -8.5],
+      "label": "west"
+    }
+  ],
   "textureFixes": [
     {
       "textureFile": "s05_0_road3.png",

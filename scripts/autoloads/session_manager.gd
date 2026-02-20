@@ -31,6 +31,7 @@ var _accepted_quest: Dictionary = {}   # {quest_id, area_id, difficulty, name}
 var _completed_quest: Dictionary = {}  # {quest_id, area_id, name} — awaiting guild report
 var _quest_objectives: Array = []      # [{item_id, label, target}] — loaded from quest JSON
 var _quest_item_counts: Dictionary = {} # {item_id: count} — runtime collection state
+var _quest_accepted_shown: bool = false # true after "Quest accepted" log shown once
 
 
 ## Enter a field area
@@ -93,6 +94,7 @@ func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 	# Load quest objectives if present
 	_quest_objectives = quest.get("objectives", [])
 	_quest_item_counts.clear()
+	_quest_accepted_shown = false
 	for obj in _quest_objectives:
 		_quest_item_counts[str(obj.get("item_id", ""))] = 0
 	_location = "field"

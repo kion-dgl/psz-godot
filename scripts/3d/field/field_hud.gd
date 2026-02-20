@@ -207,9 +207,10 @@ class _QuestLogPanel extends Control:
 		SessionManager.quest_item_collected.connect(_on_item_collected)
 		SessionManager.quest_completed.connect(_on_quest_completed)
 
-		# Log quest acceptance after a short delay so it fades like other entries
+		# Log quest acceptance once per quest (not every room transition)
 		var objectives: Array = SessionManager.get_quest_objectives()
-		if not objectives.is_empty():
+		if not objectives.is_empty() and not SessionManager._quest_accepted_shown:
+			SessionManager._quest_accepted_shown = true
 			get_tree().create_timer(0.5).timeout.connect(func() -> void:
 				_add_entry("Quest accepted", QUEST_COLOR)
 			)
