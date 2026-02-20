@@ -7,8 +7,6 @@
 // Inlined stage types (from psz-sketch systems/stage/types)
 // ============================================================================
 
-export type ContentDifficulty = 'normal' | 'hard' | 'super-hard';
-
 export type StageArea =
   | 'valley-a' | 'valley-b' | 'valley-e'
   | 'snowfield-a' | 'snowfield-b'
@@ -60,34 +58,10 @@ export interface StageContent {
 export type Direction = 'north' | 'south' | 'east' | 'west';
 
 // ============================================================================
-// Cell Roles
-// ============================================================================
-
-export type CellRole = 'transit' | 'guard' | 'puzzle' | 'cache' | 'landmark' | 'boss';
-
-export const ROLE_COLORS: Record<CellRole, string> = {
-  transit: '#666',
-  guard: '#cc4444',
-  puzzle: '#ccaa44',
-  cache: '#44aa44',
-  landmark: '#4488cc',
-  boss: '#cc8844',
-};
-
-export const ROLE_LABELS: Record<CellRole, string> = {
-  transit: 'Transit',
-  guard: 'Guard',
-  puzzle: 'Puzzle',
-  cache: 'Cache',
-  landmark: 'Landmark',
-  boss: 'Boss',
-};
-
-// ============================================================================
 // Cell Objects (placed in 3D stage)
 // ============================================================================
 
-export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc';
+export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest' | 'quest_item';
 
 export interface CellObject {
   /** Unique ID within cell (e.g., "box_0", "enemy_1") */
@@ -108,6 +82,8 @@ export interface CellObject {
   text?: string;
   /** GLB path for type='story_prop' (relative to project, e.g., "assets/objects/story/dropship_crash.glb") */
   prop_path?: string;
+  /** Scale multiplier for type='story_prop' (default 1.0) */
+  prop_scale?: number;
   /** NPC identifier for type='npc' (e.g., "sarisa", "kai") */
   npc_id?: string;
   /** Display name for type='npc' */
@@ -116,6 +92,24 @@ export interface CellObject {
   dialog?: Array<{ speaker: string; text: string }>;
   /** Trigger identifier for type='dialog_trigger' (for one-shot tracking) */
   trigger_id?: string;
+  /** Trigger collision box size [x, y, z] for type='dialog_trigger' (default [4, 3, 4]) */
+  trigger_size?: [number, number, number];
+  /** When to fire for type='dialog_trigger': 'enter' (default), 'room_clear', or 'item_pickup' */
+  trigger_condition?: 'enter' | 'room_clear' | 'item_pickup';
+  /** Post-dialog actions for type='dialog_trigger': "complete_quest", "telepipe" */
+  actions?: string[];
+  /** Animation name to freeze on for type='npc' (e.g., "dam_h" for lying face down) */
+  animation?: string;
+  /** Frame to freeze on for type='npc' (used with animation) */
+  animation_frame?: number;
+  /** When to spawn for type='telepipe': 'immediate' (default) or 'room_clear' */
+  spawn_condition?: 'immediate' | 'room_clear';
+  /** Export-only: resolved target position [x, y, z] for type='warp' */
+  warp_position?: [number, number, number];
+  /** Item identifier for type='quest_item' (e.g., "sol_leaf") */
+  quest_item_id?: string;
+  /** Display label for type='quest_item' (e.g., "Sol Leaves") */
+  quest_item_label?: string;
 }
 
 export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
@@ -128,6 +122,10 @@ export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
   story_prop: '#cccc44',
   dialog_trigger: '#44cccc',
   npc: '#44cc44',
+  telepipe: '#66aaff',
+  warp: '#aa66ff',
+  warp_dest: '#cc88ff',
+  quest_item: '#ffdd44',
 };
 
 export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
@@ -140,6 +138,10 @@ export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
   story_prop: 'Story Prop',
   dialog_trigger: 'Dialog Trigger',
   npc: 'NPC',
+  telepipe: 'Telepipe',
+  warp: 'Warp',
+  warp_dest: 'Warp Dest',
+  quest_item: 'Quest Item',
 };
 
 // ============================================================================
@@ -153,8 +155,6 @@ export interface EditorGridCell {
   rotation?: number;
   /** Which gate direction is key-locked on this cell */
   lockedGate?: Direction;
-  /** Cell role for visual and future content generation */
-  role: CellRole;
   /** Whether this cell was manually placed (vs generated) */
   manual: boolean;
   /** Optional designer notes */
@@ -171,6 +171,11 @@ export interface EditorGridCell {
 
 export type SectionType = 'grid' | 'transition' | 'boss';
 
+export interface SectionObjectiveRequirement {
+  item_id: string;
+  target: number;
+}
+
 export interface QuestSection {
   type: SectionType;
   variant: string;
@@ -179,11 +184,23 @@ export interface QuestSection {
   startPos: string | null;
   endPos: string | null;
   keyLinks: Record<string, string>;
+  /** Direction player enters from (transition/boss sections) */
+  entryDirection?: Direction;
+  /** Direction player exits to (transition/boss sections) */
+  exitDirection?: Direction;
+  /** Objectives that must be met before the section exit warp opens */
+  warpRequires?: SectionObjectiveRequirement[];
 }
 
 // ============================================================================
 // Quest Project (top-level save state)
 // ============================================================================
+
+/** Tracks where a project was loaded from */
+export type QuestProjectSource =
+  | { type: 'new' }
+  | { type: 'game'; filename: string }
+  | { type: 'draft'; id: string };
 
 export interface QuestProject {
   id: string;
@@ -200,15 +217,43 @@ export interface QuestProject {
   cellContents: Record<string, StageContent>;
   lastModified: string;
   version: number;
+  source?: QuestProjectSource;
+}
+
+export interface CityDialogScene {
+  /** NPC who speaks (matches npc_id) */
+  npc_id: string;
+  /** Display name */
+  npc_name: string;
+  /** Dialog pages */
+  dialog: Array<{ speaker: string; text: string }>;
+}
+
+export interface QuestObjective {
+  item_id: string;
+  label: string;
+  target: number;
 }
 
 export interface QuestMetadata {
   questName: string;
   description: string;
-  questType: 'exploration' | 'hunt' | 'collection' | 'escort' | 'story';
-  difficulty: ContentDifficulty;
-  recommendedLevel: number;
+  companions?: string[];
+  /** Dialog scenes that play in the city before entering the field */
+  cityDialog?: CityDialogScene[];
+  /** Quest item collection objectives */
+  objectives?: QuestObjective[];
 }
+
+export interface CompanionInfo {
+  id: string;
+  name: string;
+}
+
+export const AVAILABLE_COMPANIONS: CompanionInfo[] = [
+  { id: 'kai', name: 'Kai' },
+  { id: 'sarisa', name: 'Sarisa' },
+];
 
 // ============================================================================
 // Validation
@@ -261,9 +306,7 @@ export function createDefaultProject(id?: string): QuestProject {
     metadata: {
       questName: '',
       description: '',
-      questType: 'exploration',
-      difficulty: 'normal',
-      recommendedLevel: 1,
+      companions: [],
     },
     cellContents: {},
     lastModified: new Date().toISOString(),

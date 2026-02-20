@@ -7,7 +7,6 @@
 
 import { useMemo } from 'react';
 import type { QuestProject, EditorGridCell, Direction } from '../types';
-import { ROLE_COLORS } from '../types';
 import { getRotatedGates, oppositeDirection, getNeighbor, isValidPos } from '../hooks/useStageConfigs';
 
 interface GridCanvasProps {
@@ -136,7 +135,7 @@ function CellDisplay({
   }
 
   const gates = getRotatedGates(cell.stageName, cell.rotation ?? 0);
-  const roleColor = ROLE_COLORS[cell.role];
+  const cellColor = '#556';
   const isStart = project.startPos === pos;
   const isEnd = project.endPos === pos;
   const hasKey = Object.values(project.keyLinks).includes(pos);
@@ -149,7 +148,7 @@ function CellDisplay({
         width: '110px',
         height: '110px',
         background: isSelected ? '#3a3a6a' : '#2a2a4a',
-        border: `2px solid ${isSelected ? '#88aaff' : roleColor}`,
+        border: `2px solid ${isSelected ? '#88aaff' : cellColor}`,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -195,13 +194,6 @@ function CellDisplay({
       <div style={{ color: '#fff', fontSize: '11px', fontWeight: 600, textAlign: 'center' }}>
         {getSuffix(cell.stageName)}
       </div>
-      <div style={{
-        color: roleColor, fontSize: '8px', marginTop: '2px',
-        textTransform: 'uppercase', fontWeight: 600,
-      }}>
-        {cell.role}
-      </div>
-
       {gates.has('north') && (
         <div style={{
           position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',

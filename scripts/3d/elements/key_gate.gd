@@ -108,8 +108,8 @@ func _on_interact(_player: Node3D) -> void:
 	if element_state == "open":
 		return
 
-	if Inventory.has_item(required_key_id):
-		Inventory.remove_item(required_key_id, 1)
+	if Inventory.has_key(required_key_id):
+		Inventory.remove_key(required_key_id)
 		open()
 	else:
 		print("[KeyGate] Requires key: ", required_key_id)

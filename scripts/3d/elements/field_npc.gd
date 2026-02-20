@@ -10,10 +10,16 @@ signal dialog_finished
 @export var npc_name: String = ""
 @export var dialog: Array = []  # Array of {speaker: String, text: String}
 
-## Known NPC models — maps npc_id to GLB path
+## Known NPC models — maps npc_id to { glb, texture } paths
 const NPC_MODELS: Dictionary = {
-	"sarisa": "res://assets/npcs/sarisa/pc_a00_000.glb",
-	"kai": "res://assets/npcs/kai/pc_a01_000.glb",
+	"sarisa": {
+		"glb": "res://assets/npcs/sarisa/pc_a00_000.glb",
+		"texture": "res://assets/npcs/sarisa/pc_a00_000.png",
+	},
+	"kai": {
+		"glb": "res://assets/npcs/kai/pc_a01_000.glb",
+		"texture": "res://assets/npcs/kai/pc_a01_000.png",
+	},
 }
 
 
@@ -31,11 +37,12 @@ func _ready() -> void:
 
 
 func _load_npc_model() -> void:
-	var glb_path: String = NPC_MODELS.get(npc_id, "")
-	if glb_path.is_empty():
+	var entry: Variant = NPC_MODELS.get(npc_id, null)
+	if entry == null:
 		push_warning("FieldNpc: No model for npc_id '%s'" % npc_id)
 		return
 
+	var glb_path: String = entry["glb"]
 	var packed := load(glb_path) as PackedScene
 	if not packed:
 		push_warning("FieldNpc: Failed to load model: " + glb_path)
@@ -43,6 +50,13 @@ func _load_npc_model() -> void:
 
 	model = packed.instantiate()
 	add_child(model)
+
+	# Apply separate texture if specified
+	var tex_path: String = entry.get("texture", "")
+	if not tex_path.is_empty():
+		var tex := load(tex_path) as Texture2D
+		if tex:
+			_apply_texture(model, tex)
 
 
 func _on_interact(_player: Node3D) -> void:
@@ -76,14 +90,25 @@ func _show_dialog() -> void:
 func _find_hud() -> CanvasLayer:
 	var node := get_parent()
 	while node:
-		var hud := node.get_node_or_null("HUD")
-		if hud and hud is CanvasLayer:
-			return hud as CanvasLayer
-		for child in node.get_children():
-			if child is CanvasLayer and child.name == "HUD":
-				return child as CanvasLayer
+		for hud_name in ["FieldHud", "HUD"]:
+			var hud := node.get_node_or_null(hud_name)
+			if hud and hud is CanvasLayer:
+				return hud as CanvasLayer
 		node = node.get_parent()
 	return null
+
+
+func _apply_texture(node: Node, tex: Texture2D) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		for i in range(mi.get_surface_override_material_count()):
+			var mat := mi.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var new_mat := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+				new_mat.albedo_texture = tex
+				mi.set_surface_override_material(i, new_mat)
+	for child in node.get_children():
+		_apply_texture(child, tex)
 
 
 func _apply_state() -> void:

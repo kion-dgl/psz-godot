@@ -5,7 +5,8 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import type { QuestProject, QuestSection, SectionType } from './types';
+import { useNavigate } from 'react-router-dom';
+import type { QuestProject, QuestSection, SectionType, Direction } from './types';
 import {
   EDITOR_AREAS, getProjectSections, createSection,
   SECTION_TYPE_LABELS, SECTION_VARIANT_SUGGESTIONS,
@@ -41,9 +42,22 @@ export default function QuestEditor() {
     getSavedProject,
   } = useQuestProject();
 
-  const [activeTab, setActiveTab] = useState<TabId>('layout');
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState<TabId>(
+    project.source?.type === 'new' ? 'metadata' : 'layout'
+  );
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
+
+  const sourceLabel = useMemo(() => {
+    const src = project.source;
+    if (!src) return null;
+    if (src.type === 'game') return { text: src.filename + '.json', badge: 'game', color: '#88aaff', bg: '#334' };
+    if (src.type === 'new') return { text: 'New Quest', badge: 'new', color: '#88cc88', bg: '#343' };
+    if (src.type === 'draft') return { text: 'Draft', badge: 'draft', color: '#88cc88', bg: '#343' };
+    return null;
+  }, [project.source]);
 
   const availableAreas = EDITOR_AREAS.filter(a => a.available);
 
@@ -99,6 +113,15 @@ export default function QuestEditor() {
         keyLinks: virtualNext.keyLinks,
       };
       return { ...virtualNext, sections: newSections, variant: prev.variant, gridSize: prev.gridSize, cells: prev.cells, startPos: prev.startPos, endPos: prev.endPos, keyLinks: prev.keyLinks };
+    });
+  }, [updateProject, hasMultipleSections, sectionIdx]);
+
+  const handleSetSectionDirection = useCallback((field: 'entryDirection' | 'exitDirection', dir: Direction | undefined) => {
+    if (!hasMultipleSections) return;
+    updateProject(prev => {
+      const newSections = [...prev.sections!];
+      newSections[sectionIdx] = { ...newSections[sectionIdx], [field]: dir };
+      return { ...prev, sections: newSections };
     });
   }, [updateProject, hasMultipleSections, sectionIdx]);
 
@@ -215,6 +238,36 @@ export default function QuestEditor() {
         borderBottom: '1px solid #333',
         flexWrap: 'wrap',
       }}>
+        {/* Back button */}
+        <button
+          onClick={() => navigate('/quest-editor')}
+          style={{
+            padding: '4px 10px',
+            background: '#2a2a4a',
+            border: '1px solid #444',
+            borderRadius: '4px',
+            color: '#888',
+            fontSize: '12px',
+            cursor: 'pointer',
+          }}
+          title="Back to quest list"
+        >
+          &larr; Quests
+        </button>
+
+        {/* Source badge */}
+        {sourceLabel && (
+          <span style={{
+            padding: '2px 8px',
+            background: sourceLabel.bg,
+            borderRadius: '4px',
+            fontSize: '11px',
+            color: sourceLabel.color,
+          }}>
+            {sourceLabel.text}
+          </span>
+        )}
+
         {/* Project name */}
         <input
           type="text"
@@ -260,7 +313,7 @@ export default function QuestEditor() {
         {/* Variant selector */}
         {currentArea && currentArea.variants.length > 0 && (
           <select
-            value={project.variant}
+            value={sectionProject.variant}
             onChange={(e) => handleVariantChange(e.target.value)}
             style={{
               padding: '6px 10px',
@@ -279,7 +332,7 @@ export default function QuestEditor() {
 
         {/* Grid size */}
         <select
-          value={project.gridSize}
+          value={sectionProject.gridSize}
           onChange={(e) => handleGridSizeChange(parseInt(e.target.value))}
           style={{
             padding: '6px 10px',
@@ -552,7 +605,14 @@ export default function QuestEditor() {
       {/* Active tab content */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {activeTab === 'layout' && (
-          <LayoutTab project={sectionProject} onUpdateProject={updateSectionProject} />
+          <LayoutTab
+            project={sectionProject}
+            onUpdateProject={updateSectionProject}
+            sectionType={activeSection.type}
+            entryDirection={activeSection.entryDirection}
+            exitDirection={activeSection.exitDirection}
+            onSetSectionDirection={handleSetSectionDirection}
+          />
         )}
         {activeTab === 'content' && <ContentTab project={sectionProject} onUpdateProject={updateSectionProject} />}
         {activeTab === 'metadata' && <MetadataTab project={project} onUpdateProject={updateProject} />}

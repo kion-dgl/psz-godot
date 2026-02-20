@@ -10,7 +10,9 @@ func load_quest(quest_id: String) -> Dictionary:
 	var json := JSON.new()
 	if json.parse(fa.get_as_text()) != OK:
 		return {}
-	return json.data
+	if json.data is Dictionary:
+		return json.data
+	return {}
 
 
 func list_quests() -> Array[String]:

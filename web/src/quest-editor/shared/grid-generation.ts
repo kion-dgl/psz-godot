@@ -5,7 +5,7 @@
  * Generates random grid layouts with linear paths, branches, and key-gates.
  */
 
-import type { Direction, EditorGridCell, CellRole } from '../types';
+import type { Direction, EditorGridCell } from '../types';
 import {
   getOriginalGates,
   getRotatedGates,
@@ -14,6 +14,7 @@ import {
   isValidPos,
   oppositeDirection,
   getStagesForArea,
+  loadAllConfigs,
 } from '../hooks/useStageConfigs';
 
 // ============================================================================
@@ -76,12 +77,15 @@ function emptyGenCell(): GenCell {
  * Generate a grid layout for a given area and variant.
  * Returns sparse EditorGridCell map suitable for QuestProject.
  */
-export function generateGrid(
+export async function generateGrid(
   areaKey: string,
   variant: string,
   params: GenParams,
   maxAttempts = 200
-): GenerationResult {
+): Promise<GenerationResult> {
+  // Ensure stage configs are loaded before attempting generation
+  await loadAllConfigs();
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const result = tryGenerateGrid(areaKey, variant, params);
     if (result) return result;
@@ -162,56 +166,64 @@ function tryGenerateGrid(
     if (grid[nextRow][nextCol].stageName) break;
 
     const isLastCell = path.length === usedCells - 1;
-    const validCandidates: { stage: string; exitDir: Direction | null }[] = [];
+    const validCandidates: { stage: string; rotation: number; exitDir: Direction | null }[] = [];
 
     for (const stage of candidateStages) {
-      const gates = getOriginalGates(stage);
-      if (!gates.has(entryDir)) continue;
+      // Try all 4 rotations for each stage
+      for (const rot of [0, 90, 180, 270]) {
+        const gates = getRotatedGates(stage, rot);
+        if (!gates.has(entryDir)) continue;
 
-      const otherGates = [...gates].filter(g => g !== entryDir);
+        const otherGates = [...gates].filter(g => g !== entryDir);
 
-      if (isLastCell) {
-        if (otherGates.length !== 1) continue;
-        const exitGate = otherGates[0];
-        const [er, ec] = getNeighbor(nextRow, nextCol, exitGate);
-        if (isValidPos(er, ec, gridSize)) continue;
-        validCandidates.push({ stage, exitDir: exitGate });
-      } else {
-        if (otherGates.length !== 1) continue;
-        const exitGate = otherGates[0];
-        const [er, ec] = getNeighbor(nextRow, nextCol, exitGate);
-        if (!isValidPos(er, ec, gridSize)) continue;
-        if (grid[er][ec].stageName) continue;
-        validCandidates.push({ stage, exitDir: exitGate });
+        if (isLastCell) {
+          if (otherGates.length !== 1) continue;
+          const exitGate = otherGates[0];
+          const [er, ec] = getNeighbor(nextRow, nextCol, exitGate);
+          if (isValidPos(er, ec, gridSize)) continue;
+          validCandidates.push({ stage, rotation: rot, exitDir: exitGate });
+        } else {
+          if (otherGates.length !== 1) continue;
+          const exitGate = otherGates[0];
+          const [er, ec] = getNeighbor(nextRow, nextCol, exitGate);
+          if (!isValidPos(er, ec, gridSize)) continue;
+          if (grid[er][ec].stageName) continue;
+          validCandidates.push({ stage, rotation: rot, exitDir: exitGate });
+        }
       }
     }
 
     if (validCandidates.length === 0) {
       // Try to end early if we have enough cells
       if (path.length >= 3) {
+        let earlyEnd = false;
         for (const stage of candidateStages) {
-          const gates = getOriginalGates(stage);
-          if (!gates.has(entryDir)) continue;
-          const otherGates = [...gates].filter(g => g !== entryDir);
-          if (otherGates.length !== 1) continue;
-          const exitGate = otherGates[0];
-          const [er, ec] = getNeighbor(nextRow, nextCol, exitGate);
-          if (!isValidPos(er, ec, gridSize)) {
-            grid[nextRow][nextCol] = {
-              stageName: stage,
-              rotation: 0,
-              entryDirection: entryDir,
-              isKeyGate: false,
-              keyGateDirection: exitGate,
-              hasKey: false,
-              keyForCell: null,
-              isStart: false,
-              isEnd: true,
-              isBranch: false,
-              pathOrder: path.length,
-            };
-            path.push([nextRow, nextCol]);
-            break;
+          if (earlyEnd) break;
+          for (const rot of [0, 90, 180, 270]) {
+            const gates = getRotatedGates(stage, rot);
+            if (!gates.has(entryDir)) continue;
+            const otherGates = [...gates].filter(g => g !== entryDir);
+            if (otherGates.length !== 1) continue;
+            const exitGate = otherGates[0];
+            const [er, ec] = getNeighbor(nextRow, nextCol, exitGate);
+            if (!isValidPos(er, ec, gridSize)) {
+              grid[nextRow][nextCol] = {
+                stageName: stage,
+                rotation: rot,
+                entryDirection: entryDir,
+                isKeyGate: false,
+                keyGateDirection: exitGate,
+                hasKey: false,
+                keyForCell: null,
+                isStart: false,
+                isEnd: true,
+                isBranch: false,
+                pathOrder: path.length,
+              };
+              path.push([nextRow, nextCol]);
+              earlyEnd = true;
+              break;
+            }
           }
         }
       }
@@ -222,7 +234,7 @@ function tryGenerateGrid(
 
     grid[nextRow][nextCol] = {
       stageName: chosen.stage,
-      rotation: 0,
+      rotation: chosen.rotation,
       entryDirection: entryDir,
       isKeyGate: false,
       keyGateDirection: isLastCell ? chosen.exitDir : null,
@@ -254,34 +266,38 @@ function tryGenerateGrid(
     let foundValidEnd = false;
     for (const stage of candidateStages) {
       if (foundValidEnd) break;
-      const gates = getOriginalGates(stage);
-      if (!gates.has(entryDir)) continue;
+      for (const rot of [0, 90, 180, 270]) {
+        const gates = getRotatedGates(stage, rot);
+        if (!gates.has(entryDir)) continue;
 
-      let warpDir: Direction | null = null;
-      let hasOrphan = false;
-      for (const gate of gates) {
-        if (gate === entryDir) continue;
-        const [nr, nc] = getNeighbor(endRow, endCol, gate);
-        if (!isValidPos(nr, nc, gridSize)) {
-          warpDir = gate;
-        } else if (grid[nr][nc].stageName) {
-          const neighborGates = getOriginalGates(grid[nr][nc].stageName!);
-          if (!neighborGates.has(oppositeDirection(gate))) {
-            hasOrphan = true;
-            break;
+        let warpDir: Direction | null = null;
+        let hasOrphan = false;
+        for (const gate of gates) {
+          if (gate === entryDir) continue;
+          const [nr, nc] = getNeighbor(endRow, endCol, gate);
+          if (!isValidPos(nr, nc, gridSize)) {
+            warpDir = gate;
+          } else if (grid[nr][nc].stageName) {
+            const neighborGates = getRotatedGates(grid[nr][nc].stageName!, grid[nr][nc].rotation);
+            if (!neighborGates.has(oppositeDirection(gate))) {
+              hasOrphan = true;
+              break;
+            }
           }
         }
+
+        if (hasOrphan || !warpDir) continue;
+
+        grid[endRow][endCol] = {
+          ...endCell,
+          stageName: stage,
+          rotation: rot,
+          isEnd: true,
+          keyGateDirection: warpDir,
+        };
+        foundValidEnd = true;
+        break;
       }
-
-      if (hasOrphan || !warpDir) continue;
-
-      grid[endRow][endCol] = {
-        ...endCell,
-        stageName: stage,
-        isEnd: true,
-        keyGateDirection: warpDir,
-      };
-      foundValidEnd = true;
     }
 
     if (!foundValidEnd) return null;
@@ -296,13 +312,14 @@ function tryGenerateGrid(
       branchPos: [number, number];
       needsReplacement: boolean;
       replacementStage?: string;
+      replacementRotation?: number;
     }[] = [];
 
     for (const [pr, pc] of path) {
       const cell = grid[pr][pc];
       if (cell.isStart || cell.isEnd) continue;
 
-      const currentGates = getOriginalGates(cell.stageName!);
+      const currentGates = getRotatedGates(cell.stageName!, cell.rotation);
       const exitDir = [...currentGates].find(g => g !== cell.entryDirection);
       if (!exitDir) continue;
 
@@ -322,31 +339,37 @@ function tryGenerateGrid(
             needsReplacement: false,
           });
         } else {
+          let foundReplacement = false;
           for (const stage of candidateStages) {
-            const gates = getOriginalGates(stage);
-            if (!gates.has(cell.entryDirection!)) continue;
-            if (!gates.has(exitDir)) continue;
-            if (!gates.has(dir)) continue;
+            if (foundReplacement) break;
+            for (const rot of [0, 90, 180, 270]) {
+              const gates = getRotatedGates(stage, rot);
+              if (!gates.has(cell.entryDirection!)) continue;
+              if (!gates.has(exitDir)) continue;
+              if (!gates.has(dir)) continue;
 
-            let valid = true;
-            for (const gate of gates) {
-              if (gate === cell.entryDirection || gate === exitDir || gate === dir) continue;
-              const [nr, nc] = getNeighbor(pr, pc, gate);
-              if (isValidPos(nr, nc, gridSize) && grid[nr][nc].stageName) {
-                valid = false;
-                break;
+              let valid = true;
+              for (const gate of gates) {
+                if (gate === cell.entryDirection || gate === exitDir || gate === dir) continue;
+                const [nr, nc] = getNeighbor(pr, pc, gate);
+                if (isValidPos(nr, nc, gridSize) && grid[nr][nc].stageName) {
+                  valid = false;
+                  break;
+                }
               }
-            }
-            if (!valid) continue;
+              if (!valid) continue;
 
-            branchCandidates.push({
-              pathCell: [pr, pc],
-              branchDir: dir,
-              branchPos: [br, bc],
-              needsReplacement: true,
-              replacementStage: stage,
-            });
-            break;
+              branchCandidates.push({
+                pathCell: [pr, pc],
+                branchDir: dir,
+                branchPos: [br, bc],
+                needsReplacement: true,
+                replacementStage: stage,
+                replacementRotation: rot,
+              });
+              foundReplacement = true;
+              break;
+            }
           }
         }
       }
@@ -357,7 +380,7 @@ function tryGenerateGrid(
 
     for (const candidate of shuffled) {
       if (placedBranches >= branches) break;
-      const { pathCell, branchDir, branchPos, needsReplacement, replacementStage } = candidate;
+      const { pathCell, branchDir, branchPos, needsReplacement, replacementStage, replacementRotation } = candidate;
       const [pr, pc] = pathCell;
       const [br, bc] = branchPos;
 
@@ -365,7 +388,7 @@ function tryGenerateGrid(
 
       if (needsReplacement && replacementStage) {
         const oldCell = grid[pr][pc];
-        grid[pr][pc] = { ...oldCell, stageName: replacementStage };
+        grid[pr][pc] = { ...oldCell, stageName: replacementStage, rotation: replacementRotation ?? 0 };
       }
 
       const branchEntry = oppositeDirection(branchDir);
@@ -451,7 +474,7 @@ function tryGenerateGrid(
 
       const [keyRow, keyCol] = keyCandidates[Math.floor(Math.random() * keyCandidates.length)];
 
-      const gates = getOriginalGates(gateCell.stageName!);
+      const gates = getRotatedGates(gateCell.stageName!, gateCell.rotation);
       const exitGates = [...gates].filter(g => g !== gateCell.entryDirection);
       if (exitGates.length === 0) continue;
 
@@ -536,8 +559,6 @@ function tryGenerateGrid(
       if (!cell.stageName) continue;
 
       const pos = `${r},${c}`;
-      let role: CellRole = 'transit';
-      if (cell.isEnd) role = 'boss';
       if (cell.isStart) startPos = pos;
       if (cell.isEnd) endPos = pos;
 
@@ -545,7 +566,6 @@ function tryGenerateGrid(
         stageName: cell.stageName,
         rotation: cell.rotation || undefined,
         lockedGate: cell.isKeyGate && cell.keyGateDirection ? cell.keyGateDirection as Direction : undefined,
-        role,
         manual: false,
       };
     }
