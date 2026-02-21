@@ -34,7 +34,7 @@ func _ready() -> void:
 	# Load GLB from raw stages
 	var variant: String = stage_id[3] if stage_id.length() >= 4 else "a"
 	var subfolder := "%s_%s" % [folder, variant]
-	var map_path := "res://assets/stages/%s/%s/lndmd/%s-scene.glb" % [subfolder, stage_id, stage_id]
+	var map_path := "res://assets/stages/%s/%s/lndmd/%s_m.glb" % [subfolder, stage_id, stage_id]
 	var packed_scene := load(map_path) as PackedScene
 	if not packed_scene:
 		push_error("[TextureFixTest] Failed to load: %s" % map_path)

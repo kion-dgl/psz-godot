@@ -150,7 +150,7 @@ func _ready() -> void:
 
 	# Load visual mesh from raw stage
 	var subfolder: String = _get_stage_subfolder(stage_id, area_cfg["folder"])
-	var scene_path := "res://assets/stages/%s/%s/lndmd/%s-scene.glb" % [subfolder, stage_id, stage_id]
+	var scene_path := "res://assets/stages/%s/%s/lndmd/%s_m.glb" % [subfolder, stage_id, stage_id]
 	var floor_path := "res://assets/stages/%s/%s/lndmd/%s-floor.glb" % [subfolder, stage_id, stage_id]
 
 	var packed_scene := load(scene_path) as PackedScene

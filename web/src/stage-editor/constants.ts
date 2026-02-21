@@ -133,7 +133,7 @@ export function getGlbPath(areaKey: string, mapId: string): string {
   const area = STAGE_AREAS[areaKey];
   const folder = area?.folder ?? 'valley';
   const subfolder = getStageSubfolder(mapId, folder);
-  return assetUrl(`assets/stages/${subfolder}/${mapId}/lndmd/${mapId}-scene.glb`);
+  return assetUrl(`assets/stages/${subfolder}/${mapId}/lndmd/${mapId}_m.glb`);
 }
 
 // Calculate portal positions based on edge, offset along edge, and grid settings
