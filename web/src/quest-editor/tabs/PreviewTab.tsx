@@ -41,6 +41,9 @@ function findSpawnPortal(portals: Record<string, PortalData>): PortalData | null
   return null;
 }
 
+/** Special connection target for warp_edge portals (cross-section transitions) */
+const WARP_TARGET = '__warp__';
+
 interface BakedCell {
   pos: string;
   stage_id: string;
@@ -49,6 +52,7 @@ interface BakedCell {
   portals: Record<string, PortalData>;
   is_start: boolean;
   is_end: boolean;
+  warp_edge: string;
 }
 
 export default function PreviewTab({ project }: PreviewTabProps) {
@@ -86,14 +90,31 @@ export default function PreviewTab({ project }: PreviewTabProps) {
       const cells: Record<string, BakedCell> = {};
 
       for (const cell of section.cells || []) {
+        const warpEdge: string = cell.warp_edge || '';
+        const connections: Record<string, string> = { ...(cell.connections || {}) };
+        const cellPortals: Record<string, PortalData> = cell.portals || {};
+        // Add warp_edge as a navigable connection with special target
+        if (warpEdge && !connections[warpEdge]) {
+          connections[warpEdge] = WARP_TARGET;
+        }
+        // For start/end cells, any portal direction without a connection is also a warp
+        // (handles transition sections with 2 gates, where warp_edge only captures one)
+        if (cell.is_start || cell.is_end) {
+          for (const dir of Object.keys(cellPortals)) {
+            if (dir !== 'default' && !connections[dir]) {
+              connections[dir] = WARP_TARGET;
+            }
+          }
+        }
         cells[cell.pos] = {
           pos: cell.pos,
           stage_id: cell.stage_id,
           rotation: cell.rotation || 0,
-          connections: cell.connections || {},
-          portals: cell.portals || {},
+          connections,
+          portals: cellPortals,
           is_start: cell.is_start || false,
           is_end: cell.is_end || false,
+          warp_edge: warpEdge,
         };
       }
 
@@ -137,11 +158,32 @@ export default function PreviewTab({ project }: PreviewTabProps) {
     return () => { cancelled = true; };
   }, [currentCell?.stage_id]);
 
+  const sections = useMemo(() => getProjectSections(project), [project]);
+
   const handlePositionReport = useCallback((x: number, y: number, z: number) => {
     setReportedPos([x, y, z]);
   }, []);
 
   const handleTriggerEnter = useCallback((direction: string, targetCellPos: string) => {
+    // Warp edge → switch to next or previous section
+    if (targetCellPos === WARP_TARGET) {
+      const cell = currentCellPos ? bakedCells[currentCellPos] : null;
+      if (!cell) return;
+
+      // Determine direction: warp_edge direction goes forward (to next section),
+      // any other unconnected gate goes backward (to previous section)
+      const isForward = cell.warp_edge === direction || (cell.is_end && !cell.is_start);
+      const nextIdx = isForward
+        ? Math.min(sectionIdx + 1, sections.length - 1)
+        : Math.max(sectionIdx - 1, 0);
+
+      if (nextIdx !== sectionIdx) {
+        setCurrentCellPos(null);
+        setSectionIdx(nextIdx);
+      }
+      return;
+    }
+
     const targetCell = bakedCells[targetCellPos];
     if (!targetCell) return;
 
@@ -178,7 +220,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
     setCurrentCellPos(targetCellPos);
     setSpawnPos(pos);
     setSpawnYaw(yaw);
-  }, [bakedCells, currentCellPos]);
+  }, [bakedCells, currentCellPos, sectionIdx, sections.length]);
 
   const handleCellClick = useCallback((pos: string) => {
     const cell = bakedCells[pos];
@@ -193,8 +235,6 @@ export default function PreviewTab({ project }: PreviewTabProps) {
       setSpawnYaw(0);
     }
   }, [bakedCells]);
-
-  const sections = useMemo(() => getProjectSections(project), [project]);
 
   if (loading) {
     return (
@@ -340,7 +380,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
           <div>rot: {currentCell.rotation}</div>
           <div style={{ color: '#888', marginTop: 2 }}>
             {Object.entries(currentCell.connections).map(([dir, target]) =>
-              `${dir[0].toUpperCase()}→${target}`
+              `${dir[0].toUpperCase()}→${target === WARP_TARGET ? 'warp' : target}`
             ).join('  ') || 'no connections'}
           </div>
         </div>
