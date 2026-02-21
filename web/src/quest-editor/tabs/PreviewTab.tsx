@@ -13,23 +13,15 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { QuestProject } from '../types';
 import { getProjectSections } from '../types';
-import { projectToGodotQuest, getFloorCollisionConfig } from '../utils/quest-io';
-import type { FloorCollisionConfig } from '../utils/quest-io';
+import { projectToGodotQuest, getSvgSettings } from '../utils/quest-io';
+import type { SvgSettings } from '../utils/quest-io';
+import { STAGE_AREAS } from '../../stage-editor/constants';
 import StageScene from '../preview/StageScene';
 import type { PortalData } from '../preview/StageScene';
 import PreviewMinimap from '../preview/PreviewMinimap';
 
 interface PreviewTabProps {
   project: QuestProject;
-}
-
-/** Rotate a model-local position by cell rotation degrees around Y */
-function rotateSpawn(pos: [number, number, number], degY: number): [number, number, number] {
-  if (degY === 0) return pos;
-  const rad = (degY * Math.PI) / 180;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  return [pos[0] * cos + pos[2] * sin, pos[1], -pos[0] * sin + pos[2] * cos];
 }
 
 /** Get the yaw (facing direction) from a portal's gate_rot.
@@ -67,9 +59,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
   const [spawnYaw, setSpawnYaw] = useState(0);
   // Throttled position from StageScene for overlays
   const [reportedPos, setReportedPos] = useState<[number, number, number]>([0, 2, 0]);
-  // Floor triangles extracted from GLB for minimap
-  const [floorTriangles, setFloorTriangles] = useState<number[][] | null>(null);
-  const [floorCollision, setFloorCollision] = useState<FloorCollisionConfig | null>(null);
+  const [svgSettings, setSvgSettings] = useState<SvgSettings | null>(null);
   const [sectionIdx, setSectionIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,67 +127,18 @@ export default function PreviewTab({ project }: PreviewTabProps) {
 
   const currentCell = currentCellPos ? bakedCells[currentCellPos] : null;
 
-  // Load floor collision config when stage changes
+  // Load SVG settings when stage changes
   useEffect(() => {
-    if (!currentCell) { setFloorCollision(null); return; }
+    if (!currentCell) { setSvgSettings(null); return; }
     let cancelled = false;
-    getFloorCollisionConfig(currentCell.stage_id).then(config => {
-      if (!cancelled) setFloorCollision(config);
+    getSvgSettings(currentCell.stage_id).then(settings => {
+      if (!cancelled) setSvgSettings(settings);
     });
     return () => { cancelled = true; };
   }, [currentCell?.stage_id]);
 
-  // Minimap rotation: CW degrees → negate for rotateSpawn (CCW convention)
-  const minimapRot = currentCell ? -currentCell.rotation : 0;
-
-  // Portals rotated for minimap display
-  const minimapPortals = useMemo(() => {
-    if (!currentCell) return {};
-    if (minimapRot === 0) return currentCell.portals;
-    const result: Record<string, PortalData> = {};
-    for (const [key, p] of Object.entries(currentCell.portals)) {
-      result[key] = {
-        ...p,
-        gate: rotateSpawn(p.gate, minimapRot),
-        spawn: rotateSpawn(p.spawn, minimapRot),
-        trigger: rotateSpawn(p.trigger, minimapRot),
-      };
-    }
-    return result;
-  }, [currentCell, minimapRot]);
-
-  // Floor triangles rotated for minimap
-  const minimapFloor = useMemo(() => {
-    if (!floorTriangles || minimapRot === 0) return floorTriangles;
-    const rad = (minimapRot * Math.PI) / 180;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-    return floorTriangles.map(tri => {
-      const result: number[] = [];
-      for (let i = 0; i < 6; i += 2) {
-        const x = tri[i], z = tri[i + 1];
-        result.push(x * cos + z * sin, -x * sin + z * cos);
-      }
-      return result;
-    });
-  }, [floorTriangles, minimapRot]);
-
-  // Player position rotated for minimap
-  const minimapPlayerPos = useMemo((): [number, number] => {
-    if (minimapRot === 0) return [reportedPos[0], reportedPos[2]];
-    const rad = (minimapRot * Math.PI) / 180;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-    const x = reportedPos[0], z = reportedPos[2];
-    return [x * cos + z * sin, -x * sin + z * cos];
-  }, [reportedPos, minimapRot]);
-
   const handlePositionReport = useCallback((x: number, y: number, z: number) => {
     setReportedPos([x, y, z]);
-  }, []);
-
-  const handleFloorData = useCallback((triangles: number[][]) => {
-    setFloorTriangles(triangles);
   }, []);
 
   const handleTriggerEnter = useCallback((direction: string, targetCellPos: string) => {
@@ -361,10 +302,8 @@ export default function PreviewTab({ project }: PreviewTabProps) {
               connections={currentCell.connections}
               initialPosition={spawnPos}
               initialYaw={spawnYaw}
-              floorCollision={floorCollision}
               onPositionReport={handlePositionReport}
               onTriggerEnter={handleTriggerEnter}
-              onFloorData={handleFloorData}
             />
           </Suspense>
         </Canvas>
@@ -372,11 +311,14 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         {/* Minimap overlay */}
         <div style={{ position: 'absolute', top: 12, right: 12, pointerEvents: 'none' }}>
           <PreviewMinimap
-            floorTriangles={minimapFloor}
-            portals={minimapPortals}
+            areaFolder={STAGE_AREAS[project.areaKey]?.folder ?? 'valley'}
+            stageId={currentCell.stage_id}
+            svgSettings={svgSettings}
+            cellRotation={currentCell.rotation}
+            portals={currentCell.portals}
             connections={currentCell.connections}
-            playerX={minimapPlayerPos[0]}
-            playerZ={minimapPlayerPos[1]}
+            playerX={reportedPos[0]}
+            playerZ={reportedPos[2]}
           />
         </div>
 
