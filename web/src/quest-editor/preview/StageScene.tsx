@@ -36,11 +36,6 @@ export interface CellPortals {
   pos: string;
 }
 
-export interface FloorCollisionConfig {
-  yTolerance: number;
-  triangles: Record<string, boolean>;
-}
-
 interface StageSceneProps {
   areaKey: string;
   stageId: string;
@@ -49,10 +44,8 @@ interface StageSceneProps {
   connections: Record<string, string>;
   initialPosition: [number, number, number];
   initialYaw: number;
-  floorCollision?: FloorCollisionConfig | null;
   onPositionReport: (x: number, y: number, z: number) => void;
   onTriggerEnter: (direction: string, targetCellPos: string) => void;
-  onFloorData?: (triangles: number[][]) => void;
 }
 
 // ============================================================================
@@ -232,59 +225,6 @@ const _raycaster = new THREE.Raycaster();
 const _rayOrigin = new THREE.Vector3();
 const _rayDir = new THREE.Vector3(0, -1, 0);
 
-/** Extract floor triangles from the model using stage config floor collision data.
- *  Matches the stage editor algorithm: vertices within yTolerance of y=0,
- *  then apply exclusion map from floorCollision.triangles. */
-function extractFloorTriangles(
-  root: THREE.Object3D,
-  floorConfig?: FloorCollisionConfig | null,
-): number[][] {
-  const yTolerance = floorConfig?.yTolerance ?? 0.25;
-  const excludeMap = floorConfig?.triangles ?? {};
-  const triangles: number[][] = [];
-  const v1 = new THREE.Vector3();
-  const v2 = new THREE.Vector3();
-  const v3 = new THREE.Vector3();
-  let triId = 0;
-
-  root.updateWorldMatrix(true, true);
-
-  root.traverse((child) => {
-    if (!(child as THREE.Mesh).isMesh) return;
-    const mesh = child as THREE.Mesh;
-    const geo = mesh.geometry;
-    const pos = geo.attributes.position;
-    if (!pos) return;
-
-    const idx = geo.index;
-    const triCount = idx ? idx.count / 3 : pos.count / 3;
-
-    for (let t = 0; t < triCount; t++) {
-      const i = t * 3;
-      const i1 = idx ? idx.getX(i) : i;
-      const i2 = idx ? idx.getX(i + 1) : i + 1;
-      const i3 = idx ? idx.getX(i + 2) : i + 2;
-
-      v1.set(pos.getX(i1), pos.getY(i1), pos.getZ(i1)).applyMatrix4(mesh.matrixWorld);
-      v2.set(pos.getX(i2), pos.getY(i2), pos.getZ(i2)).applyMatrix4(mesh.matrixWorld);
-      v3.set(pos.getX(i3), pos.getY(i3), pos.getZ(i3)).applyMatrix4(mesh.matrixWorld);
-
-      // Floor filter: all 3 vertices must be within yTolerance of y=0
-      if (Math.abs(v1.y) >= yTolerance || Math.abs(v2.y) >= yTolerance || Math.abs(v3.y) >= yTolerance) continue;
-
-      // This triangle passed the Y filter — assign sequential ID (matches stage editor)
-      const id = `tri_${triId++}`;
-
-      // Check exclusion map: false means excluded
-      if (excludeMap[id] === false) continue;
-
-      triangles.push([v1.x, v1.z, v2.x, v2.z, v3.x, v3.z]);
-    }
-  });
-
-  return triangles;
-}
-
 // ============================================================================
 // Main Scene
 // ============================================================================
@@ -296,10 +236,8 @@ export default function StageScene({
   connections,
   initialPosition,
   initialYaw,
-  floorCollision,
   onPositionReport,
   onTriggerEnter,
-  onFloorData,
 }: StageSceneProps) {
   const playerGroupRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Object3D>(null);
@@ -309,12 +247,6 @@ export default function StageScene({
   const triggeredRef = useRef<Set<string>>(new Set());
   const reportTimerRef = useRef(0);
   const graceTimerRef = useRef(TRIGGER_GRACE_PERIOD);
-  const floorExtractedRef = useRef(false);
-
-  // Reset floor extraction when stage changes
-  useEffect(() => {
-    floorExtractedRef.current = false;
-  }, [stageId]);
 
   // Snap player on cell switch
   useEffect(() => {
@@ -359,16 +291,6 @@ export default function StageScene({
   };
 
   useFrame((_, delta) => {
-    // Extract floor triangles once after model loads (from modelRef only — excludes portal markers)
-    if (onFloorData && !floorExtractedRef.current && modelRef.current) {
-      let hasMeshes = false;
-      modelRef.current.traverse(c => { if ((c as THREE.Mesh).isMesh) hasMeshes = true; });
-      if (hasMeshes) {
-        floorExtractedRef.current = true;
-        onFloorData(extractFloorTriangles(modelRef.current, floorCollision));
-      }
-    }
-
     const dt = Math.min(delta, 0.05);
     const keys = keysRef.current;
     const pos = posRef.current;

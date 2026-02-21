@@ -36,10 +36,19 @@ interface FloorCollisionConfig {
   triangles: Record<string, boolean>; // tri_N -> included (true/absent) or excluded (false)
 }
 
+interface SvgSettings {
+  gridSize: number;
+  centerX: number;
+  centerZ: number;
+  svgSize: number;
+  padding: number;
+}
+
 interface FullStageConfig {
   portals: PortalConfig[];
   defaultSpawn?: DefaultSpawnConfig;
   floorCollision?: FloorCollisionConfig;
+  svgSettings?: SvgSettings;
 }
 
 let _fullConfigCache: Record<string, FullStageConfig> | null = null;
@@ -72,7 +81,13 @@ export async function getFloorCollisionConfig(stageId: string): Promise<FloorCol
   return configs[stageId]?.floorCollision ?? null;
 }
 
-export type { FloorCollisionConfig };
+/** Get SVG minimap settings for a stage */
+export async function getSvgSettings(stageId: string): Promise<SvgSettings | null> {
+  const configs = await loadFullUnifiedConfigs();
+  return configs[stageId]?.svgSettings ?? null;
+}
+
+export type { FloorCollisionConfig, SvgSettings };
 
 // ============================================================================
 // Portal position helpers (matches ExportTab.tsx computePortalPositions)
