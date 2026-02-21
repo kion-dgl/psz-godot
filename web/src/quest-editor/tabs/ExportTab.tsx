@@ -8,7 +8,7 @@
  * Plus: Import Godot Quest JSON back into a QuestProject for editing.
  */
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { QuestProject, ValidationIssue, EditorGridCell } from '../types';
 import { getProjectSections } from '../types';
 import { projectToGodotQuest, godotQuestToProject } from '../utils/quest-io';
@@ -105,9 +105,14 @@ export default function ExportTab({ project, setProject }: ExportTabProps) {
   const hasErrors = issues.some(i => i.severity === 'error');
 
   const layoutJson = useMemo(() => JSON.stringify(project, null, 2), [project]);
-  const godotJson = useMemo(() => {
-    if (hasErrors) return '';
-    return JSON.stringify(projectToGodotQuest(project), null, 2);
+  const [godotJson, setGodotJson] = useState('');
+  useEffect(() => {
+    if (hasErrors) { setGodotJson(''); return; }
+    let cancelled = false;
+    projectToGodotQuest(project).then(quest => {
+      if (!cancelled) setGodotJson(JSON.stringify(quest, null, 2));
+    });
+    return () => { cancelled = true; };
   }, [project, hasErrors]);
 
   const defaultFilename = useMemo(() => getDefaultFilename(project), [project]);
