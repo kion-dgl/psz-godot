@@ -252,7 +252,7 @@ func _parse_gates(svg_text: String) -> Array:
 					n += 1
 			if n > 0:
 				centers.append(sum / float(n))
-		elif line.begins_with("<rect") and 'fill="#4a9eff"' in line:
+		elif line.begins_with("<rect") and ('fill="#4a9eff"' in line or 'fill="#ff4444"' in line):
 			var x := float(_attr(line, "x"))
 			var y := float(_attr(line, "y"))
 			var w := float(_attr(line, "width"))

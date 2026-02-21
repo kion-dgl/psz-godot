@@ -922,6 +922,8 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
           const extracted = extractFloorTriangles(scene, stageConfig.floorCollision.yTolerance);
           const tris = extracted.filter((tri) => stageConfig.floorCollision.triangles[tri.id] !== false);
 
+          const subfolder = getStageSubfolder(currentMapId, area.folder);
+
           // Export floor GLB → assets/stages/{subfolder}/{mapId}/lndmd/{mapId}-floor.glb
           if (tris.length > 0) {
             const floorScene = new THREE.Group();
@@ -941,7 +943,6 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
               exporter.parse(floorScene, (result) => resolve(result as ArrayBuffer), reject, { binary: true });
             });
 
-            const subfolder = getStageSubfolder(currentMapId, area.folder);
             stagesRoot.file(`${subfolder}/${currentMapId}/lndmd/${currentMapId}-floor.glb`, floorGlb);
             floorCount++;
           }
