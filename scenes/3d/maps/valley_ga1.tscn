@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/camera/orbit_camera.tscn" id="2_camera"]
-[ext_resource type="PackedScene" path="res://assets/environments/valley/s01a_ga1.glb" id="3_environment"]
+[ext_resource type="PackedScene" path="res://assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1-scene.glb" id="3_environment"]
 [ext_resource type="Script" path="res://scripts/maps/map_base.gd" id="4_map_script"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_1"]

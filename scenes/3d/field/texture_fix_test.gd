@@ -31,8 +31,10 @@ func _ready() -> void:
 			fix.get("wrapS", "repeat"), fix.get("wrapT", "repeat"),
 		])
 
-	# Load GLB
-	var map_path := "res://assets/environments/%s/%s.glb" % [folder, stage_id]
+	# Load GLB from raw stages
+	var variant: String = stage_id[3] if stage_id.length() >= 4 else "a"
+	var subfolder := "%s_%s" % [folder, variant]
+	var map_path := "res://assets/stages/%s/%s/lndmd/%s-scene.glb" % [subfolder, stage_id, stage_id]
 	var packed_scene := load(map_path) as PackedScene
 	if not packed_scene:
 		push_error("[TextureFixTest] Failed to load: %s" % map_path)
@@ -54,9 +56,8 @@ func _ready() -> void:
 	print("[TextureFixTest] Scene loaded. Use WASD to look around.")
 
 
-func _load_texture_fixes(folder: String, sid: String) -> Array:
-	var config_path := "res://assets/environments/%s/%s_config.json" % [folder, sid]
-	print("[TextureFixTest] Config path: %s  exists=%s" % [config_path, FileAccess.file_exists(config_path)])
+func _load_texture_fixes(_folder: String, sid: String) -> Array:
+	var config_path := "res://data/stage_configs/unified-stage-configs.json"
 	if not FileAccess.file_exists(config_path):
 		return []
 	var file := FileAccess.open(config_path, FileAccess.READ)
@@ -67,8 +68,10 @@ func _load_texture_fixes(folder: String, sid: String) -> Array:
 	if json.parse(file.get_as_text()) != OK:
 		push_error("[TextureFixTest] JSON parse error: %s" % config_path)
 		return []
-	var data: Dictionary = json.data
-	return data.get("textureFixes", [])
+	var all_configs: Dictionary = json.data
+	if not all_configs.has(sid):
+		return []
+	return all_configs[sid].get("textureFixes", [])
 
 
 func _find_texture_fix_for_mesh(mesh_name: String) -> Dictionary:

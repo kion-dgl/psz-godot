@@ -121,11 +121,19 @@ export function getAreaFromMapId(mapId: string): string | null {
   return null;
 }
 
-// Get GLB path for a map — uses Godot asset layout via assetUrl()
+// Derive the assets/stages/ subfolder from a mapId and area folder.
+// e.g. mapId="s01a_ga1", folder="valley" → "valley_a"
+export function getStageSubfolder(mapId: string, folder: string): string {
+  if (mapId.length >= 4) return `${folder}_${mapId[3]}`;
+  return folder;
+}
+
+// Get GLB path for a map — uses raw stage layout via assetUrl()
 export function getGlbPath(areaKey: string, mapId: string): string {
   const area = STAGE_AREAS[areaKey];
-  if (!area) return assetUrl('assets/environments/valley/' + mapId + '.glb');
-  return assetUrl('assets/environments/' + area.folder + '/' + mapId + '.glb');
+  const folder = area?.folder ?? 'valley';
+  const subfolder = getStageSubfolder(mapId, folder);
+  return assetUrl(`assets/stages/${subfolder}/${mapId}/lndmd/${mapId}-scene.glb`);
 }
 
 // Calculate portal positions based on edge, offset along edge, and grid settings

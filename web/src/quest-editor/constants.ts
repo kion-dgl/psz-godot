@@ -1,6 +1,6 @@
 /**
  * Stage constants — adapted from psz-sketch stage-editor/constants.ts
- * Asset paths use Godot layout: /assets/environments/{folder}/{stageId}.glb
+ * Asset paths use raw stage layout: /assets/stages/{subfolder}/{stageId}/lndmd/{stageId}-scene.glb
  */
 import { assetUrl } from '../utils/assets';
 
@@ -12,10 +12,10 @@ export const STANDARD_SUFFIXES = [
 export interface StageAreaConfig {
   name: string;
   prefix: string;
-  folder: string;  // Godot environment folder name
+  folder: string;  // Stage area folder name
 }
 
-/** Maps area key → Godot environment folder */
+/** Maps area key → stage folder */
 export const STAGE_AREAS: Record<string, StageAreaConfig> = {
   valley:   { name: 'Gurhacia Valley',   prefix: 's01', folder: 'valley' },
   wetlands: { name: 'Ozette Wetlands',   prefix: 's02', folder: 'wetlands' },
@@ -27,11 +27,18 @@ export const STAGE_AREAS: Record<string, StageAreaConfig> = {
   tower:    { name: 'Eternal Tower',     prefix: 's08', folder: 'tower' },
 };
 
-/** Get the Godot-format GLB path for a stage */
+/** Derive the assets/stages/ subfolder from a mapId and area folder */
+export function getStageSubfolder(mapId: string, folder: string): string {
+  if (mapId.length >= 4) return `${folder}_${mapId[3]}`;
+  return folder;
+}
+
+/** Get the raw stage GLB path for a stage */
 export function getGlbPath(areaKey: string, mapId: string): string {
   const area = STAGE_AREAS[areaKey];
-  if (!area) return assetUrl(`/assets/environments/valley/${mapId}.glb`);
-  return assetUrl(`/assets/environments/${area.folder}/${mapId}.glb`);
+  const folder = area?.folder ?? 'valley';
+  const subfolder = getStageSubfolder(mapId, folder);
+  return assetUrl(`/assets/stages/${subfolder}/${mapId}/lndmd/${mapId}-scene.glb`);
 }
 
 /** Get area key from a map ID (e.g., "s01a_ib1" → "valley") */
