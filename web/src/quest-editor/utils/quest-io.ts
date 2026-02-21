@@ -12,6 +12,7 @@ import {
   getNeighbor,
   isValidPos,
   rotateDirection,
+  oppositeDirection,
 } from '../hooks/useStageConfigs';
 import type { Direction } from '../types';
 
@@ -346,6 +347,44 @@ async function exportSectionCells(
     }
 
     cells.push(cellData);
+  }
+
+  // Ensure bidirectional connections: if cell A connects dir→B, then B connects opposite→A.
+  // This handles stale rotation data where a cell's gate doesn't match its neighbor's expectation.
+  const cellsByPos = new Map<string, Record<string, any>>();
+  for (const c of cells) { const cc = c as any; cellsByPos.set(cc.pos, cc); }
+  for (const c of cells) {
+    const cc = c as any;
+    const conns = cc.connections as Record<string, string>;
+    for (const [dir, targetPos] of Object.entries(conns)) {
+      const target = cellsByPos.get(targetPos);
+      if (!target) continue;
+      const targetConns = target.connections as Record<string, string>;
+      const reverseDir = oppositeDirection(dir as Direction);
+      if (!targetConns[reverseDir]) {
+        targetConns[reverseDir] = cc.pos;
+        // Also bake a portal for the reverse direction if possible
+        const targetPortals = target.portals as Record<string, any>;
+        if (!targetPortals[reverseDir]) {
+          const targetCell = sectionCells[targetPos];
+          if (targetCell) {
+            const targetConfig = fullConfigs[targetCell.stageName];
+            if (targetConfig?.portals) {
+              const targetRot = targetCell.rotation ?? 0;
+              const configDir = reverseRotateDirection(reverseDir as Direction, targetRot);
+              let portalCfg = targetConfig.portals.find((p: PortalConfig) => p.direction === configDir);
+              // Fallback: if rotation is stale, try matching by grid direction directly
+              if (!portalCfg) {
+                portalCfg = targetConfig.portals.find((p: PortalConfig) => p.direction === reverseDir);
+              }
+              if (portalCfg) {
+                targetPortals[reverseDir] = computePortalPositions(portalCfg);
+              }
+            }
+          }
+        }
+      }
+    }
   }
 
   cells.sort((a: any, b: any) => (a.path_order ?? 999) - (b.path_order ?? 999));
