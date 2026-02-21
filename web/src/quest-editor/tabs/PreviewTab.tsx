@@ -65,8 +65,9 @@ export default function PreviewTab({ project }: PreviewTabProps) {
   const [reportedPos, setReportedPos] = useState<[number, number, number]>([0, 2, 0]);
   const [svgSettings, setSvgSettings] = useState<SvgSettings | null>(null);
   const [sectionIdx, setSectionIdx] = useState(0);
-  // When warping between sections, stores the direction the player enters from
+  // When warping between sections, stores entry context
   const [pendingEntryDir, setPendingEntryDir] = useState<string | null>(null);
+  const [pendingEntryForward, setPendingEntryForward] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -130,13 +131,16 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         // If we have a pending entry direction (from cross-section warp),
         // pick the cell that has a portal on that direction
         const entryDir = pendingEntryDir;
+        const isForward = pendingEntryForward;
         setPendingEntryDir(null);
 
-        // For backward warps, enter at the end cell
-        const entryCell = (entryDir && endCell && endCell.portals[entryDir])
-          ? endCell
-          : (entryDir && startCell && startCell.portals[entryDir])
-            ? startCell
+        // Forward warps enter at start cell, backward warps at end cell
+        const primaryCell = isForward ? startCell : endCell;
+        const secondaryCell = isForward ? endCell : startCell;
+        const entryCell = (entryDir && primaryCell && primaryCell.portals[entryDir])
+          ? primaryCell
+          : (entryDir && secondaryCell && secondaryCell.portals[entryDir])
+            ? secondaryCell
             : firstCell;
 
         setCurrentCellPos(entryCell.pos);
@@ -198,6 +202,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
       if (nextIdx !== sectionIdx) {
         // Player enters the new section from the same direction they walked through
         setPendingEntryDir(direction);
+        setPendingEntryForward(isForward);
         setCurrentCellPos(null);
         setSectionIdx(nextIdx);
       }
