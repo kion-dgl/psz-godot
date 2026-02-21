@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import type { UnifiedStageConfig, FloorTriangle, SvgSettings } from '../types';
 import { DEFAULT_SVG_SETTINGS } from '../types';
+import { rotateDirection } from '../../quest-editor/hooks/useStageConfigs';
+import type { Direction } from '../../quest-editor/types';
 
 interface SvgTabProps {
   config: UnifiedStageConfig;
@@ -9,7 +11,7 @@ interface SvgTabProps {
   mapId: string;
 }
 
-// Generate SVG minimap with configurable bounds
+// Generate SVG minimap with configurable bounds and optional rotation
 function generateSvgMinimap(
   triangles: FloorTriangle[],
   portals: UnifiedStageConfig['portals'],
@@ -19,7 +21,8 @@ function generateSvgMinimap(
     centerZ: number;
     svgSize: number;
     padding: number;
-  }
+  },
+  rotation: number = 0
 ): { svg: string; gatesInBounds: number } {
   const { gridSize, centerX, centerZ, svgSize, padding } = options;
 
@@ -42,6 +45,9 @@ function generateSvgMinimap(
 
   const toSvgX = (x: number) => (x - minX) * scale + padding;
   const toSvgY = (z: number) => (z - minZ) * scale + padding;
+
+  const cx = svgSize / 2;
+  const cy = svgSize / 2;
 
   const visibleTriangles = triangles.filter((tri) => {
     return tri.vertices.some(
@@ -99,6 +105,10 @@ function generateSvgMinimap(
       const rectWidth = isHorizontal ? 48 : 8;
       const rectHeight = isHorizontal ? 8 : 48;
 
+      // Rotated grid direction for label
+      const gridDir = rotateDirection(portal.direction as Direction, rotation);
+      const labelText = gridDir[0].toUpperCase();
+
       let labelX = x;
       let labelY = y;
       let anchor = 'middle';
@@ -111,8 +121,8 @@ function generateSvgMinimap(
         case 'west': labelX = x - labelOffset - 4; anchor = 'end'; break;
       }
 
-      const rect = `<rect x="${(x - rectWidth / 2).toFixed(1)}" y="${(y - rectHeight / 2).toFixed(1)}" width="${rectWidth}" height="${rectHeight}" fill="#ff4444" stroke="white" stroke-width="1"/>`;
-      const label = `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anchor}" font-size="10" fill="#ffaaaa" font-family="sans-serif">${portal.label}</text>`;
+      const rect = `<rect x="${(x - rectWidth / 2).toFixed(1)}" y="${(y - rectHeight / 2).toFixed(1)}" width="${rectWidth}" height="${rectHeight}" fill="#ff4444" stroke="white" stroke-width="1" data-gate="true" data-gate-dir="${gridDir}"/>`;
+      const label = `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anchor}" font-size="10" fill="#ffaaaa" font-family="sans-serif">${labelText}</text>`;
 
       return rect + '\n' + label;
     })
@@ -123,13 +133,26 @@ function generateSvgMinimap(
   const originY = toSvgY(0);
   const originMarker = `<circle cx="${originX.toFixed(1)}" cy="${originY.toFixed(1)}" r="0" data-origin="true" fill="none"/>`;
 
+  // Compute offset: toSvgX(x) = (x - minX) * scale + padding = x * scale + (padding - minX * scale)
+  const offsetX = padding - minX * scale;
+  const offsetY = padding - minZ * scale;
+
+  // Data attributes for embedded transform metadata
+  const dataAttrs = `data-rotation="${rotation}" data-scale="${scale.toFixed(6)}" data-offset-x="${offsetX.toFixed(2)}" data-offset-y="${offsetY.toFixed(2)}" data-center-x="${cx.toFixed(1)}" data-center-y="${cy.toFixed(1)}"`;
+
+  // Wrap all visual content in a rotated group when rotation != 0
+  const rotateOpen = rotation !== 0 ? `<g transform="rotate(${rotation}, ${cx.toFixed(1)}, ${cy.toFixed(1)})">` : '';
+  const rotateClose = rotation !== 0 ? '</g>' : '';
+
   return {
-    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgSize} ${svgSize}">
+    svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgSize} ${svgSize}" ${dataAttrs}>
   <rect width="${svgSize}" height="${svgSize}" fill="#1a1a2e"/>
+  ${rotateOpen}
   <path d="${trianglePaths}" fill="#2a2a4e" stroke="none"/>
   <path d="${boundaryEdges.join(' ')}" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
   ${gateMarkers}
   ${originMarker}
+  ${rotateClose}
 </svg>`,
     gatesInBounds: gatesInBounds.length,
   };

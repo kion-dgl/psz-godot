@@ -8,6 +8,8 @@ import { STAGE_AREAS, getGlbPath, getAreaFromMapId } from '../constants';
 import { DIRECTION_ROTATIONS, getPortalRotation } from '../types';
 import { loadGlobalFixes } from './TextureTab';
 import { loadAllConfigs } from '../useStageConfig';
+import { rotateDirection } from '../../quest-editor/hooks/useStageConfigs';
+import type { Direction } from '../../quest-editor/types';
 
 // Helper to compute spawn and trigger positions from portal position and direction
 // Matches PortalEditor's calculatePortalPositions offsets
@@ -347,10 +349,11 @@ function createTriggerMarker(
   return group;
 }
 
-// Generate SVG minimap
+// Generate SVG minimap with optional rotation (0, 90, 180, 270)
 function generateSvgMinimap(
   triangles: FloorTriangle[],
   config: UnifiedStageConfig,
+  rotation: number = 0,
   padding: number = 20
 ): string {
   if (triangles.length === 0) {
@@ -388,6 +391,9 @@ function generateSvgMinimap(
   // Transform functions
   const toSvgX = (x: number) => (x - minX) * scale + svgPadding;
   const toSvgY = (z: number) => (z - minZ) * scale + svgPadding;
+
+  const cx = svgWidth / 2;
+  const cy = svgHeight / 2;
 
   // Build triangle paths
   const trianglePaths = triangles
@@ -427,30 +433,60 @@ function generateSvgMinimap(
     }
   });
 
-  // Gate markers - use single color since gate type is determined at runtime
+  // Gate markers — directional rects with rotated labels
   const gateMarkers = config.portals
     .map((portal) => {
       const x = toSvgX(portal.position[0]);
       const y = toSvgY(portal.position[2]);
-      const color = '#4a9eff'; // Single color for all portals
-      // Diamond shape
-      const size = 8;
-      return `<polygon points="${x},${y - size} ${x + size},${y} ${x},${y + size} ${x - size},${y}" fill="${color}" stroke="white" stroke-width="1"/>`;
+      const isHorizontal = portal.direction === 'north' || portal.direction === 'south';
+      const rectW = isHorizontal ? 48 : 8;
+      const rectH = isHorizontal ? 8 : 48;
+
+      // Rotated grid direction for label
+      const gridDir = rotateDirection(portal.direction as Direction, rotation);
+      const labelText = gridDir[0].toUpperCase();
+
+      let labelX = x;
+      let labelY = y;
+      let anchor = 'middle';
+      const labelOffset = 16;
+      switch (portal.direction) {
+        case 'north': labelY = y - labelOffset; break;
+        case 'south': labelY = y + labelOffset + 8; break;
+        case 'east': labelX = x + labelOffset + 4; anchor = 'start'; break;
+        case 'west': labelX = x - labelOffset - 4; anchor = 'end'; break;
+      }
+
+      const rect = `<rect x="${(x - rectW / 2).toFixed(1)}" y="${(y - rectH / 2).toFixed(1)}" width="${rectW}" height="${rectH}" fill="#ff4444" stroke="white" stroke-width="1" data-gate="true" data-gate-dir="${gridDir}"/>`;
+      const label = `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anchor}" font-size="10" fill="#ffaaaa" font-family="sans-serif">${labelText}</text>`;
+      return rect + '\n' + label;
     })
     .join('\n');
 
-  // Invisible origin marker at world (0,0) — used by PreviewMinimap to anchor the
-  // world→SVG coordinate transform (paired with gate diamonds for 2+ anchor points).
+  // Invisible origin marker at world (0,0)
   const originX = toSvgX(0);
   const originY = toSvgY(0);
   const originMarker = `<circle cx="${originX.toFixed(1)}" cy="${originY.toFixed(1)}" r="0" data-origin="true" fill="none"/>`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}">
+  // Compute offset: toSvgX(x) = (x - minX) * scale + padding = x * scale + (padding - minX * scale)
+  const offsetX = svgPadding - minX * scale;
+  const offsetY = svgPadding - minZ * scale;
+
+  // Data attributes for embedded transform metadata
+  const dataAttrs = `data-rotation="${rotation}" data-scale="${scale.toFixed(6)}" data-offset-x="${offsetX.toFixed(2)}" data-offset-y="${offsetY.toFixed(2)}" data-center-x="${cx.toFixed(1)}" data-center-y="${cy.toFixed(1)}"`;
+
+  // Wrap all visual content in a rotated group when rotation != 0
+  const rotateOpen = rotation !== 0 ? `<g transform="rotate(${rotation}, ${cx.toFixed(1)}, ${cy.toFixed(1)})">` : '';
+  const rotateClose = rotation !== 0 ? '</g>' : '';
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" ${dataAttrs}>
   <rect width="${svgWidth}" height="${svgHeight}" fill="#1a1a2e"/>
+  ${rotateOpen}
   <path d="${trianglePaths}" fill="#2a2a4e" stroke="none"/>
   <path d="${boundaryEdges.join(' ')}" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
   ${gateMarkers}
   ${originMarker}
+  ${rotateClose}
 </svg>`;
 }
 
@@ -994,9 +1030,13 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
             obstacleCount++;
           }
 
-          // Export SVG → assets/stages/{subfolder}/{mapId}/lndmd/{mapId}_minimap.svg
-          const svg = generateSvgMinimap(tris, stageConfig);
-          stagesRoot.file(`${lndmdPath}/${currentMapId}_minimap.svg`, svg);
+          // Export SVG variants → assets/stages/{subfolder}/{mapId}/lndmd/{mapId}_minimap[_rN].svg
+          const svgR0 = generateSvgMinimap(tris, stageConfig, 0);
+          stagesRoot.file(`${lndmdPath}/${currentMapId}_minimap.svg`, svgR0);
+          for (const rot of [0, 90, 180, 270] as const) {
+            const svgRot = rot === 0 ? svgR0 : generateSvgMinimap(tris, stageConfig, rot);
+            stagesRoot.file(`${lndmdPath}/${currentMapId}_minimap_r${rot}.svg`, svgRot);
+          }
           svgCount++;
 
           successCount++;

@@ -1,13 +1,12 @@
 /**
  * PreviewMinimap — SVG-based minimap with player tracking dot
  *
- * Loads the pre-generated SVG minimap file for the current stage,
- * rotates it by cell rotation, and overlays a player tracking dot.
+ * Loads a pre-rotated SVG minimap variant for the current stage + cell rotation.
+ * New SVGs embed transform metadata (data-scale, data-offset-x/y, data-center-x/y)
+ * so we can map player position directly without reverse-engineering from anchor points.
  *
- * Coordinate mapping: extracts gate diamond polygon centers from the SVG
- * and matches them with known world-space gate positions from the portal
- * config. This gives us the exact scale+offset transform that was used
- * to generate the SVG, without needing saved svgSettings.
+ * Falls back to the legacy unrotated SVG + CSS rotation + anchor-point transform
+ * when no rotated variant exists.
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -16,7 +15,45 @@ import { getStageSubfolder } from '../../stage-editor/constants';
 import type { PortalData } from './StageScene';
 
 // ============================================================================
-// SVG polygon parsing + transform computation
+// SVG parsing helpers
+// ============================================================================
+
+/** Embedded transform metadata from new SVG variants */
+interface EmbeddedTransform {
+  rotation: number;
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+  centerX: number;
+  centerY: number;
+  svgSize: number;
+}
+
+/** Parse embedded data-* attributes from SVG root element.
+ *  Returns null if the SVG doesn't have the new metadata. */
+function parseEmbeddedTransform(svgContent: string): EmbeddedTransform | null {
+  const rotM = svgContent.match(/data-rotation="([^"]*)"/);
+  const scaleM = svgContent.match(/data-scale="([^"]*)"/);
+  const offXM = svgContent.match(/data-offset-x="([^"]*)"/);
+  const offYM = svgContent.match(/data-offset-y="([^"]*)"/);
+  const cxM = svgContent.match(/data-center-x="([^"]*)"/);
+  const cyM = svgContent.match(/data-center-y="([^"]*)"/);
+  if (!rotM || !scaleM || !offXM || !offYM || !cxM || !cyM) return null;
+
+  const svgSize = parseSvgSize(svgContent);
+  return {
+    rotation: parseFloat(rotM[1]),
+    scale: parseFloat(scaleM[1]),
+    offsetX: parseFloat(offXM[1]),
+    offsetY: parseFloat(offYM[1]),
+    centerX: parseFloat(cxM[1]),
+    centerY: parseFloat(cyM[1]),
+    svgSize,
+  };
+}
+
+// ============================================================================
+// Legacy SVG parsing + transform computation (for old SVGs without metadata)
 // ============================================================================
 
 /** Anchor point: a known (worldX, worldZ) ↔ (svgX, svgY) pair. */
@@ -27,13 +64,32 @@ interface AnchorPoint {
   svgY: number;
 }
 
-/** Extract gate diamond polygon centers from SVG content.
- *  Gate diamonds are <polygon fill="#4a9eff" ...> with 4 points. */
-function parseGateDiamonds(svgContent: string): [number, number][] {
+/** Extract gate marker centers from SVG content.
+ *  Supports two formats:
+ *  - New: <rect ... data-gate="true" .../> (directional rects)
+ *  - Legacy: <polygon fill="#4a9eff" .../> (diamond shapes) */
+function parseGateMarkers(svgContent: string): [number, number][] {
   const centers: [number, number][] = [];
-  // Match polygon elements — fill may come before or after points
-  const polygonRe = /<polygon\s[^>]*?fill="#4a9eff"[^>]*?\/?>/gi;
+
+  // New format: <rect ... data-gate="true" .../>
+  const rectRe = /<rect\s[^>]*?data-gate="true"[^>]*?\/?>/gi;
   let match;
+  while ((match = rectRe.exec(svgContent)) !== null) {
+    const xM = match[0].match(/\bx="([^"]*)"/);
+    const yM = match[0].match(/\by="([^"]*)"/);
+    const wM = match[0].match(/width="([^"]*)"/);
+    const hM = match[0].match(/height="([^"]*)"/);
+    if (xM && yM && wM && hM) {
+      centers.push([
+        parseFloat(xM[1]) + parseFloat(wM[1]) / 2,
+        parseFloat(yM[1]) + parseFloat(hM[1]) / 2,
+      ]);
+    }
+  }
+  if (centers.length > 0) return centers;
+
+  // Legacy format: <polygon fill="#4a9eff" .../> (diamond shapes)
+  const polygonRe = /<polygon\s[^>]*?fill="#4a9eff"[^>]*?\/?>/gi;
   while ((match = polygonRe.exec(svgContent)) !== null) {
     const pointsMatch = match[0].match(/points="([^"]*)"/);
     if (!pointsMatch) continue;
@@ -73,14 +129,7 @@ function parseSvgSize(svgContent: string): number {
 }
 
 /** Compute world→SVG affine transform from anchor points.
- *  Transform: svgX = worldX * scale + offsetX, svgY = worldZ * scale + offsetY
- *
- *  Anchors are pre-matched (worldX,worldZ) ↔ (svgX,svgY) pairs. The origin marker
- *  provides a guaranteed anchor at world (0,0); gate diamonds provide additional anchors
- *  that need permutation-matching against world portal positions.
- *
- *  With 1 anchor: estimates scale from svgSize, computes offset.
- *  With 2+ anchors: solves for scale+offset via least-squares. */
+ *  Transform: svgX = worldX * scale + offsetX, svgY = worldZ * scale + offsetY */
 function computeTransformFromAnchors(
   anchors: AnchorPoint[],
   svgSize: number,
@@ -89,7 +138,6 @@ function computeTransformFromAnchors(
   if (n === 0) return null;
 
   if (n === 1) {
-    // Single anchor — estimate scale from SVG size, compute offset from the one pair
     const padding = 20;
     const defaultGridSize = 40;
     const scale = (svgSize - padding * 2) / defaultGridSize;
@@ -100,8 +148,6 @@ function computeTransformFromAnchors(
     };
   }
 
-  // 2+ anchors: solve for scale + offset via least-squares
-  // scale = Σ(dSvg · dWorld) / Σ(dWorld · dWorld) across all pairs
   let sumNum = 0, sumDen = 0;
   for (let i = 0; i < n; i++) {
     for (let j = i + 1; j < n; j++) {
@@ -117,7 +163,6 @@ function computeTransformFromAnchors(
   const scale = sumNum / sumDen;
   if (scale <= 0) return null;
 
-  // Offset = average of (svgPos - worldPos * scale)
   let offX = 0, offY = 0;
   for (const a of anchors) {
     offX += a.svgX - a.worldX * scale;
@@ -126,9 +171,7 @@ function computeTransformFromAnchors(
   return { scale, offsetX: offX / n, offsetY: offY / n };
 }
 
-/** Build anchor points by matching gate diamonds in SVG with portal world positions.
- *  Tries all permutations (n ≤ 4 gates, so ≤ 24 attempts) and picks the best match.
- *  Also includes the origin marker as a fixed anchor if present. */
+/** Build anchor points by matching gate diamonds in SVG with portal world positions. */
 function buildAnchors(
   worldGates: { x: number; z: number }[],
   svgDiamonds: [number, number][],
@@ -137,30 +180,24 @@ function buildAnchors(
 ): AnchorPoint[] {
   const anchors: AnchorPoint[] = [];
 
-  // Origin marker is always at world (0,0)
   if (originSvg) {
     anchors.push({ worldX: 0, worldZ: 0, svgX: originSvg[0], svgY: originSvg[1] });
   }
 
-  // Match gate diamonds to world portals via permutation search
   const n = Math.min(worldGates.length, svgDiamonds.length);
   if (n === 0) return anchors;
 
   if (n === 1) {
-    // Only one gate — direct match
     anchors.push({ worldX: worldGates[0].x, worldZ: worldGates[0].z, svgX: svgDiamonds[0][0], svgY: svgDiamonds[0][1] });
     return anchors;
   }
 
-  // Try all permutations of assigning world gates to SVG diamonds
   const indices = Array.from({ length: n }, (_, i) => i);
   const perms = permutations(indices);
   let bestPerm = indices;
   let bestErr = Infinity;
 
   for (const perm of perms) {
-    // Quick estimate: use origin anchor (if available) + this permutation's pairs
-    // to compute a transform, then measure error
     const testAnchors = [...anchors];
     for (let i = 0; i < n; i++) {
       testAnchors.push({
@@ -185,7 +222,6 @@ function buildAnchors(
     }
   }
 
-  // Add gates with best permutation
   for (let i = 0; i < n; i++) {
     anchors.push({
       worldX: worldGates[bestPerm[i]].x,
@@ -240,57 +276,85 @@ export default function PreviewMinimap({
   playerZ,
 }: PreviewMinimapProps) {
   const [svgContent, setSvgContent] = useState<string | null>(null);
+  const [isRotatedVariant, setIsRotatedVariant] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load SVG file
+  // Load SVG file — try rotated variant first, fall back to base
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setSvgContent(null);
+    setIsRotatedVariant(false);
 
     const subfolder = getStageSubfolder(stageId, areaFolder);
-    const svgPath = assetUrl(`assets/stages/${subfolder}/${stageId}/lndmd/${stageId}_minimap.svg`);
+    const basePath = `assets/stages/${subfolder}/${stageId}/lndmd`;
+    const rotatedPath = assetUrl(`${basePath}/${stageId}_minimap_r${cellRotation}.svg`);
+    const fallbackPath = assetUrl(`${basePath}/${stageId}_minimap.svg`);
 
-    fetch(svgPath)
-      .then(resp => {
-        if (!resp.ok) throw new Error('SVG not found');
+    // Helper: fetch SVG and validate it's actually SVG (not SPA fallback HTML)
+    const fetchSvg = (url: string): Promise<string> =>
+      fetch(url).then(resp => {
+        if (!resp.ok) throw new Error('not found');
+        const ct = resp.headers.get('content-type') || '';
+        if (ct.includes('text/html')) throw new Error('got HTML, not SVG');
         return resp.text();
-      })
+      }).then(text => {
+        if (!text.trimStart().startsWith('<svg')) throw new Error('not SVG content');
+        return text;
+      });
+
+    fetchSvg(rotatedPath)
       .then(text => {
         if (!cancelled) {
           setSvgContent(text);
+          setIsRotatedVariant(true);
           setLoading(false);
         }
       })
       .catch(() => {
-        if (!cancelled) {
-          setSvgContent(null);
-          setLoading(false);
-        }
+        // Fall back to base SVG
+        fetchSvg(fallbackPath)
+          .then(text => {
+            if (!cancelled) {
+              setSvgContent(text);
+              setIsRotatedVariant(false);
+              setLoading(false);
+            }
+          })
+          .catch(() => {
+            if (!cancelled) {
+              setSvgContent(null);
+              setIsRotatedVariant(false);
+              setLoading(false);
+            }
+          });
       });
 
     return () => { cancelled = true; };
-  }, [stageId, areaFolder]);
+  }, [stageId, areaFolder, cellRotation]);
 
-  // Compute world→SVG transform by matching anchor points (origin marker + gate diamonds)
-  const transform = useMemo(() => {
+  // Parse embedded transform from new SVGs, or compute from anchors for legacy
+  const embedded = useMemo(() => {
     if (!svgContent) return null;
+    return parseEmbeddedTransform(svgContent);
+  }, [svgContent]);
 
-    const svgDiamonds = parseGateDiamonds(svgContent);
+  // Legacy transform (anchor-based) — only needed when no embedded metadata
+  const legacyTransform = useMemo(() => {
+    if (!svgContent || embedded) return null;
+
+    const svgDiamonds = parseGateMarkers(svgContent);
     const originSvg = parseOriginMarker(svgContent);
     const svgSz = parseSvgSize(svgContent);
 
-    // Get world-space gate positions (exclude 'default' portal)
     const worldGates = Object.entries(portals)
       .filter(([dir]) => dir !== 'default')
       .map(([, p]) => ({ x: p.gate[0], z: p.gate[2] }));
 
-    // Build anchor points (origin + matched gate diamonds)
     const anchors = buildAnchors(worldGates, svgDiamonds, originSvg, svgSz);
     const anchorTransform = computeTransformFromAnchors(anchors, svgSz);
     if (anchorTransform) return { ...anchorTransform, svgSize: svgSz };
 
-    // Fallback to svgSettings if available
     if (svgSettings) {
       const { gridSize, centerX, centerZ, svgSize: sz, padding } = svgSettings;
       const scale = (sz - padding * 2) / gridSize;
@@ -303,31 +367,59 @@ export default function PreviewMinimap({
       };
     }
 
-    // Last resort: default settings
     const defaultScale = (svgSz - 40) / 40;
     return { scale: defaultScale, offsetX: 20, offsetY: 20, svgSize: svgSz };
-  }, [svgContent, portals, svgSettings]);
+  }, [svgContent, embedded, portals, svgSettings]);
 
-  const svgSize = transform?.svgSize ?? 400;
+  const svgSize = embedded?.svgSize ?? legacyTransform?.svgSize ?? 400;
 
   // Player position in SVG coordinates
-  const playerSvgX = transform ? playerX * transform.scale + transform.offsetX : 0;
-  const playerSvgY = transform ? playerZ * transform.scale + transform.offsetY : 0;
+  const { playerSvgX, playerSvgY } = useMemo(() => {
+    if (embedded) {
+      // New path: apply base transform then rotate around SVG center
+      const baseX = playerX * embedded.scale + embedded.offsetX;
+      const baseY = playerZ * embedded.scale + embedded.offsetY;
 
-  // Gate markers in SVG coordinates (for direction labels)
+      if (embedded.rotation === 0) {
+        return { playerSvgX: baseX, playerSvgY: baseY };
+      }
+
+      // Rotate around SVG center
+      const rad = (embedded.rotation * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      const dx = baseX - embedded.centerX;
+      const dy = baseY - embedded.centerY;
+      return {
+        playerSvgX: embedded.centerX + dx * cos - dy * sin,
+        playerSvgY: embedded.centerY + dx * sin + dy * cos,
+      };
+    }
+
+    if (legacyTransform) {
+      return {
+        playerSvgX: playerX * legacyTransform.scale + legacyTransform.offsetX,
+        playerSvgY: playerZ * legacyTransform.scale + legacyTransform.offsetY,
+      };
+    }
+
+    return { playerSvgX: 0, playerSvgY: 0 };
+  }, [embedded, legacyTransform, playerX, playerZ]);
+
+  // Gate markers in SVG coordinates (for direction labels) — only for legacy SVGs
   const gateMarkers = useMemo(() => {
-    if (!transform) return [];
+    if (isRotatedVariant || !legacyTransform) return [];
     return Object.entries(portals)
       .filter(([dir]) => dir !== 'default' && connections[dir])
       .map(([dir, portal]) => ({
         dir,
-        x: portal.gate[0] * transform.scale + transform.offsetX,
-        y: portal.gate[2] * transform.scale + transform.offsetY,
+        x: portal.gate[0] * legacyTransform.scale + legacyTransform.offsetX,
+        y: portal.gate[2] * legacyTransform.scale + legacyTransform.offsetY,
       }));
-  }, [portals, connections, transform]);
+  }, [isRotatedVariant, portals, connections, legacyTransform]);
 
-  // CSS rotation for cell rotation (CW degrees)
-  const rotDeg = -cellRotation;
+  // CSS rotation — only for legacy SVGs (rotated variants already have rotation baked in)
+  const rotDeg = isRotatedVariant ? 0 : -cellRotation;
 
   if (loading) {
     return (
@@ -362,10 +454,10 @@ export default function PreviewMinimap({
       boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
       position: 'relative',
     }}>
-      {/* Rotated container for SVG + overlays */}
+      {/* Container — rotated only for legacy SVGs */}
       <div style={{
         width: DISPLAY_SIZE, height: DISPLAY_SIZE,
-        transform: `rotate(${rotDeg}deg)`,
+        transform: rotDeg !== 0 ? `rotate(${rotDeg}deg)` : undefined,
         transformOrigin: 'center center',
       }}>
         {/* SVG background (scaled to fit display size) */}
@@ -382,14 +474,14 @@ export default function PreviewMinimap({
           }}
         />
 
-        {/* Overlay SVG for player dot + gate labels */}
+        {/* Overlay SVG for player dot + gate labels (legacy only) */}
         <svg
           viewBox={`0 0 ${svgSize} ${svgSize}`}
           width={DISPLAY_SIZE}
           height={DISPLAY_SIZE}
           style={{ position: 'absolute', top: 0, left: 0 }}
         >
-          {/* Gate direction labels */}
+          {/* Gate direction labels — only for legacy SVGs (rotated variants have labels baked in) */}
           {gateMarkers.map(({ dir, x, y }) => (
             <text
               key={dir}
