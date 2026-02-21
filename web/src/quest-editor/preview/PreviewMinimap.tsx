@@ -19,6 +19,14 @@ import type { PortalData } from './StageScene';
 // SVG polygon parsing + transform computation
 // ============================================================================
 
+/** Anchor point: a known (worldX, worldZ) ↔ (svgX, svgY) pair. */
+interface AnchorPoint {
+  worldX: number;
+  worldZ: number;
+  svgX: number;
+  svgY: number;
+}
+
 /** Extract gate diamond polygon centers from SVG content.
  *  Gate diamonds are <polygon fill="#4a9eff" ...> with 4 points. */
 function parseGateDiamonds(svgContent: string): [number, number][] {
@@ -41,6 +49,17 @@ function parseGateDiamonds(svgContent: string): [number, number][] {
   return centers;
 }
 
+/** Parse the invisible origin marker (<circle data-origin="true" .../>).
+ *  Returns [svgX, svgY] of the world origin (0,0), or null if not found. */
+function parseOriginMarker(svgContent: string): [number, number] | null {
+  const m = svgContent.match(/<circle[^>]*data-origin="true"[^>]*\/?>/i);
+  if (!m) return null;
+  const cxM = m[0].match(/cx="([^"]*)"/);
+  const cyM = m[0].match(/cy="([^"]*)"/);
+  if (!cxM || !cyM) return null;
+  return [parseFloat(cxM[1]), parseFloat(cyM[1])];
+}
+
 interface SvgTransform {
   scale: number;
   offsetX: number;
@@ -53,85 +72,130 @@ function parseSvgSize(svgContent: string): number {
   return m ? parseFloat(m[1]) : 400;
 }
 
-/** Compute world→SVG affine transform from matched gate pairs.
+/** Compute world→SVG affine transform from anchor points.
  *  Transform: svgX = worldX * scale + offsetX, svgY = worldZ * scale + offsetY
  *
- *  With 1 pair: uses svgSize to estimate scale, computes offset.
- *  With 2+ pairs: solves for scale+offset via least-squares across all permutations. */
-function computeGateTransform(
-  worldGates: { x: number; z: number }[],
-  svgCenters: [number, number][],
+ *  Anchors are pre-matched (worldX,worldZ) ↔ (svgX,svgY) pairs. The origin marker
+ *  provides a guaranteed anchor at world (0,0); gate diamonds provide additional anchors
+ *  that need permutation-matching against world portal positions.
+ *
+ *  With 1 anchor: estimates scale from svgSize, computes offset.
+ *  With 2+ anchors: solves for scale+offset via least-squares. */
+function computeTransformFromAnchors(
+  anchors: AnchorPoint[],
   svgSize: number,
 ): SvgTransform | null {
-  const n = Math.min(worldGates.length, svgCenters.length);
+  const n = anchors.length;
   if (n === 0) return null;
 
   if (n === 1) {
-    // Can't determine scale from 1 pair — estimate from SVG size.
-    // Typical padding=20, gridSize chosen so stage fills the SVG.
-    // Most stages: scale ≈ (svgSize - 40) / gridSize, gridSize ≈ 40 → scale ≈ 9
-    // We can't know gridSize, but we can assume center is near the middle
-    // and scale from SVG dimension. Use a rough heuristic:
-    // Place the single gate at its known SVG position and assume the
-    // center of the SVG corresponds to world origin with default scale.
+    // Single anchor — estimate scale from SVG size, compute offset from the one pair
     const padding = 20;
     const defaultGridSize = 40;
     const scale = (svgSize - padding * 2) / defaultGridSize;
-    const offX = svgCenters[0][0] - worldGates[0].x * scale;
-    const offY = svgCenters[0][1] - worldGates[0].z * scale;
-    return { scale, offsetX: offX, offsetY: offY };
+    return {
+      scale,
+      offsetX: anchors[0].svgX - anchors[0].worldX * scale,
+      offsetY: anchors[0].svgY - anchors[0].worldZ * scale,
+    };
   }
 
-  // For 2+ pairs: try all permutations of matching world gates to SVG centers
-  // and pick the assignment with minimum reprojection error.
+  // 2+ anchors: solve for scale + offset via least-squares
+  // scale = Σ(dSvg · dWorld) / Σ(dWorld · dWorld) across all pairs
+  let sumNum = 0, sumDen = 0;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const dwx = anchors[j].worldX - anchors[i].worldX;
+      const dwz = anchors[j].worldZ - anchors[i].worldZ;
+      const dsx = anchors[j].svgX - anchors[i].svgX;
+      const dsy = anchors[j].svgY - anchors[i].svgY;
+      sumNum += dsx * dwx + dsy * dwz;
+      sumDen += dwx * dwx + dwz * dwz;
+    }
+  }
+  if (Math.abs(sumDen) < 0.001) return null;
+  const scale = sumNum / sumDen;
+  if (scale <= 0) return null;
+
+  // Offset = average of (svgPos - worldPos * scale)
+  let offX = 0, offY = 0;
+  for (const a of anchors) {
+    offX += a.svgX - a.worldX * scale;
+    offY += a.svgY - a.worldZ * scale;
+  }
+  return { scale, offsetX: offX / n, offsetY: offY / n };
+}
+
+/** Build anchor points by matching gate diamonds in SVG with portal world positions.
+ *  Tries all permutations (n ≤ 4 gates, so ≤ 24 attempts) and picks the best match.
+ *  Also includes the origin marker as a fixed anchor if present. */
+function buildAnchors(
+  worldGates: { x: number; z: number }[],
+  svgDiamonds: [number, number][],
+  originSvg: [number, number] | null,
+  svgSize: number,
+): AnchorPoint[] {
+  const anchors: AnchorPoint[] = [];
+
+  // Origin marker is always at world (0,0)
+  if (originSvg) {
+    anchors.push({ worldX: 0, worldZ: 0, svgX: originSvg[0], svgY: originSvg[1] });
+  }
+
+  // Match gate diamonds to world portals via permutation search
+  const n = Math.min(worldGates.length, svgDiamonds.length);
+  if (n === 0) return anchors;
+
+  if (n === 1) {
+    // Only one gate — direct match
+    anchors.push({ worldX: worldGates[0].x, worldZ: worldGates[0].z, svgX: svgDiamonds[0][0], svgY: svgDiamonds[0][1] });
+    return anchors;
+  }
+
+  // Try all permutations of assigning world gates to SVG diamonds
   const indices = Array.from({ length: n }, (_, i) => i);
   const perms = permutations(indices);
-
-  let best: SvgTransform | null = null;
+  let bestPerm = indices;
   let bestErr = Infinity;
 
   for (const perm of perms) {
-    // Solve for scale: collect (dWorld, dSvg) pairs across all adjacent pairs
-    let sumNum = 0, sumDen = 0;
+    // Quick estimate: use origin anchor (if available) + this permutation's pairs
+    // to compute a transform, then measure error
+    const testAnchors = [...anchors];
     for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const dwx = worldGates[perm[j]].x - worldGates[perm[i]].x;
-        const dwz = worldGates[perm[j]].z - worldGates[perm[i]].z;
-        const dsx = svgCenters[j][0] - svgCenters[i][0];
-        const dsy = svgCenters[j][1] - svgCenters[i][1];
-        // scale = dot(dSvg, dWorld) / dot(dWorld, dWorld)
-        sumNum += dsx * dwx + dsy * dwz;
-        sumDen += dwx * dwx + dwz * dwz;
-      }
+      testAnchors.push({
+        worldX: worldGates[perm[i]].x,
+        worldZ: worldGates[perm[i]].z,
+        svgX: svgDiamonds[i][0],
+        svgY: svgDiamonds[i][1],
+      });
     }
-    if (Math.abs(sumDen) < 0.001) continue;
-    const scale = sumNum / sumDen;
-    if (scale <= 0) continue; // scale must be positive
+    const t = computeTransformFromAnchors(testAnchors, svgSize);
+    if (!t) continue;
 
-    // Compute offset as average
-    let offX = 0, offY = 0;
-    for (let i = 0; i < n; i++) {
-      offX += svgCenters[i][0] - worldGates[perm[i]].x * scale;
-      offY += svgCenters[i][1] - worldGates[perm[i]].z * scale;
-    }
-    offX /= n;
-    offY /= n;
-
-    // Reprojection error
     let err = 0;
-    for (let i = 0; i < n; i++) {
-      const ex = worldGates[perm[i]].x * scale + offX - svgCenters[i][0];
-      const ey = worldGates[perm[i]].z * scale + offY - svgCenters[i][1];
+    for (const a of testAnchors) {
+      const ex = a.worldX * t.scale + t.offsetX - a.svgX;
+      const ey = a.worldZ * t.scale + t.offsetY - a.svgY;
       err += ex * ex + ey * ey;
     }
-
     if (err < bestErr) {
       bestErr = err;
-      best = { scale, offsetX: offX, offsetY: offY };
+      bestPerm = perm;
     }
   }
 
-  return best;
+  // Add gates with best permutation
+  for (let i = 0; i < n; i++) {
+    anchors.push({
+      worldX: worldGates[bestPerm[i]].x,
+      worldZ: worldGates[bestPerm[i]].z,
+      svgX: svgDiamonds[i][0],
+      svgY: svgDiamonds[i][1],
+    });
+  }
+
+  return anchors;
 }
 
 /** Generate all permutations of an array (n! — fine for n <= 4) */
@@ -208,22 +272,23 @@ export default function PreviewMinimap({
     return () => { cancelled = true; };
   }, [stageId, areaFolder]);
 
-  // Compute world→SVG transform by matching gate diamonds in SVG with portal world positions
+  // Compute world→SVG transform by matching anchor points (origin marker + gate diamonds)
   const transform = useMemo(() => {
     if (!svgContent) return null;
 
-    // Extract gate diamond centers from SVG
     const svgDiamonds = parseGateDiamonds(svgContent);
-    const svgSize = parseSvgSize(svgContent);
+    const originSvg = parseOriginMarker(svgContent);
+    const svgSz = parseSvgSize(svgContent);
 
     // Get world-space gate positions (exclude 'default' portal)
     const worldGates = Object.entries(portals)
       .filter(([dir]) => dir !== 'default')
       .map(([, p]) => ({ x: p.gate[0], z: p.gate[2] }));
 
-    // Try gate-anchored transform first
-    const gateTransform = computeGateTransform(worldGates, svgDiamonds, svgSize);
-    if (gateTransform) return { ...gateTransform, svgSize };
+    // Build anchor points (origin + matched gate diamonds)
+    const anchors = buildAnchors(worldGates, svgDiamonds, originSvg, svgSz);
+    const anchorTransform = computeTransformFromAnchors(anchors, svgSz);
+    if (anchorTransform) return { ...anchorTransform, svgSize: svgSz };
 
     // Fallback to svgSettings if available
     if (svgSettings) {
@@ -239,8 +304,8 @@ export default function PreviewMinimap({
     }
 
     // Last resort: default settings
-    const defaultScale = (svgSize - 40) / 40; // padding=20, gridSize=40
-    return { scale: defaultScale, offsetX: 20, offsetY: 20, svgSize };
+    const defaultScale = (svgSz - 40) / 40;
+    return { scale: defaultScale, offsetX: 20, offsetY: 20, svgSize: svgSz };
   }, [svgContent, portals, svgSettings]);
 
   const svgSize = transform?.svgSize ?? 400;

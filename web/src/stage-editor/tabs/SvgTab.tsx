@@ -118,12 +118,18 @@ function generateSvgMinimap(
     })
     .join('\n');
 
+  // Invisible origin marker at world (0,0) — used by PreviewMinimap to anchor coordinate transform
+  const originX = toSvgX(0);
+  const originY = toSvgY(0);
+  const originMarker = `<circle cx="${originX.toFixed(1)}" cy="${originY.toFixed(1)}" r="0" data-origin="true" fill="none"/>`;
+
   return {
     svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgSize} ${svgSize}">
   <rect width="${svgSize}" height="${svgSize}" fill="#1a1a2e"/>
   <path d="${trianglePaths}" fill="#2a2a4e" stroke="none"/>
   <path d="${boundaryEdges.join(' ')}" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
   ${gateMarkers}
+  ${originMarker}
 </svg>`,
     gatesInBounds: gatesInBounds.length,
   };
