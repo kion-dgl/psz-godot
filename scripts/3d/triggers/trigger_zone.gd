@@ -62,23 +62,11 @@ func _on_body_exited(body: Node3D) -> void:
 
 
 func _trigger_transition() -> void:
-	# Get target from MapManager routes if not explicitly set
-	var actual_target := target_map
-	var actual_spawn := spawn_index
-
-	if actual_target.is_empty():
-		var route := MapManager.get_route(MapManager.current_map_id, trigger_index)
-		if route.has("map"):
-			actual_target = route["map"]
-			actual_spawn = route.get("spawn", 0)
-
-	if actual_target.is_empty():
+	if target_map.is_empty():
 		return
 
-	print("[TriggerZone] Transitioning to: ", actual_target, " spawn: ", actual_spawn)
-
-	# Notify the game to transition
-	get_tree().call_group("map_controller", "on_trigger_activated", actual_target, actual_spawn)
+	print("[TriggerZone] Transitioning to: ", target_map, " spawn: ", spawn_index)
+	get_tree().call_group("map_controller", "on_trigger_activated", target_map, spawn_index)
 
 
 func reset_trigger() -> void:
