@@ -373,9 +373,16 @@ async function exportSectionCells(
               const targetRot = targetCell.rotation ?? 0;
               const configDir = reverseRotateDirection(reverseDir as Direction, targetRot);
               let portalCfg = targetConfig.portals.find((p: PortalConfig) => p.direction === configDir);
-              // Fallback: if rotation is stale, try matching by grid direction directly
+              // Fallback: pick an unused config portal (rotation may be stale)
               if (!portalCfg) {
-                portalCfg = targetConfig.portals.find((p: PortalConfig) => p.direction === reverseDir);
+                const usedConfigDirs = new Set<string>();
+                for (const [gDir] of Object.entries(targetPortals)) {
+                  if (gDir === 'default') continue;
+                  usedConfigDirs.add(reverseRotateDirection(gDir as Direction, targetRot));
+                }
+                portalCfg = targetConfig.portals.find(
+                  (p: PortalConfig) => !usedConfigDirs.has(p.direction)
+                );
               }
               if (portalCfg) {
                 targetPortals[reverseDir] = computePortalPositions(portalCfg);
