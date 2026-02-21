@@ -380,7 +380,6 @@ export default function PreviewTab({ project }: PreviewTabProps) {
             areaFolder={STAGE_AREAS[project.areaKey]?.folder ?? 'valley'}
             stageId={currentCell.stage_id}
             svgSettings={svgSettings}
-            cellRotation={currentCell.rotation}
             portals={currentCell.portals}
             connections={currentCell.connections}
             playerX={reportedPos[0]}

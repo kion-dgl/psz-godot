@@ -1,12 +1,12 @@
 /**
  * PreviewMinimap — SVG-based minimap with player tracking dot
  *
- * Loads a pre-rotated SVG minimap variant for the current stage + cell rotation.
- * New SVGs embed transform metadata (data-scale, data-offset-x/y, data-center-x/y)
- * so we can map player position directly without reverse-engineering from anchor points.
+ * Always loads the base (unrotated) SVG minimap since the 3D preview view
+ * is unrotated. Gate labels show grid-space directions at model-space positions,
+ * matching the labels in the 3D view. Grid orientation is handled by PreviewGrid.
  *
- * Falls back to the legacy unrotated SVG + CSS rotation + anchor-point transform
- * when no rotated variant exists.
+ * SVGs with embedded transform metadata (data-scale, data-offset-x/y) use those
+ * directly; legacy SVGs use anchor-point matching to compute the world→SVG transform.
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -255,7 +255,6 @@ interface PreviewMinimapProps {
   areaFolder: string;
   stageId: string;
   svgSettings: { gridSize: number; centerX: number; centerZ: number; svgSize: number; padding: number } | null;
-  cellRotation: number;
   portals: Record<string, PortalData>;
   connections: Record<string, string>;
   /** Player position in model-local space (unrotated) */
@@ -269,80 +268,57 @@ export default function PreviewMinimap({
   areaFolder,
   stageId,
   svgSettings,
-  cellRotation,
   portals,
   connections,
   playerX,
   playerZ,
 }: PreviewMinimapProps) {
   const [svgContent, setSvgContent] = useState<string | null>(null);
-  const [isRotatedVariant, setIsRotatedVariant] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load SVG file — try rotated variant first, fall back to base
+  // Load base (unrotated) SVG — the 3D view is always unrotated,
+  // so the minimap should match it. Grid orientation is shown by PreviewGrid.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setSvgContent(null);
-    setIsRotatedVariant(false);
 
     const subfolder = getStageSubfolder(stageId, areaFolder);
     const basePath = `assets/stages/${subfolder}/${stageId}/lndmd`;
-    const rotatedPath = assetUrl(`${basePath}/${stageId}_minimap_r${cellRotation}.svg`);
-    const fallbackPath = assetUrl(`${basePath}/${stageId}_minimap.svg`);
+    const svgUrl = assetUrl(`${basePath}/${stageId}_minimap.svg`);
 
-    // Helper: fetch SVG and validate it's actually SVG (not SPA fallback HTML)
-    const fetchSvg = (url: string): Promise<string> =>
-      fetch(url).then(resp => {
-        if (!resp.ok) throw new Error('not found');
-        const ct = resp.headers.get('content-type') || '';
-        if (ct.includes('text/html')) throw new Error('got HTML, not SVG');
-        return resp.text();
-      }).then(text => {
-        if (!text.trimStart().startsWith('<svg')) throw new Error('not SVG content');
-        return text;
-      });
-
-    fetchSvg(rotatedPath)
-      .then(text => {
-        if (!cancelled) {
-          setSvgContent(text);
-          setIsRotatedVariant(true);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        // Fall back to base SVG
-        fetchSvg(fallbackPath)
-          .then(text => {
-            if (!cancelled) {
-              setSvgContent(text);
-              setIsRotatedVariant(false);
-              setLoading(false);
-            }
-          })
-          .catch(() => {
-            if (!cancelled) {
-              setSvgContent(null);
-              setIsRotatedVariant(false);
-              setLoading(false);
-            }
-          });
-      });
+    fetch(svgUrl).then(resp => {
+      if (!resp.ok) throw new Error('not found');
+      const ct = resp.headers.get('content-type') || '';
+      if (ct.includes('text/html')) throw new Error('got HTML, not SVG');
+      return resp.text();
+    }).then(text => {
+      if (!text.trimStart().startsWith('<svg')) throw new Error('not SVG content');
+      if (!cancelled) {
+        setSvgContent(text);
+        setLoading(false);
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setSvgContent(null);
+        setLoading(false);
+      }
+    });
 
     return () => { cancelled = true; };
-  }, [stageId, areaFolder, cellRotation]);
+  }, [stageId, areaFolder]);
 
-  // Parse embedded transform from new SVGs, or compute from anchors for legacy
-  const embedded = useMemo(() => {
+  // Compute world→SVG transform from embedded metadata, anchors, or svgSettings
+  const svgTransform = useMemo(() => {
     if (!svgContent) return null;
-    return parseEmbeddedTransform(svgContent);
-  }, [svgContent]);
 
-  // Legacy transform (anchor-based) — only needed when no embedded metadata
-  const legacyTransform = useMemo(() => {
-    if (!svgContent || embedded) return null;
+    // Try embedded metadata first (new SVGs have data-scale, data-offset-x/y)
+    const emb = parseEmbeddedTransform(svgContent);
+    if (emb) {
+      return { scale: emb.scale, offsetX: emb.offsetX, offsetY: emb.offsetY, svgSize: emb.svgSize };
+    }
 
+    // Try anchor-based transform from gate markers
     const svgDiamonds = parseGateMarkers(svgContent);
     const originSvg = parseOriginMarker(svgContent);
     const svgSz = parseSvgSize(svgContent);
@@ -355,6 +331,7 @@ export default function PreviewMinimap({
     const anchorTransform = computeTransformFromAnchors(anchors, svgSz);
     if (anchorTransform) return { ...anchorTransform, svgSize: svgSz };
 
+    // Fall back to svgSettings
     if (svgSettings) {
       const { gridSize, centerX, centerZ, svgSize: sz, padding } = svgSettings;
       const scale = (sz - padding * 2) / gridSize;
@@ -369,57 +346,26 @@ export default function PreviewMinimap({
 
     const defaultScale = (svgSz - 40) / 40;
     return { scale: defaultScale, offsetX: 20, offsetY: 20, svgSize: svgSz };
-  }, [svgContent, embedded, portals, svgSettings]);
+  }, [svgContent, portals, svgSettings]);
 
-  const svgSize = embedded?.svgSize ?? legacyTransform?.svgSize ?? 400;
+  const svgSize = svgTransform?.svgSize ?? 400;
 
-  // Player position in SVG coordinates
-  const { playerSvgX, playerSvgY } = useMemo(() => {
-    if (embedded) {
-      // New path: apply base transform then rotate around SVG center
-      const baseX = playerX * embedded.scale + embedded.offsetX;
-      const baseY = playerZ * embedded.scale + embedded.offsetY;
+  // Player position in SVG coordinates (direct linear mapping — no rotation)
+  const playerSvgX = svgTransform ? playerX * svgTransform.scale + svgTransform.offsetX : 0;
+  const playerSvgY = svgTransform ? playerZ * svgTransform.scale + svgTransform.offsetY : 0;
 
-      if (embedded.rotation === 0) {
-        return { playerSvgX: baseX, playerSvgY: baseY };
-      }
-
-      // Rotate around SVG center
-      const rad = (embedded.rotation * Math.PI) / 180;
-      const cos = Math.cos(rad);
-      const sin = Math.sin(rad);
-      const dx = baseX - embedded.centerX;
-      const dy = baseY - embedded.centerY;
-      return {
-        playerSvgX: embedded.centerX + dx * cos - dy * sin,
-        playerSvgY: embedded.centerY + dx * sin + dy * cos,
-      };
-    }
-
-    if (legacyTransform) {
-      return {
-        playerSvgX: playerX * legacyTransform.scale + legacyTransform.offsetX,
-        playerSvgY: playerZ * legacyTransform.scale + legacyTransform.offsetY,
-      };
-    }
-
-    return { playerSvgX: 0, playerSvgY: 0 };
-  }, [embedded, legacyTransform, playerX, playerZ]);
-
-  // Gate markers in SVG coordinates (for direction labels) — only for legacy SVGs
+  // Gate markers with grid-space direction labels at model-space positions
+  // (matches the 3D view which shows grid directions at model-space portal positions)
   const gateMarkers = useMemo(() => {
-    if (isRotatedVariant || !legacyTransform) return [];
+    if (!svgTransform) return [];
     return Object.entries(portals)
       .filter(([dir]) => dir !== 'default' && connections[dir])
       .map(([dir, portal]) => ({
         dir,
-        x: portal.gate[0] * legacyTransform.scale + legacyTransform.offsetX,
-        y: portal.gate[2] * legacyTransform.scale + legacyTransform.offsetY,
+        x: portal.gate[0] * svgTransform.scale + svgTransform.offsetX,
+        y: portal.gate[2] * svgTransform.scale + svgTransform.offsetY,
       }));
-  }, [isRotatedVariant, portals, connections, legacyTransform]);
-
-  // CSS rotation — only for legacy SVGs (rotated variants already have rotation baked in)
-  const rotDeg = isRotatedVariant ? 0 : cellRotation;
+  }, [portals, connections, svgTransform]);
 
   if (loading) {
     return (
@@ -454,11 +400,9 @@ export default function PreviewMinimap({
       boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
       position: 'relative',
     }}>
-      {/* Container — rotated only for legacy SVGs */}
+      {/* Container — unrotated to match 3D view */}
       <div style={{
         width: DISPLAY_SIZE, height: DISPLAY_SIZE,
-        transform: rotDeg !== 0 ? `rotate(${rotDeg}deg)` : undefined,
-        transformOrigin: 'center center',
       }}>
         {/* SVG background (scaled to fit display size) */}
         <div
@@ -481,7 +425,7 @@ export default function PreviewMinimap({
           height={DISPLAY_SIZE}
           style={{ position: 'absolute', top: 0, left: 0 }}
         >
-          {/* Gate direction labels — only for legacy SVGs (rotated variants have labels baked in) */}
+          {/* Gate direction labels (grid-space, matching 3D view) */}
           {gateMarkers.map(({ dir, x, y }) => (
             <text
               key={dir}
