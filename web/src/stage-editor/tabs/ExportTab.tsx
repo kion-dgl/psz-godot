@@ -458,7 +458,9 @@ function generateSvgMinimap(
       }
 
       const rect = `<rect x="${(x - rectW / 2).toFixed(1)}" y="${(y - rectH / 2).toFixed(1)}" width="${rectW}" height="${rectH}" fill="#ff4444" stroke="white" stroke-width="1" data-gate="true" data-gate-dir="${gridDir}"/>`;
-      const label = `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anchor}" font-size="10" fill="#ffaaaa" font-family="sans-serif">${labelText}</text>`;
+      // Counter-rotate text so labels stay upright in rotated SVGs
+      const textRotate = rotation !== 0 ? ` transform="rotate(${-rotation}, ${labelX.toFixed(1)}, ${labelY.toFixed(1)})"` : '';
+      const label = `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anchor}" font-size="10" fill="#ffaaaa" font-family="sans-serif"${textRotate}>${labelText}</text>`;
       return rect + '\n' + label;
     })
     .join('\n');
