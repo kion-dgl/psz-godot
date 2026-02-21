@@ -357,26 +357,37 @@ function generateSvgMinimap(
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" text-anchor="middle" fill="#666">No floor data</text></svg>';
   }
 
-  // Calculate bounds
-  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-  triangles.forEach((tri) => {
-    tri.vertices.forEach((v) => {
-      minX = Math.min(minX, v.x);
-      maxX = Math.max(maxX, v.x);
-      minZ = Math.min(minZ, v.z);
-      maxZ = Math.max(maxZ, v.z);
+  const svgWidth = config.svgSettings?.svgSize ?? 400;
+  const svgHeight = svgWidth;
+  const svgPadding = config.svgSettings?.padding ?? padding;
+
+  // Use saved grid settings if available, otherwise auto-calculate bounds
+  let minX: number, maxX: number, minZ: number, maxZ: number;
+  if (config.svgSettings) {
+    const halfGrid = config.svgSettings.gridSize / 2;
+    minX = config.svgSettings.centerX - halfGrid;
+    maxX = config.svgSettings.centerX + halfGrid;
+    minZ = config.svgSettings.centerZ - halfGrid;
+    maxZ = config.svgSettings.centerZ + halfGrid;
+  } else {
+    minX = Infinity; maxX = -Infinity; minZ = Infinity; maxZ = -Infinity;
+    triangles.forEach((tri) => {
+      tri.vertices.forEach((v) => {
+        minX = Math.min(minX, v.x);
+        maxX = Math.max(maxX, v.x);
+        minZ = Math.min(minZ, v.z);
+        maxZ = Math.max(maxZ, v.z);
+      });
     });
-  });
+  }
 
   const width = maxX - minX;
   const height = maxZ - minZ;
-  const svgWidth = 400;
-  const svgHeight = 400;
-  const scale = Math.min((svgWidth - padding * 2) / width, (svgHeight - padding * 2) / height);
+  const scale = Math.min((svgWidth - svgPadding * 2) / width, (svgHeight - svgPadding * 2) / height);
 
   // Transform functions
-  const toSvgX = (x: number) => (x - minX) * scale + padding;
-  const toSvgY = (z: number) => (z - minZ) * scale + padding;
+  const toSvgX = (x: number) => (x - minX) * scale + svgPadding;
+  const toSvgY = (z: number) => (z - minZ) * scale + svgPadding;
 
   // Build triangle paths
   const trianglePaths = triangles
@@ -887,12 +898,12 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
 
       let successCount = 0;
       let floorCount = 0;
+      let obstacleCount = 0;
       let svgCount = 0;
       let errorCount = 0;
 
       // Create zip folders matching project layout
       const stagesRoot = zip.folder('assets/stages')!;
-      // SVGs go alongside floor GLBs in stages/
 
       for (let i = 0; i < configuredMapIds.length; i++) {
         const currentMapId = configuredMapIds[i];
@@ -923,6 +934,7 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
           const tris = extracted.filter((tri) => stageConfig.floorCollision.triangles[tri.id] !== false);
 
           const subfolder = getStageSubfolder(currentMapId, area.folder);
+          const lndmdPath = `${subfolder}/${currentMapId}/lndmd`;
 
           // Export floor GLB → assets/stages/{subfolder}/{mapId}/lndmd/{mapId}-floor.glb
           if (tris.length > 0) {
@@ -943,13 +955,41 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
               exporter.parse(floorScene, (result) => resolve(result as ArrayBuffer), reject, { binary: true });
             });
 
-            stagesRoot.file(`${subfolder}/${currentMapId}/lndmd/${currentMapId}-floor.glb`, floorGlb);
+            stagesRoot.file(`${lndmdPath}/${currentMapId}-floor.glb`, floorGlb);
             floorCount++;
+          }
+
+          // Export obstacle GLB → assets/stages/{subfolder}/{mapId}/lndmd/{mapId}-obstacles.glb
+          if (stageConfig.obstacles.length > 0) {
+            const obstacleScene = new THREE.Group();
+            obstacleScene.name = currentMapId + '_obstacles';
+
+            stageConfig.obstacles.forEach((obs) => {
+              let geometry: THREE.BufferGeometry;
+              if (obs.type === 'box') {
+                geometry = new THREE.BoxGeometry(obs.width || 1, obs.height || 1, obs.depth || 1);
+              } else {
+                geometry = new THREE.CylinderGeometry(obs.radius || 1, obs.radius || 1, obs.cylinderHeight || 1, 16);
+              }
+              const material = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.3 });
+              const mesh = new THREE.Mesh(geometry, material);
+              mesh.name = obs.label.replace(/\s+/g, '_').toLowerCase() + '-colonly';
+              mesh.position.set(...obs.position);
+              mesh.rotation.set(...obs.rotation);
+              obstacleScene.add(mesh);
+            });
+
+            const obstacleGlb = await new Promise<ArrayBuffer>((resolve, reject) => {
+              exporter.parse(obstacleScene, (result) => resolve(result as ArrayBuffer), reject, { binary: true });
+            });
+
+            stagesRoot.file(`${lndmdPath}/${currentMapId}-obstacles.glb`, obstacleGlb);
+            obstacleCount++;
           }
 
           // Export SVG → assets/stages/{subfolder}/{mapId}/lndmd/{mapId}_minimap.svg
           const svg = generateSvgMinimap(tris, stageConfig);
-          stagesRoot.file(`${subfolder}/${currentMapId}/lndmd/${currentMapId}_minimap.svg`, svg);
+          stagesRoot.file(`${lndmdPath}/${currentMapId}_minimap.svg`, svg);
           svgCount++;
 
           successCount++;
@@ -973,6 +1013,10 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
         }
       }
 
+      // Export unified stage config JSON → data/stage_configs/unified-stage-configs.json
+      const dataRoot = zip.folder('data/stage_configs')!;
+      dataRoot.file('unified-stage-configs.json', JSON.stringify(savedConfigs, null, 2));
+
       // Generate and download zip
       setExportStatus('Generating zip file...');
       const zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -983,7 +1027,7 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
       link.click();
       URL.revokeObjectURL(url);
 
-      setExportStatus(`Exported ${successCount} maps: ${floorCount} floor GLBs + ${svgCount} SVGs (${errorCount} errors). Unzip into project root to merge.`);
+      setExportStatus(`Exported ${successCount} maps: ${floorCount} floors + ${obstacleCount} obstacles + ${svgCount} SVGs + config JSON (${errorCount} errors). Unzip into project root to merge.`);
     } catch (error) {
       setExportStatus(`Export all error: ${error}`);
       console.error('Export all error:', error);
@@ -1223,7 +1267,7 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
         </button>
 
         <p style={{ margin: '8px 0 0 0', fontSize: '10px', color: '#666' }}>
-          Exports floor GLBs + SVG minimaps. Zip mirrors project layout — unzip at project root to merge into assets/stages/.
+          Exports floor GLBs, obstacle GLBs, SVG minimaps, and unified config JSON. Zip mirrors project layout — unzip at project root to merge.
         </p>
       </div>
 
