@@ -2,22 +2,21 @@
  * StageScene — Three.js scene for the quest editor walkthrough preview
  *
  * - GLB stage model (rotated by cell rotation)
- * - Portal markers (gate=yellow, spawn=green, trigger=red translucent)
+ * - Portal markers matching stage editor: gate GLB model, cyan bounding box,
+ *   green spawn sphere+ring+arrow, orange trigger box
  * - Capsule player with tank controls (W/S forward/back, A/D turn)
- * - Camera parented to capsule — fixed offset behind+above, zero jitter
+ * - Camera parented to capsule for zero-jitter follow
  * - Raycast floor collision against the GLB mesh
- * - Trigger zone detection to fire cell-switch callbacks
- *
- * Player position lives in a useRef (not React state) so the game loop
- * never triggers React re-renders.  Position is reported to the parent
- * via a throttled callback for overlays (minimap, coordinate readout).
+ * - Box-based trigger detection (matching actual game triggers)
  */
 
 import { useRef, useEffect, useMemo } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { useGLTF, Text, Grid, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { getGlbPath } from '../../stage-editor/constants';
+import { assetUrl } from '../../utils/assets';
 
 // ============================================================================
 // Types
@@ -41,14 +40,11 @@ export interface CellPortals {
 interface StageSceneProps {
   areaKey: string;
   stageId: string;
-  cellRotation: number; // degrees (0, 90, 180, 270)
+  cellRotation: number;
   portals: Record<string, PortalData>;
   connections: Record<string, string>;
-  /** Initial world-space position when cell loads / switches */
   initialPosition: [number, number, number];
-  /** Initial yaw in radians (facing direction) */
   initialYaw: number;
-  /** Throttled position report for overlays (minimap, readout) */
   onPositionReport: (x: number, y: number, z: number) => void;
   onTriggerEnter: (direction: string, targetCellPos: string) => void;
 }
@@ -77,6 +73,10 @@ function rotatePortals(
       gate: rotateVec3(p.gate, degY),
       spawn: rotateVec3(p.spawn, degY),
       trigger: rotateVec3(p.trigger, degY),
+      // Also rotate gate_rot Y component
+      gate_rot: p.gate_rot
+        ? [p.gate_rot[0], p.gate_rot[1] + (degY * Math.PI) / 180, p.gate_rot[2]]
+        : undefined,
     };
   }
   return rotated;
@@ -98,8 +98,109 @@ function StageModel({ areaKey, stageId, groupRef }: {
 }
 
 // ============================================================================
-// Portal Markers
+// Gate model path
 // ============================================================================
+
+const GATE_MODEL_PATH = assetUrl('assets/objects/valley/o0c_gate.glb');
+
+// ============================================================================
+// Portal Markers — matching stage editor (PortalOverlay.tsx)
+// ============================================================================
+
+const GATE_WIDTH = 6.0;
+
+/** Spawn marker: green sphere + ground ring + direction arrow */
+function SpawnMarker({ position, rotation }: {
+  position: [number, number, number]; rotation: number;
+}) {
+  return (
+    <group position={position}>
+      <mesh>
+        <sphereGeometry args={[0.8, 16, 16]} />
+        <meshBasicMaterial color="#00ff00" transparent opacity={0.7} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[1, 1.3, 32]} />
+        <meshBasicMaterial color="#00ff00" side={THREE.DoubleSide} />
+      </mesh>
+      <group rotation={[0, rotation, 0]}>
+        <mesh position={[0, 0.3, 1]}>
+          <boxGeometry args={[0.2, 0.2, 1.5]} />
+          <meshBasicMaterial color="#00ff00" />
+        </mesh>
+        <mesh position={[0, 0.3, 2]} rotation={[Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.4, 0.6, 8]} />
+          <meshBasicMaterial color="#00ff00" />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+/** Trigger zone: orange semi-transparent box + wireframe edges */
+function TriggerMarker({ position, rotation }: {
+  position: [number, number, number]; rotation: number;
+}) {
+  const edgesGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(GATE_WIDTH, 3, 2)), []);
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <mesh position={[0, 1.5, 0]}>
+        <boxGeometry args={[GATE_WIDTH, 3, 2]} />
+        <meshBasicMaterial color="#ff6600" transparent opacity={0.3} />
+      </mesh>
+      <lineSegments position={[0, 1.5, 0]} geometry={edgesGeo}>
+        <lineBasicMaterial color="#ff6600" />
+      </lineSegments>
+    </group>
+  );
+}
+
+/** Gate bounding box: cyan wireframe */
+function GateBoundingBox({ position, rotation }: {
+  position: [number, number, number]; rotation: number;
+}) {
+  const edgesGeo = useMemo(() => new THREE.EdgesGeometry(new THREE.BoxGeometry(GATE_WIDTH, 4, 1)), []);
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <mesh position={[0, 2, 0]}>
+        <boxGeometry args={[GATE_WIDTH, 4, 1]} />
+        <meshBasicMaterial color="#00ffff" transparent opacity={0.15} />
+      </mesh>
+      <lineSegments position={[0, 2, 0]} geometry={edgesGeo}>
+        <lineBasicMaterial color="#00ffff" />
+      </lineSegments>
+    </group>
+  );
+}
+
+/** Gate GLB model */
+function GateModel({ position, rotation }: {
+  position: [number, number, number]; rotation: number;
+}) {
+  const { scene } = useGLTF(GATE_MODEL_PATH);
+  const cloned = useMemo(() => {
+    const clone = SkeletonUtils.clone(scene);
+    clone.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        materials.forEach((mat) => {
+          const material = mat as THREE.MeshStandardMaterial;
+          material.transparent = true;
+          material.opacity = 0.8;
+          material.needsUpdate = true;
+        });
+      }
+    });
+    return clone;
+  }, [scene]);
+
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      <primitive object={cloned} />
+    </group>
+  );
+}
 
 function PortalMarkers({ portals, connections }: {
   portals: Record<string, PortalData>;
@@ -111,27 +212,21 @@ function PortalMarkers({ portals, connections }: {
         if (dir === 'default') return null;
         const targetCell = connections[dir];
         const label = `${portal.compass_label || dir[0].toUpperCase()}${targetCell ? ` → ${targetCell}` : ''}`;
+        const gateRotY = portal.gate_rot ? portal.gate_rot[1] : 0;
 
         return (
           <group key={dir}>
-            <mesh position={portal.gate}>
-              <sphereGeometry args={[0.8, 16, 16]} />
-              <meshStandardMaterial color="#ddcc44" />
-            </mesh>
-            <mesh position={portal.spawn}>
-              <sphereGeometry args={[0.5, 16, 16]} />
-              <meshStandardMaterial color="#44cc66" />
-            </mesh>
-            <mesh position={portal.trigger}>
-              <sphereGeometry args={[5, 16, 16]} />
-              <meshStandardMaterial color="#cc4444" transparent opacity={0.15} side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={portal.trigger}>
-              <sphereGeometry args={[5, 12, 12]} />
-              <meshBasicMaterial color="#cc4444" wireframe transparent opacity={0.3} />
-            </mesh>
+            {/* Gate GLB model */}
+            <GateModel position={portal.gate} rotation={gateRotY} />
+            {/* Cyan bounding box */}
+            <GateBoundingBox position={portal.gate} rotation={gateRotY} />
+            {/* Green spawn marker */}
+            <SpawnMarker position={portal.spawn} rotation={gateRotY} />
+            {/* Orange trigger box */}
+            <TriggerMarker position={portal.trigger} rotation={gateRotY} />
+            {/* Label above gate */}
             <Text
-              position={[portal.gate[0], portal.gate[1] + 3, portal.gate[2]]}
+              position={[portal.gate[0], portal.gate[1] + 5, portal.gate[2]]}
               fontSize={1.2}
               color="#ffffff"
               anchorX="center"
@@ -157,7 +252,14 @@ const TURN_SPEED = 2.5;
 const PLAYER_HEIGHT = 2;
 const FLOOR_RAYCAST_HEIGHT = 50;
 const FLOOR_FALLBACK_Y = 0;
-const REPORT_INTERVAL = 1 / 15; // ~15 Hz overlay updates
+const REPORT_INTERVAL = 1 / 15;
+
+// Trigger box half-extents (matching the 6x3x2 box in PortalOverlay)
+const TRIGGER_HALF_W = GATE_WIDTH / 2; // 3
+const TRIGGER_HALF_D = 1; // depth/2
+
+// Grace period after cell switch before triggers can fire (seconds)
+const TRIGGER_GRACE_PERIOD = 0.5;
 
 const _raycaster = new THREE.Raycaster();
 const _rayOrigin = new THREE.Vector3();
@@ -178,7 +280,6 @@ export default function StageScene({
   onPositionReport,
   onTriggerEnter,
 }: StageSceneProps) {
-  // All game-loop state lives in refs — no React re-renders during play
   const playerGroupRef = useRef<THREE.Group>(null);
   const stageGroupRef = useRef<THREE.Group>(null);
   const posRef = useRef(new THREE.Vector3(...initialPosition));
@@ -186,21 +287,21 @@ export default function StageScene({
   const keysRef = useRef<Set<string>>(new Set());
   const triggeredRef = useRef<Set<string>>(new Set());
   const reportTimerRef = useRef(0);
+  const graceTimerRef = useRef(TRIGGER_GRACE_PERIOD);
 
-  // Rotated portals for markers + triggers (world space)
   const rotatedPortals = useMemo(
     () => rotatePortals(portals, cellRotation),
     [portals, cellRotation],
   );
   const cellRotRad = (cellRotation * Math.PI) / 180;
 
-  // Snap player to initialPosition when cell switches
+  // Snap player on cell switch
   useEffect(() => {
     posRef.current.set(...initialPosition);
     yawRef.current = initialYaw;
     triggeredRef.current.clear();
+    graceTimerRef.current = TRIGGER_GRACE_PERIOD;
     reportTimerRef.current = 0;
-    // Immediate position report so overlays update on cell switch
     onPositionReport(initialPosition[0], initialPosition[1], initialPosition[2]);
   }, [initialPosition, initialYaw]);
 
@@ -216,7 +317,6 @@ export default function StageScene({
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
   }, []);
 
-  // Floor raycast (against the rotated model group's parent)
   const getFloorY = (x: number, z: number): number => {
     if (!stageGroupRef.current) return FLOOR_FALLBACK_Y;
     _rayOrigin.set(x, FLOOR_RAYCAST_HEIGHT, z);
@@ -225,7 +325,18 @@ export default function StageScene({
     return hits.length > 0 ? hits[0].point.y : FLOOR_FALLBACK_Y;
   };
 
-  // Game loop — everything reads/writes refs, never React state
+  /** Check if point (px, pz) is inside a rotated trigger box at (cx, cz) with Y rotation */
+  const isInsideTriggerBox = (px: number, pz: number, cx: number, cz: number, rotY: number): boolean => {
+    // Transform player position into the trigger box's local space
+    const dx = px - cx;
+    const dz = pz - cz;
+    const cos = Math.cos(-rotY);
+    const sin = Math.sin(-rotY);
+    const localX = dx * cos - dz * sin;
+    const localZ = dx * sin + dz * cos;
+    return Math.abs(localX) <= TRIGGER_HALF_W && Math.abs(localZ) <= TRIGGER_HALF_D;
+  };
+
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     const keys = keysRef.current;
@@ -237,7 +348,7 @@ export default function StageScene({
     if (keys.has('d') || keys.has('arrowright')) turn -= 1;
     if (turn !== 0) yawRef.current += turn * TURN_SPEED * dt;
 
-    // Move forward/back
+    // Move
     let move = 0;
     if (keys.has('w') || keys.has('arrowup')) move += 1;
     if (keys.has('s') || keys.has('arrowdown')) move -= 1;
@@ -248,28 +359,35 @@ export default function StageScene({
       pos.y = getFloorY(pos.x, pos.z) + PLAYER_HEIGHT;
     }
 
-    // Update the player group — camera is a child, so it follows automatically
+    // Update player group
     const pg = playerGroupRef.current;
     if (pg) {
       pg.position.copy(pos);
       pg.rotation.y = yawRef.current;
     }
 
-    // Throttled position report for overlays
+    // Position report
     reportTimerRef.current += dt;
     if (reportTimerRef.current >= REPORT_INTERVAL) {
       reportTimerRef.current = 0;
       onPositionReport(pos.x, pos.y, pos.z);
     }
 
-    // Trigger zones
+    // Grace period countdown
+    if (graceTimerRef.current > 0) {
+      graceTimerRef.current -= dt;
+      return; // Skip trigger checks during grace period
+    }
+
+    // Trigger detection (box-based, matching game triggers)
     for (const [dir, portal] of Object.entries(rotatedPortals)) {
       if (dir === 'default') continue;
       const target = connections[dir];
       if (!target) continue;
-      const dx = pos.x - portal.trigger[0];
-      const dz = pos.z - portal.trigger[2];
-      if (dx * dx + dz * dz < 25 && !triggeredRef.current.has(dir)) {
+      if (triggeredRef.current.has(dir)) continue;
+
+      const rotY = portal.gate_rot ? portal.gate_rot[1] : 0;
+      if (isInsideTriggerBox(pos.x, pos.z, portal.trigger[0], portal.trigger[2], rotY)) {
         triggeredRef.current.add(dir);
         onTriggerEnter(dir, target);
       }
@@ -283,7 +401,6 @@ export default function StageScene({
       <directionalLight position={[10, 30, 10]} intensity={0.8} />
       <hemisphereLight args={['#8888cc', '#444422', 0.4]} />
 
-      {/* Stage model — rotated by cell rotation */}
       <group ref={stageGroupRef} rotation={[0, cellRotRad, 0]}>
         <StageModel areaKey={areaKey} stageId={stageId} groupRef={stageGroupRef} />
       </group>
@@ -305,26 +422,28 @@ export default function StageScene({
 
       {/* Player group — capsule + camera as children */}
       <group ref={playerGroupRef}>
-        {/* Capsule body */}
         <mesh>
           <capsuleGeometry args={[0.4, 1.2, 8, 16]} />
           <meshStandardMaterial color="#5588ff" emissive="#223366" />
         </mesh>
-        {/* Nose cone (forward indicator) */}
+        {/* Nose cone */}
         <mesh position={[0, 0.5, -1.2]} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.25, 0.6, 8]} />
           <meshStandardMaterial color="#ffcc44" emissive="#886600" />
         </mesh>
-        {/* Camera — fixed behind and above, looking forward */}
+        {/* Camera — behind and above, looking forward */}
         <PerspectiveCamera
           makeDefault
           fov={50}
           near={0.1}
           far={1000}
-          position={[0, 12, 16]}
-          rotation={[-0.6, 0, 0]}
+          position={[0, 8, 14]}
+          rotation={[-0.5, 0, 0]}
         />
       </group>
     </>
   );
 }
+
+// Preload gate model
+useGLTF.preload(GATE_MODEL_PATH);
