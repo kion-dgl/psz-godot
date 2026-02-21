@@ -62,7 +62,6 @@ var _room_minimap: Control
 var _field_hud: CanvasLayer
 var _blob_shadow: MeshInstance3D
 var _stage_config: Dictionary = {}
-var _texture_fixes: Array = []
 var _spawn_edge: String = ""
 var _rotation_deg: int = 0
 var _visited_cells: Dictionary = {}  # cell_pos → true
@@ -169,10 +168,6 @@ func _ready() -> void:
 
 	# Load stage config from unified config
 	_stage_config = _load_stage_config(area_cfg["folder"], stage_id)
-	_texture_fixes = _stage_config.get("textureFixes", []) as Array
-	if _texture_fixes.size() > 0:
-		print("[ValleyField] Loaded %d texture fixes from config" % _texture_fixes.size())
-
 	add_child(_map_root)
 	_strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
@@ -660,6 +655,8 @@ static func _get_stage_subfolder(stage_id: String, folder: String) -> String:
 
 ## Static cache for unified stage config (loaded once, shared across cell transitions).
 static var _unified_config_cache: Dictionary = {}
+## Static cache for global texture fixes (keyed by texture filename, e.g. "s01_2_fall.png#1").
+static var _global_texture_fixes: Dictionary = {}
 
 
 func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
@@ -674,6 +671,18 @@ func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
 					_unified_config_cache = json.data as Dictionary
 					print("[ValleyField] Loaded unified config: %d stages" % _unified_config_cache.size())
 				file.close()
+
+	# Load global texture fixes on first access
+	if _global_texture_fixes.is_empty():
+		var gtf_path := "res://data/stage_configs/global-texture-fixes.json"
+		if FileAccess.file_exists(gtf_path):
+			var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
+			if gtf_file:
+				var gtf_json := JSON.new()
+				if gtf_json.parse(gtf_file.get_as_text()) == OK:
+					_global_texture_fixes = gtf_json.data as Dictionary
+					print("[ValleyField] Loaded global texture fixes: %d entries" % _global_texture_fixes.size())
+				gtf_file.close()
 
 	# Look up by stage_id
 	if _unified_config_cache.has(stage_id):
@@ -749,12 +758,18 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 	return result
 
 
-func _find_texture_fix_for_mesh(mesh_name: String) -> Dictionary:
-	for fix in _texture_fixes:
-		var mesh_names: Array = fix.get("meshNames", [])
-		for mn in mesh_names:
-			if str(mn) == mesh_name:
-				return fix
+func _find_global_fix_for_material(mat: StandardMaterial3D) -> Dictionary:
+	## Look up texture fix from global-texture-fixes.json by the material's albedo texture filename.
+	## Keys in global fixes use "filename.png#1" format (the #1 suffix is from GLTF material index).
+	if not mat.albedo_texture or _global_texture_fixes.is_empty():
+		return {}
+	var tex_path: String = mat.albedo_texture.resource_path
+	var tex_basename: String = tex_path.get_file()  # e.g. "s01_2_fall.png"
+	# Try with common suffixes (#0, #1) since GLTF keys include material index
+	for suffix in ["#1", "#0", ""]:
+		var key := tex_basename + suffix
+		if _global_texture_fixes.has(key):
+			return _global_texture_fixes[key] as Dictionary
 	return {}
 
 
@@ -765,19 +780,6 @@ static func _wrap_mode_int(mode: String) -> int:
 	return 0  # repeat
 
 
-func _load_fix_texture(tex_file: String) -> Texture2D:
-	if tex_file.is_empty():
-		return null
-	var stage_id_local: String = str(_current_cell.get("stage_id", ""))
-	var area_id_local: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
-	var area_cfg_local: Dictionary = GridGenerator.AREA_CONFIG.get(area_id_local, GridGenerator.AREA_CONFIG["gurhacia"])
-	var subfolder: String = _get_stage_subfolder(stage_id_local, area_cfg_local["folder"])
-	var tex_path := "res://assets/stages/%s/%s/lndmd/%s" % [subfolder, stage_id_local, tex_file]
-	if ResourceLoader.exists(tex_path):
-		return load(tex_path) as Texture2D
-	return null
-
-
 func _fix_materials(node: Node) -> void:
 	## Make stage materials unshaded so pre-baked vertex colors display at full
 	## brightness regardless of mesh normals or enclosure geometry.  TimeManager
@@ -785,42 +787,37 @@ func _fix_materials(node: Node) -> void:
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
 		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var fix := _find_texture_fix_for_mesh(mesh_inst.name)
-		var tex_file: String = str(fix.get("textureFile", ""))
-		var is_waterfall := "_fall" in tex_file
-		var needs_shader := not fix.is_empty() and (
-			is_waterfall or
-			str(fix.get("wrapS", "repeat")) == "mirror" or
-			str(fix.get("wrapT", "repeat")) == "mirror")
 		for i in range(mesh_inst.get_surface_override_material_count()):
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std_mat := mat as StandardMaterial3D
+				# Look up global texture fix from material's albedo texture filename
+				var fix := _find_global_fix_for_material(std_mat)
+				var has_scroll := fix.has("scrollX") or fix.has("scrollY")
+				var is_waterfall := has_scroll or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
+				var needs_shader := not fix.is_empty() and (
+					is_waterfall or
+					str(fix.get("wrapS", "repeat")) == "mirror" or
+					str(fix.get("wrapT", "repeat")) == "mirror")
 				if is_waterfall:
-					# Waterfall: additive blend + scrolling UV + replacement texture
+					# Waterfall / scrolling texture: additive blend + scrolling UV
 					var shader_mat := ShaderMaterial.new()
 					shader_mat.shader = WATERFALL_SHADER
-					var fix_tex: Texture2D = _load_fix_texture(tex_file)
-					if fix_tex:
-						print("[FixMat] Waterfall texture: %s (%dx%d)" % [
-							tex_file, fix_tex.get_width(), fix_tex.get_height()])
-						shader_mat.set_shader_parameter("albedo_texture", fix_tex)
-					elif std_mat.albedo_texture:
+					if std_mat.albedo_texture:
 						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
 					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
 					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
-					shader_mat.set_shader_parameter("uv_scroll", Vector2(0.0, -0.25))
+					var scroll_x: float = fix.get("scrollX", 0.0)
+					var scroll_y: float = fix.get("scrollY", -0.35)
+					shader_mat.set_shader_parameter("uv_scroll", Vector2(scroll_x, scroll_y))
 					shader_mat.render_priority = 1
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				elif needs_shader:
 					# Mirror wrap: custom shader with wrap modes
 					var shader_mat := ShaderMaterial.new()
 					shader_mat.shader = TEXTURE_FIX_SHADER
-					var fix_tex: Texture2D = _load_fix_texture(tex_file)
-					if fix_tex:
-						shader_mat.set_shader_parameter("albedo_texture", fix_tex)
-					elif std_mat.albedo_texture:
+					if std_mat.albedo_texture:
 						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
 					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
