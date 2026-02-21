@@ -47,6 +47,7 @@ interface StageSceneProps {
   initialYaw: number;
   onPositionReport: (x: number, y: number, z: number) => void;
   onTriggerEnter: (direction: string, targetCellPos: string) => void;
+  onFloorData?: (triangles: number[][]) => void;
 }
 
 // ============================================================================
@@ -267,6 +268,50 @@ const _raycaster = new THREE.Raycaster();
 const _rayOrigin = new THREE.Vector3();
 const _rayDir = new THREE.Vector3(0, -1, 0);
 
+/** Extract floor-like triangles from a scene (projected to XZ, in world space) */
+function extractFloorTriangles(root: THREE.Object3D): number[][] {
+  const triangles: number[][] = [];
+  const v1 = new THREE.Vector3();
+  const v2 = new THREE.Vector3();
+  const v3 = new THREE.Vector3();
+
+  root.updateWorldMatrix(true, true);
+
+  root.traverse((child) => {
+    if (!(child as THREE.Mesh).isMesh) return;
+    const mesh = child as THREE.Mesh;
+    const geo = mesh.geometry;
+    const pos = geo.attributes.position;
+    if (!pos) return;
+
+    const idx = geo.index;
+    const triCount = idx ? idx.count / 3 : pos.count / 3;
+
+    for (let t = 0; t < triCount; t++) {
+      const i = t * 3;
+      const i1 = idx ? idx.getX(i) : i;
+      const i2 = idx ? idx.getX(i + 1) : i + 1;
+      const i3 = idx ? idx.getX(i + 2) : i + 2;
+
+      v1.set(pos.getX(i1), pos.getY(i1), pos.getZ(i1)).applyMatrix4(mesh.matrixWorld);
+      v2.set(pos.getX(i2), pos.getY(i2), pos.getZ(i2)).applyMatrix4(mesh.matrixWorld);
+      v3.set(pos.getX(i3), pos.getY(i3), pos.getZ(i3)).applyMatrix4(mesh.matrixWorld);
+
+      // Filter: only mostly-horizontal triangles (floor surfaces)
+      const ax = v2.x - v1.x, ay = v2.y - v1.y, az = v2.z - v1.z;
+      const bx = v3.x - v1.x, by = v3.y - v1.y, bz = v3.z - v1.z;
+      const absNy = Math.abs(az * bx - ax * bz);
+      const absNx = Math.abs(ay * bz - az * by);
+      const absNz = Math.abs(ax * by - ay * bx);
+      if (absNy < absNx || absNy < absNz) continue;
+
+      triangles.push([v1.x, v1.z, v2.x, v2.z, v3.x, v3.z]);
+    }
+  });
+
+  return triangles;
+}
+
 // ============================================================================
 // Main Scene
 // ============================================================================
@@ -281,6 +326,7 @@ export default function StageScene({
   initialYaw,
   onPositionReport,
   onTriggerEnter,
+  onFloorData,
 }: StageSceneProps) {
   const playerGroupRef = useRef<THREE.Group>(null);
   const stageGroupRef = useRef<THREE.Group>(null);
@@ -290,12 +336,18 @@ export default function StageScene({
   const triggeredRef = useRef<Set<string>>(new Set());
   const reportTimerRef = useRef(0);
   const graceTimerRef = useRef(TRIGGER_GRACE_PERIOD);
+  const floorExtractedRef = useRef(false);
 
   const rotatedPortals = useMemo(
     () => rotatePortals(portals, cellRotation),
     [portals, cellRotation],
   );
   const cellRotRad = (cellRotation * Math.PI) / 180;
+
+  // Reset floor extraction when stage changes
+  useEffect(() => {
+    floorExtractedRef.current = false;
+  }, [stageId, cellRotation]);
 
   // Snap player on cell switch
   useEffect(() => {
@@ -340,6 +392,16 @@ export default function StageScene({
   };
 
   useFrame((_, delta) => {
+    // Extract floor triangles once after model loads
+    if (onFloorData && !floorExtractedRef.current && stageGroupRef.current) {
+      let hasMeshes = false;
+      stageGroupRef.current.traverse(c => { if ((c as THREE.Mesh).isMesh) hasMeshes = true; });
+      if (hasMeshes) {
+        floorExtractedRef.current = true;
+        onFloorData(extractFloorTriangles(stageGroupRef.current));
+      }
+    }
+
     const dt = Math.min(delta, 0.05);
     const keys = keysRef.current;
     const pos = posRef.current;
