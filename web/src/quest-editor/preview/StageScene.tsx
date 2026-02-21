@@ -312,7 +312,8 @@ export default function StageScene({
   const graceTimerRef = useRef(TRIGGER_GRACE_PERIOD);
   const floorExtractedRef = useRef(false);
 
-  const cellRotRad = (cellRotation * Math.PI) / 180;
+  // Cell rotation is CW degrees; Three.js Y rotation is CCW-positive, so negate
+  const cellRotRad = -(cellRotation * Math.PI) / 180;
 
   // Precompute inverse rotation for model-local ↔ world transforms
   const cosRot = Math.cos(cellRotRad);
@@ -417,9 +418,9 @@ export default function StageScene({
       return;
     }
 
-    // Trigger detection — DEBUG: no rotation, use world position directly
-    const localPX = pos.x;
-    const localPZ = pos.z;
+    // Trigger detection — transform player world position to model-local space
+    const localPX = pos.x * cosRot - pos.z * sinRot;
+    const localPZ = pos.x * sinRot + pos.z * cosRot;
 
     for (const [dir, portal] of Object.entries(portals)) {
       if (dir === 'default') continue;
@@ -443,8 +444,7 @@ export default function StageScene({
       <hemisphereLight args={['#8888cc', '#444422', 0.4]} />
 
       {/* Everything rotated together — model and portals are siblings */}
-      {/* DEBUG: rotation disabled for sanity check */}
-      <group rotation={[0, 0, 0]}>
+      <group rotation={[0, cellRotRad, 0]}>
         <StageModel areaKey={areaKey} stageId={stageId} modelRef={modelRef} />
         <PortalMarkers portals={portals} connections={connections} />
       </group>
