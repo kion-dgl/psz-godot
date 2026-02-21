@@ -31,14 +31,13 @@ function rotateSpawn(pos: [number, number, number], degY: number): [number, numb
   return [pos[0] * cos + pos[2] * sin, pos[1], -pos[0] * sin + pos[2] * cos];
 }
 
-/** Direction the player should face when arriving from a given grid direction.
- *  If they came from the south, they should face north (into the room), etc. */
-const ARRIVAL_YAW: Record<string, number> = {
-  north: Math.PI,       // arrived from north → face south
-  south: 0,             // arrived from south → face north
-  east: -Math.PI / 2,   // arrived from east → face west
-  west: Math.PI / 2,    // arrived from west → face east
-};
+/** Get the yaw (facing direction) from a portal's gate_rot, accounting for cell rotation.
+ *  gate_rot[1] is the gate's Y rotation in radians — this is the inward-facing direction,
+ *  exactly where the player should face when spawning. */
+function getSpawnYaw(portal: PortalData, cellRotDeg: number): number {
+  const gateRotY = portal.gate_rot ? portal.gate_rot[1] : 0;
+  return gateRotY + (cellRotDeg * Math.PI) / 180;
+}
 
 interface BakedCell {
   pos: string;
@@ -105,10 +104,11 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         const dp = firstCell.portals['default'];
         if (dp) {
           setSpawnPos(rotateSpawn(dp.spawn, firstCell.rotation));
+          setSpawnYaw(getSpawnYaw(dp, firstCell.rotation));
         } else {
           setSpawnPos([0, 2, 0]);
+          setSpawnYaw(0);
         }
-        setSpawnYaw(0);
       }
 
       setLoading(false);
@@ -150,18 +150,16 @@ export default function PreviewTab({ project }: PreviewTabProps) {
 
     if (returnPortal) {
       pos = rotateSpawn(returnPortal.spawn, rot);
-      // Face inward (opposite of the return direction)
-      const opposites: Record<string, string> = { north: 'south', south: 'north', east: 'west', west: 'east' };
-      yaw = ARRIVAL_YAW[opposites[returnDir!]] ?? 0;
+      yaw = getSpawnYaw(returnPortal, rot);
     } else {
-      // Fallback to default spawn
       const dp = targetCell.portals['default'];
       if (dp) {
         pos = rotateSpawn(dp.spawn, rot);
+        yaw = getSpawnYaw(dp, rot);
       } else {
         pos = [0, 2, 0];
+        yaw = 0;
       }
-      yaw = 0;
     }
 
     setCurrentCellPos(targetCellPos);
@@ -176,10 +174,11 @@ export default function PreviewTab({ project }: PreviewTabProps) {
     const dp = cell.portals['default'];
     if (dp) {
       setSpawnPos(rotateSpawn(dp.spawn, cell.rotation));
+      setSpawnYaw(getSpawnYaw(dp, cell.rotation));
     } else {
       setSpawnPos([0, 2, 0]);
+      setSpawnYaw(0);
     }
-    setSpawnYaw(0);
   }, [bakedCells]);
 
   const sections = useMemo(() => getProjectSections(project), [project]);
@@ -311,21 +310,26 @@ export default function PreviewTab({ project }: PreviewTabProps) {
           />
         </div>
 
-        {/* Cell info */}
-        <div style={{
-          position: 'absolute', top: 12, left: 12,
-          background: 'rgba(0,0,0,0.7)', padding: '6px 10px',
-          borderRadius: 6, fontSize: 12, color: '#fff', pointerEvents: 'none',
-        }}>
-          <div style={{ fontWeight: 600 }}>{currentCell.stage_id}</div>
-          <div style={{ fontSize: 10, color: '#aaa' }}>
-            Cell {currentCell.pos}
-            {currentCell.rotation ? ` (rot ${currentCell.rotation})` : ''}
+        {/* Cell info — selectable for copy-paste */}
+        <div
+          style={{
+            position: 'absolute', top: 12, left: 12,
+            background: 'rgba(0,0,0,0.85)', padding: '8px 12px',
+            borderRadius: 6, fontSize: 11, color: '#ccc',
+            fontFamily: 'monospace', userSelect: 'text', cursor: 'text',
+            lineHeight: 1.6,
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div style={{ color: '#fff', fontWeight: 600, fontSize: 12, marginBottom: 2 }}>
+            {currentCell.stage_id}
           </div>
-          <div style={{ fontSize: 10, color: '#aaa' }}>
+          <div>cell: {currentCell.pos}</div>
+          <div>rot: {currentCell.rotation}</div>
+          <div style={{ color: '#888', marginTop: 2 }}>
             {Object.entries(currentCell.connections).map(([dir, target]) =>
               `${dir[0].toUpperCase()}→${target}`
-            ).join(', ') || 'no connections'}
+            ).join('  ') || 'no connections'}
           </div>
         </div>
 
