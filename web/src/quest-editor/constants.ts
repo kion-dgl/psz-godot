@@ -1,6 +1,6 @@
 /**
  * Stage constants — adapted from psz-sketch stage-editor/constants.ts
- * Asset paths use raw stage layout: /assets/stages/{subfolder}/{stageId}/lndmd/{stageId}-scene.glb
+ * Asset paths use raw stage layout: /assets/stages/{subfolder}/{stageId}/lndmd/{stageId}_m.glb
  */
 import { assetUrl } from '../utils/assets';
 
@@ -38,7 +38,7 @@ export function getGlbPath(areaKey: string, mapId: string): string {
   const area = STAGE_AREAS[areaKey];
   const folder = area?.folder ?? 'valley';
   const subfolder = getStageSubfolder(mapId, folder);
-  return assetUrl(`/assets/stages/${subfolder}/${mapId}/lndmd/${mapId}-scene.glb`);
+  return assetUrl(`/assets/stages/${subfolder}/${mapId}/lndmd/${mapId}_m.glb`);
 }
 
 /** Get area key from a map ID (e.g., "s01a_ib1" → "valley") */
