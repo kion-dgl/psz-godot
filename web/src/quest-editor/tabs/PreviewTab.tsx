@@ -65,6 +65,8 @@ export default function PreviewTab({ project }: PreviewTabProps) {
   const [reportedPos, setReportedPos] = useState<[number, number, number]>([0, 2, 0]);
   const [svgSettings, setSvgSettings] = useState<SvgSettings | null>(null);
   const [sectionIdx, setSectionIdx] = useState(0);
+  // When warping between sections, stores the direction the player enters from
+  const [pendingEntryDir, setPendingEntryDir] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -120,12 +122,28 @@ export default function PreviewTab({ project }: PreviewTabProps) {
 
       setBakedCells(cells);
 
-      // Set initial cell to start pos
+      // Set initial cell when entering a section
       const startCell = Object.values(cells).find(c => c.is_start);
+      const endCell = Object.values(cells).find(c => c.is_end);
       const firstCell = startCell || Object.values(cells)[0];
       if (firstCell && !currentCellPos) {
-        setCurrentCellPos(firstCell.pos);
-        const sp = findSpawnPortal(firstCell.portals);
+        // If we have a pending entry direction (from cross-section warp),
+        // pick the cell that has a portal on that direction
+        const entryDir = pendingEntryDir;
+        setPendingEntryDir(null);
+
+        // For backward warps, enter at the end cell
+        const entryCell = (entryDir && endCell && endCell.portals[entryDir])
+          ? endCell
+          : (entryDir && startCell && startCell.portals[entryDir])
+            ? startCell
+            : firstCell;
+
+        setCurrentCellPos(entryCell.pos);
+
+        // Spawn at the entry direction's portal if available
+        const entryPortal = entryDir ? entryCell.portals[entryDir] : null;
+        const sp = entryPortal || findSpawnPortal(entryCell.portals);
         if (sp) {
           setSpawnPos(sp.spawn);
           setSpawnYaw(getSpawnYaw(sp));
@@ -178,6 +196,8 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         : Math.max(sectionIdx - 1, 0);
 
       if (nextIdx !== sectionIdx) {
+        // Player enters the new section from the same direction they walked through
+        setPendingEntryDir(direction);
         setCurrentCellPos(null);
         setSectionIdx(nextIdx);
       }

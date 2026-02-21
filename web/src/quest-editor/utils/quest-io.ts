@@ -266,6 +266,13 @@ async function exportSectionCells(
       // For each grid direction that has a connection or is warp_edge, find the config portal
       const allGridDirs = new Set([...Object.keys(connections)]);
       if (warpEdge) allGridDirs.add(warpEdge);
+      // For start/end cells, include all unconnected gate directions as potential warps
+      // (handles transitions with 2 gates where warp_edge only captures the exit direction)
+      if (sectionStartPos === pos || sectionEndPos === pos) {
+        for (const worldDir of gates) {
+          if (!connections[worldDir]) allGridDirs.add(worldDir);
+        }
+      }
 
       for (const gridDir of allGridDirs) {
         const configDir = reverseRotateDirection(gridDir as Direction, rotation);
