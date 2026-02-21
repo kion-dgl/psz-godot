@@ -40,6 +40,30 @@ export async function loadAllConfigs(): Promise<Record<string, StageConfig>> {
         }
       })
     );
+
+    // Override gate directions from unified config portals (source of truth)
+    try {
+      const resp = await fetch(`${base}data/stage_configs/unified-stage-configs.json`);
+      if (resp.ok) {
+        const unified = await resp.json() as Record<string, { portals?: { direction: string }[] }>;
+        for (const [stageId, uCfg] of Object.entries(unified)) {
+          const portals = uCfg.portals;
+          if (!portals || portals.length === 0) continue;
+          const dirs = portals.map(p => p.direction as Direction).filter(Boolean);
+          if (dirs.length === 0) continue;
+          if (merged[stageId]) {
+            // Replace gates array with portal directions from unified config
+            merged[stageId].gates = dirs.map(d => ({
+              edge: d as 'north' | 'south' | 'east' | 'west',
+              x: 0, z: 0, scale: 1, animated: true,
+            }));
+          }
+        }
+      }
+    } catch {
+      // Unified config not available, keep valley_configs gates
+    }
+
     _configCache = merged;
     return merged;
   })();

@@ -220,10 +220,8 @@ func _ready() -> void:
 	else:
 		_portal_data = original_portal_data
 
-	# Quest editor uses mirrored east/west convention (east=+X) while GLB nodes
-	# use standard convention (west=+X). Remap cell connections and key_gate_direction
-	# to match actual portal data keys so gates/triggers are placed correctly.
-	_remap_quest_directions(stage_id, area_id)
+	# Note: no direction remapping needed — quest editor and game both use
+	# unified config portal directions as the source of truth.
 
 	# For quest mode: derive spawn_edge from target cell's own connections.
 	# The source cell's OPPOSITE[exit_dir] may not match target portal data keys
@@ -485,51 +483,6 @@ func _grid_to_original_dir(grid_dir: String, rotation: int) -> String:
 ## The quest editor uses mirrored east/west (east=+X, west=-X) while GLB portal
 ## nodes use standard convention (east=-X, west=+X). North/south are the same.
 ## Only applies to quest sessions — generated fields already use GLB directions.
-func _remap_quest_directions(_stage_id: String, _area_id: String) -> void:
-	if str(SessionManager.get_session().get("type", "")) != "quest":
-		return
-
-	var connections: Dictionary = _current_cell.get("connections", {})
-	if connections.is_empty():
-		return
-
-	# psz-sketch uses east=+X, GLB uses west=+X (E↔W mirrored).
-	# The effective swap after rotation R is:
-	#   R=0°/180° (even 90° steps): swap east↔west
-	#   R=90°/270° (odd 90° steps): swap north↔south
-	var rotation_steps: int = (_rotation_deg / 90) % 4
-	var swap_ns: bool = (rotation_steps % 2 == 1)
-
-	var new_connections: Dictionary = {}
-	for dir in connections:
-		new_connections[_psz_to_glb_dir(dir, swap_ns)] = connections[dir]
-	_current_cell["connections"] = new_connections
-
-	var kgd: String = str(_current_cell.get("key_gate_direction", ""))
-	if not kgd.is_empty():
-		_current_cell["key_gate_direction"] = _psz_to_glb_dir(kgd, swap_ns)
-
-	var we: String = str(_current_cell.get("warp_edge", ""))
-	if not we.is_empty():
-		_current_cell["warp_edge"] = _psz_to_glb_dir(we, swap_ns)
-
-	print("[ValleyField] Quest remap (rot=%d°, swap_%s): connections=%s  key_gate_dir=%s  warp_edge=%s" % [
-		_rotation_deg, "ns" if swap_ns else "ew",
-		str(new_connections), str(_current_cell.get("key_gate_direction", "")),
-		str(_current_cell.get("warp_edge", ""))])
-
-
-## Convert a psz-sketch direction label to GLB portal data convention.
-func _psz_to_glb_dir(dir: String, swap_ns: bool) -> String:
-	if swap_ns:
-		if dir == "north": return "south"
-		elif dir == "south": return "north"
-	else:
-		if dir == "east": return "west"
-		elif dir == "west": return "east"
-	return dir
-
-
 ## Rotate a point around Y axis by degrees (CW when viewed from above).
 func _rotate_point(point: Vector3, degrees: int) -> Vector3:
 	var rad := deg_to_rad(float(degrees))
