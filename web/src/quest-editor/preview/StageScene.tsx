@@ -44,11 +44,8 @@ export interface FloorCollisionConfig {
 interface StageSceneProps {
   areaKey: string;
   stageId: string;
-  cellRotation: number;
-  /** Portal data in model-local space (for trigger detection) */
+  /** Portal data in model-local space (3D view is unrotated) */
   portals: Record<string, PortalData>;
-  /** Portal data pre-rotated to world space (for 3D rendering + minimap) */
-  worldPortals: Record<string, PortalData>;
   connections: Record<string, string>;
   initialPosition: [number, number, number];
   initialYaw: number;
@@ -295,9 +292,7 @@ function extractFloorTriangles(
 export default function StageScene({
   areaKey,
   stageId,
-  cellRotation,
   portals,
-  worldPortals,
   connections,
   initialPosition,
   initialYaw,
@@ -316,17 +311,10 @@ export default function StageScene({
   const graceTimerRef = useRef(TRIGGER_GRACE_PERIOD);
   const floorExtractedRef = useRef(false);
 
-  // Cell rotation is CW degrees; Three.js Y rotation is CCW-positive, so negate
-  const cellRotRad = -(cellRotation * Math.PI) / 180;
-
-  // Precompute inverse rotation for model-local ↔ world transforms
-  const cosRot = Math.cos(cellRotRad);
-  const sinRot = Math.sin(cellRotRad);
-
   // Reset floor extraction when stage changes
   useEffect(() => {
     floorExtractedRef.current = false;
-  }, [stageId, cellRotation]);
+  }, [stageId]);
 
   // Snap player on cell switch
   useEffect(() => {
@@ -422,10 +410,7 @@ export default function StageScene({
       return;
     }
 
-    // Trigger detection — transform player world position to model-local space
-    const localPX = pos.x * cosRot - pos.z * sinRot;
-    const localPZ = pos.x * sinRot + pos.z * cosRot;
-
+    // Trigger detection — player and portals are both in model-local space (no rotation)
     for (const [dir, portal] of Object.entries(portals)) {
       if (dir === 'default') continue;
       const target = connections[dir];
@@ -433,7 +418,7 @@ export default function StageScene({
       if (triggeredRef.current.has(dir)) continue;
 
       const rotY = portal.gate_rot ? portal.gate_rot[1] : 0;
-      if (isInsideTriggerBox(localPX, localPZ, portal.trigger[0], portal.trigger[2], rotY)) {
+      if (isInsideTriggerBox(pos.x, pos.z, portal.trigger[0], portal.trigger[2], rotY)) {
         triggeredRef.current.add(dir);
         onTriggerEnter(dir, target);
       }
@@ -447,13 +432,9 @@ export default function StageScene({
       <directionalLight position={[10, 30, 10]} intensity={0.8} />
       <hemisphereLight args={['#8888cc', '#444422', 0.4]} />
 
-      {/* Stage model rotated by cell rotation */}
-      <group rotation={[0, cellRotRad, 0]}>
-        <StageModel areaKey={areaKey} stageId={stageId} modelRef={modelRef} />
-      </group>
-
-      {/* Portal markers in world space (pre-rotated, same coords as minimap) */}
-      <PortalMarkers portals={worldPortals} connections={connections} />
+      {/* Stage model + portal markers — unrotated (model-local space) */}
+      <StageModel areaKey={areaKey} stageId={stageId} modelRef={modelRef} />
+      <PortalMarkers portals={portals} connections={connections} />
 
       <Grid
         args={[100, 100]}

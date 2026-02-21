@@ -32,13 +32,12 @@ function rotateSpawn(pos: [number, number, number], degY: number): [number, numb
   return [pos[0] * cos + pos[2] * sin, pos[1], -pos[0] * sin + pos[2] * cos];
 }
 
-/** Get the yaw (facing direction) from a portal's gate_rot, accounting for cell rotation.
- *  gate_rot[1] is the gate's Y rotation in radians — this is the inward-facing direction,
- *  exactly where the player should face when spawning. */
-function getSpawnYaw(portal: PortalData, cellRotDeg: number): number {
+/** Get the yaw (facing direction) from a portal's gate_rot.
+ *  gate_rot[1] is the gate's Y rotation in radians (outward-facing).
+ *  Player should face inward (+PI). No cell rotation — 3D view is unrotated. */
+function getSpawnYaw(portal: PortalData): number {
   const gateRotY = portal.gate_rot ? portal.gate_rot[1] : 0;
-  // gate_rot points outward from the room; player should face inward (+PI)
-  return gateRotY + (cellRotDeg * Math.PI) / 180 + Math.PI;
+  return gateRotY + Math.PI;
 }
 
 /** Find spawn portal: prefer 'default', fall back to first non-default portal */
@@ -117,8 +116,8 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         setCurrentCellPos(firstCell.pos);
         const sp = findSpawnPortal(firstCell.portals);
         if (sp) {
-          setSpawnPos(rotateSpawn(sp.spawn, -firstCell.rotation));
-          setSpawnYaw(getSpawnYaw(sp, -firstCell.rotation));
+          setSpawnPos(sp.spawn);
+          setSpawnYaw(getSpawnYaw(sp));
         } else {
           setSpawnPos([0, 2, 0]);
           setSpawnYaw(0);
@@ -148,28 +147,50 @@ export default function PreviewTab({ project }: PreviewTabProps) {
     return () => { cancelled = true; };
   }, [currentCell?.stage_id]);
 
-  // Portals rotated to world space (used for minimap AND 3D portal markers)
-  // Negate rotation: cell rotation is CW degrees, rotateSpawn expects CCW
-  const worldPortals = useMemo(() => {
+  // Minimap rotation: CW degrees → negate for rotateSpawn (CCW convention)
+  const minimapRot = currentCell ? -currentCell.rotation : 0;
+
+  // Portals rotated for minimap display
+  const minimapPortals = useMemo(() => {
     if (!currentCell) return {};
-    const rot = -currentCell.rotation;
-    if (rot === 0) return currentCell.portals;
-    const rotRad = (rot * Math.PI) / 180;
+    if (minimapRot === 0) return currentCell.portals;
     const result: Record<string, PortalData> = {};
     for (const [key, p] of Object.entries(currentCell.portals)) {
       result[key] = {
         ...p,
-        gate: rotateSpawn(p.gate, rot),
-        spawn: rotateSpawn(p.spawn, rot),
-        trigger: rotateSpawn(p.trigger, rot),
-        // Rotate gate_rot Y component to world space
-        gate_rot: p.gate_rot
-          ? [p.gate_rot[0], p.gate_rot[1] + rotRad, p.gate_rot[2]]
-          : p.gate_rot,
+        gate: rotateSpawn(p.gate, minimapRot),
+        spawn: rotateSpawn(p.spawn, minimapRot),
+        trigger: rotateSpawn(p.trigger, minimapRot),
       };
     }
     return result;
-  }, [currentCell]);
+  }, [currentCell, minimapRot]);
+
+  // Floor triangles rotated for minimap
+  const minimapFloor = useMemo(() => {
+    if (!floorTriangles || minimapRot === 0) return floorTriangles;
+    const rad = (minimapRot * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    return floorTriangles.map(tri => {
+      const result: number[] = [];
+      for (let i = 0; i < 6; i += 2) {
+        const x = tri[i], z = tri[i + 1];
+        result.push(x * cos + z * sin, -x * sin + z * cos);
+      }
+      return result;
+    });
+  }, [floorTriangles, minimapRot]);
+
+  // Player position rotated for minimap
+  const minimapPlayerPos = useMemo((): [number, number] => {
+    if (minimapRot === 0) return [reportedPos[0], reportedPos[2]];
+    const rad = (minimapRot * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const x = reportedPos[0], z = reportedPos[2];
+    return [x * cos + z * sin, -x * sin + z * cos];
+  }, [reportedPos, minimapRot]);
 
   const handlePositionReport = useCallback((x: number, y: number, z: number) => {
     setReportedPos([x, y, z]);
@@ -193,20 +214,20 @@ export default function PreviewTab({ project }: PreviewTabProps) {
       }
     }
 
-    const rot = -targetCell.rotation;
     const returnPortal = returnDir ? targetCell.portals[returnDir] : null;
 
     let pos: [number, number, number];
     let yaw: number;
 
+    // 3D view is unrotated — use raw model-local spawn positions
     if (returnPortal) {
-      pos = rotateSpawn(returnPortal.spawn, rot);
-      yaw = getSpawnYaw(returnPortal, rot);
+      pos = returnPortal.spawn;
+      yaw = getSpawnYaw(returnPortal);
     } else {
       const sp = findSpawnPortal(targetCell.portals);
       if (sp) {
-        pos = rotateSpawn(sp.spawn, rot);
-        yaw = getSpawnYaw(sp, rot);
+        pos = sp.spawn;
+        yaw = getSpawnYaw(sp);
       } else {
         pos = [0, 2, 0];
         yaw = 0;
@@ -222,11 +243,10 @@ export default function PreviewTab({ project }: PreviewTabProps) {
     const cell = bakedCells[pos];
     if (!cell) return;
     setCurrentCellPos(pos);
-    const rot = -cell.rotation;
     const sp = findSpawnPortal(cell.portals);
     if (sp) {
-      setSpawnPos(rotateSpawn(sp.spawn, rot));
-      setSpawnYaw(getSpawnYaw(sp, rot));
+      setSpawnPos(sp.spawn);
+      setSpawnYaw(getSpawnYaw(sp));
     } else {
       setSpawnPos([0, 2, 0]);
       setSpawnYaw(0);
@@ -337,9 +357,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
             <StageScene
               areaKey={project.areaKey}
               stageId={currentCell.stage_id}
-              cellRotation={currentCell.rotation}
               portals={currentCell.portals}
-              worldPortals={worldPortals}
               connections={currentCell.connections}
               initialPosition={spawnPos}
               initialYaw={spawnYaw}
@@ -354,11 +372,11 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         {/* Minimap overlay */}
         <div style={{ position: 'absolute', top: 12, right: 12, pointerEvents: 'none' }}>
           <PreviewMinimap
-            floorTriangles={floorTriangles}
-            portals={worldPortals}
+            floorTriangles={minimapFloor}
+            portals={minimapPortals}
             connections={currentCell.connections}
-            playerX={reportedPos[0]}
-            playerZ={reportedPos[2]}
+            playerX={minimapPlayerPos[0]}
+            playerZ={minimapPlayerPos[1]}
           />
         </div>
 
