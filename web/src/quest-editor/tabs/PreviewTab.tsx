@@ -41,6 +41,15 @@ function getSpawnYaw(portal: PortalData, cellRotDeg: number): number {
   return gateRotY + (cellRotDeg * Math.PI) / 180 + Math.PI;
 }
 
+/** Find spawn portal: prefer 'default', fall back to first non-default portal */
+function findSpawnPortal(portals: Record<string, PortalData>): PortalData | null {
+  if (portals['default']) return portals['default'];
+  for (const [dir, p] of Object.entries(portals)) {
+    if (dir !== 'default') return p;
+  }
+  return null;
+}
+
 interface BakedCell {
   pos: string;
   stage_id: string;
@@ -106,10 +115,11 @@ export default function PreviewTab({ project }: PreviewTabProps) {
       const firstCell = startCell || Object.values(cells)[0];
       if (firstCell && !currentCellPos) {
         setCurrentCellPos(firstCell.pos);
-        const dp = firstCell.portals['default'];
-        if (dp) {
-          setSpawnPos(rotateSpawn(dp.spawn, firstCell.rotation));
-          setSpawnYaw(getSpawnYaw(dp, firstCell.rotation));
+        const sp = findSpawnPortal(firstCell.portals);
+        if (sp) {
+          // DEBUG: no rotation for sanity check
+          setSpawnPos(sp.spawn);
+          setSpawnYaw(getSpawnYaw(sp, 0));
         } else {
           setSpawnPos([0, 2, 0]);
           setSpawnYaw(0);
@@ -139,21 +149,10 @@ export default function PreviewTab({ project }: PreviewTabProps) {
     return () => { cancelled = true; };
   }, [currentCell?.stage_id]);
 
-  // Rotated portals for minimap (same world space as 3D view)
+  // DEBUG: no rotation — pass portals as-is for sanity check
   const rotatedPortals = useMemo(() => {
     if (!currentCell) return {};
-    const rot = currentCell.rotation;
-    if (rot === 0) return currentCell.portals;
-    const result: Record<string, PortalData> = {};
-    for (const [key, p] of Object.entries(currentCell.portals)) {
-      result[key] = {
-        ...p,
-        gate: rotateSpawn(p.gate, rot),
-        spawn: rotateSpawn(p.spawn, rot),
-        trigger: rotateSpawn(p.trigger, rot),
-      };
-    }
-    return result;
+    return currentCell.portals;
   }, [currentCell]);
 
   const handlePositionReport = useCallback((x: number, y: number, z: number) => {
@@ -178,20 +177,20 @@ export default function PreviewTab({ project }: PreviewTabProps) {
       }
     }
 
-    const rot = targetCell.rotation;
     const returnPortal = returnDir ? targetCell.portals[returnDir] : null;
 
     let pos: [number, number, number];
     let yaw: number;
 
+    // DEBUG: no rotation for sanity check
     if (returnPortal) {
-      pos = rotateSpawn(returnPortal.spawn, rot);
-      yaw = getSpawnYaw(returnPortal, rot);
+      pos = returnPortal.spawn;
+      yaw = getSpawnYaw(returnPortal, 0);
     } else {
-      const dp = targetCell.portals['default'];
-      if (dp) {
-        pos = rotateSpawn(dp.spawn, rot);
-        yaw = getSpawnYaw(dp, rot);
+      const sp = findSpawnPortal(targetCell.portals);
+      if (sp) {
+        pos = sp.spawn;
+        yaw = getSpawnYaw(sp, 0);
       } else {
         pos = [0, 2, 0];
         yaw = 0;
@@ -207,10 +206,11 @@ export default function PreviewTab({ project }: PreviewTabProps) {
     const cell = bakedCells[pos];
     if (!cell) return;
     setCurrentCellPos(pos);
-    const dp = cell.portals['default'];
-    if (dp) {
-      setSpawnPos(rotateSpawn(dp.spawn, cell.rotation));
-      setSpawnYaw(getSpawnYaw(dp, cell.rotation));
+    // DEBUG: no rotation for sanity check
+    const sp = findSpawnPortal(cell.portals);
+    if (sp) {
+      setSpawnPos(sp.spawn);
+      setSpawnYaw(getSpawnYaw(sp, 0));
     } else {
       setSpawnPos([0, 2, 0]);
       setSpawnYaw(0);

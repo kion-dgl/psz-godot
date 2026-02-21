@@ -417,10 +417,9 @@ export default function StageScene({
       return;
     }
 
-    // Trigger detection — transform player world position to model-local space
-    // Inverse Y rotation: localX = worldX*cos(θ) - worldZ*sin(θ), localZ = worldX*sin(θ) + worldZ*cos(θ)
-    const localPX = pos.x * cosRot - pos.z * sinRot;
-    const localPZ = pos.x * sinRot + pos.z * cosRot;
+    // Trigger detection — DEBUG: no rotation, use world position directly
+    const localPX = pos.x;
+    const localPZ = pos.z;
 
     for (const [dir, portal] of Object.entries(portals)) {
       if (dir === 'default') continue;
@@ -444,7 +443,8 @@ export default function StageScene({
       <hemisphereLight args={['#8888cc', '#444422', 0.4]} />
 
       {/* Everything rotated together — model and portals are siblings */}
-      <group rotation={[0, cellRotRad, 0]}>
+      {/* DEBUG: rotation disabled for sanity check */}
+      <group rotation={[0, 0, 0]}>
         <StageModel areaKey={areaKey} stageId={stageId} modelRef={modelRef} />
         <PortalMarkers portals={portals} connections={connections} />
       </group>
