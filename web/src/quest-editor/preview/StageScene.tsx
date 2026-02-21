@@ -1,13 +1,12 @@
 /**
  * StageScene — Three.js scene for the quest editor walkthrough preview
  *
- * - GLB stage model (rotated by cell rotation)
- * - Portal markers matching stage editor: gate GLB model, cyan bounding box,
- *   green spawn sphere+ring+arrow, orange trigger box
- * - Capsule player with tank controls (W/S forward/back, A/D turn)
- * - Camera parented to capsule for zero-jitter follow
- * - Raycast floor collision against the GLB mesh
- * - Box-based trigger detection (matching actual game triggers)
+ * Architecture: The GLB model AND portal markers are children of a single
+ * rotated group. Cell rotation is applied once to the group — portal positions
+ * use raw model-local coords from the config and get rotated automatically.
+ *
+ * Player moves in world space. For trigger detection, the player's world
+ * position is inverse-rotated into model-local space.
  */
 
 import { useRef, useEffect, useMemo } from 'react';
@@ -51,51 +50,18 @@ interface StageSceneProps {
 }
 
 // ============================================================================
-// Rotation helper
-// ============================================================================
-
-function rotateVec3(v: [number, number, number], degY: number): [number, number, number] {
-  if (degY === 0) return v;
-  const rad = (degY * Math.PI) / 180;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  return [v[0] * cos + v[2] * sin, v[1], -v[0] * sin + v[2] * cos];
-}
-
-function rotatePortals(
-  portals: Record<string, PortalData>,
-  degY: number,
-): Record<string, PortalData> {
-  if (degY === 0) return portals;
-  const rotated: Record<string, PortalData> = {};
-  for (const [key, p] of Object.entries(portals)) {
-    rotated[key] = {
-      ...p,
-      gate: rotateVec3(p.gate, degY),
-      spawn: rotateVec3(p.spawn, degY),
-      trigger: rotateVec3(p.trigger, degY),
-      // Also rotate gate_rot Y component
-      gate_rot: p.gate_rot
-        ? [p.gate_rot[0], p.gate_rot[1] + (degY * Math.PI) / 180, p.gate_rot[2]]
-        : undefined,
-    };
-  }
-  return rotated;
-}
-
-// ============================================================================
 // GLB Model
 // ============================================================================
 
-function StageModel({ areaKey, stageId, groupRef }: {
+function StageModel({ areaKey, stageId, modelRef }: {
   areaKey: string;
   stageId: string;
-  groupRef: React.RefObject<THREE.Group | null>;
+  modelRef: React.RefObject<THREE.Object3D | null>;
 }) {
   const glbPath = getGlbPath(areaKey, stageId);
   const { scene } = useGLTF(glbPath);
   const cloned = useMemo(() => scene.clone(), [scene]);
-  return <primitive ref={groupRef} object={cloned} />;
+  return <primitive ref={modelRef} object={cloned} />;
 }
 
 // ============================================================================
@@ -106,6 +72,7 @@ const GATE_MODEL_PATH = assetUrl('assets/objects/valley/o0c_gate.glb');
 
 // ============================================================================
 // Portal Markers — matching stage editor (PortalOverlay.tsx)
+// All positions are in MODEL-LOCAL space (rotated by parent group)
 // ============================================================================
 
 const GATE_WIDTH = 6.0;
@@ -203,6 +170,7 @@ function GateModel({ position, rotation }: {
   );
 }
 
+/** Portal markers using model-local positions (parent group handles rotation) */
 function PortalMarkers({ portals, connections }: {
   portals: Record<string, PortalData>;
   connections: Record<string, string>;
@@ -212,22 +180,15 @@ function PortalMarkers({ portals, connections }: {
       {Object.entries(portals).map(([dir, portal]) => {
         if (dir === 'default') return null;
         const targetCell = connections[dir];
-        // Use the grid direction key (east/west/north/south) for the label,
-        // not compass_label which reflects the unrotated config direction
         const label = `${dir[0].toUpperCase()}${targetCell ? ` → ${targetCell}` : ''}`;
         const gateRotY = portal.gate_rot ? portal.gate_rot[1] : 0;
 
         return (
           <group key={dir}>
-            {/* Gate GLB model */}
             <GateModel position={portal.gate} rotation={gateRotY} />
-            {/* Cyan bounding box */}
             <GateBoundingBox position={portal.gate} rotation={gateRotY} />
-            {/* Green spawn marker */}
             <SpawnMarker position={portal.spawn} rotation={gateRotY} />
-            {/* Orange trigger box */}
             <TriggerMarker position={portal.trigger} rotation={gateRotY} />
-            {/* Label above gate */}
             <Text
               position={[portal.gate[0], portal.gate[1] + 5, portal.gate[2]]}
               fontSize={1.2}
@@ -257,18 +218,16 @@ const FLOOR_RAYCAST_HEIGHT = 50;
 const FLOOR_FALLBACK_Y = 0;
 const REPORT_INTERVAL = 1 / 15;
 
-// Trigger box half-extents (matching the 6x3x2 box in PortalOverlay)
 const TRIGGER_HALF_W = GATE_WIDTH / 2; // 3
 const TRIGGER_HALF_D = 1; // depth/2
-
-// Grace period after cell switch before triggers can fire (seconds)
 const TRIGGER_GRACE_PERIOD = 0.5;
 
 const _raycaster = new THREE.Raycaster();
 const _rayOrigin = new THREE.Vector3();
 const _rayDir = new THREE.Vector3(0, -1, 0);
 
-/** Extract floor-like triangles from a scene (projected to XZ, in world space) */
+/** Extract floor triangles from the model only (projected to XZ, world space).
+ *  Filters by triangle normal (must be mostly upward) AND vertex Y (below threshold). */
 function extractFloorTriangles(root: THREE.Object3D): number[][] {
   const triangles: number[][] = [];
   const v1 = new THREE.Vector3();
@@ -297,7 +256,10 @@ function extractFloorTriangles(root: THREE.Object3D): number[][] {
       v2.set(pos.getX(i2), pos.getY(i2), pos.getZ(i2)).applyMatrix4(mesh.matrixWorld);
       v3.set(pos.getX(i3), pos.getY(i3), pos.getZ(i3)).applyMatrix4(mesh.matrixWorld);
 
-      // Filter: only mostly-horizontal triangles (floor surfaces)
+      // Y filter: exclude elevated geometry (trees, roofs, walls above floor)
+      if (v1.y > 3 || v2.y > 3 || v3.y > 3) continue;
+
+      // Normal filter: only mostly-horizontal triangles (floor surfaces)
       const ax = v2.x - v1.x, ay = v2.y - v1.y, az = v2.z - v1.z;
       const bx = v3.x - v1.x, by = v3.y - v1.y, bz = v3.z - v1.z;
       const absNy = Math.abs(az * bx - ax * bz);
@@ -329,7 +291,7 @@ export default function StageScene({
   onFloorData,
 }: StageSceneProps) {
   const playerGroupRef = useRef<THREE.Group>(null);
-  const stageGroupRef = useRef<THREE.Group>(null);
+  const modelRef = useRef<THREE.Object3D>(null);
   const posRef = useRef(new THREE.Vector3(...initialPosition));
   const yawRef = useRef(initialYaw);
   const keysRef = useRef<Set<string>>(new Set());
@@ -338,11 +300,11 @@ export default function StageScene({
   const graceTimerRef = useRef(TRIGGER_GRACE_PERIOD);
   const floorExtractedRef = useRef(false);
 
-  const rotatedPortals = useMemo(
-    () => rotatePortals(portals, cellRotation),
-    [portals, cellRotation],
-  );
   const cellRotRad = (cellRotation * Math.PI) / 180;
+
+  // Precompute inverse rotation for model-local ↔ world transforms
+  const cosRot = Math.cos(cellRotRad);
+  const sinRot = Math.sin(cellRotRad);
 
   // Reset floor extraction when stage changes
   useEffect(() => {
@@ -372,16 +334,16 @@ export default function StageScene({
   }, []);
 
   const getFloorY = (x: number, z: number): number => {
-    if (!stageGroupRef.current) return FLOOR_FALLBACK_Y;
+    if (!modelRef.current) return FLOOR_FALLBACK_Y;
     _rayOrigin.set(x, FLOOR_RAYCAST_HEIGHT, z);
     _raycaster.set(_rayOrigin, _rayDir);
-    const hits = _raycaster.intersectObject(stageGroupRef.current, true);
+    const hits = _raycaster.intersectObject(modelRef.current, true);
     return hits.length > 0 ? hits[0].point.y : FLOOR_FALLBACK_Y;
   };
 
-  /** Check if point (px, pz) is inside a rotated trigger box at (cx, cz) with Y rotation */
+  /** Check if point (px, pz) is inside a trigger box at (cx, cz) with Y rotation.
+   *  All coordinates are in model-local space. */
   const isInsideTriggerBox = (px: number, pz: number, cx: number, cz: number, rotY: number): boolean => {
-    // Transform player position into the trigger box's local space
     const dx = px - cx;
     const dz = pz - cz;
     const cos = Math.cos(-rotY);
@@ -392,13 +354,13 @@ export default function StageScene({
   };
 
   useFrame((_, delta) => {
-    // Extract floor triangles once after model loads
-    if (onFloorData && !floorExtractedRef.current && stageGroupRef.current) {
+    // Extract floor triangles once after model loads (from modelRef only — excludes portal markers)
+    if (onFloorData && !floorExtractedRef.current && modelRef.current) {
       let hasMeshes = false;
-      stageGroupRef.current.traverse(c => { if ((c as THREE.Mesh).isMesh) hasMeshes = true; });
+      modelRef.current.traverse(c => { if ((c as THREE.Mesh).isMesh) hasMeshes = true; });
       if (hasMeshes) {
         floorExtractedRef.current = true;
-        onFloorData(extractFloorTriangles(stageGroupRef.current));
+        onFloorData(extractFloorTriangles(modelRef.current));
       }
     }
 
@@ -412,7 +374,7 @@ export default function StageScene({
     if (keys.has('d') || keys.has('arrowright')) turn -= 1;
     if (turn !== 0) yawRef.current += turn * TURN_SPEED * dt;
 
-    // Move
+    // Move (world space)
     let move = 0;
     if (keys.has('w') || keys.has('arrowup')) move += 1;
     if (keys.has('s') || keys.has('arrowdown')) move -= 1;
@@ -440,18 +402,22 @@ export default function StageScene({
     // Grace period countdown
     if (graceTimerRef.current > 0) {
       graceTimerRef.current -= dt;
-      return; // Skip trigger checks during grace period
+      return;
     }
 
-    // Trigger detection (box-based, matching game triggers)
-    for (const [dir, portal] of Object.entries(rotatedPortals)) {
+    // Trigger detection — transform player world position to model-local space
+    // Inverse Y rotation: localX = worldX*cos(θ) - worldZ*sin(θ), localZ = worldX*sin(θ) + worldZ*cos(θ)
+    const localPX = pos.x * cosRot - pos.z * sinRot;
+    const localPZ = pos.x * sinRot + pos.z * cosRot;
+
+    for (const [dir, portal] of Object.entries(portals)) {
       if (dir === 'default') continue;
       const target = connections[dir];
       if (!target) continue;
       if (triggeredRef.current.has(dir)) continue;
 
       const rotY = portal.gate_rot ? portal.gate_rot[1] : 0;
-      if (isInsideTriggerBox(pos.x, pos.z, portal.trigger[0], portal.trigger[2], rotY)) {
+      if (isInsideTriggerBox(localPX, localPZ, portal.trigger[0], portal.trigger[2], rotY)) {
         triggeredRef.current.add(dir);
         onTriggerEnter(dir, target);
       }
@@ -465,8 +431,10 @@ export default function StageScene({
       <directionalLight position={[10, 30, 10]} intensity={0.8} />
       <hemisphereLight args={['#8888cc', '#444422', 0.4]} />
 
-      <group ref={stageGroupRef} rotation={[0, cellRotRad, 0]}>
-        <StageModel areaKey={areaKey} stageId={stageId} groupRef={stageGroupRef} />
+      {/* Everything rotated together — model and portals are siblings */}
+      <group rotation={[0, cellRotRad, 0]}>
+        <StageModel areaKey={areaKey} stageId={stageId} modelRef={modelRef} />
+        <PortalMarkers portals={portals} connections={connections} />
       </group>
 
       <Grid
@@ -482,20 +450,16 @@ export default function StageScene({
         fadeStrength={1}
       />
 
-      <PortalMarkers portals={rotatedPortals} connections={connections} />
-
-      {/* Player group — capsule + camera as children */}
+      {/* Player group — capsule + camera as children (world space) */}
       <group ref={playerGroupRef}>
         <mesh>
           <capsuleGeometry args={[0.4, 1.2, 8, 16]} />
           <meshStandardMaterial color="#5588ff" emissive="#223366" />
         </mesh>
-        {/* Nose cone */}
         <mesh position={[0, 0.5, -1.2]} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.25, 0.6, 8]} />
           <meshStandardMaterial color="#ffcc44" emissive="#886600" />
         </mesh>
-        {/* Camera — behind and above, looking forward */}
         <PerspectiveCamera
           makeDefault
           fov={50}
