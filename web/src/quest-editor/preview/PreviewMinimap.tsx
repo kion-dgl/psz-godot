@@ -3,7 +3,11 @@
  *
  * Loads the pre-generated SVG minimap file for the current stage,
  * rotates it by cell rotation, and overlays a player tracking dot.
- * The world→SVG coordinate mapping uses svgSettings from the stage config.
+ *
+ * Coordinate mapping: extracts gate diamond polygon centers from the SVG
+ * and matches them with known world-space gate positions from the portal
+ * config. This gives us the exact scale+offset transform that was used
+ * to generate the SVG, without needing saved svgSettings.
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -11,26 +15,146 @@ import { assetUrl } from '../../utils/assets';
 import { getStageSubfolder } from '../../stage-editor/constants';
 import type { PortalData } from './StageScene';
 
-interface SvgSettings {
-  gridSize: number;
-  centerX: number;
-  centerZ: number;
-  svgSize: number;
-  padding: number;
+// ============================================================================
+// SVG polygon parsing + transform computation
+// ============================================================================
+
+/** Extract gate diamond polygon centers from SVG content.
+ *  Gate diamonds are <polygon fill="#4a9eff" ...> with 4 points. */
+function parseGateDiamonds(svgContent: string): [number, number][] {
+  const centers: [number, number][] = [];
+  // Match polygon elements — fill may come before or after points
+  const polygonRe = /<polygon\s[^>]*?fill="#4a9eff"[^>]*?\/?>/gi;
+  let match;
+  while ((match = polygonRe.exec(svgContent)) !== null) {
+    const pointsMatch = match[0].match(/points="([^"]*)"/);
+    if (!pointsMatch) continue;
+    const coords = pointsMatch[1].trim().split(/\s+/).map(p => {
+      const [x, y] = p.split(',').map(Number);
+      return [x, y] as [number, number];
+    });
+    if (coords.length < 3) continue;
+    const cx = coords.reduce((s, p) => s + p[0], 0) / coords.length;
+    const cy = coords.reduce((s, p) => s + p[1], 0) / coords.length;
+    centers.push([cx, cy]);
+  }
+  return centers;
 }
 
-const DEFAULT_SVG_SETTINGS: SvgSettings = {
-  gridSize: 40,
-  centerX: 0,
-  centerZ: 0,
-  svgSize: 400,
-  padding: 20,
-};
+interface SvgTransform {
+  scale: number;
+  offsetX: number;
+  offsetY: number;
+}
+
+/** Extract the SVG viewBox size from content (default 400). */
+function parseSvgSize(svgContent: string): number {
+  const m = svgContent.match(/viewBox="0\s+0\s+([\d.]+)\s+([\d.]+)"/);
+  return m ? parseFloat(m[1]) : 400;
+}
+
+/** Compute world→SVG affine transform from matched gate pairs.
+ *  Transform: svgX = worldX * scale + offsetX, svgY = worldZ * scale + offsetY
+ *
+ *  With 1 pair: uses svgSize to estimate scale, computes offset.
+ *  With 2+ pairs: solves for scale+offset via least-squares across all permutations. */
+function computeGateTransform(
+  worldGates: { x: number; z: number }[],
+  svgCenters: [number, number][],
+  svgSize: number,
+): SvgTransform | null {
+  const n = Math.min(worldGates.length, svgCenters.length);
+  if (n === 0) return null;
+
+  if (n === 1) {
+    // Can't determine scale from 1 pair — estimate from SVG size.
+    // Typical padding=20, gridSize chosen so stage fills the SVG.
+    // Most stages: scale ≈ (svgSize - 40) / gridSize, gridSize ≈ 40 → scale ≈ 9
+    // We can't know gridSize, but we can assume center is near the middle
+    // and scale from SVG dimension. Use a rough heuristic:
+    // Place the single gate at its known SVG position and assume the
+    // center of the SVG corresponds to world origin with default scale.
+    const padding = 20;
+    const defaultGridSize = 40;
+    const scale = (svgSize - padding * 2) / defaultGridSize;
+    const offX = svgCenters[0][0] - worldGates[0].x * scale;
+    const offY = svgCenters[0][1] - worldGates[0].z * scale;
+    return { scale, offsetX: offX, offsetY: offY };
+  }
+
+  // For 2+ pairs: try all permutations of matching world gates to SVG centers
+  // and pick the assignment with minimum reprojection error.
+  const indices = Array.from({ length: n }, (_, i) => i);
+  const perms = permutations(indices);
+
+  let best: SvgTransform | null = null;
+  let bestErr = Infinity;
+
+  for (const perm of perms) {
+    // Solve for scale: collect (dWorld, dSvg) pairs across all adjacent pairs
+    let sumNum = 0, sumDen = 0;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const dwx = worldGates[perm[j]].x - worldGates[perm[i]].x;
+        const dwz = worldGates[perm[j]].z - worldGates[perm[i]].z;
+        const dsx = svgCenters[j][0] - svgCenters[i][0];
+        const dsy = svgCenters[j][1] - svgCenters[i][1];
+        // scale = dot(dSvg, dWorld) / dot(dWorld, dWorld)
+        sumNum += dsx * dwx + dsy * dwz;
+        sumDen += dwx * dwx + dwz * dwz;
+      }
+    }
+    if (Math.abs(sumDen) < 0.001) continue;
+    const scale = sumNum / sumDen;
+    if (scale <= 0) continue; // scale must be positive
+
+    // Compute offset as average
+    let offX = 0, offY = 0;
+    for (let i = 0; i < n; i++) {
+      offX += svgCenters[i][0] - worldGates[perm[i]].x * scale;
+      offY += svgCenters[i][1] - worldGates[perm[i]].z * scale;
+    }
+    offX /= n;
+    offY /= n;
+
+    // Reprojection error
+    let err = 0;
+    for (let i = 0; i < n; i++) {
+      const ex = worldGates[perm[i]].x * scale + offX - svgCenters[i][0];
+      const ey = worldGates[perm[i]].z * scale + offY - svgCenters[i][1];
+      err += ex * ex + ey * ey;
+    }
+
+    if (err < bestErr) {
+      bestErr = err;
+      best = { scale, offsetX: offX, offsetY: offY };
+    }
+  }
+
+  return best;
+}
+
+/** Generate all permutations of an array (n! — fine for n <= 4) */
+function permutations<T>(arr: T[]): T[][] {
+  if (arr.length <= 1) return [arr];
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const rest = [...arr.slice(0, i), ...arr.slice(i + 1)];
+    for (const perm of permutations(rest)) {
+      result.push([arr[i], ...perm]);
+    }
+  }
+  return result;
+}
+
+// ============================================================================
+// Component
+// ============================================================================
 
 interface PreviewMinimapProps {
   areaFolder: string;
   stageId: string;
-  svgSettings: SvgSettings | null;
+  svgSettings: { gridSize: number; centerX: number; centerZ: number; svgSize: number; padding: number } | null;
   cellRotation: number;
   portals: Record<string, PortalData>;
   connections: Record<string, string>;
@@ -84,31 +208,58 @@ export default function PreviewMinimap({
     return () => { cancelled = true; };
   }, [stageId, areaFolder]);
 
-  // Compute world→SVG coordinate mapping
-  const settings = svgSettings ?? DEFAULT_SVG_SETTINGS;
-  const { gridSize, centerX, centerZ, svgSize, padding } = settings;
-  const halfGrid = gridSize / 2;
-  const minX = centerX - halfGrid;
-  const minZ = centerZ - halfGrid;
-  const scale = (svgSize - padding * 2) / gridSize;
+  // Compute world→SVG transform by matching gate diamonds in SVG with portal world positions
+  const transform = useMemo(() => {
+    if (!svgContent) return null;
 
-  const toSvgX = (wx: number) => (wx - minX) * scale + padding;
-  const toSvgY = (wz: number) => (wz - minZ) * scale + padding;
+    // Extract gate diamond centers from SVG
+    const svgDiamonds = parseGateDiamonds(svgContent);
+    const svgSize = parseSvgSize(svgContent);
+
+    // Get world-space gate positions (exclude 'default' portal)
+    const worldGates = Object.entries(portals)
+      .filter(([dir]) => dir !== 'default')
+      .map(([, p]) => ({ x: p.gate[0], z: p.gate[2] }));
+
+    // Try gate-anchored transform first
+    const gateTransform = computeGateTransform(worldGates, svgDiamonds, svgSize);
+    if (gateTransform) return { ...gateTransform, svgSize };
+
+    // Fallback to svgSettings if available
+    if (svgSettings) {
+      const { gridSize, centerX, centerZ, svgSize: sz, padding } = svgSettings;
+      const scale = (sz - padding * 2) / gridSize;
+      const halfGrid = gridSize / 2;
+      return {
+        scale,
+        offsetX: -(centerX - halfGrid) * scale + padding,
+        offsetY: -(centerZ - halfGrid) * scale + padding,
+        svgSize: sz,
+      };
+    }
+
+    // Last resort: default settings
+    const defaultScale = (svgSize - 40) / 40; // padding=20, gridSize=40
+    return { scale: defaultScale, offsetX: 20, offsetY: 20, svgSize };
+  }, [svgContent, portals, svgSettings]);
+
+  const svgSize = transform?.svgSize ?? 400;
 
   // Player position in SVG coordinates
-  const playerSvgX = toSvgX(playerX);
-  const playerSvgY = toSvgY(playerZ);
+  const playerSvgX = transform ? playerX * transform.scale + transform.offsetX : 0;
+  const playerSvgY = transform ? playerZ * transform.scale + transform.offsetY : 0;
 
-  // Gate markers in SVG coordinates
+  // Gate markers in SVG coordinates (for direction labels)
   const gateMarkers = useMemo(() => {
+    if (!transform) return [];
     return Object.entries(portals)
       .filter(([dir]) => dir !== 'default' && connections[dir])
       .map(([dir, portal]) => ({
         dir,
-        x: toSvgX(portal.gate[0]),
-        y: toSvgY(portal.gate[2]),
+        x: portal.gate[0] * transform.scale + transform.offsetX,
+        y: portal.gate[2] * transform.scale + transform.offsetY,
       }));
-  }, [portals, connections, minX, minZ, scale, padding]);
+  }, [portals, connections, transform]);
 
   // CSS rotation for cell rotation (CW degrees)
   const rotDeg = -cellRotation;
