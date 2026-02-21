@@ -45,7 +45,10 @@ interface StageSceneProps {
   areaKey: string;
   stageId: string;
   cellRotation: number;
+  /** Portal data in model-local space (for trigger detection) */
   portals: Record<string, PortalData>;
+  /** Portal data pre-rotated to world space (for 3D rendering + minimap) */
+  worldPortals: Record<string, PortalData>;
   connections: Record<string, string>;
   initialPosition: [number, number, number];
   initialYaw: number;
@@ -294,6 +297,7 @@ export default function StageScene({
   stageId,
   cellRotation,
   portals,
+  worldPortals,
   connections,
   initialPosition,
   initialYaw,
@@ -443,11 +447,13 @@ export default function StageScene({
       <directionalLight position={[10, 30, 10]} intensity={0.8} />
       <hemisphereLight args={['#8888cc', '#444422', 0.4]} />
 
-      {/* Everything rotated together — model and portals are siblings */}
+      {/* Stage model rotated by cell rotation */}
       <group rotation={[0, cellRotRad, 0]}>
         <StageModel areaKey={areaKey} stageId={stageId} modelRef={modelRef} />
-        <PortalMarkers portals={portals} connections={connections} />
       </group>
+
+      {/* Portal markers in world space (pre-rotated, same coords as minimap) */}
+      <PortalMarkers portals={worldPortals} connections={connections} />
 
       <Grid
         args={[100, 100]}

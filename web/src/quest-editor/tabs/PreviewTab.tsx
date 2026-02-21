@@ -148,12 +148,13 @@ export default function PreviewTab({ project }: PreviewTabProps) {
     return () => { cancelled = true; };
   }, [currentCell?.stage_id]);
 
-  // Rotated portals for minimap (same world space as 3D view)
+  // Portals rotated to world space (used for minimap AND 3D portal markers)
   // Negate rotation: cell rotation is CW degrees, rotateSpawn expects CCW
-  const rotatedPortals = useMemo(() => {
+  const worldPortals = useMemo(() => {
     if (!currentCell) return {};
     const rot = -currentCell.rotation;
     if (rot === 0) return currentCell.portals;
+    const rotRad = (rot * Math.PI) / 180;
     const result: Record<string, PortalData> = {};
     for (const [key, p] of Object.entries(currentCell.portals)) {
       result[key] = {
@@ -161,6 +162,10 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         gate: rotateSpawn(p.gate, rot),
         spawn: rotateSpawn(p.spawn, rot),
         trigger: rotateSpawn(p.trigger, rot),
+        // Rotate gate_rot Y component to world space
+        gate_rot: p.gate_rot
+          ? [p.gate_rot[0], p.gate_rot[1] + rotRad, p.gate_rot[2]]
+          : p.gate_rot,
       };
     }
     return result;
@@ -334,6 +339,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
               stageId={currentCell.stage_id}
               cellRotation={currentCell.rotation}
               portals={currentCell.portals}
+              worldPortals={worldPortals}
               connections={currentCell.connections}
               initialPosition={spawnPos}
               initialYaw={spawnYaw}
@@ -349,7 +355,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         <div style={{ position: 'absolute', top: 12, right: 12, pointerEvents: 'none' }}>
           <PreviewMinimap
             floorTriangles={floorTriangles}
-            portals={rotatedPortals}
+            portals={worldPortals}
             connections={currentCell.connections}
             playerX={reportedPos[0]}
             playerZ={reportedPos[2]}
