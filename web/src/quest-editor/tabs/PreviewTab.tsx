@@ -19,6 +19,7 @@ import { STAGE_AREAS } from '../../stage-editor/constants';
 import StageScene from '../preview/StageScene';
 import type { PortalData } from '../preview/StageScene';
 import PreviewMinimap from '../preview/PreviewMinimap';
+import PreviewGrid from '../preview/PreviewGrid';
 
 interface PreviewTabProps {
   project: QuestProject;
@@ -408,6 +409,15 @@ export default function PreviewTab({ project }: PreviewTabProps) {
               `${dir[0].toUpperCase()}→${target === WARP_TARGET ? 'warp' : target}`
             ).join('  ') || 'no connections'}
           </div>
+        </div>
+
+        {/* Grid overview overlay */}
+        <div style={{ position: 'absolute', bottom: 12, right: 12 }}>
+          <PreviewGrid
+            bakedCells={bakedCells}
+            currentCellPos={currentCellPos}
+            onCellClick={handleCellClick}
+          />
         </div>
 
         {/* Coordinate readout */}
