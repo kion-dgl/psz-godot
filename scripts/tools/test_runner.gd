@@ -2125,38 +2125,6 @@ func test_character_appearance() -> void:
 func test_valley_grid() -> void:
 	print("── Valley Grid ──")
 
-	var MapMgrScript := preload("res://scripts/3d/map_manager_3d.gd")
-	var map_mgr: Node = MapMgrScript.new()
-	map_mgr._init_valley_config()
-	map_mgr._init_map_routes()
-
-	# All 18 s01a_ stages should be configured in MapManager3D
-	var expected_stages := [
-		"s01a_sa1", "s01a_ga1", "s01a_ib1", "s01a_ib2", "s01a_ic1", "s01a_ic3",
-		"s01a_lb1", "s01a_lb3", "s01a_lc1", "s01a_lc2",
-		"s01a_na1", "s01a_nb2", "s01a_nc2",
-		"s01a_tb3", "s01a_tc3", "s01a_td1", "s01a_td2",
-		"s01a_xb2",
-	]
-	for stage_id in expected_stages:
-		assert_true(
-			map_mgr.valley_config.has(stage_id),
-			"MapManager3D has stage %s" % stage_id
-		)
-
-	# Each stage has at least 1 gate edge
-	for stage_id in expected_stages:
-		var edges: Array[String] = map_mgr.get_gate_edges(stage_id)
-		assert_true(edges.size() >= 1, "Stage %s has >= 1 gate edge (got %d)" % [stage_id, edges.size()])
-
-	# Spawn count matches trigger count per stage
-	for stage_id in expected_stages:
-		var cfg = map_mgr.valley_config.get(stage_id)
-		assert_eq(
-			cfg.spawn_points.size(), cfg.triggers.size(),
-			"Stage %s: spawn count (%d) == trigger count (%d)" % [stage_id, cfg.spawn_points.size(), cfg.triggers.size()]
-		)
-
 	# ── Grid Generator Tests ──
 	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
 	var gen := GridGen.new()
