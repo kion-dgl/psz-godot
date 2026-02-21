@@ -242,7 +242,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770497459406_szp8vww7u",
         "label": "east",
         "position": [
@@ -260,11 +260,13 @@
       "excludedMeshPatterns": [],
       "triangles": {
         "tri_32": false,
-        "tri_33": false
+        "tri_33": false,
+        "tri_31": false,
+        "tri_30": false
       },
       "yTolerance": 0.25
     },
-    "lastModified": "2026-01-21T13:43:13.893Z",
+    "lastModified": "2026-02-21T03:56:32.160Z",
     "mapId": "s01a_ga1",
     "obstacles": [],
     "portals": [
@@ -290,7 +292,14 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "svgSettings": {
+      "gridSize": 40,
+      "centerX": 0.5,
+      "centerZ": 3,
+      "svgSize": 400,
+      "padding": 20
+    }
   },
   "s01a_ib1": {
     "floorCollision": {
@@ -542,7 +551,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769091167928_f3bea7yf4",
         "label": "west",
         "position": [
@@ -581,7 +590,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769091524402_8j75nhp58",
         "label": "west",
         "position": [
@@ -658,7 +667,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769091604829_5dlzqkkcy",
         "label": "west",
         "position": [
@@ -718,7 +727,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769092086202_npqhjq32s",
         "label": "west",
         "position": [
@@ -867,27 +876,35 @@
       "excludedMeshPatterns": [],
       "triangles": {
         "tri_22": false,
-        "tri_23": false
+        "tri_23": false,
+        "tri_11": true
       },
       "yTolerance": 0.25
     },
-    "lastModified": "2026-02-09T16:43:52.879Z",
+    "lastModified": "2026-02-21T03:58:13.164Z",
     "mapId": "s01a_sa1",
     "obstacles": [],
     "portals": [
       {
+        "id": "portal_1771646251322_m10fltkxh",
         "direction": "south",
-        "id": "portal_1769092443014_stskh79n3",
-        "label": "south",
         "position": [
-          -1.9993323990772698,
+          -2.0198732008774,
           0,
-          32.82939409416594
-        ]
+          14.046629085012633
+        ],
+        "label": "south"
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "svgSettings": {
+      "gridSize": 38,
+      "centerX": -0.67578125,
+      "centerZ": 1.5,
+      "svgSize": 400,
+      "padding": 20
+    }
   },
   "s01a_tb3": {
     "floorCollision": {
@@ -917,7 +934,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769092771330_49hdn69ng",
         "label": "east",
         "position": [
@@ -927,7 +944,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769092780944_12rlsup5o",
         "label": "west",
         "position": [
@@ -964,7 +981,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769092833276_dwgo77xpn",
         "label": "west",
         "position": [
@@ -974,7 +991,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769092845836_ffebfqp8w",
         "label": "east",
         "position": [
@@ -1053,7 +1070,7 @@
     ],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769093100763_zuq2oelrr",
         "label": "east",
         "position": [
@@ -1063,7 +1080,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769093113377_hx9qyjzh1",
         "label": "west",
         "position": [
@@ -1164,7 +1181,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769141392815_vqgwz57g6",
         "label": "east",
         "position": [
@@ -1174,7 +1191,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769141410283_2nme55ig1",
         "label": "west",
         "position": [
@@ -1203,7 +1220,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769143916098_rewb6ohfy",
         "label": "east",
         "position": [
@@ -1233,7 +1250,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769143947883_f0hk5gsu8",
         "label": "west",
         "position": [
@@ -1712,7 +1729,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769177347853_rv2xmbraz",
         "label": "west",
         "position": [
@@ -1755,7 +1772,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769178022191_7xvxzo9j1",
         "label": "west",
         "position": [
@@ -1831,7 +1848,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769178076492_oo24jprvl",
         "label": "west",
         "position": [
@@ -1903,7 +1920,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769178226572_3zna1dr2p",
         "label": "west",
         "position": [
@@ -1929,23 +1946,30 @@
       },
       "yTolerance": 0.25
     },
-    "lastModified": "2026-02-13T19:09:54.991Z",
+    "lastModified": "2026-02-21T13:05:12.078Z",
     "mapId": "s01b_na1",
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
-        "id": "portal_1769178291819_n09yaw7ca",
-        "label": "west",
+        "id": "portal_1771679076062_0myo261qp",
+        "direction": "east",
         "position": [
-          6.809140764290277,
+          6.912580176636958,
           0,
-          1.9651599916831033
-        ]
+          2.0146686594193177
+        ],
+        "label": "west"
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "svgSettings": {
+      "gridSize": 33,
+      "centerX": -6.5,
+      "centerZ": 1.017578125,
+      "svgSize": 400,
+      "padding": 20
+    }
   },
   "s01b_nb2": {
     "floorCollision": {
@@ -2184,7 +2208,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769178897548_mxunttm1y",
         "label": "west",
         "position": [
@@ -2194,7 +2218,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769178909912_j1katpxwp",
         "label": "east",
         "position": [
@@ -2242,7 +2266,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769179008868_rz25stxws",
         "label": "west",
         "position": [
@@ -2252,7 +2276,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769179021592_vhi2x08c1",
         "label": "east",
         "position": [
@@ -2442,7 +2466,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769179513474_71fzipmpv",
         "label": "east",
         "position": [
@@ -2452,7 +2476,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769179528745_qjxirirr1",
         "label": "west",
         "position": [
@@ -2609,7 +2633,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769242070339_krq05mwsm",
         "label": "east",
         "position": [
@@ -2619,7 +2643,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769242081227_fk3jgpbbd",
         "label": "west",
         "position": [
@@ -2672,7 +2696,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1769242259430_i1u6s2c14",
         "label": "east",
         "position": [
@@ -2682,7 +2706,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1769242266097_4lnvhju7l",
         "label": "west",
         "position": [
@@ -2962,7 +2986,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770694981334_dp935sd79",
         "label": "west",
         "position": [
@@ -3011,7 +3035,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770695043291_6ox8psoqu",
         "label": "west",
         "position": [
@@ -3055,7 +3079,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770695078869_40h6bzjh1",
         "label": "west",
         "position": [
@@ -3088,7 +3112,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770695111393_yp47oi3a4",
         "label": "west",
         "position": [
@@ -3265,7 +3289,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770695259216_q3q9gn4s7",
         "label": "west",
         "position": [
@@ -3275,7 +3299,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770695276735_54kpz1eua",
         "label": "east",
         "position": [
@@ -3312,7 +3336,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770695306277_c6uvlke39",
         "label": "east",
         "position": [
@@ -3332,7 +3356,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770695384221_mnl4a6eok",
         "label": "west",
         "position": [
@@ -3490,7 +3514,7 @@
     ],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770695408580_44lo6lkv4",
         "label": "east",
         "position": [
@@ -3500,7 +3524,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770695419562_bawz038ke",
         "label": "west",
         "position": [
@@ -3654,7 +3678,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770695911877_4sfni8f30",
         "label": "west",
         "position": [
@@ -3674,7 +3698,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770695930867_rjf528mex",
         "label": "east",
         "position": [
@@ -4016,7 +4040,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770696287380_24hpqhhx0",
         "label": "west",
         "position": [
@@ -4077,7 +4101,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770696398843_ovubtit05",
         "label": "west",
         "position": [
@@ -4117,7 +4141,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770696714662_gew3o3dtv",
         "label": "west",
         "position": [
@@ -4152,7 +4176,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770696856132_vmje05kmy",
         "label": "west",
         "position": [
@@ -4425,7 +4449,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770722486662_1lt382fkz",
         "label": "east",
         "position": [
@@ -4435,7 +4459,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770722493277_8f5v4gryf",
         "label": "west",
         "position": [
@@ -4472,7 +4496,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770722526873_fl6504dhz",
         "label": "west",
         "position": [
@@ -4492,7 +4516,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770722564750_ufl0ok9cm",
         "label": "east",
         "position": [
@@ -4535,7 +4559,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770722631070_bolxrxrr6",
         "label": "west",
         "position": [
@@ -4545,7 +4569,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770722646376_50jxo2wvb",
         "label": "east",
         "position": [
@@ -4569,7 +4593,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770722673073_jl5ftv275",
         "label": "east",
         "position": [
@@ -4589,7 +4613,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770722699173_wjqw0ny2h",
         "label": "west",
         "position": [
@@ -4636,7 +4660,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770722760000_g83qzpo3v",
         "label": "west",
         "position": [
@@ -4646,7 +4670,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770722774311_hrtiqb9fu",
         "label": "east",
         "position": [
@@ -5134,7 +5158,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770724206940_llpatgw9s",
         "label": "west",
         "position": [
@@ -5183,7 +5207,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770724280805_d90ipsa1m",
         "label": "west",
         "position": [
@@ -5241,7 +5265,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770724309248_c2g3scaos",
         "label": "west",
         "position": [
@@ -5275,7 +5299,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770724355748_mwgaqpeeq",
         "label": "west",
         "position": [
@@ -5604,7 +5628,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770724534177_3sylr1biz",
         "label": "west",
         "position": [
@@ -5624,7 +5648,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770724565732_b018w4ing",
         "label": "east",
         "position": [
@@ -5683,7 +5707,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770724601538_i1x5p9sru",
         "label": "east",
         "position": [
@@ -5693,7 +5717,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770724619059_0r18bbnxn",
         "label": "west",
         "position": [
@@ -5888,7 +5912,7 @@
     ],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770724712468_copgchzfo",
         "label": "east",
         "position": [
@@ -5908,7 +5932,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770724738520_p9pl10hee",
         "label": "west",
         "position": [
@@ -6050,7 +6074,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770725524742_yyrgj5osn",
         "label": "west",
         "position": [
@@ -6070,7 +6094,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770725548089_ykkxu9mbr",
         "label": "east",
         "position": [
@@ -6485,7 +6509,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770725903362_b5urfdx3p",
         "label": "west",
         "position": [
@@ -6557,7 +6581,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770725960956_lizbhtu1e",
         "label": "west",
         "position": [
@@ -6614,7 +6638,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770726344511_namgrlabb",
         "label": "west",
         "position": [
@@ -6666,7 +6690,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770726378183_fxkpkwk3b",
         "label": "west",
         "position": [
@@ -7126,7 +7150,7 @@
     ],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770726568932_8hq9ktf6e",
         "label": "east",
         "position": [
@@ -7136,7 +7160,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770726581218_lcsp8551z",
         "label": "west",
         "position": [
@@ -7198,7 +7222,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770730082806_h9sjtayo4",
         "label": "east",
         "position": [
@@ -7208,7 +7232,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770730093078_7t9wp9odw",
         "label": "west",
         "position": [
@@ -7253,7 +7277,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770730129403_jg9rsahq0",
         "label": "east",
         "position": [
@@ -7263,7 +7287,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770730138498_0vijmjiu6",
         "label": "west",
         "position": [
@@ -7329,7 +7353,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770730342207_15m8hfo6e",
         "label": "east",
         "position": [
@@ -7349,7 +7373,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770730369764_mxvouzf12",
         "label": "west",
         "position": [
@@ -7388,7 +7412,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770730416611_squtxutkn",
         "label": "east",
         "position": [
@@ -7408,7 +7432,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770730445071_i9xmap0dq",
         "label": "west",
         "position": [
@@ -7719,7 +7743,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770745727373_65qwo07rp",
         "label": "west",
         "position": [
@@ -7742,12 +7766,12 @@
       },
       "yTolerance": 0.25
     },
-    "lastModified": "2026-02-14T02:58:22.418Z",
+    "lastModified": "2026-02-20T12:18:33.538Z",
     "mapId": "s04a_lb3",
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770745780702_kddz0u5zk",
         "label": "west",
         "position": [
@@ -7791,7 +7815,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770745814393_qz4f0k4io",
         "label": "west",
         "position": [
@@ -7825,7 +7849,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770745842250_5xti25xdx",
         "label": "west",
         "position": [
@@ -7985,7 +8009,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770751110868_0qo4cir0u",
         "label": "east",
         "position": [
@@ -7995,7 +8019,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770751117052_9mmvfmt6n",
         "label": "west",
         "position": [
@@ -8019,7 +8043,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770752176878_6oaeo7w5p",
         "label": "west",
         "position": [
@@ -8039,7 +8063,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770752195927_86kvndxn2",
         "label": "east",
         "position": [
@@ -8077,7 +8101,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770752231541_bv8s2s83s",
         "label": "east",
         "position": [
@@ -8087,7 +8111,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770752243717_yx32jc3u3",
         "label": "west",
         "position": [
@@ -8115,7 +8139,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770752257179_p1hgj3rf5",
         "label": "west",
         "position": [
@@ -8135,7 +8159,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770752276658_294qok3nv",
         "label": "east",
         "position": [
@@ -8169,7 +8193,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770752307253_lucyi5927",
         "label": "east",
         "position": [
@@ -8189,7 +8213,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770752325021_alyyc85ex",
         "label": "west",
         "position": [
@@ -8256,23 +8280,25 @@
         "tri_79": true,
         "tri_8": true,
         "tri_80": true,
-        "tri_9": true
+        "tri_9": true,
+        "tri_180": true,
+        "tri_181": true
       },
       "yTolerance": 0.25
     },
-    "lastModified": "2026-02-14T02:59:36.380Z",
+    "lastModified": "2026-02-20T12:20:00.761Z",
     "mapId": "s04b_ga1",
     "obstacles": [],
     "portals": [
       {
+        "id": "portal_1771589950722_o9feednfr",
         "direction": "south",
-        "id": "portal_1770752633608_6nch4xgal",
-        "label": "south",
         "position": [
-          -0.14407358297563716,
+          0.033583178919373,
           0,
-          31.16929684366579
-        ]
+          20.560845373684593
+        ],
+        "label": "south"
       }
     ],
     "textureFixes": [],
@@ -8576,7 +8602,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770752845767_lobkrhcs2",
         "label": "west",
         "position": [
@@ -8619,7 +8645,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770755683577_wc3eaxgei",
         "label": "west",
         "position": [
@@ -8692,7 +8718,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770756756287_oovfz9u6n",
         "label": "west",
         "position": [
@@ -8749,7 +8775,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770756787552_sq4e628cj",
         "label": "west",
         "position": [
@@ -8927,7 +8953,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770758566567_46fw79z8s",
         "label": "east",
         "position": [
@@ -8937,7 +8963,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770758576585_fekw12n9z",
         "label": "west",
         "position": [
@@ -8988,7 +9014,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770758608723_nkmclowjp",
         "label": "west",
         "position": [
@@ -9008,7 +9034,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770758679922_nwnfkt5dn",
         "label": "east",
         "position": [
@@ -9051,7 +9077,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770758707305_u876ldg8w",
         "label": "east",
         "position": [
@@ -9061,7 +9087,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770758716371_s6pwsxo5a",
         "label": "west",
         "position": [
@@ -9094,7 +9120,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770758736391_rsb0itky8",
         "label": "east",
         "position": [
@@ -9104,7 +9130,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770758745860_ok6npln3e",
         "label": "west",
         "position": [
@@ -9157,7 +9183,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770758774677_ruu1wjh6o",
         "label": "east",
         "position": [
@@ -9177,7 +9203,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770758792868_1bcisd24k",
         "label": "west",
         "position": [
@@ -9514,7 +9540,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770760646006_y50f5augs",
         "label": "west",
         "position": [
@@ -9548,7 +9574,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770760743576_qvl9ogr1u",
         "label": "west",
         "position": [
@@ -9572,7 +9598,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770760866348_ybzbo2dnb",
         "label": "west",
         "position": [
@@ -9616,7 +9642,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770760934426_qeoowryca",
         "label": "west",
         "position": [
@@ -9754,7 +9780,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770761055477_5jjngdhgh",
         "label": "east",
         "position": [
@@ -9764,7 +9790,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770761065434_itcg7ptk1",
         "label": "west",
         "position": [
@@ -9788,7 +9814,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770761078500_mpt9ttb02",
         "label": "west",
         "position": [
@@ -9798,7 +9824,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770761088167_dvngu6hcl",
         "label": "east",
         "position": [
@@ -10035,7 +10061,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770761970223_7esggfbxt",
         "label": "west",
         "position": [
@@ -10055,7 +10081,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770762000120_7f1gjzesa",
         "label": "east",
         "position": [
@@ -10436,7 +10462,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770762268730_8euuxqd6y",
         "label": "west",
         "position": [
@@ -10541,7 +10567,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770762320845_9i9bd4m36",
         "label": "west",
         "position": [
@@ -10600,7 +10626,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770762349368_s9t0an89w",
         "label": "west",
         "position": [
@@ -10690,7 +10716,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770762400155_6lpr2690d",
         "label": "west",
         "position": [
@@ -10967,7 +10993,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770762568180_9ii509fip",
         "label": "west",
         "position": [
@@ -10977,7 +11003,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770762578652_5huw2cn9x",
         "label": "east",
         "position": [
@@ -11024,7 +11050,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770762596082_isjbyow6a",
         "label": "east",
         "position": [
@@ -11044,7 +11070,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770762627789_64agqpesp",
         "label": "west",
         "position": [
@@ -11068,7 +11094,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770762655210_yr0ehdi5a",
         "label": "west",
         "position": [
@@ -11078,7 +11104,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770762680326_z4yfn8k74",
         "label": "east",
         "position": [
@@ -11220,7 +11246,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770763053284_7exxgs8i9",
         "label": "west",
         "position": [
@@ -11230,7 +11256,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770763062490_alnku297s",
         "label": "east",
         "position": [
@@ -11279,7 +11305,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770763081552_0g553k4w2",
         "label": "east",
         "position": [
@@ -11289,7 +11315,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770763094333_sk1t6bhto",
         "label": "west",
         "position": [
@@ -11882,7 +11908,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770800552810_ku8m9olcv",
         "label": "west",
         "position": [
@@ -11957,7 +11983,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770800737434_hntn1f52t",
         "label": "west",
         "position": [
@@ -11981,7 +12007,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770800981899_vhliis27d",
         "label": "west",
         "position": [
@@ -12025,7 +12051,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770801043650_t5ixyvhmi",
         "label": "west",
         "position": [
@@ -12256,7 +12282,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770801831635_os7jt4etx",
         "label": "west",
         "position": [
@@ -12266,7 +12292,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770801843685_5oryimfe4",
         "label": "east",
         "position": [
@@ -12300,7 +12326,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770801890896_7lan0t7w9",
         "label": "west",
         "position": [
@@ -12310,7 +12336,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770801905885_4iwwhltyx",
         "label": "east",
         "position": [
@@ -12501,7 +12527,7 @@
     ],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770802232525_v72nkckjm",
         "label": "east",
         "position": [
@@ -12511,7 +12537,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770802244126_9akzwcm2h",
         "label": "west",
         "position": [
@@ -12573,7 +12599,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770802284619_epd7pexf5",
         "label": "west",
         "position": [
@@ -12583,7 +12609,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770802298295_phwtsdykd",
         "label": "east",
         "position": [
@@ -12645,7 +12671,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770802349635_bwgzmuobe",
         "label": "west",
         "position": [
@@ -12665,7 +12691,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770802376600_c09tuf5kl",
         "label": "east",
         "position": [
@@ -12879,7 +12905,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770802805270_ccrnp2bg2",
         "label": "west",
         "position": [
@@ -12913,7 +12939,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770802862786_5r11w42p6",
         "label": "west",
         "position": [
@@ -12947,7 +12973,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770802902833_w6mwq38tq",
         "label": "west",
         "position": [
@@ -12981,7 +13007,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770802933120_4vrwhcn8h",
         "label": "west",
         "position": [
@@ -13111,7 +13137,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770803170391_vs0l6sw6j",
         "label": "west",
         "position": [
@@ -13121,7 +13147,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770803189514_yan6ioblu",
         "label": "east",
         "position": [
@@ -13155,7 +13181,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770803248415_7nzpxdptu",
         "label": "west",
         "position": [
@@ -13165,7 +13191,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770803260228_uum5itbm4",
         "label": "east",
         "position": [
@@ -13199,7 +13225,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770803299656_mnclxa4u0",
         "label": "west",
         "position": [
@@ -13209,7 +13235,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770803316790_8q4ukwdyx",
         "label": "east",
         "position": [
@@ -13243,7 +13269,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770803355729_vu8istnzc",
         "label": "west",
         "position": [
@@ -13253,7 +13279,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770803365411_2kisesxce",
         "label": "east",
         "position": [
@@ -13287,7 +13313,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770803394422_cn7wsn3qd",
         "label": "east",
         "position": [
@@ -13307,7 +13333,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770803423073_ndjhu6bwl",
         "label": "west",
         "position": [
@@ -13610,7 +13636,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770820796508_43d5tssn8",
         "label": "west",
         "position": [
@@ -13654,7 +13680,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770820827228_7tr2itghp",
         "label": "west",
         "position": [
@@ -13678,7 +13704,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770820838648_2zzytffqz",
         "label": "west",
         "position": [
@@ -13722,7 +13748,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770820861740_d9kmta3d7",
         "label": "west",
         "position": [
@@ -13860,7 +13886,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770820955761_wk2yqu78w",
         "label": "west",
         "position": [
@@ -13870,7 +13896,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770820962572_b4qjz724s",
         "label": "east",
         "position": [
@@ -13894,7 +13920,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770820976971_pclpsikda",
         "label": "east",
         "position": [
@@ -13904,7 +13930,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770820982383_e10zq66tm",
         "label": "west",
         "position": [
@@ -13938,7 +13964,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770821007760_mtrt5u95y",
         "label": "east",
         "position": [
@@ -13948,7 +13974,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821014223_83mcdhg2t",
         "label": "west",
         "position": [
@@ -13992,7 +14018,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770821040864_hhzaljwy3",
         "label": "east",
         "position": [
@@ -14002,7 +14028,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821047186_b1zh2cc12",
         "label": "west",
         "position": [
@@ -14026,7 +14052,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821060464_qzygrwcvi",
         "label": "west",
         "position": [
@@ -14046,7 +14072,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770821074996_o9m9367b5",
         "label": "east",
         "position": [
@@ -14240,7 +14266,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821188638_j0hs0qwrx",
         "label": "west",
         "position": [
@@ -14284,7 +14310,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821225200_1zpa8qzwk",
         "label": "west",
         "position": [
@@ -14308,7 +14334,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821235738_t2sqyxbcr",
         "label": "west",
         "position": [
@@ -14352,7 +14378,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821267709_nhihwchlr",
         "label": "west",
         "position": [
@@ -14482,7 +14508,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770821368580_xb64n19lq",
         "label": "east",
         "position": [
@@ -14502,7 +14528,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821388215_vvaynr262",
         "label": "west",
         "position": [
@@ -14536,7 +14562,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770821407706_00qp1ql2l",
         "label": "east",
         "position": [
@@ -14546,7 +14572,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821415743_e0quantli",
         "label": "west",
         "position": [
@@ -14570,7 +14596,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821426783_fll3nrrbo",
         "label": "west",
         "position": [
@@ -14590,7 +14616,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770821446355_t5xqnt78j",
         "label": "east",
         "position": [
@@ -14624,7 +14650,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821474601_66in1k6c6",
         "label": "west",
         "position": [
@@ -14634,7 +14660,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770821482619_ccs97svv2",
         "label": "east",
         "position": [
@@ -14658,7 +14684,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770821520875_spj37nyll",
         "label": "west",
         "position": [
@@ -14678,7 +14704,7 @@
         ]
       },
       {
-        "direction": "east",
+        "direction": "west",
         "id": "portal_1770821538440_01uy5y9am",
         "label": "east",
         "position": [
@@ -14904,7 +14930,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770827641007_k4nu1uaq5",
         "label": "west",
         "position": [
@@ -15040,7 +15066,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770828761533_76b7u8if4",
         "label": "west",
         "position": [
@@ -15176,7 +15202,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770831792236_nuyevg6xw",
         "label": "west",
         "position": [
@@ -15322,7 +15348,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770831882445_4eefl4ja0",
         "label": "west",
         "position": [
@@ -15448,7 +15474,7 @@
     "obstacles": [],
     "portals": [
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770831954470_hxpx61hmz",
         "label": "west",
         "position": [
@@ -15594,7 +15620,7 @@
         ]
       },
       {
-        "direction": "west",
+        "direction": "east",
         "id": "portal_1770832043245_e9vg1sloh",
         "label": "west",
         "position": [

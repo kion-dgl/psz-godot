@@ -13,7 +13,8 @@ import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { QuestProject } from '../types';
 import { getProjectSections } from '../types';
-import { projectToGodotQuest } from '../utils/quest-io';
+import { projectToGodotQuest, getFloorCollisionConfig } from '../utils/quest-io';
+import type { FloorCollisionConfig } from '../utils/quest-io';
 import StageScene from '../preview/StageScene';
 import type { PortalData } from '../preview/StageScene';
 import PreviewMinimap from '../preview/PreviewMinimap';
@@ -60,6 +61,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
   const [reportedPos, setReportedPos] = useState<[number, number, number]>([0, 2, 0]);
   // Floor triangles extracted from GLB for minimap
   const [floorTriangles, setFloorTriangles] = useState<number[][] | null>(null);
+  const [floorCollision, setFloorCollision] = useState<FloorCollisionConfig | null>(null);
   const [sectionIdx, setSectionIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +128,16 @@ export default function PreviewTab({ project }: PreviewTabProps) {
   }, [project, sectionIdx]);
 
   const currentCell = currentCellPos ? bakedCells[currentCellPos] : null;
+
+  // Load floor collision config when stage changes
+  useEffect(() => {
+    if (!currentCell) { setFloorCollision(null); return; }
+    let cancelled = false;
+    getFloorCollisionConfig(currentCell.stage_id).then(config => {
+      if (!cancelled) setFloorCollision(config);
+    });
+    return () => { cancelled = true; };
+  }, [currentCell?.stage_id]);
 
   // Rotated portals for minimap (same world space as 3D view)
   const rotatedPortals = useMemo(() => {
@@ -314,6 +326,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
               connections={currentCell.connections}
               initialPosition={spawnPos}
               initialYaw={spawnYaw}
+              floorCollision={floorCollision}
               onPositionReport={handlePositionReport}
               onTriggerEnter={handleTriggerEnter}
               onFloorData={handleFloorData}
