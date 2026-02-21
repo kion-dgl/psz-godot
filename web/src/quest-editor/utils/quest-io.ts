@@ -11,7 +11,145 @@ import {
   getRotatedGates,
   getNeighbor,
   isValidPos,
+  rotateDirection,
 } from '../hooks/useStageConfigs';
+import type { Direction } from '../types';
+
+// ============================================================================
+// Unified stage config loading (full portal data, not just directions)
+// ============================================================================
+
+interface PortalConfig {
+  direction: string;
+  position: [number, number, number];
+  rotationOffset?: number;
+}
+
+interface DefaultSpawnConfig {
+  position: [number, number, number];
+  direction: string;
+}
+
+interface FloorCollisionConfig {
+  yTolerance: number;
+  excludedMeshPatterns: string[];
+  triangles: Record<string, boolean>; // tri_N -> included (true/absent) or excluded (false)
+}
+
+interface FullStageConfig {
+  portals: PortalConfig[];
+  defaultSpawn?: DefaultSpawnConfig;
+  floorCollision?: FloorCollisionConfig;
+}
+
+let _fullConfigCache: Record<string, FullStageConfig> | null = null;
+let _fullConfigPromise: Promise<Record<string, FullStageConfig>> | null = null;
+
+async function loadFullUnifiedConfigs(): Promise<Record<string, FullStageConfig>> {
+  if (_fullConfigCache) return _fullConfigCache;
+  if (_fullConfigPromise) return _fullConfigPromise;
+
+  _fullConfigPromise = (async () => {
+    const base = import.meta.env.BASE_URL || '/';
+    try {
+      const resp = await fetch(`${base}data/stage_configs/unified-stage-configs.json`);
+      if (resp.ok) {
+        const data = await resp.json() as Record<string, FullStageConfig>;
+        _fullConfigCache = data;
+        return data;
+      }
+    } catch { /* ignore */ }
+    _fullConfigCache = {};
+    return {};
+  })();
+
+  return _fullConfigPromise;
+}
+
+/** Get floor collision config for a stage (yTolerance + excluded triangles map) */
+export async function getFloorCollisionConfig(stageId: string): Promise<FloorCollisionConfig | null> {
+  const configs = await loadFullUnifiedConfigs();
+  return configs[stageId]?.floorCollision ?? null;
+}
+
+export type { FloorCollisionConfig };
+
+// ============================================================================
+// Portal position helpers (matches ExportTab.tsx computePortalPositions)
+// ============================================================================
+
+const DIRECTION_ROTATIONS: Record<string, number> = {
+  north: 0,
+  south: Math.PI,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
+};
+
+function getPortalRotation(portal: PortalConfig): number {
+  return (DIRECTION_ROTATIONS[portal.direction] ?? 0) + ((portal.rotationOffset || 0) * Math.PI) / 180;
+}
+
+type Vec3 = [number, number, number];
+
+function round3(v: Vec3): Vec3 {
+  return [+v[0].toFixed(2), +v[1].toFixed(2), +v[2].toFixed(2)];
+}
+
+// Gate model Y-rotation for each config portal direction.
+// The gate model default faces +Z (south). Gate opens inward (toward room center):
+//   "north" → portal at -Z edge → gate opens toward +Z (inward) → rotY = 0
+//   "south" → portal at +Z edge → gate opens toward -Z (inward) → rotY = PI
+//   "east"  → portal at +X edge → gate opens toward -X (inward) → rotY = -PI/2
+//   "west"  → portal at -X edge → gate opens toward +X (inward) → rotY = PI/2
+const GATE_MODEL_ROTATIONS: Record<string, number> = {
+  north: 0,
+  south: Math.PI,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
+};
+
+// Config direction → compass label (1:1 now that east/west are fixed)
+const CONFIG_DIR_TO_COMPASS: Record<string, string> = {
+  north: 'N',
+  south: 'S',
+  east: 'E',
+  west: 'W',
+};
+
+function computePortalPositions(portal: PortalConfig): {
+  gate: Vec3;
+  spawn: Vec3;
+  trigger: Vec3;
+  gate_rot: Vec3;
+  compass_label: string;
+} {
+  const [x, , z] = portal.position;
+  const rotation = getPortalRotation(portal);
+
+  const spawnOutset = 3;
+  const triggerOutset = 7;
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+
+  // Cardinal gate rotation based on config direction (not atan2 of position)
+  const gateYRot = GATE_MODEL_ROTATIONS[portal.direction] ?? 0;
+
+  // Compass label for display (minimap + 3D gate label)
+  const compassLabel = CONFIG_DIR_TO_COMPASS[portal.direction] ?? portal.direction[0].toUpperCase();
+
+  return {
+    gate: round3(portal.position),
+    spawn: round3([x - sin * spawnOutset, 1, z - cos * spawnOutset]),
+    trigger: round3([x - sin * triggerOutset, 0, z - cos * triggerOutset]),
+    gate_rot: round3([0, gateYRot, 0]),
+    compass_label: compassLabel,
+  };
+}
+
+/** Reverse-rotate a grid direction back to the config (original) direction */
+function reverseRotateDirection(gridDir: Direction, rotation: number): Direction {
+  return rotateDirection(gridDir, (360 - rotation) % 360);
+}
 
 const AREA_ID_TO_KEY: Record<string, string> = Object.fromEntries(
   Object.entries(AREA_KEY_TO_ID).map(([k, v]) => [v, k])
@@ -58,20 +196,22 @@ function buildSectionPathOrder(
   return order;
 }
 
-/** Export a single section's cells to Godot format */
-function exportSectionCells(
+/** Export a single section's cells to Godot format (async — loads full stage configs for portal baking) */
+async function exportSectionCells(
   sectionCells: Record<string, EditorGridCell>,
   sectionStartPos: string | null,
   sectionEndPos: string | null,
   sectionKeyLinks: Record<string, string>,
   sectionGridSize: number,
-): object[] {
+): Promise<object[]> {
   const cells: object[] = [];
   const pathOrder = buildSectionPathOrder(sectionCells, sectionStartPos, sectionGridSize);
+  const fullConfigs = await loadFullUnifiedConfigs();
 
   for (const [pos, cell] of Object.entries(sectionCells)) {
     const [row, col] = pos.split(',').map(Number);
     const gates = getRotatedGates(cell.stageName, cell.rotation ?? 0);
+    const rotation = cell.rotation ?? 0;
 
     const connections: Record<string, string> = {};
     for (const worldDir of gates) {
@@ -98,11 +238,47 @@ function exportSectionCells(
       keyGateDirection = cell.lockedGate;
     }
 
+    // Bake portal positions from full unified config
+    const portals: Record<string, { gate: Vec3; spawn: Vec3; trigger: Vec3; gate_rot?: Vec3; compass_label?: string }> = {};
+    const stageConfig = fullConfigs[cell.stageName];
+    if (stageConfig && stageConfig.portals) {
+      // Build lookup: config direction → portal config
+      const configPortalsByDir = new Map<string, PortalConfig>();
+      for (const p of stageConfig.portals) {
+        configPortalsByDir.set(p.direction, p);
+      }
+
+      // For each grid direction that has a connection or is warp_edge, find the config portal
+      const allGridDirs = new Set([...Object.keys(connections)]);
+      if (warpEdge) allGridDirs.add(warpEdge);
+
+      for (const gridDir of allGridDirs) {
+        const configDir = reverseRotateDirection(gridDir as Direction, rotation);
+        const portal = configPortalsByDir.get(configDir);
+        if (portal) {
+          portals[gridDir] = computePortalPositions(portal);
+        }
+      }
+
+      // Bake default_spawn if the stage has one
+      if (stageConfig.defaultSpawn) {
+        const ds = stageConfig.defaultSpawn;
+        const dsRot = DIRECTION_ROTATIONS[ds.direction] ?? 0;
+        portals['default'] = {
+          gate: round3(ds.position),
+          spawn: round3([ds.position[0], 1, ds.position[2]]),
+          trigger: round3([ds.position[0], 0, ds.position[2]]),
+        };
+        (portals['default'] as any).default_rotation = +dsRot.toFixed(4);
+      }
+    }
+
     const cellData: Record<string, unknown> = {
       pos,
       stage_id: cell.stageName,
-      rotation: cell.rotation ?? 0,
+      rotation,
       connections,
+      portals,
       is_start: sectionStartPos === pos,
       is_end: sectionEndPos === pos,
       is_branch: Object.keys(connections).length > 2,
@@ -154,10 +330,10 @@ function exportSectionCells(
   return cells;
 }
 
-export function projectToGodotQuest(project: QuestProject): object {
+export async function projectToGodotQuest(project: QuestProject): Promise<object> {
   const projectSections = getProjectSections(project);
 
-  const godotSections = projectSections.map(sec => {
+  const godotSections = await Promise.all(projectSections.map(async sec => {
     // Auto-fix start/end for single-cell sections (transition/boss)
     let { startPos, endPos } = sec;
     const cellKeys = Object.keys(sec.cells);
@@ -166,7 +342,7 @@ export function projectToGodotQuest(project: QuestProject): object {
       endPos = cellKeys[0];
     }
 
-    const cells = exportSectionCells(
+    const cells = await exportSectionCells(
       sec.cells, startPos, endPos, sec.keyLinks, sec.gridSize
     );
     const section: Record<string, unknown> = {
@@ -180,7 +356,7 @@ export function projectToGodotQuest(project: QuestProject): object {
     if (sec.exitDirection) section.exit_direction = sec.exitDirection;
     if (sec.warpRequires && sec.warpRequires.length > 0) section.warp_requires = sec.warpRequires;
     return section;
-  });
+  }));
 
   // Warp link resolution: scan all sections for warp_dest objects, then inject
   // warp_section/warp_cell/warp_position into matching warp objects

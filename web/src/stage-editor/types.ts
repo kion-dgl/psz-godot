@@ -45,8 +45,8 @@ export interface SpawnPointData {
 export const DIRECTION_ROTATIONS: Record<GateDirection, number> = {
   north: 0,
   south: Math.PI,
-  east: Math.PI / 2,
-  west: -Math.PI / 2,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
 };
 
 // Get effective rotation for a portal (base direction + optional offset)

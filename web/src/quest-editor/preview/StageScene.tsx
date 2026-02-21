@@ -36,6 +36,11 @@ export interface CellPortals {
   pos: string;
 }
 
+export interface FloorCollisionConfig {
+  yTolerance: number;
+  triangles: Record<string, boolean>;
+}
+
 interface StageSceneProps {
   areaKey: string;
   stageId: string;
@@ -44,6 +49,7 @@ interface StageSceneProps {
   connections: Record<string, string>;
   initialPosition: [number, number, number];
   initialYaw: number;
+  floorCollision?: FloorCollisionConfig | null;
   onPositionReport: (x: number, y: number, z: number) => void;
   onTriggerEnter: (direction: string, targetCellPos: string) => void;
   onFloorData?: (triangles: number[][]) => void;
@@ -226,13 +232,20 @@ const _raycaster = new THREE.Raycaster();
 const _rayOrigin = new THREE.Vector3();
 const _rayDir = new THREE.Vector3(0, -1, 0);
 
-/** Extract floor triangles from the model only (projected to XZ, world space).
- *  Filters by triangle normal (must be mostly upward) AND vertex Y (below threshold). */
-function extractFloorTriangles(root: THREE.Object3D): number[][] {
+/** Extract floor triangles from the model using stage config floor collision data.
+ *  Matches the stage editor algorithm: vertices within yTolerance of y=0,
+ *  then apply exclusion map from floorCollision.triangles. */
+function extractFloorTriangles(
+  root: THREE.Object3D,
+  floorConfig?: FloorCollisionConfig | null,
+): number[][] {
+  const yTolerance = floorConfig?.yTolerance ?? 0.25;
+  const excludeMap = floorConfig?.triangles ?? {};
   const triangles: number[][] = [];
   const v1 = new THREE.Vector3();
   const v2 = new THREE.Vector3();
   const v3 = new THREE.Vector3();
+  let triId = 0;
 
   root.updateWorldMatrix(true, true);
 
@@ -256,16 +269,14 @@ function extractFloorTriangles(root: THREE.Object3D): number[][] {
       v2.set(pos.getX(i2), pos.getY(i2), pos.getZ(i2)).applyMatrix4(mesh.matrixWorld);
       v3.set(pos.getX(i3), pos.getY(i3), pos.getZ(i3)).applyMatrix4(mesh.matrixWorld);
 
-      // Y filter: exclude elevated geometry (trees, roofs, walls above floor)
-      if (v1.y > 3 || v2.y > 3 || v3.y > 3) continue;
+      // Floor filter: all 3 vertices must be within yTolerance of y=0
+      if (Math.abs(v1.y) >= yTolerance || Math.abs(v2.y) >= yTolerance || Math.abs(v3.y) >= yTolerance) continue;
 
-      // Normal filter: only mostly-horizontal triangles (floor surfaces)
-      const ax = v2.x - v1.x, ay = v2.y - v1.y, az = v2.z - v1.z;
-      const bx = v3.x - v1.x, by = v3.y - v1.y, bz = v3.z - v1.z;
-      const absNy = Math.abs(az * bx - ax * bz);
-      const absNx = Math.abs(ay * bz - az * by);
-      const absNz = Math.abs(ax * by - ay * bx);
-      if (absNy < absNx || absNy < absNz) continue;
+      // This triangle passed the Y filter — assign sequential ID (matches stage editor)
+      const id = `tri_${triId++}`;
+
+      // Check exclusion map: false means excluded
+      if (excludeMap[id] === false) continue;
 
       triangles.push([v1.x, v1.z, v2.x, v2.z, v3.x, v3.z]);
     }
@@ -286,6 +297,7 @@ export default function StageScene({
   connections,
   initialPosition,
   initialYaw,
+  floorCollision,
   onPositionReport,
   onTriggerEnter,
   onFloorData,
@@ -360,7 +372,7 @@ export default function StageScene({
       modelRef.current.traverse(c => { if ((c as THREE.Mesh).isMesh) hasMeshes = true; });
       if (hasMeshes) {
         floorExtractedRef.current = true;
-        onFloorData(extractFloorTriangles(modelRef.current));
+        onFloorData(extractFloorTriangles(modelRef.current, floorCollision));
       }
     }
 
