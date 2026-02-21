@@ -4,7 +4,7 @@
  * Milestone 1: Grid Layout Editor
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { QuestProject, QuestSection, SectionType, Direction } from './types';
 import {
@@ -17,13 +17,16 @@ import ContentTab from './tabs/ContentTab';
 import MetadataTab from './tabs/MetadataTab';
 import ExportTab from './tabs/ExportTab';
 
-type TabId = 'layout' | 'content' | 'metadata' | 'export';
+const PreviewTab = lazy(() => import('./tabs/PreviewTab'));
+
+type TabId = 'layout' | 'content' | 'metadata' | 'export' | 'preview';
 
 const TABS: { id: TabId; label: string; disabled?: boolean }[] = [
   { id: 'layout', label: 'Layout' },
   { id: 'content', label: 'Content' },
   { id: 'metadata', label: 'Metadata' },
   { id: 'export', label: 'Export' },
+  { id: 'preview', label: 'Preview' },
 ];
 
 export default function QuestEditor() {
@@ -617,6 +620,15 @@ export default function QuestEditor() {
         {activeTab === 'content' && <ContentTab project={sectionProject} onUpdateProject={updateSectionProject} />}
         {activeTab === 'metadata' && <MetadataTab project={project} onUpdateProject={updateProject} />}
         {activeTab === 'export' && <ExportTab project={project} setProject={setProject} />}
+        {activeTab === 'preview' && (
+          <Suspense fallback={
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a2e', color: '#888' }}>
+              Loading preview...
+            </div>
+          }>
+            <PreviewTab project={project} />
+          </Suspense>
+        )}
       </div>
     </div>
   );
