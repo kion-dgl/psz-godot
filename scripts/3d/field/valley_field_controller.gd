@@ -767,7 +767,7 @@ func _find_global_fix_for_material(mat: StandardMaterial3D) -> Dictionary:
 	var tex_basename: String = tex_path.get_file()  # e.g. "s01_2_fall.png"
 	# Try with common suffixes (#0, #1) since GLTF keys include material index
 	for suffix in ["#1", "#0", ""]:
-		var key := tex_basename + suffix
+		var key: String = tex_basename + suffix
 		if _global_texture_fixes.has(key):
 			return _global_texture_fixes[key] as Dictionary
 	return {}
