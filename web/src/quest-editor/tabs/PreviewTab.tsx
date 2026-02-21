@@ -58,6 +58,8 @@ export default function PreviewTab({ project }: PreviewTabProps) {
   const [spawnYaw, setSpawnYaw] = useState(0);
   // Throttled position from StageScene for overlays
   const [reportedPos, setReportedPos] = useState<[number, number, number]>([0, 2, 0]);
+  // Floor triangles extracted from GLB for minimap
+  const [floorTriangles, setFloorTriangles] = useState<number[][] | null>(null);
   const [sectionIdx, setSectionIdx] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -125,8 +127,29 @@ export default function PreviewTab({ project }: PreviewTabProps) {
 
   const currentCell = currentCellPos ? bakedCells[currentCellPos] : null;
 
+  // Rotated portals for minimap (same world space as 3D view)
+  const rotatedPortals = useMemo(() => {
+    if (!currentCell) return {};
+    const rot = currentCell.rotation;
+    if (rot === 0) return currentCell.portals;
+    const result: Record<string, PortalData> = {};
+    for (const [key, p] of Object.entries(currentCell.portals)) {
+      result[key] = {
+        ...p,
+        gate: rotateSpawn(p.gate, rot),
+        spawn: rotateSpawn(p.spawn, rot),
+        trigger: rotateSpawn(p.trigger, rot),
+      };
+    }
+    return result;
+  }, [currentCell]);
+
   const handlePositionReport = useCallback((x: number, y: number, z: number) => {
     setReportedPos([x, y, z]);
+  }, []);
+
+  const handleFloorData = useCallback((triangles: number[][]) => {
+    setFloorTriangles(triangles);
   }, []);
 
   const handleTriggerEnter = useCallback((direction: string, targetCellPos: string) => {
@@ -293,6 +316,7 @@ export default function PreviewTab({ project }: PreviewTabProps) {
               initialYaw={spawnYaw}
               onPositionReport={handlePositionReport}
               onTriggerEnter={handleTriggerEnter}
+              onFloorData={handleFloorData}
             />
           </Suspense>
         </Canvas>
@@ -300,14 +324,11 @@ export default function PreviewTab({ project }: PreviewTabProps) {
         {/* Minimap overlay */}
         <div style={{ position: 'absolute', top: 12, right: 12, pointerEvents: 'none' }}>
           <PreviewMinimap
-            areaKey={project.areaKey}
-            stageId={currentCell.stage_id}
-            portals={currentCell.portals}
+            floorTriangles={floorTriangles}
+            portals={rotatedPortals}
             connections={currentCell.connections}
             playerX={reportedPos[0]}
             playerZ={reportedPos[2]}
-            playerRotation={currentCell.rotation}
-            rotation={currentCell.rotation}
           />
         </div>
 
