@@ -419,7 +419,7 @@ export default function PreviewMinimap({
   }, [isRotatedVariant, portals, connections, legacyTransform]);
 
   // CSS rotation — only for legacy SVGs (rotated variants already have rotation baked in)
-  const rotDeg = isRotatedVariant ? 0 : -cellRotation;
+  const rotDeg = isRotatedVariant ? 0 : cellRotation;
 
   if (loading) {
     return (
