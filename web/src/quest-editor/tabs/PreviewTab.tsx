@@ -36,7 +36,8 @@ function rotateSpawn(pos: [number, number, number], degY: number): [number, numb
  *  exactly where the player should face when spawning. */
 function getSpawnYaw(portal: PortalData, cellRotDeg: number): number {
   const gateRotY = portal.gate_rot ? portal.gate_rot[1] : 0;
-  return gateRotY + (cellRotDeg * Math.PI) / 180;
+  // gate_rot points outward from the room; player should face inward (+PI)
+  return gateRotY + (cellRotDeg * Math.PI) / 180 + Math.PI;
 }
 
 interface BakedCell {

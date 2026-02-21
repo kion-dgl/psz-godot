@@ -211,7 +211,9 @@ function PortalMarkers({ portals, connections }: {
       {Object.entries(portals).map(([dir, portal]) => {
         if (dir === 'default') return null;
         const targetCell = connections[dir];
-        const label = `${portal.compass_label || dir[0].toUpperCase()}${targetCell ? ` → ${targetCell}` : ''}`;
+        // Use the grid direction key (east/west/north/south) for the label,
+        // not compass_label which reflects the unrotated config direction
+        const label = `${dir[0].toUpperCase()}${targetCell ? ` → ${targetCell}` : ''}`;
         const gateRotY = portal.gate_rot ? portal.gate_rot[1] : 0;
 
         return (
