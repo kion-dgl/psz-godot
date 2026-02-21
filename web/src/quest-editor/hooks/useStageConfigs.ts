@@ -1,7 +1,7 @@
 /**
  * useStageConfigs — Loads stage configs and provides gate helpers
  *
- * Loads all *_configs.json from /data/stage_configs/ at startup.
+ * Loads unified-stage-configs.json from /data/stage_configs/ at startup.
  * Provides filtering by area/variant and rotation-aware gate matching.
  */
 
@@ -13,13 +13,6 @@ import { EDITOR_AREAS } from '../types';
 let _configCache: Record<string, StageConfig> | null = null;
 let _configPromise: Promise<Record<string, StageConfig>> | null = null;
 
-const CONFIG_FILES = [
-  'paru_configs',
-  'valley_configs',
-  'wetlands_configs',
-  'snowfield_configs',
-];
-
 export async function loadAllConfigs(): Promise<Record<string, StageConfig>> {
   if (_configCache) return _configCache;
   if (_configPromise) return _configPromise;
@@ -27,41 +20,30 @@ export async function loadAllConfigs(): Promise<Record<string, StageConfig>> {
   _configPromise = (async () => {
     const merged: Record<string, StageConfig> = {};
     const base = import.meta.env.BASE_URL || '/';
-    await Promise.all(
-      CONFIG_FILES.map(async (name) => {
-        try {
-          const resp = await fetch(`${base}data/stage_configs/${name}.json`);
-          if (resp.ok) {
-            const data = await resp.json();
-            Object.assign(merged, data);
-          }
-        } catch {
-          // Config file not available, skip
-        }
-      })
-    );
 
-    // Override gate directions from unified config portals (source of truth)
     try {
       const resp = await fetch(`${base}data/stage_configs/unified-stage-configs.json`);
       if (resp.ok) {
-        const unified = await resp.json() as Record<string, { portals?: { direction: string }[] }>;
+        const unified = await resp.json() as Record<string, {
+          portals?: { direction: string }[];
+        }>;
         for (const [stageId, uCfg] of Object.entries(unified)) {
-          const portals = uCfg.portals;
-          if (!portals || portals.length === 0) continue;
+          const portals = uCfg.portals || [];
           const dirs = portals.map(p => p.direction as Direction).filter(Boolean);
-          if (dirs.length === 0) continue;
-          if (merged[stageId]) {
-            // Replace gates array with portal directions from unified config
-            merged[stageId].gates = dirs.map(d => ({
+          merged[stageId] = {
+            gridSize: 54,
+            gridOffset: [0, 0],
+            gates: dirs.map(d => ({
               edge: d as 'north' | 'south' | 'east' | 'west',
               x: 0, z: 0, scale: 1, animated: true,
-            }));
-          }
+            })),
+            spawnPoints: [],
+            triggers: [],
+          };
         }
       }
     } catch {
-      // Unified config not available, keep valley_configs gates
+      // Unified config not available
     }
 
     _configCache = merged;
