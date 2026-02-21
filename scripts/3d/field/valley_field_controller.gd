@@ -147,10 +147,15 @@ func _ready() -> void:
 	TimeManager.stage_label = stage_id
 	var area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
 	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
-	var map_path := "res://assets/environments/%s/%s.glb" % [area_cfg["folder"], stage_id]
-	var packed_scene := load(map_path) as PackedScene
+
+	# Load visual mesh from raw stage
+	var subfolder: String = _get_stage_subfolder(stage_id, area_cfg["folder"])
+	var scene_path := "res://assets/stages/%s/%s/lndmd/%s-scene.glb" % [subfolder, stage_id, stage_id]
+	var floor_path := "res://assets/stages/%s/%s/lndmd/%s-floor.glb" % [subfolder, stage_id, stage_id]
+
+	var packed_scene := load(scene_path) as PackedScene
 	if not packed_scene:
-		push_error("[ValleyField] Failed to load map: %s" % map_path)
+		push_error("[ValleyField] Failed to load map: %s" % scene_path)
 		_return_to_city()
 		return
 
@@ -162,7 +167,7 @@ func _ready() -> void:
 	if _rotation_deg != 0:
 		_map_root.rotation.y = deg_to_rad(_rotation_deg)
 
-	# Load stage config JSON (texture fixes + portal data)
+	# Load stage config from unified config
 	_stage_config = _load_stage_config(area_cfg["folder"], stage_id)
 	_texture_fixes = _stage_config.get("textureFixes", []) as Array
 	if _texture_fixes.size() > 0:
@@ -173,15 +178,27 @@ func _ready() -> void:
 	_fix_materials(_map_root)
 	await get_tree().process_frame
 
-	# Setup collision from GLB -colonly meshes
-	_setup_map_collision(_map_root)
+	# Load floor collision from separate floor GLB, fall back to embedded -colonly meshes
+	if FileAccess.file_exists(floor_path):
+		var floor_scene := load(floor_path) as PackedScene
+		if floor_scene:
+			var floor_root := floor_scene.instantiate() as Node3D
+			floor_root.name = "FloorCollision"
+			if _rotation_deg != 0:
+				floor_root.rotation.y = deg_to_rad(_rotation_deg)
+			add_child(floor_root)
+			_setup_map_collision(floor_root)
+			print("[ValleyField] Loaded floor collision from %s" % floor_path)
+		else:
+			_setup_map_collision(_map_root)
+	else:
+		_setup_map_collision(_map_root)
 	await get_tree().process_frame
 
-	# Build portal data from config JSON (preferred) or fall back to GLB nodes
+	# Build portal data from config JSON
 	var original_portal_data: Dictionary = _build_portal_data_from_config(_stage_config)
 	if original_portal_data.is_empty():
-		original_portal_data = _find_portal_data_from_glb(_map_root)
-		print("[ValleyField] Config had no portals — fell back to GLB node discovery")
+		print("[ValleyField] WARNING: No portal data in config for %s" % stage_id)
 
 	# Remap portal keys from original GLB directions to grid-space directions.
 	# Positions are already correct (to_global() applied cell rotation).
@@ -421,53 +438,6 @@ func _find_cell(cells: Array, pos: String) -> Dictionary:
 	return {}
 
 
-## Fallback: discover portal nodes from GLB scene tree (kept for stages without config JSON).
-func _find_portal_data_from_glb(map_root: Node3D) -> Dictionary:
-	var portals := {}
-	var portals_node: Node3D = map_root.get_node_or_null("portals")
-	if not portals_node:
-		portals_node = _find_child_by_name(map_root, "portals")
-	if not portals_node:
-		return portals
-
-	for dir in ["north", "east", "south", "west"]:
-		var spawn_node: Node3D = portals_node.get_node_or_null("spawn_" + dir)
-		if not spawn_node:
-			spawn_node = _find_child_by_name(portals_node, "spawn_" + dir)
-		var trigger_area: Node3D = portals_node.get_node_or_null("trigger_" + dir + "-area")
-		if not trigger_area:
-			trigger_area = _find_child_by_name(portals_node, "trigger_" + dir + "-area")
-		if spawn_node:
-			# Use area's base position (y=0), not the box child (y=1.5)
-			var trigger_pos: Vector3 = trigger_area.global_position if trigger_area else spawn_node.global_position
-			# Find gate marker node (gate_{dir} or gate_{dir}-colonly)
-			var gate_node: Node3D = _find_child_by_name(map_root, "gate_" + dir)
-			var gate_pos: Vector3 = gate_node.global_position if gate_node else trigger_pos
-			var gate_rot: Vector3 = gate_node.global_rotation if gate_node else Vector3.ZERO
-			# Find gate_box mesh for collision generation
-			var gate_box_node: MeshInstance3D = null
-			if gate_node:
-				var box_child: Node = _find_child_by_name(gate_node, "gate_" + dir + "_box")
-				if box_child is MeshInstance3D:
-					gate_box_node = box_child as MeshInstance3D
-			portals[dir] = {
-				"spawn_pos": spawn_node.global_position,
-				"trigger_pos": trigger_pos,
-				"gate_pos": gate_pos,
-				"gate_rot": gate_rot,
-				"gate_box_node": gate_box_node,
-			}
-
-	# Look for standalone default spawn (boss rooms / gateless areas)
-	var default_spawn: Node3D = _find_child_by_name(portals_node, "spawn_default")
-	if default_spawn:
-		portals["default"] = {
-			"spawn_pos": default_spawn.global_position,
-			"trigger_pos": default_spawn.global_position,
-		}
-
-	return portals
-
 
 func _find_child_by_name(node: Node, child_name: String) -> Node:
 	for child in node.get_children():
@@ -637,17 +607,39 @@ func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
 		_collect_embedded_lights(child, out)
 
 
-func _load_stage_config(folder: String, stage_id: String) -> Dictionary:
-	var config_path := "res://assets/environments/%s/%s_config.json" % [folder, stage_id]
-	if not FileAccess.file_exists(config_path):
-		return {}
-	var file := FileAccess.open(config_path, FileAccess.READ)
-	if not file:
-		return {}
-	var json := JSON.new()
-	if json.parse(file.get_as_text()) != OK:
-		return {}
-	return json.data as Dictionary
+## Derive the assets/stages/ subfolder from a stage_id and area folder name.
+## e.g. stage_id="s01a_ga1", folder="valley" → "valley_a"
+##      stage_id="s080_sa0", folder="tower"  → "tower_0"
+static func _get_stage_subfolder(stage_id: String, folder: String) -> String:
+	# The variant character is at index 3 in the stage_id (e.g. "s01a_ga1" → "a")
+	if stage_id.length() >= 4:
+		var variant: String = stage_id[3]
+		return "%s_%s" % [folder, variant]
+	return folder
+
+
+## Static cache for unified stage config (loaded once, shared across cell transitions).
+static var _unified_config_cache: Dictionary = {}
+
+
+func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
+	# Load unified config on first access
+	if _unified_config_cache.is_empty():
+		var unified_path := "res://data/stage_configs/unified-stage-configs.json"
+		if FileAccess.file_exists(unified_path):
+			var file := FileAccess.open(unified_path, FileAccess.READ)
+			if file:
+				var json := JSON.new()
+				if json.parse(file.get_as_text()) == OK:
+					_unified_config_cache = json.data as Dictionary
+					print("[ValleyField] Loaded unified config: %d stages" % _unified_config_cache.size())
+				file.close()
+
+	# Look up by stage_id
+	if _unified_config_cache.has(stage_id):
+		return _unified_config_cache[stage_id] as Dictionary
+
+	return {}
 
 
 ## Direction base rotations for portal position math (matches ExportTab.tsx DIRECTION_ROTATIONS).
@@ -736,9 +728,11 @@ static func _wrap_mode_int(mode: String) -> int:
 func _load_fix_texture(tex_file: String) -> Texture2D:
 	if tex_file.is_empty():
 		return null
+	var stage_id_local: String = str(_current_cell.get("stage_id", ""))
 	var area_id_local: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
 	var area_cfg_local: Dictionary = GridGenerator.AREA_CONFIG.get(area_id_local, GridGenerator.AREA_CONFIG["gurhacia"])
-	var tex_path := "res://assets/environments/%s/%s" % [area_cfg_local["folder"], tex_file]
+	var subfolder: String = _get_stage_subfolder(stage_id_local, area_cfg_local["folder"])
+	var tex_path := "res://assets/stages/%s/%s/lndmd/%s" % [subfolder, stage_id_local, tex_file]
 	if ResourceLoader.exists(tex_path):
 		return load(tex_path) as Texture2D
 	return null

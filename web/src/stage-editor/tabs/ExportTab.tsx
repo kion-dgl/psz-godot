@@ -764,6 +764,70 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
     }
   };
 
+  // Export floor-only GLB (collision mesh for Godot raw stage loading)
+  const exportFloorGlb = async () => {
+    if (!stageScene || floorTriangles.length === 0) {
+      setExportStatus('Error: No scene or floor triangles');
+      return;
+    }
+
+    setExportStatus('Exporting floor GLB...');
+
+    try {
+      const floorScene = new THREE.Group();
+      floorScene.name = mapId + '_floor';
+
+      // Build collision floor mesh from filtered triangles
+      const collisionGeometry = new THREE.BufferGeometry();
+      const vertices: number[] = [];
+
+      floorTriangles.forEach((tri) => {
+        tri.vertices.forEach((v) => {
+          vertices.push(v.x, v.y, v.z);
+        });
+      });
+
+      collisionGeometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      collisionGeometry.computeVertexNormals();
+
+      const collisionMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00ff00,
+        transparent: true,
+        opacity: 0.3,
+        side: THREE.DoubleSide,
+      });
+
+      const collisionMesh = new THREE.Mesh(collisionGeometry, collisionMaterial);
+      collisionMesh.name = 'collision_floor-colonly';
+      floorScene.add(collisionMesh);
+
+      // Export using GLTFExporter
+      const exporter = new GLTFExporter();
+      const glb = await new Promise<ArrayBuffer>((resolve, reject) => {
+        exporter.parse(
+          floorScene,
+          (result) => resolve(result as ArrayBuffer),
+          reject,
+          { binary: true }
+        );
+      });
+
+      // Download
+      const blob = new Blob([glb], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${mapId}-floor.glb`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      setExportStatus(`Exported ${mapId}-floor.glb (${(glb.byteLength / 1024).toFixed(1)} KB) — ${floorTriangles.length} triangles`);
+    } catch (error) {
+      setExportStatus(`Floor export error: ${error}`);
+      console.error('Floor export error:', error);
+    }
+  };
+
   // Export SVG
   const exportSvg = () => {
     const blob = new Blob([svgPreview], { type: 'image/svg+xml' });
@@ -794,7 +858,15 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
     setExportStatus(`Exported ${mapId}_config.json`);
   };
 
-  // Export All - loop through all configured stages and export to zip
+  // Derive the assets/stages/ subfolder from a mapId and area folder.
+  // e.g. mapId="s01a_ga1", folder="valley" → "valley_a"
+  //      mapId="s080_sa0", folder="tower"  → "tower_0"
+  const getStageSubfolder = (mid: string, folder: string): string => {
+    if (mid.length >= 4) return `${folder}_${mid[3]}`;
+    return folder;
+  };
+
+  // Export All - floor GLBs + SVGs organized to merge into assets/stages/
   const exportAll = async () => {
     setIsExportingAll(true);
     setExportStatus('Starting bulk export...');
@@ -812,10 +884,15 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
 
       const loader = new GLTFLoader();
       const exporter = new GLTFExporter();
-      const options = { useLambert, includeCollision, includeObstacles, includeMarkers };
 
       let successCount = 0;
+      let floorCount = 0;
+      let svgCount = 0;
       let errorCount = 0;
+
+      // Create zip folders matching project layout
+      const stagesRoot = zip.folder('assets/stages')!;
+      // SVGs go alongside floor GLBs in stages/
 
       for (let i = 0; i < configuredMapIds.length; i++) {
         const currentMapId = configuredMapIds[i];
@@ -824,7 +901,6 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
         setExportAllProgress({ current: i + 1, total: configuredMapIds.length, mapId: currentMapId });
 
         try {
-          // Get GLB path for this map
           const areaKey = getAreaFromMapId(currentMapId);
           if (!areaKey) {
             console.warn(`Unknown area for map: ${currentMapId}`);
@@ -832,6 +908,7 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
             continue;
           }
 
+          const area = STAGE_AREAS[areaKey];
           const glbPath = getGlbPath(areaKey, currentMapId);
 
           // Load the GLB
@@ -841,26 +918,38 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
 
           const scene = gltf.scene as THREE.Group;
 
-          // Build export scene
-          const { exportScene, floorTriangles: tris } = await buildExportScene(scene, stageConfig, options);
+          // Extract floor triangles
+          const extracted = extractFloorTriangles(scene, stageConfig.floorCollision.yTolerance);
+          const tris = extracted.filter((tri) => stageConfig.floorCollision.triangles[tri.id] !== false);
 
-          // Export GLB
-          const glb = await new Promise<ArrayBuffer>((resolve, reject) => {
-            exporter.parse(exportScene, (result) => resolve(result as ArrayBuffer), reject, { binary: true });
-          });
+          // Export floor GLB → assets/stages/{subfolder}/{mapId}/lndmd/{mapId}-floor.glb
+          if (tris.length > 0) {
+            const floorScene = new THREE.Group();
+            floorScene.name = currentMapId + '_floor';
+            const floorGeometry = new THREE.BufferGeometry();
+            const floorVerts: number[] = [];
+            tris.forEach((tri) => {
+              tri.vertices.forEach((v) => { floorVerts.push(v.x, v.y, v.z); });
+            });
+            floorGeometry.setAttribute('position', new THREE.Float32BufferAttribute(floorVerts, 3));
+            floorGeometry.computeVertexNormals();
+            const floorMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
+            const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+            floorMesh.name = 'collision_floor-colonly';
+            floorScene.add(floorMesh);
+            const floorGlb = await new Promise<ArrayBuffer>((resolve, reject) => {
+              exporter.parse(floorScene, (result) => resolve(result as ArrayBuffer), reject, { binary: true });
+            });
 
-          // Generate SVG
+            const subfolder = getStageSubfolder(currentMapId, area.folder);
+            stagesRoot.file(`${subfolder}/${currentMapId}/lndmd/${currentMapId}-floor.glb`, floorGlb);
+            floorCount++;
+          }
+
+          // Export SVG → assets/stages/{subfolder}/{mapId}/lndmd/{mapId}_minimap.svg
           const svg = generateSvgMinimap(tris, stageConfig);
-
-          // Generate config JSON (populate textureFixes from scene + global fixes)
-          const textureFixes = buildTextureFixes(scene);
-          const configJson = JSON.stringify({ ...stageConfig, textureFixes, exportedAt: new Date().toISOString() }, null, 2);
-
-          // Add to zip (organized by area)
-          const folder = zip.folder(areaKey) || zip;
-          folder.file(`${currentMapId}.glb`, glb);
-          folder.file(`${currentMapId}_minimap.svg`, svg);
-          folder.file(`${currentMapId}_config.json`, configJson);
+          stagesRoot.file(`${subfolder}/${currentMapId}/lndmd/${currentMapId}_minimap.svg`, svg);
+          svgCount++;
 
           successCount++;
 
@@ -889,11 +978,11 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `stage-exports-${new Date().toISOString().slice(0, 10)}.zip`;
+      link.download = `stage-assets-${new Date().toISOString().slice(0, 10)}.zip`;
       link.click();
       URL.revokeObjectURL(url);
 
-      setExportStatus(`Exported ${successCount} maps (${errorCount} errors) to zip`);
+      setExportStatus(`Exported ${successCount} maps: ${floorCount} floor GLBs + ${svgCount} SVGs (${errorCount} errors). Unzip into project root to merge.`);
     } catch (error) {
       setExportStatus(`Export all error: ${error}`);
       console.error('Export all error:', error);
@@ -1025,6 +1114,23 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
         </button>
 
         <button
+          onClick={exportFloorGlb}
+          disabled={!stageScene || floorTriangles.length === 0}
+          style={{
+            padding: '12px',
+            background: stageScene && floorTriangles.length > 0 ? '#4a7' : '#333',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: stageScene && floorTriangles.length > 0 ? 'pointer' : 'not-allowed',
+            fontWeight: 'bold',
+            fontSize: '14px',
+          }}
+        >
+          Export Floor GLB
+        </button>
+
+        <button
           onClick={exportSvg}
           disabled={floorTriangles.length === 0}
           style={{
@@ -1116,7 +1222,7 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
         </button>
 
         <p style={{ margin: '8px 0 0 0', fontSize: '10px', color: '#666' }}>
-          Exports GLB, SVG minimap, and config JSON for each configured map
+          Exports floor GLBs + SVG minimaps. Zip mirrors project layout — unzip at project root to merge into assets/stages/.
         </p>
       </div>
 

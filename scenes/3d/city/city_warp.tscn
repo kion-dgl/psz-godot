@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/3d/city/city_warp_controller.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://assets/environments/warp/s00e_sa3_m.glb" id="2_glb"]
+[ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa3/lndmd/s00e_sa3_m.glb" id="2_glb"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.4, 0.5, 0.7, 1)

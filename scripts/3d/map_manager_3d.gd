@@ -10,7 +10,7 @@ var current_map_id: String = ""
 var current_map_scene: Node3D = null
 
 # Map scene paths
-const MAP_PATH_PREFIX := "res://assets/environments/valley/"
+const MAP_PATH_PREFIX := "res://assets/stages/"
 
 # Spawn point data structure
 class SpawnPoint:

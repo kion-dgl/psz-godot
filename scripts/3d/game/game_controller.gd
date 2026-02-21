@@ -91,7 +91,9 @@ func load_map(map_id: String, spawn_index: int = 0) -> void:
 	await get_tree().process_frame
 
 	# Load map GLB
-	var map_path := "res://assets/environments/valley/" + map_id + ".glb"
+	# Derive subfolder from map_id (e.g., "s01a_ga1" → "valley_a")
+	var variant: String = map_id[3] if map_id.length() >= 4 else "a"
+	var map_path := "res://assets/stages/valley_%s/%s/lndmd/%s-scene.glb" % [variant, map_id, map_id]
 	var packed_scene := load(map_path) as PackedScene
 	if not packed_scene:
 		push_error("Failed to load map: " + map_path)
