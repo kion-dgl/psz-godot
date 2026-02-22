@@ -121,7 +121,7 @@
         {
           "pos": "2,4",
           "stage_id": "s03a_lc1",
-          "rotation": 180,
+          "rotation": 270,
           "connections": {
             "west": "2,3",
             "south": "3,4"
@@ -184,7 +184,7 @@
       "type": "grid",
       "area": "b",
       "start_pos": "0,2",
-      "end_pos": "",
+      "end_pos": "4,3",
       "cells": [
         {
           "pos": "0,2",
@@ -225,7 +225,7 @@
         {
           "pos": "2,2",
           "stage_id": "s03b_lc2",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
             "north": "1,2",
             "east": "2,3"
@@ -320,7 +320,7 @@
             "north": "3,3"
           },
           "is_start": false,
-          "is_end": false,
+          "is_end": true,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",

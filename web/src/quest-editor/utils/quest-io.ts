@@ -115,13 +115,13 @@ function round3(v: Vec3): Vec3 {
 // The gate model default faces +Z (south). Gate opens inward (toward room center):
 //   "north" → portal at -Z edge → gate opens toward +Z (inward) → rotY = 0
 //   "south" → portal at +Z edge → gate opens toward -Z (inward) → rotY = PI
-//   "east"  → portal at -X edge → gate opens toward +X (inward) → rotY = PI/2
-//   "west"  → portal at +X edge → gate opens toward -X (inward) → rotY = -PI/2
+//   "east"  → portal at +X edge → gate opens toward -X (inward) → rotY = -PI/2
+//   "west"  → portal at -X edge → gate opens toward +X (inward) → rotY = PI/2
 const GATE_MODEL_ROTATIONS: Record<string, number> = {
   north: 0,
   south: Math.PI,
-  east: Math.PI / 2,
-  west: -Math.PI / 2,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
 };
 
 // Config direction → compass label (1:1 now that east/west are fixed)

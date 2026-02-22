@@ -117,7 +117,7 @@
         {
           "pos": "1,4",
           "stage_id": "s04a_lb3",
-          "rotation": 270,
+          "rotation": 0,
           "connections": {
             "west": "1,3",
             "north": "0,4"
@@ -135,7 +135,7 @@
         {
           "pos": "0,4",
           "stage_id": "s04a_lc1",
-          "rotation": 180,
+          "rotation": 270,
           "connections": {
             "south": "1,4",
             "west": "0,3"
@@ -164,7 +164,7 @@
         {
           "pos": "0,3",
           "stage_id": "s04a_lb1",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
             "east": "0,4"
           },
@@ -340,7 +340,7 @@
         {
           "pos": "1,0",
           "stage_id": "s04b_lb3",
-          "rotation": 90,
+          "rotation": 180,
           "connections": {
             "east": "1,1",
             "south": "2,0"
