@@ -2094,6 +2094,21 @@ func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, ta
 				"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 			})
 	)
+	# DEBUG: Sphere markers — same as regular gates (yellow=gate, green=spawn, red=trigger)
+	_add_debug_sphere(pos, Color(1, 1, 0), "AreaWarpMark_gate")
+	# Add label
+	var label := Label3D.new()
+	label.name = "AreaWarpLabel"
+	label.text = "BACK\n→ s%d %s" % [target_section, target_cell]
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(0.29, 0.62, 1.0)
+	label.outline_modulate = Color(0, 0, 0, 1)
+	label.outline_size = 8
+	add_child(label)
+	label.global_position = Vector3(pos.x, 3.5, pos.z)
 	print("[CellObjects] AreaWarp object at %s (rot=%.2f) → section %d, cell %s" % [pos, rot_y, target_section, target_cell])
 
 
