@@ -482,8 +482,9 @@
           "path_order": 0,
           "objects": [
             {
-              "type": "warp",
+              "type": "area_warp",
               "position": [3.31, 0, 21.17],
+              "rotation_y": 0,
               "warp_section": 0,
               "warp_cell": "3,2",
               "warp_position": [14.05, 1, 23.85]
@@ -566,8 +567,9 @@
           "path_order": 0,
           "objects": [
             {
-              "type": "warp",
+              "type": "area_warp",
               "position": [-4.91, 0, -20.82],
+              "rotation_y": 3.14,
               "warp_section": 1,
               "warp_cell": "0,0",
               "warp_position": [3.31, 1, 24.17]
@@ -878,7 +880,7 @@
               ],
               "spawn": [
                 9.91,
-                5,
+                10,
                 2.01
               ],
               "trigger": [

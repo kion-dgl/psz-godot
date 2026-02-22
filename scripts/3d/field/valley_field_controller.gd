@@ -1549,6 +1549,13 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				_spawn_warp_point(pos, w_section, w_cell, w_pos)
+			"area_warp":
+				var w_section: int = int(obj.get("warp_section", 0))
+				var w_cell: String = str(obj.get("warp_cell", ""))
+				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
+				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
+				var w_rot: float = float(obj.get("rotation_y", 0))
+				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos)
 			"quest_item":
 				var qi_id: String = str(obj.get("item_id", ""))
 				var qi_label: String = str(obj.get("item_label", ""))
@@ -1629,6 +1636,13 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				_spawn_warp_point(pos, w_section, w_cell, w_pos)
+			"area_warp":
+				var w_section: int = int(obj.get("warp_section", 0))
+				var w_cell: String = str(obj.get("warp_cell", ""))
+				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
+				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
+				var w_rot: float = float(obj.get("rotation_y", 0))
+				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos)
 			"quest_item":
 				if state != "collected":
 					var qi_id: String = str(obj.get("item_id", ""))
@@ -2043,6 +2057,44 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 		})
 	)
 	print("[CellObjects] WarpPoint at %s → section %d, cell %s, position %s" % [pos, target_section, target_cell, target_position])
+
+
+func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, target_cell: String, target_position: Vector3) -> void:
+	var aw := AreaWarpScript.new()
+	aw.auto_collect = false
+	aw.element_state = "open"
+	aw.name = "AreaWarpObj"
+	add_child(aw)
+	aw.global_position = pos
+	aw.rotation.y = rot_y
+	# Create trigger area around the warp
+	var trigger := Area3D.new()
+	trigger.name = "AreaWarpObjTrigger"
+	trigger.collision_layer = 0
+	trigger.collision_mask = 2
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(4.0, 3.0, 4.0)
+	shape.shape = box
+	shape.position.y = 1.5
+	trigger.add_child(shape)
+	add_child(trigger)
+	trigger.global_position = pos
+	trigger.body_entered.connect(func(body: Node3D) -> void:
+		if body.is_in_group("player"):
+			print("[ValleyField] AreaWarp object activated → section %d, cell %s" % [target_section, target_cell])
+			SessionManager.set_current_section(target_section)
+			SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+				"current_cell_pos": target_cell,
+				"spawn_edge": "",
+				"spawn_position": [target_position.x, target_position.y, target_position.z],
+				"keys_collected": {},
+				"gates_opened": {},
+				"visited_cells": {},
+				"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+			})
+	)
+	print("[CellObjects] AreaWarp object at %s (rot=%.2f) → section %d, cell %s" % [pos, rot_y, target_section, target_cell])
 
 
 ## Wire switch.activated → linked fences.disable()
