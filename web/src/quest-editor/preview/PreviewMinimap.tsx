@@ -27,6 +27,7 @@ interface EmbeddedTransform {
   centerX: number;
   centerY: number;
   svgSize: number;
+  mirrorX: boolean;
 }
 
 /** Parse embedded data-* attributes from SVG root element.
@@ -41,6 +42,7 @@ function parseEmbeddedTransform(svgContent: string): EmbeddedTransform | null {
   if (!rotM || !scaleM || !offXM || !offYM || !cxM || !cyM) return null;
 
   const svgSize = parseSvgSize(svgContent);
+  const mirrorX = /data-mirror-x="true"/.test(svgContent);
   return {
     rotation: parseFloat(rotM[1]),
     scale: parseFloat(scaleM[1]),
@@ -49,6 +51,7 @@ function parseEmbeddedTransform(svgContent: string): EmbeddedTransform | null {
     centerX: parseFloat(cxM[1]),
     centerY: parseFloat(cyM[1]),
     svgSize,
+    mirrorX,
   };
 }
 
@@ -377,7 +380,9 @@ export default function PreviewMinimap({
   const { playerSvgX, playerSvgY } = useMemo(() => {
     if (embedded) {
       // New path: apply base transform then rotate around SVG center
-      const baseX = playerX * embedded.scale + embedded.offsetX;
+      // X may be mirrored (game camera faces +Z, so +X = left in top-down view)
+      const xScale = embedded.mirrorX ? -embedded.scale : embedded.scale;
+      const baseX = playerX * xScale + embedded.offsetX;
       const baseY = playerZ * embedded.scale + embedded.offsetY;
 
       if (embedded.rotation === 0) {
