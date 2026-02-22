@@ -17,6 +17,49 @@
           "connections": {
             "south": "1,2"
           },
+          "portals": {
+            "south": {
+              "gate": [
+                -0.07,
+                0,
+                20.99
+              ],
+              "spawn": [
+                -0.07,
+                1,
+                23.99
+              ],
+              "trigger": [
+                -0.07,
+                0,
+                27.99
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "default": {
+              "gate": [
+                0.09,
+                0,
+                -3.64
+              ],
+              "spawn": [
+                0.09,
+                1,
+                -3.64
+              ],
+              "trigger": [
+                0.09,
+                0,
+                -3.64
+              ],
+              "default_rotation": 0
+            }
+          },
           "is_start": true,
           "is_end": false,
           "is_branch": false,
@@ -32,9 +75,80 @@
           "stage_id": "s02a_tb3",
           "rotation": 270,
           "connections": {
-            "south": "2,2",
+            "east": "1,3",
             "north": "0,2",
-            "east": "1,3"
+            "south": "2,2"
+          },
+          "portals": {
+            "east": {
+              "gate": [
+                6,
+                0,
+                23.66
+              ],
+              "spawn": [
+                6,
+                1,
+                26.66
+              ],
+              "trigger": [
+                6,
+                0,
+                30.66
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "north": {
+              "gate": [
+                26.84,
+                0,
+                5.91
+              ],
+              "spawn": [
+                29.84,
+                1,
+                5.91
+              ],
+              "trigger": [
+                33.84,
+                0,
+                5.91
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            },
+            "south": {
+              "gate": [
+                -23.95,
+                0,
+                7.7
+              ],
+              "spawn": [
+                -26.95,
+                1,
+                7.7
+              ],
+              "trigger": [
+                -30.95,
+                0,
+                7.7
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
+            }
           },
           "is_start": false,
           "is_end": false,
@@ -47,31 +161,84 @@
           "path_order": 1
         },
         {
-          "pos": "2,2",
-          "stage_id": "s02a_nb2",
-          "rotation": 180,
-          "connections": {
-            "north": "1,2"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "3,3",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 2,
-          "key_position": [2.4, 1, 8.7]
-        },
-        {
           "pos": "1,3",
           "stage_id": "s02a_tb3",
           "rotation": 0,
           "connections": {
-            "west": "1,2",
+            "south": "2,3",
             "east": "1,4",
-            "south": "2,3"
+            "west": "1,2"
+          },
+          "portals": {
+            "south": {
+              "gate": [
+                6,
+                0,
+                23.66
+              ],
+              "spawn": [
+                6,
+                1,
+                26.66
+              ],
+              "trigger": [
+                6,
+                0,
+                30.66
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "east": {
+              "gate": [
+                26.84,
+                0,
+                5.91
+              ],
+              "spawn": [
+                29.84,
+                1,
+                5.91
+              ],
+              "trigger": [
+                33.84,
+                0,
+                5.91
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            },
+            "west": {
+              "gate": [
+                -23.95,
+                0,
+                7.7
+              ],
+              "spawn": [
+                -26.95,
+                1,
+                7.7
+              ],
+              "trigger": [
+                -30.95,
+                0,
+                7.7
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
+            }
           },
           "is_start": false,
           "is_end": false,
@@ -81,7 +248,144 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 2
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s02a_nb2",
+          "rotation": 180,
+          "connections": {
+            "north": "1,2"
+          },
+          "portals": {
+            "north": {
+              "gate": [
+                5.99,
+                0,
+                24.6
+              ],
+              "spawn": [
+                5.99,
+                1,
+                27.6
+              ],
+              "trigger": [
+                5.99,
+                0,
+                31.6
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3,
+          "key_position": [
+            2.4,
+            1,
+            8.7
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s02a_tb3",
+          "rotation": 270,
+          "connections": {
+            "east": "2,4",
+            "north": "1,3",
+            "south": "3,3"
+          },
+          "portals": {
+            "east": {
+              "gate": [
+                6,
+                0,
+                23.66
+              ],
+              "spawn": [
+                6,
+                1,
+                26.66
+              ],
+              "trigger": [
+                6,
+                0,
+                30.66
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "north": {
+              "gate": [
+                26.84,
+                0,
+                5.91
+              ],
+              "spawn": [
+                29.84,
+                1,
+                5.91
+              ],
+              "trigger": [
+                33.84,
+                0,
+                5.91
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            },
+            "south": {
+              "gate": [
+                -23.95,
+                0,
+                7.7
+              ],
+              "spawn": [
+                -26.95,
+                1,
+                7.7
+              ],
+              "trigger": [
+                -30.95,
+                0,
+                7.7
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 4
         },
         {
           "pos": "1,4",
@@ -90,6 +394,31 @@
           "connections": {
             "west": "1,3"
           },
+          "portals": {
+            "west": {
+              "gate": [
+                5.99,
+                0,
+                24.6
+              ],
+              "spawn": [
+                5.99,
+                1,
+                27.6
+              ],
+              "trigger": [
+                5.99,
+                0,
+                31.6
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
@@ -98,52 +427,19 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 4,
+          "path_order": 5,
           "objects": [
             {
               "type": "quest_item",
-              "position": [1.9, 0, 7],
+              "position": [
+                1.9,
+                0,
+                7
+              ],
               "item_id": "star_husk",
               "item_label": "Star Husk"
             }
           ]
-        },
-        {
-          "pos": "2,3",
-          "stage_id": "s02a_tb3",
-          "rotation": 270,
-          "connections": {
-            "south": "3,3",
-            "north": "1,3",
-            "east": "2,4"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 5
-        },
-        {
-          "pos": "3,3",
-          "stage_id": "s02a_ib2",
-          "rotation": 180,
-          "connections": {
-            "south": "4,3",
-            "north": "2,3"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
-          "warp_edge": "",
-          "path_order": 6
         },
         {
           "pos": "2,4",
@@ -152,6 +448,31 @@
           "connections": {
             "west": "2,3"
           },
+          "portals": {
+            "west": {
+              "gate": [
+                -7.14,
+                0,
+                20.61
+              ],
+              "spawn": [
+                -7.14,
+                1,
+                23.61
+              ],
+              "trigger": [
+                -7.14,
+                0,
+                27.61
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
@@ -160,23 +481,141 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 7,
+          "path_order": 6,
           "objects": [
             {
               "type": "quest_item",
-              "position": [0.4, 0, 1.1],
+              "position": [
+                0.4,
+                0,
+                1.1
+              ],
               "item_id": "moon_bloom",
               "item_label": "Moon Bloom"
             }
           ]
         },
         {
+          "pos": "3,3",
+          "stage_id": "s02a_ib2",
+          "rotation": 180,
+          "connections": {
+            "north": "2,3",
+            "south": "4,3"
+          },
+          "portals": {
+            "north": {
+              "gate": [
+                -5.94,
+                0,
+                27.03
+              ],
+              "spawn": [
+                -5.94,
+                1,
+                30.03
+              ],
+              "trigger": [
+                -5.94,
+                0,
+                34.03
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "south": {
+              "gate": [
+                -6.14,
+                0,
+                -26.62
+              ],
+              "spawn": [
+                -6.14,
+                1,
+                -29.62
+              ],
+              "trigger": [
+                -6.14,
+                0,
+                -33.62
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 7
+        },
+        {
           "pos": "4,3",
           "stage_id": "s02a_lc1",
-          "rotation": 270,
+          "rotation": 0,
           "connections": {
             "west": "4,2",
             "north": "3,3"
+          },
+          "portals": {
+            "west": {
+              "gate": [
+                1.13,
+                0,
+                -22.91
+              ],
+              "spawn": [
+                1.13,
+                1,
+                -25.91
+              ],
+              "trigger": [
+                1.13,
+                0,
+                -29.91
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "north": {
+              "gate": [
+                17.6,
+                0,
+                18.4
+              ],
+              "spawn": [
+                20.6,
+                1,
+                18.4
+              ],
+              "trigger": [
+                24.6,
+                0,
+                18.4
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
           },
           "is_start": false,
           "is_end": false,
@@ -194,6 +633,54 @@
           "rotation": 90,
           "connections": {
             "east": "4,3"
+          },
+          "portals": {
+            "east": {
+              "gate": [
+                0.05,
+                0,
+                -13.75
+              ],
+              "spawn": [
+                0.05,
+                1,
+                -16.75
+              ],
+              "trigger": [
+                0.05,
+                0,
+                -20.75
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "west": {
+              "gate": [
+                -0.02,
+                0,
+                19.9
+              ],
+              "spawn": [
+                -0.02,
+                1,
+                22.9
+              ],
+              "trigger": [
+                -0.02,
+                0,
+                26.9
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
           },
           "is_start": false,
           "is_end": true,
@@ -218,6 +705,54 @@
           "stage_id": "s02e_ia1",
           "rotation": 0,
           "connections": {},
+          "portals": {
+            "south": {
+              "gate": [
+                -10.25,
+                0,
+                18.2
+              ],
+              "spawn": [
+                -10.25,
+                1,
+                21.2
+              ],
+              "trigger": [
+                -10.25,
+                0,
+                25.2
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "north": {
+              "gate": [
+                10.87,
+                0,
+                -17.27
+              ],
+              "spawn": [
+                10.87,
+                1,
+                -20.27
+              ],
+              "trigger": [
+                10.87,
+                0,
+                -24.27
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            }
+          },
           "is_start": true,
           "is_end": true,
           "is_branch": false,
@@ -225,12 +760,16 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "north",
+          "warp_edge": "south",
           "path_order": 0,
           "objects": [
             {
               "type": "quest_item",
-              "position": [10.4, 0, 0],
+              "position": [
+                10.4,
+                0,
+                0
+              ],
               "item_id": "sol_leaf",
               "item_label": "Sol Leaf"
             }

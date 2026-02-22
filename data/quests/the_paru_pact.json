@@ -65,7 +65,7 @@
         },
         {
           "pos": "2,2",
-          "stage_id": "s05a_td1",
+          "stage_id": "s05a_tb3",
           "rotation": 90,
           "connections": {
             "north": "1,2",
@@ -85,7 +85,7 @@
         {
           "pos": "1,3",
           "stage_id": "s05a_lc2",
-          "rotation": 180,
+          "rotation": 270,
           "connections": {
             "south": "2,3",
             "west": "1,2"
@@ -308,7 +308,7 @@
         {
           "pos": "2,2",
           "stage_id": "s05b_lc2",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
             "north": "1,2",
             "east": "2,3"
