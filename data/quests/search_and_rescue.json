@@ -479,7 +479,16 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "north",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "warp",
+              "position": [3.31, 0, 21.17],
+              "warp_section": 0,
+              "warp_cell": "3,2",
+              "warp_position": [14.05, 1, 23.85]
+            }
+          ]
         }
       ],
       "entry_direction": "south",
@@ -554,7 +563,16 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "warp",
+              "position": [-4.91, 0, -20.82],
+              "warp_section": 1,
+              "warp_cell": "0,0",
+              "warp_position": [3.31, 1, 24.17]
+            }
+          ]
         },
         {
           "pos": "1,2",
@@ -718,7 +736,7 @@
                 0,
                 0
               ],
-              "compass_label": "N"
+              "compass_label": "W"
             },
             "north": {
               "gate": [
@@ -741,7 +759,7 @@
                 1.57,
                 0
               ],
-              "compass_label": "W"
+              "compass_label": "N"
             }
           },
           "is_start": false,
@@ -785,7 +803,7 @@
                 3.14,
                 0
               ],
-              "compass_label": "S"
+              "compass_label": "W"
             },
             "south": {
               "gate": [
@@ -808,7 +826,7 @@
                 -1.57,
                 0
               ],
-              "compass_label": "E"
+              "compass_label": "S"
             },
             "north": {
               "gate": [
@@ -831,7 +849,7 @@
                 1.57,
                 0
               ],
-              "compass_label": "W"
+              "compass_label": "N"
             }
           },
           "is_start": false,
@@ -860,7 +878,7 @@
               ],
               "spawn": [
                 9.91,
-                1,
+                5,
                 2.01
               ],
               "trigger": [
