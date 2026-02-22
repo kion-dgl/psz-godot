@@ -884,7 +884,7 @@
               ],
               "spawn": [
                 9.91,
-                10,
+                1,
                 2.01
               ],
               "trigger": [
@@ -911,94 +911,26 @@
           "path_order": 5,
           "objects": [
             {
-              "type": "story_prop",
-              "position": [
-                10.1,
-                0,
-                -12.1
-              ],
-              "prop_path": "assets/objects/story/dropship_crash.glb"
-            },
-            {
               "type": "enemy",
               "position": [
-                1.9,
+                -7.2,
                 0,
-                -5.2
+                2.2
               ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -2.8,
-                0,
-                -5.1
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -8.1,
-                0,
-                -3.2
-              ],
-              "enemy_id": "ghowl"
+              "enemy_id": "blaze_helion"
             },
             {
               "type": "dialog_trigger",
               "position": [
-                -1.7,
+                -11.5,
                 0,
-                4.6
-              ],
-              "dialog": [
-                {
-                  "speaker": "kai",
-                  "text": "woah, that is that?"
-                },
-                {
-                  "speaker": "kai",
-                  "text": "it looks like there's someone there"
-                }
-              ]
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -3.6,
-                0,
-                -14.3
+                2.4
               ],
               "trigger_condition": "room_clear",
               "actions": [
                 "complete_quest",
                 "telepipe"
-              ],
-              "dialog": [
-                {
-                  "speaker": "kai",
-                  "text": "looks like she's still alive"
-                },
-                {
-                  "speaker": "kai",
-                  "text": "i'll take her to get treated"
-                },
-                {
-                  "speaker": "kai",
-                  "text": "you should report back to the guild"
-                }
               ]
-            },
-            {
-              "type": "npc",
-              "position": [
-                9.8,
-                0,
-                -3.6
-              ],
-              "npc_id": "sarisa"
             }
           ]
         },
