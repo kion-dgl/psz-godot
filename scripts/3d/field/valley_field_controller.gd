@@ -161,10 +161,10 @@ func _ready() -> void:
 	_map_root = packed_scene.instantiate() as Node3D
 	_map_root.name = "Map"
 
-	# Apply cell rotation to the GLB model
+	# Stage geometry is NOT rotated. Rotation only affects direction label mapping
+	# (grid direction ↔ config direction) and minimap display. The 3D corridors
+	# stay at their original GLB positions; triggers are placed at config positions.
 	_rotation_deg = int(_current_cell.get("rotation", 0))
-	if _rotation_deg != 0:
-		_map_root.rotation.y = deg_to_rad(_rotation_deg)
 
 	# Load stage config from unified config
 	_stage_config = _load_stage_config(area_cfg["folder"], stage_id)
@@ -179,8 +179,6 @@ func _ready() -> void:
 		if floor_scene:
 			var floor_root := floor_scene.instantiate() as Node3D
 			floor_root.name = "FloorCollision"
-			if _rotation_deg != 0:
-				floor_root.rotation.y = deg_to_rad(_rotation_deg)
 			add_child(floor_root)
 			# Check if Godot's -colonly suffix import created StaticBody3D nodes
 			var has_static := _has_static_body(floor_root)
@@ -195,33 +193,27 @@ func _ready() -> void:
 			_setup_map_collision(_map_root)
 	else:
 		_setup_map_collision(_map_root)
+
+	# DEBUG: Visualize floor collision mesh as semi-transparent green overlay
+	_debug_show_floor_collision()
+
 	await get_tree().process_frame
 
-	# Build portal data from config JSON
-	var original_portal_data: Dictionary = _build_portal_data_from_config(_stage_config)
-	if original_portal_data.is_empty():
-		print("[ValleyField] WARNING: No portal data in config for %s" % stage_id)
-
-	# Remap portal keys from original GLB directions to grid-space directions.
-	# Positions are already correct (to_global() applied cell rotation).
-	# Gate rotations need the cell rotation added since they're in config-local space.
-	if _rotation_deg != 0:
-		_portal_data = {}
-		var rot_rad := deg_to_rad(float(_rotation_deg))
-		for orig_dir in original_portal_data:
-			if orig_dir == "default":
-				_portal_data["default"] = original_portal_data["default"]
-			else:
-				var grid_dir: String = _rotate_dir(orig_dir, _rotation_deg)
-				var pd: Dictionary = original_portal_data[orig_dir].duplicate()
-				if pd.has("gate_rot"):
-					pd["gate_rot"] = Vector3(pd["gate_rot"].x, pd["gate_rot"].y + rot_rad, pd["gate_rot"].z)
-				_portal_data[grid_dir] = pd
+	# Read baked portal data from quest JSON (pre-computed by quest editor)
+	var baked_portals: Dictionary = _current_cell.get("portals", {})
+	if not baked_portals.is_empty():
+		_portal_data = _parse_baked_portals(baked_portals)
 	else:
-		_portal_data = original_portal_data
-
-	# Note: no direction remapping needed — quest editor and game both use
-	# unified config portal directions as the source of truth.
+		# Fallback: build from config (for non-quest or old quest JSON without baked portals)
+		_portal_data = _build_portal_data_from_config(_stage_config)
+		if _rotation_deg != 0:
+			var remapped := {}
+			for orig_dir in _portal_data:
+				if orig_dir == "default":
+					remapped["default"] = _portal_data["default"]
+				else:
+					remapped[_rotate_dir(orig_dir, _rotation_deg)] = _portal_data[orig_dir].duplicate()
+			_portal_data = remapped
 
 	# For quest mode: derive spawn_edge from target cell's own connections.
 	# The source cell's OPPOSITE[exit_dir] may not match target portal data keys
@@ -267,8 +259,9 @@ func _ready() -> void:
 		pass  # spawn_position already resolved above
 	elif not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
 		spawn_pos = _portal_data[spawn_edge]["spawn_pos"]
-		spawn_rot = _dir_to_yaw(OPPOSITE[spawn_edge])
-		spawn_reason = "entry from %s, facing %s" % [spawn_edge, OPPOSITE[spawn_edge]]
+		var gate_pos: Vector3 = _portal_data[spawn_edge].get("gate_pos", spawn_pos)
+		spawn_rot = _facing_yaw(spawn_pos, gate_pos)
+		spawn_reason = "entry from %s, facing gate (yaw=%.2f)" % [spawn_edge, spawn_rot]
 	elif _portal_data.has("default"):
 		spawn_pos = _portal_data["default"]["spawn_pos"]
 		if _portal_data["default"].has("default_rotation"):
@@ -277,16 +270,19 @@ func _ready() -> void:
 	elif not warp_edge.is_empty() and _portal_data.has(OPPOSITE.get(warp_edge, "")):
 		var entry_dir: String = OPPOSITE[warp_edge]
 		spawn_pos = _portal_data[entry_dir]["spawn_pos"]
-		spawn_rot = _dir_to_yaw(warp_edge)
-		spawn_reason = "opposite of warp_edge=%s, spawn at %s facing %s" % [warp_edge, entry_dir, warp_edge]
+		var gp: Vector3 = _portal_data[entry_dir].get("gate_pos", spawn_pos)
+		spawn_rot = _facing_yaw(spawn_pos, gp)
+		spawn_reason = "opposite of warp_edge=%s, spawn at %s facing gate" % [warp_edge, entry_dir]
 	elif _portal_data.has("north"):
 		spawn_pos = _portal_data["north"]["spawn_pos"]
-		spawn_rot = _dir_to_yaw("south")
-		spawn_reason = "fallback north portal, facing south"
+		var gp: Vector3 = _portal_data["north"].get("gate_pos", spawn_pos)
+		spawn_rot = _facing_yaw(spawn_pos, gp)
+		spawn_reason = "fallback north portal, facing gate"
 	elif _portal_data.has("south"):
 		spawn_pos = _portal_data["south"]["spawn_pos"]
-		spawn_rot = _dir_to_yaw("north")
-		spawn_reason = "fallback south portal, facing north"
+		var gp: Vector3 = _portal_data["south"].get("gate_pos", spawn_pos)
+		spawn_rot = _facing_yaw(spawn_pos, gp)
+		spawn_reason = "fallback south portal, facing gate"
 	else:
 		spawn_pos = Vector3(0, 1, 0)
 		spawn_reason = "center fallback"
@@ -326,6 +322,9 @@ func _ready() -> void:
 	# Create exit trigger on end cell warp_edge
 	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
 		_create_exit_trigger(warp_edge, _portal_data[warp_edge])
+		# DEBUG: Label for exit gate too
+		var exit_pos: Vector3 = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
+		_add_gate_label(warp_edge + " (EXIT)", exit_pos, "next section")
 
 	# Place key pickup if this cell has one
 	if _current_cell.get("has_key", false):
@@ -460,6 +459,15 @@ func _dir_to_yaw(dir: String) -> float:
 	return 0.0
 
 
+## Compute yaw angle for facing from position `from_pos` toward `to_pos` (XZ plane).
+func _facing_yaw(from_pos: Vector3, to_pos: Vector3) -> float:
+	var dx := to_pos.x - from_pos.x
+	var dz := to_pos.z - from_pos.z
+	if dx * dx + dz * dz < 0.001:
+		return 0.0
+	return atan2(dx, dz)
+
+
 ## Rotate a direction CW by degrees (0/90/180/270).
 func _rotate_dir(dir: String, rotation: int) -> String:
 	if rotation == 0:
@@ -535,8 +543,8 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	var shadow_mat := ShaderMaterial.new()
 	shadow_mat.shader = shadow_shader
 	_blob_shadow.material_override = shadow_mat
-	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 	add_child(_blob_shadow)
+	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
 
 
@@ -575,6 +583,55 @@ func _filter_floor_collision(node: Node) -> void:
 				print("[ValleyField] Floor collision filtered: kept %d, dropped %d triangles" % [kept, dropped])
 	for child in node.get_children():
 		_filter_floor_collision(child)
+
+
+func _debug_show_floor_collision() -> void:
+	## Visualize all floor collision shapes as a semi-transparent green mesh overlay.
+	var faces := PackedVector3Array()
+	_collect_collision_faces(self, faces)
+	if faces.is_empty():
+		print("[ValleyField] DEBUG: No collision faces found to visualize")
+		return
+
+	var arr_mesh := ArrayMesh.new()
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = faces
+	# Compute normals (all pointing up for flat shading)
+	var normals := PackedVector3Array()
+	normals.resize(faces.size())
+	for i in range(faces.size()):
+		normals[i] = Vector3(0, 1, 0)
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0, 1, 0, 0.35)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	arr_mesh.surface_set_material(0, mat)
+
+	var mi := MeshInstance3D.new()
+	mi.name = "DebugFloorViz"
+	mi.mesh = arr_mesh
+	mi.position.y = 0.05  # Slight offset to avoid z-fighting
+	add_child(mi)
+	print("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (faces.size() / 3))
+
+
+func _collect_collision_faces(node: Node, out: PackedVector3Array) -> void:
+	if node is CollisionShape3D:
+		var cs := node as CollisionShape3D
+		if cs.shape is ConcavePolygonShape3D:
+			var trimesh := cs.shape as ConcavePolygonShape3D
+			var local_faces := trimesh.get_faces()
+			# Transform faces to global space
+			var xform := cs.global_transform
+			for i in range(local_faces.size()):
+				out.append(xform * local_faces[i])
+	for child in node.get_children():
+		_collect_collision_faces(child, out)
 
 
 func _strip_embedded_lights(node: Node) -> void:
@@ -654,7 +711,41 @@ const DIRECTION_ROTATIONS := {
 }
 
 
-## Build portal data from config JSON portals[] and defaultSpawn.
+## Parse baked portal data from quest JSON cell["portals"].
+## Positions are pre-computed by the quest editor — no rotation math needed.
+func _parse_baked_portals(baked: Dictionary) -> Dictionary:
+	var result := {}
+	for dir_key in baked:
+		var pd: Dictionary = baked[dir_key]
+		if dir_key == "default":
+			var sp: Array = pd.get("spawn", [0, 1, 0])
+			result["default"] = {
+				"spawn_pos": Vector3(float(sp[0]), float(sp[1]), float(sp[2])),
+				"trigger_pos": Vector3(float(sp[0]), float(sp[1]), float(sp[2])),
+			}
+			if pd.has("default_rotation"):
+				result["default"]["default_rotation"] = float(pd["default_rotation"])
+		else:
+			var gate: Array = pd.get("gate", [0, 0, 0])
+			var spawn: Array = pd.get("spawn", [0, 1, 0])
+			var trigger: Array = pd.get("trigger", [0, 0, 0])
+			var gr: Array = pd.get("gate_rot", [0, 0, 0])
+			result[dir_key] = {
+				"gate_pos": Vector3(float(gate[0]), float(gate[1]), float(gate[2])),
+				"spawn_pos": Vector3(float(spawn[0]), float(spawn[1]), float(spawn[2])),
+				"trigger_pos": Vector3(float(trigger[0]), float(trigger[1]), float(trigger[2])),
+				"gate_rot": Vector3(float(gr[0]), float(gr[1]), float(gr[2])),
+				"compass_label": pd.get("compass_label", dir_key.substr(0, 1).to_upper()),
+			}
+		print("[ValleyField]   baked portal: '%s' → gate=%s spawn=%s trigger=%s" % [
+			dir_key,
+			result[dir_key].get("gate_pos", "n/a"),
+			result[dir_key]["spawn_pos"],
+			result[dir_key]["trigger_pos"]])
+	return result
+
+
+## Build portal data from config JSON portals[] and defaultSpawn (fallback for non-quest sessions).
 ## Computes spawn/trigger/gate positions using the same math as ExportTab.tsx computePortalPositions.
 ## Positions are in stage-local space — caller transforms via _map_root.to_global() after add_child.
 func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
@@ -668,30 +759,34 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 		if dir.is_empty():
 			continue
 		var pos_arr: Array = portal.get("position", [0, 0, 0])
+		# Positions match GLB geometry directly — no mirroring or rotation needed.
 		var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 
-		# Compute rotation: base direction + optional offset (degrees)
+		# Gate rotation for visual placement (Y-axis only)
 		var base_rot: float = DIRECTION_ROTATIONS.get(dir, 0.0)
 		var offset_deg: float = float(portal.get("rotationOffset", 0))
 		var rotation: float = base_rot + deg_to_rad(offset_deg)
-
-		# Outward vector (away from the room, into the corridor)
-		var sin_r := sin(rotation)
-		var cos_r := cos(rotation)
-
-		# Spawn = 3 units outside gate, y=1.0
-		var spawn_pos := Vector3(gate_pos.x - sin_r * 3.0, 1.0, gate_pos.z - cos_r * 3.0)
-		# Trigger = 7 units outside gate, y=0.0
-		var trigger_pos := Vector3(gate_pos.x - sin_r * 7.0, 0.0, gate_pos.z - cos_r * 7.0)
-		# Gate rotation as Vector3 for element placement (Y-axis only)
 		var gate_rot := Vector3(0.0, rotation, 0.0)
 
+		# Outward direction: from room center toward gate (into the corridor)
+		var outward := Vector2(gate_pos.x, gate_pos.z).normalized()
+		if outward.length_squared() < 0.01:
+			outward = Vector2(sin(rotation), -cos(rotation))
+
+		# Spawn = 3 units outside gate (in corridor), y=1.0
+		var spawn_pos := Vector3(gate_pos.x + outward.x * 3.0, 1.0, gate_pos.z + outward.y * 3.0)
+		# Trigger = 7 units outside gate (deeper in corridor), y=0.0
+		var trigger_pos := Vector3(gate_pos.x + outward.x * 7.0, 0.0, gate_pos.z + outward.y * 7.0)
+
+		# Key by config direction — rotation remapping happens in the caller
 		result[dir] = {
-			"spawn_pos": _map_root.to_global(spawn_pos),
-			"trigger_pos": _map_root.to_global(trigger_pos),
-			"gate_pos": _map_root.to_global(gate_pos),
+			"spawn_pos": spawn_pos,
+			"trigger_pos": trigger_pos,
+			"gate_pos": gate_pos,
 			"gate_rot": gate_rot,
 		}
+		print("[ValleyField]   portal: config dir='%s' gate=%s spawn=%s trigger=%s" % [
+			dir, gate_pos, spawn_pos, trigger_pos])
 
 	# Default spawn point (boss rooms / gateless areas)
 	if config.has("defaultSpawn"):
@@ -701,8 +796,8 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 		var ds_dir: String = str(ds.get("direction", "north"))
 		var ds_rot: float = DIRECTION_ROTATIONS.get(ds_dir, 0.0)
 		result["default"] = {
-			"spawn_pos": _map_root.to_global(ds_pos),
-			"trigger_pos": _map_root.to_global(ds_pos),
+			"spawn_pos": ds_pos,
+			"trigger_pos": ds_pos,
 			"default_rotation": ds_rot,
 		}
 
@@ -872,6 +967,9 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 	# Locked triggers stay disabled until key gate opens; delayed triggers auto-enable after 1s
 	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback, delayed and not locked, locked)
 
+	# DEBUG: Add floating direction label at gate position
+	_add_gate_label(direction, _portal["gate_pos"] if _portal.has("gate_pos") else _portal["trigger_pos"], target_cell_pos)
+
 
 func _create_exit_trigger(_direction: String, _portal: Dictionary) -> void:
 	var objectives_pending := _has_pending_objectives()
@@ -941,6 +1039,53 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 			if is_instance_valid(trigger):
 				trigger.monitoring = true
 		)
+
+
+## DEBUG: Add a floating 3D text label at gate position showing compass label + target cell.
+## Also adds colored sphere markers for gate (yellow), spawn (green), and trigger (red).
+func _add_gate_label(direction: String, pos: Vector3, target_cell: String) -> void:
+	var label := Label3D.new()
+	label.name = "GateLabel_%s" % direction
+	# Use baked compass_label for display if available, else fall back to grid direction
+	var compass: String = ""
+	if _portal_data.has(direction):
+		compass = _portal_data[direction].get("compass_label", direction.to_upper())
+	else:
+		compass = direction.to_upper()
+	label.text = "%s\n→ %s" % [compass, target_cell]
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(1, 1, 0, 1)  # Bright yellow
+	label.outline_modulate = Color(0, 0, 0, 1)
+	label.outline_size = 8
+	add_child(label)
+	label.global_position = Vector3(pos.x, 3.5, pos.z)
+
+	# DEBUG: Sphere markers — gate=yellow, spawn=green, trigger=red
+	var clean_dir: String = direction.split(" ")[0]  # Strip "(EXIT)" suffix
+	if _portal_data.has(clean_dir):
+		var pd: Dictionary = _portal_data[clean_dir]
+		_add_debug_sphere(pd["gate_pos"] if pd.has("gate_pos") else pos, Color(1, 1, 0), "GateMark_%s" % direction)
+		_add_debug_sphere(pd["spawn_pos"], Color(0, 1, 0), "SpawnMark_%s" % direction)
+		_add_debug_sphere(pd["trigger_pos"], Color(1, 0, 0), "TriggerMark_%s" % direction)
+
+
+func _add_debug_sphere(pos: Vector3, color: Color, sphere_name: String) -> void:
+	var mi := MeshInstance3D.new()
+	mi.name = sphere_name
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.4
+	sphere.height = 0.8
+	mi.mesh = sphere
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.no_depth_test = true
+	mi.material_override = mat
+	add_child(mi)
+	mi.global_position = Vector3(pos.x, 1.5, pos.z)
 
 
 func _create_key_pickup(key_for_cell: String) -> void:
@@ -1200,9 +1345,9 @@ func _spawn_field_elements() -> void:
 		add_child(waypoint)
 		waypoint.global_position = wp_pos
 		waypoint._base_y = waypoint.position.y  # Re-capture after repositioning
-		# Face into the room (opposite of exit direction) so front faces the player
-		var opp_dir: String = OPPOSITE[dir]
-		waypoint.rotation.y = _dir_to_yaw(opp_dir)
+		# Face toward spawn point so front faces the player approaching from the room
+		var spawn_pt: Vector3 = _portal_data[dir].get("spawn_pos", trigger_pos)
+		waypoint.rotation.y = _facing_yaw(wp_pos, spawn_pt)
 		# Disable backface culling so it's visible from any angle
 		waypoint.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
 			if mat is StandardMaterial3D:
