@@ -183,10 +183,10 @@ func update_keys(collected: int, total: int) -> void:
 # ── SVG → Display transform ─────────────────────────────────────────────────
 
 func _svg_to_display(svg_pos: Vector2) -> Vector2:
-	## Mirror X axis (SVG generation mirrors X), rotate by cell rotation,
+	## SVG X-mirror matches the game's top-down camera view (east=left,
+	## west=right), so no unmirror needed.  Rotate by cell rotation CW,
 	## then scale to display size.
 	var pos := svg_pos
-	pos.x = 400.0 - pos.x  # Unmirror X axis
 	if _rotation_deg != 0:
 		var center := Vector2(200.0, 200.0)
 		pos = (pos - center).rotated(deg_to_rad(float(_rotation_deg))) + center
