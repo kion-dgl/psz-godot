@@ -83,7 +83,7 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 	_compute_affine(svg_gates, gate_match, portal_data, map_root)
 	print("[RoomMinimap]   affine: ax=%.2f bx=%.2f ay=%.2f by=%.2f  tracking=%s" % [
 		_ax, _bx, _ay, _by, str(_has_player_tracking)])
-	_build_gate_entries(svg_gates, gate_match, connections, warp_edge)
+	_build_gate_entries(svg_gates, gate_match, connections, warp_edge, portal_data)
 	for gate in _gate_entries:
 		print("[RoomMinimap]   gate_entry: center=%s  color=%s  label='%s'" % [
 			gate["center"], gate["color"], gate["label"]])
@@ -183,8 +183,10 @@ func update_keys(collected: int, total: int) -> void:
 # ── SVG → Display transform ─────────────────────────────────────────────────
 
 func _svg_to_display(svg_pos: Vector2) -> Vector2:
-	## Rotate SVG coordinates by cell rotation, then scale to display size.
+	## Mirror X axis (SVG generation mirrors X), rotate by cell rotation,
+	## then scale to display size.
 	var pos := svg_pos
+	pos.x = 400.0 - pos.x  # Unmirror X axis
 	if _rotation_deg != 0:
 		var center := Vector2(200.0, 200.0)
 		pos = (pos - center).rotated(deg_to_rad(float(_rotation_deg))) + center
@@ -308,16 +310,15 @@ func _match_gates(svg_centers: Array, portal_data: Dictionary) -> Dictionary:
 
 
 func _direction_score(svg_center: Vector2, orig_dir: String) -> float:
-	## Score how well an SVG gate position matches a direction in mirrored GLB
-	## convention (east=-X, west=+X).  SVG maps model X directly, so east
-	## gates appear at low SVG X (left) and west gates at high SVG X (right).
+	## Score how well an SVG gate position matches a direction.
+	## SVG has mirrored X (east=left, west=right in raw SVG coords).
 	var dx: float = svg_center.x - 200.0
 	var dy: float = svg_center.y - 200.0
 	match orig_dir:
 		"north": return -dy   # prefer small Y (top)
 		"south": return dy    # prefer large Y (bottom)
-		"east":  return -dx   # prefer small X (left, mirrored)
-		"west":  return dx    # prefer large X (right, mirrored)
+		"east":  return -dx   # prefer small X (left in raw SVG = east)
+		"west":  return dx    # prefer large X (right in raw SVG = west)
 	return 0.0
 
 
@@ -428,7 +429,7 @@ func _compute_affine(svg_centers: Array, gate_match: Dictionary,
 
 
 func _build_gate_entries(svg_centers: Array, gate_match: Dictionary,
-		connections: Dictionary, warp_edge: String) -> void:
+		connections: Dictionary, warp_edge: String, portal_data: Dictionary) -> void:
 	for i in range(svg_centers.size()):
 		var color: Color
 		var label: String
@@ -441,15 +442,9 @@ func _build_gate_entries(svg_centers: Array, gate_match: Dictionary,
 				label = "EXIT"
 			elif connections.has(grid_dir):
 				color = GATE_OPEN
-				# GLB mirrored X convention: east=-X (left), west=+X (right).
-				# The E↔W mirror propagates through rotation, causing label inversions:
-				#   R=0°/180°: E/W orig stays E/W → swap E↔W labels
-				#   R=90°/270°: E/W orig rotates to N/S → swap N↔S labels
-				var orig := _grid_to_original(grid_dir, _rotation_deg)
-				if (grid_dir == "east" or grid_dir == "west") and (orig == "east" or orig == "west"):
-					label = "W" if grid_dir == "east" else "E"
-				elif (grid_dir == "north" or grid_dir == "south") and (orig == "east" or orig == "west"):
-					label = "S" if grid_dir == "north" else "N"
+				# Use baked compass_label if available, else fall back to grid direction
+				if portal_data.has(grid_dir) and portal_data[grid_dir].has("compass_label"):
+					label = portal_data[grid_dir]["compass_label"]
 				else:
 					label = grid_dir.substr(0, 1).to_upper()
 			else:
