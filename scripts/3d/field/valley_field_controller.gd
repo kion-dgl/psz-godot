@@ -1555,7 +1555,9 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				var w_rot: float = float(obj.get("rotation_y", 0))
-				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos)
+				var w_portal: String = str(obj.get("portal_dir", ""))
+				var w_label: String = str(obj.get("label", ""))
+				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos, w_portal, w_label)
 			"quest_item":
 				var qi_id: String = str(obj.get("item_id", ""))
 				var qi_label: String = str(obj.get("item_label", ""))
@@ -1642,7 +1644,9 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				var w_rot: float = float(obj.get("rotation_y", 0))
-				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos)
+				var w_portal: String = str(obj.get("portal_dir", ""))
+				var w_label: String = str(obj.get("label", ""))
+				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos, w_portal, w_label)
 			"quest_item":
 				if state != "collected":
 					var qi_id: String = str(obj.get("item_id", ""))
@@ -2059,17 +2063,28 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 	print("[CellObjects] WarpPoint at %s → section %d, cell %s, position %s" % [pos, target_section, target_cell, target_position])
 
 
-func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, target_cell: String, target_position: Vector3) -> void:
+func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, target_cell: String, target_position: Vector3, portal_dir: String = "", label_text: String = "") -> void:
+	# Place the gate model at the gate position (not the trigger position)
+	var gate_pos := pos
+	var spawn_pos := pos
+	var trigger_pos := pos
+	if not portal_dir.is_empty() and _portal_data.has(portal_dir):
+		var pd: Dictionary = _portal_data[portal_dir]
+		gate_pos = pd.get("gate_pos", pos)
+		spawn_pos = pd.get("spawn_pos", pos)
+		trigger_pos = pd.get("trigger_pos", pos)
+
 	var aw := AreaWarpScript.new()
 	aw.auto_collect = false
 	aw.element_state = "open"
-	aw.name = "AreaWarpObj"
+	aw.name = "AreaWarpObj_%s" % portal_dir
 	add_child(aw)
-	aw.global_position = pos
+	aw.global_position = gate_pos
 	aw.rotation.y = rot_y
-	# Create trigger area around the warp
+
+	# Create trigger area at the trigger position (deep in corridor)
 	var trigger := Area3D.new()
-	trigger.name = "AreaWarpObjTrigger"
+	trigger.name = "AreaWarpObjTrigger_%s" % portal_dir
 	trigger.collision_layer = 0
 	trigger.collision_mask = 2
 	var shape := CollisionShape3D.new()
@@ -2079,7 +2094,7 @@ func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, ta
 	shape.position.y = 1.5
 	trigger.add_child(shape)
 	add_child(trigger)
-	trigger.global_position = pos
+	trigger.global_position = trigger_pos
 	trigger.body_entered.connect(func(body: Node3D) -> void:
 		if body.is_in_group("player"):
 			print("[ValleyField] AreaWarp object activated → section %d, cell %s" % [target_section, target_cell])
@@ -2094,12 +2109,17 @@ func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, ta
 				"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 			})
 	)
-	# DEBUG: Sphere markers — same as regular gates (yellow=gate, green=spawn, red=trigger)
-	_add_debug_sphere(pos, Color(1, 1, 0), "AreaWarpMark_gate")
-	# Add label
+
+	# DEBUG: Sphere markers — gate=yellow, spawn=green, trigger=red
+	_add_debug_sphere(gate_pos, Color(1, 1, 0), "AreaWarpMark_gate_%s" % portal_dir)
+	_add_debug_sphere(spawn_pos, Color(0, 1, 0), "AreaWarpMark_spawn_%s" % portal_dir)
+	_add_debug_sphere(trigger_pos, Color(1, 0, 0), "AreaWarpMark_trigger_%s" % portal_dir)
+
+	# Label
+	var display_label := label_text if not label_text.is_empty() else "%s EXIT\n→ prev section" % portal_dir.to_upper()
 	var label := Label3D.new()
-	label.name = "AreaWarpLabel"
-	label.text = "BACK\n→ s%d %s" % [target_section, target_cell]
+	label.name = "AreaWarpLabel_%s" % portal_dir
+	label.text = display_label
 	label.font_size = 48
 	label.pixel_size = 0.01
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -2108,8 +2128,8 @@ func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, ta
 	label.outline_modulate = Color(0, 0, 0, 1)
 	label.outline_size = 8
 	add_child(label)
-	label.global_position = Vector3(pos.x, 3.5, pos.z)
-	print("[CellObjects] AreaWarp object at %s (rot=%.2f) → section %d, cell %s" % [pos, rot_y, target_section, target_cell])
+	label.global_position = Vector3(gate_pos.x, 3.5, gate_pos.z)
+	print("[CellObjects] AreaWarp at gate=%s trigger=%s (rot=%.2f) → section %d, cell %s" % [gate_pos, trigger_pos, rot_y, target_section, target_cell])
 
 
 ## Wire switch.activated → linked fences.disable()

@@ -483,8 +483,10 @@
           "objects": [
             {
               "type": "area_warp",
-              "position": [3.31, 0, 28.17],
-              "rotation_y": 0,
+              "position": [3.31, 0, 21.17],
+              "rotation_y": 3.14,
+              "portal_dir": "south",
+              "label": "SOUTH EXIT\n→ prev section",
               "warp_section": 0,
               "warp_cell": "3,2",
               "warp_position": [14.05, 1, 23.85]
@@ -569,7 +571,9 @@
             {
               "type": "area_warp",
               "position": [-4.91, 0, -20.82],
-              "rotation_y": 3.14,
+              "rotation_y": 0,
+              "portal_dir": "north",
+              "label": "NORTH EXIT\n→ prev section",
               "warp_section": 1,
               "warp_cell": "0,0",
               "warp_position": [3.31, 1, 24.17]
