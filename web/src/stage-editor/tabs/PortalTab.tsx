@@ -71,6 +71,16 @@ export default function PortalTab({
     }));
   };
 
+  // Update portal compass label
+  const updatePortalCompassLabel = (id: string, compass_label: string | undefined) => {
+    updateConfig((prev) => ({
+      ...prev,
+      portals: prev.portals.map((p) =>
+        p.id === id ? { ...p, compass_label } : p
+      ),
+    }));
+  };
+
   // Update portal rotation offset
   const updatePortalRotationOffset = (id: string, offset: number) => {
     updateConfig((prev) => ({
@@ -241,6 +251,11 @@ export default function PortalTab({
                     <span style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>
                       {portal.label || portal.direction}
                     </span>
+                    {portal.compass_label && (
+                      <span style={{ marginLeft: '6px', fontSize: '11px', color: '#22aa44', fontWeight: 'bold' }}>
+                        [{portal.compass_label}]
+                      </span>
+                    )}
                     <span style={{ marginLeft: '8px', fontSize: '11px', color: '#888' }}>
                       {portal.direction.toUpperCase()}{portal.rotationOffset ? ` ${portal.rotationOffset > 0 ? '+' : ''}${portal.rotationOffset}` : ''}
                     </span>
@@ -306,10 +321,58 @@ export default function PortalTab({
             />
           </div>
 
+          {/* Compass Label */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#666' }}>
+              Compass Label (visual, fixed):
+            </label>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {(['N', 'S', 'E', 'W'] as const).map((cl) => (
+                <button
+                  key={cl}
+                  onClick={() => updatePortalCompassLabel(selectedPortal.id, cl)}
+                  style={{
+                    flex: 1,
+                    padding: '6px',
+                    background: selectedPortal.compass_label === cl ? '#22aa44' : '#333',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: selectedPortal.compass_label === cl ? 'bold' : 'normal',
+                  }}
+                >
+                  {cl}
+                </button>
+              ))}
+              <button
+                onClick={() => updatePortalCompassLabel(selectedPortal.id, undefined)}
+                style={{
+                  padding: '6px 8px',
+                  background: !selectedPortal.compass_label ? '#22aa44' : '#333',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '10px',
+                }}
+                title="Auto (derive from direction)"
+              >
+                Auto
+              </button>
+            </div>
+            <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>
+              {selectedPortal.compass_label
+                ? `Fixed: ${selectedPortal.compass_label}`
+                : `Auto: ${selectedPortal.direction[0].toUpperCase()} (from direction)`}
+            </div>
+          </div>
+
           {/* Direction */}
           <div style={{ marginBottom: '12px' }}>
             <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#666' }}>
-              Direction:
+              Direction (structural, for rotation mapping):
             </label>
             <div style={{ display: 'flex', gap: '4px' }}>
               {DIRECTIONS.map((dir) => (

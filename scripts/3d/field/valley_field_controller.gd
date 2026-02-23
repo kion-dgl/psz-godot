@@ -768,10 +768,9 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 		var rotation: float = base_rot + deg_to_rad(offset_deg)
 		var gate_rot := Vector3(0.0, rotation, 0.0)
 
-		# Outward direction: from room center toward gate (into the corridor)
-		var outward := Vector2(gate_pos.x, gate_pos.z).normalized()
-		if outward.length_squared() < 0.01:
-			outward = Vector2(sin(rotation), -cos(rotation))
+		# Outward direction: cardinal axis based on portal direction label
+		# Matches computePortalPositions() in quest-io.ts: offset = [-sin(rot), -cos(rot)]
+		var outward := Vector2(-sin(rotation), -cos(rotation))
 
 		# Spawn = 3 units outside gate (in corridor), y=1.0
 		var spawn_pos := Vector3(gate_pos.x + outward.x * 3.0, 1.0, gate_pos.z + outward.y * 3.0)

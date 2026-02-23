@@ -61,7 +61,7 @@ export type Direction = 'north' | 'south' | 'east' | 'west';
 // Cell Objects (placed in 3D stage)
 // ============================================================================
 
-export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest' | 'quest_item';
+export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest' | 'area_warp' | 'quest_item';
 
 export interface CellObject {
   /** Unique ID within cell (e.g., "box_0", "enemy_1") */
@@ -110,6 +110,12 @@ export interface CellObject {
   quest_item_id?: string;
   /** Display label for type='quest_item' (e.g., "Sol Leaves") */
   quest_item_label?: string;
+  /** Portal direction for type='area_warp' (north/south/east/west) */
+  portal_dir?: string;
+  /** Display label text for type='area_warp' */
+  area_warp_label?: string;
+  /** Gate model Y rotation in radians for type='area_warp' */
+  area_warp_rotation_y?: number;
 }
 
 export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
@@ -125,6 +131,7 @@ export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
   telepipe: '#66aaff',
   warp: '#aa66ff',
   warp_dest: '#cc88ff',
+  area_warp: '#4a9eff',
   quest_item: '#ffdd44',
 };
 
@@ -141,6 +148,7 @@ export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
   telepipe: 'Telepipe',
   warp: 'Warp',
   warp_dest: 'Warp Dest',
+  area_warp: 'Area Warp',
   quest_item: 'Quest Item',
 };
 
