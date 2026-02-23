@@ -96,16 +96,11 @@ export type { FloorCollisionConfig, SvgSettings };
 // Portal position helpers (matches ExportTab.tsx computePortalPositions)
 // ============================================================================
 
-// Spawn/trigger outset angle for each config portal direction.
-// Config labels have east/west SWAPPED vs physical positions (east=-X, west=+X),
-// so the angles here match the physical side, not the label:
-//   config "east" is physically at -X → angle = -PI/2 (outward toward -X)
-//   config "west" is physically at +X → angle = PI/2 (outward toward +X)
 const DIRECTION_ROTATIONS: Record<string, number> = {
   north: 0,
   south: Math.PI,
-  east: -Math.PI / 2,
-  west: Math.PI / 2,
+  east: Math.PI / 2,
+  west: -Math.PI / 2,
 };
 
 function getPortalRotation(portal: PortalConfig): number {
@@ -119,12 +114,11 @@ function round3(v: Vec3): Vec3 {
 }
 
 // Gate model Y-rotation for each config portal direction.
-// The gate model default faces +Z (south). Gate opens inward (toward room center).
-// Config east/west labels are inverted vs physical positions:
-//   "north" → portal at -Z edge → gate faces +Z (inward) → rotY = 0
-//   "south" → portal at +Z edge → gate faces -Z (inward) → rotY = PI
-//   "east"  → portal at -X edge → gate faces +X (inward) → rotY = -PI/2
-//   "west"  → portal at +X edge → gate faces -X (inward) → rotY = PI/2
+// The gate model default faces +Z (south). Gate opens inward (toward room center):
+//   "north" → portal at -Z edge → gate opens toward +Z (inward) → rotY = 0
+//   "south" → portal at +Z edge → gate opens toward -Z (inward) → rotY = PI
+//   "east"  → portal at +X edge → gate opens toward -X (inward) → rotY = -PI/2
+//   "west"  → portal at -X edge → gate opens toward +X (inward) → rotY = PI/2
 const GATE_MODEL_ROTATIONS: Record<string, number> = {
   north: 0,
   south: Math.PI,
@@ -132,13 +126,12 @@ const GATE_MODEL_ROTATIONS: Record<string, number> = {
   west: Math.PI / 2,
 };
 
-// Config direction → compass label.
-// Config east/west labels are inverted vs physical positions, so compass is also inverted:
+// Config direction → compass label (1:1 now that east/west are fixed)
 const CONFIG_DIR_TO_COMPASS: Record<string, string> = {
   north: 'N',
   south: 'S',
-  east: 'W',
-  west: 'E',
+  east: 'E',
+  west: 'W',
 };
 
 function computePortalPositions(portal: PortalConfig): {
@@ -289,9 +282,7 @@ async function exportSectionCells(
 
       for (const gridDir of allGridDirs) {
         const configDir = reverseRotateDirection(gridDir as Direction, rotation);
-        // Config east/west labels are inverted vs physical positions — swap lookup
-        const swappedDir = configDir === 'east' ? 'west' : configDir === 'west' ? 'east' : configDir;
-        const portal = configPortalsByDir.get(swappedDir) || configPortalsByDir.get(configDir);
+        const portal = configPortalsByDir.get(configDir);
         if (portal) {
           portals[gridDir] = computePortalPositions(portal);
         }
@@ -389,10 +380,7 @@ async function exportSectionCells(
             if (targetConfig?.portals) {
               const targetRot = targetCell.rotation ?? 0;
               const configDir = reverseRotateDirection(reverseDir as Direction, targetRot);
-              // Config east/west labels are inverted — swap lookup
-              const swappedDir2 = configDir === 'east' ? 'west' : configDir === 'west' ? 'east' : configDir;
-              let portalCfg = targetConfig.portals.find((p: PortalConfig) => p.direction === swappedDir2)
-                || targetConfig.portals.find((p: PortalConfig) => p.direction === configDir);
+              let portalCfg = targetConfig.portals.find((p: PortalConfig) => p.direction === configDir);
               // Fallback: pick an unused config portal (rotation may be stale)
               if (!portalCfg) {
                 const usedConfigDirs = new Set<string>();

@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
  * Patches portal_id (and bakes missing portals) into quest JSON files.
- * Fixes east/west portal swap: config labels have east/west inverted vs physical positions.
+ *
+ * For quests that already have baked portals: matches by gate position to find
+ * the correct config portal (handles fallback portal assignments from bidirectional fixup).
+ * For quests without baked portals: bakes full portal data from config.
  *
  * Usage: node web/scripts/patch-portal-ids.mjs
  */
@@ -30,22 +33,11 @@ function reverseRotateDirection(gridDir, rotation) {
   return rotateDirection(gridDir, (360 - rotation) % 360);
 }
 
-/** Swap east↔west config direction (config labels are inverted vs physical positions) */
-function swapEW(dir) {
-  if (dir === 'east') return 'west';
-  if (dir === 'west') return 'east';
-  return dir;
-}
-
 // --- Portal bake math (mirrors quest-io.ts computePortalPositions) ---
 
-// Config east/west labels are inverted vs physical positions:
-// config "east" is physically at -X → angle = -PI/2 (outward toward -X)
-// config "west" is physically at +X → angle = PI/2 (outward toward +X)
-const DIRECTION_ROTATIONS = { north: 0, south: Math.PI, east: -Math.PI / 2, west: Math.PI / 2 };
+const DIRECTION_ROTATIONS = { north: 0, south: Math.PI, east: Math.PI / 2, west: -Math.PI / 2 };
 const GATE_MODEL_ROTATIONS = { north: 0, south: Math.PI, east: -Math.PI / 2, west: Math.PI / 2 };
-// Config direction → compass label (inverted for east/west)
-const CONFIG_DIR_TO_COMPASS = { north: 'N', south: 'S', east: 'W', west: 'E' };
+const CONFIG_DIR_TO_COMPASS = { north: 'N', south: 'S', east: 'E', west: 'W' };
 
 function round3(v) {
   return [+v[0].toFixed(2), +v[1].toFixed(2), +v[2].toFixed(2)];
@@ -71,16 +63,38 @@ function computePortalPositions(portal) {
   return result;
 }
 
+/** Find config portal matching a stored portal by gate position (nearest match) */
+function findConfigPortalByGate(storedGate, configPortals) {
+  let best = null;
+  let bestDist = Infinity;
+  for (const p of configPortals) {
+    const g = round3(p.position);
+    const dx = g[0] - storedGate[0];
+    const dy = g[1] - storedGate[1];
+    const dz = g[2] - storedGate[2];
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = p;
+    }
+  }
+  // Only match if within 0.5 units (handles small rounding diffs)
+  return bestDist < 0.5 ? best : null;
+}
+
 // --- Main ---
 
 const stageConfigs = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf-8'));
 const manifest = JSON.parse(fs.readFileSync(path.join(QUESTS_DIR, 'manifest.json'), 'utf-8'));
 
+let totalPatched = 0;
 let totalBaked = 0;
+let totalWarnings = 0;
 
 for (const questName of manifest) {
   const questPath = path.join(QUESTS_DIR, `${questName}.json`);
   const quest = JSON.parse(fs.readFileSync(questPath, 'utf-8'));
+  let patched = 0;
   let baked = 0;
 
   for (const section of quest.sections || []) {
@@ -97,43 +111,74 @@ for (const questName of manifest) {
       const rotation = cell.rotation || 0;
       const connections = cell.connections || {};
 
-      // Determine which grid directions need portals
-      const portalDirs = new Set(Object.keys(connections));
-      if (cell.warp_edge) portalDirs.add(cell.warp_edge);
-      if (cell.is_start || cell.is_end) {
-        for (const origDir of cfg.portals.map(p => p.direction)) {
-          const gridDir = rotateDirection(origDir, rotation);
-          if (!connections[gridDir]) portalDirs.add(gridDir);
+      const existingPortals = cell.portals || {};
+      const hasExistingPortals = Object.keys(existingPortals).some(k => k !== 'default');
+
+      if (hasExistingPortals) {
+        // Patch portal_id into existing portals — match by gate position
+        for (const [gridDir, portal] of Object.entries(existingPortals)) {
+          if (gridDir === 'default') continue;
+          if (portal.portal_id) continue;
+
+          // Try direction-based match first
+          const configDir = reverseRotateDirection(gridDir, rotation);
+          let configPortal = configByDir.get(configDir);
+
+          // Verify by gate position; if mismatch, fall back to position-based match
+          if (configPortal && portal.gate) {
+            const expectedGate = round3(configPortal.position);
+            if (JSON.stringify(expectedGate) !== JSON.stringify(portal.gate)) {
+              configPortal = findConfigPortalByGate(portal.gate, cfg.portals);
+            }
+          } else if (!configPortal && portal.gate) {
+            configPortal = findConfigPortalByGate(portal.gate, cfg.portals);
+          }
+
+          if (configPortal && configPortal.id) {
+            // Re-bake from the matched config portal to fix any stale data
+            const rebaked = computePortalPositions(configPortal);
+            cell.portals[gridDir] = rebaked;
+            patched++;
+          } else {
+            console.warn(`  WARN: ${questName} ${cell.pos}/${gridDir}: no matching config portal found`);
+            totalWarnings++;
+          }
         }
-      }
-
-      // Re-bake all portals from scratch with east/west swap fix
-      const portals = {};
-      for (const gridDir of portalDirs) {
-        const configDir = reverseRotateDirection(gridDir, rotation);
-        // Swap east↔west lookup (config labels are inverted)
-        const swapped = swapEW(configDir);
-        const configPortal = configByDir.get(swapped) || configByDir.get(configDir);
-        if (configPortal) {
-          portals[gridDir] = computePortalPositions(configPortal);
-          baked++;
+      } else {
+        // Bake portals from scratch
+        const portalDirs = new Set(Object.keys(connections));
+        if (cell.warp_edge) portalDirs.add(cell.warp_edge);
+        if (cell.is_start || cell.is_end) {
+          for (const origDir of cfg.portals.map(p => p.direction)) {
+            const gridDir = rotateDirection(origDir, rotation);
+            if (!connections[gridDir]) portalDirs.add(gridDir);
+          }
         }
-      }
 
-      // Bake default_spawn if config has one
-      if (cfg.defaultSpawn) {
-        const ds = cfg.defaultSpawn;
-        const dsRot = DIRECTION_ROTATIONS[ds.direction] ?? 0;
-        portals['default'] = {
-          gate: round3(ds.position),
-          spawn: round3([ds.position[0], 1, ds.position[2]]),
-          trigger: round3([ds.position[0], 0, ds.position[2]]),
-          default_rotation: +dsRot.toFixed(4),
-        };
-      }
+        const portals = {};
+        for (const gridDir of portalDirs) {
+          const configDir = reverseRotateDirection(gridDir, rotation);
+          const configPortal = configByDir.get(configDir);
+          if (configPortal) {
+            portals[gridDir] = computePortalPositions(configPortal);
+            baked++;
+          }
+        }
 
-      if (Object.keys(portals).length > 0) {
-        cell.portals = portals;
+        if (cfg.defaultSpawn) {
+          const ds = cfg.defaultSpawn;
+          const dsRot = DIRECTION_ROTATIONS[ds.direction] ?? 0;
+          portals['default'] = {
+            gate: round3(ds.position),
+            spawn: round3([ds.position[0], 1, ds.position[2]]),
+            trigger: round3([ds.position[0], 0, ds.position[2]]),
+            default_rotation: +dsRot.toFixed(4),
+          };
+        }
+
+        if (Object.keys(portals).length > 0) {
+          cell.portals = portals;
+        }
       }
     }
 
@@ -150,11 +195,8 @@ for (const questName of manifest) {
           if (!targetCfg || !Array.isArray(targetCfg.portals)) continue;
           const targetRot = target.rotation || 0;
           const configDir = reverseRotateDirection(reverseDir, targetRot);
-          const swapped = swapEW(configDir);
-          let portalCfg = targetCfg.portals.find(p => p.direction === swapped)
-            || targetCfg.portals.find(p => p.direction === configDir);
+          let portalCfg = targetCfg.portals.find(p => p.direction === configDir);
           if (!portalCfg) {
-            // Fallback: pick unused config portal
             const usedConfigDirs = new Set();
             for (const gDir of Object.keys(targetPortals)) {
               if (gDir === 'default') continue;
@@ -173,8 +215,9 @@ for (const questName of manifest) {
   }
 
   fs.writeFileSync(questPath, JSON.stringify(quest, null, 2) + '\n');
-  console.log(`${questName}: baked ${baked} portals`);
+  console.log(`${questName}: patched ${patched} portal_ids, baked ${baked} new portals`);
+  totalPatched += patched;
   totalBaked += baked;
 }
 
-console.log(`\nDone. Baked ${totalBaked} portals total.`);
+console.log(`\nDone. Patched ${totalPatched} portal_ids, baked ${totalBaked} new portals. Warnings: ${totalWarnings}`);
