@@ -135,6 +135,7 @@ const CONFIG_DIR_TO_COMPASS: Record<string, string> = {
 };
 
 function computePortalPositions(portal: PortalConfig): {
+  portal_id?: string;
   gate: Vec3;
   spawn: Vec3;
   trigger: Vec3;
@@ -157,6 +158,7 @@ function computePortalPositions(portal: PortalConfig): {
   const compassLabel = portal.compass_label ?? CONFIG_DIR_TO_COMPASS[portal.direction] ?? portal.direction[0].toUpperCase();
 
   return {
+    ...(portal.id ? { portal_id: portal.id } : {}),
     gate: round3(portal.position),
     spawn: round3([x - sin * spawnOutset, 1, z - cos * spawnOutset]),
     trigger: round3([x - sin * triggerOutset, 0, z - cos * triggerOutset]),
@@ -258,7 +260,7 @@ async function exportSectionCells(
     }
 
     // Bake portal positions from full unified config
-    const portals: Record<string, { gate: Vec3; spawn: Vec3; trigger: Vec3; gate_rot?: Vec3; compass_label?: string }> = {};
+    const portals: Record<string, { portal_id?: string; gate: Vec3; spawn: Vec3; trigger: Vec3; gate_rot?: Vec3; compass_label?: string }> = {};
     const stageConfig = fullConfigs[cell.stageName];
     if (stageConfig && stageConfig.portals) {
       // Build lookup: config direction → portal config
