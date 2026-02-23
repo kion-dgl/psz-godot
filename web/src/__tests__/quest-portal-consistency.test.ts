@@ -21,11 +21,12 @@ const quests: Array<{ filename: string; data: any }> = manifest.map(name => ({
 
 type Vec3 = [number, number, number];
 
+// Config east/west labels are inverted vs physical positions
 const DIRECTION_ROTATIONS: Record<string, number> = {
   north: 0,
   south: Math.PI,
-  east: Math.PI / 2,
-  west: -Math.PI / 2,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
 };
 
 const GATE_MODEL_ROTATIONS: Record<string, number> = {
@@ -35,11 +36,12 @@ const GATE_MODEL_ROTATIONS: Record<string, number> = {
   west: Math.PI / 2,
 };
 
+// Config east/west labels are inverted vs physical positions
 const CONFIG_DIR_TO_COMPASS: Record<string, string> = {
   north: 'N',
   south: 'S',
-  east: 'E',
-  west: 'W',
+  east: 'W',
+  west: 'E',
 };
 
 function round3(v: Vec3): Vec3 {
