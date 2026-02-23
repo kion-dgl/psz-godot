@@ -43,11 +43,12 @@ export interface SpawnPointData {
 }
 
 // Rotation values for each direction (radians, Y-axis rotation)
+// Outward vector = [-sin(r), -cos(r)]: north→-Z, south→+Z, east→+X, west→-X
 export const DIRECTION_ROTATIONS: Record<GateDirection, number> = {
   north: 0,
   south: Math.PI,
-  east: Math.PI / 2,
-  west: -Math.PI / 2,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
 };
 
 // Get effective rotation for a portal (base direction + optional offset)

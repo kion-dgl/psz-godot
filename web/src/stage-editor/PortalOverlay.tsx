@@ -110,6 +110,73 @@ function GateBoundingBox({ position, rotation }: { position: [number, number, nu
   );
 }
 
+// Compass rose at origin showing N/S/E/W directions
+// Godot convention (from _dir_to_yaw): north=-Z, south=+Z, east=-X, west=+X
+function CompassRose() {
+  const armLength = 4;
+  const armThickness = 0.15;
+
+  // Directions mapped to 3D axes:
+  // North = -Z, South = +Z, East = +X, West = -X
+  const directions: { label: string; pos: [number, number, number]; color: string }[] = [
+    { label: 'N (-Z)', pos: [0, 0, -(armLength + 1.5)], color: '#44ff44' },
+    { label: 'S (+Z)', pos: [0, 0, armLength + 1.5], color: '#ff4444' },
+    { label: 'E (+X)', pos: [armLength + 1.5, 0, 0], color: '#4488ff' },
+    { label: 'W (-X)', pos: [-(armLength + 1.5), 0, 0], color: '#ffaa00' },
+  ];
+
+  return (
+    <group position={[0, 0.5, 0]}>
+      {/* Center marker */}
+      <mesh>
+        <sphereGeometry args={[0.4, 16, 16]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+
+      {/* N/S arm (-Z / +Z) */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[armThickness, armThickness, armLength * 2]} />
+        <meshBasicMaterial color="#44ff44" />
+      </mesh>
+      {/* Arrow tip north (-Z) */}
+      <mesh position={[0, 0, -armLength]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.4, 0.8, 8]} />
+        <meshBasicMaterial color="#44ff44" />
+      </mesh>
+
+      {/* E/W arm (-X / +X) */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[armLength * 2, armThickness, armThickness]} />
+        <meshBasicMaterial color="#4488ff" />
+      </mesh>
+      {/* Arrow tip east (+X) */}
+      <mesh position={[armLength, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <coneGeometry args={[0.4, 0.8, 8]} />
+        <meshBasicMaterial color="#4488ff" />
+      </mesh>
+
+      {/* Labels */}
+      {directions.map(({ label, pos, color }) => (
+        <Html key={label} position={pos} center style={{ pointerEvents: 'none' }}>
+          <div style={{
+            background: 'rgba(0,0,0,0.85)',
+            color,
+            padding: '2px 6px',
+            borderRadius: '3px',
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap',
+            border: `1px solid ${color}`,
+          }}>
+            {label}
+          </div>
+        </Html>
+      ))}
+    </group>
+  );
+}
+
 // Floating label above a portal showing direction, compass label, and truncated ID
 function PortalLabel({ position, label, compassLabel, portalId }: { position: [number, number, number]; label?: string; compassLabel?: string; portalId?: string }) {
   if (!label && !compassLabel && !portalId) return null;
@@ -460,6 +527,9 @@ export default function PortalOverlay({
 
   return (
     <group>
+      {/* Compass rose at origin */}
+      <CompassRose />
+
       {/* Ground plane for click detection in placement mode */}
       {anyPlacementMode && (
         <mesh
