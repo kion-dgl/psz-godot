@@ -17,15 +17,6 @@
           "connections": {
             "south": "1,2"
           },
-          "is_start": true,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 0,
           "portals": {
             "south": {
               "portal_id": "portal_1770733436575_0jjzynv4j",
@@ -69,67 +60,67 @@
               ],
               "default_rotation": 0
             }
-          }
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0
         },
         {
           "pos": "1,2",
           "stage_id": "s03a_tb3",
           "rotation": 270,
           "connections": {
-            "north": "0,2",
+            "east": "1,3",
             "south": "2,2",
-            "east": "1,3"
+            "north": "0,2"
           },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 1,
           "portals": {
-            "north": {
-              "portal_id": "portal_1770724565732_b018w4ing",
+            "east": {
+              "portal_id": "portal_1770724548563_bnzuctak9",
               "gate": [
-                -20.83,
+                -5.92,
                 0,
-                -7.32
+                20.59
               ],
               "spawn": [
-                -23.83,
+                -5.92,
                 1,
-                -7.32
+                23.59
               ],
               "trigger": [
-                -27.83,
+                -5.92,
                 0,
-                -7.32
+                27.59
               ],
               "gate_rot": [
                 0,
-                -1.57,
+                3.14,
                 0
               ],
-              "compass_label": "E"
+              "compass_label": "S"
             },
             "south": {
-              "portal_id": "portal_1770724534177_3sylr1biz",
+              "portal_id": "portal_1771825168757_c70171yhn",
               "gate": [
-                20.65,
+                -20.52,
                 0,
-                -12.68
+                -7.68
               ],
               "spawn": [
-                23.65,
+                -23.52,
                 1,
-                -12.68
+                -7.68
               ],
               "trigger": [
-                27.65,
+                -27.52,
                 0,
-                -12.68
+                -7.68
               ],
               "gate_rot": [
                 0,
@@ -138,40 +129,30 @@
               ],
               "compass_label": "W"
             },
-            "east": {
-              "portal_id": "portal_1770724548563_bnzuctak9",
+            "north": {
+              "portal_id": "portal_1771825175495_9mmsbwqbd",
               "gate": [
-                -5.92,
+                20.6,
                 0,
-                20.59
+                -12.57
               ],
               "spawn": [
-                -5.92,
+                23.6,
                 1,
-                23.59
+                -12.57
               ],
               "trigger": [
-                -5.92,
+                27.6,
                 0,
-                27.59
+                -12.57
               ],
               "gate_rot": [
                 0,
-                3.14,
+                -1.57,
                 0
               ],
-              "compass_label": "S"
+              "compass_label": "E"
             }
-          }
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s03a_tb3",
-          "rotation": 180,
-          "connections": {
-            "north": "1,2",
-            "west": "2,1",
-            "east": "2,3"
           },
           "is_start": false,
           "is_end": false,
@@ -181,81 +162,7 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 2,
-          "portals": {
-            "north": {
-              "portal_id": "portal_1770724548563_bnzuctak9",
-              "gate": [
-                -5.92,
-                0,
-                20.59
-              ],
-              "spawn": [
-                -5.92,
-                1,
-                23.59
-              ],
-              "trigger": [
-                -5.92,
-                0,
-                27.59
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            },
-            "west": {
-              "portal_id": "portal_1770724565732_b018w4ing",
-              "gate": [
-                -20.83,
-                0,
-                -7.32
-              ],
-              "spawn": [
-                -23.83,
-                1,
-                -7.32
-              ],
-              "trigger": [
-                -27.83,
-                0,
-                -7.32
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            },
-            "east": {
-              "portal_id": "portal_1770724534177_3sylr1biz",
-              "gate": [
-                20.65,
-                0,
-                -12.68
-              ],
-              "spawn": [
-                23.65,
-                1,
-                -12.68
-              ],
-              "trigger": [
-                27.65,
-                0,
-                -12.68
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            }
-          }
+          "path_order": 1
         },
         {
           "pos": "1,3",
@@ -264,20 +171,6 @@
           "connections": {
             "west": "1,2"
           },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "2,4",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 3,
-          "key_position": [
-            -5.2,
-            1,
-            -1.6
-          ],
           "portals": {
             "west": {
               "portal_id": "portal_1770724448196_4mfd4mgom",
@@ -303,14 +196,6 @@
               ],
               "compass_label": "S"
             }
-          }
-        },
-        {
-          "pos": "2,1",
-          "stage_id": "s03a_nc2",
-          "rotation": 270,
-          "connections": {
-            "east": "2,2"
           },
           "is_start": false,
           "is_end": false,
@@ -320,24 +205,39 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 4,
+          "path_order": 2,
+          "key_position": [
+            -5.2,
+            1,
+            -1.6
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s03a_tb3",
+          "rotation": 180,
+          "connections": {
+            "north": "1,2",
+            "east": "2,3",
+            "west": "2,1"
+          },
           "portals": {
-            "east": {
-              "portal_id": "portal_1770724448196_4mfd4mgom",
+            "north": {
+              "portal_id": "portal_1770724548563_bnzuctak9",
               "gate": [
-                -15.37,
+                -5.92,
                 0,
-                23.13
+                20.59
               ],
               "spawn": [
-                -15.37,
+                -5.92,
                 1,
-                26.13
+                23.59
               ],
               "trigger": [
-                -15.37,
+                -5.92,
                 0,
-                30.13
+                27.59
               ],
               "gate_rot": [
                 0,
@@ -345,51 +245,75 @@
                 0
               ],
               "compass_label": "S"
+            },
+            "east": {
+              "portal_id": "portal_1771825168757_c70171yhn",
+              "gate": [
+                -20.52,
+                0,
+                -7.68
+              ],
+              "spawn": [
+                -23.52,
+                1,
+                -7.68
+              ],
+              "trigger": [
+                -27.52,
+                0,
+                -7.68
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
+            },
+            "west": {
+              "portal_id": "portal_1771825175495_9mmsbwqbd",
+              "gate": [
+                20.6,
+                0,
+                -12.57
+              ],
+              "spawn": [
+                23.6,
+                1,
+                -12.57
+              ],
+              "trigger": [
+                27.6,
+                0,
+                -12.57
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
             }
-          }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3
         },
         {
           "pos": "2,3",
           "stage_id": "s03a_ic3",
           "rotation": 270,
           "connections": {
-            "west": "2,2",
-            "east": "2,4"
+            "east": "2,4",
+            "west": "2,2"
           },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 5,
           "portals": {
-            "west": {
-              "portal_id": "portal_1770724176247_38q7705rp",
-              "gate": [
-                4.5,
-                0,
-                -20.19
-              ],
-              "spawn": [
-                4.5,
-                1,
-                -23.19
-              ],
-              "trigger": [
-                4.5,
-                0,
-                -27.19
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
             "east": {
               "portal_id": "portal_1770724158723_pb0rd3r6e",
               "gate": [
@@ -413,43 +337,110 @@
                 0
               ],
               "compass_label": "S"
+            },
+            "west": {
+              "portal_id": "portal_1770724176247_38q7705rp",
+              "gate": [
+                4.5,
+                0,
+                -20.19
+              ],
+              "spawn": [
+                4.5,
+                1,
+                -23.19
+              ],
+              "trigger": [
+                4.5,
+                0,
+                -27.19
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
             }
-          }
-        },
-        {
-          "pos": "2,4",
-          "stage_id": "s03a_lc1",
-          "rotation": 270,
-          "connections": {
-            "west": "2,3",
-            "south": "3,4"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 6,
+          "path_order": 4
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s03a_nc2",
+          "rotation": 270,
+          "connections": {
+            "east": "2,2"
+          },
           "portals": {
-            "west": {
-              "portal_id": "portal_1770724327457_yqz9rnacz",
+            "east": {
+              "portal_id": "portal_1770724448196_4mfd4mgom",
               "gate": [
-                -4.76,
+                -15.37,
                 0,
-                -21.93
+                23.13
               ],
               "spawn": [
-                -4.76,
+                -15.37,
                 1,
-                -24.93
+                26.13
               ],
               "trigger": [
-                -4.76,
+                -15.37,
                 0,
-                -28.93
+                30.13
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "2,4",
+          "stage_id": "s03a_lc2",
+          "rotation": 180,
+          "connections": {
+            "south": "3,4",
+            "west": "2,3"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1770724373813_qo6ja9myl",
+              "gate": [
+                -15.59,
+                0,
+                -21.87
+              ],
+              "spawn": [
+                -15.59,
+                1,
+                -24.87
+              ],
+              "trigger": [
+                -15.59,
+                0,
+                -28.87
               ],
               "gate_rot": [
                 0,
@@ -458,31 +449,40 @@
               ],
               "compass_label": "N"
             },
-            "south": {
-              "portal_id": "portal_1770724309248_c2g3scaos",
+            "west": {
+              "portal_id": "portal_1771825120791_adw7ezl6e",
               "gate": [
-                12.77,
+                20.95,
                 0,
-                -8.49
+                15.6
               ],
               "spawn": [
-                15.77,
+                23.95,
                 1,
-                -8.49
+                15.6
               ],
               "trigger": [
-                19.77,
+                27.95,
                 0,
-                -8.49
+                15.6
               ],
               "gate_rot": [
                 0,
-                1.57,
+                -1.57,
                 0
               ],
-              "compass_label": "W"
+              "compass_label": "E"
             }
-          }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 6
         },
         {
           "pos": "3,4",
@@ -491,15 +491,6 @@
           "connections": {
             "north": "2,4"
           },
-          "is_start": false,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "south",
-          "path_order": 7,
           "portals": {
             "north": {
               "portal_id": "portal_1770724007474_9kh6jog21",
@@ -549,7 +540,16 @@
               ],
               "compass_label": "N"
             }
-          }
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "south",
+          "path_order": 7
         }
       ]
     },
@@ -564,40 +564,7 @@
           "stage_id": "s03e_ia1",
           "rotation": 0,
           "connections": {},
-          "is_start": true,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "north",
-          "path_order": 0,
           "portals": {
-            "north": {
-              "portal_id": "portal_1770730482439_o10tefeqr",
-              "gate": [
-                -6.19,
-                0,
-                -21.36
-              ],
-              "spawn": [
-                -6.19,
-                1,
-                -24.36
-              ],
-              "trigger": [
-                -6.19,
-                0,
-                -28.36
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
             "south": {
               "portal_id": "portal_1770730466665_bn69sos50",
               "gate": [
@@ -621,8 +588,41 @@
                 0
               ],
               "compass_label": "S"
+            },
+            "north": {
+              "portal_id": "portal_1770730482439_o10tefeqr",
+              "gate": [
+                -6.49,
+                0,
+                -21.36
+              ],
+              "spawn": [
+                -6.49,
+                1,
+                -24.36
+              ],
+              "trigger": [
+                -6.49,
+                0,
+                -28.36
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
             }
-          }
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "south",
+          "path_order": 0
         }
       ],
       "entry_direction": "south",
@@ -641,15 +641,6 @@
           "connections": {
             "south": "1,2"
           },
-          "is_start": true,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 0,
           "portals": {
             "south": {
               "portal_id": "portal_1770726528804_65npyap1o",
@@ -699,75 +690,27 @@
               ],
               "compass_label": "N"
             }
-          }
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0
         },
         {
           "pos": "1,2",
           "stage_id": "s03b_tb3",
           "rotation": 270,
           "connections": {
+            "east": "1,3",
             "north": "0,2",
-            "south": "2,2",
-            "east": "1,3"
+            "south": "2,2"
           },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 1,
           "portals": {
-            "north": {
-              "portal_id": "portal_1770726568932_8hq9ktf6e",
-              "gate": [
-                -20.48,
-                0,
-                -2.18
-              ],
-              "spawn": [
-                -23.48,
-                1,
-                -2.18
-              ],
-              "trigger": [
-                -27.48,
-                0,
-                -2.18
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            },
-            "south": {
-              "portal_id": "portal_1770726581218_lcsp8551z",
-              "gate": [
-                17.06,
-                0,
-                -4.51
-              ],
-              "spawn": [
-                20.06,
-                1,
-                -4.51
-              ],
-              "trigger": [
-                24.06,
-                0,
-                -4.51
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            },
             "east": {
               "portal_id": "portal_1770726593904_v64l4z5lm",
               "gate": [
@@ -791,16 +734,98 @@
                 0
               ],
               "compass_label": "S"
+            },
+            "north": {
+              "portal_id": "portal_1771826388908_ypj0vdq8b",
+              "gate": [
+                15.28,
+                0,
+                -4.41
+              ],
+              "spawn": [
+                18.28,
+                1,
+                -4.41
+              ],
+              "trigger": [
+                22.28,
+                0,
+                -4.41
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            },
+            "south": {
+              "portal_id": "portal_1771826394546_zx3c0s02z",
+              "gate": [
+                -19.71,
+                0,
+                -2.17
+              ],
+              "spawn": [
+                -22.71,
+                1,
+                -2.17
+              ],
+              "trigger": [
+                -26.71,
+                0,
+                -2.17
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
             }
-          }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1
         },
         {
-          "pos": "2,2",
-          "stage_id": "s03b_lc2",
+          "pos": "1,3",
+          "stage_id": "s03b_ga1",
           "rotation": 90,
           "connections": {
-            "north": "1,2",
-            "east": "2,3"
+            "west": "1,2"
+          },
+          "portals": {
+            "west": {
+              "portal_id": "portal_1770725676213_mbx0o9fxx",
+              "gate": [
+                -3.05,
+                0,
+                20.18
+              ],
+              "spawn": [
+                -3.05,
+                1,
+                23.18
+              ],
+              "trigger": [
+                -3.05,
+                0,
+                27.18
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
           },
           "is_start": false,
           "is_end": false,
@@ -810,33 +835,18 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 2,
+          "path_order": 2
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s03b_lc2",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "east": "2,3"
+          },
           "portals": {
             "north": {
-              "portal_id": "portal_1770726378183_fxkpkwk3b",
-              "gate": [
-                21.24,
-                0,
-                -13.02
-              ],
-              "spawn": [
-                24.24,
-                1,
-                -13.02
-              ],
-              "trigger": [
-                28.24,
-                0,
-                -13.02
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            },
-            "east": {
               "portal_id": "portal_1770726393370_2nra42l1h",
               "gate": [
                 -14.53,
@@ -859,15 +869,31 @@
                 0
               ],
               "compass_label": "N"
+            },
+            "east": {
+              "portal_id": "portal_1771826359864_3iztbfrsg",
+              "gate": [
+                20.21,
+                0,
+                -12.85
+              ],
+              "spawn": [
+                23.21,
+                1,
+                -12.85
+              ],
+              "trigger": [
+                27.21,
+                0,
+                -12.85
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
             }
-          }
-        },
-        {
-          "pos": "1,3",
-          "stage_id": "s03b_ga1",
-          "rotation": 90,
-          "connections": {
-            "west": "1,2"
           },
           "is_start": false,
           "is_end": false,
@@ -877,101 +903,18 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 3,
-          "portals": {
-            "west": {
-              "portal_id": "portal_1770725676213_mbx0o9fxx",
-              "gate": [
-                -3.05,
-                0,
-                23.38
-              ],
-              "spawn": [
-                -3.05,
-                1,
-                26.38
-              ],
-              "trigger": [
-                -3.05,
-                0,
-                30.38
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          }
+          "path_order": 3
         },
         {
           "pos": "2,3",
           "stage_id": "s03b_tb3",
           "rotation": 0,
           "connections": {
-            "west": "2,2",
+            "south": "3,3",
             "east": "2,4",
-            "south": "3,3"
+            "west": "2,2"
           },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 4,
           "portals": {
-            "west": {
-              "portal_id": "portal_1770726581218_lcsp8551z",
-              "gate": [
-                17.06,
-                0,
-                -4.51
-              ],
-              "spawn": [
-                20.06,
-                1,
-                -4.51
-              ],
-              "trigger": [
-                24.06,
-                0,
-                -4.51
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            },
-            "east": {
-              "portal_id": "portal_1770726568932_8hq9ktf6e",
-              "gate": [
-                -20.48,
-                0,
-                -2.18
-              ],
-              "spawn": [
-                -23.48,
-                1,
-                -2.18
-              ],
-              "trigger": [
-                -27.48,
-                0,
-                -2.18
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            },
             "south": {
               "portal_id": "portal_1770726593904_v64l4z5lm",
               "gate": [
@@ -995,56 +938,65 @@
                 0
               ],
               "compass_label": "S"
-            }
-          }
-        },
-        {
-          "pos": "2,4",
-          "stage_id": "s03b_ga1",
-          "rotation": 90,
-          "connections": {
-            "west": "2,3"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "3,3",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 5,
-          "key_position": [
-            2.5,
-            1,
-            4.1
-          ],
-          "portals": {
-            "west": {
-              "portal_id": "portal_1770725676213_mbx0o9fxx",
+            },
+            "east": {
+              "portal_id": "portal_1771826388908_ypj0vdq8b",
               "gate": [
-                -3.05,
+                15.28,
                 0,
-                23.38
+                -4.41
               ],
               "spawn": [
-                -3.05,
+                18.28,
                 1,
-                26.38
+                -4.41
               ],
               "trigger": [
-                -3.05,
+                22.28,
                 0,
-                30.38
+                -4.41
               ],
               "gate_rot": [
                 0,
-                3.14,
+                -1.57,
                 0
               ],
-              "compass_label": "S"
+              "compass_label": "E"
+            },
+            "west": {
+              "portal_id": "portal_1771826394546_zx3c0s02z",
+              "gate": [
+                -19.71,
+                0,
+                -2.17
+              ],
+              "spawn": [
+                -22.71,
+                1,
+                -2.17
+              ],
+              "trigger": [
+                -26.71,
+                0,
+                -2.17
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
             }
-          }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 4
         },
         {
           "pos": "3,3",
@@ -1054,15 +1006,6 @@
             "north": "2,3",
             "south": "4,3"
           },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
-          "warp_edge": "",
-          "path_order": 6,
           "portals": {
             "north": {
               "portal_id": "portal_1770725695157_thdqlrjg4",
@@ -1112,7 +1055,64 @@
               ],
               "compass_label": "N"
             }
-          }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "2,4",
+          "stage_id": "s03b_ga1",
+          "rotation": 90,
+          "connections": {
+            "west": "2,3"
+          },
+          "portals": {
+            "west": {
+              "portal_id": "portal_1770725676213_mbx0o9fxx",
+              "gate": [
+                -3.05,
+                0,
+                20.18
+              ],
+              "spawn": [
+                -3.05,
+                1,
+                23.18
+              ],
+              "trigger": [
+                -3.05,
+                0,
+                27.18
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 6,
+          "key_position": [
+            2.5,
+            1,
+            4.1
+          ]
         },
         {
           "pos": "4,3",
@@ -1120,6 +1120,32 @@
           "rotation": 180,
           "connections": {
             "north": "3,3"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1770726478489_wuhnlspfg",
+              "gate": [
+                16.1,
+                0,
+                22.51
+              ],
+              "spawn": [
+                16.1,
+                1,
+                25.51
+              ],
+              "trigger": [
+                16.1,
+                0,
+                29.51
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
           },
           "is_start": false,
           "is_end": true,
@@ -1138,9 +1164,9 @@
                 0,
                 7.8
               ],
+              "rotation": 90,
               "prop_path": "assets/objects/story/campfire.glb",
-              "prop_scale": 2.2,
-              "rotation": 90
+              "prop_scale": 2.2
             },
             {
               "type": "dialog_trigger",
@@ -1149,16 +1175,16 @@
                 0,
                 18
               ],
+              "trigger_size": [
+                8.5,
+                3,
+                4
+              ],
               "dialog": [
                 {
                   "speaker": "Scientist:",
                   "text": "help, they're after me!!!"
                 }
-              ],
-              "trigger_size": [
-                8.5,
-                3,
-                4
               ]
             },
             {
@@ -1206,44 +1232,18 @@
                 -9.7
               ],
               "trigger_condition": "room_clear",
+              "actions": [
+                "complete_quest",
+                "telepipe"
+              ],
               "dialog": [
                 {
                   "speaker": "NPC",
                   "text": "Thank you so much, i thought i was a gonner"
                 }
-              ],
-              "actions": [
-                "complete_quest",
-                "telepipe"
               ]
             }
-          ],
-          "portals": {
-            "north": {
-              "portal_id": "portal_1770726478489_wuhnlspfg",
-              "gate": [
-                16.1,
-                0,
-                22.51
-              ],
-              "spawn": [
-                16.1,
-                1,
-                25.51
-              ],
-              "trigger": [
-                16.1,
-                0,
-                29.51
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          }
+          ]
         }
       ]
     }
