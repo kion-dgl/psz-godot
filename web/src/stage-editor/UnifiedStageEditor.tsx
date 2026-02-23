@@ -325,6 +325,7 @@ export default function UnifiedStageEditor() {
             setSelectedPortalId={setSelectedPortalId}
             spawnPlacementMode={spawnPlacementMode}
             setSpawnPlacementMode={setSpawnPlacementModeExclusive}
+            floorTriangles={floorTriangles}
           />
         );
       case 'textures':
