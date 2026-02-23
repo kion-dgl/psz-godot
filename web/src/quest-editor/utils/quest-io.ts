@@ -96,11 +96,12 @@ export type { FloorCollisionConfig, SvgSettings };
 // Portal position helpers (matches ExportTab.tsx computePortalPositions)
 // ============================================================================
 
+// Outward vector = [-sin(r), -cos(r)]: north→-Z, south→+Z, east→+X, west→-X
 const DIRECTION_ROTATIONS: Record<string, number> = {
   north: 0,
   south: Math.PI,
-  east: Math.PI / 2,
-  west: -Math.PI / 2,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
 };
 
 function getPortalRotation(portal: PortalConfig): number {

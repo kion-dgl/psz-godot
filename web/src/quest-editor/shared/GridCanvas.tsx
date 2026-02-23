@@ -115,15 +115,12 @@ function SvgMinimapBg({ stageId, rotation, areaKey }: { stageId: string; rotatio
 
   if (!svg) return null;
   const sized = svg.replace('<svg ', '<svg width="100%" height="100%" ');
-  // SVG generation mirrors X (west=right, east=left). We compose:
-  // 1. scaleX(-1) to unmirror → west=left, east=right
-  // 2. rotate(N deg) CW to match the game's rotation convention
-  // CSS transform applies right-to-left, so: rotate(N) then scaleX(-1) → scaleX first, rotate second
+  // Rotate CW to match the game's rotation convention
   return (
     <div
       style={{
         position: 'absolute', inset: 0, zIndex: 0, opacity: 0.7, overflow: 'hidden',
-        transform: `rotate(${rotation}deg) scaleX(-1)`,
+        transform: `rotate(${rotation}deg)`,
       }}
       dangerouslySetInnerHTML={{ __html: sized }}
     />
