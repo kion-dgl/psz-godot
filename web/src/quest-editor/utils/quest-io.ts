@@ -21,8 +21,10 @@ import type { Direction } from '../types';
 // ============================================================================
 
 interface PortalConfig {
+  id?: string;
   direction: string;
   position: [number, number, number];
+  compass_label?: string; // Visual compass label (N/S/E/W) — fixed, does not rotate
   rotationOffset?: number;
 }
 
@@ -151,7 +153,8 @@ function computePortalPositions(portal: PortalConfig): {
   const gateYRot = GATE_MODEL_ROTATIONS[portal.direction] ?? 0;
 
   // Compass label for display (minimap + 3D gate label)
-  const compassLabel = CONFIG_DIR_TO_COMPASS[portal.direction] ?? portal.direction[0].toUpperCase();
+  // Use explicit compass_label from config if set, otherwise fall back to direction mapping
+  const compassLabel = portal.compass_label ?? CONFIG_DIR_TO_COMPASS[portal.direction] ?? portal.direction[0].toUpperCase();
 
   return {
     gate: round3(portal.position),
@@ -342,6 +345,9 @@ async function exportSectionCells(
         if (obj.spawn_condition && obj.spawn_condition !== 'immediate') exported.spawn_condition = obj.spawn_condition;
         if (obj.quest_item_id) exported.item_id = obj.quest_item_id;
         if (obj.quest_item_label) exported.item_label = obj.quest_item_label;
+        if (obj.portal_dir) exported.portal_dir = obj.portal_dir;
+        if (obj.area_warp_label) exported.label = obj.area_warp_label;
+        if (obj.area_warp_rotation_y !== undefined) exported.rotation_y = obj.area_warp_rotation_y;
         return exported;
       }).filter(obj => obj.type !== 'warp_dest');
     }
@@ -442,7 +448,7 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
     for (const cell of (godotSection as any).cells) {
       if (!cell.objects) continue;
       for (const obj of cell.objects) {
-        if (obj.type === 'warp' && obj.link_id) {
+        if ((obj.type === 'warp' || obj.type === 'area_warp') && obj.link_id) {
           const dest = warpDestMap.get(obj.link_id);
           if (dest) {
             obj.warp_section = dest.sectionIndex;
@@ -530,6 +536,9 @@ export function importGodotSection(section: any): QuestSection {
         if (obj.spawn_condition) co.spawn_condition = obj.spawn_condition;
         if (obj.item_id) co.quest_item_id = obj.item_id;
         if (obj.item_label) co.quest_item_label = obj.item_label;
+        if (obj.portal_dir) co.portal_dir = obj.portal_dir;
+        if (obj.label) co.area_warp_label = obj.label;
+        if (obj.rotation_y !== undefined) co.area_warp_rotation_y = obj.rotation_y;
         // warp_section, warp_cell, warp_position are export-only (resolved at export time) — skip on import
         return co;
       });
