@@ -123,6 +123,15 @@ export default function StagePicker({ project, targetPos, onSelect, onClose }: S
     [project, targetPos]
   );
 
+  // Count how many times each stage (ignoring rotation) is already used in the grid
+  const usageCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const cell of Object.values(project.cells)) {
+      counts[cell.stageName] = (counts[cell.stageName] || 0) + 1;
+    }
+    return counts;
+  }, [project.cells]);
+
   const candidates = useMemo(() => {
     const result: StageCandidate[] = [];
 
@@ -265,6 +274,7 @@ export default function StagePicker({ project, targetPos, onSelect, onClose }: S
             <StageRow
               key={`${candidate.stageName}:${candidate.rotation}`}
               candidate={candidate}
+              usageCount={usageCounts[candidate.stageName] || 0}
               onSelect={onSelect}
             />
           ))}
@@ -292,9 +302,11 @@ export default function StagePicker({ project, targetPos, onSelect, onClose }: S
 
 function StageRow({
   candidate,
+  usageCount,
   onSelect,
 }: {
   candidate: StageCandidate;
+  usageCount: number;
   onSelect: (stageName: string, rotation: number) => void;
 }) {
   const suffix = getStageSuffix(candidate.stageName);
@@ -333,6 +345,21 @@ function StageRow({
           {candidate.stageName}
         </div>
       </div>
+
+      {/* Usage count */}
+      {usageCount > 0 && (
+        <span style={{
+          padding: '2px 7px',
+          background: usageCount >= 3 ? '#553322' : '#333',
+          color: usageCount >= 3 ? '#ffaa66' : '#888',
+          fontSize: '10px',
+          borderRadius: '8px',
+          fontWeight: 600,
+          whiteSpace: 'nowrap',
+        }}>
+          {usageCount}x used
+        </span>
+      )}
 
       {/* Select button */}
       <button
