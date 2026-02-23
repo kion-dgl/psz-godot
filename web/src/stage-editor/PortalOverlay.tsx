@@ -1,5 +1,5 @@
 import { useRef, useMemo, useCallback } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, Html } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -18,6 +18,9 @@ interface PortalModelProps {
   opacity?: number;
   selected?: boolean;
   onClick?: () => void;
+  label?: string;
+  compassLabel?: string;
+  portalId?: string;
 }
 
 // Spawn/trigger offset constants (matching ExportTab)
@@ -107,7 +110,35 @@ function GateBoundingBox({ position, rotation }: { position: [number, number, nu
   );
 }
 
-function GatePreview({ position, rotation, opacity = 1, selected, onClick }: Omit<PortalModelProps, 'modelType'>) {
+// Floating label above a portal showing direction, compass label, and truncated ID
+function PortalLabel({ position, label, compassLabel, portalId }: { position: [number, number, number]; label?: string; compassLabel?: string; portalId?: string }) {
+  if (!label && !compassLabel && !portalId) return null;
+  const dir = label?.toUpperCase() || '';
+  const compass = compassLabel ? ` [${compassLabel}]` : '';
+  const idSuffix = portalId ? portalId.slice(-6) : '';
+
+  return (
+    <Html position={[position[0], position[1] + 5, position[2]]} center style={{ pointerEvents: 'none' }}>
+      <div style={{
+        background: 'rgba(0,0,0,0.8)',
+        color: '#fff',
+        padding: '3px 6px',
+        borderRadius: '3px',
+        fontSize: '11px',
+        whiteSpace: 'nowrap',
+        fontFamily: 'monospace',
+        lineHeight: '1.3',
+        textAlign: 'center',
+        border: '1px solid #555',
+      }}>
+        <div style={{ fontWeight: 'bold' }}>{dir}{compass}</div>
+        {idSuffix && <div style={{ fontSize: '9px', color: '#aaa' }}>...{idSuffix}</div>}
+      </div>
+    </Html>
+  );
+}
+
+function GatePreview({ position, rotation, opacity = 1, selected, onClick, label, compassLabel, portalId }: Omit<PortalModelProps, 'modelType'>) {
   const { scene } = useGLTF(GATE_MODEL_PATH);
 
   const clonedScene = useMemo(() => {
@@ -150,11 +181,12 @@ function GatePreview({ position, rotation, opacity = 1, selected, onClick }: Omi
       <GateBoundingBox position={position} rotation={rotation} />
       <SpawnMarker position={markers.spawn} rotation={markers.rotation} />
       <TriggerMarker position={markers.trigger} rotation={markers.rotation} />
+      <PortalLabel position={position} label={label} compassLabel={compassLabel} portalId={portalId} />
     </group>
   );
 }
 
-function WarpPreview({ position, rotation, opacity = 1, selected, onClick }: Omit<PortalModelProps, 'modelType'>) {
+function WarpPreview({ position, rotation, opacity = 1, selected, onClick, label, compassLabel, portalId }: Omit<PortalModelProps, 'modelType'>) {
   const { scene } = useGLTF(WARP_MODEL_PATH);
 
   const clonedScene = useMemo(() => {
@@ -197,6 +229,7 @@ function WarpPreview({ position, rotation, opacity = 1, selected, onClick }: Omi
       <GateBoundingBox position={position} rotation={rotation} />
       <SpawnMarker position={markers.spawn} rotation={markers.rotation} />
       <TriggerMarker position={markers.trigger} rotation={markers.rotation} />
+      <PortalLabel position={position} label={label} compassLabel={compassLabel} portalId={portalId} />
     </group>
   );
 }
@@ -449,6 +482,9 @@ export default function PortalOverlay({
           opacity={1}
           selected={portal.id === selectedPortalId}
           onClick={() => onPortalClick(portal.id)}
+          label={portal.direction}
+          compassLabel={portal.compass_label}
+          portalId={portal.id}
         />
       ))}
 

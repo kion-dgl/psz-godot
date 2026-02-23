@@ -12,7 +12,7 @@ interface SvgTabProps {
 }
 
 // Generate SVG minimap with configurable bounds and optional rotation
-function generateSvgMinimap(
+export function generateSvgMinimap(
   triangles: FloorTriangle[],
   portals: UnifiedStageConfig['portals'],
   options: {
