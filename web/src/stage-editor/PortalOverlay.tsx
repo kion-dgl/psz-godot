@@ -5,6 +5,8 @@ import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { assetUrl } from '../utils/assets';
 import type { PortalData, GateDirection, PreviewModel, SpawnPointData } from './types';
+import { rotateDirection } from '../quest-editor/hooks/useStageConfigs';
+import type { Direction } from '../quest-editor/types';
 import { DIRECTION_ROTATIONS, getPortalRotation } from './types';
 
 // Model paths — Godot asset layout
@@ -111,19 +113,38 @@ function GateBoundingBox({ position, rotation }: { position: [number, number, nu
 }
 
 // Compass rose at origin showing N/S/E/W directions
-// Godot convention (from _dir_to_yaw): north=-Z, south=+Z, east=-X, west=+X
-function CompassRose() {
+// Base axes: North = -Z, South = +Z, East = +X, West = -X
+// When previewRotation > 0, labels rotate CW (e.g. at 90°: N→+X, E→+Z, S→-X, W→-Z)
+function CompassRose({ previewRotation = 0 }: { previewRotation?: number }) {
   const armLength = 4;
   const armThickness = 0.15;
 
-  // Directions mapped to 3D axes:
-  // North = -Z, South = +Z, East = +X, West = -X
-  const directions: { label: string; pos: [number, number, number]; color: string }[] = [
-    { label: 'N (-Z)', pos: [0, 0, -(armLength + 1.5)], color: '#44ff44' },
-    { label: 'S (+Z)', pos: [0, 0, armLength + 1.5], color: '#ff4444' },
-    { label: 'E (+X)', pos: [armLength + 1.5, 0, 0], color: '#4488ff' },
-    { label: 'W (-X)', pos: [-(armLength + 1.5), 0, 0], color: '#ffaa00' },
+  // Physical axis positions (fixed, don't rotate)
+  const axisPositions: [number, number, number][] = [
+    [0, 0, -(armLength + 1.5)],  // -Z
+    [0, 0, armLength + 1.5],     // +Z
+    [armLength + 1.5, 0, 0],     // +X
+    [-(armLength + 1.5), 0, 0],  // -X
   ];
+
+  // Base direction labels at each axis position (rotation=0)
+  const baseLabels: Direction[] = ['north', 'south', 'east', 'west'];
+  const colors: Record<Direction, string> = { north: '#44ff44', south: '#ff4444', east: '#4488ff', west: '#ffaa00' };
+  const shortNames: Record<Direction, string> = { north: 'N', south: 'S', east: 'E', west: 'W' };
+
+  // Apply rotation: at each physical position, show which direction maps there
+  // rotateDirection('north', 90) = 'east', meaning north label moves to where east was (+X)
+  // So for each axis position, we need the INVERSE: which original dir rotates TO this position's base dir
+  // Inverse of CW rotation by R is CW rotation by (360-R)
+  const inverseRotation = (360 - previewRotation) % 360;
+  const directions = baseLabels.map((baseDir, i) => {
+    const rotatedLabel = rotateDirection(baseDir, inverseRotation);
+    return {
+      label: `${shortNames[rotatedLabel]}`,
+      pos: axisPositions[i],
+      color: colors[rotatedLabel],
+    };
+  });
 
   return (
     <group position={[0, 0.5, 0]}>
@@ -315,6 +336,7 @@ interface PortalOverlayProps {
   placementDirection: GateDirection;
   placementRotationOffset: number; // degrees
   previewModel: PreviewModel;
+  previewRotation?: number; // degrees (0/90/180/270) for compass + label rotation
   onPortalClick: (id: string) => void;
   onPlacePortal: (position: [number, number, number]) => void;
   onUpdatePortalPosition?: (id: string, position: [number, number, number]) => void;
@@ -500,6 +522,7 @@ export default function PortalOverlay({
   placementDirection,
   placementRotationOffset,
   previewModel,
+  previewRotation = 0,
   onPortalClick,
   onPlacePortal,
   onUpdatePortalPosition,
@@ -528,7 +551,7 @@ export default function PortalOverlay({
   return (
     <group>
       {/* Compass rose at origin */}
-      <CompassRose />
+      <CompassRose previewRotation={previewRotation} />
 
       {/* Ground plane for click detection in placement mode */}
       {anyPlacementMode && (
@@ -543,20 +566,25 @@ export default function PortalOverlay({
       )}
 
       {/* Existing portals */}
-      {portals.map((portal) => (
-        <PortalModel
-          key={portal.id}
-          position={portal.position}
-          rotation={getPortalRotation(portal)}
-          modelType={previewModel}
-          opacity={1}
-          selected={portal.id === selectedPortalId}
-          onClick={() => onPortalClick(portal.id)}
-          label={portal.direction}
-          compassLabel={portal.compass_label}
-          portalId={portal.id}
-        />
-      ))}
+      {portals.map((portal) => {
+        const rotatedDir = previewRotation > 0
+          ? rotateDirection(portal.direction as Direction, previewRotation)
+          : portal.direction;
+        return (
+          <PortalModel
+            key={portal.id}
+            position={portal.position}
+            rotation={getPortalRotation(portal)}
+            modelType={previewModel}
+            opacity={1}
+            selected={portal.id === selectedPortalId}
+            onClick={() => onPortalClick(portal.id)}
+            label={previewRotation > 0 ? `${portal.direction}→${rotatedDir}` : portal.direction}
+            compassLabel={portal.compass_label}
+            portalId={portal.id}
+          />
+        );
+      })}
 
       {/* Default spawn marker (yellow) */}
       {defaultSpawn && (

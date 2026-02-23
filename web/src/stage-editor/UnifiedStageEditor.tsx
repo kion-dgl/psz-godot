@@ -113,6 +113,9 @@ export default function UnifiedStageEditor() {
   // Default spawn placement state
   const [spawnPlacementMode, setSpawnPlacementMode] = useState(false);
 
+  // Portal rotation preview (shared between PortalTab sidebar and 3D overlay)
+  const [portalPreviewRotation, setPortalPreviewRotation] = useState(0);
+
   // Obstacle placement state
   const [obstaclePlacementMode, setObstaclePlacementMode] = useState(false);
   const [obstaclePlacementType, setObstaclePlacementType] = useState<ObstacleType>('box');
@@ -326,6 +329,8 @@ export default function UnifiedStageEditor() {
             spawnPlacementMode={spawnPlacementMode}
             setSpawnPlacementMode={setSpawnPlacementModeExclusive}
             floorTriangles={floorTriangles}
+            previewRotation={portalPreviewRotation}
+            setPreviewRotation={setPortalPreviewRotation}
           />
         );
       case 'textures':
@@ -417,6 +422,7 @@ export default function UnifiedStageEditor() {
             placementDirection={portalPlacementDirection}
             placementRotationOffset={portalPlacementRotationOffset}
             previewModel={portalPreviewModel}
+            previewRotation={portalPreviewRotation}
             onPortalClick={handlePortalClick}
             onPlacePortal={handlePlacePortal}
             onUpdatePortalPosition={handleUpdatePortalPosition}

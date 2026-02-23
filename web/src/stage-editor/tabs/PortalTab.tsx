@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { UnifiedStageConfig, GateDirection, PreviewModel, FloorTriangle } from '../types';
 import { DIRECTION_ROTATIONS, DEFAULT_SVG_SETTINGS } from '../types';
 import { rotateDirection } from '../../quest-editor/hooks/useStageConfigs';
@@ -21,6 +21,8 @@ interface PortalTabProps {
   spawnPlacementMode: boolean;
   setSpawnPlacementMode: (mode: boolean) => void;
   floorTriangles: FloorTriangle[];
+  previewRotation: number;
+  setPreviewRotation: (rotation: number) => void;
 }
 
 const DIRECTIONS: GateDirection[] = ['north', 'south', 'east', 'west'];
@@ -44,8 +46,9 @@ export default function PortalTab({
   spawnPlacementMode,
   setSpawnPlacementMode,
   floorTriangles,
+  previewRotation,
+  setPreviewRotation,
 }: PortalTabProps) {
-  const [previewRotation, setPreviewRotation] = useState(0);
 
   // Get selected portal
   const selectedPortal = config.portals.find((p) => p.id === selectedPortalId);
