@@ -125,8 +125,8 @@ export function generateSvgMinimap(
   const height = maxZ - minZ;
   const scale = Math.min((svgWidth - svgPadding * 2) / width, (svgHeight - svgPadding * 2) / height);
 
-  // Mirror X so west=left, east=right
-  const toSvgX = (x: number) => (maxX - x) * scale + svgPadding;
+  // Normal X: east (+X) is right, west (-X) is left
+  const toSvgX = (x: number) => (x - minX) * scale + svgPadding;
   const toSvgY = (z: number) => (z - minZ) * scale + svgPadding;
 
   const cx = svgWidth / 2;
@@ -188,8 +188,8 @@ export function generateSvgMinimap(
       switch (portal.direction) {
         case 'north': labelY = y - labelOffset; break;
         case 'south': labelY = y + labelOffset + 8; break;
-        case 'east': labelX = x - labelOffset - 4; anchor = 'end'; break;
-        case 'west': labelX = x + labelOffset + 4; anchor = 'start'; break;
+        case 'east': labelX = x + labelOffset + 4; anchor = 'start'; break;
+        case 'west': labelX = x - labelOffset - 4; anchor = 'end'; break;
       }
 
       const gateId = portal.id || '';
@@ -205,10 +205,12 @@ export function generateSvgMinimap(
   const originY = toSvgY(0);
   const originMarker = `<circle cx="${originX.toFixed(1)}" cy="${originY.toFixed(1)}" r="0" data-origin="true" fill="none"/>`;
 
-  const offsetX = maxX * scale + svgPadding;
+  const offsetX = svgPadding - minX * scale;
   const offsetY = svgPadding - minZ * scale;
 
-  const dataAttrs = `data-rotation="${rotation}" data-scale="${scale.toFixed(6)}" data-offset-x="${offsetX.toFixed(2)}" data-offset-y="${offsetY.toFixed(2)}" data-center-x="${cx.toFixed(1)}" data-center-y="${cy.toFixed(1)}" data-mirror-x="true"`;
+  // toSvgX(x) = x * scale + offsetX, toSvgY(z) = z * scale + offsetY
+  const dataAttrs = `data-rotation="${rotation}" data-scale="${scale.toFixed(6)}" data-offset-x="${offsetX.toFixed(2)}" data-offset-y="${offsetY.toFixed(2)}" data-center-x="${cx.toFixed(1)}" data-center-y="${cy.toFixed(1)}"`;
+
 
   const rotateOpen = rotation !== 0 ? `<g transform="rotate(${rotation}, ${cx.toFixed(1)}, ${cy.toFixed(1)})">` : '';
   const rotateClose = rotation !== 0 ? '</g>' : '';

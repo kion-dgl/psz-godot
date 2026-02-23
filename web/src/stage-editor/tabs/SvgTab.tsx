@@ -43,9 +43,8 @@ export function generateSvgMinimap(
   const height = maxZ - minZ;
   const scale = (svgSize - padding * 2) / Math.max(width, height);
 
-  // Mirror X so west is left and east is right
-  // (game camera faces +Z, making +X = left in the top-down view)
-  const toSvgX = (x: number) => (maxX - x) * scale + padding;
+  // Normal X mapping: east (+X) is right, west (-X) is left
+  const toSvgX = (x: number) => (x - minX) * scale + padding;
   const toSvgY = (z: number) => (z - minZ) * scale + padding;
 
   const cx = svgSize / 2;
@@ -119,8 +118,8 @@ export function generateSvgMinimap(
       switch (portal.direction) {
         case 'north': labelY = y - labelOffset; break;
         case 'south': labelY = y + labelOffset + 8; break;
-        case 'east': labelX = x - labelOffset - 4; anchor = 'end'; break;
-        case 'west': labelX = x + labelOffset + 4; anchor = 'start'; break;
+        case 'east': labelX = x + labelOffset + 4; anchor = 'start'; break;
+        case 'west': labelX = x - labelOffset - 4; anchor = 'end'; break;
       }
 
       const rect = `<rect x="${(x - rectWidth / 2).toFixed(1)}" y="${(y - rectHeight / 2).toFixed(1)}" width="${rectWidth}" height="${rectHeight}" fill="#ff4444" stroke="white" stroke-width="1" data-gate="true" data-gate-dir="${gridDir}"/>`;
@@ -137,13 +136,14 @@ export function generateSvgMinimap(
   const originY = toSvgY(0);
   const originMarker = `<circle cx="${originX.toFixed(1)}" cy="${originY.toFixed(1)}" r="0" data-origin="true" fill="none"/>`;
 
-  // Compute offset: toSvgX(x) = (maxX - x) * scale + padding = x * (-scale) + (maxX * scale + padding)
-  const offsetX = maxX * scale + padding;
+  // Compute offset: toSvgX(x) = (x - minX) * scale + padding = x * scale + (padding - minX * scale)
+  const offsetX = padding - minX * scale;
   const offsetY = padding - minZ * scale;
 
   // Data attributes for embedded transform metadata
-  // X is mirrored: toSvgX(x) = x * (-scale) + offsetX, Y is normal: toSvgY(z) = z * scale + offsetY
-  const dataAttrs = `data-rotation="${rotation}" data-scale="${scale.toFixed(6)}" data-offset-x="${offsetX.toFixed(2)}" data-offset-y="${offsetY.toFixed(2)}" data-center-x="${cx.toFixed(1)}" data-center-y="${cy.toFixed(1)}" data-mirror-x="true"`;
+  // toSvgX(x) = x * scale + offsetX, toSvgY(z) = z * scale + offsetY
+  const dataAttrs = `data-rotation="${rotation}" data-scale="${scale.toFixed(6)}" data-offset-x="${offsetX.toFixed(2)}" data-offset-y="${offsetY.toFixed(2)}" data-center-x="${cx.toFixed(1)}" data-center-y="${cy.toFixed(1)}"`;
+
 
   // Wrap all visual content in a rotated group when rotation != 0
   const rotateOpen = rotation !== 0 ? `<g transform="rotate(${rotation}, ${cx.toFixed(1)}, ${cy.toFixed(1)})">` : '';
