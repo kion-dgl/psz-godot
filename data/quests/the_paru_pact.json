@@ -9,12 +9,6 @@
       "area": "a",
       "start_pos": "0,2",
       "end_pos": "3,2",
-      "warp_requires": [
-        {
-          "item_id": "mag_cell",
-          "target": 2
-        }
-      ],
       "cells": [
         {
           "pos": "0,2",
@@ -23,37 +17,6 @@
           "connections": {
             "south": "1,2"
           },
-          "is_start": true,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0.3,
-                1,
-                6.6
-              ],
-              "trigger_id": "elio_entry_a",
-              "trigger_size": [
-                7.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "The energy signature is strong here. Mag Cells give off a faint resonance — like a heartbeat. Stay close and keep your eyes open."
-                }
-              ]
-            }
-          ],
           "portals": {
             "south": {
               "portal_id": "portal_1770761006966_6mtpsian4",
@@ -97,75 +60,49 @@
               ],
               "default_rotation": 0
             }
-          }
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0.3,
+                1,
+                6.6
+              ],
+              "trigger_id": "elio_entry_a",
+              "trigger_size": [
+                7.5,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "The energy signature is strong here. Mag Cells give off a faint resonance — like a heartbeat. Stay close and keep your eyes open."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "1,2",
           "stage_id": "s05a_tb3",
           "rotation": 270,
           "connections": {
-            "south": "2,2",
+            "east": "1,3",
             "north": "0,2",
-            "east": "1,3"
+            "south": "2,2"
           },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 1,
           "portals": {
-            "south": {
-              "portal_id": "portal_1770761065434_itcg7ptk1",
-              "gate": [
-                20.55,
-                0,
-                13.98
-              ],
-              "spawn": [
-                23.55,
-                1,
-                13.98
-              ],
-              "trigger": [
-                27.55,
-                0,
-                13.98
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            },
-            "north": {
-              "portal_id": "portal_1770761055477_5jjngdhgh",
-              "gate": [
-                -20.75,
-                0,
-                -0.39
-              ],
-              "spawn": [
-                -23.75,
-                1,
-                -0.39
-              ],
-              "trigger": [
-                -27.75,
-                0,
-                -0.39
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            },
             "east": {
               "portal_id": "portal_1770761049776_griu8xjfq",
               "gate": [
@@ -189,17 +126,55 @@
                 0
               ],
               "compass_label": "S"
+            },
+            "north": {
+              "portal_id": "portal_1771829093307_g1yhv2kbh",
+              "gate": [
+                20.36,
+                0,
+                13.91
+              ],
+              "spawn": [
+                23.36,
+                1,
+                13.91
+              ],
+              "trigger": [
+                27.36,
+                0,
+                13.91
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            },
+            "south": {
+              "portal_id": "portal_1771829105283_ee4dtrk4x",
+              "gate": [
+                -20.33,
+                0,
+                0
+              ],
+              "spawn": [
+                -23.33,
+                1,
+                0
+              ],
+              "trigger": [
+                -27.33,
+                0,
+                0
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
             }
-          }
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s05a_tb3",
-          "rotation": 90,
-          "connections": {
-            "north": "1,2",
-            "west": "2,1",
-            "south": "3,2"
           },
           "is_start": false,
           "is_end": false,
@@ -209,32 +184,86 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 2,
+          "path_order": 1
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s05a_lc2",
+          "rotation": 180,
+          "connections": {
+            "south": "2,3",
+            "west": "1,2"
+          },
           "portals": {
-            "north": {
-              "portal_id": "portal_1770761065434_itcg7ptk1",
+            "south": {
+              "portal_id": "portal_1770760918909_r4a8yoq2a",
               "gate": [
-                20.55,
+                -1.89,
                 0,
-                13.98
+                -19.88
               ],
               "spawn": [
-                23.55,
+                -1.89,
                 1,
-                13.98
+                -22.88
               ],
               "trigger": [
-                27.55,
+                -1.89,
                 0,
-                13.98
+                -26.88
               ],
               "gate_rot": [
                 0,
-                1.57,
+                0,
                 0
               ],
-              "compass_label": "W"
+              "compass_label": "N"
             },
+            "west": {
+              "portal_id": "portal_1771829063859_q0a4gsqi9",
+              "gate": [
+                19.86,
+                0,
+                13
+              ],
+              "spawn": [
+                22.86,
+                1,
+                13
+              ],
+              "trigger": [
+                26.86,
+                0,
+                13
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s05a_tb3",
+          "rotation": 90,
+          "connections": {
+            "west": "2,1",
+            "south": "3,2",
+            "north": "1,2"
+          },
+          "portals": {
             "west": {
               "portal_id": "portal_1770761049776_griu8xjfq",
               "gate": [
@@ -260,21 +289,21 @@
               "compass_label": "S"
             },
             "south": {
-              "portal_id": "portal_1770761055477_5jjngdhgh",
+              "portal_id": "portal_1771829093307_g1yhv2kbh",
               "gate": [
-                -20.75,
+                20.36,
                 0,
-                -0.39
+                13.91
               ],
               "spawn": [
-                -23.75,
+                23.36,
                 1,
-                -0.39
+                13.91
               ],
               "trigger": [
-                -27.75,
+                27.36,
                 0,
-                -0.39
+                13.91
               ],
               "gate_rot": [
                 0,
@@ -282,43 +311,23 @@
                 0
               ],
               "compass_label": "E"
-            }
-          }
-        },
-        {
-          "pos": "1,3",
-          "stage_id": "s05a_lc2",
-          "rotation": 270,
-          "connections": {
-            "south": "2,3",
-            "west": "1,2"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 3,
-          "portals": {
-            "south": {
-              "portal_id": "portal_1770760934426_qeoowryca",
+            },
+            "north": {
+              "portal_id": "portal_1771829105283_ee4dtrk4x",
               "gate": [
-                19.48,
+                -20.33,
                 0,
-                13.35
+                0
               ],
               "spawn": [
-                22.48,
+                -23.33,
                 1,
-                13.35
+                0
               ],
               "trigger": [
-                26.48,
+                -27.33,
                 0,
-                13.35
+                0
               ],
               "gate_rot": [
                 0,
@@ -326,39 +335,50 @@
                 0
               ],
               "compass_label": "W"
-            },
-            "west": {
-              "portal_id": "portal_1770760918909_r4a8yoq2a",
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s05a_nc2",
+          "rotation": 180,
+          "connections": {
+            "north": "1,3"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1770760986569_ghsb7pjh3",
               "gate": [
-                -1.89,
+                20.12,
                 0,
-                -19.88
+                9.81
               ],
               "spawn": [
-                -1.89,
+                20.12,
                 1,
-                -22.88
+                12.81
               ],
               "trigger": [
-                -1.89,
+                20.12,
                 0,
-                -26.88
+                16.81
               ],
               "gate_rot": [
                 0,
-                0,
+                3.14,
                 0
               ],
-              "compass_label": "N"
+              "compass_label": "S"
             }
-          }
-        },
-        {
-          "pos": "2,1",
-          "stage_id": "s05a_na1",
-          "rotation": 270,
-          "connections": {
-            "east": "2,2"
           },
           "is_start": false,
           "is_end": false,
@@ -369,6 +389,77 @@
           "key_gate_direction": "",
           "warp_edge": "",
           "path_order": 4,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [
+                -13.2,
+                1,
+                15.6
+              ],
+              "item_id": "mag_cell",
+              "item_label": "Mag Cell"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -8.6,
+                1,
+                14.9
+              ],
+              "trigger_id": "elio_after_cell1",
+              "trigger_condition": "item_pickup",
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "One down. Feel that warmth? It's not heat — it's memory. These cells stored something before the Great Blank wiped everything."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s05a_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "2,2"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1770760954951_cldar2pe9",
+              "gate": [
+                0.19,
+                0,
+                18.92
+              ],
+              "spawn": [
+                0.19,
+                1,
+                21.92
+              ],
+              "trigger": [
+                0.19,
+                0,
+                25.92
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 5,
           "objects": [
             {
               "type": "quest_item",
@@ -396,33 +487,7 @@
                 }
               ]
             }
-          ],
-          "portals": {
-            "east": {
-              "portal_id": "portal_1770760954951_cldar2pe9",
-              "gate": [
-                0.19,
-                0,
-                18.92
-              ],
-              "spawn": [
-                0.19,
-                1,
-                21.92
-              ],
-              "trigger": [
-                0.19,
-                0,
-                25.92
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          }
+          ]
         },
         {
           "pos": "3,2",
@@ -431,15 +496,6 @@
           "connections": {
             "north": "2,2"
           },
-          "is_start": false,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "south",
-          "path_order": 5,
           "portals": {
             "north": {
               "portal_id": "portal_1770760403879_4x5z4rlnq",
@@ -489,78 +545,22 @@
               ],
               "compass_label": "S"
             }
-          }
-        },
-        {
-          "pos": "2,3",
-          "stage_id": "s05a_nc2",
-          "rotation": 180,
-          "connections": {
-            "north": "1,3"
           },
           "is_start": false,
-          "is_end": false,
+          "is_end": true,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 6,
-          "objects": [
-            {
-              "type": "quest_item",
-              "position": [
-                -13.2,
-                1,
-                15.6
-              ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -8.6,
-                1,
-                14.9
-              ],
-              "trigger_id": "elio_after_cell1",
-              "trigger_condition": "item_pickup",
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "One down. Feel that warmth? It's not heat — it's memory. These cells stored something before the Great Blank wiped everything."
-                }
-              ]
-            }
-          ],
-          "portals": {
-            "north": {
-              "portal_id": "portal_1770760986569_ghsb7pjh3",
-              "gate": [
-                20.12,
-                0,
-                9.81
-              ],
-              "spawn": [
-                20.12,
-                1,
-                12.81
-              ],
-              "trigger": [
-                20.12,
-                0,
-                16.81
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          }
+          "warp_edge": "south",
+          "path_order": 6
+        }
+      ],
+      "warp_requires": [
+        {
+          "item_id": "mag_cell",
+          "target": 2
         }
       ]
     },
@@ -575,6 +575,56 @@
           "stage_id": "s05e_ia1",
           "rotation": 0,
           "connections": {},
+          "portals": {
+            "south": {
+              "portal_id": "portal_1770763170397_ucf39ta7i",
+              "gate": [
+                -0.04,
+                0,
+                18.31
+              ],
+              "spawn": [
+                -0.04,
+                1,
+                21.31
+              ],
+              "trigger": [
+                -0.04,
+                0,
+                25.31
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "north": {
+              "portal_id": "portal_1770763206964_9phrmtosv",
+              "gate": [
+                16.6,
+                0,
+                -18.8
+              ],
+              "spawn": [
+                16.6,
+                1,
+                -21.8
+              ],
+              "trigger": [
+                16.6,
+                0,
+                -25.8
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            }
+          },
           "is_start": true,
           "is_end": true,
           "is_branch": false,
@@ -582,7 +632,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "north",
+          "warp_edge": "south",
           "path_order": 0,
           "objects": [
             {
@@ -631,57 +681,7 @@
                 }
               ]
             }
-          ],
-          "portals": {
-            "north": {
-              "portal_id": "portal_1770763206964_9phrmtosv",
-              "gate": [
-                16.6,
-                0,
-                -18.8
-              ],
-              "spawn": [
-                16.6,
-                1,
-                -21.8
-              ],
-              "trigger": [
-                16.6,
-                0,
-                -25.8
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "south": {
-              "portal_id": "portal_1770763170397_ucf39ta7i",
-              "gate": [
-                -0.04,
-                0,
-                18.31
-              ],
-              "spawn": [
-                -0.04,
-                1,
-                21.31
-              ],
-              "trigger": [
-                -0.04,
-                0,
-                25.31
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          }
+          ]
         }
       ],
       "entry_direction": "south",
@@ -700,37 +700,6 @@
           "connections": {
             "south": "1,2"
           },
-          "is_start": true,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_entry_b",
-              "trigger_size": [
-                24.5,
-                3,
-                2
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "The deepest part of these ruins. The architects built inward — the most important things are always at the center."
-                }
-              ]
-            }
-          ],
           "portals": {
             "south": {
               "portal_id": "portal_1770762490612_xk9edjq18",
@@ -780,7 +749,38 @@
               ],
               "compass_label": "N"
             }
-          }
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "elio_entry_b",
+              "trigger_size": [
+                24.5,
+                3,
+                2
+              ],
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "The deepest part of these ruins. The architects built inward — the most important things are always at the center."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "1,2",
@@ -790,15 +790,6 @@
             "north": "0,2",
             "south": "2,2"
           },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 1,
           "portals": {
             "north": {
               "portal_id": "portal_1770762222618_pkq7mzaxv",
@@ -848,15 +839,6 @@
               ],
               "compass_label": "S"
             }
-          }
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s05b_lc2",
-          "rotation": 90,
-          "connections": {
-            "north": "1,2",
-            "east": "2,3"
           },
           "is_start": false,
           "is_end": false,
@@ -866,33 +848,18 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 2,
+          "path_order": 1
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s05b_lc2",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "east": "2,3"
+          },
           "portals": {
             "north": {
-              "portal_id": "portal_1770762400155_6lpr2690d",
-              "gate": [
-                20.17,
-                0,
-                -3.83
-              ],
-              "spawn": [
-                23.17,
-                1,
-                -3.83
-              ],
-              "trigger": [
-                27.17,
-                0,
-                -3.83
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            },
-            "east": {
               "portal_id": "portal_1770762386051_2c6sjdw29",
               "gate": [
                 -13.44,
@@ -915,8 +882,41 @@
                 0
               ],
               "compass_label": "N"
+            },
+            "east": {
+              "portal_id": "portal_1771829303640_0iqrsux7j",
+              "gate": [
+                20.73,
+                0,
+                -3.91
+              ],
+              "spawn": [
+                23.73,
+                1,
+                -3.91
+              ],
+              "trigger": [
+                27.73,
+                0,
+                -3.91
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
             }
-          }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2
         },
         {
           "pos": "2,3",
@@ -924,6 +924,32 @@
           "rotation": 90,
           "connections": {
             "west": "2,2"
+          },
+          "portals": {
+            "west": {
+              "portal_id": "portal_1770762066212_1u5cs6987",
+              "gate": [
+                -3.02,
+                0,
+                8.58
+              ],
+              "spawn": [
+                -3.02,
+                1,
+                11.58
+              ],
+              "trigger": [
+                -3.02,
+                0,
+                15.58
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
           },
           "is_start": false,
           "is_end": true,
@@ -993,33 +1019,7 @@
                 }
               ]
             }
-          ],
-          "portals": {
-            "west": {
-              "portal_id": "portal_1770762066212_1u5cs6987",
-              "gate": [
-                -3.02,
-                0,
-                8.58
-              ],
-              "spawn": [
-                -3.02,
-                1,
-                11.58
-              ],
-              "trigger": [
-                -3.02,
-                0,
-                15.58
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          }
+          ]
         }
       ]
     }
