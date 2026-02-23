@@ -77,8 +77,8 @@
           "rotation": 270,
           "connections": {
             "east": "1,3",
-            "north": "0,2",
-            "south": "2,2"
+            "south": "2,2",
+            "north": "0,2"
           },
           "portals": {
             "east": {
@@ -105,22 +105,22 @@
               ],
               "compass_label": "S"
             },
-            "north": {
-              "portal_id": "portal_1770695259216_q3q9gn4s7",
+            "south": {
+              "portal_id": "portal_1771823444973_aynvd4nvh",
               "gate": [
-                26.84,
+                -21.94,
                 0,
-                5.91
+                7.62
               ],
               "spawn": [
-                29.84,
+                -24.94,
                 1,
-                5.91
+                7.62
               ],
               "trigger": [
-                33.84,
+                -28.94,
                 0,
-                5.91
+                7.62
               ],
               "gate_rot": [
                 0,
@@ -129,22 +129,22 @@
               ],
               "compass_label": "W"
             },
-            "south": {
-              "portal_id": "portal_1770695276735_54kpz1eua",
+            "north": {
+              "portal_id": "portal_1771823452955_ejvuqxk9k",
               "gate": [
-                -23.95,
+                20.8,
                 0,
-                7.7
+                5.62
               ],
               "spawn": [
-                -26.95,
+                23.8,
                 1,
-                7.7
+                5.62
               ],
               "trigger": [
-                -30.95,
+                27.8,
                 0,
-                7.7
+                5.62
               ],
               "gate_rot": [
                 0,
@@ -170,8 +170,8 @@
           "rotation": 0,
           "connections": {
             "south": "2,3",
-            "east": "1,4",
-            "west": "1,2"
+            "west": "1,2",
+            "east": "1,4"
           },
           "portals": {
             "south": {
@@ -198,22 +198,22 @@
               ],
               "compass_label": "S"
             },
-            "east": {
-              "portal_id": "portal_1770695259216_q3q9gn4s7",
+            "west": {
+              "portal_id": "portal_1771823444973_aynvd4nvh",
               "gate": [
-                26.84,
+                -21.94,
                 0,
-                5.91
+                7.62
               ],
               "spawn": [
-                29.84,
+                -24.94,
                 1,
-                5.91
+                7.62
               ],
               "trigger": [
-                33.84,
+                -28.94,
                 0,
-                5.91
+                7.62
               ],
               "gate_rot": [
                 0,
@@ -222,22 +222,22 @@
               ],
               "compass_label": "W"
             },
-            "west": {
-              "portal_id": "portal_1770695276735_54kpz1eua",
+            "east": {
+              "portal_id": "portal_1771823452955_ejvuqxk9k",
               "gate": [
-                -23.95,
+                20.8,
                 0,
-                7.7
+                5.62
               ],
               "spawn": [
-                -26.95,
+                23.8,
                 1,
-                7.7
+                5.62
               ],
               "trigger": [
-                -30.95,
+                27.8,
                 0,
-                7.7
+                5.62
               ],
               "gate_rot": [
                 0,
@@ -270,17 +270,17 @@
               "gate": [
                 5.99,
                 0,
-                24.6
+                22.5
               ],
               "spawn": [
                 5.99,
                 1,
-                27.6
+                25.5
               ],
               "trigger": [
                 5.99,
                 0,
-                31.6
+                29.5
               ],
               "gate_rot": [
                 0,
@@ -311,8 +311,8 @@
           "rotation": 270,
           "connections": {
             "east": "2,4",
-            "north": "1,3",
-            "south": "3,3"
+            "south": "3,3",
+            "north": "1,3"
           },
           "portals": {
             "east": {
@@ -339,22 +339,22 @@
               ],
               "compass_label": "S"
             },
-            "north": {
-              "portal_id": "portal_1770695259216_q3q9gn4s7",
+            "south": {
+              "portal_id": "portal_1771823444973_aynvd4nvh",
               "gate": [
-                26.84,
+                -21.94,
                 0,
-                5.91
+                7.62
               ],
               "spawn": [
-                29.84,
+                -24.94,
                 1,
-                5.91
+                7.62
               ],
               "trigger": [
-                33.84,
+                -28.94,
                 0,
-                5.91
+                7.62
               ],
               "gate_rot": [
                 0,
@@ -363,22 +363,22 @@
               ],
               "compass_label": "W"
             },
-            "south": {
-              "portal_id": "portal_1770695276735_54kpz1eua",
+            "north": {
+              "portal_id": "portal_1771823452955_ejvuqxk9k",
               "gate": [
-                -23.95,
+                20.8,
                 0,
-                7.7
+                5.62
               ],
               "spawn": [
-                -26.95,
+                23.8,
                 1,
-                7.7
+                5.62
               ],
               "trigger": [
-                -30.95,
+                27.8,
                 0,
-                7.7
+                5.62
               ],
               "gate_rot": [
                 0,
@@ -411,17 +411,17 @@
               "gate": [
                 5.99,
                 0,
-                24.6
+                22.5
               ],
               "spawn": [
                 5.99,
                 1,
-                27.6
+                25.5
               ],
               "trigger": [
                 5.99,
                 0,
-                31.6
+                29.5
               ],
               "gate_rot": [
                 0,
@@ -466,17 +466,17 @@
               "gate": [
                 -7.14,
                 0,
-                20.61
+                15.91
               ],
               "spawn": [
                 -7.14,
                 1,
-                23.61
+                18.91
               ],
               "trigger": [
                 -7.14,
                 0,
-                27.61
+                22.91
               ],
               "gate_rot": [
                 0,
@@ -522,17 +522,17 @@
               "gate": [
                 -5.94,
                 0,
-                27.03
+                22.43
               ],
               "spawn": [
                 -5.94,
                 1,
-                30.03
+                25.43
               ],
               "trigger": [
                 -5.94,
                 0,
-                34.03
+                29.43
               ],
               "gate_rot": [
                 0,
@@ -546,17 +546,17 @@
               "gate": [
                 -6.14,
                 0,
-                -26.62
+                -21.62
               ],
               "spawn": [
                 -6.14,
                 1,
-                -29.62
+                -24.62
               ],
               "trigger": [
                 -6.14,
                 0,
-                -33.62
+                -28.62
               ],
               "gate_rot": [
                 0,
@@ -579,7 +579,7 @@
         {
           "pos": "4,3",
           "stage_id": "s02a_lc1",
-          "rotation": 0,
+          "rotation": 270,
           "connections": {
             "west": "4,2",
             "north": "3,3"
@@ -590,17 +590,17 @@
               "gate": [
                 1.13,
                 0,
-                -22.91
+                -20.41
               ],
               "spawn": [
                 1.13,
                 1,
-                -25.91
+                -23.41
               ],
               "trigger": [
                 1.13,
                 0,
-                -29.91
+                -27.41
               ],
               "gate_rot": [
                 0,
@@ -610,28 +610,28 @@
               "compass_label": "N"
             },
             "north": {
-              "portal_id": "portal_1770695078869_40h6bzjh1",
+              "portal_id": "portal_1771823258035_lz6lo6r6m",
               "gate": [
-                17.6,
+                7.66,
                 0,
-                18.4
+                19.22
               ],
               "spawn": [
-                20.6,
+                10.66,
                 1,
-                18.4
+                19.22
               ],
               "trigger": [
-                24.6,
+                14.66,
                 0,
-                18.4
+                19.22
               ],
               "gate_rot": [
                 0,
-                1.57,
+                -1.57,
                 0
               ],
-              "compass_label": "W"
+              "compass_label": "E"
             }
           },
           "is_start": false,
