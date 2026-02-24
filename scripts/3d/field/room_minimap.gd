@@ -110,10 +110,10 @@ func update_player(global_pos: Vector3, facing_rad: float, map_root: Node3D) -> 
 	var local: Vector3 = inv * global_pos
 
 	# Map model-local position to SVG coordinates using embedded metadata.
-	# SVG mirrors X: svgX = localX * (-scale) + offsetX
-	# SVG maps Z directly: svgY = localZ * scale + offsetY
+	# svgX = localX * scale + offsetX
+	# svgY = localZ * scale + offsetY
 	var svg_pos := Vector2(
-		local.x * (-_svg_scale) + _svg_offset_x,
+		local.x * _svg_scale + _svg_offset_x,
 		local.z * _svg_scale + _svg_offset_y)
 	_player_display_pos = _svg_to_display(svg_pos)
 
@@ -122,7 +122,7 @@ func update_player(global_pos: Vector3, facing_rad: float, map_root: Node3D) -> 
 	var step_3d := global_pos + Vector3(sin(facing_rad), 0, cos(facing_rad)) * 0.5
 	var step_local: Vector3 = inv * step_3d
 	var step_svg := Vector2(
-		step_local.x * (-_svg_scale) + _svg_offset_x,
+		step_local.x * _svg_scale + _svg_offset_x,
 		step_local.z * _svg_scale + _svg_offset_y)
 	var step_display := _svg_to_display(step_svg)
 	var dir := (step_display - _player_display_pos)
@@ -193,10 +193,9 @@ func update_keys(collected: int, total: int) -> void:
 # ── SVG → Display transform ─────────────────────────────────────────────────
 
 func _svg_to_display(svg_pos: Vector2) -> Vector2:
-	## Apply cell rotation to SVG coordinates, then scale to display size.
-	## The SVG X-mirror matches the game's top-down camera view, so no
-	## unmirror is needed (matching web PreviewMinimap).
-	var pos := svg_pos
+	## Apply cell rotation and scale SVG coordinates to display size.
+	## SVG Y already increases downward (north=top), matching display space.
+	var pos := Vector2(svg_pos.x, svg_pos.y)
 	if _rotation_deg != 0:
 		var center := Vector2(200.0, 200.0)
 		pos = (pos - center).rotated(deg_to_rad(float(_rotation_deg))) + center
