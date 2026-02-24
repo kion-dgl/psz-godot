@@ -5,9 +5,14 @@ extends Control
 ##   "area": String, "is_main": bool, "available": bool,
 ##   "requires": Array, "rewards": Dictionary, "quest_id": String }
 var _entries: Array = []
+var _quest_entries: Array = []   # Numbered quests only
+var _tui_entries: Array = []     # TUI missions grouped by area
 var _selected_index: int = 0
 var _selecting_difficulty: bool = false
 var _selected_difficulty: int = 0
+
+enum Tab { QUESTS, TUI }
+var _tab: int = Tab.QUESTS
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
@@ -48,6 +53,7 @@ const AREA_DISPLAY := {
 }
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
+@onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
 @onready var list_panel: PanelContainer = $Panel/VBox/HBox/ListPanel
 @onready var detail_panel: PanelContainer = $Panel/VBox/HBox/DetailPanel
 @onready var hint_label: Label = $Panel/VBox/HintLabel
@@ -105,7 +111,8 @@ func _load_entries() -> void:
 		})
 		return
 
-	# Normal mode — load missions and quests
+	# Load TUI missions
+	_tui_entries.clear()
 	var missions := MissionRegistry.get_all_missions()
 	missions.sort_custom(func(a, b):
 		var aa: int = AREA_ORDER.get(a.area, 99)
@@ -115,7 +122,7 @@ func _load_entries() -> void:
 		return a.name < b.name
 	)
 	for mission in missions:
-		_entries.append({
+		_tui_entries.append({
 			"type": "mission",
 			"id": mission.id,
 			"name": mission.name,
@@ -125,9 +132,9 @@ func _load_entries() -> void:
 			"rewards": mission.rewards,
 		})
 
-	# Load quests and merge into area-sorted list
+	# Load numbered quests
+	_quest_entries.clear()
 	var quest_ids := QuestLoader.list_quests()
-	var quest_entries: Array = []
 	for qid in quest_ids:
 		if qid == "hello_quest" or qid == "manifest":
 			continue
@@ -139,7 +146,7 @@ func _load_entries() -> void:
 		var quest_number: int = QUEST_ORDER.get(qid, 0)
 		if quest_number > 0:
 			display_name = "%d. %s" % [quest_number, display_name]
-		quest_entries.append({
+		_quest_entries.append({
 			"type": "quest",
 			"id": qid,
 			"quest_id": qid,
@@ -151,24 +158,30 @@ func _load_entries() -> void:
 			"rewards": {},
 			"_sort_order": quest_number,
 		})
-
-	# Merge quests into entries, sorted by area then by manifest order
-	_entries.append_array(quest_entries)
-	_entries.sort_custom(func(a, b):
-		var aa: int = AREA_ORDER.get(a["area"], 99)
-		var ab: int = AREA_ORDER.get(b["area"], 99)
-		if aa != ab: return aa < ab
-		# Within same area: missions first (main before side), then quests by manifest order
-		var a_is_quest: bool = a["type"] == "quest"
-		var b_is_quest: bool = b["type"] == "quest"
-		if a_is_quest != b_is_quest: return not a_is_quest
-		if a_is_quest and b_is_quest:
-			return a.get("_sort_order", 99) < b.get("_sort_order", 99)
-		if a.get("is_main", false) != b.get("is_main", false): return a["is_main"]
-		return a["name"] < b["name"]
+	_quest_entries.sort_custom(func(a, b):
+		return a.get("_sort_order", 99) < b.get("_sort_order", 99)
 	)
 
+	_rebuild_entries()
 	_update_availability()
+
+
+func _rebuild_entries() -> void:
+	_entries.clear()
+	if _has_active_quest():
+		# Active quest entries (report/cancel) are added in _load_entries above
+		return
+	if _tab == Tab.QUESTS:
+		_entries.append_array(_quest_entries)
+	else:
+		_entries.append_array(_tui_entries)
+		_entries.sort_custom(func(a, b):
+			var aa: int = AREA_ORDER.get(a["area"], 99)
+			var ab: int = AREA_ORDER.get(b["area"], 99)
+			if aa != ab: return aa < ab
+			if a.get("is_main", false) != b.get("is_main", false): return a["is_main"]
+			return a["name"] < b["name"]
+		)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -178,6 +191,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			_refresh_display()
 		else:
 			SceneManager.pop_scene()
+		get_viewport().set_input_as_handled()
+	elif not _selecting_difficulty and not _has_active_quest() \
+			and (event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right")):
+		_tab = Tab.TUI if _tab == Tab.QUESTS else Tab.QUESTS
+		_selected_index = 0
+		_rebuild_entries()
+		_update_availability()
+		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		if _selecting_difficulty:
@@ -298,6 +319,14 @@ func _report_quest() -> void:
 
 
 func _refresh_display() -> void:
+	# Mode bar (hidden during active quest)
+	if _has_active_quest():
+		mode_label.text = ""
+	elif _tab == Tab.QUESTS:
+		mode_label.text = "[◄ QUESTS ►]    TUI"
+	else:
+		mode_label.text = "   QUESTS    [◄ TUI ►]"
+
 	for child in list_panel.get_children():
 		child.queue_free()
 
@@ -328,25 +357,26 @@ func _refresh_display() -> void:
 	else:
 		if _entries.is_empty():
 			var empty := Label.new()
-			empty.text = "  (No missions available)"
+			empty.text = "  (No quests available)" if _tab == Tab.QUESTS else "  (No missions available)"
 			empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 			vbox.add_child(empty)
 		else:
 			var last_area := ""
 			for i in range(_entries.size()):
 				var entry: Dictionary = _entries[i]
-				# Area headers
-				var area: String = entry["area"]
-				if area != last_area:
-					if not last_area.is_empty():
-						var spacer := Label.new()
-						spacer.text = ""
-						vbox.add_child(spacer)
-					var area_header := Label.new()
-					area_header.text = "── %s ──" % area
-					area_header.add_theme_color_override("font_color", ThemeColors.HEADER)
-					vbox.add_child(area_header)
-					last_area = area
+				# Area headers (TUI tab only)
+				if _tab == Tab.TUI:
+					var area: String = entry["area"]
+					if area != last_area:
+						if not last_area.is_empty():
+							var spacer := Label.new()
+							spacer.text = ""
+							vbox.add_child(spacer)
+						var area_header := Label.new()
+						area_header.text = "── %s ──" % area
+						area_header.add_theme_color_override("font_color", ThemeColors.HEADER)
+						vbox.add_child(area_header)
+						last_area = area
 				var label := Label.new()
 				var unlocked: bool = entry.get("available", true)
 				var entry_type: String = str(entry["type"])
@@ -356,8 +386,6 @@ func _refresh_display() -> void:
 					status_tag = " [REPORT]"
 				elif entry_type == "cancel":
 					status_tag = ""
-				elif entry_type == "quest":
-					status_tag = " [QUEST]"
 				elif completed:
 					status_tag = " [CLEAR]"
 				elif not unlocked:
@@ -380,7 +408,7 @@ func _refresh_display() -> void:
 					elif entry_type == "quest":
 						label.add_theme_color_override("font_color", ThemeColors.QUEST)
 				vbox.add_child(label)
-		hint_label.text = "[↑/↓] Select  [ENTER] Choose  [ESC] Leave"
+		hint_label.text = "[←/→] Switch Tab  [↑/↓] Select  [ENTER] Choose  [ESC] Leave"
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)

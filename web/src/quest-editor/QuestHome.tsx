@@ -56,6 +56,7 @@ export default function QuestHome() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<DraftInfo | null>(null);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
 
   useEffect(() => {
     setDrafts(loadDrafts());
@@ -145,6 +146,14 @@ export default function QuestHome() {
     } catch { /* ok */ }
     setDrafts(loadDrafts());
     setDeleteConfirm(null);
+  }, []);
+
+  const handleDeleteAllDrafts = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch { /* ok */ }
+    setDrafts([]);
+    setDeleteAllConfirm(false);
   }, []);
 
   function saveAndNavigate(project: QuestProject) {
@@ -266,11 +275,30 @@ export default function QuestHome() {
         </div>
 
         {/* Drafts */}
-        <h2 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#aaa' }}>
+        <h2 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#aaa', display: 'flex', alignItems: 'center' }}>
           Editor Drafts
           <span style={{ fontSize: '11px', fontWeight: 400, color: '#666', marginLeft: '8px' }}>
             from localStorage
           </span>
+          {drafts.length > 0 && (
+            <button
+              onClick={() => setDeleteAllConfirm(true)}
+              style={{
+                marginLeft: 'auto',
+                background: 'none',
+                border: '1px solid #553333',
+                color: '#aa6666',
+                fontSize: '11px',
+                cursor: 'pointer',
+                padding: '3px 8px',
+                borderRadius: '4px',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#aa3333'; e.currentTarget.style.color = '#ff6666'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#553333'; e.currentTarget.style.color = '#aa6666'; }}
+            >
+              Delete All
+            </button>
+          )}
         </h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -393,6 +421,70 @@ export default function QuestHome() {
                 }}
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete All confirmation modal */}
+      {deleteAllConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setDeleteAllConfirm(false)}
+        >
+          <div
+            style={{
+              background: '#252540',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '400px',
+              width: '90%',
+              border: '1px solid #444',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Delete All Drafts?</h3>
+            <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 20px 0' }}>
+              This will permanently delete all <strong>{drafts.length}</strong> draft{drafts.length !== 1 ? 's' : ''} from localStorage.
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeleteAllConfirm(false)}
+                style={{
+                  padding: '8px 16px',
+                  background: '#333',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAllDrafts}
+                style={{
+                  padding: '8px 16px',
+                  background: '#aa3333',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                }}
+              >
+                Delete All
               </button>
             </div>
           </div>
