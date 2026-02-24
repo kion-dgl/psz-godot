@@ -30,9 +30,10 @@ export interface FloorCollisionConfig {
 
 export interface PortalData {
   id: string;
-  direction: GateDirection; // Label (north/south/east/west) AND determines rotation
+  direction: GateDirection; // Structural direction — determines rotation mapping (do NOT change for visual fixes)
   position: [number, number, number]; // x, y, z position in world space
   label: string;
+  compass_label?: string; // Visual compass label (N/S/E/W) — fixed, does not rotate with cell
   rotationOffset?: number; // Additional rotation in degrees (e.g. 45, -45)
 }
 
@@ -42,11 +43,12 @@ export interface SpawnPointData {
 }
 
 // Rotation values for each direction (radians, Y-axis rotation)
+// Outward vector = [-sin(r), -cos(r)]: north→-Z, south→+Z, east→+X, west→-X
 export const DIRECTION_ROTATIONS: Record<GateDirection, number> = {
   north: 0,
   south: Math.PI,
-  east: Math.PI / 2,
-  west: -Math.PI / 2,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
 };
 
 // Get effective rotation for a portal (base direction + optional offset)

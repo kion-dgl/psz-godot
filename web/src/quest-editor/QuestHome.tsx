@@ -55,6 +55,7 @@ export default function QuestHome() {
   const [drafts, setDrafts] = useState<DraftInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<DraftInfo | null>(null);
 
   useEffect(() => {
     setDrafts(loadDrafts());
@@ -132,6 +133,19 @@ export default function QuestHome() {
     } catch { /* ok */ }
     navigate('/quest-editor/edit');
   }, [navigate]);
+
+  const handleDeleteDraft = useCallback((id: string) => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const projects: Record<string, QuestProject> = JSON.parse(stored);
+        delete projects[id];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+      }
+    } catch { /* ok */ }
+    setDrafts(loadDrafts());
+    setDeleteConfirm(null);
+  }, []);
 
   function saveAndNavigate(project: QuestProject) {
     try {
@@ -282,6 +296,27 @@ export default function QuestHome() {
                 <span style={{ color: '#666', fontSize: '11px', marginLeft: 'auto' }}>
                   {new Date(d.lastModified).toLocaleDateString()}
                 </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirm(d);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#666',
+                    fontSize: '16px',
+                    cursor: 'pointer',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    lineHeight: 1,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#ff6666')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#666')}
+                  title="Delete draft"
+                >
+                  &#x1F5D1;
+                </button>
               </div>
               <div style={{ color: '#666', fontSize: '11px', marginTop: '4px' }}>
                 {d.areaKey}-{d.variant} &middot; {d.cellCount} cells
@@ -295,6 +330,74 @@ export default function QuestHome() {
           )}
         </div>
       </div>
+
+      {/* Delete confirmation modal */}
+      {deleteConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setDeleteConfirm(null)}
+        >
+          <div
+            style={{
+              background: '#252540',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '400px',
+              width: '90%',
+              border: '1px solid #444',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Delete Draft?</h3>
+            <p style={{ color: '#aaa', fontSize: '13px', margin: '0 0 8px 0' }}>
+              Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?
+            </p>
+            <p style={{ color: '#888', fontSize: '12px', margin: '0 0 20px 0' }}>
+              {deleteConfirm.areaKey}-{deleteConfirm.variant} &middot; {deleteConfirm.cellCount} cells
+              &middot; Last modified {new Date(deleteConfirm.lastModified).toLocaleDateString()}
+            </p>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                style={{
+                  padding: '8px 16px',
+                  background: '#333',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteDraft(deleteConfirm.id)}
+                style={{
+                  padding: '8px 16px',
+                  background: '#aa3333',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -98,6 +98,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
   const [pickerTarget, setPickerTarget] = useState<string | null>(null);
   const [showGenDialog, setShowGenDialog] = useState(false);
   const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([]);
+  const [showMinimap, setShowMinimap] = useState(false);
   const [genParams, setGenParams] = useState<GenParams>({
     gridSize: project.gridSize,
     usedCells: 8,
@@ -333,6 +334,15 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
           >
             Validate
           </button>
+          <button
+            onClick={() => setShowMinimap(v => !v)}
+            style={{
+              padding: '8px 16px', background: showMinimap ? '#6666aa' : '#444',
+              border: 'none', borderRadius: '6px', color: '#fff', fontSize: '13px', cursor: 'pointer',
+            }}
+          >
+            Minimap
+          </button>
           <div style={{ flex: 1 }} />
           <span style={{ fontSize: '12px', color: '#888' }}>
             {cellCount} cells | {project.gridSize}x{project.gridSize}
@@ -353,6 +363,8 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
             selectedCell={selectedCell}
             onCellClick={handleEmptyCellClick}
             onCellSelect={handleCellSelect}
+            showMinimap={showMinimap}
+            areaKey={project.areaKey}
           />
         </div>
 

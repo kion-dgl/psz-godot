@@ -58,7 +58,7 @@ func has_stat(stat_name: String) -> bool:
 func get_model_resource_path() -> String:
 	if model_path.is_empty():
 		return ""
-	return "res://assets/environments/" + model_path
+	return "res://assets/objects/" + model_path
 
 
 ## Get type as readable string

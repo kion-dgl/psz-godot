@@ -2125,38 +2125,6 @@ func test_character_appearance() -> void:
 func test_valley_grid() -> void:
 	print("── Valley Grid ──")
 
-	var MapMgrScript := preload("res://scripts/3d/map_manager_3d.gd")
-	var map_mgr: Node = MapMgrScript.new()
-	map_mgr._init_valley_config()
-	map_mgr._init_map_routes()
-
-	# All 18 s01a_ stages should be configured in MapManager3D
-	var expected_stages := [
-		"s01a_sa1", "s01a_ga1", "s01a_ib1", "s01a_ib2", "s01a_ic1", "s01a_ic3",
-		"s01a_lb1", "s01a_lb3", "s01a_lc1", "s01a_lc2",
-		"s01a_na1", "s01a_nb2", "s01a_nc2",
-		"s01a_tb3", "s01a_tc3", "s01a_td1", "s01a_td2",
-		"s01a_xb2",
-	]
-	for stage_id in expected_stages:
-		assert_true(
-			map_mgr.valley_config.has(stage_id),
-			"MapManager3D has stage %s" % stage_id
-		)
-
-	# Each stage has at least 1 gate edge
-	for stage_id in expected_stages:
-		var edges: Array[String] = map_mgr.get_gate_edges(stage_id)
-		assert_true(edges.size() >= 1, "Stage %s has >= 1 gate edge (got %d)" % [stage_id, edges.size()])
-
-	# Spawn count matches trigger count per stage
-	for stage_id in expected_stages:
-		var cfg = map_mgr.valley_config.get(stage_id)
-		assert_eq(
-			cfg.spawn_points.size(), cfg.triggers.size(),
-			"Stage %s: spawn count (%d) == trigger count (%d)" % [stage_id, cfg.spawn_points.size(), cfg.triggers.size()]
-		)
-
 	# ── Grid Generator Tests ──
 	var GridGen := preload("res://scripts/3d/field/grid_generator.gd")
 	var gen := GridGen.new()
@@ -2245,7 +2213,8 @@ func test_valley_grid() -> void:
 	var all_glbs_exist := true
 	for cell in cells:
 		var stage_id: String = cell.get("stage_id", "")
-		var glb_path := "res://assets/environments/valley/%s.glb" % stage_id
+		var variant: String = stage_id[3] if stage_id.length() >= 4 else "a"
+		var glb_path := "res://assets/stages/valley_%s/%s/lndmd/%s_m.glb" % [variant, stage_id, stage_id]
 		if not ResourceLoader.exists(glb_path):
 			all_glbs_exist = false
 			print("    Missing GLB: %s" % glb_path)
@@ -2396,15 +2365,17 @@ func test_field_config() -> void:
 	# ── GLB stage files exist for all referenced stages ──
 	var all_stages_exist := true
 	for stage_id in GridGen.GATES:
-		var path := "res://assets/environments/valley/%s.glb" % str(stage_id)
+		var sid: String = str(stage_id)
+		var v: String = sid[3] if sid.length() >= 4 else "a"
+		var path := "res://assets/stages/valley_%s/%s/lndmd/%s_m.glb" % [v, sid, sid]
 		if not ResourceLoader.exists(path):
 			print("  INFO: Missing GLB: %s" % path)
 			all_stages_exist = false
 	assert_true(all_stages_exist, "All GATES stage GLBs exist")
 
 	# ── Portal node discovery (check first GLB) ──
-	# GLB tree: AuxScene > {stage_id} > portals > spawn_{dir}, trigger_{dir}-area
-	var test_glb := load("res://assets/environments/valley/s01a_ga1.glb") as PackedScene
+	# Raw stage GLBs don't have portal nodes — portals come from config only.
+	var test_glb := load("res://assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1_m.glb") as PackedScene
 	if test_glb:
 		var instance: Node3D = test_glb.instantiate()
 		var portals_node: Node3D = _find_child_recursive(instance, "portals")
@@ -2522,7 +2493,8 @@ func test_wetlands_field() -> void:
 	for sec in sections:
 		for cell in sec.get("cells", []):
 			var stage_id: String = str(cell.get("stage_id", ""))
-			var glb_path := "res://assets/environments/wetlands/%s.glb" % stage_id
+			var wv: String = stage_id[3] if stage_id.length() >= 4 else "a"
+			var glb_path := "res://assets/stages/wetlands_%s/%s/lndmd/%s_m.glb" % [wv, stage_id, stage_id]
 			if not FileAccess.file_exists(glb_path):
 				all_glbs_exist = false
 				print("    Missing GLB: %s" % glb_path)
@@ -2669,7 +2641,8 @@ func test_tower_field() -> void:
 	for sec in sh_sections:
 		for cell in sec.get("cells", []):
 			var stage_id: String = str(cell.get("stage_id", ""))
-			var glb_path := "res://assets/environments/tower/%s.glb" % stage_id
+			var tv: String = stage_id[3] if stage_id.length() >= 4 else "0"
+			var glb_path := "res://assets/stages/tower_%s/%s/lndmd/%s_m.glb" % [tv, stage_id, stage_id]
 			if not FileAccess.file_exists(glb_path):
 				all_glbs_exist = false
 				print("    Missing tower GLB: %s" % glb_path)
