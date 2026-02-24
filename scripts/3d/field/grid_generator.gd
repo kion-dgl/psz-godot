@@ -109,8 +109,28 @@ var _gates_cache: Dictionary = {}
 var _active_gates: Dictionary = GATES
 
 
-## Load gates dict for an area by reading *_config.json files from the assets folder.
-## Falls back to hardcoded GATES for areas without config JSONs (valley/s01).
+## Static cache for unified stage config (loaded once, shared across all generators).
+static var _unified_config: Dictionary = {}
+
+
+## Load the unified config file on first access.
+static func _ensure_unified_config() -> void:
+	if not _unified_config.is_empty():
+		return
+	var path := "res://data/stage_configs/unified-stage-configs.json"
+	if not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return
+	var json := JSON.new()
+	if json.parse(file.get_as_text()) == OK:
+		_unified_config = json.data as Dictionary
+	file.close()
+
+
+## Load gates dict for an area from the unified stage config.
+## Falls back to hardcoded GATES if no portal data found.
 func load_gates(area_id: String) -> Dictionary:
 	if _gates_cache.has(area_id):
 		return _gates_cache[area_id]
@@ -121,45 +141,27 @@ func load_gates(area_id: String) -> Dictionary:
 		return GATES
 
 	var prefix: String = cfg["prefix"]
-	var folder: String = cfg["folder"]
-	var base_path := "res://assets/environments/%s/" % folder
 
-	# Check if config JSONs exist for this area
-	var test_path := "%s%sa_sa1_config.json" % [base_path, prefix]
-	if not FileAccess.file_exists(test_path):
-		# No config JSONs — use hardcoded GATES (valley)
+	# Load unified config
+	_ensure_unified_config()
+	if _unified_config.is_empty():
 		_gates_cache[area_id] = GATES
 		return GATES
 
+	# Extract gate directions from portal data for stages matching this area's prefix
 	var gates := {}
-	# Scan for all config JSONs in the folder
-	var dir := DirAccess.open(base_path)
-	if not dir:
-		_gates_cache[area_id] = GATES
-		return GATES
-
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while not file_name.is_empty():
-		if file_name.ends_with("_config.json"):
-			var stage_id: String = file_name.replace("_config.json", "")
-			var json_path := base_path + file_name
-			var fa := FileAccess.open(json_path, FileAccess.READ)
-			if fa:
-				var json := JSON.new()
-				if json.parse(fa.get_as_text()) == OK:
-					var data: Dictionary = json.data
-					var portals: Array = data.get("portals", [])
-					var dirs: Array[String] = []
-					for portal in portals:
-						var d: String = str(portal.get("direction", ""))
-						if not d.is_empty() and d not in dirs:
-							dirs.append(d)
-					if not dirs.is_empty():
-						gates[stage_id] = dirs
-				fa.close()
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	for stage_id in _unified_config:
+		if not str(stage_id).begins_with(prefix):
+			continue
+		var stage_cfg: Dictionary = _unified_config[stage_id]
+		var portals: Array = stage_cfg.get("portals", [])
+		var dirs: Array[String] = []
+		for portal in portals:
+			var d: String = str(portal.get("direction", ""))
+			if not d.is_empty() and d not in dirs:
+				dirs.append(d)
+		if not dirs.is_empty():
+			gates[stage_id] = dirs
 
 	if gates.is_empty():
 		_gates_cache[area_id] = GATES

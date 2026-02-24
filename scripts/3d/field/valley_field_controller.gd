@@ -62,7 +62,6 @@ var _room_minimap: Control
 var _field_hud: CanvasLayer
 var _blob_shadow: MeshInstance3D
 var _stage_config: Dictionary = {}
-var _texture_fixes: Array = []
 var _spawn_edge: String = ""
 var _rotation_deg: int = 0
 var _visited_cells: Dictionary = {}  # cell_pos → true
@@ -147,64 +146,74 @@ func _ready() -> void:
 	TimeManager.stage_label = stage_id
 	var area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
 	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
-	var map_path := "res://assets/environments/%s/%s.glb" % [area_cfg["folder"], stage_id]
-	var packed_scene := load(map_path) as PackedScene
+
+	# Load visual mesh from raw stage
+	var subfolder: String = _get_stage_subfolder(stage_id, area_cfg["folder"])
+	var scene_path := "res://assets/stages/%s/%s/lndmd/%s_m.glb" % [subfolder, stage_id, stage_id]
+	var floor_path := "res://assets/stages/%s/%s/lndmd/%s-floor.glb" % [subfolder, stage_id, stage_id]
+
+	var packed_scene := load(scene_path) as PackedScene
 	if not packed_scene:
-		push_error("[ValleyField] Failed to load map: %s" % map_path)
+		push_error("[ValleyField] Failed to load map: %s" % scene_path)
 		_return_to_city()
 		return
 
 	_map_root = packed_scene.instantiate() as Node3D
 	_map_root.name = "Map"
 
-	# Apply cell rotation to the GLB model
+	# Stage geometry is NOT rotated. Rotation only affects direction label mapping
+	# (grid direction ↔ config direction) and minimap display. The 3D corridors
+	# stay at their original GLB positions; triggers are placed at config positions.
 	_rotation_deg = int(_current_cell.get("rotation", 0))
-	if _rotation_deg != 0:
-		_map_root.rotation.y = deg_to_rad(_rotation_deg)
 
-	# Load stage config JSON (texture fixes + portal data)
+	# Load stage config from unified config
 	_stage_config = _load_stage_config(area_cfg["folder"], stage_id)
-	_texture_fixes = _stage_config.get("textureFixes", []) as Array
-	if _texture_fixes.size() > 0:
-		print("[ValleyField] Loaded %d texture fixes from config" % _texture_fixes.size())
-
 	add_child(_map_root)
 	_strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
 	await get_tree().process_frame
 
-	# Setup collision from GLB -colonly meshes
-	_setup_map_collision(_map_root)
+	# Load floor collision from separate floor GLB, fall back to embedded -colonly meshes
+	if FileAccess.file_exists(floor_path):
+		var floor_scene := load(floor_path) as PackedScene
+		if floor_scene:
+			var floor_root := floor_scene.instantiate() as Node3D
+			floor_root.name = "FloorCollision"
+			add_child(floor_root)
+			# Check if Godot's -colonly suffix import created StaticBody3D nodes
+			var has_static := _has_static_body(floor_root)
+			if has_static:
+				_setup_map_collision(floor_root)
+				print("[ValleyField] Floor collision from GLB import suffix: %s" % floor_path)
+			else:
+				# Suffix import didn't create collision — build manually from meshes
+				_create_collision_from_meshes(floor_root)
+				print("[ValleyField] Floor collision built manually from mesh: %s" % floor_path)
+		else:
+			_setup_map_collision(_map_root)
+	else:
+		_setup_map_collision(_map_root)
+
+	# DEBUG: Visualize floor collision mesh as semi-transparent green overlay
+	_debug_show_floor_collision()
+
 	await get_tree().process_frame
 
-	# Build portal data from config JSON (preferred) or fall back to GLB nodes
-	var original_portal_data: Dictionary = _build_portal_data_from_config(_stage_config)
-	if original_portal_data.is_empty():
-		original_portal_data = _find_portal_data_from_glb(_map_root)
-		print("[ValleyField] Config had no portals — fell back to GLB node discovery")
-
-	# Remap portal keys from original GLB directions to grid-space directions.
-	# Positions are already correct (to_global() applied cell rotation).
-	# Gate rotations need the cell rotation added since they're in config-local space.
-	if _rotation_deg != 0:
-		_portal_data = {}
-		var rot_rad := deg_to_rad(float(_rotation_deg))
-		for orig_dir in original_portal_data:
-			if orig_dir == "default":
-				_portal_data["default"] = original_portal_data["default"]
-			else:
-				var grid_dir: String = _rotate_dir(orig_dir, _rotation_deg)
-				var pd: Dictionary = original_portal_data[orig_dir].duplicate()
-				if pd.has("gate_rot"):
-					pd["gate_rot"] = Vector3(pd["gate_rot"].x, pd["gate_rot"].y + rot_rad, pd["gate_rot"].z)
-				_portal_data[grid_dir] = pd
+	# Read baked portal data from quest JSON (pre-computed by quest editor)
+	var baked_portals: Dictionary = _current_cell.get("portals", {})
+	if not baked_portals.is_empty():
+		_portal_data = _parse_baked_portals(baked_portals)
 	else:
-		_portal_data = original_portal_data
-
-	# Quest editor uses mirrored east/west convention (east=+X) while GLB nodes
-	# use standard convention (west=+X). Remap cell connections and key_gate_direction
-	# to match actual portal data keys so gates/triggers are placed correctly.
-	_remap_quest_directions(stage_id, area_id)
+		# Fallback: build from config (for non-quest or old quest JSON without baked portals)
+		_portal_data = _build_portal_data_from_config(_stage_config)
+		if _rotation_deg != 0:
+			var remapped := {}
+			for orig_dir in _portal_data:
+				if orig_dir == "default":
+					remapped["default"] = _portal_data["default"]
+				else:
+					remapped[_rotate_dir(orig_dir, _rotation_deg)] = _portal_data[orig_dir].duplicate()
+			_portal_data = remapped
 
 	# For quest mode: derive spawn_edge from target cell's own connections.
 	# The source cell's OPPOSITE[exit_dir] may not match target portal data keys
@@ -250,8 +259,9 @@ func _ready() -> void:
 		pass  # spawn_position already resolved above
 	elif not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
 		spawn_pos = _portal_data[spawn_edge]["spawn_pos"]
-		spawn_rot = _dir_to_yaw(OPPOSITE[spawn_edge])
-		spawn_reason = "entry from %s, facing %s" % [spawn_edge, OPPOSITE[spawn_edge]]
+		var gate_pos: Vector3 = _portal_data[spawn_edge].get("gate_pos", spawn_pos)
+		spawn_rot = _facing_yaw(spawn_pos, gate_pos)
+		spawn_reason = "entry from %s, facing gate (yaw=%.2f)" % [spawn_edge, spawn_rot]
 	elif _portal_data.has("default"):
 		spawn_pos = _portal_data["default"]["spawn_pos"]
 		if _portal_data["default"].has("default_rotation"):
@@ -260,16 +270,19 @@ func _ready() -> void:
 	elif not warp_edge.is_empty() and _portal_data.has(OPPOSITE.get(warp_edge, "")):
 		var entry_dir: String = OPPOSITE[warp_edge]
 		spawn_pos = _portal_data[entry_dir]["spawn_pos"]
-		spawn_rot = _dir_to_yaw(warp_edge)
-		spawn_reason = "opposite of warp_edge=%s, spawn at %s facing %s" % [warp_edge, entry_dir, warp_edge]
+		var gp: Vector3 = _portal_data[entry_dir].get("gate_pos", spawn_pos)
+		spawn_rot = _facing_yaw(spawn_pos, gp)
+		spawn_reason = "opposite of warp_edge=%s, spawn at %s facing gate" % [warp_edge, entry_dir]
 	elif _portal_data.has("north"):
 		spawn_pos = _portal_data["north"]["spawn_pos"]
-		spawn_rot = _dir_to_yaw("south")
-		spawn_reason = "fallback north portal, facing south"
+		var gp: Vector3 = _portal_data["north"].get("gate_pos", spawn_pos)
+		spawn_rot = _facing_yaw(spawn_pos, gp)
+		spawn_reason = "fallback north portal, facing gate"
 	elif _portal_data.has("south"):
 		spawn_pos = _portal_data["south"]["spawn_pos"]
-		spawn_rot = _dir_to_yaw("north")
-		spawn_reason = "fallback south portal, facing north"
+		var gp: Vector3 = _portal_data["south"].get("gate_pos", spawn_pos)
+		spawn_rot = _facing_yaw(spawn_pos, gp)
+		spawn_reason = "fallback south portal, facing gate"
 	else:
 		spawn_pos = Vector3(0, 1, 0)
 		spawn_reason = "center fallback"
@@ -309,6 +322,9 @@ func _ready() -> void:
 	# Create exit trigger on end cell warp_edge
 	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
 		_create_exit_trigger(warp_edge, _portal_data[warp_edge])
+		# DEBUG: Label for exit gate too
+		var exit_pos: Vector3 = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
+		_add_gate_label(warp_edge + " (EXIT)", exit_pos, "next section")
 
 	# Place key pickup if this cell has one
 	if _current_cell.get("has_key", false):
@@ -421,53 +437,6 @@ func _find_cell(cells: Array, pos: String) -> Dictionary:
 	return {}
 
 
-## Fallback: discover portal nodes from GLB scene tree (kept for stages without config JSON).
-func _find_portal_data_from_glb(map_root: Node3D) -> Dictionary:
-	var portals := {}
-	var portals_node: Node3D = map_root.get_node_or_null("portals")
-	if not portals_node:
-		portals_node = _find_child_by_name(map_root, "portals")
-	if not portals_node:
-		return portals
-
-	for dir in ["north", "east", "south", "west"]:
-		var spawn_node: Node3D = portals_node.get_node_or_null("spawn_" + dir)
-		if not spawn_node:
-			spawn_node = _find_child_by_name(portals_node, "spawn_" + dir)
-		var trigger_area: Node3D = portals_node.get_node_or_null("trigger_" + dir + "-area")
-		if not trigger_area:
-			trigger_area = _find_child_by_name(portals_node, "trigger_" + dir + "-area")
-		if spawn_node:
-			# Use area's base position (y=0), not the box child (y=1.5)
-			var trigger_pos: Vector3 = trigger_area.global_position if trigger_area else spawn_node.global_position
-			# Find gate marker node (gate_{dir} or gate_{dir}-colonly)
-			var gate_node: Node3D = _find_child_by_name(map_root, "gate_" + dir)
-			var gate_pos: Vector3 = gate_node.global_position if gate_node else trigger_pos
-			var gate_rot: Vector3 = gate_node.global_rotation if gate_node else Vector3.ZERO
-			# Find gate_box mesh for collision generation
-			var gate_box_node: MeshInstance3D = null
-			if gate_node:
-				var box_child: Node = _find_child_by_name(gate_node, "gate_" + dir + "_box")
-				if box_child is MeshInstance3D:
-					gate_box_node = box_child as MeshInstance3D
-			portals[dir] = {
-				"spawn_pos": spawn_node.global_position,
-				"trigger_pos": trigger_pos,
-				"gate_pos": gate_pos,
-				"gate_rot": gate_rot,
-				"gate_box_node": gate_box_node,
-			}
-
-	# Look for standalone default spawn (boss rooms / gateless areas)
-	var default_spawn: Node3D = _find_child_by_name(portals_node, "spawn_default")
-	if default_spawn:
-		portals["default"] = {
-			"spawn_pos": default_spawn.global_position,
-			"trigger_pos": default_spawn.global_position,
-		}
-
-	return portals
-
 
 func _find_child_by_name(node: Node, child_name: String) -> Node:
 	for child in node.get_children():
@@ -488,6 +457,15 @@ func _dir_to_yaw(dir: String) -> float:
 		"east": return -PI / 2.0  # sin(-PI/2)=-1, cos=0    → -X
 		"west": return PI / 2.0   # sin(PI/2)=1,  cos=0     → +X
 	return 0.0
+
+
+## Compute yaw angle for facing from position `from_pos` toward `to_pos` (XZ plane).
+func _facing_yaw(from_pos: Vector3, to_pos: Vector3) -> float:
+	var dx := to_pos.x - from_pos.x
+	var dz := to_pos.z - from_pos.z
+	if dx * dx + dz * dz < 0.001:
+		return 0.0
+	return atan2(dx, dz)
 
 
 ## Rotate a direction CW by degrees (0/90/180/270).
@@ -513,51 +491,6 @@ func _grid_to_original_dir(grid_dir: String, rotation: int) -> String:
 ## The quest editor uses mirrored east/west (east=+X, west=-X) while GLB portal
 ## nodes use standard convention (east=-X, west=+X). North/south are the same.
 ## Only applies to quest sessions — generated fields already use GLB directions.
-func _remap_quest_directions(_stage_id: String, _area_id: String) -> void:
-	if str(SessionManager.get_session().get("type", "")) != "quest":
-		return
-
-	var connections: Dictionary = _current_cell.get("connections", {})
-	if connections.is_empty():
-		return
-
-	# psz-sketch uses east=+X, GLB uses west=+X (E↔W mirrored).
-	# The effective swap after rotation R is:
-	#   R=0°/180° (even 90° steps): swap east↔west
-	#   R=90°/270° (odd 90° steps): swap north↔south
-	var rotation_steps: int = (_rotation_deg / 90) % 4
-	var swap_ns: bool = (rotation_steps % 2 == 1)
-
-	var new_connections: Dictionary = {}
-	for dir in connections:
-		new_connections[_psz_to_glb_dir(dir, swap_ns)] = connections[dir]
-	_current_cell["connections"] = new_connections
-
-	var kgd: String = str(_current_cell.get("key_gate_direction", ""))
-	if not kgd.is_empty():
-		_current_cell["key_gate_direction"] = _psz_to_glb_dir(kgd, swap_ns)
-
-	var we: String = str(_current_cell.get("warp_edge", ""))
-	if not we.is_empty():
-		_current_cell["warp_edge"] = _psz_to_glb_dir(we, swap_ns)
-
-	print("[ValleyField] Quest remap (rot=%d°, swap_%s): connections=%s  key_gate_dir=%s  warp_edge=%s" % [
-		_rotation_deg, "ns" if swap_ns else "ew",
-		str(new_connections), str(_current_cell.get("key_gate_direction", "")),
-		str(_current_cell.get("warp_edge", ""))])
-
-
-## Convert a psz-sketch direction label to GLB portal data convention.
-func _psz_to_glb_dir(dir: String, swap_ns: bool) -> String:
-	if swap_ns:
-		if dir == "north": return "south"
-		elif dir == "south": return "north"
-	else:
-		if dir == "east": return "west"
-		elif dir == "west": return "east"
-	return dir
-
-
 ## Rotate a point around Y axis by degrees (CW when viewed from above).
 func _rotate_point(point: Vector3, degrees: int) -> Vector3:
 	var rad := deg_to_rad(float(degrees))
@@ -610,13 +543,95 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	var shadow_mat := ShaderMaterial.new()
 	shadow_mat.shader = shadow_shader
 	_blob_shadow.material_override = shadow_mat
-	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 	add_child(_blob_shadow)
+	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
 
 
 func _setup_map_collision(root: Node) -> void:
+	_filter_floor_collision(root)
 	_configure_collision_nodes(root)
+
+
+func _filter_floor_collision(node: Node) -> void:
+	## Strip downward/sideways-facing triangles from ConcavePolygonShape3D so the
+	## player doesn't get trapped between top and bottom faces of the floor slab.
+	if node is CollisionShape3D:
+		var cs := node as CollisionShape3D
+		if cs.shape is ConcavePolygonShape3D:
+			var trimesh := cs.shape as ConcavePolygonShape3D
+			var faces := trimesh.get_faces()
+			var filtered := PackedVector3Array()
+			var kept := 0
+			var dropped := 0
+			for i in range(0, faces.size(), 3):
+				var a := faces[i]
+				var b := faces[i + 1]
+				var c := faces[i + 2]
+				var normal := (b - a).cross(c - a).normalized()
+				if normal.y < -0.3:  # Keep top-surface triangles (GLTF winding convention)
+					filtered.append(a)
+					filtered.append(b)
+					filtered.append(c)
+					kept += 1
+				else:
+					dropped += 1
+			if dropped > 0:
+				var new_shape := ConcavePolygonShape3D.new()
+				new_shape.set_faces(filtered)
+				cs.shape = new_shape
+				print("[ValleyField] Floor collision filtered: kept %d, dropped %d triangles" % [kept, dropped])
+	for child in node.get_children():
+		_filter_floor_collision(child)
+
+
+func _debug_show_floor_collision() -> void:
+	## Visualize all floor collision shapes as a semi-transparent green mesh overlay.
+	var faces := PackedVector3Array()
+	_collect_collision_faces(self, faces)
+	if faces.is_empty():
+		print("[ValleyField] DEBUG: No collision faces found to visualize")
+		return
+
+	var arr_mesh := ArrayMesh.new()
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = faces
+	# Compute normals (all pointing up for flat shading)
+	var normals := PackedVector3Array()
+	normals.resize(faces.size())
+	for i in range(faces.size()):
+		normals[i] = Vector3(0, 1, 0)
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0, 1, 0, 0.35)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	arr_mesh.surface_set_material(0, mat)
+
+	var mi := MeshInstance3D.new()
+	mi.name = "DebugFloorViz"
+	mi.mesh = arr_mesh
+	mi.position.y = 0.05  # Slight offset to avoid z-fighting
+	add_child(mi)
+	print("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (faces.size() / 3))
+
+
+func _collect_collision_faces(node: Node, out: PackedVector3Array) -> void:
+	if node is CollisionShape3D:
+		var cs := node as CollisionShape3D
+		if cs.shape is ConcavePolygonShape3D:
+			var trimesh := cs.shape as ConcavePolygonShape3D
+			var local_faces := trimesh.get_faces()
+			# Transform faces to global space
+			var xform := cs.global_transform
+			for i in range(local_faces.size()):
+				out.append(xform * local_faces[i])
+	for child in node.get_children():
+		_collect_collision_faces(child, out)
 
 
 func _strip_embedded_lights(node: Node) -> void:
@@ -637,17 +652,53 @@ func _collect_embedded_lights(node: Node, out: Array[Node]) -> void:
 		_collect_embedded_lights(child, out)
 
 
-func _load_stage_config(folder: String, stage_id: String) -> Dictionary:
-	var config_path := "res://assets/environments/%s/%s_config.json" % [folder, stage_id]
-	if not FileAccess.file_exists(config_path):
-		return {}
-	var file := FileAccess.open(config_path, FileAccess.READ)
-	if not file:
-		return {}
-	var json := JSON.new()
-	if json.parse(file.get_as_text()) != OK:
-		return {}
-	return json.data as Dictionary
+## Derive the assets/stages/ subfolder from a stage_id and area folder name.
+## e.g. stage_id="s01a_ga1", folder="valley" → "valley_a"
+##      stage_id="s080_sa0", folder="tower"  → "tower_0"
+static func _get_stage_subfolder(stage_id: String, folder: String) -> String:
+	# The variant character is at index 3 in the stage_id (e.g. "s01a_ga1" → "a")
+	if stage_id.length() >= 4:
+		var variant: String = stage_id[3]
+		return "%s_%s" % [folder, variant]
+	return folder
+
+
+## Static cache for unified stage config (loaded once, shared across cell transitions).
+static var _unified_config_cache: Dictionary = {}
+## Static cache for global texture fixes (keyed by texture filename, e.g. "s01_2_fall.png#1").
+static var _global_texture_fixes: Dictionary = {}
+
+
+func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
+	# Load unified config on first access
+	if _unified_config_cache.is_empty():
+		var unified_path := "res://data/stage_configs/unified-stage-configs.json"
+		if FileAccess.file_exists(unified_path):
+			var file := FileAccess.open(unified_path, FileAccess.READ)
+			if file:
+				var json := JSON.new()
+				if json.parse(file.get_as_text()) == OK:
+					_unified_config_cache = json.data as Dictionary
+					print("[ValleyField] Loaded unified config: %d stages" % _unified_config_cache.size())
+				file.close()
+
+	# Load global texture fixes on first access
+	if _global_texture_fixes.is_empty():
+		var gtf_path := "res://data/stage_configs/global-texture-fixes.json"
+		if FileAccess.file_exists(gtf_path):
+			var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
+			if gtf_file:
+				var gtf_json := JSON.new()
+				if gtf_json.parse(gtf_file.get_as_text()) == OK:
+					_global_texture_fixes = gtf_json.data as Dictionary
+					print("[ValleyField] Loaded global texture fixes: %d entries" % _global_texture_fixes.size())
+				gtf_file.close()
+
+	# Look up by stage_id
+	if _unified_config_cache.has(stage_id):
+		return _unified_config_cache[stage_id] as Dictionary
+
+	return {}
 
 
 ## Direction base rotations for portal position math (matches ExportTab.tsx DIRECTION_ROTATIONS).
@@ -660,7 +711,41 @@ const DIRECTION_ROTATIONS := {
 }
 
 
-## Build portal data from config JSON portals[] and defaultSpawn.
+## Parse baked portal data from quest JSON cell["portals"].
+## Positions are pre-computed by the quest editor — no rotation math needed.
+func _parse_baked_portals(baked: Dictionary) -> Dictionary:
+	var result := {}
+	for dir_key in baked:
+		var pd: Dictionary = baked[dir_key]
+		if dir_key == "default":
+			var sp: Array = pd.get("spawn", [0, 1, 0])
+			result["default"] = {
+				"spawn_pos": Vector3(float(sp[0]), float(sp[1]), float(sp[2])),
+				"trigger_pos": Vector3(float(sp[0]), float(sp[1]), float(sp[2])),
+			}
+			if pd.has("default_rotation"):
+				result["default"]["default_rotation"] = float(pd["default_rotation"])
+		else:
+			var gate: Array = pd.get("gate", [0, 0, 0])
+			var spawn: Array = pd.get("spawn", [0, 1, 0])
+			var trigger: Array = pd.get("trigger", [0, 0, 0])
+			var gr: Array = pd.get("gate_rot", [0, 0, 0])
+			result[dir_key] = {
+				"gate_pos": Vector3(float(gate[0]), float(gate[1]), float(gate[2])),
+				"spawn_pos": Vector3(float(spawn[0]), float(spawn[1]), float(spawn[2])),
+				"trigger_pos": Vector3(float(trigger[0]), float(trigger[1]), float(trigger[2])),
+				"gate_rot": Vector3(float(gr[0]), float(gr[1]), float(gr[2])),
+				"compass_label": pd.get("compass_label", dir_key.substr(0, 1).to_upper()),
+			}
+		print("[ValleyField]   baked portal: '%s' → gate=%s spawn=%s trigger=%s" % [
+			dir_key,
+			result[dir_key].get("gate_pos", "n/a"),
+			result[dir_key]["spawn_pos"],
+			result[dir_key]["trigger_pos"]])
+	return result
+
+
+## Build portal data from config JSON portals[] and defaultSpawn (fallback for non-quest sessions).
 ## Computes spawn/trigger/gate positions using the same math as ExportTab.tsx computePortalPositions.
 ## Positions are in stage-local space — caller transforms via _map_root.to_global() after add_child.
 func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
@@ -674,30 +759,33 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 		if dir.is_empty():
 			continue
 		var pos_arr: Array = portal.get("position", [0, 0, 0])
+		# Positions match GLB geometry directly — no mirroring or rotation needed.
 		var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 
-		# Compute rotation: base direction + optional offset (degrees)
+		# Gate rotation for visual placement (Y-axis only)
 		var base_rot: float = DIRECTION_ROTATIONS.get(dir, 0.0)
 		var offset_deg: float = float(portal.get("rotationOffset", 0))
 		var rotation: float = base_rot + deg_to_rad(offset_deg)
-
-		# Outward vector (away from the room, into the corridor)
-		var sin_r := sin(rotation)
-		var cos_r := cos(rotation)
-
-		# Spawn = 3 units outside gate, y=1.0
-		var spawn_pos := Vector3(gate_pos.x - sin_r * 3.0, 1.0, gate_pos.z - cos_r * 3.0)
-		# Trigger = 7 units outside gate, y=0.0
-		var trigger_pos := Vector3(gate_pos.x - sin_r * 7.0, 0.0, gate_pos.z - cos_r * 7.0)
-		# Gate rotation as Vector3 for element placement (Y-axis only)
 		var gate_rot := Vector3(0.0, rotation, 0.0)
 
+		# Outward direction: cardinal axis based on portal direction label
+		# Matches computePortalPositions() in quest-io.ts: offset = [-sin(rot), -cos(rot)]
+		var outward := Vector2(-sin(rotation), -cos(rotation))
+
+		# Spawn = 3 units outside gate (in corridor), y=1.0
+		var spawn_pos := Vector3(gate_pos.x + outward.x * 3.0, 1.0, gate_pos.z + outward.y * 3.0)
+		# Trigger = 7 units outside gate (deeper in corridor), y=0.0
+		var trigger_pos := Vector3(gate_pos.x + outward.x * 7.0, 0.0, gate_pos.z + outward.y * 7.0)
+
+		# Key by config direction — rotation remapping happens in the caller
 		result[dir] = {
-			"spawn_pos": _map_root.to_global(spawn_pos),
-			"trigger_pos": _map_root.to_global(trigger_pos),
-			"gate_pos": _map_root.to_global(gate_pos),
+			"spawn_pos": spawn_pos,
+			"trigger_pos": trigger_pos,
+			"gate_pos": gate_pos,
 			"gate_rot": gate_rot,
 		}
+		print("[ValleyField]   portal: config dir='%s' gate=%s spawn=%s trigger=%s" % [
+			dir, gate_pos, spawn_pos, trigger_pos])
 
 	# Default spawn point (boss rooms / gateless areas)
 	if config.has("defaultSpawn"):
@@ -707,8 +795,8 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 		var ds_dir: String = str(ds.get("direction", "north"))
 		var ds_rot: float = DIRECTION_ROTATIONS.get(ds_dir, 0.0)
 		result["default"] = {
-			"spawn_pos": _map_root.to_global(ds_pos),
-			"trigger_pos": _map_root.to_global(ds_pos),
+			"spawn_pos": ds_pos,
+			"trigger_pos": ds_pos,
 			"default_rotation": ds_rot,
 		}
 
@@ -717,12 +805,18 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 	return result
 
 
-func _find_texture_fix_for_mesh(mesh_name: String) -> Dictionary:
-	for fix in _texture_fixes:
-		var mesh_names: Array = fix.get("meshNames", [])
-		for mn in mesh_names:
-			if str(mn) == mesh_name:
-				return fix
+func _find_global_fix_for_material(mat: StandardMaterial3D) -> Dictionary:
+	## Look up texture fix from global-texture-fixes.json by the material's albedo texture filename.
+	## Keys in global fixes use "filename.png#1" format (the #1 suffix is from GLTF material index).
+	if not mat.albedo_texture or _global_texture_fixes.is_empty():
+		return {}
+	var tex_path: String = mat.albedo_texture.resource_path
+	var tex_basename: String = tex_path.get_file()  # e.g. "s01_2_fall.png"
+	# Try with common suffixes (#0, #1) since GLTF keys include material index
+	for suffix in ["#1", "#0", ""]:
+		var key: String = tex_basename + suffix
+		if _global_texture_fixes.has(key):
+			return _global_texture_fixes[key] as Dictionary
 	return {}
 
 
@@ -733,17 +827,6 @@ static func _wrap_mode_int(mode: String) -> int:
 	return 0  # repeat
 
 
-func _load_fix_texture(tex_file: String) -> Texture2D:
-	if tex_file.is_empty():
-		return null
-	var area_id_local: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
-	var area_cfg_local: Dictionary = GridGenerator.AREA_CONFIG.get(area_id_local, GridGenerator.AREA_CONFIG["gurhacia"])
-	var tex_path := "res://assets/environments/%s/%s" % [area_cfg_local["folder"], tex_file]
-	if ResourceLoader.exists(tex_path):
-		return load(tex_path) as Texture2D
-	return null
-
-
 func _fix_materials(node: Node) -> void:
 	## Make stage materials unshaded so pre-baked vertex colors display at full
 	## brightness regardless of mesh normals or enclosure geometry.  TimeManager
@@ -751,42 +834,37 @@ func _fix_materials(node: Node) -> void:
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
 		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var fix := _find_texture_fix_for_mesh(mesh_inst.name)
-		var tex_file: String = str(fix.get("textureFile", ""))
-		var is_waterfall := "_fall" in tex_file
-		var needs_shader := not fix.is_empty() and (
-			is_waterfall or
-			str(fix.get("wrapS", "repeat")) == "mirror" or
-			str(fix.get("wrapT", "repeat")) == "mirror")
 		for i in range(mesh_inst.get_surface_override_material_count()):
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std_mat := mat as StandardMaterial3D
+				# Look up global texture fix from material's albedo texture filename
+				var fix := _find_global_fix_for_material(std_mat)
+				var has_scroll := fix.has("scrollX") or fix.has("scrollY")
+				var is_waterfall := has_scroll or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
+				var needs_shader := not fix.is_empty() and (
+					is_waterfall or
+					str(fix.get("wrapS", "repeat")) == "mirror" or
+					str(fix.get("wrapT", "repeat")) == "mirror")
 				if is_waterfall:
-					# Waterfall: additive blend + scrolling UV + replacement texture
+					# Waterfall / scrolling texture: additive blend + scrolling UV
 					var shader_mat := ShaderMaterial.new()
 					shader_mat.shader = WATERFALL_SHADER
-					var fix_tex: Texture2D = _load_fix_texture(tex_file)
-					if fix_tex:
-						print("[FixMat] Waterfall texture: %s (%dx%d)" % [
-							tex_file, fix_tex.get_width(), fix_tex.get_height()])
-						shader_mat.set_shader_parameter("albedo_texture", fix_tex)
-					elif std_mat.albedo_texture:
+					if std_mat.albedo_texture:
 						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
 					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
 					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
-					shader_mat.set_shader_parameter("uv_scroll", Vector2(0.0, -0.25))
+					var scroll_x: float = fix.get("scrollX", 0.0)
+					var scroll_y: float = fix.get("scrollY", -0.35)
+					shader_mat.set_shader_parameter("uv_scroll", Vector2(scroll_x, scroll_y))
 					shader_mat.render_priority = 1
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				elif needs_shader:
 					# Mirror wrap: custom shader with wrap modes
 					var shader_mat := ShaderMaterial.new()
 					shader_mat.shader = TEXTURE_FIX_SHADER
-					var fix_tex: Texture2D = _load_fix_texture(tex_file)
-					if fix_tex:
-						shader_mat.set_shader_parameter("albedo_texture", fix_tex)
-					elif std_mat.albedo_texture:
+					if std_mat.albedo_texture:
 						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
 					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
@@ -809,6 +887,50 @@ func _fix_materials(node: Node) -> void:
 					mesh_inst.set_surface_override_material(i, new_mat)
 	for child in node.get_children():
 		_fix_materials(child)
+
+
+func _has_static_body(node: Node) -> bool:
+	if node is StaticBody3D:
+		return true
+	for child in node.get_children():
+		if _has_static_body(child):
+			return true
+	return false
+
+
+func _create_collision_from_meshes(root: Node) -> void:
+	## Find MeshInstance3D nodes in the floor GLB and create StaticBody3D + trimesh collision.
+	var meshes: Array[MeshInstance3D] = []
+	_collect_mesh_instances(root, meshes)
+	print("[ValleyField] Found %d mesh instances in floor GLB for manual collision" % meshes.size())
+	for mi in meshes:
+		var mesh := mi.mesh
+		if not mesh:
+			continue
+		var shape := mesh.create_trimesh_shape()
+		if not shape:
+			continue
+		var static_body := StaticBody3D.new()
+		static_body.name = "collision_floor"
+		static_body.collision_layer = 1
+		static_body.collision_mask = 0
+		var col_shape := CollisionShape3D.new()
+		col_shape.shape = shape
+		static_body.add_child(col_shape)
+		# Preserve the mesh's global transform
+		static_body.global_transform = mi.global_transform
+		root.add_child(static_body)
+		# Hide the visual mesh (collision only)
+		mi.visible = false
+		print("[ValleyField] Created trimesh collision from mesh '%s' (%d faces)" % [
+			mi.name, mesh.get_faces().size() / 3])
+
+
+func _collect_mesh_instances(node: Node, out: Array[MeshInstance3D]) -> void:
+	if node is MeshInstance3D:
+		out.append(node as MeshInstance3D)
+	for child in node.get_children():
+		_collect_mesh_instances(child, out)
 
 
 func _configure_collision_nodes(node: Node) -> bool:
@@ -843,6 +965,9 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 		direction, target_cell_pos, delayed, locked, _portal["trigger_pos"]])
 	# Locked triggers stay disabled until key gate opens; delayed triggers auto-enable after 1s
 	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback, delayed and not locked, locked)
+
+	# DEBUG: Add floating direction label at gate position
+	_add_gate_label(direction, _portal["gate_pos"] if _portal.has("gate_pos") else _portal["trigger_pos"], target_cell_pos)
 
 
 func _create_exit_trigger(_direction: String, _portal: Dictionary) -> void:
@@ -913,6 +1038,53 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 			if is_instance_valid(trigger):
 				trigger.monitoring = true
 		)
+
+
+## DEBUG: Add a floating 3D text label at gate position showing compass label + target cell.
+## Also adds colored sphere markers for gate (yellow), spawn (green), and trigger (red).
+func _add_gate_label(direction: String, pos: Vector3, target_cell: String) -> void:
+	var label := Label3D.new()
+	label.name = "GateLabel_%s" % direction
+	# Use baked compass_label for display if available, else fall back to grid direction
+	var compass: String = ""
+	if _portal_data.has(direction):
+		compass = _portal_data[direction].get("compass_label", direction.to_upper())
+	else:
+		compass = direction.to_upper()
+	label.text = "%s\n→ %s" % [compass, target_cell]
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(1, 1, 0, 1)  # Bright yellow
+	label.outline_modulate = Color(0, 0, 0, 1)
+	label.outline_size = 8
+	add_child(label)
+	label.global_position = Vector3(pos.x, 3.5, pos.z)
+
+	# DEBUG: Sphere markers — gate=yellow, spawn=green, trigger=red
+	var clean_dir: String = direction.split(" ")[0]  # Strip "(EXIT)" suffix
+	if _portal_data.has(clean_dir):
+		var pd: Dictionary = _portal_data[clean_dir]
+		_add_debug_sphere(pd["gate_pos"] if pd.has("gate_pos") else pos, Color(1, 1, 0), "GateMark_%s" % direction)
+		_add_debug_sphere(pd["spawn_pos"], Color(0, 1, 0), "SpawnMark_%s" % direction)
+		_add_debug_sphere(pd["trigger_pos"], Color(1, 0, 0), "TriggerMark_%s" % direction)
+
+
+func _add_debug_sphere(pos: Vector3, color: Color, sphere_name: String) -> void:
+	var mi := MeshInstance3D.new()
+	mi.name = sphere_name
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.4
+	sphere.height = 0.8
+	mi.mesh = sphere
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.no_depth_test = true
+	mi.material_override = mat
+	add_child(mi)
+	mi.global_position = Vector3(pos.x, 1.5, pos.z)
 
 
 func _create_key_pickup(key_for_cell: String) -> void:
@@ -1172,9 +1344,9 @@ func _spawn_field_elements() -> void:
 		add_child(waypoint)
 		waypoint.global_position = wp_pos
 		waypoint._base_y = waypoint.position.y  # Re-capture after repositioning
-		# Face into the room (opposite of exit direction) so front faces the player
-		var opp_dir: String = OPPOSITE[dir]
-		waypoint.rotation.y = _dir_to_yaw(opp_dir)
+		# Face toward spawn point so front faces the player approaching from the room
+		var spawn_pt: Vector3 = _portal_data[dir].get("spawn_pos", trigger_pos)
+		waypoint.rotation.y = _facing_yaw(wp_pos, spawn_pt)
 		# Disable backface culling so it's visible from any angle
 		waypoint.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
 			if mat is StandardMaterial3D:
@@ -1376,6 +1548,15 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				_spawn_warp_point(pos, w_section, w_cell, w_pos)
+			"area_warp":
+				var w_section: int = int(obj.get("warp_section", 0))
+				var w_cell: String = str(obj.get("warp_cell", ""))
+				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
+				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
+				var w_rot: float = float(obj.get("rotation_y", 0))
+				var w_portal: String = str(obj.get("portal_dir", ""))
+				var w_label: String = str(obj.get("label", ""))
+				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos, w_portal, w_label)
 			"quest_item":
 				var qi_id: String = str(obj.get("item_id", ""))
 				var qi_label: String = str(obj.get("item_label", ""))
@@ -1456,6 +1637,15 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				_spawn_warp_point(pos, w_section, w_cell, w_pos)
+			"area_warp":
+				var w_section: int = int(obj.get("warp_section", 0))
+				var w_cell: String = str(obj.get("warp_cell", ""))
+				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
+				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
+				var w_rot: float = float(obj.get("rotation_y", 0))
+				var w_portal: String = str(obj.get("portal_dir", ""))
+				var w_label: String = str(obj.get("label", ""))
+				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos, w_portal, w_label)
 			"quest_item":
 				if state != "collected":
 					var qi_id: String = str(obj.get("item_id", ""))
@@ -1870,6 +2060,75 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 		})
 	)
 	print("[CellObjects] WarpPoint at %s → section %d, cell %s, position %s" % [pos, target_section, target_cell, target_position])
+
+
+func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, target_cell: String, target_position: Vector3, portal_dir: String = "", label_text: String = "") -> void:
+	# Place the gate model at the gate position (not the trigger position)
+	var gate_pos := pos
+	var spawn_pos := pos
+	var trigger_pos := pos
+	if not portal_dir.is_empty() and _portal_data.has(portal_dir):
+		var pd: Dictionary = _portal_data[portal_dir]
+		gate_pos = pd.get("gate_pos", pos)
+		spawn_pos = pd.get("spawn_pos", pos)
+		trigger_pos = pd.get("trigger_pos", pos)
+
+	var aw := AreaWarpScript.new()
+	aw.auto_collect = false
+	aw.element_state = "open"
+	aw.name = "AreaWarpObj_%s" % portal_dir
+	add_child(aw)
+	aw.global_position = gate_pos
+	aw.rotation.y = rot_y
+
+	# Create trigger area at the trigger position (deep in corridor)
+	var trigger := Area3D.new()
+	trigger.name = "AreaWarpObjTrigger_%s" % portal_dir
+	trigger.collision_layer = 0
+	trigger.collision_mask = 2
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(4.0, 3.0, 4.0)
+	shape.shape = box
+	shape.position.y = 1.5
+	trigger.add_child(shape)
+	add_child(trigger)
+	trigger.global_position = trigger_pos
+	trigger.body_entered.connect(func(body: Node3D) -> void:
+		if body.is_in_group("player"):
+			print("[ValleyField] AreaWarp object activated → section %d, cell %s" % [target_section, target_cell])
+			SessionManager.set_current_section(target_section)
+			SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+				"current_cell_pos": target_cell,
+				"spawn_edge": "",
+				"spawn_position": [target_position.x, target_position.y, target_position.z],
+				"keys_collected": {},
+				"gates_opened": {},
+				"visited_cells": {},
+				"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+			})
+	)
+
+	# DEBUG: Sphere markers — gate=yellow, spawn=green, trigger=red
+	_add_debug_sphere(gate_pos, Color(1, 1, 0), "AreaWarpMark_gate_%s" % portal_dir)
+	_add_debug_sphere(spawn_pos, Color(0, 1, 0), "AreaWarpMark_spawn_%s" % portal_dir)
+	_add_debug_sphere(trigger_pos, Color(1, 0, 0), "AreaWarpMark_trigger_%s" % portal_dir)
+
+	# Label
+	var display_label := label_text if not label_text.is_empty() else "%s EXIT\n→ prev section" % portal_dir.to_upper()
+	var label := Label3D.new()
+	label.name = "AreaWarpLabel_%s" % portal_dir
+	label.text = display_label
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(0.29, 0.62, 1.0)
+	label.outline_modulate = Color(0, 0, 0, 1)
+	label.outline_size = 8
+	add_child(label)
+	label.global_position = Vector3(gate_pos.x, 3.5, gate_pos.z)
+	print("[CellObjects] AreaWarp at gate=%s trigger=%s (rot=%.2f) → section %d, cell %s" % [gate_pos, trigger_pos, rot_y, target_section, target_cell])
 
 
 ## Wire switch.activated → linked fences.disable()

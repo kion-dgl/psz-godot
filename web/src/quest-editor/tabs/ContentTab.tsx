@@ -442,6 +442,28 @@ function WarpDestMarker({ obj, selected, onClick }: { obj: CellObject; selected:
   );
 }
 
+/** Area warp marker — blue cylinder with ring (inter-section warp gate) */
+function AreaWarpMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  return (
+    <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      <mesh position={[0, 1.5, 0]}>
+        <cylinderGeometry args={[0.8, 0.8, 3.0, 16]} />
+        <meshBasicMaterial color="#4a9eff" transparent opacity={selected ? 0.8 : 0.5} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+        <ringGeometry args={[1.0, 1.4, 32]} />
+        <meshBasicMaterial color="#4a9eff" side={THREE.DoubleSide} transparent opacity={selected ? 0.7 : 0.35} />
+      </mesh>
+      {selected && (
+        <mesh position={[0, 1.5, 0]}>
+          <cylinderGeometry args={[0.9, 0.9, 3.1, 16]} />
+          <meshBasicMaterial color="#ffffff" wireframe transparent opacity={0.4} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
 function QuestItemMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
   return (
     <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
@@ -485,6 +507,8 @@ function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: b
       return <WarpMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'warp_dest':
       return <WarpDestMarker obj={obj} selected={selected} onClick={onClick} />;
+    case 'area_warp':
+      return <AreaWarpMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'quest_item':
       return <QuestItemMarker obj={obj} selected={selected} onClick={onClick} />;
     default:
@@ -571,6 +595,12 @@ function ObjectPlacementCursor({ objectType }: { objectType: CellObjectType }) {
         </mesh>
       )}
       {objectType === 'warp' && (
+        <mesh position={[0, 1.5, 0]}>
+          <cylinderGeometry args={[0.8, 0.8, 3.0, 16]} />
+          <meshBasicMaterial color={color} transparent opacity={0.3} />
+        </mesh>
+      )}
+      {objectType === 'area_warp' && (
         <mesh position={[0, 1.5, 0]}>
           <cylinderGeometry args={[0.8, 0.8, 3.0, 16]} />
           <meshBasicMaterial color={color} transparent opacity={0.3} />
@@ -1043,7 +1073,7 @@ function CellContentInspector({
 
         {/* Object palette */}
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest', 'quest_item'] as CellObjectType[]).map(type => (
+          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest', 'area_warp', 'quest_item'] as CellObjectType[]).map(type => (
             <button
               key={type}
               onClick={() => onSetPlacingObject(placingObject === type ? null : type)}
@@ -1100,7 +1130,7 @@ function CellContentInspector({
                   </div>
 
                   {/* Reposition button for positionable objects */}
-                  {isSel && (obj.type === 'dialog_trigger' || obj.type === 'quest_item' || obj.type === 'story_prop' || obj.type === 'npc' || obj.type === 'enemy') && (
+                  {isSel && (obj.type === 'dialog_trigger' || obj.type === 'quest_item' || obj.type === 'story_prop' || obj.type === 'npc' || obj.type === 'enemy' || obj.type === 'area_warp') && (
                     <div style={{ marginTop: '4px' }}>
                       {obj.position[0] === 0 && obj.position[1] === 0 && obj.position[2] === 0 && (
                         <div style={{ fontSize: '11px', color: '#ff8888', marginBottom: '4px' }}>
@@ -1457,7 +1487,7 @@ function CellContentInspector({
                   )}
 
                   {/* Warp link_id editor */}
-                  {isSel && (obj.type === 'warp' || obj.type === 'warp_dest') && (
+                  {isSel && (obj.type === 'warp' || obj.type === 'warp_dest' || obj.type === 'area_warp') && (
                     <div style={{ marginTop: '4px' }}>
                       <input
                         type="text"
@@ -1471,6 +1501,59 @@ function CellContentInspector({
                           color: '#fff', fontSize: '11px', fontFamily: 'monospace',
                         }}
                       />
+                    </div>
+                  )}
+
+                  {/* Area warp properties */}
+                  {isSel && obj.type === 'area_warp' && (
+                    <div style={{ marginTop: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
+                      <div>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Portal Dir:</span>
+                        <select
+                          value={obj.portal_dir || ''}
+                          onChange={(e) => onUpdateObject(obj.id, { portal_dir: e.target.value || undefined })}
+                          style={{
+                            width: '100%', padding: '3px', background: '#111',
+                            border: '1px solid #444', borderRadius: '3px',
+                            color: '#fff', fontSize: '10px', fontFamily: 'monospace',
+                          }}
+                        >
+                          <option value="">-- select --</option>
+                          <option value="north">North</option>
+                          <option value="south">South</option>
+                          <option value="east">East</option>
+                          <option value="west">West</option>
+                        </select>
+                      </div>
+                      <input
+                        type="text"
+                        value={obj.area_warp_label || ''}
+                        onChange={(e) => onUpdateObject(obj.id, { area_warp_label: e.target.value || undefined })}
+                        placeholder="Label (e.g. Back to Valley)"
+                        style={{
+                          width: '100%', padding: '4px', background: '#111',
+                          border: '1px solid #444', borderRadius: '3px',
+                          color: '#fff', fontSize: '11px', fontFamily: 'monospace',
+                        }}
+                      />
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Rot Y:</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={obj.area_warp_rotation_y ?? ''}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            onUpdateObject(obj.id, { area_warp_rotation_y: v === '' ? undefined : parseFloat(v) });
+                          }}
+                          placeholder="radians"
+                          style={{
+                            flex: 1, padding: '3px', background: '#111',
+                            border: '1px solid #444', borderRadius: '3px',
+                            color: '#fff', fontSize: '10px', fontFamily: 'monospace',
+                          }}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -1723,6 +1806,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
       if (placingObject === 'npc') { newObj.npc_id = ''; newObj.npc_name = ''; newObj.dialog = []; }
       if (placingObject === 'warp') { newObj.link_id = ''; }
       if (placingObject === 'warp_dest') { newObj.link_id = ''; }
+      if (placingObject === 'area_warp') { newObj.link_id = ''; newObj.portal_dir = ''; newObj.area_warp_label = ''; }
       if (placingObject === 'quest_item') { newObj.quest_item_id = ''; newObj.quest_item_label = ''; }
       return {
         ...prev,

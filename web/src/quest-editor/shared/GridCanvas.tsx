@@ -5,15 +5,19 @@
  * Click occupied cell -> onCellSelect (for CellInspector)
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { QuestProject, EditorGridCell, Direction } from '../types';
 import { getRotatedGates, oppositeDirection, getNeighbor, isValidPos } from '../hooks/useStageConfigs';
+import { STAGE_AREAS, getStageSubfolder } from '../../stage-editor/constants';
+import { assetUrl } from '../../utils/assets';
 
 interface GridCanvasProps {
   project: QuestProject;
   selectedCell: string | null;
   onCellClick: (pos: string) => void;
   onCellSelect: (pos: string) => void;
+  showMinimap?: boolean;
+  areaKey?: string;
 }
 
 /** Get suffix from stage name (e.g., "s01a_ib1" -> "ib1") */
@@ -92,12 +96,45 @@ function computeEntryDirections(project: QuestProject): Map<string, Direction> {
   return entries;
 }
 
+function SvgMinimapBg({ stageId, rotation, areaKey }: { stageId: string; rotation: number; areaKey: string }) {
+  const [svg, setSvg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const area = STAGE_AREAS[areaKey];
+    if (!area) return;
+    const subfolder = getStageSubfolder(stageId, area.folder);
+    // Always fetch the unrotated SVG — we apply rotation via CSS
+    const url = assetUrl(`assets/stages/${subfolder}/${stageId}/lndmd/${stageId}_minimap_r0.svg`);
+    let cancelled = false;
+    fetch(url)
+      .then(r => r.ok ? r.text() : null)
+      .then(text => { if (!cancelled && text) setSvg(text); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [stageId, areaKey]);
+
+  if (!svg) return null;
+  const sized = svg.replace('<svg ', '<svg width="100%" height="100%" ');
+  // Rotate CW to match the game's rotation convention
+  return (
+    <div
+      style={{
+        position: 'absolute', inset: 0, zIndex: 0, opacity: 0.7, overflow: 'hidden',
+        transform: `rotate(${rotation}deg)`,
+      }}
+      dangerouslySetInnerHTML={{ __html: sized }}
+    />
+  );
+}
+
 function CellDisplay({
   pos,
   cell,
   project,
   isSelected,
   entryDir,
+  showMinimap,
+  areaKey,
   onClick,
 }: {
   pos: string;
@@ -105,6 +142,8 @@ function CellDisplay({
   project: QuestProject;
   isSelected: boolean;
   entryDir: Direction | null;
+  showMinimap?: boolean;
+  areaKey?: string;
   onClick: () => void;
 }) {
   const [row, col] = pos.split(',').map(Number);
@@ -160,6 +199,9 @@ function CellDisplay({
       onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.background = '#333366'; }}
       onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.background = '#2a2a4a'; }}
     >
+      {showMinimap && areaKey && (
+        <SvgMinimapBg stageId={cell.stageName} rotation={cell.rotation ?? 0} areaKey={areaKey} />
+      )}
       {isStart && (
         <div style={{
           position: 'absolute', top: '3px', left: '3px',
@@ -234,7 +276,7 @@ function CellDisplay({
   );
 }
 
-export default function GridCanvas({ project, selectedCell, onCellClick, onCellSelect }: GridCanvasProps) {
+export default function GridCanvas({ project, selectedCell, onCellClick, onCellSelect, showMinimap, areaKey }: GridCanvasProps) {
   const { gridSize, cells } = project;
   const entryDirs = useMemo(() => computeEntryDirections(project), [project]);
 
@@ -262,6 +304,8 @@ export default function GridCanvas({ project, selectedCell, onCellClick, onCellS
                 project={project}
                 isSelected={isSelected}
                 entryDir={entryDirs.get(pos) ?? null}
+                showMinimap={showMinimap}
+                areaKey={areaKey}
                 onClick={() => cell ? onCellSelect(pos) : onCellClick(pos)}
               />
             );

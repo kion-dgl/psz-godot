@@ -1,5 +1,9 @@
-import type { UnifiedStageConfig, GateDirection, PreviewModel } from '../types';
-import { DIRECTION_ROTATIONS } from '../types';
+import { useMemo } from 'react';
+import type { UnifiedStageConfig, GateDirection, PreviewModel, FloorTriangle } from '../types';
+import { DIRECTION_ROTATIONS, DEFAULT_SVG_SETTINGS } from '../types';
+import { rotateDirection } from '../../quest-editor/hooks/useStageConfigs';
+import type { Direction } from '../../quest-editor/types';
+import { generateSvgMinimap } from './SvgTab';
 
 interface PortalTabProps {
   config: UnifiedStageConfig;
@@ -16,10 +20,15 @@ interface PortalTabProps {
   setSelectedPortalId: (id: string | null) => void;
   spawnPlacementMode: boolean;
   setSpawnPlacementMode: (mode: boolean) => void;
+  floorTriangles: FloorTriangle[];
+  previewRotation: number;
+  setPreviewRotation: (rotation: number) => void;
 }
 
 const DIRECTIONS: GateDirection[] = ['north', 'south', 'east', 'west'];
 const PREVIEW_MODELS: PreviewModel[] = ['Gate', 'AreaWarp'];
+
+const ROTATION_ANGLES = [0, 90, 180, 270] as const;
 
 export default function PortalTab({
   config,
@@ -36,9 +45,38 @@ export default function PortalTab({
   setSelectedPortalId,
   spawnPlacementMode,
   setSpawnPlacementMode,
+  floorTriangles,
+  previewRotation,
+  setPreviewRotation,
 }: PortalTabProps) {
+
   // Get selected portal
   const selectedPortal = config.portals.find((p) => p.id === selectedPortalId);
+
+  // Included floor triangles for minimap
+  const includedTriangles = useMemo(() => floorTriangles.filter((t) => t.included), [floorTriangles]);
+
+  // SVG minimap settings
+  const svgSettings = useMemo(() => {
+    if (config.svgSettings) return config.svgSettings;
+    // Auto-compute bounds from triangles
+    if (includedTriangles.length === 0) return DEFAULT_SVG_SETTINGS;
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    includedTriangles.forEach((tri) => {
+      tri.vertices.forEach((v) => {
+        minX = Math.min(minX, v.x); maxX = Math.max(maxX, v.x);
+        minZ = Math.min(minZ, v.z); maxZ = Math.max(maxZ, v.z);
+      });
+    });
+    const gridSize = Math.max(Math.ceil(Math.max(maxX - minX, maxZ - minZ) * 1.2), 20);
+    return { ...DEFAULT_SVG_SETTINGS, gridSize, centerX: (minX + maxX) / 2, centerZ: (minZ + maxZ) / 2 };
+  }, [config.svgSettings, includedTriangles]);
+
+  // Generate minimap SVG with current preview rotation
+  const { svg: minimapSvg } = useMemo(
+    () => generateSvgMinimap(includedTriangles, config.portals, svgSettings, previewRotation),
+    [includedTriangles, config.portals, svgSettings, previewRotation]
+  );
 
   // Delete portal
   const deletePortal = (id: string) => {
@@ -67,6 +105,16 @@ export default function PortalTab({
       ...prev,
       portals: prev.portals.map((p) =>
         p.id === id ? { ...p, direction } : p
+      ),
+    }));
+  };
+
+  // Update portal compass label
+  const updatePortalCompassLabel = (id: string, compass_label: string | undefined) => {
+    updateConfig((prev) => ({
+      ...prev,
+      portals: prev.portals.map((p) =>
+        p.id === id ? { ...p, compass_label } : p
       ),
     }));
   };
@@ -207,6 +255,37 @@ export default function PortalTab({
         </div>
       </div>
 
+      {/* Rotation preview control */}
+      <div>
+        <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#888' }}>
+          Rotation Preview:
+        </label>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {ROTATION_ANGLES.map((angle) => (
+            <button
+              key={angle}
+              onClick={() => setPreviewRotation(angle)}
+              style={{
+                flex: 1,
+                padding: '8px 0',
+                background: previewRotation === angle ? '#e89020' : '#333',
+                color: previewRotation === angle ? 'black' : 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: previewRotation === angle ? 'bold' : 'normal',
+              }}
+            >
+              {angle}°
+            </button>
+          ))}
+        </div>
+        <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>
+          Shows how portal directions map at this grid rotation
+        </div>
+      </div>
+
       {/* Portal list */}
       <div>
         <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#888' }}>
@@ -241,6 +320,11 @@ export default function PortalTab({
                     <span style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>
                       {portal.label || portal.direction}
                     </span>
+                    {portal.compass_label && (
+                      <span style={{ marginLeft: '6px', fontSize: '11px', color: '#22aa44', fontWeight: 'bold' }}>
+                        [{portal.compass_label}]
+                      </span>
+                    )}
                     <span style={{ marginLeft: '8px', fontSize: '11px', color: '#888' }}>
                       {portal.direction.toUpperCase()}{portal.rotationOffset ? ` ${portal.rotationOffset > 0 ? '+' : ''}${portal.rotationOffset}` : ''}
                     </span>
@@ -266,11 +350,40 @@ export default function PortalTab({
                 <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>
                   Position: [{portal.position.map((v) => v.toFixed(1)).join(', ')}]
                 </div>
+                <div style={{ fontSize: '10px', color: '#666', marginTop: '2px' }}>
+                  ID: ...{portal.id.slice(-8)}
+                </div>
+                {previewRotation !== 0 && (
+                  <div style={{ fontSize: '10px', color: '#e89020', marginTop: '2px' }}>
+                    At {previewRotation}°: {portal.direction} → {rotateDirection(portal.direction as Direction, previewRotation)}
+                  </div>
+                )}
               </div>
             ))
           )}
         </div>
       </div>
+
+      {/* SVG Minimap */}
+      {includedTriangles.length > 0 && (
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#888' }}>
+            Minimap {previewRotation !== 0 ? `(rotated ${previewRotation}°)` : ''}:
+          </label>
+          <div
+            style={{
+              background: '#1a1a2e',
+              borderRadius: '4px',
+              padding: '8px',
+              display: 'flex',
+              justifyContent: 'center',
+              maxHeight: '200px',
+              overflow: 'auto',
+            }}
+            dangerouslySetInnerHTML={{ __html: minimapSvg }}
+          />
+        </div>
+      )}
 
       {/* Selected portal editor */}
       {selectedPortal && (
@@ -306,10 +419,58 @@ export default function PortalTab({
             />
           </div>
 
+          {/* Compass Label */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#666' }}>
+              Compass Label (visual, fixed):
+            </label>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {(['N', 'S', 'E', 'W'] as const).map((cl) => (
+                <button
+                  key={cl}
+                  onClick={() => updatePortalCompassLabel(selectedPortal.id, cl)}
+                  style={{
+                    flex: 1,
+                    padding: '6px',
+                    background: selectedPortal.compass_label === cl ? '#22aa44' : '#333',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: selectedPortal.compass_label === cl ? 'bold' : 'normal',
+                  }}
+                >
+                  {cl}
+                </button>
+              ))}
+              <button
+                onClick={() => updatePortalCompassLabel(selectedPortal.id, undefined)}
+                style={{
+                  padding: '6px 8px',
+                  background: !selectedPortal.compass_label ? '#22aa44' : '#333',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '10px',
+                }}
+                title="Auto (derive from direction)"
+              >
+                Auto
+              </button>
+            </div>
+            <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>
+              {selectedPortal.compass_label
+                ? `Fixed: ${selectedPortal.compass_label}`
+                : `Auto: ${selectedPortal.direction[0].toUpperCase()} (from direction)`}
+            </div>
+          </div>
+
           {/* Direction */}
           <div style={{ marginBottom: '12px' }}>
             <label style={{ display: 'block', marginBottom: '4px', fontSize: '11px', color: '#666' }}>
-              Direction:
+              Direction (structural, for rotation mapping):
             </label>
             <div style={{ display: 'flex', gap: '4px' }}>
               {DIRECTIONS.map((dir) => (

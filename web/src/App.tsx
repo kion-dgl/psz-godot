@@ -9,6 +9,7 @@ const EnemyGallery = lazy(() => import('./storybook/EnemyGallery'));
 const WeaponGallery = lazy(() => import('./storybook/WeaponGallery'));
 const PlayerAnimationStorybook = lazy(() => import('./storybook/PlayerAnimationStorybook'));
 const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
+const SvgCheck = lazy(() => import('./svg-check/SvgCheck'));
 
 function NavBar() {
   const location = useLocation();
@@ -68,6 +69,12 @@ function NavBar() {
       }}>
         Stage Editor
       </Link>
+      <Link to="/svg-check" style={{
+        color: isActive('/svg-check') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        SVG Check
+      </Link>
     </nav>
   );
 }
@@ -87,6 +94,7 @@ export default function App() {
             <Route path="/storybook/weapons" element={<WeaponGallery />} />
             <Route path="/storybook/player-animations" element={<PlayerAnimationStorybook />} />
             <Route path="/stage-editor" element={<StageEditor />} />
+            <Route path="/svg-check" element={<SvgCheck />} />
           </Routes>
         </Suspense>
       </div>

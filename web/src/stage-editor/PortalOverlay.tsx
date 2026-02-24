@@ -1,10 +1,12 @@
 import { useRef, useMemo, useCallback } from 'react';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, Html } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { assetUrl } from '../utils/assets';
 import type { PortalData, GateDirection, PreviewModel, SpawnPointData } from './types';
+import { rotateDirection } from '../quest-editor/hooks/useStageConfigs';
+import type { Direction } from '../quest-editor/types';
 import { DIRECTION_ROTATIONS, getPortalRotation } from './types';
 
 // Model paths — Godot asset layout
@@ -18,6 +20,9 @@ interface PortalModelProps {
   opacity?: number;
   selected?: boolean;
   onClick?: () => void;
+  label?: string;
+  compassLabel?: string;
+  portalId?: string;
 }
 
 // Spawn/trigger offset constants (matching ExportTab)
@@ -107,7 +112,121 @@ function GateBoundingBox({ position, rotation }: { position: [number, number, nu
   );
 }
 
-function GatePreview({ position, rotation, opacity = 1, selected, onClick }: Omit<PortalModelProps, 'modelType'>) {
+// Compass rose at origin showing N/S/E/W directions
+// Base axes: North = -Z, South = +Z, East = +X, West = -X
+// When previewRotation > 0, labels rotate CW (e.g. at 90°: N→+X, E→+Z, S→-X, W→-Z)
+function CompassRose({ previewRotation = 0 }: { previewRotation?: number }) {
+  const armLength = 4;
+  const armThickness = 0.15;
+
+  // Physical axis positions (fixed, don't rotate)
+  const axisPositions: [number, number, number][] = [
+    [0, 0, -(armLength + 1.5)],  // -Z
+    [0, 0, armLength + 1.5],     // +Z
+    [armLength + 1.5, 0, 0],     // +X
+    [-(armLength + 1.5), 0, 0],  // -X
+  ];
+
+  // Base direction labels at each axis position (rotation=0)
+  const baseLabels: Direction[] = ['north', 'south', 'east', 'west'];
+  const colors: Record<Direction, string> = { north: '#44ff44', south: '#ff4444', east: '#4488ff', west: '#ffaa00' };
+  const shortNames: Record<Direction, string> = { north: 'N', south: 'S', east: 'E', west: 'W' };
+
+  // Apply rotation: at each physical position, show which direction maps there
+  // rotateDirection('north', 90) = 'east', meaning north label moves to where east was (+X)
+  // So for each axis position, we need the INVERSE: which original dir rotates TO this position's base dir
+  // Inverse of CW rotation by R is CW rotation by (360-R)
+  const inverseRotation = (360 - previewRotation) % 360;
+  const directions = baseLabels.map((baseDir, i) => {
+    const rotatedLabel = rotateDirection(baseDir, inverseRotation);
+    return {
+      label: `${shortNames[rotatedLabel]}`,
+      pos: axisPositions[i],
+      color: colors[rotatedLabel],
+    };
+  });
+
+  return (
+    <group position={[0, 0.5, 0]}>
+      {/* Center marker */}
+      <mesh>
+        <sphereGeometry args={[0.4, 16, 16]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+
+      {/* N/S arm (-Z / +Z) */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[armThickness, armThickness, armLength * 2]} />
+        <meshBasicMaterial color="#44ff44" />
+      </mesh>
+      {/* Arrow tip north (-Z) */}
+      <mesh position={[0, 0, -armLength]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.4, 0.8, 8]} />
+        <meshBasicMaterial color="#44ff44" />
+      </mesh>
+
+      {/* E/W arm (-X / +X) */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[armLength * 2, armThickness, armThickness]} />
+        <meshBasicMaterial color="#4488ff" />
+      </mesh>
+      {/* Arrow tip east (+X) */}
+      <mesh position={[armLength, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <coneGeometry args={[0.4, 0.8, 8]} />
+        <meshBasicMaterial color="#4488ff" />
+      </mesh>
+
+      {/* Labels */}
+      {directions.map(({ label, pos, color }) => (
+        <Html key={label} position={pos} center style={{ pointerEvents: 'none' }}>
+          <div style={{
+            background: 'rgba(0,0,0,0.85)',
+            color,
+            padding: '2px 6px',
+            borderRadius: '3px',
+            fontSize: '12px',
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+            whiteSpace: 'nowrap',
+            border: `1px solid ${color}`,
+          }}>
+            {label}
+          </div>
+        </Html>
+      ))}
+    </group>
+  );
+}
+
+// Floating label above a portal showing direction, compass label, and truncated ID
+function PortalLabel({ position, label, compassLabel, portalId }: { position: [number, number, number]; label?: string; compassLabel?: string; portalId?: string }) {
+  if (!label && !compassLabel && !portalId) return null;
+  const dir = label?.toUpperCase() || '';
+  const compass = compassLabel ? ` [${compassLabel}]` : '';
+  const idSuffix = portalId ? portalId.slice(-6) : '';
+
+  return (
+    <Html position={[position[0], position[1] + 5, position[2]]} center style={{ pointerEvents: 'none' }}>
+      <div style={{
+        background: 'rgba(0,0,0,0.8)',
+        color: '#fff',
+        padding: '3px 6px',
+        borderRadius: '3px',
+        fontSize: '11px',
+        whiteSpace: 'nowrap',
+        fontFamily: 'monospace',
+        lineHeight: '1.3',
+        textAlign: 'center',
+        border: '1px solid #555',
+      }}>
+        <div style={{ fontWeight: 'bold' }}>{dir}{compass}</div>
+        {idSuffix && <div style={{ fontSize: '9px', color: '#aaa' }}>...{idSuffix}</div>}
+      </div>
+    </Html>
+  );
+}
+
+function GatePreview({ position, rotation, opacity = 1, selected, onClick, label, compassLabel, portalId }: Omit<PortalModelProps, 'modelType'>) {
   const { scene } = useGLTF(GATE_MODEL_PATH);
 
   const clonedScene = useMemo(() => {
@@ -150,11 +269,12 @@ function GatePreview({ position, rotation, opacity = 1, selected, onClick }: Omi
       <GateBoundingBox position={position} rotation={rotation} />
       <SpawnMarker position={markers.spawn} rotation={markers.rotation} />
       <TriggerMarker position={markers.trigger} rotation={markers.rotation} />
+      <PortalLabel position={position} label={label} compassLabel={compassLabel} portalId={portalId} />
     </group>
   );
 }
 
-function WarpPreview({ position, rotation, opacity = 1, selected, onClick }: Omit<PortalModelProps, 'modelType'>) {
+function WarpPreview({ position, rotation, opacity = 1, selected, onClick, label, compassLabel, portalId }: Omit<PortalModelProps, 'modelType'>) {
   const { scene } = useGLTF(WARP_MODEL_PATH);
 
   const clonedScene = useMemo(() => {
@@ -197,6 +317,7 @@ function WarpPreview({ position, rotation, opacity = 1, selected, onClick }: Omi
       <GateBoundingBox position={position} rotation={rotation} />
       <SpawnMarker position={markers.spawn} rotation={markers.rotation} />
       <TriggerMarker position={markers.trigger} rotation={markers.rotation} />
+      <PortalLabel position={position} label={label} compassLabel={compassLabel} portalId={portalId} />
     </group>
   );
 }
@@ -215,6 +336,7 @@ interface PortalOverlayProps {
   placementDirection: GateDirection;
   placementRotationOffset: number; // degrees
   previewModel: PreviewModel;
+  previewRotation?: number; // degrees (0/90/180/270) for compass + label rotation
   onPortalClick: (id: string) => void;
   onPlacePortal: (position: [number, number, number]) => void;
   onUpdatePortalPosition?: (id: string, position: [number, number, number]) => void;
@@ -400,6 +522,7 @@ export default function PortalOverlay({
   placementDirection,
   placementRotationOffset,
   previewModel,
+  previewRotation = 0,
   onPortalClick,
   onPlacePortal,
   onUpdatePortalPosition,
@@ -427,6 +550,9 @@ export default function PortalOverlay({
 
   return (
     <group>
+      {/* Compass rose at origin */}
+      <CompassRose previewRotation={previewRotation} />
+
       {/* Ground plane for click detection in placement mode */}
       {anyPlacementMode && (
         <mesh
@@ -440,17 +566,25 @@ export default function PortalOverlay({
       )}
 
       {/* Existing portals */}
-      {portals.map((portal) => (
-        <PortalModel
-          key={portal.id}
-          position={portal.position}
-          rotation={getPortalRotation(portal)}
-          modelType={previewModel}
-          opacity={1}
-          selected={portal.id === selectedPortalId}
-          onClick={() => onPortalClick(portal.id)}
-        />
-      ))}
+      {portals.map((portal) => {
+        const rotatedDir = previewRotation > 0
+          ? rotateDirection(portal.direction as Direction, previewRotation)
+          : portal.direction;
+        return (
+          <PortalModel
+            key={portal.id}
+            position={portal.position}
+            rotation={getPortalRotation(portal)}
+            modelType={previewModel}
+            opacity={1}
+            selected={portal.id === selectedPortalId}
+            onClick={() => onPortalClick(portal.id)}
+            label={previewRotation > 0 ? `${portal.direction}→${rotatedDir}` : portal.direction}
+            compassLabel={portal.compass_label}
+            portalId={portal.id}
+          />
+        );
+      })}
 
       {/* Default spawn marker (yellow) */}
       {defaultSpawn && (

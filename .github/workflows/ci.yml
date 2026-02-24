@@ -45,6 +45,9 @@ jobs:
       - name: Type check
         run: cd web && npx tsc --noEmit
 
+      - name: Test
+        run: cd web && npm run test
+
       - name: Build
         run: cd web && npm run build
 
