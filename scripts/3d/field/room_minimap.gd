@@ -326,11 +326,7 @@ func _build_gate_entries(svg_gates: Array, connections: Dictionary,
 				label = "EXIT"
 			elif connections.has(grid_dir):
 				color = GATE_OPEN
-				# Use baked compass_label if available
-				if portal_data.has(grid_dir) and portal_data[grid_dir].has("compass_label"):
-					label = portal_data[grid_dir]["compass_label"]
-				else:
-					label = grid_dir.substr(0, 1).to_upper()
+				label = grid_dir.substr(0, 1).to_upper()
 			else:
 				color = GATE_WALL
 				label = ""
