@@ -21,6 +21,7 @@ signal dialog_finished
 
 var _triggered: bool = false
 var _player_ref: Node3D = null
+var companion_node: Node3D = null  # If set, route dialog to companion speech bubble
 
 
 func _init() -> void:
@@ -118,6 +119,17 @@ func _unfreeze_player() -> void:
 
 
 func _show_dialog() -> void:
+	var pages: Array = dialog.duplicate(true)
+	# If this trigger has completion actions and objectives are now met, append completion text
+	var _objectives_met := _has_completion_actions() and SessionManager.are_objectives_complete()
+	if _objectives_met:
+		pages.append({"speaker": "", "text": "Quest complete! Please report to the Guild."})
+
+	# Route to companion speech bubble if set
+	if companion_node and is_instance_valid(companion_node) and companion_node.has_method("show_speech"):
+		_show_companion_dialog(pages)
+		return
+
 	# Find or create dialog box on the HUD
 	var hud := _find_hud()
 	if not hud:
@@ -134,18 +146,53 @@ func _show_dialog() -> void:
 		dialog_box.name = "DialogBox"
 		hud.add_child(dialog_box)
 
-	var pages: Array = dialog.duplicate(true)
-	# If this trigger has completion actions and objectives are now met, append completion text
-	var _objectives_met := _has_completion_actions() and SessionManager.are_objectives_complete()
-	if _objectives_met:
-		pages.append({"speaker": "", "text": "Quest complete! Please report to the Guild."})
-
 	dialog_box.show_dialog(pages)
 	dialog_box.dialog_complete.connect(func() -> void:
 		_unfreeze_player()
 		_execute_actions()
 		dialog_finished.emit()
 	, CONNECT_ONE_SHOT)
+
+
+func _show_companion_dialog(pages: Array) -> void:
+	# Rotate camera to face companion
+	_rotate_camera_to(companion_node)
+	_show_companion_page(pages, 0)
+
+
+func _show_companion_page(pages: Array, index: int) -> void:
+	if index >= pages.size() or not is_instance_valid(companion_node):
+		_unfreeze_player()
+		_execute_actions()
+		dialog_finished.emit()
+		return
+	var page: Dictionary = pages[index]
+	var text: String = str(page.get("text", ""))
+	var speaker: String = str(page.get("speaker", ""))
+	companion_node.show_speech(text, speaker, 4.0)
+
+	var next_idx := index + 1
+	companion_node.speech_finished.connect(func() -> void:
+		_show_companion_page(pages, next_idx)
+	, CONNECT_ONE_SHOT)
+
+
+func _rotate_camera_to(target: Node3D) -> void:
+	if not _player_ref or not is_instance_valid(target):
+		return
+	var orbit_cam: Node3D = null
+	for child in _player_ref.get_parent().get_children():
+		if child.has_method("get_camera_rotation"):
+			orbit_cam = child
+			break
+	if not orbit_cam:
+		return
+	var to_target := target.global_position - _player_ref.global_position
+	to_target.y = 0
+	if to_target.length() < 0.1:
+		return
+	var angle := atan2(to_target.x, to_target.z)
+	orbit_cam.camera_rotation = angle + PI
 
 
 func _has_completion_actions() -> bool:
