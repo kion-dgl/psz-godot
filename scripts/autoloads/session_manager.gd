@@ -89,6 +89,7 @@ func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 		"total_exp": 0,
 		"total_meseta": 0,
 		"items_collected": [],
+		"companions": quest.get("companions", []),
 	}
 	set_field_sections(quest["sections"])
 	# Load quest objectives if present
@@ -162,6 +163,11 @@ func return_to_city() -> Dictionary:
 ## Get current session data
 func get_session() -> Dictionary:
 	return _session
+
+
+## Get companion IDs for the current quest
+func get_companions() -> Array:
+	return _session.get("companions", [])
 
 
 ## Get current location
