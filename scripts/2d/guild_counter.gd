@@ -380,7 +380,7 @@ func _refresh_display() -> void:
 				var label := Label.new()
 				var unlocked: bool = entry.get("available", true)
 				var entry_type: String = str(entry["type"])
-				var completed: bool = entry_type == "mission" and GameState.is_mission_completed(entry["id"])
+				var completed: bool = (entry_type == "mission" or entry_type == "quest") and GameState.is_mission_completed(entry["id"])
 				var status_tag: String = ""
 				if entry_type == "report":
 					status_tag = " [REPORT]"
