@@ -1045,12 +1045,8 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 func _add_gate_label(direction: String, pos: Vector3, target_cell: String) -> void:
 	var label := Label3D.new()
 	label.name = "GateLabel_%s" % direction
-	# Use baked compass_label for display if available, else fall back to grid direction
-	var compass: String = ""
-	if _portal_data.has(direction):
-		compass = _portal_data[direction].get("compass_label", direction.to_upper())
-	else:
-		compass = direction.to_upper()
+	# Show grid direction (matches minimap labels)
+	var compass: String = direction.substr(0, 1).to_upper()
 	label.text = "%s\n→ %s" % [compass, target_cell]
 	label.font_size = 48
 	label.pixel_size = 0.01
@@ -1253,7 +1249,7 @@ func _spawn_field_elements() -> void:
 		area_warp.element_state = "locked" if objectives_pending else "open"
 		add_child(area_warp)
 		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
-		area_warp.rotation.y = _dir_to_yaw(warp_edge) + PI
+		area_warp.rotation.y = _portal_data[warp_edge].get("gate_rot", Vector3.ZERO).y
 		if objectives_pending:
 			_objective_locked_exits.append(area_warp)
 
@@ -1380,7 +1376,7 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 		if not connections.has(dir) and _portal_data.has(dir):
 			exit_dir = dir
 			exit_pos = _portal_data[dir].get("gate_pos", _portal_data[dir]["trigger_pos"])
-			exit_rot = _dir_to_yaw(dir) + PI
+			exit_rot = _portal_data[dir].get("gate_rot", Vector3.ZERO).y
 			break
 
 	# Fallback to default spawn
