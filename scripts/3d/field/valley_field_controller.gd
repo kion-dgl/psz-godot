@@ -29,6 +29,7 @@ const FieldNpcScript := preload("res://scripts/3d/elements/field_npc.gd")
 const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
 const QuestItemPickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
+const CompanionNpcScript := preload("res://scripts/3d/elements/companion_npc.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -82,6 +83,8 @@ var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
+var _companion: CharacterBody3D = null  # CompanionNpc following the player
+var _companion_speech_triggers: Array = []  # trigger_ids routed to speech bubble (save as "triggered")
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 
@@ -334,6 +337,7 @@ func _ready() -> void:
 
 	_spawn_field_elements()
 	_spawn_cell_objects()
+	_spawn_companion()
 	_setup_debug_panel()
 
 	# Map overlay (toggle with Tab, persists across cell transitions)
@@ -1447,6 +1451,7 @@ func _spawn_cell_objects() -> void:
 	_room_triggers.clear()
 	_room_npcs.clear()
 	_room_quest_items.clear()
+	_companion_speech_triggers.clear()
 	_deferred_telepipe = {}
 
 	if objects.is_empty() and saved.is_empty():
@@ -1525,7 +1530,16 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var tsize := Vector3.ZERO
 				if tsize_arr.size() == 3:
 					tsize = Vector3(float(tsize_arr[0]), float(tsize_arr[1]), float(tsize_arr[2]))
-				_spawn_dialog_trigger(pos, trigger_id, dlg, "ready", condition, act, tsize)
+				# Route companion dialog to speech bubble
+				if _companion and act.is_empty() and _is_companion_dialog(dlg):
+					_queue_companion_speech(dlg)
+					_companion_speech_triggers.append({
+						"trigger_id": trigger_id, "dialog": dlg,
+						"trigger_condition": condition, "position": pos,
+						"trigger_size": tsize,
+					})
+				else:
+					_spawn_dialog_trigger(pos, trigger_id, dlg, "ready", condition, act, tsize)
 			"npc":
 				var npc_id: String = str(obj.get("npc_id", ""))
 				var npc_name: String = str(obj.get("npc_name", ""))
@@ -1831,6 +1845,21 @@ func _save_cell_state() -> void:
 				tdata["trigger_size"] = [cs.x, cs.y, cs.z]
 			obj_states.append(tdata)
 
+	# Save companion speech triggers as already triggered
+	for cst in _companion_speech_triggers:
+		var tdata := {
+			"type": "dialog_trigger",
+			"px": cst["position"].x, "py": cst["position"].y, "pz": cst["position"].z,
+			"state": "triggered",
+			"trigger_id": cst["trigger_id"],
+			"dialog": cst["dialog"],
+			"trigger_condition": cst["trigger_condition"],
+			"actions": [],
+		}
+		if cst["trigger_size"] != Vector3.ZERO:
+			tdata["trigger_size"] = [cst["trigger_size"].x, cst["trigger_size"].y, cst["trigger_size"].z]
+		obj_states.append(tdata)
+
 	# Save NPC states
 	for npc in _room_npcs:
 		if is_instance_valid(npc):
@@ -2032,6 +2061,115 @@ func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array
 		npc.rotation.y = deg_to_rad(rot_deg)
 	_room_npcs.append(npc)
 	print("[CellObjects] FieldNpc '%s' (%s) at %s (dialog=%d pages)" % [npc_name, npc_id, pos, dlg.size()])
+
+
+func _is_companion_dialog(dlg: Array) -> bool:
+	## Returns true if the companion is the primary speaker.
+	## Allows empty-speaker (narrator) lines mixed in.
+	if dlg.is_empty() or not _companion:
+		return false
+	var comp_id: String = _companion.companion_id
+	var has_companion_line := false
+	for page in dlg:
+		var speaker: String = str(page.get("speaker", "")).to_lower()
+		if speaker.is_empty():
+			continue  # narrator line — ok
+		if speaker == comp_id:
+			has_companion_line = true
+		else:
+			return false  # another named speaker — use dialog box
+	return has_companion_line
+
+
+func _queue_companion_speech(dlg: Array) -> void:
+	if not _companion or dlg.is_empty():
+		return
+	var pages := dlg.duplicate(true)
+	# Short delay so speech doesn't fire instantly on cell load
+	get_tree().create_timer(1.0).timeout.connect(func() -> void:
+		_show_next_companion_speech(pages, 0)
+	)
+
+
+func _show_next_companion_speech(pages: Array, index: int) -> void:
+	if index >= pages.size() or not is_instance_valid(_companion):
+		# All pages done — unfreeze player
+		_unfreeze_player_after_speech()
+		return
+	var page: Dictionary = pages[index]
+	var text: String = str(page.get("text", ""))
+	var speaker: String = str(page.get("speaker", ""))
+	_companion.show_speech(text, speaker, 4.0)
+
+	# Freeze player and rotate camera on first page
+	if index == 0:
+		_freeze_player_for_speech()
+		_rotate_camera_to_companion()
+
+	if index + 1 < pages.size():
+		var next_idx := index + 1
+		_companion.speech_finished.connect(func() -> void:
+			_show_next_companion_speech(pages, next_idx)
+		, CONNECT_ONE_SHOT)
+	else:
+		# Last page — unfreeze when done
+		_companion.speech_finished.connect(func() -> void:
+			_unfreeze_player_after_speech()
+		, CONNECT_ONE_SHOT)
+
+
+func _freeze_player_for_speech() -> void:
+	if player and player.has_method("transition_to"):
+		player.transition_to(player.PlayerState.CUTSCENE)
+
+
+func _unfreeze_player_after_speech() -> void:
+	if player and player.has_method("transition_to"):
+		if player.current_state == player.PlayerState.CUTSCENE:
+			player.transition_to(player.PlayerState.IDLE)
+
+
+func _rotate_camera_to_companion() -> void:
+	if not orbit_camera or not is_instance_valid(_companion) or not player:
+		return
+	# Calculate angle from player to companion, then place camera opposite
+	var to_comp := _companion.global_position - player.global_position
+	to_comp.y = 0
+	if to_comp.length() < 0.1:
+		return
+	# Camera orbit angle that looks from behind the player toward the companion
+	# Camera is at player + (sin(cam_rot) * dist, h, cos(cam_rot) * dist)
+	# For camera to face the companion, it should be on the opposite side
+	var angle_to_comp := atan2(to_comp.x, to_comp.z)
+	orbit_camera.camera_rotation = angle_to_comp + PI
+
+
+func _spawn_companion() -> void:
+	# Remove previous companion if any
+	if _companion and is_instance_valid(_companion):
+		_companion.queue_free()
+		_companion = null
+
+	var companions := SessionManager.get_companions()
+	if companions.is_empty():
+		return
+
+	var comp_id: String = str(companions[0])
+	_companion = CompanionNpcScript.new()
+	_companion.companion_id = comp_id
+	_companion.name = "Companion_" + comp_id
+
+	# Position 3 units behind the player
+	var behind := Vector3(0, 0, 3.0)
+	if player:
+		behind = -Vector3(sin(player.player_rotation), 0, cos(player.player_rotation)) * 3.0
+		add_child(_companion)
+		_companion.global_position = player.global_position + behind
+		_companion.global_position.y = player.global_position.y
+	else:
+		add_child(_companion)
+
+	print("[Companion] Spawned '%s' behind player" % comp_id)
 
 
 func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, target_position: Vector3) -> void:
