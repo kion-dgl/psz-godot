@@ -35,6 +35,7 @@ var _bubble_text: Label
 var _name_label: Label3D
 var _player_ref: Node3D = null
 var _speaking: bool = false
+var _speech_timer: float = 0.0
 
 
 func _ready() -> void:
@@ -176,24 +177,22 @@ func _assign_bubble_texture() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_process_speech_timer(delta)
 	_process_follow(delta)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if not _speaking:
+func _process_speech_timer(delta: float) -> void:
+	if not _speaking or _speech_timer <= 0:
 		return
-	if event is InputEventKey and event.pressed and not event.echo:
-		match event.keycode:
-			KEY_E, KEY_ENTER, KEY_SPACE, KEY_ESCAPE:
-				_dismiss_speech()
-				get_viewport().set_input_as_handled()
+	_speech_timer -= delta
+	# Fade out during last 0.5s
+	if _speech_timer < 0.5:
+		_bubble_sprite.modulate.a = _speech_timer / 0.5
+	if _speech_timer <= 0:
+		_dismiss_speech()
 
 
 func _process_follow(delta: float) -> void:
-	# Don't move while speaking
-	if _speaking:
-		return
-
 	# Cache player reference
 	if not is_instance_valid(_player_ref):
 		var players := get_tree().get_nodes_in_group("player")
@@ -250,12 +249,13 @@ func _dismiss_speech() -> void:
 
 
 ## Show a PSO-style speech bubble above the companion's head.
-func show_speech(text: String, _speaker: String = "", _duration: float = 4.0) -> void:
-	print("[Companion] show_speech: text='%s'" % text.left(50))
+## Auto-dismisses after duration seconds.
+func show_speech(text: String, _speaker: String = "", duration: float = 4.0) -> void:
+	print("[Companion] show_speech: text='%s' duration=%.1f" % [text.left(50), duration])
 	_bubble_text.text = text
 	_bubble_sprite.visible = true
 	_bubble_sprite.modulate.a = 1.0
 	_speaking = true
-	# Hide name label while speech is showing (bubble replaces it)
+	_speech_timer = duration
 	_name_label.visible = false
 	speech_started.emit()

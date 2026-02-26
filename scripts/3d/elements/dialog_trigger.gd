@@ -125,9 +125,10 @@ func _show_dialog() -> void:
 	if _objectives_met:
 		pages.append({"speaker": "", "text": "Quest complete! Please report to the Guild."})
 
-	# Route to companion speech bubble if set
+	# Route to companion speech bubble — no camera change, no player freeze, auto-advance
 	if companion_node and is_instance_valid(companion_node) and companion_node.has_method("show_speech"):
 		print("[DialogTrigger] '%s' → companion speech bubble (%d pages)" % [trigger_id, pages.size()])
+		_unfreeze_player()
 		_show_companion_dialog(pages)
 		return
 	else:
@@ -158,48 +159,25 @@ func _show_dialog() -> void:
 
 
 func _show_companion_dialog(pages: Array) -> void:
-	# Rotate camera to face companion
-	_rotate_camera_to(companion_node)
 	_show_companion_page(pages, 0)
 
 
 func _show_companion_page(pages: Array, index: int) -> void:
 	if index >= pages.size() or not is_instance_valid(companion_node):
-		_unfreeze_player()
 		_execute_actions()
 		dialog_finished.emit()
 		return
 	var page: Dictionary = pages[index]
 	var text: String = str(page.get("text", ""))
 	var speaker: String = str(page.get("speaker", ""))
-	companion_node.show_speech(text, speaker, 4.0)
+	# Auto-advance: ~1 second per 12 characters, minimum 3 seconds
+	var duration: float = maxf(3.0, text.length() / 12.0)
+	companion_node.show_speech(text, speaker, duration)
 
 	var next_idx := index + 1
 	companion_node.speech_finished.connect(func() -> void:
 		_show_companion_page(pages, next_idx)
 	, CONNECT_ONE_SHOT)
-
-
-func _rotate_camera_to(target: Node3D) -> void:
-	if not _player_ref or not is_instance_valid(target):
-		return
-	var orbit_cam: Node3D = null
-	for child in _player_ref.get_parent().get_children():
-		if child.has_method("get_camera_rotation"):
-			orbit_cam = child
-			break
-	if not orbit_cam:
-		return
-	var to_target := target.global_position - _player_ref.global_position
-	to_target.y = 0
-	if to_target.length() < 0.1:
-		return
-	var target_angle := atan2(to_target.x, to_target.z) + PI
-	# Smooth lerp via tween (normalize angle difference to avoid spinning the long way)
-	var current: float = orbit_cam.camera_rotation
-	var diff: float = fmod(target_angle - current + PI, TAU) - PI
-	var tween := orbit_cam.create_tween()
-	tween.tween_property(orbit_cam, "camera_rotation", current + diff, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
 
 func _has_completion_actions() -> bool:
