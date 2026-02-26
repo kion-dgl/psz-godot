@@ -1,13 +1,12 @@
 extends CharacterBody3D
 class_name CompanionNpc
 ## Companion NPC that follows the player through field exploration.
-## Renders as a colored capsule with a name label and speech bubble.
+## Renders as a colored capsule with a name label and PSO-style speech bubble.
 ## Uses direct movement (no NavigationAgent — stages have no navmesh).
 
 signal speech_started
 signal speech_finished
 
-const GRAVITY: float = 20.0
 const FOLLOW_SPEED: float = 6.0
 const CATCHUP_SPEED: float = 9.0
 const STOP_DISTANCE: float = 2.5
@@ -25,14 +24,15 @@ const COMPANION_COLORS: Dictionary = {
 }
 const DEFAULT_COLOR := Color(1.0, 1.0, 1.0)  # White
 
+## Viewport size for speech bubble
+const BUBBLE_WIDTH := 400
+const BUBBLE_HEIGHT := 180
+
 @export var companion_id: String = ""
 
-var _bubble_root: Node3D          # Billboard container for bubble
 var _bubble_viewport: SubViewport
 var _bubble_sprite: Sprite3D
-var _bubble_panel: PanelContainer
-var _bubble_speaker: Label
-var _bubble_text: RichTextLabel
+var _bubble_text: Label
 var _name_label: Label3D
 var _player_ref: Node3D = null
 var _speaking: bool = false
@@ -88,89 +88,86 @@ func _build_name_label() -> void:
 
 
 func _build_speech_bubble() -> void:
-	# SubViewport renders 2D UI → Sprite3D displays it in 3D as a billboard
+	# SubViewport renders 2D speech bubble → Sprite3D displays in 3D
 	_bubble_viewport = SubViewport.new()
 	_bubble_viewport.name = "BubbleViewport"
-	_bubble_viewport.size = Vector2i(480, 200)
+	_bubble_viewport.size = Vector2i(BUBBLE_WIDTH, BUBBLE_HEIGHT)
 	_bubble_viewport.transparent_bg = true
 	_bubble_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(_bubble_viewport)
 
-	# Build the 2D panel inside the viewport
-	var root_control := Control.new()
-	root_control.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_bubble_viewport.add_child(root_control)
+	# Root control
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_bubble_viewport.add_child(root)
 
-	_bubble_panel = PanelContainer.new()
-	_bubble_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_bubble_panel.offset_left = 8
-	_bubble_panel.offset_right = -8
-	_bubble_panel.offset_top = 8
-	_bubble_panel.offset_bottom = -24  # Leave room for tail
+	# White rounded rectangle (the bubble body)
+	var panel := PanelContainer.new()
+	panel.anchor_left = 0.05
+	panel.anchor_right = 0.95
+	panel.anchor_top = 0.0
+	panel.anchor_bottom = 0.78
+	panel.offset_left = 0
+	panel.offset_right = 0
+	panel.offset_top = 4
+	panel.offset_bottom = 0
 
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.05, 0.12, 0.92)
-	style.border_color = Color(0.3, 0.5, 0.8, 0.9)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.set_content_margin_all(12)
-	_bubble_panel.add_theme_stylebox_override("panel", style)
-	root_control.add_child(_bubble_panel)
+	style.bg_color = Color.WHITE
+	style.set_corner_radius_all(14)
+	style.set_content_margin_all(14)
+	style.border_color = Color(0.3, 0.3, 0.3, 0.6)
+	style.set_border_width_all(1)
+	panel.add_theme_stylebox_override("panel", style)
+	root.add_child(panel)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	_bubble_panel.add_child(vbox)
-
-	# Speaker name
-	_bubble_speaker = Label.new()
-	_bubble_speaker.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0))
-	_bubble_speaker.add_theme_font_size_override("font_size", 20)
-	vbox.add_child(_bubble_speaker)
-
-	# Dialog text
-	_bubble_text = RichTextLabel.new()
-	_bubble_text.bbcode_enabled = true
-	_bubble_text.fit_content = true
-	_bubble_text.scroll_active = false
+	# Text label inside panel
+	_bubble_text = Label.new()
+	_bubble_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_bubble_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_bubble_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_bubble_text.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
+	_bubble_text.add_theme_font_size_override("font_size", 18)
+	_bubble_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_bubble_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_bubble_text.add_theme_color_override("default_color", Color.WHITE)
-	_bubble_text.add_theme_font_size_override("normal_font_size", 18)
-	vbox.add_child(_bubble_text)
+	panel.add_child(_bubble_text)
 
-	# Tail triangle (drawn as a small polygon below the panel)
-	var tail := _create_tail_polygon()
-	root_control.add_child(tail)
+	# Tail triangle — white, pointing down from center-bottom of bubble
+	var tail := Polygon2D.new()
+	var cx: float = BUBBLE_WIDTH * 0.5
+	var top_y: float = BUBBLE_HEIGHT * 0.78  # Align with panel bottom
+	tail.polygon = PackedVector2Array([
+		Vector2(cx - 12, top_y),
+		Vector2(cx + 12, top_y),
+		Vector2(cx, top_y + 28),
+	])
+	tail.color = Color.WHITE
+	root.add_child(tail)
 
-	# Sprite3D that shows the viewport texture
+	# Thin border for tail (two dark triangles behind the white one)
+	var tail_border := Polygon2D.new()
+	tail_border.polygon = PackedVector2Array([
+		Vector2(cx - 13, top_y - 1),
+		Vector2(cx + 13, top_y - 1),
+		Vector2(cx, top_y + 30),
+	])
+	tail_border.color = Color(0.3, 0.3, 0.3, 0.6)
+	root.move_child(tail_border, 0)  # Behind everything
+
+	# Sprite3D billboard above the NPC
 	_bubble_sprite = Sprite3D.new()
 	_bubble_sprite.name = "BubbleSprite"
-	_bubble_sprite.pixel_size = 0.005
-	_bubble_sprite.position.y = 2.6
+	_bubble_sprite.pixel_size = 0.006
+	_bubble_sprite.position.y = 2.8
 	_bubble_sprite.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bubble_sprite.no_depth_test = true
 	_bubble_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
 	_bubble_sprite.render_priority = 10
-	_bubble_sprite.transparency = 0.0
 	_bubble_sprite.visible = false
 	add_child(_bubble_sprite)
 
-	# Assign viewport texture after one frame (needs to initialize)
-	_bubble_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	# Assign viewport texture after one frame
 	call_deferred("_assign_bubble_texture")
-
-
-func _create_tail_polygon() -> Polygon2D:
-	var tail := Polygon2D.new()
-	# Small downward-pointing triangle centered at bottom of panel
-	var cx: float = 240.0  # Center of viewport width
-	var top_y: float = 176.0  # Just at panel bottom edge
-	tail.polygon = PackedVector2Array([
-		Vector2(cx - 10, top_y),
-		Vector2(cx + 10, top_y),
-		Vector2(cx, top_y + 16),
-	])
-	tail.color = Color(0.05, 0.05, 0.12, 0.92)
-	return tail
 
 
 func _assign_bubble_texture() -> void:
@@ -205,8 +202,7 @@ func _process_follow(delta: float) -> void:
 		_player_ref = players[0]
 
 	var player_pos := _player_ref.global_position
-	var my_pos := global_position
-	var to_player := player_pos - my_pos
+	var to_player := player_pos - global_position
 	to_player.y = 0
 	var dist := to_player.length()
 
@@ -215,7 +211,7 @@ func _process_follow(delta: float) -> void:
 		_teleport_behind_player()
 		return
 
-	# Match player Y directly (no navmesh, stages are mostly flat)
+	# Match player Y directly (stages are flat)
 	global_position.y = player_pos.y
 
 	if dist > STOP_DISTANCE:
@@ -225,7 +221,6 @@ func _process_follow(delta: float) -> void:
 		velocity.z = direction.z * speed
 		velocity.y = 0
 
-		# Smooth rotation toward movement direction
 		var target_angle := atan2(direction.x, direction.z)
 		rotation.y = lerp_angle(rotation.y, target_angle, 5.0 * delta)
 	else:
@@ -249,16 +244,18 @@ func _teleport_behind_player() -> void:
 
 func _dismiss_speech() -> void:
 	_bubble_sprite.visible = false
+	_name_label.visible = true
 	_speaking = false
 	speech_finished.emit()
 
 
-## Show a speech bubble above the companion's head.
-func show_speech(text: String, speaker: String = "", _duration: float = 4.0) -> void:
-	print("[Companion] show_speech: speaker='%s' text='%s'" % [speaker, text.left(40)])
-	_bubble_speaker.text = speaker if not speaker.is_empty() else companion_id.capitalize()
+## Show a PSO-style speech bubble above the companion's head.
+func show_speech(text: String, _speaker: String = "", _duration: float = 4.0) -> void:
+	print("[Companion] show_speech: text='%s'" % text.left(50))
 	_bubble_text.text = text
 	_bubble_sprite.visible = true
 	_bubble_sprite.modulate.a = 1.0
 	_speaking = true
+	# Hide name label while speech is showing (bubble replaces it)
+	_name_label.visible = false
 	speech_started.emit()
