@@ -1,5 +1,4 @@
 extends CharacterBody3D
-class_name CompanionNpc
 ## Companion NPC that follows the player through field exploration.
 ## Renders as a colored capsule with a name label and PSO-style speech bubble.
 ## Uses direct movement (no NavigationAgent — stages have no navmesh).

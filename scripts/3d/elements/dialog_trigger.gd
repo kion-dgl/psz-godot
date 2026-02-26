@@ -196,8 +196,8 @@ func _rotate_camera_to(target: Node3D) -> void:
 		return
 	var target_angle := atan2(to_target.x, to_target.z) + PI
 	# Smooth lerp via tween (normalize angle difference to avoid spinning the long way)
-	var current := orbit_cam.camera_rotation
-	var diff := fmod(target_angle - current + PI, TAU) - PI
+	var current: float = orbit_cam.camera_rotation
+	var diff: float = fmod(target_angle - current + PI, TAU) - PI
 	var tween := orbit_cam.create_tween()
 	tween.tween_property(orbit_cam, "camera_rotation", current + diff, 0.6).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 
