@@ -101,6 +101,19 @@ func _build_speech_bubble() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_bubble_viewport.add_child(root)
 
+	var cx: float = BUBBLE_WIDTH * 0.5
+	var top_y: float = BUBBLE_HEIGHT * 0.78  # Panel bottom edge
+
+	# Tail border (behind everything — added first so it draws first)
+	var tail_border := Polygon2D.new()
+	tail_border.polygon = PackedVector2Array([
+		Vector2(cx - 13, top_y - 1),
+		Vector2(cx + 13, top_y - 1),
+		Vector2(cx, top_y + 30),
+	])
+	tail_border.color = Color(0.3, 0.3, 0.3, 0.6)
+	root.add_child(tail_border)
+
 	# White rounded rectangle (the bubble body)
 	var panel := PanelContainer.new()
 	panel.anchor_left = 0.05
@@ -132,10 +145,8 @@ func _build_speech_bubble() -> void:
 	_bubble_text.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.add_child(_bubble_text)
 
-	# Tail triangle — white, pointing down from center-bottom of bubble
+	# White tail triangle — pointing down from center-bottom of bubble
 	var tail := Polygon2D.new()
-	var cx: float = BUBBLE_WIDTH * 0.5
-	var top_y: float = BUBBLE_HEIGHT * 0.78  # Align with panel bottom
 	tail.polygon = PackedVector2Array([
 		Vector2(cx - 12, top_y),
 		Vector2(cx + 12, top_y),
@@ -143,16 +154,6 @@ func _build_speech_bubble() -> void:
 	])
 	tail.color = Color.WHITE
 	root.add_child(tail)
-
-	# Thin border for tail (two dark triangles behind the white one)
-	var tail_border := Polygon2D.new()
-	tail_border.polygon = PackedVector2Array([
-		Vector2(cx - 13, top_y - 1),
-		Vector2(cx + 13, top_y - 1),
-		Vector2(cx, top_y + 30),
-	])
-	tail_border.color = Color(0.3, 0.3, 0.3, 0.6)
-	root.move_child(tail_border, 0)  # Behind everything
 
 	# Sprite3D billboard above the NPC
 	_bubble_sprite = Sprite3D.new()
