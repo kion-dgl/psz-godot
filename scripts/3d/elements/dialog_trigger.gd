@@ -127,8 +127,11 @@ func _show_dialog() -> void:
 
 	# Route to companion speech bubble if set
 	if companion_node and is_instance_valid(companion_node) and companion_node.has_method("show_speech"):
+		print("[DialogTrigger] '%s' → companion speech bubble (%d pages)" % [trigger_id, pages.size()])
 		_show_companion_dialog(pages)
 		return
+	else:
+		print("[DialogTrigger] '%s' → HUD dialog box (companion_node=%s)" % [trigger_id, companion_node])
 
 	# Find or create dialog box on the HUD
 	var hud := _find_hud()
