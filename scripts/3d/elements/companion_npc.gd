@@ -34,8 +34,6 @@ var _bubble_panel: PanelContainer
 var _bubble_speaker: Label
 var _bubble_text: RichTextLabel
 var _name_label: Label3D
-var _speech_timer: float = 0.0
-var _speech_duration: float = 0.0
 var _player_ref: Node3D = null
 var _speaking: bool = false
 
@@ -181,8 +179,17 @@ func _assign_bubble_texture() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_process_speech(delta)
 	_process_follow(delta)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _speaking:
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		match event.keycode:
+			KEY_E, KEY_ENTER, KEY_SPACE, KEY_ESCAPE:
+				_dismiss_speech()
+				get_viewport().set_input_as_handled()
 
 
 func _process_follow(delta: float) -> void:
@@ -240,32 +247,18 @@ func _teleport_behind_player() -> void:
 	global_position.y = _player_ref.global_position.y
 
 
-func _process_speech(delta: float) -> void:
-	if _speech_timer <= 0:
-		return
-
-	_speech_timer -= delta
-
-	# Fade out during last 0.5s
-	if _speech_timer < 0.5:
-		_bubble_sprite.opacity = _speech_timer / 0.5
-	else:
-		_bubble_sprite.opacity = 1.0
-
-	if _speech_timer <= 0:
-		_bubble_sprite.visible = false
-		_speaking = false
-		speech_finished.emit()
+func _dismiss_speech() -> void:
+	_bubble_sprite.visible = false
+	_speaking = false
+	speech_finished.emit()
 
 
 ## Show a speech bubble above the companion's head.
-func show_speech(text: String, speaker: String = "", duration: float = 4.0) -> void:
-	print("[Companion] show_speech: speaker='%s' text='%s' bubble_sprite=%s" % [speaker, text.left(40), _bubble_sprite != null])
+func show_speech(text: String, speaker: String = "", _duration: float = 4.0) -> void:
+	print("[Companion] show_speech: speaker='%s' text='%s'" % [speaker, text.left(40)])
 	_bubble_speaker.text = speaker if not speaker.is_empty() else companion_id.capitalize()
 	_bubble_text.text = text
 	_bubble_sprite.visible = true
-	_bubble_sprite.opacity = 1.0
-	_speech_timer = duration
-	_speech_duration = duration
+	_bubble_sprite.modulate.a = 1.0
 	_speaking = true
 	speech_started.emit()
