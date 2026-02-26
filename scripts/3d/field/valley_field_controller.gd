@@ -335,8 +335,8 @@ func _ready() -> void:
 			_create_key_pickup(key_for)
 
 	_spawn_field_elements()
-	_spawn_cell_objects()
 	_spawn_companion()
+	_spawn_cell_objects()
 	_setup_debug_panel()
 
 	# Map overlay (toggle with Tab, persists across cell transitions)
@@ -2019,8 +2019,11 @@ func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: 
 	if size != Vector3.ZERO:
 		trigger.collision_size = size
 	# Route companion-speaker dialogs to speech bubble
-	if _companion and is_instance_valid(_companion) and _is_companion_dialog(dlg):
+	var is_comp_dlg := _is_companion_dialog(dlg)
+	print("[DialogTrigger] companion=%s valid=%s is_comp_dialog=%s" % [_companion != null, is_instance_valid(_companion) if _companion else false, is_comp_dlg])
+	if _companion and is_instance_valid(_companion) and is_comp_dlg:
 		trigger.companion_node = _companion
+		print("[DialogTrigger] → Routed '%s' to companion speech bubble" % trigger_id)
 	_map_root.add_child(trigger)
 	trigger.position = pos
 	_room_triggers.append(trigger)

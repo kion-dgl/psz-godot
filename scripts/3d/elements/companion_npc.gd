@@ -260,6 +260,7 @@ func _process_speech(delta: float) -> void:
 
 ## Show a speech bubble above the companion's head.
 func show_speech(text: String, speaker: String = "", duration: float = 4.0) -> void:
+	print("[Companion] show_speech: speaker='%s' text='%s' bubble_sprite=%s" % [speaker, text.left(40), _bubble_sprite != null])
 	_bubble_speaker.text = speaker if not speaker.is_empty() else companion_id.capitalize()
 	_bubble_text.text = text
 	_bubble_sprite.visible = true
