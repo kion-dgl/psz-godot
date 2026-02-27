@@ -32,6 +32,7 @@ var _completed_quest: Dictionary = {}  # {quest_id, area_id, name} — awaiting 
 var _quest_objectives: Array = []      # [{item_id, label, target}] — loaded from quest JSON
 var _quest_item_counts: Dictionary = {} # {item_id: count} — runtime collection state
 var _quest_accepted_shown: bool = false # true after "Quest accepted" log shown once
+var _action_log: Array = []            # [{text, color}] — persists across room transitions
 
 
 ## Enter a field area
@@ -89,6 +90,7 @@ func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 		"total_exp": 0,
 		"total_meseta": 0,
 		"items_collected": [],
+		"companions": quest.get("companions", []),
 	}
 	set_field_sections(quest["sections"])
 	# Load quest objectives if present
@@ -154,6 +156,7 @@ func return_to_city() -> Dictionary:
 	_session.clear()
 	_quest_objectives.clear()
 	_quest_item_counts.clear()
+	_action_log.clear()
 	_location = "city"
 	session_ended.emit()
 	return summary
@@ -162,6 +165,11 @@ func return_to_city() -> Dictionary:
 ## Get current session data
 func get_session() -> Dictionary:
 	return _session
+
+
+## Get companion IDs for the current quest
+func get_companions() -> Array:
+	return _session.get("companions", [])
 
 
 ## Get current location

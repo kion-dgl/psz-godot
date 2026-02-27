@@ -29,6 +29,7 @@ const FieldNpcScript := preload("res://scripts/3d/elements/field_npc.gd")
 const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
 const QuestItemPickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
+const CompanionNpcScript := preload("res://scripts/3d/elements/companion_npc.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -82,6 +83,7 @@ var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
+var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 
@@ -333,6 +335,7 @@ func _ready() -> void:
 			_create_key_pickup(key_for)
 
 	_spawn_field_elements()
+	_spawn_companion()
 	_spawn_cell_objects()
 	_setup_debug_panel()
 
@@ -1045,12 +1048,8 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 func _add_gate_label(direction: String, pos: Vector3, target_cell: String) -> void:
 	var label := Label3D.new()
 	label.name = "GateLabel_%s" % direction
-	# Use baked compass_label for display if available, else fall back to grid direction
-	var compass: String = ""
-	if _portal_data.has(direction):
-		compass = _portal_data[direction].get("compass_label", direction.to_upper())
-	else:
-		compass = direction.to_upper()
+	# Show grid direction (matches minimap labels)
+	var compass: String = direction.substr(0, 1).to_upper()
 	label.text = "%s\n→ %s" % [compass, target_cell]
 	label.font_size = 48
 	label.pixel_size = 0.01
@@ -1253,7 +1252,7 @@ func _spawn_field_elements() -> void:
 		area_warp.element_state = "locked" if objectives_pending else "open"
 		add_child(area_warp)
 		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
-		area_warp.rotation.y = _dir_to_yaw(warp_edge) + PI
+		area_warp.rotation.y = _portal_data[warp_edge].get("gate_rot", Vector3.ZERO).y
 		if objectives_pending:
 			_objective_locked_exits.append(area_warp)
 
@@ -1380,7 +1379,7 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 		if not connections.has(dir) and _portal_data.has(dir):
 			exit_dir = dir
 			exit_pos = _portal_data[dir].get("gate_pos", _portal_data[dir]["trigger_pos"])
-			exit_rot = _dir_to_yaw(dir) + PI
+			exit_rot = _portal_data[dir].get("gate_rot", Vector3.ZERO).y
 			break
 
 	# Fallback to default spawn
@@ -2019,10 +2018,16 @@ func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: 
 	trigger.actions = act
 	if size != Vector3.ZERO:
 		trigger.collision_size = size
+	# Route companion-speaker dialogs to speech bubble
+	var is_comp_dlg := _is_companion_dialog(dlg)
+	print("[DialogTrigger] companion=%s valid=%s is_comp_dialog=%s" % [_companion != null, is_instance_valid(_companion) if _companion else false, is_comp_dlg])
+	if _companion and is_instance_valid(_companion) and is_comp_dlg:
+		trigger.companion_node = _companion
+		print("[DialogTrigger] → Routed '%s' to companion speech bubble" % trigger_id)
 	_map_root.add_child(trigger)
 	trigger.position = pos
 	_room_triggers.append(trigger)
-	print("[CellObjects] DialogTrigger at %s (id=%s, condition=%s, pages=%d, actions=%s, size=%s)" % [pos, trigger_id, condition, dlg.size(), str(act), trigger.collision_size])
+	print("[CellObjects] DialogTrigger at %s (id=%s, condition=%s, pages=%d, actions=%s, companion=%s)" % [pos, trigger_id, condition, dlg.size(), str(act), trigger.companion_node != null])
 
 
 func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array, rot_deg: float = 0) -> void:
@@ -2036,6 +2041,52 @@ func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array
 		npc.rotation.y = deg_to_rad(rot_deg)
 	_room_npcs.append(npc)
 	print("[CellObjects] FieldNpc '%s' (%s) at %s (dialog=%d pages)" % [npc_name, npc_id, pos, dlg.size()])
+
+
+func _is_companion_dialog(dlg: Array) -> bool:
+	## Returns true if the companion is the primary speaker.
+	## Allows empty-speaker (narrator) lines mixed in.
+	if dlg.is_empty() or not _companion:
+		return false
+	var comp_id: String = _companion.companion_id
+	var has_companion_line := false
+	for page in dlg:
+		var speaker: String = str(page.get("speaker", "")).to_lower()
+		if speaker.is_empty():
+			continue  # narrator line — ok
+		if speaker == comp_id:
+			has_companion_line = true
+		else:
+			return false  # another named speaker — use dialog box
+	return has_companion_line
+
+
+func _spawn_companion() -> void:
+	# Remove previous companion if any
+	if _companion and is_instance_valid(_companion):
+		_companion.queue_free()
+		_companion = null
+
+	var companions := SessionManager.get_companions()
+	if companions.is_empty():
+		return
+
+	var comp_id: String = str(companions[0])
+	_companion = CompanionNpcScript.new()
+	_companion.companion_id = comp_id
+	_companion.name = "Companion_" + comp_id
+
+	# Position 3 units behind the player
+	var behind := Vector3(0, 0, 3.0)
+	if player:
+		behind = -Vector3(sin(player.player_rotation), 0, cos(player.player_rotation)) * 3.0
+		add_child(_companion)
+		_companion.global_position = player.global_position + behind
+		_companion.global_position.y = player.global_position.y
+	else:
+		add_child(_companion)
+
+	print("[Companion] Spawned '%s' behind player" % comp_id)
 
 
 func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, target_position: Vector3) -> void:
