@@ -312,6 +312,8 @@ func _report_quest() -> void:
 	# Show completion message
 	hint_label.text = "Quest complete! EXP: %d  Meseta: %d" % [
 		int(data.get("total_exp", 0)), int(data.get("total_meseta", 0))]
+	# Auto-save after quest completion so progress isn't lost
+	SaveManager.auto_save()
 	_selected_index = 0
 	_selecting_difficulty = false
 	_load_entries()
