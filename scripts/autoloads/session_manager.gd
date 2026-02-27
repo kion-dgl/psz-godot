@@ -32,6 +32,7 @@ var _completed_quest: Dictionary = {}  # {quest_id, area_id, name} — awaiting 
 var _quest_objectives: Array = []      # [{item_id, label, target}] — loaded from quest JSON
 var _quest_item_counts: Dictionary = {} # {item_id: count} — runtime collection state
 var _quest_accepted_shown: bool = false # true after "Quest accepted" log shown once
+var _action_log: Array = []            # [{text, color}] — persists across room transitions
 
 
 ## Enter a field area
@@ -155,6 +156,7 @@ func return_to_city() -> Dictionary:
 	_session.clear()
 	_quest_objectives.clear()
 	_quest_item_counts.clear()
+	_action_log.clear()
 	_location = "city"
 	session_ended.emit()
 	return summary

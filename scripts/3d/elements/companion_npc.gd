@@ -181,6 +181,14 @@ func _physics_process(delta: float) -> void:
 	_process_follow(delta)
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not _speaking:
+		return
+	if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
+		get_viewport().set_input_as_handled()
+		_dismiss_speech()
+
+
 func _process_speech_timer(delta: float) -> void:
 	if not _speaking or _speech_timer <= 0:
 		return
@@ -259,3 +267,22 @@ func show_speech(text: String, _speaker: String = "", duration: float = 4.0) -> 
 	_speech_timer = duration
 	_name_label.visible = false
 	speech_started.emit()
+	# Log to action log
+	var speaker_name: String = _speaker if not _speaker.is_empty() else companion_id.capitalize()
+	_log_to_hud(speaker_name, text)
+
+
+func _log_to_hud(speaker: String, text: String) -> void:
+	var hud := _find_field_hud()
+	if hud and hud.has_method("log_speech"):
+		hud.log_speech(speaker, text)
+
+
+func _find_field_hud() -> Node:
+	var node := get_parent()
+	while node:
+		for child in node.get_children():
+			if child is CanvasLayer and child.name == "FieldHud":
+				return child
+		node = node.get_parent()
+	return null

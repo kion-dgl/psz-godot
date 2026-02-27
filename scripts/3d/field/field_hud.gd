@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## Field HUD — shows player stats (HP/PP bars, level, name) top-left,
-## meseta below, quest log bottom-left, and hosts the room minimap (always visible).
+## meseta below, action log bottom-left, and hosts the room minimap (always visible).
 
 const MARGIN := 12.0
 
@@ -46,6 +46,11 @@ func _on_stats_changed(_value: int) -> void:
 
 func _on_meseta_changed(_value: int) -> void:
 	_meseta_label.queue_redraw()
+
+
+## Log companion speech to the action log.
+func log_speech(speaker: String, text: String) -> void:
+	_quest_log.add_speech_entry(speaker, text)
 
 
 # ── Stats Panel (top-left) ───────────────────────────────────────────────────
@@ -179,33 +184,77 @@ class _MesetaLabel extends Control:
 		return result
 
 
-# ── Quest Log (bottom-left) ─────────────────────────────────────────────────
+# ── Action Log (bottom-left, fixed box with scroll) ─────────────────────────
 
 class _QuestLogPanel extends Control:
-	const PANEL_W := 280.0
-	const LINE_H := 16.0
-	const PAD := 8.0
+	const PANEL_W := 300.0
+	const PANEL_H := 150.0
+	const PAD := 6.0
 	const FONT_SIZE := 11
-	const MAX_ENTRIES := 6
-	const FADE_TIME := 3.0  # seconds before entries start fading
-	const FADE_DURATION := 1.5  # seconds to fully fade out
 
 	const BG_COLOR := Color(0.08, 0.08, 0.15, 0.55)
 	const BORDER_COLOR := Color(0.4, 0.4, 0.5, 0.3)
 	const TEXT_COLOR := Color(0.85, 0.85, 0.85)
 	const ITEM_COLOR := Color(1.0, 0.85, 0.2)
+	const MESETA_COLOR := Color(1.0, 0.75, 0.1)
 	const QUEST_COLOR := Color(0.4, 0.8, 1.0)
+	const SPEECH_COLOR := Color(0.85, 0.85, 0.85)
 	const COMPLETE_COLOR := Color(0.3, 1.0, 0.3)
 
-	var _entries: Array = []  # Array of {text, color, time}
+	var _scroll: ScrollContainer
+	var _vbox: VBoxContainer
+	var _prev_meseta: int = 0
+	var _panel_bg: PanelContainer
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
-		size = Vector2(PANEL_W, 200)
-		custom_minimum_size = size
+
+		# Fixed position: bottom-left
+		set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+		position = Vector2(MARGIN, 0)
+		offset_left = MARGIN
+		offset_bottom = -MARGIN
+		offset_top = -MARGIN - PANEL_H
+		offset_right = MARGIN + PANEL_W
+		size = Vector2(PANEL_W, PANEL_H)
+
+		# Background panel
+		_panel_bg = PanelContainer.new()
+		_panel_bg.mouse_filter = MOUSE_FILTER_IGNORE
+		_panel_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var style := StyleBoxFlat.new()
+		style.bg_color = BG_COLOR
+		style.border_color = BORDER_COLOR
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(4)
+		style.set_content_margin_all(PAD)
+		_panel_bg.add_theme_stylebox_override("panel", style)
+		add_child(_panel_bg)
+
+		# ScrollContainer — auto-scrolls to bottom
+		_scroll = ScrollContainer.new()
+		_scroll.mouse_filter = MOUSE_FILTER_IGNORE
+		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+		_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_panel_bg.add_child(_scroll)
+
+		# VBoxContainer holds the label entries
+		_vbox = VBoxContainer.new()
+		_vbox.mouse_filter = MOUSE_FILTER_IGNORE
+		_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_vbox.add_theme_constant_override("separation", 2)
+		_scroll.add_child(_vbox)
 
 		SessionManager.quest_item_collected.connect(_on_item_collected)
 		SessionManager.quest_completed.connect(_on_quest_completed)
+		GameState.meseta_changed.connect(_on_meseta_changed)
+		_prev_meseta = GameState.meseta
+
+		# Restore entries from previous rooms
+		for entry in SessionManager._action_log:
+			_add_label(str(entry.get("text", "")), entry.get("color", TEXT_COLOR))
+		_scroll_to_bottom.call_deferred()
 
 		# Log quest acceptance once per quest (not every room transition)
 		var objectives: Array = SessionManager.get_quest_objectives()
@@ -216,7 +265,6 @@ class _QuestLogPanel extends Control:
 			)
 
 	func _on_item_collected(item_id: String, new_count: int, target: int) -> void:
-		# Find the label for this item from objectives
 		var label := item_id
 		for obj in SessionManager.get_quest_objectives():
 			if str(obj.get("item_id", "")) == item_id:
@@ -227,53 +275,36 @@ class _QuestLogPanel extends Control:
 	func _on_quest_completed() -> void:
 		_add_entry("Quest complete!", COMPLETE_COLOR)
 
+	func _on_meseta_changed(new_amount: int) -> void:
+		var diff: int = new_amount - _prev_meseta
+		_prev_meseta = new_amount
+		if diff > 0:
+			_add_entry("Picked up %d meseta" % diff, MESETA_COLOR)
+
+	## Public: log companion speech to the action log.
+	func add_speech_entry(speaker: String, text: String) -> void:
+		_add_entry("%s: %s" % [speaker, text], SPEECH_COLOR)
+
+	## Public: log an arbitrary action.
+	func add_entry(text: String, color: Color = TEXT_COLOR) -> void:
+		_add_entry(text, color)
+
 	func _add_entry(text: String, color: Color) -> void:
-		_entries.append({"text": text, "color": color, "time": Time.get_ticks_msec() / 1000.0})
-		if _entries.size() > MAX_ENTRIES:
-			_entries.pop_front()
-		queue_redraw()
+		# Persist to SessionManager so entries survive room transitions
+		SessionManager._action_log.append({"text": text, "color": color})
+		_add_label(text, color)
+		_scroll_to_bottom.call_deferred()
 
-	func _process(_delta: float) -> void:
-		# Redraw periodically to update fade
-		if not _entries.is_empty():
-			queue_redraw()
+	func _add_label(text: String, color: Color) -> void:
+		var lbl := Label.new()
+		lbl.text = text
+		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lbl.add_theme_font_size_override("font_size", FONT_SIZE)
+		lbl.add_theme_color_override("font_color", color)
+		lbl.mouse_filter = MOUSE_FILTER_IGNORE
+		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_vbox.add_child(lbl)
 
-	func _draw() -> void:
-		if _entries.is_empty():
-			return
-
-		var font := ThemeDB.fallback_font
-		var now: float = Time.get_ticks_msec() / 1000.0
-		var vp_h: float = get_viewport_rect().size.y
-
-		# Filter out fully faded entries
-		var visible_entries: Array = []
-		for entry in _entries:
-			var age: float = now - float(entry["time"])
-			if age < FADE_TIME + FADE_DURATION:
-				visible_entries.append(entry)
-		_entries = visible_entries
-
-		if visible_entries.is_empty():
-			return
-
-		var panel_h: float = PAD * 2 + LINE_H * visible_entries.size()
-		position = Vector2(MARGIN, vp_h - MARGIN - panel_h)
-		size = Vector2(PANEL_W, panel_h)
-
-		# Background
-		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_W, panel_h)), BG_COLOR)
-		draw_rect(Rect2(Vector2.ZERO, Vector2(PANEL_W, panel_h)), BORDER_COLOR, false, 1.0)
-
-		var y := PAD + 11.0
-		for entry in visible_entries:
-			var age: float = now - float(entry["time"])
-			var alpha := 1.0
-			if age > FADE_TIME:
-				alpha = clampf(1.0 - (age - FADE_TIME) / FADE_DURATION, 0.0, 1.0)
-
-			var color: Color = entry["color"]
-			color.a = alpha
-			draw_string(font, Vector2(PAD, y), str(entry["text"]),
-				HORIZONTAL_ALIGNMENT_LEFT, PANEL_W - PAD * 2, FONT_SIZE, color)
-			y += LINE_H
+	func _scroll_to_bottom() -> void:
+		await get_tree().process_frame
+		_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)

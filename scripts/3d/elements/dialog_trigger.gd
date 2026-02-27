@@ -171,7 +171,7 @@ func _show_companion_page(pages: Array, index: int) -> void:
 	var text: String = str(page.get("text", ""))
 	var speaker: String = str(page.get("speaker", ""))
 	# Auto-advance: ~1 second per 12 characters, minimum 3 seconds
-	var duration: float = maxf(3.0, text.length() / 12.0)
+	var duration: float = maxf(3.0, text.length() / 20.0)
 	companion_node.show_speech(text, speaker, duration)
 
 	var next_idx := index + 1
