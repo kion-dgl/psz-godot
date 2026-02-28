@@ -209,14 +209,16 @@ function EnemyMarker({ obj, selected, onClick }: { obj: CellObject; selected: bo
 /** Fence marker — blue horizontal bar */
 function FenceMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
   const yRot = ((obj.rotation || 0) * Math.PI) / 180;
+  const sx = obj.scale_x ?? 1;
+  const w = 3 * sx;
   return (
     <group position={obj.position} rotation={[0, yRot, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
       <mesh position={[0, 1, 0]}>
-        <boxGeometry args={[3, 2, 0.3]} />
+        <boxGeometry args={[w, 2, 0.3]} />
         <meshBasicMaterial color="#4488cc" transparent opacity={selected ? 0.7 : 0.4} />
       </mesh>
       <lineSegments position={[0, 1, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(3, 2, 0.3)]} />
+        <edgesGeometry args={[new THREE.BoxGeometry(w, 2, 0.3)]} />
         <lineBasicMaterial color={selected ? '#ffffff' : '#4488cc'} />
       </lineSegments>
     </group>
@@ -1284,23 +1286,43 @@ function CellContentInspector({
                     </div>
                   )}
 
-                  {/* Rotation for fences */}
+                  {/* Rotation and scale for fences */}
                   {isSel && obj.type === 'fence' && (
-                    <div style={{ marginTop: '4px', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '10px', color: '#888' }}>Rot:</span>
-                      {[0, 90].map(deg => (
-                        <button
-                          key={deg}
-                          onClick={(e) => { e.stopPropagation(); onUpdateObject(obj.id, { rotation: deg || undefined }); }}
-                          style={{
-                            ...btnStyle, padding: '2px 6px', fontSize: '9px',
-                            background: (obj.rotation || 0) === deg ? '#4488cc' : '#333',
+                    <>
+                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Rot:</span>
+                        {[0, 90].map(deg => (
+                          <button
+                            key={deg}
+                            onClick={(e) => { e.stopPropagation(); onUpdateObject(obj.id, { rotation: deg || undefined }); }}
+                            style={{
+                              ...btnStyle, padding: '2px 6px', fontSize: '9px',
+                              background: (obj.rotation || 0) === deg ? '#4488cc' : '#333',
+                            }}
+                          >
+                            {deg}&deg;
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Scale X:</span>
+                        <input
+                          type="number"
+                          step={0.5}
+                          min={0.5}
+                          value={obj.scale_x ?? 1}
+                          onChange={(e) => {
+                            const v = parseFloat(e.target.value);
+                            if (!isNaN(v) && v > 0) onUpdateObject(obj.id, { scale_x: v === 1 ? undefined : v });
                           }}
-                        >
-                          {deg}&deg;
-                        </button>
-                      ))}
-                    </div>
+                          style={{
+                            width: '60px', padding: '2px 4px', background: '#111',
+                            border: '1px solid #444', borderRadius: '3px',
+                            color: '#fff', fontSize: '10px',
+                          }}
+                        />
+                      </div>
+                    </>
                   )}
 
                   {/* Story prop editor */}

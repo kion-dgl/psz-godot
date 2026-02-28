@@ -1547,7 +1547,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 					_wave_enemy_data[wave].append(obj)
 			"fence":
 				var link_id: String = str(obj.get("link_id", ""))
-				_spawn_fence(pos, obj_rot, link_id)
+				var f_scale_x: float = float(obj.get("scale_x", 1.0))
+				_spawn_fence(pos, obj_rot, link_id, f_scale_x)
 			"step_switch":
 				var link_id: String = str(obj.get("link_id", ""))
 				_spawn_switch(pos, link_id)
@@ -1627,7 +1628,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_enemy(pos, str(obj.get("enemy_id", "lizard")), state)
 			"fence":
 				var link_id: String = str(obj.get("link_id", ""))
-				_spawn_fence(pos, obj_rot, link_id)
+				var r_scale_x: float = float(obj.get("scale_x", 1.0))
+				_spawn_fence(pos, obj_rot, link_id, r_scale_x)
 				# Restore fence state if disabled
 				if state == "disabled" and not _fence_links.is_empty():
 					for lid in _fence_links:
@@ -1954,11 +1956,14 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 	print("[CellObjects] Enemy '%s' at %s" % [enemy_id, pos])
 
 
-func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String) -> void:
+func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: float = 1.0) -> void:
 	var fence := FenceScript.new()
 	_map_root.add_child(fence)
 	fence.position = pos
 	fence.rotation.y = deg_to_rad(rotation_deg)
+	if scale_x != 1.0:
+		fence.scale.x = scale_x
+		fence.collision_size.x = fence.collision_size.x * scale_x
 	_fixup_element_materials(fence)
 	# Re-run laser material setup after fixup replaced materials (storybook pattern)
 	fence._setup_laser_materials()
