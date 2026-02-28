@@ -169,6 +169,8 @@ export interface EditorGridCell {
   notes?: string;
   /** Authored 3D position for key pickup [x, y, z] in stage-local coords */
   keyPosition?: [number, number, number];
+  /** Authored 3D position for key drop on room clear [x, y, z] in stage-local coords */
+  keyDropPosition?: [number, number, number];
   /** Placed objects (boxes, enemies, fences, switches) */
   objects?: CellObject[];
 }
@@ -192,6 +194,8 @@ export interface QuestSection {
   startPos: string | null;
   endPos: string | null;
   keyLinks: Record<string, string>;
+  /** Cells that drop a key on room clear: dropCellPos → gatePos */
+  keyDropLinks: Record<string, string>;
   /** Direction player enters from (transition/boss sections) */
   entryDirection?: Direction;
   /** Direction player exits to (transition/boss sections) */
@@ -220,6 +224,8 @@ export interface QuestProject {
   startPos: string | null;
   endPos: string | null;
   keyLinks: Record<string, string>;
+  /** Cells that drop a key on room clear: dropCellPos → gatePos */
+  keyDropLinks: Record<string, string>;
   sections?: QuestSection[];
   metadata: QuestMetadata;
   cellContents: Record<string, StageContent>;
@@ -311,6 +317,7 @@ export function createDefaultProject(id?: string): QuestProject {
     startPos: null,
     endPos: null,
     keyLinks: {},
+    keyDropLinks: {},
     metadata: {
       questName: '',
       description: '',
@@ -334,6 +341,7 @@ export function getProjectSections(project: QuestProject): QuestSection[] {
     startPos: project.startPos,
     endPos: project.endPos,
     keyLinks: project.keyLinks,
+    keyDropLinks: project.keyDropLinks || {},
   }];
 }
 
@@ -351,6 +359,7 @@ export function createSection(type: SectionType, variant: string, gridSize?: num
     startPos: null,
     endPos: null,
     keyLinks: {},
+    keyDropLinks: {},
   };
 }
 

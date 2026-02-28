@@ -1128,11 +1128,49 @@ func _create_key_pickup(key_for_cell: String) -> void:
 		key_for_cell, key_pos, key_item_id])
 
 
+func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
+	var key_item_id := "key_%s" % target_cell.replace(",", "_")
+	var key := KeyPickupScript.new()
+	key.key_id = key_item_id
+	key.name = "KeyDrop_%s" % target_cell
+
+	# Place key at authored position from quest editor, or fall back to room center
+	var key_pos := Vector3.ZERO
+	var authored_pos: Array = _current_cell.get("key_drop_position", [])
+	if authored_pos.size() == 3:
+		key_pos = Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
+	else:
+		var portal_positions: Array[Vector3] = []
+		for dir in _portal_data:
+			if dir != "default":
+				portal_positions.append(_portal_data[dir]["spawn_pos"])
+		if portal_positions.size() >= 2:
+			var sum := Vector3.ZERO
+			for p in portal_positions:
+				sum += p
+			key_pos = sum / float(portal_positions.size())
+		elif portal_positions.size() == 1:
+			key_pos = portal_positions[0]
+		key_pos.y = 0.5
+
+	_map_root.add_child(key)
+	key.position = key_pos
+
+	key.interacted.connect(func(_player: Node3D) -> void:
+		_keys_collected[tracking_key] = true
+		_update_key_hud()
+	)
+	print("[ValleyField] Key dropped on room clear for gate %s at %s (id=%s)" % [
+		target_cell, key_pos, key_item_id])
+
+
 func _setup_key_hud(cells: Array) -> void:
-	# Count total keys in this field section
+	# Count total keys in this field section (static pickups + room-clear drops)
 	_total_keys_in_field = 0
 	for cell in cells:
 		if cell.get("has_key", false):
+			_total_keys_in_field += 1
+		if not str(cell.get("key_drop", "")).is_empty():
 			_total_keys_in_field += 1
 	_update_key_hud()
 
@@ -1280,6 +1318,7 @@ func _spawn_field_elements() -> void:
 			var gate_rot: Vector3 = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 			var kg := KeyGateScript.new()
 			kg.required_key_id = key_item_id
+			kg.required_keys = int(_current_cell.get("required_keys", 1))
 			kg.name = "KeyGate_%s" % dir
 			add_child(kg)
 			kg.global_position = gate_pos
@@ -2248,6 +2287,14 @@ func _check_room_clear() -> void:
 			if _room_minimap and not dir.is_empty():
 				_room_minimap.set_gate_locked(dir, false)
 	_room_gates_locked.clear()
+
+	# Drop key on room clear if configured
+	var key_drop_target: String = str(_current_cell.get("key_drop", ""))
+	var current_pos: String = str(_current_cell.get("pos", ""))
+	if not key_drop_target.is_empty():
+		var drop_tracking_key := current_pos + ">" + key_drop_target
+		if not _keys_collected.has(drop_tracking_key):
+			_drop_key_on_clear(key_drop_target, drop_tracking_key)
 
 	# Fire room_clear dialog triggers
 	for rc_trigger in _room_triggers:

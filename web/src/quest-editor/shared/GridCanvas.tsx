@@ -179,6 +179,8 @@ function CellDisplay({
   const isEnd = project.endPos === pos;
   const hasKey = Object.values(project.keyLinks).includes(pos);
   const isKeyGate = pos in project.keyLinks;
+  const keyDropLinks = project.keyDropLinks || {};
+  const isKeyDrop = pos in keyDropLinks;
 
   return (
     <div
@@ -223,9 +225,19 @@ function CellDisplay({
           borderRadius: '50%', border: '2px solid #fff',
         }} title="Key" />
       )}
-      {isKeyGate && (
+      {isKeyDrop && (
         <div style={{
           position: 'absolute', top: '3px', right: hasKey ? '22px' : '3px',
+          width: '14px', height: '14px', background: '#ddaa33',
+          borderRadius: '50%', border: '2px solid #fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '8px', color: '#fff', fontWeight: 700,
+        }} title="Key Drop">D</div>
+      )}
+      {isKeyGate && (
+        <div style={{
+          position: 'absolute', top: '3px',
+          right: (hasKey || isKeyDrop) ? ((hasKey ? 19 : 0) + (isKeyDrop ? 19 : 0) + 3) + 'px' : '3px',
           width: '14px', height: '14px', background: '#ff66ff',
           borderRadius: '2px', border: '2px solid #fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',

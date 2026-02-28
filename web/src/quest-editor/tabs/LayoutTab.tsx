@@ -191,6 +191,30 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
     });
   }, [onUpdateProject]);
 
+  // Toggle key-drop on cell — marks this cell as dropping a key on room clear
+  // If gatePos is provided, set/update the target gate
+  const handleToggleKeyDrop = useCallback((pos: string, gatePos?: string) => {
+    onUpdateProject(prev => {
+      const newDropLinks = { ...prev.keyDropLinks || {} };
+
+      // If gatePos provided, set or update the target
+      if (gatePos !== undefined) {
+        newDropLinks[pos] = gatePos;
+        return { ...prev, keyDropLinks: newDropLinks };
+      }
+
+      // Toggle: if already a drop, remove; otherwise add with empty target
+      if (pos in newDropLinks) {
+        delete newDropLinks[pos];
+      } else {
+        // Default to first gate if one exists, otherwise empty (user fills in)
+        const gates = Object.keys(prev.keyLinks);
+        newDropLinks[pos] = gates.length > 0 ? gates[0] : '';
+      }
+      return { ...prev, keyDropLinks: newDropLinks };
+    });
+  }, [onUpdateProject]);
+
   // Toggle key-gate on cell
   const handleToggleKeyGate = useCallback((pos: string) => {
     onUpdateProject(prev => {
@@ -232,10 +256,18 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
       for (const [gate, key] of Object.entries(newLinks)) {
         if (key === pos) delete newLinks[gate];
       }
+      // Clean up keyDropLinks
+      const newDropLinks = { ...prev.keyDropLinks || {} };
+      delete newDropLinks[pos]; // Remove if this cell is a drop source
+      // Also remove any drops targeting this cell as their gate
+      for (const [dropCell, gate] of Object.entries(newDropLinks)) {
+        if (gate === pos) delete newDropLinks[dropCell];
+      }
       return {
         ...prev,
         cells: newCells,
         keyLinks: newLinks,
+        keyDropLinks: newDropLinks,
         startPos: prev.startPos === pos ? null : prev.startPos,
         endPos: prev.endPos === pos ? null : prev.endPos,
       };
@@ -281,6 +313,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
       startPos: null,
       endPos: null,
       keyLinks: {},
+      keyDropLinks: {},
     }));
     setSelectedCell(null);
   }, [onUpdateProject]);
@@ -418,6 +451,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
             onSetStart={handleSetStart}
             onSetEnd={handleSetEnd}
             onToggleKey={handleToggleKey}
+            onToggleKeyDrop={handleToggleKeyDrop}
             onToggleKeyGate={handleToggleKeyGate}
             onSetLockedGate={handleSetLockedGate}
             onClearCell={handleClearCell}
