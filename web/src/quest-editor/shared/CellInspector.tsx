@@ -14,7 +14,7 @@ interface CellInspectorProps {
   onUpdateCell: (pos: string, updates: Partial<EditorGridCell>) => void;
   onSetStart: (pos: string) => void;
   onSetEnd: (pos: string) => void;
-  onToggleKey: (pos: string) => void;
+  onToggleKey: (pos: string, gatePos?: string) => void;
   onToggleKeyDrop: (pos: string, gatePos?: string) => void;
   onToggleKeyGate: (pos: string) => void;
   onSetLockedGate: (pos: string, dir: Direction | undefined) => void;
@@ -27,6 +27,15 @@ interface CellInspectorProps {
 }
 
 
+
+/** Format a gate cell as a readable label: "1,2 (xb2 south)" */
+function gateLabel(pos: string, project: QuestProject): string {
+  const cell = project.cells[pos];
+  if (!cell) return pos;
+  const suffix = getStageSuffix(cell.stageName);
+  const dir = cell.lockedGate ? ` ${cell.lockedGate}` : '';
+  return `${pos} (${suffix}${dir})`;
+}
 
 const labelStyle: React.CSSProperties = {
   fontSize: '11px',
@@ -331,7 +340,9 @@ export default function CellInspector({
                 Locked: {cell.lockedGate ? `${cell.lockedGate} gate` : 'click a gate above to lock'}
               </div>
               <div style={{ fontSize: '11px', color: '#cc88ff', marginTop: '2px' }}>
-                Key at: {project.keyLinks[selectedCell] || 'none'}
+                Key at: {project.keyLinks[selectedCell]
+                  ? (() => { const kc = project.cells[project.keyLinks[selectedCell]]; return kc ? `${project.keyLinks[selectedCell]} (${getStageSuffix(kc.stageName)})` : project.keyLinks[selectedCell]; })()
+                  : 'none'}
               </div>
               <div style={{ fontSize: '11px', color: '#ddaa33', marginTop: '2px' }}>
                 {totalKeys} key{totalKeys !== 1 ? 's' : ''} required ({staticKeys} static + {drops} drop{drops !== 1 ? 's' : ''})
@@ -339,11 +350,32 @@ export default function CellInspector({
             </>
           );
         })()}
-        {hasKey && (
-          <div style={{ fontSize: '11px', color: '#ff88aa', marginTop: '4px' }}>
-            Unlocks: {Object.entries(project.keyLinks).find(([_, v]) => v === selectedCell)?.[0] || 'unlinked'}
-          </div>
-        )}
+        {hasKey && (() => {
+          const allGates = Object.keys(project.keyLinks);
+          const linkedGate = Object.entries(project.keyLinks).find(([_, v]) => v === selectedCell)?.[0] || '';
+          return (
+            <div style={{ fontSize: '11px', color: '#ff88aa', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Unlocks:
+              {allGates.length > 0 ? (
+                <select
+                  value={linkedGate}
+                  onChange={(e) => onToggleKey(selectedCell, e.target.value)}
+                  style={{
+                    background: '#2a2a4a', color: '#ff88aa', border: '1px solid #444',
+                    borderRadius: '3px', fontSize: '11px', padding: '2px 4px', flex: 1,
+                  }}
+                >
+                  {!linkedGate && <option value="">-- select gate --</option>}
+                  {allGates.map(g => (
+                    <option key={g} value={g}>{gateLabel(g, project)}</option>
+                  ))}
+                </select>
+              ) : (
+                <span style={{ color: '#888' }}>no gates</span>
+              )}
+            </div>
+          );
+        })()}
         {isKeyDrop && (() => {
           const allGates = Object.keys(project.keyLinks);
           return (
@@ -360,11 +392,9 @@ export default function CellInspector({
                     }}
                   >
                     {!keyDropGate && <option value="">-- select gate --</option>}
-                    {allGates.map(g => {
-                      const gateCell = project.cells[g];
-                      const label = gateCell ? `${g} (${getStageSuffix(gateCell.stageName)})` : g;
-                      return <option key={g} value={g}>{label}</option>;
-                    })}
+                    {allGates.map(g => (
+                      <option key={g} value={g}>{gateLabel(g, project)}</option>
+                    ))}
                   </select>
                 ) : (
                   <span style={{ color: '#888' }}>no gates — add a gate first</span>
