@@ -893,6 +893,9 @@ function CellContentInspector({
   onTogglePlaceKey,
   onClearKeyPosition,
   onSetKeyPosition,
+  placingKeyDrop,
+  onTogglePlaceKeyDrop,
+  onClearKeyDropPosition,
   placingObject,
   onSetPlacingObject,
   selectedObjectId,
@@ -908,6 +911,9 @@ function CellContentInspector({
   onTogglePlaceKey: () => void;
   onClearKeyPosition: () => void;
   onSetKeyPosition: (pos: [number, number, number]) => void;
+  placingKeyDrop: boolean;
+  onTogglePlaceKeyDrop: () => void;
+  onClearKeyDropPosition: () => void;
   placingObject: CellObjectType | null;
   onSetPlacingObject: (type: CellObjectType | null) => void;
   selectedObjectId: string | null;
@@ -933,7 +939,9 @@ function CellContentInspector({
   const isEnd = project.endPos === selectedCell;
   const hasKey = Object.values(project.keyLinks).includes(selectedCell);
   const isKeyGate = selectedCell in project.keyLinks;
+  const isKeyDrop = selectedCell in (project.keyDropLinks || {});
   const keyPos = cell.keyPosition;
+  const keyDropPos = cell.keyDropPosition;
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
@@ -949,6 +957,7 @@ function CellContentInspector({
           {isStart && <span style={badgeStyle('#66aaff')}>START</span>}
           {isEnd && <span style={badgeStyle('#ffaa66')}>END</span>}
           {hasKey && <span style={badgeStyle('#ff66aa')}>KEY</span>}
+          {isKeyDrop && <span style={badgeStyle('#ddaa33')}>DROP</span>}
           {isKeyGate && <span style={badgeStyle('#ff66ff')}>GATE</span>}
         </div>
       </div>
@@ -1038,6 +1047,65 @@ function CellContentInspector({
           )}
           <div style={{ fontSize: '10px', color: '#888', marginTop: '6px' }}>
             Unlocks: {Object.entries(project.keyLinks).find(([_, v]) => v === selectedCell)?.[0] || 'unlinked'}
+          </div>
+        </div>
+      )}
+
+      {/* Key drop position placement */}
+      {isKeyDrop && (
+        <div style={sectionStyle}>
+          <div style={labelStyle}>Key Drop Position</div>
+          {keyDropPos ? (
+            <>
+              <div style={{
+                padding: '8px',
+                background: '#ddaa3322',
+                border: '1px solid #ddaa33',
+                borderRadius: '4px',
+                fontSize: '12px',
+                color: '#ddaa33',
+                fontFamily: 'monospace',
+                marginBottom: '8px',
+              }}>
+                [{keyDropPos[0]}, {keyDropPos[1]}, {keyDropPos[2]}]
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={onTogglePlaceKeyDrop}
+                  style={{
+                    ...btnStyle,
+                    background: placingKeyDrop ? '#ddaa33' : '#555588',
+                  }}
+                >
+                  {placingKeyDrop ? 'Placing...' : 'Reposition'}
+                </button>
+                <button
+                  onClick={onClearKeyDropPosition}
+                  style={{ ...btnStyle, background: '#884444' }}
+                >
+                  Clear
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '12px', color: '#ddaa33', marginBottom: '8px' }}>
+                No position set. Key will drop at room center.
+              </div>
+              <button
+                onClick={onTogglePlaceKeyDrop}
+                style={{
+                  ...btnStyle,
+                  background: placingKeyDrop ? '#ddaa33' : '#448844',
+                  width: '100%',
+                }}
+              >
+                {placingKeyDrop ? 'Click 3D view to place...' : 'Place Key Drop'}
+              </button>
+            </>
+          )}
+          <div style={{ fontSize: '10px', color: '#888', marginTop: '6px' }}>
+            Drops key for gate: {(project.keyDropLinks || {})[selectedCell] || 'not set'}
           </div>
         </div>
       )}
@@ -1718,6 +1786,7 @@ function badgeStyle(color: string): React.CSSProperties {
 export default function ContentTab({ project, onUpdateProject }: ContentTabProps) {
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [placingKey, setPlacingKey] = useState(false);
+  const [placingKeyDrop, setPlacingKeyDrop] = useState(false);
   const [placingObject, setPlacingObject] = useState<CellObjectType | null>(null);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [repositioningObjectId, setRepositioningObjectId] = useState<string | null>(null);
@@ -1725,6 +1794,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
   const cell = selectedCell ? project.cells[selectedCell] : null;
   const config = cell ? getStageConfig(cell.stageName) : null;
   const hasKey = selectedCell ? Object.values(project.keyLinks).includes(selectedCell) : false;
+  const isKeyDrop = selectedCell ? selectedCell in (project.keyDropLinks || {}) : false;
 
   const handlePlaceKey = useCallback((pos: [number, number, number]) => {
     if (!selectedCell) return;
@@ -1752,6 +1822,38 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
 
   const handleTogglePlaceKey = useCallback(() => {
     setPlacingKey(p => !p);
+    setPlacingKeyDrop(false);
+    setPlacingObject(null);
+    setRepositioningObjectId(null);
+  }, []);
+
+  const handlePlaceKeyDrop = useCallback((pos: [number, number, number]) => {
+    if (!selectedCell) return;
+    onUpdateProject(prev => ({
+      ...prev,
+      cells: {
+        ...prev.cells,
+        [selectedCell]: { ...prev.cells[selectedCell], keyDropPosition: pos },
+      },
+    }));
+    setPlacingKeyDrop(false);
+  }, [selectedCell, onUpdateProject]);
+
+  const handleClearKeyDropPosition = useCallback(() => {
+    if (!selectedCell) return;
+    onUpdateProject(prev => {
+      const updated = { ...prev.cells[selectedCell] };
+      delete updated.keyDropPosition;
+      return {
+        ...prev,
+        cells: { ...prev.cells, [selectedCell]: updated },
+      };
+    });
+  }, [selectedCell, onUpdateProject]);
+
+  const handleTogglePlaceKeyDrop = useCallback(() => {
+    setPlacingKeyDrop(p => !p);
+    setPlacingKey(false);
     setPlacingObject(null);
     setRepositioningObjectId(null);
   }, []);
@@ -1759,12 +1861,14 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
   const handleSetPlacingObject = useCallback((type: CellObjectType | null) => {
     setPlacingObject(type);
     setPlacingKey(false);
+    setPlacingKeyDrop(false);
     setRepositioningObjectId(null);
   }, []);
 
   const handleToggleRepositionObject = useCallback((objId: string) => {
     setRepositioningObjectId(prev => prev === objId ? null : objId);
     setPlacingKey(false);
+    setPlacingKeyDrop(false);
     setPlacingObject(null);
   }, []);
 
@@ -1944,6 +2048,28 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
                 <KeyMarker position={cell.keyPosition} />
               )}
 
+              {/* Key drop marker (orange, shows authored drop position) */}
+              {isKeyDrop && cell.keyDropPosition && !placingKeyDrop && (
+                <group position={cell.keyDropPosition}>
+                  <mesh>
+                    <sphereGeometry args={[1.0, 16, 16]} />
+                    <meshBasicMaterial color="#ddaa33" transparent opacity={0.8} />
+                  </mesh>
+                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -cell.keyDropPosition[1] + 0.05, 0]}>
+                    <ringGeometry args={[1.2, 1.5, 32]} />
+                    <meshBasicMaterial color="#ddaa33" side={2} transparent opacity={0.5} />
+                  </mesh>
+                </group>
+              )}
+
+              {/* Key drop placement mode */}
+              {placingKeyDrop && (
+                <>
+                  <KeyPlacementCursor />
+                  <GroundClickPlane onPlace={handlePlaceKeyDrop} />
+                </>
+              )}
+
               {/* Object markers */}
               {cell.objects?.map(obj => (
                 <ObjectMarker
@@ -2004,6 +2130,19 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
               </div>
             )}
 
+            {placingKeyDrop && (
+              <div style={{
+                position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+                background: '#ddaa33', padding: '8px 20px',
+                borderRadius: '20px', fontSize: '13px', color: '#fff', fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onClick={() => setPlacingKeyDrop(false)}
+              >
+                Click in 3D view to place key drop | ESC to cancel
+              </div>
+            )}
+
             {placingObject && (
               <div style={{
                 position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
@@ -2057,6 +2196,9 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
             onTogglePlaceKey={handleTogglePlaceKey}
             onClearKeyPosition={handleClearKeyPosition}
             onSetKeyPosition={handlePlaceKey}
+            placingKeyDrop={placingKeyDrop}
+            onTogglePlaceKeyDrop={handleTogglePlaceKeyDrop}
+            onClearKeyDropPosition={handleClearKeyDropPosition}
             placingObject={placingObject}
             onSetPlacingObject={handleSetPlacingObject}
             selectedObjectId={selectedObjectId}
