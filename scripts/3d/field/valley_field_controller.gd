@@ -82,6 +82,7 @@ var _room_npcs: Array = []     # FieldNpc nodes in current room
 var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
+var _warp_edge_locked: Array = []  # AreaWarp + exit trigger locked until enemies cleared
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
@@ -2158,6 +2159,28 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 
 
 func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, target_cell: String, target_position: Vector3, portal_dir: String = "", label_text: String = "") -> void:
+	# Auto-resolve target when not explicitly set
+	if target_cell.is_empty() and not portal_dir.is_empty():
+		var sections: Array = SessionManager.get_field_sections()
+		var section_idx: int = SessionManager.get_current_section()
+		var section: Dictionary = sections[section_idx] if section_idx < sections.size() else {}
+		var entry_dir: String = str(section.get("entry_direction", ""))
+		var exit_dir: String = str(section.get("exit_direction", ""))
+
+		if portal_dir == entry_dir and section_idx > 0:
+			# Going back to previous section's end cell
+			var prev_section: Dictionary = sections[section_idx - 1]
+			target_section = section_idx - 1
+			target_cell = str(prev_section.get("end_pos", ""))
+			# Spawn at the warp_edge portal spawn point in the target cell
+			print("[CellObjects] AreaWarp auto-resolved → prev section %d, cell %s" % [target_section, target_cell])
+		elif portal_dir == exit_dir and section_idx + 1 < sections.size():
+			# Going forward to next section's start cell
+			var next_section: Dictionary = sections[section_idx + 1]
+			target_section = section_idx + 1
+			target_cell = str(next_section.get("start_pos", ""))
+			print("[CellObjects] AreaWarp auto-resolved → next section %d, cell %s" % [target_section, target_cell])
+
 	# Place the gate model at the gate position (not the trigger position)
 	var gate_pos := pos
 	var spawn_pos := pos
@@ -2266,6 +2289,37 @@ func _lock_gates_for_enemies() -> void:
 					print("[CellObjects] Gate %s locked (enemies present)" % dir)
 					break
 
+	# Lock warp_edge area warp + exit trigger until room clear
+	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
+	if not warp_edge.is_empty():
+		for child in get_children():
+			if child is AreaWarp:
+				child.element_state = "locked"
+				child._apply_state()
+				_warp_edge_locked.append(child)
+				# Add physical blocker
+				var blocker := StaticBody3D.new()
+				blocker.name = "WarpEdgeBlocker"
+				blocker.collision_layer = 1  # Environment layer
+				var bshape := CollisionShape3D.new()
+				var bbox := BoxShape3D.new()
+				bbox.size = Vector3(6, 4, 1.5)
+				bshape.shape = bbox
+				bshape.position.y = 2.0
+				blocker.add_child(bshape)
+				add_child(blocker)
+				blocker.global_position = child.global_position
+				blocker.global_rotation = child.global_rotation
+				_warp_edge_locked.append(blocker)
+				print("[CellObjects] AreaWarp locked (enemies present)")
+		# Disable exit trigger
+		var exit_trigger := _find_child_by_name(self, "ExitTrigger") as Area3D
+		if exit_trigger:
+			exit_trigger.monitoring = false
+			_warp_edge_locked.append(exit_trigger)
+		if _room_minimap:
+			_room_minimap.set_gate_locked(warp_edge, true)
+
 
 ## Called when an enemy is defeated — check if all cleared.
 func _check_room_clear() -> void:
@@ -2292,6 +2346,22 @@ func _check_room_clear() -> void:
 			if _room_minimap and not dir.is_empty():
 				_room_minimap.set_gate_locked(dir, false)
 	_room_gates_locked.clear()
+
+	# Unlock warp_edge area warp + exit trigger
+	for node in _warp_edge_locked:
+		if is_instance_valid(node):
+			if node is AreaWarp:
+				node.element_state = "open"
+				node._apply_state()
+				print("[CellObjects] AreaWarp unlocked (room cleared)")
+			elif node is StaticBody3D:
+				node.queue_free()
+			elif node is Area3D:
+				node.monitoring = true
+	var warp_e: String = str(_current_cell.get("warp_edge", ""))
+	if not warp_e.is_empty() and _room_minimap:
+		_room_minimap.set_gate_locked(warp_e, false)
+	_warp_edge_locked.clear()
 
 	# Drop key on room clear if configured
 	var key_drop_target: String = str(_current_cell.get("key_drop", ""))
