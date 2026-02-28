@@ -20,6 +20,7 @@ interface CellInspectorProps {
   onSetLockedGate: (pos: string, dir: Direction | undefined) => void;
   onClearCell: (pos: string) => void;
   onChangeStage: (pos: string) => void;
+  onSwapStart: (pos: string) => void;
   sectionType?: SectionType;
   entryDirection?: Direction;
   exitDirection?: Direction;
@@ -61,6 +62,7 @@ export default function CellInspector({
   onSetLockedGate,
   onClearCell,
   onChangeStage,
+  onSwapStart,
   sectionType,
   entryDirection,
   exitDirection,
@@ -428,7 +430,7 @@ export default function CellInspector({
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: '8px' }}>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <button
           onClick={() => onChangeStage(selectedCell)}
           style={{
@@ -443,6 +445,21 @@ export default function CellInspector({
           }}
         >
           Change Stage
+        </button>
+        <button
+          onClick={() => onSwapStart(selectedCell)}
+          style={{
+            flex: 1,
+            padding: '8px',
+            background: '#886622',
+            border: 'none',
+            borderRadius: '4px',
+            color: '#fff',
+            fontSize: '12px',
+            cursor: 'pointer',
+          }}
+        >
+          Swap
         </button>
         <button
           onClick={() => onClearCell(selectedCell)}
