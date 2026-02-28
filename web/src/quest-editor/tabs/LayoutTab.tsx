@@ -169,18 +169,34 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
     }));
   }, [onUpdateProject]);
 
-  // Toggle key on cell — links this cell as key holder for an unlinked gate
-  const handleToggleKey = useCallback((pos: string) => {
+  // Toggle key on cell — links this cell as key holder for a gate
+  // If gatePos is provided, assign/reassign to that specific gate
+  const handleToggleKey = useCallback((pos: string, gatePos?: string) => {
     onUpdateProject(prev => {
       const newLinks = { ...prev.keyLinks };
-      // If this cell is already a key location, remove the link
+
+      // Remove existing link from this cell (if any)
       for (const [gate, key] of Object.entries(newLinks)) {
         if (key === pos) {
-          delete newLinks[gate];
-          return { ...prev, keyLinks: newLinks };
+          newLinks[gate] = '';
+          break;
         }
       }
-      // Find first unlinked key-gate and assign this cell as its key
+
+      // If gatePos provided, assign to that gate
+      if (gatePos !== undefined) {
+        if (gatePos in newLinks) {
+          newLinks[gatePos] = pos;
+        }
+        return { ...prev, keyLinks: newLinks };
+      }
+
+      // Toggle: if we just removed it, we're done
+      if (Object.values(prev.keyLinks).includes(pos)) {
+        return { ...prev, keyLinks: newLinks };
+      }
+
+      // Not yet a key — find first unlinked gate
       for (const [gate, key] of Object.entries(newLinks)) {
         if (!key) {
           newLinks[gate] = pos;
