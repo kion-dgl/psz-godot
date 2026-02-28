@@ -76,6 +76,8 @@ export interface CellObject {
   enemy_id?: string;
   /** Links switch-fence pairs with matching link_id */
   link_id?: string;
+  /** X-axis scale for type='fence' (default 1.0, stretches the fence width) */
+  scale_x?: number;
   /** Spawn wave number for type='enemy' (default 1) */
   wave?: number;
   /** Message text for type='message' */

@@ -341,6 +341,7 @@ async function exportSectionCells(
         if (obj.rotation) exported.rotation = obj.rotation;
         if (obj.enemy_id) exported.enemy_id = obj.enemy_id;
         if (obj.link_id) exported.link_id = obj.link_id;
+        if (obj.scale_x && obj.scale_x !== 1) exported.scale_x = obj.scale_x;
         if (obj.wave && obj.wave > 1) exported.wave = obj.wave;
         if (obj.text !== undefined && obj.text !== '') exported.text = obj.text;
         if (obj.prop_path) exported.prop_path = obj.prop_path;
@@ -536,6 +537,7 @@ export function importGodotSection(section: any): QuestSection {
         if (obj.rotation) co.rotation = obj.rotation;
         if (obj.enemy_id) co.enemy_id = obj.enemy_id;
         if (obj.link_id) co.link_id = obj.link_id;
+        if (obj.scale_x) co.scale_x = obj.scale_x;
         if (obj.wave) co.wave = obj.wave;
         if (obj.text) co.text = obj.text;
         if (obj.prop_path) co.prop_path = obj.prop_path;
