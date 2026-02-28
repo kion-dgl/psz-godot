@@ -257,6 +257,11 @@ func has_key(key_id: String) -> bool:
 	return _keys.has(key_id) and int(_keys[key_id]) > 0
 
 
+## Get key count for a specific key ID
+func get_key_count(key_id: String) -> int:
+	return int(_keys.get(key_id, 0))
+
+
 ## Remove a key (consumed when opening a gate)
 func remove_key(key_id: String) -> void:
 	if _keys.has(key_id):

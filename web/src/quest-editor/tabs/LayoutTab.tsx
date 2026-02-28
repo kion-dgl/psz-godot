@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import type { QuestProject, EditorGridCell, ValidationIssue, Direction, SectionType } from '../types';
+import type { QuestProject, EditorGridCell, ValidationIssue, Direction, SectionType, StageContent } from '../types';
 import { generateGrid, type GenParams } from '../shared/grid-generation';
 import GridCanvas from '../shared/GridCanvas';
 import CellInspector from '../shared/CellInspector';
@@ -99,6 +99,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
   const [showGenDialog, setShowGenDialog] = useState(false);
   const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([]);
   const [showMinimap, setShowMinimap] = useState(false);
+  const [swapSource, setSwapSource] = useState<string | null>(null);
   const [genParams, setGenParams] = useState<GenParams>({
     gridSize: project.gridSize,
     usedCells: 8,
@@ -291,6 +292,63 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
     setSelectedCell(null);
   }, [onUpdateProject]);
 
+  // Swap cells
+  const handleSwapStart = useCallback((pos: string) => {
+    setSwapSource(pos);
+  }, []);
+
+  const handleSwapCancel = useCallback(() => {
+    setSwapSource(null);
+  }, []);
+
+  const handleSwapExecute = useCallback((targetPos: string) => {
+    if (!swapSource || swapSource === targetPos) {
+      setSwapSource(null);
+      return;
+    }
+    const posA = swapSource;
+    const posB = targetPos;
+    const remapPos = (p: string) => p === posA ? posB : p === posB ? posA : p;
+
+    onUpdateProject(prev => {
+      // Swap cells
+      const newCells = { ...prev.cells };
+      const cellA = newCells[posA];
+      const cellB = newCells[posB];
+      if (cellA) newCells[posB] = cellA; else delete newCells[posB];
+      if (cellB) newCells[posA] = cellB; else delete newCells[posA];
+
+      // Remap keyLinks
+      const newKeyLinks: Record<string, string> = {};
+      for (const [gate, key] of Object.entries(prev.keyLinks)) {
+        newKeyLinks[remapPos(gate)] = key ? remapPos(key) : key;
+      }
+
+      // Remap keyDropLinks
+      const newKeyDropLinks: Record<string, string> = {};
+      for (const [drop, gate] of Object.entries(prev.keyDropLinks || {})) {
+        newKeyDropLinks[remapPos(drop)] = gate ? remapPos(gate) : gate;
+      }
+
+      // Remap cellContents
+      const newCellContents: Record<string, StageContent> = {};
+      for (const [pos, content] of Object.entries(prev.cellContents || {})) {
+        newCellContents[remapPos(pos)] = content;
+      }
+
+      return {
+        ...prev,
+        cells: newCells,
+        keyLinks: newKeyLinks,
+        keyDropLinks: newKeyDropLinks,
+        cellContents: newCellContents,
+        startPos: prev.startPos ? remapPos(prev.startPos) : prev.startPos,
+        endPos: prev.endPos ? remapPos(prev.endPos) : prev.endPos,
+      };
+    });
+    setSwapSource(null);
+  }, [swapSource, onUpdateProject]);
+
   // Change stage (reopen picker for occupied cell)
   const handleChangeStage = useCallback((pos: string) => {
     setPickerTarget(pos);
@@ -414,6 +472,9 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
             onCellSelect={handleCellSelect}
             showMinimap={showMinimap}
             areaKey={project.areaKey}
+            swapSource={swapSource}
+            onSwapExecute={handleSwapExecute}
+            onSwapCancel={handleSwapCancel}
           />
         </div>
 
@@ -472,6 +533,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
             onSetLockedGate={handleSetLockedGate}
             onClearCell={handleClearCell}
             onChangeStage={handleChangeStage}
+            onSwapStart={handleSwapStart}
             sectionType={sectionType}
             entryDirection={entryDirection}
             exitDirection={exitDirection}

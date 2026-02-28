@@ -25,18 +25,22 @@ export async function loadAllConfigs(): Promise<Record<string, StageConfig>> {
       const resp = await fetch(`${base}data/stage_configs/unified-stage-configs.json`);
       if (resp.ok) {
         const unified = await resp.json() as Record<string, {
-          portals?: { direction: string }[];
+          portals?: { direction: string; position?: number[] }[];
         }>;
         for (const [stageId, uCfg] of Object.entries(unified)) {
           const portals = uCfg.portals || [];
-          const dirs = portals.map(p => p.direction as Direction).filter(Boolean);
           merged[stageId] = {
             gridSize: 54,
             gridOffset: [0, 0],
-            gates: dirs.map(d => ({
-              edge: d as 'north' | 'south' | 'east' | 'west',
-              x: 0, z: 0, scale: 1, animated: true,
-            })),
+            gates: portals
+              .filter(p => p.direction)
+              .map(p => ({
+                edge: p.direction as 'north' | 'south' | 'east' | 'west',
+                x: p.position?.[0] ?? 0,
+                z: p.position?.[2] ?? 0,
+                scale: 1,
+                animated: true,
+              })),
             spawnPoints: [],
             triggers: [],
           };

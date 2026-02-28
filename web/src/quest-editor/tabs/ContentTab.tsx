@@ -8,7 +8,7 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect, Suspense } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Grid } from '@react-three/drei';
+import { OrbitControls, useGLTF, Grid, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { QuestProject, Direction, CellObject, CellObjectType } from '../types';
 import { CELL_OBJECT_COLORS, CELL_OBJECT_LABELS } from '../types';
@@ -107,11 +107,21 @@ function GateMarker({ gate, isLocked }: { gate: GateConfig; isLocked: boolean })
         <edgesGeometry args={[new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth)]} />
         <lineBasicMaterial color={color} />
       </lineSegments>
-      {/* Label */}
-      <mesh position={[0, boxHeight + 0.5, 0]}>
-        <sphereGeometry args={[0.3, 8, 8]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
+      {/* Direction label */}
+      <Html position={[0, boxHeight + 1, 0]} center style={{ pointerEvents: 'none' }}>
+        <div style={{
+          background: isLocked ? '#ff66ff' : '#006688',
+          color: '#fff',
+          padding: '2px 8px',
+          borderRadius: '4px',
+          fontSize: '12px',
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          border: `1px solid ${color}`,
+        }}>
+          {gate.edge.toUpperCase()}
+        </div>
+      </Html>
     </group>
   );
 }

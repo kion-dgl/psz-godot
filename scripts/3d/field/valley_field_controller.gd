@@ -358,7 +358,7 @@ func _ready() -> void:
 	_room_minimap = RoomMinimapScript.new()
 	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
 		_current_cell.get("connections", {}),
-		str(_current_cell.get("warp_edge", "")), _map_root, _rotation_deg)
+		str(_current_cell.get("warp_edge", "")), _map_root, _rotation_deg, _spawn_edge)
 	_field_hud.add_child(_room_minimap)
 	map_panel.top_offset = 200.0
 
