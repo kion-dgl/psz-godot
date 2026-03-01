@@ -290,6 +290,9 @@ func _ready() -> void:
 		var gp: Vector3 = _portal_data[entry_dir].get("gate_pos", spawn_pos)
 		spawn_rot = _facing_yaw(spawn_pos, gp)
 		spawn_reason = "opposite of warp_edge=%s, spawn at %s facing gate" % [warp_edge, entry_dir]
+		if _spawn_edge.is_empty():
+			_spawn_edge = entry_dir
+			spawn_edge = entry_dir
 	elif _portal_data.has("north"):
 		spawn_pos = _portal_data["north"]["spawn_pos"]
 		var gp: Vector3 = _portal_data["north"].get("gate_pos", spawn_pos)
