@@ -1618,7 +1618,8 @@
                 0,
                 -7.3
               ],
-              "rotation": 90
+              "rotation": 90,
+              "link_id": "c"
             },
             {
               "type": "step_switch",
@@ -1626,7 +1627,8 @@
                 -4.1,
                 0,
                 -18.4
-              ]
+              ],
+              "link_id": "c"
             },
             {
               "type": "enemy",
