@@ -82,6 +82,7 @@ var _room_npcs: Array = []     # FieldNpc nodes in current room
 var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
+var _warp_edge_locked: Array = []  # AreaWarp + exit trigger locked until enemies cleared
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
@@ -97,10 +98,12 @@ var _show_triggers := false
 var _show_gate_markers := false
 var _show_floor_collision := false
 var _show_spawn_points := false
+var _show_all_collision := false
 var _debug_trigger_meshes: Array = []
 var _debug_gate_meshes: Array = []
 var _debug_collision_meshes: Array = []
 var _debug_spawn_meshes: Array = []
+var _debug_all_collision_meshes: Array = []
 var _debug_panel: PanelContainer
 
 
@@ -257,6 +260,20 @@ func _ready() -> void:
 		if sp != Vector3.ZERO:
 			spawn_pos = _map_root.to_global(sp)
 			spawn_reason = "warp spawn_position %s" % sp
+			# Infer spawn_edge from closest portal when not explicitly set
+			if _spawn_edge.is_empty():
+				var best_dist := INF
+				for dir in _portal_data:
+					if dir == "default":
+						continue
+					var pd: Dictionary = _portal_data[dir]
+					var d: float = sp.distance_to(pd.get("spawn_pos", Vector3.INF))
+					if d < best_dist:
+						best_dist = d
+						_spawn_edge = dir
+				if not _spawn_edge.is_empty():
+					spawn_edge = _spawn_edge
+					print("[ValleyField] Inferred spawn_edge='%s' from spawn_position proximity (dist=%.2f)" % [_spawn_edge, best_dist])
 	if not spawn_reason.is_empty():
 		pass  # spawn_position already resolved above
 	elif not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
@@ -275,6 +292,9 @@ func _ready() -> void:
 		var gp: Vector3 = _portal_data[entry_dir].get("gate_pos", spawn_pos)
 		spawn_rot = _facing_yaw(spawn_pos, gp)
 		spawn_reason = "opposite of warp_edge=%s, spawn at %s facing gate" % [warp_edge, entry_dir]
+		if _spawn_edge.is_empty():
+			_spawn_edge = entry_dir
+			spawn_edge = entry_dir
 	elif _portal_data.has("north"):
 		spawn_pos = _portal_data["north"]["spawn_pos"]
 		var gp: Vector3 = _portal_data["north"].get("gate_pos", spawn_pos)
@@ -358,7 +378,7 @@ func _ready() -> void:
 	_room_minimap = RoomMinimapScript.new()
 	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
 		_current_cell.get("connections", {}),
-		str(_current_cell.get("warp_edge", "")), _map_root, _rotation_deg)
+		str(_current_cell.get("warp_edge", "")), _map_root, _rotation_deg, _spawn_edge)
 	_field_hud.add_child(_room_minimap)
 	map_panel.top_offset = 200.0
 
@@ -1128,11 +1148,49 @@ func _create_key_pickup(key_for_cell: String) -> void:
 		key_for_cell, key_pos, key_item_id])
 
 
+func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
+	var key_item_id := "key_%s" % target_cell.replace(",", "_")
+	var key := KeyPickupScript.new()
+	key.key_id = key_item_id
+	key.name = "KeyDrop_%s" % target_cell
+
+	# Place key at authored position from quest editor, or fall back to room center
+	var key_pos := Vector3.ZERO
+	var authored_pos: Array = _current_cell.get("key_drop_position", [])
+	if authored_pos.size() == 3:
+		key_pos = Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
+	else:
+		var portal_positions: Array[Vector3] = []
+		for dir in _portal_data:
+			if dir != "default":
+				portal_positions.append(_portal_data[dir]["spawn_pos"])
+		if portal_positions.size() >= 2:
+			var sum := Vector3.ZERO
+			for p in portal_positions:
+				sum += p
+			key_pos = sum / float(portal_positions.size())
+		elif portal_positions.size() == 1:
+			key_pos = portal_positions[0]
+		key_pos.y = 0.5
+
+	_map_root.add_child(key)
+	key.position = key_pos
+
+	key.interacted.connect(func(_player: Node3D) -> void:
+		_keys_collected[tracking_key] = true
+		_update_key_hud()
+	)
+	print("[ValleyField] Key dropped on room clear for gate %s at %s (id=%s)" % [
+		target_cell, key_pos, key_item_id])
+
+
 func _setup_key_hud(cells: Array) -> void:
-	# Count total keys in this field section
+	# Count total keys in this field section (static pickups + room-clear drops)
 	_total_keys_in_field = 0
 	for cell in cells:
 		if cell.get("has_key", false):
+			_total_keys_in_field += 1
+		if not str(cell.get("key_drop", "")).is_empty():
 			_total_keys_in_field += 1
 	_update_key_hud()
 
@@ -1248,6 +1306,7 @@ func _spawn_field_elements() -> void:
 	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
 		var area_warp := AreaWarpScript.new()
 		area_warp.auto_collect = false
+		area_warp.name = "WarpEdgeAreaWarp"
 		var objectives_pending := _has_pending_objectives()
 		area_warp.element_state = "locked" if objectives_pending else "open"
 		add_child(area_warp)
@@ -1280,6 +1339,7 @@ func _spawn_field_elements() -> void:
 			var gate_rot: Vector3 = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 			var kg := KeyGateScript.new()
 			kg.required_key_id = key_item_id
+			kg.required_keys = int(_current_cell.get("required_keys", 1))
 			kg.name = "KeyGate_%s" % dir
 			add_child(kg)
 			kg.global_position = gate_pos
@@ -1508,7 +1568,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 					_wave_enemy_data[wave].append(obj)
 			"fence":
 				var link_id: String = str(obj.get("link_id", ""))
-				_spawn_fence(pos, obj_rot, link_id)
+				var f_scale_x: float = float(obj.get("scale_x", 1.0))
+				_spawn_fence(pos, obj_rot, link_id, f_scale_x)
 			"step_switch":
 				var link_id: String = str(obj.get("link_id", ""))
 				_spawn_switch(pos, link_id)
@@ -1588,7 +1649,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_enemy(pos, str(obj.get("enemy_id", "lizard")), state)
 			"fence":
 				var link_id: String = str(obj.get("link_id", ""))
-				_spawn_fence(pos, obj_rot, link_id)
+				var r_scale_x: float = float(obj.get("scale_x", 1.0))
+				_spawn_fence(pos, obj_rot, link_id, r_scale_x)
 				# Restore fence state if disabled
 				if state == "disabled" and not _fence_links.is_empty():
 					for lid in _fence_links:
@@ -1915,11 +1977,14 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 	print("[CellObjects] Enemy '%s' at %s" % [enemy_id, pos])
 
 
-func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String) -> void:
+func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: float = 1.0) -> void:
 	var fence := FenceScript.new()
 	_map_root.add_child(fence)
 	fence.position = pos
 	fence.rotation.y = deg_to_rad(rotation_deg)
+	if scale_x != 1.0:
+		fence.scale.x = scale_x
+		fence.collision_size.x = fence.collision_size.x * scale_x
 	_fixup_element_materials(fence)
 	# Re-run laser material setup after fixup replaced materials (storybook pattern)
 	fence._setup_laser_materials()
@@ -2114,6 +2179,28 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 
 
 func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, target_cell: String, target_position: Vector3, portal_dir: String = "", label_text: String = "") -> void:
+	# Auto-resolve target when not explicitly set
+	if target_cell.is_empty() and not portal_dir.is_empty():
+		var sections: Array = SessionManager.get_field_sections()
+		var section_idx: int = SessionManager.get_current_section()
+		var section: Dictionary = sections[section_idx] if section_idx < sections.size() else {}
+		var entry_dir: String = str(section.get("entry_direction", ""))
+		var exit_dir: String = str(section.get("exit_direction", ""))
+
+		if portal_dir == entry_dir and section_idx > 0:
+			# Going back to previous section's end cell
+			var prev_section: Dictionary = sections[section_idx - 1]
+			target_section = section_idx - 1
+			target_cell = str(prev_section.get("end_pos", ""))
+			# Spawn at the warp_edge portal spawn point in the target cell
+			print("[CellObjects] AreaWarp auto-resolved → prev section %d, cell %s" % [target_section, target_cell])
+		elif portal_dir == exit_dir and section_idx + 1 < sections.size():
+			# Going forward to next section's start cell
+			var next_section: Dictionary = sections[section_idx + 1]
+			target_section = section_idx + 1
+			target_cell = str(next_section.get("start_pos", ""))
+			print("[CellObjects] AreaWarp auto-resolved → next section %d, cell %s" % [target_section, target_cell])
+
 	# Place the gate model at the gate position (not the trigger position)
 	var gate_pos := pos
 	var spawn_pos := pos
@@ -2222,6 +2309,71 @@ func _lock_gates_for_enemies() -> void:
 					print("[CellObjects] Gate %s locked (enemies present)" % dir)
 					break
 
+	# Lock warp_edge area warp + exit trigger until room clear
+	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
+	if not warp_edge.is_empty():
+		var warp_aw := _find_child_by_name(self, "WarpEdgeAreaWarp") as AreaWarp
+		if warp_aw:
+			warp_aw.element_state = "locked"
+			warp_aw._apply_state()
+			_warp_edge_locked.append(warp_aw)
+			# Add physical blocker
+			var blocker := StaticBody3D.new()
+			blocker.name = "WarpEdgeBlocker"
+			blocker.collision_layer = 1  # Environment layer
+			var bshape := CollisionShape3D.new()
+			var bbox := BoxShape3D.new()
+			bbox.size = Vector3(6, 4, 1.5)
+			bshape.shape = bbox
+			bshape.position.y = 2.0
+			blocker.add_child(bshape)
+			add_child(blocker)
+			blocker.global_position = warp_aw.global_position
+			blocker.global_rotation = warp_aw.global_rotation
+			_warp_edge_locked.append(blocker)
+			print("[CellObjects] AreaWarp locked (enemies present) [warp_edge=%s]" % warp_edge)
+		# Disable exit trigger
+		var exit_trigger := _find_child_by_name(self, "ExitTrigger") as Area3D
+		if exit_trigger:
+			exit_trigger.monitoring = false
+			_warp_edge_locked.append(exit_trigger)
+		if _room_minimap:
+			_room_minimap.set_gate_locked(warp_edge, true)
+
+	# Lock area_warp objects like gates — skip entry direction and visited cells
+	for child in get_children():
+		if child is AreaWarp and child.name.begins_with("AreaWarpObj_"):
+			var aw_dir: String = child.name.trim_prefix("AreaWarpObj_")
+			if aw_dir == _spawn_edge:
+				continue  # Don't lock entry area warp
+			if _visited_cells.has(str(connections.get(aw_dir, ""))):
+				continue  # Don't lock area warps to visited cells
+			child.element_state = "locked"
+			child._apply_state()
+			_warp_edge_locked.append(child)
+			# Add physical blocker
+			var aw_blocker := StaticBody3D.new()
+			aw_blocker.name = "AreaWarpBlocker_%s" % aw_dir
+			aw_blocker.collision_layer = 1
+			var aw_bshape := CollisionShape3D.new()
+			var aw_bbox := BoxShape3D.new()
+			aw_bbox.size = Vector3(6, 4, 1.5)
+			aw_bshape.shape = aw_bbox
+			aw_bshape.position.y = 2.0
+			aw_blocker.add_child(aw_bshape)
+			add_child(aw_blocker)
+			aw_blocker.global_position = child.global_position
+			aw_blocker.global_rotation = child.global_rotation
+			_warp_edge_locked.append(aw_blocker)
+			# Disable matching trigger
+			var aw_trigger := _find_child_by_name(self, "AreaWarpObjTrigger_%s" % aw_dir) as Area3D
+			if aw_trigger:
+				aw_trigger.monitoring = false
+				_warp_edge_locked.append(aw_trigger)
+			print("[CellObjects] AreaWarp locked (enemies present) [dir=%s]" % aw_dir)
+			if _room_minimap:
+				_room_minimap.set_gate_locked(aw_dir, true)
+
 
 ## Called when an enemy is defeated — check if all cleared.
 func _check_room_clear() -> void:
@@ -2248,6 +2400,33 @@ func _check_room_clear() -> void:
 			if _room_minimap and not dir.is_empty():
 				_room_minimap.set_gate_locked(dir, false)
 	_room_gates_locked.clear()
+
+	# Unlock warp_edge area warp + area warp objects
+	for node in _warp_edge_locked:
+		if is_instance_valid(node):
+			if node is AreaWarp:
+				node.element_state = "open"
+				node._apply_state()
+				var aw_dir: String = node.name.trim_prefix("AreaWarpObj_") if node.name.begins_with("AreaWarpObj_") else ""
+				if _room_minimap and not aw_dir.is_empty():
+					_room_minimap.set_gate_locked(aw_dir, false)
+				print("[CellObjects] AreaWarp unlocked (room cleared)")
+			elif node is StaticBody3D:
+				node.queue_free()
+			elif node is Area3D:
+				node.monitoring = true
+	var warp_e: String = str(_current_cell.get("warp_edge", ""))
+	if not warp_e.is_empty() and _room_minimap:
+		_room_minimap.set_gate_locked(warp_e, false)
+	_warp_edge_locked.clear()
+
+	# Drop key on room clear if configured
+	var key_drop_target: String = str(_current_cell.get("key_drop", ""))
+	var current_pos: String = str(_current_cell.get("pos", ""))
+	if not key_drop_target.is_empty():
+		var drop_tracking_key := current_pos + ">" + key_drop_target
+		if not _keys_collected.has(drop_tracking_key):
+			_drop_key_on_clear(key_drop_target, drop_tracking_key)
 
 	# Fire room_clear dialog triggers
 	for rc_trigger in _room_triggers:
@@ -2447,6 +2626,89 @@ func _toggle_spawn_points() -> void:
 	_update_debug_label()
 
 
+func _toggle_all_collision() -> void:
+	_show_all_collision = not _show_all_collision
+	if _show_all_collision and _debug_all_collision_meshes.is_empty():
+		_build_all_collision_debug()
+	for m in _debug_all_collision_meshes:
+		if is_instance_valid(m):
+			m.visible = _show_all_collision
+	_update_debug_label()
+
+
+func _build_all_collision_debug() -> void:
+	var stack: Array[Node] = [get_tree().current_scene]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is CollisionShape3D and node.shape and node.get_parent() is StaticBody3D:
+			var debug_mesh := MeshInstance3D.new()
+			var shape: Shape3D = node.shape
+			if shape is BoxShape3D:
+				var box_mesh := BoxMesh.new()
+				box_mesh.size = shape.size
+				debug_mesh.mesh = box_mesh
+			elif shape is ConcavePolygonShape3D:
+				var faces: PackedVector3Array = shape.get_faces()
+				if faces.is_empty():
+					continue
+				var arrays := []
+				arrays.resize(Mesh.ARRAY_MAX)
+				arrays[Mesh.ARRAY_VERTEX] = faces
+				var normals := PackedVector3Array()
+				normals.resize(faces.size())
+				for i in range(0, faces.size(), 3):
+					if i + 2 < faces.size():
+						var normal := (faces[i + 1] - faces[i]).cross(faces[i + 2] - faces[i]).normalized()
+						normals[i] = normal
+						normals[i + 1] = normal
+						normals[i + 2] = normal
+				arrays[Mesh.ARRAY_NORMAL] = normals
+				var array_mesh := ArrayMesh.new()
+				array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+				debug_mesh.mesh = array_mesh
+			elif shape is CylinderShape3D:
+				var cyl_mesh := CylinderMesh.new()
+				cyl_mesh.top_radius = shape.radius
+				cyl_mesh.bottom_radius = shape.radius
+				cyl_mesh.height = shape.height
+				debug_mesh.mesh = cyl_mesh
+			elif shape is SphereShape3D:
+				var sphere_mesh := SphereMesh.new()
+				sphere_mesh.radius = shape.radius
+				sphere_mesh.height = shape.radius * 2.0
+				debug_mesh.mesh = sphere_mesh
+			elif shape is CapsuleShape3D:
+				var cap_mesh := CapsuleMesh.new()
+				cap_mesh.radius = shape.radius
+				cap_mesh.height = shape.height
+				debug_mesh.mesh = cap_mesh
+			else:
+				continue
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = Color(1.0, 0.2, 0.2, 0.25)
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			debug_mesh.material_override = mat
+			debug_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			debug_mesh.global_transform = node.global_transform
+			debug_mesh.visible = _show_all_collision
+			add_child(debug_mesh)
+			_debug_all_collision_meshes.append(debug_mesh)
+			# Label showing parent node name
+			var label := Label3D.new()
+			label.text = node.get_parent().name
+			label.font_size = 32
+			label.modulate = Color(1.0, 0.3, 0.3)
+			label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			label.no_depth_test = true
+			label.position = Vector3(0, 1.5, 0)
+			debug_mesh.add_child(label)
+			_debug_all_collision_meshes.append(label)
+		for child in node.get_children():
+			stack.push_back(child)
+
+
 func _update_debug_label() -> void:
 	if not _debug_panel:
 		return
@@ -2459,7 +2721,8 @@ func _update_debug_label() -> void:
 		+ "F5  Triggers  %s\n" % (on if _show_triggers else off) \
 		+ "F6  Gate cols  %s\n" % (on if _show_gate_markers else off) \
 		+ "F7  Floor col  %s\n" % (on if _show_floor_collision else off) \
-		+ "F8  Spawns     %s" % (on if _show_spawn_points else off)
+		+ "F8  Spawns     %s\n" % (on if _show_spawn_points else off) \
+		+ "F9  All col    %s" % (on if _show_all_collision else off)
 
 
 func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
@@ -2533,4 +2796,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_F8:
 				_toggle_spawn_points()
+				get_viewport().set_input_as_handled()
+			KEY_F9:
+				_toggle_all_collision()
 				get_viewport().set_input_as_handled()

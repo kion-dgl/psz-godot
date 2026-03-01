@@ -224,6 +224,7 @@ async function exportSectionCells(
   sectionStartPos: string | null,
   sectionEndPos: string | null,
   sectionKeyLinks: Record<string, string>,
+  sectionKeyDropLinks: Record<string, string>,
   sectionGridSize: number,
 ): Promise<object[]> {
   const cells: object[] = [];
@@ -315,12 +316,20 @@ async function exportSectionCells(
       key_for_cell: Object.entries(sectionKeyLinks).find(([_, v]) => v === pos)?.[0] || '',
       is_key_gate: pos in sectionKeyLinks,
       key_gate_direction: keyGateDirection,
+      key_drop: sectionKeyDropLinks[pos] || '',
+      required_keys: pos in sectionKeyLinks
+        ? (sectionKeyLinks[pos] ? 1 : 0) + Object.values(sectionKeyDropLinks).filter(g => g === pos).length
+        : 0,
       warp_edge: warpEdge,
       path_order: pathOrder.get(pos) ?? -1,
     };
 
     if (cell.keyPosition) {
       cellData.key_position = cell.keyPosition;
+    }
+
+    if (cell.keyDropPosition) {
+      cellData.key_drop_position = cell.keyDropPosition;
     }
 
     if (cell.objects && cell.objects.length > 0) {
@@ -332,6 +341,7 @@ async function exportSectionCells(
         if (obj.rotation) exported.rotation = obj.rotation;
         if (obj.enemy_id) exported.enemy_id = obj.enemy_id;
         if (obj.link_id) exported.link_id = obj.link_id;
+        if (obj.scale_x && obj.scale_x !== 1) exported.scale_x = obj.scale_x;
         if (obj.wave && obj.wave > 1) exported.wave = obj.wave;
         if (obj.text !== undefined && obj.text !== '') exported.text = obj.text;
         if (obj.prop_path) exported.prop_path = obj.prop_path;
@@ -420,7 +430,7 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
     }
 
     const cells = await exportSectionCells(
-      sec.cells, startPos, endPos, sec.keyLinks, sec.gridSize
+      sec.cells, startPos, endPos, sec.keyLinks, sec.keyDropLinks || {}, sec.gridSize
     );
     const section: Record<string, unknown> = {
       type: sec.type,
@@ -498,6 +508,7 @@ export function importGodotSection(section: any): QuestSection {
   let startPos: string | null = null;
   let endPos: string | null = null;
   const keyLinks: Record<string, string> = {};
+  const keyDropLinks: Record<string, string> = {};
   let maxRow = 0, maxCol = 0;
 
   for (const cell of section.cells || []) {
@@ -513,6 +524,9 @@ export function importGodotSection(section: any): QuestSection {
     if (cell.key_position && Array.isArray(cell.key_position)) {
       editorCell.keyPosition = cell.key_position as [number, number, number];
     }
+    if (cell.key_drop_position && Array.isArray(cell.key_drop_position)) {
+      editorCell.keyDropPosition = cell.key_drop_position as [number, number, number];
+    }
     if (cell.objects && Array.isArray(cell.objects)) {
       editorCell.objects = cell.objects.map((obj: any, idx: number) => {
         const co: CellObject = {
@@ -523,6 +537,7 @@ export function importGodotSection(section: any): QuestSection {
         if (obj.rotation) co.rotation = obj.rotation;
         if (obj.enemy_id) co.enemy_id = obj.enemy_id;
         if (obj.link_id) co.link_id = obj.link_id;
+        if (obj.scale_x) co.scale_x = obj.scale_x;
         if (obj.wave) co.wave = obj.wave;
         if (obj.text) co.text = obj.text;
         if (obj.prop_path) co.prop_path = obj.prop_path;
@@ -552,6 +567,9 @@ export function importGodotSection(section: any): QuestSection {
     if (cell.is_key_gate && cell.key_for_cell) {
       keyLinks[cell.pos] = cell.key_for_cell;
     }
+    if (cell.key_drop) {
+      keyDropLinks[cell.pos] = cell.key_drop;
+    }
   }
 
   const sectionType: SectionType = section.type === 'transition' ? 'transition'
@@ -565,6 +583,7 @@ export function importGodotSection(section: any): QuestSection {
     startPos,
     endPos,
     keyLinks,
+    keyDropLinks,
   };
   if (section.entry_direction) result.entryDirection = section.entry_direction;
   if (section.exit_direction) result.exitDirection = section.exit_direction;
@@ -615,6 +634,7 @@ export function godotQuestToProject(quest: any): QuestProject {
     startPos: firstSection.startPos,
     endPos: firstSection.endPos,
     keyLinks: firstSection.keyLinks,
+    keyDropLinks: firstSection.keyDropLinks || {},
     metadata: {
       questName: quest.name || '',
       description: quest.description || '',

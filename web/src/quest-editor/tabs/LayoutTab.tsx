@@ -3,7 +3,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import type { QuestProject, EditorGridCell, ValidationIssue, Direction, SectionType } from '../types';
+import type { QuestProject, EditorGridCell, ValidationIssue, Direction, SectionType, StageContent } from '../types';
 import { generateGrid, type GenParams } from '../shared/grid-generation';
 import GridCanvas from '../shared/GridCanvas';
 import CellInspector from '../shared/CellInspector';
@@ -99,6 +99,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
   const [showGenDialog, setShowGenDialog] = useState(false);
   const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([]);
   const [showMinimap, setShowMinimap] = useState(false);
+  const [swapSource, setSwapSource] = useState<string | null>(null);
   const [genParams, setGenParams] = useState<GenParams>({
     gridSize: project.gridSize,
     usedCells: 8,
@@ -169,18 +170,34 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
     }));
   }, [onUpdateProject]);
 
-  // Toggle key on cell — links this cell as key holder for an unlinked gate
-  const handleToggleKey = useCallback((pos: string) => {
+  // Toggle key on cell — links this cell as key holder for a gate
+  // If gatePos is provided, assign/reassign to that specific gate
+  const handleToggleKey = useCallback((pos: string, gatePos?: string) => {
     onUpdateProject(prev => {
       const newLinks = { ...prev.keyLinks };
-      // If this cell is already a key location, remove the link
+
+      // Remove existing link from this cell (if any)
       for (const [gate, key] of Object.entries(newLinks)) {
         if (key === pos) {
-          delete newLinks[gate];
-          return { ...prev, keyLinks: newLinks };
+          newLinks[gate] = '';
+          break;
         }
       }
-      // Find first unlinked key-gate and assign this cell as its key
+
+      // If gatePos provided, assign to that gate
+      if (gatePos !== undefined) {
+        if (gatePos in newLinks) {
+          newLinks[gatePos] = pos;
+        }
+        return { ...prev, keyLinks: newLinks };
+      }
+
+      // Toggle: if we just removed it, we're done
+      if (Object.values(prev.keyLinks).includes(pos)) {
+        return { ...prev, keyLinks: newLinks };
+      }
+
+      // Not yet a key — find first unlinked gate
       for (const [gate, key] of Object.entries(newLinks)) {
         if (!key) {
           newLinks[gate] = pos;
@@ -188,6 +205,30 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
         }
       }
       return prev;
+    });
+  }, [onUpdateProject]);
+
+  // Toggle key-drop on cell — marks this cell as dropping a key on room clear
+  // If gatePos is provided, set/update the target gate
+  const handleToggleKeyDrop = useCallback((pos: string, gatePos?: string) => {
+    onUpdateProject(prev => {
+      const newDropLinks = { ...prev.keyDropLinks || {} };
+
+      // If gatePos provided, set or update the target
+      if (gatePos !== undefined) {
+        newDropLinks[pos] = gatePos;
+        return { ...prev, keyDropLinks: newDropLinks };
+      }
+
+      // Toggle: if already a drop, remove; otherwise add with empty target
+      if (pos in newDropLinks) {
+        delete newDropLinks[pos];
+      } else {
+        // Default to first gate if one exists, otherwise empty (user fills in)
+        const gates = Object.keys(prev.keyLinks);
+        newDropLinks[pos] = gates.length > 0 ? gates[0] : '';
+      }
+      return { ...prev, keyDropLinks: newDropLinks };
     });
   }, [onUpdateProject]);
 
@@ -232,16 +273,81 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
       for (const [gate, key] of Object.entries(newLinks)) {
         if (key === pos) delete newLinks[gate];
       }
+      // Clean up keyDropLinks
+      const newDropLinks = { ...prev.keyDropLinks || {} };
+      delete newDropLinks[pos]; // Remove if this cell is a drop source
+      // Also remove any drops targeting this cell as their gate
+      for (const [dropCell, gate] of Object.entries(newDropLinks)) {
+        if (gate === pos) delete newDropLinks[dropCell];
+      }
       return {
         ...prev,
         cells: newCells,
         keyLinks: newLinks,
+        keyDropLinks: newDropLinks,
         startPos: prev.startPos === pos ? null : prev.startPos,
         endPos: prev.endPos === pos ? null : prev.endPos,
       };
     });
     setSelectedCell(null);
   }, [onUpdateProject]);
+
+  // Swap cells
+  const handleSwapStart = useCallback((pos: string) => {
+    setSwapSource(pos);
+  }, []);
+
+  const handleSwapCancel = useCallback(() => {
+    setSwapSource(null);
+  }, []);
+
+  const handleSwapExecute = useCallback((targetPos: string) => {
+    if (!swapSource || swapSource === targetPos) {
+      setSwapSource(null);
+      return;
+    }
+    const posA = swapSource;
+    const posB = targetPos;
+    const remapPos = (p: string) => p === posA ? posB : p === posB ? posA : p;
+
+    onUpdateProject(prev => {
+      // Swap cells
+      const newCells = { ...prev.cells };
+      const cellA = newCells[posA];
+      const cellB = newCells[posB];
+      if (cellA) newCells[posB] = cellA; else delete newCells[posB];
+      if (cellB) newCells[posA] = cellB; else delete newCells[posA];
+
+      // Remap keyLinks
+      const newKeyLinks: Record<string, string> = {};
+      for (const [gate, key] of Object.entries(prev.keyLinks)) {
+        newKeyLinks[remapPos(gate)] = key ? remapPos(key) : key;
+      }
+
+      // Remap keyDropLinks
+      const newKeyDropLinks: Record<string, string> = {};
+      for (const [drop, gate] of Object.entries(prev.keyDropLinks || {})) {
+        newKeyDropLinks[remapPos(drop)] = gate ? remapPos(gate) : gate;
+      }
+
+      // Remap cellContents
+      const newCellContents: Record<string, StageContent> = {};
+      for (const [pos, content] of Object.entries(prev.cellContents || {})) {
+        newCellContents[remapPos(pos)] = content;
+      }
+
+      return {
+        ...prev,
+        cells: newCells,
+        keyLinks: newKeyLinks,
+        keyDropLinks: newKeyDropLinks,
+        cellContents: newCellContents,
+        startPos: prev.startPos ? remapPos(prev.startPos) : prev.startPos,
+        endPos: prev.endPos ? remapPos(prev.endPos) : prev.endPos,
+      };
+    });
+    setSwapSource(null);
+  }, [swapSource, onUpdateProject]);
 
   // Change stage (reopen picker for occupied cell)
   const handleChangeStage = useCallback((pos: string) => {
@@ -281,6 +387,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
       startPos: null,
       endPos: null,
       keyLinks: {},
+      keyDropLinks: {},
     }));
     setSelectedCell(null);
   }, [onUpdateProject]);
@@ -365,6 +472,9 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
             onCellSelect={handleCellSelect}
             showMinimap={showMinimap}
             areaKey={project.areaKey}
+            swapSource={swapSource}
+            onSwapExecute={handleSwapExecute}
+            onSwapCancel={handleSwapCancel}
           />
         </div>
 
@@ -418,10 +528,12 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
             onSetStart={handleSetStart}
             onSetEnd={handleSetEnd}
             onToggleKey={handleToggleKey}
+            onToggleKeyDrop={handleToggleKeyDrop}
             onToggleKeyGate={handleToggleKeyGate}
             onSetLockedGate={handleSetLockedGate}
             onClearCell={handleClearCell}
             onChangeStage={handleChangeStage}
+            onSwapStart={handleSwapStart}
             sectionType={sectionType}
             entryDirection={entryDirection}
             exitDirection={exitDirection}

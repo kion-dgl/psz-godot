@@ -14,11 +14,13 @@ interface CellInspectorProps {
   onUpdateCell: (pos: string, updates: Partial<EditorGridCell>) => void;
   onSetStart: (pos: string) => void;
   onSetEnd: (pos: string) => void;
-  onToggleKey: (pos: string) => void;
+  onToggleKey: (pos: string, gatePos?: string) => void;
+  onToggleKeyDrop: (pos: string, gatePos?: string) => void;
   onToggleKeyGate: (pos: string) => void;
   onSetLockedGate: (pos: string, dir: Direction | undefined) => void;
   onClearCell: (pos: string) => void;
   onChangeStage: (pos: string) => void;
+  onSwapStart: (pos: string) => void;
   sectionType?: SectionType;
   entryDirection?: Direction;
   exitDirection?: Direction;
@@ -26,6 +28,15 @@ interface CellInspectorProps {
 }
 
 
+
+/** Format a gate cell as a readable label: "1,2 (xb2 south)" */
+function gateLabel(pos: string, project: QuestProject): string {
+  const cell = project.cells[pos];
+  if (!cell) return pos;
+  const suffix = getStageSuffix(cell.stageName);
+  const dir = cell.lockedGate ? ` ${cell.lockedGate}` : '';
+  return `${pos} (${suffix}${dir})`;
+}
 
 const labelStyle: React.CSSProperties = {
   fontSize: '11px',
@@ -46,10 +57,12 @@ export default function CellInspector({
   onSetStart,
   onSetEnd,
   onToggleKey,
+  onToggleKeyDrop,
   onToggleKeyGate,
   onSetLockedGate,
   onClearCell,
   onChangeStage,
+  onSwapStart,
   sectionType,
   entryDirection,
   exitDirection,
@@ -74,6 +87,9 @@ export default function CellInspector({
   const isEnd = project.endPos === selectedCell;
   const hasKey = Object.values(project.keyLinks).includes(selectedCell);
   const isKeyGate = selectedCell in project.keyLinks;
+  const keyDropLinks = project.keyDropLinks || {};
+  const isKeyDrop = selectedCell in keyDropLinks;
+  const keyDropGate = keyDropLinks[selectedCell] || '';
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
@@ -274,6 +290,22 @@ export default function CellInspector({
             {hasKey ? 'Has Key' : 'Add Key'}
           </button>
           <button
+            onClick={() => onToggleKeyDrop(selectedCell)}
+            style={{
+              flex: 1,
+              padding: '8px',
+              background: isKeyDrop ? '#ddaa33' : '#2a2a4a',
+              border: `1px solid ${isKeyDrop ? '#ffcc55' : '#444'}`,
+              borderRadius: '4px',
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: isKeyDrop ? 700 : 400,
+              cursor: 'pointer',
+            }}
+          >
+            {isKeyDrop ? 'Has Drop' : 'Key Drop'}
+          </button>
+          <button
             onClick={() => onToggleKeyGate(selectedCell)}
             style={{
               flex: 1,
@@ -290,21 +322,89 @@ export default function CellInspector({
             {isKeyGate ? 'Key-Gate' : 'Add Gate'}
           </button>
         </div>
-        {isKeyGate && (
-          <>
-            <div style={{ fontSize: '11px', color: '#cc88ff', marginTop: '4px' }}>
-              Locked: {cell.lockedGate ? `${cell.lockedGate} gate` : 'click a gate above to lock'}
+        {isKeyGate && (() => {
+          const staticKeys = project.keyLinks[selectedCell] ? 1 : 0;
+          const drops = Object.values(keyDropLinks).filter(g => g === selectedCell).length;
+          const totalKeys = staticKeys + drops;
+          const gateSuffix = getStageSuffix(cell.stageName);
+          return (
+            <>
+              <div
+                style={{ fontSize: '11px', color: '#cc88ff', marginTop: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                onClick={() => navigator.clipboard.writeText(selectedCell)}
+                title="Click to copy gate position"
+              >
+                Gate ID: <span style={{ fontWeight: 700, color: '#ff88ff' }}>{selectedCell}</span>
+                <span style={{ fontSize: '9px', color: '#888' }}>({gateSuffix})</span>
+                <span style={{ fontSize: '9px', color: '#666' }}>click to copy</span>
+              </div>
+              <div style={{ fontSize: '11px', color: '#cc88ff', marginTop: '2px' }}>
+                Locked: {cell.lockedGate ? `${cell.lockedGate} gate` : 'click a gate above to lock'}
+              </div>
+              <div style={{ fontSize: '11px', color: '#cc88ff', marginTop: '2px' }}>
+                Key at: {project.keyLinks[selectedCell]
+                  ? (() => { const kc = project.cells[project.keyLinks[selectedCell]]; return kc ? `${project.keyLinks[selectedCell]} (${getStageSuffix(kc.stageName)})` : project.keyLinks[selectedCell]; })()
+                  : 'none'}
+              </div>
+              <div style={{ fontSize: '11px', color: '#ddaa33', marginTop: '2px' }}>
+                {totalKeys} key{totalKeys !== 1 ? 's' : ''} required ({staticKeys} static + {drops} drop{drops !== 1 ? 's' : ''})
+              </div>
+            </>
+          );
+        })()}
+        {hasKey && (() => {
+          const allGates = Object.keys(project.keyLinks);
+          const linkedGate = Object.entries(project.keyLinks).find(([_, v]) => v === selectedCell)?.[0] || '';
+          return (
+            <div style={{ fontSize: '11px', color: '#ff88aa', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Unlocks:
+              {allGates.length > 0 ? (
+                <select
+                  value={linkedGate}
+                  onChange={(e) => onToggleKey(selectedCell, e.target.value)}
+                  style={{
+                    background: '#2a2a4a', color: '#ff88aa', border: '1px solid #444',
+                    borderRadius: '3px', fontSize: '11px', padding: '2px 4px', flex: 1,
+                  }}
+                >
+                  {!linkedGate && <option value="">-- select gate --</option>}
+                  {allGates.map(g => (
+                    <option key={g} value={g}>{gateLabel(g, project)}</option>
+                  ))}
+                </select>
+              ) : (
+                <span style={{ color: '#888' }}>no gates</span>
+              )}
             </div>
-            <div style={{ fontSize: '11px', color: '#cc88ff', marginTop: '2px' }}>
-              Key at: {project.keyLinks[selectedCell] || 'unlinked'}
+          );
+        })()}
+        {isKeyDrop && (() => {
+          const allGates = Object.keys(project.keyLinks);
+          return (
+            <div style={{ marginTop: '4px' }}>
+              <div style={{ fontSize: '11px', color: '#ddaa33', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                Drops key for:
+                {allGates.length > 0 ? (
+                  <select
+                    value={keyDropGate}
+                    onChange={(e) => onToggleKeyDrop(selectedCell, e.target.value)}
+                    style={{
+                      background: '#2a2a4a', color: '#ddaa33', border: '1px solid #444',
+                      borderRadius: '3px', fontSize: '11px', padding: '2px 4px', flex: 1,
+                    }}
+                  >
+                    {!keyDropGate && <option value="">-- select gate --</option>}
+                    {allGates.map(g => (
+                      <option key={g} value={g}>{gateLabel(g, project)}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span style={{ color: '#888' }}>no gates — add a gate first</span>
+                )}
+              </div>
             </div>
-          </>
-        )}
-        {hasKey && (
-          <div style={{ fontSize: '11px', color: '#ff88aa', marginTop: '4px' }}>
-            Unlocks: {Object.entries(project.keyLinks).find(([_, v]) => v === selectedCell)?.[0] || 'unlinked'}
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Notes */}
@@ -330,7 +430,7 @@ export default function CellInspector({
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: '8px' }}>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <button
           onClick={() => onChangeStage(selectedCell)}
           style={{
@@ -345,6 +445,21 @@ export default function CellInspector({
           }}
         >
           Change Stage
+        </button>
+        <button
+          onClick={() => onSwapStart(selectedCell)}
+          style={{
+            flex: 1,
+            padding: '8px',
+            background: '#886622',
+            border: 'none',
+            borderRadius: '4px',
+            color: '#fff',
+            fontSize: '12px',
+            cursor: 'pointer',
+          }}
+        >
+          Swap
         </button>
         <button
           onClick={() => onClearCell(selectedCell)}
