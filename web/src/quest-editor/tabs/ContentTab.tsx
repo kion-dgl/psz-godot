@@ -12,7 +12,7 @@ import { OrbitControls, useGLTF, Grid, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { QuestProject, Direction, CellObject, CellObjectType } from '../types';
 import { CELL_OBJECT_COLORS, CELL_OBJECT_LABELS } from '../types';
-import { getRotatedGates, getStageConfig, getStageSuffix } from '../hooks/useStageConfigs';
+import { getRotatedGates, getStageConfig, getStageSuffix, rotateDirection } from '../hooks/useStageConfigs';
 import { getGlbPath, getAreaFromMapId } from '../constants';
 import { assetUrl } from '../../utils/assets';
 import type { GateConfig } from '../types';
@@ -85,13 +85,13 @@ interface ContentTabProps {
 // ============================================================================
 
 /** Gate marker — cyan wireframe box at gate position */
-function GateMarker({ gate, isLocked }: { gate: GateConfig; isLocked: boolean }) {
+function GateMarker({ gate, isLocked, worldEdge }: { gate: GateConfig; isLocked: boolean; worldEdge: string }) {
   const boxWidth = 6;
   const boxHeight = 4;
   const boxDepth = 1;
   const color = isLocked ? '#ff66ff' : '#00ffff';
 
-  // Rotation based on gate edge
+  // Rotation based on gate edge (model-local, unrotated)
   const rotation = gate.edge === 'north' ? Math.PI
     : gate.edge === 'south' ? 0
     : gate.edge === 'east' ? Math.PI / 2
@@ -107,7 +107,7 @@ function GateMarker({ gate, isLocked }: { gate: GateConfig; isLocked: boolean })
         <edgesGeometry args={[new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth)]} />
         <lineBasicMaterial color={color} />
       </lineSegments>
-      {/* Direction label */}
+      {/* Direction label (shows world-space direction after rotation) */}
       <Html position={[0, boxHeight + 1, 0]} center style={{ pointerEvents: 'none' }}>
         <div style={{
           background: isLocked ? '#ff66ff' : '#006688',
@@ -119,7 +119,7 @@ function GateMarker({ gate, isLocked }: { gate: GateConfig; isLocked: boolean })
           whiteSpace: 'nowrap',
           border: `1px solid ${color}`,
         }}>
-          {gate.edge.toUpperCase()}
+          {worldEdge.toUpperCase()}
         </div>
       </Html>
     </group>
@@ -2058,13 +2058,17 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
               />
 
               {/* Gate markers */}
-              {config?.gates.map((gate, i) => (
-                <GateMarker
-                  key={i}
-                  gate={gate}
-                  isLocked={cell.lockedGate === gate.edge}
-                />
-              ))}
+              {config?.gates.map((gate, i) => {
+                const worldEdge = rotateDirection(gate.edge, cell.rotation ?? 0);
+                return (
+                  <GateMarker
+                    key={i}
+                    gate={gate}
+                    worldEdge={worldEdge}
+                    isLocked={cell.lockedGate === worldEdge}
+                  />
+                );
+              })}
 
               {/* Spawn points */}
               {config?.spawnPoints.map((sp, i) => (
