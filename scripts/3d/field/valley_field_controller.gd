@@ -98,10 +98,12 @@ var _show_triggers := false
 var _show_gate_markers := false
 var _show_floor_collision := false
 var _show_spawn_points := false
+var _show_all_collision := false
 var _debug_trigger_meshes: Array = []
 var _debug_gate_meshes: Array = []
 var _debug_collision_meshes: Array = []
 var _debug_spawn_meshes: Array = []
+var _debug_all_collision_meshes: Array = []
 var _debug_panel: PanelContainer
 
 
@@ -2624,6 +2626,89 @@ func _toggle_spawn_points() -> void:
 	_update_debug_label()
 
 
+func _toggle_all_collision() -> void:
+	_show_all_collision = not _show_all_collision
+	if _show_all_collision and _debug_all_collision_meshes.is_empty():
+		_build_all_collision_debug()
+	for m in _debug_all_collision_meshes:
+		if is_instance_valid(m):
+			m.visible = _show_all_collision
+	_update_debug_label()
+
+
+func _build_all_collision_debug() -> void:
+	var stack: Array[Node] = [get_tree().current_scene]
+	while not stack.is_empty():
+		var node: Node = stack.pop_back()
+		if node is CollisionShape3D and node.shape and node.get_parent() is StaticBody3D:
+			var debug_mesh := MeshInstance3D.new()
+			var shape: Shape3D = node.shape
+			if shape is BoxShape3D:
+				var box_mesh := BoxMesh.new()
+				box_mesh.size = shape.size
+				debug_mesh.mesh = box_mesh
+			elif shape is ConcavePolygonShape3D:
+				var faces: PackedVector3Array = shape.get_faces()
+				if faces.is_empty():
+					continue
+				var arrays := []
+				arrays.resize(Mesh.ARRAY_MAX)
+				arrays[Mesh.ARRAY_VERTEX] = faces
+				var normals := PackedVector3Array()
+				normals.resize(faces.size())
+				for i in range(0, faces.size(), 3):
+					if i + 2 < faces.size():
+						var normal := (faces[i + 1] - faces[i]).cross(faces[i + 2] - faces[i]).normalized()
+						normals[i] = normal
+						normals[i + 1] = normal
+						normals[i + 2] = normal
+				arrays[Mesh.ARRAY_NORMAL] = normals
+				var array_mesh := ArrayMesh.new()
+				array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+				debug_mesh.mesh = array_mesh
+			elif shape is CylinderShape3D:
+				var cyl_mesh := CylinderMesh.new()
+				cyl_mesh.top_radius = shape.radius
+				cyl_mesh.bottom_radius = shape.radius
+				cyl_mesh.height = shape.height
+				debug_mesh.mesh = cyl_mesh
+			elif shape is SphereShape3D:
+				var sphere_mesh := SphereMesh.new()
+				sphere_mesh.radius = shape.radius
+				sphere_mesh.height = shape.radius * 2.0
+				debug_mesh.mesh = sphere_mesh
+			elif shape is CapsuleShape3D:
+				var cap_mesh := CapsuleMesh.new()
+				cap_mesh.radius = shape.radius
+				cap_mesh.height = shape.height
+				debug_mesh.mesh = cap_mesh
+			else:
+				continue
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = Color(1.0, 0.2, 0.2, 0.25)
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			debug_mesh.material_override = mat
+			debug_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			debug_mesh.global_transform = node.global_transform
+			debug_mesh.visible = _show_all_collision
+			add_child(debug_mesh)
+			_debug_all_collision_meshes.append(debug_mesh)
+			# Label showing parent node name
+			var label := Label3D.new()
+			label.text = node.get_parent().name
+			label.font_size = 32
+			label.modulate = Color(1.0, 0.3, 0.3)
+			label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			label.no_depth_test = true
+			label.position = Vector3(0, 1.5, 0)
+			debug_mesh.add_child(label)
+			_debug_all_collision_meshes.append(label)
+		for child in node.get_children():
+			stack.push_back(child)
+
+
 func _update_debug_label() -> void:
 	if not _debug_panel:
 		return
@@ -2636,7 +2721,8 @@ func _update_debug_label() -> void:
 		+ "F5  Triggers  %s\n" % (on if _show_triggers else off) \
 		+ "F6  Gate cols  %s\n" % (on if _show_gate_markers else off) \
 		+ "F7  Floor col  %s\n" % (on if _show_floor_collision else off) \
-		+ "F8  Spawns     %s" % (on if _show_spawn_points else off)
+		+ "F8  Spawns     %s\n" % (on if _show_spawn_points else off) \
+		+ "F9  All col    %s" % (on if _show_all_collision else off)
 
 
 func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
@@ -2710,4 +2796,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_F8:
 				_toggle_spawn_points()
+				get_viewport().set_input_as_handled()
+			KEY_F9:
+				_toggle_all_collision()
 				get_viewport().set_input_as_handled()
