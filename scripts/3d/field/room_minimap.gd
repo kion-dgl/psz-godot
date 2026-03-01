@@ -155,8 +155,8 @@ func _draw() -> void:
 		var c: Vector2 = _svg_to_display(gate["center"])
 		var d := 5.0
 		draw_polygon(PackedVector2Array([
-			c + Vector2(0, -d), c + Vector2(d, 0),
-			c + Vector2(0, d), c + Vector2(-d, 0),
+			c + Vector2(-d, -d), c + Vector2(d, -d),
+			c + Vector2(d, d), c + Vector2(-d, d),
 		]), [gate["color"]])
 		var lbl: String = gate["label"]
 		if not lbl.is_empty():

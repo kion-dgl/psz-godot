@@ -632,7 +632,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "south",
+          "warp_edge": "north",
           "path_order": 0,
           "objects": [
             {
