@@ -10,6 +10,7 @@ const WeaponGallery = lazy(() => import('./storybook/WeaponGallery'));
 const PlayerAnimationStorybook = lazy(() => import('./storybook/PlayerAnimationStorybook'));
 const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
 const SvgCheck = lazy(() => import('./svg-check/SvgCheck'));
+const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
 
 function NavBar() {
   const location = useLocation();
@@ -75,6 +76,12 @@ function NavBar() {
       }}>
         SVG Check
       </Link>
+      <Link to="/office-editor" style={{
+        color: isActive('/office-editor') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Office
+      </Link>
     </nav>
   );
 }
@@ -95,6 +102,7 @@ export default function App() {
             <Route path="/storybook/player-animations" element={<PlayerAnimationStorybook />} />
             <Route path="/stage-editor" element={<StageEditor />} />
             <Route path="/svg-check" element={<SvgCheck />} />
+            <Route path="/office-editor" element={<OfficeEditor />} />
           </Routes>
         </Suspense>
       </div>

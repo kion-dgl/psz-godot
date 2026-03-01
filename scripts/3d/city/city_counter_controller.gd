@@ -13,6 +13,10 @@ const SPAWN_VARIANTS := {
 		"position": Vector3(0.50, 2, -15.33),
 		"rotation": 0.0,
 	},
+	"office-exit": {
+		"position": Vector3(11.496, 0, -11.572),
+		"rotation": PI + PI / 4,
+	},
 }
 
 const WALL_DATA := [
@@ -90,6 +94,12 @@ func _ready() -> void:
 	_add_area_trigger(
 		Vector3(-0.015, 1, -22.305), Vector3(3.29, 3, 0.91),
 		"res://scenes/3d/city/city_warp.tscn", "counter-exit"
+	)
+
+	# East exit — Principal's office
+	_add_area_trigger(
+		Vector3(11.496, 1, -11.572), Vector3(2, 3, 2),
+		"res://scenes/3d/city/city_office.tscn", "counter-office"
 	)
 
 	# Wire up
