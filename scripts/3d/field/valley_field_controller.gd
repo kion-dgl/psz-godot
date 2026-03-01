@@ -380,7 +380,6 @@ func _ready() -> void:
 	# Pause menu (hidden by default)
 	_pause_menu = FieldPauseMenuScript.new()
 	_pause_menu.visible = false
-	_pause_menu.return_to_city.connect(_return_to_city)
 	add_child(_pause_menu)
 
 	_room_minimap = RoomMinimapScript.new()
@@ -1324,8 +1323,22 @@ func _spawn_field_elements() -> void:
 			_objective_locked_exits.append(area_warp)
 
 	# End cells WITHOUT warp_edge — defer telepipe until room clear
+	# Skip if any object already provides a telepipe (explicit telepipe object or dialog action)
 	if _current_cell.get("is_end", false) and warp_edge.is_empty():
-		_needs_telepipe = true
+		var has_telepipe_source := false
+		for obj in _current_cell.get("objects", []):
+			if str(obj.get("type", "")) == "telepipe":
+				has_telepipe_source = true
+				break
+			if str(obj.get("type", "")) == "dialog_trigger":
+				for act in obj.get("actions", []):
+					if str(act) == "telepipe":
+						has_telepipe_source = true
+						break
+			if has_telepipe_source:
+				break
+		if not has_telepipe_source:
+			_needs_telepipe = true
 
 	# Gates and Waypoints at each connection trigger (skip warp_edge)
 	print("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
