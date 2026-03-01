@@ -116,6 +116,7 @@ func set_active_slot(slot: int) -> void:
 	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
 		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
 		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
+		_characters[_active_slot]["meseta"] = GameState.meseta
 	_active_slot = slot
 	# Load incoming character's data
 	Inventory._items = _characters[slot].get("inventory", {}).duplicate()
@@ -222,6 +223,7 @@ func sync_inventory_to_active() -> void:
 	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
 		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
 		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
+		_characters[_active_slot]["meseta"] = GameState.meseta
 
 
 ## Migrate v3 global completed_missions to all existing characters

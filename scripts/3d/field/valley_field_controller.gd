@@ -30,6 +30,7 @@ const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
 const QuestItemPickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
 const CompanionNpcScript := preload("res://scripts/3d/elements/companion_npc.gd")
+const FieldPauseMenuScript := preload("res://scripts/3d/field/field_pause_menu.gd")
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -87,6 +88,7 @@ var _needs_telepipe: bool = false      # End cell without warp_edge — spawn te
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
+var _pause_menu: Node = null
 
 # Wave spawning
 var _current_wave: int = 1
@@ -374,6 +376,12 @@ func _ready() -> void:
 	# Field HUD (always visible — stats panel + meseta + minimap)
 	_field_hud = FieldHudScript.new()
 	add_child(_field_hud)
+
+	# Pause menu (hidden by default)
+	_pause_menu = FieldPauseMenuScript.new()
+	_pause_menu.visible = false
+	_pause_menu.return_to_city.connect(_return_to_city)
+	add_child(_pause_menu)
 
 	_room_minimap = RoomMinimapScript.new()
 	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
@@ -2433,16 +2441,16 @@ func _check_room_clear() -> void:
 		if is_instance_valid(rc_trigger) and rc_trigger.trigger_condition == "room_clear" and rc_trigger.element_state == "ready":
 			rc_trigger.activate()
 
-	# Spawn telepipe on end cells after room clear
-	if _needs_telepipe:
-		_needs_telepipe = false
-		_spawn_telepipe(Vector3.ZERO)
-
-	# Spawn deferred telepipe objects (spawn_condition=room_clear)
+	# Spawn deferred telepipe objects (spawn_condition=room_clear) — takes precedence
 	if not _deferred_telepipe.is_empty():
 		var tp_pos: Vector3 = _deferred_telepipe.get("position", Vector3.ZERO)
 		_spawn_telepipe(tp_pos)
 		_deferred_telepipe = {}
+		_needs_telepipe = false
+	elif _needs_telepipe:
+		# Fallback: end cells without explicit telepipe object
+		_needs_telepipe = false
+		_spawn_telepipe(Vector3.ZERO)
 
 
 ## Spawn enemies for a specific wave number.
@@ -2774,9 +2782,11 @@ func _return_to_city() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		_return_to_city()
+		if _pause_menu and not _pause_menu.visible:
+			_pause_menu.open()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and not event.echo:
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_TAB:
 				if _map_overlay:
