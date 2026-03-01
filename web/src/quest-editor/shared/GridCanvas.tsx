@@ -5,7 +5,7 @@
  * Click occupied cell -> onCellSelect (for CellInspector)
  */
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import type { QuestProject, EditorGridCell, Direction } from '../types';
 import { getRotatedGates, oppositeDirection, getNeighbor, isValidPos } from '../hooks/useStageConfigs';
 import { STAGE_AREAS, getStageSubfolder } from '../../stage-editor/constants';
@@ -18,6 +18,9 @@ interface GridCanvasProps {
   onCellSelect: (pos: string) => void;
   showMinimap?: boolean;
   areaKey?: string;
+  swapSource?: string | null;
+  onSwapExecute?: (targetPos: string) => void;
+  onSwapCancel?: () => void;
 }
 
 /** Get suffix from stage name (e.g., "s01a_ib1" -> "ib1") */
@@ -136,6 +139,7 @@ function CellDisplay({
   showMinimap,
   areaKey,
   onClick,
+  isSwapSource,
 }: {
   pos: string;
   cell: EditorGridCell | null;
@@ -145,6 +149,7 @@ function CellDisplay({
   showMinimap?: boolean;
   areaKey?: string;
   onClick: () => void;
+  isSwapSource?: boolean;
 }) {
   const [row, col] = pos.split(',').map(Number);
 
@@ -179,6 +184,8 @@ function CellDisplay({
   const isEnd = project.endPos === pos;
   const hasKey = Object.values(project.keyLinks).includes(pos);
   const isKeyGate = pos in project.keyLinks;
+  const keyDropLinks = project.keyDropLinks || {};
+  const isKeyDrop = pos in keyDropLinks;
 
   return (
     <div
@@ -186,8 +193,8 @@ function CellDisplay({
       style={{
         width: '110px',
         height: '110px',
-        background: isSelected ? '#3a3a6a' : '#2a2a4a',
-        border: `2px solid ${isSelected ? '#88aaff' : cellColor}`,
+        background: isSwapSource ? '#4a3a1a' : isSelected ? '#3a3a6a' : '#2a2a4a',
+        border: `2px solid ${isSwapSource ? '#ff9922' : isSelected ? '#88aaff' : cellColor}`,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -223,9 +230,19 @@ function CellDisplay({
           borderRadius: '50%', border: '2px solid #fff',
         }} title="Key" />
       )}
-      {isKeyGate && (
+      {isKeyDrop && (
         <div style={{
           position: 'absolute', top: '3px', right: hasKey ? '22px' : '3px',
+          width: '14px', height: '14px', background: '#ddaa33',
+          borderRadius: '50%', border: '2px solid #fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '8px', color: '#fff', fontWeight: 700,
+        }} title="Key Drop">D</div>
+      )}
+      {isKeyGate && (
+        <div style={{
+          position: 'absolute', top: '3px',
+          right: (hasKey || isKeyDrop) ? ((hasKey ? 19 : 0) + (isKeyDrop ? 19 : 0) + 3) + 'px' : '3px',
           width: '14px', height: '14px', background: '#ff66ff',
           borderRadius: '2px', border: '2px solid #fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -276,42 +293,80 @@ function CellDisplay({
   );
 }
 
-export default function GridCanvas({ project, selectedCell, onCellClick, onCellSelect, showMinimap, areaKey }: GridCanvasProps) {
+export default function GridCanvas({ project, selectedCell, onCellClick, onCellSelect, showMinimap, areaKey, swapSource, onSwapExecute, onSwapCancel }: GridCanvasProps) {
   const { gridSize, cells } = project;
   const entryDirs = useMemo(() => computeEntryDirections(project), [project]);
+  const inSwapMode = !!swapSource;
+
+  // ESC to cancel swap mode
+  useEffect(() => {
+    if (!inSwapMode || !onSwapCancel) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { onSwapCancel(); }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [inSwapMode, onSwapCancel]);
+
+  const handleCellClick = useCallback((pos: string) => {
+    if (inSwapMode) {
+      if (onSwapExecute) onSwapExecute(pos);
+      return;
+    }
+    const cell = cells[pos];
+    if (cell) onCellSelect(pos); else onCellClick(pos);
+  }, [inSwapMode, cells, onSwapExecute, onCellSelect, onCellClick]);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '2px',
-      background: '#111',
-      padding: '4px',
-      borderRadius: '8px',
-    }}>
-      {Array.from({ length: gridSize }, (_, row) => (
-        <div key={row} style={{ display: 'flex', gap: '2px' }}>
-          {Array.from({ length: gridSize }, (_, col) => {
-            const pos = `${row},${col}`;
-            const cell = cells[pos] || null;
-            const isSelected = selectedCell === pos;
-
-            return (
-              <CellDisplay
-                key={col}
-                pos={pos}
-                cell={cell}
-                project={project}
-                isSelected={isSelected}
-                entryDir={entryDirs.get(pos) ?? null}
-                showMinimap={showMinimap}
-                areaKey={areaKey}
-                onClick={() => cell ? onCellSelect(pos) : onCellClick(pos)}
-              />
-            );
-          })}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
+      {/* Swap mode banner */}
+      {inSwapMode && (
+        <div style={{
+          padding: '8px 16px',
+          background: '#886622',
+          color: '#fff',
+          fontSize: '13px',
+          fontWeight: 600,
+          textAlign: 'center',
+          borderRadius: '6px',
+          marginBottom: '8px',
+        }}>
+          Click a cell to swap or move to &middot; Press ESC to cancel
         </div>
-      ))}
+      )}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2px',
+        background: '#111',
+        padding: '4px',
+        borderRadius: '8px',
+      }}>
+        {Array.from({ length: gridSize }, (_, row) => (
+          <div key={row} style={{ display: 'flex', gap: '2px' }}>
+            {Array.from({ length: gridSize }, (_, col) => {
+              const pos = `${row},${col}`;
+              const cell = cells[pos] || null;
+              const isSelected = selectedCell === pos;
+
+              return (
+                <CellDisplay
+                  key={col}
+                  pos={pos}
+                  cell={cell}
+                  project={project}
+                  isSelected={isSelected}
+                  entryDir={entryDirs.get(pos) ?? null}
+                  showMinimap={showMinimap}
+                  areaKey={areaKey}
+                  onClick={() => handleCellClick(pos)}
+                  isSwapSource={swapSource === pos}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -8,11 +8,11 @@
 
 import { useState, useCallback, useMemo, useRef, useEffect, Suspense } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Grid } from '@react-three/drei';
+import { OrbitControls, useGLTF, Grid, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { QuestProject, Direction, CellObject, CellObjectType } from '../types';
 import { CELL_OBJECT_COLORS, CELL_OBJECT_LABELS } from '../types';
-import { getRotatedGates, getStageConfig, getStageSuffix } from '../hooks/useStageConfigs';
+import { getRotatedGates, getStageConfig, getStageSuffix, rotateDirection } from '../hooks/useStageConfigs';
 import { getGlbPath, getAreaFromMapId } from '../constants';
 import { assetUrl } from '../../utils/assets';
 import type { GateConfig } from '../types';
@@ -85,13 +85,13 @@ interface ContentTabProps {
 // ============================================================================
 
 /** Gate marker — cyan wireframe box at gate position */
-function GateMarker({ gate, isLocked }: { gate: GateConfig; isLocked: boolean }) {
+function GateMarker({ gate, isLocked, worldEdge }: { gate: GateConfig; isLocked: boolean; worldEdge: string }) {
   const boxWidth = 6;
   const boxHeight = 4;
   const boxDepth = 1;
   const color = isLocked ? '#ff66ff' : '#00ffff';
 
-  // Rotation based on gate edge
+  // Rotation based on gate edge (model-local, unrotated)
   const rotation = gate.edge === 'north' ? Math.PI
     : gate.edge === 'south' ? 0
     : gate.edge === 'east' ? Math.PI / 2
@@ -107,11 +107,21 @@ function GateMarker({ gate, isLocked }: { gate: GateConfig; isLocked: boolean })
         <edgesGeometry args={[new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth)]} />
         <lineBasicMaterial color={color} />
       </lineSegments>
-      {/* Label */}
-      <mesh position={[0, boxHeight + 0.5, 0]}>
-        <sphereGeometry args={[0.3, 8, 8]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
+      {/* Direction label (shows world-space direction after rotation) */}
+      <Html position={[0, boxHeight + 1, 0]} center style={{ pointerEvents: 'none' }}>
+        <div style={{
+          background: isLocked ? '#ff66ff' : '#006688',
+          color: '#fff',
+          padding: '2px 8px',
+          borderRadius: '4px',
+          fontSize: '12px',
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          border: `1px solid ${color}`,
+        }}>
+          {worldEdge.toUpperCase()}
+        </div>
+      </Html>
     </group>
   );
 }
@@ -209,14 +219,16 @@ function EnemyMarker({ obj, selected, onClick }: { obj: CellObject; selected: bo
 /** Fence marker — blue horizontal bar */
 function FenceMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
   const yRot = ((obj.rotation || 0) * Math.PI) / 180;
+  const sx = obj.scale_x ?? 1;
+  const w = 3 * sx;
   return (
     <group position={obj.position} rotation={[0, yRot, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
       <mesh position={[0, 1, 0]}>
-        <boxGeometry args={[3, 2, 0.3]} />
+        <boxGeometry args={[w, 2, 0.3]} />
         <meshBasicMaterial color="#4488cc" transparent opacity={selected ? 0.7 : 0.4} />
       </mesh>
       <lineSegments position={[0, 1, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(3, 2, 0.3)]} />
+        <edgesGeometry args={[new THREE.BoxGeometry(w, 2, 0.3)]} />
         <lineBasicMaterial color={selected ? '#ffffff' : '#4488cc'} />
       </lineSegments>
     </group>
@@ -893,6 +905,9 @@ function CellContentInspector({
   onTogglePlaceKey,
   onClearKeyPosition,
   onSetKeyPosition,
+  placingKeyDrop,
+  onTogglePlaceKeyDrop,
+  onClearKeyDropPosition,
   placingObject,
   onSetPlacingObject,
   selectedObjectId,
@@ -908,6 +923,9 @@ function CellContentInspector({
   onTogglePlaceKey: () => void;
   onClearKeyPosition: () => void;
   onSetKeyPosition: (pos: [number, number, number]) => void;
+  placingKeyDrop: boolean;
+  onTogglePlaceKeyDrop: () => void;
+  onClearKeyDropPosition: () => void;
   placingObject: CellObjectType | null;
   onSetPlacingObject: (type: CellObjectType | null) => void;
   selectedObjectId: string | null;
@@ -933,7 +951,9 @@ function CellContentInspector({
   const isEnd = project.endPos === selectedCell;
   const hasKey = Object.values(project.keyLinks).includes(selectedCell);
   const isKeyGate = selectedCell in project.keyLinks;
+  const isKeyDrop = selectedCell in (project.keyDropLinks || {});
   const keyPos = cell.keyPosition;
+  const keyDropPos = cell.keyDropPosition;
 
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
@@ -949,6 +969,7 @@ function CellContentInspector({
           {isStart && <span style={badgeStyle('#66aaff')}>START</span>}
           {isEnd && <span style={badgeStyle('#ffaa66')}>END</span>}
           {hasKey && <span style={badgeStyle('#ff66aa')}>KEY</span>}
+          {isKeyDrop && <span style={badgeStyle('#ddaa33')}>DROP</span>}
           {isKeyGate && <span style={badgeStyle('#ff66ff')}>GATE</span>}
         </div>
       </div>
@@ -1038,6 +1059,65 @@ function CellContentInspector({
           )}
           <div style={{ fontSize: '10px', color: '#888', marginTop: '6px' }}>
             Unlocks: {Object.entries(project.keyLinks).find(([_, v]) => v === selectedCell)?.[0] || 'unlinked'}
+          </div>
+        </div>
+      )}
+
+      {/* Key drop position placement */}
+      {isKeyDrop && (
+        <div style={sectionStyle}>
+          <div style={labelStyle}>Key Drop Position</div>
+          {keyDropPos ? (
+            <>
+              <div style={{
+                padding: '8px',
+                background: '#ddaa3322',
+                border: '1px solid #ddaa33',
+                borderRadius: '4px',
+                fontSize: '12px',
+                color: '#ddaa33',
+                fontFamily: 'monospace',
+                marginBottom: '8px',
+              }}>
+                [{keyDropPos[0]}, {keyDropPos[1]}, {keyDropPos[2]}]
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={onTogglePlaceKeyDrop}
+                  style={{
+                    ...btnStyle,
+                    background: placingKeyDrop ? '#ddaa33' : '#555588',
+                  }}
+                >
+                  {placingKeyDrop ? 'Placing...' : 'Reposition'}
+                </button>
+                <button
+                  onClick={onClearKeyDropPosition}
+                  style={{ ...btnStyle, background: '#884444' }}
+                >
+                  Clear
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '12px', color: '#ddaa33', marginBottom: '8px' }}>
+                No position set. Key will drop at room center.
+              </div>
+              <button
+                onClick={onTogglePlaceKeyDrop}
+                style={{
+                  ...btnStyle,
+                  background: placingKeyDrop ? '#ddaa33' : '#448844',
+                  width: '100%',
+                }}
+              >
+                {placingKeyDrop ? 'Click 3D view to place...' : 'Place Key Drop'}
+              </button>
+            </>
+          )}
+          <div style={{ fontSize: '10px', color: '#888', marginTop: '6px' }}>
+            Drops key for gate: {(project.keyDropLinks || {})[selectedCell] || 'not set'}
           </div>
         </div>
       )}
@@ -1216,23 +1296,43 @@ function CellContentInspector({
                     </div>
                   )}
 
-                  {/* Rotation for fences */}
+                  {/* Rotation and scale for fences */}
                   {isSel && obj.type === 'fence' && (
-                    <div style={{ marginTop: '4px', display: 'flex', gap: '4px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '10px', color: '#888' }}>Rot:</span>
-                      {[0, 90].map(deg => (
-                        <button
-                          key={deg}
-                          onClick={(e) => { e.stopPropagation(); onUpdateObject(obj.id, { rotation: deg || undefined }); }}
-                          style={{
-                            ...btnStyle, padding: '2px 6px', fontSize: '9px',
-                            background: (obj.rotation || 0) === deg ? '#4488cc' : '#333',
+                    <>
+                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Rot:</span>
+                        {[0, 90].map(deg => (
+                          <button
+                            key={deg}
+                            onClick={(e) => { e.stopPropagation(); onUpdateObject(obj.id, { rotation: deg || undefined }); }}
+                            style={{
+                              ...btnStyle, padding: '2px 6px', fontSize: '9px',
+                              background: (obj.rotation || 0) === deg ? '#4488cc' : '#333',
+                            }}
+                          >
+                            {deg}&deg;
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Scale X:</span>
+                        <input
+                          type="number"
+                          step={0.5}
+                          min={0.5}
+                          value={obj.scale_x ?? 1}
+                          onChange={(e) => {
+                            const v = parseFloat(e.target.value);
+                            if (!isNaN(v) && v > 0) onUpdateObject(obj.id, { scale_x: v === 1 ? undefined : v });
                           }}
-                        >
-                          {deg}&deg;
-                        </button>
-                      ))}
-                    </div>
+                          style={{
+                            width: '60px', padding: '2px 4px', background: '#111',
+                            border: '1px solid #444', borderRadius: '3px',
+                            color: '#fff', fontSize: '10px',
+                          }}
+                        />
+                      </div>
+                    </>
                   )}
 
                   {/* Story prop editor */}
@@ -1718,6 +1818,7 @@ function badgeStyle(color: string): React.CSSProperties {
 export default function ContentTab({ project, onUpdateProject }: ContentTabProps) {
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [placingKey, setPlacingKey] = useState(false);
+  const [placingKeyDrop, setPlacingKeyDrop] = useState(false);
   const [placingObject, setPlacingObject] = useState<CellObjectType | null>(null);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [repositioningObjectId, setRepositioningObjectId] = useState<string | null>(null);
@@ -1725,6 +1826,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
   const cell = selectedCell ? project.cells[selectedCell] : null;
   const config = cell ? getStageConfig(cell.stageName) : null;
   const hasKey = selectedCell ? Object.values(project.keyLinks).includes(selectedCell) : false;
+  const isKeyDrop = selectedCell ? selectedCell in (project.keyDropLinks || {}) : false;
 
   const handlePlaceKey = useCallback((pos: [number, number, number]) => {
     if (!selectedCell) return;
@@ -1752,6 +1854,38 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
 
   const handleTogglePlaceKey = useCallback(() => {
     setPlacingKey(p => !p);
+    setPlacingKeyDrop(false);
+    setPlacingObject(null);
+    setRepositioningObjectId(null);
+  }, []);
+
+  const handlePlaceKeyDrop = useCallback((pos: [number, number, number]) => {
+    if (!selectedCell) return;
+    onUpdateProject(prev => ({
+      ...prev,
+      cells: {
+        ...prev.cells,
+        [selectedCell]: { ...prev.cells[selectedCell], keyDropPosition: pos },
+      },
+    }));
+    setPlacingKeyDrop(false);
+  }, [selectedCell, onUpdateProject]);
+
+  const handleClearKeyDropPosition = useCallback(() => {
+    if (!selectedCell) return;
+    onUpdateProject(prev => {
+      const updated = { ...prev.cells[selectedCell] };
+      delete updated.keyDropPosition;
+      return {
+        ...prev,
+        cells: { ...prev.cells, [selectedCell]: updated },
+      };
+    });
+  }, [selectedCell, onUpdateProject]);
+
+  const handleTogglePlaceKeyDrop = useCallback(() => {
+    setPlacingKeyDrop(p => !p);
+    setPlacingKey(false);
     setPlacingObject(null);
     setRepositioningObjectId(null);
   }, []);
@@ -1759,12 +1893,14 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
   const handleSetPlacingObject = useCallback((type: CellObjectType | null) => {
     setPlacingObject(type);
     setPlacingKey(false);
+    setPlacingKeyDrop(false);
     setRepositioningObjectId(null);
   }, []);
 
   const handleToggleRepositionObject = useCallback((objId: string) => {
     setRepositioningObjectId(prev => prev === objId ? null : objId);
     setPlacingKey(false);
+    setPlacingKeyDrop(false);
     setPlacingObject(null);
   }, []);
 
@@ -1922,13 +2058,17 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
               />
 
               {/* Gate markers */}
-              {config?.gates.map((gate, i) => (
-                <GateMarker
-                  key={i}
-                  gate={gate}
-                  isLocked={cell.lockedGate === gate.edge}
-                />
-              ))}
+              {config?.gates.map((gate, i) => {
+                const worldEdge = rotateDirection(gate.edge, cell.rotation ?? 0);
+                return (
+                  <GateMarker
+                    key={i}
+                    gate={gate}
+                    worldEdge={worldEdge}
+                    isLocked={cell.lockedGate === worldEdge}
+                  />
+                );
+              })}
 
               {/* Spawn points */}
               {config?.spawnPoints.map((sp, i) => (
@@ -1942,6 +2082,28 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
               {/* Key marker (if this cell has a key with authored position) */}
               {hasKey && cell.keyPosition && !placingKey && (
                 <KeyMarker position={cell.keyPosition} />
+              )}
+
+              {/* Key drop marker (orange, shows authored drop position) */}
+              {isKeyDrop && cell.keyDropPosition && !placingKeyDrop && (
+                <group position={cell.keyDropPosition}>
+                  <mesh>
+                    <sphereGeometry args={[1.0, 16, 16]} />
+                    <meshBasicMaterial color="#ddaa33" transparent opacity={0.8} />
+                  </mesh>
+                  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -cell.keyDropPosition[1] + 0.05, 0]}>
+                    <ringGeometry args={[1.2, 1.5, 32]} />
+                    <meshBasicMaterial color="#ddaa33" side={2} transparent opacity={0.5} />
+                  </mesh>
+                </group>
+              )}
+
+              {/* Key drop placement mode */}
+              {placingKeyDrop && (
+                <>
+                  <KeyPlacementCursor />
+                  <GroundClickPlane onPlace={handlePlaceKeyDrop} />
+                </>
               )}
 
               {/* Object markers */}
@@ -2004,6 +2166,19 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
               </div>
             )}
 
+            {placingKeyDrop && (
+              <div style={{
+                position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+                background: '#ddaa33', padding: '8px 20px',
+                borderRadius: '20px', fontSize: '13px', color: '#fff', fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onClick={() => setPlacingKeyDrop(false)}
+              >
+                Click in 3D view to place key drop | ESC to cancel
+              </div>
+            )}
+
             {placingObject && (
               <div style={{
                 position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
@@ -2057,6 +2232,9 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
             onTogglePlaceKey={handleTogglePlaceKey}
             onClearKeyPosition={handleClearKeyPosition}
             onSetKeyPosition={handlePlaceKey}
+            placingKeyDrop={placingKeyDrop}
+            onTogglePlaceKeyDrop={handleTogglePlaceKeyDrop}
+            onClearKeyDropPosition={handleClearKeyDropPosition}
             placingObject={placingObject}
             onSetPlacingObject={handleSetPlacingObject}
             selectedObjectId={selectedObjectId}

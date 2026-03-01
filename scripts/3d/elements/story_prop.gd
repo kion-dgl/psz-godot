@@ -29,8 +29,8 @@ func _ready() -> void:
 	if aabb.size.y > 0:
 		model.position.y -= aabb.position.y * prop_scale
 
-	# Add static collision based on AABB
-	if aabb.size.length() > 0:
+	# Add static collision based on AABB (skip for dropship — mesh is pre-scaled in GLB)
+	if aabb.size.length() > 0 and not prop_path.contains("dropship"):
 		_add_collision(aabb)
 
 

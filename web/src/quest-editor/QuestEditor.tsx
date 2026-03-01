@@ -82,6 +82,7 @@ export default function QuestEditor() {
       startPos: activeSection.startPos,
       endPos: activeSection.endPos,
       keyLinks: activeSection.keyLinks,
+      keyDropLinks: activeSection.keyDropLinks || {},
     };
   }, [project, activeSection, hasMultipleSections]);
 
@@ -102,6 +103,7 @@ export default function QuestEditor() {
         startPos: sec.startPos,
         endPos: sec.endPos,
         keyLinks: sec.keyLinks,
+        keyDropLinks: sec.keyDropLinks || {},
       };
       const virtualNext = updater(virtualPrev);
       // Write section fields back
@@ -114,8 +116,9 @@ export default function QuestEditor() {
         startPos: virtualNext.startPos,
         endPos: virtualNext.endPos,
         keyLinks: virtualNext.keyLinks,
+        keyDropLinks: virtualNext.keyDropLinks || {},
       };
-      return { ...virtualNext, sections: newSections, variant: prev.variant, gridSize: prev.gridSize, cells: prev.cells, startPos: prev.startPos, endPos: prev.endPos, keyLinks: prev.keyLinks };
+      return { ...virtualNext, sections: newSections, variant: prev.variant, gridSize: prev.gridSize, cells: prev.cells, startPos: prev.startPos, endPos: prev.endPos, keyLinks: prev.keyLinks, keyDropLinks: prev.keyDropLinks };
     });
   }, [updateProject, hasMultipleSections, sectionIdx]);
 
@@ -168,7 +171,8 @@ export default function QuestEditor() {
       startPos: null,
       endPos: null,
       keyLinks: {},
-      sections: prev.sections ? prev.sections.map(s => ({ ...s, cells: {}, startPos: null, endPos: null, keyLinks: {} })) : undefined,
+      keyDropLinks: {},
+      sections: prev.sections ? prev.sections.map(s => ({ ...s, cells: {}, startPos: null, endPos: null, keyLinks: {}, keyDropLinks: {} })) : undefined,
     }));
   }, [updateProject]);
 
@@ -181,6 +185,7 @@ export default function QuestEditor() {
         startPos: null,
         endPos: null,
         keyLinks: {},
+        keyDropLinks: {},
       }));
     } else {
       updateProject(prev => ({
@@ -190,6 +195,7 @@ export default function QuestEditor() {
         startPos: null,
         endPos: null,
         keyLinks: {},
+        keyDropLinks: {},
       }));
     }
   }, [updateProject, updateSectionProject, hasMultipleSections]);
@@ -203,6 +209,7 @@ export default function QuestEditor() {
         startPos: null,
         endPos: null,
         keyLinks: {},
+        keyDropLinks: {},
       }));
     } else {
       updateProject(prev => ({
@@ -212,6 +219,7 @@ export default function QuestEditor() {
         startPos: null,
         endPos: null,
         keyLinks: {},
+        keyDropLinks: {},
       }));
     }
   }, [updateProject, updateSectionProject, hasMultipleSections]);

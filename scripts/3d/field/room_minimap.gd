@@ -39,7 +39,7 @@ const MINIMAP_DIRECTIONS := ["north", "east", "south", "west"]
 
 func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 		connections: Dictionary, warp_edge: String,
-		map_root: Node3D, rotation_deg: int = 0) -> void:
+		map_root: Node3D, rotation_deg: int = 0, entry_edge: String = "") -> void:
 	_rotation_deg = rotation_deg
 	mouse_filter = MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(DISPLAY_SIZE, DISPLAY_SIZE)
@@ -80,7 +80,7 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 		stage_id, svg_gates.size(), _svg_scale, _svg_offset_x, _svg_offset_y, _rotation_deg])
 
 	# Build gate entries using baked directions from SVG
-	_build_gate_entries(svg_gates, connections, warp_edge, portal_data)
+	_build_gate_entries(svg_gates, connections, warp_edge, portal_data, entry_edge)
 
 	# Enable player tracking if we have embedded metadata
 	if _svg_scale > 0.0:
@@ -306,7 +306,7 @@ func _parse_gates_with_dirs(svg_text: String) -> Array:
 # ── Gate entries ─────────────────────────────────────────────────────────────
 
 func _build_gate_entries(svg_gates: Array, connections: Dictionary,
-		warp_edge: String, portal_data: Dictionary) -> void:
+		warp_edge: String, portal_data: Dictionary, entry_edge: String = "") -> void:
 	## Build gate display entries.  Uses data-gate-dir from SVG to identify
 	## gate directions (base stage direction), then rotates to grid direction.
 	for gate in svg_gates:
@@ -324,6 +324,9 @@ func _build_gate_entries(svg_gates: Array, connections: Dictionary,
 			if grid_dir == warp_edge and not warp_edge.is_empty():
 				color = GATE_EXIT
 				label = "EXIT"
+			elif not entry_edge.is_empty() and grid_dir == entry_edge:
+				color = GATE_EXIT
+				label = grid_dir.substr(0, 1).to_upper()
 			elif connections.has(grid_dir):
 				color = GATE_OPEN
 				label = grid_dir.substr(0, 1).to_upper()

@@ -20,16 +20,44 @@
           "portals": {
             "south": {
               "portal_id": "portal_1771646251322_m10fltkxh",
-              "gate": [-2.02, 0, 14.05],
-              "spawn": [-2.02, 1, 17.05],
-              "trigger": [-2.02, 0, 21.05],
-              "gate_rot": [0, 3.14, 0],
+              "gate": [
+                -2.02,
+                0,
+                14.05
+              ],
+              "spawn": [
+                -2.02,
+                1,
+                17.05
+              ],
+              "trigger": [
+                -2.02,
+                0,
+                21.05
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             },
             "default": {
-              "gate": [-1.75, 0, -9.72],
-              "spawn": [-1.75, 1, -9.72],
-              "trigger": [-1.75, 0, -9.72],
+              "gate": [
+                -1.75,
+                0,
+                -9.72
+              ],
+              "spawn": [
+                -1.75,
+                1,
+                -9.72
+              ],
+              "trigger": [
+                -1.75,
+                0,
+                -9.72
+              ],
               "default_rotation": 0
             }
           },
@@ -40,57 +68,279 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
           "objects": [
             {
-              "type": "warp",
-              "position": [-8.5, 0, 8.5],
-              "link_id": "skip"
+              "type": "dialog_trigger",
+              "position": [
+                -1.9,
+                0,
+                9.1
+              ],
+              "trigger_size": [
+                12,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "Miners in the valley just reported something falling from the sky."
+                }
+              ]
             }
           ]
         },
         {
           "pos": "1,2",
+          "stage_id": "s01a_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,2",
+            "south": "2,2"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1769053381372_5av2efj16",
+              "gate": [
+                -17.01,
+                0,
+                -20.92
+              ],
+              "spawn": [
+                -17.01,
+                1,
+                -23.92
+              ],
+              "trigger": [
+                -17.01,
+                0,
+                -27.92
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1769053417752_i1yyit48i",
+              "gate": [
+                14.05,
+                0,
+                20.85
+              ],
+              "spawn": [
+                14.05,
+                1,
+                23.85
+              ],
+              "trigger": [
+                14.05,
+                0,
+                27.85
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                3.1,
+                0,
+                -15.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                6.3,
+                0,
+                -16.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                8.9,
+                0,
+                -15.6
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.9,
+                0,
+                1.8
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.7,
+                0,
+                -2.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.6,
+                0,
+                -6.8
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -14.7,
+                0,
+                -15.5
+              ],
+              "trigger_size": [
+                16,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "The miners said the impact was south of here. Keep your weapon ready — the creatures in this area don't wait for you to swing first."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
           "stage_id": "s01a_xb2",
           "rotation": 0,
           "connections": {
-            "south": "2,2",
-            "north": "0,2",
-            "west": "1,1",
-            "east": "1,3"
+            "south": "3,2",
+            "north": "1,2",
+            "west": "2,1",
+            "east": "2,3"
           },
           "portals": {
             "south": {
               "portal_id": "portal_1769143925991_arybt8i50",
-              "gate": [11.98, 0, 21.19],
-              "spawn": [11.98, 1, 24.19],
-              "trigger": [11.98, 0, 28.19],
-              "gate_rot": [0, 3.14, 0],
+              "gate": [
+                11.98,
+                0,
+                21.19
+              ],
+              "spawn": [
+                11.98,
+                1,
+                24.19
+              ],
+              "trigger": [
+                11.98,
+                0,
+                28.19
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             },
             "north": {
               "portal_id": "portal_1769143935626_74x4a09p6",
-              "gate": [-16.6, 0, -20.39],
-              "spawn": [-16.6, 1, -23.39],
-              "trigger": [-16.6, 0, -27.39],
-              "gate_rot": [0, 0, 0],
+              "gate": [
+                -16.6,
+                0,
+                -20.39
+              ],
+              "spawn": [
+                -16.6,
+                1,
+                -23.39
+              ],
+              "trigger": [
+                -16.6,
+                0,
+                -27.39
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
               "compass_label": "N"
             },
             "west": {
               "portal_id": "portal_1771821793124_0ef6zk762",
-              "gate": [-23.05, 0, 16.41],
-              "spawn": [-26.05, 1, 16.41],
-              "trigger": [-30.05, 0, 16.41],
-              "gate_rot": [0, 1.57, 0],
+              "gate": [
+                -23.05,
+                0,
+                16.41
+              ],
+              "spawn": [
+                -26.05,
+                1,
+                16.41
+              ],
+              "trigger": [
+                -30.05,
+                0,
+                16.41
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
               "compass_label": "W"
             },
             "east": {
               "portal_id": "portal_1771821805383_ok7mbw99e",
-              "gate": [20.32, 0, -2.98],
-              "spawn": [23.32, 1, -2.98],
-              "trigger": [27.32, 0, -2.98],
-              "gate_rot": [0, -1.57, 0],
+              "gate": [
+                20.32,
+                0,
+                -2.98
+              ],
+              "spawn": [
+                23.32,
+                1,
+                -2.98
+              ],
+              "trigger": [
+                27.32,
+                0,
+                -2.98
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
               "compass_label": "E"
             }
           },
@@ -99,123 +349,119 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 2,
           "warp_edge": "",
-          "path_order": 1
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s01a_ib1",
-          "rotation": 0,
-          "connections": {
-            "north": "1,2",
-            "south": "3,2"
-          },
-          "portals": {
-            "north": {
-              "portal_id": "portal_1769053381372_5av2efj16",
-              "gate": [-17.01, 0, -20.92],
-              "spawn": [-17.01, 1, -23.92],
-              "trigger": [-17.01, 0, -27.92],
-              "gate_rot": [0, 0, 0],
-              "compass_label": "N"
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -4.2,
+                0,
+                -14.4
+              ],
+              "trigger_size": [
+                4,
+                3,
+                13
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "Usually it's just meteors, but every now and then a satellite comes down. Either way, we should go check it out."
+                },
+                {
+                  "speaker": "Kai",
+                  "text": "The wildlife out there is dangerous. Try not to get hurt too bad, rookie."
+                }
+              ]
             },
-            "south": {
-              "portal_id": "portal_1769053417752_i1yyit48i",
-              "gate": [14.05, 0, 20.85],
-              "spawn": [14.05, 1, 23.85],
-              "trigger": [14.05, 0, 27.85],
-              "gate_rot": [0, 3.14, 0],
-              "compass_label": "S"
+            {
+              "type": "enemy",
+              "position": [
+                13.1,
+                0,
+                5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.4,
+                0,
+                9.6
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.8,
+                0,
+                7.6
+              ],
+              "enemy_id": "ghowl"
             }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 2
-        },
-        {
-          "pos": "1,1",
-          "stage_id": "s01a_nc2",
-          "rotation": 270,
-          "connections": {
-            "east": "1,2"
-          },
-          "portals": {
-            "east": {
-              "portal_id": "portal_1769092368149_s8xo45sfu",
-              "gate": [-14.15, 0, 21.29],
-              "spawn": [-14.15, 1, 24.29],
-              "trigger": [-14.15, 0, 28.29],
-              "gate_rot": [0, 3.14, 0],
-              "compass_label": "S"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 3
-        },
-        {
-          "pos": "1,3",
-          "stage_id": "s01a_nc2",
-          "rotation": 90,
-          "connections": {
-            "west": "1,2"
-          },
-          "portals": {
-            "west": {
-              "portal_id": "portal_1769092368149_s8xo45sfu",
-              "gate": [-14.15, 0, 21.29],
-              "spawn": [-14.15, 1, 24.29],
-              "trigger": [-14.15, 0, 28.29],
-              "gate_rot": [0, 3.14, 0],
-              "compass_label": "S"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 4
+          ]
         },
         {
           "pos": "3,2",
-          "stage_id": "s01a_ib1",
+          "stage_id": "s01a_ib2",
           "rotation": 0,
           "connections": {
             "north": "2,2"
           },
           "portals": {
             "north": {
-              "portal_id": "portal_1769053381372_5av2efj16",
-              "gate": [-17.01, 0, -20.92],
-              "spawn": [-17.01, 1, -23.92],
-              "trigger": [-17.01, 0, -27.92],
-              "gate_rot": [0, 0, 0],
+              "portal_id": "portal_1769054096896_27h1xur3y",
+              "gate": [
+                -17,
+                0,
+                -20.53
+              ],
+              "spawn": [
+                -17,
+                1,
+                -23.53
+              ],
+              "trigger": [
+                -17,
+                0,
+                -27.53
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
               "compass_label": "N"
             },
             "south": {
-              "portal_id": "portal_1769053417752_i1yyit48i",
-              "gate": [14.05, 0, 20.85],
-              "spawn": [14.05, 1, 23.85],
-              "trigger": [14.05, 0, 27.85],
-              "gate_rot": [0, 3.14, 0],
+              "portal_id": "portal_1769054079594_o7akekgmu",
+              "gate": [
+                11.84,
+                0,
+                21.29
+              ],
+              "spawn": [
+                11.84,
+                1,
+                24.29
+              ],
+              "trigger": [
+                11.84,
+                0,
+                28.29
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             }
           },
@@ -226,8 +472,274 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "south",
-          "path_order": 5
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -1.6,
+                0,
+                -14.5
+              ],
+              "trigger_size": [
+                4,
+                3,
+                11.5
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "If your HP gets low, don't be stubborn about it. Use a healing item before you need one, not after."
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.9,
+                0,
+                8.7
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.4,
+                0,
+                11.7
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.5,
+                0,
+                8.7
+              ],
+              "enemy_id": "ghowl"
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s01a_nc2",
+          "rotation": 270,
+          "connections": {
+            "east": "2,2"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1769092368149_s8xo45sfu",
+              "gate": [
+                -14.15,
+                0,
+                21.29
+              ],
+              "spawn": [
+                -14.15,
+                1,
+                24.29
+              ],
+              "trigger": [
+                -14.15,
+                0,
+                28.29
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "2,2",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "key_position": [
+            15.1,
+            1,
+            15.3
+          ],
+          "objects": [
+            {
+              "type": "fence",
+              "position": [
+                5.2,
+                0,
+                13.2
+              ],
+              "rotation": 90,
+              "link_id": "a",
+              "scale_x": 1.5
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                2.3,
+                0,
+                -18.3
+              ],
+              "link_id": "a"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.4,
+                0,
+                -15.9
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.9,
+                0,
+                -16.5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.7,
+                0,
+                -16.9
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -1.2,
+                0,
+                11.4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "Some gates need a key to open. Keep an eye out — keys are usually hidden nearby in a side room."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s01a_na1",
+          "rotation": 90,
+          "connections": {
+            "west": "2,2"
+          },
+          "portals": {
+            "west": {
+              "portal_id": "portal_1769092107069_jgnmrzarg",
+              "gate": [
+                19.05,
+                0,
+                15.19
+              ],
+              "spawn": [
+                19.05,
+                1,
+                18.19
+              ],
+              "trigger": [
+                19.05,
+                0,
+                22.19
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "2,2",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "key_drop_position": [
+            18.4,
+            1,
+            9
+          ],
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -19.3,
+                0,
+                -8.1
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -19.1,
+                0,
+                -11.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -19.5,
+                0,
+                -5.2
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.6,
+                0,
+                -2.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.1,
+                0,
+                -4.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1,
+                0,
+                -10.6
+              ],
+              "enemy_id": "ghowl"
+            }
+          ]
         }
       ]
     },
@@ -245,18 +757,50 @@
           "portals": {
             "north": {
               "portal_id": "portal_1769242283828_wkxpbtrcj",
-              "gate": [-7.43, 0, -20.32],
-              "spawn": [-7.43, 1, -23.32],
-              "trigger": [-7.43, 0, -27.32],
-              "gate_rot": [0, 0, 0],
+              "gate": [
+                -7.43,
+                0,
+                -20.32
+              ],
+              "spawn": [
+                -7.43,
+                1,
+                -23.32
+              ],
+              "trigger": [
+                -7.43,
+                0,
+                -27.32
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
               "compass_label": "N"
             },
             "south": {
               "portal_id": "portal_1769242291064_sf43eq9wf",
-              "gate": [3.31, 0, 21.17],
-              "spawn": [3.31, 1, 24.17],
-              "trigger": [3.31, 0, 28.17],
-              "gate_rot": [0, 3.14, 0],
+              "gate": [
+                3.31,
+                0,
+                21.17
+              ],
+              "spawn": [
+                3.31,
+                1,
+                24.17
+              ],
+              "trigger": [
+                3.31,
+                0,
+                28.17
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             }
           },
@@ -267,15 +811,91 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "north",
           "path_order": 0,
           "objects": [
             {
               "type": "area_warp",
-              "position": [3.31, 0, 21.17],
+              "position": [
+                3.31,
+                0,
+                21.17
+              ],
               "portal_dir": "south",
-              "label": "SOUTH EXIT\n\u2192 prev section",
+              "label": "SOUTH EXIT\n→ prev section",
               "rotation_y": 3.14
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                3.3,
+                0,
+                14.2
+              ],
+              "trigger_size": [
+                9.5,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "If something hits hard, back off and figure out its pattern before you commit."
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.7,
+                0,
+                -6
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.3,
+                0,
+                -12.2
+              ],
+              "enemy_id": "blaze_helion"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.7,
+                0,
+                -9.7
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "box",
+              "position": [
+                8,
+                0,
+                -14.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                10.2,
+                0,
+                -13.5
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                12.8,
+                0,
+                -10.8
+              ]
             }
           ]
         }
@@ -299,18 +919,50 @@
           "portals": {
             "south": {
               "portal_id": "portal_1769178748150_zpfcscb89",
-              "gate": [5.19, 0, 17.55],
-              "spawn": [5.19, 1, 20.55],
-              "trigger": [5.19, 0, 24.55],
-              "gate_rot": [0, 3.14, 0],
+              "gate": [
+                5.19,
+                0,
+                17.55
+              ],
+              "spawn": [
+                5.19,
+                1,
+                20.55
+              ],
+              "trigger": [
+                5.19,
+                0,
+                24.55
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             },
             "north": {
               "portal_id": "portal_1769178737883_7bppcx8w1",
-              "gate": [-4.91, 0, -20.82],
-              "spawn": [-4.91, 1, -23.82],
-              "trigger": [-4.91, 0, -27.82],
-              "gate_rot": [0, 0, 0],
+              "gate": [
+                -4.91,
+                0,
+                -20.82
+              ],
+              "spawn": [
+                -4.91,
+                1,
+                -23.82
+              ],
+              "trigger": [
+                -4.91,
+                0,
+                -27.82
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
               "compass_label": "N"
             }
           },
@@ -321,15 +973,46 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
           "objects": [
             {
-              "type": "area_warp",
-              "position": [-4.91, 0, -20.82],
-              "portal_dir": "north",
-              "label": "NORTH EXIT\n\u2192 prev section",
-              "rotation_y": 0
+              "type": "enemy",
+              "position": [
+                -5.8,
+                0,
+                4.4
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.1,
+                0,
+                5.2
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.8,
+                0,
+                -0.5
+              ],
+              "enemy_id": "garapython"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.4,
+                0,
+                4.4
+              ],
+              "enemy_id": "vulkure"
             }
           ]
         },
@@ -344,18 +1027,50 @@
           "portals": {
             "south": {
               "portal_id": "portal_1769177159834_wr35kqfh4",
-              "gate": [7.31, 0, 16.79],
-              "spawn": [7.31, 1, 19.79],
-              "trigger": [7.31, 0, 23.79],
-              "gate_rot": [0, 3.14, 0],
+              "gate": [
+                7.31,
+                0,
+                16.79
+              ],
+              "spawn": [
+                7.31,
+                1,
+                19.79
+              ],
+              "trigger": [
+                7.31,
+                0,
+                23.79
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             },
             "north": {
               "portal_id": "portal_1769177169606_8is1zf24h",
-              "gate": [11.14, 0, -20.85],
-              "spawn": [11.14, 1, -23.85],
-              "trigger": [11.14, 0, -27.85],
-              "gate_rot": [0, 0, 0],
+              "gate": [
+                11.14,
+                0,
+                -20.85
+              ],
+              "spawn": [
+                11.14,
+                1,
+                -23.85
+              ],
+              "trigger": [
+                11.14,
+                0,
+                -27.85
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
               "compass_label": "N"
             }
           },
@@ -366,8 +1081,90 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -15.6,
+                0,
+                17.4
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -13.4,
+                0,
+                18.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -10.8,
+                0,
+                17.5
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -20.4,
+                0,
+                -7.4
+              ]
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                9.9,
+                0,
+                5.8
+              ],
+              "link_id": "b"
+            },
+            {
+              "type": "fence",
+              "position": [
+                11.1,
+                0,
+                1.5
+              ],
+              "link_id": "b",
+              "scale_x": 3.5
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -19.7,
+                0,
+                5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -16.4,
+                0,
+                9.1
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.7,
+                0,
+                12.7
+              ],
+              "enemy_id": "ghowl"
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -380,18 +1177,50 @@
           "portals": {
             "north": {
               "portal_id": "portal_1769177274869_ioe4andnx",
-              "gate": [14.1, 0, -20.38],
-              "spawn": [14.1, 1, -23.38],
-              "trigger": [14.1, 0, -27.38],
-              "gate_rot": [0, 0, 0],
+              "gate": [
+                14.1,
+                0,
+                -20.38
+              ],
+              "spawn": [
+                14.1,
+                1,
+                -23.38
+              ],
+              "trigger": [
+                14.1,
+                0,
+                -27.38
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
               "compass_label": "N"
             },
             "south": {
               "portal_id": "portal_1769177283330_csi1dmrty",
-              "gate": [-13.34, 0, 20.63],
-              "spawn": [-13.34, 1, 23.63],
-              "trigger": [-13.34, 0, 27.63],
-              "gate_rot": [0, 3.14, 0],
+              "gate": [
+                -13.34,
+                0,
+                20.63
+              ],
+              "spawn": [
+                -13.34,
+                1,
+                23.63
+              ],
+              "trigger": [
+                -13.34,
+                0,
+                27.63
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             }
           },
@@ -402,8 +1231,93 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "fence",
+              "position": [
+                -18.1,
+                0,
+                -3.7
+              ],
+              "link_id": "b",
+              "scale_x": 2
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                12.1,
+                0,
+                15.9
+              ],
+              "link_id": "b"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.5,
+                0,
+                11.3
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -14.6,
+                0,
+                14.7
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.7,
+                0,
+                10.7
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -17.9,
+                0,
+                -15.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -14.3,
+                0,
+                -9.4
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -1.3,
+                0,
+                -11.2
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "Focus on one enemy at a time. Take down the smaller ones first if they're in the way."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "3,2",
@@ -416,18 +1330,50 @@
           "portals": {
             "north": {
               "portal_id": "portal_1769178213949_siczd2y71",
-              "gate": [10, 0, -19.94],
-              "spawn": [10, 1, -22.94],
-              "trigger": [10, 0, -26.94],
-              "gate_rot": [0, 0, 0],
+              "gate": [
+                10,
+                0,
+                -19.94
+              ],
+              "spawn": [
+                10,
+                1,
+                -22.94
+              ],
+              "trigger": [
+                10,
+                0,
+                -26.94
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
               "compass_label": "N"
             },
             "east": {
               "portal_id": "portal_1771821922909_g43he352c",
-              "gate": [11.16, 0, 15.27],
-              "spawn": [14.16, 1, 15.27],
-              "trigger": [18.16, 0, 15.27],
-              "gate_rot": [0, -1.57, 0],
+              "gate": [
+                11.16,
+                0,
+                15.27
+              ],
+              "spawn": [
+                14.16,
+                1,
+                15.27
+              ],
+              "trigger": [
+                18.16,
+                0,
+                15.27
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
               "compass_label": "E"
             }
           },
@@ -436,10 +1382,46 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "key_drop": "3,2",
+          "required_keys": 1,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "key_drop_position": [
+            5.8,
+            1,
+            16.1
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7.8,
+                0,
+                20.1
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.5,
+                0,
+                19.8
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.7,
+                0,
+                13.2
+              ],
+              "enemy_id": "ghowl"
+            }
+          ]
         },
         {
           "pos": "3,3",
@@ -453,26 +1435,74 @@
           "portals": {
             "west": {
               "portal_id": "portal_1769179505259_m1fmdqvj8",
-              "gate": [11.14, 0, 17.44],
-              "spawn": [11.14, 1, 20.44],
-              "trigger": [11.14, 0, 24.44],
-              "gate_rot": [0, 3.14, 0],
+              "gate": [
+                11.14,
+                0,
+                17.44
+              ],
+              "spawn": [
+                11.14,
+                1,
+                20.44
+              ],
+              "trigger": [
+                11.14,
+                0,
+                24.44
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             },
             "north": {
               "portal_id": "portal_1771822052756_ncm34nd0s",
-              "gate": [-20.16, 0, 7.13],
-              "spawn": [-23.16, 1, 7.13],
-              "trigger": [-27.16, 0, 7.13],
-              "gate_rot": [0, 1.57, 0],
+              "gate": [
+                -20.16,
+                0,
+                7.13
+              ],
+              "spawn": [
+                -23.16,
+                1,
+                7.13
+              ],
+              "trigger": [
+                -27.16,
+                0,
+                7.13
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
               "compass_label": "W"
             },
             "south": {
               "portal_id": "portal_1771822065131_y100xmi8b",
-              "gate": [20.03, 0, -12.85],
-              "spawn": [23.03, 1, -12.85],
-              "trigger": [27.03, 0, -12.85],
-              "gate_rot": [0, -1.57, 0],
+              "gate": [
+                20.03,
+                0,
+                -12.85
+              ],
+              "spawn": [
+                23.03,
+                1,
+                -12.85
+              ],
+              "trigger": [
+                27.03,
+                0,
+                -12.85
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
               "compass_label": "E"
             }
           },
@@ -481,10 +1511,55 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.3,
+                0,
+                2.2
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.9,
+                0,
+                -6.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.5,
+                0,
+                -2
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                14.7,
+                0,
+                -11.7
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "Something big is up ahead. Stay sharp — don't rush in."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "2,3",
@@ -496,22 +1571,93 @@
           "portals": {
             "south": {
               "portal_id": "portal_1769176212440_n5b8n2v53",
-              "gate": [5.08, 0, 22.43],
-              "spawn": [5.08, 1, 25.43],
-              "trigger": [5.08, 0, 29.43],
-              "gate_rot": [0, 3.14, 0],
+              "gate": [
+                5.08,
+                0,
+                22.43
+              ],
+              "spawn": [
+                5.08,
+                1,
+                25.43
+              ],
+              "trigger": [
+                5.08,
+                0,
+                29.43
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
               "compass_label": "S"
             }
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
+          "has_key": true,
+          "key_for_cell": "3,3",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "key_position": [
+            -13.6,
+            1,
+            -6.6
+          ],
+          "objects": [
+            {
+              "type": "fence",
+              "position": [
+                -10.5,
+                0,
+                -7.3
+              ],
+              "rotation": 90,
+              "link_id": "c"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                -4.1,
+                0,
+                -18.4
+              ],
+              "link_id": "c"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.4,
+                0,
+                0
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.5,
+                0,
+                -6.4
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -3.8
+              ],
+              "enemy_id": "ghowl"
+            }
+          ]
         },
         {
           "pos": "4,3",
@@ -523,10 +1669,26 @@
           "portals": {
             "north": {
               "portal_id": "portal_1771821935869_9c2no14o8",
-              "gate": [6.68, 0, 2.05],
-              "spawn": [9.68, 1, 2.05],
-              "trigger": [13.68, 0, 2.05],
-              "gate_rot": [0, -1.57, 0],
+              "gate": [
+                6.68,
+                0,
+                2.05
+              ],
+              "spawn": [
+                9.68,
+                1,
+                2.05
+              ],
+              "trigger": [
+                13.68,
+                0,
+                2.05
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
               "compass_label": "E"
             }
           },
@@ -537,26 +1699,101 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 6,
           "objects": [
             {
+              "type": "dialog_trigger",
+              "position": [
+                3.6,
+                0,
+                2.7
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "There's someone here. She's unconscious but still breathing."
+                }
+              ]
+            },
+            {
+              "type": "story_prop",
+              "position": [
+                -7.4,
+                0,
+                -10.3
+              ],
+              "prop_path": "assets/objects/story/dropship_crash.glb"
+            },
+            {
+              "type": "npc",
+              "position": [
+                -3.8,
+                0,
+                -10.3
+              ],
+              "npc_id": "sarisa"
+            },
+            {
               "type": "enemy",
-              "position": [-7.2, 0, 2.2],
-              "enemy_id": "blaze_helion"
+              "position": [
+                -6.8,
+                0,
+                7.8
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11,
+                0,
+                3.5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.7,
+                0,
+                -3.5
+              ],
+              "enemy_id": "ghowl"
             },
             {
               "type": "dialog_trigger",
-              "position": [-11.5, 0, 2.4],
+              "position": [
+                -12.8,
+                0,
+                8.3
+              ],
               "trigger_condition": "room_clear",
-              "actions": ["complete_quest", "telepipe"]
+              "actions": [
+                "complete_quest",
+                "telepipe"
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "I'll carry her back to the city. You head to the Guild and file the report."
+                },
+                {
+                  "speaker": "Kai",
+                  "text": "You handled yourself well out there, rookie. See you back in town."
+                }
+              ]
             }
           ]
         }
       ]
     }
   ],
-  "companions": ["kai"],
+  "companions": [
+    "kai"
+  ],
   "city_dialog": [
     {
       "speaker": "",

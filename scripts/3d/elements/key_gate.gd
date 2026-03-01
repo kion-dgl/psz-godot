@@ -9,6 +9,9 @@ class_name KeyGate
 ## Key ID required to unlock this gate
 @export var required_key_id: String = "default"
 
+## Number of keys needed to unlock (1 = single key, 2+ = multi-key)
+@export var required_keys: int = 1
+
 ## Laser texture identifier (used to find the laser surface)
 const LASER_TEXTURE_NAME := "o0c_1_gate"
 
@@ -95,6 +98,9 @@ func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
 		_player_nearby = true
 		if element_state == "locked":
+			if required_keys > 1:
+				var count := Inventory.get_key_count(required_key_id)
+				_prompt_label.text = "[E] Unlock (%d/%d)" % [count, required_keys]
 			_prompt_label.visible = true
 
 
@@ -108,11 +114,13 @@ func _on_interact(_player: Node3D) -> void:
 	if element_state == "open":
 		return
 
-	if Inventory.has_key(required_key_id):
-		Inventory.remove_key(required_key_id)
+	var count := Inventory.get_key_count(required_key_id)
+	if count >= required_keys:
+		for i in required_keys:
+			Inventory.remove_key(required_key_id)
 		open()
 	else:
-		print("[KeyGate] Requires key: ", required_key_id)
+		print("[KeyGate] Requires %d/%d keys: %s" % [count, required_keys, required_key_id])
 
 
 ## Open the gate
