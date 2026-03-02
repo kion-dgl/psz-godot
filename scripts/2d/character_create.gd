@@ -585,4 +585,5 @@ func _create_character() -> void:
 		return
 	CharacterManager.set_active_slot(_slot)
 	SaveManager.save_game()
-	SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
+	CityState.set_spawn_key("intro")
+	SceneManager.goto_scene("res://scenes/3d/city/city_office.tscn")

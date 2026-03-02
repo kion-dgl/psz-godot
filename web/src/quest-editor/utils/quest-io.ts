@@ -485,11 +485,20 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
     quest.companions = project.metadata.companions;
   }
 
-  if (project.metadata?.cityDialog && project.metadata.cityDialog.length > 0) {
-    // Flatten scenes back to Godot's flat city_dialog format
-    quest.city_dialog = project.metadata.cityDialog.flatMap(scene =>
-      (scene.dialog || []).map(page => ({ speaker: page.speaker, text: page.text }))
-    );
+  if (project.metadata?.officeNpcs && project.metadata.officeNpcs.length > 0) {
+    quest.office_npcs = project.metadata.officeNpcs.map(n => ({
+      npc_id: n.npc_id,
+      npc_name: n.npc_name,
+      office_position: n.office_position,
+    }));
+  }
+
+  if (project.metadata?.briefingDialog && project.metadata.briefingDialog.length > 0) {
+    quest.briefing_dialog = project.metadata.briefingDialog;
+  }
+
+  if (project.metadata?.reportTo && project.metadata.reportTo !== 'guild_counter') {
+    quest.report_to = project.metadata.reportTo;
   }
 
   if (project.metadata?.objectives && project.metadata.objectives.length > 0) {
@@ -591,30 +600,55 @@ export function importGodotSection(section: any): QuestSection {
   return result;
 }
 
-/** Convert Godot city_dialog (flat pages) to editor CityDialogScene format.
- *  Groups consecutive pages by speaker into scenes. */
-function importCityDialog(raw: any): Array<{ npc_id: string; npc_name: string; dialog: Array<{ speaker: string; text: string }> }> {
-  if (!Array.isArray(raw) || raw.length === 0) return [];
+/** Import office NPCs from quest JSON */
+function importOfficeNpcs(raw: any): Array<{ npc_id: string; npc_name: string; office_position: string }> {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((n: any) => ({
+    npc_id: n.npc_id || '',
+    npc_name: n.npc_name || '',
+    office_position: n.office_position || '',
+  }));
+}
 
-  // If already in scene format (has dialog array), pass through
-  if (raw[0].dialog && Array.isArray(raw[0].dialog)) {
-    return raw;
+/** Import briefing dialog — handles new flat format and old city_dialog scene format */
+function importBriefingDialog(quest: any): Array<{ speaker: string; text: string }> {
+  // New format: briefing_dialog is a flat array of pages
+  if (Array.isArray(quest.briefing_dialog)) {
+    return quest.briefing_dialog.map((p: any) => ({ speaker: p.speaker || '', text: p.text || '' }));
   }
-
-  // Flat pages: group consecutive pages by speaker into scenes
-  const scenes: Array<{ npc_id: string; npc_name: string; dialog: Array<{ speaker: string; text: string }> }> = [];
-  let currentScene: typeof scenes[0] | null = null;
-
-  for (const page of raw) {
-    const speaker = page.speaker || '';
-    if (!currentScene || currentScene.npc_name !== speaker) {
-      currentScene = { npc_id: '', npc_name: speaker, dialog: [] };
-      scenes.push(currentScene);
+  // Legacy: city_dialog was either flat pages or scene-grouped
+  if (Array.isArray(quest.city_dialog) && quest.city_dialog.length > 0) {
+    const raw = quest.city_dialog;
+    // Scene format (has dialog array) — flatten
+    if (raw[0].dialog && Array.isArray(raw[0].dialog)) {
+      return raw.flatMap((s: any) => (s.dialog || []).map((p: any) => ({ speaker: p.speaker || '', text: p.text || '' })));
     }
-    currentScene.dialog.push({ speaker: page.speaker || '', text: page.text || '' });
+    // Already flat pages
+    return raw.map((p: any) => ({ speaker: p.speaker || '', text: p.text || '' }));
   }
+  return [];
+}
 
-  return scenes;
+/** Import office NPCs from legacy city_dialog scene format */
+function importOfficeNpcsFromLegacy(quest: any): Array<{ npc_id: string; npc_name: string; office_position: string }> {
+  if (Array.isArray(quest.office_npcs)) return importOfficeNpcs(quest.office_npcs);
+  // Legacy: city_dialog scene format had npc_id/office_position per scene
+  if (Array.isArray(quest.city_dialog) && quest.city_dialog.length > 0) {
+    const raw = quest.city_dialog;
+    if (raw[0].dialog && Array.isArray(raw[0].dialog)) {
+      const seen = new Set<string>();
+      const npcs: Array<{ npc_id: string; npc_name: string; office_position: string }> = [];
+      for (const s of raw) {
+        const id = s.npc_id || '';
+        if (id && id !== 'principal' && !seen.has(id) && s.office_position) {
+          seen.add(id);
+          npcs.push({ npc_id: id, npc_name: s.npc_name || '', office_position: s.office_position });
+        }
+      }
+      return npcs;
+    }
+  }
+  return [];
 }
 
 export function godotQuestToProject(quest: any): QuestProject {
@@ -639,7 +673,9 @@ export function godotQuestToProject(quest: any): QuestProject {
       questName: quest.name || '',
       description: quest.description || '',
       companions: Array.isArray(quest.companions) ? quest.companions : [],
-      cityDialog: importCityDialog(quest.city_dialog),
+      officeNpcs: importOfficeNpcsFromLegacy(quest),
+      briefingDialog: importBriefingDialog(quest),
+      reportTo: quest.report_to || 'guild_counter',
       objectives: Array.isArray(quest.objectives) ? quest.objectives : [],
     },
     cellContents: {},

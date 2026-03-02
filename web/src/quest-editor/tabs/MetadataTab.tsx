@@ -1,10 +1,10 @@
 /**
- * MetadataTab — Edit quest metadata: name, description, companions, city dialog
+ * MetadataTab — Edit quest metadata: name, description, companions, briefing dialog
  */
 
 import { useCallback } from 'react';
-import type { QuestProject, QuestMetadata, CityDialogScene, QuestObjective } from '../types';
-import { AVAILABLE_COMPANIONS } from '../types';
+import type { QuestProject, QuestMetadata, QuestObjective, OfficeNpc, ReportDestination } from '../types';
+import { AVAILABLE_COMPANIONS, OFFICE_POSITIONS } from '../types';
 
 interface MetadataTabProps {
   project: QuestProject;
@@ -12,15 +12,16 @@ interface MetadataTabProps {
 }
 
 const NPC_OPTIONS = [
-  { id: 'guild_counter', name: 'Guild Counter' },
   { id: 'kai', name: 'Kai' },
   { id: 'sarisa', name: 'Sarisa' },
 ];
 
 export default function MetadataTab({ project, onUpdateProject }: MetadataTabProps) {
   const meta = project.metadata;
-  const cityDialog = meta.cityDialog || [];
+  const officeNpcs = meta.officeNpcs || [];
+  const briefingDialog = meta.briefingDialog || [];
   const objectives = meta.objectives || [];
+  const reportTo = meta.reportTo || 'guild_counter';
 
   const updateMeta = useCallback(<K extends keyof QuestMetadata>(key: K, value: QuestMetadata[K]) => {
     onUpdateProject(prev => ({
@@ -43,44 +44,43 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
     });
   }, [onUpdateProject]);
 
-  const addScene = useCallback(() => {
-    const newScene: CityDialogScene = { npc_id: '', npc_name: '', dialog: [{ speaker: '', text: '' }] };
-    updateMeta('cityDialog', [...cityDialog, newScene]);
-  }, [cityDialog, updateMeta]);
+  // -- Office NPCs --
+  const addOfficeNpc = useCallback(() => {
+    updateMeta('officeNpcs', [...officeNpcs, { npc_id: '', npc_name: '', office_position: 'pos_2' }]);
+  }, [officeNpcs, updateMeta]);
 
-  const updateScene = useCallback((idx: number, updates: Partial<CityDialogScene>) => {
-    const next = cityDialog.map((s, i) => i === idx ? { ...s, ...updates } : s);
-    updateMeta('cityDialog', next);
-  }, [cityDialog, updateMeta]);
+  const updateOfficeNpc = useCallback((idx: number, updates: Partial<OfficeNpc>) => {
+    const next = officeNpcs.map((n, i) => i === idx ? { ...n, ...updates } : n);
+    updateMeta('officeNpcs', next);
+  }, [officeNpcs, updateMeta]);
 
-  const removeScene = useCallback((idx: number) => {
-    updateMeta('cityDialog', cityDialog.filter((_, i) => i !== idx));
-  }, [cityDialog, updateMeta]);
+  const removeOfficeNpc = useCallback((idx: number) => {
+    updateMeta('officeNpcs', officeNpcs.filter((_, i) => i !== idx));
+  }, [officeNpcs, updateMeta]);
 
-  const moveScene = useCallback((idx: number, dir: -1 | 1) => {
-    const next = [...cityDialog];
+  // -- Briefing Dialog --
+  const addDialogPage = useCallback(() => {
+    updateMeta('briefingDialog', [...briefingDialog, { speaker: '', text: '' }]);
+  }, [briefingDialog, updateMeta]);
+
+  const updateDialogPage = useCallback((idx: number, field: 'speaker' | 'text', value: string) => {
+    const next = briefingDialog.map((p, i) => i === idx ? { ...p, [field]: value } : p);
+    updateMeta('briefingDialog', next);
+  }, [briefingDialog, updateMeta]);
+
+  const removeDialogPage = useCallback((idx: number) => {
+    updateMeta('briefingDialog', briefingDialog.filter((_, i) => i !== idx));
+  }, [briefingDialog, updateMeta]);
+
+  const moveDialogPage = useCallback((idx: number, dir: -1 | 1) => {
+    const next = [...briefingDialog];
     const target = idx + dir;
     if (target < 0 || target >= next.length) return;
     [next[idx], next[target]] = [next[target], next[idx]];
-    updateMeta('cityDialog', next);
-  }, [cityDialog, updateMeta]);
+    updateMeta('briefingDialog', next);
+  }, [briefingDialog, updateMeta]);
 
-  const updateDialogPage = useCallback((sceneIdx: number, pageIdx: number, field: 'speaker' | 'text', value: string) => {
-    const scene = cityDialog[sceneIdx];
-    const pages = (scene.dialog || []).map((p, i) => i === pageIdx ? { ...p, [field]: value } : p);
-    updateScene(sceneIdx, { dialog: pages });
-  }, [cityDialog, updateScene]);
-
-  const addDialogPage = useCallback((sceneIdx: number) => {
-    const scene = cityDialog[sceneIdx];
-    updateScene(sceneIdx, { dialog: [...(scene.dialog || []), { speaker: scene.npc_name || '', text: '' }] });
-  }, [cityDialog, updateScene]);
-
-  const removeDialogPage = useCallback((sceneIdx: number, pageIdx: number) => {
-    const scene = cityDialog[sceneIdx];
-    updateScene(sceneIdx, { dialog: (scene.dialog || []).filter((_, i) => i !== pageIdx) });
-  }, [cityDialog, updateScene]);
-
+  // -- Objectives --
   const addObjective = useCallback(() => {
     updateMeta('objectives', [...objectives, { item_id: '', label: '', target: 1 }]);
   }, [objectives, updateMeta]);
@@ -93,6 +93,22 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
   const removeObjective = useCallback((idx: number) => {
     updateMeta('objectives', objectives.filter((_, i) => i !== idx));
   }, [objectives, updateMeta]);
+
+  // Build speaker options: Principal (always) + office NPCs + companions
+  const speakerOptions: Array<{ value: string; label: string }> = [
+    { value: 'Principal', label: 'Principal' },
+  ];
+  for (const npc of officeNpcs) {
+    if (npc.npc_name && !speakerOptions.some(s => s.value === npc.npc_name)) {
+      speakerOptions.push({ value: npc.npc_name, label: npc.npc_name });
+    }
+  }
+  for (const cid of (meta.companions || [])) {
+    const comp = AVAILABLE_COMPANIONS.find(c => c.id === cid);
+    if (comp && !speakerOptions.some(s => s.value === comp.name)) {
+      speakerOptions.push({ value: comp.name, label: comp.name });
+    }
+  }
 
   return (
     <div style={{
@@ -256,12 +272,43 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
           </div>
         </div>
 
-        {/* City Dialog */}
+        {/* Report Destination */}
+        <div>
+          <label style={labelStyle}>Report Destination</label>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {([['guild_counter', 'Guild Counter'], ['office', "Principal's Office"]] as const).map(([val, label]) => {
+              const active = reportTo === val;
+              return (
+                <button
+                  key={val}
+                  onClick={() => updateMeta('reportTo', val as ReportDestination)}
+                  style={{
+                    padding: '8px 16px',
+                    background: active ? '#2a3a5a' : '#1a1a2e',
+                    border: `1px solid ${active ? '#6688cc' : '#333'}`,
+                    borderRadius: '6px',
+                    color: active ? '#88bbff' : '#888',
+                    fontSize: '13px',
+                    fontWeight: active ? 600 : 400,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+            Where the player reports after completing the quest.
+          </div>
+        </div>
+
+        {/* Office NPCs */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-            <label style={{ ...labelStyle, marginBottom: 0 }}>City Dialog</label>
+            <label style={{ ...labelStyle, marginBottom: 0 }}>Office NPCs</label>
             <button
-              onClick={addScene}
+              onClick={addOfficeNpc}
               style={{
                 padding: '4px 10px',
                 background: '#224422',
@@ -272,14 +319,14 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
                 cursor: 'pointer',
               }}
             >
-              + Scene
+              + NPC
             </button>
           </div>
           <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>
-            Dialog scenes that play in the city before entering the field. Played in order.
+            NPCs placed in the office during the quest briefing. Principal is always present.
           </div>
 
-          {cityDialog.length === 0 && (
+          {officeNpcs.length === 0 && (
             <div style={{
               padding: '16px',
               background: '#1a1a2e',
@@ -289,141 +336,179 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
               fontSize: '12px',
               textAlign: 'center',
             }}>
-              No city dialog. Click "+ Scene" to add one.
+              No extra NPCs. Click "+ NPC" to add one.
             </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {cityDialog.map((scene, si) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {officeNpcs.map((npc, ni) => (
               <div
-                key={si}
+                key={ni}
                 style={{
-                  padding: '10px',
+                  display: 'flex', gap: '6px', alignItems: 'center',
+                  padding: '8px',
                   background: '#1a1a2e',
                   border: '1px solid #333',
                   borderRadius: '6px',
                 }}
               >
-                {/* Scene header */}
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '10px', color: '#888', minWidth: '14px' }}>#{si + 1}</span>
+                <select
+                  value={npc.npc_id}
+                  onChange={(e) => {
+                    const opt = NPC_OPTIONS.find(n => n.id === e.target.value);
+                    updateOfficeNpc(ni, { npc_id: e.target.value, npc_name: opt?.name || '' });
+                  }}
+                  style={{
+                    flex: 1, padding: '4px', background: '#111',
+                    border: '1px solid #444', borderRadius: '3px',
+                    color: '#fff', fontSize: '12px',
+                  }}
+                >
+                  <option value="">-- select NPC --</option>
+                  {NPC_OPTIONS.map(n => (
+                    <option key={n.id} value={n.id}>{n.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={npc.office_position}
+                  onChange={(e) => updateOfficeNpc(ni, { office_position: e.target.value })}
+                  style={{
+                    width: '110px', padding: '4px', background: '#111',
+                    border: '1px solid #444', borderRadius: '3px',
+                    color: '#fff', fontSize: '11px',
+                  }}
+                >
+                  {OFFICE_POSITIONS.map(p => (
+                    <option key={p.id} value={p.id}>{p.label}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => removeOfficeNpc(ni)}
+                  style={{
+                    padding: '2px 6px', background: '#442222',
+                    border: '1px solid #664444', borderRadius: '3px',
+                    color: '#aa6666', fontSize: '11px', cursor: 'pointer',
+                  }}
+                >
+                  X
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Briefing Dialog */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <label style={{ ...labelStyle, marginBottom: 0 }}>Briefing Dialog</label>
+            <button
+              onClick={addDialogPage}
+              style={{
+                padding: '4px 10px',
+                background: '#224422',
+                border: '1px solid #446644',
+                borderRadius: '4px',
+                color: '#88cc88',
+                fontSize: '11px',
+                cursor: 'pointer',
+              }}
+            >
+              + Page
+            </button>
+          </div>
+          <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>
+            Dialog played in the principal's office after quest acceptance.
+          </div>
+
+          {briefingDialog.length === 0 && (
+            <div style={{
+              padding: '16px',
+              background: '#1a1a2e',
+              border: '1px dashed #333',
+              borderRadius: '6px',
+              color: '#555',
+              fontSize: '12px',
+              textAlign: 'center',
+            }}>
+              No briefing dialog. Click "+ Page" to add one.
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {briefingDialog.map((page, pi) => (
+              <div
+                key={pi}
+                style={{
+                  padding: '6px',
+                  background: '#1a1a2e',
+                  border: '1px solid #333',
+                  borderRadius: '4px',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                   <select
-                    value={scene.npc_id}
-                    onChange={(e) => {
-                      const npc = NPC_OPTIONS.find(n => n.id === e.target.value);
-                      updateScene(si, { npc_id: e.target.value, npc_name: npc?.name || '' });
-                    }}
+                    value={page.speaker}
+                    onChange={(e) => updateDialogPage(pi, 'speaker', e.target.value)}
                     style={{
-                      flex: 1, padding: '4px', background: '#111',
+                      width: '120px', padding: '3px 6px', background: '#111',
                       border: '1px solid #444', borderRadius: '3px',
-                      color: '#fff', fontSize: '12px',
+                      color: '#fff', fontSize: '11px',
                     }}
                   >
-                    <option value="">-- select NPC --</option>
-                    {NPC_OPTIONS.map(n => (
-                      <option key={n.id} value={n.id}>{n.name}</option>
+                    <option value="">-- speaker --</option>
+                    {speakerOptions.map(s => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </select>
+                  <div style={{ flex: 1 }} />
                   <button
-                    onClick={() => moveScene(si, -1)}
-                    disabled={si === 0}
+                    onClick={() => moveDialogPage(pi, -1)}
+                    disabled={pi === 0}
                     style={{
-                      padding: '2px 6px', background: '#2a2a4a',
+                      padding: '1px 5px', background: 'none',
                       border: '1px solid #444', borderRadius: '3px',
-                      color: si === 0 ? '#444' : '#888', fontSize: '11px',
-                      cursor: si === 0 ? 'default' : 'pointer',
+                      color: pi === 0 ? '#333' : '#666', fontSize: '10px',
+                      cursor: pi === 0 ? 'default' : 'pointer',
                     }}
                   >
                     ^
                   </button>
                   <button
-                    onClick={() => moveScene(si, 1)}
-                    disabled={si === cityDialog.length - 1}
+                    onClick={() => moveDialogPage(pi, 1)}
+                    disabled={pi === briefingDialog.length - 1}
                     style={{
-                      padding: '2px 6px', background: '#2a2a4a',
+                      padding: '1px 5px', background: 'none',
                       border: '1px solid #444', borderRadius: '3px',
-                      color: si === cityDialog.length - 1 ? '#444' : '#888', fontSize: '11px',
-                      cursor: si === cityDialog.length - 1 ? 'default' : 'pointer',
+                      color: pi === briefingDialog.length - 1 ? '#333' : '#666', fontSize: '10px',
+                      cursor: pi === briefingDialog.length - 1 ? 'default' : 'pointer',
                     }}
                   >
                     v
                   </button>
                   <button
-                    onClick={() => removeScene(si)}
+                    onClick={() => removeDialogPage(pi)}
                     style={{
-                      padding: '2px 6px', background: '#442222',
-                      border: '1px solid #664444', borderRadius: '3px',
-                      color: '#aa6666', fontSize: '11px', cursor: 'pointer',
+                      padding: '1px 5px', background: 'none',
+                      border: '1px solid #444', borderRadius: '3px',
+                      color: '#666', fontSize: '10px', cursor: 'pointer',
                     }}
                   >
                     X
                   </button>
                 </div>
-
-                {/* Dialog pages */}
-                {(scene.dialog || []).map((page, pi) => (
-                  <div
-                    key={pi}
-                    style={{
-                      padding: '6px',
-                      background: '#111',
-                      border: '1px solid #2a2a2a',
-                      borderRadius: '4px',
-                      marginBottom: '4px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-                      <input
-                        type="text"
-                        value={page.speaker}
-                        onChange={(e) => updateDialogPage(si, pi, 'speaker', e.target.value)}
-                        placeholder="Speaker"
-                        style={{
-                          width: '100px', padding: '3px 6px', background: '#1a1a2e',
-                          border: '1px solid #333', borderRadius: '3px',
-                          color: '#fff', fontSize: '11px',
-                        }}
-                      />
-                      <div style={{ flex: 1 }} />
-                      <button
-                        onClick={() => removeDialogPage(si, pi)}
-                        style={{
-                          padding: '1px 5px', background: 'none',
-                          border: '1px solid #444', borderRadius: '3px',
-                          color: '#666', fontSize: '10px', cursor: 'pointer',
-                        }}
-                      >
-                        X
-                      </button>
-                    </div>
-                    <textarea
-                      value={page.text}
-                      onChange={(e) => updateDialogPage(si, pi, 'text', e.target.value)}
-                      placeholder="Dialog text..."
-                      rows={2}
-                      style={{
-                        width: '100%', padding: '4px 6px', background: '#1a1a2e',
-                        border: '1px solid #333', borderRadius: '3px',
-                        color: '#fff', fontSize: '12px', fontFamily: 'inherit',
-                        resize: 'vertical', lineHeight: 1.4,
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  </div>
-                ))}
-
-                <button
-                  onClick={() => addDialogPage(si)}
+                <textarea
+                  value={page.text}
+                  onChange={(e) => updateDialogPage(pi, 'text', e.target.value)}
+                  placeholder="Dialog text..."
+                  rows={2}
                   style={{
-                    width: '100%', padding: '4px',
-                    background: '#1a2a1a',
-                    border: '1px dashed #446644',
-                    borderRadius: '3px',
-                    color: '#88cc88', fontSize: '11px', cursor: 'pointer',
+                    width: '100%', padding: '4px 6px', background: '#111',
+                    border: '1px solid #2a2a2a', borderRadius: '3px',
+                    color: '#fff', fontSize: '12px', fontFamily: 'inherit',
+                    resize: 'vertical', lineHeight: 1.4,
+                    boxSizing: 'border-box',
                   }}
-                >
-                  + Page
-                </button>
+                />
               </div>
             ))}
           </div>
