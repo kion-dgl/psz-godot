@@ -17,6 +17,7 @@ const NPC_OPTIONS = [
   { id: 'sarisa', name: 'Sarisa' },
   { id: 'elio', name: 'Elio' },
   { id: 'fern', name: 'Fern' },
+  { id: 'dr_carlo', name: 'Dr. Carlo' },
 ];
 
 export default function MetadataTab({ project, onUpdateProject, isMobile }: MetadataTabProps) {

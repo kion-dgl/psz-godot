@@ -1,7 +1,7 @@
 {
   "id": "static_in_the_snow",
   "name": "Static in the Snow",
-  "description": "Core Objective: Defend a lost expedition camp from waves of enemies.",
+  "description": "Requested by: Research Division. A research team studying the snowfield has gone silent. Their last transmission was garbled with static. Locate the expedition camp and ensure the team's safety.",
   "area_id": "rioh",
   "sections": [
     {
@@ -1182,8 +1182,8 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Scientist:",
-                  "text": "help, they're after me!!!"
+                  "speaker": "Dr. Carlo:",
+                  "text": "Over here! They've surrounded the camp!"
                 }
               ]
             },
@@ -1238,8 +1238,12 @@
               ],
               "dialog": [
                 {
-                  "speaker": "NPC",
-                  "text": "Thank you so much, i thought i was a gonner"
+                  "speaker": "Dr. Carlo:",
+                  "text": "Thank you. The creatures came out of nowhere \u2014 we lost contact trying to call for help."
+                },
+                {
+                  "speaker": "Kai:",
+                  "text": "You're safe now. Let's get you back to town."
                 }
               ]
             }
@@ -1247,5 +1251,21 @@
         }
       ]
     }
-  ]
+  ],
+  "companions": ["kai"],
+  "office_npcs": [
+    {
+      "npc_id": "dr_carlo",
+      "npc_name": "Dr. Carlo",
+      "office_position": "pos_2"
+    }
+  ],
+  "briefing_dialog": [
+    { "speaker": "Principal", "text": "We've lost contact with a research team in the snowfield. Their last transmission was mostly static." },
+    { "speaker": "Dr. Carlo", "text": "I'm Dr. Carlo, the expedition lead. My team was conducting survey work in the deep snow region when our comms cut out." },
+    { "speaker": "Dr. Carlo", "text": "I made it back, but the rest of the team is still out there. The creatures in that area have been unusually aggressive." },
+    { "speaker": "Principal", "text": "We're sending Kai with you. Find the expedition camp and bring the team home safely." },
+    { "speaker": "Kai", "text": "The snowfield's no joke. Stay close and we'll get them out." }
+  ],
+  "report_to": "guild_counter"
 }
