@@ -5,6 +5,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import type { QuestProject, Direction } from '../types';
 import {
   getRotatedGates,
@@ -110,6 +111,7 @@ function getConstraints(
 }
 
 export default function StagePicker({ project, targetPos, onSelect, onClose }: StagePickerProps) {
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
 
@@ -197,10 +199,11 @@ export default function StagePicker({ project, targetPos, onSelect, onClose }: S
       <div
         style={{
           background: '#1a1a2e',
-          border: '1px solid #444',
-          borderRadius: '12px',
-          width: '600px',
-          maxHeight: '80vh',
+          border: isMobile ? 'none' : '1px solid #444',
+          borderRadius: isMobile ? 0 : '12px',
+          width: isMobile ? '100vw' : '600px',
+          height: isMobile ? '100vh' : undefined,
+          maxHeight: isMobile ? '100vh' : '80vh',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -318,7 +321,8 @@ function StageRow({
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        padding: '8px 12px',
+        padding: '10px 12px',
+        minHeight: '44px',
         background: '#222244',
         borderRadius: '6px',
         cursor: 'pointer',

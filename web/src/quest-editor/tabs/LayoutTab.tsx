@@ -17,6 +17,46 @@ interface LayoutTabProps {
   entryDirection?: Direction;
   exitDirection?: Direction;
   onSetSectionDirection?: (field: 'entryDirection' | 'exitDirection', dir: Direction | undefined) => void;
+  isMobile?: boolean;
+}
+
+function MobileDrawer({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
+  if (!open) return null;
+  return (
+    <div style={{
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      maxHeight: '60vh',
+      background: '#151525',
+      borderTop: '2px solid #5588ff',
+      zIndex: 50,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+    }}>
+      <div
+        onClick={onClose}
+        style={{
+          padding: '8px',
+          display: 'flex',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{
+          width: '40px',
+          height: '4px',
+          background: '#555',
+          borderRadius: '2px',
+        }} />
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 /** Validate the current layout and return issues */
@@ -93,7 +133,7 @@ function validateLayout(project: QuestProject): ValidationIssue[] {
   return issues;
 }
 
-export default function LayoutTab({ project, onUpdateProject, sectionType, entryDirection, exitDirection, onSetSectionDirection }: LayoutTabProps) {
+export default function LayoutTab({ project, onUpdateProject, sectionType, entryDirection, exitDirection, onSetSectionDirection, isMobile }: LayoutTabProps) {
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [pickerTarget, setPickerTarget] = useState<string | null>(null);
   const [showGenDialog, setShowGenDialog] = useState(false);
@@ -399,15 +439,19 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
 
   const cellCount = Object.keys(project.cells).length;
 
+  const toolbarBtnStyle: React.CSSProperties = isMobile
+    ? { padding: '6px 10px', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '11px', cursor: 'pointer' }
+    : { padding: '8px 16px', border: 'none', borderRadius: '6px', color: '#fff', fontSize: '13px', cursor: 'pointer' };
+
   return (
-    <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
         {/* Toolbar */}
         <div style={{
           display: 'flex',
-          gap: '8px',
-          padding: '12px 16px',
+          gap: isMobile ? '4px' : '8px',
+          padding: isMobile ? '8px 10px' : '12px 16px',
           borderBottom: '1px solid #333',
           background: '#151525',
           alignItems: 'center',
@@ -415,43 +459,24 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
         }}>
           <button
             onClick={() => setShowGenDialog(true)}
-            style={{
-              padding: '8px 16px', background: '#5588ff', border: 'none',
-              borderRadius: '6px', color: '#fff', fontSize: '13px',
-              fontWeight: 600, cursor: 'pointer',
-            }}
+            style={{ ...toolbarBtnStyle, background: '#5588ff', fontWeight: 600 }}
           >
             Generate
           </button>
-          <button
-            onClick={handleClear}
-            style={{
-              padding: '8px 16px', background: '#884444', border: 'none',
-              borderRadius: '6px', color: '#fff', fontSize: '13px', cursor: 'pointer',
-            }}
-          >
+          <button onClick={handleClear} style={{ ...toolbarBtnStyle, background: '#884444' }}>
             Clear
           </button>
-          <button
-            onClick={handleValidate}
-            style={{
-              padding: '8px 16px', background: '#448844', border: 'none',
-              borderRadius: '6px', color: '#fff', fontSize: '13px', cursor: 'pointer',
-            }}
-          >
+          <button onClick={handleValidate} style={{ ...toolbarBtnStyle, background: '#448844' }}>
             Validate
           </button>
           <button
             onClick={() => setShowMinimap(v => !v)}
-            style={{
-              padding: '8px 16px', background: showMinimap ? '#6666aa' : '#444',
-              border: 'none', borderRadius: '6px', color: '#fff', fontSize: '13px', cursor: 'pointer',
-            }}
+            style={{ ...toolbarBtnStyle, background: showMinimap ? '#6666aa' : '#444' }}
           >
-            Minimap
+            {isMobile ? 'Map' : 'Minimap'}
           </button>
           <div style={{ flex: 1 }} />
-          <span style={{ fontSize: '12px', color: '#888' }}>
+          <span style={{ fontSize: isMobile ? '10px' : '12px', color: '#888' }}>
             {cellCount} cells | {project.gridSize}x{project.gridSize}
           </span>
         </div>
@@ -460,9 +485,9 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
         <div style={{
           flex: 1,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: isMobile ? 'flex-start' : 'center',
           justifyContent: 'center',
-          padding: '24px',
+          padding: isMobile ? '8px' : '24px',
           overflow: 'auto',
         }}>
           <GridCanvas
@@ -475,6 +500,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
             swapSource={swapSource}
             onSwapExecute={handleSwapExecute}
             onSwapCancel={handleSwapCancel}
+            isMobile={isMobile}
           />
         </div>
 
@@ -513,40 +539,68 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
         )}
       </div>
 
-      {/* Right panel — Inspector */}
-      <div style={{
-        width: '280px',
-        borderLeft: '1px solid #333',
-        background: '#151525',
-        overflowY: 'auto',
-      }}>
-        {selectedCell ? (
-          <CellInspector
-            project={project}
-            selectedCell={selectedCell}
-            onUpdateCell={handleUpdateCell}
-            onSetStart={handleSetStart}
-            onSetEnd={handleSetEnd}
-            onToggleKey={handleToggleKey}
-            onToggleKeyDrop={handleToggleKeyDrop}
-            onToggleKeyGate={handleToggleKeyGate}
-            onSetLockedGate={handleSetLockedGate}
-            onClearCell={handleClearCell}
-            onChangeStage={handleChangeStage}
-            onSwapStart={handleSwapStart}
-            sectionType={sectionType}
-            entryDirection={entryDirection}
-            exitDirection={exitDirection}
-            onSetSectionDirection={onSetSectionDirection}
-          />
-        ) : (
-          <div style={{ padding: '1rem', color: '#888', fontSize: '13px' }}>
-            Click a cell to inspect or edit it.
-            <br /><br />
-            Click an empty cell to place a stage.
-          </div>
-        )}
-      </div>
+      {/* Right panel — Inspector (desktop only) */}
+      {!isMobile && (
+        <div style={{
+          width: '280px',
+          borderLeft: '1px solid #333',
+          background: '#151525',
+          overflowY: 'auto',
+        }}>
+          {selectedCell ? (
+            <CellInspector
+              project={project}
+              selectedCell={selectedCell}
+              onUpdateCell={handleUpdateCell}
+              onSetStart={handleSetStart}
+              onSetEnd={handleSetEnd}
+              onToggleKey={handleToggleKey}
+              onToggleKeyDrop={handleToggleKeyDrop}
+              onToggleKeyGate={handleToggleKeyGate}
+              onSetLockedGate={handleSetLockedGate}
+              onClearCell={handleClearCell}
+              onChangeStage={handleChangeStage}
+              onSwapStart={handleSwapStart}
+              sectionType={sectionType}
+              entryDirection={entryDirection}
+              exitDirection={exitDirection}
+              onSetSectionDirection={onSetSectionDirection}
+            />
+          ) : (
+            <div style={{ padding: '1rem', color: '#888', fontSize: '13px' }}>
+              Click a cell to inspect or edit it.
+              <br /><br />
+              Click an empty cell to place a stage.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Mobile drawer — Inspector */}
+      {isMobile && (
+        <MobileDrawer open={!!selectedCell && !!project.cells[selectedCell]} onClose={() => setSelectedCell(null)}>
+          {selectedCell && project.cells[selectedCell] && (
+            <CellInspector
+              project={project}
+              selectedCell={selectedCell}
+              onUpdateCell={handleUpdateCell}
+              onSetStart={handleSetStart}
+              onSetEnd={handleSetEnd}
+              onToggleKey={handleToggleKey}
+              onToggleKeyDrop={handleToggleKeyDrop}
+              onToggleKeyGate={handleToggleKeyGate}
+              onSetLockedGate={handleSetLockedGate}
+              onClearCell={handleClearCell}
+              onChangeStage={handleChangeStage}
+              onSwapStart={handleSwapStart}
+              sectionType={sectionType}
+              entryDirection={entryDirection}
+              exitDirection={exitDirection}
+              onSetSectionDirection={onSetSectionDirection}
+            />
+          )}
+        </MobileDrawer>
+      )}
 
       {/* Stage picker modal */}
       {pickerTarget && (
@@ -572,9 +626,10 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
             style={{
               background: '#1a1a2e',
               border: '1px solid #444',
-              borderRadius: '12px',
-              padding: '24px',
-              width: '360px',
+              borderRadius: isMobile ? '8px' : '12px',
+              padding: isMobile ? '16px' : '24px',
+              width: isMobile ? 'calc(100vw - 32px)' : '360px',
+              maxWidth: '360px',
             }}
             onClick={(e) => e.stopPropagation()}
           >
