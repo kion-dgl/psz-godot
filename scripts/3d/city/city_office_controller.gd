@@ -54,6 +54,7 @@ const CAPSULE_COLORS := {
 	"mira": Color(0.7, 0.3, 0.9),
 	"sarisa": Color(1.0, 0.5, 0.7),
 	"fern": Color(0.6, 0.8, 0.3),
+	"dr_carlo": Color(0.4, 0.6, 0.9),
 }
 
 var _is_intro := false
