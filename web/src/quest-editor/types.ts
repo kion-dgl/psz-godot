@@ -236,14 +236,20 @@ export interface QuestProject {
   source?: QuestProjectSource;
 }
 
-export interface CityDialogScene {
-  /** NPC who speaks (matches npc_id) */
+/** An NPC placed in the office during quest briefing */
+export interface OfficeNpc {
   npc_id: string;
-  /** Display name */
   npc_name: string;
-  /** Dialog pages */
-  dialog: Array<{ speaker: string; text: string }>;
+  /** Office position slot ("pos_1" | "pos_2") */
+  office_position: string;
 }
+
+export const OFFICE_POSITIONS = [
+  { id: 'pos_1', label: 'Position 1' },
+  { id: 'pos_2', label: 'Position 2' },
+];
+
+export type ReportDestination = 'guild_counter' | 'office';
 
 export interface QuestObjective {
   item_id: string;
@@ -255,8 +261,12 @@ export interface QuestMetadata {
   questName: string;
   description: string;
   companions?: string[];
-  /** Dialog scenes that play in the city before entering the field */
-  cityDialog?: CityDialogScene[];
+  /** NPCs placed in the office during quest briefing */
+  officeNpcs?: OfficeNpc[];
+  /** Dialog pages played in order during the office briefing */
+  briefingDialog?: Array<{ speaker: string; text: string }>;
+  /** Where the player reports quest completion */
+  reportTo?: ReportDestination;
   /** Quest item collection objectives */
   objectives?: QuestObjective[];
 }

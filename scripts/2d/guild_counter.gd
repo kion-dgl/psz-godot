@@ -291,10 +291,11 @@ func _accept_entry() -> void:
 		var area_id: String = AREA_DISPLAY.keys()[AREA_DISPLAY.values().find(entry["area"])] \
 			if AREA_DISPLAY.values().has(entry["area"]) else "gurhacia"
 		SessionManager.accept_quest(entry["quest_id"], difficulty)
-		hint_label.text = "Quest accepted! Head to %s warp." % entry["area"]
+		hint_label.text = "Quest accepted!"
 		_selecting_difficulty = false
 		_refresh_display()
-		SceneManager.pop_scene()
+		CityState.set_spawn_key("quest-briefing")
+		SceneManager.goto_scene("res://scenes/3d/city/city_office.tscn")
 	else:
 		# Missions go directly to field as before
 		SessionManager.enter_mission(entry["id"], difficulty)

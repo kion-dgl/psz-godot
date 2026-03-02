@@ -6,18 +6,22 @@ function vec3Str(v: [number, number, number]) {
 }
 
 function generateGDScript(layout: OfficeLayoutData): string {
+  const posLines = Object.entries(layout.npcPositions).map(([id, slot]) =>
+    `\t"${id}": { "position": ${vec3Str(slot.position)}, "rotation": ${slot.rotationY.toFixed(3)} },`
+  );
   return [
-    `const NPC_POSITION := ${vec3Str(layout.npcPosition)}`,
-    `const NPC_ROTATION_Y := ${layout.npcRotationY.toFixed(3)}`,
-    `const NPC_SCALE := ${layout.npcScale.toFixed(3)}`,
+    `const NPC_POSITIONS := {`,
+    ...posLines,
+    `}`,
     ``,
+    `const NPC_SCALE := ${layout.npcScale.toFixed(3)}`,
     `const ROOM_SCALE := ${layout.roomScale.toFixed(3)}`,
     ``,
     `const DOOR_TRIGGER_POSITION := ${vec3Str(layout.doorTrigger.position)}`,
     `const DOOR_TRIGGER_SIZE := ${vec3Str(layout.doorTrigger.size)}`,
     ``,
-    `const SPAWN_POSITION := ${vec3Str(layout.spawnPoint.position)}`,
-    `const SPAWN_ROTATION_Y := ${layout.spawnPoint.rotationY.toFixed(3)}`,
+    `const DEFAULT_SPAWN := ${vec3Str(layout.spawnPoint.position)}`,
+    `const DEFAULT_ROT := ${layout.spawnPoint.rotationY.toFixed(3)}`,
   ].join('\n');
 }
 
@@ -127,6 +131,10 @@ export default function OfficeExportPanel({ layout, placementMode, onLayoutChang
     onLayoutChange({ ...layout, ...partial });
   };
 
+  const updateSlot = (slotId: string, partial: Partial<{ position: [number, number, number]; rotationY: number }>) => {
+    onLayoutChange({ ...layout, npcPositions: { ...layout.npcPositions, [slotId]: { ...layout.npcPositions[slotId], ...partial } } });
+  };
+
   const updateDoor = (partial: Partial<OfficeLayoutData['doorTrigger']>) => {
     onLayoutChange({ ...layout, doorTrigger: { ...layout.doorTrigger, ...partial } });
   };
@@ -153,13 +161,26 @@ export default function OfficeExportPanel({ layout, placementMode, onLayoutChang
 
       {/* NPC Section */}
       <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <h3 style={{ margin: 0, fontSize: 12, color: '#ffaa44' }}>Principal NPC</h3>
-          <PlaceButton label="Place" mode="npc" current={placementMode} onToggle={onPlacementModeChange} />
-        </div>
-        <Vec3Input label="Position" value={layout.npcPosition} onChange={(v) => updateNpc({ npcPosition: v })} />
-        <RotationInput label="Rotation Y" value={layout.npcRotationY} onChange={(v) => updateNpc({ npcRotationY: v })} />
+        <h3 style={{ margin: '0 0 8px', fontSize: 12, color: '#ffaa44' }}>Principal NPC</h3>
         <ScaleInput label="Scale" value={layout.npcScale} onChange={(v) => updateNpc({ npcScale: v })} />
+      </section>
+
+      {/* NPC Position Slots */}
+      <section>
+        <h3 style={{ margin: '0 0 8px', fontSize: 12, color: '#ff66aa' }}>NPC Positions</h3>
+        <div style={{ fontSize: 9, color: '#666', marginBottom: 8 }}>
+          Named slots for quest briefing NPC placement.
+        </div>
+        {Object.entries(layout.npcPositions).map(([slotId, slot]) => (
+          <div key={slotId} style={{ marginBottom: 10, padding: 8, background: '#1a1a2e', borderRadius: 4, border: '1px solid #333' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <span style={{ fontSize: 11, color: '#ff66aa', fontWeight: 600 }}>{slotId}</span>
+              <PlaceButton label="Place" mode={slotId as PlacementMode} current={placementMode} onToggle={onPlacementModeChange} />
+            </div>
+            <Vec3Input label="Position" value={slot.position} onChange={(v) => updateSlot(slotId, { position: v })} />
+            <RotationInput label="Rotation Y" value={slot.rotationY} onChange={(v) => updateSlot(slotId, { rotationY: v })} />
+          </div>
+        ))}
       </section>
 
       {/* Room Section */}

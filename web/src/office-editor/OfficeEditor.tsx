@@ -7,18 +7,29 @@ import OfficeExportPanel from './OfficeExportPanel';
 const STORAGE_KEY = 'office-layout';
 
 const DEFAULT_LAYOUT: OfficeLayoutData = {
-  npcPosition: [0, 0, -3],
+  npcPosition: [0, 0, -5.6],
   npcRotationY: 0,
-  npcScale: 0.15,
-  roomScale: 0.15,
-  doorTrigger: { position: [0, 1, 5], size: [3, 2, 1] },
-  spawnPoint: { position: [0, 0, 3], rotationY: Math.PI },
+  npcScale: 0.09,
+  roomScale: 0.16,
+  doorTrigger: { position: [0, 1, 10.9], size: [8.1, 2, 1.2] },
+  spawnPoint: { position: [0, 0, 8.7], rotationY: Math.PI },
+  npcPositions: {
+    pos_1: { position: [-2.8, 0, -2.4], rotationY: 0 },
+    pos_2: { position: [-3.9, 0, -1.5], rotationY: -0.401 },
+  },
 };
 
 function loadLayout(): OfficeLayoutData {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...DEFAULT_LAYOUT, ...JSON.parse(saved) };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...DEFAULT_LAYOUT,
+        ...parsed,
+        npcPositions: { ...DEFAULT_LAYOUT.npcPositions, ...parsed.npcPositions },
+      };
+    }
   } catch { /* ignore */ }
   return DEFAULT_LAYOUT;
 }
@@ -46,6 +57,9 @@ export default function OfficeEditor() {
           return { ...prev, doorTrigger: { ...prev.doorTrigger, position: [snapped[0], snapped[1] + prev.doorTrigger.size[1] / 2, snapped[2]] } };
         case 'spawn':
           return { ...prev, spawnPoint: { ...prev.spawnPoint, position: snapped } };
+        case 'pos_1':
+        case 'pos_2':
+          return { ...prev, npcPositions: { ...prev.npcPositions, [placementMode]: { ...prev.npcPositions[placementMode], position: snapped } } };
         default:
           return prev;
       }
