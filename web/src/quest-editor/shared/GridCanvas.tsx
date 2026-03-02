@@ -21,6 +21,7 @@ interface GridCanvasProps {
   swapSource?: string | null;
   onSwapExecute?: (targetPos: string) => void;
   onSwapCancel?: () => void;
+  isMobile?: boolean;
 }
 
 /** Get suffix from stage name (e.g., "s01a_ib1" -> "ib1") */
@@ -140,6 +141,7 @@ function CellDisplay({
   areaKey,
   onClick,
   isSwapSource,
+  cellSize = 110,
 }: {
   pos: string;
   cell: EditorGridCell | null;
@@ -150,23 +152,31 @@ function CellDisplay({
   areaKey?: string;
   onClick: () => void;
   isSwapSource?: boolean;
+  cellSize?: number;
 }) {
   const [row, col] = pos.split(',').map(Number);
+
+  const compact = cellSize < 80;
+  const gateW = compact ? 14 : 22;
+  const gateH = compact ? 3 : 5;
+  const badgeSize = compact ? 10 : 14;
+  const suffixFontSize = compact ? '9px' : '11px';
+  const coordFontSize = compact ? '6px' : '8px';
 
   if (!cell) {
     return (
       <div
         onClick={onClick}
         style={{
-          width: '110px',
-          height: '110px',
+          width: `${cellSize}px`,
+          height: `${cellSize}px`,
           background: isSelected ? '#2a2a4a' : '#1a1a2e',
           border: `1px solid ${isSelected ? '#5588ff' : '#333'}`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           color: '#444',
-          fontSize: '10px',
+          fontSize: compact ? '8px' : '10px',
           cursor: 'pointer',
           transition: 'background 0.1s',
         }}
@@ -187,12 +197,14 @@ function CellDisplay({
   const keyDropLinks = project.keyDropLinks || {};
   const isKeyDrop = pos in keyDropLinks;
 
+  const badgeOffset = compact ? 13 : 19;
+
   return (
     <div
       onClick={onClick}
       style={{
-        width: '110px',
-        height: '110px',
+        width: `${cellSize}px`,
+        height: `${cellSize}px`,
         background: isSwapSource ? '#4a3a1a' : isSelected ? '#3a3a6a' : '#2a2a4a',
         border: `2px solid ${isSwapSource ? '#ff9922' : isSelected ? '#88aaff' : cellColor}`,
         position: 'relative',
@@ -211,52 +223,52 @@ function CellDisplay({
       )}
       {isStart && (
         <div style={{
-          position: 'absolute', top: '3px', left: '3px',
-          background: '#66aaff', color: '#fff', fontSize: '7px',
-          padding: '1px 4px', borderRadius: '3px', fontWeight: 700,
+          position: 'absolute', top: '2px', left: '2px',
+          background: '#66aaff', color: '#fff', fontSize: compact ? '5px' : '7px',
+          padding: '1px 3px', borderRadius: '3px', fontWeight: 700,
         }}>START</div>
       )}
       {isEnd && (
         <div style={{
-          position: 'absolute', top: '3px', left: '3px',
-          background: '#ffaa66', color: '#fff', fontSize: '7px',
-          padding: '1px 4px', borderRadius: '3px', fontWeight: 700,
+          position: 'absolute', top: '2px', left: '2px',
+          background: '#ffaa66', color: '#fff', fontSize: compact ? '5px' : '7px',
+          padding: '1px 3px', borderRadius: '3px', fontWeight: 700,
         }}>END</div>
       )}
       {hasKey && (
         <div style={{
-          position: 'absolute', top: '3px', right: '3px',
-          width: '14px', height: '14px', background: '#ff66aa',
-          borderRadius: '50%', border: '2px solid #fff',
+          position: 'absolute', top: '2px', right: '2px',
+          width: `${badgeSize}px`, height: `${badgeSize}px`, background: '#ff66aa',
+          borderRadius: '50%', border: compact ? '1px solid #fff' : '2px solid #fff',
         }} title="Key" />
       )}
       {isKeyDrop && (
         <div style={{
-          position: 'absolute', top: '3px', right: hasKey ? '22px' : '3px',
-          width: '14px', height: '14px', background: '#ddaa33',
-          borderRadius: '50%', border: '2px solid #fff',
+          position: 'absolute', top: '2px', right: hasKey ? `${badgeOffset + 2}px` : '2px',
+          width: `${badgeSize}px`, height: `${badgeSize}px`, background: '#ddaa33',
+          borderRadius: '50%', border: compact ? '1px solid #fff' : '2px solid #fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '8px', color: '#fff', fontWeight: 700,
+          fontSize: compact ? '6px' : '8px', color: '#fff', fontWeight: 700,
         }} title="Key Drop">D</div>
       )}
       {isKeyGate && (
         <div style={{
-          position: 'absolute', top: '3px',
-          right: (hasKey || isKeyDrop) ? ((hasKey ? 19 : 0) + (isKeyDrop ? 19 : 0) + 3) + 'px' : '3px',
-          width: '14px', height: '14px', background: '#ff66ff',
-          borderRadius: '2px', border: '2px solid #fff',
+          position: 'absolute', top: '2px',
+          right: (hasKey || isKeyDrop) ? ((hasKey ? badgeOffset : 0) + (isKeyDrop ? badgeOffset : 0) + 2) + 'px' : '2px',
+          width: `${badgeSize}px`, height: `${badgeSize}px`, background: '#ff66ff',
+          borderRadius: '2px', border: compact ? '1px solid #fff' : '2px solid #fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '8px', color: '#fff', fontWeight: 700,
+          fontSize: compact ? '6px' : '8px', color: '#fff', fontWeight: 700,
         }} title="Key-Gate">G</div>
       )}
 
-      <div style={{ color: '#fff', fontSize: '11px', fontWeight: 600, textAlign: 'center' }}>
+      <div style={{ color: '#fff', fontSize: suffixFontSize, fontWeight: 600, textAlign: 'center', zIndex: 1 }}>
         {getSuffix(cell.stageName)}
       </div>
       {gates.has('north') && (
         <div style={{
           position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '22px', height: '5px', borderRadius: '0 0 3px 3px',
+          width: `${gateW}px`, height: `${gateH}px`, borderRadius: '0 0 3px 3px',
           background: entryDir === 'north' ? '#88ff88' : getGateColor(project, pos, cell, 'north', project.gridSize),
           opacity: entryDir === 'north' ? 0.5 : 1,
         }} />
@@ -264,7 +276,7 @@ function CellDisplay({
       {gates.has('south') && (
         <div style={{
           position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-          width: '22px', height: '5px', borderRadius: '3px 3px 0 0',
+          width: `${gateW}px`, height: `${gateH}px`, borderRadius: '3px 3px 0 0',
           background: entryDir === 'south' ? '#88ff88' : getGateColor(project, pos, cell, 'south', project.gridSize),
           opacity: entryDir === 'south' ? 0.5 : 1,
         }} />
@@ -272,7 +284,7 @@ function CellDisplay({
       {gates.has('east') && (
         <div style={{
           position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)',
-          width: '5px', height: '22px', borderRadius: '3px 0 0 3px',
+          width: `${gateH}px`, height: `${gateW}px`, borderRadius: '3px 0 0 3px',
           background: entryDir === 'east' ? '#88ff88' : getGateColor(project, pos, cell, 'east', project.gridSize),
           opacity: entryDir === 'east' ? 0.5 : 1,
         }} />
@@ -280,21 +292,22 @@ function CellDisplay({
       {gates.has('west') && (
         <div style={{
           position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-          width: '5px', height: '22px', borderRadius: '0 3px 3px 0',
+          width: `${gateH}px`, height: `${gateW}px`, borderRadius: '0 3px 3px 0',
           background: entryDir === 'west' ? '#88ff88' : getGateColor(project, pos, cell, 'west', project.gridSize),
           opacity: entryDir === 'west' ? 0.5 : 1,
         }} />
       )}
 
-      <div style={{ position: 'absolute', bottom: '2px', right: '4px', fontSize: '8px', color: '#555' }}>
+      <div style={{ position: 'absolute', bottom: '1px', right: '3px', fontSize: coordFontSize, color: '#555' }}>
         {row},{col}
       </div>
     </div>
   );
 }
 
-export default function GridCanvas({ project, selectedCell, onCellClick, onCellSelect, showMinimap, areaKey, swapSource, onSwapExecute, onSwapCancel }: GridCanvasProps) {
+export default function GridCanvas({ project, selectedCell, onCellClick, onCellSelect, showMinimap, areaKey, swapSource, onSwapExecute, onSwapCancel, isMobile }: GridCanvasProps) {
   const { gridSize, cells } = project;
+  const cellSize = isMobile ? 66 : 110;
   const entryDirs = useMemo(() => computeEntryDirections(project), [project]);
   const inSwapMode = !!swapSource;
 
@@ -361,6 +374,7 @@ export default function GridCanvas({ project, selectedCell, onCellClick, onCellS
                   areaKey={areaKey}
                   onClick={() => handleCellClick(pos)}
                   isSwapSource={swapSource === pos}
+                  cellSize={cellSize}
                 />
               );
             })}

@@ -9,14 +9,17 @@ import { AVAILABLE_COMPANIONS, OFFICE_POSITIONS } from '../types';
 interface MetadataTabProps {
   project: QuestProject;
   onUpdateProject: (updater: (prev: QuestProject) => QuestProject) => void;
+  isMobile?: boolean;
 }
 
 const NPC_OPTIONS = [
   { id: 'kai', name: 'Kai' },
   { id: 'sarisa', name: 'Sarisa' },
+  { id: 'elio', name: 'Elio' },
+  { id: 'fern', name: 'Fern' },
 ];
 
-export default function MetadataTab({ project, onUpdateProject }: MetadataTabProps) {
+export default function MetadataTab({ project, onUpdateProject, isMobile }: MetadataTabProps) {
   const meta = project.metadata;
   const officeNpcs = meta.officeNpcs || [];
   const briefingDialog = meta.briefingDialog || [];
@@ -113,7 +116,7 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
   return (
     <div style={{
       flex: 1, display: 'flex', justifyContent: 'center',
-      overflow: 'auto', padding: '32px 24px',
+      overflow: 'auto', padding: isMobile ? '16px 12px' : '32px 24px',
     }}>
       <div style={{ maxWidth: '560px', width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
@@ -222,6 +225,7 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
                   background: '#1a1a2e',
                   border: '1px solid #333',
                   borderRadius: '6px',
+                  flexWrap: isMobile ? 'wrap' : undefined,
                 }}
               >
                 <input
@@ -230,7 +234,7 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
                   onChange={(e) => updateObjective(oi, { item_id: e.target.value })}
                   placeholder="item_id"
                   style={{
-                    width: '120px', padding: '4px 6px', background: '#111',
+                    width: isMobile ? '100%' : '120px', padding: '4px 6px', background: '#111',
                     border: '1px solid #444', borderRadius: '3px',
                     color: '#ffdd44', fontSize: '11px', fontFamily: 'monospace',
                   }}
@@ -350,6 +354,7 @@ export default function MetadataTab({ project, onUpdateProject }: MetadataTabPro
                   background: '#1a1a2e',
                   border: '1px solid #333',
                   borderRadius: '6px',
+                  flexWrap: isMobile ? 'wrap' : undefined,
                 }}
               >
                 <select

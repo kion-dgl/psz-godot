@@ -279,6 +279,8 @@ export interface CompanionInfo {
 export const AVAILABLE_COMPANIONS: CompanionInfo[] = [
   { id: 'kai', name: 'Kai' },
   { id: 'sarisa', name: 'Sarisa' },
+  { id: 'elio', name: 'Elio' },
+  { id: 'fern', name: 'Fern' },
 ];
 
 // ============================================================================
