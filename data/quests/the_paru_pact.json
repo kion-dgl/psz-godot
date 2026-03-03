@@ -1024,18 +1024,21 @@
       ]
     }
   ],
-  "companions": [
-    "elio"
-  ],
-  "city_dialog": [
+  "companions": ["elio"],
+  "office_npcs": [
     {
-      "speaker": "Elio",
-      "text": "I'm Elio, Research Division. I study Mags — the companion artifacts from before the Great Blank. Everyone thinks they're extinct, but I've been tracking energy signatures deep in Paru."
-    },
-    {
-      "speaker": "Elio",
-      "text": "I need someone who can handle the automata while I work. We're looking for Mag Cells — four of them. Enough to reconstruct a living Mag. This could change everything."
+      "npc_id": "elio",
+      "npc_name": "Elio",
+      "office_position": "pos_1"
     }
+  ],
+  "briefing_dialog": [
+    { "speaker": "Principal", "text": "This is Elio, from the Research Division. She has an unusual request." },
+    { "speaker": "Elio", "text": "I study Mags \u2014 the companion artifacts from before the Great Blank. Everyone thinks they're extinct." },
+    { "speaker": "Elio", "text": "But I've been tracking energy signatures deep in Paru. Something is still active down there." },
+    { "speaker": "Elio", "text": "I need to recover Mag Cells from the ruins. With enough of them, I can reconstruct a living Mag. This could change everything." },
+    { "speaker": "Elio", "text": "The automata won't make it easy. I need someone who can handle themselves while I work." },
+    { "speaker": "Principal", "text": "The Research Division has authorized this expedition. Keep Elio safe and bring back what you find." }
   ],
   "objectives": [
     {
@@ -1043,5 +1046,6 @@
       "label": "Mag Cells",
       "target": 4
     }
-  ]
+  ],
+  "report_to": "guild_counter"
 }

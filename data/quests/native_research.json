@@ -1,0 +1,1104 @@
+{
+  "id": "native_research",
+  "name": "Native Research",
+  "description": "Requested by: Dr. Carlo. Escort a researcher through the valley, wetlands, and snowfield to conduct a wildlife survey across all three biomes.",
+  "area_id": "gurhacia",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,2",
+      "end_pos": "3,2",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s01a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1771646251322_m10fltkxh",
+              "gate": [
+                -2.02,
+                0,
+                14.05
+              ],
+              "spawn": [
+                -2.02,
+                1,
+                17.05
+              ],
+              "trigger": [
+                -2.02,
+                0,
+                21.05
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "default": {
+              "gate": [
+                -1.75,
+                0,
+                -9.72
+              ],
+              "spawn": [
+                -1.75,
+                1,
+                -9.72
+              ],
+              "trigger": [
+                -1.75,
+                0,
+                -9.72
+              ],
+              "default_rotation": 0
+            }
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -1,
+                1,
+                6
+              ],
+              "trigger_id": "carlo_valley_intro",
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Thank you for escorting me. The Guild hasn't funded a proper wildlife survey in years."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Our first stop is the valley. The creatures here are well-documented, but I want to observe their behavior in person."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s01a_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,2",
+            "south": "2,2"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1769053381372_5av2efj16",
+              "gate": [
+                -17.01,
+                0,
+                -20.92
+              ],
+              "spawn": [
+                -17.01,
+                1,
+                -23.92
+              ],
+              "trigger": [
+                -17.01,
+                0,
+                -27.92
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1769053417752_i1yyit48i",
+              "gate": [
+                14.05,
+                0,
+                20.85
+              ],
+              "spawn": [
+                14.05,
+                1,
+                23.85
+              ],
+              "trigger": [
+                14.05,
+                0,
+                27.85
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                1,
+                0
+              ],
+              "trigger_id": "carlo_valley_observe1",
+              "trigger_size": [
+                20,
+                4,
+                20
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Fascinating. The native rappies here are showing heightened aggression. That's not typical for the species."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Before the Blight, they were docile foragers. Something is changing their behavior at a fundamental level."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s01a_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "south": "3,2"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1769002968090_15j7x91gm",
+              "gate": [
+                1.97,
+                0,
+                -14.99
+              ],
+              "spawn": [
+                1.97,
+                1,
+                -17.99
+              ],
+              "trigger": [
+                1.97,
+                0,
+                -21.99
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1769002993382_c7pgnyd8v",
+              "gate": [
+                -6.13,
+                0,
+                20.02
+              ],
+              "spawn": [
+                -6.13,
+                1,
+                23.02
+              ],
+              "trigger": [
+                -6.13,
+                0,
+                27.02
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "message",
+              "position": [
+                5,
+                0,
+                -8
+              ],
+              "text": "Research Team 4, Log 12: The valley fauna are deteriorating faster than predicted. Recommend immediate field study before baseline data is lost entirely."
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s01a_na1",
+          "rotation": 0,
+          "connections": {
+            "south": "2,2"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1769092107069_jgnmrzarg",
+              "gate": [
+                19.05,
+                0,
+                15.19
+              ],
+              "spawn": [
+                19.05,
+                1,
+                18.19
+              ],
+              "trigger": [
+                19.05,
+                0,
+                22.19
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "south",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                1,
+                -6
+              ],
+              "trigger_id": "carlo_valley_end",
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Good data from the valley. The aggression patterns confirm what I suspected."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Next we should head to the wetlands. The ecosystem there is completely different \u2014 I want to compare behavioral markers."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,2",
+      "end_pos": "3,2",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s02a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1771802375822_jr1b5c8lp",
+              "gate": [
+                -0.03,
+                0,
+                3.73
+              ],
+              "spawn": [
+                -0.03,
+                1,
+                6.73
+              ],
+              "trigger": [
+                -0.03,
+                0,
+                10.73
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "default": {
+              "gate": [
+                0.09,
+                0,
+                -3.64
+              ],
+              "spawn": [
+                0.09,
+                1,
+                -3.64
+              ],
+              "trigger": [
+                0.09,
+                0,
+                -3.64
+              ],
+              "default_rotation": 0
+            }
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -1,
+                1,
+                6
+              ],
+              "trigger_id": "carlo_wetlands_intro",
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "The wetlands. Amphibious species dominate here \u2014 completely different food chain from the valley."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "If the Blight has reached here too, it means it's not just a local contamination. It's systemic."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s02a_ib2",
+          "rotation": 0,
+          "connections": {
+            "north": "0,2",
+            "south": "2,2"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1770694873204_haxbz6f3g",
+              "gate": [
+                -6.14,
+                0,
+                -21.62
+              ],
+              "spawn": [
+                -6.14,
+                1,
+                -24.62
+              ],
+              "trigger": [
+                -6.14,
+                0,
+                -28.62
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1770694856803_2ys7twqc5",
+              "gate": [
+                -5.94,
+                0,
+                22.43
+              ],
+              "spawn": [
+                -5.94,
+                1,
+                25.43
+              ],
+              "trigger": [
+                -5.94,
+                0,
+                29.43
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                1,
+                0
+              ],
+              "trigger_id": "carlo_wetlands_observe",
+              "trigger_size": [
+                20,
+                4,
+                20
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "See how the water creatures cluster near the shallows? Defensive formation. They're afraid of something."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "In a healthy ecosystem, they'd be spread across the entire waterway."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s02a_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "south": "3,2"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1770694163468_w6x5en6p1",
+              "gate": [
+                0.05,
+                0,
+                -13.75
+              ],
+              "spawn": [
+                0.05,
+                1,
+                -16.75
+              ],
+              "trigger": [
+                0.05,
+                0,
+                -20.75
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1770694183466_bhd3dyy58",
+              "gate": [
+                -0.02,
+                0,
+                19.9
+              ],
+              "spawn": [
+                -0.02,
+                1,
+                22.9
+              ],
+              "trigger": [
+                -0.02,
+                0,
+                26.9
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "message",
+              "position": [
+                -6,
+                0,
+                4
+              ],
+              "text": "Research Team 4, Log 19: Wetland species show identical corruption markers to the valley fauna. The Blight is not airborne \u2014 it's in the water table. Requesting toxicology equipment."
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s02a_na1",
+          "rotation": 0,
+          "connections": {
+            "south": "2,2"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1770695165920_u1whbwviy",
+              "gate": [
+                -7.14,
+                0,
+                15.91
+              ],
+              "spawn": [
+                -7.14,
+                1,
+                18.91
+              ],
+              "trigger": [
+                -7.14,
+                0,
+                22.91
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "south",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                1,
+                -6
+              ],
+              "trigger_id": "carlo_wetlands_end",
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Same markers here as the valley. This confirms it \u2014 the Blight is spreading through the water system."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "One more stop. The snowfield. If we find corruption there too, this is bigger than anyone realizes."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,2",
+      "end_pos": "3,2",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s03a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1770733436575_0jjzynv4j",
+              "gate": [
+                -0.23,
+                0,
+                13.13
+              ],
+              "spawn": [
+                -0.23,
+                1,
+                16.13
+              ],
+              "trigger": [
+                -0.23,
+                0,
+                20.13
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "default": {
+              "gate": [
+                -0.04,
+                0,
+                0.16
+              ],
+              "spawn": [
+                -0.04,
+                1,
+                0.16
+              ],
+              "trigger": [
+                -0.04,
+                0,
+                0.16
+              ],
+              "default_rotation": 0
+            }
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -1,
+                1,
+                6
+              ],
+              "trigger_id": "carlo_snow_intro",
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "The snowfield. The cold should slow the Blight's spread, in theory."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Let's see if the wildlife here tells a different story."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s03a_ib2",
+          "rotation": 0,
+          "connections": {
+            "north": "0,2",
+            "south": "2,2"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1770724021228_2sbc5cfro",
+              "gate": [
+                7.49,
+                0,
+                -20.73
+              ],
+              "spawn": [
+                7.49,
+                1,
+                -23.73
+              ],
+              "trigger": [
+                7.49,
+                0,
+                -27.73
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1770724007474_9kh6jog21",
+              "gate": [
+                12.44,
+                0,
+                21.1
+              ],
+              "spawn": [
+                12.44,
+                1,
+                24.1
+              ],
+              "trigger": [
+                12.44,
+                0,
+                28.1
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                1,
+                0
+              ],
+              "trigger_id": "carlo_snow_observe",
+              "trigger_size": [
+                20,
+                4,
+                20
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Interesting! The creatures here are still aggressive, but the corruption markers are weaker."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "The cold IS slowing it down. That's important data."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s03a_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "south": "3,2"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1770723810436_8lyziqda8",
+              "gate": [
+                1.02,
+                0,
+                -10.89
+              ],
+              "spawn": [
+                1.02,
+                1,
+                -13.89
+              ],
+              "trigger": [
+                1.02,
+                0,
+                -17.89
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1770723821191_ps69vm5m9",
+              "gate": [
+                -0.72,
+                0,
+                10.09
+              ],
+              "spawn": [
+                -0.72,
+                1,
+                13.09
+              ],
+              "trigger": [
+                -0.72,
+                0,
+                17.09
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                1,
+                0
+              ],
+              "trigger_id": "carlo_discovery",
+              "trigger_size": [
+                20,
+                4,
+                20
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Wait. Stop. Look at that creature over there."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "...it's not corrupted. No aggression markers, no discoloration. It's completely clean."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "I haven't seen an unblighted specimen in the field in over two years."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "This changes everything. If one survived naturally, then the Blight isn't irreversible. There might be a resistance factor we can isolate."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "We need to document this and get back to the Guild immediately. This is the breakthrough we've been waiting for."
+                }
+              ]
+            },
+            {
+              "type": "message",
+              "position": [
+                8,
+                0,
+                -10
+              ],
+              "text": "Research Team 4, Final Log: All personnel recalled. Funding terminated. Quote: 'The wildlife situation is a natural cycle and will self-correct.' We know that isn't true. Someone will find these logs someday. Please, don't stop looking."
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s03a_na1",
+          "rotation": 0,
+          "connections": {
+            "south": "2,2"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1770724402240_3wzf2nh7w",
+              "gate": [
+                2.64,
+                0,
+                19.95
+              ],
+              "spawn": [
+                2.64,
+                1,
+                22.95
+              ],
+              "trigger": [
+                2.64,
+                0,
+                26.95
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "warp_edge": "south",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                1,
+                -6
+              ],
+              "trigger_id": "carlo_ending",
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
+              "actions": [
+                "complete_quest",
+                "telepipe"
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Three areas surveyed. Corruption confirmed across all biomes, but weakest in cold climates."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "And one clean specimen in the snowfield. One. That's all it takes."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Research Team 4's logs... they were right all along. The Blight isn't natural. And now we have proof it can be survived."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Thank you. Truly. This data will save lives. Let's report back to the Guild."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "companions": [
+    "dr_carlo"
+  ],
+  "office_npcs": [
+    {
+      "npc_id": "dr_carlo",
+      "npc_name": "Dr. Carlo",
+      "office_position": "pos_1"
+    }
+  ],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "This is a research assignment. Dr. Carlo from the Pioneer Lab has requested an escort."
+    },
+    {
+      "speaker": "Dr. Carlo",
+      "text": "I'm conducting a wildlife survey across three biomes \u2014 valley, wetlands, and snowfield."
+    },
+    {
+      "speaker": "Dr. Carlo",
+      "text": "Research Team 4 was doing similar work before their funding was cut. I want to pick up where they left off."
+    },
+    {
+      "speaker": "Principal",
+      "text": "The field is dangerous. Dr. Carlo will need protection while he works."
+    },
+    {
+      "speaker": "Dr. Carlo",
+      "text": "I won't slow you down. I just need time to observe and document. That's all I ask."
+    },
+    {
+      "speaker": "Principal",
+      "text": "Keep Dr. Carlo safe across all three areas. Good luck out there."
+    }
+  ],
+  "report_to": "guild_counter"
+}

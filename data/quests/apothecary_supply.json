@@ -817,5 +817,23 @@
       "label": "Sol Leaf",
       "target": 1
     }
-  ]
+  ],
+  "companions": ["fern"],
+  "office_npcs": [
+    {
+      "npc_id": "fern",
+      "npc_name": "Fern",
+      "office_position": "pos_1"
+    }
+  ],
+  "briefing_dialog": [
+    { "speaker": "Principal", "text": "We've received a supply request from the item shop. Their stock of healing atomizers is critically low." },
+    { "speaker": "Principal", "text": "This is Fern, an herbalist who supplies the raw materials. She'll explain the situation." },
+    { "speaker": "Fern", "text": "The wetlands used to be safe enough to harvest alone, but lately the creatures have become more aggressive." },
+    { "speaker": "Fern", "text": "Without fresh herbs, the shop can't synthesize atomizers. And without atomizers, fewer hunters can take missions safely." },
+    { "speaker": "Fern", "text": "It's a vicious cycle. The longer we wait, the worse it gets." },
+    { "speaker": "Principal", "text": "We need you to escort Fern into the wetlands so she can collect what she needs \u2014 Sol Leaves, Moon Blooms, and Star Husks." },
+    { "speaker": "Fern", "text": "I know exactly where they grow. Just keep the creatures off me and I'll handle the rest." }
+  ],
+  "report_to": "guild_counter"
 }

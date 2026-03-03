@@ -24,6 +24,18 @@ const WARP_TO_AREA := {
 	"eternal-tower": "tower",
 }
 
+## Stage prefix → area_id (reverse of GridGenerator.AREA_CONFIG prefix)
+const STAGE_PREFIX_TO_AREA := {
+	"s01": "gurhacia",
+	"s02": "ozette",
+	"s03": "rioh",
+	"s04": "makara",
+	"s05": "paru",
+	"s06": "arca",
+	"s07": "dark",
+	"s08": "tower",
+}
+
 var _session: Dictionary = {}
 var _suspended_session: Dictionary = {}
 var _location: String = "city"
@@ -175,6 +187,22 @@ func get_companions() -> Array:
 ## Get current location
 func get_location() -> String:
 	return _location
+
+
+## Get area_id for the current section (supports multi-area quests).
+## Derives area from the first cell's stage prefix; falls back to session area_id.
+func get_current_area_id() -> String:
+	var sections: Array = get_field_sections()
+	var section_idx: int = get_current_section()
+	if section_idx < sections.size():
+		var cells: Array = sections[section_idx].get("cells", [])
+		if cells.size() > 0:
+			var stage_id: String = str(cells[0].get("stage_id", ""))
+			if stage_id.length() >= 3:
+				var prefix: String = stage_id.substr(0, 3)
+				if STAGE_PREFIX_TO_AREA.has(prefix):
+					return STAGE_PREFIX_TO_AREA[prefix]
+	return str(_session.get("area_id", "gurhacia"))
 
 
 ## Suspend current session (telepipe — return to city but keep session)
