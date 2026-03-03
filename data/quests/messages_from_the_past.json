@@ -1,7 +1,7 @@
 {
-  "id": "voices_from_the_void",
-  "name": "Voices from the Void",
-  "description": "Requested by: Research Division. Escort researcher Mira into classified Paru ruins to recover ancient data disks from before the Great Blank.",
+  "id": "messages_from_the_past",
+  "name": "Messages from the Past",
+  "description": "Requested by: Research Division. Enter the classified Paru ruins with Elio to recover ancient data disks from before the Great Blank.",
   "area_id": "paru",
   "sections": [
     {
@@ -1920,18 +1920,22 @@
       ]
     }
   ],
-  "companions": [
-    "mira"
-  ],
-  "city_dialog": [
+  "companions": ["elio"],
+  "office_npcs": [
     {
-      "speaker": "Mira",
-      "text": "The Guild keeps Paru classified for a reason. Automata, unstable structures... but there's data in there that could change everything we know about the Great Blank. I need someone who can handle themselves. That's you."
-    },
-    {
-      "speaker": "Mira",
-      "text": "The survey team recovered fragments — just enough to know there's more. I'm not going in blind. I'm going in prepared. Let's move."
+      "npc_id": "mira",
+      "npc_name": "Mira",
+      "office_position": "pos_2"
     }
+  ],
+  "briefing_dialog": [
+    { "speaker": "Principal", "text": "This mission is classified. What you're about to hear does not leave this room." },
+    { "speaker": "Principal", "text": "This is Mira, from the Research Division. She's been studying fragments recovered from the Paru ruins." },
+    { "speaker": "Mira", "text": "The ruins contain data from before the Great Blank \u2014 records that could explain what happened to this world." },
+    { "speaker": "Mira", "text": "A survey team found fragments, enough to confirm there are complete data disks still inside. I need them recovered." },
+    { "speaker": "Mira", "text": "I'd go myself, but the ruins are crawling with active automata. I'm sending Elio with you \u2014 she knows what to look for." },
+    { "speaker": "Elio", "text": "I've studied Mira's notes. I'll know the disks when I see them \u2014 you keep us alive." },
+    { "speaker": "Principal", "text": "Retrieve the disks and return safely. The Research Division is counting on this." }
   ],
   "objectives": [
     {
@@ -1939,5 +1943,6 @@
       "label": "Data Disks",
       "target": 4
     }
-  ]
+  ],
+  "report_to": "guild_counter"
 }

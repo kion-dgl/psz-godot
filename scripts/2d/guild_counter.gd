@@ -35,7 +35,7 @@ const QUEST_ORDER := {
 	"apothecary_supply": 3,
 	"static_in_the_snow": 4,
 	"deep_ore_extraction": 5,
-	"voices_from_the_void": 6,
+	"messages_from_the_past": 6,
 	"the_pure_sample": 7,
 	"the_final_transmission": 8,
 }
