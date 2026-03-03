@@ -133,7 +133,7 @@ func _refresh_display() -> void:
 	var session: Dictionary = SessionManager.get_session()
 	var sections: Array = SessionManager.get_field_sections()
 	var section_idx: int = SessionManager.get_current_section()
-	var area_id: String = str(session.get("area_id", "gurhacia"))
+	var area_id: String = SessionManager.get_current_area_id()
 	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
 	var area_name: String = area_cfg["name"]
 	var section_suffix: String = SECTION_LABELS.get(_section_area, "")

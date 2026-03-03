@@ -41,7 +41,7 @@ func _start_wave() -> void:
 		SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 		return
 
-	var area_id: String = session.get("area_id", "gurhacia")
+	var area_id: String = SessionManager.get_current_area_id()
 	var difficulty: String = session.get("difficulty", "normal")
 	var stage: int = int(session.get("stage", 1))
 	var wave: int = int(session.get("wave", 1))
@@ -706,7 +706,7 @@ func _add_log(message: String) -> void:
 
 func _refresh_display() -> void:
 	var session: Dictionary = SessionManager.get_session()
-	var area_name: String = str(session.get("area_id", "???")).capitalize()
+	var area_name: String = SessionManager.get_current_area_id().capitalize()
 	header_label.text = "─── %s ─── Stage %d/%d ─── Wave %d/%d ───" % [
 		area_name,
 		int(session.get("stage", 1)), 3,
