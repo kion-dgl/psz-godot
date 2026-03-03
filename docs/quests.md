@@ -50,15 +50,15 @@ Researchers found a sealed Great Blank-era facility in Paru. The player enters t
 
 ---
 
-## Quest 7: The Pure Sample (#24)
+## Quest 7: Native Research (#24)
 
-**Location:** Valley | **Theme:** Lore — Explains enemy aggression as a biological tragedy rather than just "monsters existing."
+**Location:** Valley → Wetlands → Snowfield | **Theme:** Lore — Explains enemy aggression as a biological tragedy rather than just "monsters existing."
 
-Most local wildlife has succumbed to "The Blight" — a corruption that makes creatures aggressive. Researchers need an uninfected specimen for study. The player navigates through the valley fighting blighted enemies while message packs from prior research teams describe how the wildlife used to be peaceful. Deep in the valley, the player finds a pure specimen — a passive, non-hostile creature (e.g., an unblighted rappy). Approaching it triggers waves of blighted enemies drawn to its presence. The player must protect the specimen until the area is clear. Surviving earns a bittersweet victory and a revelation: "The Blight isn't natural."
+Dr. Carlo from the Pioneer Lab requests an escort for a wildlife survey across three biomes. The player accompanies him through the valley, wetlands, and snowfield while he observes creature behavior and documents Blight corruption markers. Along the way, they find logs from Research Team 4 — a prior team whose funding was cut before they could prove the Blight isn't natural. In the snowfield, Dr. Carlo discovers an uncorrupted specimen — the first seen in two years — proving the Blight can be survived and isn't irreversible. The discovery is a happy side effect of the research, not the objective.
 
 ---
 
-## Quest 8: The Final Transmission (#25)
+## Quest 8: Seek My Mentor (#25)
 
 **Location:** Makara Ruins | **Theme:** Stakes & Emotional Weight — Even experienced hunters can die.
 

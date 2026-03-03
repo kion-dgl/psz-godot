@@ -53,6 +53,11 @@ func log_speech(speaker: String, text: String) -> void:
 	_quest_log.add_speech_entry(speaker, text)
 
 
+## Log an arbitrary entry to the action log.
+func log_entry(text: String, color: Color = Color(0.85, 0.85, 0.85)) -> void:
+	_quest_log.add_entry(text, color)
+
+
 # ── Stats Panel (top-left) ───────────────────────────────────────────────────
 
 class _StatsPanel extends Control:

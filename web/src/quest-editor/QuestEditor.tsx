@@ -6,6 +6,7 @@
 
 import { useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import type { QuestProject, QuestSection, SectionType, Direction } from './types';
 import {
   EDITOR_AREAS, getProjectSections, createSection,
@@ -29,6 +30,71 @@ const TABS: { id: TabId; label: string; disabled?: boolean }[] = [
   { id: 'preview', label: 'Preview' },
 ];
 
+function ProjectDropdown({
+  savedProjectIds, getSavedProject, project, loadProject, deleteProject, newProject, onClose,
+}: {
+  savedProjectIds: string[];
+  getSavedProject: (id: string) => QuestProject | undefined;
+  project: QuestProject;
+  loadProject: (id: string) => void;
+  deleteProject: (id: string) => void;
+  newProject: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div style={{
+      position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+      background: '#1a1a2e', border: '1px solid #444', borderRadius: '8px',
+      padding: '8px', width: '260px', zIndex: 100,
+      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+    }}>
+      <button
+        onClick={() => { newProject(); onClose(); }}
+        style={{
+          width: '100%', padding: '8px', background: '#448844',
+          border: 'none', borderRadius: '4px', color: '#fff',
+          fontSize: '12px', cursor: 'pointer', marginBottom: '8px',
+        }}
+      >New Project</button>
+      {savedProjectIds.length === 0 && (
+        <div style={{ color: '#888', fontSize: '12px', padding: '8px' }}>No saved projects</div>
+      )}
+      {savedProjectIds.map(id => {
+        const saved = getSavedProject(id);
+        if (!saved) return null;
+        const isCurrent = id === project.id;
+        return (
+          <div key={id} style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '6px 8px', borderRadius: '4px',
+            background: isCurrent ? '#333366' : 'transparent', marginBottom: '2px',
+          }}>
+            <div
+              style={{ flex: 1, cursor: 'pointer', fontSize: '12px', color: '#fff' }}
+              onClick={() => { loadProject(id); onClose(); }}
+            >
+              {saved.name}
+              <div style={{ fontSize: '10px', color: '#888' }}>
+                {saved.areaKey}-{saved.variant} | {Object.keys(saved.cells).length} cells
+              </div>
+            </div>
+            {!isCurrent && (
+              <button
+                onClick={() => deleteProject(id)}
+                style={{
+                  background: 'none', border: 'none', color: '#884444',
+                  fontSize: '14px', cursor: 'pointer', padding: '2px',
+                }}
+                title="Delete project"
+              >✕</button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function QuestEditor() {
   const {
     project,
@@ -46,6 +112,7 @@ export default function QuestEditor() {
   } = useQuestProject();
 
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const [activeTab, setActiveTab] = useState<TabId>(
     project.source?.type === 'new' ? 'metadata' : 'layout'
@@ -240,253 +307,245 @@ export default function QuestEditor() {
       fontFamily: "'Segoe UI', system-ui, sans-serif",
     }}>
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '10px 16px',
-        background: '#151525',
-        borderBottom: '1px solid #333',
-        flexWrap: 'wrap',
-      }}>
-        {/* Back button */}
-        <button
-          onClick={() => navigate('/quest-editor')}
-          style={{
-            padding: '4px 10px',
-            background: '#2a2a4a',
-            border: '1px solid #444',
-            borderRadius: '4px',
-            color: '#888',
-            fontSize: '12px',
-            cursor: 'pointer',
-          }}
-          title="Back to quest list"
-        >
-          &larr; Quests
-        </button>
-
-        {/* Source badge */}
-        {sourceLabel && (
-          <span style={{
-            padding: '2px 8px',
-            background: sourceLabel.bg,
-            borderRadius: '4px',
-            fontSize: '11px',
-            color: sourceLabel.color,
+      {isMobile ? (
+        /* ---- Mobile header: two rows ---- */
+        <div style={{ background: '#151525', borderBottom: '1px solid #333' }}>
+          {/* Row 1: back, name, undo/redo, projects */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '6px 10px',
           }}>
-            {sourceLabel.text}
-          </span>
-        )}
-
-        {/* Project name */}
-        <input
-          type="text"
-          value={project.name}
-          onChange={(e) => handleNameChange(e.target.value)}
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '15px',
-            fontWeight: 700,
-            padding: '4px 8px',
-            width: '200px',
-          }}
-          onFocus={(e) => e.currentTarget.style.borderColor = '#444'}
-          onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
-        />
-
-        {/* Separator */}
-        <div style={{ width: '1px', height: '24px', background: '#333' }} />
-
-        {/* Area selector */}
-        <select
-          value={project.areaKey}
-          onChange={(e) => handleAreaChange(e.target.value)}
-          style={{
-            padding: '6px 10px',
-            background: '#2a2a4a',
-            border: '1px solid #444',
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '12px',
-          }}
-        >
-          {EDITOR_AREAS.map(area => (
-            <option key={area.key} value={area.key} disabled={!area.available}>
-              {area.name} ({area.prefix}){!area.available ? ' — no config' : ''}
-            </option>
-          ))}
-        </select>
-
-        {/* Variant selector */}
-        {currentArea && currentArea.variants.length > 0 && (
-          <select
-            value={sectionProject.variant}
-            onChange={(e) => handleVariantChange(e.target.value)}
-            style={{
-              padding: '6px 10px',
-              background: '#2a2a4a',
-              border: '1px solid #444',
-              borderRadius: '4px',
-              color: '#fff',
-              fontSize: '12px',
-            }}
-          >
-            {currentArea.variants.map(v => (
-              <option key={v} value={v}>Variant {v.toUpperCase()}</option>
-            ))}
-          </select>
-        )}
-
-        {/* Grid size */}
-        <select
-          value={sectionProject.gridSize}
-          onChange={(e) => handleGridSizeChange(parseInt(e.target.value))}
-          style={{
-            padding: '6px 10px',
-            background: '#2a2a4a',
-            border: '1px solid #444',
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '12px',
-          }}
-        >
-          {[3, 4, 5, 6, 7].map(n => (
-            <option key={n} value={n}>{n}x{n}</option>
-          ))}
-        </select>
-
-        <div style={{ flex: 1 }} />
-
-        {/* Undo/Redo */}
-        <button
-          onClick={undo}
-          disabled={!canUndo}
-          title="Undo (Ctrl+Z)"
-          style={{
-            padding: '4px 10px',
-            background: canUndo ? '#2a2a4a' : '#222',
-            border: '1px solid #444',
-            borderRadius: '4px',
-            color: canUndo ? '#fff' : '#555',
-            fontSize: '12px',
-            cursor: canUndo ? 'pointer' : 'default',
-          }}
-        >
-          Undo
-        </button>
-        <button
-          onClick={redo}
-          disabled={!canRedo}
-          title="Redo (Ctrl+Y)"
-          style={{
-            padding: '4px 10px',
-            background: canRedo ? '#2a2a4a' : '#222',
-            border: '1px solid #444',
-            borderRadius: '4px',
-            color: canRedo ? '#fff' : '#555',
-            fontSize: '12px',
-            cursor: canRedo ? 'pointer' : 'default',
-          }}
-        >
-          Redo
-        </button>
-
-        {/* Project menu */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowProjectMenu(!showProjectMenu)}
-            style={{
-              padding: '4px 10px',
-              background: '#2a2a4a',
-              border: '1px solid #444',
-              borderRadius: '4px',
-              color: '#fff',
-              fontSize: '12px',
-              cursor: 'pointer',
-            }}
-          >
-            Projects
-          </button>
-          {showProjectMenu && (
-            <div
+            <button
+              onClick={() => navigate('/quest-editor')}
               style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: '4px',
-                background: '#1a1a2e',
-                border: '1px solid #444',
-                borderRadius: '8px',
-                padding: '8px',
-                width: '260px',
-                zIndex: 100,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                padding: '4px 8px', background: '#2a2a4a', border: '1px solid #444',
+                borderRadius: '4px', color: '#888', fontSize: '12px', cursor: 'pointer',
               }}
+              title="Back to quest list"
             >
+              &larr;
+            </button>
+            {sourceLabel && (
+              <span style={{
+                padding: '2px 6px', background: sourceLabel.bg, borderRadius: '4px',
+                fontSize: '10px', color: sourceLabel.color,
+              }}>
+                {sourceLabel.badge}
+              </span>
+            )}
+            <input
+              type="text"
+              value={project.name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              style={{
+                flex: 1, minWidth: 0, background: 'transparent',
+                border: '1px solid transparent', borderRadius: '4px',
+                color: '#fff', fontSize: '14px', fontWeight: 700, padding: '4px 6px',
+              }}
+              onFocus={(e) => e.currentTarget.style.borderColor = '#444'}
+              onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
+            />
+            <button onClick={undo} disabled={!canUndo} title="Undo"
+              style={{
+                padding: '4px 8px', background: canUndo ? '#2a2a4a' : '#222',
+                border: '1px solid #444', borderRadius: '4px',
+                color: canUndo ? '#fff' : '#555', fontSize: '11px',
+                cursor: canUndo ? 'pointer' : 'default',
+              }}
+            >U</button>
+            <button onClick={redo} disabled={!canRedo} title="Redo"
+              style={{
+                padding: '4px 8px', background: canRedo ? '#2a2a4a' : '#222',
+                border: '1px solid #444', borderRadius: '4px',
+                color: canRedo ? '#fff' : '#555', fontSize: '11px',
+                cursor: canRedo ? 'pointer' : 'default',
+              }}
+            >R</button>
+            <div style={{ position: 'relative' }}>
               <button
-                onClick={() => { newProject(); setShowProjectMenu(false); }}
+                onClick={() => setShowProjectMenu(!showProjectMenu)}
                 style={{
-                  width: '100%', padding: '8px', background: '#448844',
-                  border: 'none', borderRadius: '4px', color: '#fff',
-                  fontSize: '12px', cursor: 'pointer', marginBottom: '8px',
+                  padding: '4px 8px', background: '#2a2a4a', border: '1px solid #444',
+                  borderRadius: '4px', color: '#fff', fontSize: '11px', cursor: 'pointer',
                 }}
               >
-                New Project
+                ...
               </button>
-              {savedProjectIds.length === 0 && (
-                <div style={{ color: '#888', fontSize: '12px', padding: '8px' }}>
-                  No saved projects
-                </div>
+              {showProjectMenu && (
+                <ProjectDropdown
+                  savedProjectIds={savedProjectIds}
+                  getSavedProject={getSavedProject}
+                  project={project}
+                  loadProject={loadProject}
+                  deleteProject={deleteProject}
+                  newProject={newProject}
+                  onClose={() => setShowProjectMenu(false)}
+                />
               )}
-              {savedProjectIds.map(id => {
-                const saved = getSavedProject(id);
-                if (!saved) return null;
-                const isCurrent = id === project.id;
-                return (
-                  <div
-                    key={id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '6px 8px',
-                      borderRadius: '4px',
-                      background: isCurrent ? '#333366' : 'transparent',
-                      marginBottom: '2px',
-                    }}
-                  >
-                    <div
-                      style={{ flex: 1, cursor: 'pointer', fontSize: '12px', color: '#fff' }}
-                      onClick={() => { loadProject(id); setShowProjectMenu(false); }}
-                    >
-                      {saved.name}
-                      <div style={{ fontSize: '10px', color: '#888' }}>
-                        {saved.areaKey}-{saved.variant} | {Object.keys(saved.cells).length} cells
-                      </div>
-                    </div>
-                    {!isCurrent && (
-                      <button
-                        onClick={() => deleteProject(id)}
-                        style={{
-                          background: 'none', border: 'none', color: '#884444',
-                          fontSize: '14px', cursor: 'pointer', padding: '2px',
-                        }}
-                        title="Delete project"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
             </div>
-          )}
+          </div>
+          {/* Row 2: area, variant, grid size */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            padding: '4px 10px 6px',
+          }}>
+            <select
+              value={project.areaKey}
+              onChange={(e) => handleAreaChange(e.target.value)}
+              style={{
+                flex: 1, padding: '5px 6px', background: '#2a2a4a',
+                border: '1px solid #444', borderRadius: '4px',
+                color: '#fff', fontSize: '11px',
+              }}
+            >
+              {EDITOR_AREAS.map(area => (
+                <option key={area.key} value={area.key} disabled={!area.available}>
+                  {area.name} ({area.prefix}){!area.available ? ' — n/a' : ''}
+                </option>
+              ))}
+            </select>
+            {currentArea && currentArea.variants.length > 0 && (
+              <select
+                value={sectionProject.variant}
+                onChange={(e) => handleVariantChange(e.target.value)}
+                style={{
+                  padding: '5px 6px', background: '#2a2a4a',
+                  border: '1px solid #444', borderRadius: '4px',
+                  color: '#fff', fontSize: '11px',
+                }}
+              >
+                {currentArea.variants.map(v => (
+                  <option key={v} value={v}>{v.toUpperCase()}</option>
+                ))}
+              </select>
+            )}
+            <select
+              value={sectionProject.gridSize}
+              onChange={(e) => handleGridSizeChange(parseInt(e.target.value))}
+              style={{
+                padding: '5px 6px', background: '#2a2a4a',
+                border: '1px solid #444', borderRadius: '4px',
+                color: '#fff', fontSize: '11px',
+              }}
+            >
+              {[3, 4, 5, 6, 7].map(n => (
+                <option key={n} value={n}>{n}x{n}</option>
+              ))}
+            </select>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* ---- Desktop header: single row ---- */
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '12px',
+          padding: '10px 16px', background: '#151525',
+          borderBottom: '1px solid #333', flexWrap: 'wrap',
+        }}>
+          <button
+            onClick={() => navigate('/quest-editor')}
+            style={{
+              padding: '4px 10px', background: '#2a2a4a', border: '1px solid #444',
+              borderRadius: '4px', color: '#888', fontSize: '12px', cursor: 'pointer',
+            }}
+            title="Back to quest list"
+          >&larr; Quests</button>
+          {sourceLabel && (
+            <span style={{
+              padding: '2px 8px', background: sourceLabel.bg, borderRadius: '4px',
+              fontSize: '11px', color: sourceLabel.color,
+            }}>{sourceLabel.text}</span>
+          )}
+          <input
+            type="text"
+            value={project.name}
+            onChange={(e) => handleNameChange(e.target.value)}
+            style={{
+              background: 'transparent', border: '1px solid transparent', borderRadius: '4px',
+              color: '#fff', fontSize: '15px', fontWeight: 700, padding: '4px 8px', width: '200px',
+            }}
+            onFocus={(e) => e.currentTarget.style.borderColor = '#444'}
+            onBlur={(e) => e.currentTarget.style.borderColor = 'transparent'}
+          />
+          <div style={{ width: '1px', height: '24px', background: '#333' }} />
+          <select
+            value={project.areaKey}
+            onChange={(e) => handleAreaChange(e.target.value)}
+            style={{
+              padding: '6px 10px', background: '#2a2a4a', border: '1px solid #444',
+              borderRadius: '4px', color: '#fff', fontSize: '12px',
+            }}
+          >
+            {EDITOR_AREAS.map(area => (
+              <option key={area.key} value={area.key} disabled={!area.available}>
+                {area.name} ({area.prefix}){!area.available ? ' — no config' : ''}
+              </option>
+            ))}
+          </select>
+          {currentArea && currentArea.variants.length > 0 && (
+            <select
+              value={sectionProject.variant}
+              onChange={(e) => handleVariantChange(e.target.value)}
+              style={{
+                padding: '6px 10px', background: '#2a2a4a', border: '1px solid #444',
+                borderRadius: '4px', color: '#fff', fontSize: '12px',
+              }}
+            >
+              {currentArea.variants.map(v => (
+                <option key={v} value={v}>Variant {v.toUpperCase()}</option>
+              ))}
+            </select>
+          )}
+          <select
+            value={sectionProject.gridSize}
+            onChange={(e) => handleGridSizeChange(parseInt(e.target.value))}
+            style={{
+              padding: '6px 10px', background: '#2a2a4a', border: '1px solid #444',
+              borderRadius: '4px', color: '#fff', fontSize: '12px',
+            }}
+          >
+            {[3, 4, 5, 6, 7].map(n => (
+              <option key={n} value={n}>{n}x{n}</option>
+            ))}
+          </select>
+          <div style={{ flex: 1 }} />
+          <button onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)"
+            style={{
+              padding: '4px 10px', background: canUndo ? '#2a2a4a' : '#222',
+              border: '1px solid #444', borderRadius: '4px',
+              color: canUndo ? '#fff' : '#555', fontSize: '12px',
+              cursor: canUndo ? 'pointer' : 'default',
+            }}
+          >Undo</button>
+          <button onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)"
+            style={{
+              padding: '4px 10px', background: canRedo ? '#2a2a4a' : '#222',
+              border: '1px solid #444', borderRadius: '4px',
+              color: canRedo ? '#fff' : '#555', fontSize: '12px',
+              cursor: canRedo ? 'pointer' : 'default',
+            }}
+          >Redo</button>
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowProjectMenu(!showProjectMenu)}
+              style={{
+                padding: '4px 10px', background: '#2a2a4a', border: '1px solid #444',
+                borderRadius: '4px', color: '#fff', fontSize: '12px', cursor: 'pointer',
+              }}
+            >Projects</button>
+            {showProjectMenu && (
+              <ProjectDropdown
+                savedProjectIds={savedProjectIds}
+                getSavedProject={getSavedProject}
+                project={project}
+                loadProject={loadProject}
+                deleteProject={deleteProject}
+                newProject={newProject}
+                onClose={() => setShowProjectMenu(false)}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Tab bar */}
       <div style={{
@@ -494,6 +553,8 @@ export default function QuestEditor() {
         gap: '0',
         background: '#151525',
         borderBottom: '1px solid #333',
+        overflowX: 'auto',
+        whiteSpace: 'nowrap' as const,
       }}>
         {TABS.map(tab => (
           <button
@@ -524,10 +585,12 @@ export default function QuestEditor() {
           display: 'flex',
           alignItems: 'center',
           gap: '4px',
-          padding: '6px 16px',
+          padding: isMobile ? '6px 10px' : '6px 16px',
           background: '#1a1a30',
           borderBottom: '1px solid #333',
           fontSize: '11px',
+          overflowX: 'auto',
+          whiteSpace: 'nowrap' as const,
         }}>
           <span style={{ color: '#888', marginRight: '4px' }}>Sections:</span>
           {sections.map((sec, idx) => (
@@ -623,10 +686,11 @@ export default function QuestEditor() {
             entryDirection={activeSection.entryDirection}
             exitDirection={activeSection.exitDirection}
             onSetSectionDirection={handleSetSectionDirection}
+            isMobile={isMobile}
           />
         )}
         {activeTab === 'content' && <ContentTab project={sectionProject} onUpdateProject={updateSectionProject} />}
-        {activeTab === 'metadata' && <MetadataTab project={project} onUpdateProject={updateProject} />}
+        {activeTab === 'metadata' && <MetadataTab project={project} onUpdateProject={updateProject} isMobile={isMobile} />}
         {activeTab === 'export' && <ExportTab project={project} setProject={setProject} />}
         {activeTab === 'preview' && (
           <Suspense fallback={

@@ -151,7 +151,7 @@ func _ready() -> void:
 	# Load GLB — resolve area folder from session
 	var stage_id: String = str(_current_cell["stage_id"])
 	TimeManager.stage_label = stage_id
-	var area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
+	var area_id: String = SessionManager.get_current_area_id()
 	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
 
 	# Load visual mesh from raw stage
@@ -2050,7 +2050,7 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 
 	# Roll for item drop (15% chance)
 	if randf() < 0.15:
-		var area_id: String = str(SessionManager.get_session().get("area_id", "gurhacia"))
+		var area_id: String = SessionManager.get_current_area_id()
 		var difficulty: String = str(SessionManager.get_session().get("difficulty", "normal"))
 		var drop_area: String = AREA_DROP_KEYS.get(area_id, "gurhacia-valley")
 		var drop_list: Array = DropRegistry.get_enemy_drops(difficulty, drop_area, enemy_name)
