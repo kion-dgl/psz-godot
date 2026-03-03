@@ -1417,17 +1417,21 @@
       ]
     }
   ],
-  "companions": [
-    "ren"
-  ],
-  "city_dialog": [
+  "companions": ["ren"],
+  "office_npcs": [
     {
-      "speaker": "Ren",
-      "text": "My mentor — Voss — went into the Makara Ruins three days ago. He told me not to worry. That he'd be back by morning."
-    },
-    {
-      "speaker": "Ren",
-      "text": "It's been three days. I'm going after him. Will you come with me?"
+      "npc_id": "ren",
+      "npc_name": "Ren",
+      "office_position": "pos_2"
     }
-  ]
+  ],
+  "briefing_dialog": [
+    { "speaker": "Principal", "text": "This is a search and recovery mission. I want you to hear this directly." },
+    { "speaker": "Ren", "text": "My mentor \u2014 Voss \u2014 went into the Makara Ruins three days ago. He said he'd be back by morning." },
+    { "speaker": "Ren", "text": "His transponder signal has been fading. The last ping was deep inside the ruins." },
+    { "speaker": "Principal", "text": "Voss is one of our most experienced hunters. If he hasn't come back, something went wrong." },
+    { "speaker": "Ren", "text": "I'm going after him. I just need someone with me. Please." },
+    { "speaker": "Principal", "text": "Find Voss and bring him home. Be careful in there." }
+  ],
+  "report_to": "guild_counter"
 }

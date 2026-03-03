@@ -281,6 +281,7 @@ export const AVAILABLE_COMPANIONS: CompanionInfo[] = [
   { id: 'sarisa', name: 'Sarisa' },
   { id: 'elio', name: 'Elio' },
   { id: 'dorn', name: 'Dorn' },
+  { id: 'ren', name: 'Ren' },
   { id: 'fern', name: 'Fern' },
   { id: 'dr_carlo', name: 'Dr. Carlo' },
   { id: 'mira', name: 'Mira' },
