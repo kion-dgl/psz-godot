@@ -4,6 +4,9 @@ extends "res://scripts/3d/city/city_area_base.gd"
 
 # -- Configurable NPC positions --
 # Update these if the office geometry changes.
+# Principal always stands at PRINCIPAL_POSITION.
+# pos_1 and pos_2 are for quest client NPCs.
+const PRINCIPAL_POSITION := { "position": Vector3(0.000, 0.000, -6.100), "rotation": 0.000 }
 const NPC_POSITIONS := {
 	"pos_1": { "position": Vector3(-2.800, 0.000, -2.400), "rotation": 0.000 },
 	"pos_2": { "position": Vector3(-3.900, 0.000, -1.500), "rotation": -0.401 },
@@ -78,10 +81,9 @@ func _ready() -> void:
 	# Floor collision
 	_add_floor_collision(Vector3(0, 0, 0), Vector3(20, 0.2, 30))
 
-	# Principal NPC at pos_1
-	var pos_data: Dictionary = NPC_POSITIONS["pos_1"]
+	# Principal NPC at fixed position
 	_principal_npc = _add_npc(
-		"PrincipalNPC", pos_data["position"], pos_data["rotation"],
+		"PrincipalNPC", PRINCIPAL_POSITION["position"], PRINCIPAL_POSITION["rotation"],
 		"res://assets/npcs/principal/principal.glb",
 		"Principal",
 		""  # Empty target — we handle interaction ourselves
