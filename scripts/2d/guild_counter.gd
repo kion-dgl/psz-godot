@@ -36,8 +36,8 @@ const QUEST_ORDER := {
 	"static_in_the_snow": 4,
 	"deep_ore_extraction": 5,
 	"messages_from_the_past": 6,
-	"the_pure_sample": 7,
-	"the_final_transmission": 8,
+	"native_research": 7,
+	"seek_my_mentor": 8,
 }
 
 ## area_id → display area name
@@ -291,11 +291,8 @@ func _accept_entry() -> void:
 		var area_id: String = AREA_DISPLAY.keys()[AREA_DISPLAY.values().find(entry["area"])] \
 			if AREA_DISPLAY.values().has(entry["area"]) else "gurhacia"
 		SessionManager.accept_quest(entry["quest_id"], difficulty)
-		hint_label.text = "Quest accepted!"
 		_selecting_difficulty = false
-		_refresh_display()
-		CityState.set_spawn_key("quest-briefing")
-		SceneManager.goto_scene("res://scenes/3d/city/city_office.tscn")
+		SceneManager.pop_scene({"quest_accepted": true})
 	else:
 		# Missions go directly to field as before
 		SessionManager.enter_mission(entry["id"], difficulty)
