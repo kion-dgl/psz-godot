@@ -1926,6 +1926,11 @@
       "npc_id": "mira",
       "npc_name": "Mira",
       "office_position": "pos_1"
+    },
+    {
+      "npc_id": "elio",
+      "npc_name": "Elio",
+      "office_position": "pos_2"
     }
   ],
   "briefing_dialog": [
