@@ -1513,18 +1513,20 @@
       ]
     }
   ],
-  "companions": [
-    "dorn"
-  ],
-  "city_dialog": [
+  "companions": ["dorn"],
+  "office_npcs": [
     {
-      "speaker": "Dorn",
-      "text": "The forge has been cold for weeks. Can't make anything without raw iron, and the valley deposits are crawling with creatures now. I know where the veins are — I just need someone who can clear the way. That's where you come in."
-    },
-    {
-      "speaker": "Dorn",
-      "text": "I've marked four deposits on the map. We hit those, I can haul enough ore back to get the forge running again. Let's move."
+      "npc_id": "dorn",
+      "npc_name": "Dorn",
+      "office_position": "pos_2"
     }
+  ],
+  "briefing_dialog": [
+    { "speaker": "Principal", "text": "The weapon smith has put in an urgent material request. This is Dorn, his apprentice." },
+    { "speaker": "Dorn", "text": "The forge has been cold for weeks. Can't make anything without raw iron, and the valley deposits are crawling with creatures." },
+    { "speaker": "Dorn", "text": "No new weapons, no repairs \u2014 hunters are going out with worn-down gear. It's only going to get worse." },
+    { "speaker": "Dorn", "text": "I know where the veins are. I just need someone to keep the creatures off me while I work." },
+    { "speaker": "Principal", "text": "No ore means no equipment. Get down there and bring back what we need." }
   ],
   "objectives": [
     {
@@ -1537,5 +1539,6 @@
       "label": "Rich Ore",
       "target": 1
     }
-  ]
+  ],
+  "report_to": "guild_counter"
 }
