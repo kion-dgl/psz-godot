@@ -234,7 +234,7 @@ export default function QuestHome() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '32px' }}>
-          {gameQuests.map(q => (
+          {gameQuests.map((q, i) => (
             <div
               key={q.filename}
               style={cardStyle}
@@ -249,8 +249,11 @@ export default function QuestHome() {
                   borderRadius: '4px',
                   fontSize: '10px',
                   color: '#88aaff',
+                  fontWeight: 700,
+                  minWidth: '18px',
+                  textAlign: 'center' as const,
                 }}>
-                  game
+                  Q{i + 1}
                 </span>
                 <span style={{ fontWeight: 600, fontSize: '14px' }}>{q.name}</span>
                 <span style={{ color: '#666', fontSize: '11px', marginLeft: 'auto' }}>
