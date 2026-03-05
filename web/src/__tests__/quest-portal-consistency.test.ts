@@ -24,8 +24,8 @@ type Vec3 = [number, number, number];
 const DIRECTION_ROTATIONS: Record<string, number> = {
   north: 0,
   south: Math.PI,
-  east: Math.PI / 2,
-  west: -Math.PI / 2,
+  east: -Math.PI / 2,
+  west: Math.PI / 2,
 };
 
 const GATE_MODEL_ROTATIONS: Record<string, number> = {
