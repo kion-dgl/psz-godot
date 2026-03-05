@@ -500,7 +500,7 @@
                 0,
                 -11
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "reyhound"
             }
           ]
         },
@@ -581,7 +581,7 @@
                 0,
                 -11.7
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
@@ -590,7 +590,7 @@
                 0,
                 -12.6
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
@@ -599,7 +599,7 @@
                 0,
                 -12
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "reyhound"
             },
             {
               "type": "fence",
@@ -1067,7 +1067,7 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "south",
+          "warp_edge": "north",
           "path_order": 0,
           "objects": [
             {
