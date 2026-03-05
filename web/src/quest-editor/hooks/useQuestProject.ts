@@ -43,7 +43,7 @@ export interface UseQuestProjectReturn {
   deleteProject: (id: string) => void;
   newProject: () => void;
   savedProjectIds: string[];
-  getSavedProject: (id: string) => QuestProject | null;
+  getSavedProject: (id: string) => QuestProject | undefined;
 }
 
 export function useQuestProject(): UseQuestProjectReturn {
@@ -188,9 +188,9 @@ export function useQuestProject(): UseQuestProjectReturn {
     setSavedIds(Object.keys(projects));
   }, [project]);
 
-  const getSavedProject = useCallback((id: string): QuestProject | null => {
+  const getSavedProject = useCallback((id: string): QuestProject | undefined => {
     const projects = loadAllProjects();
-    return projects[id] || null;
+    return projects[id] ?? undefined;
   }, []);
 
   return {
