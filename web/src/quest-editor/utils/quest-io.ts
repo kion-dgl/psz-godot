@@ -5,7 +5,7 @@
  */
 
 import type { QuestProject, QuestSection, EditorGridCell, CellObject, SectionType } from '../types';
-import { getProjectSections } from '../types';
+import { getProjectSections, EDITOR_AREAS } from '../types';
 import { AREA_KEY_TO_ID } from '../constants';
 import {
   getRotatedGates,
@@ -584,9 +584,20 @@ export function importGodotSection(section: any): QuestSection {
   const sectionType: SectionType = section.type === 'transition' ? 'transition'
     : section.type === 'boss' ? 'boss' : 'grid';
 
+  // Infer areaKey from the first cell's stage_id prefix (e.g., "s01" → valley)
+  const firstCellKey = Object.keys(cells)[0];
+  let inferredAreaKey: string | undefined;
+  if (firstCellKey) {
+    const stageId = cells[firstCellKey].stageName;
+    const prefix = stageId.slice(0, 3); // e.g., "s01"
+    const matchedArea = EDITOR_AREAS.find(a => a.prefix === prefix);
+    if (matchedArea) inferredAreaKey = matchedArea.key;
+  }
+
   const result: QuestSection = {
     type: sectionType,
     variant: section.area || 'a',
+    areaKey: inferredAreaKey,
     gridSize: Math.max(3, Math.max(maxRow, maxCol) + 1),
     cells,
     startPos,
@@ -684,7 +695,14 @@ export function godotQuestToProject(quest: any): QuestProject {
   };
 
   if (importedSections.length > 1) {
-    result.sections = importedSections;
+    // Only keep section.areaKey when it differs from the project-level area
+    result.sections = importedSections.map(sec => {
+      if (sec.areaKey === areaKey) {
+        const { areaKey: _, ...rest } = sec;
+        return rest;
+      }
+      return sec;
+    });
   }
 
   return result;

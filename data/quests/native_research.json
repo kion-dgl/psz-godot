@@ -2,13 +2,13 @@
   "id": "native_research",
   "name": "Native Research",
   "description": "Requested by: Dr. Carlo. Escort a researcher through the valley, wetlands, and snowfield to conduct a wildlife survey across all three biomes.",
-  "area_id": "gurhacia",
+  "area_id": "rioh",
   "sections": [
     {
       "type": "grid",
       "area": "a",
       "start_pos": "0,2",
-      "end_pos": "3,2",
+      "end_pos": "0,4",
       "cells": [
         {
           "pos": "0,2",
@@ -68,60 +68,36 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -1,
-                1,
-                6
-              ],
-              "trigger_id": "carlo_valley_intro",
-              "trigger_size": [
-                24.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Thank you for escorting me. The Guild hasn't funded a proper wildlife survey in years."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Our first stop is the valley. The creatures here are well-documented, but I want to observe their behavior in person."
-                }
-              ]
-            }
-          ]
+          "path_order": 0
         },
         {
           "pos": "1,2",
-          "stage_id": "s01a_ib1",
+          "stage_id": "s01a_lc1",
           "rotation": 0,
           "connections": {
             "north": "0,2",
-            "south": "2,2"
+            "east": "1,3"
           },
           "portals": {
             "north": {
-              "portal_id": "portal_1769053381372_5av2efj16",
+              "portal_id": "portal_1769091580925_ikdndw3vn",
               "gate": [
-                -17.01,
+                -13.45,
                 0,
-                -20.92
+                -20.45
               ],
               "spawn": [
-                -17.01,
+                -13.45,
                 1,
-                -23.92
+                -23.45
               ],
               "trigger": [
-                -17.01,
+                -13.45,
                 0,
-                -27.92
+                -27.45
               ],
               "gate_rot": [
                 0,
@@ -130,22 +106,232 @@
               ],
               "compass_label": "N"
             },
-            "south": {
-              "portal_id": "portal_1769053417752_i1yyit48i",
+            "east": {
+              "portal_id": "portal_1771821540428_bdtsarvlb",
               "gate": [
-                14.05,
+                8.09,
                 0,
-                20.85
+                13.62
               ],
               "spawn": [
-                14.05,
+                11.09,
                 1,
-                23.85
+                13.62
               ],
               "trigger": [
-                14.05,
+                15.09,
                 0,
-                27.85
+                13.62
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s01a_tb3",
+          "rotation": 90,
+          "connections": {
+            "west": "1,2",
+            "south": "2,3",
+            "north": "0,3"
+          },
+          "portals": {
+            "west": {
+              "portal_id": "portal_1769092758520_qdtk50cms",
+              "gate": [
+                6.19,
+                0,
+                20.93
+              ],
+              "spawn": [
+                6.19,
+                1,
+                23.93
+              ],
+              "trigger": [
+                6.19,
+                0,
+                27.93
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "south": {
+              "portal_id": "portal_1771821631167_wt2zq9xik",
+              "gate": [
+                19.17,
+                0,
+                8.91
+              ],
+              "spawn": [
+                22.17,
+                1,
+                8.91
+              ],
+              "trigger": [
+                26.17,
+                0,
+                8.91
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            },
+            "north": {
+              "portal_id": "portal_1771821642862_ebervwnls",
+              "gate": [
+                -18.54,
+                0,
+                -10.72
+              ],
+              "spawn": [
+                -21.54,
+                1,
+                -10.72
+              ],
+              "trigger": [
+                -25.54,
+                0,
+                -10.72
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s01a_lc2",
+          "rotation": 0,
+          "connections": {
+            "north": "1,3",
+            "east": "2,4"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1769092071707_39cmfdsru",
+              "gate": [
+                14.01,
+                0,
+                -21.51
+              ],
+              "spawn": [
+                14.01,
+                1,
+                -24.51
+              ],
+              "trigger": [
+                14.01,
+                0,
+                -28.51
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "east": {
+              "portal_id": "portal_1771821560334_4iz79ipeh",
+              "gate": [
+                20.82,
+                0,
+                -10.69
+              ],
+              "spawn": [
+                23.82,
+                1,
+                -10.69
+              ],
+              "trigger": [
+                27.82,
+                0,
+                -10.69
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s01a_nc2",
+          "rotation": 0,
+          "connections": {
+            "south": "1,3"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1769092368149_s8xo45sfu",
+              "gate": [
+                -14.15,
+                0,
+                21.29
+              ],
+              "spawn": [
+                -14.15,
+                1,
+                24.29
+              ],
+              "trigger": [
+                -14.15,
+                0,
+                28.29
               ],
               "gate_rot": [
                 0,
@@ -158,64 +344,40 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
+          "has_key": true,
+          "key_for_cell": "2,4",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                1,
-                0
-              ],
-              "trigger_id": "carlo_valley_observe1",
-              "trigger_size": [
-                20,
-                4,
-                20
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Fascinating. The native rappies here are showing heightened aggression. That's not typical for the species."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Before the Blight, they were docile foragers. Something is changing their behavior at a fundamental level."
-                }
-              ]
-            }
-          ]
+          "path_order": 4
         },
         {
-          "pos": "2,2",
-          "stage_id": "s01a_ga1",
-          "rotation": 0,
+          "pos": "2,4",
+          "stage_id": "s01a_lb3",
+          "rotation": 270,
           "connections": {
-            "north": "1,2",
-            "south": "3,2"
+            "west": "2,3",
+            "north": "1,4"
           },
           "portals": {
-            "north": {
-              "portal_id": "portal_1769002968090_15j7x91gm",
+            "west": {
+              "portal_id": "portal_1769091205145_nug66fnhl",
               "gate": [
-                1.97,
+                -6.12,
                 0,
-                -14.99
+                -20.07
               ],
               "spawn": [
-                1.97,
+                -6.12,
                 1,
-                -17.99
+                -23.07
               ],
               "trigger": [
-                1.97,
+                -6.12,
                 0,
-                -21.99
+                -27.07
               ],
               "gate_rot": [
                 0,
@@ -224,20 +386,90 @@
               ],
               "compass_label": "N"
             },
-            "south": {
-              "portal_id": "portal_1769002993382_c7pgnyd8v",
+            "north": {
+              "portal_id": "portal_1771821466784_b0qj5a0w7",
               "gate": [
-                -6.13,
+                19.06,
+                0,
+                11.93
+              ],
+              "spawn": [
+                22.06,
+                1,
+                11.93
+              ],
+              "trigger": [
+                26.06,
+                0,
+                11.93
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "north",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "1,4",
+          "stage_id": "s01a_ic1",
+          "rotation": 180,
+          "connections": {
+            "south": "2,4",
+            "north": "0,4"
+          },
+          "portals": {
+            "south": {
+              "portal_id": "portal_1769090970268_79fl50z0t",
+              "gate": [
+                -13.45,
+                0,
+                -20.55
+              ],
+              "spawn": [
+                -13.45,
+                1,
+                -23.55
+              ],
+              "trigger": [
+                -13.45,
+                0,
+                -27.55
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "north": {
+              "portal_id": "portal_1769090993555_xrh9frw4y",
+              "gate": [
+                19.09,
                 0,
                 20.02
               ],
               "spawn": [
-                -6.13,
+                19.09,
                 1,
                 23.02
               ],
               "trigger": [
-                -6.13,
+                19.09,
                 0,
                 27.02
               ],
@@ -256,51 +488,66 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "message",
-              "position": [
-                5,
-                0,
-                -8
-              ],
-              "text": "Research Team 4, Log 12: The valley fauna are deteriorating faster than predicted. Recommend immediate field study before baseline data is lost entirely."
-            }
-          ]
+          "path_order": 6
         },
         {
-          "pos": "3,2",
-          "stage_id": "s01a_na1",
-          "rotation": 0,
+          "pos": "0,4",
+          "stage_id": "s01a_lc2",
+          "rotation": 90,
           "connections": {
-            "south": "2,2"
+            "south": "1,4"
           },
           "portals": {
             "south": {
-              "portal_id": "portal_1769092107069_jgnmrzarg",
+              "portal_id": "portal_1771821560334_4iz79ipeh",
               "gate": [
-                19.05,
+                20.82,
                 0,
-                15.19
+                -10.69
               ],
               "spawn": [
-                19.05,
+                23.82,
                 1,
-                18.19
+                -10.69
               ],
               "trigger": [
-                19.05,
+                27.82,
                 0,
-                22.19
+                -10.69
               ],
               "gate_rot": [
                 0,
-                3.14,
+                -1.57,
                 0
               ],
-              "compass_label": "S"
+              "compass_label": "E"
+            },
+            "east": {
+              "portal_id": "portal_1769092071707_39cmfdsru",
+              "gate": [
+                14.01,
+                0,
+                -21.51
+              ],
+              "spawn": [
+                14.01,
+                1,
+                -24.51
+              ],
+              "trigger": [
+                14.01,
+                0,
+                -28.51
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
             }
           },
           "is_start": false,
@@ -310,34 +557,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "south",
-          "path_order": 3,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                1,
-                -6
-              ],
-              "trigger_id": "carlo_valley_end",
-              "trigger_size": [
-                24.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Good data from the valley. The aggression patterns confirm what I suspected."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Next we should head to the wetlands. The ecosystem there is completely different \u2014 I want to compare behavioral markers."
-                }
-              ]
-            }
-          ]
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "east",
+          "path_order": 7
         }
       ]
     },
@@ -345,7 +568,7 @@
       "type": "grid",
       "area": "a",
       "start_pos": "0,2",
-      "end_pos": "3,2",
+      "end_pos": "4,0",
       "cells": [
         {
           "pos": "0,2",
@@ -405,60 +628,36 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -1,
-                1,
-                6
-              ],
-              "trigger_id": "carlo_wetlands_intro",
-              "trigger_size": [
-                24.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "The wetlands. Amphibious species dominate here \u2014 completely different food chain from the valley."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "If the Blight has reached here too, it means it's not just a local contamination. It's systemic."
-                }
-              ]
-            }
-          ]
+          "path_order": 0
         },
         {
           "pos": "1,2",
-          "stage_id": "s02a_ib2",
-          "rotation": 0,
+          "stage_id": "s02a_ib1",
+          "rotation": 180,
           "connections": {
-            "north": "0,2",
-            "south": "2,2"
+            "south": "2,2",
+            "north": "0,2"
           },
           "portals": {
-            "north": {
-              "portal_id": "portal_1770694873204_haxbz6f3g",
+            "south": {
+              "portal_id": "portal_1770694802470_rabpz62p6",
               "gate": [
-                -6.14,
+                -6.03,
                 0,
-                -21.62
+                -21.84
               ],
               "spawn": [
-                -6.14,
+                -6.03,
                 1,
-                -24.62
+                -24.84
               ],
               "trigger": [
-                -6.14,
+                -6.03,
                 0,
-                -28.62
+                -28.84
               ],
               "gate_rot": [
                 0,
@@ -467,22 +666,22 @@
               ],
               "compass_label": "N"
             },
-            "south": {
-              "portal_id": "portal_1770694856803_2ys7twqc5",
+            "north": {
+              "portal_id": "portal_1770694814154_z0fveyavc",
               "gate": [
-                -5.94,
+                3.91,
                 0,
-                22.43
+                21.73
               ],
               "spawn": [
-                -5.94,
+                3.91,
                 1,
-                25.43
+                24.73
               ],
               "trigger": [
-                -5.94,
+                3.91,
                 0,
-                29.43
+                28.73
               ],
               "gate_rot": [
                 0,
@@ -499,42 +698,228 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                1,
-                0
-              ],
-              "trigger_id": "carlo_wetlands_observe",
-              "trigger_size": [
-                20,
-                4,
-                20
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "See how the water creatures cluster near the shallows? Defensive formation. They're afraid of something."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "In a healthy ecosystem, they'd be spread across the entire waterway."
-                }
-              ]
-            }
-          ]
+          "path_order": 1
         },
         {
           "pos": "2,2",
+          "stage_id": "s02a_tb3",
+          "rotation": 180,
+          "connections": {
+            "north": "1,2",
+            "east": "2,3",
+            "west": "2,1"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1770695247101_m9zjn0us8",
+              "gate": [
+                6,
+                0,
+                23.66
+              ],
+              "spawn": [
+                6,
+                1,
+                26.66
+              ],
+              "trigger": [
+                6,
+                0,
+                30.66
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "east": {
+              "portal_id": "portal_1771823444973_aynvd4nvh",
+              "gate": [
+                -21.94,
+                0,
+                7.62
+              ],
+              "spawn": [
+                -24.94,
+                1,
+                7.62
+              ],
+              "trigger": [
+                -28.94,
+                0,
+                7.62
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
+            },
+            "west": {
+              "portal_id": "portal_1771823452955_ejvuqxk9k",
+              "gate": [
+                20.8,
+                0,
+                5.62
+              ],
+              "spawn": [
+                23.8,
+                1,
+                5.62
+              ],
+              "trigger": [
+                27.8,
+                0,
+                5.62
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": true,
+          "key_for_cell": "3,1",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s02a_na1",
+          "rotation": 90,
+          "connections": {
+            "west": "2,2"
+          },
+          "portals": {
+            "west": {
+              "portal_id": "portal_1770695165920_u1whbwviy",
+              "gate": [
+                -7.14,
+                0,
+                15.91
+              ],
+              "spawn": [
+                -7.14,
+                1,
+                18.91
+              ],
+              "trigger": [
+                -7.14,
+                0,
+                22.91
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "2,1",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s02a_lc2",
+          "rotation": 90,
+          "connections": {
+            "east": "2,2",
+            "south": "3,1"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1770695126921_s96ga4o8b",
+              "gate": [
+                -0.11,
+                0,
+                -21.3
+              ],
+              "spawn": [
+                -0.11,
+                1,
+                -24.3
+              ],
+              "trigger": [
+                -0.11,
+                0,
+                -28.3
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1771823299886_igxz0w3zl",
+              "gate": [
+                21.79,
+                0,
+                0.14
+              ],
+              "spawn": [
+                24.79,
+                1,
+                0.14
+              ],
+              "trigger": [
+                28.79,
+                0,
+                0.14
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 4
+        },
+        {
+          "pos": "3,1",
           "stage_id": "s02a_ga1",
           "rotation": 0,
           "connections": {
-            "north": "1,2",
-            "south": "3,2"
+            "north": "2,1",
+            "south": "4,1"
           },
           "portals": {
             "north": {
@@ -591,46 +976,131 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
           "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "message",
-              "position": [
-                -6,
-                0,
-                4
-              ],
-              "text": "Research Team 4, Log 19: Wetland species show identical corruption markers to the valley fauna. The Blight is not airborne \u2014 it's in the water table. Requesting toxicology equipment."
-            }
-          ]
+          "path_order": 5
         },
         {
-          "pos": "3,2",
-          "stage_id": "s02a_na1",
-          "rotation": 0,
+          "pos": "4,1",
+          "stage_id": "s02a_lb3",
+          "rotation": 270,
           "connections": {
-            "south": "2,2"
+            "west": "4,0",
+            "north": "3,1"
           },
           "portals": {
-            "south": {
-              "portal_id": "portal_1770695165920_u1whbwviy",
+            "west": {
+              "portal_id": "portal_1770695022722_34drm4g8s",
               "gate": [
-                -7.14,
+                -5.97,
                 0,
-                15.91
+                -23.28
               ],
               "spawn": [
-                -7.14,
+                -5.97,
                 1,
-                18.91
+                -26.28
               ],
               "trigger": [
-                -7.14,
+                -5.97,
                 0,
-                22.91
+                -30.28
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "north": {
+              "portal_id": "portal_1771823204770_cizkv0xpt",
+              "gate": [
+                22.23,
+                0,
+                -7.66
+              ],
+              "spawn": [
+                25.23,
+                1,
+                -7.66
+              ],
+              "trigger": [
+                29.23,
+                0,
+                -7.66
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s02a_ib2",
+          "rotation": 90,
+          "connections": {
+            "east": "4,1"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1770694873204_haxbz6f3g",
+              "gate": [
+                -6.14,
+                0,
+                -21.62
+              ],
+              "spawn": [
+                -6.14,
+                1,
+                -24.62
+              ],
+              "trigger": [
+                -6.14,
+                0,
+                -28.62
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "west": {
+              "portal_id": "portal_1770694856803_2ys7twqc5",
+              "gate": [
+                -5.94,
+                0,
+                22.43
+              ],
+              "spawn": [
+                -5.94,
+                1,
+                25.43
+              ],
+              "trigger": [
+                -5.94,
+                0,
+                29.43
               ],
               "gate_rot": [
                 0,
@@ -647,34 +1117,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "south",
-          "path_order": 3,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                1,
-                -6
-              ],
-              "trigger_id": "carlo_wetlands_end",
-              "trigger_size": [
-                24.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Same markers here as the valley. This confirms it \u2014 the Blight is spreading through the water system."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "One more stop. The snowfield. If we find corruption there too, this is bigger than anyone realizes."
-                }
-              ]
-            }
-          ]
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "west",
+          "path_order": 7
         }
       ]
     },
@@ -682,7 +1128,7 @@
       "type": "grid",
       "area": "a",
       "start_pos": "0,2",
-      "end_pos": "3,2",
+      "end_pos": "4,0",
       "cells": [
         {
           "pos": "0,2",
@@ -742,84 +1188,37 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -1,
-                1,
-                6
-              ],
-              "trigger_id": "carlo_snow_intro",
-              "trigger_size": [
-                24.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "The snowfield. The cold should slow the Blight's spread, in theory."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Let's see if the wildlife here tells a different story."
-                }
-              ]
-            }
-          ]
+          "path_order": 0
         },
         {
           "pos": "1,2",
-          "stage_id": "s03a_ib2",
-          "rotation": 0,
+          "stage_id": "s03a_tb3",
+          "rotation": 90,
           "connections": {
+            "west": "1,1",
             "north": "0,2",
             "south": "2,2"
           },
           "portals": {
-            "north": {
-              "portal_id": "portal_1770724021228_2sbc5cfro",
+            "west": {
+              "portal_id": "portal_1770724548563_bnzuctak9",
               "gate": [
-                7.49,
+                -5.92,
                 0,
-                -20.73
+                20.59
               ],
               "spawn": [
-                7.49,
+                -5.92,
                 1,
-                -23.73
+                23.59
               ],
               "trigger": [
-                7.49,
+                -5.92,
                 0,
-                -27.73
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "south": {
-              "portal_id": "portal_1770724007474_9kh6jog21",
-              "gate": [
-                12.44,
-                0,
-                21.1
-              ],
-              "spawn": [
-                12.44,
-                1,
-                24.1
-              ],
-              "trigger": [
-                12.44,
-                0,
-                28.1
+                27.59
               ],
               "gate_rot": [
                 0,
@@ -827,168 +1226,77 @@
                 0
               ],
               "compass_label": "S"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 1,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                1,
-                0
-              ],
-              "trigger_id": "carlo_snow_observe",
-              "trigger_size": [
-                20,
-                4,
-                20
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Interesting! The creatures here are still aggressive, but the corruption markers are weaker."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "The cold IS slowing it down. That's important data."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s03a_ga1",
-          "rotation": 0,
-          "connections": {
-            "north": "1,2",
-            "south": "3,2"
-          },
-          "portals": {
+            },
             "north": {
-              "portal_id": "portal_1770723810436_8lyziqda8",
+              "portal_id": "portal_1771825168757_c70171yhn",
               "gate": [
-                1.02,
+                -20.52,
                 0,
-                -10.89
+                -7.68
               ],
               "spawn": [
-                1.02,
+                -23.52,
                 1,
-                -13.89
+                -7.68
               ],
               "trigger": [
-                1.02,
+                -27.52,
                 0,
-                -17.89
+                -7.68
               ],
               "gate_rot": [
                 0,
-                0,
+                1.57,
                 0
               ],
-              "compass_label": "N"
+              "compass_label": "W"
             },
             "south": {
-              "portal_id": "portal_1770723821191_ps69vm5m9",
+              "portal_id": "portal_1771825175495_9mmsbwqbd",
               "gate": [
-                -0.72,
+                20.6,
                 0,
-                10.09
+                -12.57
               ],
               "spawn": [
-                -0.72,
+                23.6,
                 1,
-                13.09
+                -12.57
               ],
               "trigger": [
-                -0.72,
+                27.6,
                 0,
-                17.09
+                -12.57
               ],
               "gate_rot": [
                 0,
-                3.14,
+                -1.57,
                 0
               ],
-              "compass_label": "S"
+              "compass_label": "E"
             }
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                1,
-                0
-              ],
-              "trigger_id": "carlo_discovery",
-              "trigger_size": [
-                20,
-                4,
-                20
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Wait. Stop. Look at that creature over there."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "...it's not corrupted. No aggression markers, no discoloration. It's completely clean."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "I haven't seen an unblighted specimen in the field in over two years."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "This changes everything. If one survived naturally, then the Blight isn't irreversible. There might be a resistance factor we can isolate."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "We need to document this and get back to the Guild immediately. This is the breakthrough we've been waiting for."
-                }
-              ]
-            },
-            {
-              "type": "message",
-              "position": [
-                8,
-                0,
-                -10
-              ],
-              "text": "Research Team 4, Final Log: All personnel recalled. Funding terminated. Quote: 'The wildlife situation is a natural cycle and will self-correct.' We know that isn't true. Someone will find these logs someday. Please, don't stop looking."
-            }
-          ]
+          "path_order": 1
         },
         {
-          "pos": "3,2",
+          "pos": "1,1",
           "stage_id": "s03a_na1",
-          "rotation": 0,
+          "rotation": 270,
           "connections": {
-            "south": "2,2"
+            "east": "1,2"
           },
           "portals": {
-            "south": {
+            "east": {
               "portal_id": "portal_1770724402240_3wzf2nh7w",
               "gate": [
                 2.64,
@@ -1014,52 +1322,411 @@
             }
           },
           "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "3,0",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s03a_tb3",
+          "rotation": 90,
+          "connections": {
+            "west": "2,1",
+            "north": "1,2",
+            "south": "3,2"
+          },
+          "portals": {
+            "west": {
+              "portal_id": "portal_1770724548563_bnzuctak9",
+              "gate": [
+                -5.92,
+                0,
+                20.59
+              ],
+              "spawn": [
+                -5.92,
+                1,
+                23.59
+              ],
+              "trigger": [
+                -5.92,
+                0,
+                27.59
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "north": {
+              "portal_id": "portal_1771825168757_c70171yhn",
+              "gate": [
+                -20.52,
+                0,
+                -7.68
+              ],
+              "spawn": [
+                -23.52,
+                1,
+                -7.68
+              ],
+              "trigger": [
+                -27.52,
+                0,
+                -7.68
+              ],
+              "gate_rot": [
+                0,
+                1.57,
+                0
+              ],
+              "compass_label": "W"
+            },
+            "south": {
+              "portal_id": "portal_1771825175495_9mmsbwqbd",
+              "gate": [
+                20.6,
+                0,
+                -12.57
+              ],
+              "spawn": [
+                23.6,
+                1,
+                -12.57
+              ],
+              "trigger": [
+                27.6,
+                0,
+                -12.57
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s03a_nb2",
+          "rotation": 270,
+          "connections": {
+            "east": "2,2"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1770724424456_ucexb8mrp",
+              "gate": [
+                15.41,
+                0,
+                18.88
+              ],
+              "spawn": [
+                15.41,
+                1,
+                21.88
+              ],
+              "trigger": [
+                15.41,
+                0,
+                25.88
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s03a_lb3",
+          "rotation": 270,
+          "connections": {
+            "west": "3,1",
+            "north": "2,2"
+          },
+          "portals": {
+            "west": {
+              "portal_id": "portal_1770724266872_rv1ah2vnl",
+              "gate": [
+                -15.5,
+                0,
+                -17.39
+              ],
+              "spawn": [
+                -15.5,
+                1,
+                -20.39
+              ],
+              "trigger": [
+                -15.5,
+                0,
+                -24.39
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "north": {
+              "portal_id": "portal_1771825077219_e71k3428s",
+              "gate": [
+                15.91,
+                0,
+                8.58
+              ],
+              "spawn": [
+                18.91,
+                1,
+                8.58
+              ],
+              "trigger": [
+                22.91,
+                0,
+                8.58
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "3,1",
+          "stage_id": "s03a_ic3",
+          "rotation": 270,
+          "connections": {
+            "east": "3,2",
+            "west": "3,0"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1770724158723_pb0rd3r6e",
+              "gate": [
+                2.08,
+                0,
+                22.42
+              ],
+              "spawn": [
+                2.08,
+                1,
+                25.42
+              ],
+              "trigger": [
+                2.08,
+                0,
+                29.42
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            },
+            "west": {
+              "portal_id": "portal_1770724176247_38q7705rp",
+              "gate": [
+                4.5,
+                0,
+                -20.19
+              ],
+              "spawn": [
+                4.5,
+                1,
+                -23.19
+              ],
+              "trigger": [
+                4.5,
+                0,
+                -27.19
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "3,0",
+          "stage_id": "s03a_lb1",
+          "rotation": 90,
+          "connections": {
+            "east": "3,1",
+            "south": "4,0"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1770724222445_x2qvptt3a",
+              "gate": [
+                -6.61,
+                0,
+                -21.16
+              ],
+              "spawn": [
+                -6.61,
+                1,
+                -24.16
+              ],
+              "trigger": [
+                -6.61,
+                0,
+                -28.16
+              ],
+              "gate_rot": [
+                0,
+                0,
+                0
+              ],
+              "compass_label": "N"
+            },
+            "south": {
+              "portal_id": "portal_1771825059929_uhomc3vsu",
+              "gate": [
+                21.25,
+                0,
+                -4.48
+              ],
+              "spawn": [
+                24.25,
+                1,
+                -4.48
+              ],
+              "trigger": [
+                28.25,
+                0,
+                -4.48
+              ],
+              "gate_rot": [
+                0,
+                -1.57,
+                0
+              ],
+              "compass_label": "E"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 7
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s03a_nc2",
+          "rotation": 180,
+          "connections": {
+            "north": "3,0"
+          },
+          "portals": {
+            "north": {
+              "portal_id": "portal_1770724448196_4mfd4mgom",
+              "gate": [
+                -15.37,
+                0,
+                23.13
+              ],
+              "spawn": [
+                -15.37,
+                1,
+                26.13
+              ],
+              "trigger": [
+                -15.37,
+                0,
+                30.13
+              ],
+              "gate_rot": [
+                0,
+                3.14,
+                0
+              ],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
           "is_end": true,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "south",
-          "path_order": 3,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                1,
-                -6
-              ],
-              "trigger_id": "carlo_ending",
-              "trigger_size": [
-                24.5,
-                3,
-                4
-              ],
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Three areas surveyed. Corruption confirmed across all biomes, but weakest in cold climates."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "And one clean specimen in the snowfield. One. That's all it takes."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Research Team 4's logs... they were right all along. The Blight isn't natural. And now we have proof it can be survived."
-                },
-                {
-                  "speaker": "Dr. Carlo",
-                  "text": "Thank you. Truly. This data will save lives. Let's report back to the Guild."
-                }
-              ]
-            }
-          ]
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 8
         }
       ]
     }
@@ -1081,7 +1748,7 @@
     },
     {
       "speaker": "Dr. Carlo",
-      "text": "I'm conducting a wildlife survey across three biomes \u2014 valley, wetlands, and snowfield."
+      "text": "I'm conducting a wildlife survey across three biomes — valley, wetlands, and snowfield."
     },
     {
       "speaker": "Dr. Carlo",
@@ -1099,6 +1766,5 @@
       "speaker": "Principal",
       "text": "Keep Dr. Carlo safe across all three areas. Good luck out there."
     }
-  ],
-  "report_to": "guild_counter"
+  ]
 }
