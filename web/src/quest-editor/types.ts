@@ -191,6 +191,8 @@ export interface SectionObjectiveRequirement {
 export interface QuestSection {
   type: SectionType;
   variant: string;
+  /** Per-section area override (falls back to project.areaKey when absent) */
+  areaKey?: string;
   gridSize: number;
   cells: Record<string, EditorGridCell>;
   startPos: string | null;

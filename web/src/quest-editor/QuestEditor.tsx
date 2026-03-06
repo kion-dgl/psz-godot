@@ -143,6 +143,7 @@ export default function QuestEditor() {
     if (!hasMultipleSections) return project;
     return {
       ...project,
+      areaKey: activeSection.areaKey ?? project.areaKey,
       variant: activeSection.variant,
       gridSize: activeSection.gridSize,
       cells: activeSection.cells,
@@ -164,6 +165,7 @@ export default function QuestEditor() {
       const sec = prev.sections![sectionIdx];
       const virtualPrev: QuestProject = {
         ...prev,
+        areaKey: sec.areaKey ?? prev.areaKey,
         variant: sec.variant,
         gridSize: sec.gridSize,
         cells: sec.cells,
@@ -177,6 +179,7 @@ export default function QuestEditor() {
       const newSections = [...prev.sections!];
       newSections[sectionIdx] = {
         ...newSections[sectionIdx],
+        areaKey: virtualNext.areaKey !== prev.areaKey ? virtualNext.areaKey : newSections[sectionIdx].areaKey,
         variant: virtualNext.variant,
         gridSize: virtualNext.gridSize,
         cells: virtualNext.cells,
@@ -231,17 +234,34 @@ export default function QuestEditor() {
   }, [updateProject]);
 
   const handleAreaChange = useCallback((areaKey: string) => {
-    updateProject(prev => ({
-      ...prev,
-      areaKey,
-      cells: {},
-      startPos: null,
-      endPos: null,
-      keyLinks: {},
-      keyDropLinks: {},
-      sections: prev.sections ? prev.sections.map(s => ({ ...s, cells: {}, startPos: null, endPos: null, keyLinks: {}, keyDropLinks: {} })) : undefined,
-    }));
-  }, [updateProject]);
+    if (hasMultipleSections) {
+      // Multi-section: update only the active section's area and clear its cells
+      updateProject(prev => {
+        const newSections = [...prev.sections!];
+        newSections[sectionIdx] = {
+          ...newSections[sectionIdx],
+          areaKey,
+          cells: {},
+          startPos: null,
+          endPos: null,
+          keyLinks: {},
+          keyDropLinks: {},
+        };
+        return { ...prev, sections: newSections };
+      });
+    } else {
+      // Single-section: update project-level area and clear all cells
+      updateProject(prev => ({
+        ...prev,
+        areaKey,
+        cells: {},
+        startPos: null,
+        endPos: null,
+        keyLinks: {},
+        keyDropLinks: {},
+      }));
+    }
+  }, [updateProject, hasMultipleSections, sectionIdx]);
 
   const handleVariantChange = useCallback((variant: string) => {
     if (hasMultipleSections) {
@@ -295,7 +315,7 @@ export default function QuestEditor() {
     updateProject(prev => ({ ...prev, name }));
   }, [updateProject]);
 
-  const currentArea = EDITOR_AREAS.find(a => a.key === project.areaKey);
+  const currentArea = EDITOR_AREAS.find(a => a.key === sectionProject.areaKey);
 
   return (
     <div style={{
@@ -390,7 +410,7 @@ export default function QuestEditor() {
             padding: '4px 10px 6px',
           }}>
             <select
-              value={project.areaKey}
+              value={sectionProject.areaKey}
               onChange={(e) => handleAreaChange(e.target.value)}
               style={{
                 flex: 1, padding: '5px 6px', background: '#2a2a4a',
@@ -613,6 +633,15 @@ export default function QuestEditor() {
                   : `Section ${sec.variant.toUpperCase()}`
                 }
                 {sec.type === 'grid' && ` (${sec.gridSize}x${sec.gridSize})`}
+                {hasMultipleSections && (() => {
+                  const secArea = sec.areaKey ?? project.areaKey;
+                  const areaName = EDITOR_AREAS.find(a => a.key === secArea)?.name?.split(' ')[0] || secArea;
+                  return (
+                    <span style={{ fontSize: '9px', color: '#aaa', marginLeft: '4px' }}>
+                      {areaName}
+                    </span>
+                  );
+                })()}
               </button>
               {hasMultipleSections && sections.length > 1 && (
                 <button
