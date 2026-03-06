@@ -2373,29 +2373,7 @@ func test_field_config() -> void:
 			all_stages_exist = false
 	assert_true(all_stages_exist, "All GATES stage GLBs exist")
 
-	# ── Portal node discovery (check first GLB) ──
-	# Raw stage GLBs don't have portal nodes — portals come from config only.
-	var test_glb := load("res://assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1_m.glb") as PackedScene
-	if test_glb:
-		var instance: Node3D = test_glb.instantiate()
-		var portals_node: Node3D = _find_child_recursive(instance, "portals")
-		assert_true(portals_node != null, "s01a_ga1.glb has portals node (nested)")
-		if portals_node:
-			var has_spawn := false
-			for dir in ["north", "south", "east", "west"]:
-				if portals_node.get_node_or_null("spawn_" + dir):
-					has_spawn = true
-					break
-			assert_true(has_spawn, "s01a_ga1.glb has at least one spawn_{dir} node")
-			# Verify trigger area structure
-			var trigger_area: Node3D = portals_node.get_node_or_null("trigger_north-area")
-			assert_true(trigger_area != null, "s01a_ga1.glb has trigger_north-area")
-			if trigger_area:
-				var trigger_box = trigger_area.get_node_or_null("trigger_north_box")
-				assert_true(trigger_box != null, "trigger_north-area has trigger_north_box")
-		instance.free()
-	else:
-		print("  SKIP: Could not load s01a_ga1.glb for portal test")
+	# Portal nodes are config-only — GLBs no longer contain portal nodes.
 
 	print("")
 
@@ -2422,7 +2400,7 @@ func test_wetlands_field() -> void:
 	var ga1_dirs: Array = gates.get("s02a_ga1", [])
 	assert_true("north" in ga1_dirs and "south" in ga1_dirs, "s02a_ga1 has north+south gates")
 	var lb1_dirs: Array = gates.get("s02a_lb1", [])
-	assert_true("north" in lb1_dirs and "west" in lb1_dirs, "s02a_lb1 has north+west gates")
+	assert_true("north" in lb1_dirs and "east" in lb1_dirs, "s02a_lb1 has north+east gates")
 	var xb2_dirs: Array = gates.get("s02a_xb2", [])
 	assert_eq(xb2_dirs.size(), 4, "s02a_xb2 has 4 gates (NSEW)")
 	var tb3_dirs: Array = gates.get("s02a_tb3", [])

@@ -24,6 +24,8 @@ func list_quests() -> Array[String]:
 	var file := dir.get_next()
 	while not file.is_empty():
 		if file.ends_with(".json") or file.ends_with(".json.remap"):
-			quests.append(file.replace(".json.remap", "").replace(".json", ""))
+			var quest_name = file.replace(".json.remap", "").replace(".json", "")
+			if quest_name != "manifest":
+				quests.append(quest_name)
 		file = dir.get_next()
 	return quests

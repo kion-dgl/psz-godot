@@ -25,6 +25,7 @@ interface Cell {
   is_end: boolean;
   has_key: boolean;
   key_for_cell: string;
+  key_drop: string;
   is_key_gate: boolean;
   key_gate_direction: string;
   warp_edge: string;
@@ -90,6 +91,9 @@ function bfsWithKeys(cellMap: Map<string, Cell>, startPos: string): Set<string> 
   if (startCell?.has_key && startCell.key_for_cell) {
     collectedKeys.add(startCell.key_for_cell);
   }
+  if (startCell?.key_drop) {
+    collectedKeys.add(startCell.key_drop);
+  }
 
   // We may need multiple passes: collecting a key can open a gate that
   // reveals more cells (and potentially more keys). Loop until stable.
@@ -125,12 +129,18 @@ function bfsWithKeys(cellMap: Map<string, Cell>, startPos: string): Set<string> 
         visited.add(neighbor);
         queue.push(neighbor);
 
-        // Collect key if present
+        // Collect key if present (has_key/key_for_cell or key_drop)
         const neighborCell = cellMap.get(neighbor);
         if (neighborCell?.has_key && neighborCell.key_for_cell) {
           if (!collectedKeys.has(neighborCell.key_for_cell)) {
             collectedKeys.add(neighborCell.key_for_cell);
             changed = true; // new key may unlock previously blocked gates
+          }
+        }
+        if (neighborCell?.key_drop) {
+          if (!collectedKeys.has(neighborCell.key_drop)) {
+            collectedKeys.add(neighborCell.key_drop);
+            changed = true;
           }
         }
       }
