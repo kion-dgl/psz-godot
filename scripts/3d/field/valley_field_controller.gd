@@ -451,6 +451,15 @@ func _unlock_objective_exits() -> void:
 		_room_minimap.set_gate_locked(we, false)
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_K:
+			print("[DEBUG] Kill all enemies (%d)" % _room_enemies.size())
+			for enemy in _room_enemies:
+				if is_instance_valid(enemy) and enemy.element_state != "dead":
+					enemy.take_damage(9999)
+
+
 func _process(_delta: float) -> void:
 	if _world_env and _sky_material and _dir_light:
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light)
