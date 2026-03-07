@@ -23,6 +23,7 @@ const MENU_ITEMS := [
 	"Status",
 	"──────────",
 	"Save Game",
+	"Return to Title",
 ]
 
 var _selected: int = 0
@@ -45,8 +46,8 @@ func _ready() -> void:
 
 	_panel = Control.new()
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_panel.size = Vector2(240, 220)
-	_panel.position = Vector2(-120, -110)
+	_panel.size = Vector2(240, 244)
+	_panel.position = Vector2(-120, -122)
 	add_child(_panel)
 
 	_panel.draw.connect(_draw_panel)
@@ -119,6 +120,11 @@ func _activate_item() -> void:
 			_feedback_text = "Game saved!"
 			_feedback_timer = 1.5
 			_panel.queue_redraw()
+		"Return to Title":
+			close()
+			SaveManager.save_game()
+			CityState.clear()
+			SceneManager.goto_scene("res://scenes/2d/title.tscn")
 
 
 func _draw_panel() -> void:
