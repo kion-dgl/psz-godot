@@ -6,6 +6,9 @@ class_name QuestItemPickup
 
 @export var quest_item_id: String = ""
 @export var quest_item_label: String = ""
+var pickup_dialog: Array = []  # [{speaker, text}, ...] shown after "Picked up X"
+var pickup_actions: Array = []  # ["complete_quest", "telepipe"] run after dialog
+var companion_node: Node = null  # CompanionNpc for speech bubble routing
 
 
 func _init() -> void:
@@ -113,7 +116,69 @@ func _show_pickup_dialog() -> void:
 		hud.add_child(dialog_box)
 
 	var item_id := quest_item_id
+	var actions := pickup_actions
+	var dlg := pickup_dialog
+	var comp := companion_node
 	dialog_box.dialog_complete.connect(func() -> void:
 		SessionManager.collect_quest_item(item_id)
+		if not dlg.is_empty() and comp and is_instance_valid(comp) and comp.has_method("show_speech"):
+			_show_companion_pages(comp, dlg, 0, actions)
+		else:
+			_execute_pickup_actions(actions)
 	, CONNECT_ONE_SHOT)
 	dialog_box.show_dialog([{"speaker": "", "text": "Picked up %s." % label}])
+
+
+func _show_companion_pages(comp: Node, pages: Array, index: int, actions: Array) -> void:
+	if index >= pages.size() or not is_instance_valid(comp):
+		_execute_pickup_actions(actions)
+		return
+	var page: Dictionary = pages[index]
+	var text: String = str(page.get("text", ""))
+	var speaker: String = str(page.get("speaker", ""))
+	var duration: float = maxf(3.0, text.length() / 20.0)
+	comp.show_speech(text, speaker, duration)
+	var next_idx := index + 1
+	comp.speech_finished.connect(func() -> void:
+		_show_companion_pages(comp, pages, next_idx, actions)
+	, CONNECT_ONE_SHOT)
+
+
+func _execute_pickup_actions(actions: Array) -> void:
+	if actions.is_empty():
+		return
+	var objectives_met := SessionManager.are_objectives_complete()
+	for action in actions:
+		match str(action):
+			"complete_quest":
+				if not objectives_met:
+					continue
+				print("[QuestItem] Action: complete_quest")
+				SessionManager.complete_quest()
+			"telepipe":
+				if not objectives_met:
+					continue
+				print("[QuestItem] Action: spawning telepipe")
+				var TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
+				var telepipe := TelepipeScript.new()
+				telepipe.name = "Telepipe"
+				get_parent().add_child(telepipe)
+				telepipe.position = position
+				var fc := _find_field_controller()
+				if fc and fc.has_method("_on_end_reached"):
+					telepipe.activated.connect(func() -> void:
+						fc._on_end_reached()
+					)
+				else:
+					telepipe.activated.connect(func() -> void:
+						SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+					)
+
+
+func _find_field_controller() -> Node:
+	var node := get_parent()
+	while node:
+		if node.has_method("_on_end_reached"):
+			return node
+		node = node.get_parent()
+	return null

@@ -1322,15 +1322,25 @@ func _spawn_field_elements() -> void:
 		if objectives_pending:
 			_objective_locked_exits.append(area_warp)
 
+	# Entry-side area warp for transition sections (back to previous section)
+	var sections_for_entry: Array = SessionManager.get_field_sections()
+	var section_idx_for_entry: int = SessionManager.get_current_section()
+	if section_idx_for_entry < sections_for_entry.size():
+		var current_section: Dictionary = sections_for_entry[section_idx_for_entry]
+		var entry_dir: String = str(current_section.get("entry_direction", ""))
+		if not entry_dir.is_empty() and _portal_data.has(entry_dir) and section_idx_for_entry > 0:
+			_spawn_area_warp_object(Vector3.ZERO, 0.0, 0, "", Vector3.ZERO, entry_dir, "%s\n← prev section" % entry_dir.to_upper())
+
 	# End cells WITHOUT warp_edge — defer telepipe until room clear
 	# Skip if any object already provides a telepipe (explicit telepipe object or dialog action)
 	if _current_cell.get("is_end", false) and warp_edge.is_empty():
 		var has_telepipe_source := false
 		for obj in _current_cell.get("objects", []):
-			if str(obj.get("type", "")) == "telepipe":
+			var obj_type: String = str(obj.get("type", ""))
+			if obj_type == "telepipe":
 				has_telepipe_source = true
 				break
-			if str(obj.get("type", "")) == "dialog_trigger":
+			if obj_type in ["dialog_trigger", "quest_item"]:
 				for act in obj.get("actions", []):
 					if str(act) == "telepipe":
 						has_telepipe_source = true
@@ -1509,10 +1519,14 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 	)
 
 
-func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String) -> void:
+func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String, dlg: Array = [], actions: Array = []) -> void:
 	var qi := QuestItemPickupScript.new()
 	qi.quest_item_id = item_id
 	qi.quest_item_label = item_label
+	qi.pickup_dialog = dlg
+	qi.pickup_actions = actions
+	if _companion and is_instance_valid(_companion):
+		qi.companion_node = _companion
 	_map_root.add_child(qi)
 	qi.position = pos
 	_room_quest_items.append(qi)
@@ -1641,7 +1655,9 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 			"quest_item":
 				var qi_id: String = str(obj.get("item_id", ""))
 				var qi_label: String = str(obj.get("item_label", ""))
-				_spawn_quest_item(pos, qi_id, qi_label)
+				var qi_dlg: Array = obj.get("dialog", [])
+				var qi_act: Array = obj.get("actions", [])
+				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -1732,7 +1748,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				if state != "collected":
 					var qi_id: String = str(obj.get("item_id", ""))
 					var qi_label: String = str(obj.get("item_label", ""))
-					_spawn_quest_item(pos, qi_id, qi_label)
+					var qi_dlg: Array = obj.get("dialog", [])
+					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg)
 
 	# Restore uncollected drops
 	for d in drop_states:

@@ -158,13 +158,13 @@ func _apply_state() -> void:
 			if collision_body:
 				collision_body.collision_layer = 1
 			if hurtbox:
-				hurtbox.monitorable = true
+				hurtbox.set_deferred("monitorable", true)
 		"dead":
 			set_element_visible(false)
 			if collision_body:
 				collision_body.collision_layer = 0
 			if hurtbox:
-				hurtbox.monitorable = false
+				hurtbox.set_deferred("monitorable", false)
 
 
 ## Called when hit by player attack via Hurtbox

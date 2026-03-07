@@ -13,7 +13,7 @@ func _ready() -> void:
 	collision_layer = 32  # Layer 5 = hitboxes
 	collision_mask = 0
 	monitoring = false
-	monitorable = true
+	set_deferred("monitorable", true)
 
 
 ## Called by Hitbox when we're hit
