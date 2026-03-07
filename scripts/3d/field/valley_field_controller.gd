@@ -731,13 +731,13 @@ func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
 	return {}
 
 
-## Direction base rotations for portal position math (matches ExportTab.tsx DIRECTION_ROTATIONS).
-## north=0, south=PI, east=PI/2, west=-PI/2.
+## Direction base rotations for portal position math (matches quest-io.ts DIRECTION_ROTATIONS).
+## north=0, south=PI, east=-PI/2, west=PI/2.
 const DIRECTION_ROTATIONS := {
 	"north": 0.0,
 	"south": PI,
-	"east": PI / 2.0,
-	"west": -PI / 2.0,
+	"east": -PI / 2.0,
+	"west": PI / 2.0,
 }
 
 
