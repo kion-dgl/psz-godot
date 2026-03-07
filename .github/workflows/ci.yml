@@ -26,6 +26,15 @@ jobs:
       - name: Run tests
         run: godot --headless --path . res://scripts/tools/test_runner.tscn
 
+  validate-quests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate quest JSON schema
+        run: python3 scripts/tools/validate_quests.py
+
   web:
     runs-on: ubuntu-latest
     timeout-minutes: 5
