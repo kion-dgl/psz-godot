@@ -184,26 +184,16 @@
                 15.6
               ],
               "item_id": "data_disk",
-              "item_label": "Data Disk"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -8.6,
-                1,
-                14.9
-              ],
-              "trigger_id": "mira_after_disk1",
-              "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
+              "item_label": "Data Disk",
               "dialog": [
                 {
                   "speaker": "Mira",
                   "text": "This is military. Something happened here on a scale we can't even imagine. Keep looking."
                 }
+              ],
+              "actions": [
+                "complete_quest",
+                "telepipe"
               ]
             },
             {
@@ -641,20 +631,7 @@
                 -7.8
               ],
               "item_id": "data_disk",
-              "item_label": "Data Disk 1"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -9.1,
-                0,
-                -8.2
-              ],
-              "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
+              "item_label": "Data Disk 1",
               "dialog": [
                 {
                   "speaker": "Mira",
@@ -664,6 +641,10 @@
                   "speaker": "Mira",
                   "text": "Shelters? Recovery?"
                 }
+              ],
+              "actions": [
+                "complete_quest",
+                "telepipe"
               ]
             }
           ]
@@ -1326,18 +1307,14 @@
           "path_order": 8,
           "objects": [
             {
-              "type": "dialog_trigger",
+              "type": "quest_item",
               "position": [
-                -14.5,
-                1,
-                15.6
+                -18.9,
+                0,
+                15.5
               ],
-              "trigger_id": "corrupted_log",
-              "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
+              "item_id": "data_disk",
+              "item_label": "Data Disk 3",
               "dialog": [
                 {
                   "speaker": "",
@@ -1347,17 +1324,11 @@
                   "speaker": "Mira",
                   "text": "...They did this to themselves. I\u2014 I need to process this. Let's get back to the Guild."
                 }
-              ]
-            },
-            {
-              "type": "quest_item",
-              "position": [
-                -18.9,
-                0,
-                15.5
               ],
-              "item_id": "data_disk",
-              "item_label": "Data Disk 3"
+              "actions": [
+                "complete_quest",
+                "telepipe"
+              ]
             },
             {
               "type": "enemy",
@@ -1444,20 +1415,7 @@
                 -11
               ],
               "item_id": "data_disk",
-              "item_label": "Data Disk 2"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -14.9,
-                0,
-                -16.3
-              ],
-              "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
+              "item_label": "Data Disk 2",
               "dialog": [
                 {
                   "speaker": "Mira",
@@ -1467,6 +1425,10 @@
                   "speaker": "Mira",
                   "text": "Centuries? Just how long ago did this actually happen?"
                 }
+              ],
+              "actions": [
+                "complete_quest",
+                "telepipe"
               ]
             },
             {
