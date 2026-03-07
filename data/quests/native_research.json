@@ -1186,7 +1186,7 @@
         },
         {
           "pos": "1,2",
-          "stage_id": "s02a_td1",
+          "stage_id": "s03a_td1",
           "rotation": 90,
           "connections": {
             "west": "1,1",
@@ -1194,9 +1194,9 @@
             "north": "0,2"
           },
           "portals": {
-            "west": "portal_1770695441450_vb2laorp2",
-            "south": "portal_1771823520947_jywvzs3ku",
-            "north": "portal_1771823532445_ateg9d8js"
+            "west": "portal_1770724725322_k3e93g7oo",
+            "south": "portal_1771825327795_36slj66rh",
+            "north": "portal_1771825339711_scglyrkrj"
           },
           "is_start": false,
           "is_end": false,
