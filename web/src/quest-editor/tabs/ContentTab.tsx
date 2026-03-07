@@ -1352,6 +1352,8 @@ function CellContentInspector({
                         <option value="">-- select prop --</option>
                         <option value="assets/objects/story/dropship_crash.glb">Dropship (crashed)</option>
                         <option value="assets/objects/story/campfire.glb">Campfire</option>
+                        <option value="assets/enemies/rabbit/rabbit.glb">Rabbit</option>
+                        <option value="assets/enemies/rabbit_rare/rabbit_rare.glb">Rabbit (rare)</option>
                       </select>
                       <input
                         type="text"
