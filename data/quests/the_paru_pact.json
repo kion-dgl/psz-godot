@@ -161,17 +161,7 @@
                 15.6
               ],
               "item_id": "mag_cell",
-              "item_label": "Mag Cell"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -8.6,
-                1,
-                14.9
-              ],
-              "trigger_id": "elio_after_cell1",
-              "trigger_condition": "item_pickup",
+              "item_label": "Mag Cell",
               "dialog": [
                 {
                   "speaker": "Elio",
@@ -211,17 +201,7 @@
                 7.6
               ],
               "item_id": "mag_cell",
-              "item_label": "Mag Cell"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -14.9,
-                0,
-                -16.3
-              ],
-              "trigger_id": "elio_after_cell2",
-              "trigger_condition": "item_pickup",
+              "item_label": "Mag Cell",
               "dialog": [
                 {
                   "speaker": "Elio",
@@ -297,7 +277,13 @@
                 -5
               ],
               "item_id": "mag_cell",
-              "item_label": "Mag Cell"
+              "item_label": "Mag Cell",
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "Three cells. One more and we have a complete set. The last one should be deeper in."
+                }
+              ]
             },
             {
               "type": "dialog_trigger",
@@ -316,22 +302,6 @@
                 {
                   "speaker": "Elio",
                   "text": "I've been studying Mags my entire career. The texts say they bonded with people \u2014 not as tools, but as partners. If we can reassemble one..."
-                }
-              ]
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                5,
-                0,
-                -8
-              ],
-              "trigger_id": "elio_after_cell3",
-              "trigger_condition": "item_pickup",
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "Three cells. One more and we have a complete set. The last one should be deeper in."
                 }
               ]
             }
@@ -470,38 +440,12 @@
                 -11
               ],
               "item_id": "mag_cell",
-              "item_label": "Mag Cell"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                3.9,
-                0,
-                -13
-              ],
-              "trigger_id": "elio_after_cell4",
-              "trigger_condition": "item_pickup",
+              "item_label": "Mag Cell",
               "dialog": [
                 {
                   "speaker": "Elio",
                   "text": "That's all four! The cells are resonating together \u2014 I can feel it through the case. Let's push to the chamber ahead."
-                }
-              ]
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -6.1,
-                0,
-                -7.8
-              ],
-              "trigger_id": "mag_assembly",
-              "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
-              "dialog": [
+                },
                 {
                   "speaker": "Elio",
                   "text": "Hold still. I'm fitting the cells into the housing..."
@@ -518,6 +462,10 @@
                   "speaker": "Elio",
                   "text": "Take care of it. And take care of yourself \u2014 a Mag bond is for life."
                 }
+              ],
+              "actions": [
+                "complete_quest",
+                "telepipe"
               ]
             }
           ],
