@@ -20,44 +20,16 @@
           "portals": {
             "south": {
               "portal_id": "portal_1770761006966_6mtpsian4",
-              "gate": [
-                0.05,
-                0,
-                8.64
-              ],
-              "spawn": [
-                0.05,
-                1,
-                11.64
-              ],
-              "trigger": [
-                0.05,
-                0,
-                15.64
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [0.05, 0, 8.64],
+              "spawn": [0.05, 1, 11.64],
+              "trigger": [0.05, 0, 15.64],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             },
             "default": {
-              "gate": [
-                0.39,
-                0,
-                -1.99
-              ],
-              "spawn": [
-                0.39,
-                1,
-                -1.99
-              ],
-              "trigger": [
-                0.39,
-                0,
-                -1.99
-              ],
+              "gate": [0.39, 0, -1.99],
+              "spawn": [0.39, 1, -1.99],
+              "trigger": [0.39, 0, -1.99],
               "default_rotation": 0
             }
           },
@@ -68,22 +40,16 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [
-                0.3,
-                1,
-                6.6
-              ],
+              "position": [0.5, 1, -0.4],
               "trigger_id": "mira_entry_a",
-              "trigger_size": [
-                7.5,
-                3,
-                4
-              ],
+              "trigger_size": [7.5, 3, 4],
               "dialog": [
                 {
                   "speaker": "Mira",
@@ -105,74 +71,26 @@
           "portals": {
             "east": {
               "portal_id": "portal_1770761049776_griu8xjfq",
-              "gate": [
-                -0.42,
-                0,
-                21.71
-              ],
-              "spawn": [
-                -0.42,
-                1,
-                24.71
-              ],
-              "trigger": [
-                -0.42,
-                0,
-                28.71
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [-0.42, 0, 21.71],
+              "spawn": [-0.42, 1, 24.71],
+              "trigger": [-0.42, 0, 28.71],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             },
             "north": {
               "portal_id": "portal_1771829093307_g1yhv2kbh",
-              "gate": [
-                20.36,
-                0,
-                13.91
-              ],
-              "spawn": [
-                23.36,
-                1,
-                13.91
-              ],
-              "trigger": [
-                27.36,
-                0,
-                13.91
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
+              "gate": [20.36, 0, 13.91],
+              "spawn": [23.36, 1, 13.91],
+              "trigger": [27.36, 0, 13.91],
+              "gate_rot": [0, -1.57, 0],
               "compass_label": "E"
             },
             "south": {
               "portal_id": "portal_1771829105283_ee4dtrk4x",
-              "gate": [
-                -20.33,
-                0,
-                0
-              ],
-              "spawn": [
-                -23.33,
-                1,
-                0
-              ],
-              "trigger": [
-                -27.33,
-                0,
-                0
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
+              "gate": [-20.33, 0, 0],
+              "spawn": [-23.33, 1, 0],
+              "trigger": [-27.33, 0, 0],
+              "gate_rot": [0, 1.57, 0],
               "compass_label": "W"
             }
           },
@@ -183,8 +101,49 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-7.8, 0, -0.2],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-7.4, 0, 6.6],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-8.8, 0, 14.4],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [4.1, 0, 4.2],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [3.2, 0, 11.6],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "box",
+              "position": [-15.1, 0, -8.7]
+            },
+            {
+              "type": "box",
+              "position": [-10.1, 0, -8.7]
+            },
+            {
+              "type": "box",
+              "position": [-13.4, 0, -12.9]
+            }
+          ]
         },
         {
           "pos": "1,3",
@@ -196,26 +155,10 @@
           "portals": {
             "west": {
               "portal_id": "portal_1770760986569_ghsb7pjh3",
-              "gate": [
-                20.12,
-                0,
-                9.81
-              ],
-              "spawn": [
-                20.12,
-                1,
-                12.81
-              ],
-              "trigger": [
-                20.12,
-                0,
-                16.81
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [20.12, 0, 9.81],
+              "spawn": [20.12, 1, 12.81],
+              "trigger": [20.12, 0, 16.81],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             }
           },
@@ -226,122 +169,108 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
           "objects": [
             {
               "type": "quest_item",
-              "position": [
-                -13.2,
-                1,
-                15.6
-              ],
+              "position": [-13.2, 1, 15.6],
               "item_id": "data_disk",
               "item_label": "Data Disk"
             },
             {
               "type": "dialog_trigger",
-              "position": [
-                -8.6,
-                1,
-                14.9
-              ],
+              "position": [-8.6, 1, 14.9],
               "trigger_id": "mira_after_disk1",
               "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
+              "actions": ["complete_quest", "telepipe"],
               "dialog": [
                 {
                   "speaker": "Mira",
                   "text": "This is military. Something happened here on a scale we can't even imagine. Keep looking."
                 }
               ]
+            },
+            {
+              "type": "fence",
+              "position": [10.3, 0, 9.4],
+              "link_id": "a"
+            },
+            {
+              "type": "step_switch",
+              "position": [-16.6, 0, -5.4],
+              "link_id": "a"
+            },
+            {
+              "type": "enemy",
+              "position": [10.4, 0, -2],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [15.5, 0, -11.7],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [19.5, 0, -4],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-12.5, 0, -12.6],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [-11.7, 0, -5.5],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "box",
+              "position": [-17.8, 0, -14.9]
+            },
+            {
+              "type": "box",
+              "position": [-17.5, 0, -10.3]
             }
           ]
         },
         {
           "pos": "2,2",
-          "stage_id": "s05a_tb3",
+          "stage_id": "s05a_td1",
           "rotation": 180,
           "connections": {
+            "east": "2,3",
             "north": "1,2",
-            "west": "2,1",
-            "east": "2,3"
+            "west": "2,1"
           },
           "portals": {
+            "east": {
+              "portal_id": "portal_1771829147606_4cqf4tv3y",
+              "gate": [-14.42, 0, 9.28],
+              "spawn": [-17.42, 1, 9.28],
+              "trigger": [-21.42, 0, 9.28],
+              "gate_rot": [0, 1.57, 0],
+              "compass_label": "W"
+            },
             "north": {
-              "portal_id": "portal_1770761049776_griu8xjfq",
-              "gate": [
-                -0.42,
-                0,
-                21.71
-              ],
-              "spawn": [
-                -0.42,
-                1,
-                24.71
-              ],
-              "trigger": [
-                -0.42,
-                0,
-                28.71
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "portal_id": "portal_1771829157794_5ghpglwpb",
+              "gate": [5.75, 0, 19.7],
+              "spawn": [5.75, 1, 22.7],
+              "trigger": [5.75, 0, 26.7],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             },
             "west": {
-              "portal_id": "portal_1771829093307_g1yhv2kbh",
-              "gate": [
-                20.36,
-                0,
-                13.91
-              ],
-              "spawn": [
-                23.36,
-                1,
-                13.91
-              ],
-              "trigger": [
-                27.36,
-                0,
-                13.91
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
+              "portal_id": "portal_1771829168501_uskvq1oq2",
+              "gate": [19.37, 0, -8.29],
+              "spawn": [22.37, 1, -8.29],
+              "trigger": [26.37, 0, -8.29],
+              "gate_rot": [0, -1.57, 0],
               "compass_label": "E"
-            },
-            "east": {
-              "portal_id": "portal_1771829105283_ee4dtrk4x",
-              "gate": [
-                -20.33,
-                0,
-                0
-              ],
-              "spawn": [
-                -23.33,
-                1,
-                0
-              ],
-              "trigger": [
-                -27.33,
-                0,
-                0
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
             }
           },
           "is_start": false,
@@ -351,51 +280,42 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
-        },
-        {
-          "pos": "2,1",
-          "stage_id": "s05a_na1",
-          "rotation": 270,
-          "connections": {
-            "east": "2,2"
-          },
-          "portals": {
-            "east": {
-              "portal_id": "portal_1770760954951_cldar2pe9",
-              "gate": [
-                0.19,
-                0,
-                18.92
-              ],
-              "spawn": [
-                0.19,
-                1,
-                21.92
-              ],
-              "trigger": [
-                0.19,
-                0,
-                25.92
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-0.1, 0, 6.5],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-5.6, 0, 1.4],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [1.1, 0, 13.3],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [9.1, 0, 8.9],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [15.2, 0, 11.1],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [10.8, 0, -7.6],
+              "enemy_id": "izhirak_s6"
             }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 4
+          ]
         },
         {
           "pos": "2,3",
@@ -408,50 +328,18 @@
           "portals": {
             "south": {
               "portal_id": "portal_1770760882904_0kcwqxwih",
-              "gate": [
-                -9.62,
-                0,
-                -20.24
-              ],
-              "spawn": [
-                -9.62,
-                1,
-                -23.24
-              ],
-              "trigger": [
-                -9.62,
-                0,
-                -27.24
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [-9.62, 0, -20.24],
+              "spawn": [-9.62, 1, -23.24],
+              "trigger": [-9.62, 0, -27.24],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             },
             "west": {
               "portal_id": "portal_1771829050902_igqqcz686",
-              "gate": [
-                19.77,
-                0,
-                -2.01
-              ],
-              "spawn": [
-                22.77,
-                1,
-                -2.01
-              ],
-              "trigger": [
-                26.77,
-                0,
-                -2.01
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
+              "gate": [19.77, 0, -2.01],
+              "spawn": [22.77, 1, -2.01],
+              "trigger": [26.77, 0, -2.01],
+              "gate_rot": [0, -1.57, 0],
               "compass_label": "E"
             }
           },
@@ -462,8 +350,89 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [12.1, 0, 8.8],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [7.3, 0, 2.3],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [11.7, 0, -5.4],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [7.7, 0, -3],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-12.3, 0, -8.5],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [-17.4, 0, -11.7],
+              "enemy_id": "froutang"
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s05a_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "2,2"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1770760954951_cldar2pe9",
+              "gate": [0.19, 0, 18.92],
+              "spawn": [0.19, 1, 21.92],
+              "trigger": [0.19, 0, 25.92],
+              "gate_rot": [0, 3.14, 0],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "2,2",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "key_drop_position": [0.4, 1, 11.5],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-3.9, 0, 10.2],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [0.8, 0, 4.8],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [4.6, 0, 8.7],
+              "enemy_id": "izhirak_s6"
+            }
+          ]
         },
         {
           "pos": "3,3",
@@ -476,50 +445,18 @@
           "portals": {
             "west": {
               "portal_id": "portal_1770760918909_r4a8yoq2a",
-              "gate": [
-                -1.89,
-                0,
-                -19.88
-              ],
-              "spawn": [
-                -1.89,
-                1,
-                -22.88
-              ],
-              "trigger": [
-                -1.89,
-                0,
-                -26.88
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [-1.89, 0, -19.88],
+              "spawn": [-1.89, 1, -22.88],
+              "trigger": [-1.89, 0, -26.88],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             },
             "north": {
               "portal_id": "portal_1771829063859_q0a4gsqi9",
-              "gate": [
-                19.86,
-                0,
-                13
-              ],
-              "spawn": [
-                22.86,
-                1,
-                13
-              ],
-              "trigger": [
-                26.86,
-                0,
-                13
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
+              "gate": [19.86, 0, 13],
+              "spawn": [22.86, 1, 13],
+              "trigger": [26.86, 0, 13],
+              "gate_rot": [0, -1.57, 0],
               "compass_label": "E"
             }
           },
@@ -530,8 +467,55 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "step_switch",
+              "position": [-18.8, 0, -17.7],
+              "link_id": "b"
+            },
+            {
+              "type": "fence",
+              "position": [-2.4, 0, 8.5],
+              "link_id": "b"
+            },
+            {
+              "type": "enemy",
+              "position": [12, 0, 18.5],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [0.2, 0, 19.4],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-2.9, 0, 15],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "box",
+              "position": [12.1, 0, -7.5]
+            },
+            {
+              "type": "box",
+              "position": [15.3, 0, -7.7]
+            },
+            {
+              "type": "enemy",
+              "position": [-17.7, 0, 15.1],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [-17.7, 0, 7.5],
+              "enemy_id": "izhirak_s6"
+            }
+          ]
         },
         {
           "pos": "3,2",
@@ -543,50 +527,18 @@
           "portals": {
             "east": {
               "portal_id": "portal_1770760403879_4x5z4rlnq",
-              "gate": [
-                0.03,
-                0,
-                -16.3
-              ],
-              "spawn": [
-                0.03,
-                1,
-                -19.3
-              ],
-              "trigger": [
-                0.03,
-                0,
-                -23.3
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [0.03, 0, -16.3],
+              "spawn": [0.03, 1, -19.3],
+              "trigger": [0.03, 0, -23.3],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             },
             "west": {
               "portal_id": "portal_1770760413999_g15jg63cq",
-              "gate": [
-                -0.03,
-                0,
-                12.66
-              ],
-              "spawn": [
-                -0.03,
-                1,
-                15.66
-              ],
-              "trigger": [
-                -0.03,
-                0,
-                19.66
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [-0.03, 0, 12.66],
+              "spawn": [-0.03, 1, 15.66],
+              "trigger": [-0.03, 0, 19.66],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             }
           },
@@ -597,31 +549,22 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "west",
           "path_order": 7,
           "objects": [
             {
               "type": "quest_item",
-              "position": [
-                -6.1,
-                0,
-                -7.8
-              ],
+              "position": [-6.1, 0, -7.8],
               "item_id": "data_disk",
               "item_label": "Data Disk 1"
             },
             {
               "type": "dialog_trigger",
-              "position": [
-                -9.1,
-                0,
-                -8.2
-              ],
+              "position": [-9.1, 0, -8.2],
               "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
+              "actions": ["complete_quest", "telepipe"],
               "dialog": [
                 {
                   "speaker": "Mira",
@@ -651,50 +594,18 @@
           "portals": {
             "south": {
               "portal_id": "portal_1770763170397_ucf39ta7i",
-              "gate": [
-                -0.04,
-                0,
-                18.31
-              ],
-              "spawn": [
-                -0.04,
-                1,
-                21.31
-              ],
-              "trigger": [
-                -0.04,
-                0,
-                25.31
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [-0.04, 0, 18.31],
+              "spawn": [-0.04, 1, 21.31],
+              "trigger": [-0.04, 0, 25.31],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             },
             "north": {
               "portal_id": "portal_1770763206964_9phrmtosv",
-              "gate": [
-                16.6,
-                0,
-                -18.8
-              ],
-              "spawn": [
-                16.6,
-                1,
-                -21.8
-              ],
-              "trigger": [
-                16.6,
-                0,
-                -25.8
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [16.6, 0, -18.8],
+              "spawn": [16.6, 1, -21.8],
+              "trigger": [16.6, 0, -25.8],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             }
           },
@@ -705,28 +616,37 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "south",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "north",
           "path_order": 0,
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
+              "position": [0, 0, 0],
               "trigger_id": "mira_transition",
-              "trigger_size": [
-                44.5,
-                5,
-                4
-              ],
+              "trigger_size": [44.5, 5, 4],
               "dialog": [
                 {
                   "speaker": "Mira",
                   "text": "Everything past here is uncharted. The Guild doesn't even have maps. Whatever we find... we're the first to see it in centuries."
                 }
               ]
+            },
+            {
+              "type": "enemy",
+              "position": [-7, 0, 3.2],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-0.7, 0, -0.4],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [7.9, 0, 2.2],
+              "enemy_id": "bolix"
             }
           ]
         }
@@ -750,50 +670,18 @@
           "portals": {
             "south": {
               "portal_id": "portal_1770762490612_xk9edjq18",
-              "gate": [
-                0.97,
-                0,
-                17.02
-              ],
-              "spawn": [
-                0.97,
-                1,
-                20.02
-              ],
-              "trigger": [
-                0.97,
-                0,
-                24.02
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [0.97, 0, 17.02],
+              "spawn": [0.97, 1, 20.02],
+              "trigger": [0.97, 0, 24.02],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             },
             "north": {
               "portal_id": "portal_1770762480435_w1vi860kj",
-              "gate": [
-                1.41,
-                0,
-                -10.3
-              ],
-              "spawn": [
-                1.41,
-                1,
-                -13.3
-              ],
-              "trigger": [
-                1.41,
-                0,
-                -17.3
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [1.41, 0, -10.3],
+              "spawn": [1.41, 1, -13.3],
+              "trigger": [1.41, 0, -17.3],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             }
           },
@@ -804,22 +692,16 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
+              "position": [0, 0, 0],
               "trigger_id": "mira_entry_b",
-              "trigger_size": [
-                24.5,
-                3,
-                2
-              ],
+              "trigger_size": [24.5, 3, 2],
               "dialog": [
                 {
                   "speaker": "Mira",
@@ -842,98 +724,34 @@
           "portals": {
             "south": {
               "portal_id": "portal_1770763117337_02xd3h3fw",
-              "gate": [
-                -11.3,
-                0,
-                20.34
-              ],
-              "spawn": [
-                -11.3,
-                1,
-                23.34
-              ],
-              "trigger": [
-                -11.3,
-                0,
-                27.34
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [-11.3, 0, 20.34],
+              "spawn": [-11.3, 1, 23.34],
+              "trigger": [-11.3, 0, 27.34],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             },
             "north": {
               "portal_id": "portal_1770763133293_rrt10vndm",
-              "gate": [
-                -16.02,
-                0,
-                -20.27
-              ],
-              "spawn": [
-                -16.02,
-                1,
-                -23.27
-              ],
-              "trigger": [
-                -16.02,
-                0,
-                -27.27
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [-16.02, 0, -20.27],
+              "spawn": [-16.02, 1, -23.27],
+              "trigger": [-16.02, 0, -27.27],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             },
             "east": {
               "portal_id": "portal_1771829475331_5d16g6qoc",
-              "gate": [
-                20.33,
-                0,
-                -8.7
-              ],
-              "spawn": [
-                23.33,
-                1,
-                -8.7
-              ],
-              "trigger": [
-                27.33,
-                0,
-                -8.7
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
+              "gate": [20.33, 0, -8.7],
+              "spawn": [23.33, 1, -8.7],
+              "trigger": [27.33, 0, -8.7],
+              "gate_rot": [0, -1.57, 0],
               "compass_label": "E"
             },
             "west": {
               "portal_id": "portal_1771829486420_qd8nt5t9q",
-              "gate": [
-                -20.09,
-                0,
-                11.07
-              ],
-              "spawn": [
-                -23.09,
-                1,
-                11.07
-              ],
-              "trigger": [
-                -27.09,
-                0,
-                11.07
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
+              "gate": [-20.09, 0, 11.07],
+              "spawn": [-23.09, 1, 11.07],
+              "trigger": [-27.09, 0, 11.07],
+              "gate_rot": [0, 1.57, 0],
               "compass_label": "W"
             }
           },
@@ -942,10 +760,40 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "west",
+          "key_drop": "1,2",
+          "required_keys": 1,
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "key_drop_position": [13.5, 1, 16.7],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-9.4, 0, 3.9],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [-14.7, 0, -2.2],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-13, 0, -10],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [0.7, 0, -15.1],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [7.3, 0, -10.9],
+              "enemy_id": "izhirak_s6"
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -958,160 +806,121 @@
           "portals": {
             "north": {
               "portal_id": "portal_1770762222618_pkq7mzaxv",
-              "gate": [
-                -10.83,
-                0,
-                -20.37
-              ],
-              "spawn": [
-                -10.83,
-                1,
-                -23.37
-              ],
-              "trigger": [
-                -10.83,
-                0,
-                -27.37
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [-10.83, 0, -20.37],
+              "spawn": [-10.83, 1, -23.37],
+              "trigger": [-10.83, 0, -27.37],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             },
             "south": {
               "portal_id": "portal_1770762240912_d4tbxftvu",
-              "gate": [
-                16.02,
-                0,
-                14.88
-              ],
-              "spawn": [
-                16.02,
-                1,
-                17.88
-              ],
-              "trigger": [
-                16.02,
-                0,
-                21.88
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [16.02, 0, 14.88],
+              "spawn": [16.02, 1, 17.88],
+              "trigger": [16.02, 0, 21.88],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             }
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "2,2",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": true,
           "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 2,
-          "key_position": [
-            14.5,
-            1,
-            -13.3
+          "key_position": [14.5, 1, -13.3],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-14.7, 0, -6],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [-5.1, 0, -9.4],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [4.9, 0, -13.5],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [-5.4, 0, 17.3],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [-2.6, 0, 12.4],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "step_switch",
+              "position": [0.1, 0, 18.1],
+              "link_id": "c"
+            },
+            {
+              "type": "fence",
+              "position": [15.8, 0, -6.9],
+              "link_id": "c"
+            }
           ]
         },
         {
           "pos": "1,3",
-          "stage_id": "s05b_td1",
-          "rotation": 0,
+          "stage_id": "s05b_ga1",
+          "rotation": 90,
           "connections": {
-            "south": "2,3",
-            "east": "1,4",
             "west": "1,2"
           },
           "portals": {
-            "south": {
-              "portal_id": "portal_1770762691089_e6rz1juyx",
-              "gate": [
-                -3.01,
-                0,
-                19.95
-              ],
-              "spawn": [
-                -3.01,
-                1,
-                22.95
-              ],
-              "trigger": [
-                -3.01,
-                0,
-                26.95
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            },
-            "east": {
-              "portal_id": "portal_1771829420349_w41wscqlm",
-              "gate": [
-                15.5,
-                0,
-                -15.88
-              ],
-              "spawn": [
-                18.5,
-                1,
-                -15.88
-              ],
-              "trigger": [
-                22.5,
-                0,
-                -15.88
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            },
             "west": {
-              "portal_id": "portal_1771829431165_27h2vxc6r",
-              "gate": [
-                -20.74,
-                0,
-                11.08
-              ],
-              "spawn": [
-                -23.74,
-                1,
-                11.08
-              ],
-              "trigger": [
-                -27.74,
-                0,
-                11.08
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
+              "portal_id": "portal_1770762066212_1u5cs6987",
+              "gate": [-3.02, 0, 8.58],
+              "spawn": [-3.02, 1, 11.58],
+              "trigger": [-3.02, 0, 15.58],
+              "gate_rot": [0, 3.14, 0],
+              "compass_label": "S"
             }
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "2,2",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "key_drop_position": [0.6, 1, -3.7],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-4.2, 0, -3.5],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [5.8, 0, 1.2],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [2.1, 0, -8.7],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "rare_box",
+              "position": [-8.5, 0, -10.2]
+            }
+          ]
         },
         {
           "pos": "1,1",
@@ -1124,50 +933,18 @@
           "portals": {
             "east": {
               "portal_id": "portal_1770762480435_w1vi860kj",
-              "gate": [
-                1.41,
-                0,
-                -10.3
-              ],
-              "spawn": [
-                1.41,
-                1,
-                -13.3
-              ],
-              "trigger": [
-                1.41,
-                0,
-                -17.3
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [1.41, 0, -10.3],
+              "spawn": [1.41, 1, -13.3],
+              "trigger": [1.41, 0, -17.3],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             },
             "west": {
               "portal_id": "portal_1770762490612_xk9edjq18",
-              "gate": [
-                0.97,
-                0,
-                17.02
-              ],
-              "spawn": [
-                0.97,
-                1,
-                20.02
-              ],
-              "trigger": [
-                0.97,
-                0,
-                24.02
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [0.97, 0, 17.02],
+              "spawn": [0.97, 1, 20.02],
+              "trigger": [0.97, 0, 24.02],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             }
           },
@@ -1178,114 +955,65 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-3.8, 0, 5.6],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [4.2, 0, -1.3],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [-1.5, 0, -6.8],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [6.1, 0, 8.4],
+              "enemy_id": "froutang"
+            }
+          ]
         },
         {
           "pos": "3,2",
-          "stage_id": "s05b_xb2",
-          "rotation": 0,
+          "stage_id": "s05b_td2",
+          "rotation": 90,
           "connections": {
+            "west": "3,1",
             "south": "4,2",
-            "north": "2,2",
-            "east": "3,3",
-            "west": "3,1"
+            "north": "2,2"
           },
           "portals": {
-            "south": {
-              "portal_id": "portal_1770763117337_02xd3h3fw",
-              "gate": [
-                -11.3,
-                0,
-                20.34
-              ],
-              "spawn": [
-                -11.3,
-                1,
-                23.34
-              ],
-              "trigger": [
-                -11.3,
-                0,
-                27.34
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+            "west": {
+              "portal_id": "portal_1770763042178_6x1h1a4sf",
+              "gate": [6.02, 0, 20.49],
+              "spawn": [6.02, 1, 23.49],
+              "trigger": [6.02, 0, 27.49],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             },
-            "north": {
-              "portal_id": "portal_1770763133293_rrt10vndm",
-              "gate": [
-                -16.02,
-                0,
-                -20.27
-              ],
-              "spawn": [
-                -16.02,
-                1,
-                -23.27
-              ],
-              "trigger": [
-                -16.02,
-                0,
-                -27.27
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "east": {
-              "portal_id": "portal_1771829475331_5d16g6qoc",
-              "gate": [
-                20.33,
-                0,
-                -8.7
-              ],
-              "spawn": [
-                23.33,
-                1,
-                -8.7
-              ],
-              "trigger": [
-                27.33,
-                0,
-                -8.7
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
+            "south": {
+              "portal_id": "portal_1771829447772_syapg518n",
+              "gate": [20.16, 0, -15.92],
+              "spawn": [23.16, 1, -15.92],
+              "trigger": [27.16, 0, -15.92],
+              "gate_rot": [0, -1.57, 0],
               "compass_label": "E"
             },
-            "west": {
-              "portal_id": "portal_1771829486420_qd8nt5t9q",
-              "gate": [
-                -20.09,
-                0,
-                11.07
-              ],
-              "spawn": [
-                -23.09,
-                1,
-                11.07
-              ],
-              "trigger": [
-                -27.09,
-                0,
-                11.07
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
+            "north": {
+              "portal_id": "portal_1771829457604_wk64detkm",
+              "gate": [-20.24, 0, -4.02],
+              "spawn": [-23.24, 1, -4.02],
+              "trigger": [-27.24, 0, -4.02],
+              "gate_rot": [0, 1.57, 0],
               "compass_label": "W"
             }
           },
@@ -1296,154 +1024,37 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
-        },
-        {
-          "pos": "2,3",
-          "stage_id": "s05b_na1",
-          "rotation": 180,
-          "connections": {
-            "north": "1,3"
-          },
-          "portals": {
-            "north": {
-              "portal_id": "portal_1770762428229_pum514kqo",
-              "gate": [
-                -7.77,
-                0,
-                19.94
-              ],
-              "spawn": [
-                -7.77,
-                1,
-                22.94
-              ],
-              "trigger": [
-                -7.77,
-                0,
-                26.94
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 6,
+          "path_order": 5,
           "objects": [
             {
-              "type": "quest_item",
-              "position": [
-                10.6,
-                0,
-                -11
-              ],
-              "item_id": "data_disk",
-              "item_label": "Data Disk 4"
+              "type": "enemy",
+              "position": [4.6, 0, -4.7],
+              "enemy_id": "izhirak_s6"
             },
             {
-              "type": "dialog_trigger",
-              "position": [
-                3.9,
-                0,
-                -13
-              ],
-              "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
-              "dialog": [
-                {
-                  "speaker": "Mira",
-                  "text": "\"...no██ing le██ to s██e. we bu██ed it ██l. ev██y f██ld, ev██y c██y. ██ey sa██ it w██ nec██sary...\""
-                },
-                {
-                  "speaker": "Mira",
-                  "text": "Somehow it makes sense, but the truth is worse than i could have immagined."
-                }
-              ]
+              "type": "enemy",
+              "position": [4.3, 0, 0.3],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [4.3, 0, 6.6],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [10.6, 0, -11.9],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [10.7, 0, -5.4],
+              "enemy_id": "pobomma"
             }
           ]
-        },
-        {
-          "pos": "1,4",
-          "stage_id": "s05b_lb1",
-          "rotation": 180,
-          "connections": {
-            "south": "2,4",
-            "west": "1,3"
-          },
-          "portals": {
-            "south": {
-              "portal_id": "portal_1770762284199_dgwf6ksmg",
-              "gate": [
-                -3.99,
-                0,
-                -15.44
-              ],
-              "spawn": [
-                -3.99,
-                1,
-                -18.44
-              ],
-              "trigger": [
-                -3.99,
-                0,
-                -22.44
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "west": {
-              "portal_id": "portal_1771829258919_afduhhqi4",
-              "gate": [
-                20.12,
-                0,
-                8.02
-              ],
-              "spawn": [
-                23.12,
-                1,
-                8.02
-              ],
-              "trigger": [
-                27.12,
-                0,
-                8.02
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 7
         },
         {
           "pos": "1,0",
@@ -1456,50 +1067,18 @@
           "portals": {
             "east": {
               "portal_id": "portal_1770762284199_dgwf6ksmg",
-              "gate": [
-                -3.99,
-                0,
-                -15.44
-              ],
-              "spawn": [
-                -3.99,
-                1,
-                -18.44
-              ],
-              "trigger": [
-                -3.99,
-                0,
-                -22.44
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
+              "gate": [-3.99, 0, -15.44],
+              "spawn": [-3.99, 1, -18.44],
+              "trigger": [-3.99, 0, -22.44],
+              "gate_rot": [0, 0, 0],
               "compass_label": "N"
             },
             "south": {
               "portal_id": "portal_1771829258919_afduhhqi4",
-              "gate": [
-                20.12,
-                0,
-                8.02
-              ],
-              "spawn": [
-                23.12,
-                1,
-                8.02
-              ],
-              "trigger": [
-                27.12,
-                0,
-                8.02
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
+              "gate": [20.12, 0, 8.02],
+              "spawn": [23.12, 1, 8.02],
+              "trigger": [27.12, 0, 8.02],
+              "gate_rot": [0, -1.57, 0],
               "compass_label": "E"
             }
           },
@@ -1510,8 +1089,86 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 8
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-7.3, 0, 4.1],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [5.6, 0, -3.2],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [-2.1, 0, -8.5],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [10.3, 0, 6.7],
+              "enemy_id": "pobomma"
+            }
+          ]
+        },
+        {
+          "pos": "3,1",
+          "stage_id": "s05b_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "3,2"
+          },
+          "portals": {
+            "east": {
+              "portal_id": "portal_1770762428229_pum514kqo",
+              "gate": [-7.77, 0, 19.94],
+              "spawn": [-7.77, 1, 22.94],
+              "trigger": [-7.77, 0, 26.94],
+              "gate_rot": [0, 3.14, 0],
+              "compass_label": "S"
+            }
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-4.5, 0, 7.3],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [3.2, 0, 2.1],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [-1.8, 0, -4.6],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "box",
+              "position": [5.1, 0, -10.3]
+            },
+            {
+              "type": "box",
+              "position": [8.4, 0, -10.1]
+            }
+          ]
         },
         {
           "pos": "4,2",
@@ -1523,26 +1180,10 @@
           "portals": {
             "north": {
               "portal_id": "portal_1770762463884_eccghdr22",
-              "gate": [
-                3.98,
-                0,
-                21.06
-              ],
-              "spawn": [
-                3.98,
-                1,
-                24.06
-              ],
-              "trigger": [
-                3.98,
-                0,
-                28.06
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [3.98, 0, 21.06],
+              "spawn": [3.98, 1, 24.06],
+              "trigger": [3.98, 0, 28.06],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             }
           },
@@ -1553,22 +1194,17 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 9,
+          "path_order": 8,
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [
-                -14.5,
-                1,
-                15.6
-              ],
+              "position": [-14.5, 1, 15.6],
               "trigger_id": "corrupted_log",
               "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
+              "actions": ["complete_quest", "telepipe"],
               "dialog": [
                 {
                   "speaker": "",
@@ -1582,194 +1218,40 @@
             },
             {
               "type": "quest_item",
-              "position": [
-                -18.9,
-                0,
-                15.5
-              ],
+              "position": [-18.9, 0, 15.5],
               "item_id": "data_disk",
               "item_label": "Data Disk 3"
+            },
+            {
+              "type": "enemy",
+              "position": [-15.4, 0, -11.9],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [-8.8, 0, -14.2],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [-0.1, 0, -16.1],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [8.9, 0, -13.8],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "step_switch",
+              "position": [20.3, 0, 17.8],
+              "link_id": "d"
+            },
+            {
+              "type": "fence",
+              "position": [-18, 0, -5.7]
             }
           ]
-        },
-        {
-          "pos": "3,3",
-          "stage_id": "s05b_ic3",
-          "rotation": 90,
-          "connections": {
-            "east": "3,4",
-            "west": "3,2"
-          },
-          "portals": {
-            "east": {
-              "portal_id": "portal_1770762222618_pkq7mzaxv",
-              "gate": [
-                -10.83,
-                0,
-                -20.37
-              ],
-              "spawn": [
-                -10.83,
-                1,
-                -23.37
-              ],
-              "trigger": [
-                -10.83,
-                0,
-                -27.37
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "west": {
-              "portal_id": "portal_1770762240912_d4tbxftvu",
-              "gate": [
-                16.02,
-                0,
-                14.88
-              ],
-              "spawn": [
-                16.02,
-                1,
-                17.88
-              ],
-              "trigger": [
-                16.02,
-                0,
-                21.88
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 10
-        },
-        {
-          "pos": "3,1",
-          "stage_id": "s05b_na1",
-          "rotation": 270,
-          "connections": {
-            "east": "3,2"
-          },
-          "portals": {
-            "east": {
-              "portal_id": "portal_1770762428229_pum514kqo",
-              "gate": [
-                -7.77,
-                0,
-                19.94
-              ],
-              "spawn": [
-                -7.77,
-                1,
-                22.94
-              ],
-              "trigger": [
-                -7.77,
-                0,
-                26.94
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 11
-        },
-        {
-          "pos": "2,4",
-          "stage_id": "s05b_ic3",
-          "rotation": 0,
-          "connections": {
-            "north": "1,4",
-            "south": "3,4"
-          },
-          "portals": {
-            "north": {
-              "portal_id": "portal_1770762222618_pkq7mzaxv",
-              "gate": [
-                -10.83,
-                0,
-                -20.37
-              ],
-              "spawn": [
-                -10.83,
-                1,
-                -23.37
-              ],
-              "trigger": [
-                -10.83,
-                0,
-                -27.37
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "south": {
-              "portal_id": "portal_1770762240912_d4tbxftvu",
-              "gate": [
-                16.02,
-                0,
-                14.88
-              ],
-              "spawn": [
-                16.02,
-                1,
-                17.88
-              ],
-              "trigger": [
-                16.02,
-                0,
-                21.88
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 12
         },
         {
           "pos": "2,0",
@@ -1781,26 +1263,10 @@
           "portals": {
             "north": {
               "portal_id": "portal_1770762447606_t7fyxk2xi",
-              "gate": [
-                -7.75,
-                0,
-                20.54
-              ],
-              "spawn": [
-                -7.75,
-                1,
-                23.54
-              ],
-              "trigger": [
-                -7.75,
-                0,
-                27.54
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
+              "gate": [-7.75, 0, 20.54],
+              "spawn": [-7.75, 1, 23.54],
+              "trigger": [-7.75, 0, 27.54],
+              "gate_rot": [0, 3.14, 0],
               "compass_label": "S"
             }
           },
@@ -1811,31 +1277,22 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 13,
+          "path_order": 9,
           "objects": [
             {
               "type": "quest_item",
-              "position": [
-                -18.5,
-                0,
-                -11
-              ],
+              "position": [-18.5, 0, -11],
               "item_id": "data_disk",
               "item_label": "Data Disk 2"
             },
             {
               "type": "dialog_trigger",
-              "position": [
-                -14.9,
-                0,
-                -16.3
-              ],
+              "position": [-14.9, 0, -16.3],
               "trigger_condition": "item_pickup",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
+              "actions": ["complete_quest", "telepipe"],
               "dialog": [
                 {
                   "speaker": "Mira",
@@ -1846,76 +1303,38 @@
                   "text": "Centuries? Just how long ago did this actually happen?"
                 }
               ]
+            },
+            {
+              "type": "enemy",
+              "position": [3.5, 0, 4.9],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [10.6, 0, -0.9],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [6.7, 0, 14.5],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [13.4, 0, 6.7],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [-6.6, 0, -16.1],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [-0.8, 0, -18.4],
+              "enemy_id": "bolix"
             }
           ]
-        },
-        {
-          "pos": "3,4",
-          "stage_id": "s05b_lb3",
-          "rotation": 270,
-          "connections": {
-            "west": "3,3",
-            "north": "2,4"
-          },
-          "portals": {
-            "west": {
-              "portal_id": "portal_1770762310334_psw7r9aa9",
-              "gate": [
-                -16.07,
-                0,
-                -19.79
-              ],
-              "spawn": [
-                -16.07,
-                1,
-                -22.79
-              ],
-              "trigger": [
-                -16.07,
-                0,
-                -26.79
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "north": {
-              "portal_id": "portal_1771829272606_ryg70e085",
-              "gate": [
-                20.21,
-                0,
-                -6.25
-              ],
-              "spawn": [
-                23.21,
-                1,
-                -6.25
-              ],
-              "trigger": [
-                27.21,
-                0,
-                -6.25
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            }
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 14
         }
       ]
     }
@@ -1936,10 +1355,10 @@
   "briefing_dialog": [
     { "speaker": "Principal", "text": "This mission is classified. What you're about to hear does not leave this room." },
     { "speaker": "Principal", "text": "This is Mira, from the Research Division. She's been studying fragments recovered from the Paru ruins." },
-    { "speaker": "Mira", "text": "The ruins contain data from before the Great Blank \u2014 records that could explain what happened to this world." },
+    { "speaker": "Mira", "text": "The ruins contain data from before the Great Blank — records that could explain what happened to this world." },
     { "speaker": "Mira", "text": "A survey team found fragments, enough to confirm there are complete data disks still inside. I need them recovered." },
-    { "speaker": "Mira", "text": "I'd go myself, but the ruins are crawling with active automata. I'm sending Elio with you \u2014 she knows what to look for." },
-    { "speaker": "Elio", "text": "I've studied Mira's notes. I'll know the disks when I see them \u2014 you keep us alive." },
+    { "speaker": "Mira", "text": "I'd go myself, but the ruins are crawling with active automata. I'm sending Elio with you — she knows what to look for." },
+    { "speaker": "Elio", "text": "I've studied Mira's notes. I'll know the disks when I see them — you keep us alive." },
     { "speaker": "Principal", "text": "Retrieve the disks and return safely. The Research Division is counting on this." }
   ],
   "objectives": [
@@ -1948,6 +1367,5 @@
       "label": "Data Disks",
       "target": 4
     }
-  ],
-  "report_to": "guild_counter"
+  ]
 }
