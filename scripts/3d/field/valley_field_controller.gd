@@ -1393,8 +1393,8 @@ func _spawn_field_elements() -> void:
 		var target_section := 0
 		var target_cell := ""
 		var target_position := Vector3.ZERO
-		var is_exit := (portal_dir == warp_edge or portal_dir == exit_dir)
-		var is_entry := (portal_dir == entry_dir)
+		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir)
+		var is_entry: bool = (portal_dir == entry_dir)
 
 		if is_exit and section_idx_for_warp + 1 < sections_for_warp.size():
 			var next_sec: Dictionary = sections_for_warp[section_idx_for_warp + 1]
@@ -1417,7 +1417,7 @@ func _spawn_field_elements() -> void:
 		var area_warp := AreaWarpScript.new()
 		area_warp.auto_collect = false
 		area_warp.name = "AreaWarp_%s" % portal_dir
-		var is_locked := is_exit and objectives_pending
+		var is_locked: bool = is_exit and objectives_pending
 		area_warp.element_state = "locked" if is_locked else "open"
 		add_child(area_warp)
 		area_warp.global_position = gate_pos
@@ -1457,8 +1457,8 @@ func _spawn_field_elements() -> void:
 		)
 
 		# Label
-		var dir_label := portal_dir.to_upper()
-		var label_text := "%s EXIT\n→ next section" % dir_label if is_exit else "%s\n← prev section" % dir_label
+		var dir_label: String = portal_dir.to_upper()
+		var label_text: String = ("%s EXIT\n→ next section" % dir_label) if is_exit else ("%s\n← prev section" % dir_label)
 		var label := Label3D.new()
 		label.name = "AreaWarpLabel_%s" % portal_dir
 		label.text = label_text
