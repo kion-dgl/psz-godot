@@ -261,8 +261,8 @@ async function exportSectionCells(
       keyGateDirection = cell.lockedGate;
     }
 
-    // Bake portal positions from full unified config
-    const portals: Record<string, { portal_id?: string; gate: Vec3; spawn: Vec3; trigger: Vec3; gate_rot?: Vec3; compass_label?: string }> = {};
+    // v1 portal format: store portal_id strings, positions computed at runtime
+    const portals: Record<string, string> = {};
     const stageConfig = fullConfigs[cell.stageName];
     if (stageConfig && stageConfig.portals) {
       // Build lookup: config direction → portal config
@@ -285,21 +285,14 @@ async function exportSectionCells(
       for (const gridDir of allGridDirs) {
         const configDir = reverseRotateDirection(gridDir as Direction, rotation);
         const portal = configPortalsByDir.get(configDir);
-        if (portal) {
-          portals[gridDir] = computePortalPositions(portal);
+        if (portal?.id) {
+          portals[gridDir] = portal.id;
         }
       }
 
-      // Bake default_spawn if the stage has one
+      // Reference default spawn if the stage has one
       if (stageConfig.defaultSpawn) {
-        const ds = stageConfig.defaultSpawn;
-        const dsRot = DIRECTION_ROTATIONS[ds.direction] ?? 0;
-        portals['default'] = {
-          gate: round3(ds.position),
-          spawn: round3([ds.position[0], 1, ds.position[2]]),
-          trigger: round3([ds.position[0], 0, ds.position[2]]),
-        };
-        (portals['default'] as any).default_rotation = +dsRot.toFixed(4);
+        portals['default'] = 'default';
       }
     }
 
@@ -403,8 +396,8 @@ async function exportSectionCells(
                   (p: PortalConfig) => !usedConfigDirs.has(p.direction)
                 );
               }
-              if (portalCfg) {
-                targetPortals[reverseDir] = computePortalPositions(portalCfg);
+              if (portalCfg?.id) {
+                targetPortals[reverseDir] = portalCfg.id;
               }
             }
           }
@@ -474,6 +467,8 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
   }
 
   const quest: Record<string, unknown> = {
+    version: 1,
+    last_updated: new Date().toISOString().slice(0, 10),
     id: project.id,
     name: project.name,
     description: project.metadata?.description || '',
@@ -573,8 +568,10 @@ export function importGodotSection(section: any): QuestSection {
     cells[cell.pos] = editorCell;
     if (cell.is_start) startPos = cell.pos;
     if (cell.is_end) endPos = cell.pos;
-    if (cell.is_key_gate && cell.key_for_cell) {
-      keyLinks[cell.pos] = cell.key_for_cell;
+    if (cell.is_key_gate) {
+      // key_for_cell may be empty in quest JSONs — use the key_gate_direction
+      // to mark this cell as a gate so CellInspector can list it for key drops
+      keyLinks[cell.pos] = cell.key_for_cell || '';
     }
     if (cell.key_drop) {
       keyDropLinks[cell.pos] = cell.key_drop;

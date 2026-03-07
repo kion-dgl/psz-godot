@@ -741,12 +741,50 @@ const DIRECTION_ROTATIONS := {
 }
 
 
-## Parse baked portal data from quest JSON cell["portals"].
-## Positions are pre-computed by the quest editor — no rotation math needed.
+## Parse portal data from quest JSON cell["portals"].
+## Supports two formats:
+##   v1 (reference): { "south": "portal_id_xxx" } — looks up position from stage config
+##   legacy (baked): { "south": { "gate": [...], "spawn": [...], ... } } — uses inline positions
 func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 	var result := {}
+	# Build a lookup from portal_id → config portal for v1 references
+	var config_portals_by_id := {}
+	for cp in _stage_config.get("portals", []):
+		config_portals_by_id[str(cp.get("id", ""))] = cp
+
 	for dir_key in baked:
-		var pd: Dictionary = baked[dir_key]
+		var value = baked[dir_key]
+
+		# v1 format: value is a portal_id string
+		if value is String:
+			var portal_id: String = value
+			if dir_key == "default":
+				# "default" references the defaultSpawn in stage config
+				var ds: Dictionary = _stage_config.get("defaultSpawn", {})
+				if not ds.is_empty():
+					var ds_pos_arr: Array = ds.get("position", [0, 0, 0])
+					var ds_pos := Vector3(float(ds_pos_arr[0]), 1.0, float(ds_pos_arr[2]))
+					var ds_dir: String = str(ds.get("direction", "north"))
+					var ds_rot: float = DIRECTION_ROTATIONS.get(ds_dir, 0.0)
+					result["default"] = {
+						"spawn_pos": ds_pos,
+						"trigger_pos": ds_pos,
+						"default_rotation": ds_rot,
+					}
+			elif config_portals_by_id.has(portal_id):
+				result[dir_key] = _compute_portal_from_config(config_portals_by_id[portal_id], dir_key)
+			else:
+				push_warning("[ValleyField] Portal ID '%s' not found in stage config for dir '%s'" % [portal_id, dir_key])
+			if result.has(dir_key):
+				print("[ValleyField]   v1 portal: '%s' (id=%s) → gate=%s spawn=%s trigger=%s" % [
+					dir_key, portal_id,
+					result[dir_key].get("gate_pos", "n/a"),
+					result[dir_key]["spawn_pos"],
+					result[dir_key]["trigger_pos"]])
+			continue
+
+		# Legacy format: value is a dictionary with baked positions
+		var pd: Dictionary = value
 		if dir_key == "default":
 			var sp: Array = pd.get("spawn", [0, 1, 0])
 			result["default"] = {
@@ -773,6 +811,29 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 			result[dir_key]["spawn_pos"],
 			result[dir_key]["trigger_pos"]])
 	return result
+
+
+## Compute portal positions from a config portal entry, using the game direction
+## for gate_rot and spawn/trigger offsets.
+func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictionary:
+	var pos_arr: Array = portal.get("position", [0, 0, 0])
+	var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+
+	# Gate rotation and outward direction based on game direction (not config direction)
+	var base_rot: float = DIRECTION_ROTATIONS.get(game_dir, 0.0)
+	var gate_rot := Vector3(0.0, base_rot, 0.0)
+	var outward := Vector2(-sin(base_rot), -cos(base_rot))
+
+	var spawn_pos := Vector3(gate_pos.x + outward.x * 3.0, 1.0, gate_pos.z + outward.y * 3.0)
+	var trigger_pos := Vector3(gate_pos.x + outward.x * 7.0, 0.0, gate_pos.z + outward.y * 7.0)
+
+	return {
+		"gate_pos": gate_pos,
+		"spawn_pos": spawn_pos,
+		"trigger_pos": trigger_pos,
+		"gate_rot": gate_rot,
+		"compass_label": game_dir.substr(0, 1).to_upper(),
+	}
 
 
 ## Build portal data from config JSON portals[] and defaultSpawn (fallback for non-quest sessions).

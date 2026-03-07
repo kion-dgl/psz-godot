@@ -1,7 +1,9 @@
 {
+  "version": 1,
+  "last_updated": "2026-03-07",
   "id": "apothecary_supply",
   "name": "Apothecary's Supply",
-  "description": "Requested by: Item Shop. Asks the player to gather herbs from the wetlands to use for item synthesis. \nCore Objective: Harvest Sol Leaves, Moon Blooms, and Star Husks.\nTheme: Industry — Establishes how the town produces its own Atomizers.",
+  "description": "Requested by: Item Shop. Asks the player to gather herbs from the wetlands to use for item synthesis. \nCore Objective: Harvest Sol Leaves, Moon Blooms, and Star Husks.\nTheme: Industry \u2014 Establishes how the town produces its own Atomizers.",
   "area_id": "ozette",
   "sections": [
     {
@@ -18,48 +20,8 @@
             "south": "1,2"
           },
           "portals": {
-            "south": {
-              "portal_id": "portal_1771802375822_jr1b5c8lp",
-              "gate": [
-                -0.03,
-                0,
-                3.73
-              ],
-              "spawn": [
-                -0.03,
-                1,
-                6.73
-              ],
-              "trigger": [
-                -0.03,
-                0,
-                10.73
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            },
-            "default": {
-              "gate": [
-                0.09,
-                0,
-                -3.64
-              ],
-              "spawn": [
-                0.09,
-                1,
-                -3.64
-              ],
-              "trigger": [
-                0.09,
-                0,
-                -3.64
-              ],
-              "default_rotation": 0
-            }
+            "south": "portal_1771802375822_jr1b5c8lp",
+            "default": "default"
           },
           "is_start": true,
           "is_end": false,
@@ -69,7 +31,9 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "1,2",
@@ -81,78 +45,9 @@
             "north": "0,2"
           },
           "portals": {
-            "east": {
-              "portal_id": "portal_1770695247101_m9zjn0us8",
-              "gate": [
-                6,
-                0,
-                23.66
-              ],
-              "spawn": [
-                6,
-                1,
-                26.66
-              ],
-              "trigger": [
-                6,
-                0,
-                30.66
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            },
-            "south": {
-              "portal_id": "portal_1771823444973_aynvd4nvh",
-              "gate": [
-                -21.94,
-                0,
-                7.62
-              ],
-              "spawn": [
-                -24.94,
-                1,
-                7.62
-              ],
-              "trigger": [
-                -28.94,
-                0,
-                7.62
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            },
-            "north": {
-              "portal_id": "portal_1771823452955_ejvuqxk9k",
-              "gate": [
-                20.8,
-                0,
-                5.62
-              ],
-              "spawn": [
-                23.8,
-                1,
-                5.62
-              ],
-              "trigger": [
-                27.8,
-                0,
-                5.62
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            }
+            "east": "portal_1770695247101_m9zjn0us8",
+            "south": "portal_1771823444973_aynvd4nvh",
+            "north": "portal_1771823452955_ejvuqxk9k"
           },
           "is_start": false,
           "is_end": false,
@@ -162,7 +57,9 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "1,3",
@@ -174,78 +71,9 @@
             "east": "1,4"
           },
           "portals": {
-            "south": {
-              "portal_id": "portal_1770695247101_m9zjn0us8",
-              "gate": [
-                6,
-                0,
-                23.66
-              ],
-              "spawn": [
-                6,
-                1,
-                26.66
-              ],
-              "trigger": [
-                6,
-                0,
-                30.66
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            },
-            "west": {
-              "portal_id": "portal_1771823444973_aynvd4nvh",
-              "gate": [
-                -21.94,
-                0,
-                7.62
-              ],
-              "spawn": [
-                -24.94,
-                1,
-                7.62
-              ],
-              "trigger": [
-                -28.94,
-                0,
-                7.62
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            },
-            "east": {
-              "portal_id": "portal_1771823452955_ejvuqxk9k",
-              "gate": [
-                20.8,
-                0,
-                5.62
-              ],
-              "spawn": [
-                23.8,
-                1,
-                5.62
-              ],
-              "trigger": [
-                27.8,
-                0,
-                5.62
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            }
+            "south": "portal_1770695247101_m9zjn0us8",
+            "west": "portal_1771823444973_aynvd4nvh",
+            "east": "portal_1771823452955_ejvuqxk9k"
           },
           "is_start": false,
           "is_end": false,
@@ -255,7 +83,9 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "2,2",
@@ -265,30 +95,7 @@
             "north": "1,2"
           },
           "portals": {
-            "north": {
-              "portal_id": "portal_1770695186397_svb24gi87",
-              "gate": [
-                5.99,
-                0,
-                22.5
-              ],
-              "spawn": [
-                5.99,
-                1,
-                25.5
-              ],
-              "trigger": [
-                5.99,
-                0,
-                29.5
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
+            "north": "portal_1770695186397_svb24gi87"
           },
           "is_start": false,
           "is_end": false,
@@ -303,7 +110,9 @@
             2.4,
             1,
             8.7
-          ]
+          ],
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "2,3",
@@ -315,78 +124,9 @@
             "north": "1,3"
           },
           "portals": {
-            "east": {
-              "portal_id": "portal_1770695247101_m9zjn0us8",
-              "gate": [
-                6,
-                0,
-                23.66
-              ],
-              "spawn": [
-                6,
-                1,
-                26.66
-              ],
-              "trigger": [
-                6,
-                0,
-                30.66
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            },
-            "south": {
-              "portal_id": "portal_1771823444973_aynvd4nvh",
-              "gate": [
-                -21.94,
-                0,
-                7.62
-              ],
-              "spawn": [
-                -24.94,
-                1,
-                7.62
-              ],
-              "trigger": [
-                -28.94,
-                0,
-                7.62
-              ],
-              "gate_rot": [
-                0,
-                1.57,
-                0
-              ],
-              "compass_label": "W"
-            },
-            "north": {
-              "portal_id": "portal_1771823452955_ejvuqxk9k",
-              "gate": [
-                20.8,
-                0,
-                5.62
-              ],
-              "spawn": [
-                23.8,
-                1,
-                5.62
-              ],
-              "trigger": [
-                27.8,
-                0,
-                5.62
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            }
+            "east": "portal_1770695247101_m9zjn0us8",
+            "south": "portal_1771823444973_aynvd4nvh",
+            "north": "portal_1771823452955_ejvuqxk9k"
           },
           "is_start": false,
           "is_end": false,
@@ -396,7 +136,9 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 4,
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "1,4",
@@ -406,30 +148,7 @@
             "west": "1,3"
           },
           "portals": {
-            "west": {
-              "portal_id": "portal_1770695186397_svb24gi87",
-              "gate": [
-                5.99,
-                0,
-                22.5
-              ],
-              "spawn": [
-                5.99,
-                1,
-                25.5
-              ],
-              "trigger": [
-                5.99,
-                0,
-                29.5
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
+            "west": "portal_1770695186397_svb24gi87"
           },
           "is_start": false,
           "is_end": false,
@@ -451,7 +170,9 @@
               "item_id": "star_husk",
               "item_label": "Star Husk"
             }
-          ]
+          ],
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "2,4",
@@ -461,30 +182,7 @@
             "west": "2,3"
           },
           "portals": {
-            "west": {
-              "portal_id": "portal_1770695165920_u1whbwviy",
-              "gate": [
-                -7.14,
-                0,
-                15.91
-              ],
-              "spawn": [
-                -7.14,
-                1,
-                18.91
-              ],
-              "trigger": [
-                -7.14,
-                0,
-                22.91
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
+            "west": "portal_1770695165920_u1whbwviy"
           },
           "is_start": false,
           "is_end": false,
@@ -506,7 +204,9 @@
               "item_id": "moon_bloom",
               "item_label": "Moon Bloom"
             }
-          ]
+          ],
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "3,3",
@@ -517,54 +217,8 @@
             "south": "4,3"
           },
           "portals": {
-            "north": {
-              "portal_id": "portal_1770694856803_2ys7twqc5",
-              "gate": [
-                -5.94,
-                0,
-                22.43
-              ],
-              "spawn": [
-                -5.94,
-                1,
-                25.43
-              ],
-              "trigger": [
-                -5.94,
-                0,
-                29.43
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            },
-            "south": {
-              "portal_id": "portal_1770694873204_haxbz6f3g",
-              "gate": [
-                -6.14,
-                0,
-                -21.62
-              ],
-              "spawn": [
-                -6.14,
-                1,
-                -24.62
-              ],
-              "trigger": [
-                -6.14,
-                0,
-                -28.62
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            }
+            "north": "portal_1770694856803_2ys7twqc5",
+            "south": "portal_1770694873204_haxbz6f3g"
           },
           "is_start": false,
           "is_end": false,
@@ -574,7 +228,9 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "4,3",
@@ -585,54 +241,8 @@
             "north": "3,3"
           },
           "portals": {
-            "west": {
-              "portal_id": "portal_1770695063903_613iplai3",
-              "gate": [
-                1.13,
-                0,
-                -20.41
-              ],
-              "spawn": [
-                1.13,
-                1,
-                -23.41
-              ],
-              "trigger": [
-                1.13,
-                0,
-                -27.41
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "north": {
-              "portal_id": "portal_1771823258035_lz6lo6r6m",
-              "gate": [
-                7.66,
-                0,
-                19.22
-              ],
-              "spawn": [
-                10.66,
-                1,
-                19.22
-              ],
-              "trigger": [
-                14.66,
-                0,
-                19.22
-              ],
-              "gate_rot": [
-                0,
-                -1.57,
-                0
-              ],
-              "compass_label": "E"
-            }
+            "west": "portal_1770695063903_613iplai3",
+            "north": "portal_1771823258035_lz6lo6r6m"
           },
           "is_start": false,
           "is_end": false,
@@ -642,7 +252,9 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "",
-          "path_order": 8
+          "path_order": 8,
+          "key_drop": "",
+          "required_keys": 0
         },
         {
           "pos": "4,2",
@@ -652,54 +264,8 @@
             "east": "4,3"
           },
           "portals": {
-            "east": {
-              "portal_id": "portal_1770694163468_w6x5en6p1",
-              "gate": [
-                0.05,
-                0,
-                -13.75
-              ],
-              "spawn": [
-                0.05,
-                1,
-                -16.75
-              ],
-              "trigger": [
-                0.05,
-                0,
-                -20.75
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            },
-            "west": {
-              "portal_id": "portal_1770694183466_bhd3dyy58",
-              "gate": [
-                -0.02,
-                0,
-                19.9
-              ],
-              "spawn": [
-                -0.02,
-                1,
-                22.9
-              ],
-              "trigger": [
-                -0.02,
-                0,
-                26.9
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            }
+            "east": "portal_1770694163468_w6x5en6p1",
+            "west": "portal_1770694183466_bhd3dyy58"
           },
           "is_start": false,
           "is_end": true,
@@ -709,7 +275,9 @@
           "is_key_gate": false,
           "key_gate_direction": "",
           "warp_edge": "west",
-          "path_order": 9
+          "path_order": 9,
+          "key_drop": "",
+          "required_keys": 0
         }
       ]
     },
@@ -725,54 +293,8 @@
           "rotation": 0,
           "connections": {},
           "portals": {
-            "south": {
-              "portal_id": "portal_1770722813858_ymnffet9h",
-              "gate": [
-                -10.25,
-                0,
-                18.2
-              ],
-              "spawn": [
-                -10.25,
-                1,
-                21.2
-              ],
-              "trigger": [
-                -10.25,
-                0,
-                25.2
-              ],
-              "gate_rot": [
-                0,
-                3.14,
-                0
-              ],
-              "compass_label": "S"
-            },
-            "north": {
-              "portal_id": "portal_1770722828360_dauapvjke",
-              "gate": [
-                10.87,
-                0,
-                -17.27
-              ],
-              "spawn": [
-                10.87,
-                1,
-                -20.27
-              ],
-              "trigger": [
-                10.87,
-                0,
-                -24.27
-              ],
-              "gate_rot": [
-                0,
-                0,
-                0
-              ],
-              "compass_label": "N"
-            }
+            "south": "portal_1770722813858_ymnffet9h",
+            "north": "portal_1770722828360_dauapvjke"
           },
           "is_start": true,
           "is_end": true,
@@ -794,7 +316,9 @@
               "item_id": "sol_leaf",
               "item_label": "Sol Leaf"
             }
-          ]
+          ],
+          "key_drop": "",
+          "required_keys": 0
         }
       ],
       "entry_direction": "south",
@@ -818,7 +342,9 @@
       "target": 1
     }
   ],
-  "companions": ["fern"],
+  "companions": [
+    "fern"
+  ],
   "office_npcs": [
     {
       "npc_id": "fern",
@@ -827,13 +353,34 @@
     }
   ],
   "briefing_dialog": [
-    { "speaker": "Principal", "text": "We've received a supply request from the item shop. Their stock of healing atomizers is critically low." },
-    { "speaker": "Principal", "text": "This is Fern, an herbalist who supplies the raw materials. She'll explain the situation." },
-    { "speaker": "Fern", "text": "The wetlands used to be safe enough to harvest alone, but lately the creatures have become more aggressive." },
-    { "speaker": "Fern", "text": "Without fresh herbs, the shop can't synthesize atomizers. And without atomizers, fewer hunters can take missions safely." },
-    { "speaker": "Fern", "text": "It's a vicious cycle. The longer we wait, the worse it gets." },
-    { "speaker": "Principal", "text": "We need you to escort Fern into the wetlands so she can collect what she needs \u2014 Sol Leaves, Moon Blooms, and Star Husks." },
-    { "speaker": "Fern", "text": "I know exactly where they grow. Just keep the creatures off me and I'll handle the rest." }
+    {
+      "speaker": "Principal",
+      "text": "We've received a supply request from the item shop. Their stock of healing atomizers is critically low."
+    },
+    {
+      "speaker": "Principal",
+      "text": "This is Fern, an herbalist who supplies the raw materials. She'll explain the situation."
+    },
+    {
+      "speaker": "Fern",
+      "text": "The wetlands used to be safe enough to harvest alone, but lately the creatures have become more aggressive."
+    },
+    {
+      "speaker": "Fern",
+      "text": "Without fresh herbs, the shop can't synthesize atomizers. And without atomizers, fewer hunters can take missions safely."
+    },
+    {
+      "speaker": "Fern",
+      "text": "It's a vicious cycle. The longer we wait, the worse it gets."
+    },
+    {
+      "speaker": "Principal",
+      "text": "We need you to escort Fern into the wetlands so she can collect what she needs \u2014 Sol Leaves, Moon Blooms, and Star Husks."
+    },
+    {
+      "speaker": "Fern",
+      "text": "I know exactly where they grow. Just keep the creatures off me and I'll handle the rest."
+    }
   ],
   "report_to": "guild_counter"
 }
