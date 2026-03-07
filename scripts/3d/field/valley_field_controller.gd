@@ -1367,9 +1367,9 @@ func _spawn_field_elements() -> void:
 			if _portal_data["default"].has("default_rotation"):
 				start_rot = _portal_data["default"]["default_rotation"]
 		else:
-			var entry_dir: String = str(OPPOSITE.get(warp_edge, ""))
-			if not entry_dir.is_empty() and _portal_data.has(entry_dir):
-				start_pos = _portal_data[entry_dir]["spawn_pos"]
+			var start_entry_dir: String = str(OPPOSITE.get(warp_edge, ""))
+			if not start_entry_dir.is_empty() and _portal_data.has(start_entry_dir):
+				start_pos = _portal_data[start_entry_dir]["spawn_pos"]
 				start_rot = _dir_to_yaw(warp_edge)
 			else:
 				for dir in _portal_data:
@@ -1562,29 +1562,28 @@ func _spawn_field_elements() -> void:
 		else:
 			# Regular gate — open if entry, visited, or room has no enemies
 			var target_visited: bool = _visited_cells.has(str(connections[dir]))
-			var room_has_enemies: bool = _cell_has_enemies(_current_cell)
-			var is_open: bool = (dir == _spawn_edge) or target_visited or not room_has_enemies
+			var gate_is_open: bool = (dir == _spawn_edge) or target_visited or not room_has_enemies
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
 			gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 			_fixup_gate_materials(gate)
 			gate._setup_laser_material()
-			if is_open:
+			if gate_is_open:
 				gate.open()
 			_fix_gate_depth(gate)
 
 		# Waypoint — navigation marker inside the load trigger area
-		var wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)
-		var waypoint := WaypointScript.new()
-		add_child(waypoint)
-		waypoint.global_position = wp_pos
-		waypoint._base_y = waypoint.position.y  # Re-capture after repositioning
+		var gate_wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)
+		var gate_waypoint := WaypointScript.new()
+		add_child(gate_waypoint)
+		gate_waypoint.global_position = gate_wp_pos
+		gate_waypoint._base_y = gate_waypoint.position.y  # Re-capture after repositioning
 		# Face toward spawn point so front faces the player approaching from the room
 		var spawn_pt: Vector3 = _portal_data[dir].get("spawn_pos", trigger_pos)
-		waypoint.rotation.y = _facing_yaw(wp_pos, spawn_pt)
+		gate_waypoint.rotation.y = _facing_yaw(gate_wp_pos, spawn_pt)
 		# Disable backface culling so it's visible from any angle
-		waypoint.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
+		gate_waypoint.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
 			if mat is StandardMaterial3D:
 				(mat as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
 		)
@@ -1592,13 +1591,13 @@ func _spawn_field_elements() -> void:
 		var target_cell_pos: String = str(connections[dir])
 		var wp_state: String
 		if dir == _spawn_edge:
-			waypoint.mark_unvisited()
+			gate_waypoint.mark_unvisited()
 			wp_state = "came_from"
 		elif _visited_cells.has(target_cell_pos):
-			waypoint.mark_visited()
+			gate_waypoint.mark_visited()
 			wp_state = "visited_prior"
 		else:
-			waypoint.mark_new()
+			gate_waypoint.mark_new()
 			wp_state = "unvisited"
 		print("[Waypoint] dir=%s → target_cell=%s  state=%s" % [dir, target_cell_pos, wp_state])
 
