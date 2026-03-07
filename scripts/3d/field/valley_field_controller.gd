@@ -343,12 +343,7 @@ func _ready() -> void:
 		var is_locked_gate: bool = is_key_gate and dir == key_gate_dir and not _gates_opened.has(str(_current_cell.get("pos", "")))
 		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
-	# Create exit trigger on end cell warp_edge
-	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
-		_create_exit_trigger(warp_edge, _portal_data[warp_edge])
-		# DEBUG: Label for exit gate too
-		var exit_pos: Vector3 = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
-		_add_gate_label(warp_edge + " (EXIT)", exit_pos, "next section")
+	# (warp_edge exit is handled by area warp auto-generation in _spawn_field_elements)
 
 	# Place key pickup if this cell has one
 	if _current_cell.get("has_key", false):
@@ -439,11 +434,6 @@ func _unlock_objective_exits() -> void:
 		if is_instance_valid(warp):
 			warp.set_state("open")
 	_objective_locked_exits.clear()
-
-	# Enable objective-locked exit triggers
-	var exit_trigger := _find_child_by_name(self, "ExitTrigger") as Area3D
-	if exit_trigger and not exit_trigger.monitoring:
-		exit_trigger.monitoring = true
 
 	# Update minimap
 	var we: String = str(_current_cell.get("warp_edge", ""))
@@ -731,22 +721,60 @@ func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
 	return {}
 
 
-## Direction base rotations for portal position math (matches ExportTab.tsx DIRECTION_ROTATIONS).
-## north=0, south=PI, east=PI/2, west=-PI/2.
+## Direction base rotations for portal position math (matches quest-io.ts DIRECTION_ROTATIONS).
+## north=0, south=PI, east=-PI/2, west=PI/2.
 const DIRECTION_ROTATIONS := {
 	"north": 0.0,
 	"south": PI,
-	"east": PI / 2.0,
-	"west": -PI / 2.0,
+	"east": -PI / 2.0,
+	"west": PI / 2.0,
 }
 
 
-## Parse baked portal data from quest JSON cell["portals"].
-## Positions are pre-computed by the quest editor — no rotation math needed.
+## Parse portal data from quest JSON cell["portals"].
+## Supports two formats:
+##   v1 (reference): { "south": "portal_id_xxx" } — looks up position from stage config
+##   legacy (baked): { "south": { "gate": [...], "spawn": [...], ... } } — uses inline positions
 func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 	var result := {}
+	# Build a lookup from portal_id → config portal for v1 references
+	var config_portals_by_id := {}
+	for cp in _stage_config.get("portals", []):
+		config_portals_by_id[str(cp.get("id", ""))] = cp
+
 	for dir_key in baked:
-		var pd: Dictionary = baked[dir_key]
+		var value = baked[dir_key]
+
+		# v1 format: value is a portal_id string
+		if value is String:
+			var portal_id: String = value
+			if dir_key == "default":
+				# "default" references the defaultSpawn in stage config
+				var ds: Dictionary = _stage_config.get("defaultSpawn", {})
+				if not ds.is_empty():
+					var ds_pos_arr: Array = ds.get("position", [0, 0, 0])
+					var ds_pos := Vector3(float(ds_pos_arr[0]), 1.0, float(ds_pos_arr[2]))
+					var ds_dir: String = str(ds.get("direction", "north"))
+					var ds_rot: float = DIRECTION_ROTATIONS.get(ds_dir, 0.0)
+					result["default"] = {
+						"spawn_pos": ds_pos,
+						"trigger_pos": ds_pos,
+						"default_rotation": ds_rot,
+					}
+			elif config_portals_by_id.has(portal_id):
+				result[dir_key] = _compute_portal_from_config(config_portals_by_id[portal_id], dir_key)
+			else:
+				push_warning("[ValleyField] Portal ID '%s' not found in stage config for dir '%s'" % [portal_id, dir_key])
+			if result.has(dir_key):
+				print("[ValleyField]   v1 portal: '%s' (id=%s) → gate=%s spawn=%s trigger=%s" % [
+					dir_key, portal_id,
+					result[dir_key].get("gate_pos", "n/a"),
+					result[dir_key]["spawn_pos"],
+					result[dir_key]["trigger_pos"]])
+			continue
+
+		# Legacy format: value is a dictionary with baked positions
+		var pd: Dictionary = value
 		if dir_key == "default":
 			var sp: Array = pd.get("spawn", [0, 1, 0])
 			result["default"] = {
@@ -773,6 +801,31 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 			result[dir_key]["spawn_pos"],
 			result[dir_key]["trigger_pos"]])
 	return result
+
+
+## Compute portal positions from a config portal entry.
+## Gate rotation and spawn/trigger offsets use the config direction (physical orientation).
+## Only the compass label uses the game direction (rotated label).
+func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictionary:
+	var pos_arr: Array = portal.get("position", [0, 0, 0])
+	var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+
+	# Use the config direction for gate rotation and outward vector
+	var config_dir: String = str(portal.get("direction", "north"))
+	var base_rot: float = DIRECTION_ROTATIONS.get(config_dir, 0.0)
+	var gate_rot := Vector3(0.0, base_rot, 0.0)
+	var outward := Vector2(-sin(base_rot), -cos(base_rot))
+
+	var spawn_pos := Vector3(gate_pos.x + outward.x * 3.0, 1.0, gate_pos.z + outward.y * 3.0)
+	var trigger_pos := Vector3(gate_pos.x + outward.x * 7.0, 0.0, gate_pos.z + outward.y * 7.0)
+
+	return {
+		"gate_pos": gate_pos,
+		"spawn_pos": spawn_pos,
+		"trigger_pos": trigger_pos,
+		"gate_rot": gate_rot,
+		"compass_label": game_dir.substr(0, 1).to_upper(),
+	}
 
 
 ## Build portal data from config JSON portals[] and defaultSpawn (fallback for non-quest sessions).
@@ -1295,9 +1348,9 @@ func _spawn_field_elements() -> void:
 			if _portal_data["default"].has("default_rotation"):
 				start_rot = _portal_data["default"]["default_rotation"]
 		else:
-			var entry_dir: String = str(OPPOSITE.get(warp_edge, ""))
-			if not entry_dir.is_empty() and _portal_data.has(entry_dir):
-				start_pos = _portal_data[entry_dir]["spawn_pos"]
+			var start_entry_dir: String = str(OPPOSITE.get(warp_edge, ""))
+			if not start_entry_dir.is_empty() and _portal_data.has(start_entry_dir):
+				start_pos = _portal_data[start_entry_dir]["spawn_pos"]
 				start_rot = _dir_to_yaw(warp_edge)
 			else:
 				for dir in _portal_data:
@@ -1309,27 +1362,101 @@ func _spawn_field_elements() -> void:
 		start_warp.global_position = Vector3(start_pos.x, 0.0, start_pos.z)
 		start_warp.rotation.y = start_rot
 
-	# AreaWarp on end cells at warp_edge exit
-	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
+	# Area warps — placed at portals that have no connection (unconnected exits).
+	# Behave exactly like gates (locked/open based on enemies, waypoints, triggers)
+	# but use the AreaWarp model to indicate a section transition.
+	var sections_for_warp: Array = SessionManager.get_field_sections()
+	var current_section_data: Dictionary = sections_for_warp[section_idx_for_warp] if section_idx_for_warp < sections_for_warp.size() else {}
+	var entry_dir: String = str(current_section_data.get("entry_direction", ""))
+	var exit_dir: String = str(current_section_data.get("exit_direction", ""))
+	var room_has_enemies: bool = _cell_has_enemies(_current_cell)
+
+	for portal_dir in _portal_data:
+		if portal_dir == "default":
+			continue
+		if connections.has(portal_dir):
+			continue  # Has a connection — handled by gate logic above
+
+		# Determine warp target based on direction
+		var target_section := 0
+		var target_cell := ""
+		var target_position := Vector3.ZERO
+		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir)
+		var is_entry: bool = (portal_dir == entry_dir)
+
+		if is_exit and section_idx_for_warp + 1 < sections_for_warp.size():
+			var next_sec: Dictionary = sections_for_warp[section_idx_for_warp + 1]
+			target_section = section_idx_for_warp + 1
+			target_cell = str(next_sec.get("start_pos", ""))
+		elif is_entry and section_idx_for_warp > 0:
+			var prev_sec: Dictionary = sections_for_warp[section_idx_for_warp - 1]
+			target_section = section_idx_for_warp - 1
+			target_cell = str(prev_sec.get("end_pos", ""))
+		else:
+			continue  # No valid target — skip
+
+		var pd: Dictionary = _portal_data[portal_dir]
+		var aw_gate_pos: Vector3 = pd.get("gate_pos", pd["trigger_pos"])
+		var aw_gate_rot: Vector3 = pd.get("gate_rot", Vector3.ZERO)
+		var aw_trigger_pos: Vector3 = pd["trigger_pos"]
+		var aw_spawn_pos: Vector3 = pd["spawn_pos"]
+
+		# Open/locked state — same logic as regular gates
+		var is_spawn_edge: bool = (portal_dir == _spawn_edge)
+		var is_open: bool = is_spawn_edge or not room_has_enemies
+		var is_delayed: bool = is_spawn_edge  # Delay trigger on entry edge
+
+		# Gate model — AreaWarp instead of Gate
 		var area_warp := AreaWarpScript.new()
 		area_warp.auto_collect = false
-		area_warp.name = "WarpEdgeAreaWarp"
-		var objectives_pending := _has_pending_objectives()
-		area_warp.element_state = "locked" if objectives_pending else "open"
+		area_warp.name = "AreaWarp_%s" % portal_dir
+		area_warp.element_state = "open" if is_open else "locked"
 		add_child(area_warp)
-		area_warp.global_position = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
-		area_warp.rotation.y = _portal_data[warp_edge].get("gate_rot", Vector3.ZERO).y
-		if objectives_pending:
-			_objective_locked_exits.append(area_warp)
+		area_warp.global_position = aw_gate_pos
+		area_warp.rotation = aw_gate_rot
 
-	# Entry-side area warp for transition sections (back to previous section)
-	var sections_for_entry: Array = SessionManager.get_field_sections()
-	var section_idx_for_entry: int = SessionManager.get_current_section()
-	if section_idx_for_entry < sections_for_entry.size():
-		var current_section: Dictionary = sections_for_entry[section_idx_for_entry]
-		var entry_dir: String = str(current_section.get("entry_direction", ""))
-		if not entry_dir.is_empty() and _portal_data.has(entry_dir) and section_idx_for_entry > 0:
-			_spawn_area_warp_object(Vector3.ZERO, 0.0, 0, "", Vector3.ZERO, entry_dir, "%s\n← prev section" % entry_dir.to_upper())
+		# Gate trigger — same as _create_gate_trigger but transitions to another section
+		var t_section := target_section
+		var t_cell := target_cell
+		var t_pos := target_position
+		var aw_callback := func(_body: Node3D) -> void:
+			if _body.is_in_group("player"):
+				print("[ValleyField] AreaWarp %s activated → section %d, cell %s" % [portal_dir, t_section, t_cell])
+				SessionManager.set_current_section(t_section)
+				SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+					"current_cell_pos": t_cell,
+					"spawn_edge": "",
+					"spawn_position": [t_pos.x, t_pos.y, t_pos.z],
+					"keys_collected": {},
+					"gates_opened": {},
+					"visited_cells": {},
+					"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+				})
+		_create_fallback_trigger("GateTrigger_%s" % portal_dir, aw_trigger_pos, aw_callback, is_delayed, not is_open)
+
+		# Waypoint — same as regular gates
+		var wp_pos := Vector3(aw_trigger_pos.x, 1.5, aw_trigger_pos.z)
+		var waypoint := WaypointScript.new()
+		add_child(waypoint)
+		waypoint.global_position = wp_pos
+		waypoint._base_y = waypoint.position.y
+		waypoint.rotation.y = _facing_yaw(wp_pos, aw_spawn_pos)
+		waypoint.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
+			if mat is StandardMaterial3D:
+				(mat as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
+		)
+		if is_spawn_edge:
+			waypoint.mark_unvisited()
+		else:
+			waypoint.mark_new()
+
+		# Debug spheres (gate=yellow, spawn=green, trigger=red)
+		_add_debug_sphere(aw_gate_pos, Color(1, 1, 0), "GateMark_%s" % portal_dir)
+		_add_debug_sphere(aw_spawn_pos, Color(0, 1, 0), "SpawnMark_%s" % portal_dir)
+		_add_debug_sphere(aw_trigger_pos, Color(1, 0, 0), "TriggerMark_%s" % portal_dir)
+
+		print("[FieldElements] AreaWarp '%s' → gate=%s trigger=%s open=%s target=s%d/%s" % [
+			portal_dir, aw_gate_pos, aw_trigger_pos, is_open, target_section, target_cell])
 
 	# End cells WITHOUT warp_edge — defer telepipe until room clear
 	# Skip if any object already provides a telepipe (explicit telepipe object or dialog action)
@@ -1416,29 +1543,28 @@ func _spawn_field_elements() -> void:
 		else:
 			# Regular gate — open if entry, visited, or room has no enemies
 			var target_visited: bool = _visited_cells.has(str(connections[dir]))
-			var room_has_enemies: bool = _cell_has_enemies(_current_cell)
-			var is_open: bool = (dir == _spawn_edge) or target_visited or not room_has_enemies
+			var gate_is_open: bool = (dir == _spawn_edge) or target_visited or not room_has_enemies
 			var gate := GateScript.new()
 			add_child(gate)
 			gate.global_position = gate_pos
 			gate.rotation = _portal_data[dir].get("gate_rot", Vector3.ZERO)
 			_fixup_gate_materials(gate)
 			gate._setup_laser_material()
-			if is_open:
+			if gate_is_open:
 				gate.open()
 			_fix_gate_depth(gate)
 
 		# Waypoint — navigation marker inside the load trigger area
-		var wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)
-		var waypoint := WaypointScript.new()
-		add_child(waypoint)
-		waypoint.global_position = wp_pos
-		waypoint._base_y = waypoint.position.y  # Re-capture after repositioning
+		var gate_wp_pos := Vector3(trigger_pos.x, 1.5, trigger_pos.z)
+		var gate_waypoint := WaypointScript.new()
+		add_child(gate_waypoint)
+		gate_waypoint.global_position = gate_wp_pos
+		gate_waypoint._base_y = gate_waypoint.position.y  # Re-capture after repositioning
 		# Face toward spawn point so front faces the player approaching from the room
 		var spawn_pt: Vector3 = _portal_data[dir].get("spawn_pos", trigger_pos)
-		waypoint.rotation.y = _facing_yaw(wp_pos, spawn_pt)
+		gate_waypoint.rotation.y = _facing_yaw(gate_wp_pos, spawn_pt)
 		# Disable backface culling so it's visible from any angle
-		waypoint.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
+		gate_waypoint.apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
 			if mat is StandardMaterial3D:
 				(mat as StandardMaterial3D).cull_mode = BaseMaterial3D.CULL_DISABLED
 		)
@@ -1446,13 +1572,13 @@ func _spawn_field_elements() -> void:
 		var target_cell_pos: String = str(connections[dir])
 		var wp_state: String
 		if dir == _spawn_edge:
-			waypoint.mark_unvisited()
+			gate_waypoint.mark_unvisited()
 			wp_state = "came_from"
 		elif _visited_cells.has(target_cell_pos):
-			waypoint.mark_visited()
+			gate_waypoint.mark_visited()
 			wp_state = "visited_prior"
 		else:
-			waypoint.mark_new()
+			gate_waypoint.mark_new()
 			wp_state = "unvisited"
 		print("[Waypoint] dir=%s → target_cell=%s  state=%s" % [dir, target_cell_pos, wp_state])
 
@@ -1644,14 +1770,7 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				_spawn_warp_point(pos, w_section, w_cell, w_pos)
 			"area_warp":
-				var w_section: int = int(obj.get("warp_section", 0))
-				var w_cell: String = str(obj.get("warp_cell", ""))
-				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
-				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
-				var w_rot: float = float(obj.get("rotation_y", 0))
-				var w_portal: String = str(obj.get("portal_dir", ""))
-				var w_label: String = str(obj.get("label", ""))
-				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos, w_portal, w_label)
+				pass  # Area warps are auto-generated from portal data, not from objects
 			"quest_item":
 				var qi_id: String = str(obj.get("item_id", ""))
 				var qi_label: String = str(obj.get("item_label", ""))
@@ -1736,14 +1855,7 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
 				_spawn_warp_point(pos, w_section, w_cell, w_pos)
 			"area_warp":
-				var w_section: int = int(obj.get("warp_section", 0))
-				var w_cell: String = str(obj.get("warp_cell", ""))
-				var w_pos_arr: Array = obj.get("warp_position", [0, 0, 0])
-				var w_pos := Vector3(w_pos_arr[0], w_pos_arr[1], w_pos_arr[2])
-				var w_rot: float = float(obj.get("rotation_y", 0))
-				var w_portal: String = str(obj.get("portal_dir", ""))
-				var w_label: String = str(obj.get("label", ""))
-				_spawn_area_warp_object(pos, w_rot, w_section, w_cell, w_pos, w_portal, w_label)
+				pass  # Area warps are auto-generated from portal data, not from objects
 			"quest_item":
 				if state != "collected":
 					var qi_id: String = str(obj.get("item_id", ""))
@@ -2216,95 +2328,6 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 	print("[CellObjects] WarpPoint at %s → section %d, cell %s, position %s" % [pos, target_section, target_cell, target_position])
 
 
-func _spawn_area_warp_object(pos: Vector3, rot_y: float, target_section: int, target_cell: String, target_position: Vector3, portal_dir: String = "", label_text: String = "") -> void:
-	# Auto-resolve target when not explicitly set
-	if target_cell.is_empty() and not portal_dir.is_empty():
-		var sections: Array = SessionManager.get_field_sections()
-		var section_idx: int = SessionManager.get_current_section()
-		var section: Dictionary = sections[section_idx] if section_idx < sections.size() else {}
-		var entry_dir: String = str(section.get("entry_direction", ""))
-		var exit_dir: String = str(section.get("exit_direction", ""))
-
-		if portal_dir == entry_dir and section_idx > 0:
-			# Going back to previous section's end cell
-			var prev_section: Dictionary = sections[section_idx - 1]
-			target_section = section_idx - 1
-			target_cell = str(prev_section.get("end_pos", ""))
-			# Spawn at the warp_edge portal spawn point in the target cell
-			print("[CellObjects] AreaWarp auto-resolved → prev section %d, cell %s" % [target_section, target_cell])
-		elif portal_dir == exit_dir and section_idx + 1 < sections.size():
-			# Going forward to next section's start cell
-			var next_section: Dictionary = sections[section_idx + 1]
-			target_section = section_idx + 1
-			target_cell = str(next_section.get("start_pos", ""))
-			print("[CellObjects] AreaWarp auto-resolved → next section %d, cell %s" % [target_section, target_cell])
-
-	# Place the gate model at the gate position (not the trigger position)
-	var gate_pos := pos
-	var spawn_pos := pos
-	var trigger_pos := pos
-	if not portal_dir.is_empty() and _portal_data.has(portal_dir):
-		var pd: Dictionary = _portal_data[portal_dir]
-		gate_pos = pd.get("gate_pos", pos)
-		spawn_pos = pd.get("spawn_pos", pos)
-		trigger_pos = pd.get("trigger_pos", pos)
-
-	var aw := AreaWarpScript.new()
-	aw.auto_collect = false
-	aw.element_state = "open"
-	aw.name = "AreaWarpObj_%s" % portal_dir
-	add_child(aw)
-	aw.global_position = gate_pos
-	aw.rotation.y = rot_y
-
-	# Create trigger area at the trigger position (deep in corridor)
-	var trigger := Area3D.new()
-	trigger.name = "AreaWarpObjTrigger_%s" % portal_dir
-	trigger.collision_layer = 0
-	trigger.collision_mask = 2
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(4.0, 3.0, 4.0)
-	shape.shape = box
-	shape.position.y = 1.5
-	trigger.add_child(shape)
-	add_child(trigger)
-	trigger.global_position = trigger_pos
-	trigger.body_entered.connect(func(body: Node3D) -> void:
-		if body.is_in_group("player"):
-			print("[ValleyField] AreaWarp object activated → section %d, cell %s" % [target_section, target_cell])
-			SessionManager.set_current_section(target_section)
-			SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-				"current_cell_pos": target_cell,
-				"spawn_edge": "",
-				"spawn_position": [target_position.x, target_position.y, target_position.z],
-				"keys_collected": {},
-				"gates_opened": {},
-				"visited_cells": {},
-				"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
-			})
-	)
-
-	# DEBUG: Sphere markers — gate=yellow, spawn=green, trigger=red
-	_add_debug_sphere(gate_pos, Color(1, 1, 0), "AreaWarpMark_gate_%s" % portal_dir)
-	_add_debug_sphere(spawn_pos, Color(0, 1, 0), "AreaWarpMark_spawn_%s" % portal_dir)
-	_add_debug_sphere(trigger_pos, Color(1, 0, 0), "AreaWarpMark_trigger_%s" % portal_dir)
-
-	# Label
-	var display_label := label_text if not label_text.is_empty() else "%s EXIT\n→ prev section" % portal_dir.to_upper()
-	var label := Label3D.new()
-	label.name = "AreaWarpLabel_%s" % portal_dir
-	label.text = display_label
-	label.font_size = 48
-	label.pixel_size = 0.01
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.no_depth_test = true
-	label.modulate = Color(0.29, 0.62, 1.0)
-	label.outline_modulate = Color(0, 0, 0, 1)
-	label.outline_size = 8
-	add_child(label)
-	label.global_position = Vector3(gate_pos.x, 3.5, gate_pos.z)
-	print("[CellObjects] AreaWarp at gate=%s trigger=%s (rot=%.2f) → section %d, cell %s" % [gate_pos, trigger_pos, rot_y, target_section, target_cell])
 
 
 ## Wire switch.activated → linked fences.disable()
@@ -2347,18 +2370,19 @@ func _lock_gates_for_enemies() -> void:
 					print("[CellObjects] Gate %s locked (enemies present)" % dir)
 					break
 
-	# Lock warp_edge area warp + exit trigger until room clear
-	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
-	if not warp_edge.is_empty():
-		var warp_aw := _find_child_by_name(self, "WarpEdgeAreaWarp") as AreaWarp
-		if warp_aw:
-			warp_aw.element_state = "locked"
-			warp_aw._apply_state()
-			_warp_edge_locked.append(warp_aw)
+	# Lock area warps (like gates) until room clear — skip entry direction
+	for child in get_children():
+		if child is AreaWarp and child.name.begins_with("AreaWarp_"):
+			var aw_dir: String = child.name.trim_prefix("AreaWarp_")
+			if aw_dir == _spawn_edge:
+				continue  # Don't lock entry area warp
+			child.element_state = "locked"
+			child._apply_state()
+			_warp_edge_locked.append(child)
 			# Add physical blocker
 			var blocker := StaticBody3D.new()
-			blocker.name = "WarpEdgeBlocker"
-			blocker.collision_layer = 1  # Environment layer
+			blocker.name = "AreaWarpBlocker_%s" % aw_dir
+			blocker.collision_layer = 1
 			var bshape := CollisionShape3D.new()
 			var bbox := BoxShape3D.new()
 			bbox.size = Vector3(6, 4, 1.5)
@@ -2366,45 +2390,11 @@ func _lock_gates_for_enemies() -> void:
 			bshape.position.y = 2.0
 			blocker.add_child(bshape)
 			add_child(blocker)
-			blocker.global_position = warp_aw.global_position
-			blocker.global_rotation = warp_aw.global_rotation
+			blocker.global_position = child.global_position
+			blocker.global_rotation = child.global_rotation
 			_warp_edge_locked.append(blocker)
-			print("[CellObjects] AreaWarp locked (enemies present) [warp_edge=%s]" % warp_edge)
-		# Disable exit trigger
-		var exit_trigger := _find_child_by_name(self, "ExitTrigger") as Area3D
-		if exit_trigger:
-			exit_trigger.monitoring = false
-			_warp_edge_locked.append(exit_trigger)
-		if _room_minimap:
-			_room_minimap.set_gate_locked(warp_edge, true)
-
-	# Lock area_warp objects like gates — skip entry direction and visited cells
-	for child in get_children():
-		if child is AreaWarp and child.name.begins_with("AreaWarpObj_"):
-			var aw_dir: String = child.name.trim_prefix("AreaWarpObj_")
-			if aw_dir == _spawn_edge:
-				continue  # Don't lock entry area warp
-			if _visited_cells.has(str(connections.get(aw_dir, ""))):
-				continue  # Don't lock area warps to visited cells
-			child.element_state = "locked"
-			child._apply_state()
-			_warp_edge_locked.append(child)
-			# Add physical blocker
-			var aw_blocker := StaticBody3D.new()
-			aw_blocker.name = "AreaWarpBlocker_%s" % aw_dir
-			aw_blocker.collision_layer = 1
-			var aw_bshape := CollisionShape3D.new()
-			var aw_bbox := BoxShape3D.new()
-			aw_bbox.size = Vector3(6, 4, 1.5)
-			aw_bshape.shape = aw_bbox
-			aw_bshape.position.y = 2.0
-			aw_blocker.add_child(aw_bshape)
-			add_child(aw_blocker)
-			aw_blocker.global_position = child.global_position
-			aw_blocker.global_rotation = child.global_rotation
-			_warp_edge_locked.append(aw_blocker)
-			# Disable matching trigger
-			var aw_trigger := _find_child_by_name(self, "AreaWarpObjTrigger_%s" % aw_dir) as Area3D
+			# Disable matching gate trigger (uses same GateTrigger_ naming)
+			var aw_trigger := _find_child_by_name(self, "GateTrigger_%s" % aw_dir) as Area3D
 			if aw_trigger:
 				aw_trigger.monitoring = false
 				_warp_edge_locked.append(aw_trigger)
@@ -2439,23 +2429,20 @@ func _check_room_clear() -> void:
 				_room_minimap.set_gate_locked(dir, false)
 	_room_gates_locked.clear()
 
-	# Unlock warp_edge area warp + area warp objects
+	# Unlock area warps (same pattern as gates above)
 	for node in _warp_edge_locked:
 		if is_instance_valid(node):
 			if node is AreaWarp:
 				node.element_state = "open"
 				node._apply_state()
-				var aw_dir: String = node.name.trim_prefix("AreaWarpObj_") if node.name.begins_with("AreaWarpObj_") else ""
+				var aw_dir: String = node.name.trim_prefix("AreaWarp_") if node.name.begins_with("AreaWarp_") else ""
 				if _room_minimap and not aw_dir.is_empty():
 					_room_minimap.set_gate_locked(aw_dir, false)
-				print("[CellObjects] AreaWarp unlocked (room cleared)")
+				print("[CellObjects] AreaWarp unlocked (room cleared) [dir=%s]" % aw_dir)
 			elif node is StaticBody3D:
 				node.queue_free()
 			elif node is Area3D:
 				node.monitoring = true
-	var warp_e: String = str(_current_cell.get("warp_edge", ""))
-	if not warp_e.is_empty() and _room_minimap:
-		_room_minimap.set_gate_locked(warp_e, false)
 	_warp_edge_locked.clear()
 
 	# Drop key on room clear if configured
@@ -2839,4 +2826,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_F9:
 				_toggle_all_collision()
+				get_viewport().set_input_as_handled()
+			KEY_K:
+				print("[DEBUG] Kill all enemies (%d)" % _room_enemies.size())
+				for enemy in _room_enemies:
+					if is_instance_valid(enemy) and enemy.element_state != "dead":
+						enemy.take_damage(9999)
 				get_viewport().set_input_as_handled()

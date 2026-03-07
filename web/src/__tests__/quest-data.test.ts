@@ -106,23 +106,18 @@ describe('Quest files — portals', () => {
     expect(errors, `Missing portals:\n${errors.join('\n')}`).toHaveLength(0);
   });
 
-  it.each(quests)('$filename: non-default baked portals have compass_label', ({ data }) => {
+  it.each(quests)('$filename: portals are v1 string references', ({ data }) => {
     const errors: string[] = [];
     for (const section of data.sections) {
       for (const cell of section.cells || []) {
-        // Only check cells that have baked portals (from stages with portal configs)
-        const cfg = stageConfigs[cell.stage_id];
-        if (!cfg || !Array.isArray(cfg.portals) || cfg.portals.length === 0) continue;
-
-        for (const [dir, portal] of Object.entries(cell.portals || {}) as [string, any][]) {
-          if (dir === 'default') continue;
-          if (!portal.compass_label) {
-            errors.push(`${cell.pos}/${dir}: missing compass_label`);
+        for (const [dir, value] of Object.entries(cell.portals || {}) as [string, any][]) {
+          if (typeof value !== 'string') {
+            errors.push(`${cell.pos}/${dir}: portal should be string (v1), got ${typeof value}`);
           }
         }
       }
     }
-    expect(errors, `Portals missing compass_label:\n${errors.join('\n')}`).toHaveLength(0);
+    expect(errors, `Non-v1 portals:\n${errors.join('\n')}`).toHaveLength(0);
   });
 });
 
