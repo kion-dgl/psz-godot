@@ -121,6 +121,22 @@
                 14
               ],
               "enemy_id": "ghowl"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_valley_1",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "These creatures are far more aggressive than the old field reports indicated. Interesting."
+                }
+              ]
             }
           ]
         },
@@ -290,6 +306,26 @@
               ],
               "enemy_id": "grimble",
               "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_valley_2",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "They attacked without any provocation. That's not normal territorial behavior."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Most wildlife only fights when cornered. These are seeking us out."
+                }
+              ]
             }
           ]
         },
@@ -563,6 +599,22 @@
                 -14.8
               ],
               "enemy_id": "grimble"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_valley_3",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "I've documented everything I need from the valley. Let's move on to the wetlands and see if the pattern holds."
+                }
+              ]
             }
           ]
         }
@@ -656,6 +708,22 @@
                 4.1
               ],
               "enemy_id": "porel"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_wetland_1",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Same aggression here, even in a completely different ecosystem. This isn't isolated to one species."
+                }
+              ]
             }
           ]
         },
@@ -865,6 +933,26 @@
                 15.3
               ],
               "enemy_id": "porel"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_wetland_2",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "The growth patterns are unusual too. These creatures are mature, but the population density is too high for natural reproduction."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Something is accelerating their development. I'm not sure what yet."
+                }
+              ]
             }
           ]
         },
@@ -1046,6 +1134,22 @@
                 9.2
               ],
               "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_wetland_3",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Two biomes, same abnormal behavior. One more area should give me enough data to start forming a hypothesis."
+                }
+              ]
             }
           ]
         }
@@ -1150,6 +1254,22 @@
                 7.3
               ],
               "enemy_id": "stagg"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_snow_1",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Even here in the snowfield. Whatever is causing this, it's not limited to one region."
+                }
+              ]
             }
           ]
         },
@@ -1534,6 +1654,26 @@
                 -4.4
               ],
               "enemy_id": "hildegao"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_snow_2",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "The aggression is consistent across all three biomes. The old research team's notes didn't mention anything like this."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Either it started after they lost funding, or they never got far enough to notice."
+                }
+              ]
             }
           ]
         },
@@ -1609,19 +1749,23 @@
               "dialog": [
                 {
                   "speaker": "Dr. Carlo",
-                  "text": "Look at these rabbits. They're completely docile — no aggression at all."
+                  "text": "Wait — look at these rabbits. They're not attacking us."
                 },
                 {
                   "speaker": "Dr. Carlo",
-                  "text": "Every other species we've encountered has been unnaturally hostile. But not these."
+                  "text": "Every other creature across three biomes has been hostile on sight. But these are completely calm."
                 },
                 {
                   "speaker": "Dr. Carlo",
-                  "text": "I need to take a sample back to the lab. Whatever is affecting the wildlife, these rabbits might hold the key."
+                  "text": "This wasn't what I expected to find, but it might be more valuable than the survey itself."
                 },
                 {
                   "speaker": "Dr. Carlo",
-                  "text": "Excellent work escorting me. Let's head back — I have a lot of analysis to do."
+                  "text": "If I can figure out why these rabbits are unaffected, it could explain what's driving the aggression in everything else."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "I'm going to collect a sample. Let's head back to the lab — I have a lot of work ahead of me."
                 }
               ]
             }
