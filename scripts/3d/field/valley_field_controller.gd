@@ -343,12 +343,7 @@ func _ready() -> void:
 		var is_locked_gate: bool = is_key_gate and dir == key_gate_dir and not _gates_opened.has(str(_current_cell.get("pos", "")))
 		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
-	# Create exit trigger on end cell warp_edge
-	if not warp_edge.is_empty() and _portal_data.has(warp_edge):
-		_create_exit_trigger(warp_edge, _portal_data[warp_edge])
-		# DEBUG: Label for exit gate too
-		var exit_pos: Vector3 = _portal_data[warp_edge].get("gate_pos", _portal_data[warp_edge]["trigger_pos"])
-		_add_gate_label(warp_edge + " (EXIT)", exit_pos, "next section")
+	# (warp_edge exit is handled by area warp auto-generation in _spawn_field_elements)
 
 	# Place key pickup if this cell has one
 	if _current_cell.get("has_key", false):
@@ -439,11 +434,6 @@ func _unlock_objective_exits() -> void:
 		if is_instance_valid(warp):
 			warp.set_state("open")
 	_objective_locked_exits.clear()
-
-	# Enable objective-locked exit triggers
-	var exit_trigger := _find_child_by_name(self, "ExitTrigger") as Area3D
-	if exit_trigger and not exit_trigger.monitoring:
-		exit_trigger.monitoring = true
 
 	# Update minimap
 	var we: String = str(_current_cell.get("warp_edge", ""))
@@ -1460,10 +1450,10 @@ func _spawn_field_elements() -> void:
 		else:
 			waypoint.mark_new()
 
-		# Debug label + spheres
-		var dir_label: String = portal_dir.to_upper()
-		var label_text: String = ("%s\n→ next" % dir_label) if is_exit else ("%s\n← prev" % dir_label)
-		_add_gate_label(portal_dir, aw_gate_pos, "s%d/%s" % [target_section, target_cell])
+		# Debug spheres (gate=yellow, spawn=green, trigger=red)
+		_add_debug_sphere(aw_gate_pos, Color(1, 1, 0), "GateMark_%s" % portal_dir)
+		_add_debug_sphere(aw_spawn_pos, Color(0, 1, 0), "SpawnMark_%s" % portal_dir)
+		_add_debug_sphere(aw_trigger_pos, Color(1, 0, 0), "TriggerMark_%s" % portal_dir)
 
 		print("[FieldElements] AreaWarp '%s' → gate=%s trigger=%s open=%s target=s%d/%s" % [
 			portal_dir, aw_gate_pos, aw_trigger_pos, is_open, target_section, target_cell])
