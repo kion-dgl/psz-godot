@@ -1376,7 +1376,6 @@ func _spawn_field_elements() -> void:
 	# These are gates that transition to a different grid section.
 	# Position, rotation, spawn, and trigger all come from portal data.
 	var sections_for_warp: Array = SessionManager.get_field_sections()
-	var section_idx_for_warp: int = SessionManager.get_current_section()
 	var current_section_data: Dictionary = sections_for_warp[section_idx_for_warp] if section_idx_for_warp < sections_for_warp.size() else {}
 	var entry_dir: String = str(current_section_data.get("entry_direction", ""))
 	var exit_dir: String = str(current_section_data.get("exit_direction", ""))
