@@ -813,14 +813,16 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 	return result
 
 
-## Compute portal positions from a config portal entry, using the game direction
-## for gate_rot and spawn/trigger offsets.
+## Compute portal positions from a config portal entry.
+## Gate rotation and spawn/trigger offsets use the config direction (physical orientation).
+## Only the compass label uses the game direction (rotated label).
 func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictionary:
 	var pos_arr: Array = portal.get("position", [0, 0, 0])
 	var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 
-	# Gate rotation and outward direction based on game direction (not config direction)
-	var base_rot: float = DIRECTION_ROTATIONS.get(game_dir, 0.0)
+	# Use the config direction for gate rotation and outward vector
+	var config_dir: String = str(portal.get("direction", "north"))
+	var base_rot: float = DIRECTION_ROTATIONS.get(config_dir, 0.0)
 	var gate_rot := Vector3(0.0, base_rot, 0.0)
 	var outward := Vector2(-sin(base_rot), -cos(base_rot))
 
