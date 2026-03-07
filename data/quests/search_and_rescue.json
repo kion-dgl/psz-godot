@@ -503,17 +503,6 @@
           "path_order": 0,
           "objects": [
             {
-              "type": "area_warp",
-              "position": [
-                3.31,
-                0,
-                21.17
-              ],
-              "portal_dir": "south",
-              "label": "SOUTH EXIT\n\u2192 prev section",
-              "rotation_y": 3.14
-            },
-            {
               "type": "dialog_trigger",
               "position": [
                 3.3,
