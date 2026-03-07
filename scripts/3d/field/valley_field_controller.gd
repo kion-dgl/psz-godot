@@ -2263,13 +2263,15 @@ func _is_companion_dialog(dlg: Array) -> bool:
 	## Allows empty-speaker (narrator) lines mixed in.
 	if dlg.is_empty() or not _companion:
 		return false
-	var comp_id: String = _companion.companion_id
+	var comp_id: String = _companion.companion_id.to_lower()
 	var has_companion_line := false
 	for page in dlg:
 		var speaker: String = str(page.get("speaker", "")).to_lower()
 		if speaker.is_empty():
 			continue  # narrator line — ok
-		if speaker == comp_id:
+		# Normalize "Dr. Carlo" → "dr_carlo" for comparison
+		var normalized: String = speaker.replace(" ", "_").replace(".", "")
+		if normalized == comp_id or speaker == comp_id:
 			has_companion_line = true
 		else:
 			return false  # another named speaker — use dialog box
