@@ -729,8 +729,9 @@ export default function RetargetViewer() {
           Array.from(track.times),
           Array.from(dstValues),
         ));
-      } else if (prop === '.position') {
-        // Scale position tracks to match PSZ model size
+      } else if (prop === '.position' && boneName === 'bone_000') {
+        // Only transfer root bone position (walking/falling). Other bones have
+        // different rest offsets and bone lengths that would distort the mesh.
         const srcValues = track.values;
         const dstValues = new Float32Array(srcValues.length);
 
