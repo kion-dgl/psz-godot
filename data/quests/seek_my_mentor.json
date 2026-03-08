@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-07",
+  "last_updated": "2026-03-08",
   "id": "seek_my_mentor",
   "name": "Seek My Mentor",
   "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Vash, who went missing three days ago and hasn't come back.",
@@ -30,6 +30,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
           "objects": [
@@ -53,9 +55,7 @@
                 }
               ]
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         },
         {
           "pos": "1,2",
@@ -78,10 +78,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 1,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
           "objects": [
             {
               "type": "enemy",
@@ -138,6 +138,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
           "objects": [
@@ -197,9 +199,7 @@
                 }
               ]
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         },
         {
           "pos": "1,3",
@@ -220,35 +220,35 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 3,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                -8,
-                0,
-                5
+                15,
+                1,
+                10.3
               ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
               "position": [
-                2,
-                0,
-                -3
+                11.2,
+                1,
+                8.4
               ],
               "enemy_id": "batt"
             },
             {
               "type": "enemy",
               "position": [
-                8,
-                0,
-                7
+                7.9,
+                1,
+                11.5
               ],
               "enemy_id": "kapantha"
             }
@@ -273,10 +273,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 4,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
           "objects": [
             {
               "type": "enemy",
@@ -346,6 +346,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 5,
           "objects": [
@@ -361,27 +363,27 @@
             {
               "type": "enemy",
               "position": [
-                -12,
-                0,
-                5
+                10.8,
+                1,
+                3.1
               ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
               "position": [
-                -6,
-                0,
-                8
+                7.5,
+                1,
+                8.4
               ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
               "position": [
-                3,
-                0,
-                3
+                6,
+                1,
+                13.1
               ],
               "enemy_id": "batt"
             },
@@ -405,9 +407,7 @@
                 }
               ]
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         },
         {
           "pos": "0,3",
@@ -427,6 +427,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "north",
           "path_order": 6,
           "objects": [
@@ -439,10 +441,11 @@
               ],
               "trigger_id": "ren_end_a",
               "trigger_size": [
-                24.5,
-                3,
-                4
+                1,
+                1,
+                1
               ],
+              "trigger_condition": "room_clear",
               "dialog": [
                 {
                   "speaker": "Ren",
@@ -497,9 +500,7 @@
               "enemy_id": "rohjade",
               "wave": 2
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         }
       ]
     },
@@ -527,6 +528,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
           "objects": [
@@ -550,9 +553,7 @@
                 }
               ]
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         },
         {
           "pos": "1,2",
@@ -575,10 +576,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 1,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
           "objects": [
             {
               "type": "enemy",
@@ -637,10 +638,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 2,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
           "objects": [
             {
               "type": "enemy",
@@ -688,21 +689,17 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 3,
           "objects": [
             {
-              "type": "dialog_trigger",
+              "type": "quest_item",
               "position": [
-                0,
+                0.4,
                 1,
-                0
-              ],
-              "trigger_id": "ren_vash_gun",
-              "trigger_size": [
-                20,
-                4,
-                20
+                -13.7
               ],
               "dialog": [
                 {
@@ -713,14 +710,6 @@
                   "speaker": "Ren",
                   "text": "...we keep moving."
                 }
-              ]
-            },
-            {
-              "type": "quest_item",
-              "position": [
-                0.4,
-                1,
-                -13.7
               ],
               "item_id": "vash_gun",
               "item_label": "Vash Gun"
@@ -728,33 +717,31 @@
             {
               "type": "enemy",
               "position": [
-                -8,
-                0,
-                5
+                -4.1,
+                1,
+                8.7
               ],
               "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
               "position": [
-                6,
-                0,
-                3
+                0.2,
+                1,
+                4.1
               ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
               "position": [
-                -3,
-                0,
-                -5
+                4.7,
+                1,
+                7.5
               ],
               "enemy_id": "rohjade"
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         },
         {
           "pos": "1,0",
@@ -775,10 +762,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 4,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
           "objects": [
             {
               "type": "enemy",
@@ -792,18 +779,18 @@
             {
               "type": "enemy",
               "position": [
-                5,
-                0,
-                6
+                4.8,
+                1,
+                -12.7
               ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
               "position": [
-                -2,
-                0,
-                4
+                -0.7,
+                1,
+                -10.7
               ],
               "enemy_id": "rohjade"
             },
@@ -837,17 +824,17 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 5,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                -5,
-                0,
-                7
+                -1.5,
+                1,
+                -6.5
               ],
               "enemy_id": "kapantha"
             },
@@ -863,18 +850,18 @@
             {
               "type": "enemy",
               "position": [
-                9,
-                0,
-                3
+                -0.3,
+                1,
+                -12.4
               ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
               "position": [
-                -8,
-                0,
-                -4
+                -6,
+                1,
+                -12.9
               ],
               "enemy_id": "rumole"
             }
@@ -901,10 +888,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 6,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6,
           "objects": [
             {
               "type": "enemy",
@@ -976,10 +963,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 7,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
           "objects": [
             {
               "type": "enemy",
@@ -1036,6 +1023,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 8,
           "objects": [
@@ -1060,18 +1049,18 @@
             {
               "type": "enemy",
               "position": [
-                3,
-                0,
-                -4
+                1.7,
+                1,
+                4.3
               ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
               "position": [
-                8,
-                0,
-                5
+                -3,
+                1,
+                -10.3
               ],
               "enemy_id": "bullbatt"
             },
@@ -1095,9 +1084,7 @@
                 }
               ]
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         },
         {
           "pos": "2,1",
@@ -1116,35 +1103,35 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "",
-          "path_order": 9,
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 9,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                -4,
-                0,
-                3
+                -5.1,
+                1,
+                10.1
               ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
               "position": [
-                5,
-                0,
-                -6
+                1,
+                1,
+                5.2
               ],
               "enemy_id": "rumole"
             },
             {
               "type": "enemy",
               "position": [
-                -7,
-                0,
-                -3
+                4.1,
+                1,
+                7.6
               ],
               "enemy_id": "bullbatt"
             }
@@ -1167,6 +1154,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 10,
           "objects": [
@@ -1239,9 +1228,7 @@
                 }
               ]
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         }
       ]
     }
@@ -1281,6 +1268,5 @@
       "speaker": "Principal",
       "text": "Find Vash and bring him home. Be careful in there."
     }
-  ],
-  "report_to": "guild_counter"
+  ]
 }
