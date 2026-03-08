@@ -4,11 +4,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { assetUrl } from '../utils/assets';
 
-// PSZ model — using humar (pc_000) as reference
 const PSZ_MODEL_PATH = assetUrl('/player/pc_000/pc_000/pc_000_000.glb');
 const PSZ_TEXTURE_PATH = assetUrl('/player/pc_000/textures/pc_000_000.png');
-
-// PSO model — Humar with all animations
 const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
 
 const BONE_MARKER_RADIUS = 0.012;
@@ -20,10 +17,44 @@ interface BoneInfo {
   bone: THREE.Bone;
 }
 
+interface BoneTreeNode {
+  info: BoneInfo;
+  children: BoneTreeNode[];
+}
+
 interface BoneMarker {
   mesh: THREE.Mesh;
   boneName: string;
   side: 'psz' | 'pso';
+}
+
+// Build a tree from the flat depth-ordered bone list
+function buildBoneTree(bones: BoneInfo[]): BoneTreeNode[] {
+  const roots: BoneTreeNode[] = [];
+  const stack: BoneTreeNode[] = [];
+  for (const bone of bones) {
+    const node: BoneTreeNode = { info: bone, children: [] };
+    while (stack.length > 0 && stack[stack.length - 1].info.depth >= bone.depth) {
+      stack.pop();
+    }
+    if (stack.length === 0) {
+      roots.push(node);
+    } else {
+      stack[stack.length - 1].children.push(node);
+    }
+    stack.push(node);
+  }
+  return roots;
+}
+
+// Collect all descendant bone names (for hiding subtrees)
+function collectDescendantNames(node: BoneTreeNode): string[] {
+  const names: string[] = [];
+  for (const child of node.children) {
+    names.push(child.info.name);
+    names.push(...collectDescendantNames(child));
+  }
+  return names;
 }
 
 function collectBones(root: THREE.Object3D): BoneInfo[] {
@@ -58,8 +89,7 @@ function matchPsoScaleToPsz(pszModel: THREE.Object3D, psoModel: THREE.Object3D):
   const pszHeight = pszBox.max.y - pszBox.min.y;
   const psoHeight = psoBox.max.y - psoBox.min.y;
   if (psoHeight > 0 && pszHeight > 0) {
-    const scale = pszHeight / psoHeight;
-    psoModel.scale.multiplyScalar(scale);
+    psoModel.scale.multiplyScalar(pszHeight / psoHeight);
   }
 }
 
@@ -84,10 +114,12 @@ function createBoneMarkers(
   selectedBone: string | null,
   scene: THREE.Scene,
   side: 'psz' | 'pso',
+  disabledBones?: Set<string>,
 ): BoneMarker[] {
   const markers: BoneMarker[] = [];
   const geo = new THREE.SphereGeometry(BONE_MARKER_RADIUS, 8, 6);
   for (const bone of bones) {
+    if (disabledBones?.has(bone.name)) continue;
     const isSelected = bone.name === selectedBone;
     const mat = new THREE.MeshBasicMaterial({
       color: isSelected ? 0xffff00 : color,
@@ -101,6 +133,25 @@ function createBoneMarkers(
     markers.push({ mesh, boneName: bone.name, side });
   }
   return markers;
+}
+
+function createSelectedLabel(bone: BoneInfo, color: string, scene: THREE.Scene): THREE.Sprite {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d')!;
+  ctx.font = 'bold 24px monospace';
+  ctx.fillStyle = color;
+  ctx.fillText(bone.name, 4, 28);
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(1.6, 0.2, 1);
+  sprite.position.copy(bone.worldPos);
+  sprite.position.y += 0.06;
+  sprite.renderOrder = 1000;
+  scene.add(sprite);
+  return sprite;
 }
 
 interface SceneState {
@@ -118,6 +169,127 @@ interface SceneState {
   currentAction: THREE.AnimationAction | null;
   currentPszAction: THREE.AnimationAction | null;
   boneMarkers: BoneMarker[];
+  selectedLabels: THREE.Sprite[];
+}
+
+// Collapsible bone tree row component
+function BoneTreeRow({
+  node,
+  selectedBone,
+  onSelect,
+  collapsed,
+  onToggleCollapse,
+  color,
+  selectedColor,
+  mappings,
+  disabledBones,
+  onToggleDisable,
+  side,
+}: {
+  node: BoneTreeNode;
+  selectedBone: string | null;
+  onSelect: (name: string) => void;
+  collapsed: Set<string>;
+  onToggleCollapse: (name: string) => void;
+  color: string;
+  selectedColor: string;
+  mappings?: Record<string, string>;
+  disabledBones?: Set<string>;
+  onToggleDisable?: (name: string) => void;
+  side: 'psz' | 'pso';
+}) {
+  const isSelected = selectedBone === node.info.name;
+  const isCollapsed = collapsed.has(node.info.name);
+  const hasChildren = node.children.length > 0;
+  const isDisabled = disabledBones?.has(node.info.name);
+  const isMapped = mappings && node.info.name in mappings;
+
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+        {/* Collapse toggle */}
+        {hasChildren ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleCollapse(node.info.name); }}
+            style={{
+              width: '14px', height: '14px', padding: 0,
+              background: 'transparent', border: 'none',
+              color: '#666', cursor: 'pointer', fontSize: '9px',
+              flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            {isCollapsed ? '\u25b6' : '\u25bc'}
+          </button>
+        ) : (
+          <span style={{ width: '14px', flexShrink: 0 }} />
+        )}
+
+        {/* Disable toggle (PSO only) */}
+        {onToggleDisable && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleDisable(node.info.name); }}
+            title={isDisabled ? 'Show bone' : 'Hide bone'}
+            style={{
+              width: '14px', height: '14px', padding: 0,
+              background: 'transparent', border: 'none',
+              color: isDisabled ? '#555' : '#888', cursor: 'pointer', fontSize: '10px',
+              flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+          >
+            {isDisabled ? '\u25cb' : '\u25cf'}
+          </button>
+        )}
+
+        {/* Bone name button */}
+        <button
+          onClick={() => onSelect(node.info.name)}
+          style={{
+            flex: 1,
+            padding: '3px 6px',
+            paddingLeft: `${4 + node.info.depth * 10}px`,
+            background: isSelected ? (side === 'psz' ? '#2a4a2a' : '#4a2a2a') : isMapped ? '#2a2a3a' : 'transparent',
+            border: isSelected ? `1px solid ${selectedColor}` : '1px solid transparent',
+            borderRadius: '3px',
+            color: isDisabled ? '#444' : isSelected ? selectedColor : isMapped ? '#8888ff' : '#aaa',
+            cursor: 'pointer',
+            fontSize: '11px',
+            textAlign: 'left',
+            fontFamily: 'monospace',
+            textDecoration: isDisabled ? 'line-through' : 'none',
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {node.info.name}
+          {isMapped && (
+            <span style={{ color: '#44ff44', fontSize: '9px', marginLeft: '4px' }}>
+              &rarr; {mappings![node.info.name]}
+            </span>
+          )}
+        </button>
+      </div>
+      {/* Children */}
+      {hasChildren && !isCollapsed && node.children.map((child) => (
+        <BoneTreeRow
+          key={child.info.name}
+          node={child}
+          selectedBone={selectedBone}
+          onSelect={onSelect}
+          collapsed={collapsed}
+          onToggleCollapse={onToggleCollapse}
+          color={color}
+          selectedColor={selectedColor}
+          mappings={mappings}
+          disabledBones={disabledBones}
+          onToggleDisable={onToggleDisable}
+          side={side}
+        />
+      ))}
+    </>
+  );
 }
 
 export default function RetargetViewer() {
@@ -141,6 +313,46 @@ export default function RetargetViewer() {
   const [psoLoadProgress, setPsoLoadProgress] = useState(0);
   const [playOnBoth, setPlayOnBoth] = useState(false);
   const [hoveredBone, setHoveredBone] = useState<{ name: string; side: 'psz' | 'pso' } | null>(null);
+  const [pszCollapsed, setPszCollapsed] = useState<Set<string>>(new Set());
+  const [psoCollapsed, setPsoCollapsed] = useState<Set<string>>(new Set());
+  const [disabledPsoBones, setDisabledPsoBones] = useState<Set<string>>(new Set());
+
+  const pszTree = buildBoneTree(pszBones);
+  const psoTree = buildBoneTree(psoBones);
+
+  const toggleCollapse = useCallback((setFn: React.Dispatch<React.SetStateAction<Set<string>>>) => (name: string) => {
+    setFn((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }, []);
+
+  const toggleDisablePsoBone = useCallback((name: string) => {
+    setDisabledPsoBones((prev) => {
+      const next = new Set(prev);
+      // Find the node to also toggle descendants
+      const findNode = (nodes: BoneTreeNode[]): BoneTreeNode | null => {
+        for (const n of nodes) {
+          if (n.info.name === name) return n;
+          const found = findNode(n.children);
+          if (found) return found;
+        }
+        return null;
+      };
+      const node = findNode(psoTree);
+      const names = [name];
+      if (node) names.push(...collectDescendantNames(node));
+
+      const willDisable = !prev.has(name);
+      for (const n of names) {
+        if (willDisable) next.add(n);
+        else next.delete(n);
+      }
+      return next;
+    });
+  }, [psoTree]);
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -172,7 +384,7 @@ export default function RetargetViewer() {
       pszModel: null, psoModel: null,
       pszHelper: null, psoHelper: null,
       psoMixer: null, pszMixer: null, psoAnimations: [],
-      currentAction: null, currentPszAction: null, boneMarkers: [],
+      currentAction: null, currentPszAction: null, boneMarkers: [], selectedLabels: [],
     };
 
     const clock = new THREE.Clock();
@@ -186,7 +398,6 @@ export default function RetargetViewer() {
     };
     animate();
 
-    // Raycasting for hover/click on bone markers
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -194,12 +405,10 @@ export default function RetargetViewer() {
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
       if (!sceneRef.current) return;
       raycaster.setFromCamera(mouse, camera);
       const markerMeshes = sceneRef.current.boneMarkers.map((m) => m.mesh);
       const intersects = raycaster.intersectObjects(markerMeshes);
-
       if (tooltipRef.current) {
         if (intersects.length > 0) {
           const hit = intersects[0].object;
@@ -221,12 +430,10 @@ export default function RetargetViewer() {
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
       if (!sceneRef.current) return;
       raycaster.setFromCamera(mouse, camera);
       const markerMeshes = sceneRef.current.boneMarkers.map((m) => m.mesh);
       const intersects = raycaster.intersectObjects(markerMeshes);
-
       if (intersects.length > 0) {
         const hit = intersects[0].object;
         const { boneName, side } = hit.userData;
@@ -247,7 +454,6 @@ export default function RetargetViewer() {
     };
     window.addEventListener('resize', handleResize);
 
-    // Load both models
     const loader = new GLTFLoader();
     const textureLoader = new THREE.TextureLoader();
 
@@ -257,7 +463,6 @@ export default function RetargetViewer() {
       model.position.x = -1.2;
       scene.add(model);
       sceneRef.current!.pszModel = model;
-
       textureLoader.load(PSZ_TEXTURE_PATH, (texture) => {
         texture.magFilter = THREE.NearestFilter;
         texture.minFilter = THREE.NearestFilter;
@@ -265,27 +470,17 @@ export default function RetargetViewer() {
         texture.colorSpace = THREE.SRGBColorSpace;
         model.traverse((child: THREE.Object3D) => {
           if ((child as THREE.Mesh).isMesh) {
-            const mat = new THREE.MeshBasicMaterial({ map: texture });
-            (child as THREE.Mesh).material = mat;
+            (child as THREE.Mesh).material = new THREE.MeshBasicMaterial({ map: texture });
           }
         });
       });
-
       const helper = createSkeletonHelper(model, 0x44ff44);
-      if (helper) {
-        scene.add(helper);
-        sceneRef.current!.pszHelper = helper;
-      }
-      const pszMixer = new THREE.AnimationMixer(model);
-      sceneRef.current!.pszMixer = pszMixer;
-
+      if (helper) { scene.add(helper); sceneRef.current!.pszHelper = helper; }
+      sceneRef.current!.pszMixer = new THREE.AnimationMixer(model);
       model.updateMatrixWorld(true);
       setPszBones(collectBones(model));
       setPszLoaded(true);
-
-      if (sceneRef.current!.psoModel) {
-        matchPsoScaleToPsz(model, sceneRef.current!.psoModel);
-      }
+      if (sceneRef.current!.psoModel) matchPsoScaleToPsz(model, sceneRef.current!.psoModel);
     });
 
     // PSO model on the right
@@ -296,35 +491,20 @@ export default function RetargetViewer() {
         model.position.x = 1.2;
         scene.add(model);
         sceneRef.current!.psoModel = model;
-
-        // Reset to T-pose (bind pose)
         resetToBindPose(model);
-
         const helper = createSkeletonHelper(model, 0xff4444);
-        if (helper) {
-          scene.add(helper);
-          sceneRef.current!.psoHelper = helper;
-        }
-
+        if (helper) { scene.add(helper); sceneRef.current!.psoHelper = helper; }
         const mixer = new THREE.AnimationMixer(model);
         sceneRef.current!.psoMixer = mixer;
         sceneRef.current!.psoAnimations = gltf.animations;
-        const animNames = gltf.animations.map((a) => a.name);
-        setPsoAnimations(animNames);
-
-        // Scale PSO to match PSZ height
-        if (sceneRef.current!.pszModel) {
-          matchPsoScaleToPsz(sceneRef.current!.pszModel, model);
-        }
-
+        setPsoAnimations(gltf.animations.map((a) => a.name));
+        if (sceneRef.current!.pszModel) matchPsoScaleToPsz(sceneRef.current!.pszModel, model);
         model.updateMatrixWorld(true);
         setPsoBones(collectBones(model));
         setPsoLoaded(true);
       },
       (progress) => {
-        if (progress.total > 0) {
-          setPsoLoadProgress(Math.round((progress.loaded / progress.total) * 100));
-        }
+        if (progress.total > 0) setPsoLoadProgress(Math.round((progress.loaded / progress.total) * 100));
       },
       (error) => {
         console.error('Failed to load PSO model:', error);
@@ -337,47 +517,54 @@ export default function RetargetViewer() {
       renderer.domElement.removeEventListener('mousemove', onMouseMove);
       renderer.domElement.removeEventListener('click', onClick);
       renderer.dispose();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
+      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };
   }, []);
 
-  // Update bone markers when selection or bones change
+  // Update bone markers + selected labels
   useEffect(() => {
     if (!sceneRef.current) return;
-    const { scene, boneMarkers } = sceneRef.current;
+    const { scene, boneMarkers, selectedLabels } = sceneRef.current;
 
-    // Remove old markers
     for (const marker of boneMarkers) scene.remove(marker.mesh);
+    for (const label of selectedLabels) { scene.remove(label); label.material.map?.dispose(); (label.material as THREE.SpriteMaterial).dispose(); }
 
     if (!showMarkers) {
       sceneRef.current.boneMarkers = [];
+      sceneRef.current.selectedLabels = [];
       return;
     }
 
     const pszMarkers = createBoneMarkers(pszBones, 0x44ff44, selectedPszBone, scene, 'psz');
-    const psoMarkers = createBoneMarkers(psoBones, 0xff4444, selectedPsoBone, scene, 'pso');
+    const psoMarkers = createBoneMarkers(psoBones, 0xff4444, selectedPsoBone, scene, 'pso', disabledPsoBones);
     sceneRef.current.boneMarkers = [...pszMarkers, ...psoMarkers];
-  }, [pszBones, psoBones, selectedPszBone, selectedPsoBone, showMarkers]);
+
+    // Add 3D labels for selected bones
+    const newLabels: THREE.Sprite[] = [];
+    if (selectedPszBone) {
+      const bone = pszBones.find((b) => b.name === selectedPszBone);
+      if (bone) newLabels.push(createSelectedLabel(bone, '#44ff44', scene));
+    }
+    if (selectedPsoBone) {
+      const bone = psoBones.find((b) => b.name === selectedPsoBone);
+      if (bone && !disabledPsoBones.has(bone.name)) newLabels.push(createSelectedLabel(bone, '#ff4444', scene));
+    }
+    sceneRef.current.selectedLabels = newLabels;
+  }, [pszBones, psoBones, selectedPszBone, selectedPsoBone, showMarkers, disabledPsoBones]);
 
   // Toggle meshes visibility
   useEffect(() => {
     if (!sceneRef.current) return;
-    const { pszModel, psoModel } = sceneRef.current;
-    const toggleMeshes = (model: THREE.Object3D | null) => {
+    const toggle = (model: THREE.Object3D | null) => {
       if (!model) return;
       model.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          (child as THREE.Mesh).visible = showMeshes;
-        }
+        if ((child as THREE.Mesh).isMesh) (child as THREE.Mesh).visible = showMeshes;
       });
     };
-    toggleMeshes(pszModel);
-    toggleMeshes(psoModel);
+    toggle(sceneRef.current.pszModel);
+    toggle(sceneRef.current.psoModel);
   }, [showMeshes]);
 
-  // Build a retargeted clip that maps PSO bone tracks -> PSZ bone names
   const buildRetargetedClip = useCallback((clip: THREE.AnimationClip, boneMap: Record<string, string>): THREE.AnimationClip | null => {
     if (Object.keys(boneMap).length === 0) return null;
     const tracks: THREE.KeyframeTrack[] = [];
@@ -397,13 +584,11 @@ export default function RetargetViewer() {
     return new THREE.AnimationClip(clip.name + '_retargeted', clip.duration, tracks);
   }, []);
 
-  // Play animation on PSO model (and optionally retarget to PSZ)
   useEffect(() => {
     if (!sceneRef.current?.psoMixer || !selectedAnimation) return;
     const { psoMixer, pszMixer, psoAnimations, currentAction, currentPszAction } = sceneRef.current;
     if (currentAction) currentAction.fadeOut(0.2);
     if (currentPszAction) currentPszAction.fadeOut(0.2);
-
     const clip = psoAnimations.find((a) => a.name === selectedAnimation);
     if (clip) {
       const action = psoMixer.clipAction(clip);
@@ -411,7 +596,6 @@ export default function RetargetViewer() {
       action.setLoop(THREE.LoopRepeat, Infinity);
       action.paused = !isPlaying;
       sceneRef.current.currentAction = action;
-
       if (playOnBoth && pszMixer) {
         const retargeted = buildRetargetedClip(clip, mappings);
         if (retargeted) {
@@ -437,16 +621,11 @@ export default function RetargetViewer() {
   }, [selectedPszBone, selectedPsoBone]);
 
   const removeMapping = useCallback((psoKey: string) => {
-    setMappings((prev) => {
-      const next = { ...prev };
-      delete next[psoKey];
-      return next;
-    });
+    setMappings((prev) => { const next = { ...prev }; delete next[psoKey]; return next; });
   }, []);
 
   const exportMappings = useCallback(() => {
-    const json = JSON.stringify(mappings, null, 2);
-    navigator.clipboard.writeText(json);
+    navigator.clipboard.writeText(JSON.stringify(mappings, null, 2));
   }, [mappings]);
 
   return (
@@ -457,26 +636,19 @@ export default function RetargetViewer() {
           <h3 style={{ fontSize: '12px', color: '#44ff44', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             PSZ Bones ({pszBones.length})
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {pszBones.map((bone) => (
-              <button
-                key={bone.name}
-                onClick={() => setSelectedPszBone(bone.name)}
-                style={{
-                  padding: '4px 8px',
-                  paddingLeft: `${8 + bone.depth * 12}px`,
-                  background: selectedPszBone === bone.name ? '#2a4a2a' : 'transparent',
-                  border: selectedPszBone === bone.name ? '1px solid #44ff44' : '1px solid transparent',
-                  borderRadius: '3px',
-                  color: selectedPszBone === bone.name ? '#44ff44' : '#aaa',
-                  cursor: 'pointer',
-                  fontSize: '11px',
-                  textAlign: 'left',
-                  fontFamily: 'monospace',
-                }}
-              >
-                {bone.name}
-              </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+            {pszTree.map((node) => (
+              <BoneTreeRow
+                key={node.info.name}
+                node={node}
+                selectedBone={selectedPszBone}
+                onSelect={setSelectedPszBone}
+                collapsed={pszCollapsed}
+                onToggleCollapse={toggleCollapse(setPszCollapsed)}
+                color="#aaa"
+                selectedColor="#44ff44"
+                side="psz"
+              />
             ))}
           </div>
         </div>
@@ -511,22 +683,15 @@ export default function RetargetViewer() {
             </div>
           </div>
           <div style={{ flex: 1, background: '#0a0a1a', borderRadius: '8px', overflow: 'hidden', position: 'relative' }} ref={containerRef}>
-            {/* Hover tooltip */}
             <div
               ref={tooltipRef}
               style={{
-                display: 'none',
-                position: 'absolute',
-                pointerEvents: 'none',
-                padding: '4px 8px',
-                background: 'rgba(0,0,0,0.85)',
+                display: 'none', position: 'absolute', pointerEvents: 'none',
+                padding: '4px 8px', background: 'rgba(0,0,0,0.85)',
                 border: `1px solid ${hoveredBone?.side === 'psz' ? '#44ff44' : '#ff4444'}`,
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontFamily: 'monospace',
+                borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace',
                 color: hoveredBone?.side === 'psz' ? '#44ff44' : '#ff4444',
-                zIndex: 10,
-                whiteSpace: 'nowrap',
+                zIndex: 10, whiteSpace: 'nowrap',
               }}
             >
               {hoveredBone && (
@@ -583,38 +748,28 @@ export default function RetargetViewer() {
         <div style={{ width: '280px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {/* PSO Bones */}
           <div style={{ flex: 1, background: '#2d2d44', borderRadius: '8px', padding: '12px', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '12px', color: '#ff4444', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              PSO Bones ({psoBones.length})
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {psoBones.map((bone) => {
-                const isMapped = bone.name in mappings;
-                return (
-                  <button
-                    key={bone.name}
-                    onClick={() => setSelectedPsoBone(bone.name)}
-                    style={{
-                      padding: '4px 8px',
-                      paddingLeft: `${8 + bone.depth * 12}px`,
-                      background: selectedPsoBone === bone.name ? '#4a2a2a' : isMapped ? '#2a2a3a' : 'transparent',
-                      border: selectedPsoBone === bone.name ? '1px solid #ff4444' : '1px solid transparent',
-                      borderRadius: '3px',
-                      color: selectedPsoBone === bone.name ? '#ff4444' : isMapped ? '#8888ff' : '#aaa',
-                      cursor: 'pointer',
-                      fontSize: '11px',
-                      textAlign: 'left',
-                      fontFamily: 'monospace',
-                    }}
-                  >
-                    {bone.name}
-                    {isMapped && (
-                      <span style={{ color: '#44ff44', fontSize: '9px', marginLeft: '6px' }}>
-                        &rarr; {mappings[bone.name]}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h3 style={{ fontSize: '12px', color: '#ff4444', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                PSO Bones ({psoBones.length - disabledPsoBones.size}/{psoBones.length})
+              </h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+              {psoTree.map((node) => (
+                <BoneTreeRow
+                  key={node.info.name}
+                  node={node}
+                  selectedBone={selectedPsoBone}
+                  onSelect={setSelectedPsoBone}
+                  collapsed={psoCollapsed}
+                  onToggleCollapse={toggleCollapse(setPsoCollapsed)}
+                  color="#aaa"
+                  selectedColor="#ff4444"
+                  mappings={mappings}
+                  disabledBones={disabledPsoBones}
+                  onToggleDisable={toggleDisablePsoBone}
+                  side="pso"
+                />
+              ))}
             </div>
           </div>
 
@@ -646,10 +801,7 @@ export default function RetargetViewer() {
                     border: selectedAnimation === name ? '1px solid #6b8afd' : '1px solid transparent',
                     borderRadius: '3px',
                     color: selectedAnimation === name ? '#fff' : '#aaa',
-                    cursor: 'pointer',
-                    fontSize: '10px',
-                    textAlign: 'left',
-                    fontFamily: 'monospace',
+                    cursor: 'pointer', fontSize: '10px', textAlign: 'left', fontFamily: 'monospace',
                   }}
                 >
                   {name}
