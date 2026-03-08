@@ -3,7 +3,7 @@
   "last_updated": "2026-03-07",
   "id": "seek_my_mentor",
   "name": "Seek My Mentor",
-  "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Voss, who went missing three days ago and hasn't come back.",
+  "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Vash, who went missing three days ago and hasn't come back.",
   "area_id": "makara",
   "sections": [
     {
@@ -49,7 +49,7 @@
               "dialog": [
                 {
                   "speaker": "Ren",
-                  "text": "His signal was last tracked in this sector. Voss is the toughest hunter I know \u2014 if something took him down, we need to be careful."
+                  "text": "His signal was last tracked in this sector. Vash is the toughest hunter I know — if something took him down, we need to be careful."
                 }
               ]
             }
@@ -81,7 +81,45 @@
           "warp_edge": "",
           "path_order": 1,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                3
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -5
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                1
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                -3
+              ],
+              "enemy_id": "batt"
+            }
+          ]
         },
         {
           "pos": "1,1",
@@ -110,7 +148,54 @@
                 0,
                 8
               ],
-              "text": "Voss, log one. Made it past the outer corridors. The ruins go deep \u2014 much deeper than anyone told me. Quiet so far. Should be back by morning."
+              "text": "Vash, log one. Made it past the outer corridors. The ruins go deep — much deeper than anyone told me. Quiet so far. Should be back by morning."
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -4
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                2
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                -2
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "ren_log1_react",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "That's his handwriting. He always left voice logs when he went solo."
+                },
+                {
+                  "speaker": "Ren",
+                  "text": "He sounds confident here. Whatever went wrong happened further in."
+                }
+              ]
             }
           ],
           "key_drop": "",
@@ -138,7 +223,36 @@
           "warp_edge": "",
           "path_order": 3,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                5
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2,
+                0,
+                -3
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8,
+                0,
+                7
+              ],
+              "enemy_id": "kapantha"
+            }
+          ]
         },
         {
           "pos": "1,4",
@@ -162,7 +276,56 @@
           "warp_edge": "",
           "path_order": 4,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                4
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -6
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                2
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2,
+                0,
+                -3
+              ],
+              "enemy_id": "kapantha",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                8
+              ],
+              "enemy_id": "batt",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "0,4",
@@ -193,7 +356,54 @@
                 0,
                 -10
               ],
-              "text": "Voss, log two. Took a bad hit from something I didn't see coming. Patched myself up but my leg's not right. The creatures down here are different \u2014 faster, more coordinated. They're not just wandering. They know I'm here."
+              "text": "Vash, log two. Took a bad hit from something I didn't see coming. Patched myself up but my leg's not right. The creatures down here are different — faster, more coordinated. They're not just wandering. They know I'm here."
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12,
+                0,
+                5
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                8
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                3
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "ren_log2_react",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "He was hurt. And he dropped his guard... that's not like him."
+                },
+                {
+                  "speaker": "Ren",
+                  "text": "We need to keep going."
+                }
+              ]
             }
           ],
           "key_drop": "",
@@ -239,6 +449,53 @@
                   "text": "The signal cuts out past this point. Whatever happened to him... it happened deeper in."
                 }
               ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                6
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                2
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -4
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10,
+                0,
+                -8
+              ],
+              "enemy_id": "kapantha",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                -10
+              ],
+              "enemy_id": "rohjade",
+              "wave": 2
             }
           ],
           "key_drop": "",
@@ -321,7 +578,45 @@
           "warp_edge": "",
           "path_order": 1,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                6
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -4
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8,
+                0,
+                3
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2,
+                0,
+                -8
+              ],
+              "enemy_id": "kapantha"
+            }
+          ]
         },
         {
           "pos": "1,1",
@@ -345,7 +640,36 @@
           "warp_edge": "",
           "path_order": 2,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                2
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -5
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10,
+                0,
+                4
+              ],
+              "enemy_id": "kapantha"
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -374,7 +698,7 @@
                 1,
                 0
               ],
-              "trigger_id": "ren_voss_gun",
+              "trigger_id": "ren_vash_gun",
               "trigger_size": [
                 20,
                 4,
@@ -383,7 +707,7 @@
               "dialog": [
                 {
                   "speaker": "Ren",
-                  "text": "That's his gun. Voss would never leave his piece behind. Not unless..."
+                  "text": "That's his gun. Vash would never leave his piece behind. Not unless..."
                 },
                 {
                   "speaker": "Ren",
@@ -398,8 +722,35 @@
                 1,
                 -13.7
               ],
-              "item_id": "voss_gun",
-              "item_label": "Voss Gun"
+              "item_id": "vash_gun",
+              "item_label": "Vash Gun"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                5
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                3
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -5
+              ],
+              "enemy_id": "rohjade"
             }
           ],
           "key_drop": "",
@@ -427,7 +778,45 @@
           "warp_edge": "",
           "path_order": 4,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7,
+                0,
+                -3
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                6
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2,
+                0,
+                4
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8,
+                0,
+                -5
+              ],
+              "enemy_id": "bullbatt"
+            }
+          ]
         },
         {
           "pos": "2,0",
@@ -451,7 +840,45 @@
           "warp_edge": "",
           "path_order": 5,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                7
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -6
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9,
+                0,
+                3
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                -4
+              ],
+              "enemy_id": "rumole"
+            }
+          ]
         },
         {
           "pos": "3,0",
@@ -477,7 +904,56 @@
           "warp_edge": "",
           "path_order": 6,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                5
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -3
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9,
+                0,
+                8
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -7
+              ],
+              "enemy_id": "rumole",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -9
+              ],
+              "enemy_id": "bullbatt",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "3,1",
@@ -503,7 +979,45 @@
           "warp_edge": "",
           "path_order": 7,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7,
+                0,
+                4
+              ],
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                -5
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2,
+                0,
+                7
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                -8
+              ],
+              "enemy_id": "rohjade"
+            }
+          ]
         },
         {
           "pos": "4,0",
@@ -532,7 +1046,54 @@
                 0,
                 0
               ],
-              "text": "Voss... log three. Had to drop my weapon to squeeze through a collapsed passage. Bleeding through the bandages. They're still behind me. I can hear them. I just need to find somewhere they can't reach..."
+              "text": "Vash... log three. Had to drop my weapon to squeeze through a collapsed passage. Bleeding through the bandages. They're still behind me. I can hear them. I just need to find somewhere they can't reach..."
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                6
+              ],
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -4
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8,
+                0,
+                5
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "ren_log3_react",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "He dropped his weapon... he was trying to run."
+                },
+                {
+                  "speaker": "Ren",
+                  "text": "Vash never runs. He must have been in bad shape."
+                }
+              ]
             }
           ],
           "key_drop": "",
@@ -558,7 +1119,36 @@
           "warp_edge": "",
           "path_order": 9,
           "key_drop": "",
-          "required_keys": 0
+          "required_keys": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                3
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                -6
+              ],
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7,
+                0,
+                -3
+              ],
+              "enemy_id": "bullbatt"
+            }
+          ]
         },
         {
           "pos": "4,1",
@@ -587,7 +1177,7 @@
                 0,
                 -8
               ],
-              "npc_id": "voss"
+              "npc_id": "vash"
             },
             {
               "type": "dialog_trigger",
@@ -616,15 +1206,15 @@
                   "text": "The recording is faint. Barely a whisper."
                 },
                 {
-                  "speaker": "Voss",
+                  "speaker": "Vash",
                   "text": "...can't feel my hands anymore. It's cold down here. Didn't think it'd be this cold."
                 },
                 {
-                  "speaker": "Voss",
+                  "speaker": "Vash",
                   "text": "Ren... I'm sorry, kid. I promised I'd come back."
                 },
                 {
-                  "speaker": "Voss",
+                  "speaker": "Vash",
                   "text": "If only I could see you again."
                 },
                 {
@@ -641,7 +1231,7 @@
                 },
                 {
                   "speaker": "Ren",
-                  "text": "...I'm here, Voss. I came."
+                  "text": "...I'm here, Vash. I came."
                 },
                 {
                   "speaker": "Ren",
@@ -673,7 +1263,7 @@
     },
     {
       "speaker": "Ren",
-      "text": "My mentor \u2014 Voss \u2014 went into the Makara Ruins three days ago. He said he'd be back by morning."
+      "text": "My mentor — Vash — went into the Makara Ruins three days ago. He said he'd be back by morning."
     },
     {
       "speaker": "Ren",
@@ -681,7 +1271,7 @@
     },
     {
       "speaker": "Principal",
-      "text": "Voss is one of our most experienced hunters. If he hasn't come back, something went wrong."
+      "text": "Vash is one of our most experienced hunters. If he hasn't come back, something went wrong."
     },
     {
       "speaker": "Ren",
@@ -689,7 +1279,7 @@
     },
     {
       "speaker": "Principal",
-      "text": "Find Voss and bring him home. Be careful in there."
+      "text": "Find Vash and bring him home. Be careful in there."
     }
   ],
   "report_to": "guild_counter"
