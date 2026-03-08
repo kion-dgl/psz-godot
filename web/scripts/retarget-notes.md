@@ -1,0 +1,139 @@
+# PSO -> PSZ Animation Retargeting Notes
+
+## Model Overview
+
+### PSZ (Phantasy Star Zero)
+- **12 bones** total (simple skeleton)
+- **Scale**: ~1.5 units tall (game units)
+- **Bone naming**: `NNN_Name` format (e.g., `010_Hip`, `060_RArm01`)
+- **Rest pose approach**: Complex multi-axis local rotations. Hip has -90 Y, spine has (90, -80, 180), arms have ~135 degree compound rotations
+- **Bone orientation**: Local X-axis generally points along the bone (positions like `(0.27, 0, 0)` for arm segments, `(0.32, 0, 0)` for leg segments)
+- **Root bone** (`000_Root`): Identity quaternion at origin
+
+### PSO (Phantasy Star Online)
+- **64 bones** (bone_000 to bone_063, plus bone_000_1, bone_000_2)
+- **Scale**: ~16 units tall (roughly 10x PSZ)
+- **Bone naming**: `bone_NNN` format (numbered, no semantic names)
+- **Rest pose approach**: Primarily Z-axis rotations for pre-rotation. Hip is -91 Z, spine is +91 Z (cancels hip), arms are ~-83 Z, legs are ~-94 Z
+- **Bone orientation**: Local X-axis points along bones (positions like `(2.5, 0, 0)` for arm segments, `(3.95, 0, 0)` for leg segments)
+- **Root bone** (`bone_000`): Identity quaternion at origin
+- Has extra bones for fingers, toes, accessories, etc. that PSZ doesn't have
+
+## Bone Mappings (12 mapped bones)
+
+| PSO Bone | PSZ Bone | Body Part |
+|----------|----------|-----------|
+| bone_000 | 000_Root | Root |
+| bone_002 | 010_Hip | Hip/Pelvis |
+| bone_024 | 020_Spine | Spine/Chest |
+| bone_028 | 030_LArm01 | Left Upper Arm |
+| bone_029 | 040_LArm02 | Left Lower Arm |
+| bone_041 | 060_RArm01 | Right Upper Arm |
+| bone_042 | 070_RArm02 | Right Lower Arm |
+| bone_056 | 090_Head | Head |
+| bone_004 | 100_LLeg01 | Left Upper Leg |
+| bone_005 | 110_LLeg02 | Left Lower Leg |
+| bone_013 | 120_RLeg01 | Right Upper Leg |
+| bone_014 | 130_RLeg02 | Right Lower Leg |
+
+## PSO Bone Hierarchy (mapped bones in context)
+
+```
+bone_000 (root)
+  bone_001 (position offset to hip height)
+    bone_002 (hip) — Z rotation -91°
+      bone_003 → bone_004 (LLeg01) → bone_005 (LLeg02) → bone_006..011 (foot/toes)
+      bone_012 → bone_013 (RLeg01) → bone_014 (RLeg02) → bone_015..020 (foot/toes)
+      bone_024 (spine) — Z rotation +91° (cancels hip rotation)
+        bone_025 (chest/upper spine)
+          bone_026 → bone_027 → bone_028 (LArm01) → bone_029 (LArm02) → bone_030..037 (hand/fingers)
+          bone_039 → bone_040 → bone_041 (RArm01) → bone_042 (RArm02) → bone_043..051 (hand/fingers)
+          bone_055 → bone_056 (Head) → bone_057..059 (face)
+```
+
+Note: PSO has intermediate bones between mapped bones (e.g., bone_003 between hip and LLeg01, bone_027 between spine chain and arms). These intermediate bones have their own rotations that contribute to the world-space orientation.
+
+## PSZ Bone Hierarchy
+
+```
+000_Root
+  010_Hip — Y rotation -90°
+    120_RLeg01 → 130_RLeg02
+    020_Spine (complex compound rotation)
+      060_RArm01 → 070_RArm02
+      090_Head
+      030_LArm01 → 040_LArm02
+    100_LLeg01 → 110_LLeg02
+```
+
+## Key Differences
+
+### 1. Pre-rotation Axes
+- **PSO**: Almost exclusively uses Z-axis rotation for bone pre-rotations (the "old school" approach)
+- **PSZ**: Uses complex multi-axis compound rotations (more modern approach with arbitrary rest orientations)
+- This means PSO's local rotation space is very different from PSZ's local rotation space for corresponding bones
+
+### 2. Intermediate Bones
+PSO has bones between mapped positions that PSZ doesn't:
+- `bone_001` between root and hip (just a position offset)
+- `bone_003` / `bone_012` between hip and legs (with -90/+90 X rotations and 5-6° Z)
+- `bone_025` between spine and everything above (89.6° Z)
+- `bone_026`/`bone_027` and `bone_039`/`bone_040` between chest and arms (with 90° Y rotation)
+- `bone_055` between chest and head
+
+These intermediate bones accumulate rotations that affect the world-space orientation of mapped bones.
+
+### 3. World-Space Rest Orientations (the core problem)
+
+Comparing world-space euler angles at rest for each mapped pair:
+
+| Body Part | PSO World Euler | PSZ World Euler | Difference |
+|-----------|----------------|-----------------|------------|
+| Root | (0, 0, 0) | (0, 0, 0) | Same |
+| Hip | (0, 0, -91) | (0, -90, 0) | Different axes |
+| Spine | (0, 0, 0) | (170, 0, -90) | Very different |
+| LArm01 | (-83, 90, 0) | (3.5, -2.3, -44) | Very different |
+| RArm01 | (-83, 90, 0) | (3.5, 2.3, -136) | Very different |
+| Head | (0, 0, 91) | (-180, 0, -90) | Very different |
+| LLeg01 | (-90, 85, -4) | (-175, 0, 90) | Very different |
+| RLeg01 | (90, 86, 176) | (-175, 0, 90) | Very different |
+
+The world-space rest orientations are fundamentally different for every bone pair except root. This means:
+- A "swing forward" rotation in PSO world space is NOT the same axis as "swing forward" in PSZ world space
+- Simple local or world quaternion remapping won't work correctly
+
+### 4. Animation Structure
+- PSO animations contain **position, rotation (quaternion), and scale** tracks per bone per keyframe
+- Animations are **relative to rest pose** — zeroing out rest rotations breaks the model
+- Only **rotation tracks** should be transferred (position and scale are skeleton-specific)
+
+## Retargeting Approaches Tried
+
+### Approach 1: Direct Copy (failed)
+Just rename bone tracks. Result: completely twisted/mutilated model because local coordinate frames are totally different.
+
+### Approach 2: Local Rest-Pose Delta (partially worked)
+`pszLocal = pszRest * inv(psoRest) * psoAnim`
+Result: character stands up, arms/legs move, but swing directions are wrong (legs waddle sideways instead of forward/back). The local rest delta doesn't account for the different parent chain orientations.
+
+### Approach 3: World-Space Delta (current, partially works)
+1. Convert PSO local anim to world: `psoWorld = psoParentWorldRest * psoLocalAnim`
+2. Get world delta: `worldDelta = inv(psoWorldRest) * psoWorld`
+3. Apply to PSZ: `pszWorld = pszWorldRest * worldDelta`
+4. Convert back: `pszLocal = inv(pszParentWorldRest) * pszWorld`
+
+Result: character stands but movements are very subtle/dampened. The world delta extraction may be losing the rotation magnitude.
+
+## Potential Next Steps
+
+1. **Debug the world-space approach**: The math may have a quaternion multiplication order issue. Quaternion multiplication is non-commutative, and the difference between `A * B` and `B * A` matters.
+
+2. **Try a different delta formulation**: Instead of `worldDelta = inv(psoWorldRest) * psoWorld`, try `worldDelta = psoWorld * inv(psoWorldRest)` (right-multiply vs left-multiply changes whether the delta is in world frame or bone frame).
+
+3. **Axis remapping per bone**: Compute a static correction quaternion per mapped bone pair that transforms PSO's bone coordinate frame to PSZ's. Apply this correction to each animation frame.
+
+4. **Look at Mixamo/Unity retargeting**: These engines solve this problem. Unity's Humanoid system normalizes all skeletons to a canonical "muscle space" with per-bone twist/swing decomposition. This is more complex but robust.
+
+5. **Manual axis mapping**: For each mapped bone pair, manually specify which PSO axis maps to which PSZ axis (e.g., "PSO X-swing = PSZ Z-swing"). This is tedious but might be the most practical for 12 bones.
+
+6. **Consider that PSO has 3 skins**: The GLB has `bone_000`, `bone_000_1`, `bone_000_2` suggesting multiple skin/skeleton variants. Need to verify we're using the right one.
