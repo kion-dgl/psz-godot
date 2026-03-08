@@ -324,7 +324,7 @@ export default function RetargetViewer() {
   const [psoLoaded, setPsoLoaded] = useState(false);
   const [psoLoadError, setPsoLoadError] = useState<string | null>(null);
   const [psoLoadProgress, setPsoLoadProgress] = useState(0);
-  const [playOnBoth, setPlayOnBoth] = useState(false);
+  const [playOnBoth, setPlayOnBoth] = useState(true);
   const [hoveredBone, setHoveredBone] = useState<{ name: string; side: 'psz' | 'pso' } | null>(null);
   const [pszCollapsed, setPszCollapsed] = useState<Set<string>>(new Set());
   const [psoCollapsed, setPsoCollapsed] = useState<Set<string>>(new Set());
