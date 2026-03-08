@@ -11,11 +11,19 @@ const PSZ_TEXTURE_PATH = assetUrl('/player/pc_000/textures/pc_000_000.png');
 // PSO model — Humar with all animations
 const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
 
+const BONE_MARKER_RADIUS = 0.012;
+
 interface BoneInfo {
   name: string;
   depth: number;
   worldPos: THREE.Vector3;
   bone: THREE.Bone;
+}
+
+interface BoneMarker {
+  mesh: THREE.Mesh;
+  boneName: string;
+  side: 'psz' | 'pso';
 }
 
 function collectBones(root: THREE.Object3D): BoneInfo[] {
@@ -34,34 +42,14 @@ function collectBones(root: THREE.Object3D): BoneInfo[] {
   return bones;
 }
 
-function createBoneLabels(
-  bones: BoneInfo[],
-  color: string,
-  scene: THREE.Scene,
-  selectedBone: string | null,
-): THREE.Sprite[] {
-  const sprites: THREE.Sprite[] = [];
-  for (const bone of bones) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d')!;
-    const isSelected = bone.name === selectedBone;
-    ctx.font = isSelected ? 'bold 18px monospace' : '14px monospace';
-    ctx.fillStyle = isSelected ? '#ffff00' : color;
-    ctx.fillText(bone.name, 4, 20);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const material = new THREE.SpriteMaterial({ map: texture, depthTest: false });
-    const sprite = new THREE.Sprite(material);
-    sprite.scale.set(1.2, 0.3, 1);
-    sprite.position.copy(bone.worldPos);
-    sprite.position.y += 0.08;
-    sprite.renderOrder = 999;
-    scene.add(sprite);
-    sprites.push(sprite);
-  }
-  return sprites;
+function resetToBindPose(model: THREE.Object3D): void {
+  model.traverse((child) => {
+    if ((child as THREE.SkinnedMesh).isSkinnedMesh) {
+      const skeleton = (child as THREE.SkinnedMesh).skeleton;
+      if (skeleton) skeleton.pose();
+    }
+  });
+  model.updateMatrixWorld(true);
 }
 
 function matchPsoScaleToPsz(pszModel: THREE.Object3D, psoModel: THREE.Object3D): void {
@@ -90,6 +78,31 @@ function createSkeletonHelper(model: THREE.Object3D, color: number): THREE.Skele
   return helper;
 }
 
+function createBoneMarkers(
+  bones: BoneInfo[],
+  color: number,
+  selectedBone: string | null,
+  scene: THREE.Scene,
+  side: 'psz' | 'pso',
+): BoneMarker[] {
+  const markers: BoneMarker[] = [];
+  const geo = new THREE.SphereGeometry(BONE_MARKER_RADIUS, 8, 6);
+  for (const bone of bones) {
+    const isSelected = bone.name === selectedBone;
+    const mat = new THREE.MeshBasicMaterial({
+      color: isSelected ? 0xffff00 : color,
+      depthTest: false,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(bone.worldPos);
+    mesh.renderOrder = 999;
+    mesh.userData = { boneName: bone.name, side };
+    scene.add(mesh);
+    markers.push({ mesh, boneName: bone.name, side });
+  }
+  return markers;
+}
+
 interface SceneState {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
@@ -104,12 +117,13 @@ interface SceneState {
   psoAnimations: THREE.AnimationClip[];
   currentAction: THREE.AnimationAction | null;
   currentPszAction: THREE.AnimationAction | null;
-  labelSprites: THREE.Sprite[];
+  boneMarkers: BoneMarker[];
 }
 
 export default function RetargetViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<SceneState | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
   const [pszBones, setPszBones] = useState<BoneInfo[]>([]);
   const [psoBones, setPsoBones] = useState<BoneInfo[]>([]);
@@ -119,13 +133,14 @@ export default function RetargetViewer() {
   const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showMeshes, setShowMeshes] = useState(true);
-  const [showLabels, setShowLabels] = useState(true);
+  const [showMarkers, setShowMarkers] = useState(true);
   const [mappings, setMappings] = useState<Record<string, string>>({});
   const [pszLoaded, setPszLoaded] = useState(false);
   const [psoLoaded, setPsoLoaded] = useState(false);
   const [psoLoadError, setPsoLoadError] = useState<string | null>(null);
   const [psoLoadProgress, setPsoLoadProgress] = useState(0);
   const [playOnBoth, setPlayOnBoth] = useState(false);
+  const [hoveredBone, setHoveredBone] = useState<{ name: string; side: 'psz' | 'pso' } | null>(null);
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -157,7 +172,7 @@ export default function RetargetViewer() {
       pszModel: null, psoModel: null,
       pszHelper: null, psoHelper: null,
       psoMixer: null, pszMixer: null, psoAnimations: [],
-      currentAction: null, currentPszAction: null, labelSprites: [],
+      currentAction: null, currentPszAction: null, boneMarkers: [],
     };
 
     const clock = new THREE.Clock();
@@ -170,6 +185,58 @@ export default function RetargetViewer() {
       renderer.render(scene, camera);
     };
     animate();
+
+    // Raycasting for hover/click on bone markers
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const onMouseMove = (e: MouseEvent) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      if (!sceneRef.current) return;
+      raycaster.setFromCamera(mouse, camera);
+      const markerMeshes = sceneRef.current.boneMarkers.map((m) => m.mesh);
+      const intersects = raycaster.intersectObjects(markerMeshes);
+
+      if (tooltipRef.current) {
+        if (intersects.length > 0) {
+          const hit = intersects[0].object;
+          const { boneName, side } = hit.userData;
+          setHoveredBone({ name: boneName, side });
+          tooltipRef.current.style.left = `${e.clientX - rect.left + 12}px`;
+          tooltipRef.current.style.top = `${e.clientY - rect.top - 8}px`;
+          tooltipRef.current.style.display = 'block';
+          renderer.domElement.style.cursor = 'pointer';
+        } else {
+          setHoveredBone(null);
+          tooltipRef.current.style.display = 'none';
+          renderer.domElement.style.cursor = 'default';
+        }
+      }
+    };
+
+    const onClick = (e: MouseEvent) => {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      if (!sceneRef.current) return;
+      raycaster.setFromCamera(mouse, camera);
+      const markerMeshes = sceneRef.current.boneMarkers.map((m) => m.mesh);
+      const intersects = raycaster.intersectObjects(markerMeshes);
+
+      if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        const { boneName, side } = hit.userData;
+        if (side === 'psz') setSelectedPszBone(boneName);
+        else setSelectedPsoBone(boneName);
+      }
+    };
+
+    renderer.domElement.addEventListener('mousemove', onMouseMove);
+    renderer.domElement.addEventListener('click', onClick);
 
     const handleResize = () => {
       const w = container.clientWidth;
@@ -212,12 +279,10 @@ export default function RetargetViewer() {
       const pszMixer = new THREE.AnimationMixer(model);
       sceneRef.current!.pszMixer = pszMixer;
 
-      // Need to update world matrices before collecting bone positions
       model.updateMatrixWorld(true);
       setPszBones(collectBones(model));
       setPszLoaded(true);
 
-      // If PSO already loaded, scale it to match
       if (sceneRef.current!.psoModel) {
         matchPsoScaleToPsz(model, sceneRef.current!.psoModel);
       }
@@ -231,6 +296,9 @@ export default function RetargetViewer() {
         model.position.x = 1.2;
         scene.add(model);
         sceneRef.current!.psoModel = model;
+
+        // Reset to T-pose (bind pose)
+        resetToBindPose(model);
 
         const helper = createSkeletonHelper(model, 0xff4444);
         if (helper) {
@@ -266,6 +334,8 @@ export default function RetargetViewer() {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousemove', onMouseMove);
+      renderer.domElement.removeEventListener('click', onClick);
       renderer.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
@@ -273,30 +343,23 @@ export default function RetargetViewer() {
     };
   }, []);
 
-  // Update labels when selection changes
-  useEffect(() => {
-    if (!sceneRef.current || !showLabels) return;
-    const { scene, labelSprites } = sceneRef.current;
-
-    // Remove old labels
-    for (const sprite of labelSprites) scene.remove(sprite);
-    sceneRef.current.labelSprites = [];
-
-    // Add new labels
-    const pszLabels = createBoneLabels(pszBones, '#44ff44', scene, selectedPszBone);
-    const psoLabels = createBoneLabels(psoBones, '#ff4444', scene, selectedPsoBone);
-    sceneRef.current.labelSprites = [...pszLabels, ...psoLabels];
-  }, [pszBones, psoBones, selectedPszBone, selectedPsoBone, showLabels]);
-
-  // Toggle labels visibility
+  // Update bone markers when selection or bones change
   useEffect(() => {
     if (!sceneRef.current) return;
-    const { scene, labelSprites } = sceneRef.current;
-    if (!showLabels) {
-      for (const sprite of labelSprites) scene.remove(sprite);
-      sceneRef.current.labelSprites = [];
+    const { scene, boneMarkers } = sceneRef.current;
+
+    // Remove old markers
+    for (const marker of boneMarkers) scene.remove(marker.mesh);
+
+    if (!showMarkers) {
+      sceneRef.current.boneMarkers = [];
+      return;
     }
-  }, [showLabels]);
+
+    const pszMarkers = createBoneMarkers(pszBones, 0x44ff44, selectedPszBone, scene, 'psz');
+    const psoMarkers = createBoneMarkers(psoBones, 0xff4444, selectedPsoBone, scene, 'pso');
+    sceneRef.current.boneMarkers = [...pszMarkers, ...psoMarkers];
+  }, [pszBones, psoBones, selectedPszBone, selectedPsoBone, showMarkers]);
 
   // Toggle meshes visibility
   useEffect(() => {
@@ -314,12 +377,11 @@ export default function RetargetViewer() {
     toggleMeshes(psoModel);
   }, [showMeshes]);
 
-  // Build a retargeted clip that maps PSO bone tracks → PSZ bone names
+  // Build a retargeted clip that maps PSO bone tracks -> PSZ bone names
   const buildRetargetedClip = useCallback((clip: THREE.AnimationClip, boneMap: Record<string, string>): THREE.AnimationClip | null => {
     if (Object.keys(boneMap).length === 0) return null;
     const tracks: THREE.KeyframeTrack[] = [];
     for (const track of clip.tracks) {
-      // Track names are like "bone_000.quaternion" or "bone_000.position"
       const dotIdx = track.name.indexOf('.');
       if (dotIdx < 0) continue;
       const boneName = track.name.substring(0, dotIdx);
@@ -350,7 +412,6 @@ export default function RetargetViewer() {
       action.paused = !isPlaying;
       sceneRef.current.currentAction = action;
 
-      // Retarget to PSZ if enabled and mappings exist
       if (playOnBoth && pszMixer) {
         const retargeted = buildRetargetedClip(clip, mappings);
         if (retargeted) {
@@ -440,8 +501,8 @@ export default function RetargetViewer() {
                 Meshes
               </label>
               <label style={{ fontSize: '11px', color: '#888', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} />
-                Labels
+                <input type="checkbox" checked={showMarkers} onChange={(e) => setShowMarkers(e.target.checked)} />
+                Bones
               </label>
               <label style={{ fontSize: '11px', color: Object.keys(mappings).length > 0 ? '#8888ff' : '#555', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input type="checkbox" checked={playOnBoth} onChange={(e) => setPlayOnBoth(e.target.checked)} disabled={Object.keys(mappings).length === 0} />
@@ -450,6 +511,31 @@ export default function RetargetViewer() {
             </div>
           </div>
           <div style={{ flex: 1, background: '#0a0a1a', borderRadius: '8px', overflow: 'hidden', position: 'relative' }} ref={containerRef}>
+            {/* Hover tooltip */}
+            <div
+              ref={tooltipRef}
+              style={{
+                display: 'none',
+                position: 'absolute',
+                pointerEvents: 'none',
+                padding: '4px 8px',
+                background: 'rgba(0,0,0,0.85)',
+                border: `1px solid ${hoveredBone?.side === 'psz' ? '#44ff44' : '#ff4444'}`,
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontFamily: 'monospace',
+                color: hoveredBone?.side === 'psz' ? '#44ff44' : '#ff4444',
+                zIndex: 10,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {hoveredBone && (
+                <>
+                  <span style={{ color: '#888', fontSize: '9px' }}>{hoveredBone.side.toUpperCase()} </span>
+                  {hoveredBone.name}
+                </>
+              )}
+            </div>
             {psoLoadError && (
               <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, padding: '8px 12px', background: 'rgba(100,20,20,0.9)', borderRadius: '6px', fontSize: '11px', color: '#f88' }}>
                 {psoLoadError}
