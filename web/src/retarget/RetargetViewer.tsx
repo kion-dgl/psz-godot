@@ -9,7 +9,7 @@ const PSZ_MODEL_PATH = assetUrl('/player/pc_000/pc_000/pc_000_000.glb');
 const PSZ_TEXTURE_PATH = assetUrl('/player/pc_000/textures/pc_000_000.png');
 
 // PSO model — Humar with all animations
-const PSO_MODEL_PATH = '/data/retarget/Humar_body.glb';
+const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
 
 interface BoneInfo {
   name: string;
@@ -108,6 +108,8 @@ export default function RetargetViewer() {
   const [showMeshes, setShowMeshes] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [mappings, setMappings] = useState<Record<string, string>>({});
+  const [pszLoaded, setPszLoaded] = useState(false);
+  const [psoLoaded, setPsoLoaded] = useState(false);
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -193,6 +195,7 @@ export default function RetargetViewer() {
       // Need to update world matrices before collecting bone positions
       model.updateMatrixWorld(true);
       setPszBones(collectBones(model));
+      setPszLoaded(true);
     });
 
     // PSO model on the right
@@ -216,6 +219,7 @@ export default function RetargetViewer() {
 
       model.updateMatrixWorld(true);
       setPsoBones(collectBones(model));
+      setPsoLoaded(true);
     });
 
     return () => {
@@ -345,9 +349,9 @@ export default function RetargetViewer() {
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           }}>
             <span style={{ fontSize: '14px', fontWeight: 'bold' }}>
-              <span style={{ color: '#44ff44' }}>PSZ</span>
+              <span style={{ color: pszLoaded ? '#44ff44' : '#666' }}>PSZ {!pszLoaded && '(loading...)'}</span>
               {' vs '}
-              <span style={{ color: '#ff4444' }}>PSO</span>
+              <span style={{ color: psoLoaded ? '#ff4444' : '#666' }}>PSO {!psoLoaded && '(loading ~55MB...)'}</span>
               {' Skeleton Comparison'}
             </span>
             <div style={{ display: 'flex', gap: '8px' }}>
