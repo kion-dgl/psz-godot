@@ -146,12 +146,23 @@ export function buildRetargetedClip(
         Array.from(dstValues),
       ));
     } else if (prop === '.position' && boneName === 'bone_000') {
+      // Rotate root position to match retargeted root orientation.
+      // Without this, root rotation retargeting changes facing direction
+      // but position still moves in the original direction → shuffling.
+      const psoWorldRest = getWorldRestQuat(boneName, psoRest);
+      const pszWorldRest = getWorldRestQuat(pszBoneName, adjustedPszRest);
+      const F = pszWorldRest.clone().invert().multiply(psoWorldRest);
+      const posRotation = F.clone().invert(); // same 'suffix' applied to root rotation
+
       const srcValues = track.values;
       const dstValues = new Float32Array(srcValues.length);
+      const pos = new THREE.Vector3();
       for (let i = 0; i < srcValues.length; i += 3) {
-        dstValues[i] = srcValues[i] * posScale;
-        dstValues[i + 1] = srcValues[i + 1] * posScale;
-        dstValues[i + 2] = srcValues[i + 2] * posScale;
+        pos.set(srcValues[i], srcValues[i + 1], srcValues[i + 2]);
+        pos.applyQuaternion(posRotation);
+        dstValues[i] = pos.x * posScale;
+        dstValues[i + 1] = pos.y * posScale;
+        dstValues[i + 2] = pos.z * posScale;
       }
       tracks.push(new THREE.VectorKeyframeTrack(
         pszBoneName + '.position',

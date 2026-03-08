@@ -1,0 +1,533 @@
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { assetUrl } from '../utils/assets';
+import {
+  captureRestPose,
+  buildRetargetedClip,
+  resetToBindPose,
+  BONE_MAPPINGS,
+  type RestPoseData,
+} from './retarget-utils';
+
+const PSZ_MODEL_PATH = assetUrl('/player/pc_000/pc_000/pc_000_000.glb');
+const PSZ_TEXTURE_PATH = assetUrl('/player/pc_000/textures/pc_000_000.png');
+const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
+const ANIMATION_MAP_PATH = assetUrl('/data/retarget/pso_animation_map.json');
+
+// PSZ bones that can be adjusted, in display order
+const TUNABLE_BONES = [
+  { pszBone: '000_Root', label: 'Root' },
+  { pszBone: '010_Hip', label: 'Hip' },
+  { pszBone: '020_Spine', label: 'Spine' },
+  { pszBone: '090_Head', label: 'Head' },
+  { pszBone: '030_LArm01', label: 'L Upper Arm' },
+  { pszBone: '040_LArm02', label: 'L Forearm' },
+  { pszBone: '060_RArm01', label: 'R Upper Arm' },
+  { pszBone: '070_RArm02', label: 'R Forearm' },
+  { pszBone: '100_LLeg01', label: 'L Upper Leg' },
+  { pszBone: '110_LLeg02', label: 'L Lower Leg' },
+  { pszBone: '120_RLeg01', label: 'R Upper Leg' },
+  { pszBone: '130_RLeg02', label: 'R Lower Leg' },
+];
+
+interface BoneOffset {
+  x: number; // degrees
+  y: number;
+  z: number;
+}
+
+type OffsetMap = Record<string, BoneOffset>;
+
+function defaultOffsets(): OffsetMap {
+  const m: OffsetMap = {};
+  for (const b of TUNABLE_BONES) m[b.pszBone] = { x: 0, y: 0, z: 0 };
+  return m;
+}
+
+function applyOffsetsToRest(rest: RestPoseData, offsets: OffsetMap): RestPoseData {
+  const modified: RestPoseData = {
+    localQuats: { ...rest.localQuats },
+    worldQuats: { ...rest.worldQuats },
+    parentMap: rest.parentMap,
+  };
+  const deg2rad = Math.PI / 180;
+  for (const [boneName, offset] of Object.entries(offsets)) {
+    if (offset.x === 0 && offset.y === 0 && offset.z === 0) continue;
+    const orig = modified.localQuats[boneName];
+    if (!orig) continue;
+    const euler = new THREE.Euler(offset.x * deg2rad, offset.y * deg2rad, offset.z * deg2rad, 'XYZ');
+    const offsetQuat = new THREE.Quaternion().setFromEuler(euler);
+    modified.localQuats[boneName] = orig.clone().multiply(offsetQuat);
+  }
+  return modified;
+}
+
+interface SceneState {
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  renderer: THREE.WebGLRenderer;
+  controls: OrbitControls;
+  pszModel: THREE.Object3D | null;
+  psoModel: THREE.Object3D | null;
+  pszMixer: THREE.AnimationMixer | null;
+  psoMixer: THREE.AnimationMixer | null;
+  psoAnimations: THREE.AnimationClip[];
+  psoRest: RestPoseData;
+  pszRest: RestPoseData;
+  psoScale: number;
+  currentAction: THREE.AnimationAction | null;
+  currentPsoAction: THREE.AnimationAction | null;
+  helper: THREE.SkeletonHelper | null;
+}
+
+export default function RetargetTuner() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<SceneState | null>(null);
+
+  const [offsets, setOffsets] = useState<OffsetMap>(defaultOffsets);
+  const [psoAnimNames, setPsoAnimNames] = useState<string[]>([]);
+  const [selectedAnim, setSelectedAnim] = useState<string | null>(null);
+  const [animNameMap, setAnimNameMap] = useState<Record<string, string>>({});
+  const [animSearch, setAnimSearch] = useState('');
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+  const [showSkeleton, setShowSkeleton] = useState(true);
+
+  // Load animation name mappings
+  useEffect(() => {
+    fetch(ANIMATION_MAP_PATH)
+      .then((r) => r.json())
+      .then((data: { mappings: Record<string, string> }) => setAnimNameMap(data.mappings || {}))
+      .catch(() => {});
+  }, []);
+
+  // Filter animations
+  const filteredAnims = useMemo(() => {
+    if (!animSearch) return psoAnimNames;
+    const q = animSearch.toLowerCase();
+    return psoAnimNames.filter((name) => {
+      const idx = name.replace('plymotiondata_', '');
+      const mapped = animNameMap[idx];
+      return idx.includes(q) || (mapped && mapped.toLowerCase().includes(q)) || name.toLowerCase().includes(q);
+    });
+  }, [psoAnimNames, animSearch, animNameMap]);
+
+  // Initialize scene
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.01, 100);
+    camera.position.set(0, 1, 3);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x0a0a1a);
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 5, 5);
+    scene.add(dirLight);
+    scene.add(new THREE.GridHelper(10, 10, 0x333333, 0x222222));
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 0.8, 0);
+
+    sceneRef.current = {
+      scene, camera, renderer, controls,
+      pszModel: null, psoModel: null,
+      pszMixer: null, psoMixer: null, psoAnimations: [],
+      psoRest: { localQuats: {}, worldQuats: {}, parentMap: {} },
+      pszRest: { localQuats: {}, worldQuats: {}, parentMap: {} },
+      psoScale: 1, currentAction: null, currentPsoAction: null, helper: null,
+    };
+
+    const clock = new THREE.Clock();
+    const animate = () => {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      if (sceneRef.current?.pszMixer) sceneRef.current.pszMixer.update(delta);
+      if (sceneRef.current?.psoMixer) sceneRef.current.psoMixer.update(delta);
+      controls.update();
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    const loader = new GLTFLoader();
+    const textureLoader = new THREE.TextureLoader();
+
+    // Load PSZ model
+    loader.load(PSZ_MODEL_PATH, (gltf) => {
+      const model = gltf.scene;
+      model.position.x = -1.0;
+      scene.add(model);
+      sceneRef.current!.pszModel = model;
+      textureLoader.load(PSZ_TEXTURE_PATH, (texture) => {
+        texture.magFilter = THREE.NearestFilter;
+        texture.minFilter = THREE.NearestFilter;
+        texture.flipY = false;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        model.traverse((child: THREE.Object3D) => {
+          if ((child as THREE.Mesh).isMesh) {
+            (child as THREE.Mesh).material = new THREE.MeshBasicMaterial({ map: texture });
+          }
+        });
+      });
+      const helper = new THREE.SkeletonHelper(model);
+      (helper.material as THREE.LineBasicMaterial).color.set(0x44ff44);
+      (helper.material as THREE.LineBasicMaterial).linewidth = 2;
+      helper.renderOrder = 998;
+      scene.add(helper);
+      sceneRef.current!.helper = helper;
+
+      sceneRef.current!.pszMixer = new THREE.AnimationMixer(model);
+      model.updateMatrixWorld(true);
+      sceneRef.current!.pszRest = captureRestPose(model);
+
+      // Load PSO model as reference (positioned to the right)
+      loader.load(PSO_MODEL_PATH, (psoGltf) => {
+        const psoModel = psoGltf.scene;
+        psoModel.position.x = 1.5;
+        scene.add(psoModel);
+
+        // Scale BEFORE resetting — animated pose gives reliable bounding box
+        psoModel.updateMatrixWorld(true);
+        const pszBox = new THREE.Box3().setFromObject(model);
+        const psoBox = new THREE.Box3().setFromObject(psoModel);
+        const pszH = pszBox.max.y - pszBox.min.y;
+        const psoH = psoBox.max.y - psoBox.min.y;
+        const scale = psoH > 0 ? pszH / psoH : 1;
+        sceneRef.current!.psoScale = scale;
+        psoModel.scale.multiplyScalar(scale);
+        psoModel.updateMatrixWorld(true);
+
+        // Reset to bind pose THEN capture rest quaternions
+        resetToBindPose(psoModel);
+        psoModel.updateMatrixWorld(true);
+        sceneRef.current!.psoRest = captureRestPose(psoModel);
+
+        sceneRef.current!.psoModel = psoModel;
+        sceneRef.current!.psoMixer = new THREE.AnimationMixer(psoModel);
+        sceneRef.current!.psoAnimations = psoGltf.animations;
+
+        const names = psoGltf.animations.map((a) => a.name).sort((a, b) => {
+          const numA = parseInt(a.replace('plymotiondata_', ''), 10);
+          const numB = parseInt(b.replace('plymotiondata_', ''), 10);
+          return numA - numB;
+        });
+        setPsoAnimNames(names);
+        setLoaded(true);
+      });
+    });
+
+    const handleResize = () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      renderer.dispose();
+      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  // Rebuild retargeted clip when animation or offsets change
+  useEffect(() => {
+    const s = sceneRef.current;
+    if (!s || !s.pszModel || !s.pszMixer || !selectedAnim) return;
+
+    const clip = s.psoAnimations.find((a) => a.name === selectedAnim);
+    if (!clip) return;
+
+    // Stop current PSZ animation
+    if (s.currentAction) {
+      s.currentAction.stop();
+      s.pszMixer.uncacheAction(s.currentAction.getClip());
+    }
+
+    // Stop current PSO animation
+    if (s.currentPsoAction && s.psoMixer) {
+      s.currentPsoAction.stop();
+      s.psoMixer.uncacheAction(s.currentPsoAction.getClip());
+    }
+
+    // Reset to bind pose
+    resetToBindPose(s.pszModel);
+
+    // Apply offsets to PSZ rest pose
+    const adjustedPszRest = applyOffsetsToRest(s.pszRest, offsets);
+
+    // Build retargeted clip for PSZ
+    const retargetedClip = buildRetargetedClip(
+      clip, s.psoRest, adjustedPszRest, BONE_MAPPINGS, s.psoScale,
+    );
+
+    if (retargetedClip) {
+      const action = s.pszMixer.clipAction(retargetedClip);
+      action.timeScale = playbackSpeed;
+      action.play();
+      if (!isPlaying) action.paused = true;
+      s.currentAction = action;
+    }
+
+    // Play original animation on PSO model as reference
+    if (s.psoMixer) {
+      const psoAction = s.psoMixer.clipAction(clip);
+      psoAction.timeScale = playbackSpeed;
+      psoAction.play();
+      if (!isPlaying) psoAction.paused = true;
+      s.currentPsoAction = psoAction;
+    }
+  }, [selectedAnim, offsets, isPlaying]);
+
+  // Update playback speed
+  useEffect(() => {
+    const s = sceneRef.current;
+    if (s?.currentAction) s.currentAction.timeScale = playbackSpeed;
+    if (s?.currentPsoAction) s.currentPsoAction.timeScale = playbackSpeed;
+  }, [playbackSpeed]);
+
+  // Toggle play/pause
+  useEffect(() => {
+    const s = sceneRef.current;
+    if (s?.currentAction) s.currentAction.paused = !isPlaying;
+    if (s?.currentPsoAction) s.currentPsoAction.paused = !isPlaying;
+  }, [isPlaying]);
+
+  // Toggle skeleton helper
+  useEffect(() => {
+    const s = sceneRef.current;
+    if (s?.helper) s.helper.visible = showSkeleton;
+  }, [showSkeleton]);
+
+  const updateOffset = useCallback((bone: string, axis: 'x' | 'y' | 'z', value: number) => {
+    setOffsets((prev) => ({
+      ...prev,
+      [bone]: { ...prev[bone], [axis]: value },
+    }));
+  }, []);
+
+  const resetBone = useCallback((bone: string) => {
+    setOffsets((prev) => ({ ...prev, [bone]: { x: 0, y: 0, z: 0 } }));
+  }, []);
+
+  const resetAll = useCallback(() => {
+    setOffsets(defaultOffsets());
+  }, []);
+
+  const hasAnyOffset = Object.values(offsets).some((o) => o.x !== 0 || o.y !== 0 || o.z !== 0);
+
+  const exportOffsets = useCallback(() => {
+    const nonZero: OffsetMap = {};
+    for (const [k, v] of Object.entries(offsets)) {
+      if (v.x !== 0 || v.y !== 0 || v.z !== 0) nonZero[k] = v;
+    }
+    navigator.clipboard.writeText(JSON.stringify(nonZero, null, 2));
+  }, [offsets]);
+
+  return (
+    <div style={{ display: 'flex', height: '100%', background: '#0a0a1a', color: '#ccc' }}>
+      {/* Left panel: bone offset sliders */}
+      <div style={{
+        width: '300px', flexShrink: 0, display: 'flex', flexDirection: 'column',
+        background: '#12122a', borderRight: '1px solid #2a2a4a', overflow: 'hidden',
+      }}>
+        <div style={{
+          padding: '8px 12px', borderBottom: '1px solid #2a2a4a',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <span style={{ fontSize: '13px', fontWeight: 600 }}>Bone Offsets</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {hasAnyOffset && (
+              <button
+                onClick={exportOffsets}
+                style={{
+                  padding: '2px 8px', fontSize: '10px', background: '#2d5a2d',
+                  border: '1px solid #4a4', borderRadius: '3px', color: '#6f6', cursor: 'pointer',
+                }}
+              >
+                Copy
+              </button>
+            )}
+            <button
+              onClick={resetAll}
+              disabled={!hasAnyOffset}
+              style={{
+                padding: '2px 8px', fontSize: '10px', background: hasAnyOffset ? '#4a2a2a' : '#1a1a2e',
+                border: '1px solid #444', borderRadius: '3px',
+                color: hasAnyOffset ? '#f88' : '#555', cursor: hasAnyOffset ? 'pointer' : 'default',
+              }}
+            >
+              Reset All
+            </button>
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
+          {TUNABLE_BONES.map(({ pszBone, label }) => {
+            const o = offsets[pszBone];
+            const hasOffset = o.x !== 0 || o.y !== 0 || o.z !== 0;
+            return (
+              <div key={pszBone} style={{
+                padding: '4px 10px', borderBottom: '1px solid #1a1a2e',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  marginBottom: '2px',
+                }}>
+                  <span style={{
+                    fontSize: '11px', fontWeight: 600,
+                    color: hasOffset ? '#8cf' : '#999',
+                  }}>
+                    {label}
+                  </span>
+                  {hasOffset && (
+                    <button
+                      onClick={() => resetBone(pszBone)}
+                      style={{
+                        padding: '1px 6px', fontSize: '9px', background: 'transparent',
+                        border: '1px solid #444', borderRadius: '2px', color: '#888', cursor: 'pointer',
+                      }}
+                    >
+                      reset
+                    </button>
+                  )}
+                </div>
+                {(['x', 'y', 'z'] as const).map((axis) => (
+                  <div key={axis} style={{
+                    display: 'flex', alignItems: 'center', gap: '4px', height: '18px',
+                  }}>
+                    <span style={{
+                      fontSize: '10px', width: '10px', textAlign: 'center', fontWeight: 600,
+                      color: axis === 'x' ? '#f66' : axis === 'y' ? '#6f6' : '#66f',
+                    }}>
+                      {axis.toUpperCase()}
+                    </span>
+                    <input
+                      type="range"
+                      min={-90} max={90} step={1}
+                      value={o[axis]}
+                      onChange={(e) => updateOffset(pszBone, axis, parseFloat(e.target.value))}
+                      style={{ flex: 1, height: '12px' }}
+                    />
+                    <span style={{
+                      fontSize: '10px', color: '#888', width: '32px', textAlign: 'right',
+                      fontFamily: 'monospace',
+                    }}>
+                      {o[axis]}°
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Center: 3D viewport */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+        {!loaded && (
+          <div style={{
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            color: '#888', fontSize: '14px',
+          }}>
+            Loading models...
+          </div>
+        )}
+      </div>
+
+      {/* Right panel: animation picker */}
+      <div style={{
+        width: '260px', flexShrink: 0, display: 'flex', flexDirection: 'column',
+        background: '#12122a', borderLeft: '1px solid #2a2a4a', overflow: 'hidden',
+      }}>
+        <div style={{ padding: '8px 10px', borderBottom: '1px solid #2a2a4a' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Animations</div>
+          <input
+            type="text"
+            placeholder="Filter (walk, run, atk...)"
+            value={animSearch}
+            onChange={(e) => setAnimSearch(e.target.value)}
+            style={{
+              width: '100%', padding: '4px 8px', fontSize: '11px', fontFamily: 'monospace',
+              background: '#1a1a2e', border: '1px solid #444', borderRadius: '4px',
+              color: '#ccc', outline: 'none', boxSizing: 'border-box', marginBottom: '6px',
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              style={{
+                padding: '3px 10px', fontSize: '11px',
+                background: isPlaying ? '#2d5a2d' : '#5a2d2d',
+                border: `1px solid ${isPlaying ? '#4a4' : '#a44'}`,
+                borderRadius: '4px', color: isPlaying ? '#6f6' : '#f66', cursor: 'pointer',
+              }}
+            >
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
+            <label style={{ fontSize: '10px', color: '#888', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <input type="checkbox" checked={showSkeleton} onChange={(e) => setShowSkeleton(e.target.checked)} />
+              Skeleton
+            </label>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ fontSize: '10px', color: '#888', whiteSpace: 'nowrap' }}>
+              Speed: {playbackSpeed.toFixed(1)}x
+            </label>
+            <input
+              type="range" min="0.1" max="2" step="0.1"
+              value={playbackSpeed}
+              onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
+              style={{ flex: 1 }}
+            />
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1px', padding: '4px' }}>
+          {filteredAnims.map((name) => {
+            const idx = name.replace('plymotiondata_', '');
+            const mappedName = animNameMap[idx];
+            return (
+              <button
+                key={name}
+                onClick={() => { setSelectedAnim(name); setIsPlaying(true); }}
+                style={{
+                  padding: '3px 6px', display: 'flex', alignItems: 'center', gap: '4px',
+                  background: selectedAnim === name ? '#4a4a6a' : 'transparent',
+                  border: selectedAnim === name ? '1px solid #6b8afd' : '1px solid transparent',
+                  borderRadius: '3px',
+                  color: selectedAnim === name ? '#fff' : mappedName ? '#8c8' : '#aaa',
+                  cursor: 'pointer', fontSize: '10px', textAlign: 'left', fontFamily: 'monospace',
+                }}
+              >
+                <span style={{
+                  fontSize: '9px', color: '#666', background: mappedName ? '#1a3a1a' : '#1a1a2e',
+                  padding: '1px 4px', borderRadius: '2px', minWidth: '24px', textAlign: 'center',
+                }}>
+                  {idx}
+                </span>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {mappedName || name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

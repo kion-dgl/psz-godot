@@ -344,6 +344,7 @@ export default function RetargetViewer() {
   const [animationNameMap, setAnimationNameMap] = useState<Record<string, string>>({});
   const [nameInput, setNameInput] = useState('');
   const [animFilter, setAnimFilter] = useState<'all' | 'mapped' | 'unmapped'>('all');
+  const [animSearch, setAnimSearch] = useState('');
   const [pszBonesOpen, setPszBonesOpen] = useState(false);
   const [psoBonesOpen, setPsoBonesOpen] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -411,10 +412,16 @@ export default function RetargetViewer() {
 
   // Filter animation list
   const filteredAnimations = psoAnimations.filter((name) => {
-    if (animFilter === 'all') return true;
     const idx = name.replace('plymotiondata_', '');
+    const mappedName = animationNameMap[idx];
     const isMapped = idx in animationNameMap;
-    return animFilter === 'mapped' ? isMapped : !isMapped;
+    if (animFilter === 'mapped' && !isMapped) return false;
+    if (animFilter === 'unmapped' && isMapped) return false;
+    if (animSearch) {
+      const q = animSearch.toLowerCase();
+      return idx.includes(q) || (mappedName && mappedName.toLowerCase().includes(q)) || name.toLowerCase().includes(q);
+    }
+    return true;
   });
 
   const pszTree = buildBoneTree(pszBones);
@@ -1192,7 +1199,7 @@ export default function RetargetViewer() {
                 &#9654;
               </button>
               <div style={{ flex: 1 }} />
-              {/* Filter buttons */}
+              {/* Filter buttons + search */}
               {(['all', 'mapped', 'unmapped'] as const).map((f) => (
                 <button
                   key={f}
@@ -1210,6 +1217,19 @@ export default function RetargetViewer() {
                 </button>
               ))}
             </div>
+
+            {/* Search filter */}
+            <input
+              type="text"
+              placeholder="Filter by name (e.g. walk, run, atk)"
+              value={animSearch}
+              onChange={(e) => setAnimSearch(e.target.value)}
+              style={{
+                padding: '4px 8px', fontSize: '11px', fontFamily: 'monospace',
+                background: '#1a1a2e', border: '1px solid #444', borderRadius: '4px',
+                color: '#ccc', outline: 'none', width: '100%', boxSizing: 'border-box',
+              }}
+            />
 
             {/* Speed slider */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
