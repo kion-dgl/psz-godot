@@ -1,0 +1,11 @@
+{
+  "_comment": "Per-bone Euler offsets (degrees) applied after arm correction in retargeting. Keyed by PSZ bone name.",
+  "default": {
+    "020_Spine": { "x": 0, "y": 8, "z": 0 },
+    "090_Head": { "x": 0, "y": 10, "z": 0 },
+    "030_LArm01": { "x": 0, "y": -15, "z": 0 },
+    "040_LArm02": { "x": 90, "y": 0, "z": 0 },
+    "060_RArm01": { "x": 0, "y": 15, "z": 0 },
+    "070_RArm02": { "x": 90, "y": 0, "z": 0 }
+  }
+}

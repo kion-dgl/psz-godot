@@ -3,10 +3,18 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { assetUrl } from '../utils/assets';
+import { captureRestPose, getWorldRestQuat, type RestPoseData } from './retarget-utils';
 
 const PSZ_MODEL_PATH = assetUrl('/player/pc_000/pc_000/pc_000_000.glb');
 const PSZ_TEXTURE_PATH = assetUrl('/player/pc_000/textures/pc_000_000.png');
 const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
+const ANIMATION_MAP_PATH = assetUrl('/data/retarget/pso_animation_map.json');
+
+// Animation name mapping: PSO animation index → PSZ animation name
+interface AnimationMapData {
+  _comment: string;
+  mappings: Record<string, string>; // index as string → PSZ name
+}
 
 const BONE_MARKER_RADIUS = 0.012;
 
@@ -152,29 +160,6 @@ function createSelectedLabel(bone: BoneInfo, color: string, scene: THREE.Scene):
   sprite.renderOrder = 1000;
   scene.add(sprite);
   return sprite;
-}
-
-interface RestPoseData {
-  localQuats: Record<string, THREE.Quaternion>;
-  worldQuats: Record<string, THREE.Quaternion>;
-  parentMap: Record<string, string | null>;
-}
-
-// Capture rest-pose local + world quaternions and parent relationships
-function captureRestPose(model: THREE.Object3D): RestPoseData {
-  const localQuats: Record<string, THREE.Quaternion> = {};
-  const worldQuats: Record<string, THREE.Quaternion> = {};
-  const parentMap: Record<string, string | null> = {};
-  model.traverse((child) => {
-    if ((child as THREE.Bone).isBone) {
-      localQuats[child.name] = child.quaternion.clone();
-      const wq = new THREE.Quaternion();
-      child.getWorldQuaternion(wq);
-      worldQuats[child.name] = wq;
-      parentMap[child.name] = child.parent && (child.parent as THREE.Bone).isBone ? child.parent.name : null;
-    }
-  });
-  return { localQuats, worldQuats, parentMap };
 }
 
 interface SceneState {
@@ -330,7 +315,8 @@ export default function RetargetViewer() {
   const [selectedAnimation, setSelectedAnimation] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showMeshes, setShowMeshes] = useState(true);
-  const [showMarkers, setShowMarkers] = useState(true);
+  const [showMarkers, setShowMarkers] = useState(false);
+  const [showSkeleton, setShowSkeleton] = useState(false);
   const [mappings, setMappings] = useState<Record<string, string>>({
     bone_000: '000_Root',
     bone_002: '010_Hip',
@@ -355,6 +341,88 @@ export default function RetargetViewer() {
   const [psoCollapsed, setPsoCollapsed] = useState<Set<string>>(new Set());
   const [disabledPsoBones, setDisabledPsoBones] = useState<Set<string>>(new Set());
   const [zeroedPsoRest, setZeroedPsoRest] = useState(false);
+  const [animationNameMap, setAnimationNameMap] = useState<Record<string, string>>({});
+  const [nameInput, setNameInput] = useState('');
+  const [animFilter, setAnimFilter] = useState<'all' | 'mapped' | 'unmapped'>('all');
+  const [animSearch, setAnimSearch] = useState('');
+  const [pszBonesOpen, setPszBonesOpen] = useState(false);
+  const [psoBonesOpen, setPsoBonesOpen] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+
+  // Load animation name mappings
+  useEffect(() => {
+    fetch(ANIMATION_MAP_PATH)
+      .then((r) => r.json())
+      .then((data: AnimationMapData) => setAnimationNameMap(data.mappings || {}))
+      .catch(() => {});
+  }, []);
+
+  // When selected animation changes, populate input with existing mapping
+  useEffect(() => {
+    if (!selectedAnimation) return;
+    const idx = selectedAnimation.replace('plymotiondata_', '');
+    setNameInput(animationNameMap[idx] || '');
+  }, [selectedAnimation, animationNameMap]);
+
+  const assignAnimationName = useCallback(() => {
+    if (!selectedAnimation) return;
+    const idx = selectedAnimation.replace('plymotiondata_', '');
+    const trimmed = nameInput.trim();
+    setAnimationNameMap((prev) => {
+      const next = { ...prev };
+      if (trimmed) next[idx] = trimmed;
+      else delete next[idx];
+      return next;
+    });
+  }, [selectedAnimation, nameInput]);
+
+  const exportAnimationMap = useCallback(() => {
+    const data: AnimationMapData = {
+      _comment: 'Maps PSO animation index (plymotiondata_NNN) to PSZ animation name. Set to null for unmapped.',
+      mappings: animationNameMap,
+    };
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+  }, [animationNameMap]);
+
+  const downloadAnimationMap = useCallback(() => {
+    const data: AnimationMapData = {
+      _comment: 'Maps PSO animation index (plymotiondata_NNN) to PSZ animation name. Set to null for unmapped.',
+      mappings: animationNameMap,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pso_animation_map.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, [animationNameMap]);
+
+  const navigateAnimation = useCallback((direction: 1 | -1) => {
+    if (psoAnimations.length === 0) return;
+    const currentIdx = selectedAnimation ? psoAnimations.indexOf(selectedAnimation) : -1;
+    let nextIdx = currentIdx + direction;
+    if (nextIdx < 0) nextIdx = psoAnimations.length - 1;
+    if (nextIdx >= psoAnimations.length) nextIdx = 0;
+    setSelectedAnimation(psoAnimations[nextIdx]);
+    setIsPlaying(true);
+  }, [psoAnimations, selectedAnimation]);
+
+  const mappedCount = Object.keys(animationNameMap).length;
+  const totalAnims = psoAnimations.length;
+
+  // Filter animation list
+  const filteredAnimations = psoAnimations.filter((name) => {
+    const idx = name.replace('plymotiondata_', '');
+    const mappedName = animationNameMap[idx];
+    const isMapped = idx in animationNameMap;
+    if (animFilter === 'mapped' && !isMapped) return false;
+    if (animFilter === 'unmapped' && isMapped) return false;
+    if (animSearch) {
+      const q = animSearch.toLowerCase();
+      return idx.includes(q) || (mappedName && mappedName.toLowerCase().includes(q)) || name.toLowerCase().includes(q);
+    }
+    return true;
+  });
 
   const pszTree = buildBoneTree(pszBones);
   const psoTree = buildBoneTree(psoBones);
@@ -516,7 +584,7 @@ export default function RetargetViewer() {
         });
       });
       const helper = createSkeletonHelper(model, 0x44ff44);
-      if (helper) { scene.add(helper); sceneRef.current!.pszHelper = helper; }
+      if (helper) { helper.visible = false; scene.add(helper); sceneRef.current!.pszHelper = helper; }
       sceneRef.current!.pszMixer = new THREE.AnimationMixer(model);
       model.updateMatrixWorld(true);
       sceneRef.current!.pszRest = captureRestPose(model);
@@ -551,7 +619,7 @@ export default function RetargetViewer() {
         sceneRef.current!.psoRest = captureRestPose(model);
 
         const helper = createSkeletonHelper(model, 0xff4444);
-        if (helper) { scene.add(helper); sceneRef.current!.psoHelper = helper; }
+        if (helper) { helper.visible = false; scene.add(helper); sceneRef.current!.psoHelper = helper; }
         const mixer = new THREE.AnimationMixer(model);
         sceneRef.current!.psoMixer = mixer;
         sceneRef.current!.psoAnimations = gltf.animations;
@@ -641,21 +709,11 @@ export default function RetargetViewer() {
     toggle(sceneRef.current.psoModel);
   }, [showMeshes]);
 
-  // Compute world-space rest quaternion by walking the parent chain
-  const getWorldRestQuat = useCallback((boneName: string, restData: RestPoseData): THREE.Quaternion => {
-    const result = new THREE.Quaternion();
-    const chain: string[] = [];
-    let cur: string | null = boneName;
-    while (cur) {
-      chain.unshift(cur);
-      cur = restData.parentMap[cur] || null;
-    }
-    for (const name of chain) {
-      const local = restData.localQuats[name];
-      if (local) result.multiply(local);
-    }
-    return result;
-  }, []);
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    if (sceneRef.current.pszHelper) sceneRef.current.pszHelper.visible = showSkeleton;
+    if (sceneRef.current.psoHelper) sceneRef.current.psoHelper.visible = showSkeleton;
+  }, [showSkeleton]);
 
   const buildRetargetedClip = useCallback((clip: THREE.AnimationClip, boneMap: Record<string, string>): THREE.AnimationClip | null => {
     if (!sceneRef.current || Object.keys(boneMap).length === 0) return null;
@@ -750,27 +808,28 @@ export default function RetargetViewer() {
     }
     if (tracks.length === 0) return null;
     return new THREE.AnimationClip(clip.name + '_retargeted', clip.duration, tracks);
-  }, [getWorldRestQuat]);
+  }, []);
 
   useEffect(() => {
     if (!sceneRef.current?.psoMixer || !selectedAnimation) return;
     const { psoMixer, pszMixer, psoAnimations, currentAction, currentPszAction } = sceneRef.current;
-    if (currentAction) currentAction.fadeOut(0.2);
-    if (currentPszAction) currentPszAction.fadeOut(0.2);
+    if (currentAction) { currentAction.stop(); psoMixer.uncacheAction(currentAction.getClip()); }
+    if (currentPszAction && pszMixer) { currentPszAction.stop(); pszMixer.uncacheAction(currentPszAction.getClip()); }
+    sceneRef.current.currentPszAction = null;
     const clip = psoAnimations.find((a) => a.name === selectedAnimation);
     if (clip) {
       const action = psoMixer.clipAction(clip);
-      action.reset().fadeIn(0.2).play();
+      action.reset().play();
       action.setLoop(THREE.LoopRepeat, Infinity);
-      action.paused = !isPlaying;
+      action.timeScale = playbackSpeed;
       sceneRef.current.currentAction = action;
       if (playOnBoth && pszMixer) {
         const retargeted = buildRetargetedClip(clip, mappings);
         if (retargeted) {
           const pszAction = pszMixer.clipAction(retargeted);
-          pszAction.reset().fadeIn(0.2).play();
+          pszAction.reset().play();
           pszAction.setLoop(THREE.LoopRepeat, Infinity);
-          pszAction.paused = !isPlaying;
+          pszAction.timeScale = playbackSpeed;
           sceneRef.current.currentPszAction = pszAction;
         }
       }
@@ -781,6 +840,11 @@ export default function RetargetViewer() {
     if (sceneRef.current?.currentAction) sceneRef.current.currentAction.paused = !isPlaying;
     if (sceneRef.current?.currentPszAction) sceneRef.current.currentPszAction.paused = !isPlaying;
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (sceneRef.current?.currentAction) sceneRef.current.currentAction.timeScale = playbackSpeed;
+    if (sceneRef.current?.currentPszAction) sceneRef.current.currentPszAction.timeScale = playbackSpeed;
+  }, [playbackSpeed]);
 
   const addMapping = useCallback(() => {
     if (selectedPszBone && selectedPsoBone) {
@@ -799,25 +863,124 @@ export default function RetargetViewer() {
   return (
     <div style={{ background: '#1a1a2e', height: '100%', color: '#fff', padding: '16px', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', gap: '16px', height: '100%' }}>
-        {/* Left panel - PSZ bones */}
-        <div style={{ width: '220px', background: '#2d2d44', borderRadius: '8px', padding: '12px', overflowY: 'auto' }}>
-          <h3 style={{ fontSize: '12px', color: '#44ff44', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            PSZ Bones ({pszBones.length})
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-            {pszTree.map((node) => (
-              <BoneTreeRow
-                key={node.info.name}
-                node={node}
-                selectedBone={selectedPszBone}
-                onSelect={setSelectedPszBone}
-                collapsed={pszCollapsed}
-                onToggleCollapse={toggleCollapse(setPszCollapsed)}
-                color="#aaa"
-                selectedColor="#44ff44"
-                side="psz"
-              />
-            ))}
+        {/* Left panel - Bones + Mappings */}
+        <div style={{ width: '260px', background: '#2d2d44', borderRadius: '8px', padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Mappings */}
+          {Object.keys(mappings).length > 0 && (
+            <div style={{ borderBottom: '1px solid #3a3a5a', paddingBottom: '8px' }}>
+              <h3 style={{ fontSize: '12px', color: '#8888ff', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
+                Mappings ({Object.keys(mappings).length})
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                {Object.entries(mappings).map(([pso, psz]) => (
+                  <div key={pso} style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '3px 6px', background: '#1a1a2e', borderRadius: '3px', fontSize: '10px',
+                  }}>
+                    <span style={{ color: '#ff4444', fontFamily: 'monospace', flex: 1 }}>{pso}</span>
+                    <span style={{ color: '#666' }}>&rarr;</span>
+                    <span style={{ color: '#44ff44', fontFamily: 'monospace', flex: 1 }}>{psz}</span>
+                    <button
+                      onClick={() => removeMapping(pso)}
+                      style={{
+                        padding: '1px 5px', background: '#4a2a2a', border: '1px solid #644',
+                        borderRadius: '3px', color: '#f66', cursor: 'pointer', fontSize: '9px',
+                      }}
+                    >
+                      x
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* PSZ Bones (collapsible) */}
+          <div>
+            <button
+              onClick={() => setPszBonesOpen((v) => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px', width: '100%',
+                background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 0 8px 0',
+              }}
+            >
+              <span style={{ color: '#666', fontSize: '9px' }}>{pszBonesOpen ? '\u25bc' : '\u25b6'}</span>
+              <h3 style={{ fontSize: '12px', color: '#44ff44', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                PSZ Bones ({pszBones.length})
+              </h3>
+            </button>
+            {pszBonesOpen && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                {pszTree.map((node) => (
+                  <BoneTreeRow
+                    key={node.info.name}
+                    node={node}
+                    selectedBone={selectedPszBone}
+                    onSelect={setSelectedPszBone}
+                    collapsed={pszCollapsed}
+                    onToggleCollapse={toggleCollapse(setPszCollapsed)}
+                    color="#aaa"
+                    selectedColor="#44ff44"
+                    side="psz"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* PSO Bones (collapsible) */}
+          <div>
+            <button
+              onClick={() => setPsoBonesOpen((v) => !v)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px', width: '100%',
+                background: 'transparent', border: 'none', cursor: 'pointer', padding: '0 0 8px 0',
+              }}
+            >
+              <span style={{ color: '#666', fontSize: '9px' }}>{psoBonesOpen ? '\u25bc' : '\u25b6'}</span>
+              <h3 style={{ fontSize: '12px', color: '#ff4444', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                PSO Bones ({psoBones.length - disabledPsoBones.size}/{psoBones.length})
+              </h3>
+            </button>
+            {psoBonesOpen && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                {psoTree.map((node) => (
+                  <BoneTreeRow
+                    key={node.info.name}
+                    node={node}
+                    selectedBone={selectedPsoBone}
+                    onSelect={setSelectedPsoBone}
+                    collapsed={psoCollapsed}
+                    onToggleCollapse={toggleCollapse(setPsoCollapsed)}
+                    color="#aaa"
+                    selectedColor="#ff4444"
+                    mappings={mappings}
+                    disabledBones={disabledPsoBones}
+                    onToggleDisable={toggleDisablePsoBone}
+                    side="pso"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Animation order reference */}
+          <div style={{ borderTop: '1px solid #3a3a5a', paddingTop: '8px' }}>
+            <h3 style={{ fontSize: '12px', color: '#6b8afd', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Animation Order (Saber)
+            </h3>
+            <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#888', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+              {[
+                'atk1', 'atk2', 'atk3', 'wait', 'block',
+                'walk', 'dam_h', 'dam_d_wa', 'dam_n', 'dam_d',
+                'press', 'pb', 'run', 'walk_ready', 'tec',
+              ].map((name, i) => (
+                <div key={name} style={{ display: 'flex', gap: '6px', padding: '1px 4px' }}>
+                  <span style={{ color: '#555', minWidth: '16px', textAlign: 'right' }}>{i + 1}.</span>
+                  <span>{name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -843,6 +1006,10 @@ export default function RetargetViewer() {
               <label style={{ fontSize: '11px', color: '#888', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input type="checkbox" checked={showMarkers} onChange={(e) => setShowMarkers(e.target.checked)} />
                 Bones
+              </label>
+              <label style={{ fontSize: '11px', color: '#888', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input type="checkbox" checked={showSkeleton} onChange={(e) => setShowSkeleton(e.target.checked)} />
+                Skeleton
               </label>
               <label style={{ fontSize: '11px', color: '#c84', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input type="checkbox" checked={zeroedPsoRest} onChange={(e) => setZeroedPsoRest(e.target.checked)} />
@@ -916,101 +1083,220 @@ export default function RetargetViewer() {
           </div>
         </div>
 
-        {/* Right panel - PSO bones + animations + mappings */}
-        <div style={{ width: '280px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {/* PSO Bones */}
-          <div style={{ flex: 1, background: '#2d2d44', borderRadius: '8px', padding: '12px', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <h3 style={{ fontSize: '12px', color: '#ff4444', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                PSO Bones ({psoBones.length - disabledPsoBones.size}/{psoBones.length})
+        {/* Right panel - Animations */}
+        <div style={{ width: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* Animations + Mapping */}
+          <div style={{ flex: 1, background: '#2d2d44', borderRadius: '8px', padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {/* Header + progress + jump-to */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+              <h3 style={{ fontSize: '12px', color: '#6b8afd', margin: 0, textTransform: 'uppercase' }}>
+                Animations
               </h3>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-              {psoTree.map((node) => (
-                <BoneTreeRow
-                  key={node.info.name}
-                  node={node}
-                  selectedBone={selectedPsoBone}
-                  onSelect={setSelectedPsoBone}
-                  collapsed={psoCollapsed}
-                  onToggleCollapse={toggleCollapse(setPsoCollapsed)}
-                  color="#aaa"
-                  selectedColor="#ff4444"
-                  mappings={mappings}
-                  disabledBones={disabledPsoBones}
-                  onToggleDisable={toggleDisablePsoBone}
-                  side="pso"
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Animations */}
-          <div style={{ maxHeight: '200px', background: '#2d2d44', borderRadius: '8px', padding: '12px', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '12px', color: '#6b8afd', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
-              PSO Animations ({psoAnimations.length})
-            </h3>
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              style={{
-                padding: '4px 8px', width: '100%', marginBottom: '8px',
-                background: isPlaying ? '#2d5a2d' : '#1a1a2e',
-                border: isPlaying ? '1px solid #4a4' : '1px solid #444',
-                borderRadius: '4px', color: isPlaying ? '#6f6' : '#aaa',
-                cursor: 'pointer', fontSize: '11px',
-              }}
-            >
-              {isPlaying ? 'Pause' : 'Play'}
-            </button>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {psoAnimations.map((name) => (
-                <button
-                  key={name}
-                  onClick={() => { setSelectedAnimation(name); setIsPlaying(true); }}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input
+                  type="number"
+                  min={0}
+                  max={totalAnims - 1}
+                  placeholder="#"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const val = parseInt((e.target as HTMLInputElement).value);
+                      const name = `plymotiondata_${String(val).padStart(3, '0')}`;
+                      if (psoAnimations.includes(name)) {
+                        setSelectedAnimation(name);
+                        setIsPlaying(true);
+                      }
+                    }
+                  }}
                   style={{
-                    padding: '3px 6px',
-                    background: selectedAnimation === name ? '#4a4a6a' : 'transparent',
-                    border: selectedAnimation === name ? '1px solid #6b8afd' : '1px solid transparent',
+                    width: '48px', padding: '2px 4px', background: '#1a1a2e', border: '1px solid #444',
+                    borderRadius: '3px', color: '#aaa', fontSize: '10px', fontFamily: 'monospace',
+                    outline: 'none',
+                  }}
+                />
+                <span style={{ fontSize: '10px', color: mappedCount > 0 ? '#6f6' : '#666' }}>
+                  {mappedCount}/{totalAnims}
+                </span>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            {totalAnims > 0 && (
+              <div style={{ height: '4px', background: '#1a1a2e', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', width: `${(mappedCount / totalAnims) * 100}%`,
+                  background: '#4a4', borderRadius: '2px', transition: 'width 0.3s',
+                }} />
+              </div>
+            )}
+
+            {/* Name assignment for current animation */}
+            {selectedAnimation && (
+              <div style={{ background: '#1a1a2e', borderRadius: '4px', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ fontSize: '10px', color: '#888' }}>
+                  Assign name to <span style={{ color: '#6b8afd' }}>{selectedAnimation}</span>:
+                </div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <input
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') assignAnimationName(); }}
+                    placeholder="e.g. pmsa_atk1"
+                    style={{
+                      flex: 1, padding: '4px 8px', background: '#2d2d44', border: '1px solid #444',
+                      borderRadius: '3px', color: '#fff', fontSize: '11px', fontFamily: 'monospace',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    onClick={assignAnimationName}
+                    style={{
+                      padding: '4px 10px', background: nameInput.trim() ? '#2d5a2d' : '#4a2a2a',
+                      border: `1px solid ${nameInput.trim() ? '#4a4' : '#644'}`,
+                      borderRadius: '3px', color: nameInput.trim() ? '#6f6' : '#f66',
+                      cursor: 'pointer', fontSize: '10px',
+                    }}
+                  >
+                    {nameInput.trim() ? 'Set' : 'Clear'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Controls row */}
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <button
+                onClick={() => navigateAnimation(-1)}
+                title="Previous animation"
+                style={{
+                  padding: '4px 6px', background: '#1a1a2e', border: '1px solid #444',
+                  borderRadius: '4px', color: '#aaa', cursor: 'pointer', fontSize: '11px',
+                }}
+              >
+                &#9664;
+              </button>
+              <button
+                onClick={() => setIsPlaying(!isPlaying)}
+                style={{
+                  padding: '4px 8px',
+                  background: isPlaying ? '#2d5a2d' : '#1a1a2e',
+                  border: isPlaying ? '1px solid #4a4' : '1px solid #444',
+                  borderRadius: '4px', color: isPlaying ? '#6f6' : '#aaa',
+                  cursor: 'pointer', fontSize: '11px',
+                }}
+              >
+                {isPlaying ? 'Pause' : 'Play'}
+              </button>
+              <button
+                onClick={() => navigateAnimation(1)}
+                title="Next animation"
+                style={{
+                  padding: '4px 6px', background: '#1a1a2e', border: '1px solid #444',
+                  borderRadius: '4px', color: '#aaa', cursor: 'pointer', fontSize: '11px',
+                }}
+              >
+                &#9654;
+              </button>
+              <div style={{ flex: 1 }} />
+              {/* Filter buttons + search */}
+              {(['all', 'mapped', 'unmapped'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setAnimFilter(f)}
+                  style={{
+                    padding: '3px 6px', fontSize: '9px',
+                    background: animFilter === f ? '#4a4a6a' : 'transparent',
+                    border: animFilter === f ? '1px solid #6b8afd' : '1px solid #444',
                     borderRadius: '3px',
-                    color: selectedAnimation === name ? '#fff' : '#aaa',
-                    cursor: 'pointer', fontSize: '10px', textAlign: 'left', fontFamily: 'monospace',
+                    color: animFilter === f ? '#fff' : '#888',
+                    cursor: 'pointer', textTransform: 'capitalize',
                   }}
                 >
-                  {name}
+                  {f}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Mappings list */}
-          {Object.keys(mappings).length > 0 && (
-            <div style={{ maxHeight: '200px', background: '#2d2d44', borderRadius: '8px', padding: '12px', overflowY: 'auto' }}>
-              <h3 style={{ fontSize: '12px', color: '#8888ff', margin: '0 0 8px 0', textTransform: 'uppercase' }}>
-                Mappings ({Object.keys(mappings).length})
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                {Object.entries(mappings).map(([pso, psz]) => (
-                  <div key={pso} style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    padding: '3px 6px', background: '#1a1a2e', borderRadius: '3px', fontSize: '10px',
-                  }}>
-                    <span style={{ color: '#ff4444', fontFamily: 'monospace', flex: 1 }}>{pso}</span>
-                    <span style={{ color: '#666' }}>&rarr;</span>
-                    <span style={{ color: '#44ff44', fontFamily: 'monospace', flex: 1 }}>{psz}</span>
-                    <button
-                      onClick={() => removeMapping(pso)}
-                      style={{
-                        padding: '1px 5px', background: '#4a2a2a', border: '1px solid #644',
-                        borderRadius: '3px', color: '#f66', cursor: 'pointer', fontSize: '9px',
-                      }}
-                    >
-                      x
-                    </button>
-                  </div>
-                ))}
-              </div>
+            {/* Search filter */}
+            <input
+              type="text"
+              placeholder="Filter by name (e.g. walk, run, atk)"
+              value={animSearch}
+              onChange={(e) => setAnimSearch(e.target.value)}
+              style={{
+                padding: '4px 8px', fontSize: '11px', fontFamily: 'monospace',
+                background: '#1a1a2e', border: '1px solid #444', borderRadius: '4px',
+                color: '#ccc', outline: 'none', width: '100%', boxSizing: 'border-box',
+              }}
+            />
+
+            {/* Speed slider */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <label style={{ fontSize: '10px', color: '#888', whiteSpace: 'nowrap' }}>Speed: {playbackSpeed.toFixed(1)}x</label>
+              <input type="range" min="0.1" max="2" step="0.1" value={playbackSpeed}
+                onChange={(e) => setPlaybackSpeed(parseFloat(e.target.value))}
+                style={{ flex: 1 }} />
             </div>
-          )}
+
+            {/* Animation list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, overflowY: 'auto' }}>
+              {filteredAnimations.map((name) => {
+                const idx = name.replace('plymotiondata_', '');
+                const mappedName = animationNameMap[idx];
+                return (
+                  <button
+                    key={name}
+                    onClick={() => { setSelectedAnimation(name); setIsPlaying(true); }}
+                    style={{
+                      padding: '3px 6px',
+                      display: 'flex', alignItems: 'center', gap: '4px',
+                      background: selectedAnimation === name ? '#4a4a6a' : 'transparent',
+                      border: selectedAnimation === name ? '1px solid #6b8afd' : '1px solid transparent',
+                      borderRadius: '3px',
+                      color: selectedAnimation === name ? '#fff' : mappedName ? '#8c8' : '#aaa',
+                      cursor: 'pointer', fontSize: '10px', textAlign: 'left', fontFamily: 'monospace',
+                    }}
+                  >
+                    <span style={{
+                      fontSize: '9px', color: '#666', background: mappedName ? '#1a3a1a' : '#1a1a2e',
+                      padding: '1px 4px', borderRadius: '2px', minWidth: '24px', textAlign: 'center',
+                    }}>
+                      {idx}
+                    </span>
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {mappedName || name}
+                    </span>
+                    {mappedName && (
+                      <span style={{ color: '#4a4', fontSize: '9px', flexShrink: 0 }}>&#10003;</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Export buttons */}
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                onClick={exportAnimationMap}
+                style={{
+                  flex: 1, padding: '4px 8px', background: '#2d5a2d', border: '1px solid #4a4',
+                  borderRadius: '4px', color: '#6f6', cursor: 'pointer', fontSize: '10px',
+                }}
+              >
+                Copy JSON
+              </button>
+              <button
+                onClick={downloadAnimationMap}
+                style={{
+                  flex: 1, padding: '4px 8px', background: '#2d2d5a', border: '1px solid #44a',
+                  borderRadius: '4px', color: '#88f', cursor: 'pointer', fontSize: '10px',
+                }}
+              >
+                Download
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

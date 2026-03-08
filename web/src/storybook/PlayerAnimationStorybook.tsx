@@ -1,8 +1,45 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { assetUrl } from '../utils/assets';
+import {
+  BONE_MAPPINGS,
+  captureRestPose,
+  resetToBindPose,
+  buildRetargetedClip,
+  PSO_CATEGORY_ANIMATIONS,
+  type RestPoseData,
+} from '../retarget/retarget-utils';
+
+const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
+const PSO_SABER_PATH = assetUrl('/data/retarget/Saber.glb');
+
+// Common PSO locomotion animations added to every category with tuned bone offsets
+const PSO_COMMON_ANIMS: { index: number; name: string; label: string; boneOffsets: Record<string, { x: number; y: number; z: number }> }[] = [
+  {
+    index: 200, name: 'pso_fi_walk', label: 'PSO Walk',
+    boneOffsets: {
+      '020_Spine': { x: 0, y: 8, z: 0 },
+      '090_Head': { x: 0, y: 10, z: 0 },
+      '030_LArm01': { x: 0, y: -15, z: 0 },
+      '040_LArm02': { x: 90, y: 0, z: 0 },
+      '060_RArm01': { x: 0, y: 15, z: 0 },
+      '070_RArm02': { x: 90, y: 0, z: 0 },
+    },
+  },
+  {
+    index: 207, name: 'pso_fi_run', label: 'PSO Run',
+    boneOffsets: {
+      '020_Spine': { x: 0, y: 8, z: 0 },
+      '090_Head': { x: 0, y: 3, z: 0 },
+      '030_LArm01': { x: 0, y: -10, z: 0 },
+      '040_LArm02': { x: 90, y: 0, z: 0 },
+      '060_RArm01': { x: 0, y: 10, z: 0 },
+      '070_RArm02': { x: 90, y: 0, z: 0 },
+    },
+  },
+];
 
 const GENDER_MAP: Record<string, 'm' | 'w'> = {
   humar: 'm', hucast: 'm', ramar: 'm', racast: 'm', fomar: 'm', hunewm: 'm', fonewm: 'm',
@@ -55,7 +92,7 @@ const ANIMATION_CATEGORIES = [
 
 const CATEGORY_WEAPON_MAP: Record<string, string | null> = {
   common: null,
-  saver: assetUrl('/weapons/wsac01/wsac01/wsac01_1_o.glb'),
+  saver: PSO_SABER_PATH,
   sword: assetUrl('/weapons/wswr02/wswr02/wswr02_1_b.glb'),
   dagger: assetUrl('/weapons/wdah01/wdah01/wdah01_1_l.glb'),
   spear: assetUrl('/weapons/wsph01/wsph01/wsph01_1_b.glb'),
@@ -69,6 +106,9 @@ const CATEGORY_WEAPON_MAP: Record<string, string | null> = {
   wand: assetUrl('/weapons/wwan01/wwan01/wwan01_1_o.glb'),
   slicer: assetUrl('/weapons/wslr03/wslr03/wslr03_1_o.glb'),
 };
+
+// Categories whose weapon GLB is in PSO scale (needs psoScale applied)
+const PSO_SCALE_WEAPONS = new Set(['saver']);
 
 const WEAPON_OFFSETS: Record<string, { x: number; y: number; z: number }> = {
   saver: { x: 0.310, y: 0.000, z: 0.000 },
@@ -97,6 +137,17 @@ const ANIMATION_LABELS: Record<string, string> = {
   'pmsa_tec': 'Technique', 'pmbn_pb': 'Photon Blast', 'pmbn_pb_lp': 'Photon Blast Loop',
 };
 
+// Build PSO animation labels from the definitions
+const PSO_ANIMATION_LABELS: Record<string, string> = {};
+for (const defs of Object.values(PSO_CATEGORY_ANIMATIONS)) {
+  for (const def of defs) {
+    PSO_ANIMATION_LABELS[def.name] = def.label;
+  }
+}
+for (const def of PSO_COMMON_ANIMS) {
+  PSO_ANIMATION_LABELS[def.name] = def.label;
+}
+
 export default function PlayerAnimationStorybook() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<{
@@ -108,8 +159,14 @@ export default function PlayerAnimationStorybook() {
     model: THREE.Object3D | null;
     weaponRight: THREE.Object3D | null;
     weaponLeft: THREE.Object3D | null;
+    wristR: THREE.Object3D | null;
+    wristL: THREE.Object3D | null;
     animations: THREE.AnimationClip[];
     currentAction: THREE.AnimationAction | null;
+    psoAnimations: THREE.AnimationClip[];
+    psoRest: RestPoseData | null;
+    pszRest: RestPoseData | null;
+    psoScale: number;
   } | null>(null);
 
   const [selectedClass, setSelectedClass] = useState('humar');
@@ -121,6 +178,9 @@ export default function PlayerAnimationStorybook() {
   const [useSpecialAnimation, setUseSpecialAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [weaponOffset, setWeaponOffset] = useState({ x: 0, y: 0, z: 0 });
+  const [psoLoaded, setPsoLoaded] = useState(false);
+  const [psoRetargetedClips, setPsoRetargetedClips] = useState<Record<string, THREE.AnimationClip>>({});
+  const [wristRotation, setWristRotation] = useState({ x: 0, y: 0, z: 0 });
 
   const gender = GENDER_MAP[selectedClass] || 'm';
   const bodyType = useSpecialAnimation ? (gender === 'm' ? 'sm' : 'sw') : gender;
@@ -163,8 +223,9 @@ export default function PlayerAnimationStorybook() {
 
     sceneRef.current = {
       scene, camera, renderer, controls,
-      mixer: null, model: null, weaponRight: null, weaponLeft: null,
+      mixer: null, model: null, weaponRight: null, weaponLeft: null, wristR: null, wristL: null,
       animations: [], currentAction: null,
+      psoAnimations: [], psoRest: null, pszRest: null, psoScale: 1,
     };
 
     const clock = new THREE.Clock();
@@ -194,6 +255,68 @@ export default function PlayerAnimationStorybook() {
     };
   }, []);
 
+  // Load PSO model once (for retargeting source animations)
+  useEffect(() => {
+    if (!sceneRef.current) return;
+    const loader = new GLTFLoader();
+    loader.load(PSO_MODEL_PATH, (gltf) => {
+      const psoModel = gltf.scene;
+      psoModel.updateMatrixWorld(true);
+      const psoBox = new THREE.Box3().setFromObject(psoModel);
+      const psoHeight = psoBox.max.y - psoBox.min.y;
+      const pszHeight = 1.5;
+      const scale = pszHeight / psoHeight;
+
+      resetToBindPose(psoModel);
+      psoModel.updateMatrixWorld(true);
+
+      sceneRef.current!.psoRest = captureRestPose(psoModel);
+      sceneRef.current!.psoAnimations = gltf.animations;
+      sceneRef.current!.psoScale = scale;
+      setPsoLoaded(true);
+    });
+  }, []);
+
+  // Wrist target mapping: PSO wrist bone → wrapper node name
+  const wristTargets: Record<string, string> = {
+    bone_030: '_wristL',
+    bone_043: '_wristR',
+  };
+
+  // Retarget PSO animations for a given category
+  const retargetPsoForCategory = useCallback((
+    categoryId: string,
+    psoRest: RestPoseData,
+    pszRest: RestPoseData,
+    psoAnims: THREE.AnimationClip[],
+    psoScale: number,
+  ): Record<string, THREE.AnimationClip> => {
+    const clips: Record<string, THREE.AnimationClip> = {};
+
+    // Category-specific PSO animations (saber, sword, etc.)
+    const psoDefs = PSO_CATEGORY_ANIMATIONS[categoryId];
+    if (psoDefs) {
+      for (const def of psoDefs) {
+        const psoClipName = `plymotiondata_${String(def.index).padStart(3, '0')}`;
+        const srcClip = psoAnims.find((c) => c.name === psoClipName);
+        if (!srcClip) continue;
+        const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, psoScale, def.name, wristTargets);
+        if (retargeted) clips[def.name] = retargeted;
+      }
+    }
+
+    // Common PSO locomotion animations (walk/run) added to every category
+    for (const def of PSO_COMMON_ANIMS) {
+      const psoClipName = `plymotiondata_${String(def.index).padStart(3, '0')}`;
+      const srcClip = psoAnims.find((c) => c.name === psoClipName);
+      if (!srcClip) continue;
+      const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, psoScale, def.name, wristTargets, def.boneOffsets);
+      if (retargeted) clips[def.name] = retargeted;
+    }
+
+    return clips;
+  }, []);
+
   // Load model, animations, and weapon
   useEffect(() => {
     if (!sceneRef.current || !animationGlbPath) return;
@@ -208,6 +331,8 @@ export default function PlayerAnimationStorybook() {
     }
     sceneRef.current.weaponRight = null;
     sceneRef.current.weaponLeft = null;
+    sceneRef.current.wristR = null;
+    sceneRef.current.wristL = null;
     sceneRef.current.mixer = null;
     sceneRef.current.currentAction = null;
 
@@ -215,6 +340,10 @@ export default function PlayerAnimationStorybook() {
       const model = gltf.scene;
       scene.add(model);
       sceneRef.current!.model = model;
+
+      // Capture PSZ rest pose for retargeting
+      model.updateMatrixWorld(true);
+      sceneRef.current!.pszRest = captureRestPose(model);
 
       textureLoader.load(textureUrl, (texture) => {
         texture.magFilter = THREE.NearestFilter;
@@ -234,7 +363,17 @@ export default function PlayerAnimationStorybook() {
         sceneRef.current!.mixer = mixer;
         sceneRef.current!.animations = animGltf.animations;
         const animNames = animGltf.animations.map((a) => a.name);
-        setAvailableAnimations(animNames);
+
+        // Retarget PSO animations if available
+        const { psoRest, psoAnimations: psoAnims, psoScale, pszRest } = sceneRef.current!;
+        if (psoRest && pszRest && psoAnims.length > 0) {
+          const psoClips = retargetPsoForCategory(selectedCategory, psoRest, pszRest, psoAnims, psoScale);
+          setPsoRetargetedClips(psoClips);
+          setAvailableAnimations([...animNames, ...Object.keys(psoClips)]);
+        } else {
+          setPsoRetargetedClips({});
+          setAvailableAnimations(animNames);
+        }
         if (animNames.length > 0) setSelectedAnimation(animNames[0]);
 
         if (weaponGlbPath) {
@@ -247,37 +386,67 @@ export default function PlayerAnimationStorybook() {
           });
 
           const isDualWield = currentCategory === 'dagger' || currentCategory === 'machinegun';
+          const usePsoWeapon = PSO_SCALE_WEAPONS.has(currentCategory);
           const prepareWeapon = (s: THREE.Group) => {
             s.traverse((child: THREE.Object3D) => {
               if ((child as THREE.Mesh).isMesh) {
-                (child as THREE.Mesh).geometry?.computeVertexNormals();
-                (child as THREE.Mesh).material = new THREE.MeshNormalMaterial({
-                  flatShading: true, side: THREE.DoubleSide,
-                });
+                if (usePsoWeapon) {
+                  // Keep embedded textures, just set nearest-neighbor filtering
+                  const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial;
+                  if (mat.map) {
+                    mat.map.magFilter = THREE.NearestFilter;
+                    mat.map.minFilter = THREE.NearestFilter;
+                    mat.map.needsUpdate = true;
+                  }
+                } else {
+                  (child as THREE.Mesh).geometry?.computeVertexNormals();
+                  (child as THREE.Mesh).material = new THREE.MeshNormalMaterial({
+                    flatShading: true, side: THREE.DoubleSide,
+                  });
+                }
               }
             });
             return s;
           };
           const defaultOffset = WEAPON_OFFSETS[currentCategory] || { x: 0, y: 0, z: 0 };
 
+          const needsPsoScale = PSO_SCALE_WEAPONS.has(currentCategory);
           loader.load(weaponGlbPath, (weaponGltf) => {
             const weaponRight = prepareWeapon(weaponGltf.scene);
+            if (needsPsoScale) {
+              const s = sceneRef.current!.psoScale;
+              weaponRight.scale.set(s, s, s);
+            }
             if (rightHand) {
+              // Insert wrist wrapper node for PSO wrist rotation
+              const wristR = new THREE.Object3D();
+              wristR.name = '_wristR';
+              rightHand.add(wristR);
               weaponRight.position.set(defaultOffset.x, defaultOffset.y, defaultOffset.z);
-              rightHand.add(weaponRight);
+              wristR.add(weaponRight);
               sceneRef.current!.weaponRight = weaponRight;
+              sceneRef.current!.wristR = wristR;
             }
             if (isDualWield && leftHand) {
               loader.load(weaponGlbPath, (wg2) => {
                 const weaponLeft = prepareWeapon(wg2.scene);
+                if (needsPsoScale) {
+                  const s = sceneRef.current!.psoScale;
+                  weaponLeft.scale.set(s, s, s);
+                }
+                const wristL = new THREE.Object3D();
+                wristL.name = '_wristL';
+                leftHand!.add(wristL);
                 weaponLeft.position.set(defaultOffset.x, defaultOffset.y, defaultOffset.z);
                 weaponLeft.rotation.x = Math.PI;
-                leftHand!.add(weaponLeft);
+                wristL.add(weaponLeft);
                 sceneRef.current!.weaponLeft = weaponLeft;
+                sceneRef.current!.wristL = wristL;
                 setIsLoading(false);
               });
             } else {
               sceneRef.current!.weaponLeft = null;
+              sceneRef.current!.wristL = null;
               setIsLoading(false);
             }
           });
@@ -286,14 +455,41 @@ export default function PlayerAnimationStorybook() {
         }
       });
     });
-  }, [modelGlbPath, animationGlbPath, textureUrl, weaponGlbPath, selectedCategory]);
+  }, [modelGlbPath, animationGlbPath, textureUrl, weaponGlbPath, selectedCategory, retargetPsoForCategory]);
 
-  // Play selected animation
+  // Re-retarget when PSO finishes loading after PSZ animations are already loaded
+  useEffect(() => {
+    if (!psoLoaded || !sceneRef.current?.pszRest || !sceneRef.current?.psoRest) return;
+    const { psoRest, pszRest, psoAnimations: psoAnims, psoScale } = sceneRef.current;
+    if (psoAnims.length === 0) return;
+    const psoClips = retargetPsoForCategory(selectedCategory, psoRest, pszRest, psoAnims, psoScale);
+    setPsoRetargetedClips(psoClips);
+    setAvailableAnimations((prev) => {
+      const pszOnly = prev.filter((n) => !n.startsWith('pso_'));
+      return [...pszOnly, ...Object.keys(psoClips)];
+    });
+  }, [psoLoaded, selectedCategory, retargetPsoForCategory]);
+
+  // Play selected animation (PSZ or retargeted PSO)
   useEffect(() => {
     if (!sceneRef.current?.mixer || !selectedAnimation) return;
-    const { mixer, animations, currentAction } = sceneRef.current;
+    const { mixer, animations, currentAction, wristR, wristL } = sceneRef.current;
     if (currentAction) currentAction.fadeOut(0.2);
-    const clip = animations.find((a) => a.name === selectedAnimation);
+
+    const isPso = selectedAnimation.startsWith('pso_');
+
+    // Reset wrist nodes to identity when playing PSZ animations
+    if (!isPso) {
+      if (wristR) wristR.quaternion.identity();
+      if (wristL) wristL.quaternion.identity();
+    }
+
+    // Check PSZ animations first, then PSO retargeted clips
+    let clip = animations.find((a) => a.name === selectedAnimation);
+    if (!clip && psoRetargetedClips[selectedAnimation]) {
+      clip = psoRetargetedClips[selectedAnimation];
+    }
+
     if (clip) {
       const action = mixer.clipAction(clip);
       action.reset().fadeIn(0.2).play();
@@ -302,7 +498,7 @@ export default function PlayerAnimationStorybook() {
       action.paused = !isPlaying;
       sceneRef.current.currentAction = action;
     }
-  }, [selectedAnimation]);
+  }, [selectedAnimation, psoRetargetedClips]);
 
   useEffect(() => {
     if (sceneRef.current?.currentAction) sceneRef.current.currentAction.timeScale = playbackSpeed;
@@ -326,6 +522,25 @@ export default function PlayerAnimationStorybook() {
     if (sceneRef.current?.weaponLeft)
       sceneRef.current.weaponLeft.position.set(weaponOffset.x, weaponOffset.y, weaponOffset.z);
   }, [weaponOffset]);
+
+  // Apply wrist rotation to wrapper nodes (for PSO animation weapon orientation correction)
+  useEffect(() => {
+    const isPso = selectedAnimation?.startsWith('pso_');
+    if (!sceneRef.current) return;
+    const { wristR, wristL } = sceneRef.current;
+    if (isPso) {
+      const euler = new THREE.Euler(
+        wristRotation.x * Math.PI / 180,
+        wristRotation.y * Math.PI / 180,
+        wristRotation.z * Math.PI / 180,
+      );
+      if (wristR) wristR.rotation.copy(euler);
+      if (wristL) wristL.rotation.copy(euler);
+    } else {
+      if (wristR) wristR.quaternion.identity();
+      if (wristL) wristL.quaternion.identity();
+    }
+  }, [wristRotation, selectedAnimation]);
 
   const copyOffset = () => {
     const str = `{ x: ${weaponOffset.x.toFixed(3)}, y: ${weaponOffset.y.toFixed(3)}, z: ${weaponOffset.z.toFixed(3)} }`;
@@ -418,22 +633,34 @@ export default function PlayerAnimationStorybook() {
           <div style={{ borderBottom: '1px solid #3a3a5a', paddingBottom: '12px' }}>
             <h3 style={{ fontSize: '12px', color: '#6b8afd', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
               Animations ({availableAnimations.length})
+              {!psoLoaded && (
+                <span style={{ color: '#666', fontWeight: 'normal', fontSize: '10px' }}> (loading PSO...)</span>
+              )}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', maxHeight: '250px', overflowY: 'auto' }}>
               {availableAnimations.length === 0 ? (
                 <div style={{ color: '#666', fontSize: '12px', fontStyle: 'italic', textAlign: 'center', padding: '16px' }}>Loading...</div>
-              ) : availableAnimations.map((anim, index) => (
-                <button key={anim} onClick={() => setSelectedAnimation(anim)} style={{
-                  display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px',
-                  background: selectedAnimation === anim ? '#4a4a6a' : '#1a1a2e',
-                  border: selectedAnimation === anim ? '1px solid #6b8afd' : '1px solid #444',
-                  borderRadius: '4px', color: selectedAnimation === anim ? '#fff' : '#aaa',
-                  cursor: 'pointer', fontSize: '11px', textAlign: 'left',
-                }}>
-                  <span style={{ fontSize: '10px', color: '#666', background: '#333', padding: '2px 5px', borderRadius: '3px', minWidth: '20px', textAlign: 'center' }}>{index}</span>
-                  <span style={{ flex: 1 }}>{ANIMATION_LABELS[anim] || anim}</span>
-                </button>
-              ))}
+              ) : availableAnimations.map((anim, index) => {
+                const isPso = anim.startsWith('pso_');
+                const label = isPso ? (PSO_ANIMATION_LABELS[anim] || anim) : (ANIMATION_LABELS[anim] || anim);
+                return (
+                  <button key={anim} onClick={() => setSelectedAnimation(anim)} style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px',
+                    background: selectedAnimation === anim ? (isPso ? '#3a2a4a' : '#4a4a6a')  : '#1a1a2e',
+                    border: selectedAnimation === anim ? `1px solid ${isPso ? '#a66afd' : '#6b8afd'}` : '1px solid #444',
+                    borderRadius: '4px', color: selectedAnimation === anim ? '#fff' : isPso ? '#c8a' : '#aaa',
+                    cursor: 'pointer', fontSize: '11px', textAlign: 'left',
+                  }}>
+                    <span style={{
+                      fontSize: '10px', padding: '2px 5px', borderRadius: '3px', minWidth: '20px', textAlign: 'center',
+                      color: isPso ? '#a66afd' : '#666', background: isPso ? '#2a1a3a' : '#333',
+                    }}>
+                      {isPso ? 'PSO' : index}
+                    </span>
+                    <span style={{ flex: 1 }}>{label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -472,6 +699,38 @@ export default function PlayerAnimationStorybook() {
               }}>
                 Copy Offset
               </button>
+            </div>
+          )}
+
+          {/* Wrist Rotation (for PSO animation weapon correction) */}
+          {weaponGlbPath && selectedAnimation?.startsWith('pso_') && (
+            <div style={{ paddingBottom: '12px' }}>
+              <h3 style={{ fontSize: '12px', color: '#a66afd', margin: '0 0 10px 0', textTransform: 'uppercase' }}>Wrist Rotation (PSO)</h3>
+              {(['x', 'y', 'z'] as const).map((axis) => (
+                <div key={axis} style={{ marginBottom: '8px' }}>
+                  <label style={{ fontSize: '11px', color: '#888' }}>{axis.toUpperCase()}: {wristRotation[axis].toFixed(0)}&deg;</label>
+                  <input type="range" min="-180" max="180" step="1" value={wristRotation[axis]}
+                    onChange={(e) => setWristRotation(prev => ({ ...prev, [axis]: parseFloat(e.target.value) }))}
+                    style={{ width: '100%' }} />
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => {
+                  const str = `{ x: ${wristRotation.x}, y: ${wristRotation.y}, z: ${wristRotation.z} }`;
+                  navigator.clipboard.writeText(str);
+                }} style={{
+                  padding: '8px 12px', background: '#3a2a4a', border: '1px solid #a66afd',
+                  borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '12px',
+                }}>
+                  Copy Rotation
+                </button>
+                <button onClick={() => setWristRotation({ x: 0, y: 0, z: 0 })} style={{
+                  padding: '8px 12px', background: '#1a1a2e', border: '1px solid #444',
+                  borderRadius: '4px', color: '#aaa', cursor: 'pointer', fontSize: '12px',
+                }}>
+                  Reset
+                </button>
+              </div>
             </div>
           )}
         </div>

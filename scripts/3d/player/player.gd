@@ -4,6 +4,9 @@ extends CharacterBody3D
 
 # Movement settings
 const MOVE_SPEED: float = 6.0
+const SPRINT_SPEED: float = 8.0
+const WALK_SPEED: float = 2.5
+const WALK_TO_RUN_DELAY: float = 1.75
 const ROTATE_SPEED: float = 5.0
 const GRAVITY: float = 20.0
 const FALL_RESPAWN_Y: float = -10.0  # Respawn if player falls below this
@@ -14,7 +17,9 @@ var spawn_position: Vector3 = Vector3.ZERO
 # Player state machine
 enum PlayerState {
 	IDLE,
+	WALKING,
 	RUNNING,
+	SPRINTING,
 	ATTACKING,
 	DODGING,
 	DAMAGED,
@@ -26,7 +31,9 @@ enum PlayerState {
 # Animation name mapping (from R3F ANIMATION_MAP)
 const ANIMATION_MAP: Dictionary = {
 	"pmsa_wait": "wait",
+	"pmsa_walk": "walk",
 	"pmsa_run": "run",
+	"pmsa_run_pso": "run_pso",
 	"pmsa_esc_f": "dodge",
 	"pmsa_atk1": "atk1",
 	"pmsa_atk2": "atk2",
@@ -62,6 +69,7 @@ var weapon_scene: PackedScene = preload("res://assets/weapons/saber/saber.glb")
 # State tracking
 var current_state: PlayerState = PlayerState.IDLE
 var player_rotation: float = 0.0
+var walk_timer: float = 0.0
 
 # Combo system
 var combo_state: int = 0  # 0 = not attacking, 1-3 = combo step
@@ -139,7 +147,7 @@ func _setup_animations() -> void:
 	skeleton_parent.add_child(animation_player)
 
 	# Animations that should loop
-	var looping_anims := ["pmsa_wait", "pmsa_run", "pmsa_stp_fb", "pmsa_stp_lr"]
+	var looping_anims := ["pmsa_wait", "pmsa_run", "pmsa_walk", "pmsa_run_pso", "pmsa_stp_fb", "pmsa_stp_lr"]
 
 	# Copy and remap each animation - skeleton is now a sibling
 	var lib := AnimationLibrary.new()
@@ -185,8 +193,9 @@ func _setup_weapon() -> void:
 		weapon_node = weapon_scene.instantiate() as Node3D
 		bone_attachment.add_child(weapon_node)
 		# Adjust weapon position/rotation as needed
+		weapon_node.position = Vector3(0.31, 0, 0)  # Offset into hand
 		weapon_node.rotation_degrees = Vector3(0, 90, 0)  # Rotate to align with hand
-		weapon_node.scale = Vector3(1.5, 1.5, 1.5)  # Scale up if needed
+		weapon_node.scale = Vector3(0.09, 0.09, 0.09)  # PSO scale → PSZ scale
 		print("[Player] Weapon attached to bone: ", bone_attachment.bone_name)
 
 
@@ -331,7 +340,7 @@ func _physics_process(delta: float) -> void:
 
 	# Handle state-specific logic
 	match current_state:
-		PlayerState.IDLE, PlayerState.RUNNING:
+		PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING, PlayerState.SPRINTING:
 			_handle_movement(delta)
 		PlayerState.DODGING:
 			_handle_dodge(delta)
@@ -418,9 +427,33 @@ func _handle_movement(delta: float) -> void:
 			rot_diff += TAU
 		player_rotation += rot_diff * ROTATE_SPEED * delta
 
+		# Sprint check
+		var sprinting := Input.is_action_pressed("sprint")
+
+		# State transitions: IDLE → WALKING → RUNNING, or SPRINTING with shift
+		if sprinting:
+			if current_state != PlayerState.SPRINTING:
+				transition_to(PlayerState.SPRINTING)
+		elif current_state == PlayerState.SPRINTING:
+			transition_to(PlayerState.RUNNING)
+		elif current_state == PlayerState.IDLE:
+			walk_timer = 0.0
+			transition_to(PlayerState.WALKING)
+		elif current_state == PlayerState.WALKING:
+			walk_timer += delta
+			if walk_timer >= WALK_TO_RUN_DELAY:
+				transition_to(PlayerState.RUNNING)
+
+		# Speed based on current state
+		var speed: float = MOVE_SPEED
+		if current_state == PlayerState.WALKING:
+			speed = WALK_SPEED
+		elif current_state == PlayerState.SPRINTING:
+			speed = SPRINT_SPEED
+
 		# Calculate desired movement
 		var move_dir := Vector3(sin(player_rotation), 0, cos(player_rotation))
-		var desired_velocity := move_dir * MOVE_SPEED
+		var desired_velocity := move_dir * speed
 
 		# Check if movement would stay on floor using raycasts
 		# Check three points: center, left, and right of movement direction
@@ -431,17 +464,14 @@ func _handle_movement(delta: float) -> void:
 			# No floor ahead, stop at edge
 			velocity.x = 0
 			velocity.z = 0
-
-		# Switch to running state if idle
-		if current_state == PlayerState.IDLE:
-			transition_to(PlayerState.RUNNING)
 	else:
 		# Stop horizontal movement
 		velocity.x = 0
 		velocity.z = 0
 
-		# Switch to idle if running
-		if current_state == PlayerState.RUNNING:
+		# Switch to idle if walking, running, or sprinting
+		if current_state in [PlayerState.WALKING, PlayerState.RUNNING, PlayerState.SPRINTING]:
+			walk_timer = 0.0
 			transition_to(PlayerState.IDLE)
 
 
@@ -554,7 +584,11 @@ func transition_to(new_state: PlayerState) -> void:
 	match new_state:
 		PlayerState.IDLE:
 			play_animation("pmsa_wait", true)
+		PlayerState.WALKING:
+			play_animation("pmsa_walk", true)
 		PlayerState.RUNNING:
+			play_animation("pmsa_run_pso", true)
+		PlayerState.SPRINTING:
 			play_animation("pmsa_run", true)
 		PlayerState.DODGING:
 			play_animation("pmsa_esc_f", false)
