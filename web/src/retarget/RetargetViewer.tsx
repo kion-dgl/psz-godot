@@ -597,10 +597,15 @@ export default function RetargetViewer() {
     if (Object.keys(boneMap).length === 0) return null;
     const tracks: THREE.KeyframeTrack[] = [];
     for (const track of clip.tracks) {
+      // Track names are like "bone_000.quaternion", "bone_000.position", "bone_000.scale"
       const dotIdx = track.name.indexOf('.');
       if (dotIdx < 0) continue;
       const boneName = track.name.substring(0, dotIdx);
       const prop = track.name.substring(dotIdx);
+
+      // Only transfer rotation tracks — position and scale are skeleton-specific
+      if (prop !== '.quaternion') continue;
+
       const pszBoneName = boneMap[boneName];
       if (pszBoneName) {
         const newTrack = track.clone();
