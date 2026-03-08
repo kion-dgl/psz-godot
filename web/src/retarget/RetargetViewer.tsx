@@ -154,6 +154,17 @@ function createSelectedLabel(bone: BoneInfo, color: string, scene: THREE.Scene):
   return sprite;
 }
 
+// Capture rest-pose quaternions for all bones in a model
+function captureRestQuaternions(model: THREE.Object3D): Record<string, THREE.Quaternion> {
+  const quats: Record<string, THREE.Quaternion> = {};
+  model.traverse((child) => {
+    if ((child as THREE.Bone).isBone) {
+      quats[child.name] = child.quaternion.clone();
+    }
+  });
+  return quats;
+}
+
 interface SceneState {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
@@ -170,6 +181,8 @@ interface SceneState {
   currentPszAction: THREE.AnimationAction | null;
   boneMarkers: BoneMarker[];
   selectedLabels: THREE.Sprite[];
+  psoRestQuats: Record<string, THREE.Quaternion>;
+  pszRestQuats: Record<string, THREE.Quaternion>;
 }
 
 // Collapsible bone tree row component
@@ -398,6 +411,7 @@ export default function RetargetViewer() {
       pszHelper: null, psoHelper: null,
       psoMixer: null, pszMixer: null, psoAnimations: [],
       currentAction: null, currentPszAction: null, boneMarkers: [], selectedLabels: [],
+      psoRestQuats: {}, pszRestQuats: {},
     };
 
     const clock = new THREE.Clock();
@@ -491,6 +505,7 @@ export default function RetargetViewer() {
       if (helper) { scene.add(helper); sceneRef.current!.pszHelper = helper; }
       sceneRef.current!.pszMixer = new THREE.AnimationMixer(model);
       model.updateMatrixWorld(true);
+      sceneRef.current!.pszRestQuats = captureRestQuaternions(model);
       setPszBones(collectBones(model));
       setPszLoaded(true);
       if (sceneRef.current!.psoModel) {
@@ -516,8 +531,10 @@ export default function RetargetViewer() {
           model.updateMatrixWorld(true);
         }
 
-        // Now reset to T-pose
+        // Now reset to T-pose and capture rest quaternions
         resetToBindPose(model);
+        model.updateMatrixWorld(true);
+        sceneRef.current!.psoRestQuats = captureRestQuaternions(model);
 
         const helper = createSkeletonHelper(model, 0xff4444);
         if (helper) { scene.add(helper); sceneRef.current!.psoHelper = helper; }
@@ -594,24 +611,51 @@ export default function RetargetViewer() {
   }, [showMeshes]);
 
   const buildRetargetedClip = useCallback((clip: THREE.AnimationClip, boneMap: Record<string, string>): THREE.AnimationClip | null => {
-    if (Object.keys(boneMap).length === 0) return null;
+    if (!sceneRef.current || Object.keys(boneMap).length === 0) return null;
+    const { psoRestQuats, pszRestQuats } = sceneRef.current;
+
     const tracks: THREE.KeyframeTrack[] = [];
+    const identity = new THREE.Quaternion();
+
     for (const track of clip.tracks) {
-      // Track names are like "bone_000.quaternion", "bone_000.position", "bone_000.scale"
       const dotIdx = track.name.indexOf('.');
       if (dotIdx < 0) continue;
       const boneName = track.name.substring(0, dotIdx);
       const prop = track.name.substring(dotIdx);
 
-      // Only transfer rotation tracks — position and scale are skeleton-specific
+      // Only transfer rotation tracks
       if (prop !== '.quaternion') continue;
 
       const pszBoneName = boneMap[boneName];
-      if (pszBoneName) {
-        const newTrack = track.clone();
-        newTrack.name = pszBoneName + prop;
-        tracks.push(newTrack);
+      if (!pszBoneName) continue;
+
+      // Get rest quaternions for pre-rotation correction
+      const psoRest = psoRestQuats[boneName] || identity;
+      const pszRest = pszRestQuats[pszBoneName] || identity;
+      const psoRestInv = psoRest.clone().invert();
+
+      // Transform each keyframe:
+      // delta = inverse(psoRest) * psoAnim  (change from PSO rest pose)
+      // result = pszRest * delta             (apply change to PSZ rest pose)
+      const srcValues = track.values;
+      const dstValues = new Float32Array(srcValues.length);
+      const psoAnim = new THREE.Quaternion();
+      const result = new THREE.Quaternion();
+
+      for (let i = 0; i < srcValues.length; i += 4) {
+        psoAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
+        result.copy(pszRest).multiply(psoRestInv).multiply(psoAnim);
+        dstValues[i] = result.x;
+        dstValues[i + 1] = result.y;
+        dstValues[i + 2] = result.z;
+        dstValues[i + 3] = result.w;
       }
+
+      tracks.push(new THREE.QuaternionKeyframeTrack(
+        pszBoneName + '.quaternion',
+        Array.from(track.times),
+        Array.from(dstValues),
+      ));
     }
     if (tracks.length === 0) return null;
     return new THREE.AnimationClip(clip.name + '_retargeted', clip.duration, tracks);
