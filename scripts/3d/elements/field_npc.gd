@@ -36,16 +36,31 @@ func _ready() -> void:
 	_apply_state()
 
 
+## Capsule colors for NPCs without GLB models
+const CAPSULE_COLORS: Dictionary = {
+	"kai": Color(1.0, 0.9, 0.1),
+	"dorn": Color(1.0, 0.6, 0.0),
+	"ren": Color(0.0, 0.9, 0.9),
+	"elio": Color(0.2, 0.9, 0.2),
+	"mira": Color(0.7, 0.3, 0.9),
+	"sarisa": Color(1.0, 0.5, 0.7),
+	"fern": Color(0.6, 0.8, 0.3),
+	"dr_carlo": Color(0.4, 0.6, 0.9),
+	"vash": Color(0.6, 0.2, 0.2),
+}
+
+
 func _load_npc_model() -> void:
 	var entry: Variant = NPC_MODELS.get(npc_id, null)
 	if entry == null:
-		push_warning("FieldNpc: No model for npc_id '%s'" % npc_id)
+		_spawn_capsule_placeholder()
 		return
 
 	var glb_path: String = entry["glb"]
 	var packed := load(glb_path) as PackedScene
 	if not packed:
 		push_warning("FieldNpc: Failed to load model: " + glb_path)
+		_spawn_capsule_placeholder()
 		return
 
 	model = packed.instantiate()
@@ -57,6 +72,30 @@ func _load_npc_model() -> void:
 		var tex := load(tex_path) as Texture2D
 		if tex:
 			_apply_texture(model, tex)
+
+
+func _spawn_capsule_placeholder() -> void:
+	var mesh_inst := MeshInstance3D.new()
+	var capsule := CapsuleMesh.new()
+	capsule.radius = 0.3
+	capsule.height = 1.4
+	mesh_inst.mesh = capsule
+	mesh_inst.position.y = 0.7
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = CAPSULE_COLORS.get(npc_id, Color(0.7, 0.7, 0.7))
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mesh_inst.material_override = mat
+	add_child(mesh_inst)
+
+	# Name label above capsule
+	if not npc_name.is_empty():
+		var label := Label3D.new()
+		label.text = npc_name
+		label.position.y = 1.8
+		label.font_size = 32
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		add_child(label)
 
 
 func _on_interact(_player: Node3D) -> void:
