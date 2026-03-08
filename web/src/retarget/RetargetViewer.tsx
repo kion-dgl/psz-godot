@@ -685,58 +685,67 @@ export default function RetargetViewer() {
     const tracks: THREE.KeyframeTrack[] = [];
     const identity = new THREE.Quaternion();
 
+    // Scale ratio for position tracks: PSO model was scaled to match PSZ height
+    const posScale = sceneRef.current.psoModel?.scale.x || 1;
+
     for (const track of clip.tracks) {
       const dotIdx = track.name.indexOf('.');
       if (dotIdx < 0) continue;
       const boneName = track.name.substring(0, dotIdx);
       const prop = track.name.substring(dotIdx);
 
-      // Only transfer rotation tracks
-      if (prop !== '.quaternion') continue;
-
       const pszBoneName = boneMap[boneName];
       if (!pszBoneName) continue;
 
-      // Conjugation approach: re-express the local animation delta in PSZ's bone frame
-      // localDelta = inv(psoLocalRest) * psoLocalAnim  (delta in PSO bone frame)
-      // F = inv(pszWorldRest) * psoWorldRest            (frame correction PSO -> PSZ)
-      // pszLocal = pszLocalRest * F * localDelta * inv(F)
-      //
-      // Precompute per-bone constants:
-      //   prefix = pszLocalRest * F * inv(psoLocalRest)
-      //   suffix = inv(F)
-      // Then per keyframe: pszLocal = prefix * psoLocalAnim * suffix
-      const psoLocalRest = psoRest.localQuats[boneName] || identity;
-      const pszLocalRest = pszRest.localQuats[pszBoneName] || identity;
-      const psoWorldRest = getWorldRestQuat(boneName, psoRest);
-      const pszWorldRest = getWorldRestQuat(pszBoneName, pszRest);
+      if (prop === '.quaternion') {
+        // Conjugation approach: re-express the local animation delta in PSZ's bone frame
+        // Precompute per-bone: prefix = pszLocalRest * F * inv(psoLocalRest), suffix = inv(F)
+        // Per keyframe: pszLocal = prefix * psoLocalAnim * suffix
+        const psoLocalRest = psoRest.localQuats[boneName] || identity;
+        const pszLocalRest = pszRest.localQuats[pszBoneName] || identity;
+        const psoWorldRest = getWorldRestQuat(boneName, psoRest);
+        const pszWorldRest = getWorldRestQuat(pszBoneName, pszRest);
 
-      const F = pszWorldRest.clone().invert().multiply(psoWorldRest);
-      const Finv = F.clone().invert();
-      const prefix = pszLocalRest.clone().multiply(F).multiply(psoLocalRest.clone().invert());
-      const suffix = Finv;
+        const F = pszWorldRest.clone().invert().multiply(psoWorldRest);
+        const Finv = F.clone().invert();
+        const prefix = pszLocalRest.clone().multiply(F).multiply(psoLocalRest.clone().invert());
+        const suffix = Finv;
 
-      const srcValues = track.values;
-      const dstValues = new Float32Array(srcValues.length);
-      const psoLocalAnim = new THREE.Quaternion();
+        const srcValues = track.values;
+        const dstValues = new Float32Array(srcValues.length);
+        const psoLocalAnim = new THREE.Quaternion();
 
-      for (let i = 0; i < srcValues.length; i += 4) {
-        psoLocalAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
+        for (let i = 0; i < srcValues.length; i += 4) {
+          psoLocalAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
+          const pszLocalResult = prefix.clone().multiply(psoLocalAnim).multiply(suffix);
+          dstValues[i] = pszLocalResult.x;
+          dstValues[i + 1] = pszLocalResult.y;
+          dstValues[i + 2] = pszLocalResult.z;
+          dstValues[i + 3] = pszLocalResult.w;
+        }
 
-        // pszLocal = prefix * psoLocalAnim * suffix
-        const pszLocalResult = prefix.clone().multiply(psoLocalAnim).multiply(suffix);
+        tracks.push(new THREE.QuaternionKeyframeTrack(
+          pszBoneName + '.quaternion',
+          Array.from(track.times),
+          Array.from(dstValues),
+        ));
+      } else if (prop === '.position') {
+        // Scale position tracks to match PSZ model size
+        const srcValues = track.values;
+        const dstValues = new Float32Array(srcValues.length);
 
-        dstValues[i] = pszLocalResult.x;
-        dstValues[i + 1] = pszLocalResult.y;
-        dstValues[i + 2] = pszLocalResult.z;
-        dstValues[i + 3] = pszLocalResult.w;
+        for (let i = 0; i < srcValues.length; i += 3) {
+          dstValues[i] = srcValues[i] * posScale;
+          dstValues[i + 1] = srcValues[i + 1] * posScale;
+          dstValues[i + 2] = srcValues[i + 2] * posScale;
+        }
+
+        tracks.push(new THREE.VectorKeyframeTrack(
+          pszBoneName + '.position',
+          Array.from(track.times),
+          Array.from(dstValues),
+        ));
       }
-
-      tracks.push(new THREE.QuaternionKeyframeTrack(
-        pszBoneName + '.quaternion',
-        Array.from(track.times),
-        Array.from(dstValues),
-      ));
     }
     if (tracks.length === 0) return null;
     return new THREE.AnimationClip(clip.name + '_retargeted', clip.duration, tracks);
