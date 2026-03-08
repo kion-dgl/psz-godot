@@ -493,7 +493,11 @@ export default function RetargetViewer() {
       model.updateMatrixWorld(true);
       setPszBones(collectBones(model));
       setPszLoaded(true);
-      if (sceneRef.current!.psoModel) matchPsoScaleToPsz(model, sceneRef.current!.psoModel);
+      if (sceneRef.current!.psoModel) {
+        matchPsoScaleToPsz(model, sceneRef.current!.psoModel);
+        sceneRef.current!.psoModel.updateMatrixWorld(true);
+        console.log('PSO scaled (from PSZ callback), scale:', sceneRef.current!.psoModel.scale.toArray());
+      }
     });
 
     // PSO model on the right
@@ -504,17 +508,28 @@ export default function RetargetViewer() {
         model.position.x = 1.2;
         scene.add(model);
         sceneRef.current!.psoModel = model;
+
+        // Scale BEFORE resetting to bind pose — animated pose gives reliable bounding box
+        model.updateMatrixWorld(true);
+        if (sceneRef.current!.pszModel) {
+          matchPsoScaleToPsz(sceneRef.current!.pszModel, model);
+          model.updateMatrixWorld(true);
+        }
+
+        // Now reset to T-pose
         resetToBindPose(model);
+
         const helper = createSkeletonHelper(model, 0xff4444);
         if (helper) { scene.add(helper); sceneRef.current!.psoHelper = helper; }
         const mixer = new THREE.AnimationMixer(model);
         sceneRef.current!.psoMixer = mixer;
         sceneRef.current!.psoAnimations = gltf.animations;
         setPsoAnimations(gltf.animations.map((a) => a.name));
-        if (sceneRef.current!.pszModel) matchPsoScaleToPsz(sceneRef.current!.pszModel, model);
+
         model.updateMatrixWorld(true);
         setPsoBones(collectBones(model));
         setPsoLoaded(true);
+        console.log('PSO loaded, scale:', model.scale.toArray(), 'position:', model.position.toArray());
       },
       (progress) => {
         if (progress.total > 0) setPsoLoadProgress(Math.round((progress.loaded / progress.total) * 100));
