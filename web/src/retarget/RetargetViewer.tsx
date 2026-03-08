@@ -659,7 +659,28 @@ export default function RetargetViewer() {
 
   const buildRetargetedClip = useCallback((clip: THREE.AnimationClip, boneMap: Record<string, string>): THREE.AnimationClip | null => {
     if (!sceneRef.current || Object.keys(boneMap).length === 0) return null;
-    const { psoRest, pszRest } = sceneRef.current;
+    const { psoRest, pszRest: pszRestOriginal } = sceneRef.current;
+
+    // Create a modified copy of PSZ rest data with arm bones adjusted to match
+    // PSO's rest orientation. PSO has arms at sides, PSZ has arms at 45° —
+    // without this correction the conjugation overshoots arm animations.
+    const pszRest: RestPoseData = {
+      localQuats: { ...pszRestOriginal.localQuats },
+      worldQuats: { ...pszRestOriginal.worldQuats },
+      parentMap: pszRestOriginal.parentMap,
+    };
+    const armBones: [string, string][] = [
+      ['bone_028', '030_LArm01'],
+      ['bone_041', '060_RArm01'],
+    ];
+    for (const [psoBone, pszBone] of armBones) {
+      if (!(psoBone in boneMap) || boneMap[psoBone] !== pszBone) continue;
+      const pszParent = pszRest.parentMap[pszBone];
+      const pszParentWorld = pszParent ? getWorldRestQuat(pszParent, pszRest) : new THREE.Quaternion();
+      const psoArmWorld = getWorldRestQuat(psoBone, psoRest);
+      // Set PSZ arm local rest so its world orientation matches PSO's
+      pszRest.localQuats[pszBone] = pszParentWorld.clone().invert().multiply(psoArmWorld);
+    }
 
     const tracks: THREE.KeyframeTrack[] = [];
     const identity = new THREE.Quaternion();
