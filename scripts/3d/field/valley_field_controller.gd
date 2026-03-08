@@ -1736,7 +1736,10 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				_spawn_switch(pos, link_id)
 			"message":
 				var text: String = str(obj.get("text", ""))
-				_spawn_message(pos, text)
+				var msg_locked: bool = obj.get("locked", false)
+				var reaction: Array = obj.get("reaction_dialog", [])
+				var init_state: String = "locked" if msg_locked else "available"
+				_spawn_message(pos, text, init_state, reaction)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
 				var prop_scale: float = float(obj.get("prop_scale", 1.0))
@@ -1825,7 +1828,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 			"message":
 				var text: String = str(obj.get("text", ""))
 				var msg_state: String = state if not state.is_empty() else "available"
-				_spawn_message(pos, text, msg_state)
+				var reaction: Array = obj.get("reaction_dialog", [])
+				_spawn_message(pos, text, msg_state, reaction)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
 				var prop_scale: float = float(obj.get("prop_scale", 1.0))
@@ -2011,12 +2015,15 @@ func _save_cell_state() -> void:
 	# Save message states
 	for msg in _room_messages:
 		if is_instance_valid(msg):
-			obj_states.append({
+			var msg_entry := {
 				"type": "message",
 				"px": msg.position.x, "py": msg.position.y, "pz": msg.position.z,
 				"state": msg.element_state,
 				"text": msg.message_text,
-			})
+			}
+			if not msg.reaction_dialog.is_empty():
+				msg_entry["reaction_dialog"] = msg.reaction_dialog
+			obj_states.append(msg_entry)
 
 	# Save story prop states
 	for prop in _room_props:
@@ -2197,7 +2204,7 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 
 
 ## Spawn a message pack element.
-func _spawn_message(pos: Vector3, text: String, state: String = "available") -> void:
+func _spawn_message(pos: Vector3, text: String, state: String = "available", reaction: Array = []) -> void:
 	var msg := MessagePackScript.new()
 	msg.message_text = text
 	_map_root.add_child(msg)
@@ -2205,10 +2212,32 @@ func _spawn_message(pos: Vector3, text: String, state: String = "available") -> 
 	_fixup_element_materials(msg)
 	# Re-run scroll material setup after fixup replaced materials
 	msg._setup_scroll_material()
-	if state == "read":
-		msg.set_state("read")
+	if state != "available":
+		msg.set_state(state)
+	# Store and connect reaction dialog — companion speech bubble plays after reading
+	msg.reaction_dialog = reaction
+	if not reaction.is_empty() and _companion and is_instance_valid(_companion):
+		msg.message_read.connect(_on_message_read_reaction.bind(reaction))
 	_room_messages.append(msg)
-	print("[CellObjects] Message at %s (text=%d chars)" % [pos, text.length()])
+	print("[CellObjects] Message at %s (text=%d chars, state=%s, reaction=%d pages)" % [pos, text.length(), state, reaction.size()])
+
+
+func _on_message_read_reaction(_text: String, reaction: Array) -> void:
+	if not _companion or not is_instance_valid(_companion):
+		return
+	# Play each reaction page as a speech bubble with delay between pages
+	var delay := 0.0
+	for page in reaction:
+		var speech_text: String = str(page.get("text", ""))
+		var speaker: String = str(page.get("speaker", ""))
+		var duration: float = maxf(3.0, speech_text.length() / 20.0)
+		if delay > 0:
+			get_tree().create_timer(delay).timeout.connect(
+				_companion.show_speech.bind(speech_text, speaker, duration)
+			)
+		else:
+			_companion.show_speech(speech_text, speaker, duration)
+		delay += duration + 0.5
 
 
 func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop_scale: float = 1.0) -> void:
@@ -2454,6 +2483,13 @@ func _check_room_clear() -> void:
 		var drop_tracking_key := current_pos + ">" + key_drop_target
 		if not _keys_collected.has(drop_tracking_key):
 			_drop_key_on_clear(key_drop_target, drop_tracking_key)
+
+	# Activate locked messages on room clear (scroll animation turns on)
+	for msg in _room_messages:
+		if is_instance_valid(msg) and msg.element_state == "locked":
+			msg.set_state("available")
+			if msg._prompt_label and msg._player_nearby:
+				msg._prompt_label.visible = true
 
 	# Fire room_clear dialog triggers
 	for rc_trigger in _room_triggers:

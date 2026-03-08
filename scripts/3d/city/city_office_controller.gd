@@ -82,7 +82,9 @@ func _ready() -> void:
 	var spawn_key := CityState.get_spawn_key()
 	_is_intro = spawn_key == "intro"
 	# Briefing triggers when the player has an accepted quest (walks in from counter)
-	_is_briefing = not _is_intro and SessionManager.has_accepted_quest()
+	# Only play once — check the briefing_shown flag so re-entering the office skips it
+	_is_briefing = not _is_intro and SessionManager.has_accepted_quest() \
+		and not SessionManager.get_accepted_quest().get("briefing_shown", false)
 
 	# Spawn player — at origin for briefings so cutscene starts immediately
 	if _is_briefing:
@@ -366,6 +368,11 @@ func _on_briefing_complete() -> void:
 	if _active_bubble_sprite:
 		_active_bubble_sprite.visible = false
 		_active_bubble_sprite = null
+
+	# Mark briefing as shown so it doesn't replay on re-entry
+	var aq := SessionManager.get_accepted_quest()
+	if not aq.is_empty():
+		aq["briefing_shown"] = true
 
 	# Log "Quest accepted!" to action log
 	var field_hud := _find_field_hud()
