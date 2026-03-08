@@ -116,24 +116,37 @@ Just rename bone tracks. Result: completely twisted/mutilated model because loca
 `pszLocal = pszRest * inv(psoRest) * psoAnim`
 Result: character stands up, arms/legs move, but swing directions are wrong (legs waddle sideways instead of forward/back). The local rest delta doesn't account for the different parent chain orientations.
 
-### Approach 3: World-Space Delta (current, partially works)
-1. Convert PSO local anim to world: `psoWorld = psoParentWorldRest * psoLocalAnim`
-2. Get world delta: `worldDelta = inv(psoWorldRest) * psoWorld`
-3. Apply to PSZ: `pszWorld = pszWorldRest * worldDelta`
-4. Convert back: `pszLocal = inv(pszParentWorldRest) * pszWorld`
+### Approach 3: World-Space Delta (had a bug, now fixed)
+Original (buggy) implementation extracted a LEFT (world-frame) delta but applied it on the RIGHT (bone-frame):
+```
+worldDelta = psoWorld * inv(psoWorldRest)     // LEFT extraction
+pszWorldAnimated = pszWorldRest * worldDelta  // RIGHT application (BUG!)
+```
+This mismatch caused dampened/subtle movements. For arm bones the error was up to 170°.
 
-Result: character stands but movements are very subtle/dampened. The world delta extraction may be losing the rotation magnitude.
+### Approach 4: Conjugation (current, correct)
+Re-express the local animation delta from PSO's bone coordinate frame to PSZ's:
 
-## Potential Next Steps
+```
+localDelta = inv(psoLocalRest) * psoLocalAnim     // delta in PSO bone frame
+F = inv(pszWorldRest) * psoWorldRest               // frame correction PSO -> PSZ
+pszDelta = F * localDelta * inv(F)                 // conjugate to PSZ's frame
+pszLocal = pszLocalRest * pszDelta
+```
 
-1. **Debug the world-space approach**: The math may have a quaternion multiplication order issue. Quaternion multiplication is non-commutative, and the difference between `A * B` and `B * A` matters.
+Optimized form (precompute per bone, 2 quat multiplies per keyframe):
+```
+prefix = pszLocalRest * F * inv(psoLocalRest)
+suffix = inv(F)
+pszLocal = prefix * psoLocalAnim * suffix
+```
 
-2. **Try a different delta formulation**: Instead of `worldDelta = inv(psoWorldRest) * psoWorld`, try `worldDelta = psoWorld * inv(psoWorldRest)` (right-multiply vs left-multiply changes whether the delta is in world frame or bone frame).
+Verified via `retarget-test.mjs`: this produces identical results to the corrected world-frame approach (left-left), with 0.0° difference across all bones and keyframes.
 
-3. **Axis remapping per bone**: Compute a static correction quaternion per mapped bone pair that transforms PSO's bone coordinate frame to PSZ's. Apply this correction to each animation frame.
+## Remaining Issues
 
-4. **Look at Mixamo/Unity retargeting**: These engines solve this problem. Unity's Humanoid system normalizes all skeletons to a canonical "muscle space" with per-bone twist/swing decomposition. This is more complex but robust.
+1. **Visual verification needed**: The math is correct but the retargeted animations need visual inspection in the RetargetViewer to confirm they look right on the PSZ model.
 
-5. **Manual axis mapping**: For each mapped bone pair, manually specify which PSO axis maps to which PSZ axis (e.g., "PSO X-swing = PSZ Z-swing"). This is tedious but might be the most practical for 12 bones.
+2. **PSO has 3 skins**: The GLB has `bone_000`, `bone_000_1`, `bone_000_2` suggesting multiple skin/skeleton variants. Currently using the first one.
 
-6. **Consider that PSO has 3 skins**: The GLB has `bone_000`, `bone_000_1`, `bone_000_2` suggesting multiple skin/skeleton variants. Need to verify we're using the right one.
+3. **Animation naming**: PSO animations are numbered (`plymotiondata_000` through `plymotiondata_571`). Need to map these to semantic names using the PLYMOTION array from the psov2 codebase.

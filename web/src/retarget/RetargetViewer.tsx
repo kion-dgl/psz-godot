@@ -676,19 +676,24 @@ export default function RetargetViewer() {
       const pszBoneName = boneMap[boneName];
       if (!pszBoneName) continue;
 
-      // World-space approach:
-      // 1. Get PSO parent's world rest quat to convert PSO local anim -> world
-      // 2. Get PSZ parent's world rest quat to convert world -> PSZ local
-      const psoParent = psoRest.parentMap[boneName];
-      const pszParent = pszRest.parentMap[pszBoneName];
-      const psoParentWorldRest = psoParent ? getWorldRestQuat(psoParent, psoRest) : identity.clone();
-      const pszParentWorldRest = pszParent ? getWorldRestQuat(pszParent, pszRest) : identity.clone();
-      const pszParentWorldRestInv = pszParentWorldRest.clone().invert();
-
-      // PSO local rest and PSZ local rest for this bone
+      // Conjugation approach: re-express the local animation delta in PSZ's bone frame
+      // localDelta = inv(psoLocalRest) * psoLocalAnim  (delta in PSO bone frame)
+      // F = inv(pszWorldRest) * psoWorldRest            (frame correction PSO -> PSZ)
+      // pszLocal = pszLocalRest * F * localDelta * inv(F)
+      //
+      // Precompute per-bone constants:
+      //   prefix = pszLocalRest * F * inv(psoLocalRest)
+      //   suffix = inv(F)
+      // Then per keyframe: pszLocal = prefix * psoLocalAnim * suffix
       const psoLocalRest = psoRest.localQuats[boneName] || identity;
-      const psoLocalRestInv = psoLocalRest.clone().invert();
       const pszLocalRest = pszRest.localQuats[pszBoneName] || identity;
+      const psoWorldRest = getWorldRestQuat(boneName, psoRest);
+      const pszWorldRest = getWorldRestQuat(pszBoneName, pszRest);
+
+      const F = pszWorldRest.clone().invert().multiply(psoWorldRest);
+      const Finv = F.clone().invert();
+      const prefix = pszLocalRest.clone().multiply(F).multiply(psoLocalRest.clone().invert());
+      const suffix = Finv;
 
       const srcValues = track.values;
       const dstValues = new Float32Array(srcValues.length);
@@ -697,20 +702,8 @@ export default function RetargetViewer() {
       for (let i = 0; i < srcValues.length; i += 4) {
         psoLocalAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
 
-        // PSO local anim -> world: psoParentWorld * psoLocalAnim
-        const psoWorld = psoParentWorldRest.clone().multiply(psoLocalAnim);
-
-        // Extract delta in world space: how does this differ from PSO rest world?
-        const psoWorldRest = psoParentWorldRest.clone().multiply(psoLocalRest);
-        const psoWorldRestInv = psoWorldRest.clone().invert();
-        const worldDelta = psoWorldRestInv.clone().premultiply(psoWorld);
-        // worldDelta = psoWorld * inv(psoWorldRest) — rotation change in world space
-
-        // Apply world delta to PSZ world rest, then convert to PSZ local
-        const pszWorldRest = pszParentWorldRest.clone().multiply(pszLocalRest);
-        const pszWorldAnimated = pszWorldRest.clone().multiply(worldDelta);
-        // Convert back to local: pszLocal = inv(pszParentWorld) * pszWorld
-        const pszLocalResult = pszParentWorldRestInv.clone().multiply(pszWorldAnimated);
+        // pszLocal = prefix * psoLocalAnim * suffix
+        const pszLocalResult = prefix.clone().multiply(psoLocalAnim).multiply(suffix);
 
         dstValues[i] = pszLocalResult.x;
         dstValues[i + 1] = pszLocalResult.y;
