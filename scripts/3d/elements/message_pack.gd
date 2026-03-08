@@ -7,6 +7,8 @@ signal message_read(text: String)
 
 ## The message text displayed when interacted with
 @export var message_text: String = ""
+## Companion reaction dialog played after reading (Array of {speaker, text})
+var reaction_dialog: Array = []
 
 ## Scrolling texture
 const SCROLL_TEXTURE_NAME := "o0c_1_mspack"
@@ -60,15 +62,23 @@ func _setup_prompt() -> void:
 
 
 func _update_animation(delta: float) -> void:
-	if _scroll_material:
+	if _scroll_material and element_state != "locked":
 		_scroll_material.uv1_offset.y += SCROLL_SPEED * delta
 
 
 func _apply_state() -> void:
 	match element_state:
+		"locked":
+			# Visible but scroll animation off, not interactable
+			set_element_visible(true)
+			set_process(true)
+			if _scroll_material:
+				_scroll_material.albedo_color = Color(0.3, 0.3, 0.3)
 		"available":
 			set_element_visible(true)
 			set_process(true)
+			if _scroll_material:
+				_scroll_material.albedo_color = Color.WHITE
 		"read":
 			# Still visible but stopped spinning
 			set_element_visible(true)
@@ -78,7 +88,7 @@ func _apply_state() -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player") or body.name == "Player":
 		_player_nearby = true
-		if _prompt_label:
+		if _prompt_label and element_state != "locked":
 			_prompt_label.visible = true
 
 
@@ -94,7 +104,6 @@ func _on_interact(_player: Node3D) -> void:
 		return  # Already showing
 	_show_popup()
 	set_state("read")
-	message_read.emit(message_text)
 	# Consume the input so the same E key doesn't immediately close the popup
 	get_viewport().set_input_as_handled()
 
@@ -176,6 +185,7 @@ func _close_popup() -> void:
 	if _popup:
 		_popup.queue_free()
 		_popup = null
+		message_read.emit(message_text)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -184,6 +194,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			if event.keycode == KEY_E or event.keycode == KEY_ESCAPE:
 				_close_popup()
 				get_viewport().set_input_as_handled()
-	elif _player_nearby and event.is_action_pressed("interact"):
+	elif _player_nearby and element_state != "locked" and event.is_action_pressed("interact"):
 		_on_interact(null)
 		get_viewport().set_input_as_handled()

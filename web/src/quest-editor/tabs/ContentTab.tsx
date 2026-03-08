@@ -1352,6 +1352,8 @@ function CellContentInspector({
                         <option value="">-- select prop --</option>
                         <option value="assets/objects/story/dropship_crash.glb">Dropship (crashed)</option>
                         <option value="assets/objects/story/campfire.glb">Campfire</option>
+                        <option value="assets/enemies/rabbit/rabbit.glb">Rabbit</option>
+                        <option value="assets/enemies/rabbit_rare/rabbit_rare.glb">Rabbit (rare)</option>
                       </select>
                       <input
                         type="text"
@@ -1687,8 +1689,37 @@ function CellContentInspector({
                     </div>
                   )}
 
-                  {/* Dialog editor for dialog_trigger and npc */}
-                  {isSel && (obj.type === 'dialog_trigger' || obj.type === 'npc') && (
+                  {/* Actions for quest_item */}
+                  {isSel && obj.type === 'quest_item' && (
+                    <div style={{ marginTop: '4px' }}>
+                      <span style={{ fontSize: '10px', color: '#888' }}>Actions:</span>
+                      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '2px' }}>
+                        {['complete_quest', 'telepipe'].map(action => {
+                          const active = (obj.actions || []).includes(action);
+                          return (
+                            <button
+                              key={action}
+                              onClick={() => {
+                                const current = obj.actions || [];
+                                const updated = active ? current.filter(a => a !== action) : [...current, action];
+                                onUpdateObject(obj.id, { actions: updated });
+                              }}
+                              style={{
+                                ...btnStyle, padding: '2px 8px', fontSize: '9px',
+                                background: active ? '#44cccc' : '#333',
+                                border: `1px solid ${active ? '#44cccc' : '#555'}`,
+                              }}
+                            >
+                              {action}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dialog editor for dialog_trigger, npc, and quest_item */}
+                  {isSel && (obj.type === 'dialog_trigger' || obj.type === 'npc' || obj.type === 'quest_item') && (
                     <div style={{ marginTop: '4px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                         <span style={{ fontSize: '10px', color: '#888' }}>Dialog ({obj.dialog?.length || 0} pages)</span>

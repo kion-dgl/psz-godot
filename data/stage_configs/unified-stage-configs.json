@@ -5688,16 +5688,16 @@
     "floorCollision": {
       "excludedMeshPatterns": [],
       "triangles": {
-        "tri_0": false,
-        "tri_1": false,
+        "tri_0": true,
+        "tri_1": true,
         "tri_10": true,
         "tri_11": true,
-        "tri_2": false,
-        "tri_3": false,
-        "tri_4": false,
-        "tri_5": false,
-        "tri_6": false,
-        "tri_7": false,
+        "tri_2": true,
+        "tri_3": true,
+        "tri_4": true,
+        "tri_5": true,
+        "tri_6": true,
+        "tri_7": true,
         "tri_8": true,
         "tri_9": true
       },
@@ -5719,7 +5719,8 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "exportedAt": "2026-03-08T00:03:27.212Z"
   },
   "s03a_sa1": {
     "defaultSpawn": {

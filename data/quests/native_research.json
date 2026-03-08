@@ -4,7 +4,7 @@
   "id": "native_research",
   "name": "Native Research",
   "description": "Requested by: Dr. Carlo. Escort a researcher through the valley, wetlands, and snowfield to conduct a wildlife survey across all three biomes.",
-  "area_id": "rioh",
+  "area_id": "ozette",
   "sections": [
     {
       "type": "grid",
@@ -57,7 +57,88 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -17.3,
+                0,
+                -9.9
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.9,
+                0,
+                -16.4
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.5,
+                0,
+                -10.9
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                14.7,
+                0,
+                -6.2
+              ],
+              "link_id": "a"
+            },
+            {
+              "type": "fence",
+              "position": [
+                -14.6,
+                0,
+                -3
+              ],
+              "link_id": "a"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.7,
+                0,
+                15.4
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.3,
+                0,
+                14
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_valley_1",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "These creatures are far more aggressive than the old field reports indicated. Interesting."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "1,3",
@@ -83,7 +164,54 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.5,
+                0,
+                1.5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.4,
+                0,
+                -11.5
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -5.4
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                7.7
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.6,
+                0,
+                1.5
+              ],
+              "enemy_id": "grimble"
+            }
+          ]
         },
         {
           "pos": "2,3",
@@ -104,10 +232,102 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_drop": "2,4",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "key_drop_position": [
+            -14.7,
+            1,
+            9.3
+          ],
+          "objects": [
+            {
+              "type": "step_switch",
+              "position": [
+                13.4,
+                0,
+                16.3
+              ],
+              "link_id": "b"
+            },
+            {
+              "type": "fence",
+              "position": [
+                -16.4,
+                0,
+                -8.5
+              ],
+              "link_id": "b"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.5,
+                0,
+                16.4
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.4,
+                0,
+                19.2
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.6,
+                0,
+                19.5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -19.4,
+                0,
+                -16.2
+              ],
+              "enemy_id": "vulkure",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13,
+                0,
+                -15.7
+              ],
+              "enemy_id": "grimble",
+              "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_valley_2",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "They attacked without any provocation. That's not normal territorial behavior."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Most wildlife only fights when cornered. These are seeking us out."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "0,3",
@@ -122,8 +342,8 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "2,4",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
@@ -150,22 +370,74 @@
           "key_for_cell": "",
           "is_key_gate": true,
           "key_gate_direction": "north",
-          "key_drop": "",
+          "key_drop": "2,4",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "key_drop_position": [
+            12.4,
+            1,
+            12.9
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.4,
+                0,
+                5.9
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.6,
+                0,
+                -1.4
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.4,
+                0,
+                -4.2
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.6,
+                0,
+                14
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.2,
+                0,
+                8.3
+              ],
+              "enemy_id": "ghowl"
+            }
+          ]
         },
         {
           "pos": "1,4",
-          "stage_id": "s01a_ic1",
-          "rotation": 180,
+          "stage_id": "s01a_ib2",
+          "rotation": 0,
           "connections": {
             "south": "2,4",
             "north": "0,4"
           },
           "portals": {
-            "south": "portal_1769090970268_79fl50z0t",
-            "north": "portal_1769090993555_xrh9frw4y"
+            "south": "portal_1769054079594_o7akekgmu",
+            "north": "portal_1769054096896_27h1xur3y"
           },
           "is_start": false,
           "is_end": false,
@@ -177,18 +449,81 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                5.9,
+                0,
+                11.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.2,
+                0,
+                3.8
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.6,
+                0,
+                7.7
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -19.8,
+                0,
+                -6
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.2,
+                0,
+                -10.2
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "box",
+              "position": [
+                -21.2,
+                0,
+                6.9
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -19.5,
+                0,
+                3.7
+              ]
+            }
+          ]
         },
         {
           "pos": "0,4",
-          "stage_id": "s01a_lc2",
-          "rotation": 90,
+          "stage_id": "s01a_ic3",
+          "rotation": 0,
           "connections": {
             "south": "1,4"
           },
           "portals": {
-            "south": "portal_1771821560334_4iz79ipeh",
-            "east": "portal_1769092071707_39cmfdsru"
+            "south": "portal_1769091101029_psdymd2kn",
+            "north": "portal_1769091093818_4fqlpqiz6"
           },
           "is_start": false,
           "is_end": true,
@@ -199,8 +534,89 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "east",
-          "path_order": 7
+          "warp_edge": "north",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -17.8,
+                0,
+                7.8
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -15.2,
+                0,
+                3.9
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.2,
+                0,
+                7.5
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.8,
+                0,
+                -13.3
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.9,
+                0,
+                12.3
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.8,
+                0,
+                7.3
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.9,
+                0,
+                -14.8
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_valley_3",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "I've documented everything I need from the valley. Let's move on to the wetlands and see if the pattern holds."
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -255,7 +671,61 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6.7,
+                0,
+                5.3
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.3,
+                0,
+                -3.1
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.3,
+                0,
+                -5.7
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.5,
+                0,
+                4.1
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_wetland_1",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Same aggression here, even in a completely different ecosystem. This isn't isolated to one species."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -274,14 +744,61 @@
           "is_start": false,
           "is_end": false,
           "is_branch": true,
-          "has_key": true,
-          "key_for_cell": "3,1",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                7.5,
+                0,
+                2.1
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.4,
+                0,
+                6.1
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.9,
+                0,
+                12.6
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.1,
+                0,
+                3.8
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.5,
+                0,
+                8.1
+              ],
+              "enemy_id": "porel"
+            }
+          ]
         },
         {
           "pos": "2,3",
@@ -296,14 +813,48 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "2,1",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_drop": "2,1",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "key_drop_position": [
+            0.9,
+            1,
+            -5
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.9,
+                0,
+                4.7
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.6,
+                0,
+                5.3
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.6,
+                0,
+                5.7
+              ],
+              "enemy_id": "pelcatraz"
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -327,7 +878,83 @@
           "key_drop": "",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -14.8,
+                0,
+                1.3
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.4,
+                0,
+                0.4
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.4,
+                0,
+                14.4
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.6,
+                0,
+                0.5
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.8,
+                0,
+                -2.7
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.5,
+                0,
+                15.3
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_wetland_2",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "The growth patterns are unusual too. These creatures are mature, but the population density is too high for natural reproduction."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Something is accelerating their development. I'm not sure what yet."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "3,1",
@@ -348,10 +975,44 @@
           "key_for_cell": "",
           "is_key_gate": true,
           "key_gate_direction": "south",
-          "key_drop": "",
+          "key_drop": "3,1",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "key_drop_position": [
+            -0.2,
+            1,
+            14
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3.3,
+                0,
+                1.4
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.4,
+                0,
+                4.2
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.5,
+                0,
+                1.5
+              ],
+              "enemy_id": "hypao"
+            }
+          ]
         },
         {
           "pos": "4,1",
@@ -375,7 +1036,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7.2,
+                0,
+                -6.2
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.4,
+                0,
+                -4.2
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.5,
+                0,
+                -7.3
+              ],
+              "enemy_id": "hypao"
+            }
+          ]
         },
         {
           "pos": "4,0",
@@ -398,7 +1088,70 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "west",
-          "path_order": 7
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -10.9,
+                0,
+                -5.3
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.6,
+                0,
+                -13.5
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.1,
+                0,
+                -12.5
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1,
+                0,
+                11.1
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.8,
+                0,
+                9.2
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_wetland_3",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Two biomes, same abnormal behavior. One more area should give me enough data to start forming a hypothesis."
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -433,17 +1186,17 @@
         },
         {
           "pos": "1,2",
-          "stage_id": "s03a_tb3",
+          "stage_id": "s03a_td1",
           "rotation": 90,
           "connections": {
             "west": "1,1",
-            "north": "0,2",
-            "south": "2,2"
+            "south": "2,2",
+            "north": "0,2"
           },
           "portals": {
-            "west": "portal_1770724548563_bnzuctak9",
-            "north": "portal_1771825168757_c70171yhn",
-            "south": "portal_1771825175495_9mmsbwqbd"
+            "west": "portal_1770724725322_k3e93g7oo",
+            "south": "portal_1771825327795_36slj66rh",
+            "north": "portal_1771825339711_scglyrkrj"
           },
           "is_start": false,
           "is_end": false,
@@ -455,7 +1208,70 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -10.8,
+                0,
+                -4.2
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.2,
+                0,
+                5.4
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.6,
+                0,
+                4.9
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.2,
+                0,
+                11.8
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.9,
+                0,
+                7.3
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_snow_1",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Even here in the snowfield. Whatever is causing this, it's not limited to one region."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "1,1",
@@ -470,14 +1286,43 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "3,0",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3.6,
+                0,
+                4.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.2,
+                0,
+                -1.9
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.4,
+                0,
+                5.2
+              ],
+              "enemy_id": "reyhound"
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -503,7 +1348,54 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -8.4,
+                0,
+                12.2
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.4,
+                0,
+                7.5
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.9,
+                0,
+                11
+              ],
+              "enemy_id": "hildegao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.8,
+                0,
+                -4
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10,
+                0,
+                -11.4
+              ],
+              "enemy_id": "reyhound"
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -525,7 +1417,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                2.8,
+                0,
+                -6.4
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.6,
+                0,
+                -11.4
+              ],
+              "enemy_id": "hildegao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                15.2,
+                0,
+                3.7
+              ],
+              "enemy_id": "stagg"
+            }
+          ]
         },
         {
           "pos": "3,2",
@@ -549,7 +1470,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -12.7,
+                0,
+                11.7
+              ],
+              "enemy_id": "hildegao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.4,
+                0,
+                -4.1
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.6,
+                0,
+                5.9
+              ],
+              "enemy_id": "reyhound"
+            }
+          ]
         },
         {
           "pos": "3,1",
@@ -573,7 +1523,54 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -13.7,
+                0,
+                -9.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.6,
+                0,
+                -12.5
+              ],
+              "enemy_id": "hildegao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.1,
+                0,
+                -10.1
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.6,
+                0,
+                9.4
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.8,
+                0,
+                9.6
+              ],
+              "enemy_id": "stagg"
+            }
+          ]
         },
         {
           "pos": "3,0",
@@ -594,10 +1591,91 @@
           "key_for_cell": "",
           "is_key_gate": true,
           "key_gate_direction": "south",
-          "key_drop": "",
+          "key_drop": "3,0",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "key_drop_position": [
+            14.7,
+            1,
+            -3.2
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7.1,
+                0,
+                6.1
+              ],
+              "enemy_id": "hildegao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.2,
+                0,
+                -3.5
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.8,
+                0,
+                -10.2
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.4,
+                0,
+                -4.2
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.1,
+                0,
+                2.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.9,
+                0,
+                -4.4
+              ],
+              "enemy_id": "hildegao"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "carlo_snow_2",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "The aggression is consistent across all three biomes. The old research team's notes didn't mention anything like this."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Either it started after they lost funding, or they never got far enough to notice."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "4,0",
@@ -619,7 +1697,79 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 8
+          "path_order": 8,
+          "objects": [
+            {
+              "type": "story_prop",
+              "position": [
+                12.6,
+                0,
+                -10.1
+              ],
+              "prop_path": "assets/enemies/rabbit/rabbit.glb"
+            },
+            {
+              "type": "story_prop",
+              "position": [
+                8.2,
+                0,
+                -7.5
+              ],
+              "prop_path": "assets/enemies/rabbit/rabbit.glb",
+              "rotation": 45
+            },
+            {
+              "type": "story_prop",
+              "position": [
+                15.1,
+                0,
+                -6.3
+              ],
+              "prop_path": "assets/enemies/rabbit/rabbit.glb",
+              "rotation": 220
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                10,
+                0,
+                -8
+              ],
+              "trigger_id": "carlo_rabbits",
+              "trigger_size": [
+                12,
+                3,
+                10
+              ],
+              "trigger_condition": "enter",
+              "actions": [
+                "complete_quest",
+                "telepipe"
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Wait — look at these rabbits. They're not attacking us."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Every other creature across three biomes has been hostile on sight. But these are completely calm."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "This wasn't what I expected to find, but it might be more valuable than the survey itself."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "If I can figure out why these rabbits are unaffected, it could explain what's driving the aggression in everything else."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "I'm going to collect a sample. Let's head back to the lab — I have a lot of work ahead of me."
+                }
+              ]
+            }
+          ]
         }
       ]
     }
@@ -641,7 +1791,7 @@
     },
     {
       "speaker": "Dr. Carlo",
-      "text": "I'm conducting a wildlife survey across three biomes \u2014 valley, wetlands, and snowfield."
+      "text": "I'm conducting a wildlife survey across three biomes — valley, wetlands, and snowfield."
     },
     {
       "speaker": "Dr. Carlo",
