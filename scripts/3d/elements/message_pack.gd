@@ -104,7 +104,6 @@ func _on_interact(_player: Node3D) -> void:
 		return  # Already showing
 	_show_popup()
 	set_state("read")
-	message_read.emit(message_text)
 	# Consume the input so the same E key doesn't immediately close the popup
 	get_viewport().set_input_as_handled()
 
@@ -186,6 +185,7 @@ func _close_popup() -> void:
 	if _popup:
 		_popup.queue_free()
 		_popup = null
+		message_read.emit(message_text)
 
 
 func _unhandled_input(event: InputEvent) -> void:
