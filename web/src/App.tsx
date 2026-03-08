@@ -12,6 +12,7 @@ const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
 const SvgCheck = lazy(() => import('./svg-check/SvgCheck'));
 const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
 const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
+const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 
 function NavBar() {
   const location = useLocation();
@@ -89,6 +90,12 @@ function NavBar() {
       }}>
         Retarget
       </Link>
+      <Link to="/retarget-tuner" style={{
+        color: isActive('/retarget-tuner') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Tuner
+      </Link>
     </nav>
   );
 }
@@ -111,6 +118,7 @@ export default function App() {
             <Route path="/svg-check" element={<SvgCheck />} />
             <Route path="/office-editor" element={<OfficeEditor />} />
             <Route path="/retarget" element={<RetargetViewer />} />
+            <Route path="/retarget-tuner" element={<RetargetTuner />} />
           </Routes>
         </Suspense>
       </div>
