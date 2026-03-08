@@ -342,6 +342,7 @@ export default function RetargetViewer() {
   const [pszCollapsed, setPszCollapsed] = useState<Set<string>>(new Set());
   const [psoCollapsed, setPsoCollapsed] = useState<Set<string>>(new Set());
   const [disabledPsoBones, setDisabledPsoBones] = useState<Set<string>>(new Set());
+  const [zeroedPsoRest, setZeroedPsoRest] = useState(false);
 
   const pszTree = buildBoneTree(pszBones);
   const psoTree = buildBoneTree(psoBones);
@@ -566,6 +567,23 @@ export default function RetargetViewer() {
     };
   }, []);
 
+  // Zero out or restore PSO bone rest rotations
+  useEffect(() => {
+    if (!sceneRef.current?.psoModel) return;
+    const { psoModel, psoRestQuats } = sceneRef.current;
+    psoModel.traverse((child) => {
+      if ((child as THREE.Bone).isBone) {
+        if (zeroedPsoRest) {
+          child.quaternion.identity();
+        } else {
+          const rest = psoRestQuats[child.name];
+          if (rest) child.quaternion.copy(rest);
+        }
+      }
+    });
+    psoModel.updateMatrixWorld(true);
+  }, [zeroedPsoRest]);
+
   // Update bone markers + selected labels
   useEffect(() => {
     if (!sceneRef.current) return;
@@ -752,6 +770,10 @@ export default function RetargetViewer() {
               <label style={{ fontSize: '11px', color: '#888', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input type="checkbox" checked={showMarkers} onChange={(e) => setShowMarkers(e.target.checked)} />
                 Bones
+              </label>
+              <label style={{ fontSize: '11px', color: '#c84', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input type="checkbox" checked={zeroedPsoRest} onChange={(e) => setZeroedPsoRest(e.target.checked)} />
+                Zero PSO Rest
               </label>
               <label style={{ fontSize: '11px', color: Object.keys(mappings).length > 0 ? '#8888ff' : '#555', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input type="checkbox" checked={playOnBoth} onChange={(e) => setPlayOnBoth(e.target.checked)} disabled={Object.keys(mappings).length === 0} />
