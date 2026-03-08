@@ -89,8 +89,10 @@ interface SceneState {
   pszHelper: THREE.SkeletonHelper | null;
   psoHelper: THREE.SkeletonHelper | null;
   psoMixer: THREE.AnimationMixer | null;
+  pszMixer: THREE.AnimationMixer | null;
   psoAnimations: THREE.AnimationClip[];
   currentAction: THREE.AnimationAction | null;
+  currentPszAction: THREE.AnimationAction | null;
   labelSprites: THREE.Sprite[];
 }
 
@@ -110,6 +112,9 @@ export default function RetargetViewer() {
   const [mappings, setMappings] = useState<Record<string, string>>({});
   const [pszLoaded, setPszLoaded] = useState(false);
   const [psoLoaded, setPsoLoaded] = useState(false);
+  const [psoLoadError, setPsoLoadError] = useState<string | null>(null);
+  const [psoLoadProgress, setPsoLoadProgress] = useState(0);
+  const [playOnBoth, setPlayOnBoth] = useState(false);
 
   // Initialize Three.js scene
   useEffect(() => {
@@ -140,8 +145,8 @@ export default function RetargetViewer() {
       scene, camera, renderer, controls,
       pszModel: null, psoModel: null,
       pszHelper: null, psoHelper: null,
-      psoMixer: null, psoAnimations: [],
-      currentAction: null, labelSprites: [],
+      psoMixer: null, pszMixer: null, psoAnimations: [],
+      currentAction: null, currentPszAction: null, labelSprites: [],
     };
 
     const clock = new THREE.Clock();
@@ -149,6 +154,7 @@ export default function RetargetViewer() {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (sceneRef.current?.psoMixer) sceneRef.current.psoMixer.update(delta);
+      if (sceneRef.current?.pszMixer) sceneRef.current.pszMixer.update(delta);
       controls.update();
       renderer.render(scene, camera);
     };
@@ -192,6 +198,9 @@ export default function RetargetViewer() {
         scene.add(helper);
         sceneRef.current!.pszHelper = helper;
       }
+      const pszMixer = new THREE.AnimationMixer(model);
+      sceneRef.current!.pszMixer = pszMixer;
+
       // Need to update world matrices before collecting bone positions
       model.updateMatrixWorld(true);
       setPszBones(collectBones(model));
@@ -199,28 +208,40 @@ export default function RetargetViewer() {
     });
 
     // PSO model on the right
-    loader.load(PSO_MODEL_PATH, (gltf) => {
-      const model = gltf.scene;
-      model.position.x = 1.2;
-      scene.add(model);
-      sceneRef.current!.psoModel = model;
+    loader.load(
+      PSO_MODEL_PATH,
+      (gltf) => {
+        const model = gltf.scene;
+        model.position.x = 1.2;
+        scene.add(model);
+        sceneRef.current!.psoModel = model;
 
-      const helper = createSkeletonHelper(model, 0xff4444);
-      if (helper) {
-        scene.add(helper);
-        sceneRef.current!.psoHelper = helper;
-      }
+        const helper = createSkeletonHelper(model, 0xff4444);
+        if (helper) {
+          scene.add(helper);
+          sceneRef.current!.psoHelper = helper;
+        }
 
-      const mixer = new THREE.AnimationMixer(model);
-      sceneRef.current!.psoMixer = mixer;
-      sceneRef.current!.psoAnimations = gltf.animations;
-      const animNames = gltf.animations.map((a) => a.name);
-      setPsoAnimations(animNames);
+        const mixer = new THREE.AnimationMixer(model);
+        sceneRef.current!.psoMixer = mixer;
+        sceneRef.current!.psoAnimations = gltf.animations;
+        const animNames = gltf.animations.map((a) => a.name);
+        setPsoAnimations(animNames);
 
-      model.updateMatrixWorld(true);
-      setPsoBones(collectBones(model));
-      setPsoLoaded(true);
-    });
+        model.updateMatrixWorld(true);
+        setPsoBones(collectBones(model));
+        setPsoLoaded(true);
+      },
+      (progress) => {
+        if (progress.total > 0) {
+          setPsoLoadProgress(Math.round((progress.loaded / progress.total) * 100));
+        }
+      },
+      (error) => {
+        console.error('Failed to load PSO model:', error);
+        setPsoLoadError(`Failed to load PSO model: ${error}`);
+      },
+    );
 
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -272,11 +293,34 @@ export default function RetargetViewer() {
     toggleMeshes(psoModel);
   }, [showMeshes]);
 
-  // Play animation on PSO model
+  // Build a retargeted clip that maps PSO bone tracks → PSZ bone names
+  const buildRetargetedClip = useCallback((clip: THREE.AnimationClip, boneMap: Record<string, string>): THREE.AnimationClip | null => {
+    if (Object.keys(boneMap).length === 0) return null;
+    const tracks: THREE.KeyframeTrack[] = [];
+    for (const track of clip.tracks) {
+      // Track names are like "bone_000.quaternion" or "bone_000.position"
+      const dotIdx = track.name.indexOf('.');
+      if (dotIdx < 0) continue;
+      const boneName = track.name.substring(0, dotIdx);
+      const prop = track.name.substring(dotIdx);
+      const pszBoneName = boneMap[boneName];
+      if (pszBoneName) {
+        const newTrack = track.clone();
+        newTrack.name = pszBoneName + prop;
+        tracks.push(newTrack);
+      }
+    }
+    if (tracks.length === 0) return null;
+    return new THREE.AnimationClip(clip.name + '_retargeted', clip.duration, tracks);
+  }, []);
+
+  // Play animation on PSO model (and optionally retarget to PSZ)
   useEffect(() => {
     if (!sceneRef.current?.psoMixer || !selectedAnimation) return;
-    const { psoMixer, psoAnimations, currentAction } = sceneRef.current;
+    const { psoMixer, pszMixer, psoAnimations, currentAction, currentPszAction } = sceneRef.current;
     if (currentAction) currentAction.fadeOut(0.2);
+    if (currentPszAction) currentPszAction.fadeOut(0.2);
+
     const clip = psoAnimations.find((a) => a.name === selectedAnimation);
     if (clip) {
       const action = psoMixer.clipAction(clip);
@@ -284,11 +328,24 @@ export default function RetargetViewer() {
       action.setLoop(THREE.LoopRepeat, Infinity);
       action.paused = !isPlaying;
       sceneRef.current.currentAction = action;
+
+      // Retarget to PSZ if enabled and mappings exist
+      if (playOnBoth && pszMixer) {
+        const retargeted = buildRetargetedClip(clip, mappings);
+        if (retargeted) {
+          const pszAction = pszMixer.clipAction(retargeted);
+          pszAction.reset().fadeIn(0.2).play();
+          pszAction.setLoop(THREE.LoopRepeat, Infinity);
+          pszAction.paused = !isPlaying;
+          sceneRef.current.currentPszAction = pszAction;
+        }
+      }
     }
-  }, [selectedAnimation]);
+  }, [selectedAnimation, playOnBoth, mappings, buildRetargetedClip]);
 
   useEffect(() => {
     if (sceneRef.current?.currentAction) sceneRef.current.currentAction.paused = !isPlaying;
+    if (sceneRef.current?.currentPszAction) sceneRef.current.currentPszAction.paused = !isPlaying;
   }, [isPlaying]);
 
   const addMapping = useCallback(() => {
@@ -351,7 +408,9 @@ export default function RetargetViewer() {
             <span style={{ fontSize: '14px', fontWeight: 'bold' }}>
               <span style={{ color: pszLoaded ? '#44ff44' : '#666' }}>PSZ {!pszLoaded && '(loading...)'}</span>
               {' vs '}
-              <span style={{ color: psoLoaded ? '#ff4444' : '#666' }}>PSO {!psoLoaded && '(loading ~55MB...)'}</span>
+              <span style={{ color: psoLoaded ? '#ff4444' : psoLoadError ? '#ff6666' : '#666' }}>
+                PSO {psoLoadError ? '(FAILED)' : !psoLoaded ? `(loading ${psoLoadProgress}%...)` : ''}
+              </span>
               {' Skeleton Comparison'}
             </span>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -363,9 +422,19 @@ export default function RetargetViewer() {
                 <input type="checkbox" checked={showLabels} onChange={(e) => setShowLabels(e.target.checked)} />
                 Labels
               </label>
+              <label style={{ fontSize: '11px', color: Object.keys(mappings).length > 0 ? '#8888ff' : '#555', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input type="checkbox" checked={playOnBoth} onChange={(e) => setPlayOnBoth(e.target.checked)} disabled={Object.keys(mappings).length === 0} />
+                Retarget
+              </label>
             </div>
           </div>
-          <div style={{ flex: 1, background: '#0a0a1a', borderRadius: '8px', overflow: 'hidden' }} ref={containerRef} />
+          <div style={{ flex: 1, background: '#0a0a1a', borderRadius: '8px', overflow: 'hidden', position: 'relative' }} ref={containerRef}>
+            {psoLoadError && (
+              <div style={{ position: 'absolute', bottom: 12, left: 12, right: 12, padding: '8px 12px', background: 'rgba(100,20,20,0.9)', borderRadius: '6px', fontSize: '11px', color: '#f88' }}>
+                {psoLoadError}
+              </div>
+            )}
+          </div>
 
           {/* Mapping controls */}
           <div style={{
