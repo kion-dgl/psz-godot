@@ -143,10 +143,34 @@ pszLocal = prefix * psoLocalAnim * suffix
 
 Verified via `retarget-test.mjs`: this produces identical results to the corrected world-frame approach (left-left), with 0.0° difference across all bones and keyframes.
 
+## Mapped PSO Animations (Humar)
+
+Animations are grouped per weapon. The pattern repeats: each weapon set starts with attacks, then idle/block/walk/damage/utility/run/tech.
+
+### Saber (indices 99–113)
+
+| Index | Name | Description |
+|-------|------|-------------|
+| 099 | pso_sa_atk1 | Saber Attack 1 |
+| 100 | pso_sa_atk2 | Saber Attack 2 |
+| 101 | pso_sa_atk3 | Saber Attack 3 |
+| 102 | pso_sa_wait | Saber Idle Ready |
+| 103 | pso_sa_block | Saber Block |
+| 104 | pso_sa_walk | Saber Walk |
+| 105 | pso_sa_dam_h | Saber Damage (flip back) |
+| 106 | pso_sa_dam_d_wa | Saber Get Back Up |
+| 107 | pso_sa_dam_n | Saber Damage (light) |
+| 108 | pso_sa_dam_d | Saber Damage (fall down) |
+| 109 | pso_sa_press | Saber Press Button |
+| 110 | pso_sa_pb | Saber Photon Blast |
+| 111 | pso_sa_run | Saber Run |
+| 112 | pso_sa_walk_ready | Saber Walk Ready |
+| 113 | pso_sa_tec | Saber Cast Tech |
+
+**Note:** Index 114 likely starts the sword weapon set following the same pattern.
+
 ## Remaining Issues
 
-1. **Visual verification needed**: The math is correct but the retargeted animations need visual inspection in the RetargetViewer to confirm they look right on the PSZ model.
+1. **PSO has 3 skins**: The GLB has `bone_000`, `bone_000_1`, `bone_000_2` suggesting multiple skin/skeleton variants. Currently using the first one.
 
-2. **PSO has 3 skins**: The GLB has `bone_000`, `bone_000_1`, `bone_000_2` suggesting multiple skin/skeleton variants. Currently using the first one.
-
-3. **Animation naming**: PSO animations are numbered (`plymotiondata_000` through `plymotiondata_571`). Need to map these to semantic names using the PLYMOTION array from the psov2 codebase.
+2. **Animation sets to map**: Sword (114+), Dagger, Spear, Claw, Shield, Handgun, Rifle, Machinegun, Grenade, Rod, Wand, Slicer — each likely follows the same 15-animation pattern as saber.
