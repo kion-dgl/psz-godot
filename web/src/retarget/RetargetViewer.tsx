@@ -154,15 +154,27 @@ function createSelectedLabel(bone: BoneInfo, color: string, scene: THREE.Scene):
   return sprite;
 }
 
-// Capture rest-pose quaternions for all bones in a model
-function captureRestQuaternions(model: THREE.Object3D): Record<string, THREE.Quaternion> {
-  const quats: Record<string, THREE.Quaternion> = {};
+interface RestPoseData {
+  localQuats: Record<string, THREE.Quaternion>;
+  worldQuats: Record<string, THREE.Quaternion>;
+  parentMap: Record<string, string | null>;
+}
+
+// Capture rest-pose local + world quaternions and parent relationships
+function captureRestPose(model: THREE.Object3D): RestPoseData {
+  const localQuats: Record<string, THREE.Quaternion> = {};
+  const worldQuats: Record<string, THREE.Quaternion> = {};
+  const parentMap: Record<string, string | null> = {};
   model.traverse((child) => {
     if ((child as THREE.Bone).isBone) {
-      quats[child.name] = child.quaternion.clone();
+      localQuats[child.name] = child.quaternion.clone();
+      const wq = new THREE.Quaternion();
+      child.getWorldQuaternion(wq);
+      worldQuats[child.name] = wq;
+      parentMap[child.name] = child.parent && (child.parent as THREE.Bone).isBone ? child.parent.name : null;
     }
   });
-  return quats;
+  return { localQuats, worldQuats, parentMap };
 }
 
 interface SceneState {
@@ -181,8 +193,8 @@ interface SceneState {
   currentPszAction: THREE.AnimationAction | null;
   boneMarkers: BoneMarker[];
   selectedLabels: THREE.Sprite[];
-  psoRestQuats: Record<string, THREE.Quaternion>;
-  pszRestQuats: Record<string, THREE.Quaternion>;
+  psoRest: RestPoseData;
+  pszRest: RestPoseData;
 }
 
 // Collapsible bone tree row component
@@ -412,7 +424,8 @@ export default function RetargetViewer() {
       pszHelper: null, psoHelper: null,
       psoMixer: null, pszMixer: null, psoAnimations: [],
       currentAction: null, currentPszAction: null, boneMarkers: [], selectedLabels: [],
-      psoRestQuats: {}, pszRestQuats: {},
+      psoRest: { localQuats: {}, worldQuats: {}, parentMap: {} },
+      pszRest: { localQuats: {}, worldQuats: {}, parentMap: {} },
     };
 
     const clock = new THREE.Clock();
@@ -506,7 +519,7 @@ export default function RetargetViewer() {
       if (helper) { scene.add(helper); sceneRef.current!.pszHelper = helper; }
       sceneRef.current!.pszMixer = new THREE.AnimationMixer(model);
       model.updateMatrixWorld(true);
-      sceneRef.current!.pszRestQuats = captureRestQuaternions(model);
+      sceneRef.current!.pszRest = captureRestPose(model);
       setPszBones(collectBones(model));
       setPszLoaded(true);
       if (sceneRef.current!.psoModel) {
@@ -535,7 +548,7 @@ export default function RetargetViewer() {
         // Now reset to T-pose and capture rest quaternions
         resetToBindPose(model);
         model.updateMatrixWorld(true);
-        sceneRef.current!.psoRestQuats = captureRestQuaternions(model);
+        sceneRef.current!.psoRest = captureRestPose(model);
 
         const helper = createSkeletonHelper(model, 0xff4444);
         if (helper) { scene.add(helper); sceneRef.current!.psoHelper = helper; }
@@ -570,13 +583,13 @@ export default function RetargetViewer() {
   // Zero out or restore PSO bone rest rotations
   useEffect(() => {
     if (!sceneRef.current?.psoModel) return;
-    const { psoModel, psoRestQuats } = sceneRef.current;
+    const { psoModel, psoRest } = sceneRef.current;
     psoModel.traverse((child) => {
       if ((child as THREE.Bone).isBone) {
         if (zeroedPsoRest) {
           child.quaternion.identity();
         } else {
-          const rest = psoRestQuats[child.name];
+          const rest = psoRest.localQuats[child.name];
           if (rest) child.quaternion.copy(rest);
         }
       }
@@ -628,9 +641,25 @@ export default function RetargetViewer() {
     toggle(sceneRef.current.psoModel);
   }, [showMeshes]);
 
+  // Compute world-space rest quaternion by walking the parent chain
+  const getWorldRestQuat = useCallback((boneName: string, restData: RestPoseData): THREE.Quaternion => {
+    const result = new THREE.Quaternion();
+    const chain: string[] = [];
+    let cur: string | null = boneName;
+    while (cur) {
+      chain.unshift(cur);
+      cur = restData.parentMap[cur] || null;
+    }
+    for (const name of chain) {
+      const local = restData.localQuats[name];
+      if (local) result.multiply(local);
+    }
+    return result;
+  }, []);
+
   const buildRetargetedClip = useCallback((clip: THREE.AnimationClip, boneMap: Record<string, string>): THREE.AnimationClip | null => {
     if (!sceneRef.current || Object.keys(boneMap).length === 0) return null;
-    const { psoRestQuats, pszRestQuats } = sceneRef.current;
+    const { psoRest, pszRest } = sceneRef.current;
 
     const tracks: THREE.KeyframeTrack[] = [];
     const identity = new THREE.Quaternion();
@@ -647,26 +676,46 @@ export default function RetargetViewer() {
       const pszBoneName = boneMap[boneName];
       if (!pszBoneName) continue;
 
-      // Get rest quaternions for pre-rotation correction
-      const psoRest = psoRestQuats[boneName] || identity;
-      const pszRest = pszRestQuats[pszBoneName] || identity;
-      const psoRestInv = psoRest.clone().invert();
+      // World-space approach:
+      // 1. Get PSO parent's world rest quat to convert PSO local anim -> world
+      // 2. Get PSZ parent's world rest quat to convert world -> PSZ local
+      const psoParent = psoRest.parentMap[boneName];
+      const pszParent = pszRest.parentMap[pszBoneName];
+      const psoParentWorldRest = psoParent ? getWorldRestQuat(psoParent, psoRest) : identity.clone();
+      const pszParentWorldRest = pszParent ? getWorldRestQuat(pszParent, pszRest) : identity.clone();
+      const pszParentWorldRestInv = pszParentWorldRest.clone().invert();
 
-      // Transform each keyframe:
-      // delta = inverse(psoRest) * psoAnim  (change from PSO rest pose)
-      // result = pszRest * delta             (apply change to PSZ rest pose)
+      // PSO local rest and PSZ local rest for this bone
+      const psoLocalRest = psoRest.localQuats[boneName] || identity;
+      const psoLocalRestInv = psoLocalRest.clone().invert();
+      const pszLocalRest = pszRest.localQuats[pszBoneName] || identity;
+
       const srcValues = track.values;
       const dstValues = new Float32Array(srcValues.length);
-      const psoAnim = new THREE.Quaternion();
-      const result = new THREE.Quaternion();
+      const psoLocalAnim = new THREE.Quaternion();
 
       for (let i = 0; i < srcValues.length; i += 4) {
-        psoAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
-        result.copy(pszRest).multiply(psoRestInv).multiply(psoAnim);
-        dstValues[i] = result.x;
-        dstValues[i + 1] = result.y;
-        dstValues[i + 2] = result.z;
-        dstValues[i + 3] = result.w;
+        psoLocalAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
+
+        // PSO local anim -> world: psoParentWorld * psoLocalAnim
+        const psoWorld = psoParentWorldRest.clone().multiply(psoLocalAnim);
+
+        // Extract delta in world space: how does this differ from PSO rest world?
+        const psoWorldRest = psoParentWorldRest.clone().multiply(psoLocalRest);
+        const psoWorldRestInv = psoWorldRest.clone().invert();
+        const worldDelta = psoWorldRestInv.clone().premultiply(psoWorld);
+        // worldDelta = psoWorld * inv(psoWorldRest) — rotation change in world space
+
+        // Apply world delta to PSZ world rest, then convert to PSZ local
+        const pszWorldRest = pszParentWorldRest.clone().multiply(pszLocalRest);
+        const pszWorldAnimated = pszWorldRest.clone().multiply(worldDelta);
+        // Convert back to local: pszLocal = inv(pszParentWorld) * pszWorld
+        const pszLocalResult = pszParentWorldRestInv.clone().multiply(pszWorldAnimated);
+
+        dstValues[i] = pszLocalResult.x;
+        dstValues[i + 1] = pszLocalResult.y;
+        dstValues[i + 2] = pszLocalResult.z;
+        dstValues[i + 3] = pszLocalResult.w;
       }
 
       tracks.push(new THREE.QuaternionKeyframeTrack(
@@ -677,7 +726,7 @@ export default function RetargetViewer() {
     }
     if (tracks.length === 0) return null;
     return new THREE.AnimationClip(clip.name + '_retargeted', clip.duration, tracks);
-  }, []);
+  }, [getWorldRestQuat]);
 
   useEffect(() => {
     if (!sceneRef.current?.psoMixer || !selectedAnimation) return;
