@@ -6,6 +6,11 @@ class_name CityAreaBase
 const PLAYER_SCENE := preload("res://scenes/3d/player/player.tscn")
 const ORBIT_CAMERA_SCENE := preload("res://scenes/3d/camera/orbit_camera.tscn")
 const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
+const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
+const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
+
+## Static cache for global texture fixes (shared across all city area instances).
+static var _global_texture_fixes: Dictionary = {}
 
 var player: CharacterBody3D
 var orbit_camera: Node3D
@@ -149,3 +154,98 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Override in subclasses to return the area identifier string.
 func _get_area_name() -> String:
 	return ""
+
+
+func _fix_city_materials() -> void:
+	## Apply texture fixes from global-texture-fixes.json to all city GLB meshes.
+	_load_global_texture_fixes()
+	_fix_materials_recursive(self)
+
+
+static func _load_global_texture_fixes() -> void:
+	if not _global_texture_fixes.is_empty():
+		return
+	var gtf_path := "res://data/stage_configs/global-texture-fixes.json"
+	if FileAccess.file_exists(gtf_path):
+		var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
+		if gtf_file:
+			var gtf_json := JSON.new()
+			if gtf_json.parse(gtf_file.get_as_text()) == OK:
+				_global_texture_fixes = gtf_json.data as Dictionary
+				print("[CityArea] Loaded global texture fixes: %d entries" % _global_texture_fixes.size())
+			gtf_file.close()
+
+
+static func _find_global_fix_for_material(mat: StandardMaterial3D) -> Dictionary:
+	if not mat.albedo_texture or _global_texture_fixes.is_empty():
+		return {}
+	var tex_path: String = mat.albedo_texture.resource_path
+	var tex_basename: String = tex_path.get_file()
+	for suffix in ["#1", "#0", ""]:
+		var key: String = tex_basename + suffix
+		if _global_texture_fixes.has(key):
+			return _global_texture_fixes[key] as Dictionary
+	return {}
+
+
+static func _wrap_mode_int(mode: String) -> int:
+	match mode:
+		"mirror": return 1
+		"clamp": return 2
+	return 0  # repeat
+
+
+func _fix_materials_recursive(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var std_mat := mat as StandardMaterial3D
+				var fix := _find_global_fix_for_material(std_mat)
+				var has_scroll := fix.has("scrollX") or fix.has("scrollY")
+				var is_waterfall := has_scroll or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
+				var needs_shader := not fix.is_empty() and (
+					is_waterfall or
+					str(fix.get("wrapS", "repeat")) == "mirror" or
+					str(fix.get("wrapT", "repeat")) == "mirror")
+				if is_waterfall:
+					var shader_mat := ShaderMaterial.new()
+					shader_mat.shader = WATERFALL_SHADER
+					if std_mat.albedo_texture:
+						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
+					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
+					var scroll_x: float = fix.get("scrollX", 0.0)
+					var scroll_y: float = fix.get("scrollY", -0.35)
+					shader_mat.set_shader_parameter("uv_scroll", Vector2(scroll_x, scroll_y))
+					shader_mat.render_priority = 1
+					mesh_inst.set_surface_override_material(i, shader_mat)
+				elif needs_shader:
+					var shader_mat := ShaderMaterial.new()
+					shader_mat.shader = TEXTURE_FIX_SHADER
+					if std_mat.albedo_texture:
+						shader_mat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+					shader_mat.set_shader_parameter("albedo_color", std_mat.albedo_color)
+					shader_mat.set_shader_parameter("uv_scale", Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0))
+					shader_mat.set_shader_parameter("uv_offset", Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0))
+					shader_mat.set_shader_parameter("wrap_s", _wrap_mode_int(str(fix.get("wrapS", "repeat"))))
+					shader_mat.set_shader_parameter("wrap_t", _wrap_mode_int(str(fix.get("wrapT", "repeat"))))
+					mesh_inst.set_surface_override_material(i, shader_mat)
+				else:
+					var new_mat := std_mat.duplicate() as StandardMaterial3D
+					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+					new_mat.alpha_scissor_threshold = 0.1
+					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+					new_mat.texture_repeat = true
+					if not fix.is_empty():
+						new_mat.uv1_scale = Vector3(fix.get("repeatX", 1.0), fix.get("repeatY", 1.0), 1.0)
+						new_mat.uv1_offset = Vector3(fix.get("offsetX", 0.0), fix.get("offsetY", 0.0), 0.0)
+						if str(fix.get("wrapS", "repeat")) == "clamp" or str(fix.get("wrapT", "repeat")) == "clamp":
+							new_mat.texture_repeat = false
+					mesh_inst.set_surface_override_material(i, new_mat)
+	for child in node.get_children():
+		_fix_materials_recursive(child)

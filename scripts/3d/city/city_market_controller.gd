@@ -55,6 +55,9 @@ const WALL_DATA := [
 
 
 func _ready() -> void:
+	# Apply texture fixes from global config
+	_fix_city_materials()
+
 	# Heal on city entry
 	_heal_character()
 
