@@ -15,6 +15,32 @@ import {
 const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
 const PSO_SABER_PATH = assetUrl('/data/retarget/Saber.glb');
 
+// Common PSO locomotion animations added to every category with tuned bone offsets
+const PSO_COMMON_ANIMS: { index: number; name: string; label: string; boneOffsets: Record<string, { x: number; y: number; z: number }> }[] = [
+  {
+    index: 200, name: 'pso_fi_walk', label: 'PSO Walk',
+    boneOffsets: {
+      '020_Spine': { x: 0, y: 8, z: 0 },
+      '090_Head': { x: 0, y: 10, z: 0 },
+      '030_LArm01': { x: 0, y: -15, z: 0 },
+      '040_LArm02': { x: 90, y: 0, z: 0 },
+      '060_RArm01': { x: 0, y: 15, z: 0 },
+      '070_RArm02': { x: 90, y: 0, z: 0 },
+    },
+  },
+  {
+    index: 207, name: 'pso_fi_run', label: 'PSO Run',
+    boneOffsets: {
+      '020_Spine': { x: 0, y: 8, z: 0 },
+      '090_Head': { x: 0, y: 3, z: 0 },
+      '030_LArm01': { x: 0, y: -10, z: 0 },
+      '040_LArm02': { x: 90, y: 0, z: 0 },
+      '060_RArm01': { x: 0, y: 10, z: 0 },
+      '070_RArm02': { x: 90, y: 0, z: 0 },
+    },
+  },
+];
+
 const GENDER_MAP: Record<string, 'm' | 'w'> = {
   humar: 'm', hucast: 'm', ramar: 'm', racast: 'm', fomar: 'm', hunewm: 'm', fonewm: 'm',
   humarl: 'w', hucaseal: 'w', ramarl: 'w', racaseal: 'w', fomarl: 'w', hunewearl: 'w', fonewearl: 'w',
@@ -117,6 +143,9 @@ for (const defs of Object.values(PSO_CATEGORY_ANIMATIONS)) {
   for (const def of defs) {
     PSO_ANIMATION_LABELS[def.name] = def.label;
   }
+}
+for (const def of PSO_COMMON_ANIMS) {
+  PSO_ANIMATION_LABELS[def.name] = def.label;
 }
 
 export default function PlayerAnimationStorybook() {
@@ -262,17 +291,29 @@ export default function PlayerAnimationStorybook() {
     psoAnims: THREE.AnimationClip[],
     psoScale: number,
   ): Record<string, THREE.AnimationClip> => {
-    const psoDefs = PSO_CATEGORY_ANIMATIONS[categoryId];
-    if (!psoDefs || psoDefs.length === 0) return {};
-
     const clips: Record<string, THREE.AnimationClip> = {};
-    for (const def of psoDefs) {
+
+    // Category-specific PSO animations (saber, sword, etc.)
+    const psoDefs = PSO_CATEGORY_ANIMATIONS[categoryId];
+    if (psoDefs) {
+      for (const def of psoDefs) {
+        const psoClipName = `plymotiondata_${String(def.index).padStart(3, '0')}`;
+        const srcClip = psoAnims.find((c) => c.name === psoClipName);
+        if (!srcClip) continue;
+        const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, psoScale, def.name, wristTargets);
+        if (retargeted) clips[def.name] = retargeted;
+      }
+    }
+
+    // Common PSO locomotion animations (walk/run) added to every category
+    for (const def of PSO_COMMON_ANIMS) {
       const psoClipName = `plymotiondata_${String(def.index).padStart(3, '0')}`;
       const srcClip = psoAnims.find((c) => c.name === psoClipName);
       if (!srcClip) continue;
-      const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, psoScale, def.name, wristTargets);
+      const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, psoScale, def.name, wristTargets, def.boneOffsets);
       if (retargeted) clips[def.name] = retargeted;
     }
+
     return clips;
   }, []);
 
@@ -592,7 +633,7 @@ export default function PlayerAnimationStorybook() {
           <div style={{ borderBottom: '1px solid #3a3a5a', paddingBottom: '12px' }}>
             <h3 style={{ fontSize: '12px', color: '#6b8afd', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
               Animations ({availableAnimations.length})
-              {!psoLoaded && PSO_CATEGORY_ANIMATIONS[selectedCategory] && (
+              {!psoLoaded && (
                 <span style={{ color: '#666', fontWeight: 'normal', fontSize: '10px' }}> (loading PSO...)</span>
               )}
             </h3>

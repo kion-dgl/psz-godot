@@ -46,23 +46,6 @@ function defaultOffsets(): OffsetMap {
   return m;
 }
 
-function applyOffsetsToRest(rest: RestPoseData, offsets: OffsetMap): RestPoseData {
-  const modified: RestPoseData = {
-    localQuats: { ...rest.localQuats },
-    worldQuats: { ...rest.worldQuats },
-    parentMap: rest.parentMap,
-  };
-  const deg2rad = Math.PI / 180;
-  for (const [boneName, offset] of Object.entries(offsets)) {
-    if (offset.x === 0 && offset.y === 0 && offset.z === 0) continue;
-    const orig = modified.localQuats[boneName];
-    if (!orig) continue;
-    const euler = new THREE.Euler(offset.x * deg2rad, offset.y * deg2rad, offset.z * deg2rad, 'XYZ');
-    const offsetQuat = new THREE.Quaternion().setFromEuler(euler);
-    modified.localQuats[boneName] = orig.clone().multiply(offsetQuat);
-  }
-  return modified;
-}
 
 interface SceneState {
   scene: THREE.Scene;
@@ -266,12 +249,11 @@ export default function RetargetTuner() {
     // Reset to bind pose
     resetToBindPose(s.pszModel);
 
-    // Apply offsets to PSZ rest pose
-    const adjustedPszRest = applyOffsetsToRest(s.pszRest, offsets);
-
-    // Build retargeted clip for PSZ
+    // Build retargeted clip — pass original rest + offsets separately
+    // so offsets are applied AFTER arm correction (not overwritten by it)
     const retargetedClip = buildRetargetedClip(
-      clip, s.psoRest, adjustedPszRest, BONE_MAPPINGS, s.psoScale,
+      clip, s.psoRest, s.pszRest, BONE_MAPPINGS, s.psoScale,
+      undefined, undefined, offsets,
     );
 
     if (retargetedClip) {

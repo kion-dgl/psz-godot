@@ -79,6 +79,7 @@ export function buildRetargetedClip(
   posScale: number,
   outputName?: string,
   wristTargets?: Record<string, string>,
+  boneOffsets?: Record<string, { x: number; y: number; z: number }>,
 ): THREE.AnimationClip | null {
   if (Object.keys(boneMap).length === 0) return null;
 
@@ -102,6 +103,19 @@ export function buildRetargetedClip(
     const pszParentWorld = pszParent ? getWorldRestQuat(pszParent, adjustedPszRest) : new THREE.Quaternion();
     const psoArmWorld = getWorldRestQuat(psoBone, psoRest);
     adjustedPszRest.localQuats[pszBone] = pszParentWorld.clone().invert().multiply(psoArmWorld);
+  }
+
+  // Apply user bone offsets AFTER arm correction so they don't get overwritten
+  if (boneOffsets) {
+    const deg2rad = Math.PI / 180;
+    for (const [boneName, offset] of Object.entries(boneOffsets)) {
+      if (offset.x === 0 && offset.y === 0 && offset.z === 0) continue;
+      const base = adjustedPszRest.localQuats[boneName];
+      if (!base) continue;
+      const euler = new THREE.Euler(offset.x * deg2rad, offset.y * deg2rad, offset.z * deg2rad, 'XYZ');
+      const offsetQuat = new THREE.Quaternion().setFromEuler(euler);
+      adjustedPszRest.localQuats[boneName] = base.clone().multiply(offsetQuat);
+    }
   }
 
   const tracks: THREE.KeyframeTrack[] = [];
