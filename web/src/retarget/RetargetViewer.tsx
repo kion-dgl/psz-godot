@@ -64,6 +64,17 @@ function createBoneLabels(
   return sprites;
 }
 
+function matchPsoScaleToPsz(pszModel: THREE.Object3D, psoModel: THREE.Object3D): void {
+  const pszBox = new THREE.Box3().setFromObject(pszModel);
+  const psoBox = new THREE.Box3().setFromObject(psoModel);
+  const pszHeight = pszBox.max.y - pszBox.min.y;
+  const psoHeight = psoBox.max.y - psoBox.min.y;
+  if (psoHeight > 0 && pszHeight > 0) {
+    const scale = pszHeight / psoHeight;
+    psoModel.scale.multiplyScalar(scale);
+  }
+}
+
 function createSkeletonHelper(model: THREE.Object3D, color: number): THREE.SkeletonHelper | null {
   let skeleton: THREE.Skeleton | null = null;
   model.traverse((child) => {
@@ -205,6 +216,11 @@ export default function RetargetViewer() {
       model.updateMatrixWorld(true);
       setPszBones(collectBones(model));
       setPszLoaded(true);
+
+      // If PSO already loaded, scale it to match
+      if (sceneRef.current!.psoModel) {
+        matchPsoScaleToPsz(model, sceneRef.current!.psoModel);
+      }
     });
 
     // PSO model on the right
@@ -227,6 +243,11 @@ export default function RetargetViewer() {
         sceneRef.current!.psoAnimations = gltf.animations;
         const animNames = gltf.animations.map((a) => a.name);
         setPsoAnimations(animNames);
+
+        // Scale PSO to match PSZ height
+        if (sceneRef.current!.pszModel) {
+          matchPsoScaleToPsz(sceneRef.current!.pszModel, model);
+        }
 
         model.updateMatrixWorld(true);
         setPsoBones(collectBones(model));
