@@ -306,7 +306,20 @@ export default function RetargetViewer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showMeshes, setShowMeshes] = useState(true);
   const [showMarkers, setShowMarkers] = useState(true);
-  const [mappings, setMappings] = useState<Record<string, string>>({});
+  const [mappings, setMappings] = useState<Record<string, string>>({
+    bone_000: '000_Root',
+    bone_002: '010_Hip',
+    bone_024: '020_Spine',
+    bone_028: '030_LArm01',
+    bone_029: '040_LArm02',
+    bone_041: '060_RArm01',
+    bone_042: '070_RArm02',
+    bone_056: '090_Head',
+    bone_004: '100_LLeg01',
+    bone_005: '110_LLeg02',
+    bone_013: '120_RLeg01',
+    bone_014: '130_RLeg02',
+  });
   const [pszLoaded, setPszLoaded] = useState(false);
   const [psoLoaded, setPsoLoaded] = useState(false);
   const [psoLoadError, setPsoLoadError] = useState<string | null>(null);
