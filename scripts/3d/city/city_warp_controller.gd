@@ -37,6 +37,9 @@ const WALL_DATA := [
 
 
 func _ready() -> void:
+	# Apply texture fixes from global config
+	_fix_city_materials()
+
 	# Spawn player
 	_spawn_player(DEFAULT_SPAWN, DEFAULT_ROT, SPAWN_VARIANTS)
 

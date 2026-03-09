@@ -6,7 +6,7 @@ extends CharacterBody3D
 const MOVE_SPEED: float = 6.0
 const SPRINT_SPEED: float = 8.0
 const WALK_SPEED: float = 2.5
-const WALK_TO_RUN_DELAY: float = 1.75
+const WALK_TO_RUN_DELAY: float = 1.2
 const ROTATE_SPEED: float = 5.0
 const GRAVITY: float = 20.0
 const FALL_RESPAWN_Y: float = -10.0  # Respawn if player falls below this
@@ -28,21 +28,23 @@ enum PlayerState {
 	CUTSCENE
 }
 
-# Animation name mapping (from R3F ANIMATION_MAP)
-const ANIMATION_MAP: Dictionary = {
-	"pmsa_wait": "wait",
-	"pmsa_walk": "walk",
-	"pmsa_run": "run",
-	"pmsa_run_pso": "run_pso",
-	"pmsa_esc_f": "dodge",
-	"pmsa_atk1": "atk1",
-	"pmsa_atk2": "atk2",
-	"pmsa_atk3": "atk3",
-	"pmsa_dam_n": "dam_n",
-	"pmsa_dam_h": "dam_h",
-	"pmsa_dam_d": "dam_d",
-	"pmsa_tec": "tec",
+# Weapon type → animation GLB path and prefix
+const WEAPON_ANIM_DATA: Dictionary = {
+	WeaponData.WeaponType.SABER: {"glb": "res://assets/player/animations/saver_m.glb", "prefix": "pmsa"},
+	WeaponData.WeaponType.SWORD: {"glb": "res://assets/player/animations/sword_m.glb", "prefix": "pmsw"},
+	WeaponData.WeaponType.DAGGERS: {"glb": "res://assets/player/animations/dagger_m.glb", "prefix": "pmda"},
+	WeaponData.WeaponType.SPEAR: {"glb": "res://assets/player/animations/spear_m.glb", "prefix": "pmsp"},
+	WeaponData.WeaponType.HANDGUN: {"glb": "res://assets/player/animations/handgun_m.glb", "prefix": "pmhg"},
+	WeaponData.WeaponType.MECH_GUN: {"glb": "res://assets/player/animations/machinegun_m.glb", "prefix": "pmmg"},
+	WeaponData.WeaponType.RIFLE: {"glb": "res://assets/player/animations/shotgun_m.glb", "prefix": "pmgb"},
+	WeaponData.WeaponType.ROD: {"glb": "res://assets/player/animations/rod_m.glb", "prefix": "pmro"},
+	WeaponData.WeaponType.WAND: {"glb": "res://assets/player/animations/rod_m.glb", "prefix": "pmro"},
 }
+const DEFAULT_ANIM_GLB := "res://assets/player/animations/saver_m.glb"
+const DEFAULT_ANIM_PREFIX := "pmsa"
+
+# Current weapon animation prefix (changes when weapon changes)
+var _anim_prefix: String = DEFAULT_ANIM_PREFIX
 
 # Default asset paths (fallback when no character data)
 const DEFAULT_TEXTURE_PATH := "res://assets/player/pc_000/textures/pc_000_000.png"
@@ -63,8 +65,9 @@ var skeleton: Skeleton3D
 var weapon_node: Node3D  # Attached weapon model
 
 # Weapon attachment config
-const WEAPON_BONE_NAME: String = "070_RArm02"  # Right arm segment 2 (hand)
-var weapon_scene: PackedScene = preload("res://assets/weapons/saber/saber.glb")
+const WEAPON_BONE_NAME: String = "070_RArm02"  # Right hand
+const LEFT_WEAPON_BONE_NAME: String = "040_LArm02"  # Left hand (dual-wield)
+var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
 # State tracking
 var current_state: PlayerState = PlayerState.IDLE
@@ -114,7 +117,9 @@ func _ready() -> void:
 	_setup_animations()
 
 	# Set up weapon attachment (skip in city — no combat there)
-	if not _is_in_city():
+	var in_city := _is_in_city()
+	print("[Player] _ready: in_city=%s, skeleton=%s" % [in_city, skeleton != null])
+	if not in_city:
 		_setup_weapon()
 
 	# Initialize animation player if we have one
@@ -130,7 +135,7 @@ func _setup_animations() -> void:
 	var model_node := $PlayerModel/Model
 	skeleton = _find_node_of_type(model_node, "Skeleton3D") as Skeleton3D
 
-	# Find the AnimationPlayer in the Animations node
+	# Find the AnimationPlayer in the Animations node (scene-baked saber anims)
 	var anims_node := $PlayerModel/Animations
 	var source_anim_player: AnimationPlayer
 	if anims_node:
@@ -146,57 +151,257 @@ func _setup_animations() -> void:
 	animation_player.name = "PlayerAnimationPlayer"
 	skeleton_parent.add_child(animation_player)
 
-	# Animations that should loop
-	var looping_anims := ["pmsa_wait", "pmsa_run", "pmsa_walk", "pmsa_run_pso", "pmsa_stp_fb", "pmsa_stp_lr"]
+	# Load animations — weapon-specific in field, default unarmed in city
+	_load_weapon_animations()
 
-	# Copy and remap each animation - skeleton is now a sibling
+
+func _load_weapon_animations() -> void:
+	if not animation_player or not skeleton:
+		return
+
+	# In city, always use default unarmed animations
+	var anim_glb := DEFAULT_ANIM_GLB
+	_anim_prefix = DEFAULT_ANIM_PREFIX
+
+	if not _is_in_city():
+		var weapon_data := _get_equipped_weapon_data()
+		if weapon_data and WEAPON_ANIM_DATA.has(weapon_data.weapon_type):
+			var data: Dictionary = WEAPON_ANIM_DATA[weapon_data.weapon_type]
+			anim_glb = str(data.get("glb", DEFAULT_ANIM_GLB))
+			_anim_prefix = str(data.get("prefix", DEFAULT_ANIM_PREFIX))
+
+	print("[Player] Loading animations: glb=%s, prefix=%s" % [anim_glb, _anim_prefix])
+
+	# Load animation GLB
+	if not ResourceLoader.exists(anim_glb):
+		push_warning("[Player] Animation GLB not found: %s, falling back to default" % anim_glb)
+		anim_glb = DEFAULT_ANIM_GLB
+		_anim_prefix = DEFAULT_ANIM_PREFIX
+
+	var packed: PackedScene = load(anim_glb) as PackedScene
+	if packed == null:
+		push_warning("[Player] Failed to load animation GLB: %s" % anim_glb)
+		return
+
+	var anim_scene := packed.instantiate()
+	var source_player: AnimationPlayer = _find_node_of_type(anim_scene, "AnimationPlayer") as AnimationPlayer
+	if not source_player:
+		push_warning("[Player] No AnimationPlayer found in animation GLB: %s" % anim_glb)
+		anim_scene.queue_free()
+		return
+
+	# Looping animations: weapon-specific idle/wait + shared locomotion
+	var looping_suffixes := ["_wait", "_run", "_walk", "_stp_fb", "_stp_lr"]
+
+	# Build new library from the weapon animation GLB
 	var lib := AnimationLibrary.new()
-	for anim_name in source_anim_player.get_animation_list():
-		var source_anim := source_anim_player.get_animation(anim_name)
+	for anim_name in source_player.get_animation_list():
+		var source_anim := source_player.get_animation(anim_name)
 		var new_anim := _remap_animation(source_anim, skeleton.name)
 
-		# Set loop mode for looping animations
-		if anim_name in looping_anims or anim_name.ends_with("_lp"):
+		# Set loop mode
+		var should_loop := anim_name.ends_with("_lp")
+		if not should_loop:
+			for suffix in looping_suffixes:
+				if anim_name.ends_with(suffix):
+					should_loop = true
+					break
+		if should_loop:
 			new_anim.loop_mode = Animation.LOOP_LINEAR
 
 		lib.add_animation(anim_name, new_anim)
 
+	# Also load shared PSO locomotion from the scene-baked Animations node
+	var scene_anims_node := $PlayerModel/Animations
+	if scene_anims_node:
+		var scene_player: AnimationPlayer = _find_node_of_type(scene_anims_node, "AnimationPlayer") as AnimationPlayer
+		if scene_player:
+			for anim_name in ["pmsa_walk", "pmsa_run_pso"]:
+				if scene_player.has_animation(anim_name) and not lib.has_animation(anim_name):
+					var source_anim := scene_player.get_animation(anim_name)
+					var new_anim := _remap_animation(source_anim, skeleton.name)
+					new_anim.loop_mode = Animation.LOOP_LINEAR
+					lib.add_animation(anim_name, new_anim)
+
+	# Replace existing library
+	if animation_player.has_animation_library(""):
+		animation_player.remove_animation_library("")
 	animation_player.add_animation_library("", lib)
+
+	var anim_list := animation_player.get_animation_list()
+	print("[Player] Loaded %d animations: %s" % [anim_list.size(), anim_list])
+
+	anim_scene.queue_free()
+
+
+## Call this after equipment changes to update the 3D weapon model.
+func refresh_weapon() -> void:
+	if _is_in_city():
+		return
+	_clear_weapon()
+	_setup_weapon()
+	_load_weapon_animations()
+	transition_to(current_state)  # Replay current animation with new set
+
+
+func _clear_weapon() -> void:
+	if weapon_node and is_instance_valid(weapon_node):
+		var parent := weapon_node.get_parent()
+		if parent:
+			parent.get_parent().remove_child(parent)
+			parent.queue_free()
+		weapon_node = null
+	if weapon_node_left and is_instance_valid(weapon_node_left):
+		var parent := weapon_node_left.get_parent()
+		if parent:
+			parent.get_parent().remove_child(parent)
+			parent.queue_free()
+		weapon_node_left = null
 
 
 func _setup_weapon() -> void:
+	print("[Player] _setup_weapon called, skeleton=%s" % [skeleton != null])
 	if not skeleton:
-		push_warning("[Player] No skeleton found, cannot attach weapon")
+		push_warning("[Player] ABORT: No skeleton found, cannot attach weapon")
+		print("[Player] Available bones: (none — skeleton is null)")
 		return
 
-	# Find the weapon bone
-	var bone_idx := skeleton.find_bone(WEAPON_BONE_NAME)
-	if bone_idx == -1:
-		# Try alternative bone names
-		for alt_name in ["R_Hand", "RightHand", "hand_R", "Wrist_R"]:
-			bone_idx = skeleton.find_bone(alt_name)
-			if bone_idx != -1:
-				break
+	print("[Player] Skeleton bone count: %d, bones: %s" % [skeleton.get_bone_count(), _get_bone_names()])
 
-	if bone_idx == -1:
-		push_warning("[Player] Could not find weapon bone. Available bones: %s" % _get_bone_names())
+	# Get equipped weapon from character data
+	var weapon_data: WeaponData = _get_equipped_weapon_data()
+	if weapon_data == null:
+		print("[Player] ABORT: No weapon data returned")
 		return
 
-	# Create BoneAttachment3D
+	print("[Player] Weapon data: id=%s, name=%s, type=%d, glb=%s, scale=%f, tint=%s" % [
+		weapon_data.id, weapon_data.name, weapon_data.weapon_type,
+		weapon_data.glb_path, weapon_data.glb_scale, weapon_data.tint_color])
+
+	# Attach to right hand
+	weapon_node = _attach_weapon_to_bone(WEAPON_BONE_NAME, weapon_data)
+
+	# Dual-wield: daggers and mechguns go in both hands
+	var is_dual_wield := weapon_data.weapon_type in [
+		WeaponData.WeaponType.DAGGERS,
+		WeaponData.WeaponType.MECH_GUN,
+	]
+	if is_dual_wield:
+		print("[Player] Dual-wield weapon, attaching to left hand")
+		weapon_node_left = _attach_weapon_to_bone(LEFT_WEAPON_BONE_NAME, weapon_data, true)
+
+
+func _get_equipped_weapon_data() -> WeaponData:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		print("[Player] _get_equipped_weapon_data: No active character")
+		return null
+	var equipment: Dictionary = character.get("equipment", {})
+	var weapon_id: String = str(equipment.get("weapon", ""))
+	print("[Player] _get_equipped_weapon_data: equipment=%s, weapon_id='%s'" % [equipment, weapon_id])
+	if weapon_id.is_empty():
+		print("[Player] ABORT: weapon_id is empty")
+		return null
+	var all_ids = WeaponRegistry.get_all_weapon_ids()
+	print("[Player] WeaponRegistry has %d weapons: %s" % [all_ids.size(), all_ids])
+	var w = WeaponRegistry.get_weapon(weapon_id)
+	if w == null:
+		push_warning("[Player] ABORT: weapon '%s' not found in registry" % weapon_id)
+	return w
+
+
+func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: bool = false) -> Node3D:
+	var bone_idx := skeleton.find_bone(bone_name)
+	if bone_idx == -1:
+		push_warning("[Player] ABORT: Could not find bone '%s' in skeleton" % bone_name)
+		return null
+
+	# Load the weapon GLB
+	var glb_path: String = weapon_data.glb_path
+	if glb_path.is_empty():
+		push_warning("[Player] ABORT: No glb_path set for weapon: %s" % weapon_data.id)
+		return null
+	var exists := ResourceLoader.exists(glb_path)
+	print("[Player] Loading GLB: %s (exists=%s)" % [glb_path, exists])
+	if not exists:
+		push_warning("[Player] ABORT: Weapon GLB not found: %s" % glb_path)
+		return null
+
+	var packed: PackedScene = load(glb_path) as PackedScene
+	if packed == null:
+		push_warning("[Player] ABORT: Failed to load GLB as PackedScene: %s" % glb_path)
+		return null
+
+	# Create bone attachment
 	var bone_attachment := BoneAttachment3D.new()
-	bone_attachment.name = "WeaponAttachment"
+	bone_attachment.name = "WeaponAttachment_R" if not mirror else "WeaponAttachment_L"
 	bone_attachment.bone_name = skeleton.get_bone_name(bone_idx)
 	skeleton.add_child(bone_attachment)
 
-	# Instance and attach weapon
-	if weapon_scene:
-		weapon_node = weapon_scene.instantiate() as Node3D
-		bone_attachment.add_child(weapon_node)
-		# Adjust weapon position/rotation as needed
-		weapon_node.position = Vector3(0.31, 0, 0)  # Offset into hand
-		weapon_node.rotation_degrees = Vector3(0, 90, 0)  # Rotate to align with hand
-		weapon_node.scale = Vector3(0.09, 0.09, 0.09)  # PSO scale → PSZ scale
-		print("[Player] Weapon attached to bone: ", bone_attachment.bone_name)
+	# Instance weapon
+	var node := packed.instantiate() as Node3D
+	bone_attachment.add_child(node)
+
+	# Position and scale
+	var s: float = weapon_data.glb_scale
+	node.position = Vector3(0.31, 0, 0)
+	node.rotation_degrees = Vector3(0, 90, 0)
+	node.scale = Vector3(s, s, s)
+
+	# Mirror left-hand weapon on X axis
+	if mirror:
+		node.scale.x = -s
+
+	# Apply tint and additive blending to blade materials
+	_apply_weapon_materials(node, weapon_data)
+
+	print("[Player] SUCCESS: Weapon '%s' attached to bone '%s' (mirror=%s, scale=%f)" % [
+		weapon_data.name, bone_attachment.bone_name, mirror, s])
+	return node
+
+
+# Weapon type → global material indices that get additive blending (blade/energy surfaces)
+# Indices count across all mesh children in order (matching web preview)
+const WEAPON_ADDITIVE_MATERIALS: Dictionary = {
+	WeaponData.WeaponType.SABER: [1, 2],
+	WeaponData.WeaponType.SWORD: [1, 3],
+	WeaponData.WeaponType.DAGGERS: [1],
+	WeaponData.WeaponType.SPEAR: [2, 3],
+}
+
+
+func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
+	var additive_indices: Array = WEAPON_ADDITIVE_MATERIALS.get(weapon_data.weapon_type, [])
+	var tint: Color = weapon_data.tint_color
+	# Collect all surfaces across all MeshInstance3D children in tree order
+	var surfaces: Array = []  # Array of [MeshInstance3D, surface_index]
+	_collect_surfaces(node, surfaces)
+	for global_idx in additive_indices:
+		if global_idx >= surfaces.size():
+			continue
+		var entry: Array = surfaces[global_idx]
+		var mesh_inst: MeshInstance3D = entry[0]
+		var surf_idx: int = entry[1]
+		var mat := mesh_inst.get_active_material(surf_idx)
+		if mat is StandardMaterial3D:
+			var new_mat := mat.duplicate() as StandardMaterial3D
+			new_mat.albedo_color = tint
+			new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+			new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+			mesh_inst.set_surface_override_material(surf_idx, new_mat)
+
+
+func _collect_surfaces(node: Node3D, surfaces: Array) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		var mesh := mesh_inst.mesh
+		if mesh:
+			for i in range(mesh.get_surface_count()):
+				surfaces.append([mesh_inst, i])
+	for child in node.get_children():
+		if child is Node3D:
+			_collect_surfaces(child as Node3D, surfaces)
 
 
 func _get_bone_names() -> Array[String]:
@@ -572,7 +777,7 @@ func _handle_damaged(_delta: float) -> void:
 
 
 func _play_attack_animation(attack_num: int) -> void:
-	var anim_name := "pmsa_atk" + str(attack_num)
+	var anim_name := _anim_prefix + "_atk" + str(attack_num)
 	play_animation(anim_name, false)
 	_activate_attack_hitbox()
 
@@ -583,19 +788,19 @@ func transition_to(new_state: PlayerState) -> void:
 
 	match new_state:
 		PlayerState.IDLE:
-			play_animation("pmsa_wait", true)
+			play_animation(_anim_prefix + "_wait", true)
 		PlayerState.WALKING:
-			play_animation("pmsa_walk", true)
+			play_animation("pmsa_walk", true)  # Shared PSO walk
 		PlayerState.RUNNING:
-			play_animation("pmsa_run_pso", true)
+			play_animation("pmsa_run_pso", true)  # Shared PSO run
 		PlayerState.SPRINTING:
-			play_animation("pmsa_run", true)
+			play_animation(_anim_prefix + "_run", true)
 		PlayerState.DODGING:
-			play_animation("pmsa_esc_f", false)
+			play_animation(_anim_prefix + "_esc_f", false)
 		PlayerState.DAMAGED:
-			play_animation("pmsa_dam_n", false)
+			play_animation(_anim_prefix + "_dam_n", false)
 		PlayerState.CUTSCENE:
-			play_animation("pmsa_wait", true)
+			play_animation(_anim_prefix + "_wait", true)
 
 
 func play_animation(anim_name: String, _loop: bool = true) -> void:
@@ -632,9 +837,9 @@ func take_damage(damage: int, knockback: Vector3 = Vector3.ZERO) -> void:
 
 	# Play damage animation (heavy if damage > 20)
 	if damage > 20:
-		play_animation("pmsa_dam_h", false)
+		play_animation(_anim_prefix + "_dam_h", false)
 	else:
-		play_animation("pmsa_dam_n", false)
+		play_animation(_anim_prefix + "_dam_n", false)
 	transition_to(PlayerState.DAMAGED)
 
 

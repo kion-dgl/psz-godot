@@ -4,25 +4,25 @@
 
 [resource]
 script = ExtResource("1")
-id = "blade"
-name = "Blade"
+id = "breaker"
+name = "Breaker"
 japanese_name = ""
 rarity = 3
-weapon_type = 2
-max_grind = 28
-level = 15
-resale_value = 180
-attack_base = 70
-attack_max = 185
-accuracy_base = 47
-accuracy_max = 47
+weapon_type = 1
+max_grind = 25
+level = 18
+resale_value = 240
+attack_base = 105
+attack_max = 240
+accuracy_base = 36
+accuracy_max = 36
 element = ""
 element_level = 0
 photon_arts = []
-usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human", "Force Newman")
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
 pso_world_id = 0
 model_id = ""
 variant_id = ""
 glb_scale = 0.09
-glb_path = "res://assets/weapons/basic/Dagger.glb"
+glb_path = "res://assets/weapons/basic/Sword.glb"
 tint_color = Color(0.7, 0.3, 0.9, 1)

@@ -189,6 +189,8 @@ func _equip_selected_item() -> void:
 		# If unequipping frame, clear ALL unit slots
 		if slot_key == "frame":
 			_auto_unequip_excess_units(equipment, 0)
+		if slot_key == "weapon":
+			_notify_player_weapon_changed()
 		_choosing_item = false
 		if not old_id.is_empty():
 			var info: Dictionary = Inventory._lookup_item(old_id)
@@ -213,6 +215,10 @@ func _equip_selected_item() -> void:
 		var armor = ArmorRegistry.get_armor(item_id)
 		var new_max: int = armor.max_slots if armor else 0
 		_auto_unequip_excess_units(equipment, new_max)
+
+	# Update 3D weapon model if weapon slot changed
+	if slot_key == "weapon":
+		_notify_player_weapon_changed()
 
 	_choosing_item = false
 	hint_label.text = "Equipped %s!" % item.name
@@ -469,3 +475,9 @@ func _refresh_stats() -> void:
 		vbox.add_child(stat_label)
 
 	stats_panel.add_child(vbox)
+
+
+func _notify_player_weapon_changed() -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("refresh_weapon"):
+		player.refresh_weapon()

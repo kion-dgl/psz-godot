@@ -4,18 +4,18 @@
 
 [resource]
 script = ExtResource("1")
-id = "saber"
-name = "Saber"
+id = "railgun"
+name = "Railgun"
 japanese_name = ""
-rarity = 1
-weapon_type = 0
-max_grind = 35
-level = 1
-resale_value = 30
-attack_base = 40
-attack_max = 120
-accuracy_base = 35
-accuracy_max = 35
+rarity = 4
+weapon_type = 9
+max_grind = 22
+level = 24
+resale_value = 420
+attack_base = 85
+attack_max = 215
+accuracy_base = 50
+accuracy_max = 50
 element = ""
 element_level = 0
 photon_arts = []
@@ -24,5 +24,5 @@ pso_world_id = 0
 model_id = ""
 variant_id = ""
 glb_scale = 0.09
-glb_path = "res://assets/weapons/basic/Saber.glb"
-tint_color = Color(0.4, 0.9, 0.4, 1)
+glb_path = "res://assets/weapons/basic/Handgun.glb"
+tint_color = Color(1.0, 0.3, 0.3, 1)
