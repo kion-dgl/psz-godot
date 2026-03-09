@@ -352,19 +352,34 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	if mirror:
 		node.scale.x = -s
 
-	# Apply tint color to the first material (blade/body)
-	_apply_weapon_tint(node, weapon_data.tint_color)
+	# Apply tint and additive blending to blade materials
+	_apply_weapon_materials(node, weapon_data)
 
 	print("[Player] SUCCESS: Weapon '%s' attached to bone '%s' (mirror=%s, scale=%f)" % [
 		weapon_data.name, bone_attachment.bone_name, mirror, s])
 	return node
 
 
-func _apply_weapon_tint(node: Node3D, tint: Color) -> void:
+# Weapon type → material indices that get additive blending (blade/energy surfaces)
+const WEAPON_ADDITIVE_MATERIALS: Dictionary = {
+	WeaponData.WeaponType.SABER: [1, 2],
+	WeaponData.WeaponType.SWORD: [1, 2],
+	WeaponData.WeaponType.SPEAR: [2, 3],
+}
+# Daggers, Handgun, Mech Gun, Rifle, Rod, Wand: no additive materials
+
+
+func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
+	var additive_indices: Array = WEAPON_ADDITIVE_MATERIALS.get(weapon_data.weapon_type, [])
+	var tint: Color = weapon_data.tint_color
+	_apply_weapon_materials_recursive(node, tint, additive_indices)
+
+
+func _apply_weapon_materials_recursive(node: Node3D, tint: Color, additive_indices: Array) -> void:
 	for child in node.get_children():
 		if child is MeshInstance3D:
 			var mesh_inst := child as MeshInstance3D
-			for surf_idx in [1, 2]:
+			for surf_idx in additive_indices:
 				var mat := mesh_inst.get_active_material(surf_idx)
 				if mat is StandardMaterial3D:
 					var new_mat := mat.duplicate() as StandardMaterial3D
@@ -373,9 +388,8 @@ func _apply_weapon_tint(node: Node3D, tint: Color) -> void:
 					new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
 					mesh_inst.set_surface_override_material(surf_idx, new_mat)
-			return  # Only apply to the first MeshInstance3D found
-		# Recurse into children (GLB may nest nodes)
-		_apply_weapon_tint(child, tint)
+			return
+		_apply_weapon_materials_recursive(child, tint, additive_indices)
 
 
 func _get_bone_names() -> Array[String]:
