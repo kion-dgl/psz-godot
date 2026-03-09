@@ -360,36 +360,48 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	return node
 
 
-# Weapon type → material indices that get additive blending (blade/energy surfaces)
+# Weapon type → global material indices that get additive blending (blade/energy surfaces)
+# Indices count across all mesh children in order (matching web preview)
 const WEAPON_ADDITIVE_MATERIALS: Dictionary = {
 	WeaponData.WeaponType.SABER: [1, 2],
-	WeaponData.WeaponType.SWORD: [1, 2],
+	WeaponData.WeaponType.SWORD: [1, 3],
+	WeaponData.WeaponType.DAGGERS: [1],
 	WeaponData.WeaponType.SPEAR: [2, 3],
 }
-# Daggers, Handgun, Mech Gun, Rifle, Rod, Wand: no additive materials
 
 
 func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
 	var additive_indices: Array = WEAPON_ADDITIVE_MATERIALS.get(weapon_data.weapon_type, [])
 	var tint: Color = weapon_data.tint_color
-	_apply_weapon_materials_recursive(node, tint, additive_indices)
+	# Collect all surfaces across all MeshInstance3D children in tree order
+	var surfaces: Array = []  # Array of [MeshInstance3D, surface_index]
+	_collect_surfaces(node, surfaces)
+	for global_idx in additive_indices:
+		if global_idx >= surfaces.size():
+			continue
+		var entry: Array = surfaces[global_idx]
+		var mesh_inst: MeshInstance3D = entry[0]
+		var surf_idx: int = entry[1]
+		var mat := mesh_inst.get_active_material(surf_idx)
+		if mat is StandardMaterial3D:
+			var new_mat := mat.duplicate() as StandardMaterial3D
+			new_mat.albedo_color = tint
+			new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+			new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+			mesh_inst.set_surface_override_material(surf_idx, new_mat)
 
 
-func _apply_weapon_materials_recursive(node: Node3D, tint: Color, additive_indices: Array) -> void:
+func _collect_surfaces(node: Node3D, surfaces: Array) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		var mesh := mesh_inst.mesh
+		if mesh:
+			for i in range(mesh.get_surface_count()):
+				surfaces.append([mesh_inst, i])
 	for child in node.get_children():
-		if child is MeshInstance3D:
-			var mesh_inst := child as MeshInstance3D
-			for surf_idx in additive_indices:
-				var mat := mesh_inst.get_active_material(surf_idx)
-				if mat is StandardMaterial3D:
-					var new_mat := mat.duplicate() as StandardMaterial3D
-					new_mat.albedo_color = tint
-					new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-					new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
-					mesh_inst.set_surface_override_material(surf_idx, new_mat)
-			return
-		_apply_weapon_materials_recursive(child, tint, additive_indices)
+		if child is Node3D:
+			_collect_surfaces(child as Node3D, surfaces)
 
 
 func _get_bone_names() -> Array[String]:

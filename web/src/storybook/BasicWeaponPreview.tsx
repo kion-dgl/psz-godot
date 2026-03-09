@@ -110,13 +110,15 @@ function WeaponModel({ name, onMeshInfo, tintIndex, tintColor, additiveIndices }
     reportedRef.current = key;
 
     const meshes: MeshInfo[] = [];
+    let globalMatIndex = 0;
     clonedScene.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
       const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
-      const matInfos: MaterialInfo[] = materials.map((mat: THREE.Material, idx: number) => {
+      const matInfos: MaterialInfo[] = materials.map((mat: THREE.Material) => {
+        const matIdx = globalMatIndex++;
         const info: MaterialInfo = {
-          index: idx,
-          name: mat.name || `Material ${idx}`,
+          index: matIdx,
+          name: mat.name || `Material ${matIdx}`,
           type: mat.type,
           color: '#ffffff',
           textureName: null,
@@ -157,10 +159,12 @@ function WeaponModel({ name, onMeshInfo, tintIndex, tintColor, additiveIndices }
 
   // Apply tint and additive blending
   useEffect(() => {
+    let globalIdx = 0;
     clonedScene.traverse((obj) => {
       if (!(obj instanceof THREE.Mesh)) return;
       const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
-      materials.forEach((mat: THREE.Material, idx: number) => {
+      materials.forEach((mat: THREE.Material) => {
+        const idx = globalIdx++;
         if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshBasicMaterial) {
           // Reset to original first
           const origColor = mat.userData.origColor || (mat as any).color.clone();
@@ -454,6 +458,31 @@ export default function BasicWeaponPreview() {
                 }}
               >
                 {additiveIndices.has(mat.index) ? 'Additive ON' : 'Additive'}
+              </button>
+              <button
+                onClick={() => {
+                  const info = {
+                    index: mat.index,
+                    name: mat.name,
+                    type: mat.type,
+                    color: mat.color,
+                    texture: mat.textureName,
+                    textureSize: mat.textureSize,
+                    blending: additiveIndices.has(mat.index) ? 'Additive' : mat.blending,
+                    side: mat.side,
+                    opacity: mat.opacity,
+                    transparent: mat.transparent,
+                    emissive: mat.emissive,
+                  };
+                  navigator.clipboard.writeText(JSON.stringify(info, null, 2));
+                }}
+                style={{
+                  padding: '4px 10px', fontSize: '10px', cursor: 'pointer',
+                  background: '#333', color: '#ccc',
+                  border: 'none', borderRadius: '4px', marginLeft: 'auto',
+                }}
+              >
+                Copy
               </button>
             </div>
           </div>
