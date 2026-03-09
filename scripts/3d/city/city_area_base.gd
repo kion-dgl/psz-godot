@@ -9,6 +9,9 @@ const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 const TEXTURE_FIX_SHADER := preload("res://scripts/3d/field/texture_fix_shader.gdshader")
 const WATERFALL_SHADER := preload("res://scripts/3d/field/waterfall_shader.gdshader")
 
+## Textures that are baked shadow/lightmap overlays — hide meshes using them.
+const SHADOW_TEXTURES := ["s00_1_gr1.png", "s00_0_gr1.png"]
+
 ## Static cache for global texture fixes (shared across all city area instances).
 static var _global_texture_fixes: Dictionary = {}
 
@@ -203,6 +206,12 @@ func _fix_materials_recursive(node: Node) -> void:
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std_mat := mat as StandardMaterial3D
+				# Hide baked shadow/lightmap textures
+				if std_mat.albedo_texture:
+					var tex_file: String = std_mat.albedo_texture.resource_path.get_file()
+					if tex_file in SHADOW_TEXTURES:
+						mesh_inst.visible = false
+						break
 				var fix := _find_global_fix_for_material(std_mat)
 				var has_scroll := fix.has("scrollX") or fix.has("scrollY")
 				var is_waterfall := has_scroll or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
