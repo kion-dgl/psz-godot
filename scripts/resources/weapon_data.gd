@@ -80,6 +80,9 @@ enum WeaponType {
 ## Path to 3D weapon GLB (empty = use legacy model_id system)
 @export var glb_path: String = ""
 
+## Scale for the 3D model (PSO ports need ~0.09)
+@export var glb_scale: float = 1.0
+
 ## Tint color applied to the blade/body material (white = no tint)
 @export var tint_color: Color = Color.WHITE
 
