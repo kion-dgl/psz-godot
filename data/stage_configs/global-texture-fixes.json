@@ -231,13 +231,6 @@
     "wrapS": "mirror",
     "wrapT": "mirror"
   },
-  "s00_2_wave01.png#1": {
-    "offsetX": 5.728230000000487,
-    "offsetY": 0,
-    "repeatX": 1,
-    "repeatY": 1,
-    "scrollX": 0.2
-  },
   "s01_0_bri2.png#1": {
     "offsetX": 0,
     "offsetY": 1,
