@@ -13,10 +13,25 @@ var _weapons: Array = []
 var _armors: Array = []
 var _units: Array = []
 
-## Shop weapon pool — basic and mid-tier weapons
-const SHOP_WEAPON_IDS := [
-	"saber", "blade", "daggers", "handgun", "cane", "rod", "wand",
-	"clear_saber", "chrome_cutlass", "ein_blade", "red_saber",
+## Set true to show all weapon tiers in the shop (for testing)
+const DEBUG_ALL_TIERS := true
+
+## Shop weapon pool — PSO basic weapon tiers
+const SHOP_WEAPON_TIER1 := [
+	"saber", "sword", "dagger", "partisan",
+	"handgun", "rifle", "mechgun", "rod",
+]
+const SHOP_WEAPON_TIER2 := [
+	"brand", "gigush", "knife", "halberd",
+	"autogun", "sniper", "assault", "pole",
+]
+const SHOP_WEAPON_TIER3 := [
+	"buster", "breaker", "blade", "glaive",
+	"lockgun", "blaster", "repeater", "pillar",
+]
+const SHOP_WEAPON_TIER4 := [
+	"pallasch", "claymore", "edge", "berdys",
+	"railgun", "beam", "gatling", "striker",
 ]
 
 ## Shop armor pool
@@ -51,7 +66,12 @@ func _generate_inventory() -> void:
 	_armors.clear()
 	_units.clear()
 
-	for wid in SHOP_WEAPON_IDS:
+	var weapon_ids: Array = SHOP_WEAPON_TIER1.duplicate()
+	if DEBUG_ALL_TIERS:
+		weapon_ids.append_array(SHOP_WEAPON_TIER2)
+		weapon_ids.append_array(SHOP_WEAPON_TIER3)
+		weapon_ids.append_array(SHOP_WEAPON_TIER4)
+	for wid in weapon_ids:
 		var w = WeaponRegistry.get_weapon(wid)
 		if w == null:
 			continue

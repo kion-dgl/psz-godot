@@ -4,24 +4,24 @@
 
 [resource]
 script = ExtResource("1")
-id = "rod"
-name = "Rod"
+id = "halberd"
+name = "Halberd"
 japanese_name = ""
-rarity = 1
-weapon_type = 14
-max_grind = 40
-level = 1
-resale_value = 28
-attack_base = 0
-attack_max = 0
+rarity = 2
+weapon_type = 5
+max_grind = 30
+level = 8
+resale_value = 85
+attack_base = 68
+attack_max = 175
 accuracy_base = 35
 accuracy_max = 35
 element = ""
 element_level = 0
 photon_arts = []
-usable_by = PackedStringArray("Force Human", "Force Newman")
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
 pso_world_id = 0
 model_id = ""
 variant_id = ""
-glb_path = "res://assets/weapons/basic/Rod.glb"
-tint_color = Color(0.4, 0.9, 0.4, 1)
+glb_path = "res://assets/weapons/basic/Partisan.glb"
+tint_color = Color(0.4, 0.5, 1.0, 1)

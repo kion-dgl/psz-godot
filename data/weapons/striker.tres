@@ -4,18 +4,18 @@
 
 [resource]
 script = ExtResource("1")
-id = "rod"
-name = "Rod"
+id = "striker"
+name = "Striker"
 japanese_name = ""
-rarity = 1
+rarity = 4
 weapon_type = 14
-max_grind = 40
-level = 1
-resale_value = 28
+max_grind = 22
+level = 26
+resale_value = 480
 attack_base = 0
 attack_max = 0
-accuracy_base = 35
-accuracy_max = 35
+accuracy_base = 46
+accuracy_max = 46
 element = ""
 element_level = 0
 photon_arts = []
@@ -24,4 +24,4 @@ pso_world_id = 0
 model_id = ""
 variant_id = ""
 glb_path = "res://assets/weapons/basic/Rod.glb"
-tint_color = Color(0.4, 0.9, 0.4, 1)
+tint_color = Color(1.0, 0.3, 0.3, 1)
