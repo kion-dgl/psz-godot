@@ -1,7 +1,9 @@
 extends Control
 ## Shop — buy consumables or technique disks, toggled with tabs.
 
-enum Tab { ITEMS, DISKS }
+enum Tab { ITEMS, DISKS, SELL }
+
+const TAB_COUNT := 3
 
 var _tab: int = Tab.ITEMS
 var _selected_index: int = 0
@@ -12,6 +14,9 @@ var _shop_items: Array = []
 # Disks tab data
 var _disk_items: Array = []
 
+# Sell tab data
+var _sell_items: Array = []
+
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
 @onready var shop_panel: PanelContainer = $Panel/VBox/HBox/ShopPanel
@@ -21,9 +26,10 @@ var _disk_items: Array = []
 
 func _ready() -> void:
 	title_label.text = "SHOP"
-	hint_label.text = "[←/→] Items/Disks  [↑/↓] Select  [ENTER] Buy  [ESC] Leave"
+	_update_hint()
 	_load_shop_items()
 	_generate_disk_inventory()
+	_generate_sell_list()
 	_refresh_display()
 
 
@@ -42,13 +48,50 @@ func _generate_disk_inventory() -> void:
 	_disk_items = TechniqueManager.generate_shop_inventory(char_level)
 
 
+func _generate_sell_list() -> void:
+	_sell_items.clear()
+	for item_info in Inventory.get_all_items():
+		var item_id: String = str(item_info.get("id", ""))
+		var qty: int = int(item_info.get("quantity", 0))
+		if qty <= 0:
+			continue
+		var sell_price: int = 10
+		var item_name: String = str(item_info.get("name", item_id))
+		var consumable = ConsumableRegistry.get_consumable(item_id)
+		if consumable:
+			item_name = consumable.name
+			sell_price = maxi(int(consumable.sell_price), 1)
+		_sell_items.append({
+			"id": item_id, "name": item_name,
+			"sell_price": sell_price, "quantity": qty,
+		})
+
+
+func _update_hint() -> void:
+	if _tab == Tab.SELL:
+		hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Sell  [ESC] Leave"
+	else:
+		hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Buy  [ESC] Leave"
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
-		_tab = Tab.DISKS if _tab == Tab.ITEMS else Tab.ITEMS
+	elif event.is_action_pressed("ui_left"):
+		_tab = wrapi(_tab - 1, 0, TAB_COUNT)
 		_selected_index = 0
+		if _tab == Tab.SELL:
+			_generate_sell_list()
+		_update_hint()
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_right"):
+		_tab = wrapi(_tab + 1, 0, TAB_COUNT)
+		_selected_index = 0
+		if _tab == Tab.SELL:
+			_generate_sell_list()
+		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
@@ -65,14 +108,20 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _get_current_list() -> Array:
-	return _shop_items if _tab == Tab.ITEMS else _disk_items
+	match _tab:
+		Tab.ITEMS: return _shop_items
+		Tab.DISKS: return _disk_items
+		Tab.SELL: return _sell_items
+	return _shop_items
 
 
 func _on_select() -> void:
 	if _tab == Tab.ITEMS:
 		_buy_item()
-	else:
+	elif _tab == Tab.DISKS:
 		_buy_disk()
+	else:
+		_sell_selected()
 
 
 func _buy_item() -> void:
@@ -118,12 +167,39 @@ func _buy_disk() -> void:
 	_refresh_display()
 
 
+func _sell_selected() -> void:
+	if _sell_items.is_empty() or _selected_index >= _sell_items.size():
+		return
+	var item: Dictionary = _sell_items[_selected_index]
+	var item_id: String = str(item.get("id", ""))
+	var sell_price: int = int(item.get("sell_price", 0))
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+
+	if not Inventory.remove_item(item_id, 1):
+		hint_label.text = "Cannot sell that!"
+		return
+
+	character["meseta"] = int(character.get("meseta", 0)) + sell_price
+	GameState.meseta = int(character["meseta"])
+	hint_label.text = "Sold %s for %d M!" % [str(item.get("name", "???")), sell_price]
+	_generate_sell_list()
+	if _selected_index >= _sell_items.size():
+		_selected_index = maxi(0, _sell_items.size() - 1)
+	_refresh_display()
+
+
 func _refresh_display() -> void:
 	# Mode bar
-	if _tab == Tab.ITEMS:
-		mode_label.text = "[◄ ITEMS ►]    DISKS    |  Meseta: %s" % _get_meseta_str()
-	else:
-		mode_label.text = "   ITEMS    [◄ DISKS ►] |  Meseta: %s" % _get_meseta_str()
+	var tab_names := ["ITEMS", "DISKS", "SELL"]
+	var parts := []
+	for i in range(TAB_COUNT):
+		if i == _tab:
+			parts.append("[◄ %s ►]" % tab_names[i])
+		else:
+			parts.append("   %s   " % tab_names[i])
+	mode_label.text = "%s |  Meseta: %s" % ["  ".join(PackedStringArray(parts)), _get_meseta_str()]
 
 	# Shop panel
 	for child in shop_panel.get_children():
@@ -141,9 +217,29 @@ func _refresh_display() -> void:
 
 	if list.is_empty():
 		var empty := Label.new()
-		empty.text = "  (No items)" if _tab == Tab.ITEMS else "  (No techniques available)"
+		if _tab == Tab.SELL:
+			empty.text = "  (Nothing to sell)"
+		elif _tab == Tab.ITEMS:
+			empty.text = "  (No items)"
+		else:
+			empty.text = "  (No techniques available)"
 		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		vbox.add_child(empty)
+	elif _tab == Tab.SELL:
+		for i in range(list.size()):
+			var item: Dictionary = list[i]
+			var sell_price: int = int(item.get("sell_price", 0))
+			var qty: int = int(item.get("quantity", 1))
+			var qty_str := " x%d" % qty if qty > 1 else ""
+			var label := Label.new()
+			label.text = "%-18s%s %6d M" % [str(item.get("name", "???")), qty_str, sell_price]
+			if i == _selected_index:
+				label.text = "> " + label.text
+				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+				selected_label = label
+			else:
+				label.text = "  " + label.text
+			vbox.add_child(label)
 	elif _tab == Tab.ITEMS:
 		for i in range(list.size()):
 			var label := Label.new()
@@ -233,8 +329,10 @@ func _refresh_detail() -> void:
 
 	if _tab == Tab.ITEMS:
 		_refresh_item_detail(list[_selected_index])
-	else:
+	elif _tab == Tab.DISKS:
 		_refresh_disk_detail(list[_selected_index])
+	else:
+		_refresh_sell_detail(list[_selected_index])
 
 
 func _refresh_item_detail(item: Dictionary) -> void:
@@ -326,6 +424,30 @@ func _refresh_disk_detail(item: Dictionary) -> void:
 	note.text = "Use from inventory to learn"
 	note.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 	vbox.add_child(note)
+
+	detail_panel.add_child(vbox)
+
+
+func _refresh_sell_detail(item: Dictionary) -> void:
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+
+	var name_label := Label.new()
+	name_label.text = "── %s ──" % str(item.get("name", "???"))
+	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
+	vbox.add_child(name_label)
+
+	var qty_label := Label.new()
+	qty_label.text = "Owned: %d" % int(item.get("quantity", 0))
+	vbox.add_child(qty_label)
+
+	var sep := Label.new()
+	sep.text = ""
+	vbox.add_child(sep)
+	var sell_label := Label.new()
+	sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
+	sell_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+	vbox.add_child(sell_label)
 
 	detail_panel.add_child(vbox)
 
