@@ -77,19 +77,19 @@ func _ready() -> void:
 
 	# NPCs
 	_add_npc(
-		"ShopNPC", Vector3(-10.34, 0, 27.67), PI,
+		"ShopNPC", Vector3(-10.34, 0, 27.67), 1.4207,
 		"res://assets/npcs/np_003_00_0/np_003_00_0.glb",
 		"Shop",
 		"res://scenes/2d/shops/item_shop.tscn"
 	)
 	_add_npc(
-		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), PI,
+		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), 0.7835,
 		"res://assets/npcs/np_002_00_0/np_002_00_0.glb",
 		"Weapon Shop",
 		"res://scenes/2d/shops/weapon_shop.tscn"
 	)
 	_add_npc(
-		"TekkerNPC", Vector3(6.25, 0, 23.45), PI,
+		"TekkerNPC", Vector3(6.25, 0, 23.45), -0.7533,
 		"res://assets/npcs/np_004_00_0/np_004_00_0.glb",
 		"Tekker",
 		"res://scenes/2d/shops/tekker.tscn"

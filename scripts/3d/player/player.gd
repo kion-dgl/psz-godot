@@ -361,16 +361,18 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 
 
 func _apply_weapon_tint(node: Node3D, tint: Color) -> void:
-	if tint == Color.WHITE:
-		return  # No tint needed
 	for child in node.get_children():
 		if child is MeshInstance3D:
 			var mesh_inst := child as MeshInstance3D
-			var mat := mesh_inst.get_active_material(0)
-			if mat is StandardMaterial3D:
-				var new_mat := mat.duplicate() as StandardMaterial3D
-				new_mat.albedo_color = tint
-				mesh_inst.set_surface_override_material(0, new_mat)
+			for surf_idx in [1, 2]:
+				var mat := mesh_inst.get_active_material(surf_idx)
+				if mat is StandardMaterial3D:
+					var new_mat := mat.duplicate() as StandardMaterial3D
+					new_mat.albedo_color = tint
+					new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+					new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+					mesh_inst.set_surface_override_material(surf_idx, new_mat)
 			return  # Only apply to the first MeshInstance3D found
 		# Recurse into children (GLB may nest nodes)
 		_apply_weapon_tint(child, tint)
