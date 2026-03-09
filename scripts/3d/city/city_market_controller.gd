@@ -55,8 +55,7 @@ const WALL_DATA := [
 
 
 func _ready() -> void:
-	# Apply texture fixes from global config
-	_fix_city_materials()
+	# s00e_sa1 uses baked textures from psz-asset-viewer — no runtime fixes needed
 
 	# Heal on city entry
 	_heal_character()
