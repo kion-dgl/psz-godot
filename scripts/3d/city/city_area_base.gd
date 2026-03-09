@@ -206,12 +206,16 @@ func _fix_materials_recursive(node: Node) -> void:
 			var mat := mesh_inst.get_active_material(i)
 			if mat is StandardMaterial3D:
 				var std_mat := mat as StandardMaterial3D
-				# Hide baked shadow/lightmap textures
+				# Hide baked shadow/lightmap surface with a fully transparent material
 				if std_mat.albedo_texture:
 					var tex_file: String = std_mat.albedo_texture.resource_path.get_file()
 					if tex_file in SHADOW_TEXTURES:
-						mesh_inst.visible = false
-						break
+						var hide_mat := StandardMaterial3D.new()
+						hide_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+						hide_mat.albedo_color = Color(0, 0, 0, 0)
+						hide_mat.no_depth_test = true
+						mesh_inst.set_surface_override_material(i, hide_mat)
+						continue
 				var fix := _find_global_fix_for_material(std_mat)
 				var has_scroll := fix.has("scrollX") or fix.has("scrollY")
 				var is_waterfall := has_scroll or (std_mat.albedo_texture and "_fall" in std_mat.albedo_texture.resource_path)
