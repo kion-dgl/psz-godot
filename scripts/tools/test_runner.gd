@@ -120,7 +120,7 @@ func test_registries() -> void:
 	assert_true(saber != null, "Can look up saber")
 	if saber:
 		assert_eq(saber.name, "Saber", "Saber name correct")
-		assert_eq(saber.attack_base, 39, "Saber ATK base = 39")
+		assert_eq(saber.attack_base, 40, "Saber ATK base = 40")
 
 	var common_armor = ArmorRegistry.get_armor("common_armor")
 	assert_true(common_armor != null, "Can look up common_armor")
