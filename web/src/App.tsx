@@ -13,6 +13,7 @@ const SvgCheck = lazy(() => import('./svg-check/SvgCheck'));
 const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
 const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
 const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
+const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
 
 function NavBar() {
   const location = useLocation();
@@ -59,6 +60,12 @@ function NavBar() {
         textDecoration: 'none',
       }}>
         Weapons
+      </Link>
+      <Link to="/storybook/basic-weapons" style={{
+        color: isActive('/storybook/basic-weapons') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        PSO Weapons
       </Link>
       <Link to="/storybook/player-animations" style={{
         color: isActive('/storybook/player-animations') ? '#fff' : '#888',
@@ -113,6 +120,7 @@ export default function App() {
             <Route path="/storybook" element={<StorybookViewer />} />
             <Route path="/storybook/enemies" element={<EnemyGallery />} />
             <Route path="/storybook/weapons" element={<WeaponGallery />} />
+            <Route path="/storybook/basic-weapons" element={<BasicWeaponPreview />} />
             <Route path="/storybook/player-animations" element={<PlayerAnimationStorybook />} />
             <Route path="/stage-editor" element={<StageEditor />} />
             <Route path="/svg-check" element={<SvgCheck />} />

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "glaive"
+name = "Glaive"
+japanese_name = ""
+rarity = 3
+weapon_type = 5
+max_grind = 25
+level = 17
+resale_value = 220
+attack_base = 95
+attack_max = 220
+accuracy_base = 38
+accuracy_max = 38
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 0
+model_id = ""
+variant_id = ""
+glb_scale = 0.09
+glb_path = "res://assets/weapons/basic/Partisan.glb"
+tint_color = Color(0.7, 0.3, 0.9, 1)

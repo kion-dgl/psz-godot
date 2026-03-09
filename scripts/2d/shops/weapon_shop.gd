@@ -1,10 +1,10 @@
 extends Control
 ## Weapon shop — browse and buy weapons, armor, and units via tabs.
 
-enum Tab { WEAPONS, ARMOR, UNITS }
+enum Tab { WEAPONS, ARMOR, UNITS, SELL }
 
-const TAB_NAMES := ["WEAPONS", "ARMOR", "UNITS"]
-const TAB_COUNT := 3
+const TAB_NAMES := ["WEAPONS", "ARMOR", "UNITS", "SELL"]
+const TAB_COUNT := 4
 
 var _tab: int = Tab.WEAPONS
 var _selected_index: int = 0
@@ -12,11 +12,27 @@ var _selected_index: int = 0
 var _weapons: Array = []
 var _armors: Array = []
 var _units: Array = []
+var _sell_items: Array = []
 
-## Shop weapon pool — basic and mid-tier weapons
-const SHOP_WEAPON_IDS := [
-	"saber", "blade", "daggers", "handgun", "cane", "rod", "wand",
-	"clear_saber", "chrome_cutlass", "ein_blade", "red_saber",
+## Set true to show all weapon tiers in the shop (for testing)
+const DEBUG_ALL_TIERS := true
+
+## Shop weapon pool — PSO basic weapon tiers
+const SHOP_WEAPON_TIER1 := [
+	"saber", "sword", "dagger", "partisan",
+	"handgun", "rifle", "mechgun", "rod",
+]
+const SHOP_WEAPON_TIER2 := [
+	"brand", "gigush", "knife", "halberd",
+	"autogun", "sniper", "assault", "pole",
+]
+const SHOP_WEAPON_TIER3 := [
+	"buster", "breaker", "blade", "glaive",
+	"lockgun", "blaster", "repeater", "pillar",
+]
+const SHOP_WEAPON_TIER4 := [
+	"pallasch", "claymore", "edge", "berdys",
+	"railgun", "beam", "gatling", "striker",
 ]
 
 ## Shop armor pool
@@ -41,7 +57,7 @@ const SHOP_UNIT_IDS := [
 
 func _ready() -> void:
 	title_label.text = "WEAPON SHOP"
-	hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Buy  [ESC] Leave"
+	_update_hint()
 	_generate_inventory()
 	_refresh_display()
 
@@ -51,7 +67,12 @@ func _generate_inventory() -> void:
 	_armors.clear()
 	_units.clear()
 
-	for wid in SHOP_WEAPON_IDS:
+	var weapon_ids: Array = SHOP_WEAPON_TIER1.duplicate()
+	if DEBUG_ALL_TIERS:
+		weapon_ids.append_array(SHOP_WEAPON_TIER2)
+		weapon_ids.append_array(SHOP_WEAPON_TIER3)
+		weapon_ids.append_array(SHOP_WEAPON_TIER4)
+	for wid in weapon_ids:
 		var w = WeaponRegistry.get_weapon(wid)
 		if w == null:
 			continue
@@ -81,6 +102,45 @@ func _generate_inventory() -> void:
 			"cost": price, "sell_price": int(price * 0.25),
 		})
 
+	_generate_sell_list()
+
+
+func _generate_sell_list() -> void:
+	_sell_items.clear()
+	for item_info in Inventory.get_all_items():
+		var item_id: String = str(item_info.get("id", ""))
+		var qty: int = int(item_info.get("quantity", 0))
+		if qty <= 0:
+			continue
+		var sell_price: int = 0
+		var item_name: String = str(item_info.get("name", item_id))
+		var cat: String = ""
+		var w = WeaponRegistry.get_weapon(item_id)
+		if w:
+			sell_price = maxi(int(_weapon_price(w) * 0.25), 1)
+			item_name = w.name
+			cat = "weapon"
+		else:
+			var a = ArmorRegistry.get_armor(item_id)
+			if a:
+				sell_price = maxi(int(_armor_price(a) * 0.25), 1)
+				item_name = a.name
+				cat = "armor"
+			else:
+				var u = UnitRegistry.get_unit(item_id)
+				if u:
+					sell_price = maxi(int(_unit_price(u) * 0.25), 1)
+					item_name = u.name
+					cat = "unit"
+				else:
+					# Consumable or other item — flat sell price
+					sell_price = 10
+					cat = "item"
+		_sell_items.append({
+			"id": item_id, "name": item_name, "category": cat,
+			"sell_price": sell_price, "quantity": qty,
+		})
+
 
 func _weapon_price(w) -> int:
 	var base: int = int(w.attack_base) * 15 + (int(w.rarity) - 1) * 500
@@ -97,11 +157,19 @@ func _unit_price(u) -> int:
 	return maxi(base, 100)
 
 
+func _update_hint() -> void:
+	if _tab == Tab.SELL:
+		hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Sell  [ESC] Leave"
+	else:
+		hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Buy  [ESC] Leave"
+
+
 func _get_current_list() -> Array:
 	match _tab:
 		Tab.WEAPONS: return _weapons
 		Tab.ARMOR: return _armors
 		Tab.UNITS: return _units
+		Tab.SELL: return _sell_items
 	return _weapons
 
 
@@ -147,11 +215,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_left"):
 		_tab = wrapi(_tab - 1, 0, TAB_COUNT)
 		_selected_index = 0
+		if _tab == Tab.SELL:
+			_generate_sell_list()
+		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right"):
 		_tab = wrapi(_tab + 1, 0, TAB_COUNT)
 		_selected_index = 0
+		if _tab == Tab.SELL:
+			_generate_sell_list()
+		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
@@ -163,7 +237,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		_buy_selected()
+		if _tab == Tab.SELL:
+			_sell_selected()
+		else:
+			_buy_selected()
 		get_viewport().set_input_as_handled()
 
 
@@ -199,6 +276,30 @@ func _buy_selected() -> void:
 	GameState.meseta = int(character["meseta"])
 	Inventory.add_item(item_id, 1)
 	hint_label.text = "Bought %s for %d M!" % [str(item.get("name", "???")), cost]
+	_generate_sell_list()
+	_refresh_display()
+
+
+func _sell_selected() -> void:
+	if _sell_items.is_empty() or _selected_index >= _sell_items.size():
+		return
+	var item: Dictionary = _sell_items[_selected_index]
+	var item_id: String = str(item.get("id", ""))
+	var sell_price: int = int(item.get("sell_price", 0))
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+
+	if not Inventory.remove_item(item_id, 1):
+		hint_label.text = "Cannot sell that!"
+		return
+
+	character["meseta"] = int(character.get("meseta", 0)) + sell_price
+	GameState.meseta = int(character["meseta"])
+	hint_label.text = "Sold %s for %d M!" % [str(item.get("name", "???")), sell_price]
+	_generate_sell_list()
+	if _selected_index >= _sell_items.size():
+		_selected_index = maxi(0, _sell_items.size() - 1)
 	_refresh_display()
 
 
@@ -231,9 +332,24 @@ func _refresh_display() -> void:
 
 	if list.is_empty():
 		var empty := Label.new()
-		empty.text = "  (Nothing for sale)"
+		empty.text = "  (Nothing to sell)" if _tab == Tab.SELL else "  (Nothing for sale)"
 		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
 		vbox.add_child(empty)
+	elif _tab == Tab.SELL:
+		for i in range(list.size()):
+			var item: Dictionary = list[i]
+			var sell_price: int = int(item.get("sell_price", 0))
+			var qty: int = int(item.get("quantity", 1))
+			var qty_str := " x%d" % qty if qty > 1 else ""
+			var label := Label.new()
+			label.text = "%-18s%s %6d M" % [str(item.get("name", "???")), qty_str, sell_price]
+			if i == _selected_index:
+				label.text = "> " + label.text
+				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+				selected_label = label
+			else:
+				label.text = "  " + label.text
+			vbox.add_child(label)
 	else:
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
@@ -355,36 +471,45 @@ func _refresh_detail() -> void:
 			_add_line(vbox, "Category: %s" % u.category)
 			_add_line(vbox, "Effect: %s" % u.effect, ThemeColors.EQUIPPABLE)
 
-	# Price / sell info
+	# Price info
 	var sep := Label.new()
 	sep.text = ""
 	vbox.add_child(sep)
-	var cost_label := Label.new()
-	cost_label.text = "Buy: %d M" % int(item.get("cost", 0))
-	cost_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-	vbox.add_child(cost_label)
-	var sell_label := Label.new()
-	sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
-	sell_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-	vbox.add_child(sell_label)
+	if _tab == Tab.SELL:
+		var sell_label := Label.new()
+		sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
+		sell_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+		vbox.add_child(sell_label)
+		var qty_label := Label.new()
+		qty_label.text = "Owned: %d" % int(item.get("quantity", 0))
+		vbox.add_child(qty_label)
+	else:
+		var cost_label := Label.new()
+		cost_label.text = "Buy: %d M" % int(item.get("cost", 0))
+		cost_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+		vbox.add_child(cost_label)
+		var sell_label := Label.new()
+		sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
+		sell_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
+		vbox.add_child(sell_label)
 
-	# Equippability status
-	if cat in ["weapon", "armor"]:
-		var equip_check: Dictionary = _check_equippability(item_id, cat)
-		var equip_status := Label.new()
-		if equip_check.get("can_equip", true):
-			equip_status.text = "Can equip"
-			equip_status.add_theme_color_override("font_color", ThemeColors.EQUIPPABLE)
-		else:
-			var reason: String = str(equip_check.get("reason", ""))
-			if reason == "class":
-				equip_status.text = "Cannot equip: class"
-			elif reason == "level":
-				equip_status.text = "Cannot equip: Lv.%d required" % int(equip_check.get("req_level", 1))
+		# Equippability status
+		if cat in ["weapon", "armor"]:
+			var equip_check: Dictionary = _check_equippability(item_id, cat)
+			var equip_status := Label.new()
+			if equip_check.get("can_equip", true):
+				equip_status.text = "Can equip"
+				equip_status.add_theme_color_override("font_color", ThemeColors.EQUIPPABLE)
 			else:
-				equip_status.text = "Cannot equip"
-			equip_status.add_theme_color_override("font_color", ThemeColors.DANGER)
-		vbox.add_child(equip_status)
+				var reason: String = str(equip_check.get("reason", ""))
+				if reason == "class":
+					equip_status.text = "Cannot equip: class"
+				elif reason == "level":
+					equip_status.text = "Cannot equip: Lv.%d required" % int(equip_check.get("req_level", 1))
+				else:
+					equip_status.text = "Cannot equip"
+				equip_status.add_theme_color_override("font_color", ThemeColors.DANGER)
+			vbox.add_child(equip_status)
 
 	detail_panel.add_child(vbox)
 

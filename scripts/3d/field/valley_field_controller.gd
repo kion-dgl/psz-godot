@@ -30,7 +30,7 @@ const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
 const QuestItemPickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
 const CompanionNpcScript := preload("res://scripts/3d/elements/companion_npc.gd")
-const FieldPauseMenuScript := preload("res://scripts/3d/field/field_pause_menu.gd")
+const MENU_SCENE_PATH := "res://scenes/3d/city/city_menu.tscn"
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -88,7 +88,6 @@ var _needs_telepipe: bool = false      # End cell without warp_edge — spawn te
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
-var _pause_menu: Node = null
 
 # Wave spawning
 var _current_wave: int = 1
@@ -372,10 +371,6 @@ func _ready() -> void:
 	_field_hud = FieldHudScript.new()
 	add_child(_field_hud)
 
-	# Pause menu (hidden by default)
-	_pause_menu = FieldPauseMenuScript.new()
-	_pause_menu.visible = false
-	add_child(_pause_menu)
 
 	_room_minimap = RoomMinimapScript.new()
 	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
@@ -2837,8 +2832,7 @@ func _return_to_city() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		if _pause_menu and not _pause_menu.visible:
-			_pause_menu.open()
+		SceneManager.push_scene(MENU_SCENE_PATH)
 		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed and not event.echo:

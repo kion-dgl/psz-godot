@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "claymore"
+name = "Claymore"
+japanese_name = ""
+rarity = 4
+weapon_type = 1
+max_grind = 20
+level = 27
+resale_value = 600
+attack_base = 140
+attack_max = 290
+accuracy_base = 40
+accuracy_max = 40
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 0
+model_id = ""
+variant_id = ""
+glb_scale = 0.09
+glb_path = "res://assets/weapons/basic/Sword.glb"
+tint_color = Color(1.0, 0.3, 0.3, 1)

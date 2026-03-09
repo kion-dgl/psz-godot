@@ -78,6 +78,9 @@ var _active_bubble_sprite: Sprite3D = null
 
 
 func _ready() -> void:
+	# Apply texture fixes from global config
+	_fix_city_materials()
+
 	# Capture spawn key before _spawn_player consumes it
 	var spawn_key := CityState.get_spawn_key()
 	_is_intro = spawn_key == "intro"

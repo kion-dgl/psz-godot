@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "sword"
+name = "Sword"
+japanese_name = ""
+rarity = 1
+weapon_type = 1
+max_grind = 35
+level = 1
+resale_value = 35
+attack_base = 50
+attack_max = 150
+accuracy_base = 30
+accuracy_max = 30
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
+pso_world_id = 0
+model_id = ""
+variant_id = ""
+glb_scale = 0.09
+glb_path = "res://assets/weapons/basic/Sword.glb"
+tint_color = Color(0.4, 0.9, 0.4, 1)
