@@ -114,7 +114,12 @@ func _freeze_player() -> void:
 func _unfreeze_player() -> void:
 	if _player_ref and _player_ref.has_method("transition_to"):
 		if _player_ref.current_state == _player_ref.PlayerState.CUTSCENE:
-			_player_ref.transition_to(_player_ref.PlayerState.IDLE)
+			# Resume running if player is holding movement input
+			var has_input := Input.is_action_pressed("move_forward") or Input.is_action_pressed("move_backward") or Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right")
+			if has_input:
+				_player_ref.transition_to(_player_ref.PlayerState.RUNNING)
+			else:
+				_player_ref.transition_to(_player_ref.PlayerState.IDLE)
 	_player_ref = null
 
 
