@@ -4,24 +4,24 @@
 
 [resource]
 script = ExtResource("1")
-id = "blade"
-name = "Blade"
+id = "repeater"
+name = "Repeater"
 japanese_name = ""
 rarity = 3
-weapon_type = 2
-max_grind = 28
+weapon_type = 10
+max_grind = 32
 level = 15
-resale_value = 180
-attack_base = 70
-attack_max = 185
-accuracy_base = 47
-accuracy_max = 47
+resale_value = 150
+attack_base = 43
+attack_max = 143
+accuracy_base = 42
+accuracy_max = 42
 element = ""
 element_level = 0
 photon_arts = []
-usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Force Human", "Force Newman")
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
 pso_world_id = 0
 model_id = ""
 variant_id = ""
-glb_path = "res://assets/weapons/basic/Dagger.glb"
+glb_path = "res://assets/weapons/basic/Mechgun.glb"
 tint_color = Color(0.7, 0.3, 0.9, 1)

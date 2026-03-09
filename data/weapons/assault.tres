@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "assault"
+name = "Assault"
+japanese_name = ""
+rarity = 2
+weapon_type = 10
+max_grind = 38
+level = 7
+resale_value = 58
+attack_base = 28
+attack_max = 108
+accuracy_base = 38
+accuracy_max = 38
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
+pso_world_id = 0
+model_id = ""
+variant_id = ""
+glb_path = "res://assets/weapons/basic/Mechgun.glb"
+tint_color = Color(0.4, 0.5, 1.0, 1)
