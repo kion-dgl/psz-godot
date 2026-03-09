@@ -23,5 +23,6 @@ usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
 pso_world_id = 0
 model_id = ""
 variant_id = ""
+glb_scale = 0.09
 glb_path = "res://assets/weapons/basic/Partisan.glb"
 tint_color = Color(0.4, 0.5, 1.0, 1)

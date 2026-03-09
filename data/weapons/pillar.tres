@@ -23,5 +23,6 @@ usable_by = PackedStringArray("Force Human", "Force Newman")
 pso_world_id = 0
 model_id = ""
 variant_id = ""
+glb_scale = 0.09
 glb_path = "res://assets/weapons/basic/Rod.glb"
 tint_color = Color(0.7, 0.3, 0.9, 1)

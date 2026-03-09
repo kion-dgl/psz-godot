@@ -23,5 +23,6 @@ usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
 pso_world_id = 0
 model_id = ""
 variant_id = ""
+glb_scale = 0.09
 glb_path = "res://assets/weapons/basic/Mechgun.glb"
 tint_color = Color(1.0, 0.3, 0.3, 1)
