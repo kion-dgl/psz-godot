@@ -7,6 +7,7 @@ const MARGIN := 12.0
 
 var _stats_panel: Control
 var _quest_log: Control
+var _action_palette: Control
 var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
 
@@ -32,6 +33,9 @@ func _ready() -> void:
 
 	_quest_log = _QuestLogPanel.new()
 	add_child(_quest_log)
+
+	_action_palette = _ActionPalette.new()
+	add_child(_action_palette)
 
 	GameState.hp_changed.connect(_on_stats_changed)
 	GameState.max_hp_changed.connect(_on_stats_changed)
@@ -71,7 +75,10 @@ func _toggle_log() -> void:
 
 
 func _is_in_quest() -> bool:
-	return SessionManager.has_accepted_quest() or not SessionManager.get_quest_objectives().is_empty()
+	if SessionManager.has_accepted_quest():
+		return true
+	var session: Dictionary = SessionManager.get_session()
+	return not session.is_empty() and str(session.get("type", "")) == "quest"
 
 
 ## Hide all HUD elements when a menu/shop/dialog is open.
@@ -402,3 +409,120 @@ class _QuestLogPanel extends Control:
 	func _scroll_to_bottom() -> void:
 		await get_tree().process_frame
 		_scroll.scroll_vertical = int(_scroll.get_v_scroll_bar().max_value)
+
+
+# ── Action Palette (bottom-right) ────────────────────────────────────────────
+
+class _ActionPalette extends Control:
+	## PSO-style action palette: I (swap), J/K/L (action slots).
+	## I centered above, J/L raised, K lower (diamond-ish layout).
+
+	const PILL_BG := Color(1.0, 1.0, 1.0, 0.85)
+	const PILL_BORDER := Color(0.59, 0.71, 0.82, 0.4)
+	const KEY_BG := Color(0.16, 0.24, 0.31, 0.7)
+	const KEY_TEXT := Color(1.0, 1.0, 1.0)
+	const LABEL_TEXT := Color(0.1, 0.1, 0.17)
+	const LABEL_LIGHT := Color(0.23, 0.29, 0.35)
+	const FONT_SIZE_KEY := 9
+	const FONT_SIZE_LABEL := 11
+	const FONT_SIZE_SMALL := 9
+
+	# Layout constants
+	const PILL_W := 52.0
+	const PILL_H := 34.0
+	const SWAP_W := 46.0
+	const SWAP_H := 20.0
+	const GAP := 6.0
+	const RAISED := 14.0  # J and L raised above K
+
+	var _bg_pill: StyleBoxFlat
+	var _bg_swap: StyleBoxFlat
+
+	# Action slot data
+	var _slots: Array = [
+		{"key": "J", "label": "Atk"},
+		{"key": "K", "label": "Foie"},
+		{"key": "L", "label": "Mate"},
+	]
+	var _palette_index: int = 1
+	var _palette_count: int = 6
+
+	func _ready() -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+
+		# Total size: 3 pills + 2 gaps wide, swap pill + gap + tallest pill high
+		var total_w: float = PILL_W * 3 + GAP * 2
+		var total_h: float = SWAP_H + 2.0 + PILL_H + RAISED
+		custom_minimum_size = Vector2(total_w, total_h)
+		size = Vector2(total_w, total_h)
+
+		# Anchor bottom-right
+		anchor_left = 1.0
+		anchor_right = 1.0
+		anchor_top = 1.0
+		anchor_bottom = 1.0
+		offset_left = -total_w - MARGIN
+		offset_right = -MARGIN
+		offset_top = -total_h - MARGIN
+		offset_bottom = -MARGIN
+
+		# Pill style
+		_bg_pill = StyleBoxFlat.new()
+		_bg_pill.bg_color = PILL_BG
+		_bg_pill.border_color = PILL_BORDER
+		_bg_pill.set_border_width_all(1)
+		_bg_pill.set_corner_radius_all(8)
+
+		# Swap pill style (smaller)
+		_bg_swap = StyleBoxFlat.new()
+		_bg_swap.bg_color = PILL_BG
+		_bg_swap.border_color = PILL_BORDER
+		_bg_swap.set_border_width_all(1)
+		_bg_swap.set_corner_radius_all(8)
+
+	func _draw() -> void:
+		var font := ThemeDB.fallback_font
+		var total_w: float = size.x
+
+		# I — palette swap, centered above JKL
+		var swap_x: float = (total_w - SWAP_W) * 0.5
+		var swap_y: float = 0.0
+		draw_style_box(_bg_swap, Rect2(swap_x, swap_y, SWAP_W, SWAP_H))
+
+		# "I" key badge
+		var key_rect := Rect2(swap_x + 6, swap_y + 4, 16, 13)
+		draw_rect(key_rect, KEY_BG)
+		draw_string(font, Vector2(swap_x + 10, swap_y + 14), "I",
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
+
+		# Palette number
+		var pn_text := "%d/%d" % [_palette_index, _palette_count]
+		draw_string(font, Vector2(swap_x + 26, swap_y + 14), pn_text,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, LABEL_LIGHT)
+
+		# JKL row — bottom-aligned, J and L raised
+		var row_y: float = SWAP_H + 2.0
+		for i in range(3):
+			var slot: Dictionary = _slots[i]
+			var px: float = i * (PILL_W + GAP)
+			var py: float = row_y + (0.0 if slot["key"] == "K" else 0.0)
+			# J and L are raised (lower py = higher on screen)
+			if slot["key"] != "K":
+				py = row_y
+			else:
+				py = row_y + RAISED
+
+			draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
+
+			# Key badge
+			var kx: float = px + (PILL_W - 16) * 0.5
+			var ky: float = py + 5
+			draw_rect(Rect2(kx, ky, 16, 13), KEY_BG)
+			draw_string(font, Vector2(kx + 4, ky + 10), slot["key"],
+				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
+
+			# Action label
+			var lbl: String = slot["label"]
+			var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LABEL).x
+			draw_string(font, Vector2(px + (PILL_W - lbl_w) * 0.5, py + PILL_H - 5),
+				lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LABEL, LABEL_TEXT)
