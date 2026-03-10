@@ -8,8 +8,9 @@ extends Control
 
 
 func _ready() -> void:
-	title_label.text = "CHARACTER STATUS"
-	hint_label.text = "[ESC] Back"
+	PszStyle.style_menu(title_label, hint_label, [content_panel, stats_panel])
+	title_label.text = "Character Status"
+	hint_label.text = "Esc: Back"
 	_refresh_display()
 
 
@@ -32,100 +33,70 @@ func _refresh_info() -> void:
 	if character == null:
 		return
 
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-
-	var name_label := Label.new()
-	name_label.text = "── %s ──" % str(character.get("name", "???"))
-	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(name_label)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 3)
 
 	var class_id: String = str(character.get("class_id", "???"))
 	var class_data = ClassRegistry.get_class_data(class_id)
 	var class_name_str: String = class_data.name if class_data else class_id
 
-	var class_label := Label.new()
-	class_label.text = "Class: %s" % class_name_str
-	vbox.add_child(class_label)
+	# Character header
+	vbox.add_child(PszStyle.create_section_header(str(character.get("name", "???"))))
+	vbox.add_child(PszStyle.create_pill("Class: %s" % class_name_str, false))
 
 	var level: int = int(character.get("level", 1))
-	var level_label := Label.new()
-	level_label.text = "Level: %d" % level
-	vbox.add_child(level_label)
+	vbox.add_child(PszStyle.create_pill("Level: %d" % level, false))
 
 	# EXP bar
 	var exp_progress: Dictionary = CharacterManager.get_exp_progress()
-	var exp_label := Label.new()
 	var current_exp: int = int(exp_progress.get("current", 0))
 	var needed_exp: int = int(exp_progress.get("needed", 1))
-	var exp_percent: float = float(exp_progress.get("percent", 0.0))
-	var exp_filled := int(exp_percent / 100.0 * 20)
-	exp_label.text = "EXP %s %d/%d" % [
-		"█".repeat(exp_filled) + "░".repeat(20 - exp_filled),
-		current_exp, needed_exp
-	]
-	vbox.add_child(exp_label)
+	var exp_ratio: float = clampf(float(exp_progress.get("percent", 0.0)) / 100.0, 0.0, 1.0)
+	vbox.add_child(PszStyle.create_bar("EXP", exp_ratio, "%d/%d" % [current_exp, needed_exp],
+		Color(0.30, 0.55, 0.85)))
 
-	# HP
+	# HP bar
 	var hp: int = int(character.get("hp", 0))
 	var max_hp: int = int(character.get("max_hp", 1))
 	var hp_ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-	var hp_filled := int(hp_ratio * 20)
-	var hp_label := Label.new()
-	hp_label.text = "HP  %s %d/%d" % [
-		"█".repeat(hp_filled) + "░".repeat(20 - hp_filled), hp, max_hp
-	]
-	if hp_ratio < 0.25:
-		hp_label.add_theme_color_override("font_color", ThemeColors.DANGER)
-	vbox.add_child(hp_label)
+	var hp_fill_color := Color(0.80, 0.20, 0.20) if hp_ratio < 0.25 else Color(0.20, 0.70, 0.30)
+	vbox.add_child(PszStyle.create_bar("HP", hp_ratio, "%d/%d" % [hp, max_hp], hp_fill_color))
 
-	# PP
+	# PP bar
 	var pp: int = int(character.get("pp", 0))
 	var max_pp: int = int(character.get("max_pp", 1))
 	var pp_ratio := clampf(float(pp) / float(max_pp), 0.0, 1.0)
-	var pp_filled := int(pp_ratio * 20)
-	var pp_label := Label.new()
-	pp_label.text = "PP  %s %d/%d" % [
-		"█".repeat(pp_filled) + "░".repeat(20 - pp_filled), pp, max_pp
-	]
-	vbox.add_child(pp_label)
+	vbox.add_child(PszStyle.create_bar("PP", pp_ratio, "%d/%d" % [pp, max_pp],
+		Color(0.30, 0.50, 0.80)))
 
 	# Meseta
-	var meseta_label := Label.new()
-	meseta_label.text = "Meseta: %d" % int(character.get("meseta", 0))
-	meseta_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-	vbox.add_child(meseta_label)
+	vbox.add_child(PszStyle.create_pill("Meseta", false, "%d" % int(character.get("meseta", 0)), PszStyle.TEXT_MESETA))
 
 	# Equipment section
-	var sep := Label.new()
-	sep.text = ""
-	vbox.add_child(sep)
-
-	var equip_header := Label.new()
-	equip_header.text = "── EQUIPMENT ──"
-	equip_header.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(equip_header)
+	vbox.add_child(PszStyle.create_section_header("Equipment"))
 
 	var equipment: Dictionary = character.get("equipment", {})
 	var slots := ["weapon", "frame", "mag", "unit1", "unit2", "unit3", "unit4"]
 	var slot_names := ["Weapon", "Frame", "Mag", "Unit 1", "Unit 2", "Unit 3", "Unit 4"]
 	for i in range(slots.size()):
-		var slot_label := Label.new()
 		var item_id: String = str(equipment.get(slots[i], ""))
 		if item_id.is_empty():
-			slot_label.text = "  %-8s [Empty]" % slot_names[i]
-			slot_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
+			vbox.add_child(PszStyle.create_pill(slot_names[i], false, "[Empty]", PszStyle.TEXT_MUTED))
 		else:
 			var item_name := _get_item_name(slots[i], item_id)
-			# Show grind level for weapons
 			if slots[i] == "weapon":
 				var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0))
 				if grind > 0:
 					item_name += " +%d" % grind
-			slot_label.text = "  %-8s %s" % [slot_names[i], item_name]
-		vbox.add_child(slot_label)
+			vbox.add_child(PszStyle.create_pill(slot_names[i], false, item_name))
 
-	content_panel.add_child(vbox)
+	scroll.add_child(vbox)
+	content_panel.add_child(scroll)
 
 
 func _refresh_stats() -> void:
@@ -136,63 +107,36 @@ func _refresh_stats() -> void:
 	if character == null:
 		return
 
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 3)
 
-	var header := Label.new()
-	header.text = "── STATS ──"
-	header.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(header)
+	vbox.add_child(PszStyle.create_section_header("Base Stats"))
 
 	var stats: Dictionary = character.get("stats", {})
-	var stat_order := ["hp", "pp", "atk", "def", "acc", "eva", "tech"]
-	var stat_names := ["HP", "PP", "ATK", "DEF", "ACC", "EVA", "TECH"]
+	var stat_order := ["atk", "def", "acc", "eva", "tech"]
+	var stat_names := ["ATK", "DEF", "ACC", "EVA", "TECH"]
 
 	for i in range(stat_order.size()):
 		var key: String = stat_order[i]
 		var value: int = int(stats.get(key, 0))
-		var label := Label.new()
-		label.text = "  %-6s %d" % [stat_names[i], value]
-		vbox.add_child(label)
-
-	# Equipment bonuses
-	var equip_bonuses := _calculate_equipment_bonuses(character)
-	if not equip_bonuses.is_empty():
-		var sep := Label.new()
-		sep.text = ""
-		vbox.add_child(sep)
-
-		var bonus_header := Label.new()
-		bonus_header.text = "── EQUIP BONUS ──"
-		bonus_header.add_theme_color_override("font_color", ThemeColors.HEADER)
-		vbox.add_child(bonus_header)
-
-		for key in equip_bonuses:
-			if int(equip_bonuses[key]) != 0:
-				var label := Label.new()
-				label.text = "  %-6s +%d" % [key.to_upper(), int(equip_bonuses[key])]
-				label.add_theme_color_override("font_color", ThemeColors.EQUIPPABLE)
-				vbox.add_child(label)
+		vbox.add_child(PszStyle.create_pill(stat_names[i], false, str(value)))
 
 	# Effective stats
-	var sep2 := Label.new()
-	sep2.text = ""
-	vbox.add_child(sep2)
-
-	var eff_header := Label.new()
-	eff_header.text = "── EFFECTIVE ──"
-	eff_header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-	vbox.add_child(eff_header)
-
+	var equip_bonuses := _calculate_equipment_bonuses(character)
+	vbox.add_child(PszStyle.create_section_header("Effective"))
 	for i in range(stat_order.size()):
 		var key: String = stat_order[i]
 		var base: int = int(stats.get(key, 0))
 		var bonus: int = int(equip_bonuses.get(key, 0))
-		var label := Label.new()
-		label.text = "  %-6s %d" % [stat_names[i], base + bonus]
-		vbox.add_child(label)
+		vbox.add_child(PszStyle.create_pill(stat_names[i], false, str(base + bonus), PszStyle.TEXT_HIGHLIGHT))
 
-	stats_panel.add_child(vbox)
+	scroll.add_child(vbox)
+	stats_panel.add_child(scroll)
 
 
 func _calculate_equipment_bonuses(character: Dictionary) -> Dictionary:

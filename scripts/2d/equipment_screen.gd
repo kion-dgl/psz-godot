@@ -22,8 +22,9 @@ var _selected_item: int = 0
 
 
 func _ready() -> void:
-	title_label.text = "EQUIPMENT"
-	hint_label.text = "[↑/↓] Select Slot  [ENTER] Equip/Unequip  [ESC] Back"
+	PszStyle.style_menu(title_label, hint_label, [equip_panel, stats_panel])
+	title_label.text = "Equipment"
+	hint_label.text = "Up/Down: Select Slot  Enter: Equip/Unequip  Esc: Back"
 	_refresh_display()
 
 
@@ -66,7 +67,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		if _choosing_item:
 			_choosing_item = false
-			hint_label.text = "[↑/↓] Select Slot  [ENTER] Equip/Unequip  [ESC] Back"
+			hint_label.text = "Up/Down: Select Slot  Enter: Equip/Unequip  Esc: Back"
 			_refresh_display()
 		else:
 			SceneManager.pop_scene()
@@ -143,7 +144,7 @@ func _open_item_selection() -> void:
 
 	_choosing_item = true
 	_selected_item = 0
-	hint_label.text = "[↑/↓] Select Item  [ENTER] Equip  [ESC] Cancel"
+	hint_label.text = "Up/Down: Select Item  Enter: Equip  Esc: Cancel"
 	_refresh_display()
 
 
@@ -203,7 +204,7 @@ func _equip_selected_item() -> void:
 	# Selecting the already-equipped item — no-op, just close
 	if item.get("equipped", false):
 		_choosing_item = false
-		hint_label.text = "[↑/↓] Select Slot  [ENTER] Equip/Unequip  [ESC] Back"
+		hint_label.text = "Up/Down: Select Slot  Enter: Equip/Unequip  Esc: Back"
 		_refresh_display()
 		return
 
@@ -242,83 +243,77 @@ func _refresh_display() -> void:
 	for child in equip_panel.get_children():
 		child.queue_free()
 
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 3)
 
-	var header := Label.new()
-	header.text = "── Equipment Slots ──"
-	header.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(header)
+	var selected_pill: Control = null
 
 	if _choosing_item:
-		# Show item selection list
-		var slot_label := Label.new()
-		slot_label.text = "Select %s:" % visible_names[_selected_slot]
-		slot_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-		vbox.add_child(slot_label)
+		# Item selection header
+		vbox.add_child(PszStyle.create_section_header("Select %s" % visible_names[_selected_slot]))
 
 		for i in range(_equippable_items.size()):
 			var item: Dictionary = _equippable_items[i]
-			var label := Label.new()
 			var item_id: String = str(item.get("id", ""))
 			var is_equipped: bool = item.get("equipped", false)
 			var is_unequip: bool = item_id == UNEQUIP_SENTINEL
 
+			var display_text: String
+			var text_color := Color.TRANSPARENT
+
 			if is_unequip:
-				label.text = item.name
+				display_text = item.name
+				text_color = PszStyle.TEXT_DANGER
 			else:
 				var detail_str := _get_item_brief(item_id)
 				var tag: String = " [Equipped]" if is_equipped else ""
 				if detail_str.is_empty():
-					label.text = "%s%s" % [item.name, tag]
+					display_text = "%s%s" % [item.name, tag]
 				else:
-					label.text = "%-16s %s%s" % [str(item.get("name", "")), detail_str, tag]
+					display_text = "%s  %s%s" % [str(item.get("name", "")), detail_str, tag]
+				if is_equipped:
+					text_color = PszStyle.TEXT_HIGHLIGHT
 
+			var pill := PszStyle.create_pill(display_text, i == _selected_item, "", text_color)
+			vbox.add_child(pill)
 			if i == _selected_item:
-				label.text = "> " + label.text
-				if is_equipped:
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				elif is_unequip:
-					label.add_theme_color_override("font_color", ThemeColors.DANGER)
-				else:
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-			else:
-				label.text = "  " + label.text
-				if is_equipped:
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				elif is_unequip:
-					label.add_theme_color_override("font_color", ThemeColors.DANGER)
-			vbox.add_child(label)
+				selected_pill = pill
 	else:
-		# Show equipment slots (dynamic based on armor)
+		# Equipment slots
+		vbox.add_child(PszStyle.create_section_header("Equipment Slots"))
+
 		for i in range(visible_slots.size()):
 			var slot_key: String = visible_slots[i]
 			var equipped: String = str(equipment.get(slot_key, ""))
 			var slot_name: String = visible_names[i]
 
 			var item_display: String = "[Empty]"
-			if not equipped.is_empty():
+			var text_color := Color.TRANSPARENT
+			if equipped.is_empty():
+				text_color = PszStyle.TEXT_MUTED
+			else:
 				var info: Dictionary = Inventory._lookup_item(equipped)
 				item_display = info.name
-				# Show grind level for weapons
 				if slot_key == "weapon":
 					var grind: int = int(character.get("weapon_grinds", {}).get(equipped, 0))
 					if grind > 0:
 						item_display += " +%d" % grind
 
-			var label := Label.new()
-			label.text = "%-8s %s" % [slot_name, item_display]
+			var pill := PszStyle.create_pill(slot_name, i == _selected_slot, item_display, text_color)
+			vbox.add_child(pill)
 			if i == _selected_slot:
-				label.text = "> " + label.text
-				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-			else:
-				label.text = "  " + label.text
-				if equipped.is_empty():
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
+				selected_pill = pill
 
-			vbox.add_child(label)
+	scroll.add_child(vbox)
+	equip_panel.add_child(scroll)
 
-	equip_panel.add_child(vbox)
+	if selected_pill != null:
+		scroll.ensure_control_visible.call_deferred(selected_pill)
 
 	# Stats panel
 	_refresh_stats()
@@ -426,26 +421,19 @@ func _refresh_stats() -> void:
 				preview_bonuses = _calc_equip_bonuses(preview_equip, character)
 				has_preview = true
 
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 3)
 
-	var stat_header := Label.new()
-	stat_header.text = "── Stats ──"
-	stat_header.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(stat_header)
-
-	var name_label := Label.new()
-	name_label.text = "%s  %s Lv.%d" % [
+	vbox.add_child(PszStyle.create_section_header("%s  %s Lv.%d" % [
 		str(character.get("name", "???")),
 		str(character.get("class_id", "???")),
 		level
-	]
-	name_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-	vbox.add_child(name_label)
-
-	var sep := Label.new()
-	sep.text = ""
-	vbox.add_child(sep)
+	]))
 
 	var stat_order := ["hp", "pp", "attack", "defense", "accuracy", "evasion", "technique"]
 	var display_names := ["HP", "PP", "ATK", "DEF", "ACC", "EVA", "TEC"]
@@ -455,26 +443,24 @@ func _refresh_stats() -> void:
 		var base: int = int(base_stats.get(stat_order[i], 0))
 		var cur_bonus: int = int(current_bonuses.get(bonus_keys[i], 0))
 		var effective: int = base + cur_bonus
-		var stat_label := Label.new()
 
 		if has_preview:
 			var pre_bonus: int = int(preview_bonuses.get(bonus_keys[i], 0))
 			var preview_val: int = base + pre_bonus
 			var diff: int = preview_val - effective
 			if diff > 0:
-				stat_label.text = "  %-4s %d → %d (+%d)" % [display_names[i], effective, preview_val, diff]
-				stat_label.add_theme_color_override("font_color", ThemeColors.STAT_POSITIVE)
+				vbox.add_child(PszStyle.create_pill(display_names[i], false,
+					"%d -> %d (+%d)" % [effective, preview_val, diff], PszStyle.TEXT_SUCCESS))
 			elif diff < 0:
-				stat_label.text = "  %-4s %d → %d (%d)" % [display_names[i], effective, preview_val, diff]
-				stat_label.add_theme_color_override("font_color", ThemeColors.STAT_NEGATIVE)
+				vbox.add_child(PszStyle.create_pill(display_names[i], false,
+					"%d -> %d (%d)" % [effective, preview_val, diff], PszStyle.TEXT_DANGER))
 			else:
-				stat_label.text = "  %-4s %d" % [display_names[i], effective]
+				vbox.add_child(PszStyle.create_pill(display_names[i], false, str(effective)))
 		else:
-			stat_label.text = "  %-4s %d" % [display_names[i], effective]
+			vbox.add_child(PszStyle.create_pill(display_names[i], false, str(effective)))
 
-		vbox.add_child(stat_label)
-
-	stats_panel.add_child(vbox)
+	scroll.add_child(vbox)
+	stats_panel.add_child(scroll)
 
 
 func _notify_player_weapon_changed() -> void:

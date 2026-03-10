@@ -14,6 +14,7 @@ const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
 const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
 const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
+const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
 
 function NavBar() {
   const location = useLocation();
@@ -91,6 +92,12 @@ function NavBar() {
       }}>
         Office
       </Link>
+      <Link to="/menu-design" style={{
+        color: isActive('/menu-design') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Menus
+      </Link>
       <Link to="/retarget" style={{
         color: isActive('/retarget') ? '#fff' : '#888',
         textDecoration: 'none',
@@ -125,6 +132,7 @@ export default function App() {
             <Route path="/stage-editor" element={<StageEditor />} />
             <Route path="/svg-check" element={<SvgCheck />} />
             <Route path="/office-editor" element={<OfficeEditor />} />
+            <Route path="/menu-design" element={<MenuDesign />} />
             <Route path="/retarget" element={<RetargetViewer />} />
             <Route path="/retarget-tuner" element={<RetargetTuner />} />
           </Routes>

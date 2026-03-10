@@ -32,10 +32,15 @@ func _ready() -> void:
 	title_label.text = "CITY"
 	hint_label.text = "[↑/↓] Navigate  [ENTER] Select  [ESC] Quick Save & Quit"
 
-	title_label.add_theme_color_override("font_color", ThemeColors.HEADER_TEXT)
-	title_label.add_theme_font_size_override("font_size", 18)
-	hint_label.add_theme_color_override("font_color", ThemeColors.HINT_TEXT)
-	hint_label.add_theme_font_size_override("font_size", 14)
+	# Style title with PSZ dark navy bar
+	title_label.add_theme_stylebox_override("normal", PszStyle.title_style())
+	title_label.add_theme_color_override("font_color", PszStyle.TEXT_WHITE)
+	title_label.add_theme_font_size_override("font_size", PszStyle.FONT_TITLE)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+
+	# Style hint label
+	hint_label.add_theme_color_override("font_color", Color(0.75, 0.82, 0.90))
+	hint_label.add_theme_font_size_override("font_size", PszStyle.FONT_HINT)
 
 	# Heal character to full on entering the city
 	var character = CharacterManager.get_active_character()
@@ -149,44 +154,51 @@ func _update_char_info() -> void:
 	if class_data:
 		stats = class_data.get_stats_at_level(int(character.get("level", 1)))
 
-	_add_info_line("CHARACTER", ThemeColors.HEADER)
-	_add_info_line("")
-	_add_info_line(str(character.get("name", "???")), ThemeColors.TEXT_HIGHLIGHT)
-	_add_info_line("%s  Lv.%d" % [str(character.get("class_id", "???")), int(character.get("level", 1))])
-	_add_info_line("")
+	# Character name and class
+	_add_info_line(str(character.get("name", "???")), PszStyle.TEXT_WHITE)
+	_add_info_line("%s  Lv.%d" % [str(character.get("class_id", "???")), int(character.get("level", 1))], PszStyle.TEXT_HIGHLIGHT)
+	_add_spacer()
 
 	# HP bar
 	var hp: int = int(character.get("hp", 0))
 	var max_hp: int = int(character.get("max_hp", 1))
 	var hp_ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
 	var hp_filled := int(hp_ratio * 10)
-	_add_info_line("HP %s %d/%d" % ["█".repeat(hp_filled) + "░".repeat(10 - hp_filled), hp, max_hp])
+	_add_info_line("HP %s %d/%d" % ["█".repeat(hp_filled) + "░".repeat(10 - hp_filled), hp, max_hp],
+		PszStyle.TEXT_SUCCESS if hp_ratio > 0.25 else PszStyle.TEXT_DANGER)
 
 	# PP bar
 	var pp: int = int(character.get("pp", 0))
 	var max_pp: int = int(character.get("max_pp", 1))
 	var pp_ratio := clampf(float(pp) / float(max_pp), 0.0, 1.0)
 	var pp_filled := int(pp_ratio * 10)
-	_add_info_line("PP %s %d/%d" % ["█".repeat(pp_filled) + "░".repeat(10 - pp_filled), pp, max_pp])
+	_add_info_line("PP %s %d/%d" % ["█".repeat(pp_filled) + "░".repeat(10 - pp_filled), pp, max_pp],
+		Color(0.40, 0.60, 0.85))
 
-	_add_info_line("")
-	_add_info_line("Meseta: %s" % _format_number(int(character.get("meseta", 0))), ThemeColors.MESETA_GOLD)
+	_add_spacer()
+	_add_info_line("Meseta: %s" % _format_number(int(character.get("meseta", 0))), PszStyle.TEXT_MESETA)
 
 	# Stats
-	_add_info_line("")
-	_add_info_line("STATS", ThemeColors.HEADER)
-	_add_info_line("  ATK  %d" % stats.get("attack", 0))
-	_add_info_line("  DEF  %d" % stats.get("defense", 0))
-	_add_info_line("  ACC  %d" % stats.get("accuracy", 0))
-	_add_info_line("  EVA  %d" % stats.get("evasion", 0))
-	_add_info_line("  TEC  %d" % stats.get("technique", 0))
+	_add_spacer()
+	_add_info_line("ATK  %d" % stats.get("attack", 0), PszStyle.TEXT_WHITE)
+	_add_info_line("DEF  %d" % stats.get("defense", 0), PszStyle.TEXT_WHITE)
+	_add_info_line("ACC  %d" % stats.get("accuracy", 0), PszStyle.TEXT_WHITE)
+	_add_info_line("EVA  %d" % stats.get("evasion", 0), PszStyle.TEXT_WHITE)
+	_add_info_line("TEC  %d" % stats.get("technique", 0), PszStyle.TEXT_WHITE)
 
 
-func _add_info_line(text: String, color: Color = ThemeColors.TEXT_PRIMARY) -> void:
+func _add_info_line(text: String, color: Color = PszStyle.TEXT_WHITE) -> void:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_color_override("font_color", color)
+	label.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
 	char_panel.add_child(label)
+
+
+func _add_spacer() -> void:
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 4)
+	char_panel.add_child(spacer)
 
 
 func _format_number(n: int) -> String:
