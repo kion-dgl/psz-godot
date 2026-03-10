@@ -4,6 +4,7 @@ extends Control
 enum Tab { ITEMS, DISKS, SELL }
 
 const TAB_COUNT := 3
+const TAB_NAMES := ["Items", "Disks", "Sell"]
 
 var _tab: int = Tab.ITEMS
 var _selected_index: int = 0
@@ -17,6 +18,8 @@ var _disk_items: Array = []
 # Sell tab data
 var _sell_items: Array = []
 
+var _mode_bar: HBoxContainer
+
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
 @onready var shop_panel: PanelContainer = $Panel/VBox/HBox/ShopPanel
@@ -25,7 +28,9 @@ var _sell_items: Array = []
 
 
 func _ready() -> void:
-	title_label.text = "SHOP"
+	_mode_bar = mode_label.get_parent()
+	PszStyle.style_menu(title_label, hint_label, [shop_panel, detail_panel])
+	title_label.text = "Item Shop"
 	_update_hint()
 	_load_shop_items()
 	_generate_disk_inventory()
@@ -69,9 +74,9 @@ func _generate_sell_list() -> void:
 
 func _update_hint() -> void:
 	if _tab == Tab.SELL:
-		hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Sell  [ESC] Leave"
+		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Sell  Esc: Leave"
 	else:
-		hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Buy  [ESC] Leave"
+		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Buy  Esc: Leave"
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -191,17 +196,15 @@ func _sell_selected() -> void:
 
 
 func _refresh_display() -> void:
-	# Mode bar
-	var tab_names := ["ITEMS", "DISKS", "SELL"]
-	var parts := []
-	for i in range(TAB_COUNT):
-		if i == _tab:
-			parts.append("[◄ %s ►]" % tab_names[i])
-		else:
-			parts.append("   %s   " % tab_names[i])
-	mode_label.text = "%s |  Meseta: %s" % ["  ".join(PackedStringArray(parts)), _get_meseta_str()]
+	# Tab bar
+	for child in _mode_bar.get_children():
+		child.queue_free()
+	var tab_bar := PszStyle.create_tab_bar(TAB_NAMES, _tab)
+	_mode_bar.add_child(tab_bar)
+	var meseta_lbl := PszStyle.create_meseta_label(_get_meseta())
+	_mode_bar.add_child(meseta_lbl)
 
-	# Shop panel
+	# Shop panel — pill rows
 	for child in shop_panel.get_children():
 		child.queue_free()
 
@@ -212,51 +215,41 @@ func _refresh_display() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 3)
 
-	var selected_label: Label = null
+	var selected_pill: Control = null
 
 	if list.is_empty():
-		var empty := Label.new()
-		if _tab == Tab.SELL:
-			empty.text = "  (Nothing to sell)"
-		elif _tab == Tab.ITEMS:
-			empty.text = "  (No items)"
-		else:
-			empty.text = "  (No techniques available)"
-		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-		vbox.add_child(empty)
+		var empty_text := "(Nothing to sell)" if _tab == Tab.SELL else "(No items)" if _tab == Tab.ITEMS else "(No techniques available)"
+		var pill := PszStyle.create_pill(empty_text, false, "", PszStyle.TEXT_MUTED)
+		vbox.add_child(pill)
 	elif _tab == Tab.SELL:
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
-			var label := Label.new()
-			label.text = "%-18s%s %6d M" % [str(item.get("name", "???")), qty_str, sell_price]
+			var pill := PszStyle.create_pill(
+				str(item.get("name", "???")) + qty_str,
+				i == _selected_index, "%d M" % sell_price)
+			vbox.add_child(pill)
 			if i == _selected_index:
-				label.text = "> " + label.text
-				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				selected_label = label
-			else:
-				label.text = "  " + label.text
-			vbox.add_child(label)
+				selected_pill = pill
 	elif _tab == Tab.ITEMS:
 		for i in range(list.size()):
-			var label := Label.new()
 			var item: Dictionary = list[i]
 			var shop_name: String = str(item.get("item", "???"))
 			var item_id: String = shop_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
 			var held: int = Inventory.get_item_count(item_id)
 			var held_str: String = " (%d)" % held if held > 0 else ""
-			label.text = "%-18s%s %5d M" % [shop_name, held_str, int(item.get("cost", 0))]
+			var pill := PszStyle.create_pill(
+				shop_name + held_str,
+				i == _selected_index, "%d M" % int(item.get("cost", 0)))
+			vbox.add_child(pill)
 			if i == _selected_index:
-				label.text = "> " + label.text
-				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				selected_label = label
-			else:
-				label.text = "  " + label.text
-			vbox.add_child(label)
+				selected_pill = pill
 	else:
+		# Disks tab
 		var character = CharacterManager.get_active_character()
 		var char_level: int = int(character.get("level", 1)) if character else 1
 		var current_meseta: int = int(character.get("meseta", 0)) if character else 0
@@ -277,45 +270,33 @@ func _refresh_display() -> void:
 			var too_low_level: bool = char_level < required_level
 			var already_higher: bool = current_tech_level >= level
 
-			var status_tag := ""
+			var text_color := Color.TRANSPARENT
 			if already_higher:
-				status_tag = " [Lv.%d]" % current_tech_level
-			elif current_tech_level > 0:
+				text_color = PszStyle.TEXT_MUTED
+			elif too_low_level:
+				text_color = PszStyle.TEXT_WARNING
+			elif cant_afford:
+				text_color = PszStyle.TEXT_WARNING
+
+			var status_tag := ""
+			if current_tech_level > 0:
 				status_tag = " [Lv.%d]" % current_tech_level
 			if too_low_level:
 				status_tag += " [Req.%d]" % required_level
 
-			var label := Label.new()
-			label.text = "%-22s %5d M%s" % [disk_name, cost, status_tag]
-
+			var pill := PszStyle.create_pill(
+				disk_name + status_tag,
+				i == _selected_index, "%d M" % cost, text_color)
+			vbox.add_child(pill)
 			if i == _selected_index:
-				label.text = "> " + label.text
-				if already_higher:
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-				elif too_low_level:
-					label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
-				elif cant_afford:
-					label.add_theme_color_override("font_color", ThemeColors.WARNING)
-				else:
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				selected_label = label
-			else:
-				label.text = "  " + label.text
-				if already_higher:
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-				elif too_low_level:
-					label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
-				elif cant_afford:
-					label.add_theme_color_override("font_color", ThemeColors.WARNING)
-			vbox.add_child(label)
+				selected_pill = pill
 
 	scroll.add_child(vbox)
 	shop_panel.add_child(scroll)
 
-	if selected_label != null:
-		scroll.ensure_control_visible.call_deferred(selected_label)
+	if selected_pill != null:
+		scroll.ensure_control_visible.call_deferred(selected_pill)
 
-	# Detail panel
 	_refresh_detail()
 
 
@@ -339,26 +320,21 @@ func _refresh_item_detail(item: Dictionary) -> void:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 
-	var name_label := Label.new()
-	name_label.text = "── %s ──" % str(item.get("item", "???"))
-	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(name_label)
+	vbox.add_child(PszStyle.detail_label(str(item.get("item", "???")), PszStyle.TITLE_BG))
 
-	var cat_label := Label.new()
-	cat_label.text = "Category: %s" % str(item.get("category", "unknown"))
+	var cat_label := PszStyle.detail_label("Category: %s" % str(item.get("category", "unknown")))
 	vbox.add_child(cat_label)
 
-	var cost_label := Label.new()
-	cost_label.text = "Cost: %d %s" % [int(item.get("cost", 0)), str(item.get("currency", "Meseta"))]
-	cost_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+	var cost_label := PszStyle.detail_label(
+		"Cost: %d %s" % [int(item.get("cost", 0)), str(item.get("currency", "Meseta"))],
+		PszStyle.TEXT_HIGHLIGHT)
 	vbox.add_child(cost_label)
 
 	var consumable = ConsumableRegistry.get_consumable(
 		str(item.get("item", "")).to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
 	)
 	if consumable:
-		var details_label := Label.new()
-		details_label.text = consumable.details
+		var details_label := PszStyle.detail_label(consumable.details)
 		details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(details_label)
 
@@ -375,55 +351,35 @@ func _refresh_disk_detail(item: Dictionary) -> void:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 
-	var name_label := Label.new()
-	name_label.text = "── %s ──" % str(item.get("name", "???"))
-	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(name_label)
-
-	_add_line(vbox, "Element: %s" % str(tech.get("element", "none")).capitalize())
-	_add_line(vbox, "Target: %s" % str(tech.get("target", "single")).capitalize())
+	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
+	vbox.add_child(PszStyle.detail_label("Element: %s" % str(tech.get("element", "none")).capitalize()))
+	vbox.add_child(PszStyle.detail_label("Target: %s" % str(tech.get("target", "single")).capitalize()))
 
 	var power: int = int(tech.get("power", 0))
 	if power > 0:
 		var scaled_power: int = int(float(power) * (1.0 + float(level) / 10.0))
-		_add_line(vbox, "Power: %d (Lv.%d)" % [scaled_power, level])
+		vbox.add_child(PszStyle.detail_label("Power: %d (Lv.%d)" % [scaled_power, level]))
 
 	var pp_cost: int = maxi(1, int(tech.get("pp", 5)) - int(float(level) / 5.0))
-	_add_line(vbox, "PP Cost: %d" % pp_cost)
+	vbox.add_child(PszStyle.detail_label("PP Cost: %d" % pp_cost))
 
 	var required_level: int = TechniqueManager.get_disk_required_level(level)
 	var character = CharacterManager.get_active_character()
 	var char_level: int = int(character.get("level", 1)) if character else 1
-	var req_label := Label.new()
-	req_label.text = "Req. Level: %d" % required_level
-	if char_level < required_level:
-		req_label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
-	vbox.add_child(req_label)
+	var req_color := PszStyle.TEXT_WARNING if char_level < required_level else PszStyle.TEXT
+	vbox.add_child(PszStyle.detail_label("Req. Level: %d" % required_level, req_color))
 
 	if character:
 		var current_level: int = TechniqueManager.get_technique_level(character, technique_id)
 		if current_level > 0:
-			var cur_label := Label.new()
 			if current_level >= level:
-				cur_label.text = "Known: Lv.%d (already higher)" % current_level
-				cur_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
+				vbox.add_child(PszStyle.detail_label("Known: Lv.%d (already higher)" % current_level, PszStyle.TEXT_MUTED))
 			else:
-				cur_label.text = "Known: Lv.%d → Lv.%d" % [current_level, level]
-				cur_label.add_theme_color_override("font_color", ThemeColors.EQUIPPABLE)
-			vbox.add_child(cur_label)
+				vbox.add_child(PszStyle.detail_label("Known: Lv.%d -> Lv.%d" % [current_level, level], PszStyle.TEXT_SUCCESS))
 
-	var sep := Label.new()
-	sep.text = ""
-	vbox.add_child(sep)
-	var cost_label := Label.new()
-	cost_label.text = "Price: %d M" % int(item.get("cost", 0))
-	cost_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-	vbox.add_child(cost_label)
-
-	var note := Label.new()
-	note.text = "Use from inventory to learn"
-	note.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-	vbox.add_child(note)
+	vbox.add_child(PszStyle.detail_label(""))
+	vbox.add_child(PszStyle.detail_label("Price: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
+	vbox.add_child(PszStyle.detail_label("Use from inventory to learn", PszStyle.TEXT_MUTED))
 
 	detail_panel.add_child(vbox)
 
@@ -432,34 +388,16 @@ func _refresh_sell_detail(item: Dictionary) -> void:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 
-	var name_label := Label.new()
-	name_label.text = "── %s ──" % str(item.get("name", "???"))
-	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(name_label)
-
-	var qty_label := Label.new()
-	qty_label.text = "Owned: %d" % int(item.get("quantity", 0))
-	vbox.add_child(qty_label)
-
-	var sep := Label.new()
-	sep.text = ""
-	vbox.add_child(sep)
-	var sell_label := Label.new()
-	sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
-	sell_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-	vbox.add_child(sell_label)
+	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
+	vbox.add_child(PszStyle.detail_label("Owned: %d" % int(item.get("quantity", 0))))
+	vbox.add_child(PszStyle.detail_label(""))
+	vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_HIGHLIGHT))
 
 	detail_panel.add_child(vbox)
 
 
-func _add_line(parent: VBoxContainer, text: String) -> void:
-	var label := Label.new()
-	label.text = text
-	parent.add_child(label)
-
-
-func _get_meseta_str() -> String:
+func _get_meseta() -> int:
 	var character = CharacterManager.get_active_character()
 	if character:
-		return str(int(character.get("meseta", 0)))
-	return "0"
+		return int(character.get("meseta", 0))
+	return 0

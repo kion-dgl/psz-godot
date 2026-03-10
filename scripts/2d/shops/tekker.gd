@@ -3,10 +3,15 @@ extends Control
 
 enum Mode { GRIND, IDENTIFY }
 
+const TAB_NAMES := ["Grind", "Identify"]
+
 var _mode: int = Mode.GRIND
 var _selected_index: int = 0
 var _grindable_weapons: Array = []  # Array of {id, name, grind, max_grind, rarity}
 var _unidentified_weapons: Array = []  # Array of {id, name, rarity}
+
+var _mode_bar_parent: Control  # Parent of mode_label for tab bar rebuilding
+var _tab_row: HBoxContainer    # Persistent tab bar container
 
 ## Grinder requirements by weapon rarity
 const GRINDER_FOR_RARITY := {
@@ -26,8 +31,10 @@ const IDENTIFY_COST := {5: 1000, 6: 2500, 7: 5000}
 
 
 func _ready() -> void:
-	title_label.text = "TEKKER"
-	hint_label.text = "[←/→] Switch Mode  [↑/↓] Select  [ENTER] Confirm  [ESC] Leave"
+	_mode_bar_parent = mode_label.get_parent()
+	PszStyle.style_menu(title_label, hint_label, [content_panel])
+	title_label.text = "Tekker"
+	hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"
 	_build_lists()
 	_refresh_display()
 
@@ -171,72 +178,82 @@ func _identify_selected() -> void:
 
 
 func _refresh_display() -> void:
-	if _mode == Mode.GRIND:
-		mode_label.text = "[◄ GRIND ►]    IDENTIFY"
-	else:
-		mode_label.text = "   GRIND    [◄ IDENTIFY ►]"
+	# Tab bar — mode_label is direct child of VBox, so we hide it and
+	# reuse a persistent HBoxContainer for the tab bar
+	mode_label.visible = false
 
+	if not is_instance_valid(_tab_row):
+		_tab_row = HBoxContainer.new()
+		_tab_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		_tab_row.add_theme_constant_override("separation", 8)
+		_mode_bar_parent.add_child(_tab_row)
+		_mode_bar_parent.move_child(_tab_row, mode_label.get_index() + 1)
+	for child in _tab_row.get_children():
+		child.queue_free()
+	_tab_row.add_child(PszStyle.create_tab_bar(TAB_NAMES, _mode))
+	_tab_row.add_child(PszStyle.create_meseta_label(_get_meseta()))
+
+	# Content panel — pill rows
 	for child in content_panel.get_children():
 		child.queue_free()
 
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 3)
 
-	var character = CharacterManager.get_active_character()
-	var meseta_label := Label.new()
-	meseta_label.text = "Meseta: %d" % (int(character.get("meseta", 0)) if character else 0)
-	meseta_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-	vbox.add_child(meseta_label)
+	var selected_pill: Control = null
 
 	if _mode == Mode.GRIND:
-		var desc := Label.new()
-		desc.text = "Grinding increases a weapon's attack power."
-		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		vbox.add_child(desc)
+		vbox.add_child(PszStyle.create_section_header("Grinding increases a weapon's attack power."))
 
 		if _grindable_weapons.is_empty():
-			var placeholder := Label.new()
-			placeholder.text = "(No grindable weapons in inventory)"
-			placeholder.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-			vbox.add_child(placeholder)
+			vbox.add_child(PszStyle.create_pill("(No grindable weapons in inventory)", false, "", PszStyle.TEXT_MUTED))
 		else:
 			for i in range(_grindable_weapons.size()):
 				var w: Dictionary = _grindable_weapons[i]
 				var grinder_id: String = GRINDER_FOR_RARITY.get(w["rarity"], "monogrinder")
 				var has_grinder: bool = Inventory.has_item(grinder_id)
 				var cost := int((200 + w["grind"] * 100) * RARITY_COST_MULT.get(w["rarity"], 1.0))
-				var label := Label.new()
-				label.text = "%-18s +%d/%d  %d M  [%s]" % [w["name"], w["grind"], w["max_grind"], cost, grinder_id.replace("_", " ")]
+
+				var text_color := Color.TRANSPARENT
+				if not has_grinder:
+					text_color = PszStyle.TEXT_DANGER
+
+				var pill := PszStyle.create_pill(
+					"%s  +%d/%d  [%s]" % [w["name"], w["grind"], w["max_grind"], grinder_id.replace("_", " ")],
+					i == _selected_index, "%d M" % cost, text_color)
+				vbox.add_child(pill)
 				if i == _selected_index:
-					label.text = "> " + label.text
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT if has_grinder else ThemeColors.DANGER)
-				else:
-					label.text = "  " + label.text
-					if not has_grinder:
-						label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-				vbox.add_child(label)
+					selected_pill = pill
 	else:
-		var desc := Label.new()
-		desc.text = "Identification reveals the true stats of\nunidentified weapons (5-7★ rarity)."
-		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		vbox.add_child(desc)
+		vbox.add_child(PszStyle.create_section_header("Identify unknown weapons (5-7 star rarity)."))
 
 		if _unidentified_weapons.is_empty():
-			var placeholder := Label.new()
-			placeholder.text = "(No unidentified weapons)"
-			placeholder.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-			vbox.add_child(placeholder)
+			vbox.add_child(PszStyle.create_pill("(No unidentified weapons)", false, "", PszStyle.TEXT_MUTED))
 		else:
 			for i in range(_unidentified_weapons.size()):
 				var w: Dictionary = _unidentified_weapons[i]
 				var cost: int = IDENTIFY_COST.get(w["rarity"], 1000)
-				var label := Label.new()
-				label.text = "%-18s %s★  %d M" % [w["name"], str(w["rarity"]), cost]
+				var pill := PszStyle.create_pill(
+					"%s  %s star" % [w["name"], str(w["rarity"])],
+					i == _selected_index, "%d M" % cost)
+				vbox.add_child(pill)
 				if i == _selected_index:
-					label.text = "> " + label.text
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				else:
-					label.text = "  " + label.text
-				vbox.add_child(label)
+					selected_pill = pill
 
-	content_panel.add_child(vbox)
+	scroll.add_child(vbox)
+	content_panel.add_child(scroll)
+
+	if selected_pill != null:
+		scroll.ensure_control_visible.call_deferred(selected_pill)
+
+
+func _get_meseta() -> int:
+	var character = CharacterManager.get_active_character()
+	if character:
+		return int(character.get("meseta", 0))
+	return 0
