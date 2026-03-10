@@ -1,5 +1,5 @@
 extends VBoxContainer
-## Keyboard-navigable menu with PSZ DS-style pill-shaped rows.
+## Keyboard-navigable menu with PSZ-style pill-shaped rows.
 ## Use add_item() to populate, then arrow keys + enter to navigate.
 
 signal item_selected(index: int)
@@ -12,7 +12,7 @@ var _active: bool = true
 
 
 func _ready() -> void:
-	add_theme_constant_override("separation", 4)
+	add_theme_constant_override("separation", 3)
 	_update_display()
 
 
@@ -104,44 +104,17 @@ func _update_display() -> void:
 		var is_disabled: bool = _disabled[i]
 		var is_separator: bool = _items[i].begins_with("────")
 
-		# Separators render as simple labels (no panel)
+		# Separators render as thin spacers
 		if is_separator:
-			var sep_label := Label.new()
-			sep_label.text = _items[i]
-			var sep_settings := LabelSettings.new()
-			sep_settings.font_color = ThemeColors.TEXT_DISABLED
-			sep_label.label_settings = sep_settings
-			add_child(sep_label)
+			var spacer := Control.new()
+			spacer.custom_minimum_size = Vector2(0, 4)
+			add_child(spacer)
 			continue
 
-		var panel := PanelContainer.new()
-		var style := StyleBoxFlat.new()
-
-		if is_selected:
-			style.bg_color = ThemeColors.MENU_SELECTED
-		elif is_disabled:
-			style.bg_color = Color(ThemeColors.MENU_BG, 0.5)
-		else:
-			style.bg_color = ThemeColors.MENU_BG
-
-		style.corner_radius_top_left = 12
-		style.corner_radius_top_right = 12
-		style.corner_radius_bottom_right = 12
-		style.corner_radius_bottom_left = 12
-		style.content_margin_left = 12
-		style.content_margin_right = 12
-		style.content_margin_top = 6
-		style.content_margin_bottom = 6
-		panel.add_theme_stylebox_override("panel", style)
-
-		var label := Label.new()
-		label.text = _items[i]
-		var settings := LabelSettings.new()
+		var pill := PszStyle.create_pill(_items[i], is_selected)
 		if is_disabled:
-			settings.font_color = ThemeColors.TEXT_DISABLED
-		else:
-			settings.font_color = ThemeColors.MENU_TEXT
-		label.label_settings = settings
-		panel.add_child(label)
-
-		add_child(panel)
+			# Override colors for disabled items
+			var label: Label = pill.get_child(0).get_child(0) if pill.get_child_count() > 0 else null
+			if label:
+				label.add_theme_color_override("font_color", PszStyle.TEXT_MUTED)
+		add_child(pill)

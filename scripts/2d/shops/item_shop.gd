@@ -8,6 +8,7 @@ const TAB_NAMES := ["Items", "Disks", "Sell"]
 
 var _tab: int = Tab.ITEMS
 var _selected_index: int = 0
+var _confirming: bool = false
 
 # Items tab data
 var _shop_items: Array = []
@@ -79,11 +80,21 @@ func _update_hint() -> void:
 		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Buy  Esc: Leave"
 
 
+func _cancel_confirm() -> void:
+	_confirming = false
+	_update_hint()
+	_refresh_display()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		SceneManager.pop_scene()
+		if _confirming:
+			_cancel_confirm()
+		else:
+			SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left"):
+		_confirming = false
 		_tab = wrapi(_tab - 1, 0, TAB_COUNT)
 		_selected_index = 0
 		if _tab == Tab.SELL:
@@ -92,6 +103,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right"):
+		_confirming = false
 		_tab = wrapi(_tab + 1, 0, TAB_COUNT)
 		_selected_index = 0
 		if _tab == Tab.SELL:
@@ -100,15 +112,23 @@ func _unhandled_input(event: InputEvent) -> void:
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
+		_confirming = false
 		_selected_index = wrapi(_selected_index - 1, 0, maxi(_get_current_list().size(), 1))
+		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
+		_confirming = false
 		_selected_index = wrapi(_selected_index + 1, 0, maxi(_get_current_list().size(), 1))
+		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		_on_select()
+		if _confirming:
+			_confirming = false
+			_on_select()
+		else:
+			_ask_confirm()
 		get_viewport().set_input_as_handled()
 
 
@@ -118,6 +138,23 @@ func _get_current_list() -> Array:
 		Tab.DISKS: return _disk_items
 		Tab.SELL: return _sell_items
 	return _shop_items
+
+
+func _ask_confirm() -> void:
+	var list := _get_current_list()
+	if list.is_empty() or _selected_index >= list.size():
+		return
+	var item: Dictionary = list[_selected_index]
+	if _tab == Tab.SELL:
+		var sell_price: int = int(item.get("sell_price", 0))
+		hint_label.text = "Sell %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), sell_price]
+	elif _tab == Tab.ITEMS:
+		var cost: int = int(item.get("cost", 0))
+		hint_label.text = "Buy %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("item", "???")), cost]
+	else:
+		var cost: int = int(item.get("cost", 0))
+		hint_label.text = "Buy %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), cost]
+	_confirming = true
 
 
 func _on_select() -> void:
