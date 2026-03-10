@@ -7,7 +7,12 @@ extends Control
 ## position tracking, matching the web PreviewMinimap approach.
 
 const DISPLAY_SIZE := 180.0
-const BG_COLOR := Color(0.1, 0.1, 0.18, 0.85)
+const PANEL_PAD := 8.0  # padding around map inside blue panel
+# PSZ palette
+const PANEL_BG := Color(0.66, 0.80, 0.91)           # Pale icy blue
+const PANEL_BORDER := Color(0.48, 0.63, 0.75)       # Blue border
+const SCANLINE_COLOR := Color(0.47, 0.63, 0.78, 0.08)
+const BG_COLOR := Color(0.08, 0.15, 0.23, 0.85)     # Dark map background
 const FLOOR_COLOR := Color(0.16, 0.16, 0.31)
 const BOUNDARY_COLOR := Color(1.0, 1.0, 1.0, 0.6)
 const PLAYER_COLOR := Color(0.0, 1.0, 0.0)
@@ -15,6 +20,9 @@ const GATE_OPEN := Color(0.27, 1.0, 0.27)
 const GATE_LOCKED := Color(1.0, 0.3, 0.3)
 const GATE_EXIT := Color(0.29, 0.62, 1.0)
 const GATE_WALL := Color(0.4, 0.4, 0.4)
+const KEY_LABEL_COLOR := Color(0.1, 0.1, 0.17)      # Dark text
+const KEY_BG_ACTIVE := Color(0.8, 0.53, 0.27)       # Orange for collected
+const KEY_BG_INACTIVE := Color(0.59, 0.71, 0.82, 0.4)  # Light gray
 
 var _floor_triangles: Array = []   # Array[PackedVector2Array] — 3 verts each
 var _boundary_lines: Array = []    # Array[[Vector2, Vector2]]
@@ -42,18 +50,20 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 		map_root: Node3D, rotation_deg: int = 0, entry_edge: String = "") -> void:
 	_rotation_deg = rotation_deg
 	mouse_filter = MOUSE_FILTER_IGNORE
-	custom_minimum_size = Vector2(DISPLAY_SIZE, DISPLAY_SIZE)
-	size = Vector2(DISPLAY_SIZE, DISPLAY_SIZE)
+	var total_w: float = DISPLAY_SIZE + PANEL_PAD * 2 + 30  # extra for key column
+	var total_h: float = DISPLAY_SIZE + PANEL_PAD * 2
+	custom_minimum_size = Vector2(total_w, total_h)
+	size = Vector2(total_w, total_h)
 
 	# Anchor top-right with margin
 	anchor_left = 1.0
 	anchor_right = 1.0
 	anchor_top = 0.0
 	anchor_bottom = 0.0
-	offset_left = -DISPLAY_SIZE - 20
-	offset_right = -20
-	offset_top = 20
-	offset_bottom = 20 + DISPLAY_SIZE
+	offset_left = -total_w - 12
+	offset_right = -12
+	offset_top = 12
+	offset_bottom = 12 + total_h
 
 	# Load SVG text (not as texture — we need to parse geometry)
 	var subfolder: String = "%s_%s" % [area_folder, stage_id[3]] if stage_id.length() >= 4 else area_folder
@@ -134,25 +144,59 @@ func update_player(global_pos: Vector3, facing_rad: float, map_root: Node3D) -> 
 # ── Drawing ──────────────────────────────────────────────────────────────────
 
 func _draw() -> void:
-	# Background
-	draw_rect(Rect2(Vector2.ZERO, Vector2(DISPLAY_SIZE, DISPLAY_SIZE)), BG_COLOR)
+	var font := ThemeDB.fallback_font
+	var total_w: float = size.x
+	var total_h: float = size.y
+
+	# Blue panel background
+	var panel_rect := Rect2(Vector2.ZERO, Vector2(total_w, total_h))
+	draw_rect(panel_rect, PANEL_BG)
+	draw_rect(panel_rect, PANEL_BORDER, false, 2.0)
+
+	# Scanlines on panel
+	for sy in range(0, int(total_h), 4):
+		draw_rect(Rect2(0, sy + 2, total_w, 2), SCANLINE_COLOR)
+
+	# Key indicators — left column inside panel
+	var key_x := PANEL_PAD
+	var key_y_start := PANEL_PAD
+	if _keys_total > 0:
+		# "Keys" label
+		draw_string(font, Vector2(key_x, key_y_start + 8.0), "Keys",
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 8, KEY_LABEL_COLOR)
+		for ki in range(_keys_total):
+			var ky: float = key_y_start + 14.0 + ki * 22.0
+			var key_bg: Color = KEY_BG_ACTIVE if ki < _keys_collected else KEY_BG_INACTIVE
+			var key_rect := Rect2(key_x, ky, 18, 18)
+			draw_rect(key_rect, key_bg)
+			draw_rect(key_rect, Color(0, 0, 0, 0.15), false, 1.0)
+			var letter := char(65 + ki)  # A, B, C...
+			var letter_color: Color = Color(1, 1, 1) if ki < _keys_collected else KEY_LABEL_COLOR
+			draw_string(font, Vector2(key_x + 4, ky + 13), letter,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, letter_color)
+
+	# Map area offset — right of key column
+	var map_offset := Vector2(30 + PANEL_PAD, PANEL_PAD)
+
+	# Dark map background
+	draw_rect(Rect2(map_offset, Vector2(DISPLAY_SIZE, DISPLAY_SIZE)), BG_COLOR)
+	draw_rect(Rect2(map_offset, Vector2(DISPLAY_SIZE, DISPLAY_SIZE)), Color(0, 0, 0, 0.3), false, 1.0)
 
 	# Floor triangles
 	for tri in _floor_triangles:
 		var pts := PackedVector2Array()
 		for v in tri:
-			pts.append(_svg_to_display(v))
+			pts.append(_svg_to_display(v) + map_offset)
 		draw_polygon(pts, [FLOOR_COLOR])
 
 	# Boundary edges
 	for seg in _boundary_lines:
-		draw_line(_svg_to_display(seg[0]), _svg_to_display(seg[1]),
+		draw_line(_svg_to_display(seg[0]) + map_offset, _svg_to_display(seg[1]) + map_offset,
 			BOUNDARY_COLOR, 1.5)
 
 	# Gate markers
-	var font := ThemeDB.fallback_font
 	for gate in _gate_entries:
-		var c: Vector2 = _svg_to_display(gate["center"])
+		var c: Vector2 = _svg_to_display(gate["center"]) + map_offset
 		var d := 5.0
 		draw_polygon(PackedVector2Array([
 			c + Vector2(-d, -d), c + Vector2(d, -d),
@@ -167,21 +211,12 @@ func _draw() -> void:
 	if _has_player_tracking:
 		var fwd := _player_display_dir
 		var sz := 6.0
+		var pp := _player_display_pos + map_offset
 		draw_polygon(PackedVector2Array([
-			_player_display_pos + fwd * sz,
-			_player_display_pos + fwd.rotated(2.4) * sz * 0.6,
-			_player_display_pos + fwd.rotated(-2.4) * sz * 0.6,
+			pp + fwd * sz,
+			pp + fwd.rotated(2.4) * sz * 0.6,
+			pp + fwd.rotated(-2.4) * sz * 0.6,
 		]), [PLAYER_COLOR])
-
-	# Key counter below minimap
-	if _keys_total > 0:
-		var key_y := DISPLAY_SIZE + 6.0
-		var key_color := Color(1.0, 0.3, 0.3)
-		var val_color := Color(1.0, 1.0, 1.0) if _keys_collected < _keys_total else Color(0.3, 1.0, 0.3)
-		draw_string(font, Vector2(2.0, key_y + 11.0), "KEY", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, key_color)
-		var key_text := "%d/%d" % [_keys_collected, _keys_total]
-		var tw: float = font.get_string_size(key_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
-		draw_string(font, Vector2(DISPLAY_SIZE - tw - 2.0, key_y + 11.0), key_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, val_color)
 
 
 func update_keys(collected: int, total: int) -> void:

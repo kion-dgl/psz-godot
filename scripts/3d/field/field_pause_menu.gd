@@ -4,16 +4,23 @@ extends CanvasLayer
 
 signal closed()
 
-const BG_COLOR := Color(0.0, 0.0, 0.0, 0.6)
-const PANEL_COLOR := Color(0.1, 0.1, 0.18, 0.95)
-const BORDER_COLOR := Color(0.4, 0.45, 0.6, 0.7)
-const TITLE_COLOR := Color(0.8, 0.85, 1.0)
-const ITEM_COLOR := Color(0.9, 0.9, 0.9)
-const SELECTED_COLOR := Color(1.0, 0.9, 0.3)
-const SEPARATOR_COLOR := Color(0.4, 0.4, 0.5, 0.4)
-const HINT_COLOR := Color(0.6, 0.6, 0.7)
-const FONT_SIZE_TITLE := 18
-const FONT_SIZE_ITEM := 15
+# PSZ palette
+const BG_COLOR := Color(0.0, 0.0, 0.0, 0.5)
+const PANEL_COLOR := Color(0.66, 0.80, 0.91)        # Pale icy blue
+const BORDER_COLOR := Color(0.48, 0.63, 0.75)       # Blue border
+const TITLE_BG := Color(0.16, 0.16, 0.22)           # Dark navy title bar
+const TITLE_COLOR := Color(1.0, 1.0, 1.0)           # White title text
+const ITEM_COLOR := Color(0.1, 0.1, 0.17)           # Dark text
+const ITEM_BG := Color(1.0, 1.0, 1.0, 0.85)         # White pill row
+const SELECTED_BG_A := Color(0.94, 0.63, 0.13)      # Orange gradient start
+const SELECTED_BG_B := Color(0.97, 0.78, 0.25)      # Orange gradient end
+const SELECTED_BORDER := Color(0.82, 0.5, 0.06)     # Orange border
+const SEPARATOR_COLOR := Color(0.48, 0.63, 0.75, 0.5)
+const HINT_COLOR := Color(0.1, 0.1, 0.17)
+const HINT_BG := Color(1.0, 1.0, 1.0, 0.7)
+const SCANLINE_COLOR := Color(0.47, 0.63, 0.78, 0.08)
+const FONT_SIZE_TITLE := 16
+const FONT_SIZE_ITEM := 14
 const FONT_SIZE_HINT := 11
 
 const MENU_ITEMS := [
@@ -46,8 +53,8 @@ func _ready() -> void:
 
 	_panel = Control.new()
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_panel.size = Vector2(240, 244)
-	_panel.position = Vector2(-120, -122)
+	_panel.size = Vector2(260, 270)
+	_panel.position = Vector2(-130, -135)
 	add_child(_panel)
 
 	_panel.draw.connect(_draw_panel)
@@ -60,12 +67,23 @@ func open() -> void:
 	_feedback_text = ""
 	get_tree().paused = true
 	_panel.queue_redraw()
+	_set_field_hud_visible(false)
 
 
 func close() -> void:
 	visible = false
 	get_tree().paused = false
+	_set_field_hud_visible(true)
 	closed.emit()
+
+
+func _set_field_hud_visible(show: bool) -> void:
+	var hud := get_parent().get_node_or_null("FieldHud")
+	if hud and hud.has_method("hide_for_menu") and hud.has_method("restore_after_menu"):
+		if show:
+			hud.restore_after_menu()
+		else:
+			hud.hide_for_menu()
 
 
 func _process(delta: float) -> void:
@@ -129,37 +147,62 @@ func _activate_item() -> void:
 
 func _draw_panel() -> void:
 	var font := ThemeDB.fallback_font
+	var pw: float = _panel.size.x
+	var ph: float = _panel.size.y
 	var rect := Rect2(Vector2.ZERO, _panel.size)
-	_panel.draw_rect(rect, PANEL_COLOR)
-	_panel.draw_rect(rect, BORDER_COLOR, false, 1.5)
+	var pad := 12.0
 
-	var pad := 16.0
-	var y := pad + 18.0
-	_panel.draw_string(font, Vector2(pad, y), "PAUSED",
+	# Panel background — pale icy blue
+	_panel.draw_rect(rect, PANEL_COLOR)
+	_panel.draw_rect(rect, BORDER_COLOR, false, 2.0)
+
+	# Scanline overlay
+	for sy in range(0, int(ph), 4):
+		_panel.draw_rect(Rect2(0, sy + 2, pw, 2), SCANLINE_COLOR)
+
+	# Title bar — dark navy
+	var title_h := 32.0
+	_panel.draw_rect(Rect2(0, 0, pw, title_h), TITLE_BG)
+	_panel.draw_string(font, Vector2(pad, 22.0), "Menu",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_TITLE, TITLE_COLOR)
 
-	y += 30.0
+	var y := title_h + 10.0
+	var item_h := 26.0
 	for i in range(MENU_ITEMS.size()):
 		var item: String = MENU_ITEMS[i]
 		if item.begins_with("────"):
 			_panel.draw_line(
-				Vector2(pad, y - 6.0), Vector2(_panel.size.x - pad, y - 6.0),
+				Vector2(pad, y + 2.0), Vector2(pw - pad, y + 2.0),
 				SEPARATOR_COLOR, 1.0)
-			y += 12.0
+			y += 8.0
 			continue
-		var color: Color = SELECTED_COLOR if i == _selected else ITEM_COLOR
-		var prefix := "> " if i == _selected else "  "
-		_panel.draw_string(font, Vector2(pad, y), prefix + item,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_ITEM, color)
-		y += 24.0
+
+		var item_rect := Rect2(pad - 2.0, y, pw - (pad - 2.0) * 2, item_h - 3.0)
+		if i == _selected:
+			# Orange selected pill
+			_panel.draw_rect(item_rect, SELECTED_BG_A)
+			# Gradient effect — lighter right half
+			_panel.draw_rect(Rect2(item_rect.position.x + item_rect.size.x * 0.5,
+				item_rect.position.y, item_rect.size.x * 0.5, item_rect.size.y), SELECTED_BG_B)
+			_panel.draw_rect(item_rect, SELECTED_BORDER, false, 2.0)
+		else:
+			# White pill
+			_panel.draw_rect(item_rect, ITEM_BG)
+			_panel.draw_rect(item_rect, Color(0.59, 0.71, 0.82, 0.4), false, 1.0)
+
+		_panel.draw_string(font, Vector2(pad + 8.0, y + 17.0), item,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_ITEM, ITEM_COLOR)
+		y += item_h
 
 	# Feedback text
 	if not _feedback_text.is_empty():
-		_panel.draw_string(font, Vector2(pad, _panel.size.y - 12.0), _feedback_text,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_ITEM, SELECTED_COLOR)
+		_panel.draw_string(font, Vector2(pad, ph - 28.0), _feedback_text,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_ITEM, Color(0.13, 0.53, 0.13))
 
-	# Hint at bottom
-	var hint := "[ESC] Resume"
+	# Hint bar at bottom
+	var hint := "Select from the Menu."
+	var hint_rect := Rect2(pad - 2.0, ph - 24.0, pw - (pad - 2.0) * 2, 20.0)
+	_panel.draw_rect(hint_rect, HINT_BG)
 	var hint_w: float = font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_HINT).x
-	_panel.draw_string(font, Vector2(_panel.size.x - pad - hint_w, _panel.size.y - 12.0), hint,
+	_panel.draw_string(font, Vector2((pw - hint_w) * 0.5, ph - 10.0), hint,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_HINT, HINT_COLOR)
