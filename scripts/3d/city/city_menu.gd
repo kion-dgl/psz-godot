@@ -11,6 +11,7 @@ const BASE_MENU_ITEMS := [
 	"Return to Title",
 ]
 
+@onready var title_label: Label = $CenterPanel/VBox/TitleLabel
 @onready var menu_list = $CenterPanel/VBox/MenuList
 @onready var hint_label: Label = $HintLabel
 @onready var feedback_label: Label = $CenterPanel/VBox/FeedbackLabel
@@ -19,8 +20,14 @@ var _menu_items: Array = []
 
 
 func _ready() -> void:
+	# PSZ title bar styling
+	title_label.add_theme_stylebox_override("normal", PszStyle.title_style())
+	title_label.add_theme_color_override("font_color", PszStyle.TEXT_WHITE)
+	title_label.add_theme_font_size_override("font_size", PszStyle.FONT_TITLE)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+
 	_build_menu()
-	hint_label.text = "[↑/↓] Navigate  [ENTER] Select  [ESC] Resume"
+	hint_label.text = "Up/Down: Navigate  Enter: Select  Esc: Resume"
 
 
 func _build_menu() -> void:

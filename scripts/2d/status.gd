@@ -118,30 +118,16 @@ func _refresh_stats() -> void:
 	vbox.add_child(PszStyle.create_section_header("Base Stats"))
 
 	var stats: Dictionary = character.get("stats", {})
-	var stat_order := ["hp", "pp", "atk", "def", "acc", "eva", "tech"]
-	var stat_names := ["HP", "PP", "ATK", "DEF", "ACC", "EVA", "TECH"]
+	var stat_order := ["atk", "def", "acc", "eva", "tech"]
+	var stat_names := ["ATK", "DEF", "ACC", "EVA", "TECH"]
 
 	for i in range(stat_order.size()):
 		var key: String = stat_order[i]
 		var value: int = int(stats.get(key, 0))
 		vbox.add_child(PszStyle.create_pill(stat_names[i], false, str(value)))
 
-	# Equipment bonuses
-	var equip_bonuses := _calculate_equipment_bonuses(character)
-	var has_bonuses := false
-	for key in equip_bonuses:
-		if int(equip_bonuses[key]) != 0:
-			has_bonuses = true
-			break
-
-	if has_bonuses:
-		vbox.add_child(PszStyle.create_section_header("Equipment Bonus"))
-		for key in equip_bonuses:
-			if int(equip_bonuses[key]) != 0:
-				vbox.add_child(PszStyle.create_pill(key.to_upper(), false,
-					"+%d" % int(equip_bonuses[key]), PszStyle.TEXT_SUCCESS))
-
 	# Effective stats
+	var equip_bonuses := _calculate_equipment_bonuses(character)
 	vbox.add_child(PszStyle.create_section_header("Effective"))
 	for i in range(stat_order.size()):
 		var key: String = stat_order[i]
