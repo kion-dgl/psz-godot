@@ -204,33 +204,258 @@ function PauseMenu() {
   );
 }
 
-function HUD() {
+function HudHpPp() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '400px' }}>
-      {/* Player HUD */}
+    <div style={{
+      background: C.bgLight, backgroundImage: SCANLINES,
+      border: `2px solid ${C.separator}`,
+      borderRadius: '4px 20px 12px 16px',
+      padding: '8px 14px', width: '230px',
+      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
+    }}>
+      {/* Player name + level */}
       <div style={{
-        background: C.bgLight, backgroundImage: SCANLINES,
-        border: `2px solid ${C.separator}`, borderRadius: '8px',
-        padding: '10px 14px',
+        fontSize: '13px', fontWeight: 800, color: C.text,
+        marginBottom: '5px', fontStyle: 'italic',
+        borderBottom: '1px solid rgba(120,160,200,0.3)',
+        paddingBottom: '4px',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>HUmar Lv.42</span>
-          <span style={{ fontSize: '12px', fontWeight: 600, color: '#886600' }}>12,450 MST</span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <StatBar label="HP" current={342} max={480} color={C.hp} bgColor={C.hpBg} />
-          <StatBar label="PP" current={86} max={120} color={C.pp} bgColor={C.ppBg} />
+        Kion
+        <span style={{
+          fontSize: '10px', fontWeight: 600, color: C.textLight,
+          marginLeft: '8px', fontStyle: 'normal',
+        }}>
+          Lv. 42
+        </span>
+      </div>
+
+      {/* HP bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+        <span style={{ fontSize: '10px', fontWeight: 800, color: '#338833', width: '18px' }}>HP</span>
+        <div style={{
+          flex: 1, height: '14px', background: C.hpBg,
+          borderRadius: '7px', overflow: 'hidden',
+          border: '1px solid rgba(0,0,0,0.1)',
+          position: 'relative',
+        }}>
+          <div style={{
+            width: `${(342 / 480) * 100}%`, height: '100%',
+            background: 'linear-gradient(180deg, #66dd66 0%, #338833 100%)',
+            borderRadius: '7px',
+          }} />
+          <span style={{
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            fontSize: '9px', fontWeight: 700, color: '#fff',
+            textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+          }}>342</span>
+          <span style={{
+            position: 'absolute', top: '50%', right: '6px', transform: 'translateY(-50%)',
+            fontSize: '9px', fontWeight: 700, color: C.text,
+          }}>480</span>
         </div>
       </div>
 
-      {/* Target */}
+      {/* PP bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ fontSize: '10px', fontWeight: 800, color: '#3366bb', width: '18px' }}>PP</span>
+        <div style={{
+          flex: 1, height: '14px', background: C.ppBg,
+          borderRadius: '7px', overflow: 'hidden',
+          border: '1px solid rgba(0,0,0,0.1)',
+          position: 'relative',
+        }}>
+          <div style={{
+            width: `${(86 / 120) * 100}%`, height: '100%',
+            background: 'linear-gradient(180deg, #6699ff 0%, #3355aa 100%)',
+            borderRadius: '7px',
+          }} />
+          <span style={{
+            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            fontSize: '9px', fontWeight: 700, color: '#fff',
+            textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+          }}>86</span>
+          <span style={{
+            position: 'absolute', top: '50%', right: '6px', transform: 'translateY(-50%)',
+            fontSize: '9px', fontWeight: 700, color: C.text,
+          }}>120</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HudMinimap() {
+  return (
+    <div style={{
+      background: C.bgLight, backgroundImage: SCANLINES,
+      border: `2px solid ${C.separator}`, borderRadius: '20px 4px 4px 12px',
+      padding: '8px', width: '170px',
+      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
+      display: 'flex', gap: '6px',
+    }}>
+      {/* Key indicators — inside panel, left of map */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <span style={{ fontSize: '8px', fontWeight: 700, color: C.textLight, textAlign: 'center' }}>Keys</span>
+        {['A', 'B'].map((key, i) => (
+          <div key={key} style={{
+            width: '18px', height: '18px', fontSize: '10px', fontWeight: 800,
+            background: i === 0 ? '#cc8844' : 'rgba(150,180,210,0.4)',
+            color: i === 0 ? C.textWhite : C.textLight,
+            borderRadius: '3px', border: '1px solid rgba(0,0,0,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            {key}
+          </div>
+        ))}
+      </div>
+
+      {/* Minimap grid */}
       <div style={{
-        background: C.bgLight, backgroundImage: SCANLINES,
-        border: `2px solid ${C.separator}`, borderRadius: '8px',
-        padding: '8px 14px', width: '220px',
+        flex: 1, aspectRatio: '1', background: 'rgba(20,40,60,0.7)',
+        borderRadius: '4px', border: '1px solid rgba(0,0,0,0.3)',
+        position: 'relative',
       }}>
-        <div style={{ fontSize: '13px', fontWeight: 700, color: C.rare, marginBottom: '4px' }}>Booma</div>
-        <StatBar label="HP" current={120} max={200} color="#cc4444" bgColor="#e8d0d0" />
+        {Array.from({ length: 25 }).map((_, i) => {
+          const row = Math.floor(i / 5);
+          const col = i % 5;
+          const isVisited = [6, 7, 8, 11, 12, 13, 16, 17, 18].includes(i);
+          const isCurrent = i === 12;
+          const isGate = i === 8 || i === 16;
+          return (
+            <div key={i} style={{
+              position: 'absolute',
+              left: `${col * 20 + 2}%`, top: `${row * 20 + 2}%`,
+              width: '16%', height: '16%',
+              background: isCurrent ? '#44cc44' : isGate ? '#cc8844' : isVisited ? 'rgba(100,160,220,0.5)' : 'rgba(60,80,100,0.3)',
+              borderRadius: '2px',
+              border: isCurrent ? '2px solid #88ff88' : '1px solid rgba(100,140,180,0.3)',
+            }} />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function HudActionPalette() {
+  // PSO-style: I to swap palette, J/K/L for the 3 action slots
+  const slots = [
+    { label: 'Atk', key: 'J' },
+    { label: 'Foie', key: 'K' },
+    { label: 'Mate', key: 'L' },
+  ];
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0px',
+      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
+    }}>
+      {/* I — palette swap, centered above */}
+      <div style={{
+        background: C.itemBg, borderRadius: '8px',
+        padding: '4px 12px', border: '1px solid rgba(150,180,210,0.4)',
+        display: 'flex', alignItems: 'center', gap: '6px',
+        marginBottom: '-2px', zIndex: 1,
+      }}>
+        <span style={{
+          fontSize: '9px', fontWeight: 700, color: C.textWhite,
+          background: 'rgba(40,60,80,0.7)', borderRadius: '6px',
+          padding: '1px 6px', lineHeight: '16px',
+        }}>I</span>
+        <span style={{ fontSize: '9px', fontWeight: 600, color: C.textLight }}>1/6</span>
+      </div>
+      {/* J K L — J and L raised, K lower (diamond-ish) */}
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+        {slots.map((a) => (
+          <div key={a.key} style={{
+            background: C.itemBg, borderRadius: '8px',
+            padding: '6px 12px', border: '1px solid rgba(150,180,210,0.4)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+            minWidth: '52px',
+            marginBottom: a.key === 'K' ? '0px' : '14px',
+          }}>
+            <span style={{
+              fontSize: '9px', fontWeight: 700, color: C.textWhite,
+              background: 'rgba(40,60,80,0.7)', borderRadius: '6px',
+              padding: '1px 6px', lineHeight: '16px',
+            }}>{a.key}</span>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: C.text }}>{a.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HudActivityLog() {
+  const entries = [
+    { text: 'Picked up Monomate x2', color: C.text },
+    { text: 'Booma defeated!', color: C.rare },
+    { text: 'Obtained 120 Meseta', color: '#886600' },
+    { text: 'NPC: "The valley is dangerous. Be careful."', color: '#4466aa' },
+    { text: 'Picked up Photon Drop x1', color: '#8844cc' },
+    { text: 'Key A obtained!', color: '#cc8844' },
+  ];
+  return (
+    <div style={{
+      background: C.bgLight, backgroundImage: SCANLINES,
+      border: `2px solid ${C.separator}`, borderRadius: '8px',
+      padding: '4px', width: '320px',
+      filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
+    }}>
+      <div style={{
+        fontSize: '10px', fontWeight: 800, color: C.textWhite,
+        background: C.bgDark, backgroundImage: SCANLINES,
+        borderRadius: '4px 4px 0 0',
+        padding: '3px 8px',
+      }}>Log</div>
+      <div style={{
+        background: C.itemBg, borderRadius: '4px',
+        padding: '8px 10px', border: '1px solid rgba(150,180,210,0.4)',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          {entries.map((entry, i) => (
+            <div key={i} style={{
+              fontSize: '12px', color: entry.color,
+              opacity: 0.5 + (i / entries.length) * 0.5,
+            }}>
+              {entry.text}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HudFull() {
+  return (
+    <div style={{
+      width: '800px', height: '500px', position: 'relative',
+      background: 'rgba(30,50,70,0.3)', borderRadius: '8px',
+      border: '1px dashed rgba(100,140,180,0.3)',
+    }}>
+      {/* Top-left: HP/PP */}
+      <div style={{ position: 'absolute', top: '12px', left: '12px' }}>
+        <HudHpPp />
+      </div>
+      {/* Top-right: Minimap */}
+      <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+        <HudMinimap />
+      </div>
+      {/* Bottom-right: Action palette */}
+      <div style={{ position: 'absolute', bottom: '12px', right: '12px' }}>
+        <HudActionPalette />
+      </div>
+      {/* Bottom-left: Activity log */}
+      <div style={{ position: 'absolute', bottom: '12px', left: '12px' }}>
+        <HudActivityLog />
+      </div>
+      {/* Center label */}
+      <div style={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        fontSize: '14px', color: 'rgba(150,180,210,0.4)', fontStyle: 'italic',
+      }}>
+        gameplay area
       </div>
     </div>
   );
@@ -518,7 +743,11 @@ function GuildCounter() {
 // --- Main Page ---
 
 const MENU_DEMOS = [
-  { id: 'hud', label: 'HUD', component: HUD },
+  { id: 'hud-full', label: 'HUD (Full)', component: HudFull },
+  { id: 'hud-hp', label: 'HUD: HP/PP', component: HudHpPp },
+  { id: 'hud-map', label: 'HUD: Minimap', component: HudMinimap },
+  { id: 'hud-actions', label: 'HUD: Actions', component: HudActionPalette },
+  { id: 'hud-log', label: 'HUD: Log', component: HudActivityLog },
   { id: 'pause', label: 'Pause Menu', component: PauseMenu },
   { id: 'equipment', label: 'Equipment', component: EquipmentMenu },
   { id: 'inventory', label: 'Inventory', component: InventoryMenu },
@@ -528,7 +757,7 @@ const MENU_DEMOS = [
 ];
 
 export default function MenuDesign() {
-  const [activeMenu, setActiveMenu] = useState('pause');
+  const [activeMenu, setActiveMenu] = useState('hud-full');
   const ActiveComponent = MENU_DEMOS.find((m) => m.id === activeMenu)?.component || PauseMenu;
 
   return (
