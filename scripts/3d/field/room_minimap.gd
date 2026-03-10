@@ -6,13 +6,13 @@ extends Control
 ## Uses embedded metadata from SVG (data-scale, data-offset-x/y) for player
 ## position tracking, matching the web PreviewMinimap approach.
 
-const DISPLAY_SIZE := 180.0
-const PANEL_PAD := 8.0  # padding around map inside blue panel
-# PSZ palette
-const PANEL_BG := Color(0.66, 0.80, 0.91)           # Pale icy blue
-const PANEL_BORDER := Color(0.48, 0.63, 0.75)       # Blue border
-const SCANLINE_COLOR := Color(0.47, 0.63, 0.78, 0.08)
-const BG_COLOR := Color(0.08, 0.15, 0.23, 0.85)     # Dark map background
+const DISPLAY_SIZE := 120.0
+const PANEL_PAD := 5.0  # padding around map inside blue panel
+# PSZ palette — semi-transparent for single-screen
+const PANEL_BG := Color(0.66, 0.80, 0.91, 0.5)     # Pale icy blue, translucent
+const PANEL_BORDER := Color(0.48, 0.63, 0.75, 0.4)
+const SCANLINE_COLOR := Color(0.47, 0.63, 0.78, 0.06)
+const BG_COLOR := Color(0.08, 0.15, 0.23, 0.7)      # Dark map background
 const FLOOR_COLOR := Color(0.16, 0.16, 0.31)
 const BOUNDARY_COLOR := Color(1.0, 1.0, 1.0, 0.6)
 const PLAYER_COLOR := Color(0.0, 1.0, 0.0)
@@ -20,9 +20,9 @@ const GATE_OPEN := Color(0.27, 1.0, 0.27)
 const GATE_LOCKED := Color(1.0, 0.3, 0.3)
 const GATE_EXIT := Color(0.29, 0.62, 1.0)
 const GATE_WALL := Color(0.4, 0.4, 0.4)
-const KEY_LABEL_COLOR := Color(0.1, 0.1, 0.17)      # Dark text
-const KEY_BG_ACTIVE := Color(0.8, 0.53, 0.27)       # Orange for collected
-const KEY_BG_INACTIVE := Color(0.59, 0.71, 0.82, 0.4)  # Light gray
+const KEY_LABEL_COLOR := Color(0.1, 0.1, 0.17, 0.8)
+const KEY_BG_ACTIVE := Color(0.8, 0.53, 0.27, 0.8)  # Orange for collected
+const KEY_BG_INACTIVE := Color(0.59, 0.71, 0.82, 0.3)
 
 var _floor_triangles: Array = []   # Array[PackedVector2Array] — 3 verts each
 var _boundary_lines: Array = []    # Array[[Vector2, Vector2]]
@@ -50,7 +50,7 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 		map_root: Node3D, rotation_deg: int = 0, entry_edge: String = "") -> void:
 	_rotation_deg = rotation_deg
 	mouse_filter = MOUSE_FILTER_IGNORE
-	var total_w: float = DISPLAY_SIZE + PANEL_PAD * 2 + 30  # extra for key column
+	var total_w: float = DISPLAY_SIZE + PANEL_PAD * 2 + 22  # extra for key column
 	var total_h: float = DISPLAY_SIZE + PANEL_PAD * 2
 	custom_minimum_size = Vector2(total_w, total_h)
 	size = Vector2(total_w, total_h)
@@ -161,22 +161,19 @@ func _draw() -> void:
 	var key_x := PANEL_PAD
 	var key_y_start := PANEL_PAD
 	if _keys_total > 0:
-		# "Keys" label
-		draw_string(font, Vector2(key_x, key_y_start + 8.0), "Keys",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, 8, KEY_LABEL_COLOR)
 		for ki in range(_keys_total):
-			var ky: float = key_y_start + 14.0 + ki * 22.0
+			var ky: float = key_y_start + ki * 18.0
 			var key_bg: Color = KEY_BG_ACTIVE if ki < _keys_collected else KEY_BG_INACTIVE
-			var key_rect := Rect2(key_x, ky, 18, 18)
+			var key_rect := Rect2(key_x, ky, 14, 14)
 			draw_rect(key_rect, key_bg)
 			draw_rect(key_rect, Color(0, 0, 0, 0.15), false, 1.0)
 			var letter := char(65 + ki)  # A, B, C...
 			var letter_color: Color = Color(1, 1, 1) if ki < _keys_collected else KEY_LABEL_COLOR
-			draw_string(font, Vector2(key_x + 4, ky + 13), letter,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, letter_color)
+			draw_string(font, Vector2(key_x + 3, ky + 11), letter,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 9, letter_color)
 
 	# Map area offset — right of key column
-	var map_offset := Vector2(30 + PANEL_PAD, PANEL_PAD)
+	var map_offset := Vector2(22 + PANEL_PAD, PANEL_PAD)
 
 	# Dark map background
 	draw_rect(Rect2(map_offset, Vector2(DISPLAY_SIZE, DISPLAY_SIZE)), BG_COLOR)
