@@ -5,12 +5,16 @@ const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable",
 
 enum Tab { ITEMS, MESETA }
 
+const TAB_NAMES := ["Store Items", "Store Meseta"]
+
 var _tab: int = Tab.ITEMS
 var _selected_side: int = 0  # 0 = inventory, 1 = storage (items tab)
 var _selected_index: int = 0
 var _meseta_action: int = 0  # 0 = deposit, 1 = withdraw (meseta tab)
 var _inventory_items: Array = []
 var _storage_items: Array = []
+
+var _mode_bar: HBoxContainer
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
@@ -20,7 +24,9 @@ var _storage_items: Array = []
 
 
 func _ready() -> void:
-	title_label.text = "STORAGE"
+	_mode_bar = mode_label.get_parent()
+	PszStyle.style_menu(title_label, hint_label, [inventory_panel, storage_panel])
+	title_label.text = "Storage"
 	_load_items()
 	_refresh_display()
 
@@ -169,13 +175,15 @@ func _move_item() -> void:
 
 
 func _refresh_display() -> void:
-	# Mode bar
+	# Tab bar
+	for child in _mode_bar.get_children():
+		child.queue_free()
+	_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
+
 	if _tab == Tab.ITEMS:
-		mode_label.text = "[◄ STORE ITEMS ►]    STORE MESETA"
-		hint_label.text = "[←/→] Switch Tab  [TAB] Switch Panel  [↑/↓] Select  [ENTER] Move  [ESC] Back"
+		hint_label.text = "Left/Right: Switch Tab  TAB: Switch Panel  Up/Down: Select  Enter: Move  Esc: Back"
 	else:
-		mode_label.text = "   STORE ITEMS    [◄ STORE MESETA ►]"
-		hint_label.text = "[←/→] Switch Tab  [↑/↓] Select  [ENTER] Transfer 100M  [ESC] Back"
+		hint_label.text = "Left/Right: Switch Tab  Up/Down: Select  Enter: Transfer 100M  Esc: Back"
 
 	_refresh_items_panel(inventory_panel, _inventory_items, "INVENTORY (%d/40)" % Inventory.get_total_slots(), 0)
 	_refresh_items_panel(storage_panel, _storage_items, "STORAGE (%d)" % _storage_items.size(), 1)
@@ -185,56 +193,38 @@ func _refresh_items_panel(panel: PanelContainer, items: Array, header_text: Stri
 	for child in panel.get_children():
 		child.queue_free()
 
-	var labels_ref: Array = []
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.add_theme_constant_override("separation", 2)
+	vbox.add_theme_constant_override("separation", 3)
+
+	var pills_ref: Array = []
 
 	# Header
-	var header := Label.new()
 	if _tab == Tab.MESETA:
 		var character = CharacterManager.get_active_character()
 		if side == 0:
 			var char_meseta: int = int(character.get("meseta", 0)) if character else 0
-			header.text = "── WALLET: %d M ──" % char_meseta
+			vbox.add_child(PszStyle.create_section_header("WALLET: %d M" % char_meseta))
 		else:
-			header.text = "── BANK: %d M ──" % GameState.stored_meseta
-		header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+			vbox.add_child(PszStyle.create_section_header("BANK: %d M" % GameState.stored_meseta))
 	else:
-		header.text = "── %s ──" % header_text
-		if _selected_side == side:
-			header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-		else:
-			header.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(header)
+		var header_color := PszStyle.TEXT_HIGHLIGHT if _selected_side == side else PszStyle.TITLE_BG
+		vbox.add_child(PszStyle.create_section_header(header_text))
 
 	if _tab == Tab.MESETA:
 		# Meseta mode: show deposit/withdraw options
 		if side == 0:
-			var dep_label := Label.new()
-			if _meseta_action == 0:
-				dep_label.text = "> Deposit 100 M"
-				dep_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-			else:
-				dep_label.text = "  Deposit 100 M"
-			vbox.add_child(dep_label)
+			var pill := PszStyle.create_pill("Deposit 100 M", _meseta_action == 0)
+			vbox.add_child(pill)
 		else:
-			var wit_label := Label.new()
-			if _meseta_action == 1:
-				wit_label.text = "> Withdraw 100 M"
-				wit_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-			else:
-				wit_label.text = "  Withdraw 100 M"
-			vbox.add_child(wit_label)
+			var pill := PszStyle.create_pill("Withdraw 100 M", _meseta_action == 1)
+			vbox.add_child(pill)
 	elif items.is_empty():
-		var empty := Label.new()
-		empty.text = "  (Empty)"
-		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-		vbox.add_child(empty)
+		vbox.add_child(PszStyle.create_pill("(Empty)", false, "", PszStyle.TEXT_MUTED))
 	else:
 		var character = CharacterManager.get_active_character()
 		var class_type_race := ""
@@ -261,10 +251,7 @@ func _refresh_items_panel(panel: PanelContainer, items: Array, header_text: Stri
 			var cat: String = _get_item_category(item_id)
 			if cat != current_category:
 				current_category = cat
-				var cat_label := Label.new()
-				cat_label.text = "── %s ──" % cat
-				cat_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-				vbox.add_child(cat_label)
+				vbox.add_child(PszStyle.create_section_header(cat))
 
 			var weapon = WeaponRegistry.get_weapon(item_id)
 			if weapon == null and is_unresolved:
@@ -273,7 +260,6 @@ func _refresh_items_panel(panel: PanelContainer, items: Array, header_text: Stri
 			if armor_data == null and is_unresolved:
 				armor_data = ArmorRegistry.get_armor(norm_id)
 
-			var label := Label.new()
 			var item_name: String = str(item.get("name", item_id))
 			if is_unresolved:
 				if weapon:
@@ -291,40 +277,38 @@ func _refresh_items_panel(panel: PanelContainer, items: Array, header_text: Stri
 
 			var suffix := ""
 			if weapon:
-				suffix = "%s %s [%s]" % [grind_tag, weapon.get_rarity_string(), weapon.get_weapon_type_name()]
+				suffix = "%s %s" % [grind_tag, weapon.get_rarity_string()]
 			elif armor_data:
-				suffix = " %s [%s]" % [armor_data.get_rarity_string(), armor_data.get_type_name()]
+				suffix = " %s" % armor_data.get_rarity_string()
 
-			if qty > 1:
-				label.text = "%-18s x%d%s%s" % [item_name, qty, equip_tag, suffix]
-			else:
-				label.text = "%s%s%s" % [item_name, equip_tag, suffix]
+			var display_name := item_name + equip_tag + suffix
+			var right_text := "x%d" % qty if qty > 1 else ""
 
-			if _selected_side == side and i == _selected_index:
-				label.text = "> " + label.text
-				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-			else:
-				label.text = "  " + label.text
-				if is_unresolved:
-					label.add_theme_color_override("font_color", ThemeColors.RESTRICT_ID)
-				elif weapon and not class_type_race.is_empty():
-					if not weapon.can_be_used_by(class_type_race):
-						label.add_theme_color_override("font_color", ThemeColors.RESTRICT_CLASS)
-					elif char_level < weapon.level:
-						label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
-				elif armor_data and not class_type_race.is_empty():
-					if not armor_data.can_be_used_by(class_type_race):
-						label.add_theme_color_override("font_color", ThemeColors.RESTRICT_CLASS)
-					elif char_level < armor_data.level:
-						label.add_theme_color_override("font_color", ThemeColors.RESTRICT_LEVEL)
-			vbox.add_child(label)
-			labels_ref.append(label)
+			# Determine text color based on equippability
+			var text_color := Color.TRANSPARENT
+			if is_unresolved:
+				text_color = PszStyle.TEXT_DANGER
+			elif weapon and not class_type_race.is_empty():
+				if not weapon.can_be_used_by(class_type_race):
+					text_color = PszStyle.TEXT_DANGER
+				elif char_level < weapon.level:
+					text_color = PszStyle.TEXT_WARNING
+			elif armor_data and not class_type_race.is_empty():
+				if not armor_data.can_be_used_by(class_type_race):
+					text_color = PszStyle.TEXT_DANGER
+				elif char_level < armor_data.level:
+					text_color = PszStyle.TEXT_WARNING
+
+			var is_selected: bool = _selected_side == side and i == _selected_index
+			var pill := PszStyle.create_pill(display_name, is_selected, right_text, text_color)
+			vbox.add_child(pill)
+			pills_ref.append(pill)
 
 	scroll.add_child(vbox)
 	panel.add_child(scroll)
 
-	if _tab == Tab.ITEMS and _selected_side == side and _selected_index >= 0 and _selected_index < labels_ref.size():
-		scroll.ensure_control_visible.call_deferred(labels_ref[_selected_index])
+	if _tab == Tab.ITEMS and _selected_side == side and _selected_index >= 0 and _selected_index < pills_ref.size():
+		scroll.ensure_control_visible.call_deferred(pills_ref[_selected_index])
 
 
 func _get_item_category(item_id: String) -> String:

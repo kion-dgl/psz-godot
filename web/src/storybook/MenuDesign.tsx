@@ -740,6 +740,339 @@ function GuildCounter() {
   );
 }
 
+function ItemShop() {
+  const [tab, setTab] = useState(0);
+  const [sel, setSel] = useState(0);
+  const items = [
+    { name: 'Monomate', price: 50, desc: 'Restores a small amount of HP.' },
+    { name: 'Dimate', price: 300, desc: 'Restores a moderate amount of HP.' },
+    { name: 'Trimate', price: 2000, desc: 'Fully restores HP.' },
+    { name: 'Monofluid', price: 100, desc: 'Restores a small amount of PP.' },
+    { name: 'Difluid', price: 600, desc: 'Restores a moderate amount of PP.' },
+    { name: 'Telepipe', price: 350, desc: 'Warps back to the city from the field.' },
+    { name: 'Moon Atomizer', price: 500, desc: 'Revives a fallen ally.' },
+    { name: 'Star Atomizer', price: 5000, desc: 'Fully restores HP of all nearby allies.' },
+    { name: 'Sol Atomizer', price: 200, desc: 'Cures status effects for all nearby allies.' },
+  ];
+
+  return (
+    <div style={{ display: 'flex', gap: '12px' }}>
+      <Panel title="Item Shop" width={380} hint={`Press ENTER to buy - ${items[sel].price} MST`}>
+        <TabBar tabs={['Buy', 'Sell']} active={tab} onSelect={setTab} />
+        {items.map((item, i) => (
+          <PillRow
+            key={item.name}
+            label={item.name}
+            rightText={`${item.price.toLocaleString()} MST`}
+            selected={sel === i}
+            onClick={() => setSel(i)}
+          />
+        ))}
+        <Divider />
+        <div style={{
+          display: 'flex', justifyContent: 'space-between',
+          fontSize: '13px', color: C.text, padding: '2px 4px',
+        }}>
+          <span>Your Meseta:</span>
+          <span style={{ fontWeight: 700, color: '#886600' }}>12,450</span>
+        </div>
+      </Panel>
+
+      <Panel title="Item Info" width={260}>
+        <div style={{
+          background: C.itemBg, borderRadius: '4px',
+          padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)',
+        }}>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>
+            {items[sel].name}
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#886600', marginBottom: '8px' }}>
+            {items[sel].price.toLocaleString()} MST
+          </div>
+          <Divider />
+          <div style={{ fontSize: '13px', color: C.text, lineHeight: '1.5' }}>
+            {items[sel].desc}
+          </div>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function StorageCounter() {
+  const [tab, setTab] = useState(0);
+  const [sel, setSel] = useState(0);
+  const stored = [
+    { name: 'Brand', type: 'Saber', rarity: 'common' },
+    { name: 'Varista', type: 'Handgun', rarity: 'common' },
+    { name: 'Photon Drop', type: 'Material', rarity: 'common' },
+    { name: 'Photon Drop', type: 'Material', rarity: 'common' },
+    { name: 'Grinder', type: 'Material', rarity: 'common' },
+    { name: 'Resist/Fire', type: 'Unit', rarity: 'common' },
+    { name: 'DB\'s Saber', type: 'Saber', rarity: 'rare' },
+    { name: 'Mag Cell', type: 'Material', rarity: 'rare' },
+  ];
+  const inventory = [
+    { name: 'Monomate', qty: 8 },
+    { name: 'Dimate', qty: 3 },
+    { name: 'Telepipe', qty: 4 },
+    { name: 'Saber', qty: 1 },
+  ];
+
+  return (
+    <div style={{ display: 'flex', gap: '12px' }}>
+      <Panel title="Storage" width={360} hint={tab === 0 ? 'Select item to withdraw.' : 'Select item to deposit.'}>
+        <TabBar tabs={['Withdraw', 'Deposit']} active={tab} onSelect={(i) => { setTab(i); setSel(0); }} />
+        <div style={{
+          fontSize: '11px', color: C.textLight, padding: '0 4px', marginBottom: '6px',
+        }}>
+          {tab === 0
+            ? <span>{stored.length}/200 stored</span>
+            : <span>{inventory.length}/40 items</span>
+          }
+        </div>
+        {(tab === 0 ? stored : inventory).map((item, i) => (
+          <PillRow
+            key={`${item.name}-${i}`}
+            label={item.name}
+            rightText={'type' in item ? item.type : `x${(item as any).qty}`}
+            selected={sel === i}
+            onClick={() => setSel(i)}
+          />
+        ))}
+      </Panel>
+
+      <Panel title="Detail" width={240}>
+        <div style={{
+          background: C.itemBg, borderRadius: '4px',
+          padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)',
+        }}>
+          {tab === 0 ? (
+            <>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: stored[sel]?.rarity === 'rare' ? C.rare : C.text, marginBottom: '4px' }}>
+                {stored[sel]?.name}
+              </div>
+              <div style={{ fontSize: '11px', color: C.textLight, marginBottom: '8px' }}>
+                {stored[sel]?.type}
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: '15px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>
+              {inventory[sel]?.name}
+            </div>
+          )}
+          <Divider />
+          <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+            {[tab === 0 ? 'Withdraw' : 'Deposit', 'Cancel'].map((action) => (
+              <div key={action} style={{
+                flex: 1, padding: '7px', fontSize: '13px', fontWeight: 600,
+                background: C.itemBg, border: '1px solid rgba(150,180,210,0.4)',
+                borderRadius: '4px', color: C.text, cursor: 'pointer', textAlign: 'center',
+              }}>
+                {action}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function TekkerMenu() {
+  const [tab, setTab] = useState(0);
+  const [sel, setSel] = useState(0);
+
+  const unidentified = [
+    { name: '??? Saber', slots: '???' },
+    { name: '??? Sword', slots: '???' },
+    { name: '??? Handgun', slots: '???' },
+  ];
+  const grindable = [
+    { name: 'Saber', grind: '+0', maxGrind: '+9', cost: 100 },
+    { name: 'Brand', grind: '+3', maxGrind: '+12', cost: 300 },
+    { name: 'Buster', grind: '+1', maxGrind: '+15', cost: 500 },
+  ];
+
+  return (
+    <div style={{ display: 'flex', gap: '12px' }}>
+      <Panel title="Tekker" width={380} hint={tab === 0 ? 'Identify a mysterious weapon.' : 'Grind your weapon for ATK bonus.'}>
+        <TabBar tabs={['Identify', 'Grind']} active={tab} onSelect={(i) => { setTab(i); setSel(0); }} />
+        {tab === 0 ? (
+          <>
+            {unidentified.length === 0 ? (
+              <div style={{ padding: '16px', fontSize: '13px', color: C.textLight, textAlign: 'center' }}>
+                No unidentified weapons.
+              </div>
+            ) : (
+              unidentified.map((w, i) => (
+                <PillRow
+                  key={`${w.name}-${i}`}
+                  label={w.name}
+                  rightText={w.slots}
+                  selected={sel === i}
+                  onClick={() => setSel(i)}
+                />
+              ))
+            )}
+          </>
+        ) : (
+          <>
+            {grindable.map((w, i) => (
+              <PillRow
+                key={w.name}
+                label={w.name}
+                rightText={`${w.grind} / ${w.maxGrind}`}
+                selected={sel === i}
+                onClick={() => setSel(i)}
+              />
+            ))}
+            <Divider />
+            <div style={{
+              display: 'flex', justifyContent: 'space-between',
+              fontSize: '13px', color: C.text, padding: '2px 4px',
+            }}>
+              <span>Grind Cost:</span>
+              <span style={{ fontWeight: 700, color: '#886600' }}>{grindable[sel]?.cost.toLocaleString()} MST</span>
+            </div>
+          </>
+        )}
+      </Panel>
+
+      <Panel title="Detail" width={280}>
+        <div style={{
+          background: C.itemBg, borderRadius: '4px',
+          padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)',
+        }}>
+          {tab === 0 ? (
+            <>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: C.rare, marginBottom: '4px' }}>
+                {unidentified[sel]?.name}
+              </div>
+              <div style={{ fontSize: '11px', color: C.textLight, marginBottom: '8px' }}>
+                Unidentified weapon
+              </div>
+              <Divider />
+              <div style={{ fontSize: '13px', color: C.text, lineHeight: '1.5' }}>
+                This weapon must be identified before it can be equipped. The Tekker will reveal its true stats and element.
+              </div>
+              <div style={{
+                marginTop: '10px', padding: '7px', fontSize: '13px', fontWeight: 600,
+                background: C.selectedGradient, border: '2px solid #d08010',
+                borderRadius: '4px', color: C.text, cursor: 'pointer', textAlign: 'center',
+              }}>
+                Identify (100 MST)
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>
+                {grindable[sel]?.name}
+              </div>
+              <div style={{ fontSize: '11px', color: C.textLight, marginBottom: '8px' }}>
+                Current grind: {grindable[sel]?.grind}
+              </div>
+              <Divider />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px' }}>
+                {[
+                  ['ATK Bonus', `+${parseInt(grindable[sel]?.grind.replace('+', '') || '0') * 2}`],
+                  ['Max Grind', grindable[sel]?.maxGrind || ''],
+                  ['Success Rate', '90%'],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: C.textLight }}>{k}</span>
+                    <span style={{ fontWeight: 700, color: C.text }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{
+                marginTop: '10px', padding: '7px', fontSize: '13px', fontWeight: 600,
+                background: C.selectedGradient, border: '2px solid #d08010',
+                borderRadius: '4px', color: C.text, cursor: 'pointer', textAlign: 'center',
+              }}>
+                Grind ({grindable[sel]?.cost} MST)
+              </div>
+            </>
+          )}
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function QuestCounter() {
+  const [mode, setMode] = useState(0);
+  const [sel, setSel] = useState(0);
+  const quests = [
+    { name: 'Valley Patrol', area: 'Gurhacia Valley', diff: 'Normal', rank: 'C', reward: 500, desc: 'Patrol the valley and eliminate hostile creatures.' },
+    { name: 'Swamp Sweep', area: 'Ozette Wetlands', diff: 'Normal', rank: 'C', reward: 600, desc: 'Clear out the creatures infesting the wetlands.' },
+    { name: 'Forest Recon', area: 'Rioh Snowfield', diff: 'Hard', rank: 'B', reward: 1200, desc: 'Investigate unusual activity in the snowfield.' },
+    { name: 'Desert Storm', area: 'Makara Desert', diff: 'Hard', rank: 'B', reward: 1500, desc: 'A sandstorm has stirred up the desert creatures.' },
+    { name: 'Tower Ascent', area: 'Eternal Tower', diff: 'S. Hard', rank: 'A', reward: 5000, desc: 'Climb the tower and reach the summit.' },
+  ];
+  const difficulties = ['Normal', 'Hard', 'S. Hard'];
+
+  return (
+    <div style={{ display: 'flex', gap: '12px' }}>
+      <Panel title="Quest Counter" width={420} hint="Select a quest to accept.">
+        <div style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          marginBottom: '8px', padding: '0 4px',
+        }}>
+          <TabBar tabs={difficulties} active={mode} onSelect={(i) => { setMode(i); setSel(0); }} />
+        </div>
+        {quests.filter((q) => q.diff === difficulties[mode] || (mode === 2 && q.diff === 'S. Hard')).map((q, i) => (
+          <PillRow
+            key={q.name}
+            label={q.name}
+            rightText={`[${q.rank}]`}
+            selected={sel === i}
+            onClick={() => setSel(i)}
+          />
+        ))}
+      </Panel>
+
+      <Panel title="Quest Info" width={280}>
+        <div style={{
+          background: C.itemBg, borderRadius: '4px',
+          padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)',
+        }}>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: C.text, marginBottom: '2px' }}>
+            {quests.filter((q) => q.diff === difficulties[mode] || (mode === 2 && q.diff === 'S. Hard'))[sel]?.name}
+          </div>
+          <div style={{ fontSize: '11px', color: C.textLight, marginBottom: '8px' }}>
+            {quests.filter((q) => q.diff === difficulties[mode] || (mode === 2 && q.diff === 'S. Hard'))[sel]?.area}
+          </div>
+          <Divider />
+          <div style={{ fontSize: '13px', color: C.text, lineHeight: '1.5', marginBottom: '8px' }}>
+            {quests.filter((q) => q.diff === difficulties[mode] || (mode === 2 && q.diff === 'S. Hard'))[sel]?.desc}
+          </div>
+          <Divider />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px' }}>
+            {[
+              ['Difficulty', quests.filter((q) => q.diff === difficulties[mode] || (mode === 2 && q.diff === 'S. Hard'))[sel]?.diff || ''],
+              ['Rank', quests.filter((q) => q.diff === difficulties[mode] || (mode === 2 && q.diff === 'S. Hard'))[sel]?.rank || ''],
+              ['Reward', `${(quests.filter((q) => q.diff === difficulties[mode] || (mode === 2 && q.diff === 'S. Hard'))[sel]?.reward || 0).toLocaleString()} MST`],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: C.textLight }}>{k}</span>
+                <span style={{ fontWeight: 700, color: C.text }}>{v}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{
+            marginTop: '10px', padding: '7px', fontSize: '13px', fontWeight: 600,
+            background: C.selectedGradient, border: '2px solid #d08010',
+            borderRadius: '4px', color: C.text, cursor: 'pointer', textAlign: 'center',
+          }}>
+            Accept Quest
+          </div>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
 // --- Main Page ---
 
 const MENU_DEMOS = [
@@ -751,9 +1084,12 @@ const MENU_DEMOS = [
   { id: 'pause', label: 'Pause Menu', component: PauseMenu },
   { id: 'equipment', label: 'Equipment', component: EquipmentMenu },
   { id: 'inventory', label: 'Inventory', component: InventoryMenu },
-  { id: 'shop', label: 'Weapon Shop', component: ShopMenu },
+  { id: 'weapon-shop', label: 'Weapon Shop', component: ShopMenu },
+  { id: 'item-shop', label: 'Item Shop', component: ItemShop },
+  { id: 'tekker', label: 'Tekker', component: TekkerMenu },
+  { id: 'storage', label: 'Storage', component: StorageCounter },
+  { id: 'quest', label: 'Quest Counter', component: QuestCounter },
   { id: 'status', label: 'Status', component: StatusScreen },
-  { id: 'guild', label: 'Guild Counter', component: GuildCounter },
 ];
 
 export default function MenuDesign() {

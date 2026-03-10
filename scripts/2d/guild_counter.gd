@@ -14,6 +14,9 @@ var _selected_difficulty: int = 0
 enum Tab { QUESTS, TUI }
 var _tab: int = Tab.QUESTS
 
+var _mode_bar: HBoxContainer
+
+const TAB_NAMES := ["Quests", "TUI"]
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
 ## Progression order by area
@@ -60,8 +63,10 @@ const AREA_DISPLAY := {
 
 
 func _ready() -> void:
-	title_label.text = "GUILD COUNTER"
-	hint_label.text = "[↑/↓] Select  [ENTER] Accept  [ESC] Leave"
+	_mode_bar = mode_label.get_parent()
+	PszStyle.style_menu(title_label, hint_label, [list_panel, detail_panel])
+	title_label.text = "Guild Counter"
+	hint_label.text = "Up/Down: Select  Enter: Accept  Esc: Leave"
 	_load_entries()
 	_refresh_display()
 	# Show quest status hints
@@ -319,47 +324,41 @@ func _report_quest() -> void:
 
 
 func _refresh_display() -> void:
-	# Mode bar (hidden during active quest)
-	if _has_active_quest():
-		mode_label.text = ""
-	elif _tab == Tab.QUESTS:
-		mode_label.text = "[◄ QUESTS ►]    TUI"
-	else:
-		mode_label.text = "   QUESTS    [◄ TUI ►]"
+	# Tab bar (hidden during active quest)
+	for child in _mode_bar.get_children():
+		child.queue_free()
+	if not _has_active_quest():
+		_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
 
+	# List panel — pill rows
 	for child in list_panel.get_children():
 		child.queue_free()
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var selected_control: Control = null
+	vbox.add_theme_constant_override("separation", 3)
+	var selected_pill: Control = null
 
 	if _selecting_difficulty and not _entries.is_empty():
 		var entry: Dictionary = _entries[_selected_index]
-		var header := Label.new()
-		header.text = "── %s ──\n\nSelect Difficulty:" % entry["name"]
-		header.add_theme_color_override("font_color", ThemeColors.HEADER)
-		vbox.add_child(header)
+		vbox.add_child(PszStyle.create_section_header(entry["name"]))
+		vbox.add_child(PszStyle.detail_label(""))
+		vbox.add_child(PszStyle.detail_label("Select Difficulty:"))
 
 		for i in range(DIFFICULTIES.size()):
-			var label := Label.new()
+			var pill := PszStyle.create_pill(DIFFICULTIES[i], i == _selected_difficulty)
+			vbox.add_child(pill)
 			if i == _selected_difficulty:
-				label.text = "> " + DIFFICULTIES[i]
-				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				selected_control = label
-			else:
-				label.text = "  " + DIFFICULTIES[i]
-			vbox.add_child(label)
-		hint_label.text = "[↑/↓] Select Difficulty  [ENTER] Accept  [ESC] Back"
+				selected_pill = pill
+		hint_label.text = "Up/Down: Select Difficulty  Enter: Accept  Esc: Back"
 	else:
 		if _entries.is_empty():
-			var empty := Label.new()
-			empty.text = "  (No quests available)" if _tab == Tab.QUESTS else "  (No missions available)"
-			empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-			vbox.add_child(empty)
+			var empty_text := "(No quests available)" if _tab == Tab.QUESTS else "(No missions available)"
+			vbox.add_child(PszStyle.create_pill(empty_text, false, "", PszStyle.TEXT_MUTED))
 		else:
 			var last_area := ""
 			for i in range(_entries.size()):
@@ -369,15 +368,10 @@ func _refresh_display() -> void:
 					var area: String = entry["area"]
 					if area != last_area:
 						if not last_area.is_empty():
-							var spacer := Label.new()
-							spacer.text = ""
-							vbox.add_child(spacer)
-						var area_header := Label.new()
-						area_header.text = "── %s ──" % area
-						area_header.add_theme_color_override("font_color", ThemeColors.HEADER)
-						vbox.add_child(area_header)
+							vbox.add_child(PszStyle.detail_label(""))
+						vbox.add_child(PszStyle.create_section_header(area))
 						last_area = area
-				var label := Label.new()
+
 				var unlocked: bool = entry.get("available", true)
 				var entry_type: String = str(entry["type"])
 				var completed: bool = (entry_type == "mission" or entry_type == "quest") and GameState.is_mission_completed(entry["id"])
@@ -390,32 +384,33 @@ func _refresh_display() -> void:
 					status_tag = " [CLEAR]"
 				elif not unlocked:
 					status_tag = " [LOCKED]"
-				label.text = "%-24s%s" % [entry["name"], status_tag]
+
+				# Determine text color
+				var text_color := Color.TRANSPARENT
+				if entry_type == "report":
+					text_color = PszStyle.TEXT_HIGHLIGHT
+				elif entry_type == "cancel":
+					text_color = PszStyle.TEXT_DANGER
+				elif not unlocked:
+					text_color = PszStyle.TEXT_MUTED
+				elif completed:
+					text_color = PszStyle.TEXT_CLEAR
+				elif entry_type == "quest":
+					text_color = PszStyle.TEXT_QUEST
+
+				var pill := PszStyle.create_pill(
+					entry["name"] + status_tag, i == _selected_index, "", text_color)
+				vbox.add_child(pill)
 				if i == _selected_index:
-					label.text = "> " + label.text
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-					selected_control = label
-				else:
-					label.text = "  " + label.text
-					if entry_type == "report":
-						label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-					elif entry_type == "cancel":
-						label.add_theme_color_override("font_color", ThemeColors.DANGER)
-					elif not unlocked:
-						label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-					elif completed:
-						label.add_theme_color_override("font_color", ThemeColors.COMPLETED)
-					elif entry_type == "quest":
-						label.add_theme_color_override("font_color", ThemeColors.QUEST)
-				vbox.add_child(label)
-		hint_label.text = "[←/→] Switch Tab  [↑/↓] Select  [ENTER] Choose  [ESC] Leave"
+					selected_pill = pill
+		hint_label.text = "Left/Right: Switch Tab  Up/Down: Select  Enter: Choose  Esc: Leave"
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)
 
 	# Scroll to selected item after layout
-	if selected_control:
-		scroll.ensure_control_visible.call_deferred(selected_control)
+	if selected_pill:
+		scroll.ensure_control_visible.call_deferred(selected_pill)
 
 	# Detail panel
 	_refresh_detail()
@@ -432,30 +427,21 @@ func _refresh_detail() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 
-	var name_label := Label.new()
-	name_label.text = "── %s ──" % entry["name"]
-	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(name_label)
+	vbox.add_child(PszStyle.detail_label(entry["name"], PszStyle.TITLE_BG))
 
-	var area_label := Label.new()
-	area_label.text = "Area: %s" % entry["area"]
-	vbox.add_child(area_label)
+	if not str(entry["area"]).is_empty():
+		vbox.add_child(PszStyle.detail_label("Area: %s" % entry["area"]))
 
 	if entry["type"] == "quest":
-		var type_label := Label.new()
-		type_label.text = "Type: Quest"
-		type_label.add_theme_color_override("font_color", ThemeColors.QUEST)
-		vbox.add_child(type_label)
+		vbox.add_child(PszStyle.detail_label("Type: Quest", PszStyle.TEXT_QUEST))
 		var desc: String = str(entry.get("description", ""))
 		if not desc.is_empty():
-			var desc_label := Label.new()
-			desc_label.text = desc
+			var desc_label := PszStyle.detail_label(desc)
 			desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			vbox.add_child(desc_label)
 	else:
-		var type_label := Label.new()
-		type_label.text = "Type: %s" % ("Main Story" if entry["is_main"] else "Side Quest")
-		vbox.add_child(type_label)
+		var type_text := "Main Story" if entry.get("is_main", false) else "Side Quest"
+		vbox.add_child(PszStyle.detail_label("Type: %s" % type_text))
 
 		var requires: Array = entry["requires"]
 		if not requires.is_empty():
@@ -463,30 +449,20 @@ func _refresh_detail() -> void:
 			for req_id in requires:
 				var req_mission = MissionRegistry.get_mission(req_id)
 				req_names.append(req_mission.name if req_mission else req_id)
-			var req_label := Label.new()
-			req_label.text = "Requires: %s" % ", ".join(req_names)
-			req_label.add_theme_color_override("font_color", ThemeColors.DANGER)
-			vbox.add_child(req_label)
+			vbox.add_child(PszStyle.detail_label("Requires: %s" % ", ".join(req_names), PszStyle.TEXT_DANGER))
 
 		# Rewards
 		var rewards: Dictionary = entry["rewards"]
 		if not rewards.is_empty():
-			var sep := Label.new()
-			sep.text = ""
-			vbox.add_child(sep)
-			var rewards_header := Label.new()
-			rewards_header.text = "Rewards:"
-			rewards_header.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-			vbox.add_child(rewards_header)
+			vbox.add_child(PszStyle.detail_label(""))
+			vbox.add_child(PszStyle.detail_label("Rewards:", PszStyle.TEXT_HIGHLIGHT))
 			for diff_key in rewards:
 				var reward: Dictionary = rewards[diff_key]
-				var r := Label.new()
-				r.text = "  %s: %s x%s, %s M" % [
+				vbox.add_child(PszStyle.detail_label("  %s: %s x%s, %s M" % [
 					str(diff_key).capitalize(),
 					str(reward.get("item", "???")),
 					str(reward.get("quantity", 1)),
 					str(reward.get("meseta", 0)),
-				]
-				vbox.add_child(r)
+				]))
 
 	detail_panel.add_child(vbox)

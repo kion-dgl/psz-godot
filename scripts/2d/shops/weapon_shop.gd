@@ -3,7 +3,7 @@ extends Control
 
 enum Tab { WEAPONS, ARMOR, UNITS, SELL }
 
-const TAB_NAMES := ["WEAPONS", "ARMOR", "UNITS", "SELL"]
+const TAB_NAMES := ["Weapons", "Armor", "Units", "Sell"]
 const TAB_COUNT := 4
 
 var _tab: int = Tab.WEAPONS
@@ -13,6 +13,8 @@ var _weapons: Array = []
 var _armors: Array = []
 var _units: Array = []
 var _sell_items: Array = []
+
+var _mode_bar: HBoxContainer
 
 ## Set true to show all weapon tiers in the shop (for testing)
 const DEBUG_ALL_TIERS := true
@@ -56,7 +58,9 @@ const SHOP_UNIT_IDS := [
 
 
 func _ready() -> void:
-	title_label.text = "WEAPON SHOP"
+	_mode_bar = mode_label.get_parent()
+	PszStyle.style_menu(title_label, hint_label, [list_panel, detail_panel])
+	title_label.text = "Weapon Shop"
 	_update_hint()
 	_generate_inventory()
 	_refresh_display()
@@ -80,7 +84,14 @@ func _generate_inventory() -> void:
 		_weapons.append({
 			"id": w.id, "name": w.name, "category": "weapon",
 			"cost": price, "sell_price": int(price * 0.25),
+			"weapon_type": int(w.weapon_type), "weapon_type_name": w.get_weapon_type_name(),
+			"rarity": int(w.rarity),
 		})
+	_weapons.sort_custom(func(a, b):
+		if a["weapon_type"] != b["weapon_type"]:
+			return a["weapon_type"] < b["weapon_type"]
+		return a["rarity"] < b["rarity"]
+	)
 
 	for aid in SHOP_ARMOR_IDS:
 		var a = ArmorRegistry.get_armor(aid)
@@ -133,7 +144,6 @@ func _generate_sell_list() -> void:
 					item_name = u.name
 					cat = "unit"
 				else:
-					# Consumable or other item — flat sell price
 					sell_price = 10
 					cat = "item"
 		_sell_items.append({
@@ -159,9 +169,9 @@ func _unit_price(u) -> int:
 
 func _update_hint() -> void:
 	if _tab == Tab.SELL:
-		hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Sell  [ESC] Leave"
+		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Sell  Esc: Leave"
 	else:
-		hint_label.text = "[←/→] Category  [↑/↓] Select  [ENTER] Buy  [ESC] Leave"
+		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Buy  Esc: Leave"
 
 
 func _get_current_list() -> Array:
@@ -304,16 +314,13 @@ func _sell_selected() -> void:
 
 
 func _refresh_display() -> void:
-	# Mode bar — highlight active tab
-	var parts := []
-	for i in range(TAB_COUNT):
-		if i == _tab:
-			parts.append("[◄ %s ►]" % TAB_NAMES[i])
-		else:
-			parts.append("   %s   " % TAB_NAMES[i])
-	mode_label.text = "%s |  Meseta: %s" % ["  ".join(PackedStringArray(parts)), _get_meseta_str()]
+	# Tab bar
+	for child in _mode_bar.get_children():
+		child.queue_free()
+	_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
+	_mode_bar.add_child(PszStyle.create_meseta_label(_get_meseta()))
 
-	# List panel
+	# List panel — pill rows
 	for child in list_panel.get_children():
 		child.queue_free()
 
@@ -327,38 +334,39 @@ func _refresh_display() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_theme_constant_override("separation", 3)
 
-	var selected_label: Label = null
+	var selected_pill: Control = null
 
 	if list.is_empty():
-		var empty := Label.new()
-		empty.text = "  (Nothing to sell)" if _tab == Tab.SELL else "  (Nothing for sale)"
-		empty.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-		vbox.add_child(empty)
+		var empty_text := "(Nothing to sell)" if _tab == Tab.SELL else "(Nothing for sale)"
+		vbox.add_child(PszStyle.create_pill(empty_text, false, "", PszStyle.TEXT_MUTED))
 	elif _tab == Tab.SELL:
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
-			var label := Label.new()
-			label.text = "%-18s%s %6d M" % [str(item.get("name", "???")), qty_str, sell_price]
+			var pill := PszStyle.create_pill(
+				str(item.get("name", "???")) + qty_str,
+				i == _selected_index, "%d M" % sell_price)
+			vbox.add_child(pill)
 			if i == _selected_index:
-				label.text = "> " + label.text
-				label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				selected_label = label
-			else:
-				label.text = "  " + label.text
-			vbox.add_child(label)
+				selected_pill = pill
 	else:
+		var last_type_name := ""
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
 			var item_id: String = str(item.get("id", ""))
 			var cat: String = str(item.get("category", ""))
 			var cost: int = int(item.get("cost", 0))
 
-			var label := Label.new()
-			var held: int = int(Inventory._items.get(item_id, 0))
+			# Section headers for weapon types
+			if _tab == Tab.WEAPONS:
+				var type_name: String = str(item.get("weapon_type_name", ""))
+				if not type_name.is_empty() and type_name != last_type_name:
+					last_type_name = type_name
+					vbox.add_child(PszStyle.create_section_header(type_name))
 
 			# Rarity stars
 			var stars := ""
@@ -375,14 +383,19 @@ func _refresh_display() -> void:
 				if u:
 					stars = " " + u.get_rarity_string() if u.has_method("get_rarity_string") else " " + "*".repeat(int(u.rarity))
 
-			var held_str := ""
-			if held > 1:
-				held_str = " x%d" % held
+			var held: int = int(Inventory._items.get(item_id, 0))
+			var held_str := " x%d" % held if held > 1 else ""
 
 			var equip_check: Dictionary = _check_equippability(item_id, cat)
 			var can_equip: bool = equip_check.get("can_equip", true)
 			var reason: String = str(equip_check.get("reason", ""))
 			var cant_afford: bool = current_meseta < cost
+
+			var text_color := Color.TRANSPARENT
+			if not can_equip:
+				text_color = PszStyle.TEXT_DANGER
+			elif cant_afford:
+				text_color = PszStyle.TEXT_WARNING
 
 			var restriction_tag := ""
 			if not can_equip:
@@ -391,29 +404,18 @@ func _refresh_display() -> void:
 				elif reason == "level":
 					restriction_tag = " [Lv.%d]" % int(equip_check.get("req_level", 1))
 
-			label.text = "%-18s%s%s %6d M%s" % [str(item.get("name", "???")), stars, held_str, cost, restriction_tag]
+			var pill := PszStyle.create_pill(
+				str(item.get("name", "???")) + stars + held_str + restriction_tag,
+				i == _selected_index, "%d M" % cost, text_color)
+			vbox.add_child(pill)
 			if i == _selected_index:
-				label.text = "> " + label.text
-				if not can_equip:
-					label.add_theme_color_override("font_color", ThemeColors.DANGER)
-				elif cant_afford:
-					label.add_theme_color_override("font_color", ThemeColors.WARNING)
-				else:
-					label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-				selected_label = label
-			else:
-				label.text = "  " + label.text
-				if not can_equip:
-					label.add_theme_color_override("font_color", ThemeColors.RESTRICT_CLASS)
-				elif cant_afford:
-					label.add_theme_color_override("font_color", ThemeColors.WARNING)
-			vbox.add_child(label)
+				selected_pill = pill
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)
 
-	if selected_label != null:
-		scroll.ensure_control_visible.call_deferred(selected_label)
+	if selected_pill != null:
+		scroll.ensure_control_visible.call_deferred(selected_pill)
 
 	_refresh_detail()
 
@@ -432,30 +434,27 @@ func _refresh_detail() -> void:
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)
 
-	var name_label := Label.new()
-	name_label.text = "── %s ──" % str(item.get("name", "???"))
-	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(name_label)
+	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
 
 	if cat == "weapon":
 		var w = WeaponRegistry.get_weapon(item_id)
 		if w:
-			_add_line(vbox, "Type: %s" % w.get_weapon_type_name())
-			_add_line(vbox, "Rarity: %s" % w.get_rarity_string(), ThemeColors.TEXT_HIGHLIGHT)
-			_add_line(vbox, "ATK: %d-%d" % [w.attack_base, w.attack_max])
-			_add_line(vbox, "ACC: %d" % w.accuracy_base)
+			vbox.add_child(PszStyle.detail_label("Type: %s" % w.get_weapon_type_name()))
+			vbox.add_child(PszStyle.detail_label("Rarity: %s" % w.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
+			vbox.add_child(PszStyle.detail_label("ATK: %d-%d" % [w.attack_base, w.attack_max]))
+			vbox.add_child(PszStyle.detail_label("ACC: %d" % w.accuracy_base))
 			if not w.element.is_empty():
-				_add_line(vbox, "Element: %s Lv.%d" % [w.element, w.element_level])
-			_add_line(vbox, "Max Grind: +%d" % w.max_grind)
-			_add_line(vbox, "Req. Level: %d" % w.level)
+				vbox.add_child(PszStyle.detail_label("Element: %s Lv.%d" % [w.element, w.element_level]))
+			vbox.add_child(PszStyle.detail_label("Max Grind: +%d" % w.max_grind))
+			vbox.add_child(PszStyle.detail_label("Req. Level: %d" % w.level))
 	elif cat == "armor":
 		var a = ArmorRegistry.get_armor(item_id)
 		if a:
-			_add_line(vbox, "Rarity: %s" % a.get_rarity_string(), ThemeColors.TEXT_HIGHLIGHT)
-			_add_line(vbox, "DEF: %d-%d" % [a.defense_base, a.defense_max])
-			_add_line(vbox, "EVA: %d-%d" % [a.evasion_base, a.evasion_max])
-			_add_line(vbox, "Unit Slots: %d" % a.max_slots)
-			_add_line(vbox, "Req. Level: %d" % a.level)
+			vbox.add_child(PszStyle.detail_label("Rarity: %s" % a.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
+			vbox.add_child(PszStyle.detail_label("DEF: %d-%d" % [a.defense_base, a.defense_max]))
+			vbox.add_child(PszStyle.detail_label("EVA: %d-%d" % [a.evasion_base, a.evasion_max]))
+			vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % a.max_slots))
+			vbox.add_child(PszStyle.detail_label("Req. Level: %d" % a.level))
 			var resists: Array = []
 			if a.resist_fire > 0: resists.append("Fire %d" % a.resist_fire)
 			if a.resist_ice > 0: resists.append("Ice %d" % a.resist_ice)
@@ -463,66 +462,42 @@ func _refresh_detail() -> void:
 			if a.resist_light > 0: resists.append("Lgt %d" % a.resist_light)
 			if a.resist_dark > 0: resists.append("Drk %d" % a.resist_dark)
 			if not resists.is_empty():
-				_add_line(vbox, "Resist: %s" % ", ".join(PackedStringArray(resists)))
+				vbox.add_child(PszStyle.detail_label("Resist: %s" % ", ".join(PackedStringArray(resists))))
 	elif cat == "unit":
 		var u = UnitRegistry.get_unit(item_id)
 		if u:
-			_add_line(vbox, "Rarity: %s" % ("*".repeat(int(u.rarity))), ThemeColors.TEXT_HIGHLIGHT)
-			_add_line(vbox, "Category: %s" % u.category)
-			_add_line(vbox, "Effect: %s" % u.effect, ThemeColors.EQUIPPABLE)
+			vbox.add_child(PszStyle.detail_label("Rarity: %s" % ("*".repeat(int(u.rarity))), PszStyle.TEXT_HIGHLIGHT))
+			vbox.add_child(PszStyle.detail_label("Category: %s" % u.category))
+			vbox.add_child(PszStyle.detail_label("Effect: %s" % u.effect, PszStyle.TEXT_SUCCESS))
 
 	# Price info
-	var sep := Label.new()
-	sep.text = ""
-	vbox.add_child(sep)
+	vbox.add_child(PszStyle.detail_label(""))
 	if _tab == Tab.SELL:
-		var sell_label := Label.new()
-		sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
-		sell_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-		vbox.add_child(sell_label)
-		var qty_label := Label.new()
-		qty_label.text = "Owned: %d" % int(item.get("quantity", 0))
-		vbox.add_child(qty_label)
+		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("Owned: %d" % int(item.get("quantity", 0))))
 	else:
-		var cost_label := Label.new()
-		cost_label.text = "Buy: %d M" % int(item.get("cost", 0))
-		cost_label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-		vbox.add_child(cost_label)
-		var sell_label := Label.new()
-		sell_label.text = "Sell: %d M" % int(item.get("sell_price", 0))
-		sell_label.add_theme_color_override("font_color", ThemeColors.TEXT_SECONDARY)
-		vbox.add_child(sell_label)
+		vbox.add_child(PszStyle.detail_label("Buy: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_MUTED))
 
 		# Equippability status
 		if cat in ["weapon", "armor"]:
 			var equip_check: Dictionary = _check_equippability(item_id, cat)
-			var equip_status := Label.new()
 			if equip_check.get("can_equip", true):
-				equip_status.text = "Can equip"
-				equip_status.add_theme_color_override("font_color", ThemeColors.EQUIPPABLE)
+				vbox.add_child(PszStyle.detail_label("Can equip", PszStyle.TEXT_SUCCESS))
 			else:
 				var reason: String = str(equip_check.get("reason", ""))
 				if reason == "class":
-					equip_status.text = "Cannot equip: class"
+					vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
 				elif reason == "level":
-					equip_status.text = "Cannot equip: Lv.%d required" % int(equip_check.get("req_level", 1))
+					vbox.add_child(PszStyle.detail_label("Cannot equip: Lv.%d required" % int(equip_check.get("req_level", 1)), PszStyle.TEXT_DANGER))
 				else:
-					equip_status.text = "Cannot equip"
-				equip_status.add_theme_color_override("font_color", ThemeColors.DANGER)
-			vbox.add_child(equip_status)
+					vbox.add_child(PszStyle.detail_label("Cannot equip", PszStyle.TEXT_DANGER))
 
 	detail_panel.add_child(vbox)
 
 
-func _add_line(parent: VBoxContainer, text: String, color: Color = ThemeColors.TEXT_PRIMARY) -> void:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_color_override("font_color", color)
-	parent.add_child(label)
-
-
-func _get_meseta_str() -> String:
+func _get_meseta() -> int:
 	var character = CharacterManager.get_active_character()
 	if character:
-		return str(int(character.get("meseta", 0)))
-	return "0"
+		return int(character.get("meseta", 0))
+	return 0
