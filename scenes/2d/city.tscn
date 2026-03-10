@@ -6,12 +6,12 @@
 [ext_resource type="PackedScene" path="res://scenes/3d/maps/city_market.tscn" id="4_city_market"]
 
 [sub_resource type="StyleBoxFlat" id="panel_style"]
-bg_color = Color(0.06, 0.10, 0.20, 0.80)
+bg_color = Color(0.10, 0.14, 0.22, 0.85)
 border_width_left = 1
 border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
-border_color = Color(0.25, 0.45, 0.70, 0.5)
+border_color = Color(0.48, 0.63, 0.75, 0.5)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
