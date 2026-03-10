@@ -56,30 +56,23 @@ func _refresh_info() -> void:
 	var exp_progress: Dictionary = CharacterManager.get_exp_progress()
 	var current_exp: int = int(exp_progress.get("current", 0))
 	var needed_exp: int = int(exp_progress.get("needed", 1))
-	var exp_percent: float = float(exp_progress.get("percent", 0.0))
-	var exp_filled := int(exp_percent / 100.0 * 20)
-	vbox.add_child(PszStyle.create_pill(
-		"EXP %s %d/%d" % ["█".repeat(exp_filled) + "░".repeat(20 - exp_filled), current_exp, needed_exp],
-		false))
+	var exp_ratio: float = clampf(float(exp_progress.get("percent", 0.0)) / 100.0, 0.0, 1.0)
+	vbox.add_child(PszStyle.create_bar("EXP", exp_ratio, "%d/%d" % [current_exp, needed_exp],
+		Color(0.30, 0.55, 0.85)))
 
-	# HP
+	# HP bar
 	var hp: int = int(character.get("hp", 0))
 	var max_hp: int = int(character.get("max_hp", 1))
 	var hp_ratio := clampf(float(hp) / float(max_hp), 0.0, 1.0)
-	var hp_filled := int(hp_ratio * 20)
-	var hp_color := PszStyle.TEXT_DANGER if hp_ratio < 0.25 else Color.TRANSPARENT
-	vbox.add_child(PszStyle.create_pill(
-		"HP  %s %d/%d" % ["█".repeat(hp_filled) + "░".repeat(20 - hp_filled), hp, max_hp],
-		false, "", hp_color))
+	var hp_fill_color := Color(0.80, 0.20, 0.20) if hp_ratio < 0.25 else Color(0.20, 0.70, 0.30)
+	vbox.add_child(PszStyle.create_bar("HP", hp_ratio, "%d/%d" % [hp, max_hp], hp_fill_color))
 
-	# PP
+	# PP bar
 	var pp: int = int(character.get("pp", 0))
 	var max_pp: int = int(character.get("max_pp", 1))
 	var pp_ratio := clampf(float(pp) / float(max_pp), 0.0, 1.0)
-	var pp_filled := int(pp_ratio * 20)
-	vbox.add_child(PszStyle.create_pill(
-		"PP  %s %d/%d" % ["█".repeat(pp_filled) + "░".repeat(20 - pp_filled), pp, max_pp],
-		false))
+	vbox.add_child(PszStyle.create_bar("PP", pp_ratio, "%d/%d" % [pp, max_pp],
+		Color(0.30, 0.50, 0.80)))
 
 	# Meseta
 	vbox.add_child(PszStyle.create_pill("Meseta", false, "%d" % int(character.get("meseta", 0)), PszStyle.TEXT_MESETA))
