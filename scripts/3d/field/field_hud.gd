@@ -123,16 +123,16 @@ func _auto_show_log() -> void:
 # ── Stats Panel (top-left) ───────────────────────────────────────────────────
 
 class _StatsPanel extends Control:
-	const PANEL_W := 190.0
-	const PANEL_H := 62.0
-	const BAR_H := 12.0
-	const FONT_SIZE_MAIN := 12
-	const FONT_SIZE_SMALL := 10
-	const FONT_SIZE_BAR := 9
+	const PANEL_W := 170.0
+	const PANEL_H := 56.0
+	const BAR_H := 10.0
+	const FONT_SIZE_MAIN := 11
+	const FONT_SIZE_SMALL := 9
+	const FONT_SIZE_BAR := 8
 
-	# PSZ palette
-	const BG_BLUE := Color(0.66, 0.80, 0.91)       # Pale icy blue
-	const BORDER_BLUE := Color(0.48, 0.63, 0.75)    # Blue border
+	# PSZ palette — semi-transparent for single-screen
+	const BG_BLUE := Color(0.66, 0.80, 0.91, 0.6)   # Pale icy blue, translucent
+	const BORDER_BLUE := Color(0.48, 0.63, 0.75, 0.5)
 	const TEXT_DARK := Color(0.1, 0.1, 0.17)         # Near-black text
 	const TEXT_LIGHT := Color(0.23, 0.29, 0.35)      # Secondary text
 	const HP_COLOR := Color(0.27, 0.73, 0.27)        # Green HP fill
@@ -247,17 +247,17 @@ class _StatsPanel extends Control:
 # ── Action Log (bottom-left, fixed box with scroll) ─────────────────────────
 
 class _QuestLogPanel extends Control:
-	const PANEL_W := 220.0
-	const PANEL_H := 180.0
-	const PAD := 5.0
-	const FONT_SIZE := 10
+	const PANEL_W := 180.0
+	const PANEL_H := 120.0
+	const PAD := 4.0
+	const FONT_SIZE := 9
 
-	# PSZ palette — light blue panel with white content area
-	const BG_COLOR := Color(0.66, 0.80, 0.91)        # Pale icy blue
-	const BORDER_COLOR := Color(0.48, 0.63, 0.75)     # Blue border
-	const HEADER_BG := Color(0.16, 0.16, 0.22)        # Dark navy header
-	const HEADER_TEXT := Color(1.0, 1.0, 1.0)          # White header text
-	const CONTENT_BG := Color(1.0, 1.0, 1.0, 0.85)    # White content area
+	# PSZ palette — semi-transparent for single-screen
+	const BG_COLOR := Color(0.66, 0.80, 0.91, 0.5)   # Pale icy blue, translucent
+	const BORDER_COLOR := Color(0.48, 0.63, 0.75, 0.4)
+	const HEADER_BG := Color(0.16, 0.16, 0.22, 0.7)   # Dark navy header
+	const HEADER_TEXT := Color(1.0, 1.0, 1.0, 0.9)
+	const CONTENT_BG := Color(1.0, 1.0, 1.0, 0.6)     # White content area, translucent
 	const TEXT_COLOR := Color(0.1, 0.1, 0.17)          # Dark text
 	const ITEM_COLOR := Color(0.53, 0.33, 0.13)        # Brown/orange items
 	const MESETA_COLOR := Color(0.53, 0.4, 0.0)        # Dark gold
@@ -417,23 +417,23 @@ class _ActionPalette extends Control:
 	## PSO-style action palette: I (swap), J/K/L (action slots).
 	## I centered above, J/L raised, K lower (diamond-ish layout).
 
-	const PILL_BG := Color(1.0, 1.0, 1.0, 0.85)
-	const PILL_BORDER := Color(0.59, 0.71, 0.82, 0.4)
-	const KEY_BG := Color(0.16, 0.24, 0.31, 0.7)
+	const PILL_BG := Color(1.0, 1.0, 1.0, 0.5)
+	const PILL_BORDER := Color(0.59, 0.71, 0.82, 0.3)
+	const KEY_BG := Color(0.16, 0.24, 0.31, 0.5)
 	const KEY_TEXT := Color(1.0, 1.0, 1.0)
 	const LABEL_TEXT := Color(0.1, 0.1, 0.17)
 	const LABEL_LIGHT := Color(0.23, 0.29, 0.35)
-	const FONT_SIZE_KEY := 9
-	const FONT_SIZE_LABEL := 11
-	const FONT_SIZE_SMALL := 9
+	const FONT_SIZE_KEY := 8
+	const FONT_SIZE_LABEL := 10
+	const FONT_SIZE_SMALL := 8
 
 	# Layout constants
-	const PILL_W := 52.0
-	const PILL_H := 34.0
-	const SWAP_W := 46.0
-	const SWAP_H := 20.0
-	const GAP := 6.0
-	const RAISED := 14.0  # J and L raised above K
+	const PILL_W := 44.0
+	const PILL_H := 28.0
+	const SWAP_W := 40.0
+	const SWAP_H := 18.0
+	const GAP := 4.0
+	const RAISED := 10.0  # J and L raised above K
 
 	var _bg_pill: StyleBoxFlat
 	var _bg_swap: StyleBoxFlat
