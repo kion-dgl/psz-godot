@@ -8,6 +8,7 @@ const TAB_COUNT := 4
 
 var _tab: int = Tab.WEAPONS
 var _selected_index: int = 0
+var _confirming: bool = false
 
 var _weapons: Array = []
 var _armors: Array = []
@@ -218,11 +219,35 @@ func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	return {"can_equip": true, "reason": ""}
 
 
+func _cancel_confirm() -> void:
+	_confirming = false
+	_update_hint()
+	_refresh_display()
+
+
+func _ask_confirm() -> void:
+	var list := _get_current_list()
+	if list.is_empty() or _selected_index >= list.size():
+		return
+	var item: Dictionary = list[_selected_index]
+	if _tab == Tab.SELL:
+		var sell_price: int = int(item.get("sell_price", 0))
+		hint_label.text = "Sell %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), sell_price]
+	else:
+		var cost: int = int(item.get("cost", 0))
+		hint_label.text = "Buy %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), cost]
+	_confirming = true
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		SceneManager.pop_scene()
+		if _confirming:
+			_cancel_confirm()
+		else:
+			SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left"):
+		_confirming = false
 		_tab = wrapi(_tab - 1, 0, TAB_COUNT)
 		_selected_index = 0
 		if _tab == Tab.SELL:
@@ -231,6 +256,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right"):
+		_confirming = false
 		_tab = wrapi(_tab + 1, 0, TAB_COUNT)
 		_selected_index = 0
 		if _tab == Tab.SELL:
@@ -239,18 +265,26 @@ func _unhandled_input(event: InputEvent) -> void:
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
+		_confirming = false
 		_selected_index = wrapi(_selected_index - 1, 0, maxi(_get_current_list().size(), 1))
+		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
+		_confirming = false
 		_selected_index = wrapi(_selected_index + 1, 0, maxi(_get_current_list().size(), 1))
+		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		if _tab == Tab.SELL:
-			_sell_selected()
+		if _confirming:
+			_confirming = false
+			if _tab == Tab.SELL:
+				_sell_selected()
+			else:
+				_buy_selected()
 		else:
-			_buy_selected()
+			_ask_confirm()
 		get_viewport().set_input_as_handled()
 
 
