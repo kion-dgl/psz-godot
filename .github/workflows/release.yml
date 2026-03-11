@@ -71,7 +71,7 @@ jobs:
       - name: Export Android build
         run: |
           mkdir -p build/android
-          godot --headless --path . --export-release "Android" build/android/psz-godot.apk
+          godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
 
       - name: Package builds
         run: |
