@@ -60,9 +60,16 @@ jobs:
       - name: Build
         run: cd web && npm run build
 
+      - name: Verify Pages asset copy
+        run: |
+          cp -r assets/enemies/ web/dist/assets/enemies/
+          cp -r assets/objects/ web/dist/assets/objects/
+          cp -r assets/npcs/ web/dist/assets/npcs/
+          cp -r data/ web/dist/data/
+
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 

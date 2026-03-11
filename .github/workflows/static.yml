@@ -36,7 +36,6 @@ jobs:
 
       - name: Copy shared assets into build
         run: |
-          cp -r assets/environments/ web/dist/assets/environments/
           cp -r assets/enemies/ web/dist/assets/enemies/
           cp -r assets/objects/ web/dist/assets/objects/
           cp -r assets/npcs/ web/dist/assets/npcs/
