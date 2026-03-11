@@ -95,10 +95,24 @@ jobs:
       - name: Import project
         run: godot --headless --path . --import --quit || true
 
+      - name: Debug Godot config state
+        run: |
+          echo "--- Files in ~/.config/godot/ after import ---"
+          ls -la ~/.config/godot/ || echo "No godot config dir"
+          echo "--- Export template files ---"
+          ls ~/.local/share/godot/export_templates/ || echo "No templates dir"
+          TEMPLATE_DIR=$(ls -d ~/.local/share/godot/export_templates/*/ 2>/dev/null | head -1)
+          if [ -n "$TEMPLATE_DIR" ]; then
+            echo "--- Template dir: $TEMPLATE_DIR ---"
+            ls "$TEMPLATE_DIR" | grep -i android || echo "No android templates found"
+          fi
+
       - name: Configure Godot Android settings
         run: |
           mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.5.tres << EOF
+          # Write settings to both possible filenames
+          for f in editor_settings-4.tres editor_settings-4.5.tres; do
+            cat > ~/.config/godot/$f << EOF
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
@@ -108,11 +122,10 @@ jobs:
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
           EOF
-          echo "--- Editor settings ---"
+          done
+          echo "--- Editor settings files ---"
+          ls -la ~/.config/godot/
           cat ~/.config/godot/editor_settings-4.5.tres
-          echo "--- Android SDK contents ---"
-          ls -la /usr/local/lib/android/sdk/
-          ls -la /usr/local/lib/android/sdk/build-tools/ || echo "No build-tools dir"
 
       - name: Export Web
         run: |
@@ -132,4 +145,4 @@ jobs:
       - name: Export Android
         run: |
           mkdir -p build/android
-          godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
+          godot --headless --verbose --path . --export-debug "Android" build/android/psz-godot.apk
