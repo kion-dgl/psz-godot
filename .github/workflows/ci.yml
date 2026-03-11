@@ -90,6 +90,9 @@ jobs:
             -storepass android -dname "CN=Android Debug,O=Android,C=US" \
             -validity 9999 -deststoretype pkcs12
 
+      - name: Import project
+        run: godot --headless --path . --import --quit || true
+
       - name: Configure Godot Android settings
         run: |
           mkdir -p ~/.config/godot
@@ -103,8 +106,12 @@ jobs:
           export/android/debug_keystore_pass = "android"
           SETTINGS
 
-      - name: Import project
-        run: godot --headless --path . --import --quit || true
+      - name: Verify Android config
+        run: |
+          echo "=== Editor settings ==="
+          cat ~/.config/godot/editor_settings-4.5.tres
+          echo "=== Android SDK contents ==="
+          ls /usr/local/lib/android/sdk/build-tools/
 
       - name: Export Web
         run: |
