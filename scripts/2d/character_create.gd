@@ -158,7 +158,7 @@ func _handle_confirm_input(event: InputEvent) -> void:
 
 func _show_class_select() -> void:
 	_step = Step.CLASS_SELECT
-	hint_label.text = "[↑/↓] Navigate  [ENTER] Select  [ESC] Back"
+	hint_label.text = "[D-Pad] Navigate  [Confirm] Select  [Cancel] Back"
 	_update_class_select()
 
 
@@ -390,7 +390,7 @@ func _teardown_preview() -> void:
 
 func _show_appearance() -> void:
 	_step = Step.APPEARANCE
-	hint_label.text = "[↑/↓] Row  [←/→] Change  [SPACE+←/→] Rotate  [ENTER] Next  [ESC] Back"
+	hint_label.text = "[D-Pad] Row/Change  [Confirm] Next  [Cancel] Back"
 
 	# Hide BG so 3D shows through the transparent info panel
 	_bg.visible = false
@@ -477,7 +477,7 @@ func _handle_name_entry_input(event: InputEvent) -> void:
 
 func _show_name_entry() -> void:
 	_step = Step.NAME_ENTRY
-	hint_label.text = "[ENTER] Confirm  [ESC] Back to Appearance"
+	hint_label.text = "[Confirm] Continue  [Cancel] Back to Appearance"
 
 	for child in content_panel.get_children():
 		child.queue_free()
@@ -524,7 +524,7 @@ func _on_name_submitted(text: String) -> void:
 func _show_confirm() -> void:
 	_step = Step.CONFIRM
 	var cls = _class_list[_selected_class_index]
-	hint_label.text = "[ENTER] Create Character  [ESC] Back to Name"
+	hint_label.text = "[Confirm] Create Character  [Cancel] Back to Name"
 
 	for child in content_panel.get_children():
 		child.queue_free()

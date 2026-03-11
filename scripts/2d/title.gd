@@ -10,7 +10,7 @@ var _debug_guide: PanelContainer
 
 
 func _ready() -> void:
-	prompt_label.text = "[ Press ENTER to start ]"
+	prompt_label.text = "[ Tap or press any button to start ]"
 	version_label.text = "PSZ Godot v0.1 — A Phantasy Star Zero fan game"
 
 	# Add text shadows for readability over the background image
@@ -80,6 +80,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_debug_guide.visible = not _debug_guide.visible
 			get_viewport().set_input_as_handled()
 			return
-	if event.is_action_pressed("ui_accept"):
+	if event.is_action_pressed("ui_accept") \
+			or (event is InputEventScreenTouch and event.pressed) \
+			or (event is InputEventMouseButton and event.pressed) \
+			or (event is InputEventJoypadButton and event.pressed):
 		get_viewport().set_input_as_handled()
 		SceneManager.goto_scene("res://scenes/2d/character_select.tscn")
