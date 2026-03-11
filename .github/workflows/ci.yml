@@ -62,7 +62,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -72,25 +72,6 @@ jobs:
           version: 4.5.1
           use-dotnet: false
           include-templates: true
-
-      - name: Setup Java for Android export
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'build-tools;34.0.0 platform-tools platforms;android-34 cmdline-tools;latest'
-
-      - name: Generate debug keystore
-        run: |
-          mkdir -p ~/.android
-          keytool -keyalg RSA -genkeypair -alias androiddebugkey \
-            -keypass android -keystore ~/.android/debug.keystore \
-            -storepass android -dname "CN=Android Debug,O=Android,C=US" \
-            -validity 9999 -deststoretype pkcs12
 
       - name: Import project
         run: godot --headless --path . --import --quit || true
@@ -109,8 +90,3 @@ jobs:
         run: |
           mkdir -p build/windows
           godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
-
-      - name: Export Android
-        run: |
-          mkdir -p build/android
-          godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
