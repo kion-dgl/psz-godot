@@ -15,6 +15,7 @@ const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
 const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
 const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
+const SettingsMockup = lazy(() => import('./settings/SettingsMockup'));
 
 function NavBar() {
   const location = useLocation();
@@ -98,6 +99,12 @@ function NavBar() {
       }}>
         Menus
       </Link>
+      <Link to="/settings" style={{
+        color: isActive('/settings') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Settings
+      </Link>
       <Link to="/retarget" style={{
         color: isActive('/retarget') ? '#fff' : '#888',
         textDecoration: 'none',
@@ -133,6 +140,7 @@ export default function App() {
             <Route path="/svg-check" element={<SvgCheck />} />
             <Route path="/office-editor" element={<OfficeEditor />} />
             <Route path="/menu-design" element={<MenuDesign />} />
+            <Route path="/settings" element={<SettingsMockup />} />
             <Route path="/retarget" element={<RetargetViewer />} />
             <Route path="/retarget-tuner" element={<RetargetTuner />} />
           </Routes>

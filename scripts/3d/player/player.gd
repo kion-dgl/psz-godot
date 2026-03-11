@@ -578,13 +578,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if current_state == PlayerState.CUTSCENE:
 		return
 
-	# Handle dodge input
-	if event.is_action_pressed("dodge"):
-		if current_state != PlayerState.DODGING and current_state != PlayerState.ATTACKING:
-			_start_dodge()
-
-	# Handle attack input
-	if event.is_action_pressed("attack"):
+	# Handle action palette inputs (action_1 = attack by default)
+	if event.is_action_pressed("action_1"):
 		_start_attack()
 
 	# Handle interact input
@@ -632,14 +627,8 @@ func _handle_movement(delta: float) -> void:
 			rot_diff += TAU
 		player_rotation += rot_diff * ROTATE_SPEED * delta
 
-		# Sprint check
-		var sprinting := Input.is_action_pressed("sprint")
-
-		# State transitions: IDLE → WALKING → RUNNING, or SPRINTING with shift
-		if sprinting:
-			if current_state != PlayerState.SPRINTING:
-				transition_to(PlayerState.SPRINTING)
-		elif current_state == PlayerState.SPRINTING:
+		# State transitions: IDLE → WALKING → RUNNING
+		if current_state == PlayerState.SPRINTING:
 			transition_to(PlayerState.RUNNING)
 		elif current_state == PlayerState.IDLE:
 			walk_timer = 0.0

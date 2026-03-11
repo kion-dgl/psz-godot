@@ -107,17 +107,17 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		_appearance_row = wrapi(_appearance_row + 1, 0, 4)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") and not Input.is_action_pressed("dodge"):
+	elif event.is_action_pressed("ui_left") and not Input.is_action_pressed("camera_lock"):
 		_cycle_appearance_value(-1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right") and not Input.is_action_pressed("dodge"):
+	elif event.is_action_pressed("ui_right") and not Input.is_action_pressed("camera_lock"):
 		_cycle_appearance_value(1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept") and not Input.is_action_pressed("dodge"):
+	elif event.is_action_pressed("ui_accept") and not Input.is_action_pressed("camera_lock"):
 		_teardown_preview()
 		_show_name_entry()
 		_update_class_info()
@@ -126,8 +126,8 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		_teardown_preview()
 		_show_class_select()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("dodge"):
-		# Consume Space press so it doesn't trigger ui_accept
+	elif event.is_action_pressed("camera_lock"):
+		# Consume Tab press so it doesn't trigger other actions
 		get_viewport().set_input_as_handled()
 
 
@@ -270,8 +270,8 @@ func _update_class_info() -> void:
 
 func _process(delta: float) -> void:
 	if _preview_active and _preview_pivot:
-		# Space + Left/Right to rotate the preview model
-		if Input.is_action_pressed("dodge"):
+		# Tab/L + Left/Right to rotate the preview model
+		if Input.is_action_pressed("camera_lock"):
 			if Input.is_action_pressed("ui_left"):
 				_preview_pivot.rotate_y(delta * 3.0)
 			elif Input.is_action_pressed("ui_right"):

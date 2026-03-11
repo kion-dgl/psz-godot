@@ -414,8 +414,8 @@ class _QuestLogPanel extends Control:
 # ── Action Palette (bottom-right) ────────────────────────────────────────────
 
 class _ActionPalette extends Control:
-	## PSO-style action palette: I (swap), J/K/L (action slots).
-	## I centered above, J/L raised, K lower (diamond-ish layout).
+	## PSO-style action palette: R/I (swap), J/K/L or X/Y/B (action slots).
+	## Swap centered above, J/L raised, K lower (diamond-ish layout).
 
 	const PILL_BG := Color(1.0, 1.0, 1.0, 0.5)
 	const PILL_BORDER := Color(0.59, 0.71, 0.82, 0.3)
@@ -489,10 +489,10 @@ class _ActionPalette extends Control:
 		var swap_y: float = 0.0
 		draw_style_box(_bg_swap, Rect2(swap_x, swap_y, SWAP_W, SWAP_H))
 
-		# "I" key badge
+		# "R" key badge (palette_swap = I key / R shoulder)
 		var key_rect := Rect2(swap_x + 6, swap_y + 4, 16, 13)
 		draw_rect(key_rect, KEY_BG)
-		draw_string(font, Vector2(swap_x + 10, swap_y + 14), "I",
+		draw_string(font, Vector2(swap_x + 10, swap_y + 14), "R",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
 
 		# Palette number

@@ -194,11 +194,137 @@ function Divider() {
 
 function PauseMenu() {
   const [sel, setSel] = useState(0);
-  const items = ['Equipment', 'Inventory', 'Techniques', 'Status', 'Options', 'Quit Mission'];
+  const items = ['Equipment', 'Inventory', 'Techniques', 'Action Palette', 'Status', 'Options', 'Quit Mission'];
   return (
     <Panel title="Menu" width={320} hint="Select from the Menu.">
       {items.map((item, i) => (
         <PillRow key={item} label={item} selected={sel === i} onClick={() => setSel(i)} />
+      ))}
+    </Panel>
+  );
+}
+
+
+const PALETTE_ACTIONS = [
+  { id: 'attack', label: 'Attack' },
+  { id: 'dodge', label: 'Dodge' },
+  { id: 'foie', label: 'Foie' },
+  { id: 'barta', label: 'Barta' },
+  { id: 'zonde', label: 'Zonde' },
+  { id: 'resta', label: 'Resta' },
+  { id: 'mate', label: 'Mate' },
+  { id: 'atomizer', label: 'Atomizer' },
+  { id: 'telepipe', label: 'Telepipe' },
+];
+
+function ActionPaletteMenu() {
+  const [pages, setPages] = useState([
+    ['Attack', 'Foie', 'Mate'],
+    ['Attack', 'Barta', 'Resta'],
+    ['Dodge', 'Zonde', 'Atomizer'],
+  ]);
+  const [activePage, setActivePage] = useState(0);
+  const [selSlot, setSelSlot] = useState(0);
+  const [picking, setPicking] = useState(false);
+
+  const currentPage = pages[activePage];
+
+  const assignAction = (actionLabel: string) => {
+    setPages(prev => prev.map((p, pi) => {
+      if (pi !== activePage) return p;
+      const newP = [...p];
+      newP[selSlot] = actionLabel;
+      return newP;
+    }));
+    setPicking(false);
+  };
+
+  // Action picker sub-view
+  if (picking) {
+    return (
+      <Panel title="Action Palette" width={380} hint="Select an action to assign.">
+        <div style={{ fontSize: '12px', color: C.textLight, marginBottom: '6px', padding: '0 4px' }}>
+          Assign to Page {activePage + 1}, Slot {selSlot + 1}
+        </div>
+        {PALETTE_ACTIONS.map(a => (
+          <PillRow
+            key={a.id}
+            label={a.label}
+            selected={currentPage[selSlot] === a.label}
+            onClick={() => assignAction(a.label)}
+          />
+        ))}
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel title="Action Palette" width={380} hint="Left/Right: Page  Up/Down: Slot  Confirm: Assign  R: Add Page">
+      {/* Page tabs */}
+      <TabBar
+        tabs={pages.map((_, i) => `Page ${i + 1}`)}
+        active={activePage}
+        onSelect={(i) => { setActivePage(i); setSelSlot(0); }}
+      />
+
+      {/* Live palette preview */}
+      <div style={{
+        display: 'flex', justifyContent: 'center', margin: '8px 0 12px',
+      }}>
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0px',
+        }}>
+          {/* Swap indicator */}
+          <div style={{
+            background: C.itemBg, borderRadius: '8px',
+            padding: '3px 10px', border: '1px solid rgba(150,180,210,0.4)',
+            display: 'flex', alignItems: 'center', gap: '4px',
+            marginBottom: '-2px', zIndex: 1,
+          }}>
+            <span style={{
+              fontSize: '9px', fontWeight: 700, color: C.textWhite,
+              background: 'rgba(40,60,80,0.7)', borderRadius: '6px',
+              padding: '1px 6px', lineHeight: '16px',
+            }}>R</span>
+            <span style={{ fontSize: '9px', fontWeight: 600, color: C.textLight }}>
+              {activePage + 1}/{pages.length}
+            </span>
+          </div>
+          {/* 3 slots */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+            {currentPage.map((label, i) => (
+              <div key={i} style={{
+                background: selSlot === i ? C.selectedGradient : C.itemBg,
+                borderRadius: '8px',
+                padding: '6px 12px',
+                border: selSlot === i ? '2px solid #d08010' : '1px solid rgba(150,180,210,0.4)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+                minWidth: '52px', cursor: 'pointer',
+                marginBottom: i === 1 ? '0px' : '14px',
+              }} onClick={() => setSelSlot(i)}>
+                <span style={{
+                  fontSize: '9px', fontWeight: 700, color: C.textWhite,
+                  background: 'rgba(40,60,80,0.7)', borderRadius: '6px',
+                  padding: '1px 6px', lineHeight: '16px',
+                }}>{i + 1}</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: C.text }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <Divider />
+
+      {/* Slot list */}
+      {currentPage.map((label, i) => (
+        <PillRow
+          key={i}
+          label={`Slot ${i + 1}`}
+          rightText={label}
+          selected={selSlot === i}
+          onClick={() => { setSelSlot(i); setPicking(true); }}
+        />
       ))}
     </Panel>
   );
@@ -1082,6 +1208,7 @@ const MENU_DEMOS = [
   { id: 'hud-actions', label: 'HUD: Actions', component: HudActionPalette },
   { id: 'hud-log', label: 'HUD: Log', component: HudActivityLog },
   { id: 'pause', label: 'Pause Menu', component: PauseMenu },
+  { id: 'action-palette', label: 'Action Palette', component: ActionPaletteMenu },
   { id: 'equipment', label: 'Equipment', component: EquipmentMenu },
   { id: 'inventory', label: 'Inventory', component: InventoryMenu },
   { id: 'weapon-shop', label: 'Weapon Shop', component: ShopMenu },

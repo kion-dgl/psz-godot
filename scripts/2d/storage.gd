@@ -116,7 +116,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_items_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
+	if event.is_action_pressed("palette_swap"):
 		# Switch between inventory and storage panels
 		_selected_side = 1 - _selected_side
 		_selected_index = clampi(_selected_index, 0, maxi(_get_current_list_size() - 1, 0))

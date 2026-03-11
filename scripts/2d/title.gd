@@ -68,8 +68,7 @@ func _setup_debug_guide() -> void:
 		+ "F6   Gate markers\n" \
 		+ "F7   Floor collision\n" \
 		+ "F8   Spawn points\n" \
-		+ "F9   All collision (labels)\n" \
-		+ "TAB  Map overlay"
+		+ "F9   All collision (labels)"
 	_debug_guide.add_child(label)
 	add_child(_debug_guide)
 
