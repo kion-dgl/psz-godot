@@ -16,6 +16,7 @@ var _units: Array = []
 var _sell_items: Array = []
 
 var _mode_bar: HBoxContainer
+var _portrait: TextureRect
 
 ## Set true to show all weapon tiers in the shop (for testing)
 const DEBUG_ALL_TIERS := true
@@ -62,9 +63,18 @@ func _ready() -> void:
 	_mode_bar = mode_label.get_parent()
 	PszStyle.style_menu(title_label, hint_label, [list_panel, detail_panel])
 	title_label.text = "Weapon Shop"
+	_setup_portrait()
 	_update_hint()
 	_generate_inventory()
 	_refresh_display()
+
+
+func _setup_portrait() -> void:
+	var data := SceneManager.get_transition_data()
+	var model_path: String = data.get("npc_model_path", "")
+	if model_path.is_empty():
+		return
+	_portrait = PszStyle.setup_shop_portrait($Panel, list_panel, detail_panel, model_path)
 
 
 func _generate_inventory() -> void:
