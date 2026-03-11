@@ -578,9 +578,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if current_state == PlayerState.CUTSCENE:
 		return
 
-	# Handle action palette inputs (action_1 = attack by default)
+	# Palette swap
+	if event.is_action_pressed("palette_swap"):
+		ActionPalette.swap_page()
+
+	# Action palette inputs — dispatch through ActionPalette
 	if event.is_action_pressed("action_1"):
-		_start_attack()
+		_execute_palette_action(0)
+	if event.is_action_pressed("action_2"):
+		_execute_palette_action(1)
+	if event.is_action_pressed("action_3"):
+		_execute_palette_action(2)
 
 	# Handle interact input
 	if event.is_action_pressed("interact"):
@@ -737,6 +745,38 @@ func _start_attack() -> void:
 	combo_window_open = false
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
+
+
+func _execute_palette_action(slot: int) -> void:
+	var action_id: String = ActionPalette.get_action_for_slot(slot)
+	match action_id:
+		"attack":
+			_start_attack()
+		"strong_attack":
+			_start_strong_attack()
+		"dodge":
+			_start_dodge()
+		"monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid":
+			_use_consumable(action_id)
+
+
+func _start_strong_attack() -> void:
+	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+		return
+	# Strong attack uses combo step 3 animation directly
+	combo_state = 3
+	combo_window_open = false
+	transition_to(PlayerState.ATTACKING)
+	_play_attack_animation(combo_state)
+
+
+func _use_consumable(item_id: String) -> void:
+	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+		return
+	if Inventory.use_item(item_id):
+		print("[Player] Used %s from action palette" % item_id)
+	else:
+		print("[Player] No %s in inventory" % item_id)
 
 
 func _handle_attack_state(delta: float) -> void:

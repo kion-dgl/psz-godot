@@ -46,6 +46,7 @@ CityState="*res://scripts/autoloads/city_state.gd"
 PlayerConfig="*res://scripts/autoloads/player_config.gd"
 TimeManager="*res://scripts/autoloads/time_manager.gd"
 QuestLoader="*res://scripts/autoloads/quest_loader.gd"
+ActionPalette="*res://scripts/autoloads/action_palette.gd"
 
 [display]
 
