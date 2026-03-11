@@ -28,6 +28,8 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'build-tools;34.0.0 platform-tools platforms;android-34 cmdline-tools;latest'
 
       - name: Generate debug keystore
         run: |
@@ -37,21 +39,22 @@ jobs:
             -storepass android -dname "CN=Android Debug,O=Android,C=US" \
             -validity 9999 -deststoretype pkcs12
 
+      - name: Import project
+        run: godot --headless --path . --import --quit || true
+
       - name: Configure Godot Android settings
         run: |
           mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.5.tres << SETTINGS
+          cat > ~/.config/godot/editor_settings-4.5.tres << EOF
           [gd_resource type="EditorSettings" format=3]
+
           [resource]
           export/android/android_sdk_path = "/usr/local/lib/android/sdk"
           export/android/java_sdk_path = "${JAVA_HOME}"
           export/android/debug_keystore = "${HOME}/.android/debug.keystore"
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
-          SETTINGS
-
-      - name: Import project
-        run: godot --headless --path . --import --quit || true
+          EOF
 
       - name: Export Web build
         run: |
