@@ -12,6 +12,7 @@ var _unidentified_weapons: Array = []  # Array of {id, name, rarity}
 
 var _mode_bar_parent: Control  # Parent of mode_label for tab bar rebuilding
 var _tab_row: HBoxContainer    # Persistent tab bar container
+var _portrait: TextureRect
 
 ## Grinder requirements by weapon rarity
 const GRINDER_FOR_RARITY := {
@@ -34,9 +35,54 @@ func _ready() -> void:
 	_mode_bar_parent = mode_label.get_parent()
 	PszStyle.style_menu(title_label, hint_label, [content_panel])
 	title_label.text = "Tekker"
+	_setup_portrait()
 	hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"
 	_build_lists()
 	_refresh_display()
+
+
+func _setup_portrait() -> void:
+	var data := SceneManager.get_transition_data()
+	var model_path: String = data.get("npc_model_path", "")
+	if model_path.is_empty():
+		return
+	# Make panel fullscreen
+	var panel: PanelContainer = $Panel
+	panel.offset_left = 0
+	panel.offset_top = 0
+	panel.offset_right = 0
+	panel.offset_bottom = 0
+	var fs := StyleBoxFlat.new()
+	fs.bg_color = PszStyle.BG
+	fs.content_margin_left = 12.0
+	fs.content_margin_top = 8.0
+	fs.content_margin_bottom = 8.0
+	panel.add_theme_stylebox_override("panel", fs)
+
+	# Wrap VBox in outer HBox: left menu (3/5) + right portrait (2/5)
+	var vbox := panel.get_child(0) as VBoxContainer
+	panel.remove_child(vbox)
+	var outer := HBoxContainer.new()
+	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outer.add_theme_constant_override("separation", 0)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_stretch_ratio = 3.0
+	outer.add_child(vbox)
+
+	# Right: just portrait (no detail panel for tekker)
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.size_flags_stretch_ratio = 2.0
+	right.add_theme_constant_override("separation", 0)
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(spacer)
+	_portrait = PszStyle.create_npc_portrait(model_path)
+	right.add_child(_portrait)
+	outer.add_child(right)
+	panel.add_child(outer)
 
 
 func _build_lists() -> void:

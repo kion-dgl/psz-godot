@@ -272,6 +272,67 @@ static func create_bar(label_text: String, ratio: float, value_text: String, fil
 	return pill
 
 
+## Create a flush 4:3 NPC portrait TextureRect from portrait.png in the GLB directory.
+static func create_npc_portrait(model_path: String) -> TextureRect:
+	var tex_rect := TextureRect.new()
+	tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var portrait_path := model_path.get_base_dir() + "/portrait.png"
+	if ResourceLoader.exists(portrait_path):
+		tex_rect.texture = load(portrait_path)
+	return tex_rect
+
+
+## Restructure a shop with list+detail panels into fullscreen layout with portrait.
+## Left 3/5: title, tabs, list, hints. Right 2/5: detail on top, 4:3 portrait flush at bottom.
+static func setup_shop_portrait(
+		panel: PanelContainer, menu_panel: PanelContainer,
+		detail_ref: PanelContainer, model_path: String) -> TextureRect:
+	# Make panel fullscreen and opaque
+	panel.offset_left = 0
+	panel.offset_top = 0
+	panel.offset_right = 0
+	panel.offset_bottom = 0
+	var fs := StyleBoxFlat.new()
+	fs.bg_color = BG
+	fs.content_margin_left = 12.0
+	fs.content_margin_top = 8.0
+	fs.content_margin_bottom = 8.0
+	panel.add_theme_stylebox_override("panel", fs)
+
+	# Pull VBox out of Panel, remove detail from inner HBox
+	var vbox := panel.get_child(0) as VBoxContainer
+	panel.remove_child(vbox)
+	menu_panel.get_parent().remove_child(detail_ref)
+
+	# Outer HBox: left menu (3/5) + right detail/portrait (2/5)
+	var outer := HBoxContainer.new()
+	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outer.add_theme_constant_override("separation", 0)
+
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.size_flags_stretch_ratio = 3.0
+	outer.add_child(vbox)
+
+	var right := VBoxContainer.new()
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.size_flags_stretch_ratio = 2.0
+	right.add_theme_constant_override("separation", 0)
+
+	detail_ref.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(detail_ref)
+
+	var portrait := create_npc_portrait(model_path)
+	right.add_child(portrait)
+
+	outer.add_child(right)
+	panel.add_child(outer)
+	return portrait
+
+
 static func detail_label(text: String, color := TEXT) -> Label:
 	var label := Label.new()
 	label.text = text
