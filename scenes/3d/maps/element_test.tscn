@@ -1,13 +1,13 @@
 [gd_scene load_steps=12 format=3]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="1_player"]
-[ext_resource type="PackedScene" path="res://scenes/camera/orbit_camera.tscn" id="2_camera"]
-[ext_resource type="Script" path="res://scripts/elements/key_pickup.gd" id="3_key"]
-[ext_resource type="Script" path="res://scripts/elements/drop_meseta.gd" id="4_meseta"]
-[ext_resource type="Script" path="res://scripts/elements/gate.gd" id="5_gate"]
-[ext_resource type="Script" path="res://scripts/elements/interact_switch.gd" id="6_switch"]
-[ext_resource type="Script" path="res://scripts/elements/fence.gd" id="7_fence"]
-[ext_resource type="Script" path="res://scripts/elements/box.gd" id="8_box"]
+[ext_resource type="PackedScene" path="res://scenes/3d/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/3d/camera/orbit_camera.tscn" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/3d/elements/key_pickup.gd" id="3_key"]
+[ext_resource type="Script" path="res://scripts/3d/elements/drop_meseta.gd" id="4_meseta"]
+[ext_resource type="Script" path="res://scripts/3d/elements/gate.gd" id="5_gate"]
+[ext_resource type="Script" path="res://scripts/3d/elements/interact_switch.gd" id="6_switch"]
+[ext_resource type="Script" path="res://scripts/3d/elements/fence.gd" id="7_fence"]
+[ext_resource type="Script" path="res://scripts/3d/elements/box.gd" id="8_box"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.4, 0.6, 0.9, 1)
