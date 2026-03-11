@@ -414,8 +414,8 @@ class _QuestLogPanel extends Control:
 # ── Action Palette (bottom-right) ────────────────────────────────────────────
 
 class _ActionPalette extends Control:
-	## PSO-style action palette: R/I (swap), J/K/L or X/Y/B (action slots).
-	## Swap centered above, J/L raised, K lower (diamond-ish layout).
+	## PSO-style action palette: reads from ActionPalette autoload.
+	## Swap centered above, slot 0 and 2 raised, slot 1 lower (diamond-ish layout).
 
 	const PILL_BG := Color(1.0, 1.0, 1.0, 0.5)
 	const PILL_BORDER := Color(0.59, 0.71, 0.82, 0.3)
@@ -433,19 +433,12 @@ class _ActionPalette extends Control:
 	const SWAP_W := 40.0
 	const SWAP_H := 18.0
 	const GAP := 4.0
-	const RAISED := 10.0  # J and L raised above K
+	const RAISED := 10.0  # Outer slots raised above center
+
+	const SLOT_KEYS := ["J", "K", "L"]
 
 	var _bg_pill: StyleBoxFlat
 	var _bg_swap: StyleBoxFlat
-
-	# Action slot data
-	var _slots: Array = [
-		{"key": "J", "label": "Atk"},
-		{"key": "K", "label": "Foie"},
-		{"key": "L", "label": "Mate"},
-	]
-	var _palette_index: int = 1
-	var _palette_count: int = 6
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
@@ -480,37 +473,47 @@ class _ActionPalette extends Control:
 		_bg_swap.set_border_width_all(1)
 		_bg_swap.set_corner_radius_all(8)
 
+		# Connect to ActionPalette signals for live updates
+		ActionPalette.page_changed.connect(_on_palette_changed)
+		ActionPalette.config_changed.connect(_on_palette_changed)
+
+	func _on_palette_changed(_arg = null) -> void:
+		queue_redraw()
+
 	func _draw() -> void:
 		var font := ThemeDB.fallback_font
 		var total_w: float = size.x
 
-		# I — palette swap, centered above JKL
+		var page_idx: int = ActionPalette.current_page
+		var page_count: int = ActionPalette.pages.size()
+		var slots: Array = ActionPalette.get_current_slots()
+
+		# Swap badge — centered above slots
 		var swap_x: float = (total_w - SWAP_W) * 0.5
 		var swap_y: float = 0.0
 		draw_style_box(_bg_swap, Rect2(swap_x, swap_y, SWAP_W, SWAP_H))
 
-		# "R" key badge (palette_swap = I key / R shoulder)
+		# "R" key badge
 		var key_rect := Rect2(swap_x + 6, swap_y + 4, 16, 13)
 		draw_rect(key_rect, KEY_BG)
 		draw_string(font, Vector2(swap_x + 10, swap_y + 14), "R",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
 
 		# Palette number
-		var pn_text := "%d/%d" % [_palette_index, _palette_count]
+		var pn_text := "%d/%d" % [page_idx + 1, page_count]
 		draw_string(font, Vector2(swap_x + 26, swap_y + 14), pn_text,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, LABEL_LIGHT)
 
-		# JKL row — bottom-aligned, J and L raised
+		# 3 action slots — outer raised, center lower (diamond)
 		var row_y: float = SWAP_H + 2.0
 		for i in range(3):
-			var slot: Dictionary = _slots[i]
+			var action_id: String = slots[i] if i < slots.size() else ""
+			var data: Dictionary = ActionPalette.get_action_data(action_id)
+			var lbl: String = data.get("short", action_id)
+			var key: String = SLOT_KEYS[i] if i < SLOT_KEYS.size() else str(i + 1)
+
 			var px: float = i * (PILL_W + GAP)
-			var py: float = row_y + (0.0 if slot["key"] == "K" else 0.0)
-			# J and L are raised (lower py = higher on screen)
-			if slot["key"] != "K":
-				py = row_y
-			else:
-				py = row_y + RAISED
+			var py: float = row_y + RAISED if i == 1 else row_y
 
 			draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
 
@@ -518,11 +521,10 @@ class _ActionPalette extends Control:
 			var kx: float = px + (PILL_W - 16) * 0.5
 			var ky: float = py + 5
 			draw_rect(Rect2(kx, ky, 16, 13), KEY_BG)
-			draw_string(font, Vector2(kx + 4, ky + 10), slot["key"],
+			draw_string(font, Vector2(kx + 4, ky + 10), key,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
 
 			# Action label
-			var lbl: String = slot["label"]
 			var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LABEL).x
 			draw_string(font, Vector2(px + (PILL_W - lbl_w) * 0.5, py + PILL_H - 5),
 				lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LABEL, LABEL_TEXT)
