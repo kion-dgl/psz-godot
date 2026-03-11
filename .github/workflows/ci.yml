@@ -128,6 +128,26 @@ jobs:
           mkdir -p build/windows
           godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
 
+      - name: Check settings before Android export
+        run: |
+          echo "=== Settings after other exports ==="
+          grep -c "android" ~/.config/godot/editor_settings-4.5.tres || echo "no android settings found"
+          grep "android" ~/.config/godot/editor_settings-4.5.tres || true
+          echo "=== File size ==="
+          wc -l ~/.config/godot/editor_settings-4.5.tres
+
+      - name: Rewrite Android settings
+        run: |
+          cat > ~/.config/godot/editor_settings-4.5.tres << SETTINGS
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "/usr/local/lib/android/sdk"
+          export/android/java_sdk_path = "${JAVA_HOME}"
+          export/android/debug_keystore = "${HOME}/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          SETTINGS
+
       - name: Export Android
         run: |
           mkdir -p build/android
