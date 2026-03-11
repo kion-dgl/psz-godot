@@ -322,9 +322,16 @@ static func setup_shop_portrait(
 	right.size_flags_stretch_ratio = 2.0
 	right.add_theme_constant_override("separation", 0)
 
+	var detail_margin := MarginContainer.new()
+	detail_margin.add_theme_constant_override("margin_left", 8)
+	detail_margin.add_theme_constant_override("margin_top", 8)
+	detail_margin.add_theme_constant_override("margin_right", 8)
+	detail_margin.add_theme_constant_override("margin_bottom", 8)
+	detail_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_margin.size_flags_stretch_ratio = 1.0
 	detail_ref.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_ref.size_flags_stretch_ratio = 1.0
-	right.add_child(detail_ref)
+	detail_margin.add_child(detail_ref)
+	right.add_child(detail_margin)
 
 	var portrait := create_npc_portrait(model_path)
 	portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
