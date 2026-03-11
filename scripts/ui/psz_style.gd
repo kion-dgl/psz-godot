@@ -323,9 +323,12 @@ static func setup_shop_portrait(
 	right.add_theme_constant_override("separation", 0)
 
 	detail_ref.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_ref.size_flags_stretch_ratio = 1.0
 	right.add_child(detail_ref)
 
 	var portrait := create_npc_portrait(model_path)
+	portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	portrait.size_flags_stretch_ratio = 1.0
 	right.add_child(portrait)
 
 	outer.add_child(right)

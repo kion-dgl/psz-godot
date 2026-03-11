@@ -70,8 +70,11 @@ func _setup_portrait() -> void:
 	right.add_theme_constant_override("separation", 0)
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	spacer.size_flags_stretch_ratio = 1.0
 	right.add_child(spacer)
 	_portrait = PszStyle.create_npc_portrait(model_path)
+	_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_portrait.size_flags_stretch_ratio = 1.0
 	right.add_child(_portrait)
 	outer.add_child(right)
 	panel.add_child(outer)
