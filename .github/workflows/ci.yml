@@ -95,37 +95,39 @@ jobs:
       - name: Import project
         run: godot --headless --path . --import --quit || true
 
-      - name: Debug Godot config state
-        run: |
-          echo "--- Files in ~/.config/godot/ after import ---"
-          ls -la ~/.config/godot/ || echo "No godot config dir"
-          echo "--- Export template files ---"
-          ls ~/.local/share/godot/export_templates/ || echo "No templates dir"
-          TEMPLATE_DIR=$(ls -d ~/.local/share/godot/export_templates/*/ 2>/dev/null | head -1)
-          if [ -n "$TEMPLATE_DIR" ]; then
-            echo "--- Template dir: $TEMPLATE_DIR ---"
-            ls "$TEMPLATE_DIR" | grep -i android || echo "No android templates found"
-          fi
-
       - name: Configure Godot Android settings
         run: |
-          mkdir -p ~/.config/godot
-          # Write settings to both possible filenames
-          for f in editor_settings-4.tres editor_settings-4.5.tres; do
-            cat > ~/.config/godot/$f << EOF
-          [gd_resource type="EditorSettings" format=3]
-
-          [resource]
-          export/android/android_sdk_path = "/usr/local/lib/android/sdk"
-          export/android/java_sdk_path = "${JAVA_HOME}"
-          export/android/debug_keystore = "${HOME}/.android/debug.keystore"
-          export/android/debug_keystore_user = "androiddebugkey"
-          export/android/debug_keystore_pass = "android"
-          EOF
-          done
-          echo "--- Editor settings files ---"
-          ls -la ~/.config/godot/
-          cat ~/.config/godot/editor_settings-4.5.tres
+          SETTINGS=~/.config/godot/editor_settings-4.5.tres
+          echo "=== Import-generated editor settings ==="
+          cat "$SETTINGS"
+          echo "=== Signing tools check ==="
+          ls -la "${JAVA_HOME}/bin/jarsigner" || echo "No jarsigner"
+          ls -la /usr/local/lib/android/sdk/build-tools/34.0.0/apksigner || echo "No apksigner"
+          ls -la "${HOME}/.android/debug.keystore" || echo "No debug keystore"
+          echo "=== Injecting Android settings ==="
+          python3 << 'PYEOF'
+          import re, os
+          settings_path = os.path.expanduser("~/.config/godot/editor_settings-4.5.tres")
+          java_home = os.environ["JAVA_HOME"]
+          home = os.environ["HOME"]
+          with open(settings_path, 'r') as f:
+              content = f.read()
+          # Remove any existing android export lines
+          content = re.sub(r'export/android/[^\n]*\n', '', content)
+          # Add our settings
+          android_lines = [
+              f'export/android/android_sdk_path = "/usr/local/lib/android/sdk"',
+              f'export/android/java_sdk_path = "{java_home}"',
+              f'export/android/debug_keystore = "{home}/.android/debug.keystore"',
+              f'export/android/debug_keystore_user = "androiddebugkey"',
+              f'export/android/debug_keystore_pass = "android"',
+          ]
+          content = content.rstrip() + '\n' + '\n'.join(android_lines) + '\n'
+          with open(settings_path, 'w') as f:
+              f.write(content)
+          PYEOF
+          echo "=== Final editor settings ==="
+          cat "$SETTINGS"
 
       - name: Export Web
         run: |
