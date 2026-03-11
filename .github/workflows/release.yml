@@ -7,7 +7,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     permissions:
       contents: write
     steps:
@@ -19,6 +19,36 @@ jobs:
           version: 4.5.1
           use-dotnet: false
           include-templates: true
+
+      - name: Setup Java for Android export
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Generate debug keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey \
+            -keypass android -keystore ~/.android/debug.keystore \
+            -storepass android -dname "CN=Android Debug,O=Android,C=US" \
+            -validity 9999 -deststoretype pkcs12
+
+      - name: Configure Godot Android settings
+        run: |
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.tres << 'SETTINGS'
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "/usr/local/lib/android/sdk"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "~/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          SETTINGS
 
       - name: Import project
         run: godot --headless --path . --import --quit || true
@@ -37,6 +67,11 @@ jobs:
         run: |
           mkdir -p build/windows
           godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
+
+      - name: Export Android build
+        run: |
+          mkdir -p build/android
+          godot --headless --path . --export-release "Android" build/android/psz-godot.apk
 
       - name: Package builds
         run: |
@@ -57,4 +92,5 @@ jobs:
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
+            build/android/psz-godot.apk
           generate_release_notes: true
