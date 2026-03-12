@@ -36,7 +36,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_accept"):
 		_use_selected()
 		get_viewport().set_input_as_handled()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_D:
+	elif event.is_action_pressed("action_3"):
 		_drop_selected()
 		get_viewport().set_input_as_handled()
 
