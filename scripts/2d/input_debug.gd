@@ -155,7 +155,7 @@ func _get_button_name(idx: int) -> String:
 		12: return "D-Pad Down"
 		13: return "D-Pad Left"
 		14: return "D-Pad Right"
-		15: return "Misc / Share"
+		15: return "Misc 1"
 		16: return "Paddle 1"
 		17: return "Paddle 2"
 		18: return "Paddle 3"

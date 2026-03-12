@@ -169,8 +169,8 @@ static func _load_global_texture_fixes() -> void:
 	if not _global_texture_fixes.is_empty():
 		return
 	var gtf_path := "res://data/stage_configs/global-texture-fixes.json"
-	if FileAccess.file_exists(gtf_path):
-		var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
+	var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
+	if gtf_file:
 		if gtf_file:
 			var gtf_json := JSON.new()
 			if gtf_json.parse(gtf_file.get_as_text()) == OK:

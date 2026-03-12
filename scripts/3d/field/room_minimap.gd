@@ -68,8 +68,6 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 	# Load SVG text (not as texture — we need to parse geometry)
 	var subfolder: String = "%s_%s" % [area_folder, stage_id[3]] if stage_id.length() >= 4 else area_folder
 	var svg_path := "res://assets/stages/%s/%s/lndmd/%s_minimap.svg" % [subfolder, stage_id, stage_id]
-	if not FileAccess.file_exists(svg_path):
-		return
 	var file := FileAccess.open(svg_path, FileAccess.READ)
 	if not file:
 		return
