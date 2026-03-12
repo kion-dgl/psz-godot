@@ -11,7 +11,8 @@ var _debug_guide: PanelContainer
 
 func _ready() -> void:
 	prompt_label.text = "[ Tap or press any button to start ]"
-	version_label.text = "PSZ Godot v0.1 — A Phantasy Star Zero fan game"
+	var app_version: String = ProjectSettings.get_setting("application/config/version", "0.0.0")
+	version_label.text = "PSZ Godot v%s" % app_version
 
 	# Add text shadows for readability over the background image
 	var prompt_settings := LabelSettings.new()
