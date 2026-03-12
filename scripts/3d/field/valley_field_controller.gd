@@ -2831,7 +2831,7 @@ func _return_to_city() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("pause"):
 		SceneManager.push_scene(MENU_SCENE_PATH)
 		get_viewport().set_input_as_handled()
 		return
