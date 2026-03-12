@@ -6,6 +6,7 @@ const BASE_MENU_ITEMS := [
 	"Inventory",
 	"Equipment",
 	"Status",
+	"Action Palette",
 	"──────────────",
 	"Save Game",
 	"Return to Title",
@@ -65,6 +66,8 @@ func _on_menu_selected(index: int) -> void:
 			SceneManager.push_scene("res://scenes/2d/equipment.tscn")
 		"Status":
 			SceneManager.push_scene("res://scenes/2d/status.tscn")
+		"Action Palette":
+			SceneManager.push_scene("res://scenes/2d/action_palette.tscn")
 		"Save Game":
 			SaveManager.save_game()
 			feedback_label.text = "Game saved!"

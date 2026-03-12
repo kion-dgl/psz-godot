@@ -79,7 +79,10 @@ func _on_interact(_player: Node3D) -> void:
 	var area_controller := get_parent()
 	if area_controller and area_controller.has_method("_save_player_state"):
 		area_controller._save_player_state()
-	SceneManager.push_scene(target_scene_path)
+	SceneManager.push_scene(target_scene_path, {
+		"npc_model_path": npc_model_path,
+		"npc_display_name": npc_display_name,
+	})
 
 
 func _apply_npc_texture(node: Node, texture: Texture2D) -> void:

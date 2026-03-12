@@ -84,6 +84,7 @@ func create_character(slot: int, class_id: String, char_name: String, appearance
 		"combat_buffs": {},
 		"completed_missions": [],
 		"storage": [],
+		"action_palette": ActionPalette.DEFAULT_PAGES.duplicate(true),
 		"created_at": Time.get_unix_time_from_system(),
 	}
 
@@ -121,6 +122,7 @@ func set_active_slot(slot: int) -> void:
 	# Load incoming character's data
 	Inventory._items = _characters[slot].get("inventory", {}).duplicate()
 	GameState.completed_missions = _characters[slot].get("completed_missions", []).duplicate()
+	ActionPalette.load_from_character(_characters[slot])
 	active_character_changed.emit(slot)
 	_sync_to_game_state()
 
@@ -224,6 +226,7 @@ func sync_inventory_to_active() -> void:
 		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
 		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
 		_characters[_active_slot]["meseta"] = GameState.meseta
+		_characters[_active_slot]["action_palette"] = ActionPalette.pages.duplicate(true)
 
 
 ## Migrate v3 global completed_missions to all existing characters

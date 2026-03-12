@@ -42,7 +42,7 @@ func _process(_delta: float) -> void:
 	if Input.is_action_pressed("camera_right"):
 		camera_rotation += rotation_speed
 
-	if Input.is_action_just_pressed("camera_center"):
+	if Input.is_action_just_pressed("camera_lock"):
 		_center_behind_player()
 
 	if target and camera:

@@ -2837,7 +2837,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
-			KEY_TAB:
+			KEY_QUOTELEFT:
 				if _map_overlay:
 					_map_overlay.visible = not _map_overlay.visible
 				get_viewport().set_input_as_handled()

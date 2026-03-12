@@ -107,17 +107,17 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		_appearance_row = wrapi(_appearance_row + 1, 0, 4)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") and not Input.is_action_pressed("dodge"):
+	elif event.is_action_pressed("ui_left") and not Input.is_action_pressed("camera_lock"):
 		_cycle_appearance_value(-1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right") and not Input.is_action_pressed("dodge"):
+	elif event.is_action_pressed("ui_right") and not Input.is_action_pressed("camera_lock"):
 		_cycle_appearance_value(1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept") and not Input.is_action_pressed("dodge"):
+	elif event.is_action_pressed("ui_accept") and not Input.is_action_pressed("camera_lock"):
 		_teardown_preview()
 		_show_name_entry()
 		_update_class_info()
@@ -126,8 +126,8 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		_teardown_preview()
 		_show_class_select()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("dodge"):
-		# Consume Space press so it doesn't trigger ui_accept
+	elif event.is_action_pressed("camera_lock"):
+		# Consume Tab press so it doesn't trigger other actions
 		get_viewport().set_input_as_handled()
 
 
@@ -158,7 +158,7 @@ func _handle_confirm_input(event: InputEvent) -> void:
 
 func _show_class_select() -> void:
 	_step = Step.CLASS_SELECT
-	hint_label.text = "[↑/↓] Navigate  [ENTER] Select  [ESC] Back"
+	hint_label.text = "[D-Pad] Navigate  [Confirm] Select  [Cancel] Back"
 	_update_class_select()
 
 
@@ -270,8 +270,8 @@ func _update_class_info() -> void:
 
 func _process(delta: float) -> void:
 	if _preview_active and _preview_pivot:
-		# Space + Left/Right to rotate the preview model
-		if Input.is_action_pressed("dodge"):
+		# Tab/L + Left/Right to rotate the preview model
+		if Input.is_action_pressed("camera_lock"):
 			if Input.is_action_pressed("ui_left"):
 				_preview_pivot.rotate_y(delta * 3.0)
 			elif Input.is_action_pressed("ui_right"):
@@ -390,7 +390,7 @@ func _teardown_preview() -> void:
 
 func _show_appearance() -> void:
 	_step = Step.APPEARANCE
-	hint_label.text = "[↑/↓] Row  [←/→] Change  [SPACE+←/→] Rotate  [ENTER] Next  [ESC] Back"
+	hint_label.text = "[D-Pad] Row/Change  [Confirm] Next  [Cancel] Back"
 
 	# Hide BG so 3D shows through the transparent info panel
 	_bg.visible = false
@@ -477,7 +477,7 @@ func _handle_name_entry_input(event: InputEvent) -> void:
 
 func _show_name_entry() -> void:
 	_step = Step.NAME_ENTRY
-	hint_label.text = "[ENTER] Confirm  [ESC] Back to Appearance"
+	hint_label.text = "[Confirm] Continue  [Cancel] Back to Appearance"
 
 	for child in content_panel.get_children():
 		child.queue_free()
@@ -524,7 +524,7 @@ func _on_name_submitted(text: String) -> void:
 func _show_confirm() -> void:
 	_step = Step.CONFIRM
 	var cls = _class_list[_selected_class_index]
-	hint_label.text = "[ENTER] Create Character  [ESC] Back to Name"
+	hint_label.text = "[Confirm] Create Character  [Cancel] Back to Name"
 
 	for child in content_panel.get_children():
 		child.queue_free()
