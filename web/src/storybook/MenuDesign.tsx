@@ -194,11 +194,178 @@ function Divider() {
 
 function PauseMenu() {
   const [sel, setSel] = useState(0);
-  const items = ['Equipment', 'Inventory', 'Techniques', 'Status', 'Options', 'Quit Mission'];
+  const items = ['Equipment', 'Inventory', 'Techniques', 'Action Palette', 'Status', 'Options', 'Quit Mission'];
   return (
     <Panel title="Menu" width={320} hint="Select from the Menu.">
       {items.map((item, i) => (
         <PillRow key={item} label={item} selected={sel === i} onClick={() => setSel(i)} />
+      ))}
+    </Panel>
+  );
+}
+
+
+const PALETTE_ACTIONS = [
+  { id: 'attack', label: 'Attack', category: 'combat' },
+  { id: 'strong_attack', label: 'Strong Attack', category: 'combat' },
+  { id: 'dodge', label: 'Dodge Roll', category: 'combat' },
+  { id: 'monomate', label: 'Monomate', category: 'recovery' },
+  { id: 'dimate', label: 'Dimate', category: 'recovery' },
+  { id: 'trimate', label: 'Trimate', category: 'recovery' },
+  { id: 'monofluid', label: 'Monofluid', category: 'recovery' },
+  { id: 'difluid', label: 'Difluid', category: 'recovery' },
+  { id: 'trifluid', label: 'Trifluid', category: 'recovery' },
+] as const;
+
+// Button labels for gamepad vs keyboard display
+const SLOT_LABELS = {
+  gamepad: ['X', 'A', 'B'],
+  keyboard: ['J', 'K', 'L'],
+} as const;
+const SWAP_LABELS = { gamepad: 'RB', keyboard: 'Shift' } as const;
+
+function ActionPaletteMenu() {
+  const [pages, setPages] = useState(() => DEFAULT_PALETTE_PAGES.map(p => [...p]));
+  const [activePage, setActivePage] = useState(0);
+  const [selSlot, setSelSlot] = useState(0);
+  const [picking, setPicking] = useState(false);
+  const [inputMode, setInputMode] = useState<'gamepad' | 'keyboard'>('gamepad');
+
+  const currentPage = pages[activePage];
+  const slotKeys = SLOT_LABELS[inputMode];
+  const swapKey = SWAP_LABELS[inputMode];
+
+  const assignAction = (actionLabel: string) => {
+    setPages(prev => prev.map((p, pi) => {
+      if (pi !== activePage) return p;
+      const newP = [...p];
+      newP[selSlot] = actionLabel;
+      return newP;
+    }));
+    setPicking(false);
+  };
+
+  // Action picker sub-view
+  if (picking) {
+    const combatActions = PALETTE_ACTIONS.filter(a => a.category === 'combat');
+    const recoveryActions = PALETTE_ACTIONS.filter(a => a.category === 'recovery');
+    return (
+      <Panel title="Action Palette" width={380} hint={inputMode === 'gamepad'
+        ? '\u2191\u2193 Select   A Confirm   B Back'
+        : '\u2191\u2193 Select   Enter Confirm   Esc Back'}>
+        <div style={{ fontSize: '12px', color: C.textLight, marginBottom: '6px', padding: '0 4px' }}>
+          Assign to Page {activePage + 1} \u00b7 {slotKeys[selSlot]} slot
+        </div>
+        <div style={{ fontSize: '10px', fontWeight: 700, color: C.textLight, padding: '4px 6px 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Combat</div>
+        {combatActions.map(a => (
+          <PillRow
+            key={a.id}
+            label={a.label}
+            selected={currentPage[selSlot] === a.label}
+            onClick={() => assignAction(a.label)}
+          />
+        ))}
+        <div style={{ fontSize: '10px', fontWeight: 700, color: C.textLight, padding: '8px 6px 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Recovery</div>
+        {recoveryActions.map(a => (
+          <PillRow
+            key={a.id}
+            label={a.label}
+            selected={currentPage[selSlot] === a.label}
+            onClick={() => assignAction(a.label)}
+          />
+        ))}
+        <div style={{ marginTop: '8px' }}>
+          <PillRow label="\u2190 Back" onClick={() => setPicking(false)} />
+        </div>
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel title="Action Palette" width={380} hint={inputMode === 'gamepad'
+      ? 'LB/RB Page   \u2191\u2193 Slot   A Edit   B Back'
+      : 'Left/Right Page   \u2191\u2193 Slot   Enter Edit   Esc Back'}>
+      {/* Input mode toggle */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 4px 4px' }}>
+        <div style={{
+          display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.1)', borderRadius: '6px', padding: '2px',
+        }}>
+          {(['gamepad', 'keyboard'] as const).map(mode => (
+            <button key={mode} onClick={() => setInputMode(mode)} style={{
+              background: inputMode === mode ? C.bgDark : 'transparent',
+              color: inputMode === mode ? C.textWhite : C.textLight,
+              border: 'none', borderRadius: '4px', padding: '2px 8px',
+              fontSize: '10px', fontWeight: 600, cursor: 'pointer',
+            }}>{mode === 'gamepad' ? '\uD83C\uDFAE Gamepad' : '\u2328 Keyboard'}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Page tabs */}
+      <TabBar
+        tabs={pages.map((_, i) => `Page ${i + 1}`)}
+        active={activePage}
+        onSelect={(i) => { setActivePage(i); setSelSlot(0); }}
+      />
+
+      {/* Live palette preview — diamond layout matching HUD */}
+      <div style={{
+        display: 'flex', justifyContent: 'center', margin: '8px 0 12px',
+      }}>
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0px',
+        }}>
+          {/* Swap indicator */}
+          <div style={{
+            background: C.itemBg, borderRadius: '8px',
+            padding: '3px 10px', border: '1px solid rgba(150,180,210,0.4)',
+            display: 'flex', alignItems: 'center', gap: '4px',
+            marginBottom: '-2px', zIndex: 1,
+          }}>
+            <span style={{
+              fontSize: '9px', fontWeight: 700, color: C.textWhite,
+              background: 'rgba(40,60,80,0.7)', borderRadius: '6px',
+              padding: '1px 6px', lineHeight: '16px',
+            }}>{swapKey}</span>
+            <span style={{ fontSize: '9px', fontWeight: 600, color: C.textLight }}>
+              {activePage + 1}/{pages.length}
+            </span>
+          </div>
+          {/* 3 slots — left and right raised, center lower (diamond) */}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+            {currentPage.map((label, i) => (
+              <div key={i} style={{
+                background: selSlot === i ? C.selectedGradient : C.itemBg,
+                borderRadius: '8px',
+                padding: '6px 12px',
+                border: selSlot === i ? '2px solid #d08010' : '1px solid rgba(150,180,210,0.4)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
+                minWidth: '58px', cursor: 'pointer',
+                marginBottom: i === 1 ? '0px' : '14px',
+              }} onClick={() => setSelSlot(i)}>
+                <span style={{
+                  fontSize: '9px', fontWeight: 700, color: C.textWhite,
+                  background: 'rgba(40,60,80,0.7)', borderRadius: '6px',
+                  padding: '1px 6px', lineHeight: '16px',
+                }}>{slotKeys[i]}</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: C.text, textAlign: 'center', lineHeight: '14px' }}>{label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <Divider />
+
+      {/* Slot list */}
+      {currentPage.map((label, i) => (
+        <PillRow
+          key={i}
+          label={`${slotKeys[i]}  Slot ${i + 1}`}
+          rightText={label}
+          selected={selSlot === i}
+          onClick={() => { setSelSlot(i); setPicking(true); }}
+        />
       ))}
     </Panel>
   );
@@ -337,48 +504,70 @@ function HudMinimap() {
   );
 }
 
+// Default palette pages shared by HUD and menu
+const DEFAULT_PALETTE_PAGES = [
+  ['Attack', 'Strong Attack', 'Monomate'],
+  ['Attack', 'Dodge Roll', 'Dimate'],
+];
+
+// Abbreviate long action names for the compact HUD display
+function shortLabel(label: string): string {
+  const map: Record<string, string> = {
+    'Attack': 'Atk', 'Strong Attack': 'S.Atk', 'Dodge Roll': 'Dodge',
+    'Monomate': 'Mono', 'Dimate': 'Di', 'Trimate': 'Tri',
+    'Monofluid': 'M.Flu', 'Difluid': 'D.Flu', 'Trifluid': 'T.Flu',
+  };
+  return map[label] ?? label;
+}
+
 function HudActionPalette() {
-  // PSO-style: I to swap palette, J/K/L for the 3 action slots
-  const slots = [
-    { label: 'Atk', key: 'J' },
-    { label: 'Foie', key: 'K' },
-    { label: 'Mate', key: 'L' },
-  ];
+  const [pageIndex, setPageIndex] = useState(0);
+  const pages = DEFAULT_PALETTE_PAGES;
+  const currentPage = pages[pageIndex];
+  const buttonKeys = ['X', 'A', 'B'];
+
+  const swapPalette = () => setPageIndex(i => (i + 1) % pages.length);
+
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0px',
       filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))',
     }}>
-      {/* I — palette swap, centered above */}
-      <div style={{
-        background: C.itemBg, borderRadius: '8px',
-        padding: '4px 12px', border: '1px solid rgba(150,180,210,0.4)',
-        display: 'flex', alignItems: 'center', gap: '6px',
-        marginBottom: '-2px', zIndex: 1,
-      }}>
+      {/* RB — palette swap, clickable */}
+      <div
+        onClick={swapPalette}
+        style={{
+          background: C.itemBg, borderRadius: '8px',
+          padding: '4px 12px', border: '1px solid rgba(150,180,210,0.4)',
+          display: 'flex', alignItems: 'center', gap: '6px',
+          marginBottom: '-2px', zIndex: 1, cursor: 'pointer',
+        }}
+      >
         <span style={{
           fontSize: '9px', fontWeight: 700, color: C.textWhite,
           background: 'rgba(40,60,80,0.7)', borderRadius: '6px',
           padding: '1px 6px', lineHeight: '16px',
-        }}>I</span>
-        <span style={{ fontSize: '9px', fontWeight: 600, color: C.textLight }}>1/6</span>
+        }}>RB</span>
+        <span style={{ fontSize: '9px', fontWeight: 600, color: C.textLight }}>
+          {pageIndex + 1}/{pages.length}
+        </span>
       </div>
-      {/* J K L — J and L raised, K lower (diamond-ish) */}
+      {/* X A B — X and B raised, A lower (diamond-ish) */}
       <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
-        {slots.map((a) => (
-          <div key={a.key} style={{
+        {currentPage.map((label, i) => (
+          <div key={i} style={{
             background: C.itemBg, borderRadius: '8px',
             padding: '6px 12px', border: '1px solid rgba(150,180,210,0.4)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
             minWidth: '52px',
-            marginBottom: a.key === 'K' ? '0px' : '14px',
+            marginBottom: i === 1 ? '0px' : '14px',
           }}>
             <span style={{
               fontSize: '9px', fontWeight: 700, color: C.textWhite,
               background: 'rgba(40,60,80,0.7)', borderRadius: '6px',
               padding: '1px 6px', lineHeight: '16px',
-            }}>{a.key}</span>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: C.text }}>{a.label}</span>
+            }}>{buttonKeys[i]}</span>
+            <span style={{ fontSize: '11px', fontWeight: 600, color: C.text }}>{shortLabel(label)}</span>
           </div>
         ))}
       </div>
@@ -1082,6 +1271,7 @@ const MENU_DEMOS = [
   { id: 'hud-actions', label: 'HUD: Actions', component: HudActionPalette },
   { id: 'hud-log', label: 'HUD: Log', component: HudActivityLog },
   { id: 'pause', label: 'Pause Menu', component: PauseMenu },
+  { id: 'action-palette', label: 'Action Palette', component: ActionPaletteMenu },
   { id: 'equipment', label: 'Equipment', component: EquipmentMenu },
   { id: 'inventory', label: 'Inventory', component: InventoryMenu },
   { id: 'weapon-shop', label: 'Weapon Shop', component: ShopMenu },

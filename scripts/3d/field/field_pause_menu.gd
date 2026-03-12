@@ -28,6 +28,7 @@ const MENU_ITEMS := [
 	"Inventory",
 	"Equipment",
 	"Status",
+	"Action Palette",
 	"──────────",
 	"Save Game",
 	"Return to Title",
@@ -53,8 +54,8 @@ func _ready() -> void:
 
 	_panel = Control.new()
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_panel.size = Vector2(260, 270)
-	_panel.position = Vector2(-130, -135)
+	_panel.size = Vector2(260, 300)
+	_panel.position = Vector2(-130, -150)
 	add_child(_panel)
 
 	_panel.draw.connect(_draw_panel)
@@ -133,6 +134,9 @@ func _activate_item() -> void:
 		"Status":
 			close()
 			SceneManager.push_scene("res://scenes/2d/status.tscn")
+		"Action Palette":
+			close()
+			SceneManager.push_scene("res://scenes/2d/action_palette.tscn")
 		"Save Game":
 			SaveManager.save_game()
 			_feedback_text = "Game saved!"

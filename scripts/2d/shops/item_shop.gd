@@ -20,6 +20,7 @@ var _disk_items: Array = []
 var _sell_items: Array = []
 
 var _mode_bar: HBoxContainer
+var _portrait: TextureRect
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
@@ -32,11 +33,20 @@ func _ready() -> void:
 	_mode_bar = mode_label.get_parent()
 	PszStyle.style_menu(title_label, hint_label, [shop_panel, detail_panel])
 	title_label.text = "Item Shop"
+	_setup_portrait()
 	_update_hint()
 	_load_shop_items()
 	_generate_disk_inventory()
 	_generate_sell_list()
 	_refresh_display()
+
+
+func _setup_portrait() -> void:
+	var data := SceneManager.get_transition_data()
+	var model_path: String = data.get("npc_model_path", "")
+	if model_path.is_empty():
+		return
+	_portrait = PszStyle.setup_shop_portrait($Panel, shop_panel, detail_panel, model_path)
 
 
 func _load_shop_items() -> void:

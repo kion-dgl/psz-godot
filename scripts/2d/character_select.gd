@@ -13,7 +13,7 @@ var _current_slot: int = 0
 
 func _ready() -> void:
 	title_label.text = "SELECT CHARACTER"
-	hint_label.text = "[↑/↓/←/→] Navigate  [ENTER] Select  [DELETE] Delete  [ESC] Back"
+	hint_label.text = "[D-Pad] Navigate  [Confirm] Select  [Cancel] Back"
 	_refresh_slots()
 
 

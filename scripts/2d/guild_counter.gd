@@ -15,6 +15,7 @@ enum Tab { QUESTS, TUI }
 var _tab: int = Tab.QUESTS
 
 var _mode_bar: HBoxContainer
+var _portrait: TextureRect
 
 const TAB_NAMES := ["Quests", "TUI"]
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
@@ -66,6 +67,7 @@ func _ready() -> void:
 	_mode_bar = mode_label.get_parent()
 	PszStyle.style_menu(title_label, hint_label, [list_panel, detail_panel])
 	title_label.text = "Guild Counter"
+	_setup_portrait()
 	hint_label.text = "Up/Down: Select  Enter: Accept  Esc: Leave"
 	_load_entries()
 	_refresh_display()
@@ -73,6 +75,14 @@ func _ready() -> void:
 	if SessionManager.has_completed_quest():
 		var cq: Dictionary = SessionManager.get_completed_quest()
 		hint_label.text = "Quest \"%s\" complete! Press ENTER to report." % str(cq.get("name", ""))
+
+
+func _setup_portrait() -> void:
+	var data := SceneManager.get_transition_data()
+	var model_path: String = data.get("npc_model_path", "")
+	if model_path.is_empty():
+		return
+	_portrait = PszStyle.setup_shop_portrait($Panel, list_panel, detail_panel, model_path)
 
 
 func _has_active_quest() -> bool:
