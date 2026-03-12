@@ -28,7 +28,7 @@ func _ready() -> void:
 
 func _setup_prompt() -> void:
 	_prompt_label = Label3D.new()
-	_prompt_label.text = "[E] Enter %s" % display_name
+	_prompt_label.text = "Enter %s" % display_name
 	_prompt_label.font_size = 28
 	_prompt_label.pixel_size = 0.01
 	_prompt_label.position = Vector3(0, 2.0, 0)
@@ -114,7 +114,7 @@ func _process(delta: float) -> void:
 			var susp_session: Dictionary = SessionManager._suspended_session
 			susp_area = str(susp_session.get("area_id", ""))
 		if susp_area == my_area:
-			_prompt_label.text = "[E] Resume Quest"
+			_prompt_label.text = "Resume Quest"
 			_prompt_label.modulate = Color(0.3, 1.0, 0.3)
 			_prompt_label.visible = is_nearest
 		else:
@@ -125,7 +125,7 @@ func _process(delta: float) -> void:
 		var quest_area: String = SessionManager.get_accepted_quest_area()
 		if quest_area == my_area:
 			var quest_name: String = str(SessionManager.get_accepted_quest().get("name", ""))
-			_prompt_label.text = "[E] Enter %s" % quest_name
+			_prompt_label.text = "Enter %s" % quest_name
 			_prompt_label.modulate = Color(0.3, 1.0, 0.3)
 			_prompt_label.visible = is_nearest
 		else:
@@ -133,7 +133,7 @@ func _process(delta: float) -> void:
 		return
 
 	# No quest active — normal free-explore
-	_prompt_label.text = "[E] Enter %s" % display_name
+	_prompt_label.text = "Enter %s" % display_name
 	_prompt_label.modulate = Color(0.5, 1.0, 0.5)
 	_prompt_label.visible = is_nearest
 
