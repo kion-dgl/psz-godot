@@ -28,23 +28,31 @@ enum PlayerState {
 	CUTSCENE
 }
 
-# Weapon type → animation GLB path and prefix
+# Weapon type → animation GLB path and prefix (male / female)
 const WEAPON_ANIM_DATA: Dictionary = {
-	WeaponData.WeaponType.SABER: {"glb": "res://assets/player/animations/saver_m.glb", "prefix": "pmsa"},
-	WeaponData.WeaponType.SWORD: {"glb": "res://assets/player/animations/sword_m.glb", "prefix": "pmsw"},
-	WeaponData.WeaponType.DAGGERS: {"glb": "res://assets/player/animations/dagger_m.glb", "prefix": "pmda"},
-	WeaponData.WeaponType.SPEAR: {"glb": "res://assets/player/animations/spear_m.glb", "prefix": "pmsp"},
-	WeaponData.WeaponType.HANDGUN: {"glb": "res://assets/player/animations/handgun_m.glb", "prefix": "pmhg"},
-	WeaponData.WeaponType.MECH_GUN: {"glb": "res://assets/player/animations/machinegun_m.glb", "prefix": "pmmg"},
-	WeaponData.WeaponType.RIFLE: {"glb": "res://assets/player/animations/shotgun_m.glb", "prefix": "pmgb"},
-	WeaponData.WeaponType.ROD: {"glb": "res://assets/player/animations/rod_m.glb", "prefix": "pmro"},
-	WeaponData.WeaponType.WAND: {"glb": "res://assets/player/animations/rod_m.glb", "prefix": "pmro"},
+	WeaponData.WeaponType.SABER: {"glb_m": "res://assets/player/animations/saver_m.glb", "glb_w": "res://assets/player/animations/saver_w.glb", "prefix_m": "pmsa", "prefix_w": "pwsa"},
+	WeaponData.WeaponType.SWORD: {"glb_m": "res://assets/player/animations/sword_m.glb", "glb_w": "res://assets/player/animations/sword_w.glb", "prefix_m": "pmsw", "prefix_w": "pwsw"},
+	WeaponData.WeaponType.DAGGERS: {"glb_m": "res://assets/player/animations/dagger_m.glb", "glb_w": "res://assets/player/animations/dagger_w.glb", "prefix_m": "pmda", "prefix_w": "pwda"},
+	WeaponData.WeaponType.SPEAR: {"glb_m": "res://assets/player/animations/spear_m.glb", "glb_w": "res://assets/player/animations/spear_w.glb", "prefix_m": "pmsp", "prefix_w": "pwsp"},
+	WeaponData.WeaponType.HANDGUN: {"glb_m": "res://assets/player/animations/handgun_m.glb", "glb_w": "res://assets/player/animations/handgun_w.glb", "prefix_m": "pmhg", "prefix_w": "pwhg"},
+	WeaponData.WeaponType.MECH_GUN: {"glb_m": "res://assets/player/animations/machinegun_m.glb", "glb_w": "res://assets/player/animations/machinegun_w.glb", "prefix_m": "pmmg", "prefix_w": "pwmgs"},
+	WeaponData.WeaponType.RIFLE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmgb", "prefix_w": "pwgbs"},
+	WeaponData.WeaponType.ROD: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwros"},
+	WeaponData.WeaponType.WAND: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwros"},
 }
-const DEFAULT_ANIM_GLB := "res://assets/player/animations/saver_m.glb"
-const DEFAULT_ANIM_PREFIX := "pmsa"
+const DEFAULT_ANIM_GLB_M := "res://assets/player/animations/saver_m.glb"
+const DEFAULT_ANIM_GLB_W := "res://assets/player/animations/saver_w.glb"
+const DEFAULT_ANIM_PREFIX_M := "pmsa"
+const DEFAULT_ANIM_PREFIX_W := "pwsa"
 
 # Current weapon animation prefix (changes when weapon changes)
-var _anim_prefix: String = DEFAULT_ANIM_PREFIX
+var _anim_prefix: String = DEFAULT_ANIM_PREFIX_M
+
+# Gender-aware walk/run/sprint animation names
+var _walk_anim: String = "pmsa_walk"
+var _run_anim: String = "pmsa_run_pso"
+var _sprint_anim: String = ""  # Set in _load_weapon_animations; empty = use _anim_prefix + "_run"
+var _is_female: bool = false
 
 # Default asset paths (fallback when no character data)
 const DEFAULT_TEXTURE_PATH := "res://assets/player/pc_000/textures/pc_000_000.png"
@@ -159,24 +167,36 @@ func _load_weapon_animations() -> void:
 	if not animation_player or not skeleton:
 		return
 
+	# Detect character gender
+	_is_female = false
+	var character = CharacterManager.get_active_character()
+	if character:
+		var class_id: String = character.get("class_id", "humar")
+		var class_data = ClassRegistry.get_class_data(class_id)
+		if class_data and class_data.gender == "Female":
+			_is_female = true
+
+	var gender_key := "w" if _is_female else "m"
+
 	# In city, always use default unarmed animations
-	var anim_glb := DEFAULT_ANIM_GLB
-	_anim_prefix = DEFAULT_ANIM_PREFIX
+	var anim_glb := DEFAULT_ANIM_GLB_W if _is_female else DEFAULT_ANIM_GLB_M
+	_anim_prefix = DEFAULT_ANIM_PREFIX_W if _is_female else DEFAULT_ANIM_PREFIX_M
 
 	if not _is_in_city():
 		var weapon_data := _get_equipped_weapon_data()
 		if weapon_data and WEAPON_ANIM_DATA.has(weapon_data.weapon_type):
 			var data: Dictionary = WEAPON_ANIM_DATA[weapon_data.weapon_type]
-			anim_glb = str(data.get("glb", DEFAULT_ANIM_GLB))
-			_anim_prefix = str(data.get("prefix", DEFAULT_ANIM_PREFIX))
+			anim_glb = str(data.get("glb_" + gender_key, anim_glb))
+			_anim_prefix = str(data.get("prefix_" + gender_key, _anim_prefix))
 
-	print("[Player] Loading animations: glb=%s, prefix=%s" % [anim_glb, _anim_prefix])
+	print("[Player] Loading animations: glb=%s, prefix=%s, female=%s" % [anim_glb, _anim_prefix, _is_female])
 
-	# Load animation GLB
+	# Load animation GLB (fall back to male if female GLB missing)
 	if not ResourceLoader.exists(anim_glb):
-		push_warning("[Player] Animation GLB not found: %s, falling back to default" % anim_glb)
-		anim_glb = DEFAULT_ANIM_GLB
-		_anim_prefix = DEFAULT_ANIM_PREFIX
+		push_warning("[Player] Animation GLB not found: %s, falling back to male" % anim_glb)
+		anim_glb = DEFAULT_ANIM_GLB_M
+		_anim_prefix = DEFAULT_ANIM_PREFIX_M
+		_is_female = false
 
 	var packed: PackedScene = load(anim_glb) as PackedScene
 	if packed == null:
@@ -191,7 +211,7 @@ func _load_weapon_animations() -> void:
 		return
 
 	# Looping animations: weapon-specific idle/wait + shared locomotion
-	var looping_suffixes := ["_wait", "_run", "_walk", "_stp_fb", "_stp_lr"]
+	var looping_suffixes := ["_wait", "_run", "_run_pso", "_walk", "_stp_fb", "_stp_lr"]
 
 	# Build new library from the weapon animation GLB
 	var lib := AnimationLibrary.new()
@@ -222,6 +242,24 @@ func _load_weapon_animations() -> void:
 					var new_anim := _remap_animation(source_anim, skeleton.name)
 					new_anim.loop_mode = Animation.LOOP_LINEAR
 					lib.add_animation(anim_name, new_anim)
+
+	# Set gender-aware walk/run/sprint animation names
+	if _is_female:
+		_walk_anim = "pwsa_walk" if lib.has_animation("pwsa_walk") else "pmsa_walk"
+		_run_anim = "pwsa_run_pso" if lib.has_animation("pwsa_run_pso") else "pmsa_run_pso"
+		# Sprint uses weapon-specific run; search for best pw*_run in library
+		var female_sprint := _anim_prefix + "_run"
+		if not lib.has_animation(female_sprint):
+			for anim_name in lib.get_animation_list():
+				if anim_name.begins_with("pw") and anim_name.ends_with("_run") and not anim_name.ends_with("_run_pso"):
+					female_sprint = anim_name
+					break
+		_sprint_anim = female_sprint
+	else:
+		_walk_anim = "pmsa_walk"
+		_run_anim = "pmsa_run_pso"
+		_sprint_anim = _anim_prefix + "_run"
+	print("[Player] Walk=%s, Run=%s, Sprint=%s" % [_walk_anim, _run_anim, _sprint_anim])
 
 	# Replace existing library
 	if animation_player.has_animation_library(""):
@@ -819,11 +857,11 @@ func transition_to(new_state: PlayerState) -> void:
 		PlayerState.IDLE:
 			play_animation(_anim_prefix + "_wait", true)
 		PlayerState.WALKING:
-			play_animation("pmsa_walk", true)  # Shared PSO walk
+			play_animation(_walk_anim, true)
 		PlayerState.RUNNING:
-			play_animation("pmsa_run_pso", true)  # Shared PSO run
+			play_animation(_run_anim, true)
 		PlayerState.SPRINTING:
-			play_animation(_anim_prefix + "_run", true)
+			play_animation(_sprint_anim, true)
 		PlayerState.DODGING:
 			play_animation(_anim_prefix + "_esc_f", false)
 		PlayerState.DAMAGED:
