@@ -56,9 +56,11 @@ func _ready() -> void:
 		Vector3(0.38, 1, 14.43), Vector3(7.42, 3, 1),
 		"res://scenes/3d/city/city_counter.tscn", "market-exit"
 	)
-	_add_area_trigger(
+	# Interactive trigger — Enter Underground
+	_add_interactive_trigger(
 		Vector3(-13.44, 1, 57.44), Vector3(3, 3, 3),
-		"res://scenes/3d/city/city_underground.tscn", "market-exit"
+		"res://scenes/3d/city/city_underground.tscn", "market-exit",
+		"Enter Underground"
 	)
 
 	# Wire up player references

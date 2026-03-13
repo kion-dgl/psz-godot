@@ -13,9 +13,6 @@ const SPAWN_VARIANTS := {
 
 
 func _ready() -> void:
-	# Apply texture fixes from global config
-	_fix_city_materials()
-
 	# Spawn player
 	_spawn_player(DEFAULT_SPAWN, DEFAULT_ROT, SPAWN_VARIANTS)
 
@@ -39,10 +36,11 @@ func _ready() -> void:
 		""  # TODO: create photon collector shop scene
 	)
 
-	# Exit trigger — back to market (at the entrance, south side of room)
-	_add_area_trigger(
+	# Interactive exit trigger — back to market
+	_add_interactive_trigger(
 		Vector3(0.04, 1, 3.0), Vector3(3, 3, 1),
-		"res://scenes/3d/city/city_market.tscn", "underground-exit"
+		"res://scenes/3d/city/city_market.tscn", "underground-exit",
+		"Exit to City"
 	)
 
 	# Wire up player references
