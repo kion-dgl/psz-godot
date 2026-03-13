@@ -1,7 +1,7 @@
 extends GameElement
 class_name WarpPad
 ## Interactive warp pad element for the warp area.
-## Handles quest routing, session resume, and free-explore warp teleporter.
+## When area_id is empty, acts as a central pad that opens the teleporter menu.
 
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 
@@ -28,7 +28,7 @@ func _ready() -> void:
 
 func _setup_prompt() -> void:
 	_prompt_label = Label3D.new()
-	_prompt_label.text = "Enter %s" % display_name
+	_prompt_label.text = display_name
 	_prompt_label.font_size = 28
 	_prompt_label.pixel_size = 0.01
 	_prompt_label.position = Vector3(0, 2.0, 0)
@@ -41,11 +41,17 @@ func _setup_prompt() -> void:
 	add_child(_prompt_label)
 
 
+func _is_central_pad() -> bool:
+	return area_id.is_empty()
+
+
 func _get_my_area() -> String:
 	return SessionManager.WARP_TO_AREA.get(area_id, "")
 
 
 func _is_pad_active() -> bool:
+	if _is_central_pad():
+		return not SessionManager.has_completed_quest()
 	var my_area: String = _get_my_area()
 	if SessionManager.has_completed_quest():
 		return false
@@ -59,6 +65,8 @@ func _is_pad_active() -> bool:
 
 func _update_dim_state() -> void:
 	if not model:
+		return
+	if _is_central_pad():
 		return
 	var quest_active: bool = SessionManager.has_accepted_quest() \
 		or SessionManager.has_suspended_session() \
@@ -96,6 +104,11 @@ func _process(delta: float) -> void:
 		return
 
 	var is_nearest: bool = _player_ref.get_nearest_interactable() == self
+
+	if _is_central_pad():
+		_process_central_prompt(is_nearest)
+		return
+
 	var my_area: String = _get_my_area()
 
 	# Determine prompt text and visibility based on quest state
@@ -138,11 +151,38 @@ func _process(delta: float) -> void:
 	_prompt_label.visible = is_nearest
 
 
+func _process_central_prompt(is_nearest: bool) -> void:
+	if SessionManager.has_completed_quest():
+		_prompt_label.visible = false
+		return
+
+	if SessionManager.has_suspended_session():
+		_prompt_label.text = "Resume Quest"
+		_prompt_label.modulate = Color(0.3, 1.0, 0.3)
+		_prompt_label.visible = is_nearest
+		return
+
+	if SessionManager.has_accepted_quest():
+		_prompt_label.text = "Warp Teleporter"
+		_prompt_label.modulate = Color(0.3, 1.0, 0.3)
+		_prompt_label.visible = is_nearest
+		return
+
+	# Free explore
+	_prompt_label.text = "Warp Teleporter"
+	_prompt_label.modulate = Color(0.5, 1.0, 0.5)
+	_prompt_label.visible = is_nearest
+
+
 func set_player(player: Node3D) -> void:
 	_player_ref = player
 
 
 func _on_interact(_player: Node3D) -> void:
+	if _is_central_pad():
+		_on_interact_central()
+		return
+
 	var my_area: String = _get_my_area()
 
 	# Completed quest — pads disabled
@@ -171,6 +211,32 @@ func _on_interact(_player: Node3D) -> void:
 	if area_controller and area_controller.has_method("_save_player_state"):
 		area_controller._save_player_state()
 	SceneManager.push_scene("res://scenes/2d/warp_teleporter.tscn")
+
+
+func _on_interact_central() -> void:
+	# Completed quest — pad disabled
+	if SessionManager.has_completed_quest():
+		return
+
+	# Suspended session — resume immediately
+	if SessionManager.has_suspended_session():
+		SessionManager.resume_session()
+		_enter_3d_field()
+		return
+
+	# Save player state before opening menu
+	var area_controller := get_parent()
+	if area_controller and area_controller.has_method("_save_player_state"):
+		area_controller._save_player_state()
+
+	# Build transition data based on quest state
+	var data := {}
+	if SessionManager.has_accepted_quest():
+		data = {
+			"quest_mode": true,
+			"area_id": SessionManager.get_accepted_quest_area(),
+		}
+	SceneManager.push_scene("res://scenes/2d/warp_teleporter.tscn", data)
 
 
 func _enter_3d_field() -> void:
