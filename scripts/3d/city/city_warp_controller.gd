@@ -49,12 +49,6 @@ func _ready() -> void:
 	# Floor collision — centered on walkable area (Z range ~-8 to ~18)
 	_add_floor_collision(Vector3(0, 0, 5), Vector3(24, 0.2, 30))
 
-	# Walls
-	var walls := CityWalls.new()
-	walls.name = "Walls"
-	add_child(walls)
-	walls.create_walls(WALL_DATA)
-
 	# Warp pads
 	_add_warp_pad("GurhaciaValley", Vector3(4.55, 0, -4.10), "gurhacia-valley", "Gurhacia Valley")
 	_add_warp_pad("OzetteWetlands", Vector3(6.56, 0, 0.42), "ozette-wetland", "Ozette Wetlands")

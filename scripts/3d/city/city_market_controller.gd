@@ -69,12 +69,6 @@ func _ready() -> void:
 	# Floor collision — centered on walkable area (Z range ~14 to ~67)
 	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
 
-	# Walls
-	var walls := CityWalls.new()
-	walls.name = "Walls"
-	add_child(walls)
-	walls.create_walls(WALL_DATA)
-
 	# NPCs
 	_add_npc(
 		"ShopNPC", Vector3(-10.34, 0, 27.67), 1.4207,
