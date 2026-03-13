@@ -71,7 +71,7 @@ func _build_ui() -> void:
 
 	# Advance prompt
 	_advance_label = Label.new()
-	_advance_label.text = "[E] Continue"
+	_advance_label.text = "Continue ▶"
 	_advance_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_advance_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 	_advance_label.add_theme_font_size_override("font_size", 12)
@@ -98,9 +98,9 @@ func _show_page(idx: int) -> void:
 	_text_label.text = str(page.get("text", ""))
 
 	if idx >= _pages.size() - 1:
-		_advance_label.text = "[E] Close"
+		_advance_label.text = "Close ▶"
 	else:
-		_advance_label.text = "[E] Continue"
+		_advance_label.text = "Continue ▶"
 
 
 func _advance() -> void:
@@ -123,11 +123,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _active:
 		return
 
-	if event is InputEventKey and event.pressed and not event.echo:
-		match event.keycode:
-			KEY_E, KEY_ENTER, KEY_SPACE:
-				_advance()
-				get_viewport().set_input_as_handled()
-			KEY_ESCAPE:
-				_close()
-				get_viewport().set_input_as_handled()
+	if event.is_action_pressed("ui_accept") or event.is_action_pressed("interact"):
+		_advance()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		_close()
+		get_viewport().set_input_as_handled()

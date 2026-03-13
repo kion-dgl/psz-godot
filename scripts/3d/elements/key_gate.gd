@@ -54,7 +54,7 @@ func _setup_laser_material() -> void:
 
 func _setup_prompt() -> void:
 	_prompt_label = Label3D.new()
-	_prompt_label.text = "[E] Unlock"
+	_prompt_label.text = "Unlock"
 	_prompt_label.font_size = 28
 	_prompt_label.pixel_size = 0.01
 	_prompt_label.position = Vector3(0, 3.0, 0)
@@ -100,7 +100,7 @@ func _on_body_entered(body: Node3D) -> void:
 		if element_state == "locked":
 			if required_keys > 1:
 				var count := Inventory.get_key_count(required_key_id)
-				_prompt_label.text = "[E] Unlock (%d/%d)" % [count, required_keys]
+				_prompt_label.text = "Unlock (%d/%d)" % [count, required_keys]
 			_prompt_label.visible = true
 
 

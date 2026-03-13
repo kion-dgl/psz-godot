@@ -1,0 +1,180 @@
+{
+  "armadillo": [
+    "b_035.png"
+  ],
+  "armadillo_rare": [
+    "b_135.png"
+  ],
+  "bat": [
+    "s_033.png"
+  ],
+  "bat_blue": [
+    "s_033_b.png"
+  ],
+  "board": [
+    "m_051.png"
+  ],
+  "board_blue": [
+    "m_251.png"
+  ],
+  "board_green": [
+    "m_151.png"
+  ],
+  "booma": [
+    "en_booma_a.png"
+  ],
+  "circle": [
+    "anks_01.png"
+  ],
+  "circle_black": [
+    "anks_160.png"
+  ],
+  "deer": [
+    "sika_a.png"
+  ],
+  "frog": [
+    "s_020.png"
+  ],
+  "frog_bomb": [
+    "haikyo_kael.png"
+  ],
+  "frog_rare": [
+    "013_body_b.png"
+  ],
+  "gorilla": [
+    "b_014.png"
+  ],
+  "gorilla_female": [
+    "b_014_b.png"
+  ],
+  "gorilla_rare": [
+    "b_114.png"
+  ],
+  "hyena": [
+    "inosisi.png"
+  ],
+  "hyena_rare": [
+    "inosisi_b.png"
+  ],
+  "jigobooma": [
+    "en_booma_b.png"
+  ],
+  "leg": [
+    "m_061.png"
+  ],
+  "leg_black": [
+    "m_161.png"
+  ],
+  "lion": [
+    "b_004.png"
+  ],
+  "lion_rare": [
+    "en005b_b.png"
+  ],
+  "lizard": [
+    "lizard.png"
+  ],
+  "lower": [
+    "m_261.png"
+  ],
+  "lower_black": [
+    "m_361.png"
+  ],
+  "mole": [
+    "m_032.png"
+  ],
+  "mother": [
+    "tower_a.png",
+    "tower_b.png"
+  ],
+  "mother_gun": [
+    "tower_a.png",
+    "tower_b.png"
+  ],
+  "mother_sword": [
+    "tower_a.png",
+    "tower_b.png"
+  ],
+  "mother_tech": [
+    "tower_a.png",
+    "tower_b.png"
+  ],
+  "quad": [
+    "m_042.png"
+  ],
+  "quad_rare": [
+    "m_142.png"
+  ],
+  "rabbit": [
+    "s_010.png"
+  ],
+  "rabbit_rare": [
+    "s_110.png"
+  ],
+  "rappy": [
+    "s_070.png"
+  ],
+  "rappy_blue": [
+    "s_170.png"
+  ],
+  "rappy_red": [
+    "s_270.png"
+  ],
+  "roc": [
+    "b_022.png"
+  ],
+  "roc_rare": [
+    "metabo_bird.png"
+  ],
+  "seal": [
+    "ashika_a.png"
+  ],
+  "seal_rare": [
+    "ashika_b.png"
+  ],
+  "shooter": [
+    "s_050.png"
+  ],
+  "shooter_leader": [
+    "s_150.png"
+  ],
+  "shrimp": [
+    "yado_01.png"
+  ],
+  "shrimp_rare": [
+    "s_140.png"
+  ],
+  "snake": [
+    "m_003.png"
+  ],
+  "snake_rare": [
+    "snake_103.png"
+  ],
+  "swordman": [
+    "ankoku_a.png"
+  ],
+  "swordman_b": [
+    "ankoku_a_bk.png"
+  ],
+  "swordman_rare": [
+    "anko_b.png"
+  ],
+  "swordman_rare_b": [
+    "anko_b_bk.png"
+  ],
+  "tank": [
+    "b_052.png"
+  ],
+  "tank_rare": [
+    "b_152.png"
+  ],
+  "tiger": [
+    "hyou_a.png"
+  ],
+  "vulture": [
+    "hagetaka_a.png"
+  ],
+  "wolf": [
+    "m_012.png"
+  ]
+}

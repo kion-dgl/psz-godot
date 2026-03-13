@@ -46,7 +46,7 @@ func _ready() -> void:
 
 func _setup_prompt() -> void:
 	_prompt_label = Label3D.new()
-	_prompt_label.text = "[E] %s" % npc_display_name
+	_prompt_label.text = npc_display_name
 	_prompt_label.font_size = 32
 	_prompt_label.pixel_size = 0.01
 	_prompt_label.position = Vector3(0, 2.5, 0)

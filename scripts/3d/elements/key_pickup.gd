@@ -34,7 +34,7 @@ func _ready() -> void:
 
 func _setup_prompt() -> void:
 	_prompt_label = Label3D.new()
-	_prompt_label.text = "[E] Pick up"
+	_prompt_label.text = "Pick up"
 	_prompt_label.font_size = 28
 	_prompt_label.pixel_size = 0.01
 	_prompt_label.position = Vector3(0, 2.0, 0)

@@ -4,9 +4,9 @@ extends Node
 
 func load_quest(quest_id: String) -> Dictionary:
 	var path := "res://data/quests/%s.json" % quest_id
-	if not FileAccess.file_exists(path):
-		return {}
 	var fa := FileAccess.open(path, FileAccess.READ)
+	if not fa:
+		return {}
 	var json := JSON.new()
 	if json.parse(fa.get_as_text()) != OK:
 		return {}

@@ -24,6 +24,11 @@ var hurtbox: Hurtbox
 ## Resolved model folder name (set in _ready)
 var _model_id: String = ""
 
+## Texture manifest — maps model_id → [texture filenames].
+## Loaded once from JSON so we don't need DirAccess (fails on Android PCK).
+static var _tex_manifest: Dictionary = {}
+static var _tex_manifest_loaded: bool = false
+
 
 func _init() -> void:
 	interactable = false
@@ -55,29 +60,10 @@ func _ready() -> void:
 
 
 func _load_enemy_model() -> void:
-	var dir_path := "res://assets/enemies/%s/" % _model_id
-	if not DirAccess.dir_exists_absolute(dir_path):
-		push_warning("[EnemySpawn] Model dir not found: %s" % dir_path)
-		return
-
-	# Find first imported GLB in the directory
-	var glb_path := ""
-	var dir := DirAccess.open(dir_path)
-	if dir:
-		dir.list_dir_begin()
-		var fname := dir.get_next()
-		while not fname.is_empty():
-			if fname.ends_with(".glb") and not fname.ends_with(".import"):
-				# Check that it has been imported (ResourceLoader can load it)
-				var candidate := dir_path + fname
-				if ResourceLoader.exists(candidate):
-					glb_path = candidate
-					break
-			fname = dir.get_next()
-		dir.list_dir_end()
-
-	if glb_path.is_empty():
-		push_warning("[EnemySpawn] No imported GLB in: %s" % dir_path)
+	# Construct path directly — DirAccess enumeration fails in Android PCK exports.
+	var glb_path := "res://assets/enemies/%s/%s.glb" % [_model_id, _model_id]
+	if not ResourceLoader.exists(glb_path):
+		push_warning("[EnemySpawn] Model not found: %s" % glb_path)
 		return
 
 	var packed := load(glb_path) as PackedScene
@@ -120,23 +106,44 @@ func _setup_hurtbox() -> void:
 	add_child(hurtbox)
 
 
+static func _load_tex_manifest() -> void:
+	if _tex_manifest_loaded:
+		return
+	_tex_manifest_loaded = true
+	var fa := FileAccess.open("res://data/enemy_textures.json", FileAccess.READ)
+	if fa:
+		var json := JSON.new()
+		if json.parse(fa.get_as_text()) == OK and json.data is Dictionary:
+			_tex_manifest = json.data
+		fa.close()
+
+
 func _apply_enemy_texture() -> void:
 	if not model:
 		return
+	_load_tex_manifest()
 	var tex_dir := "res://assets/enemies/" + _model_id + "/"
-	if DirAccess.dir_exists_absolute(tex_dir):
-		var dir := DirAccess.open(tex_dir)
-		if dir:
-			dir.list_dir_begin()
-			var fname := dir.get_next()
-			while not fname.is_empty():
-				if fname.ends_with(".png") and not fname.ends_with(".import"):
-					var tex := load(tex_dir + fname) as Texture2D
-					if tex:
-						_apply_texture(tex)
-						break
-				fname = dir.get_next()
-			dir.list_dir_end()
+	if _tex_manifest.has(_model_id):
+		var tex_files: Array = _tex_manifest[_model_id]
+		if tex_files.size() > 0:
+			var tex_path := tex_dir + str(tex_files[0])
+			var tex := load(tex_path) as Texture2D
+			if tex:
+				_apply_texture(tex)
+				return
+	# Fallback: try DirAccess enumeration (works in editor for new models not yet in manifest)
+	var dir := DirAccess.open(tex_dir)
+	if dir:
+		dir.list_dir_begin()
+		var fname := dir.get_next()
+		while not fname.is_empty():
+			if fname.ends_with(".png") and not fname.ends_with(".import"):
+				var tex := load(tex_dir + fname) as Texture2D
+				if tex:
+					_apply_texture(tex)
+					break
+			fname = dir.get_next()
+		dir.list_dir_end()
 
 
 func _apply_texture(texture: Texture2D) -> void:

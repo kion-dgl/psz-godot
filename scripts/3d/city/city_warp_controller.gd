@@ -11,30 +11,6 @@ const SPAWN_VARIANTS := {
 	},
 }
 
-const WALL_DATA := [
-	# Circular containment walls (approximation with box segments)
-	# North
-	[-2, 0, 18.26, 3, PI / 2],
-	[2, 0, 18.26, 3, PI / 2],
-	# North-east
-	[6, 0, 14, 6, -PI / 6],
-	# East
-	[9, 0, 7, 8, 0],
-	# South-east
-	[7, 0, -3, 6, PI / 6],
-	# South
-	[0, 0, -8.5, 10, PI / 2],
-	# South-west
-	[-7, 0, -3, 6, -PI / 6],
-	# West
-	[-9, 0, 7, 8, 0],
-	# North-west
-	[-6, 0, 14, 6, PI / 6],
-	# Exit corridor walls
-	[-1, 0, 17, 2, 0],
-	[1, 0, 17, 2, 0],
-]
-
 
 func _ready() -> void:
 	# Apply texture fixes from global config
@@ -48,12 +24,6 @@ func _ready() -> void:
 
 	# Floor collision — centered on walkable area (Z range ~-8 to ~18)
 	_add_floor_collision(Vector3(0, 0, 5), Vector3(24, 0.2, 30))
-
-	# Walls
-	var walls := CityWalls.new()
-	walls.name = "Walls"
-	add_child(walls)
-	walls.create_walls(WALL_DATA)
 
 	# Warp pads
 	_add_warp_pad("GurhaciaValley", Vector3(4.55, 0, -4.10), "gurhacia-valley", "Gurhacia Valley")
