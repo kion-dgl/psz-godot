@@ -1,4 +1,4 @@
-// Bake retargeted PSO walk/run animations into saber_m.glb
+// Bake retargeted PSO animations into weapon animation GLBs.
 // Usage: cd web && node scripts/bake-retarget.mjs
 import { Blob } from 'buffer';
 globalThis.self = globalThis;
@@ -65,9 +65,42 @@ const RUN_OFFSETS = {
   '070_RArm02': { x: 90, y: 0, z: 0 },
 };
 
-const RETARGET_ANIMS = [
-  { index: 200, name: 'pmsa_walk', offsets: WALK_OFFSETS },
-  { index: 207, name: 'pmsa_run_pso', offsets: RUN_OFFSETS },
+// Female walk/run offsets — same corrections as male (arms need 90° forearm fix)
+const F_WALK_OFFSETS = {
+  '020_Spine': { x: 0, y: 8, z: 0 },
+  '090_Head': { x: 0, y: 10, z: 0 },
+  '030_LArm01': { x: 0, y: -15, z: 0 },
+  '040_LArm02': { x: 90, y: 0, z: 0 },
+  '060_RArm01': { x: 0, y: 15, z: 0 },
+  '070_RArm02': { x: 90, y: 0, z: 0 },
+};
+
+const F_RUN_OFFSETS = {
+  '020_Spine': { x: 0, y: 8, z: 0 },
+  '090_Head': { x: 0, y: 3, z: 0 },
+  '030_LArm01': { x: 0, y: -10, z: 0 },
+  '040_LArm02': { x: 90, y: 0, z: 0 },
+  '060_RArm01': { x: 0, y: 10, z: 0 },
+  '070_RArm02': { x: 90, y: 0, z: 0 },
+};
+
+// Each target GLB gets its own list of retarget animations.
+// To add a new retargeted animation: add an entry with { index, name, offsets }.
+const BAKE_TARGETS = [
+  {
+    targetGlb: '../assets/player/animations/saber_m.glb',
+    anims: [
+      { index: 200, name: 'pmsa_walk', offsets: WALK_OFFSETS },
+      { index: 207, name: 'pmsa_run_pso', offsets: RUN_OFFSETS },
+    ],
+  },
+  {
+    targetGlb: '../assets/player/animations/saver_w.glb',
+    anims: [
+      { index: 412, name: 'pwsa_walk', offsets: F_WALK_OFFSETS },
+      { index: 416, name: 'pwsa_run_pso', offsets: F_RUN_OFFSETS },
+    ],
+  },
 ];
 
 // ── Retarget utilities (inlined from retarget-utils.ts) ──────────
@@ -229,14 +262,12 @@ function buildRetargetedClip(clip, psoRest, pszRest, boneMap, posScale, outputNa
 
 async function main() {
   const psoPath = path.resolve('../data/retarget/Humar_body.glb');
-  const pszPath = path.resolve('public/player/pc_000/pc_000/pc_000_000.glb');
-  const saberPath = path.resolve('../assets/player/animations/saber_m.glb');
+  const pszPath = path.resolve('../assets/player/pc_000/pc_000_000.glb');
 
-  console.log('Loading models...');
-  const [psoGltf, pszGltf, saberGltf] = await Promise.all([
+  console.log('Loading PSO and PSZ models...');
+  const [psoGltf, pszGltf] = await Promise.all([
     loadGLB(psoPath),
     loadGLB(pszPath),
-    loadGLB(saberPath),
   ]);
 
   // Compute position scale from height ratio
@@ -258,49 +289,57 @@ async function main() {
   pszModel.updateMatrixWorld(true);
   const pszRest = captureRestPose(pszModel);
 
-  // Retarget walk/run animations
-  const newClips = [];
-  for (const { index, name, offsets } of RETARGET_ANIMS) {
-    const clipName = `plymotiondata_${String(index).padStart(3, '0')}`;
-    const srcClip = psoGltf.animations.find((c) => c.name === clipName);
-    if (!srcClip) {
-      console.warn(`Animation ${clipName} not found, skipping ${name}`);
+  // Process each bake target
+  for (const { targetGlb, anims } of BAKE_TARGETS) {
+    const targetPath = path.resolve(targetGlb);
+    console.log(`\n── Baking into: ${targetGlb} ──`);
+
+    const targetGltf = await loadGLB(targetPath);
+
+    // Retarget animations
+    const newClips = [];
+    for (const { index, name, offsets } of anims) {
+      const clipName = `plymotiondata_${String(index).padStart(3, '0')}`;
+      const srcClip = psoGltf.animations.find((c) => c.name === clipName);
+      if (!srcClip) {
+        console.warn(`Animation ${clipName} not found, skipping ${name}`);
+        continue;
+      }
+      const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, posScale, name, offsets);
+      if (retargeted) {
+        newClips.push(retargeted);
+        console.log(`  Retargeted: ${clipName} -> ${name} (${retargeted.duration.toFixed(2)}s, ${retargeted.tracks.length} tracks)`);
+      }
+    }
+
+    if (newClips.length === 0) {
+      console.warn(`  No clips retargeted for ${targetGlb}, skipping`);
       continue;
     }
-    const retargeted = buildRetargetedClip(srcClip, psoRest, pszRest, BONE_MAPPINGS, posScale, name, offsets);
-    if (retargeted) {
-      newClips.push(retargeted);
-      console.log(`Retargeted: ${clipName} -> ${name} (${retargeted.duration.toFixed(2)}s, ${retargeted.tracks.length} tracks)`);
-    }
+
+    // Merge with existing animations (deduplicate by name)
+    const newNames = new Set(newClips.map((c) => c.name));
+    const existing = targetGltf.animations.filter((a) => !newNames.has(a.name));
+    const allAnims = [...existing, ...newClips];
+    console.log(`  Existing: ${targetGltf.animations.length}, adding: ${newClips.length}, total: ${allAnims.length}`);
+
+    // Strip materials/textures to avoid export issues in Node.js
+    targetGltf.scene.traverse((child) => {
+      if (child.isMesh) {
+        child.material = new THREE.MeshBasicMaterial();
+      }
+    });
+
+    // Export as GLB
+    const exporter = new GLTFExporter();
+    const glb = await exporter.parseAsync(targetGltf.scene, {
+      binary: true,
+      animations: allAnims,
+    });
+
+    fs.writeFileSync(targetPath, Buffer.from(glb));
+    console.log(`  Written: ${targetPath} (${(glb.byteLength / 1024).toFixed(1)} KB)`);
   }
-
-  if (newClips.length === 0) {
-    console.error('No clips were retargeted!');
-    process.exit(1);
-  }
-
-  // Merge with existing saber_m animations (deduplicate by name)
-  const newNames = new Set(newClips.map((c) => c.name));
-  const existing = saberGltf.animations.filter((a) => !newNames.has(a.name));
-  const allAnims = [...existing, ...newClips];
-  console.log(`Existing: ${saberGltf.animations.length}, adding: ${newClips.length}, total: ${allAnims.length}`);
-
-  // Strip materials/textures to avoid export issues in Node.js
-  saberGltf.scene.traverse((child) => {
-    if (child.isMesh) {
-      child.material = new THREE.MeshBasicMaterial();
-    }
-  });
-
-  // Export as GLB
-  const exporter = new GLTFExporter();
-  const glb = await exporter.parseAsync(saberGltf.scene, {
-    binary: true,
-    animations: allAnims,
-  });
-
-  fs.writeFileSync(saberPath, Buffer.from(glb));
-  console.log(`Written: ${saberPath} (${(glb.byteLength / 1024).toFixed(1)} KB)`);
 }
 
 main().catch((err) => {
