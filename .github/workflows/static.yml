@@ -39,6 +39,7 @@ jobs:
           cp -r assets/enemies/ web/dist/assets/enemies/
           cp -r assets/objects/ web/dist/assets/objects/
           cp -r assets/npcs/ web/dist/assets/npcs/
+          cp -r assets/player/ web/dist/player/
           cp -r data/ web/dist/data/
 
       - name: Setup Pages
