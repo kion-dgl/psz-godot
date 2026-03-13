@@ -1,5 +1,5 @@
 extends "res://scripts/3d/city/city_area_base.gd"
-## Warp area controller — 8 warp pads in circular arrangement.
+## Warp area controller — single central warp pad that opens the teleporter menu.
 
 const DEFAULT_SPAWN := Vector3(0.08, 2, 15.26)
 const DEFAULT_ROT := PI
@@ -25,15 +25,8 @@ func _ready() -> void:
 	# Floor collision — centered on walkable area (Z range ~-8 to ~18)
 	_add_floor_collision(Vector3(0, 0, 5), Vector3(24, 0.2, 30))
 
-	# Warp pads
-	_add_warp_pad("GurhaciaValley", Vector3(4.55, 0, -4.10), "gurhacia-valley", "Gurhacia Valley")
-	_add_warp_pad("OzetteWetlands", Vector3(6.56, 0, 0.42), "ozette-wetland", "Ozette Wetlands")
-	_add_warp_pad("RiohSnowfield", Vector3(4.65, 0, 5.14), "rioh-snowfield", "Rioh Snowfield")
-	_add_warp_pad("MakaraRuins", Vector3(0.08, 0, 6.72), "makara-ruins", "Makara Ruins")
-	_add_warp_pad("OblivionCityParu", Vector3(-4.50, 0, 4.50), "oblivion-city-paru", "Oblivion City Paru")
-	_add_warp_pad("ArcaPlant", Vector3(-6.68, 0, 0.42), "arca-plant", "Arca Plant")
-	_add_warp_pad("DarkShrine", Vector3(-4.69, 0, -4.17), "dark-shrine", "Dark Shrine")
-	_add_warp_pad("EternalTower", Vector3(0.08, 0, -6.25), "eternal-tower", "Eternal Tower")
+	# Single central warp pad — area selection happens in the teleporter menu
+	_add_warp_pad("WarpTeleporter", Vector3(0.08, 0, 1.0), "", "Warp Teleporter")
 
 	# North exit trigger → Counter
 	_add_area_trigger(
