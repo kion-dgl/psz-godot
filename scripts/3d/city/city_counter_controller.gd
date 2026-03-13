@@ -22,42 +22,6 @@ const SPAWN_VARIANTS := {
 	},
 }
 
-const WALL_DATA := [
-	# West walls
-	[-12, 0, 0, 30, 0],
-	# East walls
-	[12, 0, 0, 30, 0],
-	# North boundary
-	[-4, 0, 18, 6, PI / 2],
-	[4, 0, 18, 6, PI / 2],
-	# South boundary
-	[-3.5, 0, -22.3, 5, PI / 2],
-	[3.5, 0, -22.3, 5, PI / 2],
-	# Counter desk (west)
-	[-10, 0, -5, 8, 0],
-	[-7, 0, -9, 4, PI / 2],
-	# Counter desk (east)
-	[10, 0, -5, 8, 0],
-	[7, 0, -9, 4, PI / 2],
-	# Corridor narrowing north
-	[-8, 0, 15, 4, PI / 4],
-	[8, 0, 15, 4, -PI / 4],
-	# Corridor narrowing south
-	[-8, 0, -18, 4, -PI / 4],
-	[8, 0, -18, 4, PI / 4],
-	# Inner pillars/benches
-	[-4, 0, 5, 3, 0],
-	[4, 0, 5, 3, 0],
-	[-4, 0, -3, 3, 0],
-	[4, 0, -3, 3, 0],
-	# Back wall sections
-	[-6, 0, -12, 4, PI / 2],
-	[6, 0, -12, 4, PI / 2],
-	# Exit corridor guides
-	[-2, 0, -20, 3, 0],
-	[2, 0, -20, 3, 0],
-]
-
 
 func _ready() -> void:
 	# Apply texture fixes from global config
