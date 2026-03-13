@@ -9,49 +9,11 @@ const SPAWN_VARIANTS := {
 		"position": Vector3(0.98, 2, 18.84),
 		"rotation": PI,
 	},
+	"underground-exit": {
+		"position": Vector3(-13.44, 2, 55.0),
+		"rotation": 0.0,
+	},
 }
-
-# Wall data: [x, y, z, length, rotation_y]
-const WALL_DATA := [
-	# West walls
-	[-15.5, 0, 45, 40, 0],
-	[-15.5, 0, 20, 10, 0],
-	# East walls
-	[16.5, 0, 45, 40, 0],
-	[16.5, 0, 20, 10, 0],
-	# North wall
-	[0, 0, 67, 33, PI / 2],
-	# South-west
-	[-6, 0, 14.4, 10, PI / 2],
-	# South-east
-	[7, 0, 14.4, 10, PI / 2],
-	# Shop alcove walls (west side)
-	[-13, 0, 30, 6, 0],
-	[-13, 0, 22, 4, PI / 2],
-	# Shop alcove walls (east side)
-	[13, 0, 30, 6, 0],
-	[13, 0, 22, 4, PI / 2],
-	# Inner corridor guides
-	[-10, 0, 16, 4, PI / 4],
-	[10, 0, 16, 4, -PI / 4],
-	# Back walls behind shops
-	[-9, 0, 35, 8, PI / 2],
-	[9, 0, 35, 8, PI / 2],
-	# Central platform edges
-	[-5, 0, 40, 8, 0],
-	[5, 0, 40, 8, 0],
-	# Fountain barriers
-	[-3, 0, 50, 4, PI / 2],
-	[3, 0, 50, 4, PI / 2],
-	[-3, 0, 55, 4, 0],
-	[3, 0, 55, 4, 0],
-	# Ramp edges
-	[-4, 0, 60, 6, 0],
-	[4, 0, 60, 6, 0],
-	# Near-spawn containment
-	[-8, 0, 65, 4, PI / 2],
-	[8, 0, 65, 4, PI / 2],
-]
 
 
 func _ready() -> void:
@@ -68,12 +30,6 @@ func _ready() -> void:
 
 	# Floor collision — centered on walkable area (Z range ~14 to ~67)
 	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
-
-	# Walls
-	var walls := CityWalls.new()
-	walls.name = "Walls"
-	add_child(walls)
-	walls.create_walls(WALL_DATA)
 
 	# NPCs
 	_add_npc(
@@ -99,6 +55,12 @@ func _ready() -> void:
 	_add_area_trigger(
 		Vector3(0.38, 1, 14.43), Vector3(7.42, 3, 1),
 		"res://scenes/3d/city/city_counter.tscn", "market-exit"
+	)
+	# Interactive trigger — Enter Underground
+	_add_interactive_trigger(
+		Vector3(-13.44, 1, 57.44), Vector3(3, 3, 3),
+		"res://scenes/3d/city/city_underground.tscn", "market-exit",
+		"Enter Underground"
 	)
 
 	# Wire up player references

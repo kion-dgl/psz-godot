@@ -180,7 +180,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	# Load floor collision from separate floor GLB, fall back to embedded -colonly meshes
-	if FileAccess.file_exists(floor_path):
+	if ResourceLoader.exists(floor_path):
 		var floor_scene := load(floor_path) as PackedScene
 		if floor_scene:
 			var floor_root := floor_scene.instantiate() as Node3D
@@ -688,26 +688,24 @@ func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
 	# Load unified config on first access
 	if _unified_config_cache.is_empty():
 		var unified_path := "res://data/stage_configs/unified-stage-configs.json"
-		if FileAccess.file_exists(unified_path):
-			var file := FileAccess.open(unified_path, FileAccess.READ)
-			if file:
-				var json := JSON.new()
-				if json.parse(file.get_as_text()) == OK:
-					_unified_config_cache = json.data as Dictionary
-					print("[ValleyField] Loaded unified config: %d stages" % _unified_config_cache.size())
-				file.close()
+		var file := FileAccess.open(unified_path, FileAccess.READ)
+		if file:
+			var json := JSON.new()
+			if json.parse(file.get_as_text()) == OK:
+				_unified_config_cache = json.data as Dictionary
+				print("[ValleyField] Loaded unified config: %d stages" % _unified_config_cache.size())
+			file.close()
 
 	# Load global texture fixes on first access
 	if _global_texture_fixes.is_empty():
 		var gtf_path := "res://data/stage_configs/global-texture-fixes.json"
-		if FileAccess.file_exists(gtf_path):
-			var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
-			if gtf_file:
-				var gtf_json := JSON.new()
-				if gtf_json.parse(gtf_file.get_as_text()) == OK:
-					_global_texture_fixes = gtf_json.data as Dictionary
-					print("[ValleyField] Loaded global texture fixes: %d entries" % _global_texture_fixes.size())
-				gtf_file.close()
+		var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
+		if gtf_file:
+			var gtf_json := JSON.new()
+			if gtf_json.parse(gtf_file.get_as_text()) == OK:
+				_global_texture_fixes = gtf_json.data as Dictionary
+				print("[ValleyField] Loaded global texture fixes: %d entries" % _global_texture_fixes.size())
+			gtf_file.close()
 
 	# Look up by stage_id
 	if _unified_config_cache.has(stage_id):
@@ -2831,7 +2829,7 @@ func _return_to_city() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
+	if event.is_action_pressed("pause"):
 		SceneManager.push_scene(MENU_SCENE_PATH)
 		get_viewport().set_input_as_handled()
 		return

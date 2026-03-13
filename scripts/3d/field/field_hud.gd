@@ -62,11 +62,9 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Toggle log with backtick (`) key
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_QUOTELEFT:
-			_toggle_log()
-			get_viewport().set_input_as_handled()
+	if event.is_action_pressed("quest_log"):
+		_toggle_log()
+		get_viewport().set_input_as_handled()
 
 
 func _toggle_log() -> void:

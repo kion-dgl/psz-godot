@@ -118,8 +118,6 @@ static func _ensure_unified_config() -> void:
 	if not _unified_config.is_empty():
 		return
 	var path := "res://data/stage_configs/unified-stage-configs.json"
-	if not FileAccess.file_exists(path):
-		return
 	var file := FileAccess.open(path, FileAccess.READ)
 	if not file:
 		return

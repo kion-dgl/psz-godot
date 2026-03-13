@@ -48,7 +48,7 @@ func _setup_scroll_material() -> void:
 
 func _setup_prompt() -> void:
 	_prompt_label = Label3D.new()
-	_prompt_label.text = "[E] Read"
+	_prompt_label.text = "Read"
 	_prompt_label.font_size = 28
 	_prompt_label.pixel_size = 0.01
 	_prompt_label.position = Vector3(0, 2.0, 0)
@@ -170,7 +170,7 @@ func _show_popup() -> void:
 
 	# Close hint
 	var close_hint := Label.new()
-	close_hint.text = "[E] or [ESC] Close"
+	close_hint.text = "Close"
 	var hint_settings := LabelSettings.new()
 	hint_settings.font_color = Color(0.5, 0.5, 0.5)
 	hint_settings.font_size = 13
@@ -190,10 +190,9 @@ func _close_popup() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _popup:
-		if event is InputEventKey and event.pressed and not event.echo:
-			if event.keycode == KEY_E or event.keycode == KEY_ESCAPE:
-				_close_popup()
-				get_viewport().set_input_as_handled()
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel") or event.is_action_pressed("interact"):
+			_close_popup()
+			get_viewport().set_input_as_handled()
 	elif _player_nearby and element_state != "locked" and event.is_action_pressed("interact"):
 		_on_interact(null)
 		get_viewport().set_input_as_handled()

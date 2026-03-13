@@ -101,6 +101,50 @@ func _add_area_trigger(pos: Vector3, trigger_size: Vector3, target_scene: String
 	return area
 
 
+var _interactive_triggers: Array[GameElement] = []
+
+
+func _add_interactive_trigger(pos: Vector3, trigger_size: Vector3, target_scene: String, spawn_key: String, prompt_text: String) -> GameElement:
+	var trigger := GameElement.new()
+	trigger.name = "InteractiveTrigger_%s" % spawn_key
+	trigger.interactable = true
+	trigger.collision_size = trigger_size
+	trigger.position = pos
+	add_child(trigger)
+
+	# Prompt label
+	var label := Label3D.new()
+	label.text = prompt_text
+	label.font_size = 32
+	label.pixel_size = 0.01
+	label.position = Vector3(0, 2.5, 0)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color(1, 0.8, 0)
+	label.outline_size = 8
+	label.outline_modulate = Color(0, 0, 0)
+	label.visible = false
+	trigger.add_child(label)
+	trigger.set_meta("_prompt_label", label)
+
+	# Transition on interact
+	trigger.interacted.connect(func(_p: Node3D) -> void:
+		_save_and_transition(target_scene, spawn_key)
+	)
+
+	_interactive_triggers.append(trigger)
+	return trigger
+
+
+func _process(_delta: float) -> void:
+	if not player or not is_instance_valid(player):
+		return
+	for trigger in _interactive_triggers:
+		if is_instance_valid(trigger):
+			var label: Label3D = trigger.get_meta("_prompt_label")
+			label.visible = player.get_nearest_interactable() == trigger
+
+
 func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2, 70)) -> void:
 	var body := StaticBody3D.new()
 	body.name = "FloorCollision"
@@ -149,7 +193,7 @@ func _handle_esc() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause"):
+	if event.is_action_pressed("pause"):
 		_handle_esc()
 		get_viewport().set_input_as_handled()
 
@@ -169,8 +213,8 @@ static func _load_global_texture_fixes() -> void:
 	if not _global_texture_fixes.is_empty():
 		return
 	var gtf_path := "res://data/stage_configs/global-texture-fixes.json"
-	if FileAccess.file_exists(gtf_path):
-		var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
+	var gtf_file := FileAccess.open(gtf_path, FileAccess.READ)
+	if gtf_file:
 		if gtf_file:
 			var gtf_json := JSON.new()
 			if gtf_json.parse(gtf_file.get_as_text()) == OK:

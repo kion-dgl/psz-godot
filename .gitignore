@@ -1,6 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+/build/
 
 # Web app
 web/node_modules/

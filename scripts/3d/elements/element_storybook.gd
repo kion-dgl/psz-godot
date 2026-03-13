@@ -387,25 +387,21 @@ func _process(delta: float) -> void:
 # ── Input ─────────────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event is InputEventKey or not event.pressed:
-		return
-
-	match event.keycode:
-		KEY_UP:
-			_move_cursor(-1)
-			get_viewport().set_input_as_handled()
-		KEY_DOWN:
-			_move_cursor(1)
-			get_viewport().set_input_as_handled()
-		KEY_LEFT:
-			_cycle_state(-1)
-			get_viewport().set_input_as_handled()
-		KEY_RIGHT, KEY_ENTER:
-			_cycle_state(1)
-			get_viewport().set_input_as_handled()
-		KEY_ESCAPE:
-			SceneManager.pop_scene()
-			get_viewport().set_input_as_handled()
+	if event.is_action_pressed("ui_up"):
+		_move_cursor(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_down"):
+		_move_cursor(1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_left"):
+		_cycle_state(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_right") or event.is_action_pressed("ui_accept"):
+		_cycle_state(1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel"):
+		SceneManager.pop_scene()
+		get_viewport().set_input_as_handled()
 
 
 # ── Navigation ────────────────────────────────────────────────────────────────
