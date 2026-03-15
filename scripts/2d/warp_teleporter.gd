@@ -1,5 +1,5 @@
 extends Control
-## Warp Teleporter — select area and difficulty to enter the field.
+## Warp Teleporter — PSZ-styled area selection menu.
 ## Supports quest mode (single area), and free-explore (unlocked areas only).
 
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
@@ -38,21 +38,31 @@ const AREA_NAME_TO_ID := {
 	"Eternal Tower": "tower",
 }
 
-const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
+# PSZ palette (matches field_pause_menu.gd)
+const BG_COLOR := Color(0.0, 0.0, 0.0, 0.5)
+const PANEL_COLOR := Color(0.66, 0.80, 0.91)
+const BORDER_COLOR := Color(0.48, 0.63, 0.75)
+const TITLE_BG := Color(0.16, 0.16, 0.22)
+const TITLE_COLOR := Color(1.0, 1.0, 1.0)
+const ITEM_COLOR := Color(0.1, 0.1, 0.17)
+const ITEM_BG := Color(1.0, 1.0, 1.0, 0.85)
+const SELECTED_BG_A := Color(0.94, 0.63, 0.13)
+const SELECTED_BG_B := Color(0.97, 0.78, 0.25)
+const SELECTED_BORDER := Color(0.82, 0.5, 0.06)
+const SEPARATOR_COLOR := Color(0.48, 0.63, 0.75, 0.5)
+const HINT_COLOR := Color(0.1, 0.1, 0.17)
+const HINT_BG := Color(1.0, 1.0, 1.0, 0.7)
+const SCANLINE_COLOR := Color(0.47, 0.63, 0.78, 0.08)
+const FONT_SIZE_TITLE := 16
+const FONT_SIZE_ITEM := 14
+const FONT_SIZE_HINT := 11
 
-enum Step { AREA_SELECT, DIFFICULTY_SELECT }
-
-var _step: int = Step.AREA_SELECT
 var _selected_area: int = 0
-var _selected_difficulty: int = 0
 var _quest_mode: bool = false
 var _quest_area_id: String = ""
 var _visible_areas: Array = []
-
-@onready var title_label: Label = $Panel/VBox/TitleLabel
-@onready var content_panel: PanelContainer = $Panel/VBox/HBox/ContentPanel
-@onready var info_panel: PanelContainer = $Panel/VBox/HBox/InfoPanel
-@onready var hint_label: Label = $Panel/VBox/HintLabel
+var _bg: ColorRect
+var _panel: Control
 
 
 func _ready() -> void:
@@ -61,40 +71,45 @@ func _ready() -> void:
 	_quest_area_id = str(data.get("area_id", ""))
 
 	_build_visible_areas()
-	title_label.text = "WARP TELEPORTER"
 
-	# Auto-advance if only 1 area available
-	if _visible_areas.size() == 1:
-		_selected_area = 0
-		_step = Step.DIFFICULTY_SELECT
+	# Dim background
+	_bg = ColorRect.new()
+	_bg.color = BG_COLOR
+	_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_bg.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_bg)
 
-	_refresh_display()
+	# Centered panel
+	_panel = Control.new()
+	_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	var panel_h: float = 42.0 + _visible_areas.size() * 26.0 + 34.0
+	_panel.size = Vector2(280, panel_h)
+	_panel.position = Vector2(-140, -panel_h * 0.5)
+	add_child(_panel)
+
+	_panel.draw.connect(_draw_panel)
+	_panel.queue_redraw()
 
 
 func _build_visible_areas() -> void:
 	_visible_areas.clear()
 	if _quest_mode and not _quest_area_id.is_empty():
-		# Quest mode: only show the quest's target area
 		for area in AREAS:
 			if str(area["id"]) == _quest_area_id:
 				_visible_areas.append(area)
 				break
 	else:
-		# Free explore: show only unlocked areas
 		for area in AREAS:
 			if _is_area_unlocked(str(area["id"])):
 				_visible_areas.append(area)
 
 
 func _is_area_unlocked(area_id: String) -> bool:
-	# Gurhacia is always unlocked
 	if area_id == "gurhacia":
 		return true
-	# Check story mission unlock
 	var mission_id: String = AREA_UNLOCK_MISSIONS.get(area_id, "")
 	if not mission_id.is_empty() and GameState.is_mission_completed(mission_id):
 		return true
-	# Check quest-based unlock: completing any quest/mission for this area
 	for completed_id in GameState.completed_missions:
 		var mission = MissionRegistry.get_mission(str(completed_id))
 		if mission and AREA_NAME_TO_ID.get(mission.area, "") == area_id:
@@ -110,58 +125,36 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("ui_cancel"):
-		if _step == Step.DIFFICULTY_SELECT:
-			# If only 1 area, cancel goes back to city (not area select)
-			if _visible_areas.size() == 1:
-				SceneManager.pop_scene()
-			else:
-				_step = Step.AREA_SELECT
-				_refresh_display()
-		else:
-			SceneManager.pop_scene()
+		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
-		if _step == Step.AREA_SELECT:
-			_selected_area = wrapi(_selected_area - 1, 0, _visible_areas.size())
-		else:
-			_selected_difficulty = wrapi(_selected_difficulty - 1, 0, DIFFICULTIES.size())
-		_refresh_display()
+		_selected_area = wrapi(_selected_area - 1, 0, _visible_areas.size())
+		_panel.queue_redraw()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
-		if _step == Step.AREA_SELECT:
-			_selected_area = wrapi(_selected_area + 1, 0, _visible_areas.size())
-		else:
-			_selected_difficulty = wrapi(_selected_difficulty + 1, 0, DIFFICULTIES.size())
-		_refresh_display()
+		_selected_area = wrapi(_selected_area + 1, 0, _visible_areas.size())
+		_panel.queue_redraw()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		if _step == Step.AREA_SELECT:
-			_step = Step.DIFFICULTY_SELECT
-			_selected_difficulty = 0
-		else:
-			_warp_to_field()
-		_refresh_display()
+		_warp_to_field()
 		get_viewport().set_input_as_handled()
 
 
 func _warp_to_field() -> void:
 	var area: Dictionary = _visible_areas[_selected_area]
 	var area_id: String = str(area["id"])
-	var difficulty: String = DIFFICULTIES[_selected_difficulty].to_lower().replace(" ", "-")
 
 	if _quest_mode:
-		# Start the accepted quest session, then enter field
 		SessionManager.start_accepted_quest()
 		_enter_3d_field()
 	else:
-		# Free explore
-		SessionManager.enter_field(area_id, difficulty)
+		SessionManager.enter_field(area_id, "normal")
 		var gen := GridGenerator.new()
 		var field: Dictionary
 		if area_id == "tower":
-			field = gen.generate_tower_field(difficulty)
+			field = gen.generate_tower_field("normal")
 		else:
-			field = gen.generate_field(difficulty, area_id)
+			field = gen.generate_field("normal", area_id)
 		var sections: Array = field["sections"]
 		SessionManager.set_field_sections(sections)
 		var first_section: Dictionary = sections[0]
@@ -193,100 +186,52 @@ func _enter_3d_field() -> void:
 		SceneManager.goto_scene("res://scenes/2d/field.tscn")
 
 
-func _refresh_display() -> void:
-	if _step == Step.AREA_SELECT:
-		hint_label.text = "[↑/↓] Select Area  [ENTER] Choose  [ESC] Back"
-		_show_area_select()
-	else:
-		hint_label.text = "[↑/↓] Select Difficulty  [ENTER] Warp  [ESC] Back"
-		_show_difficulty_select()
-	_refresh_info()
+func _draw_panel() -> void:
+	var font := ThemeDB.fallback_font
+	var pw: float = _panel.size.x
+	var ph: float = _panel.size.y
+	var rect := Rect2(Vector2.ZERO, _panel.size)
+	var pad := 12.0
 
+	# Panel background — pale icy blue
+	_panel.draw_rect(rect, PANEL_COLOR)
+	_panel.draw_rect(rect, BORDER_COLOR, false, 2.0)
 
-func _show_area_select() -> void:
-	for child in content_panel.get_children():
-		child.queue_free()
+	# Scanline overlay
+	for sy in range(0, int(ph), 4):
+		_panel.draw_rect(Rect2(0, sy + 2, pw, 2), SCANLINE_COLOR)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
+	# Title bar — dark navy
+	var title_h := 32.0
+	_panel.draw_rect(Rect2(0, 0, pw, title_h), TITLE_BG)
+	_panel.draw_string(font, Vector2(pad, 22.0), "Warp Teleporter",
+		HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_TITLE, TITLE_COLOR)
 
-	var header := Label.new()
-	header.text = "Select Destination"
-	header.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(header)
-
+	# Area list
+	var y := title_h + 10.0
+	var item_h := 26.0
 	for i in range(_visible_areas.size()):
 		var area: Dictionary = _visible_areas[i]
-		var label := Label.new()
-		label.text = str(area["name"])
+		var area_name: String = str(area["name"])
+		var item_rect := Rect2(pad - 2.0, y, pw - (pad - 2.0) * 2, item_h - 3.0)
+
 		if i == _selected_area:
-			label.text = "> " + label.text
-			label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
+			_panel.draw_rect(item_rect, SELECTED_BG_A)
+			_panel.draw_rect(Rect2(item_rect.position.x + item_rect.size.x * 0.5,
+				item_rect.position.y, item_rect.size.x * 0.5, item_rect.size.y), SELECTED_BG_B)
+			_panel.draw_rect(item_rect, SELECTED_BORDER, false, 2.0)
 		else:
-			label.text = "  " + label.text
-		vbox.add_child(label)
+			_panel.draw_rect(item_rect, ITEM_BG)
+			_panel.draw_rect(item_rect, Color(0.59, 0.71, 0.82, 0.4), false, 1.0)
 
-	content_panel.add_child(vbox)
+		_panel.draw_string(font, Vector2(pad + 8.0, y + 17.0), area_name,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_ITEM, ITEM_COLOR)
+		y += item_h
 
-
-func _show_difficulty_select() -> void:
-	for child in content_panel.get_children():
-		child.queue_free()
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 6)
-
-	var header := Label.new()
-	header.text = "%s\n\nSelect Difficulty:" % str(_visible_areas[_selected_area]["name"])
-	header.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(header)
-
-	for i in range(DIFFICULTIES.size()):
-		var label := Label.new()
-		label.text = DIFFICULTIES[i]
-		if i == _selected_difficulty:
-			label.text = "> " + label.text
-			label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
-		else:
-			label.text = "  " + label.text
-		vbox.add_child(label)
-
-	content_panel.add_child(vbox)
-
-
-func _refresh_info() -> void:
-	for child in info_panel.get_children():
-		child.queue_free()
-
-	if _visible_areas.is_empty():
-		return
-
-	var area: Dictionary = _visible_areas[_selected_area]
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-
-	var name_label := Label.new()
-	name_label.text = str(area["name"])
-	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
-	vbox.add_child(name_label)
-
-	var stages_label := Label.new()
-	stages_label.text = "Stages: 3 (3 waves each)"
-	vbox.add_child(stages_label)
-
-	# Show enemy types
-	var pool: Dictionary = EnemySpawner.get_enemy_pool(str(area["id"]))
-	if not pool.is_empty():
-		var sep := Label.new()
-		sep.text = ""
-		vbox.add_child(sep)
-		var enemies_header := Label.new()
-		enemies_header.text = "Enemies:"
-		enemies_header.add_theme_color_override("font_color", ThemeColors.HEADER)
-		vbox.add_child(enemies_header)
-		for enemy_id in pool.get("common", []):
-			var e := Label.new()
-			e.text = "  " + enemy_id.replace("-", " ").capitalize()
-			vbox.add_child(e)
-
-	info_panel.add_child(vbox)
+	# Hint bar at bottom
+	var hint := "Select a destination."
+	var hint_rect := Rect2(pad - 2.0, ph - 24.0, pw - (pad - 2.0) * 2, 20.0)
+	_panel.draw_rect(hint_rect, HINT_BG)
+	var hint_w: float = font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_HINT).x
+	_panel.draw_string(font, Vector2((pw - hint_w) * 0.5, ph - 10.0), hint,
+		HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_HINT, HINT_COLOR)
