@@ -1,0 +1,420 @@
+{
+  "version": 1,
+  "last_updated": "2026-03-15",
+  "id": "tower_field_01",
+  "name": "Tower Ascent",
+  "description": "Scale the mysterious tower that pierces the clouds. Each floor tests your resolve, and what waits at the summit defies imagination.",
+  "area_id": "tower",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "5,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s080_sa0",
+          "rotation": 0,
+          "connections": {
+            "south": "1,0"
+          },
+          "portals": {
+            "south": "portal_tf01_001",
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s081_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,0",
+            "south": "2,0"
+          },
+          "portals": {
+            "north": "portal_tf01_002",
+            "south": "portal_tf01_003"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {"type": "enemy", "position": [-6, 0, 5], "enemy_id": "ghowl"},
+            {"type": "enemy", "position": [4, 0, -3], "enemy_id": "porel"},
+            {"type": "enemy", "position": [0, 0, 8], "enemy_id": "usanny"}
+          ]
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s082_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,0",
+            "south": "3,0"
+          },
+          "portals": {
+            "north": "portal_tf01_004",
+            "south": "portal_tf01_005"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {"type": "enemy", "position": [-5, 0, 4], "enemy_id": "batt"},
+            {"type": "enemy", "position": [6, 0, -2], "enemy_id": "pobomma"},
+            {"type": "enemy", "position": [0, 0, -8], "enemy_id": "garahadan"}
+          ]
+        },
+        {
+          "pos": "3,0",
+          "stage_id": "s083_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "2,0",
+            "south": "4,0"
+          },
+          "portals": {
+            "north": "portal_tf01_006",
+            "south": "portal_tf01_007"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {"type": "enemy", "position": [-8, 0, 3], "enemy_id": "korse"},
+            {"type": "enemy", "position": [6, 0, -5], "enemy_id": "pelcatraz"},
+            {"type": "enemy", "position": [0, 0, 0], "enemy_id": "stagg"},
+            {
+              "type": "dialog_trigger",
+              "position": [-2, 0, -5],
+              "trigger_size": [10, 3, 6],
+              "dialog": [
+                {"speaker": "Tower Climber", "text": "I've been going floor to floor, but every level gets harder than the last."},
+                {"speaker": "Tower Climber", "text": "There's something at the top \u2014 I can feel it. A presence. Be ready for anything."}
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s084_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "3,0",
+            "south": "5,0"
+          },
+          "portals": {
+            "north": "portal_tf01_008",
+            "south": "portal_tf01_009"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {"type": "enemy", "position": [-6, 0, 4], "enemy_id": "kapantha"},
+            {"type": "enemy", "position": [4, 0, -2], "enemy_id": "goldix"},
+            {"type": "box", "position": [12, 0, -8]},
+            {"type": "box", "position": [14, 0, -6]}
+          ]
+        },
+        {
+          "pos": "5,0",
+          "stage_id": "s085_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "4,0"
+          },
+          "portals": {
+            "north": "portal_tf01_010"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 5,
+          "objects": [
+            {"type": "enemy", "position": [-6, 0, 4], "enemy_id": "eulid"},
+            {"type": "enemy", "position": [4, 0, -2], "enemy_id": "arkzein"},
+            {"type": "enemy", "position": [0, 0, 8], "enemy_id": "euladaveil"}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "transition",
+      "area": "e",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "entry_direction": "south",
+      "exit_direction": "north",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s08e_ib1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
+            "north": "portal_tf01_011",
+            "south": "portal_tf01_012"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "north",
+          "path_order": 0,
+          "objects": [
+            {"type": "enemy", "position": [-10, 0, -6], "enemy_id": "finjer-g"},
+            {"type": "enemy", "position": [6, 0, -10], "enemy_id": "arkzein"},
+            {"type": "enemy", "position": [-4, 0, -14], "enemy_id": "korse"},
+            {"type": "box", "position": [8, 0, -15]}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "0,0",
+      "end_pos": "4,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s086_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,0"
+          },
+          "portals": {
+            "south": "portal_tf01_013",
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s086_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,0",
+            "south": "2,0"
+          },
+          "portals": {
+            "north": "portal_tf01_014",
+            "south": "portal_tf01_015"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {"type": "enemy", "position": [-6, 0, 5], "enemy_id": "eulid"},
+            {"type": "enemy", "position": [4, 0, -3], "enemy_id": "arkzein"},
+            {"type": "enemy", "position": [0, 0, 8], "enemy_id": "finjer-b"}
+          ]
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s085_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,0",
+            "south": "3,0"
+          },
+          "portals": {
+            "north": "portal_tf01_016",
+            "south": "portal_tf01_017"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {"type": "enemy", "position": [-8, 0, 3], "enemy_id": "finjer-r"},
+            {"type": "enemy", "position": [6, 0, -5], "enemy_id": "goldix"},
+            {"type": "enemy", "position": [0, 0, 0], "enemy_id": "kapantha"},
+            {
+              "type": "dialog_trigger",
+              "position": [-2, 0, -5],
+              "trigger_size": [10, 3, 6],
+              "dialog": [
+                {"speaker": "Exhausted Hunter", "text": "I can't go any further. The creatures on these upper floors are relentless."},
+                {"speaker": "Exhausted Hunter", "text": "Whatever is controlling them is somewhere above. End this, for all of us."}
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "3,0",
+          "stage_id": "s084_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "2,0",
+            "south": "4,0"
+          },
+          "portals": {
+            "north": "portal_tf01_018",
+            "south": "portal_tf01_019"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {"type": "enemy", "position": [-10, 0, 4], "enemy_id": "arkzein"},
+            {"type": "enemy", "position": [5, 0, -6], "enemy_id": "euladaveil"},
+            {"type": "box", "position": [14, 0, 10]},
+            {"type": "box", "position": [16, 0, 8]}
+          ]
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s083_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "3,0"
+          },
+          "portals": {
+            "north": "portal_tf01_020"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 4,
+          "objects": [
+            {"type": "enemy", "position": [-4, 0, 3], "enemy_id": "arkzein"},
+            {"type": "enemy", "position": [6, 0, -4], "enemy_id": "finjer-g"},
+            {"type": "enemy", "position": [0, 0, -8], "enemy_id": "stagg"}
+          ]
+        }
+      ]
+    },
+    {
+      "type": "boss",
+      "area": "z",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s087_na1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {},
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 0,
+          "objects": [
+            {"type": "enemy", "position": [0, 0, 0], "enemy_id": "dark-falz"},
+            {"type": "enemy", "position": [-10, 0, 8], "enemy_id": "eulid"},
+            {"type": "enemy", "position": [10, 0, 8], "enemy_id": "eulid"}
+          ]
+        }
+      ]
+    }
+  ],
+  "companions": []
+}
