@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "third_daughter"
 name = "Third Daughter"
-area = "Rioh Snowfield"
+area = "Snowfield"
 is_main = false
 is_secret = true
 requires = PackedStringArray("waltz_of_rage")

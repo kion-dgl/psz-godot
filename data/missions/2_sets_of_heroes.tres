@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "2_sets_of_heroes"
 name = "2 Sets of Heroes"
-area = "Arca Plant"
+area = "Moon Facility"
 is_main = false
 is_secret = false
 requires = PackedStringArray("ana_s_request")

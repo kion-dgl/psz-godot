@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "devilish_return"
 name = "Devilish Return"
-area = "Ozette Wetland"
+area = "Wetlands"
 is_main = true
 is_secret = false
 requires = PackedStringArray("waltz_of_rage")
