@@ -49,9 +49,35 @@ function loadDrafts(): DraftInfo[] {
   }
 }
 
+async function loadQuestsFromManifest(manifestPath: string, questDir: string): Promise<GameQuestInfo[]> {
+  const res = await fetch(assetUrl(manifestPath));
+  if (!res.ok) return [];
+  const filenames: string[] = await res.json();
+
+  const quests: GameQuestInfo[] = [];
+  for (const fn of filenames) {
+    try {
+      const qRes = await fetch(assetUrl(`${questDir}/${fn}.json`));
+      if (!qRes.ok) continue;
+      const quest = await qRes.json();
+      quests.push({
+        filename: fn,
+        name: quest.name || fn,
+        description: quest.description || '',
+        areaId: quest.area_id || '',
+        sectionCount: quest.sections?.length || 0,
+      });
+    } catch {
+      // skip broken quest files
+    }
+  }
+  return quests;
+}
+
 export default function QuestHome() {
   const navigate = useNavigate();
   const [gameQuests, setGameQuests] = useState<GameQuestInfo[]>([]);
+  const [fieldQuests, setFieldQuests] = useState<GameQuestInfo[]>([]);
   const [drafts, setDrafts] = useState<DraftInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -63,36 +89,14 @@ export default function QuestHome() {
 
     (async () => {
       try {
-        const manifestUrl = assetUrl('/data/quests/manifest.json');
-        const res = await fetch(manifestUrl);
-        if (!res.ok) {
-          setError('Could not load quest manifest');
-          setLoading(false);
-          return;
-        }
-        const filenames: string[] = await res.json();
-
-        const quests: GameQuestInfo[] = [];
-        for (const fn of filenames) {
-          try {
-            const questUrl = assetUrl(`/data/quests/${fn}.json`);
-            const qRes = await fetch(questUrl);
-            if (!qRes.ok) continue;
-            const quest = await qRes.json();
-            quests.push({
-              filename: fn,
-              name: quest.name || fn,
-              description: quest.description || '',
-              areaId: quest.area_id || '',
-              sectionCount: quest.sections?.length || 0,
-            });
-          } catch {
-            // skip broken quest files
-          }
-        }
-        setGameQuests(quests);
+        const [story, field] = await Promise.all([
+          loadQuestsFromManifest('/data/quests/manifest.json', '/data/quests'),
+          loadQuestsFromManifest('/data/field_quests/manifest.json', '/data/field_quests'),
+        ]);
+        setGameQuests(story);
+        setFieldQuests(field);
       } catch {
-        setError('Could not load quest manifest');
+        setError('Could not load quest manifests');
       }
       setLoading(false);
     })();
@@ -104,9 +108,9 @@ export default function QuestHome() {
     saveAndNavigate(fresh);
   }, []);
 
-  const handleOpenGameQuest = useCallback(async (filename: string) => {
+  const handleOpenGameQuest = useCallback(async (filename: string, dir = '/data/quests') => {
     try {
-      const questUrl = assetUrl(`/data/quests/${filename}.json`);
+      const questUrl = assetUrl(`${dir}/${filename}.json`);
       const res = await fetch(questUrl);
       if (!res.ok) throw new Error('Fetch failed');
       const quest = await res.json();
@@ -273,6 +277,58 @@ export default function QuestHome() {
           {!loading && gameQuests.length === 0 && !error && (
             <div style={{ color: '#666', fontSize: '13px', padding: '12px' }}>
               No game quests found
+            </div>
+          )}
+        </div>
+
+        {/* Field Quests */}
+        <h2 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#aaa' }}>
+          Field Quests
+          <span style={{ fontSize: '11px', fontWeight: 400, color: '#666', marginLeft: '8px' }}>
+            from data/field_quests/
+          </span>
+        </h2>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '32px' }}>
+          {fieldQuests.map((q, i) => (
+            <div
+              key={q.filename}
+              style={cardStyle}
+              onClick={() => handleOpenGameQuest(q.filename, '/data/field_quests')}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#ffaa55')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '#333')}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{
+                  padding: '2px 6px',
+                  background: '#443322',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  color: '#ffaa55',
+                  fontWeight: 700,
+                  minWidth: '18px',
+                  textAlign: 'center' as const,
+                }}>
+                  F{i + 1}
+                </span>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>{q.name}</span>
+                <span style={{ color: '#666', fontSize: '11px', marginLeft: 'auto' }}>
+                  {q.filename}.json
+                </span>
+              </div>
+              {q.description && (
+                <div style={{ color: '#888', fontSize: '12px', marginTop: '4px' }}>
+                  {q.description}
+                </div>
+              )}
+              <div style={{ color: '#666', fontSize: '11px', marginTop: '4px' }}>
+                {q.areaId} &middot; {q.sectionCount} section{q.sectionCount !== 1 ? 's' : ''}
+              </div>
+            </div>
+          ))}
+          {!loading && fieldQuests.length === 0 && (
+            <div style={{ color: '#666', fontSize: '13px', padding: '12px' }}>
+              No field quests yet — add quest JSONs to data/field_quests/
             </div>
           )}
         </div>
