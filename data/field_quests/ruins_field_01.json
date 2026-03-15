@@ -1,0 +1,874 @@
+{
+  "version": 1,
+  "last_updated": "2026-03-15",
+  "id": "ruins_field_01",
+  "name": "Ruins Investigation",
+  "description": "Delve into the ancient structures of Makara. Every corridor holds secrets and threats alike.",
+  "area_id": "makara",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,2",
+      "end_pos": "3,3",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s04a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "portals": {
+            "south": "portal_rf01_001",
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s04a_xb2",
+          "rotation": 0,
+          "connections": {
+            "north": "0,2",
+            "south": "2,2",
+            "west": "1,1",
+            "east": "1,3"
+          },
+          "portals": {
+            "north": "portal_rf01_002",
+            "south": "portal_rf01_003",
+            "west": "portal_rf01_004",
+            "east": "portal_rf01_005"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                4
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                -3
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -8
+              ],
+              "enemy_id": "bullbatt"
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s04a_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "1,2"
+          },
+          "portals": {
+            "east": "portal_rf01_006"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                2
+              ],
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -5
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "box",
+              "position": [
+                12,
+                0,
+                -8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                14,
+                0,
+                -6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                13,
+                0,
+                -10
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s04a_nc2",
+          "rotation": 90,
+          "connections": {
+            "west": "1,2"
+          },
+          "portals": {
+            "west": "portal_rf01_007"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -2,
+                0,
+                -5
+              ],
+              "trigger_size": [
+                10,
+                3,
+                6
+              ],
+              "dialog": [
+                {
+                  "speaker": "Archaeologist",
+                  "text": "These markings on the wall... they're not from any civilization in our records."
+                },
+                {
+                  "speaker": "Archaeologist",
+                  "text": "The symbols seem to describe some kind of energy source deep within the ruins. Proceed with caution."
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                0
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "box",
+              "position": [
+                8,
+                0,
+                -12
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                10,
+                0,
+                -14
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s04a_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "south": "3,2"
+          },
+          "portals": {
+            "north": "portal_rf01_008",
+            "south": "portal_rf01_009"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                8
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                5
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2,
+                0,
+                -4
+              ],
+              "enemy_id": "rumole"
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s04a_tb3",
+          "rotation": 180,
+          "connections": {
+            "north": "2,2",
+            "west": "3,1",
+            "east": "3,3"
+          },
+          "portals": {
+            "north": "portal_rf01_010",
+            "west": "portal_rf01_011",
+            "east": "portal_rf01_012"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7,
+                0,
+                3
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                -2
+              ],
+              "enemy_id": "bullbatt"
+            }
+          ]
+        },
+        {
+          "pos": "3,1",
+          "stage_id": "s04a_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "3,2"
+          },
+          "portals": {
+            "east": "portal_rf01_013"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "3,2",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                4
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                0
+              ],
+              "enemy_id": "batt"
+            }
+          ],
+          "key_position": [
+            5,
+            1,
+            -10
+          ]
+        },
+        {
+          "pos": "3,3",
+          "stage_id": "s04a_ga1",
+          "rotation": 90,
+          "connections": {
+            "west": "3,2"
+          },
+          "portals": {
+            "west": "portal_rf01_014"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "east",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                4
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -2
+              ],
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                8
+              ],
+              "enemy_id": "batt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "transition",
+      "area": "e",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "entry_direction": "south",
+      "exit_direction": "north",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s04e_ia1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
+            "north": "portal_rf01_015",
+            "south": "portal_rf01_016"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "north",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -10,
+                0,
+                -6
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -10
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                -14
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "box",
+              "position": [
+                8,
+                0,
+                -15
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "0,2",
+      "end_pos": "1,5",
+      "cells": [
+        {
+          "pos": "0,2",
+          "stage_id": "s04b_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,2"
+          },
+          "portals": {
+            "south": "portal_rf01_017",
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s04b_td1",
+          "rotation": 180,
+          "connections": {
+            "north": "0,2",
+            "west": "1,1",
+            "east": "1,3"
+          },
+          "portals": {
+            "north": "portal_rf01_018",
+            "west": "portal_rf01_019",
+            "east": "portal_rf01_020"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                5
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -3
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                8
+              ],
+              "enemy_id": "bullbatt"
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s04b_na1",
+          "rotation": 270,
+          "connections": {
+            "east": "1,2"
+          },
+          "portals": {
+            "east": "portal_rf01_021"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -2,
+                0,
+                -5
+              ],
+              "trigger_size": [
+                10,
+                3,
+                6
+              ],
+              "dialog": [
+                {
+                  "speaker": "Ruin Explorer",
+                  "text": "I've been mapping these corridors for weeks. The deeper sections are still unexplored."
+                },
+                {
+                  "speaker": "Ruin Explorer",
+                  "text": "The machines here are ancient but still active. They don't take kindly to intruders."
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                2
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -4
+              ],
+              "enemy_id": "rumole"
+            }
+          ]
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s04b_ib1",
+          "rotation": 270,
+          "connections": {
+            "west": "1,2",
+            "east": "1,4"
+          },
+          "portals": {
+            "west": "portal_rf01_022",
+            "east": "portal_rf01_023"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                3
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -5
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "rumole"
+            }
+          ]
+        },
+        {
+          "pos": "1,4",
+          "stage_id": "s04b_ib1",
+          "rotation": 270,
+          "connections": {
+            "west": "1,3",
+            "east": "1,5"
+          },
+          "portals": {
+            "west": "portal_rf01_024",
+            "east": "portal_rf01_025"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -10,
+                0,
+                4
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                -6
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "box",
+              "position": [
+                14,
+                0,
+                10
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                16,
+                0,
+                8
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,5",
+          "stage_id": "s04b_ib2",
+          "rotation": 270,
+          "connections": {
+            "west": "1,4"
+          },
+          "portals": {
+            "west": "portal_rf01_026"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "east",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                3
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -4
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                -8
+              ],
+              "enemy_id": "batt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "boss",
+      "area": "z",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s04z_na1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {},
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "rohcrysta"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10,
+                0,
+                8
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10,
+                0,
+                8
+              ],
+              "enemy_id": "batt"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "companions": []
+}
