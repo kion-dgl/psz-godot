@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "oblivion_city_paru"
 area_id = "oblivion-city-paru"
-area_name = "Oblivion City Paru"
+area_name = "Forgotten City"
 description = "An ancient underwater city filled with mysterious artifacts and dangerous aquatic creatures."
 unlock_condition = "Complete 'Clockworks' story quest"
 recommended_level = 25

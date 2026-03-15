@@ -38,12 +38,12 @@ func _get_rotated_gates(cell: Dictionary) -> Array[String]:
 
 ## Area configuration: maps area_id → prefix, folder, display name.
 const AREA_CONFIG := {
-	"gurhacia": {"prefix": "s01", "folder": "valley", "name": "Gurhacia Valley"},
-	"ozette":   {"prefix": "s02", "folder": "wetlands", "name": "Ozette Wetlands"},
-	"rioh":     {"prefix": "s03", "folder": "snowfield", "name": "Rioh Snowfield"},
-	"makara":   {"prefix": "s04", "folder": "makara", "name": "Makara Ruins"},
-	"paru":     {"prefix": "s05", "folder": "paru", "name": "Paru Waterfall"},
-	"arca":     {"prefix": "s06", "folder": "arca", "name": "Arca Plant"},
+	"gurhacia": {"prefix": "s01", "folder": "valley", "name": "Valley"},
+	"ozette":   {"prefix": "s02", "folder": "wetlands", "name": "Wetlands"},
+	"rioh":     {"prefix": "s03", "folder": "snowfield", "name": "Snowfield"},
+	"makara":   {"prefix": "s04", "folder": "makara", "name": "Ruins"},
+	"paru":     {"prefix": "s05", "folder": "paru", "name": "Forgotten City"},
+	"arca":     {"prefix": "s06", "folder": "arca", "name": "Moon Facility"},
 	"dark":     {"prefix": "s07", "folder": "shrine", "name": "Dark Shrine"},
 	"tower":    {"prefix": "s08", "folder": "tower", "name": "Eternal Tower"},
 }

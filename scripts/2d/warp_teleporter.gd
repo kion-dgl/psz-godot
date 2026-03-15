@@ -5,14 +5,14 @@ extends Control
 const GridGenerator := preload("res://scripts/3d/field/grid_generator.gd")
 
 const AREAS := [
-	{"id": "gurhacia", "name": "Gurhacia Valley", "rec_level": [1, 35, 70]},
-	{"id": "rioh", "name": "Rioh Snowfield", "rec_level": [10, 40, 75]},
-	{"id": "ozette", "name": "Ozette Wetlands", "rec_level": [20, 45, 80]},
-	{"id": "paru", "name": "Paru Waterfall", "rec_level": [30, 50, 85]},
-	{"id": "makara", "name": "Makara Ruins", "rec_level": [40, 55, 90]},
-	{"id": "arca", "name": "Arca Plant", "rec_level": [50, 60, 95]},
-	{"id": "dark", "name": "Dark Shrine", "rec_level": [60, 70, 100]},
-	{"id": "tower", "name": "Eternal Tower", "rec_level": [70, 80, 100]},
+	{"id": "gurhacia", "name": "Valley"},
+	{"id": "rioh", "name": "Snowfield"},
+	{"id": "ozette", "name": "Wetlands"},
+	{"id": "paru", "name": "Forgotten City"},
+	{"id": "makara", "name": "Ruins"},
+	{"id": "arca", "name": "Moon Facility"},
+	{"id": "dark", "name": "Dark Shrine"},
+	{"id": "tower", "name": "Eternal Tower"},
 ]
 
 ## Story mission that must be completed to unlock each warp area.
@@ -28,12 +28,12 @@ const AREA_UNLOCK_MISSIONS := {
 
 ## Display area name → area_id mapping (for quest-based unlock checks).
 const AREA_NAME_TO_ID := {
-	"Gurhacia Valley": "gurhacia",
-	"Rioh Snowfield": "rioh",
-	"Ozette Wetland": "ozette", "Ozette Wetlands": "ozette",
-	"Oblivion City Paru": "paru", "Paru Waterfall": "paru",
-	"Makura Ruins": "makara", "Makara Ruins": "makara",
-	"Arca Plant": "arca",
+	"Valley": "gurhacia",
+	"Snowfield": "rioh",
+	"Wetlands": "ozette",
+	"Forgotten City": "paru",
+	"Ruins": "makara",
+	"Moon Facility": "arca",
 	"Dark Shrine": "dark",
 	"Eternal Tower": "tower",
 }
@@ -218,8 +218,7 @@ func _show_area_select() -> void:
 	for i in range(_visible_areas.size()):
 		var area: Dictionary = _visible_areas[i]
 		var label := Label.new()
-		var levels: Array = area["rec_level"]
-		label.text = "%-24s Lv.%d+" % [str(area["name"]), int(levels[0])]
+		label.text = str(area["name"])
 		if i == _selected_area:
 			label.text = "> " + label.text
 			label.add_theme_color_override("font_color", ThemeColors.TEXT_HIGHLIGHT)
@@ -270,15 +269,6 @@ func _refresh_info() -> void:
 	name_label.text = str(area["name"])
 	name_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 	vbox.add_child(name_label)
-
-	var levels: Array = area["rec_level"]
-	var level_label := Label.new()
-	level_label.text = "Recommended Level:"
-	vbox.add_child(level_label)
-	for i in range(DIFFICULTIES.size()):
-		var diff_label := Label.new()
-		diff_label.text = "  %-12s Lv.%d+" % [DIFFICULTIES[i], int(levels[i])]
-		vbox.add_child(diff_label)
 
 	var stages_label := Label.new()
 	stages_label.text = "Stages: 3 (3 waves each)"

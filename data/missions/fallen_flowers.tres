@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "fallen_flowers"
 name = "Fallen Flowers"
-area = "Makura Ruins"
+area = "Ruins"
 is_main = true
 is_secret = false
 requires = PackedStringArray("a_small_friend")

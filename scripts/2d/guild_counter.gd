@@ -22,12 +22,12 @@ const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
 ## Progression order by area
 const AREA_ORDER := {
-	"Gurhacia Valley": 0,
-	"Rioh Snowfield": 1,
-	"Ozette Wetland": 2,
-	"Oblivion City Paru": 3,
-	"Makura Ruins": 4, "Makara Ruins": 4,
-	"Arca Plant": 5,
+	"Valley": 0,
+	"Snowfield": 1,
+	"Wetlands": 2,
+	"Forgotten City": 3,
+	"Ruins": 4,
+	"Moon Facility": 5,
 	"Dark Shrine": 6,
 	"Eternal Tower": 7,
 }
@@ -46,12 +46,12 @@ const QUEST_ORDER := {
 
 ## area_id → display area name
 const AREA_DISPLAY := {
-	"gurhacia": "Gurhacia Valley",
-	"rioh": "Rioh Snowfield",
-	"ozette": "Ozette Wetland",
-	"paru": "Oblivion City Paru",
-	"makara": "Makara Ruins",
-	"arca": "Arca Plant",
+	"gurhacia": "Valley",
+	"rioh": "Snowfield",
+	"ozette": "Wetlands",
+	"paru": "Forgotten City",
+	"makara": "Ruins",
+	"arca": "Moon Facility",
 	"dark": "Dark Shrine",
 	"tower": "Eternal Tower",
 }
