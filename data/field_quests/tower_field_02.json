@@ -1,0 +1,713 @@
+{
+  "version": 1,
+  "last_updated": "2026-03-15",
+  "id": "tower_field_02",
+  "name": "Tower Ascent: Lower Spire",
+  "description": "The lower floors of the Eternal Tower wind upward in a tight spiral. Strange energies crackle through the corridors as you climb higher.",
+  "area_id": "tower",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "5,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s080_sa0",
+          "rotation": 0,
+          "connections": {
+            "south": "1,0"
+          },
+          "portals": {
+            "south": "portal_tf02_001",
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s081_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,0",
+            "south": "2,0"
+          },
+          "portals": {
+            "north": "portal_tf02_002",
+            "south": "portal_tf02_003"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-6, 0, 5],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [4, 0, -3],
+              "enemy_id": "korse"
+            }
+          ]
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s081_lb1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,0",
+            "east": "2,1"
+          },
+          "portals": {
+            "north": "portal_tf02_004",
+            "east": "portal_tf02_005"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-5, 0, 4],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [3, 0, -2],
+              "enemy_id": "ghowl"
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s082_ib1",
+          "rotation": 90,
+          "connections": {
+            "west": "2,0",
+            "east": "2,2"
+          },
+          "portals": {
+            "west": "portal_tf02_006",
+            "east": "portal_tf02_007"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-8, 0, 3],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [6, 0, -5],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [0, 0, 0],
+              "enemy_id": "eulid"
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s082_lb1",
+          "rotation": 180,
+          "connections": {
+            "west": "2,1",
+            "south": "3,2"
+          },
+          "portals": {
+            "west": "portal_tf02_008",
+            "south": "portal_tf02_009"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-4, 0, 6],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [5, 0, -1],
+              "enemy_id": "ghowl"
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s083_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "2,2",
+            "south": "4,2"
+          },
+          "portals": {
+            "north": "portal_tf02_010",
+            "south": "portal_tf02_011"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-6, 0, 4],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [4, 0, -2],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [0, 0, 8],
+              "enemy_id": "eulid"
+            }
+          ]
+        },
+        {
+          "pos": "4,2",
+          "stage_id": "s083_lb1",
+          "rotation": 270,
+          "connections": {
+            "north": "3,2",
+            "west": "4,1"
+          },
+          "portals": {
+            "north": "portal_tf02_012",
+            "west": "portal_tf02_013"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-5, 0, 3],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [6, 0, -4],
+              "enemy_id": "eulid"
+            }
+          ]
+        },
+        {
+          "pos": "4,1",
+          "stage_id": "s084_ib1",
+          "rotation": 90,
+          "connections": {
+            "east": "4,2",
+            "west": "4,0"
+          },
+          "portals": {
+            "east": "portal_tf02_014",
+            "west": "portal_tf02_015"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-8, 0, 3],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [6, 0, -5],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "box",
+              "position": [12, 0, -8]
+            },
+            {
+              "type": "box",
+              "position": [14, 0, -6]
+            }
+          ]
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s084_lb1",
+          "rotation": 90,
+          "connections": {
+            "east": "4,1",
+            "south": "5,0"
+          },
+          "portals": {
+            "east": "portal_tf02_016",
+            "south": "portal_tf02_017"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 8,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-3, 0, 5],
+              "enemy_id": "ghowl"
+            }
+          ]
+        },
+        {
+          "pos": "5,0",
+          "stage_id": "s085_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "4,0"
+          },
+          "portals": {
+            "north": "portal_tf02_018"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 9,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-6, 0, 4],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [4, 0, -2],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [0, 0, 8],
+              "enemy_id": "kapantha"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "transition",
+      "area": "e",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "entry_direction": "south",
+      "exit_direction": "north",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s08e_ib1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
+            "north": "portal_tf02_019",
+            "south": "portal_tf02_020"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "north",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-10, 0, -6],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [6, 0, -10],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [-4, 0, -14],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "box",
+              "position": [8, 0, -15]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "0,0",
+      "end_pos": "3,2",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s085_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,0"
+          },
+          "portals": {
+            "south": "portal_tf02_021",
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s085_lb1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,0",
+            "east": "1,1"
+          },
+          "portals": {
+            "north": "portal_tf02_022",
+            "east": "portal_tf02_023"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-5, 0, 4],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [3, 0, -2],
+              "enemy_id": "arkzein"
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s086_ib1",
+          "rotation": 90,
+          "connections": {
+            "west": "1,0",
+            "east": "1,2"
+          },
+          "portals": {
+            "west": "portal_tf02_024",
+            "east": "portal_tf02_025"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-8, 0, 3],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [6, 0, -5],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [0, 0, 0],
+              "enemy_id": "korse"
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s086_lb1",
+          "rotation": 180,
+          "connections": {
+            "west": "1,1",
+            "south": "2,2"
+          },
+          "portals": {
+            "west": "portal_tf02_026",
+            "south": "portal_tf02_027"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-4, 0, 6],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [5, 0, -1],
+              "enemy_id": "eulid"
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s086_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "south": "3,2"
+          },
+          "portals": {
+            "north": "portal_tf02_028",
+            "south": "portal_tf02_029"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-6, 0, 4],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [4, 0, -2],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [-2, 0, -5],
+              "trigger_size": [10, 3, 6],
+              "dialog": [
+                {
+                  "speaker": "Wounded Scout",
+                  "text": "The walls here pulse with some kind of energy. I swear the tower is alive."
+                },
+                {
+                  "speaker": "Wounded Scout",
+                  "text": "Whatever is at the top... it's been calling the creatures upward. Be careful."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s085_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "2,2"
+          },
+          "portals": {
+            "north": "portal_tf02_030"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-4, 0, 3],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [6, 0, -4],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [0, 0, -8],
+              "enemy_id": "arkzein"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "boss",
+      "area": "z",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s087_na1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {},
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [0, 0, 0],
+              "enemy_id": "dark-falz"
+            },
+            {
+              "type": "enemy",
+              "position": [-10, 0, 8],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [10, 0, 8],
+              "enemy_id": "korse"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "companions": []
+}
