@@ -201,12 +201,14 @@ def validate_quest(filepath: str, stage_configs: dict) -> list[str]:
 
             section_type = section.get('type', 'grid')
 
-            # For grid sections, connections and portals (excluding "default") should agree
+            # For grid sections, connections should be a subset of portals (extra portals
+            # may serve as warp_edge or section entry/exit points)
             if section_type == 'grid':
-                if cell_connection_dirs != cell_portal_dirs:
+                missing_portals = cell_connection_dirs - cell_portal_dirs
+                if missing_portals:
                     errors.append(
-                        f'{cell_label}: connection directions {sorted(cell_connection_dirs)} '
-                        f'do not match portal directions {sorted(cell_portal_dirs)}'
+                        f'{cell_label}: connections {sorted(missing_portals)} '
+                        f'have no matching portal entry'
                     )
 
             # For transition/boss sections, portals serve as cross-section entry/exit
