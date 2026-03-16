@@ -1,0 +1,719 @@
+{
+  "version": 1,
+  "last_updated": "2026-03-15",
+  "id": "arca_field_02",
+  "name": "Moon Facility Field 2",
+  "description": "Explore the wilds of Arca. Danger lurks around every corner.",
+  "area_id": "arca",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "3,2",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s06a_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,0"
+          },
+          "portals": {
+            "south": "portal_1770801200021_x2p1zdfsl",
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s06a_lc2",
+          "rotation": 0,
+          "connections": {
+            "east": "1,1",
+            "north": "0,0"
+          },
+          "portals": {
+            "east": "portal_1771831537096_i5jcw080v",
+            "north": "portal_1770801028773_gtcx4g3lr"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                5.0,
+                0,
+                11.4
+              ],
+              "enemy_id": "finjer-r"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.3,
+                0,
+                -8.5
+              ],
+              "enemy_id": "akorse"
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s06a_ic1",
+          "rotation": 90,
+          "connections": {
+            "west": "1,0",
+            "east": "1,2"
+          },
+          "portals": {
+            "west": "portal_1770800365105_dyn3wkd26",
+            "east": "portal_1770800345128_oioq8dfpq"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                16.6,
+                0,
+                16.0
+              ],
+              "enemy_id": "finjer-r"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                18.7,
+                0,
+                11.7
+              ],
+              "enemy_id": "finjer-r"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.4,
+                0,
+                18.8
+              ],
+              "enemy_id": "korse"
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s06a_lb1",
+          "rotation": 180,
+          "connections": {
+            "west": "1,1",
+            "south": "2,2"
+          },
+          "portals": {
+            "west": "portal_1771831467859_7mrsjvkx6",
+            "south": "portal_1770800566616_o86lhuiio"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                8.7,
+                0,
+                -11.8
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.6,
+                0,
+                -13.4
+              ],
+              "enemy_id": "finjer-r"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.3,
+                0,
+                2.8
+              ],
+              "enemy_id": "finjer-r"
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s06a_ga1",
+          "rotation": 0,
+          "connections": {
+            "south": "3,2",
+            "north": "1,2"
+          },
+          "portals": {
+            "south": "portal_1770771660479_fqd6m0x3e",
+            "north": "portal_1770771649727_llh3vpezg"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -9.7,
+                0,
+                6.9
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.0,
+                0,
+                4.7
+              ],
+              "enemy_id": "akorse"
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s06a_na1",
+          "rotation": 180,
+          "connections": {
+            "north": "2,2"
+          },
+          "portals": {
+            "north": "portal_1770801069492_s6nc2m57f"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -24.4,
+                0,
+                -9.8
+              ],
+              "enemy_id": "akorse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -23.8,
+                0,
+                1.0
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "box",
+              "position": [
+                -28.9,
+                0,
+                -33.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -33.6,
+                0,
+                21.3
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -27.6,
+                0,
+                -40.4
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "transition",
+      "area": "e",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "entry_direction": "south",
+      "exit_direction": "north",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s06e_ia1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
+            "north": "portal_1770803472379_4v8wbaqr8",
+            "south": "portal_1770803459438_jtgt8w5ig"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "north",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                13.3,
+                0,
+                -4.4
+              ],
+              "enemy_id": "finjer-r"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.7,
+                0,
+                4.8
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.9,
+                0,
+                -5.4
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "box",
+              "position": [
+                7.5,
+                0,
+                -5.8
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "0,0",
+      "end_pos": "3,2",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s06b_sa1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,0"
+          },
+          "portals": {
+            "south": "portal_1770803042772_a45p6nkgi"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s06b_lc2",
+          "rotation": 0,
+          "connections": {
+            "east": "1,1",
+            "north": "0,0"
+          },
+          "portals": {
+            "east": "portal_1771831846982_sg3209n7n",
+            "north": "portal_1770802918831_epgobz1rr"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -15.7,
+                0,
+                0.6
+              ],
+              "enemy_id": "finjer-r"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.4,
+                0,
+                -12.4
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -14.6,
+                0,
+                -13.3
+              ],
+              "enemy_id": "akorse"
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s06b_ic1",
+          "rotation": 90,
+          "connections": {
+            "west": "1,0",
+            "east": "1,2"
+          },
+          "portals": {
+            "west": "portal_1770802691984_ta4zhvmtw",
+            "east": "portal_1770802680665_7lrpi87bt"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -16.8,
+                0,
+                -2.9
+              ],
+              "enemy_id": "akorse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.5,
+                0,
+                16.7
+              ],
+              "enemy_id": "akorse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.0,
+                0,
+                12.7
+              ],
+              "enemy_id": "finjer-r"
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s06b_lb3",
+          "rotation": 180,
+          "connections": {
+            "west": "1,1",
+            "south": "2,2"
+          },
+          "portals": {
+            "west": "portal_1771831812448_4hhk4awo9",
+            "south": "portal_1770802848973_tciddatgl"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                7.1,
+                0,
+                -15.0
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                15.6,
+                0,
+                3.3
+              ],
+              "enemy_id": "korse"
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s06b_ic3",
+          "rotation": 0,
+          "connections": {
+            "south": "3,2",
+            "north": "1,2"
+          },
+          "portals": {
+            "south": "portal_1770802730097_z3ivjr3cz",
+            "north": "portal_1770802719701_8ntqeakty"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                17.8,
+                0,
+                -2.7
+              ],
+              "enemy_id": "finjer-b"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.1,
+                0,
+                -6.7
+              ],
+              "enemy_id": "finjer-b"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.6,
+                0,
+                -32.9
+              ],
+              "enemy_id": "finjer-g"
+            }
+          ]
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s06b_na1",
+          "rotation": 180,
+          "connections": {
+            "north": "2,2"
+          },
+          "portals": {
+            "north": "portal_1770802950720_ot6f2jmur"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.7,
+                0,
+                0.1
+              ],
+              "enemy_id": "finjer-g"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.7,
+                0,
+                -3.9
+              ],
+              "enemy_id": "akorse"
+            },
+            {
+              "type": "box",
+              "position": [
+                -2.7,
+                0,
+                -8.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                4.1,
+                0,
+                8.8
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "boss",
+      "area": "z",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s06a_na1",
+          "rotation": 180,
+          "connections": {},
+          "portals": {
+            "north": "portal_1770801069492_s6nc2m57f"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "north",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -19.3,
+                0,
+                10.3
+              ],
+              "enemy_id": "blade-mother"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.8,
+                0,
+                14.2
+              ],
+              "enemy_id": "finjer-r"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                33.4,
+                0,
+                11.5
+              ],
+              "enemy_id": "finjer-r"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
