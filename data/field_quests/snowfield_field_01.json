@@ -195,12 +195,12 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Wildlife Researcher",
-                  "text": "Fascinating! The Usanny migration patterns have shifted dramatically this season."
+                  "speaker": "Hunter",
+                  "text": "Came out here looking for game, but nothing out here is safe to eat. The meat's got a weird color to it."
                 },
                 {
-                  "speaker": "Wildlife Researcher",
-                  "text": "I suspect something deeper in the snowfield is driving them out of their usual territory."
+                  "speaker": "Hunter",
+                  "text": "Whatever's wrong with the soil, it's in the animals too. Whole trip's been a waste."
                 }
               ]
             },

@@ -195,12 +195,12 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Herb Gatherer",
-                  "text": "Oh! A hunter! I came looking for dreamrose herbs — they only grow in the damp soil here."
+                  "speaker": "Water Surveyor",
+                  "text": "The settlement's been rationing for weeks. I'm testing the runoff here to see if any of it's safe to drink."
                 },
                 {
-                  "speaker": "Herb Gatherer",
-                  "text": "But the Porels keep circling closer. Could you clear them out so I can finish gathering?"
+                  "speaker": "Water Surveyor",
+                  "text": "Something upstream is tainting it. The color's wrong and the animals won't go near it."
                 }
               ]
             },

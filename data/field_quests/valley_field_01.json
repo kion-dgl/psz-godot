@@ -972,12 +972,12 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Field Medic",
-                  "text": "I set up a small camp here to tend to anyone who wanders through."
+                  "speaker": "Scout",
+                  "text": "A few miners swore they saw something huge flying over the ridge last night. Scales, wings, the whole deal."
                 },
                 {
-                  "speaker": "Field Medic",
-                  "text": "The creatures are more aggressive deeper in. Don't push yourself too hard."
+                  "speaker": "Scout",
+                  "text": "Guild sent me to check it out, but all I've found are these claw marks. Whatever it was, it's big."
                 }
               ]
             },
