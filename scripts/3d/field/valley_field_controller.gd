@@ -769,7 +769,7 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 						matched = true
 						break
 				if not matched:
-					push_warning("[ValleyField] No portal found for dir '%s' in stage config (id=%s, rot=%d)" % [dir_key, _stage_id, _rotation_deg])
+					push_warning("[ValleyField] No portal found for dir '%s' in stage config (rot=%d)" % [dir_key, _rotation_deg])
 			if result.has(dir_key):
 				print("[ValleyField]   v1 portal: '%s' (id=%s) → gate=%s spawn=%s trigger=%s" % [
 					dir_key, portal_id,
