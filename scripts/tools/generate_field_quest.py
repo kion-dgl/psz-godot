@@ -125,6 +125,423 @@ ENEMY_POOLS = {
 }
 
 # ---------------------------------------------------------------------------
+# Floor mesh GLB parsing
+# ---------------------------------------------------------------------------
+
+
+def get_floor_glb_path(stage_id: str) -> str | None:
+    """Resolve the floor GLB path for a stage_id.
+
+    Pattern: assets/stages/{folder}_{area_letter}/{stage_id}/lndmd/{stage_id}-floor.glb
+    The area letter is extracted from the stage_id (e.g., s01a_sa1 -> 'a').
+    The folder comes from the prefix (e.g., s01 -> 'valley').
+    """
+    m = re.match(r'^(s\d{2})([a-z0-9])_', stage_id)
+    if not m:
+        return None
+    prefix = m.group(1)
+    area_letter = m.group(2)
+    folder = AREA_FOLDERS.get(prefix)
+    if not folder:
+        return None
+    subfolder_name = f"{folder}_{area_letter}"
+    path = os.path.join(
+        STAGES_DIR, subfolder_name, stage_id, "lndmd", f"{stage_id}-floor.glb"
+    )
+    if os.path.exists(path):
+        return path
+    return None
+
+
+def load_floor_triangles(glb_path: str) -> list[tuple]:
+    """Extract floor triangles as list of [(x1,z1), (x2,z2), (x3,z3)] from a GLB file.
+
+    Floor meshes are flat (Y=0), so we only need X and Z coordinates.
+    Handles both indexed and non-indexed meshes.
+    """
+    with open(glb_path, "rb") as f:
+        magic, version, length = struct.unpack("<III", f.read(12))
+        if magic != 0x46546C67:  # 'glTF'
+            raise ValueError(f"Not a valid GLB file: {glb_path}")
+        chunk_len, chunk_type = struct.unpack("<II", f.read(8))
+        json_data = json.loads(f.read(chunk_len))
+        pos = f.tell()
+        remaining = length - pos
+        if remaining > 8:
+            chunk_len2, chunk_type2 = struct.unpack("<II", f.read(8))
+            bin_data = f.read(chunk_len2)
+        else:
+            bin_data = b""
+
+    accessors = json_data.get("accessors", [])
+    buffer_views = json_data.get("bufferViews", [])
+    triangles: list[tuple] = []
+
+    for mesh in json_data.get("meshes", []):
+        for prim in mesh.get("primitives", []):
+            pos_idx = prim.get("attributes", {}).get("POSITION")
+            idx_idx = prim.get("indices")
+            if pos_idx is None:
+                continue
+
+            # Read vertex positions
+            acc = accessors[pos_idx]
+            bv = buffer_views[acc["bufferView"]]
+            offset = bv.get("byteOffset", 0) + acc.get("byteOffset", 0)
+            stride = bv.get("byteStride", 12)  # Default 12 for VEC3 float
+            verts = []
+            for i in range(acc["count"]):
+                x, y, z = struct.unpack_from("<fff", bin_data, offset + i * stride)
+                verts.append((x, z))
+
+            if idx_idx is not None:
+                # Indexed mesh
+                iacc = accessors[idx_idx]
+                ibv = buffer_views[iacc["bufferView"]]
+                ioff = ibv.get("byteOffset", 0) + iacc.get("byteOffset", 0)
+                comp_type = iacc["componentType"]
+                if comp_type == 5121:      # UNSIGNED_BYTE
+                    idx_size, fmt = 1, "<B"
+                elif comp_type == 5123:    # UNSIGNED_SHORT
+                    idx_size, fmt = 2, "<H"
+                else:                      # UNSIGNED_INT (5125)
+                    idx_size, fmt = 4, "<I"
+                indices = [
+                    struct.unpack_from(fmt, bin_data, ioff + i * idx_size)[0]
+                    for i in range(iacc["count"])
+                ]
+                for i in range(0, len(indices), 3):
+                    triangles.append((
+                        verts[indices[i]],
+                        verts[indices[i + 1]],
+                        verts[indices[i + 2]],
+                    ))
+            else:
+                # Non-indexed mesh: vertices are in triangle order
+                for i in range(0, len(verts), 3):
+                    if i + 2 < len(verts):
+                        triangles.append((verts[i], verts[i + 1], verts[i + 2]))
+
+    return triangles
+
+
+def point_in_triangle(px: float, pz: float, tri: tuple) -> bool:
+    """Test if point (px, pz) is inside triangle tri = ((x1,z1), (x2,z2), (x3,z3))."""
+    (x1, z1), (x2, z2), (x3, z3) = tri
+    d1 = (px - x2) * (z1 - z2) - (x1 - x2) * (pz - z2)
+    d2 = (px - x3) * (z2 - z3) - (x2 - x3) * (pz - z3)
+    d3 = (px - x1) * (z3 - z1) - (x3 - x1) * (pz - z1)
+    has_neg = (d1 < 0) or (d2 < 0) or (d3 < 0)
+    has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0)
+    return not (has_neg and has_pos)
+
+
+def is_on_floor(
+    x: float,
+    z: float,
+    triangles: list[tuple],
+    excluded_indices: set[int] | None = None,
+) -> bool:
+    """Check if (x, z) lies on any non-excluded floor triangle."""
+    for i, tri in enumerate(triangles):
+        if excluded_indices and i in excluded_indices:
+            continue
+        if point_in_triangle(x, z, tri):
+            return True
+    return False
+
+
+def get_excluded_triangle_indices(stage_config: dict) -> set[int]:
+    """Get set of triangle indices marked as excluded in the stage config."""
+    fc = stage_config.get("floorCollision", {})
+    tris = fc.get("triangles", {})
+    excluded: set[int] = set()
+    for key, value in tris.items():
+        if value:  # True = excluded
+            m_idx = re.match(r"tri_(\d+)", key)
+            if m_idx:
+                excluded.add(int(m_idx.group(1)))
+    return excluded
+
+
+def rotate_point_xz(x: float, z: float, rotation: int) -> tuple[float, float]:
+    """Rotate a point (x, z) clockwise by rotation degrees (matching Godot stage rotation)."""
+    if rotation == 0:
+        return (x, z)
+    rad = math.radians(rotation)
+    cos_r = math.cos(rad)
+    sin_r = math.sin(rad)
+    return (x * cos_r + z * sin_r, -x * sin_r + z * cos_r)
+
+
+def rotate_triangle(tri: tuple, rotation: int) -> tuple:
+    """Rotate all 3 points of a floor triangle."""
+    if rotation == 0:
+        return tri
+    return tuple(rotate_point_xz(p[0], p[1], rotation) for p in tri)
+
+
+def get_floor_bounds(triangles: list[tuple]) -> tuple[float, float, float, float]:
+    """Get the bounding box of the floor mesh: (min_x, max_x, min_z, max_z)."""
+    all_x = [p[0] for t in triangles for p in t]
+    all_z = [p[1] for t in triangles for p in t]
+    return (min(all_x), max(all_x), min(all_z), max(all_z))
+
+
+class FloorCache:
+    """Cache for floor mesh data per stage+rotation, avoiding repeated GLB parsing."""
+
+    def __init__(self, stage_configs: dict):
+        self._cache: dict[str, dict | None] = {}
+        self._stage_configs = stage_configs
+
+    def load(self, stage_id: str, rotation: int = 0) -> dict | None:
+        """Load floor data for a stage, applying rotation.
+
+        Returns dict with: triangles, excluded, obstacles, bounds, or None if unavailable.
+        """
+        cache_key = f"{stage_id}@{rotation}"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        glb_path = get_floor_glb_path(stage_id)
+        if not glb_path:
+            self._cache[cache_key] = None
+            return None
+
+        try:
+            raw_triangles = load_floor_triangles(glb_path)
+        except Exception as e:
+            print(f"  WARNING: Could not parse floor GLB for {stage_id}: {e}", file=sys.stderr)
+            self._cache[cache_key] = None
+            return None
+
+        if not raw_triangles:
+            self._cache[cache_key] = None
+            return None
+
+        # Apply rotation to triangles
+        triangles = [rotate_triangle(t, rotation) for t in raw_triangles]
+
+        # Get excluded triangle indices from stage config
+        stage_cfg = self._stage_configs.get(stage_id, {})
+        excluded = get_excluded_triangle_indices(stage_cfg)
+
+        # Get obstacles and rotate their positions
+        raw_obstacles = stage_cfg.get("obstacles", [])
+        obstacles = []
+        for obs in raw_obstacles:
+            obs_pos = obs.get("position", [0, 0, 0])
+            rx, rz = rotate_point_xz(obs_pos[0], obs_pos[2], rotation)
+            rotated_obs = dict(obs)
+            rotated_obs["position"] = [rx, obs_pos[1], rz]
+            obstacles.append(rotated_obs)
+
+        bounds = get_floor_bounds(triangles)
+
+        result = {
+            "triangles": triangles,
+            "excluded": excluded,
+            "obstacles": obstacles,
+            "bounds": bounds,
+        }
+        self._cache[cache_key] = result
+        return result
+
+
+# ---------------------------------------------------------------------------
+# Floor-validated position sampling
+# ---------------------------------------------------------------------------
+
+
+def sample_positions_on_floor(
+    count: int,
+    floor_data: dict,
+    portal_positions: list[tuple[float, float]] | None = None,
+    min_spacing: float = 3.0,
+    min_portal_dist: float = 5.0,
+    min_edge_margin: float = 2.5,
+    rng: random.Random | None = None,
+) -> list[list[float]]:
+    """Sample `count` positions validated against actual floor mesh geometry.
+
+    Each sampled point is guaranteed to:
+      - Lie on a walkable (non-excluded) floor triangle
+      - Be clear of obstacles
+      - Be at least min_spacing from other sampled points
+      - Be at least min_portal_dist from portal positions
+      - Be at least min_edge_margin from the floor bounding box edges
+    """
+    if rng is None:
+        rng = random.Random()
+    if portal_positions is None:
+        portal_positions = []
+
+    triangles = floor_data["triangles"]
+    excluded = floor_data["excluded"]
+    obstacles = floor_data["obstacles"]
+    min_x, max_x, min_z, max_z = floor_data["bounds"]
+
+    # Shrink bounds slightly to avoid edge placements
+    sample_min_x = min_x + min_edge_margin
+    sample_max_x = max_x - min_edge_margin
+    sample_min_z = min_z + min_edge_margin
+    sample_max_z = max_z - min_edge_margin
+
+    if sample_min_x >= sample_max_x or sample_min_z >= sample_max_z:
+        # Bounds too small after margin, use raw bounds
+        sample_min_x, sample_max_x = min_x, max_x
+        sample_min_z, sample_max_z = min_z, max_z
+
+    placed: list[list[float]] = []
+    max_attempts = count * 300
+
+    for _ in range(max_attempts):
+        if len(placed) >= count:
+            break
+
+        x = round(rng.uniform(sample_min_x, sample_max_x), 1)
+        z = round(rng.uniform(sample_min_z, sample_max_z), 1)
+
+        # Must be on walkable floor
+        if not is_on_floor(x, z, triangles, excluded):
+            continue
+
+        # Must be clear of obstacles
+        if not is_clear_of_obstacles(x, z, obstacles):
+            continue
+
+        # Must be far enough from portal positions
+        too_close_to_portal = False
+        for px, pz in portal_positions:
+            if (x - px) ** 2 + (z - pz) ** 2 < min_portal_dist ** 2:
+                too_close_to_portal = True
+                break
+        if too_close_to_portal:
+            continue
+
+        # Must be far enough from already-placed objects
+        too_close = False
+        for existing in placed:
+            if (x - existing[0]) ** 2 + (z - existing[2]) ** 2 < min_spacing ** 2:
+                too_close = True
+                break
+        if too_close:
+            continue
+
+        placed.append([x, 0, z])
+
+    return placed
+
+
+# ---------------------------------------------------------------------------
+# --check-floors: validate all positioned objects lie on walkable floor
+# ---------------------------------------------------------------------------
+
+
+def check_floors(quest_path: str) -> int:
+    """Validate that all positioned objects in a quest JSON are on walkable floor.
+
+    Returns the number of errors found.
+    """
+    with open(quest_path) as f:
+        quest = json.load(f)
+
+    quest_id = quest.get("id", os.path.basename(quest_path))
+    with open(STAGE_CONFIG_PATH) as f:
+        stage_configs = json.load(f)
+
+    floor_cache = FloorCache(stage_configs)
+    errors = 0
+    warnings = 0
+    checked = 0
+
+    print(f"Checking floors for: {quest_id}")
+    print(f"  Area: {quest.get('area_id', '?')}")
+
+    for si, section in enumerate(quest.get("sections", [])):
+        sec_type = section.get("type", "?")
+        sec_area = section.get("area", "?")
+
+        for cell in section.get("cells", []):
+            stage_id = cell["stage_id"]
+            rotation = cell.get("rotation", 0)
+            pos = cell.get("pos", "?")
+
+            floor_data = floor_cache.load(stage_id, rotation)
+            if floor_data is None:
+                print(
+                    f"  WARNING: No floor GLB for {stage_id} "
+                    f"(section {si} area={sec_area} cell={pos})"
+                )
+                warnings += 1
+                continue
+
+            # Check key_position
+            if cell.get("key_position"):
+                kp = cell["key_position"]
+                checked += 1
+                if not is_on_floor(kp[0], kp[2], floor_data["triangles"], floor_data["excluded"]):
+                    print(
+                        f"  ERROR: key_position [{kp[0]}, {kp[2]}] NOT on floor "
+                        f"in {stage_id} (cell {pos})"
+                    )
+                    errors += 1
+
+            # Check key_drop_position
+            if cell.get("key_drop_position"):
+                kdp = cell["key_drop_position"]
+                checked += 1
+                if not is_on_floor(
+                    kdp[0], kdp[2], floor_data["triangles"], floor_data["excluded"]
+                ):
+                    print(
+                        f"  ERROR: key_drop_position [{kdp[0]}, {kdp[2]}] NOT on floor "
+                        f"in {stage_id} (cell {pos})"
+                    )
+                    errors += 1
+
+            # Check objects
+            for oi, obj in enumerate(cell.get("objects", [])):
+                obj_type = obj.get("type", "?")
+                obj_pos = obj.get("position")
+                if obj_pos is None:
+                    continue
+
+                checked += 1
+                ox, oz = obj_pos[0], obj_pos[2]
+
+                on_floor = is_on_floor(
+                    ox, oz, floor_data["triangles"], floor_data["excluded"]
+                )
+                if not on_floor:
+                    eid = obj.get("enemy_id", "")
+                    label = f"{obj_type}"
+                    if eid:
+                        label += f" ({eid})"
+                    print(
+                        f"  ERROR: {label} at [{ox}, {oz}] NOT on floor "
+                        f"in {stage_id} (cell {pos}, obj {oi})"
+                    )
+                    errors += 1
+
+                # Also check obstacle clearance
+                if not is_clear_of_obstacles(ox, oz, floor_data["obstacles"], clearance=0.5):
+                    eid = obj.get("enemy_id", "")
+                    label = f"{obj_type}"
+                    if eid:
+                        label += f" ({eid})"
+                    print(
+                        f"  WARNING: {label} at [{ox}, {oz}] is inside an obstacle "
+                        f"in {stage_id} (cell {pos}, obj {oi})"
+                    )
+                    warnings += 1
+
+    print(f"\nResults: {checked} positions checked, {errors} error(s), {warnings} warning(s)")
+    return errors
+
+
+# ---------------------------------------------------------------------------
 # Stage catalog
 # ---------------------------------------------------------------------------
 
@@ -338,11 +755,28 @@ def sample_positions(
     obstacles: list[dict],
     min_spacing: float = 3.0,
     rng: random.Random | None = None,
+    floor_data: dict | None = None,
+    portal_positions: list[tuple[float, float]] | None = None,
 ) -> list[list[float]]:
-    """Sample `count` positions within walkable zone, spaced apart."""
+    """Sample `count` positions within walkable zone, spaced apart.
+
+    If floor_data is provided, uses actual floor mesh triangles for validation.
+    Otherwise falls back to bounding-box estimation from portal positions.
+    """
     if rng is None:
         rng = random.Random()
 
+    # Use floor-mesh-validated sampling when available
+    if floor_data is not None:
+        return sample_positions_on_floor(
+            count,
+            floor_data,
+            portal_positions=portal_positions,
+            min_spacing=min_spacing,
+            rng=rng,
+        )
+
+    # Fallback: bounding-box estimation
     min_x, max_x, min_z, max_z = compute_walkable_bounds(portals, obstacles)
     placed: list[list[float]] = []
     attempts = 0
@@ -716,6 +1150,25 @@ def infer_connections(
 # ---------------------------------------------------------------------------
 
 
+def _get_portal_positions_rotated(
+    catalog: StageCatalog, stage_id: str, rotation: int
+) -> list[tuple[float, float]]:
+    """Get rotated portal positions for a stage, used to keep objects away from gates."""
+    cfg = catalog.configs.get(stage_id, {})
+    positions: list[tuple[float, float]] = []
+    for portal in cfg.get("portals", []):
+        pos = portal.get("position", [0, 0, 0])
+        rx, rz = rotate_point_xz(pos[0], pos[2], rotation)
+        positions.append((rx, rz))
+    # Also include defaultSpawn position
+    default_spawn = cfg.get("defaultSpawn")
+    if default_spawn:
+        pos = default_spawn.get("position", [0, 0, 0])
+        rx, rz = rotate_point_xz(pos[0], pos[2], rotation)
+        positions.append((rx, rz))
+    return positions
+
+
 def place_objects_for_cell(
     cell: dict,
     catalog: StageCatalog,
@@ -726,9 +1179,15 @@ def place_objects_for_cell(
     is_boss: bool,
     rare_box_placed: list[bool],
     rng: random.Random,
+    floor_cache: FloorCache | None = None,
 ) -> list[dict]:
-    """Place enemies and boxes for a single cell."""
+    """Place enemies and boxes for a single cell.
+
+    When floor_cache is provided, positions are validated against actual floor
+    mesh geometry. Otherwise falls back to portal-based bounding box estimation.
+    """
     stage_id = cell["stage_id"]
+    rotation = cell.get("rotation", 0)
     portals_cfg = catalog.configs.get(stage_id, {}).get("portals", [])
     obstacles = catalog.get_obstacles(stage_id)
     objects: list[dict] = []
@@ -737,11 +1196,22 @@ def place_objects_for_cell(
     if cell.get("role") == "S":
         return []
 
+    # Try to load floor data
+    floor_data = None
+    portal_positions: list[tuple[float, float]] | None = None
+    if floor_cache is not None:
+        floor_data = floor_cache.load(stage_id, rotation)
+        if floor_data is not None:
+            portal_positions = _get_portal_positions_rotated(catalog, stage_id, rotation)
+
     if is_boss:
         # Boss cell: 1 boss + 2 common support
         enemy_ids = [rng.choice(pool["bosses"])]
         enemy_ids.extend(rng.choices(pool["common"], k=2))
-        positions = sample_positions(len(enemy_ids), portals_cfg, obstacles, rng=rng)
+        positions = sample_positions(
+            len(enemy_ids), portals_cfg, obstacles, rng=rng,
+            floor_data=floor_data, portal_positions=portal_positions,
+        )
         for eid, pos in zip(enemy_ids, positions):
             objects.append({"type": "enemy", "position": pos, "enemy_id": eid})
         return objects
@@ -776,7 +1246,8 @@ def place_objects_for_cell(
 
     total_needed = enemy_count + (box_count if is_branch_end else 0)
     positions = sample_positions(
-        total_needed, portals_cfg, obstacles, rng=rng
+        total_needed, portals_cfg, obstacles, rng=rng,
+        floor_data=floor_data, portal_positions=portal_positions,
     )
 
     idx = 0
@@ -812,6 +1283,7 @@ def build_grid_section(
     variant: str,
     rng: random.Random,
     rare_box_placed: list[bool],
+    floor_cache: FloorCache | None = None,
 ) -> dict:
     """Build a complete grid section from assigned template cells."""
     connections = infer_connections(template_cells)
@@ -877,6 +1349,7 @@ def build_grid_section(
         objects = place_objects_for_cell(
             c, catalog, pool, path_order, total_cells,
             is_branch_end, False, rare_box_placed, rng,
+            floor_cache=floor_cache,
         )
 
         json_cells.append(
@@ -908,6 +1381,7 @@ def build_transition_section(
     prefix: str,
     pool: dict,
     rng: random.Random,
+    floor_cache: FloorCache | None = None,
 ) -> dict:
     """Build a transition section (single ia1 cell)."""
     stage_id = f"{prefix}e_ia1"
@@ -926,6 +1400,14 @@ def build_transition_section(
     portals_cfg = catalog.configs.get(stage_id, {}).get("portals", [])
     obstacles = catalog.get_obstacles(stage_id)
 
+    # Load floor data if available
+    floor_data = None
+    portal_positions = None
+    if floor_cache is not None:
+        floor_data = floor_cache.load(stage_id, rotation)
+        if floor_data is not None:
+            portal_positions = _get_portal_positions_rotated(catalog, stage_id, rotation)
+
     # Place 2-3 enemies
     enemy_count = rng.randint(2, 3)
     enemy_ids = []
@@ -935,7 +1417,10 @@ def build_transition_section(
         else:
             enemy_ids.append(rng.choice(pool["common"]))
 
-    positions = sample_positions(enemy_count + 1, portals_cfg, obstacles, rng=rng)
+    positions = sample_positions(
+        enemy_count + 1, portals_cfg, obstacles, rng=rng,
+        floor_data=floor_data, portal_positions=portal_positions,
+    )
     objects: list[dict] = []
     for i, eid in enumerate(enemy_ids):
         if i < len(positions):
@@ -1001,6 +1486,7 @@ def build_boss_section(
     prefix: str,
     pool: dict,
     rng: random.Random,
+    floor_cache: FloorCache | None = None,
 ) -> dict:
     """Build a boss section (single na1 cell with boss + support)."""
     # Prefer z-variant na1, fall back to a-variant
@@ -1024,10 +1510,21 @@ def build_boss_section(
     portals_cfg = catalog.configs.get(stage_id, {}).get("portals", [])
     obstacles = catalog.get_obstacles(stage_id)
 
+    # Load floor data if available
+    floor_data = None
+    portal_positions = None
+    if floor_cache is not None:
+        floor_data = floor_cache.load(stage_id, rotation)
+        if floor_data is not None:
+            portal_positions = _get_portal_positions_rotated(catalog, stage_id, rotation)
+
     # Place boss + 2 support
     enemy_ids = [rng.choice(pool["bosses"])]
     enemy_ids.extend(rng.choices(pool["common"], k=2))
-    positions = sample_positions(3, portals_cfg, obstacles, rng=rng)
+    positions = sample_positions(
+        3, portals_cfg, obstacles, rng=rng,
+        floor_data=floor_data, portal_positions=portal_positions,
+    )
 
     objects: list[dict] = []
     for i, eid in enumerate(enemy_ids):
@@ -1083,6 +1580,7 @@ def build_tower_sections(
     catalog: StageCatalog,
     pool: dict,
     rng: random.Random,
+    floor_cache: FloorCache | None = None,
 ) -> list[dict]:
     """Build all sections for a tower quest (floors s080-s087)."""
     sections: list[dict] = []
@@ -1122,7 +1620,7 @@ def build_tower_sections(
     # Mark last as end
     a_assigned[-1]["role"] = "E"
 
-    grid_a = build_grid_section(a_assigned, catalog, pool, "a", rng, rare_box_placed)
+    grid_a = build_grid_section(a_assigned, catalog, pool, "a", rng, rare_box_placed, floor_cache=floor_cache)
     sections.append(grid_a)
 
     # Transition
@@ -1139,9 +1637,20 @@ def build_tower_sections(
     portals_cfg = catalog.configs.get(trans_stage, {}).get("portals", [])
     obstacles = catalog.get_obstacles(trans_stage)
 
+    # Load floor data for tower transition
+    t_floor_data = None
+    t_portal_positions = None
+    if floor_cache is not None:
+        t_floor_data = floor_cache.load(trans_stage, rot)
+        if t_floor_data is not None:
+            t_portal_positions = _get_portal_positions_rotated(catalog, trans_stage, rot)
+
     enemy_count = rng.randint(2, 3)
     enemy_ids = rng.choices(pool["common"], k=enemy_count)
-    positions = sample_positions(enemy_count, portals_cfg, obstacles, rng=rng)
+    positions = sample_positions(
+        enemy_count, portals_cfg, obstacles, rng=rng,
+        floor_data=t_floor_data, portal_positions=t_portal_positions,
+    )
     objects = []
     for eid, pos in zip(enemy_ids, positions):
         objects.append({"type": "enemy", "position": pos, "enemy_id": eid})
@@ -1219,7 +1728,7 @@ def build_tower_sections(
         if rot_s is not None:
             b_assigned[0]["rotation"] = rot_s
 
-    grid_b = build_grid_section(b_assigned, catalog, pool, "b", rng, rare_box_placed)
+    grid_b = build_grid_section(b_assigned, catalog, pool, "b", rng, rare_box_placed, floor_cache=floor_cache)
     # Override area label for tower B
     grid_b["area"] = "b"
     sections.append(grid_b)
@@ -1241,8 +1750,20 @@ def build_tower_sections(
 
     boss_portals_cfg = catalog.configs.get(boss_stage, {}).get("portals", [])
     boss_obstacles = catalog.get_obstacles(boss_stage)
+
+    # Load floor data for tower boss
+    boss_floor_data = None
+    boss_portal_positions = None
+    if floor_cache is not None:
+        boss_floor_data = floor_cache.load(boss_stage, b_rot)
+        if boss_floor_data is not None:
+            boss_portal_positions = _get_portal_positions_rotated(catalog, boss_stage, b_rot)
+
     boss_enemy_ids = [rng.choice(pool["bosses"])] + rng.choices(pool["common"], k=2)
-    boss_positions = sample_positions(3, boss_portals_cfg, boss_obstacles, rng=rng)
+    boss_positions = sample_positions(
+        3, boss_portals_cfg, boss_obstacles, rng=rng,
+        floor_data=boss_floor_data, portal_positions=boss_portal_positions,
+    )
     boss_objects = []
     for eid, pos in zip(boss_enemy_ids, boss_positions):
         boss_objects.append({"type": "enemy", "position": pos, "enemy_id": eid})
@@ -1373,6 +1894,9 @@ def generate_quest(
     pool = ENEMY_POOLS[area]
     catalog = StageCatalog(STAGE_CONFIG_PATH)
 
+    # Create floor cache for floor-mesh-validated placement
+    floor_cache = FloorCache(catalog.raw)
+
     quest_id = os.path.splitext(os.path.basename(output_path))[0]
     if description is None:
         description = f"Explore the wilds of {area.title()}. Danger lurks around every corner."
@@ -1380,9 +1904,9 @@ def generate_quest(
     today = time.strftime("%Y-%m-%d")
 
     if area == "tower":
-        sections = build_tower_sections(catalog, pool, rng)
+        sections = build_tower_sections(catalog, pool, rng, floor_cache=floor_cache)
     else:
-        sections = _generate_standard_sections(catalog, prefix, pool, rng)
+        sections = _generate_standard_sections(catalog, prefix, pool, rng, floor_cache=floor_cache)
 
     quest = {
         "version": 1,
@@ -1406,6 +1930,7 @@ def _generate_standard_sections(
     prefix: str,
     pool: dict,
     rng: random.Random,
+    floor_cache: FloorCache | None = None,
 ) -> list[dict]:
     """Generate sections for non-tower areas: Grid A + Transition E + Grid B + Boss Z."""
     sections: list[dict] = []
@@ -1434,11 +1959,11 @@ def _generate_standard_sections(
             print("ERROR: Could not assign stages for Grid A", file=sys.stderr)
             sys.exit(1)
 
-    grid_a = build_grid_section(grid_a_cells, catalog, pool, "a", rng, rare_box_placed)
+    grid_a = build_grid_section(grid_a_cells, catalog, pool, "a", rng, rare_box_placed, floor_cache=floor_cache)
     sections.append(grid_a)
 
     # --- Transition E ---
-    trans = build_transition_section(catalog, prefix, pool, rng)
+    trans = build_transition_section(catalog, prefix, pool, rng, floor_cache=floor_cache)
     sections.append(trans)
 
     # --- Grid B ---
@@ -1465,11 +1990,11 @@ def _generate_standard_sections(
         print("ERROR: Could not assign stages for Grid B", file=sys.stderr)
         sys.exit(1)
 
-    grid_b = build_grid_section(grid_b_cells, catalog, pool, "b", rng, rare_box_placed)
+    grid_b = build_grid_section(grid_b_cells, catalog, pool, "b", rng, rare_box_placed, floor_cache=floor_cache)
     sections.append(grid_b)
 
     # --- Boss Z ---
-    boss = build_boss_section(catalog, prefix, pool, rng)
+    boss = build_boss_section(catalog, prefix, pool, rng, floor_cache=floor_cache)
     sections.append(boss)
 
     return sections
@@ -1482,20 +2007,34 @@ def _generate_standard_sections(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate a field quest JSON file."
+        description="Generate a field quest JSON file.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Generate a quest
+  %(prog)s --area gurhacia --name "Valley Patrol" \\
+      --output data/quests/valley_patrol.json --seed 42
+
+  # Check all positions in an existing quest lie on walkable floor
+  %(prog)s --check-floors data/quests/search_and_rescue.json
+""",
     )
     parser.add_argument(
-        "--area", required=True,
+        "--check-floors", metavar="QUEST_JSON",
+        help="Validate all positioned objects in a quest are on walkable floor",
+    )
+    parser.add_argument(
+        "--area",
         choices=list(AREA_CONFIG.keys()),
         help="Area name (gurhacia, ozette, rioh, makara, paru, arca, dark, tower)",
     )
     parser.add_argument(
-        "--name", required=True,
+        "--name",
         help="Quest display name (e.g. 'Valley Patrol')",
     )
     parser.add_argument(
-        "--output", required=True,
-        help="Output JSON file path (e.g. data/field_quests/valley_field_02.json)",
+        "--output",
+        help="Output JSON file path (e.g. data/quests/valley_patrol.json)",
     )
     parser.add_argument(
         "--seed", type=int, default=None,
@@ -1506,6 +2045,21 @@ def main():
         help="Quest description text (optional)",
     )
     args = parser.parse_args()
+
+    # --check-floors mode
+    if args.check_floors:
+        quest_path = args.check_floors
+        if not os.path.isabs(quest_path):
+            quest_path = os.path.join(PROJECT_ROOT, quest_path)
+        if not os.path.exists(quest_path):
+            print(f"ERROR: File not found: {quest_path}", file=sys.stderr)
+            sys.exit(1)
+        errors = check_floors(quest_path)
+        sys.exit(1 if errors > 0 else 0)
+
+    # Generation mode: require --area, --name, --output
+    if not args.area or not args.name or not args.output:
+        parser.error("--area, --name, and --output are required for quest generation")
 
     # Resolve output path relative to project root if not absolute
     output_path = args.output
@@ -1554,6 +2108,10 @@ def main():
     print("  Sections:")
     for info in section_info:
         print(f"    {info}")
+
+    # Auto-check floors of the generated quest
+    print(f"\n--- Floor Validation ---")
+    check_floors(output_path)
 
 
 if __name__ == "__main__":
