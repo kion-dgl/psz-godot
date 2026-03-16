@@ -182,29 +182,6 @@
           "path_order": 7,
           "objects": [
             {
-              "type": "dialog_trigger",
-              "position": [
-                -2,
-                0,
-                -5
-              ],
-              "trigger_size": [
-                10,
-                3,
-                6
-              ],
-              "dialog": [
-                {
-                  "speaker": "Parts Scavenger",
-                  "text": "This old city is a goldmine for salvage, but the wildlife has completely taken over."
-                },
-                {
-                  "speaker": "Parts Scavenger",
-                  "text": "I found some intact power cells a few rooms back. Watch for the Bolix nests \u2014 they're everywhere."
-                }
-              ]
-            },
-            {
               "type": "enemy",
               "position": [
                 -4,

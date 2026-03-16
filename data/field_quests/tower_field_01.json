@@ -60,9 +60,33 @@
           "warp_edge": "",
           "path_order": 1,
           "objects": [
-            {"type": "enemy", "position": [-6, 0, 5], "enemy_id": "ghowl"},
-            {"type": "enemy", "position": [4, 0, -3], "enemy_id": "porel"},
-            {"type": "enemy", "position": [0, 0, 8], "enemy_id": "usanny"}
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -3
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                8
+              ],
+              "enemy_id": "usanny"
+            }
           ]
         },
         {
@@ -89,9 +113,33 @@
           "warp_edge": "",
           "path_order": 2,
           "objects": [
-            {"type": "enemy", "position": [-5, 0, 4], "enemy_id": "batt"},
-            {"type": "enemy", "position": [6, 0, -2], "enemy_id": "pobomma"},
-            {"type": "enemy", "position": [0, 0, -8], "enemy_id": "garahadan"}
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                4
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -2
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                -8
+              ],
+              "enemy_id": "garahadan"
+            }
           ]
         },
         {
@@ -118,17 +166,32 @@
           "warp_edge": "",
           "path_order": 3,
           "objects": [
-            {"type": "enemy", "position": [-8, 0, 3], "enemy_id": "korse"},
-            {"type": "enemy", "position": [6, 0, -5], "enemy_id": "pelcatraz"},
-            {"type": "enemy", "position": [0, 0, 0], "enemy_id": "stagg"},
             {
-              "type": "dialog_trigger",
-              "position": [-2, 0, -5],
-              "trigger_size": [10, 3, 6],
-              "dialog": [
-                {"speaker": "Tower Climber", "text": "I've been going floor to floor, but every level gets harder than the last."},
-                {"speaker": "Tower Climber", "text": "There's something at the top \u2014 I can feel it. A presence. Be ready for anything."}
-              ]
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                3
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -5
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "stagg"
             }
           ]
         },
@@ -156,10 +219,40 @@
           "warp_edge": "",
           "path_order": 4,
           "objects": [
-            {"type": "enemy", "position": [-6, 0, 4], "enemy_id": "kapantha"},
-            {"type": "enemy", "position": [4, 0, -2], "enemy_id": "goldix"},
-            {"type": "box", "position": [12, 0, -8]},
-            {"type": "box", "position": [14, 0, -6]}
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                4
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -2
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "box",
+              "position": [
+                12,
+                0,
+                -8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                14,
+                0,
+                -6
+              ]
+            }
           ]
         },
         {
@@ -184,9 +277,33 @@
           "warp_edge": "south",
           "path_order": 5,
           "objects": [
-            {"type": "enemy", "position": [-6, 0, 4], "enemy_id": "eulid"},
-            {"type": "enemy", "position": [4, 0, -2], "enemy_id": "arkzein"},
-            {"type": "enemy", "position": [0, 0, 8], "enemy_id": "euladaveil"}
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                4
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -2
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                8
+              ],
+              "enemy_id": "euladaveil"
+            }
           ]
         }
       ]
@@ -220,10 +337,41 @@
           "warp_edge": "north",
           "path_order": 0,
           "objects": [
-            {"type": "enemy", "position": [-10, 0, -6], "enemy_id": "finjer-g"},
-            {"type": "enemy", "position": [6, 0, -10], "enemy_id": "arkzein"},
-            {"type": "enemy", "position": [-4, 0, -14], "enemy_id": "korse"},
-            {"type": "box", "position": [8, 0, -15]}
+            {
+              "type": "enemy",
+              "position": [
+                -10,
+                0,
+                -6
+              ],
+              "enemy_id": "finjer-g"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -10
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                -14
+              ],
+              "enemy_id": "korse"
+            },
+            {
+              "type": "box",
+              "position": [
+                8,
+                0,
+                -15
+              ]
+            }
           ]
         }
       ]
@@ -282,9 +430,33 @@
           "warp_edge": "",
           "path_order": 1,
           "objects": [
-            {"type": "enemy", "position": [-6, 0, 5], "enemy_id": "eulid"},
-            {"type": "enemy", "position": [4, 0, -3], "enemy_id": "arkzein"},
-            {"type": "enemy", "position": [0, 0, 8], "enemy_id": "finjer-b"}
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                5
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -3
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                8
+              ],
+              "enemy_id": "finjer-b"
+            }
           ]
         },
         {
@@ -311,16 +483,54 @@
           "warp_edge": "",
           "path_order": 2,
           "objects": [
-            {"type": "enemy", "position": [-8, 0, 3], "enemy_id": "finjer-r"},
-            {"type": "enemy", "position": [6, 0, -5], "enemy_id": "goldix"},
-            {"type": "enemy", "position": [0, 0, 0], "enemy_id": "kapantha"},
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                3
+              ],
+              "enemy_id": "finjer-r"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -5
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "kapantha"
+            },
             {
               "type": "dialog_trigger",
-              "position": [-2, 0, -5],
-              "trigger_size": [10, 3, 6],
+              "position": [
+                -2,
+                0,
+                -5
+              ],
+              "trigger_size": [
+                10,
+                3,
+                6
+              ],
               "dialog": [
-                {"speaker": "Exhausted Hunter", "text": "I can't go any further. The creatures on these upper floors are relentless."},
-                {"speaker": "Exhausted Hunter", "text": "Whatever is controlling them is somewhere above. End this, for all of us."}
+                {
+                  "speaker": "Exhausted Hunter",
+                  "text": "I can't go any further. The creatures on these upper floors are relentless."
+                },
+                {
+                  "speaker": "Exhausted Hunter",
+                  "text": "Whatever is controlling them is somewhere above. End this, for all of us."
+                }
               ]
             }
           ]
@@ -349,10 +559,40 @@
           "warp_edge": "",
           "path_order": 3,
           "objects": [
-            {"type": "enemy", "position": [-10, 0, 4], "enemy_id": "arkzein"},
-            {"type": "enemy", "position": [5, 0, -6], "enemy_id": "euladaveil"},
-            {"type": "box", "position": [14, 0, 10]},
-            {"type": "box", "position": [16, 0, 8]}
+            {
+              "type": "enemy",
+              "position": [
+                -10,
+                0,
+                4
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                -6
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "box",
+              "position": [
+                14,
+                0,
+                10
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                16,
+                0,
+                8
+              ]
+            }
           ]
         },
         {
@@ -377,9 +617,33 @@
           "warp_edge": "south",
           "path_order": 4,
           "objects": [
-            {"type": "enemy", "position": [-4, 0, 3], "enemy_id": "arkzein"},
-            {"type": "enemy", "position": [6, 0, -4], "enemy_id": "finjer-g"},
-            {"type": "enemy", "position": [0, 0, -8], "enemy_id": "stagg"}
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                3
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -4
+              ],
+              "enemy_id": "finjer-g"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                -8
+              ],
+              "enemy_id": "stagg"
+            }
           ]
         }
       ]
@@ -408,9 +672,33 @@
           "warp_edge": "south",
           "path_order": 0,
           "objects": [
-            {"type": "enemy", "position": [0, 0, 0], "enemy_id": "dark-falz"},
-            {"type": "enemy", "position": [-10, 0, 8], "enemy_id": "eulid"},
-            {"type": "enemy", "position": [10, 0, 8], "enemy_id": "eulid"}
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "dark-falz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10,
+                0,
+                8
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10,
+                0,
+                8
+              ],
+              "enemy_id": "eulid"
+            }
           ]
         }
       ]
