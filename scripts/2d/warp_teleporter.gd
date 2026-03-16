@@ -149,13 +149,21 @@ func _warp_to_field() -> void:
 		_enter_3d_field()
 	else:
 		SessionManager.enter_field(area_id, "normal")
-		var gen := GridGenerator.new()
-		var field: Dictionary
-		if area_id == "tower":
-			field = gen.generate_tower_field("normal")
+
+		# Try hand-authored field quest first, fall back to procedural generation
+		var quest := QuestLoader.pick_field_quest(area_id)
+		var sections: Array
+		if not quest.is_empty() and quest.has("sections"):
+			sections = quest["sections"]
 		else:
-			field = gen.generate_field("normal", area_id)
-		var sections: Array = field["sections"]
+			var gen := GridGenerator.new()
+			var field: Dictionary
+			if area_id == "tower":
+				field = gen.generate_tower_field("normal")
+			else:
+				field = gen.generate_field("normal", area_id)
+			sections = field["sections"]
+
 		SessionManager.set_field_sections(sections)
 		var first_section: Dictionary = sections[0]
 		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
