@@ -596,12 +596,12 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Fallen Guardian",
-                  "text": "I was... tasked with guarding the inner sanctum. But the corruption was too strong."
+                  "speaker": "Wounded Hunter",
+                  "text": "Don't go deeper. I barely made it out. The things in there... they're not like the creatures on the surface."
                 },
                 {
-                  "speaker": "Fallen Guardian",
-                  "text": "You must reach the heart of the shrine and destroy the source. It's the only way to stop this."
+                  "speaker": "Wounded Hunter",
+                  "text": "It's like the air itself is wrong. My head's been pounding since I set foot in this place."
                 }
               ]
             },

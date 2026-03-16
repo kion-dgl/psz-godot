@@ -195,12 +195,12 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Systems Technician",
-                  "text": "I've been trying to restart this console, but the power grid is completely disrupted."
+                  "speaker": "Senior Hunter",
+                  "text": "Command says figure out what this place does. But every terminal I touch just spits out errors in a language nobody reads."
                 },
                 {
-                  "speaker": "Systems Technician",
-                  "text": "The Korse infestations are interfering with the circuitry. Clear them out and I might get this running."
+                  "speaker": "Senior Hunter",
+                  "text": "Half the team wants to rip the servers out for parts. The other half thinks turning them off might make things worse. Nobody knows."
                 }
               ]
             },

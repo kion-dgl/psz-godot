@@ -596,12 +596,12 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Former Resident",
-                  "text": "I used to live here before the evacuation. Hard to believe what it's become."
+                  "speaker": "Scavenger",
+                  "text": "Look at this place. Plumbing, wiring, buildings taller than anything we've got. And it's all just... left here."
                 },
                 {
-                  "speaker": "Former Resident",
-                  "text": "There's a storage vault further in. If it's still sealed, there could be valuable tech inside."
+                  "speaker": "Scavenger",
+                  "text": "How does a civilization that can build all this just disappear? What could do that?"
                 }
               ]
             },

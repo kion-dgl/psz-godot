@@ -195,12 +195,12 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Archaeologist",
-                  "text": "These markings on the wall... they're not from any civilization in our records."
+                  "speaker": "Scavenger",
+                  "text": "Found some kind of weapon a few rooms back. Doesn't use any ammo I've ever seen. It just... glows."
                 },
                 {
-                  "speaker": "Archaeologist",
-                  "text": "The symbols seem to describe some kind of energy source deep within the ruins. Proceed with caution."
+                  "speaker": "Scavenger",
+                  "text": "My partner went deeper in yesterday and hasn't come back. I'm starting to think I should stop waiting."
                 }
               ]
             },
