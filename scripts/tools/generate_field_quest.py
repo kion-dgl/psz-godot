@@ -916,8 +916,117 @@ def _template_tower_l() -> list[TemplateCell]:
     ]
 
 
-ALL_TEMPLATES = [_template_t_branch, _template_zigzag, _template_linear, _template_hub]
+def _template_maze_5x5() -> list[TemplateCell]:
+    """Template 5 -- 5x5 Maze (15 cells). Winding path with dead-end branches."""
+    return [
+        # Start at top-center, wind through the grid
+        (0, 2, "S", {"south"}),
+        (1, 2, "T", {"north", "east", "west"}),
+        (1, 1, "L", {"east", "south"}),                   # west branch turns south
+        (2, 1, "L", {"north", "east"}),                    # turns east
+        (2, 2, "T", {"west", "south", "east"}),            # rejoin + continue
+        (2, 3, "L", {"west", "south"}),                    # east branch turns south
+        (3, 3, "I", {"north", "south"}),
+        (4, 3, "L", {"north", "west"}),                    # turn west at bottom
+        (4, 2, "I", {"east", "west"}),
+        (4, 1, "T", {"east", "north", "west"}),            # T at bottom-left
+        (4, 0, "N", {"east"}),                              # dead end with loot
+        (3, 1, "I", {"south", "north"}),                    # north from T
+        (3, 0, "N", {"south"}),                             # branch dead end
+        (1, 3, "I", {"west", "east"}),                      # east corridor from top T
+        (1, 4, "E", {"west"}),                              # end room far east
+    ]
+
+
+def _template_sprawl_5x5() -> list[TemplateCell]:
+    """Template 6 -- 5x5 Sprawl (18 cells). Large exploration area with multiple branches."""
+    return [
+        (0, 2, "S", {"south"}),
+        (1, 2, "X", {"north", "south", "east", "west"}),   # central hub
+        # West wing
+        (1, 1, "I", {"east", "west"}),
+        (1, 0, "L", {"east", "south"}),
+        (2, 0, "I", {"north", "south"}),
+        (3, 0, "N", {"north"}),                              # dead end west
+        # East wing
+        (1, 3, "I", {"east", "west"}),
+        (1, 4, "L", {"west", "south"}),
+        (2, 4, "I", {"north", "south"}),
+        (3, 4, "N", {"north"}),                              # dead end east
+        # South corridor
+        (2, 2, "T", {"north", "south", "west"}),
+        (2, 1, "N", {"east"}),                               # side room
+        (3, 2, "T", {"north", "east", "west"}),
+        (3, 1, "N", {"east"}),                               # side room with loot
+        (3, 3, "L", {"west", "south"}),
+        (4, 3, "I", {"north", "south"}),
+        (4, 2, "L", {"east", "north"}),                      # turn toward end
+        (4, 4, "E", {"north"}),                              # end room far corner
+    ]
+
+
+def _template_gauntlet_5x5() -> list[TemplateCell]:
+    """Template 7 -- 5x5 Gauntlet (14 cells). Long winding path, few branches, more combat rooms."""
+    return [
+        (0, 0, "S", {"south"}),
+        (1, 0, "I", {"north", "south"}),
+        (2, 0, "L", {"north", "east"}),
+        (2, 1, "I", {"west", "east"}),
+        (2, 2, "L", {"west", "south"}),
+        (3, 2, "I", {"north", "south"}),
+        (4, 2, "L", {"north", "east"}),
+        (4, 3, "I", {"west", "east"}),
+        (4, 4, "L", {"west", "north"}),
+        (3, 4, "T", {"south", "north", "west"}),
+        (3, 3, "N", {"east"}),                               # side room
+        (2, 4, "I", {"south", "north"}),
+        (1, 4, "I", {"south", "north"}),
+        (0, 4, "E", {"south"}),                              # end room top-right
+    ]
+
+
+_BASE_TEMPLATES = [
+    _template_t_branch, _template_zigzag, _template_linear, _template_hub,
+    _template_maze_5x5, _template_sprawl_5x5, _template_gauntlet_5x5,
+]
 TOWER_TEMPLATES = [_template_tower_linear, _template_tower_l]
+
+# Direction rotation for rotating entire templates
+_DIR_ROTATE_90 = {"north": "east", "east": "south", "south": "west", "west": "north"}
+
+
+def _rotate_template_90(cells: list[TemplateCell]) -> list[TemplateCell]:
+    """Rotate an entire template 90 degrees clockwise.
+
+    Grid transform: (row, col) -> (col, max_row - row).
+    Directions rotate: north->east, east->south, south->west, west->north.
+    """
+    if not cells:
+        return cells
+    max_row = max(r for r, c, _, _ in cells)
+    rotated = []
+    for row, col, role, dirs in cells:
+        new_row = col
+        new_col = max_row - row
+        new_dirs = {_DIR_ROTATE_90[d] for d in dirs}
+        rotated.append((new_row, new_col, role, new_dirs))
+    # Normalize so min row/col are 0
+    min_r = min(r for r, c, _, _ in rotated)
+    min_c = min(c for r, c, _, _ in rotated)
+    return [(r - min_r, c - min_c, role, dirs) for r, c, role, dirs in rotated]
+
+
+def pick_template(rng: random.Random) -> list[TemplateCell]:
+    """Pick a random template and optionally rotate the whole layout 0/90/180/270."""
+    base_fn = rng.choice(_BASE_TEMPLATES)
+    cells = base_fn()
+    rotations = rng.randint(0, 3)
+    for _ in range(rotations):
+        cells = _rotate_template_90(cells)
+    return cells
+
+
+ALL_TEMPLATES = _BASE_TEMPLATES
 
 # ---------------------------------------------------------------------------
 # Rotation solver
@@ -1936,25 +2045,19 @@ def _generate_standard_sections(
     sections: list[dict] = []
     rare_box_placed = [False]
 
-    # --- Grid A ---
-    templates = list(ALL_TEMPLATES)
-    rng.shuffle(templates)
+    # --- Grid A --- (prefer larger 5x5 templates)
     grid_a_cells = None
-    template_name = ""
-
-    for template_fn in templates:
-        template = template_fn()
+    for _attempt in range(10):
+        template = pick_template(rng)
         cells = assign_stages(template, catalog, prefix, "a", rng)
         if cells is not None:
             grid_a_cells = cells
-            template_name = template_fn.__name__
             break
 
     if grid_a_cells is None:
         # Fallback to linear
         template = _template_linear()
         grid_a_cells = assign_stages(template, catalog, prefix, "a", rng)
-        template_name = "_template_linear"
         if grid_a_cells is None:
             print("ERROR: Could not assign stages for Grid A", file=sys.stderr)
             sys.exit(1)
@@ -1966,14 +2069,10 @@ def _generate_standard_sections(
     trans = build_transition_section(catalog, prefix, pool, rng, floor_cache=floor_cache)
     sections.append(trans)
 
-    # --- Grid B ---
-    # Use a different (usually smaller) template for B
-    b_templates = [_template_zigzag, _template_linear, _template_hub]
-    rng.shuffle(b_templates)
+    # --- Grid B --- (can also use 5x5 templates with rotation)
     grid_b_cells = None
-
-    for template_fn in b_templates:
-        template = template_fn()
+    for _attempt in range(10):
+        template = pick_template(rng)
         cells = assign_stages(template, catalog, prefix, "b", rng)
         if cells is not None:
             grid_b_cells = cells
