@@ -606,29 +606,6 @@
           "path_order": 5,
           "objects": [
             {
-              "type": "dialog_trigger",
-              "position": [
-                -2,
-                0,
-                -5
-              ],
-              "trigger_size": [
-                10,
-                3,
-                6
-              ],
-              "dialog": [
-                {
-                  "speaker": "Frost Surveyor",
-                  "text": "My instruments are detecting unusual seismic activity beneath the ice."
-                },
-                {
-                  "speaker": "Frost Surveyor",
-                  "text": "Whatever is down there, it's big. The wildlife can sense it too \u2014 that's why they're so agitated."
-                }
-              ]
-            },
-            {
               "type": "enemy",
               "position": [
                 5,

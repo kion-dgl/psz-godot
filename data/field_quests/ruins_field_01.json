@@ -606,29 +606,6 @@
           "path_order": 5,
           "objects": [
             {
-              "type": "dialog_trigger",
-              "position": [
-                -2,
-                0,
-                -5
-              ],
-              "trigger_size": [
-                10,
-                3,
-                6
-              ],
-              "dialog": [
-                {
-                  "speaker": "Ruin Explorer",
-                  "text": "I've been mapping these corridors for weeks. The deeper sections are still unexplored."
-                },
-                {
-                  "speaker": "Ruin Explorer",
-                  "text": "The machines here are ancient but still active. They don't take kindly to intruders."
-                }
-              ]
-            },
-            {
               "type": "enemy",
               "position": [
                 5,

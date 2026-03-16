@@ -182,29 +182,6 @@
           "path_order": 7,
           "objects": [
             {
-              "type": "dialog_trigger",
-              "position": [
-                -2,
-                0,
-                -5
-              ],
-              "trigger_size": [
-                10,
-                3,
-                6
-              ],
-              "dialog": [
-                {
-                  "speaker": "Shrine Priest",
-                  "text": "The dark energy here grows stronger by the hour. The seals are weakening."
-                },
-                {
-                  "speaker": "Shrine Priest",
-                  "text": "Turn back if you value your life. What lies ahead is not meant for mortal eyes."
-                }
-              ]
-            },
-            {
               "type": "enemy",
               "position": [
                 -4,

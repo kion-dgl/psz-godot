@@ -196,7 +196,7 @@
               "dialog": [
                 {
                   "speaker": "Herb Gatherer",
-                  "text": "Oh! A hunter! I came looking for dreamrose herbs \u2014 they only grow in the damp soil here."
+                  "text": "Oh! A hunter! I came looking for dreamrose herbs — they only grow in the damp soil here."
                 },
                 {
                   "speaker": "Herb Gatherer",
@@ -605,29 +605,6 @@
           "warp_edge": "",
           "path_order": 5,
           "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -2,
-                0,
-                -5
-              ],
-              "trigger_size": [
-                10,
-                3,
-                6
-              ],
-              "dialog": [
-                {
-                  "speaker": "Wetlands Villager",
-                  "text": "The water levels have been rising lately. Something upstream is disturbing the flow."
-                },
-                {
-                  "speaker": "Wetlands Villager",
-                  "text": "I've seen strange creatures I've never encountered before. Please be careful out there."
-                }
-              ]
-            },
             {
               "type": "enemy",
               "position": [

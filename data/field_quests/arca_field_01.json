@@ -606,29 +606,6 @@
           "path_order": 5,
           "objects": [
             {
-              "type": "dialog_trigger",
-              "position": [
-                -2,
-                0,
-                -5
-              ],
-              "trigger_size": [
-                10,
-                3,
-                6
-              ],
-              "dialog": [
-                {
-                  "speaker": "Arca Engineer",
-                  "text": "The defense systems in this sector are malfunctioning. They're attacking everything \u2014 including us."
-                },
-                {
-                  "speaker": "Arca Engineer",
-                  "text": "If we can reach the central hub, I might be able to issue a shutdown command."
-                }
-              ]
-            },
-            {
               "type": "enemy",
               "position": [
                 5,
