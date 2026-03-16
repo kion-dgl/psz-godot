@@ -757,7 +757,19 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 			elif config_portals_by_id.has(portal_id):
 				result[dir_key] = _compute_portal_from_config(config_portals_by_id[portal_id], dir_key)
 			else:
-				push_warning("[ValleyField] Portal ID '%s' not found in stage config for dir '%s'" % [portal_id, dir_key])
+				# Portal ID not in config — match by direction instead.
+				# dir_key is the game direction (after rotation). Find the config
+				# portal whose base direction rotates to dir_key.
+				var matched := false
+				for cp in _stage_config.get("portals", []):
+					var base_dir: String = str(cp.get("direction", ""))
+					var rotated_dir: String = _rotate_dir(base_dir, _rotation_deg)
+					if rotated_dir == dir_key:
+						result[dir_key] = _compute_portal_from_config(cp, dir_key)
+						matched = true
+						break
+				if not matched:
+					push_warning("[ValleyField] No portal found for dir '%s' in stage config (id=%s, rot=%d)" % [dir_key, _stage_id, _rotation_deg])
 			if result.has(dir_key):
 				print("[ValleyField]   v1 portal: '%s' (id=%s) → gate=%s spawn=%s trigger=%s" % [
 					dir_key, portal_id,
