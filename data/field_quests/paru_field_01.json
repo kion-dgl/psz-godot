@@ -127,34 +127,34 @@
             {
               "type": "enemy",
               "position": [
-                3,
+                3.3,
                 0,
-                -5
+                -3.5
               ],
               "enemy_id": "pobomma"
             },
             {
               "type": "box",
               "position": [
-                9.5,
+                8.3,
                 0,
-                -4.9
+                -1.6
               ]
             },
             {
               "type": "box",
               "position": [
-                12.3,
+                10.8,
                 0,
-                -2.4
+                0.2
               ]
             },
             {
               "type": "box",
               "position": [
-                8.7,
+                7.5,
                 0,
-                -5.8
+                -2.5
               ]
             }
           ]
@@ -184,9 +184,9 @@
             {
               "type": "enemy",
               "position": [
-                -4,
+                -7.0,
                 0,
-                0
+                -1.8
               ],
               "enemy_id": "goldix"
             },
@@ -459,16 +459,16 @@
               "position": [
                 -3.0,
                 0,
-                -12.3
+                -8.8
               ],
               "enemy_id": "bolix"
             },
             {
               "type": "box",
               "position": [
-                8,
+                11.5,
                 0,
-                -15
+                -15.0
               ]
             }
           ]
@@ -723,17 +723,17 @@
             {
               "type": "box",
               "position": [
-                14,
+                13.5,
                 0,
-                10
+                10.0
               ]
             },
             {
               "type": "box",
               "position": [
-                16,
+                13.5,
                 0,
-                8
+                8.4
               ]
             }
           ]
@@ -781,9 +781,9 @@
             {
               "type": "enemy",
               "position": [
+                -1.6,
                 0,
-                0,
-                -8
+                -4.2
               ],
               "enemy_id": "pobomma"
             }

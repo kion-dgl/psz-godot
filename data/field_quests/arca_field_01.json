@@ -67,9 +67,9 @@
             {
               "type": "enemy",
               "position": [
-                -8,
+                -8.5,
                 0,
-                4
+                4.9
               ],
               "enemy_id": "korse"
             },
@@ -364,9 +364,9 @@
             {
               "type": "enemy",
               "position": [
-                5,
+                5.5,
                 0,
-                0
+                0.0
               ],
               "enemy_id": "korse"
             }
@@ -411,9 +411,9 @@
             {
               "type": "enemy",
               "position": [
-                4,
+                3.0,
                 0,
-                -2
+                -2.0
               ],
               "enemy_id": "finjer-r"
             },
@@ -462,7 +462,7 @@
             {
               "type": "enemy",
               "position": [
-                -8.0,
+                -4.5,
                 0,
                 -6.0
               ],
@@ -480,9 +480,9 @@
             {
               "type": "enemy",
               "position": [
-                -4,
+                -3.0,
                 0,
-                -14
+                -14.0
               ],
               "enemy_id": "akorse"
             },
@@ -491,7 +491,7 @@
               "position": [
                 8.0,
                 0,
-                -14.0
+                -11.0
               ]
             }
           ]
@@ -652,18 +652,18 @@
             {
               "type": "enemy",
               "position": [
-                -8,
+                -8.0,
                 0,
-                3
+                6.0
               ],
               "enemy_id": "akorse"
             },
             {
               "type": "enemy",
               "position": [
-                6,
+                6.5,
                 0,
-                -5
+                -6.4
               ],
               "enemy_id": "finjer-g"
             },
@@ -672,7 +672,7 @@
               "position": [
                 -1.0,
                 0,
-                -1.7
+                -5.2
               ],
               "enemy_id": "finjer-r"
             }
@@ -705,18 +705,18 @@
             {
               "type": "enemy",
               "position": [
-                -10,
+                -10.2,
                 0,
-                4
+                4.5
               ],
               "enemy_id": "finjer-g"
             },
             {
               "type": "enemy",
               "position": [
-                5,
+                4.2,
                 0,
-                -6
+                -6.6
               ],
               "enemy_id": "korse"
             },
@@ -763,18 +763,18 @@
             {
               "type": "enemy",
               "position": [
-                -4,
+                -3.0,
                 0,
-                3
+                3.0
               ],
               "enemy_id": "finjer-b"
             },
             {
               "type": "enemy",
               "position": [
-                6,
+                4.3,
                 0,
-                -4
+                -5.0
               ],
               "enemy_id": "finjer-g"
             },

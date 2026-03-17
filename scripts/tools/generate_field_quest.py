@@ -296,11 +296,11 @@ class FloorCache:
         self._stage_configs = stage_configs
 
     def load(self, stage_id: str, rotation: int = 0) -> dict | None:
-        """Load floor data for a stage, applying rotation.
+        """Load floor data for a stage (unrotated — rotation only remaps gate names).
 
         Returns dict with: triangles, excluded, obstacles, bounds, or None if unavailable.
         """
-        cache_key = f"{stage_id}@{rotation}"
+        cache_key = stage_id  # No rotation in cache key — floor is always unrotated
         if cache_key in self._cache:
             return self._cache[cache_key]
 
@@ -320,22 +320,16 @@ class FloorCache:
             self._cache[cache_key] = None
             return None
 
-        # Apply rotation to triangles
-        triangles = [rotate_triangle(t, rotation) for t in raw_triangles]
+        # No rotation applied — stage geometry is never rotated.
+        # "Rotation" only remaps gate names, not coordinates.
+        triangles = list(raw_triangles)
 
         # Get excluded triangle indices from stage config
         stage_cfg = self._stage_configs.get(stage_id, {})
         excluded = get_excluded_triangle_indices(stage_cfg)
 
-        # Get obstacles and rotate their positions
-        raw_obstacles = stage_cfg.get("obstacles", [])
-        obstacles = []
-        for obs in raw_obstacles:
-            obs_pos = obs.get("position", [0, 0, 0])
-            rx, rz = rotate_point_xz(obs_pos[0], obs_pos[2], rotation)
-            rotated_obs = dict(obs)
-            rotated_obs["position"] = [rx, obs_pos[1], rz]
-            obstacles.append(rotated_obs)
+        # Obstacles are in stage-local space (unrotated)
+        obstacles = stage_cfg.get("obstacles", [])
 
         bounds = get_floor_bounds(triangles)
 
