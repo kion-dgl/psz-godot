@@ -1304,8 +1304,9 @@ def place_objects_for_cell(
     obstacles = catalog.get_obstacles(stage_id)
     objects: list[dict] = []
 
-    # Start cells: no enemies
-    if cell.get("role") == "S":
+    # Only the very first start cell (grid A) is empty — gives the player a safe landing.
+    # Grid B/later start cells get enemies so gates lock and the flow is clear.
+    if cell.get("role") == "S" and cell.get("is_first_start", True):
         return []
 
     # Try to load floor data
@@ -1396,6 +1397,7 @@ def build_grid_section(
     rng: random.Random,
     rare_box_placed: list[bool],
     floor_cache: FloorCache | None = None,
+    is_first_grid: bool = True,
 ) -> dict:
     """Build a complete grid section from assigned template cells."""
     connections = infer_connections(template_cells)
@@ -1458,8 +1460,13 @@ def build_grid_section(
                         warp_edge = d
                         break
 
+        # Mark whether this is the very first start cell (grid A only gets empty start)
+        c_copy = dict(c)
+        if is_start and not is_first_grid:
+            c_copy["is_first_start"] = False
+
         objects = place_objects_for_cell(
-            c, catalog, pool, path_order, total_cells,
+            c_copy, catalog, pool, path_order, total_cells,
             is_branch_end, False, rare_box_placed, rng,
             floor_cache=floor_cache,
         )
@@ -1840,7 +1847,7 @@ def build_tower_sections(
         if rot_s is not None:
             b_assigned[0]["rotation"] = rot_s
 
-    grid_b = build_grid_section(b_assigned, catalog, pool, "b", rng, rare_box_placed, floor_cache=floor_cache)
+    grid_b = build_grid_section(b_assigned, catalog, pool, "b", rng, rare_box_placed, floor_cache=floor_cache, is_first_grid=False)
     # Override area label for tower B
     grid_b["area"] = "b"
     sections.append(grid_b)
@@ -2092,7 +2099,7 @@ def _generate_standard_sections(
         print("ERROR: Could not assign stages for Grid B", file=sys.stderr)
         sys.exit(1)
 
-    grid_b = build_grid_section(grid_b_cells, catalog, pool, "b", rng, rare_box_placed, floor_cache=floor_cache)
+    grid_b = build_grid_section(grid_b_cells, catalog, pool, "b", rng, rare_box_placed, floor_cache=floor_cache, is_first_grid=False)
     sections.append(grid_b)
 
     # --- Boss Z ---
