@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-16",
+  "last_updated": "2026-03-17",
   "id": "paru_field_02",
   "name": "Forgotten City Field 2",
   "description": "Explore the wilds of Paru. Danger lurks around every corner.",
@@ -9,15 +9,15 @@
     {
       "type": "grid",
       "area": "a",
-      "start_pos": "1,3",
+      "start_pos": "0,3",
       "end_pos": "2,0",
       "cells": [
         {
-          "pos": "1,3",
+          "pos": "0,3",
           "stage_id": "s05a_sa1",
           "rotation": 90,
           "connections": {
-            "west": "1,2"
+            "west": "0,2"
           },
           "portals": {
             "west": "portal_1770761006966_6mtpsian4",
@@ -37,24 +37,20 @@
           "objects": []
         },
         {
-          "pos": "1,2",
-          "stage_id": "s05a_xb2",
-          "rotation": 0,
+          "pos": "0,2",
+          "stage_id": "s05a_lb1",
+          "rotation": 90,
           "connections": {
-            "north": "0,2",
-            "south": "2,2",
-            "east": "1,3",
-            "west": "1,1"
+            "east": "0,3",
+            "south": "1,2"
           },
           "portals": {
-            "north": "portal_1770761982742_vtj9w744r",
-            "south": "portal_1770761959864_7ra0yzsyh",
-            "east": "portal_1771829224858_2f8xh7499",
-            "west": "portal_1771829215485_dd1k0wrp1"
+            "east": "portal_1770760630219_wzrky8k77",
+            "south": "portal_1771829019999_q7a7k4jhj"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -67,208 +63,100 @@
             {
               "type": "enemy",
               "position": [
-                -9.1,
+                14.5,
                 0,
-                16.7
+                20.1
+              ],
+              "enemy_id": "izhirak-s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.8,
+                0,
+                0.4
               ],
               "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
               "position": [
-                -16.8,
+                23.3,
                 0,
-                13.7
+                -1.8
+              ],
+              "enemy_id": "izhirak-s6"
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s05a_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,2",
+            "south": "2,2"
+          },
+          "portals": {
+            "north": "portal_1770760460971_148gify38",
+            "south": "portal_1770760450958_wy2ptrups"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7.7,
+                0,
+                1.3
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                17.3,
+                0,
+                3.0
               ],
               "enemy_id": "bolix"
             },
             {
               "type": "enemy",
               "position": [
-                -4.9,
+                -10.6,
                 0,
-                5.7
+                5.2
               ],
-              "enemy_id": "pobomma"
-            }
-          ]
-        },
-        {
-          "pos": "0,2",
-          "stage_id": "s05a_na1",
-          "rotation": 0,
-          "connections": {
-            "south": "1,2"
-          },
-          "portals": {
-            "south": "portal_1770760954951_cldar2pe9"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -2.2,
-                0,
-                -0.8
-              ],
-              "enemy_id": "goldix"
-            },
-            {
-              "type": "box",
-              "position": [
-                -7.2,
-                0,
-                13.6
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                4.8,
-                0,
-                0.0
-              ]
-            },
-            {
-              "type": "rare_box",
-              "position": [
-                4.3,
-                0,
-                15.1
-              ]
+              "enemy_id": "izhirak-s6"
             }
           ]
         },
         {
           "pos": "2,2",
-          "stage_id": "s05a_nb2",
-          "rotation": 180,
-          "connections": {
-            "north": "1,2"
-          },
-          "portals": {
-            "north": "portal_1770760968113_5ywbkpk2i"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -12.5,
-                0,
-                6.3
-              ],
-              "enemy_id": "goldix"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -15.5,
-                0,
-                8.0
-              ],
-              "enemy_id": "izhirak-s6"
-            },
-            {
-              "type": "box",
-              "position": [
-                -5.0,
-                0,
-                19.1
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -8.3,
-                0,
-                16.2
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "1,1",
-          "stage_id": "s05a_ib1",
-          "rotation": 90,
-          "connections": {
-            "east": "1,2",
-            "west": "1,0"
-          },
-          "portals": {
-            "east": "portal_1770760460971_148gify38",
-            "west": "portal_1770760450958_wy2ptrups"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                5.6,
-                0,
-                -11.3
-              ],
-              "enemy_id": "izhirak-s6"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -0.1,
-                0,
-                17.3
-              ],
-              "enemy_id": "pobomma"
-            }
-          ]
-        },
-        {
-          "pos": "1,0",
-          "stage_id": "s05a_td1",
+          "stage_id": "s05a_lb3",
           "rotation": 270,
           "connections": {
-            "north": "0,0",
-            "south": "2,0",
-            "east": "1,1"
+            "north": "1,2",
+            "west": "2,1"
           },
           "portals": {
-            "north": "portal_1771829168501_uskvq1oq2",
-            "south": "portal_1771829147606_4cqf4tv3y",
-            "east": "portal_1771829157794_5ghpglwpb"
+            "north": "portal_1771829034747_dr1nuvw1a",
+            "west": "portal_1770760727901_mxkpm6cdw"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -281,41 +169,43 @@
             {
               "type": "enemy",
               "position": [
-                0.2,
+                -2.1,
                 0,
-                -5.6
-              ],
-              "enemy_id": "izhirak-s6"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -11.9,
-                0,
-                14.1
-              ],
-              "enemy_id": "bolix"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                6.3,
-                0,
-                32.7
+                -17.1
               ],
               "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.5,
+                0,
+                12.8
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.2,
+                0,
+                -13.0
+              ],
+              "enemy_id": "izhirak-s6"
             }
           ]
         },
         {
-          "pos": "0,0",
-          "stage_id": "s05a_nc2",
-          "rotation": 0,
+          "pos": "2,1",
+          "stage_id": "s05a_ib2",
+          "rotation": 90,
           "connections": {
-            "south": "1,0"
+            "east": "2,2",
+            "west": "2,0"
           },
           "portals": {
-            "south": "portal_1770760986569_ghsb7pjh3"
+            "east": "portal_1770760498696_s6sgv5h90",
+            "west": "portal_1770760475809_o935wst5m"
           },
           "is_start": false,
           "is_end": false,
@@ -332,48 +222,32 @@
             {
               "type": "enemy",
               "position": [
-                3.3,
+                4.0,
                 0,
-                18.8
+                5.2
+              ],
+              "enemy_id": "izhirak-s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.8,
+                0,
+                -11.6
               ],
               "enemy_id": "bolix"
-            },
-            {
-              "type": "box",
-              "position": [
-                -9.3,
-                0,
-                -16.8
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                10.8,
-                0,
-                5.5
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -16.0,
-                0,
-                18.8
-              ]
             }
           ]
         },
         {
           "pos": "2,0",
-          "stage_id": "s05a_ib1",
-          "rotation": 0,
+          "stage_id": "s05a_na1",
+          "rotation": 270,
           "connections": {
-            "north": "1,0"
+            "east": "2,1"
           },
           "portals": {
-            "north": "portal_1770760460971_148gify38",
-            "south": "portal_1770760450958_wy2ptrups"
+            "east": "portal_1770760954951_cldar2pe9"
           },
           "is_start": false,
           "is_end": true,
@@ -384,26 +258,33 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "south",
-          "path_order": 4,
+          "warp_edge": "",
+          "path_order": 5,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                -17.1,
+                4.5,
                 0,
-                -7.3
+                13.7
               ],
-              "enemy_id": "bolix"
+              "enemy_id": "goldix"
             },
             {
-              "type": "enemy",
+              "type": "box",
               "position": [
-                -19.9,
+                -2.8,
                 0,
-                -2.8
-              ],
-              "enemy_id": "izhirak-s6"
+                23.2
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                5.9,
+                0,
+                8.4
+              ]
             }
           ]
         }
@@ -441,36 +322,36 @@
             {
               "type": "enemy",
               "position": [
-                12.4,
+                17.8,
                 0,
-                7.5
+                4.2
               ],
-              "enemy_id": "izhirak-s6"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
               "position": [
-                -13.4,
+                9.5,
                 0,
-                11.6
+                8.7
               ],
-              "enemy_id": "izhirak-s6"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
               "position": [
-                12.0,
+                7.9,
                 0,
-                -6.5
+                12.4
               ],
-              "enemy_id": "izhirak-s6"
+              "enemy_id": "bolix"
             },
             {
               "type": "box",
               "position": [
-                11.7,
+                4.4,
                 0,
-                13.4
+                13.7
               ]
             }
           ]
@@ -480,18 +361,18 @@
     {
       "type": "grid",
       "area": "b",
-      "start_pos": "0,0",
-      "end_pos": "0,4",
+      "start_pos": "0,3",
+      "end_pos": "2,0",
       "cells": [
         {
-          "pos": "0,0",
+          "pos": "0,3",
           "stage_id": "s05b_sa1",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
-            "south": "1,0"
+            "west": "0,2"
           },
           "portals": {
-            "south": "portal_1770762490612_xk9edjq18"
+            "west": "portal_1770762490612_xk9edjq18"
           },
           "is_start": true,
           "is_end": false,
@@ -507,16 +388,16 @@
           "objects": []
         },
         {
-          "pos": "1,0",
-          "stage_id": "s05b_ib2",
-          "rotation": 0,
+          "pos": "0,2",
+          "stage_id": "s05b_lc2",
+          "rotation": 90,
           "connections": {
-            "north": "0,0",
-            "south": "2,0"
+            "east": "0,3",
+            "south": "1,2"
           },
           "portals": {
-            "north": "portal_1770762149006_koouccay5",
-            "south": "portal_1770762135903_raq1yxheg"
+            "east": "portal_1770762386051_2c6sjdw29",
+            "south": "portal_1771829303640_0iqrsux7j"
           },
           "is_start": false,
           "is_end": false,
@@ -533,34 +414,43 @@
             {
               "type": "enemy",
               "position": [
-                -12.7,
+                -10.0,
                 0,
-                21.2
+                -4.9
               ],
-              "enemy_id": "izhirak-s6"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
               "position": [
-                1.8,
+                13.7,
                 0,
-                -5.7
+                16.2
               ],
               "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.3,
+                0,
+                -17.5
+              ],
+              "enemy_id": "izhirak-s6"
             }
           ]
         },
         {
-          "pos": "2,0",
-          "stage_id": "s05b_lb3",
+          "pos": "1,2",
+          "stage_id": "s05b_ib2",
           "rotation": 0,
           "connections": {
-            "north": "1,0",
-            "east": "2,1"
+            "north": "0,2",
+            "south": "2,2"
           },
           "portals": {
-            "north": "portal_1770762310334_psw7r9aa9",
-            "east": "portal_1771829272606_ryg70e085"
+            "north": "portal_1770762149006_koouccay5",
+            "south": "portal_1770762135903_raq1yxheg"
           },
           "is_start": false,
           "is_end": false,
@@ -577,43 +467,43 @@
             {
               "type": "enemy",
               "position": [
-                -5.2,
+                19.0,
                 0,
-                8.7
-              ],
-              "enemy_id": "bolix"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                19.7,
-                0,
-                -11.5
-              ],
-              "enemy_id": "bolix"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                8.5,
-                0,
-                -6.8
+                14.5
               ],
               "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                15.2,
+                0,
+                -18.4
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                18.4,
+                0,
+                -17.6
+              ],
+              "enemy_id": "bolix"
             }
           ]
         },
         {
-          "pos": "2,1",
-          "stage_id": "s05b_ic3",
-          "rotation": 90,
+          "pos": "2,2",
+          "stage_id": "s05b_lb3",
+          "rotation": 270,
           "connections": {
-            "east": "2,2",
-            "west": "2,0"
+            "north": "1,2",
+            "west": "2,1"
           },
           "portals": {
-            "east": "portal_1770762222618_pkq7mzaxv",
-            "west": "portal_1770762240912_d4tbxftvu"
+            "north": "portal_1771829272606_ryg70e085",
+            "west": "portal_1770762310334_psw7r9aa9"
           },
           "is_start": false,
           "is_end": false,
@@ -630,34 +520,43 @@
             {
               "type": "enemy",
               "position": [
-                -3.2,
+                -14.1,
                 0,
-                21.6
+                -16.2
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "izhirak-s6"
             },
             {
               "type": "enemy",
               "position": [
-                -13.7,
+                -19.0,
                 0,
-                -17.6
+                -0.2
               ],
               "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.5,
+                0,
+                -0.7
+              ],
+              "enemy_id": "pobomma"
             }
           ]
         },
         {
-          "pos": "2,2",
-          "stage_id": "s05b_lc1",
-          "rotation": 180,
+          "pos": "2,1",
+          "stage_id": "s05b_ib1",
+          "rotation": 90,
           "connections": {
-            "south": "3,2",
-            "west": "2,1"
+            "east": "2,2",
+            "west": "2,0"
           },
           "portals": {
-            "south": "portal_1770762338736_egi4mo9sv",
-            "west": "portal_1771829283696_uottk4qr3"
+            "east": "portal_1770762096917_1q5gfdelq",
+            "west": "portal_1770762110269_txr2onqm3"
           },
           "is_start": false,
           "is_end": false,
@@ -674,46 +573,44 @@
             {
               "type": "enemy",
               "position": [
-                -7.0,
+                4.2,
                 0,
-                -6.3
+                16.1
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             },
             {
               "type": "enemy",
               "position": [
-                -2.2,
+                -7.8,
                 0,
-                16.9
+                -6.8
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             },
             {
               "type": "enemy",
               "position": [
-                -3.0,
+                -12.3,
                 0,
-                -11.4
+                5.7
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "goldix"
             }
           ]
         },
         {
-          "pos": "3,2",
-          "stage_id": "s05b_ib2",
-          "rotation": 0,
+          "pos": "2,0",
+          "stage_id": "s05b_nb2",
+          "rotation": 270,
           "connections": {
-            "north": "2,2",
-            "south": "4,2"
+            "east": "2,1"
           },
           "portals": {
-            "north": "portal_1770762149006_koouccay5",
-            "south": "portal_1770762135903_raq1yxheg"
+            "east": "portal_1770762447606_t7fyxk2xi"
           },
           "is_start": false,
-          "is_end": false,
+          "is_end": true,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
@@ -727,395 +624,27 @@
             {
               "type": "enemy",
               "position": [
-                17.0,
+                -0.1,
                 0,
-                -5.6
-              ],
-              "enemy_id": "bolix"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                2.5,
-                0,
-                13.9
-              ],
-              "enemy_id": "izhirak-s6"
-            }
-          ]
-        },
-        {
-          "pos": "4,2",
-          "stage_id": "s05b_lb1",
-          "rotation": 0,
-          "connections": {
-            "north": "3,2",
-            "east": "4,3"
-          },
-          "portals": {
-            "north": "portal_1770762284199_dgwf6ksmg",
-            "east": "portal_1771829258919_afduhhqi4"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 6,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                1.6,
-                0,
-                1.9
-              ],
-              "enemy_id": "pobomma"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -16.0,
-                0,
-                12.5
-              ],
-              "enemy_id": "izhirak-s6"
-            }
-          ]
-        },
-        {
-          "pos": "4,3",
-          "stage_id": "s05b_ib2",
-          "rotation": 90,
-          "connections": {
-            "east": "4,4",
-            "west": "4,2"
-          },
-          "portals": {
-            "east": "portal_1770762149006_koouccay5",
-            "west": "portal_1770762135903_raq1yxheg"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 7,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                14.1,
-                0,
-                -19.4
-              ],
-              "enemy_id": "bolix"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                15.3,
-                0,
-                14.9
-              ],
-              "enemy_id": "pobomma"
-            }
-          ]
-        },
-        {
-          "pos": "4,4",
-          "stage_id": "s05b_lc2",
-          "rotation": 270,
-          "connections": {
-            "north": "3,4",
-            "west": "4,3"
-          },
-          "portals": {
-            "north": "portal_1771829303640_0iqrsux7j",
-            "west": "portal_1770762386051_2c6sjdw29"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 8,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                0.7,
-                0,
-                6.2
-              ],
-              "enemy_id": "izhirak-s6"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -19.2,
-                0,
-                13.0
-              ],
-              "enemy_id": "izhirak-s6"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -16.9,
-                0,
-                -9.1
-              ],
-              "enemy_id": "izhirak-s6"
-            }
-          ]
-        },
-        {
-          "pos": "3,4",
-          "stage_id": "s05b_tc3",
-          "rotation": 90,
-          "connections": {
-            "north": "2,4",
-            "south": "4,4",
-            "west": "3,3"
-          },
-          "portals": {
-            "north": "portal_1771829389327_d2g00191x",
-            "south": "portal_1771829399150_a9o9hr4rw",
-            "west": "portal_1770762613008_8zui8r8uw"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 9,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                9.4,
-                0,
-                49.3
-              ],
-              "enemy_id": "izhirak-s6"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -16.9,
-                0,
-                13.0
+                -12.8
               ],
               "enemy_id": "froutang"
-            }
-          ]
-        },
-        {
-          "pos": "3,3",
-          "stage_id": "s05b_nc2",
-          "rotation": 270,
-          "connections": {
-            "east": "3,4"
-          },
-          "portals": {
-            "east": "portal_1770762463884_eccghdr22"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 10,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -10.2,
-                0,
-                -15.6
-              ],
-              "enemy_id": "pobomma"
             },
             {
               "type": "box",
               "position": [
-                16.4,
+                16.5,
                 0,
-                2.1
+                12.1
               ]
             },
             {
               "type": "box",
               "position": [
-                -1.8,
+                -13.1,
                 0,
-                20.0
+                -15.5
               ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -29.7,
-                0,
-                3.6
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "2,4",
-          "stage_id": "s05b_ib1",
-          "rotation": 0,
-          "connections": {
-            "north": "1,4",
-            "south": "3,4"
-          },
-          "portals": {
-            "north": "portal_1770762096917_1q5gfdelq",
-            "south": "portal_1770762110269_txr2onqm3"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 10,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -7.8,
-                0,
-                3.2
-              ],
-              "enemy_id": "goldix"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -11.3,
-                0,
-                9.4
-              ],
-              "enemy_id": "izhirak-s6"
-            }
-          ]
-        },
-        {
-          "pos": "1,4",
-          "stage_id": "s05b_ic3",
-          "rotation": 0,
-          "connections": {
-            "north": "0,4",
-            "south": "2,4"
-          },
-          "portals": {
-            "north": "portal_1770762222618_pkq7mzaxv",
-            "south": "portal_1770762240912_d4tbxftvu"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 11,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -11.3,
-                0,
-                -0.4
-              ],
-              "enemy_id": "izhirak-s6"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -23.0,
-                0,
-                -11.0
-              ],
-              "enemy_id": "bolix"
-            }
-          ]
-        },
-        {
-          "pos": "0,4",
-          "stage_id": "s05b_ic1",
-          "rotation": 0,
-          "connections": {
-            "south": "1,4"
-          },
-          "portals": {
-            "south": "portal_1770762175378_pdu241uss",
-            "north": "portal_1770762163771_3emtnz6kq"
-          },
-          "is_start": false,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "north",
-          "path_order": 12,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                2.8,
-                0,
-                10.1
-              ],
-              "enemy_id": "goldix"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -5.2,
-                0,
-                15.5
-              ],
-              "enemy_id": "froutang"
             }
           ]
         }
@@ -1150,27 +679,27 @@
             {
               "type": "enemy",
               "position": [
-                -2.0,
+                0.7,
                 0,
-                -8.3
+                -1.1
               ],
               "enemy_id": "frunaked"
             },
             {
               "type": "enemy",
               "position": [
-                -4.5,
+                -2.9,
                 0,
-                1.0
+                0.6
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
               "position": [
-                1.0,
+                7.8,
                 0,
-                1.1
+                15.7
               ],
               "enemy_id": "pobomma"
             }

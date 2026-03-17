@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-16",
+  "last_updated": "2026-03-17",
   "id": "wetlands_field_04",
   "name": "Wetlands Field 4",
   "description": "Explore the wilds of Ozette. Danger lurks around every corner.",
@@ -9,18 +9,18 @@
     {
       "type": "grid",
       "area": "a",
-      "start_pos": "3,2",
+      "start_pos": "1,3",
       "end_pos": "2,0",
       "cells": [
         {
-          "pos": "3,2",
+          "pos": "1,3",
           "stage_id": "s02a_sa1",
-          "rotation": 180,
+          "rotation": 90,
           "connections": {
-            "north": "2,2"
+            "west": "1,2"
           },
           "portals": {
-            "north": "portal_1771802375822_jr1b5c8lp",
+            "west": "portal_1771802375822_jr1b5c8lp",
             "default": "default"
           },
           "is_start": true,
@@ -37,20 +37,20 @@
           "objects": []
         },
         {
-          "pos": "2,2",
+          "pos": "1,2",
           "stage_id": "s02a_xb2",
           "rotation": 0,
           "connections": {
-            "east": "2,3",
-            "west": "2,1",
-            "north": "1,2",
-            "south": "3,2"
+            "south": "2,2",
+            "west": "1,1",
+            "east": "1,3",
+            "north": "0,2"
           },
           "portals": {
-            "east": "portal_1771823724805_jzvjlntbh",
+            "south": "portal_1770695921048_ymnhzs8zk",
             "west": "portal_1771823713729_l2ee6x2yb",
-            "north": "portal_1770695943816_9wx2zmy01",
-            "south": "portal_1770695921048_ymnhzs8zk"
+            "east": "portal_1771823724805_jzvjlntbh",
+            "north": "portal_1770695943816_9wx2zmy01"
           },
           "is_start": false,
           "is_end": false,
@@ -67,195 +67,306 @@
             {
               "type": "enemy",
               "position": [
-                -3.0,
+                7.0,
                 0,
-                -16.1
+                -19.6
               ],
-              "enemy_id": "hypao"
+              "enemy_id": "porel"
             },
             {
               "type": "enemy",
               "position": [
-                -3.5,
+                -6.1,
                 0,
-                32.3
-              ],
-              "enemy_id": "hypao"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -5.2,
-                0,
-                -1.3
-              ],
-              "enemy_id": "pomarr"
-            }
-          ]
-        },
-        {
-          "pos": "2,3",
-          "stage_id": "s02a_nc2",
-          "rotation": 90,
-          "connections": {
-            "west": "2,2"
-          },
-          "portals": {
-            "west": "portal_1770695202486_i6sg5336n"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                9.9,
-                0,
-                -2.0
-              ],
-              "enemy_id": "hypao"
-            },
-            {
-              "type": "box",
-              "position": [
-                -17.2,
-                0,
-                -0.2
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -0.7,
-                0,
-                17.6
-              ]
-            },
-            {
-              "type": "rare_box",
-              "position": [
-                -12.0,
-                0,
-                -1.7
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "2,1",
-          "stage_id": "s02a_ib1",
-          "rotation": 90,
-          "connections": {
-            "west": "2,0",
-            "east": "2,2"
-          },
-          "portals": {
-            "west": "portal_1770694814154_z0fveyavc",
-            "east": "portal_1770694802470_rabpz62p6"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -7.0,
-                0,
-                12.2
-              ],
-              "enemy_id": "hypao"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -13.1,
-                0,
-                -9.9
-              ],
-              "enemy_id": "pomarr"
-            }
-          ]
-        },
-        {
-          "pos": "1,2",
-          "stage_id": "s02a_ic1",
-          "rotation": 0,
-          "connections": {
-            "north": "0,2",
-            "south": "2,2"
-          },
-          "portals": {
-            "north": "portal_1770694894856_00sjm9ic7",
-            "south": "portal_1770694911889_192cql2fn"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                13.4,
-                0,
-                4.4
-              ],
-              "enemy_id": "hypao"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                14.8,
-                0,
-                -2.9
-              ],
-              "enemy_id": "pomarr"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -10.7,
-                0,
-                13.9
+                -1.4
               ],
               "enemy_id": "porel"
             }
           ]
         },
         {
-          "pos": "2,0",
-          "stage_id": "s02a_nb2",
-          "rotation": 270,
+          "pos": "0,2",
+          "stage_id": "s02a_na1",
+          "rotation": 0,
           "connections": {
-            "east": "2,1"
+            "south": "1,2"
           },
           "portals": {
-            "east": "portal_1770695186397_svb24gi87"
+            "south": "portal_1770695165920_u1whbwviy"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                4.4,
+                0,
+                1.0
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.4,
+                0,
+                3.6
+              ],
+              "enemy_id": "vespao"
+            },
+            {
+              "type": "box",
+              "position": [
+                4.5,
+                0,
+                -5.6
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                6.6,
+                0,
+                14.0
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s02a_nb2",
+          "rotation": 180,
+          "connections": {
+            "north": "1,2"
+          },
+          "portals": {
+            "north": "portal_1770695186397_svb24gi87"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -13.8,
+                0,
+                -0.2
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.9,
+                0,
+                11.8
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "box",
+              "position": [
+                -10.0,
+                0,
+                -12.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -1.5,
+                0,
+                -8.5
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s02a_ib2",
+          "rotation": 90,
+          "connections": {
+            "west": "1,0",
+            "east": "1,2"
+          },
+          "portals": {
+            "west": "portal_1770694856803_2ys7twqc5",
+            "east": "portal_1770694873204_haxbz6f3g"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -11.9,
+                0,
+                5.4
+              ],
+              "enemy_id": "pomarr"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.7,
+                0,
+                3.9
+              ],
+              "enemy_id": "pomarr"
+            }
+          ]
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s02a_td2",
+          "rotation": 270,
+          "connections": {
+            "south": "2,0",
+            "east": "1,1",
+            "north": "0,0"
+          },
+          "portals": {
+            "south": "portal_1771823673405_g8oy6err7",
+            "east": "portal_1771823685691_nt6bxpfsj",
+            "north": "portal_1771823663750_e4su4kky8"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -25.4,
+                0,
+                -5.6
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.2,
+                0,
+                20.0
+              ],
+              "enemy_id": "pomarr"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -22.3,
+                0,
+                -5.2
+              ],
+              "enemy_id": "porel"
+            }
+          ]
+        },
+        {
+          "pos": "0,0",
+          "stage_id": "s02a_na1",
+          "rotation": 0,
+          "connections": {
+            "south": "1,0"
+          },
+          "portals": {
+            "south": "portal_1770695165920_u1whbwviy"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -9.9,
+                0,
+                8.5
+              ],
+              "enemy_id": "vespao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.7,
+                0,
+                -4.3
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "box",
+              "position": [
+                -7.0,
+                0,
+                21.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                8.8,
+                0,
+                4.8
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s02a_ic1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,0"
+          },
+          "portals": {
+            "north": "portal_1770694894856_00sjm9ic7",
+            "south": "portal_1770694911889_192cql2fn"
           },
           "is_start": false,
           "is_end": true,
@@ -266,108 +377,35 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 3,
+          "warp_edge": "south",
+          "path_order": 4,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                7.2,
+                17.0,
                 0,
-                -6.0
+                2.8
               ],
-              "enemy_id": "vespao"
+              "enemy_id": "pomarr"
             },
             {
               "type": "enemy",
               "position": [
-                9.7,
-                0,
-                -16.3
-              ],
-              "enemy_id": "vespao"
-            },
-            {
-              "type": "box",
-              "position": [
-                18.2,
-                0,
-                -12.8
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -3.0,
-                0,
-                -2.8
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -4.8,
+                -7.3,
                 0,
                 1.3
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "0,2",
-          "stage_id": "s02a_nb2",
-          "rotation": 0,
-          "connections": {
-            "south": "1,2"
-          },
-          "portals": {
-            "south": "portal_1770695186397_svb24gi87"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 3,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                16.7,
-                0,
-                -2.4
               ],
-              "enemy_id": "vespao"
+              "enemy_id": "hypao"
             },
             {
               "type": "enemy",
               "position": [
-                12.4,
+                -0.1,
                 0,
-                -4.9
+                -28.5
               ],
-              "enemy_id": "pelcatraz"
-            },
-            {
-              "type": "box",
-              "position": [
-                6.4,
-                0,
-                1.3
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -13.0,
-                0,
-                5.8
-              ]
+              "enemy_id": "pomarr"
             }
           ]
         }
@@ -405,27 +443,27 @@
             {
               "type": "enemy",
               "position": [
-                -10.5,
+                2.2,
                 0,
-                27.0
+                -11.0
               ],
-              "enemy_id": "vespao"
+              "enemy_id": "porel"
             },
             {
               "type": "enemy",
               "position": [
-                10.4,
+                10.9,
                 0,
-                8.3
+                14.1
               ],
-              "enemy_id": "pelcatraz"
+              "enemy_id": "porel"
             },
             {
               "type": "box",
               "position": [
-                6.9,
+                -6.0,
                 0,
-                -4.1
+                -5.0
               ]
             }
           ]
@@ -435,18 +473,18 @@
     {
       "type": "grid",
       "area": "b",
-      "start_pos": "0,3",
-      "end_pos": "2,0",
+      "start_pos": "3,2",
+      "end_pos": "0,0",
       "cells": [
         {
-          "pos": "0,3",
+          "pos": "3,2",
           "stage_id": "s02b_sa1",
-          "rotation": 90,
+          "rotation": 0,
           "connections": {
-            "west": "0,2"
+            "north": "2,2"
           },
           "portals": {
-            "west": "portal_1770722436433_276ptzb9r"
+            "north": "portal_1770722423559_s3hhqqfp8"
           },
           "is_start": true,
           "is_end": false,
@@ -462,16 +500,16 @@
           "objects": []
         },
         {
-          "pos": "0,2",
+          "pos": "2,2",
           "stage_id": "s02b_lc2",
-          "rotation": 90,
+          "rotation": 180,
           "connections": {
-            "east": "0,3",
-            "south": "1,2"
+            "south": "3,2",
+            "west": "2,1"
           },
           "portals": {
-            "east": "portal_1770696868350_53ycdovqk",
-            "south": "portal_1771824292467_h2oacpn4m"
+            "south": "portal_1770696868350_53ycdovqk",
+            "west": "portal_1771824292467_h2oacpn4m"
           },
           "is_start": false,
           "is_end": false,
@@ -488,34 +526,34 @@
             {
               "type": "enemy",
               "position": [
-                -11.4,
+                -13.3,
                 0,
-                6.1
+                -3.1
               ],
-              "enemy_id": "hypao"
+              "enemy_id": "pomarr"
             },
             {
               "type": "enemy",
               "position": [
-                7.0,
+                9.7,
                 0,
-                -12.7
+                -18.0
               ],
-              "enemy_id": "pomarr"
+              "enemy_id": "hypao"
             }
           ]
         },
         {
-          "pos": "1,2",
+          "pos": "2,1",
           "stage_id": "s02b_ic3",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
-            "north": "0,2",
-            "south": "2,2"
+            "west": "2,0",
+            "east": "2,2"
           },
           "portals": {
-            "north": "portal_1770696246359_4142nrg5r",
-            "south": "portal_1770696235960_6fcxsghtm"
+            "west": "portal_1770696235960_6fcxsghtm",
+            "east": "portal_1770696246359_4142nrg5r"
           },
           "is_start": false,
           "is_end": false,
@@ -532,34 +570,34 @@
             {
               "type": "enemy",
               "position": [
-                7.5,
+                -5.8,
                 0,
-                16.9
+                4.6
               ],
               "enemy_id": "pomarr"
             },
             {
               "type": "enemy",
               "position": [
-                -7.6,
+                3.7,
                 0,
-                0.0
+                12.4
               ],
-              "enemy_id": "porel"
+              "enemy_id": "hypao"
             }
           ]
         },
         {
-          "pos": "2,2",
+          "pos": "2,0",
           "stage_id": "s02b_lb1",
-          "rotation": 270,
+          "rotation": 0,
           "connections": {
-            "west": "2,1",
-            "north": "1,2"
+            "east": "2,1",
+            "north": "1,0"
           },
           "portals": {
-            "west": "portal_1770696301183_3vabtmsg1",
-            "north": "portal_1771824211510_k5pxzjp59"
+            "east": "portal_1771824211510_k5pxzjp59",
+            "north": "portal_1770696301183_3vabtmsg1"
           },
           "is_start": false,
           "is_end": false,
@@ -576,34 +614,43 @@
             {
               "type": "enemy",
               "position": [
-                -2.9,
+                7.6,
                 0,
-                13.8
+                -6.8
               ],
-              "enemy_id": "hypao"
+              "enemy_id": "porel"
             },
             {
               "type": "enemy",
               "position": [
-                -13.6,
+                2.7,
                 0,
-                3.3
+                -6.4
               ],
-              "enemy_id": "hypao"
+              "enemy_id": "pomarr"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.6,
+                0,
+                -12.8
+              ],
+              "enemy_id": "porel"
             }
           ]
         },
         {
-          "pos": "2,1",
-          "stage_id": "s02b_ib1",
-          "rotation": 90,
+          "pos": "1,0",
+          "stage_id": "s02b_ic1",
+          "rotation": 0,
           "connections": {
-            "west": "2,0",
-            "east": "2,2"
+            "south": "2,0",
+            "north": "0,0"
           },
           "portals": {
-            "west": "portal_1770696072299_1082sfkmb",
-            "east": "portal_1770696088515_2j7yqawry"
+            "south": "portal_1770696191379_54ldp5bkp",
+            "north": "portal_1770696203312_aat2h0zl0"
           },
           "is_start": false,
           "is_end": false,
@@ -620,32 +667,41 @@
             {
               "type": "enemy",
               "position": [
-                -5.0,
+                -4.2,
                 0,
-                1.5
+                7.9
               ],
               "enemy_id": "porel"
             },
             {
               "type": "enemy",
               "position": [
-                -11.9,
+                7.7,
                 0,
-                -0.0
+                15.7
+              ],
+              "enemy_id": "pomarr"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.7,
+                0,
+                -9.7
               ],
               "enemy_id": "pelcatraz"
             }
           ]
         },
         {
-          "pos": "2,0",
-          "stage_id": "s02b_nc2",
-          "rotation": 270,
+          "pos": "0,0",
+          "stage_id": "s02b_nb2",
+          "rotation": 0,
           "connections": {
-            "east": "2,1"
+            "south": "1,0"
           },
           "portals": {
-            "east": "portal_1770722381794_qiorb20p5"
+            "south": "portal_1770722350896_v5fuxjb88"
           },
           "is_start": false,
           "is_end": true,
@@ -662,34 +718,26 @@
             {
               "type": "enemy",
               "position": [
-                7.1,
+                -1.6,
                 0,
-                3.7
+                8.2
               ],
-              "enemy_id": "porel"
+              "enemy_id": "hypao"
             },
             {
               "type": "box",
               "position": [
-                7.8,
+                -8.6,
                 0,
-                7.4
+                13.1
               ]
             },
             {
               "type": "box",
               "position": [
-                -4.8,
+                1.4,
                 0,
-                -2.1
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                10.7,
-                0,
-                -8.8
+                -15.9
               ]
             }
           ]
@@ -725,29 +773,29 @@
             {
               "type": "enemy",
               "position": [
-                -9.4,
+                -7.3,
                 0,
-                -9.3
+                3.1
               ],
               "enemy_id": "octo-diablo"
             },
             {
               "type": "enemy",
               "position": [
-                -6.3,
+                -4.7,
                 0,
-                4.7
+                -8.9
               ],
               "enemy_id": "hypao"
             },
             {
               "type": "enemy",
               "position": [
-                2.9,
+                -2.6,
                 0,
-                1.5
+                -3.1
               ],
-              "enemy_id": "pomarr"
+              "enemy_id": "hypao"
             }
           ]
         }

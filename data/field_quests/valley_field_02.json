@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-16",
+  "last_updated": "2026-03-17",
   "id": "valley_field_02",
   "name": "Valley Field 2",
   "description": "Explore the wilds of Gurhacia. Danger lurks around every corner.",
@@ -9,18 +9,18 @@
     {
       "type": "grid",
       "area": "a",
-      "start_pos": "0,0",
-      "end_pos": "3,2",
+      "start_pos": "0,4",
+      "end_pos": "0,0",
       "cells": [
         {
-          "pos": "0,0",
+          "pos": "0,4",
           "stage_id": "s01a_sa1",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
-            "south": "1,0"
+            "west": "0,3"
           },
           "portals": {
-            "south": "portal_1771646251322_m10fltkxh",
+            "west": "portal_1771646251322_m10fltkxh",
             "default": "default"
           },
           "is_start": true,
@@ -37,16 +37,16 @@
           "objects": []
         },
         {
-          "pos": "1,0",
-          "stage_id": "s01a_lc2",
-          "rotation": 0,
+          "pos": "0,3",
+          "stage_id": "s01a_ic3",
+          "rotation": 90,
           "connections": {
-            "east": "1,1",
-            "north": "0,0"
+            "west": "0,2",
+            "east": "0,4"
           },
           "portals": {
-            "east": "portal_1771821560334_4iz79ipeh",
-            "north": "portal_1769092071707_39cmfdsru"
+            "west": "portal_1769091101029_psdymd2kn",
+            "east": "portal_1769091093818_4fqlpqiz6"
           },
           "is_start": false,
           "is_end": false,
@@ -63,34 +63,43 @@
             {
               "type": "enemy",
               "position": [
-                -12.0,
+                -20.9,
                 0,
-                -9.8
+                -24.4
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -19.0,
+                0,
+                -12.6
               ],
               "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
               "position": [
-                -5.5,
+                8.9,
                 0,
-                -10.6
+                -23.6
               ],
               "enemy_id": "vulkure"
             }
           ]
         },
         {
-          "pos": "1,1",
-          "stage_id": "s01a_ic3",
+          "pos": "0,2",
+          "stage_id": "s01a_ib2",
           "rotation": 90,
           "connections": {
-            "east": "1,2",
-            "west": "1,0"
+            "west": "0,1",
+            "east": "0,3"
           },
           "portals": {
-            "east": "portal_1769091093818_4fqlpqiz6",
-            "west": "portal_1769091101029_psdymd2kn"
+            "west": "portal_1769054079594_o7akekgmu",
+            "east": "portal_1769054096896_27h1xur3y"
           },
           "is_start": false,
           "is_end": false,
@@ -107,43 +116,43 @@
             {
               "type": "enemy",
               "position": [
-                0.5,
+                13.1,
                 0,
-                15.8
-              ],
-              "enemy_id": "garapython"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -22.9,
-                0,
-                -0.5
+                -8.9
               ],
               "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
               "position": [
-                18.1,
+                8.7,
                 0,
-                3.1
+                3.8
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.6,
+                0,
+                16.0
               ],
               "enemy_id": "ghowl"
             }
           ]
         },
         {
-          "pos": "1,2",
-          "stage_id": "s01a_lb1",
-          "rotation": 180,
+          "pos": "0,1",
+          "stage_id": "s01a_ic1",
+          "rotation": 90,
           "connections": {
-            "south": "2,2",
-            "west": "1,1"
+            "west": "0,0",
+            "east": "0,2"
           },
           "portals": {
-            "south": "portal_1771821299622_yqnbj8zku",
-            "west": "portal_1771821420224_3s36p1dt1"
+            "west": "portal_1769090993555_xrh9frw4y",
+            "east": "portal_1769090970268_79fl50z0t"
           },
           "is_start": false,
           "is_end": false,
@@ -160,85 +169,42 @@
             {
               "type": "enemy",
               "position": [
-                2.9,
+                -4.1,
                 0,
-                -5.2
+                -11.7
+              ],
+              "enemy_id": "tormatible"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -20.3,
+                0,
+                -2.9
               ],
               "enemy_id": "garapython"
             },
             {
               "type": "enemy",
               "position": [
-                1.8,
+                -13.8,
                 0,
-                11.0
+                -14.8
               ],
-              "enemy_id": "garapython"
+              "enemy_id": "garahadan"
             }
           ]
         },
         {
-          "pos": "2,2",
-          "stage_id": "s01a_ic3",
-          "rotation": 0,
+          "pos": "0,0",
+          "stage_id": "s01a_ga1",
+          "rotation": 90,
           "connections": {
-            "south": "3,2",
-            "north": "1,2"
+            "east": "0,1"
           },
           "portals": {
-            "south": "portal_1769091101029_psdymd2kn",
-            "north": "portal_1769091093818_4fqlpqiz6"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 4,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                18.9,
-                0,
-                3.2
-              ],
-              "enemy_id": "garapython"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -14.3,
-                0,
-                22.3
-              ],
-              "enemy_id": "vulkure"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                1.7,
-                0,
-                -10.9
-              ],
-              "enemy_id": "vulkure"
-            }
-          ]
-        },
-        {
-          "pos": "3,2",
-          "stage_id": "s01a_nb2",
-          "rotation": 180,
-          "connections": {
-            "north": "2,2"
-          },
-          "portals": {
-            "north": "portal_1769092327993_a9mir3dem"
+            "east": "portal_1769002968090_15j7x91gm",
+            "west": "portal_1769002993382_c7pgnyd8v"
           },
           "is_start": false,
           "is_end": true,
@@ -249,33 +215,35 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 5,
+          "warp_edge": "west",
+          "path_order": 4,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                -9.7,
+                -1.2,
                 0,
-                -5.9
+                17.2
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "grimble"
             },
             {
-              "type": "box",
+              "type": "enemy",
               "position": [
-                -8.6,
+                0.6,
                 0,
-                -11.5
-              ]
+                2.3
+              ],
+              "enemy_id": "vulkure"
             },
             {
-              "type": "rare_box",
+              "type": "enemy",
               "position": [
-                13.6,
+                -8.2,
                 0,
-                -11.5
-              ]
+                -4.1
+              ],
+              "enemy_id": "garapython"
             }
           ]
         }
@@ -313,27 +281,36 @@
             {
               "type": "enemy",
               "position": [
-                -17.2,
+                18.0,
                 0,
-                -10.6
+                6.5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.9,
+                0,
+                13.4
               ],
               "enemy_id": "garapython"
             },
             {
               "type": "enemy",
               "position": [
-                3.8,
+                -2.6,
                 0,
-                9.6
+                7.8
               ],
-              "enemy_id": "vulkure"
+              "enemy_id": "ghowl"
             },
             {
               "type": "box",
               "position": [
-                -14.6,
+                -8.2,
                 0,
-                15.0
+                -27.6
               ]
             }
           ]
@@ -343,18 +320,18 @@
     {
       "type": "grid",
       "area": "b",
-      "start_pos": "2,0",
-      "end_pos": "0,3",
+      "start_pos": "0,4",
+      "end_pos": "0,0",
       "cells": [
         {
-          "pos": "2,0",
+          "pos": "0,4",
           "stage_id": "s01b_sa1",
           "rotation": 90,
           "connections": {
-            "east": "2,1"
+            "west": "0,3"
           },
           "portals": {
-            "east": "portal_1769178737883_7bppcx8w1"
+            "west": "portal_1769178748150_zpfcscb89"
           },
           "is_start": true,
           "is_end": false,
@@ -370,16 +347,16 @@
           "objects": []
         },
         {
-          "pos": "2,1",
-          "stage_id": "s01b_lc1",
-          "rotation": 270,
+          "pos": "0,3",
+          "stage_id": "s01b_ib1",
+          "rotation": 90,
           "connections": {
-            "west": "2,0",
-            "north": "1,1"
+            "west": "0,2",
+            "east": "0,4"
           },
           "portals": {
-            "west": "portal_1769178064874_b6z8yj3so",
-            "north": "portal_1771821901145_gtalfch2s"
+            "west": "portal_1769176717000_etkc158y8",
+            "east": "portal_1769176701974_01xdz1lxv"
           },
           "is_start": false,
           "is_end": false,
@@ -396,34 +373,34 @@
             {
               "type": "enemy",
               "position": [
-                -10.0,
+                -18.9,
                 0,
-                12.8
+                -19.2
               ],
-              "enemy_id": "vulkure"
+              "enemy_id": "garapython"
             },
             {
               "type": "enemy",
               "position": [
-                1.5,
+                21.5,
                 0,
-                -16.2
+                12.2
               ],
               "enemy_id": "garapython"
             }
           ]
         },
         {
-          "pos": "1,1",
+          "pos": "0,2",
           "stage_id": "s01b_ib2",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
-            "south": "2,1",
-            "north": "0,1"
+            "west": "0,1",
+            "east": "0,3"
           },
           "portals": {
-            "south": "portal_1769177159834_wr35kqfh4",
-            "north": "portal_1769177169606_8is1zf24h"
+            "west": "portal_1769177159834_wr35kqfh4",
+            "east": "portal_1769177169606_8is1zf24h"
           },
           "is_start": false,
           "is_end": false,
@@ -440,34 +417,34 @@
             {
               "type": "enemy",
               "position": [
-                -8.7,
+                -10.3,
                 0,
-                9.6
+                19.8
               ],
               "enemy_id": "garapython"
             },
             {
               "type": "enemy",
               "position": [
-                5.9,
+                12.2,
                 0,
-                -8.1
+                8.1
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garapython"
             }
           ]
         },
         {
           "pos": "0,1",
-          "stage_id": "s01b_lb3",
+          "stage_id": "s01b_ic3",
           "rotation": 90,
           "connections": {
-            "east": "0,2",
-            "south": "1,1"
+            "west": "0,0",
+            "east": "0,2"
           },
           "portals": {
-            "east": "portal_1769178005473_uw0ikza72",
-            "south": "portal_1771821882385_bdi4p10wk"
+            "west": "portal_1769177283330_csi1dmrty",
+            "east": "portal_1769177274869_ioe4andnx"
           },
           "is_start": false,
           "is_end": false,
@@ -484,85 +461,33 @@
             {
               "type": "enemy",
               "position": [
-                -18.7,
+                17.2,
                 0,
-                -5.1
-              ],
-              "enemy_id": "garapython"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -12.5,
-                0,
-                1.3
-              ],
-              "enemy_id": "vulkure"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                9.9,
-                0,
-                12.7
+                6.0
               ],
               "enemy_id": "ghowl"
-            }
-          ]
-        },
-        {
-          "pos": "0,2",
-          "stage_id": "s01b_ic3",
-          "rotation": 90,
-          "connections": {
-            "east": "0,3",
-            "west": "0,1"
-          },
-          "portals": {
-            "east": "portal_1769177274869_ioe4andnx",
-            "west": "portal_1769177283330_csi1dmrty"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 4,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -21.6,
-                0,
-                9.7
-              ],
-              "enemy_id": "tormatible"
             },
             {
               "type": "enemy",
               "position": [
-                -22.3,
+                -7.3,
                 0,
-                16.8
+                -10.2
               ],
-              "enemy_id": "garahadan"
+              "enemy_id": "vulkure"
             }
           ]
         },
         {
-          "pos": "0,3",
-          "stage_id": "s01b_nc2",
+          "pos": "0,0",
+          "stage_id": "s01b_ic1",
           "rotation": 90,
           "connections": {
-            "west": "0,2"
+            "east": "0,1"
           },
           "portals": {
-            "west": "portal_1769178651383_s7qdsli66"
+            "east": "portal_1769177200197_453qitwyk",
+            "west": "portal_1769177210743_wtit3fab2"
           },
           "is_start": false,
           "is_end": true,
@@ -573,42 +498,26 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 5,
+          "warp_edge": "west",
+          "path_order": 4,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                8.0,
+                -13.5,
                 0,
-                -21.6
+                10.4
               ],
               "enemy_id": "garapython"
             },
             {
               "type": "enemy",
               "position": [
-                0.5,
+                18.5,
                 0,
-                17.5
+                -1.5
               ],
-              "enemy_id": "tormatible"
-            },
-            {
-              "type": "box",
-              "position": [
-                31.2,
-                0,
-                9.3
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -17.1,
-                0,
-                -11.2
-              ]
+              "enemy_id": "garahadan"
             }
           ]
         }
@@ -643,27 +552,27 @@
             {
               "type": "enemy",
               "position": [
-                6.6,
+                -3.9,
                 0,
-                6.7
+                -7.0
               ],
               "enemy_id": "reyburn"
             },
             {
               "type": "enemy",
               "position": [
-                2.2,
+                -7.7,
                 0,
-                1.4
+                -19.8
               ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
               "position": [
-                -13.9,
+                -9.9,
                 0,
-                -0.5
+                -9.9
               ],
               "enemy_id": "garapython"
             }
