@@ -282,6 +282,10 @@ func _ready() -> void:
 	elif not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
 		spawn_pos = _portal_data[spawn_edge]["spawn_pos"]
 		var gate_pos: Vector3 = _portal_data[spawn_edge].get("gate_pos", spawn_pos)
+		# Push spawn further inward (toward room center) to avoid spawning behind area warps
+		var inward: Vector3 = (Vector3.ZERO - gate_pos).normalized() * 3.0
+		spawn_pos = gate_pos + inward
+		spawn_pos.y = 1.0
 		spawn_rot = _facing_yaw(spawn_pos, gate_pos)
 		spawn_reason = "entry from %s, facing gate (yaw=%.2f)" % [spawn_edge, spawn_rot]
 	elif _portal_data.has("default"):
