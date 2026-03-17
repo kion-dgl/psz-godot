@@ -462,9 +462,9 @@
             {
               "type": "enemy",
               "position": [
-                -10,
+                -8.0,
                 0,
-                -6
+                -6.0
               ],
               "enemy_id": "korse"
             },
@@ -489,9 +489,9 @@
             {
               "type": "box",
               "position": [
-                8,
+                8.0,
                 0,
-                -15
+                -14.0
               ]
             }
           ]
@@ -670,9 +670,9 @@
             {
               "type": "enemy",
               "position": [
+                -1.0,
                 0,
-                0,
-                0
+                -1.7
               ],
               "enemy_id": "finjer-r"
             }

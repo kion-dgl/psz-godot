@@ -580,17 +580,17 @@
             {
               "type": "box",
               "position": [
-                14,
+                13.0,
                 0,
-                10
+                10.0
               ]
             },
             {
               "type": "box",
               "position": [
-                16,
+                13.7,
                 0,
-                8
+                9.9
               ]
             }
           ]
@@ -675,9 +675,9 @@
             {
               "type": "enemy",
               "position": [
+                1.0,
                 0,
-                0,
-                0
+                0.0
               ],
               "enemy_id": "dark-falz"
             },
