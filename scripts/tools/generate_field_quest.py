@@ -991,16 +991,13 @@ _BASE_TEMPLATES = [
 ]
 TOWER_TEMPLATES = [_template_tower_linear, _template_tower_l]
 
-# Direction rotation for rotating entire templates
+# Pre-bake all 4 rotations of each template at import time.
+# No runtime rotation — just a flat list of concrete layouts to pick from.
 _DIR_ROTATE_90 = {"north": "east", "east": "south", "south": "west", "west": "north"}
 
 
 def _rotate_template_90(cells: list[TemplateCell]) -> list[TemplateCell]:
-    """Rotate an entire template 90 degrees clockwise.
-
-    Grid transform: (row, col) -> (col, max_row - row).
-    Directions rotate: north->east, east->south, south->west, west->north.
-    """
+    """Rotate an entire template 90 degrees clockwise."""
     if not cells:
         return cells
     max_row = max(r for r, c, _, _ in cells)
@@ -1010,23 +1007,28 @@ def _rotate_template_90(cells: list[TemplateCell]) -> list[TemplateCell]:
         new_col = max_row - row
         new_dirs = {_DIR_ROTATE_90[d] for d in dirs}
         rotated.append((new_row, new_col, role, new_dirs))
-    # Normalize so min row/col are 0
     min_r = min(r for r, c, _, _ in rotated)
     min_c = min(c for r, c, _, _ in rotated)
     return [(r - min_r, c - min_c, role, dirs) for r, c, role, dirs in rotated]
 
 
+def _bake_all_rotations(base_templates: list) -> list[list[TemplateCell]]:
+    """Pre-compute all 4 rotations of each base template."""
+    baked = []
+    for fn in base_templates:
+        cells = fn()
+        for _ in range(4):
+            baked.append(list(cells))
+            cells = _rotate_template_90(cells)
+    return baked
+
+
+ALL_TEMPLATES = _bake_all_rotations(_BASE_TEMPLATES)
+
+
 def pick_template(rng: random.Random) -> list[TemplateCell]:
-    """Pick a random template and optionally rotate the whole layout 0/90/180/270."""
-    base_fn = rng.choice(_BASE_TEMPLATES)
-    cells = base_fn()
-    rotations = rng.randint(0, 3)
-    for _ in range(rotations):
-        cells = _rotate_template_90(cells)
-    return cells
-
-
-ALL_TEMPLATES = _BASE_TEMPLATES
+    """Pick a random pre-baked template (already includes rotated variants)."""
+    return rng.choice(ALL_TEMPLATES)
 
 # ---------------------------------------------------------------------------
 # Rotation solver

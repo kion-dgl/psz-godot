@@ -9,18 +9,18 @@
     {
       "type": "grid",
       "area": "a",
-      "start_pos": "1,0",
-      "end_pos": "0,3",
+      "start_pos": "0,1",
+      "end_pos": "1,3",
       "cells": [
         {
-          "pos": "1,0",
+          "pos": "0,1",
           "stage_id": "s04a_sa1",
-          "rotation": 270,
+          "rotation": 0,
           "connections": {
-            "east": "1,1"
+            "south": "1,1"
           },
           "portals": {
-            "east": "portal_1770750774728_oqxufle0v",
+            "south": "portal_1770750774728_oqxufle0v",
             "default": "default"
           },
           "is_start": true,
@@ -41,14 +41,14 @@
           "stage_id": "s04a_xb2",
           "rotation": 0,
           "connections": {
-            "north": "0,1",
             "south": "2,1",
+            "north": "0,1",
             "west": "1,0",
             "east": "1,2"
           },
           "portals": {
-            "north": "portal_1770752316833_g0dc8bv9n",
             "south": "portal_1770752290159_x7w9j4jmk",
+            "north": "portal_1770752316833_g0dc8bv9n",
             "west": "portal_1771827707663_tm5tkqoq3",
             "east": "portal_1771827718030_uwr4bkgu8"
           },
@@ -67,32 +67,32 @@
             {
               "type": "enemy",
               "position": [
-                -3.2,
+                3.4,
                 0,
-                -17.6
+                -1.3
               ],
-              "enemy_id": "bullbatt"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
               "position": [
-                3.8,
+                18.8,
                 0,
-                3.0
+                -10.8
               ],
-              "enemy_id": "bullbatt"
+              "enemy_id": "batt"
             }
           ]
         },
         {
-          "pos": "2,1",
-          "stage_id": "s04a_na1",
-          "rotation": 180,
+          "pos": "1,0",
+          "stage_id": "s04a_nb2",
+          "rotation": 270,
           "connections": {
-            "north": "1,1"
+            "east": "1,1"
           },
           "portals": {
-            "north": "portal_1770745860162_egll9murc"
+            "east": "portal_1770745873567_6z54sf0du"
           },
           "is_start": false,
           "is_end": false,
@@ -109,101 +109,35 @@
             {
               "type": "enemy",
               "position": [
-                -13.3,
+                12.0,
                 0,
-                1.1
+                -14.6
               ],
-              "enemy_id": "rumole"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
               "position": [
-                -8.8,
+                0.9,
                 0,
-                0.0
+                -9.9
               ],
-              "enemy_id": "rohjade"
+              "enemy_id": "batt"
             },
             {
               "type": "box",
               "position": [
-                7.2,
+                -9.6,
                 0,
-                -8.1
+                -13.5
               ]
             },
             {
               "type": "rare_box",
               "position": [
-                -0.4,
+                -0.0,
                 0,
-                9.8
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "0,1",
-          "stage_id": "s04a_na1",
-          "rotation": 0,
-          "connections": {
-            "south": "1,1"
-          },
-          "portals": {
-            "south": "portal_1770745860162_egll9murc"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                14.6,
-                0,
-                3.0
-              ],
-              "enemy_id": "rumole"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                10.3,
-                0,
-                2.8
-              ],
-              "enemy_id": "kapantha"
-            },
-            {
-              "type": "box",
-              "position": [
-                8.6,
-                0,
-                -5.0
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -8.0,
-                0,
-                8.1
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                6.0,
-                0,
-                2.0
+                5.5
               ]
             }
           ]
@@ -213,12 +147,12 @@
           "stage_id": "s04a_ic3",
           "rotation": 90,
           "connections": {
-            "west": "1,1",
-            "east": "1,3"
+            "east": "1,3",
+            "west": "1,1"
           },
           "portals": {
-            "west": "portal_1770745684617_pcygvh4e5",
-            "east": "portal_1770745696932_e1ry3dnfh"
+            "east": "portal_1770745696932_e1ry3dnfh",
+            "west": "portal_1770745684617_pcygvh4e5"
           },
           "is_start": false,
           "is_end": false,
@@ -235,40 +169,89 @@
             {
               "type": "enemy",
               "position": [
-                -18.7,
+                -13.0,
                 0,
-                15.9
+                -3.8
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.8,
+                0,
+                12.4
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.1,
+                0,
+                8.4
+              ],
+              "enemy_id": "rumole"
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s04a_ga1",
+          "rotation": 0,
+          "connections": {
+            "south": "3,1",
+            "north": "1,1"
+          },
+          "portals": {
+            "south": "portal_1770745554384_9kncudq67",
+            "north": "portal_1770745579087_ckots2l1l"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                1.7,
+                0,
+                -5.1
               ],
               "enemy_id": "rumole"
             },
             {
               "type": "enemy",
               "position": [
-                -14.4,
+                -4.4,
                 0,
-                -3.8
+                -9.2
               ],
-              "enemy_id": "batt"
+              "enemy_id": "bullbatt"
             }
           ]
         },
         {
           "pos": "1,3",
-          "stage_id": "s04a_td1",
+          "stage_id": "s04a_nc2",
           "rotation": 90,
           "connections": {
-            "north": "0,3",
-            "south": "2,3",
             "west": "1,2"
           },
           "portals": {
-            "north": "portal_1771827631475_5icfonypi",
-            "south": "portal_1771827616799_4crtmwnmu",
-            "west": "portal_1770752225654_ak3irmp72"
+            "west": "portal_1770745887420_n5w8w9gw7"
           },
           "is_start": false,
-          "is_end": false,
-          "is_branch": true,
+          "is_end": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -281,41 +264,47 @@
             {
               "type": "enemy",
               "position": [
-                -13.1,
+                -6.1,
                 0,
-                -5.7
+                10.9
               ],
-              "enemy_id": "rumole"
+              "enemy_id": "kapantha"
             },
             {
-              "type": "enemy",
+              "type": "box",
               "position": [
-                -9.3,
+                3.3,
                 0,
-                0.9
-              ],
-              "enemy_id": "rumole"
+                -3.1
+              ]
             },
             {
-              "type": "enemy",
+              "type": "box",
               "position": [
-                6.2,
+                -12.5,
                 0,
-                -8.4
-              ],
-              "enemy_id": "bullbatt"
+                3.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                12.3,
+                0,
+                2.6
+              ]
             }
           ]
         },
         {
-          "pos": "2,3",
-          "stage_id": "s04a_nc2",
+          "pos": "3,1",
+          "stage_id": "s04a_nb2",
           "rotation": 180,
           "connections": {
-            "north": "1,3"
+            "north": "2,1"
           },
           "portals": {
-            "north": "portal_1770745887420_n5w8w9gw7"
+            "north": "portal_1770745873567_6z54sf0du"
           },
           "is_start": false,
           "is_end": false,
@@ -327,84 +316,32 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 4,
+          "path_order": 3,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                -16.7,
+                12.8,
                 0,
-                3.7
+                -16.4
               ],
-              "enemy_id": "rumole"
+              "enemy_id": "kapantha"
             },
             {
               "type": "box",
               "position": [
-                17.3,
+                8.0,
                 0,
-                -13.4
+                -2.0
               ]
             },
             {
               "type": "box",
               "position": [
-                -2.3,
+                7.1,
                 0,
-                -16.8
+                -10.9
               ]
-            }
-          ]
-        },
-        {
-          "pos": "0,3",
-          "stage_id": "s04a_ib1",
-          "rotation": 0,
-          "connections": {
-            "south": "1,3"
-          },
-          "portals": {
-            "south": "portal_1770745604078_a1wjzjtr9",
-            "north": "portal_1770745613177_vqwq2i24x"
-          },
-          "is_start": false,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "north",
-          "path_order": 4,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -5.3,
-                0,
-                15.3
-              ],
-              "enemy_id": "bullbatt"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -14.7,
-                0,
-                -2.8
-              ],
-              "enemy_id": "bullbatt"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -0.5,
-                0,
-                -7.7
-              ],
-              "enemy_id": "batt"
             }
           ]
         }
@@ -442,36 +379,36 @@
             {
               "type": "enemy",
               "position": [
-                -16.9,
+                6.8,
                 0,
-                1.1
+                -9.1
               ],
               "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
               "position": [
-                1.0,
+                -11.8,
                 0,
-                5.3
+                17.2
               ],
-              "enemy_id": "rumole"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
               "position": [
-                13.5,
+                -14.9,
                 0,
-                -10.6
+                17.1
               ],
-              "enemy_id": "rohjade"
+              "enemy_id": "rumole"
             },
             {
               "type": "box",
               "position": [
-                5.1,
+                -8.6,
                 0,
-                -6.9
+                11.6
               ]
             }
           ]
@@ -481,15 +418,15 @@
     {
       "type": "grid",
       "area": "b",
-      "start_pos": "4,0",
+      "start_pos": "3,1",
       "end_pos": "0,0",
       "cells": [
         {
-          "pos": "4,0",
+          "pos": "3,1",
           "stage_id": "s04b_sa1",
           "rotation": 0,
           "connections": {
-            "north": "3,0"
+            "north": "2,1"
           },
           "portals": {
             "north": "portal_1770758547006_2pih7u9vn"
@@ -508,20 +445,24 @@
           "objects": []
         },
         {
-          "pos": "3,0",
-          "stage_id": "s04b_ic1",
+          "pos": "2,1",
+          "stage_id": "s04b_xb2",
           "rotation": 0,
           "connections": {
-            "north": "2,0",
-            "south": "4,0"
+            "south": "3,1",
+            "east": "2,2",
+            "north": "1,1",
+            "west": "2,0"
           },
           "portals": {
-            "north": "portal_1770755769988_z5jmafocx",
-            "south": "portal_1770755781563_3ylf76w8h"
+            "south": "portal_1770758764972_2ctz3n17e",
+            "east": "portal_1771828159974_msxn4enrc",
+            "north": "portal_1770758783764_7lskcyoxx",
+            "west": "portal_1771828170131_bvnygr8z5"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -534,43 +475,41 @@
             {
               "type": "enemy",
               "position": [
-                -6.5,
+                -19.6,
                 0,
-                -16.5
-              ],
-              "enemy_id": "batt"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -0.1,
-                0,
-                8.6
+                12.8
               ],
               "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
               "position": [
-                -0.8,
+                11.7,
                 0,
-                -9.8
+                14.6
               ],
-              "enemy_id": "rumole"
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.6,
+                0,
+                -8.1
+              ],
+              "enemy_id": "batt"
             }
           ]
         },
         {
-          "pos": "2,0",
-          "stage_id": "s04b_ic1",
-          "rotation": 0,
+          "pos": "2,2",
+          "stage_id": "s04b_nc2",
+          "rotation": 90,
           "connections": {
-            "north": "1,0",
-            "south": "3,0"
+            "west": "2,1"
           },
           "portals": {
-            "north": "portal_1770755769988_z5jmafocx",
-            "south": "portal_1770755781563_3ylf76w8h"
+            "west": "portal_1770758500315_ymy7e7lt2"
           },
           "is_start": false,
           "is_end": false,
@@ -587,47 +526,158 @@
             {
               "type": "enemy",
               "position": [
-                3.0,
+                1.0,
                 0,
-                -10.4
-              ],
-              "enemy_id": "bullbatt"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                7.3,
-                0,
-                -6.0
+                20.5
               ],
               "enemy_id": "batt"
             },
             {
-              "type": "enemy",
+              "type": "box",
               "position": [
-                -1.9,
+                -0.5,
                 0,
-                -12.0
-              ],
-              "enemy_id": "bullbatt"
+                -9.0
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -3.5,
+                0,
+                -5.5
+              ]
             }
           ]
         },
         {
-          "pos": "1,0",
-          "stage_id": "s04b_ic3",
-          "rotation": 0,
+          "pos": "2,0",
+          "stage_id": "s04b_nb2",
+          "rotation": 270,
           "connections": {
-            "north": "0,0",
-            "south": "2,0"
+            "east": "2,1"
           },
           "portals": {
-            "north": "portal_1770756699695_yrebq1j7c",
-            "south": "portal_1770756714642_5qlztsshk"
+            "east": "portal_1770758491430_kxga3o6k2"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                8.1,
+                0,
+                -0.2
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                15.9,
+                0,
+                -17.2
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "box",
+              "position": [
+                -3.0,
+                0,
+                -11.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -10.4,
+                0,
+                -3.7
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s04b_ic1",
+          "rotation": 0,
+          "connections": {
+            "south": "2,1",
+            "north": "0,1"
+          },
+          "portals": {
+            "south": "portal_1770755781563_3ylf76w8h",
+            "north": "portal_1770755769988_z5jmafocx"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -14.0,
+                0,
+                -6.3
+              ],
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.2,
+                0,
+                -3.7
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.5,
+                0,
+                -16.7
+              ],
+              "enemy_id": "batt"
+            }
+          ]
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s04b_tb3",
+          "rotation": 0,
+          "connections": {
+            "south": "1,1",
+            "east": "0,2",
+            "west": "0,0"
+          },
+          "portals": {
+            "south": "portal_1770758589812_rue3bl194",
+            "east": "portal_1771827971498_ef8w0905n",
+            "west": "portal_1771827962828_pvljykcmj"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -640,42 +690,90 @@
             {
               "type": "enemy",
               "position": [
-                -10.6,
+                -17.4,
                 0,
-                -5.4
+                9.7
               ],
-              "enemy_id": "batt"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
               "position": [
-                15.3,
+                4.0,
                 0,
-                -9.7
+                6.3
               ],
-              "enemy_id": "batt"
-            },
+              "enemy_id": "bullbatt"
+            }
+          ]
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s04b_ga1",
+          "rotation": 90,
+          "connections": {
+            "west": "0,1"
+          },
+          "portals": {
+            "west": "portal_1771589950722_o9feednfr"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
             {
               "type": "enemy",
               "position": [
-                0.4,
+                -14.0,
                 0,
-                -2.5
+                7.0
               ],
-              "enemy_id": "kapantha"
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "box",
+              "position": [
+                -4.5,
+                0,
+                -0.2
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -1.2,
+                0,
+                -2.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                25.3,
+                0,
+                2.3
+              ]
             }
           ]
         },
         {
           "pos": "0,0",
           "stage_id": "s04b_ib1",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
-            "south": "1,0"
+            "east": "0,1"
           },
           "portals": {
-            "south": "portal_1770752697255_depfakwo2",
-            "north": "portal_1770752710424_h95o8nta3"
+            "east": "portal_1770752710424_h95o8nta3",
+            "west": "portal_1770752697255_depfakwo2"
           },
           "is_start": false,
           "is_end": true,
@@ -686,33 +784,33 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "north",
+          "warp_edge": "west",
           "path_order": 4,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                2.2,
+                -17.5,
                 0,
-                4.4
+                -10.3
               ],
-              "enemy_id": "rohjade"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
               "position": [
-                -2.0,
+                -3.7,
                 0,
-                -2.8
+                -7.3
               ],
-              "enemy_id": "kapantha"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
               "position": [
-                -14.2,
+                4.9,
                 0,
-                -19.1
+                -4.8
               ],
               "enemy_id": "bullbatt"
             }
@@ -749,29 +847,29 @@
             {
               "type": "enemy",
               "position": [
-                6.5,
+                -3.0,
                 0,
-                -12.1
+                -14.5
               ],
               "enemy_id": "rohcrysta"
             },
             {
               "type": "enemy",
               "position": [
-                -1.8,
+                -4.7,
                 0,
-                -0.3
+                -10.9
               ],
-              "enemy_id": "bullbatt"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
               "position": [
-                -1.8,
+                5.7,
                 0,
-                -13.7
+                -16.7
               ],
-              "enemy_id": "rumole"
+              "enemy_id": "bullbatt"
             }
           ]
         }
