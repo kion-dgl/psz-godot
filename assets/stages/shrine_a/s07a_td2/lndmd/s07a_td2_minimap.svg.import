@@ -1,12 +1,6 @@
 [remap]
 
-importer="texture"
-type="CompressedTexture2D"
-uid="uid://sd54ol3j3g00"
-path="res://.godot/imported/s07a_td2_minimap.svg-ef24800781138ed6304edd6755f1c137.ctex"
-metadata={
-"vram_texture": false
-}
+importer="keep"
 
 [deps]
 
