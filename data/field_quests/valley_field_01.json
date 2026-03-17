@@ -66,17 +66,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-8, 0, 4],
+              "position": [
+                -8,
+                0,
+                4
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [5, 0, -3],
+              "position": [
+                5,
+                0,
+                -3
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [-3, 0, -8],
+              "position": [
+                -3,
+                0,
+                -8
+              ],
               "enemy_id": "vulkure"
             }
           ]
@@ -109,17 +121,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-6, 0, 8],
+              "position": [
+                -6,
+                0,
+                8
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [4, 0, 5],
+              "position": [
+                4,
+                0,
+                5
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [-2, 0, -4],
+              "position": [
+                -2,
+                0,
+                -4
+              ],
               "enemy_id": "garapython"
             }
           ]
@@ -148,25 +172,45 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-5, 0, 2],
+              "position": [
+                -5,
+                0,
+                2
+              ],
               "enemy_id": "garapython"
             },
             {
               "type": "enemy",
-              "position": [3, 0, -5],
+              "position": [
+                3,
+                0,
+                -5
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "box",
-              "position": [12, 0, -8]
+              "position": [
+                12,
+                0,
+                -8
+              ]
             },
             {
               "type": "box",
-              "position": [14, 0, -6]
+              "position": [
+                14,
+                0,
+                -6
+              ]
             },
             {
               "type": "box",
-              "position": [13, 0, -10]
+              "position": [
+                13,
+                0,
+                -10
+              ]
             }
           ]
         },
@@ -196,12 +240,20 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-10, 0, 5],
+              "position": [
+                -10,
+                0,
+                5
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [2, 0, -4],
+              "position": [
+                2,
+                0,
+                -4
+              ],
               "enemy_id": "vulkure"
             }
           ]
@@ -232,17 +284,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-6, 0, 3],
+              "position": [
+                -6,
+                0,
+                3
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [4, 0, -5],
+              "position": [
+                4,
+                0,
+                -5
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [0, 0, 8],
+              "position": [
+                0,
+                0,
+                8
+              ],
               "enemy_id": "vulkure"
             }
           ]
@@ -273,21 +337,37 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-8, 0, 3],
+              "position": [
+                -8,
+                0,
+                3
+              ],
               "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
-              "position": [6, 0, -6],
+              "position": [
+                6,
+                0,
+                -6
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "box",
-              "position": [-15, 0, -12]
+              "position": [
+                -15,
+                0,
+                -12
+              ]
             },
             {
               "type": "box",
-              "position": [-13, 0, -14]
+              "position": [
+                -13,
+                0,
+                -14
+              ]
             }
           ]
         },
@@ -315,16 +395,28 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-4, 0, 0],
+              "position": [
+                -5.5,
+                0,
+                2.6
+              ],
               "enemy_id": "grimble"
             },
             {
               "type": "box",
-              "position": [8, 0, -12]
+              "position": [
+                8,
+                0,
+                -12
+              ]
             },
             {
               "type": "rare_box",
-              "position": [10, 0, -14]
+              "position": [
+                10,
+                0,
+                -14
+              ]
             }
           ]
         },
@@ -354,12 +446,20 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-4, 0, 6],
+              "position": [
+                -4,
+                0,
+                6
+              ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
-              "position": [7, 0, -2],
+              "position": [
+                7,
+                0,
+                -2
+              ],
               "enemy_id": "ghowl"
             }
           ]
@@ -390,17 +490,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-5, 0, 7],
+              "position": [
+                -5,
+                0,
+                7
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [3, 0, 2],
+              "position": [
+                3,
+                0,
+                2
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [8, 0, -4],
+              "position": [
+                8,
+                0,
+                -4
+              ],
               "enemy_id": "garahadan"
             }
           ]
@@ -431,26 +543,46 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-8, 0, 5],
+              "position": [
+                -8,
+                0,
+                5
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [6, 0, -7],
+              "position": [
+                6,
+                0,
+                -7
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [0, 0, 0],
+              "position": [
+                0,
+                0,
+                0
+              ],
               "enemy_id": "garapython"
             },
             {
               "type": "box",
-              "position": [14, 0, 12]
+              "position": [
+                14,
+                0,
+                12
+              ]
             },
             {
               "type": "box",
-              "position": [16, 0, 10]
+              "position": [
+                16,
+                0,
+                10
+              ]
             }
           ]
         },
@@ -480,17 +612,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-10, 0, 2],
+              "position": [
+                -10,
+                0,
+                2
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [5, 0, -8],
+              "position": [
+                5,
+                0,
+                -8
+              ],
               "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
-              "position": [0, 0, 5],
+              "position": [
+                0,
+                0,
+                5
+              ],
               "enemy_id": "ghowl"
             }
           ]
@@ -520,17 +664,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-6, 0, 4],
+              "position": [
+                -6,
+                0,
+                4
+              ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
-              "position": [4, 0, -2],
+              "position": [
+                4,
+                0,
+                -2
+              ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
-              "position": [0, 0, 8],
+              "position": [
+                0,
+                0,
+                8
+              ],
               "enemy_id": "grimble"
             }
           ]
@@ -561,12 +717,20 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-8, 0, 6],
+              "position": [
+                -8,
+                0,
+                6
+              ],
               "enemy_id": "garapython"
             },
             {
               "type": "enemy",
-              "position": [4, 0, -3],
+              "position": [
+                4,
+                0,
+                -3
+              ],
               "enemy_id": "ghowl"
             }
           ]
@@ -595,12 +759,20 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-3, 0, 4],
+              "position": [
+                -3,
+                0,
+                4
+              ],
               "enemy_id": "grimble"
             },
             {
               "type": "enemy",
-              "position": [5, 0, 0],
+              "position": [
+                5,
+                0,
+                0
+              ],
               "enemy_id": "ghowl"
             }
           ]
@@ -638,22 +810,38 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-10, 0, -6],
+              "position": [
+                -10,
+                0,
+                -6
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [6, 0, -10],
+              "position": [
+                6,
+                0,
+                -10
+              ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
-              "position": [-4, 0, -14],
+              "position": [
+                -4,
+                0,
+                -14
+              ],
               "enemy_id": "vulkure"
             },
             {
               "type": "box",
-              "position": [8, 0, -15]
+              "position": [
+                8,
+                0,
+                -15
+              ]
             }
           ]
         }
@@ -717,17 +905,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-6, 0, 5],
+              "position": [
+                -6,
+                0,
+                5
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [4, 0, -3],
+              "position": [
+                4,
+                0,
+                -3
+              ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
-              "position": [0, 0, 8],
+              "position": [
+                0,
+                0,
+                8
+              ],
               "enemy_id": "vulkure"
             }
           ]
@@ -758,17 +958,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-8, 0, 3],
+              "position": [
+                -8,
+                0,
+                3
+              ],
               "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
-              "position": [6, 0, -5],
+              "position": [
+                6,
+                0,
+                -5
+              ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
-              "position": [0, 0, 0],
+              "position": [
+                0,
+                0,
+                0
+              ],
               "enemy_id": "garapython"
             }
           ]
@@ -797,8 +1009,16 @@
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [-2, 0, -5],
-              "trigger_size": [10, 3, 6],
+              "position": [
+                -2,
+                0,
+                -5
+              ],
+              "trigger_size": [
+                10,
+                3,
+                6
+              ],
               "dialog": [
                 {
                   "speaker": "Scout",
@@ -812,12 +1032,20 @@
             },
             {
               "type": "enemy",
-              "position": [5, 0, 2],
+              "position": [
+                5,
+                0,
+                2
+              ],
               "enemy_id": "tormatible"
             },
             {
               "type": "enemy",
-              "position": [-3, 0, -4],
+              "position": [
+                -3,
+                0,
+                -4
+              ],
               "enemy_id": "garapython"
             }
           ]
@@ -848,21 +1076,37 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-10, 0, 4],
+              "position": [
+                -10,
+                0,
+                4
+              ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
-              "position": [5, 0, -6],
+              "position": [
+                5,
+                0,
+                -6
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "box",
-              "position": [14, 0, 10]
+              "position": [
+                14,
+                0,
+                10
+              ]
             },
             {
               "type": "box",
-              "position": [16, 0, 8]
+              "position": [
+                16,
+                0,
+                8
+              ]
             }
           ]
         },
@@ -891,17 +1135,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-4, 0, 3],
+              "position": [
+                -0.5,
+                0,
+                4.9
+              ],
               "enemy_id": "tormatible"
             },
             {
               "type": "enemy",
-              "position": [6, 0, -4],
+              "position": [
+                6,
+                0,
+                -4
+              ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
-              "position": [0, 0, -8],
+              "position": [
+                0,
+                0,
+                -8
+              ],
               "enemy_id": "ghowl"
             }
           ]
@@ -936,17 +1192,29 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [0, 0, 0],
+              "position": [
+                0,
+                0,
+                0
+              ],
               "enemy_id": "reyburn"
             },
             {
               "type": "enemy",
-              "position": [-10, 0, 8],
+              "position": [
+                -10,
+                0,
+                8
+              ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
-              "position": [10, 0, 8],
+              "position": [
+                10,
+                0,
+                8
+              ],
               "enemy_id": "ghowl"
             }
           ]

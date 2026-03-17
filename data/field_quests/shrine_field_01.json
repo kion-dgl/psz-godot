@@ -439,9 +439,9 @@
             {
               "type": "enemy",
               "position": [
-                -10,
+                -10.3,
                 0,
-                -6
+                -1.0
               ],
               "enemy_id": "eulid"
             },
@@ -457,9 +457,9 @@
             {
               "type": "enemy",
               "position": [
-                -4,
+                -1.7,
                 0,
-                -14
+                -12.1
               ],
               "enemy_id": "eulidveil"
             },
