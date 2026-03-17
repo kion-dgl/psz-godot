@@ -9,18 +9,18 @@
     {
       "type": "grid",
       "area": "a",
-      "start_pos": "0,3",
-      "end_pos": "2,0",
+      "start_pos": "0,1",
+      "end_pos": "1,3",
       "cells": [
         {
-          "pos": "0,3",
+          "pos": "0,1",
           "stage_id": "s03a_sa1",
-          "rotation": 90,
+          "rotation": 0,
           "connections": {
-            "west": "0,2"
+            "south": "1,1"
           },
           "portals": {
-            "west": "portal_1770733436575_0jjzynv4j",
+            "south": "portal_1770733436575_0jjzynv4j",
             "default": "default"
           },
           "is_start": true,
@@ -37,20 +37,24 @@
           "objects": []
         },
         {
-          "pos": "0,2",
-          "stage_id": "s03a_lc1",
-          "rotation": 90,
+          "pos": "1,1",
+          "stage_id": "s03a_xb2",
+          "rotation": 0,
           "connections": {
-            "east": "0,3",
-            "south": "1,2"
+            "west": "1,0",
+            "south": "2,1",
+            "north": "0,1",
+            "east": "1,2"
           },
           "portals": {
-            "east": "portal_1770724327457_yqz9rnacz",
-            "south": "portal_1771825096918_r3nc1t46b"
+            "west": "portal_1771825404103_7ok8p65ir",
+            "south": "portal_1770725534611_eq06pfawr",
+            "north": "portal_1770725561755_8cua208tb",
+            "east": "portal_1771825410903_wbdv4259s"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -63,34 +67,41 @@
             {
               "type": "enemy",
               "position": [
-                -8.8,
+                16.4,
                 0,
-                13.0
+                -2.4
               ],
-              "enemy_id": "usanny"
+              "enemy_id": "usanimere"
             },
             {
               "type": "enemy",
               "position": [
-                10.1,
+                26.2,
                 0,
-                -6.0
+                6.3
               ],
-              "enemy_id": "usanimere"
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.4,
+                0,
+                1.6
+              ],
+              "enemy_id": "reyhound"
             }
           ]
         },
         {
-          "pos": "1,2",
-          "stage_id": "s03a_ic1",
-          "rotation": 0,
+          "pos": "1,0",
+          "stage_id": "s03a_nb2",
+          "rotation": 270,
           "connections": {
-            "north": "0,2",
-            "south": "2,2"
+            "east": "1,1"
           },
           "portals": {
-            "north": "portal_1770724078993_5elsmcsc4",
-            "south": "portal_1770724068139_aswsf0cji"
+            "east": "portal_1770724424456_ucexb8mrp"
           },
           "is_start": false,
           "is_end": false,
@@ -107,34 +118,211 @@
             {
               "type": "enemy",
               "position": [
-                18.2,
+                -6.2,
                 0,
-                5.3
+                13.8
+              ],
+              "enemy_id": "usanimere"
+            },
+            {
+              "type": "box",
+              "position": [
+                15.2,
+                0,
+                6.4
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -4.7,
+                0,
+                10.7
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s03a_ic3",
+          "rotation": 90,
+          "connections": {
+            "west": "1,1",
+            "east": "1,3"
+          },
+          "portals": {
+            "west": "portal_1770724158723_pb0rd3r6e",
+            "east": "portal_1770724176247_38q7705rp"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                15.0,
+                0,
+                -8.0
               ],
               "enemy_id": "usanimere"
             },
             {
               "type": "enemy",
               "position": [
-                18.7,
+                -12.0,
                 0,
-                -21.9
+                -13.8
               ],
-              "enemy_id": "reyhound"
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.2,
+                0,
+                -1.1
+              ],
+              "enemy_id": "usanny"
             }
           ]
         },
         {
-          "pos": "2,2",
-          "stage_id": "s03a_lc2",
-          "rotation": 270,
+          "pos": "2,1",
+          "stage_id": "s03a_ib2",
+          "rotation": 0,
           "connections": {
-            "west": "2,1",
-            "north": "1,2"
+            "south": "3,1",
+            "north": "1,1"
           },
           "portals": {
-            "west": "portal_1770724373813_qo6ja9myl",
-            "north": "portal_1771825120791_adw7ezl6e"
+            "south": "portal_1770724007474_9kh6jog21",
+            "north": "portal_1770724021228_2sbc5cfro"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -1.3,
+                0,
+                9.6
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                17.6,
+                0,
+                9.8
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.7,
+                0,
+                -5.5
+              ],
+              "enemy_id": "usanny"
+            }
+          ]
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s03a_nb2",
+          "rotation": 90,
+          "connections": {
+            "west": "1,2"
+          },
+          "portals": {
+            "west": "portal_1770724424456_ucexb8mrp"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -0.2,
+                0,
+                -18.0
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -15.4,
+                0,
+                -19.1
+              ],
+              "enemy_id": "usanimere"
+            },
+            {
+              "type": "box",
+              "position": [
+                -10.7,
+                0,
+                11.0
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -18.4,
+                0,
+                -5.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -8.5,
+                0,
+                -12.5
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "3,1",
+          "stage_id": "s03a_na1",
+          "rotation": 180,
+          "connections": {
+            "north": "2,1"
+          },
+          "portals": {
+            "north": "portal_1770724402240_3wzf2nh7w"
           },
           "is_start": false,
           "is_end": false,
@@ -151,130 +339,43 @@
             {
               "type": "enemy",
               "position": [
-                -13.4,
+                -9.8,
                 0,
-                -16.3
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                30.5,
-                0,
-                -17.2
-              ],
-              "enemy_id": "reyhound"
-            }
-          ]
-        },
-        {
-          "pos": "2,1",
-          "stage_id": "s03a_ib1",
-          "rotation": 90,
-          "connections": {
-            "west": "2,0",
-            "east": "2,2"
-          },
-          "portals": {
-            "west": "portal_1770723931285_tso6bvs29",
-            "east": "portal_1770723916745_dtri7lila"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 4,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -12.1,
-                0,
-                17.6
-              ],
-              "enemy_id": "usanimere"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                1.7,
-                0,
-                -14.3
+                9.8
               ],
               "enemy_id": "usanny"
             },
             {
               "type": "enemy",
               "position": [
-                -12.3,
+                -6.0,
                 0,
-                0.3
-              ],
-              "enemy_id": "hildeghana"
-            }
-          ]
-        },
-        {
-          "pos": "2,0",
-          "stage_id": "s03a_na1",
-          "rotation": 270,
-          "connections": {
-            "east": "2,1"
-          },
-          "portals": {
-            "east": "portal_1770724402240_3wzf2nh7w"
-          },
-          "is_start": false,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 5,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                5.0,
-                0,
-                -9.9
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -2.3,
-                0,
-                10.7
+                5.8
               ],
               "enemy_id": "usanny"
             },
             {
               "type": "box",
               "position": [
-                -9.5,
+                -4.6,
                 0,
-                10.4
+                -11.2
               ]
             },
             {
-              "type": "rare_box",
+              "type": "box",
               "position": [
-                0.0,
+                5.3,
                 0,
-                -2.6
+                -0.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                5.0,
+                0,
+                -5.2
               ]
             }
           ]
@@ -313,27 +414,36 @@
             {
               "type": "enemy",
               "position": [
-                6.3,
+                14.2,
                 0,
-                1.9
+                13.3
               ],
-              "enemy_id": "reyhound"
+              "enemy_id": "hildeghana"
             },
             {
               "type": "enemy",
               "position": [
-                3.0,
+                -5.7,
                 0,
-                -6.2
+                -9.2
               ],
               "enemy_id": "usanimere"
             },
             {
+              "type": "enemy",
+              "position": [
+                7.3,
+                0,
+                -5.4
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
               "type": "box",
               "position": [
-                0.4,
+                -0.3,
                 0,
-                7.7
+                -10.0
               ]
             }
           ]
@@ -343,18 +453,18 @@
     {
       "type": "grid",
       "area": "b",
-      "start_pos": "4,0",
-      "end_pos": "0,0",
+      "start_pos": "0,3",
+      "end_pos": "2,0",
       "cells": [
         {
-          "pos": "4,0",
+          "pos": "0,3",
           "stage_id": "s03b_sa1",
           "rotation": 90,
           "connections": {
-            "east": "4,1"
+            "west": "0,2"
           },
           "portals": {
-            "east": "portal_1770726548654_oycyfmnn7"
+            "west": "portal_1770726528804_65npyap1o"
           },
           "is_start": true,
           "is_end": false,
@@ -370,16 +480,16 @@
           "objects": []
         },
         {
-          "pos": "4,1",
-          "stage_id": "s03b_ib2",
+          "pos": "0,2",
+          "stage_id": "s03b_lb3",
           "rotation": 90,
           "connections": {
-            "west": "4,0",
-            "east": "4,2"
+            "south": "1,2",
+            "east": "0,3"
           },
           "portals": {
-            "west": "portal_1770725739472_at4z8xlml",
-            "east": "portal_1770725725304_4aaht7788"
+            "south": "portal_1771825482627_93ccoohau",
+            "east": "portal_1770725946219_ha5vwnji3"
           },
           "is_start": false,
           "is_end": false,
@@ -396,43 +506,43 @@
             {
               "type": "enemy",
               "position": [
-                -2.8,
+                -5.9,
                 0,
-                20.9
+                1.9
               ],
               "enemy_id": "usanimere"
             },
             {
               "type": "enemy",
               "position": [
-                -7.6,
+                -8.4,
                 0,
-                -2.1
+                -8.8
               ],
               "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
               "position": [
-                4.2,
+                -1.7,
                 0,
-                -0.9
+                4.5
               ],
-              "enemy_id": "usanimere"
+              "enemy_id": "usanny"
             }
           ]
         },
         {
-          "pos": "4,2",
-          "stage_id": "s03b_lc2",
-          "rotation": 270,
+          "pos": "1,2",
+          "stage_id": "s03b_ic3",
+          "rotation": 0,
           "connections": {
-            "west": "4,1",
-            "north": "3,2"
+            "south": "2,2",
+            "north": "0,2"
           },
           "portals": {
-            "west": "portal_1770726393370_2nra42l1h",
-            "north": "portal_1771826359864_3iztbfrsg"
+            "south": "portal_1770725853822_n4epcpmr9",
+            "north": "portal_1770725865315_z0q9secmh"
           },
           "is_start": false,
           "is_end": false,
@@ -449,43 +559,43 @@
             {
               "type": "enemy",
               "position": [
-                3.7,
+                -18.4,
                 0,
-                -20.8
+                -13.3
               ],
               "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
               "position": [
-                -9.6,
+                -4.2,
                 0,
-                4.2
+                2.6
               ],
-              "enemy_id": "reyhound"
+              "enemy_id": "usanny"
             },
             {
               "type": "enemy",
               "position": [
-                -5.0,
+                -15.3,
                 0,
-                -19.6
+                0.5
               ],
-              "enemy_id": "reyhound"
+              "enemy_id": "usanimere"
             }
           ]
         },
         {
-          "pos": "3,2",
-          "stage_id": "s03b_ic3",
-          "rotation": 0,
+          "pos": "2,2",
+          "stage_id": "s03b_lc2",
+          "rotation": 270,
           "connections": {
-            "north": "2,2",
-            "south": "4,2"
+            "west": "2,1",
+            "north": "1,2"
           },
           "portals": {
-            "north": "portal_1770725865315_z0q9secmh",
-            "south": "portal_1770725853822_n4epcpmr9"
+            "west": "portal_1770726393370_2nra42l1h",
+            "north": "portal_1771826359864_3iztbfrsg"
           },
           "is_start": false,
           "is_end": false,
@@ -502,34 +612,43 @@
             {
               "type": "enemy",
               "position": [
-                -1.8,
+                10.2,
                 0,
-                -8.5
+                14.9
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.0,
+                0,
+                9.3
               ],
               "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
               "position": [
-                13.8,
+                6.5,
                 0,
-                2.2
+                -10.5
               ],
-              "enemy_id": "usanimere"
+              "enemy_id": "reyhound"
             }
           ]
         },
         {
-          "pos": "2,2",
-          "stage_id": "s03b_lb3",
+          "pos": "2,1",
+          "stage_id": "s03b_ib1",
           "rotation": 90,
           "connections": {
-            "east": "2,3",
-            "south": "3,2"
+            "west": "2,0",
+            "east": "2,2"
           },
           "portals": {
-            "east": "portal_1770725946219_ha5vwnji3",
-            "south": "portal_1771825482627_93ccoohau"
+            "west": "portal_1770725695157_thdqlrjg4",
+            "east": "portal_1770725706335_vtdmi7t4r"
           },
           "is_start": false,
           "is_end": false,
@@ -546,46 +665,44 @@
             {
               "type": "enemy",
               "position": [
-                -5.5,
+                14.1,
                 0,
-                -4.8
+                -8.3
               ],
-              "enemy_id": "reyhound"
+              "enemy_id": "hildeghana"
             },
             {
               "type": "enemy",
               "position": [
-                -10.8,
+                -0.9,
                 0,
-                -26.3
-              ],
-              "enemy_id": "usanimere"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                1.6,
-                0,
-                -2.8
+                -15.3
               ],
               "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.5,
+                0,
+                -5.3
+              ],
+              "enemy_id": "hildeghana"
             }
           ]
         },
         {
-          "pos": "2,3",
-          "stage_id": "s03b_ic3",
-          "rotation": 90,
+          "pos": "2,0",
+          "stage_id": "s03b_nb2",
+          "rotation": 270,
           "connections": {
-            "west": "2,2",
-            "east": "2,4"
+            "east": "2,1"
           },
           "portals": {
-            "west": "portal_1770725853822_n4epcpmr9",
-            "east": "portal_1770725865315_z0q9secmh"
+            "east": "portal_1770726458075_bz9f98pru"
           },
           "is_start": false,
-          "is_end": false,
+          "is_end": true,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
@@ -599,405 +716,35 @@
             {
               "type": "enemy",
               "position": [
-                -5.8,
+                11.1,
                 0,
-                -9.6
-              ],
-              "enemy_id": "usanny"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -10.9,
-                0,
-                2.4
-              ],
-              "enemy_id": "usanimere"
-            }
-          ]
-        },
-        {
-          "pos": "2,4",
-          "stage_id": "s03b_lc2",
-          "rotation": 270,
-          "connections": {
-            "west": "2,3",
-            "north": "1,4"
-          },
-          "portals": {
-            "west": "portal_1770726393370_2nra42l1h",
-            "north": "portal_1771826359864_3iztbfrsg"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 6,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -12.8,
-                0,
-                -2.9
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                8.6,
-                0,
-                6.9
-              ],
-              "enemy_id": "usanny"
-            }
-          ]
-        },
-        {
-          "pos": "1,4",
-          "stage_id": "s03b_ic3",
-          "rotation": 0,
-          "connections": {
-            "north": "0,4",
-            "south": "2,4"
-          },
-          "portals": {
-            "north": "portal_1770725865315_z0q9secmh",
-            "south": "portal_1770725853822_n4epcpmr9"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 7,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                17.7,
-                0,
-                17.8
-              ],
-              "enemy_id": "usanimere"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -15.3,
-                0,
-                -2.3
-              ],
-              "enemy_id": "usanimere"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                9.5,
-                0,
-                6.1
-              ],
-              "enemy_id": "usanimere"
-            }
-          ]
-        },
-        {
-          "pos": "0,4",
-          "stage_id": "s03b_lc2",
-          "rotation": 180,
-          "connections": {
-            "west": "0,3",
-            "south": "1,4"
-          },
-          "portals": {
-            "west": "portal_1771826359864_3iztbfrsg",
-            "south": "portal_1770726393370_2nra42l1h"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 8,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                21.0,
-                0,
-                8.3
-              ],
-              "enemy_id": "usanimere"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                16.2,
-                0,
-                12.3
-              ],
-              "enemy_id": "usanny"
-            }
-          ]
-        },
-        {
-          "pos": "0,3",
-          "stage_id": "s03b_td2",
-          "rotation": 0,
-          "connections": {
-            "west": "0,2",
-            "east": "0,4",
-            "south": "1,3"
-          },
-          "portals": {
-            "west": "portal_1771826580279_97thq75lx",
-            "east": "portal_1771826590677_76s29vdos",
-            "south": "portal_1770730358671_3utbvtiid"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 9,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                12.8,
-                0,
-                -4.1
+                -2.7
               ],
               "enemy_id": "hildeghana"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                11.3,
-                0,
-                13.2
-              ],
-              "enemy_id": "usanny"
-            }
-          ]
-        },
-        {
-          "pos": "1,3",
-          "stage_id": "s03b_nc2",
-          "rotation": 180,
-          "connections": {
-            "north": "0,3"
-          },
-          "portals": {
-            "north": "portal_1770726478489_wuhnlspfg"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 10,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -8.3,
-                0,
-                4.5
-              ],
-              "enemy_id": "hildeghana"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                2.2,
-                0,
-                -17.6
-              ],
-              "enemy_id": "stagg"
             },
             {
               "type": "box",
               "position": [
-                -16.3,
+                19.1,
                 0,
-                -30.3
+                16.2
               ]
             },
             {
               "type": "box",
               "position": [
-                8.3,
+                -10.5,
                 0,
-                -15.6
+                -14.1
               ]
-            }
-          ]
-        },
-        {
-          "pos": "0,2",
-          "stage_id": "s03b_ic1",
-          "rotation": 90,
-          "connections": {
-            "west": "0,1",
-            "east": "0,3"
-          },
-          "portals": {
-            "west": "portal_1770725830471_io341ffla",
-            "east": "portal_1770725818346_at5nongav"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 10,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                6.0,
-                0,
-                -19.0
-              ],
-              "enemy_id": "reyhound"
             },
             {
-              "type": "enemy",
+              "type": "box",
               "position": [
-                9.4,
+                3.5,
                 0,
-                -6.5
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -2.4,
-                0,
-                13.3
-              ],
-              "enemy_id": "reyhound"
-            }
-          ]
-        },
-        {
-          "pos": "0,1",
-          "stage_id": "s03b_ic1",
-          "rotation": 90,
-          "connections": {
-            "west": "0,0",
-            "east": "0,2"
-          },
-          "portals": {
-            "west": "portal_1770725830471_io341ffla",
-            "east": "portal_1770725818346_at5nongav"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 11,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                13.3,
-                0,
-                10.7
-              ],
-              "enemy_id": "stagg"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                0.9,
-                0,
-                -19.4
-              ],
-              "enemy_id": "hildeghana"
-            }
-          ]
-        },
-        {
-          "pos": "0,0",
-          "stage_id": "s03b_ib2",
-          "rotation": 90,
-          "connections": {
-            "east": "0,1"
-          },
-          "portals": {
-            "east": "portal_1770725725304_4aaht7788",
-            "west": "portal_1770725739472_at4z8xlml"
-          },
-          "is_start": false,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "west",
-          "path_order": 12,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                27.7,
-                0,
-                -7.8
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -14.5,
-                0,
-                6.4
-              ],
-              "enemy_id": "usanimere"
+                -3.1
+              ]
             }
           ]
         }
@@ -1032,27 +779,27 @@
             {
               "type": "enemy",
               "position": [
-                3.9,
+                -5.1,
                 0,
-                3.3
+                0.3
               ],
               "enemy_id": "hildegao"
             },
             {
               "type": "enemy",
               "position": [
-                -9.6,
+                4.9,
                 0,
-                -8.1
+                -2.1
               ],
-              "enemy_id": "reyhound"
+              "enemy_id": "usanny"
             },
             {
               "type": "enemy",
               "position": [
-                -10.8,
+                -4.2,
                 0,
-                1.4
+                -9.6
               ],
               "enemy_id": "usanny"
             }

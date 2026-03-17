@@ -9,18 +9,18 @@
     {
       "type": "grid",
       "area": "a",
-      "start_pos": "0,0",
-      "end_pos": "4,0",
+      "start_pos": "0,3",
+      "end_pos": "2,0",
       "cells": [
         {
-          "pos": "0,0",
+          "pos": "0,3",
           "stage_id": "s07a_sa1",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
-            "south": "1,0"
+            "west": "0,2"
           },
           "portals": {
-            "south": "portal_1770820945204_h8r8u5zrh",
+            "west": "portal_1770820945204_h8r8u5zrh",
             "default": "default"
           },
           "is_start": true,
@@ -37,16 +37,16 @@
           "objects": []
         },
         {
-          "pos": "1,0",
-          "stage_id": "s07a_ic3",
-          "rotation": 0,
+          "pos": "0,2",
+          "stage_id": "s07a_lb1",
+          "rotation": 90,
           "connections": {
-            "south": "2,0",
-            "north": "0,0"
+            "east": "0,3",
+            "south": "1,2"
           },
           "portals": {
-            "south": "portal_1770820780307_tq7j1gsto",
-            "north": "portal_1770820771544_qkosjrs39"
+            "east": "portal_1770820806240_n59b2weqw",
+            "south": "portal_1771832207730_mpsadru86"
           },
           "is_start": false,
           "is_end": false,
@@ -63,34 +63,43 @@
             {
               "type": "enemy",
               "position": [
-                6.3,
+                3.8,
                 0,
-                12.4
+                -15.2
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.2,
+                0,
+                13.2
               ],
               "enemy_id": "eulid"
             },
             {
               "type": "enemy",
               "position": [
-                -3.3,
+                -25.9,
                 0,
-                -8.8
+                0.1
               ],
-              "enemy_id": "eulada"
+              "enemy_id": "eulidveil"
             }
           ]
         },
         {
-          "pos": "2,0",
-          "stage_id": "s07a_ic3",
+          "pos": "1,2",
+          "stage_id": "s07a_ga1",
           "rotation": 0,
           "connections": {
-            "south": "3,0",
-            "north": "1,0"
+            "north": "0,2",
+            "south": "2,2"
           },
           "portals": {
-            "south": "portal_1770820780307_tq7j1gsto",
-            "north": "portal_1770820771544_qkosjrs39"
+            "north": "portal_1770820698313_sivtrwb7e",
+            "south": "portal_1770820706677_bt9phciaz"
           },
           "is_start": false,
           "is_end": false,
@@ -107,43 +116,34 @@
             {
               "type": "enemy",
               "position": [
-                -11.6,
+                -16.7,
                 0,
-                -3.5
-              ],
-              "enemy_id": "eulidveil"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -9.2,
-                0,
-                -10.1
+                1.2
               ],
               "enemy_id": "eulid"
             },
             {
               "type": "enemy",
               "position": [
-                3.9,
+                6.6,
                 0,
-                -4.7
+                6.8
               ],
               "enemy_id": "eulid"
             }
           ]
         },
         {
-          "pos": "3,0",
-          "stage_id": "s07a_ga1",
-          "rotation": 0,
+          "pos": "2,2",
+          "stage_id": "s07a_lb3",
+          "rotation": 270,
           "connections": {
-            "south": "4,0",
-            "north": "2,0"
+            "north": "1,2",
+            "west": "2,1"
           },
           "portals": {
-            "south": "portal_1770820706677_bt9phciaz",
-            "north": "portal_1770820698313_sivtrwb7e"
+            "north": "portal_1771832222555_w7bd7g8l4",
+            "west": "portal_1770820815324_we9l0xtzc"
           },
           "is_start": false,
           "is_end": false,
@@ -160,33 +160,76 @@
             {
               "type": "enemy",
               "position": [
-                -6.5,
+                -0.4,
                 0,
-                10.5
+                9.7
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "eulada"
             },
             {
               "type": "enemy",
               "position": [
-                1.4,
+                0.7,
                 0,
-                -10.7
+                5.6
+              ],
+              "enemy_id": "eulada"
+            }
+          ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s07a_ic1",
+          "rotation": 90,
+          "connections": {
+            "east": "2,2",
+            "west": "2,0"
+          },
+          "portals": {
+            "east": "portal_1770820762723_f9zafntym",
+            "west": "portal_1770820755045_6v6k1j6gq"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                3.4,
+                0,
+                5.3
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.3,
+                0,
+                4.1
               ],
               "enemy_id": "euladaveil"
             }
           ]
         },
         {
-          "pos": "4,0",
-          "stage_id": "s07a_ib2",
-          "rotation": 0,
+          "pos": "2,0",
+          "stage_id": "s07a_nb2",
+          "rotation": 270,
           "connections": {
-            "north": "3,0"
+            "east": "2,1"
           },
           "portals": {
-            "north": "portal_1770820737996_zpoxpi8rn",
-            "south": "portal_1770820744066_ruwnjgnk0"
+            "east": "portal_1770820882882_sahshwu0q"
           },
           "is_start": false,
           "is_end": true,
@@ -197,26 +240,50 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "south",
-          "path_order": 4,
+          "warp_edge": "",
+          "path_order": 5,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                1.3,
+                5.8,
                 0,
-                -6.0
+                0.7
               ],
               "enemy_id": "euladaveil"
             },
             {
               "type": "enemy",
               "position": [
-                -4.9,
+                -5.2,
                 0,
-                5.5
+                -14.6
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "box",
+              "position": [
+                9.4,
+                0,
+                3.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -4.8,
+                0,
+                3.8
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                2.3,
+                0,
+                12.2
+              ]
             }
           ]
         }
@@ -254,36 +321,27 @@
             {
               "type": "enemy",
               "position": [
-                5.3,
+                5.2,
                 0,
-                -3.3
+                -0.2
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "eulada"
             },
             {
               "type": "enemy",
               "position": [
-                -9.8,
+                -1.8,
                 0,
-                6.5
+                5.3
               ],
-              "enemy_id": "euladaveil"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                1.2,
-                0,
-                -9.6
-              ],
-              "enemy_id": "arkzein"
+              "enemy_id": "eulada"
             },
             {
               "type": "box",
               "position": [
-                -1.5,
+                -5.5,
                 0,
-                5.1
+                13.6
               ]
             }
           ]
@@ -293,18 +351,18 @@
     {
       "type": "grid",
       "area": "b",
-      "start_pos": "0,2",
-      "end_pos": "3,3",
+      "start_pos": "4,4",
+      "end_pos": "4,0",
       "cells": [
         {
-          "pos": "0,2",
+          "pos": "4,4",
           "stage_id": "s07b_sa1",
           "rotation": 0,
           "connections": {
-            "south": "1,2"
+            "north": "3,4"
           },
           "portals": {
-            "south": "portal_1770821336434_64xtxqez5"
+            "north": "portal_1770821319508_586v6o3nj"
           },
           "is_start": true,
           "is_end": false,
@@ -320,24 +378,20 @@
           "objects": []
         },
         {
-          "pos": "1,2",
-          "stage_id": "s07b_xb2",
+          "pos": "3,4",
+          "stage_id": "s07b_ib1",
           "rotation": 0,
           "connections": {
-            "east": "1,3",
-            "south": "2,2",
-            "north": "0,2",
-            "west": "1,1"
+            "north": "2,4",
+            "south": "4,4"
           },
           "portals": {
-            "east": "portal_1771832592883_q16nkuzdp",
-            "south": "portal_1770821529370_yf1wwgl7f",
-            "north": "portal_1770821547402_lfjqkv2mr",
-            "west": "portal_1771832583001_jj964rze0"
+            "north": "portal_1770821121482_xwrvk4acg",
+            "south": "portal_1770821112454_omguyidhi"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -350,199 +404,91 @@
             {
               "type": "enemy",
               "position": [
-                9.6,
+                -4.1,
                 0,
-                -11.4
+                9.7
               ],
               "enemy_id": "eulidveil"
             },
             {
               "type": "enemy",
               "position": [
-                -0.6,
+                -11.1,
                 0,
-                10.3
-              ],
-              "enemy_id": "eulid"
-            }
-          ]
-        },
-        {
-          "pos": "1,1",
-          "stage_id": "s07b_nb2",
-          "rotation": 270,
-          "connections": {
-            "east": "1,2"
-          },
-          "portals": {
-            "east": "portal_1770821292699_20ynpvr0q"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -5.4,
-                0,
-                -1.2
-              ],
-              "enemy_id": "eulid"
-            },
-            {
-              "type": "box",
-              "position": [
-                9.0,
-                0,
-                -3.3
-              ]
-            },
-            {
-              "type": "rare_box",
-              "position": [
-                1.5,
-                0,
-                7.2
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "1,3",
-          "stage_id": "s07b_ga1",
-          "rotation": 90,
-          "connections": {
-            "west": "1,2"
-          },
-          "portals": {
-            "west": "portal_1770821100591_3ijqg0tu0"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -3.5,
-                0,
-                5.6
-              ],
-              "enemy_id": "eulidveil"
-            },
-            {
-              "type": "box",
-              "position": [
-                13.7,
-                0,
-                -0.4
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -13.9,
-                0,
-                -5.9
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                11.1,
-                0,
-                -5.5
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s07b_ic1",
-          "rotation": 0,
-          "connections": {
-            "south": "3,2",
-            "north": "1,2"
-          },
-          "portals": {
-            "south": "portal_1770821147803_a8tp3d4iw",
-            "north": "portal_1770821157208_ncybswah6"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                4.2,
-                0,
-                -0.0
-              ],
-              "enemy_id": "eulidveil"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -2.4,
-                0,
-                -25.9
+                6.2
               ],
               "enemy_id": "eulid"
             },
             {
               "type": "enemy",
               "position": [
-                2.8,
+                -14.6,
                 0,
-                -12.6
+                4.4
               ],
               "enemy_id": "eulidveil"
             }
           ]
         },
         {
-          "pos": "3,2",
-          "stage_id": "s07b_tb3",
+          "pos": "2,4",
+          "stage_id": "s07b_lb3",
           "rotation": 180,
           "connections": {
-            "east": "3,3",
-            "north": "2,2",
-            "west": "3,1"
+            "west": "2,3",
+            "south": "3,4"
           },
           "portals": {
-            "east": "portal_1771832486881_za5d5u0ch",
-            "north": "portal_1770821379571_7two93w77",
-            "west": "portal_1771832476633_z8ei9qq8j"
+            "west": "portal_1771832424714_dz2ye4837",
+            "south": "portal_1770821214729_dreia2o9r"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                1.7,
+                0,
+                27.6
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -27.6,
+                0,
+                2.6
+              ],
+              "enemy_id": "eulid"
+            }
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s07b_ib1",
+          "rotation": 90,
+          "connections": {
+            "east": "2,4",
+            "west": "2,2"
+          },
+          "portals": {
+            "east": "portal_1770821121482_xwrvk4acg",
+            "west": "portal_1770821112454_omguyidhi"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -555,41 +501,43 @@
             {
               "type": "enemy",
               "position": [
-                -8.1,
+                -6.1,
                 0,
-                -6.3
+                10.5
               ],
               "enemy_id": "eulada"
             },
             {
               "type": "enemy",
               "position": [
-                14.9,
+                2.4,
                 0,
-                -6.8
+                -3.9
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "eulada"
             },
             {
               "type": "enemy",
               "position": [
-                -10.9,
+                -12.9,
                 0,
-                -4.2
+                -2.4
               ],
-              "enemy_id": "eulada"
+              "enemy_id": "eulid"
             }
           ]
         },
         {
-          "pos": "3,1",
-          "stage_id": "s07b_nc2",
-          "rotation": 270,
+          "pos": "2,2",
+          "stage_id": "s07b_lc1",
+          "rotation": 0,
           "connections": {
-            "east": "3,2"
+            "east": "2,3",
+            "north": "1,2"
           },
           "portals": {
-            "east": "portal_1770821304018_wrhhde2pc"
+            "east": "portal_1771832440949_qnltvzi2r",
+            "north": "portal_1770821248109_xkzy76jy6"
           },
           "is_start": false,
           "is_end": false,
@@ -606,49 +554,445 @@
             {
               "type": "enemy",
               "position": [
-                11.5,
+                1.9,
                 0,
-                9.5
+                -24.9
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.8,
+                0,
+                10.7
+              ],
+              "enemy_id": "eulidveil"
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s07b_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,2",
+            "south": "2,2"
+          },
+          "portals": {
+            "north": "portal_1770821121482_xwrvk4acg",
+            "south": "portal_1770821112454_omguyidhi"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3.8,
+                0,
+                -13.9
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.5,
+                0,
+                -12.2
+              ],
+              "enemy_id": "eulidveil"
+            }
+          ]
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s07b_lc1",
+          "rotation": 180,
+          "connections": {
+            "west": "0,1",
+            "south": "1,2"
+          },
+          "portals": {
+            "west": "portal_1771832440949_qnltvzi2r",
+            "south": "portal_1770821248109_xkzy76jy6"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -0.3,
+                0,
+                -3.3
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.8,
+                0,
+                -3.5
+              ],
+              "enemy_id": "eulid"
+            }
+          ]
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s07b_ic1",
+          "rotation": 90,
+          "connections": {
+            "east": "0,2",
+            "west": "0,0"
+          },
+          "portals": {
+            "east": "portal_1770821157208_ncybswah6",
+            "west": "portal_1770821147803_a8tp3d4iw"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                8.4,
+                0,
+                -6.5
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.6,
+                0,
+                -1.7
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.1,
+                0,
+                -7.1
+              ],
+              "enemy_id": "eulada"
+            }
+          ]
+        },
+        {
+          "pos": "0,0",
+          "stage_id": "s07b_lb3",
+          "rotation": 90,
+          "connections": {
+            "east": "0,1",
+            "south": "1,0"
+          },
+          "portals": {
+            "east": "portal_1770821214729_dreia2o9r",
+            "south": "portal_1771832424714_dz2ye4837"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 8,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -2.2,
+                0,
+                8.1
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.0,
+                0,
+                -13.3
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.5,
+                0,
+                13.6
+              ],
+              "enemy_id": "eulid"
+            }
+          ]
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s07b_tc3",
+          "rotation": 270,
+          "connections": {
+            "north": "0,0",
+            "east": "1,1",
+            "south": "2,0"
+          },
+          "portals": {
+            "north": "portal_1771832505886_oojsdm9ag",
+            "east": "portal_1770821399404_8ba46zun8",
+            "south": "portal_1771832514624_oyfjokfbi"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 9,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                2.3,
+                0,
+                -23.5
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.5,
+                0,
+                -8.6
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.7,
+                0,
+                -1.0
+              ],
+              "enemy_id": "arkzein"
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s07b_na1",
+          "rotation": 90,
+          "connections": {
+            "west": "1,0"
+          },
+          "portals": {
+            "west": "portal_1770821281035_hai74ddv7"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 10,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -8.6,
+                0,
+                -0.9
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.5,
+                0,
+                12.0
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "box",
+              "position": [
+                6.4,
+                0,
+                -15.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -2.6,
+                0,
+                -9.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                13.9,
+                0,
+                1.5
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s07b_ic1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,0",
+            "south": "3,0"
+          },
+          "portals": {
+            "north": "portal_1770821157208_ncybswah6",
+            "south": "portal_1770821147803_a8tp3d4iw"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 10,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                3.5,
+                0,
+                1.3
               ],
               "enemy_id": "eulidveil"
             },
             {
               "type": "enemy",
               "position": [
-                7.1,
+                -3.8,
                 0,
-                5.7
+                -10.9
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "arkzein"
             },
             {
-              "type": "box",
+              "type": "enemy",
               "position": [
-                -14.1,
+                1.8,
                 0,
-                5.9
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -25.1,
-                0,
-                -2.1
-              ]
+                11.6
+              ],
+              "enemy_id": "eulidveil"
             }
           ]
         },
         {
-          "pos": "3,3",
-          "stage_id": "s07b_ib2",
-          "rotation": 90,
+          "pos": "3,0",
+          "stage_id": "s07b_ic1",
+          "rotation": 0,
           "connections": {
-            "west": "3,2"
+            "north": "2,0",
+            "south": "4,0"
           },
           "portals": {
-            "west": "portal_1770821137670_yfbvpczjr",
-            "east": "portal_1770821129359_00qk8aogv"
+            "north": "portal_1770821157208_ncybswah6",
+            "south": "portal_1770821147803_a8tp3d4iw"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 11,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -1.8,
+                0,
+                -7.1
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.5,
+                0,
+                0.1
+              ],
+              "enemy_id": "eulada"
+            }
+          ]
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s07b_ic3",
+          "rotation": 0,
+          "connections": {
+            "north": "3,0"
+          },
+          "portals": {
+            "north": "portal_1770821166284_bdecyq3n9",
+            "south": "portal_1770821173608_68xxg3j9k"
           },
           "is_start": false,
           "is_end": true,
@@ -659,35 +1003,35 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "east",
-          "path_order": 4,
+          "warp_edge": "south",
+          "path_order": 12,
           "objects": [
             {
               "type": "enemy",
               "position": [
-                -3.5,
+                11.9,
                 0,
-                2.2
+                4.8
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "arkzein"
             },
             {
               "type": "enemy",
               "position": [
-                3.2,
+                -8.3,
                 0,
-                8.3
+                -4.9
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.6,
+                0,
+                6.2
               ],
               "enemy_id": "eulada"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                6.2,
-                0,
-                4.2
-              ],
-              "enemy_id": "eulid"
             }
           ]
         }
@@ -722,29 +1066,29 @@
             {
               "type": "enemy",
               "position": [
-                7.4,
+                -10.7,
                 0,
-                -11.9
+                -6.8
               ],
               "enemy_id": "dark-falz"
             },
             {
               "type": "enemy",
               "position": [
-                11.6,
+                0.8,
                 0,
-                -0.5
+                4.8
               ],
               "enemy_id": "eulid"
             },
             {
               "type": "enemy",
               "position": [
-                6.3,
+                5.7,
                 0,
-                -4.3
+                10.9
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "eulidveil"
             }
           ]
         }
