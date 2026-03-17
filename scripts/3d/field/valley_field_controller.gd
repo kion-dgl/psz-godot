@@ -2860,9 +2860,23 @@ func _on_end_reached() -> void:
 		var sections: Array = SessionManager.get_field_sections()
 		var new_idx: int = SessionManager.get_current_section()
 		var new_section: Dictionary = sections[new_idx]
+
+		# Determine entry edge from previous section's exit direction
+		# or the new section's entry_direction field
+		var entry_edge: String = ""
+		var prev_idx: int = new_idx - 1
+		if prev_idx >= 0:
+			var prev_section: Dictionary = sections[prev_idx]
+			var exit_dir: String = str(prev_section.get("exit_direction", ""))
+			if not exit_dir.is_empty():
+				entry_edge = OPPOSITE.get(exit_dir, "")
+			# Also try the new section's entry_direction
+			if entry_edge.is_empty():
+				entry_edge = str(new_section.get("entry_direction", ""))
+
 		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 			"current_cell_pos": str(new_section.get("start_pos", "")),
-			"spawn_edge": "",
+			"spawn_edge": entry_edge,
 			"keys_collected": {},
 			"gates_opened": {},
 			"visited_cells": {},
