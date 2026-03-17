@@ -852,6 +852,7 @@
       "area": "b",
       "start_pos": "0,2",
       "end_pos": "1,5",
+      "entry_direction": "north",
       "cells": [
         {
           "pos": "0,2",
@@ -875,7 +876,10 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
-          "objects": []
+          "objects": [
+            {"type": "enemy", "position": [-5, 0, 3], "enemy_id": "garahadan"},
+            {"type": "enemy", "position": [4, 0, -2], "enemy_id": "vulkure"}
+          ]
         },
         {
           "pos": "1,2",
