@@ -97,6 +97,10 @@ func restore_after_menu() -> void:
 			child.visible = true
 	# Log respects its own toggle state
 	_quest_log.visible = _log_visible
+	# Grid minimap respects its toggle state (stored as meta by field controller)
+	for child in get_children():
+		if child.has_meta("toggled_off") and child.get_meta("toggled_off"):
+			child.visible = false
 
 
 func _on_stats_changed(_value: int) -> void:
@@ -506,10 +510,35 @@ class _ActionPalette extends Control:
 	const GAP := 4.0
 	const RAISED := 10.0  # Outer slots raised above center
 
-	const SLOT_KEYS := ["J", "K", "L"]
+	const KENNEY_BASE := "res://assets/kenney_input-prompts/"
+
+	## Slot icons per control scheme: [slot0, slot1, slot2]
+	const SLOT_ICONS := {
+		"keyboard": ["Keyboard & Mouse/Default/keyboard_j.png", "Keyboard & Mouse/Default/keyboard_k.png", "Keyboard & Mouse/Default/keyboard_l.png"],
+		"kb_mouse": ["Keyboard & Mouse/Default/keyboard_j.png", "Keyboard & Mouse/Default/keyboard_k.png", "Keyboard & Mouse/Default/keyboard_l.png"],
+		"xinput":   ["Xbox Series/Default/xbox_button_x.png", "Xbox Series/Default/xbox_button_a.png", "Xbox Series/Default/xbox_button_b.png"],
+		"switch":   ["Nintendo Switch/Default/switch_button_y.png", "Nintendo Switch/Default/switch_button_a.png", "Nintendo Switch/Default/switch_button_b.png"],
+	}
+	## Swap button icon per scheme
+	const SWAP_ICONS := {
+		"keyboard": "Keyboard & Mouse/Default/keyboard_i.png",
+		"kb_mouse": "Keyboard & Mouse/Default/keyboard_i.png",
+		"xinput":   "Xbox Series/Default/xbox_rb.png",
+		"switch":   "Nintendo Switch/Default/switch_button_r.png",
+	}
+	## Fallback text labels if icons can't load
+	const SLOT_KEYS_FALLBACK := {
+		"keyboard": ["J", "K", "L"], "kb_mouse": ["J", "K", "L"],
+		"xinput": ["X", "A", "B"], "switch": ["Y", "A", "B"],
+	}
+	const SWAP_KEY_FALLBACK := {
+		"keyboard": "I", "kb_mouse": "I", "xinput": "RB", "switch": "R",
+	}
 
 	var _bg_pill: StyleBoxFlat
 	var _bg_swap: StyleBoxFlat
+	var _slot_textures: Array = [null, null, null]
+	var _swap_texture: Texture2D = null
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
@@ -544,9 +573,33 @@ class _ActionPalette extends Control:
 		_bg_swap.set_border_width_all(1)
 		_bg_swap.set_corner_radius_all(8)
 
+		# Load icons for current control scheme
+		_load_scheme_icons()
+
 		# Connect to ActionPalette signals for live updates
 		ActionPalette.page_changed.connect(_on_palette_changed)
 		ActionPalette.config_changed.connect(_on_palette_changed)
+		if InputConfig.has_signal("scheme_changed"):
+			InputConfig.scheme_changed.connect(_on_scheme_changed)
+
+	func _on_scheme_changed(_scheme = null) -> void:
+		_load_scheme_icons()
+		queue_redraw()
+
+	func _load_scheme_icons() -> void:
+		var scheme: String = InputConfig.current_scheme
+		var slot_paths: Array = SLOT_ICONS.get(scheme, SLOT_ICONS["keyboard"])
+		for i in range(3):
+			var path: String = KENNEY_BASE + slot_paths[i]
+			if ResourceLoader.exists(path):
+				_slot_textures[i] = load(path)
+			else:
+				_slot_textures[i] = null
+		var swap_path: String = KENNEY_BASE + SWAP_ICONS.get(scheme, SWAP_ICONS["keyboard"])
+		if ResourceLoader.exists(swap_path):
+			_swap_texture = load(swap_path)
+		else:
+			_swap_texture = null
 
 	func _on_palette_changed(_arg = null) -> void:
 		queue_redraw()
@@ -564,11 +617,17 @@ class _ActionPalette extends Control:
 		var swap_y: float = 0.0
 		draw_style_box(_bg_swap, Rect2(swap_x, swap_y, SWAP_W, SWAP_H))
 
-		# "R" key badge
-		var key_rect := Rect2(swap_x + 6, swap_y + 4, 16, 13)
-		draw_rect(key_rect, KEY_BG)
-		draw_string(font, Vector2(swap_x + 10, swap_y + 14), "R",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
+		# Swap button icon or text fallback
+		if _swap_texture:
+			var icon_size := 14.0
+			draw_texture_rect(_swap_texture, Rect2(swap_x + 4, swap_y + 2, icon_size, icon_size), false)
+		else:
+			var scheme: String = InputConfig.current_scheme
+			var swap_key: String = SWAP_KEY_FALLBACK.get(scheme, "R")
+			var key_rect := Rect2(swap_x + 6, swap_y + 4, 16, 13)
+			draw_rect(key_rect, KEY_BG)
+			draw_string(font, Vector2(swap_x + 10, swap_y + 14), swap_key,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
 
 		# Palette number
 		var pn_text := "%d/%d" % [page_idx + 1, page_count]
@@ -581,19 +640,26 @@ class _ActionPalette extends Control:
 			var action_id: String = slots[i] if i < slots.size() else ""
 			var data: Dictionary = ActionPalette.get_action_data(action_id)
 			var lbl: String = data.get("short", action_id)
-			var key: String = SLOT_KEYS[i] if i < SLOT_KEYS.size() else str(i + 1)
 
 			var px: float = i * (PILL_W + GAP)
 			var py: float = row_y + RAISED if i == 1 else row_y
 
 			draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
 
-			# Key badge
-			var kx: float = px + (PILL_W - 16) * 0.5
-			var ky: float = py + 5
-			draw_rect(Rect2(kx, ky, 16, 13), KEY_BG)
-			draw_string(font, Vector2(kx + 4, ky + 10), key,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
+			# Button icon or text fallback
+			var tex: Texture2D = _slot_textures[i] if i < _slot_textures.size() else null
+			if tex:
+				var icon_sz := 14.0
+				draw_texture_rect(tex, Rect2(px + (PILL_W - icon_sz) * 0.5, py + 4, icon_sz, icon_sz), false)
+			else:
+				var scheme: String = InputConfig.current_scheme
+				var keys: Array = SLOT_KEYS_FALLBACK.get(scheme, ["1", "2", "3"])
+				var key: String = keys[i] if i < keys.size() else str(i + 1)
+				var kx: float = px + (PILL_W - 16) * 0.5
+				var ky: float = py + 5
+				draw_rect(Rect2(kx, ky, 16, 13), KEY_BG)
+				draw_string(font, Vector2(kx + 4, ky + 10), key,
+					HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
 
 			# Action label
 			var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LABEL).x
