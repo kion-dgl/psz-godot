@@ -399,6 +399,7 @@ func _ready() -> void:
 	_grid_minimap.setup(cells, str(_current_cell.get("pos", "")),
 		_visited_cells, "Section %d" % (section_idx + 1))
 	_grid_minimap.visible = grid_minimap_visible
+	_grid_minimap.set_meta("toggled_off", not grid_minimap_visible)
 	_field_hud.add_child(_grid_minimap)
 
 	# Sync initial gate lock states to minimap (gates were created before minimap)
@@ -460,6 +461,8 @@ func _unlock_objective_exits() -> void:
 	var we: String = str(_current_cell.get("warp_edge", ""))
 	if not we.is_empty() and _room_minimap:
 		_room_minimap.set_gate_locked(we, false)
+	if not we.is_empty() and _grid_minimap:
+		_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), we, "exit")
 
 
 func _process(_delta: float) -> void:
@@ -1462,6 +1465,7 @@ func _spawn_field_elements() -> void:
 					"gates_opened": {},
 					"visited_cells": {},
 					"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+					"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 				})
 		_create_fallback_trigger("GateTrigger_%s" % portal_dir, aw_trigger_pos, aw_callback, is_delayed, not is_open)
 
@@ -1569,6 +1573,8 @@ func _spawn_field_elements() -> void:
 						print("[ValleyField] KeyGate opened → trigger '%s' enabled, gate tracked" % gate_trigger_name)
 					if _room_minimap:
 						_room_minimap.set_gate_locked(gate_dir_for_minimap, false)
+					if _grid_minimap:
+						_grid_minimap.set_gate_state(cell_pos_for_gate, gate_dir_for_minimap, "open")
 			)
 			print("[FieldElements] ── KEY GATE DONE ──")
 		else:
@@ -2385,6 +2391,7 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 			"gates_opened": {},
 			"visited_cells": {},
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+			"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 		})
 	)
 	print("[CellObjects] WarpPoint at %s → section %d, cell %s, position %s" % [pos, target_section, target_cell, target_position])
@@ -2429,6 +2436,8 @@ func _lock_gates_for_enemies() -> void:
 					_room_gates_locked.append(gate)
 					if _room_minimap:
 						_room_minimap.set_gate_locked(dir, true)
+					if _grid_minimap:
+						_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), dir, "locked")
 					print("[CellObjects] Gate %s locked (enemies present)" % dir)
 					break
 
@@ -2463,6 +2472,8 @@ func _lock_gates_for_enemies() -> void:
 			print("[CellObjects] AreaWarp locked (enemies present) [dir=%s]" % aw_dir)
 			if _room_minimap:
 				_room_minimap.set_gate_locked(aw_dir, true)
+			if _grid_minimap:
+				_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "locked")
 
 
 ## Called when an enemy is defeated — check if all cleared.
@@ -2489,6 +2500,8 @@ func _check_room_clear() -> void:
 				trigger.monitoring = true
 			if _room_minimap and not dir.is_empty():
 				_room_minimap.set_gate_locked(dir, false)
+			if _grid_minimap and not dir.is_empty():
+				_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), dir, "open")
 	_room_gates_locked.clear()
 
 	# Unlock area warps (same pattern as gates above)
@@ -2500,6 +2513,8 @@ func _check_room_clear() -> void:
 				var aw_dir: String = node.name.trim_prefix("AreaWarp_") if node.name.begins_with("AreaWarp_") else ""
 				if _room_minimap and not aw_dir.is_empty():
 					_room_minimap.set_gate_locked(aw_dir, false)
+				if _grid_minimap and not aw_dir.is_empty():
+					_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "open")
 				print("[CellObjects] AreaWarp unlocked (room cleared) [dir=%s]" % aw_dir)
 			elif node is StaticBody3D:
 				node.queue_free()
@@ -2833,6 +2848,7 @@ func _transition_to_cell(target_pos: String, spawn_edge: String) -> void:
 		"visited_cells": _visited_cells,
 		"cell_states": _cell_states,
 		"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+		"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 	})
 
 
@@ -2851,6 +2867,7 @@ func _on_end_reached() -> void:
 			"gates_opened": {},
 			"visited_cells": {},
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+			"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 		})
 	else:
 		# All sections complete
@@ -2873,6 +2890,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
+			KEY_M:
+				if _grid_minimap:
+					_grid_minimap.visible = not _grid_minimap.visible
+					_grid_minimap.set_meta("toggled_off", not _grid_minimap.visible)
+				get_viewport().set_input_as_handled()
 			KEY_QUOTELEFT:
 				if _map_overlay:
 					_map_overlay.visible = not _map_overlay.visible
