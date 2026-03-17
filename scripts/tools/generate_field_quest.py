@@ -1088,7 +1088,7 @@ def assign_stages(
     Returns list of cell dicts or None if assignment fails.
     """
     cells = []
-    used_stages: set[str] = set()
+    used_stages: list[str] = []  # Track recently used stages to avoid repetition
 
     for row, col, role, needed_dirs in template:
         topos = _topology_for_role(role)
@@ -1097,6 +1097,9 @@ def assign_stages(
         for topo in topos:
             candidates = catalog.get_stages(prefix, variant, topo)
             rng.shuffle(candidates)
+
+            # Sort candidates: prefer stages not recently used
+            candidates.sort(key=lambda s: s in used_stages)
 
             for stage_id in candidates:
                 config_dirs = catalog.get_config_directions(stage_id)
@@ -1113,6 +1116,10 @@ def assign_stages(
                             "config_dirs": config_dirs,
                         }
                     )
+                    used_stages.append(stage_id)
+                    # Keep only last 3 to allow eventual reuse in large grids
+                    if len(used_stages) > 3:
+                        used_stages.pop(0)
                     assigned = True
                     break
 
