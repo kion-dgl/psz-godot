@@ -796,6 +796,30 @@ func _execute_palette_action(slot: int) -> void:
 			_start_dodge()
 		"monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid":
 			_use_consumable(action_id)
+		"kill_all":
+			_debug_kill_all()
+
+
+func _debug_kill_all() -> void:
+	var kill_count: int = 0
+	# Kill EnemyBase instances (AI enemies in "enemies" group)
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if node is EnemyBase and node.is_alive:
+			node._on_hit_received(99999, Vector3.ZERO)
+			kill_count += 1
+	# Kill EnemySpawn instances (static field enemies) via scene tree scan
+	kill_count += _kill_enemy_spawns_recursive(get_tree().current_scene)
+	print("[DEBUG] Kill All from action palette (%d killed)" % kill_count)
+
+
+func _kill_enemy_spawns_recursive(node: Node) -> int:
+	var count: int = 0
+	if node is EnemySpawn and node.element_state != "dead":
+		node.take_damage(9999)
+		count += 1
+	for child in node.get_children():
+		count += _kill_enemy_spawns_recursive(child)
+	return count
 
 
 func _start_strong_attack() -> void:

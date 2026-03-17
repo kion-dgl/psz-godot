@@ -15,6 +15,7 @@ const ALL_ACTIONS: Array = [
 	{"id": "monofluid", "label": "Monofluid", "short": "M.Flu", "category": "recovery"},
 	{"id": "difluid", "label": "Difluid", "short": "D.Flu", "category": "recovery"},
 	{"id": "trifluid", "label": "Trifluid", "short": "T.Flu", "category": "recovery"},
+	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug"},
 ]
 
 const DEFAULT_PAGES: Array = [
