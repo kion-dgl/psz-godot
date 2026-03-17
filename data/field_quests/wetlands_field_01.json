@@ -76,9 +76,9 @@
             {
               "type": "enemy",
               "position": [
-                5,
+                4.7,
                 0,
-                -3
+                -3.9
               ],
               "enemy_id": "porel"
             },
@@ -144,17 +144,17 @@
             {
               "type": "box",
               "position": [
-                14,
+                13.1,
                 0,
-                -6
+                -5.5
               ]
             },
             {
               "type": "box",
               "position": [
-                13,
+                13.0,
                 0,
-                -10
+                -9.5
               ]
             }
           ]
@@ -184,9 +184,9 @@
             {
               "type": "dialog_trigger",
               "position": [
-                -2,
+                -4.2,
                 0,
-                -5
+                -8.9
               ],
               "trigger_size": [
                 10,
@@ -207,26 +207,26 @@
             {
               "type": "enemy",
               "position": [
-                -4,
+                -6.8,
                 0,
-                0
+                1.0
               ],
               "enemy_id": "vespao"
             },
             {
               "type": "box",
               "position": [
-                8,
+                6.7,
                 0,
-                -12
+                -11.2
               ]
             },
             {
               "type": "rare_box",
               "position": [
-                10,
+                6.7,
                 0,
-                -14
+                -12.8
               ]
             }
           ]
@@ -714,18 +714,18 @@
             {
               "type": "enemy",
               "position": [
-                5,
+                4.6,
                 0,
-                -6
+                -4.9
               ],
               "enemy_id": "porel"
             },
             {
               "type": "box",
               "position": [
-                14,
+                14.0,
                 0,
-                10
+                11.8
               ]
             },
             {
@@ -772,9 +772,9 @@
             {
               "type": "enemy",
               "position": [
-                6,
+                6.2,
                 0,
-                -4
+                -7.7
               ],
               "enemy_id": "vespao"
             },
@@ -818,9 +818,9 @@
             {
               "type": "enemy",
               "position": [
-                2.5,
+                3.7,
                 0,
-                7.6
+                10.9
               ],
               "enemy_id": "octo-diablo"
             },

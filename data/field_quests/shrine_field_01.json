@@ -136,9 +136,9 @@
             {
               "type": "box",
               "position": [
-                12,
+                12.8,
                 0,
-                -8
+                -7.4
               ]
             },
             {
@@ -152,9 +152,9 @@
             {
               "type": "box",
               "position": [
-                13,
+                14.5,
                 0,
-                -10
+                -7.4
               ]
             }
           ]
@@ -201,9 +201,9 @@
             {
               "type": "rare_box",
               "position": [
-                10,
+                10.0,
                 0,
-                -14
+                -12.5
               ]
             }
           ]
@@ -235,9 +235,9 @@
             {
               "type": "enemy",
               "position": [
-                -6,
+                -5.5,
                 0,
-                8
+                8.2
               ],
               "enemy_id": "eulid"
             },
@@ -332,9 +332,9 @@
             {
               "type": "enemy",
               "position": [
-                -3,
+                -3.1,
                 0,
-                4
+                4.5
               ],
               "enemy_id": "arkzein"
             },
@@ -388,9 +388,9 @@
             {
               "type": "enemy",
               "position": [
-                4,
+                5.0,
                 0,
-                -2
+                -2.0
               ],
               "enemy_id": "eulada"
             },
@@ -441,7 +441,7 @@
               "position": [
                 -10.3,
                 0,
-                -1.0
+                2.5
               ],
               "enemy_id": "eulid"
             },
@@ -457,9 +457,9 @@
             {
               "type": "enemy",
               "position": [
-                -1.7,
+                1.6,
                 0,
-                -12.1
+                -10.9
               ],
               "enemy_id": "eulidveil"
             },
@@ -723,17 +723,17 @@
             {
               "type": "box",
               "position": [
-                14,
+                12.8,
                 0,
-                10
+                6.7
               ]
             },
             {
               "type": "box",
               "position": [
-                16,
+                15.0,
                 0,
-                8
+                6.9
               ]
             }
           ]

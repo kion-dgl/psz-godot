@@ -216,17 +216,17 @@
             {
               "type": "box",
               "position": [
-                8,
+                10.5,
                 0,
-                -12
+                -12.0
               ]
             },
             {
               "type": "rare_box",
               "position": [
-                10,
+                10.5,
                 0,
-                -14
+                -14.0
               ]
             }
           ]
@@ -705,9 +705,9 @@
             {
               "type": "enemy",
               "position": [
-                -10,
+                -7.4,
                 0,
-                4
+                1.8
               ],
               "enemy_id": "kapantha"
             },
@@ -723,17 +723,17 @@
             {
               "type": "box",
               "position": [
-                14,
+                17.5,
                 0,
-                10
+                7.8
               ]
             },
             {
               "type": "box",
               "position": [
-                16,
+                17.5,
                 0,
-                8
+                7.8
               ]
             }
           ]
@@ -763,18 +763,18 @@
             {
               "type": "enemy",
               "position": [
-                -4,
+                -4.0,
                 0,
-                3
+                5.5
               ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
               "position": [
-                6,
+                7.5,
                 0,
-                -4
+                -4.0
               ],
               "enemy_id": "kapantha"
             },

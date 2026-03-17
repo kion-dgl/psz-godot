@@ -67,9 +67,9 @@
             {
               "type": "enemy",
               "position": [
-                -8,
+                -4.9,
                 0,
-                4
+                6.6
               ],
               "enemy_id": "usanny"
             },
@@ -152,9 +152,9 @@
             {
               "type": "box",
               "position": [
-                13,
+                12.7,
                 0,
-                -10
+                -8.5
               ]
             }
           ]
@@ -216,9 +216,9 @@
             {
               "type": "box",
               "position": [
-                8,
+                5.6,
                 0,
-                -12
+                -10.4
               ]
             },
             {
@@ -258,18 +258,18 @@
             {
               "type": "enemy",
               "position": [
-                -6,
+                -12.0,
                 0,
-                8
+                11.1
               ],
               "enemy_id": "usanny"
             },
             {
               "type": "enemy",
               "position": [
-                7.5,
+                5.6,
                 0,
-                3.1
+                2.4
               ],
               "enemy_id": "usanimere"
             },
@@ -313,9 +313,9 @@
             {
               "type": "enemy",
               "position": [
-                -7,
+                -6.0,
                 0,
-                3
+                3.0
               ],
               "enemy_id": "usanny"
             },
@@ -557,9 +557,9 @@
             {
               "type": "enemy",
               "position": [
-                -6,
+                -8.5,
                 0,
-                5
+                5.0
               ],
               "enemy_id": "usanny"
             },
@@ -575,9 +575,9 @@
             {
               "type": "enemy",
               "position": [
+                0.5,
                 0,
-                0,
-                8
+                8.0
               ],
               "enemy_id": "usanimere"
             }

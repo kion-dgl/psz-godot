@@ -67,9 +67,9 @@
             {
               "type": "enemy",
               "position": [
-                -8,
+                -7.5,
                 0,
-                4
+                4.0
               ],
               "enemy_id": "ghowl"
             },
@@ -85,9 +85,9 @@
             {
               "type": "enemy",
               "position": [
-                -3,
+                -6.2,
                 0,
-                -8
+                -8.3
               ],
               "enemy_id": "vulkure"
             }
@@ -294,9 +294,9 @@
             {
               "type": "enemy",
               "position": [
-                4,
+                4.7,
                 0,
-                -5
+                -6.9
               ],
               "enemy_id": "ghowl"
             },
@@ -396,9 +396,9 @@
             {
               "type": "enemy",
               "position": [
-                -5.5,
+                -6.7,
                 0,
-                2.6
+                5.9
               ],
               "enemy_id": "grimble"
             },
@@ -413,9 +413,9 @@
             {
               "type": "rare_box",
               "position": [
-                10,
+                8.6,
                 0,
-                -14
+                -13.5
               ]
             }
           ]
@@ -447,18 +447,18 @@
             {
               "type": "enemy",
               "position": [
-                -4,
+                -5.9,
                 0,
-                6
+                6.7
               ],
               "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
               "position": [
-                7,
+                7.5,
                 0,
-                -2
+                -3.4
               ],
               "enemy_id": "ghowl"
             }
@@ -613,18 +613,18 @@
             {
               "type": "enemy",
               "position": [
-                -10,
+                -10.2,
                 0,
-                2
+                1.5
               ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
               "position": [
-                5,
+                6.8,
                 0,
-                -8
+                -11.0
               ],
               "enemy_id": "vulkure"
             },
@@ -760,18 +760,18 @@
             {
               "type": "enemy",
               "position": [
-                -3,
+                -2.8,
                 0,
-                4
+                -3.6
               ],
               "enemy_id": "grimble"
             },
             {
               "type": "enemy",
               "position": [
-                5,
+                8.4,
                 0,
-                0
+                0.6
               ],
               "enemy_id": "ghowl"
             }
@@ -1136,9 +1136,9 @@
             {
               "type": "enemy",
               "position": [
-                -0.5,
+                2.5,
                 0,
-                4.9
+                6.7
               ],
               "enemy_id": "tormatible"
             },
@@ -1154,9 +1154,9 @@
             {
               "type": "enemy",
               "position": [
+                0.5,
                 0,
-                0,
-                -8
+                -8.0
               ],
               "enemy_id": "ghowl"
             }
@@ -1202,9 +1202,9 @@
             {
               "type": "enemy",
               "position": [
-                -10,
+                -11.0,
                 0,
-                8
+                6.3
               ],
               "enemy_id": "ghowl"
             },

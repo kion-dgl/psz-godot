@@ -248,9 +248,9 @@
             {
               "type": "box",
               "position": [
-                14,
+                12.6,
                 0,
-                -6
+                -3.8
               ]
             }
           ]
@@ -289,9 +289,9 @@
             {
               "type": "enemy",
               "position": [
-                4,
+                3.5,
                 0,
-                -2
+                -2.0
               ],
               "enemy_id": "arkzein"
             },
@@ -562,33 +562,33 @@
             {
               "type": "enemy",
               "position": [
-                -10,
+                -7.7,
                 0,
-                4
+                4.9
               ],
               "enemy_id": "arkzein"
             },
             {
               "type": "enemy",
               "position": [
-                5,
+                5.0,
                 0,
-                -6
+                -4.5
               ],
               "enemy_id": "euladaveil"
             },
             {
               "type": "box",
               "position": [
-                13.0,
+                10.2,
                 0,
-                10.0
+                11.0
               ]
             },
             {
               "type": "box",
               "position": [
-                13.7,
+                10.2,
                 0,
                 9.9
               ]
@@ -629,18 +629,18 @@
             {
               "type": "enemy",
               "position": [
-                6,
+                5.1,
                 0,
-                -4
+                -3.7
               ],
               "enemy_id": "finjer-g"
             },
             {
               "type": "enemy",
               "position": [
+                1.2,
                 0,
-                0,
-                -8
+                -4.7
               ],
               "enemy_id": "stagg"
             }
@@ -675,7 +675,7 @@
             {
               "type": "enemy",
               "position": [
-                1.0,
+                4.5,
                 0,
                 0.0
               ],
