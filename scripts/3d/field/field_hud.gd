@@ -8,6 +8,7 @@ const MARGIN := 12.0
 var _stats_panel: Control
 var _quest_log: Control
 var _action_palette: Control
+var _debug_info: Control
 var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
 
@@ -36,6 +37,9 @@ func _ready() -> void:
 
 	_action_palette = _ActionPalette.new()
 	add_child(_action_palette)
+
+	_debug_info = _DebugInfoPanel.new()
+	add_child(_debug_info)
 
 	GameState.hp_changed.connect(_on_stats_changed)
 	GameState.max_hp_changed.connect(_on_stats_changed)
@@ -116,6 +120,75 @@ func _auto_show_log() -> void:
 	if not _log_visible:
 		_log_visible = true
 		_quest_log.visible = true
+
+
+## Set the debug info text shown at top-center (quest ID, section, cell).
+func set_debug_info(quest_id: String, section_text: String, cell_pos: String) -> void:
+	if _debug_info and _debug_info is _DebugInfoPanel:
+		_debug_info.set_info(quest_id, section_text, cell_pos)
+
+
+# ── Debug Info Panel (top-center) ────────────────────────────────────────────
+
+class _DebugInfoPanel extends Control:
+	## Always-visible debug overlay at top-center showing quest context.
+	const FONT_SIZE := 12
+	const BG_COLOR := Color(0.0, 0.0, 0.0, 0.45)
+	const BORDER_COLOR := Color(0.4, 0.4, 0.4, 0.3)
+	const TEXT_COLOR := Color(1.0, 1.0, 1.0, 0.85)
+	const PAD_H := 12.0
+	const PAD_V := 4.0
+
+	var _label: Label
+	var _panel: PanelContainer
+
+	func _ready() -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+
+		_panel = PanelContainer.new()
+		_panel.mouse_filter = MOUSE_FILTER_IGNORE
+
+		# Semi-transparent dark background
+		var style := StyleBoxFlat.new()
+		style.bg_color = BG_COLOR
+		style.border_color = BORDER_COLOR
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(4)
+		style.content_margin_left = PAD_H
+		style.content_margin_right = PAD_H
+		style.content_margin_top = PAD_V
+		style.content_margin_bottom = PAD_V
+		_panel.add_theme_stylebox_override("panel", style)
+
+		# Anchor top-center
+		_panel.anchor_left = 0.5
+		_panel.anchor_right = 0.5
+		_panel.anchor_top = 0.0
+		_panel.anchor_bottom = 0.0
+		_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_panel.offset_top = 6.0
+
+		_label = Label.new()
+		_label.text = ""
+		_label.add_theme_font_size_override("font_size", FONT_SIZE)
+		_label.add_theme_color_override("font_color", TEXT_COLOR)
+		_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_label.mouse_filter = MOUSE_FILTER_IGNORE
+		_panel.add_child(_label)
+
+		add_child(_panel)
+
+	func set_info(quest_id: String, section_text: String, cell_pos: String) -> void:
+		if not _label:
+			return
+		var parts: PackedStringArray = PackedStringArray()
+		if not quest_id.is_empty():
+			parts.append(quest_id)
+		if not section_text.is_empty():
+			parts.append(section_text)
+		if not cell_pos.is_empty():
+			parts.append("Cell %s" % cell_pos)
+		_label.text = " | ".join(parts)
 
 
 # ── Stats Panel (top-left) ───────────────────────────────────────────────────

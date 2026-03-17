@@ -15,6 +15,7 @@ const KeyPickupScript := preload("res://scripts/3d/elements/key_pickup.gd")
 const KeyGateScript := preload("res://scripts/3d/elements/key_gate.gd")
 const WaypointScript := preload("res://scripts/3d/elements/waypoint.gd")
 const RoomMinimapScript := preload("res://scripts/3d/field/room_minimap.gd")
+const GridMinimapScript := preload("res://scripts/3d/field/grid_minimap.gd")
 const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 const BoxScript := preload("res://scripts/3d/elements/box.gd")
 const FenceScript := preload("res://scripts/3d/elements/fence.gd")
@@ -61,6 +62,7 @@ var _current_cell: Dictionary = {}
 var _portal_data: Dictionary = {}
 var _map_overlay: CanvasLayer
 var _room_minimap: Control
+var _grid_minimap: Control
 var _field_hud: CanvasLayer
 var _blob_shadow: MeshInstance3D
 var _stage_config: Dictionary = {}
@@ -371,6 +373,15 @@ func _ready() -> void:
 	_field_hud = FieldHudScript.new()
 	add_child(_field_hud)
 
+	# Debug info overlay — quest ID / mission ID, section, cell position
+	var debug_session: Dictionary = SessionManager.get_session()
+	var debug_id: String = str(debug_session.get("quest_id", ""))
+	if debug_id.is_empty():
+		debug_id = str(debug_session.get("mission_id", ""))
+	var debug_section_text: String = "Section %d/%d (%s)" % [
+		section_idx + 1, sections.size(), str(section.get("type", "?"))]
+	var debug_cell_pos: String = str(_current_cell.get("pos", ""))
+	_field_hud.set_debug_info(debug_id, debug_section_text, debug_cell_pos)
 
 	_room_minimap = RoomMinimapScript.new()
 	_room_minimap.setup(stage_id, area_cfg["folder"], _portal_data,
@@ -382,22 +393,37 @@ func _ready() -> void:
 	# Key HUD (drawn below minimap)
 	_setup_key_hud(cells)
 
+	# Grid minimap (toggleable with M key, shows section grid layout)
+	var grid_minimap_visible: bool = data.get("grid_minimap_visible", true)
+	_grid_minimap = GridMinimapScript.new()
+	_grid_minimap.setup(cells, str(_current_cell.get("pos", "")),
+		_visited_cells, "Section %d" % (section_idx + 1))
+	_grid_minimap.visible = grid_minimap_visible
+	_field_hud.add_child(_grid_minimap)
+
 	# Sync initial gate lock states to minimap (gates were created before minimap)
+	var cur_pos: String = str(_current_cell.get("pos", ""))
 	for gate in _room_gates_locked:
 		if is_instance_valid(gate):
 			var dir := _gate_direction(gate)
 			if not dir.is_empty():
 				_room_minimap.set_gate_locked(dir, true)
+				if _grid_minimap:
+					_grid_minimap.set_gate_state(cur_pos, dir, "locked")
 	# Key-gate starts locked unless previously opened
 	var is_key_gate_cell: bool = _current_cell.get("is_key_gate", false)
 	var kg_dir: String = str(_current_cell.get("key_gate_direction", ""))
-	if is_key_gate_cell and not kg_dir.is_empty() and not _gates_opened.has(str(_current_cell.get("pos", ""))):
+	if is_key_gate_cell and not kg_dir.is_empty() and not _gates_opened.has(cur_pos):
 		_room_minimap.set_gate_locked(kg_dir, true)
+		if _grid_minimap:
+			_grid_minimap.set_gate_state(cur_pos, kg_dir, "locked")
 
 	# Lock warp_edge on minimap if objectives are pending
 	var warp_e: String = str(_current_cell.get("warp_edge", ""))
 	if not warp_e.is_empty() and _has_pending_objectives():
 		_room_minimap.set_gate_locked(warp_e, true)
+		if _grid_minimap:
+			_grid_minimap.set_gate_state(cur_pos, warp_e, "locked")
 
 	# Connect quest completion signal
 	if not SessionManager.quest_completed.is_connected(_on_quest_completed):
