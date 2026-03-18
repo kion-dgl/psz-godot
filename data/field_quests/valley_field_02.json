@@ -559,12 +559,10 @@
       "cells": [
         {
           "pos": "0,0",
-          "stage_id": "s01a_na1",
-          "rotation": 180,
+          "stage_id": "s01z_na1",
+          "rotation": 0,
           "connections": {},
-          "portals": {
-            "north": "portal_1769092107069_jgnmrzarg"
-          },
+          "portals": {},
           "is_start": true,
           "is_end": true,
           "is_branch": false,
@@ -574,7 +572,7 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "north",
+          "warp_edge": "south",
           "path_order": 0,
           "objects": [
             {
