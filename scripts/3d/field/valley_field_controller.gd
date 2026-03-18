@@ -282,12 +282,9 @@ func _ready() -> void:
 	elif not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
 		spawn_pos = _portal_data[spawn_edge]["spawn_pos"]
 		var gate_pos: Vector3 = _portal_data[spawn_edge].get("gate_pos", spawn_pos)
-		# Push spawn further inward (toward room center) to avoid spawning behind area warps
-		var inward: Vector3 = (Vector3.ZERO - gate_pos).normalized() * 3.0
-		spawn_pos = gate_pos + inward
-		spawn_pos.y = 1.0
-		spawn_rot = _facing_yaw(spawn_pos, gate_pos)
-		spawn_reason = "entry from %s, facing gate (yaw=%.2f)" % [spawn_edge, spawn_rot]
+		# Face inward (toward room center, away from gate)
+		spawn_rot = _facing_yaw(gate_pos, Vector3.ZERO)
+		spawn_reason = "entry from %s, facing inward (yaw=%.2f)" % [spawn_edge, spawn_rot]
 	elif _portal_data.has("default"):
 		spawn_pos = _portal_data["default"]["spawn_pos"]
 		if _portal_data["default"].has("default_rotation"):
@@ -1439,10 +1436,11 @@ func _spawn_field_elements() -> void:
 		var aw_trigger_pos: Vector3 = pd["trigger_pos"]
 		var aw_spawn_pos: Vector3 = pd["spawn_pos"]
 
-		# Open/locked state — same logic as regular gates
+		# Open/locked state — entry warp is always open (player spawned here)
 		var is_spawn_edge: bool = (portal_dir == _spawn_edge)
-		var is_open: bool = is_spawn_edge or not room_has_enemies
-		var is_delayed: bool = is_spawn_edge  # Delay trigger on entry edge
+		var is_player_entry: bool = is_spawn_edge or is_entry
+		var is_open: bool = is_player_entry or not room_has_enemies
+		var is_delayed: bool = is_player_entry  # Delay trigger on entry edge
 
 		# Gate model — AreaWarp instead of Gate
 		var area_warp := AreaWarpScript.new()
@@ -1457,14 +1455,22 @@ func _spawn_field_elements() -> void:
 		var t_section := target_section
 		var t_cell := target_cell
 		var t_pos := target_position
+		# Compute entry edge for the target section
+		var aw_entry_edge: String = ""
+		if is_exit and t_section < sections_for_warp.size():
+			var target_sec: Dictionary = sections_for_warp[t_section]
+			aw_entry_edge = str(target_sec.get("entry_direction", ""))
+		elif is_entry and t_section >= 0 and t_section < sections_for_warp.size():
+			var target_sec: Dictionary = sections_for_warp[t_section]
+			aw_entry_edge = str(target_sec.get("exit_direction", ""))
+
 		var aw_callback := func(_body: Node3D) -> void:
 			if _body.is_in_group("player"):
-				print("[ValleyField] AreaWarp %s activated → section %d, cell %s" % [portal_dir, t_section, t_cell])
+				print("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
 				SessionManager.set_current_section(t_section)
 				SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 					"current_cell_pos": t_cell,
-					"spawn_edge": "",
-					"spawn_position": [t_pos.x, t_pos.y, t_pos.z],
+					"spawn_edge": aw_entry_edge,
 					"keys_collected": {},
 					"gates_opened": {},
 					"visited_cells": {},
