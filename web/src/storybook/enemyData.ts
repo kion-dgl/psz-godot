@@ -31,6 +31,7 @@ export const ENEMY_CATEGORIES: EnemyCategory[] = [
   { id: 'arca', label: 'Arca Plant', description: 'Machine enemies' },
   { id: 'dark', label: 'Dark Shrine', description: 'Dark element creatures' },
   { id: 'rare', label: 'Rare', description: 'Rare spawns (Rappies & Boomas)' },
+  { id: 'bosses', label: 'Bosses', description: 'Area boss encounters' },
 ];
 
 const ENEMY_METADATA: Record<string, EnemyMetadata> = {
@@ -102,6 +103,12 @@ const ENEMY_METADATA: Record<string, EnemyMetadata> = {
   rappy: { displayName: 'Rappy', element: 'Native', location: 'Gurhacia Valley', isRare: true },
   rappy_blue: { displayName: 'Ar Rappy', element: 'Native', location: 'Oblivion City Paru', isRare: true },
   rappy_red: { displayName: 'Rab Rappy', element: 'Native', location: 'Arca Plant', isRare: true },
+  // Bosses
+  boss_dragon: { displayName: 'Reyburn', element: 'Beast', location: 'Valley' },
+  boss_octopus: { displayName: 'Octo Diablo', element: 'Native', location: 'Wetlands' },
+  boss_mother: { displayName: 'Humilias', element: 'Dark', location: 'Ruins' },
+  boss_darkfalz: { displayName: 'Dark Falz', element: 'Dark', location: 'Dark Shrine' },
+  boss_robot: { displayName: 'Chaos Mobius', element: 'Machine', location: 'Moon Facility' },
 };
 
 const ENEMY_CATEGORY_MAP: Record<string, string> = {
@@ -123,6 +130,8 @@ const ENEMY_CATEGORY_MAP: Record<string, string> = {
   swordman_b: 'dark', swordman_rare_b: 'dark', mother: 'dark',
   mother_gun: 'dark', mother_sword: 'dark', mother_tech: 'dark',
   booma: 'rare', jigobooma: 'rare', rappy: 'rare', rappy_blue: 'rare', rappy_red: 'rare',
+  boss_dragon: 'bosses', boss_octopus: 'bosses', boss_mother: 'bosses',
+  boss_darkfalz: 'bosses', boss_robot: 'bosses',
 };
 
 // 60 enemies imported into psz-godot (bosses excluded — multi-part models not imported)
@@ -145,6 +154,7 @@ export const ALL_ENEMY_IDS = [
   'snake', 'snake_rare',
   'swordman', 'swordman_b', 'swordman_rare', 'swordman_rare_b',
   'tank', 'tank_rare', 'tiger', 'vulture', 'wolf',
+  'boss_dragon', 'boss_octopus', 'boss_mother', 'boss_darkfalz', 'boss_robot',
 ];
 
 /** Animation source sharing — rare variants load animations from base model */
