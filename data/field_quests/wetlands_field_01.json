@@ -818,9 +818,9 @@
             {
               "type": "enemy",
               "position": [
-                3.7,
                 0,
-                10.9
+                0,
+                0
               ],
               "enemy_id": "octo-diablo"
             },
