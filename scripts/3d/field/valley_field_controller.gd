@@ -1419,10 +1419,14 @@ func _spawn_field_elements() -> void:
 		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir)
 		var is_entry: bool = (portal_dir == entry_dir)
 
+		var is_final_exit: bool = false
 		if is_exit and section_idx_for_warp + 1 < sections_for_warp.size():
 			var next_sec: Dictionary = sections_for_warp[section_idx_for_warp + 1]
 			target_section = section_idx_for_warp + 1
 			target_cell = str(next_sec.get("start_pos", ""))
+		elif is_exit:
+			# Last section — exit returns to city
+			is_final_exit = true
 		elif is_entry and section_idx_for_warp > 0:
 			var prev_sec: Dictionary = sections_for_warp[section_idx_for_warp - 1]
 			target_section = section_idx_for_warp - 1
@@ -1464,19 +1468,28 @@ func _spawn_field_elements() -> void:
 			var target_sec: Dictionary = sections_for_warp[t_section]
 			aw_entry_edge = str(target_sec.get("exit_direction", ""))
 
+		var is_final := is_final_exit
 		var aw_callback := func(_body: Node3D) -> void:
 			if _body.is_in_group("player"):
-				print("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
-				SessionManager.set_current_section(t_section)
-				SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-					"current_cell_pos": t_cell,
-					"spawn_edge": aw_entry_edge,
-					"keys_collected": {},
-					"gates_opened": {},
-					"visited_cells": {},
-					"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
-					"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
-				})
+				if is_final:
+					print("[ValleyField] AreaWarp %s → final exit, returning to city" % portal_dir)
+					if SessionManager.get_session().get("type") == "quest":
+						SessionManager.complete_quest()
+					else:
+						SessionManager.return_to_city()
+					SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+				else:
+					print("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
+					SessionManager.set_current_section(t_section)
+					SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+						"current_cell_pos": t_cell,
+						"spawn_edge": aw_entry_edge,
+						"keys_collected": {},
+						"gates_opened": {},
+						"visited_cells": {},
+						"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
+						"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
+					})
 		_create_fallback_trigger("GateTrigger_%s" % portal_dir, aw_trigger_pos, aw_callback, is_delayed, not is_open)
 
 		# Waypoint — same as regular gates
