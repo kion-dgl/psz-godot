@@ -136,6 +136,15 @@ export function getGlbPath(areaKey: string, mapId: string): string {
   return assetUrl(`assets/stages/${subfolder}/${mapId}/lndmd/${mapId}_m.glb`);
 }
 
+// Get skybox GLB path for boss stages (z-variant). Returns null if no skybox.
+export function getSkyboxPath(areaKey: string, mapId: string): string | null {
+  if (!mapId.includes('z_')) return null;
+  const area = STAGE_AREAS[areaKey];
+  const folder = area?.folder ?? 'valley';
+  const subfolder = getStageSubfolder(mapId, folder);
+  return assetUrl(`assets/stages/${subfolder}/${mapId}/lndmd/skybox/o0s_zsky.glb`);
+}
+
 // Calculate portal positions based on edge, offset along edge, and grid settings
 export function calculatePortalPositions(
   edge: 'north' | 'south' | 'east' | 'west',
