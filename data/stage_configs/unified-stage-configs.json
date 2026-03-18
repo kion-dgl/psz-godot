@@ -16053,5 +16053,25 @@
     ],
     "textureFixes": [],
     "version": 1
+  },
+  "s01z_na1": {
+    "floorCollision": {
+      "excludedMeshPatterns": [],
+      "triangles": {},
+      "yTolerance": 0.25
+    },
+    "mapId": "s01z_na1",
+    "obstacles": [],
+    "portals": [],
+    "textureFixes": [],
+    "version": 1,
+    "defaultSpawn": {
+      "direction": "north",
+      "position": [
+        0,
+        0,
+        -10
+      ]
+    }
   }
 }
