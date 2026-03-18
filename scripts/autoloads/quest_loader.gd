@@ -31,7 +31,8 @@ func pick_field_quest(area_id: String) -> Dictionary:
 			matching.append(qid)
 	if matching.is_empty():
 		return {}
-	var pick: String = matching[randi() % matching.size()]
+	matching.sort()
+	var pick: String = matching[0]  # Always pick first (_01) for testing
 	return load_field_quest(pick)
 
 
