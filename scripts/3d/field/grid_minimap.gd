@@ -208,7 +208,7 @@ func _draw() -> void:
 			# Draw the connection line in the gap between cells
 			var midx: float = (cx + tx) * 0.5
 			var midy: float = (cy + ty) * 0.5
-			var offset := DIR_OFFSETS.get(dir, Vector2i.ZERO)
+			var offset: Vector2i = DIR_OFFSETS.get(dir, Vector2i.ZERO)
 			if offset.x != 0:
 				# Vertical connection (north/south) — draw horizontal gate bar at midpoint
 				draw_rect(Rect2(midx - GATE_LENGTH * 0.5, midy - GATE_THICKNESS * 0.5,
@@ -230,7 +230,7 @@ func _draw() -> void:
 				_:
 					warp_color = GATE_EXIT_COLOR
 
-			var wo := DIR_OFFSETS.get(warp_edge, Vector2i.ZERO)
+			var wo: Vector2i = DIR_OFFSETS.get(warp_edge, Vector2i.ZERO)
 			var edge_x: float = cx + wo.y * (CELL_SIZE * 0.5 + CELL_GAP * 0.5)
 			var edge_y: float = cy + wo.x * (CELL_SIZE * 0.5 + CELL_GAP * 0.5)
 			if wo.x != 0:
