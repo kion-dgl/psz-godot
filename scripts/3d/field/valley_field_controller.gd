@@ -223,6 +223,15 @@ func _ready() -> void:
 					remapped[_rotate_dir(orig_dir, _rotation_deg)] = _portal_data[orig_dir].duplicate()
 			_portal_data = remapped
 
+	# Ensure all stage config portals are in _portal_data (some quest JSONs
+	# omit unconnected portals like warp_edge from the portals dict).
+	for cp in _stage_config.get("portals", []):
+		var base_dir: String = str(cp.get("direction", ""))
+		var game_dir: String = _rotate_dir(base_dir, _rotation_deg)
+		if not _portal_data.has(game_dir):
+			_portal_data[game_dir] = _compute_portal_from_config(cp, game_dir)
+			print("[ValleyField]   Synthesized missing portal: '%s' (config dir='%s')" % [game_dir, base_dir])
+
 	# For quest mode: derive spawn_edge from target cell's own connections.
 	# The source cell's OPPOSITE[exit_dir] may not match target portal data keys
 	# due to rotation-dependent direction conventions.
