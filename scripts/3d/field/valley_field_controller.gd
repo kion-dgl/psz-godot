@@ -2576,6 +2576,18 @@ func _check_room_clear() -> void:
 		_needs_telepipe = false
 		_spawn_telepipe(Vector3.ZERO)
 
+	# Boss room cleared — spawn a return-to-city warp at the default spawn point
+	var sections: Array = SessionManager.get_field_sections()
+	var section_idx: int = SessionManager.get_current_section()
+	if section_idx >= 0 and section_idx < sections.size():
+		var cur_section: Dictionary = sections[section_idx]
+		if str(cur_section.get("type", "")) == "boss":
+			var ds: Dictionary = _stage_config.get("defaultSpawn", {})
+			var ds_pos_arr: Array = ds.get("position", [0, 0, 0])
+			var warp_pos := Vector3(float(ds_pos_arr[0]), 0, float(ds_pos_arr[2]))
+			print("[CellObjects] Boss cleared! Spawning return warp at %s" % warp_pos)
+			_spawn_telepipe(warp_pos)
+
 
 ## Spawn enemies for a specific wave number.
 func _spawn_wave(wave_num: int) -> void:
