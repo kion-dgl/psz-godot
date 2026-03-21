@@ -32,26 +32,16 @@ func _ready() -> void:
 	_stats_panel.char_level = _char_level
 	add_child(_stats_panel)
 
-	_quest_log = _QuestLogPanel.new()
-	add_child(_quest_log)
-
 	_action_palette = _ActionPalette.new()
 	add_child(_action_palette)
-
-	_debug_info = _DebugInfoPanel.new()
-	add_child(_debug_info)
 
 	GameState.hp_changed.connect(_on_stats_changed)
 	GameState.max_hp_changed.connect(_on_stats_changed)
 	GameState.mp_changed.connect(_on_stats_changed)
 	GameState.max_mp_changed.connect(_on_stats_changed)
 
-	# Auto-show log if we're in a quest session
-	if _is_in_quest():
-		_log_visible = true
-		_quest_log.visible = true
-	else:
-		_quest_log.visible = false
+	# Quest log disabled for now
+	_log_visible = false
 
 
 func _process(_delta: float) -> void:
@@ -72,6 +62,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _toggle_log() -> void:
+	if not _quest_log:
+		return
 	_log_visible = not _log_visible
 	_quest_log.visible = _log_visible
 
@@ -96,7 +88,8 @@ func restore_after_menu() -> void:
 		if child is Control:
 			child.visible = true
 	# Log respects its own toggle state
-	_quest_log.visible = _log_visible
+	if _quest_log:
+		_quest_log.visible = _log_visible
 	# Grid minimap respects its toggle state (stored as meta by field controller)
 	for child in get_children():
 		if child.has_meta("toggled_off") and child.get_meta("toggled_off"):
@@ -109,27 +102,32 @@ func _on_stats_changed(_value: int) -> void:
 
 ## Log companion speech to the action log.
 func log_speech(speaker: String, text: String) -> void:
+	if not _quest_log:
+		return
 	_quest_log.add_speech_entry(speaker, text)
 	_auto_show_log()
 
 
 ## Log an arbitrary entry to the action log.
 func log_entry(text: String, color: Color = Color(0.85, 0.85, 0.85)) -> void:
+	if not _quest_log:
+		return
 	_quest_log.add_entry(text, color)
 	_auto_show_log()
 
 
 ## Auto-show log when a new entry arrives during a quest.
 func _auto_show_log() -> void:
+	if not _quest_log:
+		return
 	if not _log_visible:
 		_log_visible = true
 		_quest_log.visible = true
 
 
 ## Set the debug info text shown at top-center (quest ID, section, cell).
-func set_debug_info(quest_id: String, section_text: String, cell_pos: String) -> void:
-	if _debug_info and _debug_info is _DebugInfoPanel:
-		_debug_info.set_info(quest_id, section_text, cell_pos)
+func set_debug_info(_quest_id: String, _section_text: String, _cell_pos: String) -> void:
+	pass
 
 
 # ── Debug Info Panel (top-center) ────────────────────────────────────────────
@@ -517,7 +515,7 @@ class _ActionPalette extends Control:
 		"keyboard": ["Keyboard & Mouse/Default/keyboard_j.png", "Keyboard & Mouse/Default/keyboard_k.png", "Keyboard & Mouse/Default/keyboard_l.png"],
 		"kb_mouse": ["Keyboard & Mouse/Default/keyboard_j.png", "Keyboard & Mouse/Default/keyboard_k.png", "Keyboard & Mouse/Default/keyboard_l.png"],
 		"xinput":   ["Xbox Series/Default/xbox_button_x.png", "Xbox Series/Default/xbox_button_a.png", "Xbox Series/Default/xbox_button_b.png"],
-		"switch":   ["Nintendo Switch/Default/switch_button_y.png", "Nintendo Switch/Default/switch_button_a.png", "Nintendo Switch/Default/switch_button_b.png"],
+		"switch":   ["Nintendo Switch/Default/switch_button_y.png", "Nintendo Switch/Default/switch_button_b.png", "Nintendo Switch/Default/switch_button_a.png"],
 	}
 	## Swap button icon per scheme
 	const SWAP_ICONS := {
@@ -529,7 +527,7 @@ class _ActionPalette extends Control:
 	## Fallback text labels if icons can't load
 	const SLOT_KEYS_FALLBACK := {
 		"keyboard": ["J", "K", "L"], "kb_mouse": ["J", "K", "L"],
-		"xinput": ["X", "A", "B"], "switch": ["Y", "A", "B"],
+		"xinput": ["X", "A", "B"], "switch": ["Y", "B", "A"],
 	}
 	const SWAP_KEY_FALLBACK := {
 		"keyboard": "I", "kb_mouse": "I", "xinput": "RB", "switch": "R",

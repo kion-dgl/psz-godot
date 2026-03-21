@@ -179,6 +179,17 @@ func _ready() -> void:
 	add_child(_map_root)
 	_strip_embedded_lights(_map_root)
 	_fix_materials(_map_root)
+
+	# Load skybox GLB if present (e.g. wetlands boss s02z_na1 has a separate skybox model)
+	var skybox_path := "res://assets/stages/%s/%s/lndmd/skybox/o0s_zsky.glb" % [subfolder, stage_id]
+	if ResourceLoader.exists(skybox_path):
+		var skybox_scene := load(skybox_path) as PackedScene
+		if skybox_scene:
+			var skybox_root := skybox_scene.instantiate() as Node3D
+			skybox_root.name = "Skybox"
+			_map_root.add_child(skybox_root)
+			_fix_materials(skybox_root)
+			print("[ValleyField] Loaded skybox: %s" % skybox_path)
 	await get_tree().process_frame
 
 	# Load floor collision from separate floor GLB, fall back to embedded -colonly meshes
@@ -2252,6 +2263,20 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 	dm.position = pos + offset
 	_room_drops.append(dm)
 	print("[EnemyDrop] Meseta %d at %s" % [dm.amount, dm.position])
+
+	# Grant EXP
+	var exp_amount: int = int(enemy_data.exp_reward) if enemy_data else 0
+	if exp_amount > 0:
+		var result := CharacterManager.add_experience(exp_amount)
+		print("[EnemyDrop] +%d EXP for %s" % [exp_amount, enemy_name])
+		if _field_hud:
+			_field_hud.log_entry("+%d EXP" % exp_amount, Color(0.4, 0.9, 1.0))
+		if result.leveled_up:
+			print("[EnemyDrop] LEVEL UP! Now level %d" % result.new_level)
+			if _field_hud:
+				_field_hud.log_entry("LEVEL UP! Lv. %d" % result.new_level, Color(1.0, 0.9, 0.3))
+				_field_hud._stats_panel.char_level = result.new_level
+				_field_hud._stats_panel.queue_redraw()
 
 	# Roll for item drop (15% chance)
 	if randf() < 0.15:
