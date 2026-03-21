@@ -66,9 +66,11 @@ func _apply_button_mapping() -> void:
 	if current_scheme == "switch":
 		_set_joypad_button(ACCEPT_ACTIONS, XBOX_B)   # Physical A on Switch = index 1
 		_set_joypad_button(CANCEL_ACTIONS, XBOX_A)    # Physical B on Switch = index 0
-		_set_joypad_button(B_ACTIONS, XBOX_A)         # Physical B on Switch = index 0
-		_set_joypad_button(X_ACTIONS, XBOX_Y)         # Physical X on Switch = index 3
-		_set_joypad_button(Y_ACTIONS, XBOX_X)         # Physical Y on Switch = index 2
+		# Palette: same physical positions as Xbox, different labels
+		# Left face (Y on Switch) = index 2, Bottom (B) = index 0, Right (A) = index 1
+		_set_joypad_button(X_ACTIONS, XBOX_X)         # action_1 → index 2 = Switch Y
+		_set_joypad_button(Y_ACTIONS, XBOX_A)         # action_2 → index 0 = Switch B
+		_set_joypad_button(B_ACTIONS, XBOX_B)         # action_3 → index 1 = Switch A
 	else:
 		_set_joypad_button(ACCEPT_ACTIONS, XBOX_A)    # Standard Xbox layout
 		_set_joypad_button(CANCEL_ACTIONS, XBOX_B)

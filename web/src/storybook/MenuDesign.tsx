@@ -1262,6 +1262,33 @@ function QuestCounter() {
   );
 }
 
+function FieldWarpMenu() {
+  const [sel, setSel] = useState(0);
+  const areas = [
+    'Valley',
+    'Snowfield',
+    'Wetlands',
+    'Forgotten City',
+    'Ruins',
+    'Moon Facility',
+    'Dark Shrine',
+    'Eternal Tower',
+  ];
+
+  return (
+    <Panel title="Warp Teleporter" width={360} hint="Select a destination.">
+      {areas.map((name, i) => (
+        <PillRow
+          key={name}
+          label={name}
+          selected={sel === i}
+          onClick={() => setSel(i)}
+        />
+      ))}
+    </Panel>
+  );
+}
+
 // --- Main Page ---
 
 const MENU_DEMOS = [
@@ -1280,6 +1307,7 @@ const MENU_DEMOS = [
   { id: 'storage', label: 'Storage', component: StorageCounter },
   { id: 'quest', label: 'Quest Counter', component: QuestCounter },
   { id: 'status', label: 'Status', component: StatusScreen },
+  { id: 'field-warp', label: 'Field Warp', component: FieldWarpMenu },
 ];
 
 export default function MenuDesign() {

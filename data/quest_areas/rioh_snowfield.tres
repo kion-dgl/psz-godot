@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "rioh_snowfield"
 area_id = "rioh_snowfield"
-area_name = "Rioh Snowfield"
+area_name = "Snowfield"
 description = "A frozen tundra with ice caves and blizzard conditions. Home to the CAST storyline."
 unlock_condition = "Complete Newman story quest"
 recommended_level = 8

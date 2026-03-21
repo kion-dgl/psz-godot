@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "mayor_s_quest"
 name = "Mayor's Quest"
-area = "Ozette Wetland"
+area = "Wetlands"
 is_main = false
 is_secret = false
 requires = PackedStringArray("devilish_return")

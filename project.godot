@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="PSZ Godot"
-config/version="0.2.2"
+config/version="0.4.0"
 run/main_scene="res://scenes/2d/title.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
@@ -56,9 +56,9 @@ InputConfig="*res://scripts/autoloads/input_config.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/stretch/mode="canvas_items"
 window/size/viewport_width.mobile=854
 window/size/viewport_height.mobile=480
-window/stretch/mode="canvas_items"
 
 [input]
 

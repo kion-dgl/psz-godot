@@ -1,8 +1,15 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Grid } from '@react-three/drei';
-import { Suspense, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { Suspense, useEffect, useRef, forwardRef, useImperativeHandle, Component, type ReactNode } from 'react';
 import * as THREE from 'three';
-import { getGlbPath, getAreaFromMapId } from './constants';
+import { getGlbPath, getAreaFromMapId, getSkyboxPath } from './constants';
+
+/** Silent error boundary — renders nothing if children fail to load */
+class SilentBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() { return this.state.failed ? null : this.props.children; }
+}
 
 interface StageModelProps {
   mapId: string;
@@ -20,6 +27,18 @@ function StageModel({ mapId, onSceneReady }: StageModelProps) {
     }
   }, [scene, onSceneReady]);
 
+  return <primitive object={scene} />;
+}
+
+function SkyboxModel({ mapId }: { mapId: string }) {
+  const areaKey = getAreaFromMapId(mapId) || 'valley';
+  const skyboxPath = getSkyboxPath(areaKey, mapId);
+  if (!skyboxPath) return null;
+  return <SkyboxGlb path={skyboxPath} />;
+}
+
+function SkyboxGlb({ path }: { path: string }) {
+  const { scene } = useGLTF(path);
   return <primitive object={scene} />;
 }
 
@@ -75,6 +94,9 @@ const StageCanvas = forwardRef<StageCanvasRef, StageCanvasProps>(function StageC
       <Suspense fallback={null}>
         <group visible={showStage}>
           <StageModel mapId={mapId} onSceneReady={onSceneReady} />
+          <SilentBoundary>
+            <SkyboxModel mapId={mapId} />
+          </SilentBoundary>
         </group>
       </Suspense>
 

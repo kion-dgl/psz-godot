@@ -119,12 +119,12 @@ func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 ## Convert display area name to spawner area_id
 func _area_name_to_id(area_name: String) -> String:
 	var mapping := {
-		"Gurhacia Valley": "gurhacia",
-		"Rioh Snowfield": "rioh",
-		"Ozette Wetland": "ozette",
-		"Oblivion City Paru": "paru",
-		"Makura Ruins": "makara", "Makara Ruins": "makara",
-		"Arca Plant": "arca",
+		"Valley": "gurhacia",
+		"Snowfield": "rioh",
+		"Wetlands": "ozette",
+		"Forgotten City": "paru",
+		"Ruins": "makara",
+		"Moon Facility": "arca",
 		"Dark Shrine": "dark",
 		"Eternal Tower": "tower",
 	}
