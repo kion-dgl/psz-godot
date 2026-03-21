@@ -56,9 +56,9 @@ InputConfig="*res://scripts/autoloads/input_config.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/stretch/mode="canvas_items"
 window/size/viewport_width.mobile=854
 window/size/viewport_height.mobile=480
-window/stretch/mode="canvas_items"
 
 [input]
 

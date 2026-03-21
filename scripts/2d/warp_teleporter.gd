@@ -12,7 +12,6 @@ const AREAS := [
 	{"id": "makara", "name": "Ruins"},
 	{"id": "arca", "name": "Moon Facility"},
 	{"id": "dark", "name": "Dark Shrine"},
-	{"id": "tower", "name": "Eternal Tower"},
 ]
 
 ## Story mission that must be completed to unlock each warp area.
@@ -23,7 +22,6 @@ const AREA_UNLOCK_MISSIONS := {
 	"makara": "fallen_flowers",
 	"arca": "ana_s_request",
 	"dark": "mother_s_memory",
-	"tower": "mother_s_memory",
 }
 
 ## Display area name → area_id mapping (for quest-based unlock checks).
@@ -35,7 +33,6 @@ const AREA_NAME_TO_ID := {
 	"Ruins": "makara",
 	"Moon Facility": "arca",
 	"Dark Shrine": "dark",
-	"Eternal Tower": "tower",
 }
 
 # PSZ palette (matches field_pause_menu.gd)
@@ -107,12 +104,18 @@ func _build_visible_areas() -> void:
 func _is_area_unlocked(area_id: String) -> bool:
 	if area_id == "gurhacia":
 		return true
+	# Check story mission unlock
 	var mission_id: String = AREA_UNLOCK_MISSIONS.get(area_id, "")
 	if not mission_id.is_empty() and GameState.is_mission_completed(mission_id):
 		return true
 	for completed_id in GameState.completed_missions:
+		# Check story missions by area name
 		var mission = MissionRegistry.get_mission(str(completed_id))
 		if mission and AREA_NAME_TO_ID.get(mission.area, "") == area_id:
+			return true
+		# Check guild quests by area_id
+		var quest: Dictionary = QuestLoader.load_quest(str(completed_id))
+		if not quest.is_empty() and str(quest.get("area_id", "")) == area_id:
 			return true
 	return false
 
@@ -157,11 +160,7 @@ func _warp_to_field() -> void:
 			sections = quest["sections"]
 		else:
 			var gen := GridGenerator.new()
-			var field: Dictionary
-			if area_id == "tower":
-				field = gen.generate_tower_field("normal")
-			else:
-				field = gen.generate_field("normal", area_id)
+			var field: Dictionary = gen.generate_field("normal", area_id)
 			sections = field["sections"]
 
 		SessionManager.set_field_sections(sections)

@@ -1,36 +1,16 @@
 extends Control
-## Guild counter — accept missions and quests.
+## Guild counter — accept and report quests.
 
-## Each entry: { "type": "mission"|"quest", "id": String, "name": String,
-##   "area": String, "is_main": bool, "available": bool,
-##   "requires": Array, "rewards": Dictionary, "quest_id": String }
+## Each entry: { "type": "quest"|"report"|"cancel", "id": String, "name": String,
+##   "area": String, "available": bool, "quest_id": String }
 var _entries: Array = []
-var _quest_entries: Array = []   # Numbered quests only
-var _tui_entries: Array = []     # TUI missions grouped by area
 var _selected_index: int = 0
 var _selecting_difficulty: bool = false
 var _selected_difficulty: int = 0
 
-enum Tab { QUESTS, TUI }
-var _tab: int = Tab.QUESTS
-
-var _mode_bar: HBoxContainer
 var _portrait: TextureRect
 
-const TAB_NAMES := ["Quests", "TUI"]
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
-
-## Progression order by area
-const AREA_ORDER := {
-	"Valley": 0,
-	"Snowfield": 1,
-	"Wetlands": 2,
-	"Forgotten City": 3,
-	"Ruins": 4,
-	"Moon Facility": 5,
-	"Dark Shrine": 6,
-	"Eternal Tower": 7,
-}
 
 ## Quest numbering (matches GitHub issue order)
 const QUEST_ORDER := {
@@ -53,7 +33,6 @@ const AREA_DISPLAY := {
 	"makara": "Ruins",
 	"arca": "Moon Facility",
 	"dark": "Dark Shrine",
-	"tower": "Eternal Tower",
 }
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
@@ -64,7 +43,7 @@ const AREA_DISPLAY := {
 
 
 func _ready() -> void:
-	_mode_bar = mode_label.get_parent()
+	var _mode_bar: HBoxContainer = mode_label.get_parent()
 	PszStyle.style_menu(title_label, hint_label, [list_panel, detail_panel])
 	title_label.text = "Guild Counter"
 	_setup_portrait()
@@ -126,29 +105,7 @@ func _load_entries() -> void:
 		})
 		return
 
-	# Load TUI missions
-	_tui_entries.clear()
-	var missions := MissionRegistry.get_all_missions()
-	missions.sort_custom(func(a, b):
-		var aa: int = AREA_ORDER.get(a.area, 99)
-		var ab: int = AREA_ORDER.get(b.area, 99)
-		if aa != ab: return aa < ab
-		if a.is_main != b.is_main: return a.is_main
-		return a.name < b.name
-	)
-	for mission in missions:
-		_tui_entries.append({
-			"type": "mission",
-			"id": mission.id,
-			"name": mission.name,
-			"area": mission.area,
-			"is_main": mission.is_main,
-			"requires": mission.requires,
-			"rewards": mission.rewards,
-		})
-
 	# Load numbered quests
-	_quest_entries.clear()
 	var quest_ids := QuestLoader.list_quests()
 	for qid in quest_ids:
 		if qid == "hello_quest" or qid == "manifest":
@@ -161,7 +118,7 @@ func _load_entries() -> void:
 		var quest_number: int = QUEST_ORDER.get(qid, 0)
 		if quest_number > 0:
 			display_name = "%d. %s" % [quest_number, display_name]
-		_quest_entries.append({
+		_entries.append({
 			"type": "quest",
 			"id": qid,
 			"quest_id": qid,
@@ -172,31 +129,11 @@ func _load_entries() -> void:
 			"requires": [],
 			"rewards": {},
 			"_sort_order": quest_number,
+			"available": true,
 		})
-	_quest_entries.sort_custom(func(a, b):
+	_entries.sort_custom(func(a, b):
 		return a.get("_sort_order", 99) < b.get("_sort_order", 99)
 	)
-
-	_rebuild_entries()
-	_update_availability()
-
-
-func _rebuild_entries() -> void:
-	_entries.clear()
-	if _has_active_quest():
-		# Active quest entries (report/cancel) are added in _load_entries above
-		return
-	if _tab == Tab.QUESTS:
-		_entries.append_array(_quest_entries)
-	else:
-		_entries.append_array(_tui_entries)
-		_entries.sort_custom(func(a, b):
-			var aa: int = AREA_ORDER.get(a["area"], 99)
-			var ab: int = AREA_ORDER.get(b["area"], 99)
-			if aa != ab: return aa < ab
-			if a.get("is_main", false) != b.get("is_main", false): return a["is_main"]
-			return a["name"] < b["name"]
-		)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -206,14 +143,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			_refresh_display()
 		else:
 			SceneManager.pop_scene()
-		get_viewport().set_input_as_handled()
-	elif not _selecting_difficulty and not _has_active_quest() \
-			and (event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right")):
-		_tab = Tab.TUI if _tab == Tab.QUESTS else Tab.QUESTS
-		_selected_index = 0
-		_rebuild_entries()
-		_update_availability()
-		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		if _selecting_difficulty:
@@ -251,37 +180,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _update_availability() -> void:
-	for i in range(_entries.size()):
-		var entry: Dictionary = _entries[i]
-		if entry["type"] == "quest":
-			entry["available"] = true
-			continue
-		# Mission availability logic
-		var requires: Array = entry["requires"]
-		if requires.is_empty():
-			var area_idx: int = AREA_ORDER.get(entry["area"], 0)
-			if area_idx == 0:
-				entry["available"] = true
-			else:
-				var prev_completed := false
-				for e in _entries:
-					if e["type"] != "mission":
-						continue
-					var e_area: int = AREA_ORDER.get(e["area"], 99)
-					if e_area == area_idx - 1 and GameState.is_mission_completed(e["id"]):
-						prev_completed = true
-						break
-				entry["available"] = prev_completed
-		else:
-			var all_met := true
-			for req in requires:
-				if not GameState.is_mission_completed(req):
-					all_met = false
-					break
-			entry["available"] = all_met
-
-
 func _accept_entry() -> void:
 	if _entries.is_empty() or _selected_index >= _entries.size():
 		return
@@ -290,7 +188,7 @@ func _accept_entry() -> void:
 		_report_quest()
 		return
 	if not entry.get("available", true):
-		hint_label.text = "Mission locked! Complete earlier missions first."
+		hint_label.text = "Quest locked!"
 		_selecting_difficulty = false
 		_refresh_display()
 		return
@@ -308,10 +206,6 @@ func _accept_entry() -> void:
 		SessionManager.accept_quest(entry["quest_id"], difficulty)
 		_selecting_difficulty = false
 		SceneManager.pop_scene({"quest_accepted": true})
-	else:
-		# Missions go directly to field as before
-		SessionManager.enter_mission(entry["id"], difficulty)
-		SceneManager.goto_scene("res://scenes/2d/field.tscn")
 
 
 func _report_quest() -> void:
@@ -334,12 +228,6 @@ func _report_quest() -> void:
 
 
 func _refresh_display() -> void:
-	# Tab bar (hidden during active quest)
-	for child in _mode_bar.get_children():
-		child.queue_free()
-	if not _has_active_quest():
-		_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
-
 	# List panel — pill rows
 	for child in list_panel.get_children():
 		child.queue_free()
@@ -367,24 +255,13 @@ func _refresh_display() -> void:
 		hint_label.text = "Up/Down: Select Difficulty  Enter: Accept  Esc: Back"
 	else:
 		if _entries.is_empty():
-			var empty_text := "(No quests available)" if _tab == Tab.QUESTS else "(No missions available)"
-			vbox.add_child(PszStyle.create_pill(empty_text, false, "", PszStyle.TEXT_MUTED))
+			vbox.add_child(PszStyle.create_pill("(No quests available)", false, "", PszStyle.TEXT_MUTED))
 		else:
-			var last_area := ""
 			for i in range(_entries.size()):
 				var entry: Dictionary = _entries[i]
-				# Area headers (TUI tab only)
-				if _tab == Tab.TUI:
-					var area: String = entry["area"]
-					if area != last_area:
-						if not last_area.is_empty():
-							vbox.add_child(PszStyle.detail_label(""))
-						vbox.add_child(PszStyle.create_section_header(area))
-						last_area = area
-
 				var unlocked: bool = entry.get("available", true)
 				var entry_type: String = str(entry["type"])
-				var completed: bool = (entry_type == "mission" or entry_type == "quest") and GameState.is_mission_completed(entry["id"])
+				var completed: bool = entry_type == "quest" and GameState.is_mission_completed(entry["id"])
 				var status_tag: String = ""
 				if entry_type == "report":
 					status_tag = " [REPORT]"
@@ -413,7 +290,7 @@ func _refresh_display() -> void:
 				vbox.add_child(pill)
 				if i == _selected_index:
 					selected_pill = pill
-		hint_label.text = "Left/Right: Switch Tab  Up/Down: Select  Enter: Choose  Esc: Leave"
+		hint_label.text = "Up/Down: Select  Enter: Choose  Esc: Leave"
 
 	scroll.add_child(vbox)
 	list_panel.add_child(scroll)
@@ -442,37 +319,11 @@ func _refresh_detail() -> void:
 	if not str(entry["area"]).is_empty():
 		vbox.add_child(PszStyle.detail_label("Area: %s" % entry["area"]))
 
-	if entry["type"] == "quest":
-		vbox.add_child(PszStyle.detail_label("Type: Quest", PszStyle.TEXT_QUEST))
-		var desc: String = str(entry.get("description", ""))
-		if not desc.is_empty():
-			var desc_label := PszStyle.detail_label(desc)
-			desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			vbox.add_child(desc_label)
-	else:
-		var type_text := "Main Story" if entry.get("is_main", false) else "Side Quest"
-		vbox.add_child(PszStyle.detail_label("Type: %s" % type_text))
-
-		var requires: Array = entry["requires"]
-		if not requires.is_empty():
-			var req_names := PackedStringArray()
-			for req_id in requires:
-				var req_mission = MissionRegistry.get_mission(req_id)
-				req_names.append(req_mission.name if req_mission else req_id)
-			vbox.add_child(PszStyle.detail_label("Requires: %s" % ", ".join(req_names), PszStyle.TEXT_DANGER))
-
-		# Rewards
-		var rewards: Dictionary = entry["rewards"]
-		if not rewards.is_empty():
-			vbox.add_child(PszStyle.detail_label(""))
-			vbox.add_child(PszStyle.detail_label("Rewards:", PszStyle.TEXT_HIGHLIGHT))
-			for diff_key in rewards:
-				var reward: Dictionary = rewards[diff_key]
-				vbox.add_child(PszStyle.detail_label("  %s: %s x%s, %s M" % [
-					str(diff_key).capitalize(),
-					str(reward.get("item", "???")),
-					str(reward.get("quantity", 1)),
-					str(reward.get("meseta", 0)),
-				]))
+	vbox.add_child(PszStyle.detail_label("Type: Quest", PszStyle.TEXT_QUEST))
+	var desc: String = str(entry.get("description", ""))
+	if not desc.is_empty():
+		var desc_label := PszStyle.detail_label(desc)
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(desc_label)
 
 	detail_panel.add_child(vbox)

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-07",
+  "last_updated": "2026-03-20",
   "id": "static_in_the_snow",
   "name": "Static in the Snow",
   "description": "Requested by: Research Division. A research team studying the snowfield has gone silent. Their last transmission was garbled with static. Locate the expedition camp and ensure the team's safety.",
@@ -10,7 +10,7 @@
       "type": "grid",
       "area": "a",
       "start_pos": "0,2",
-      "end_pos": "3,4",
+      "end_pos": "0,3",
       "cells": [
         {
           "pos": "0,2",
@@ -59,26 +59,26 @@
         {
           "pos": "1,2",
           "stage_id": "s03a_tb3",
-          "rotation": 270,
+          "rotation": 180,
           "connections": {
+            "north": "0,2",
             "east": "1,3",
-            "south": "2,2",
-            "north": "0,2"
+            "west": "1,1"
           },
           "portals": {
-            "east": "portal_1770724548563_bnzuctak9",
-            "south": "portal_1771825168757_c70171yhn",
-            "north": "portal_1771825175495_9mmsbwqbd"
+            "north": "portal_1770724548563_bnzuctak9",
+            "east": "portal_1771825168757_c70171yhn",
+            "west": "portal_1771825175495_9mmsbwqbd"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "key_drop": "",
-          "required_keys": 1,
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 1,
           "objects": [
@@ -122,35 +122,27 @@
         },
         {
           "pos": "1,3",
-          "stage_id": "s03a_nc2",
-          "rotation": 90,
+          "stage_id": "s03a_ib1",
+          "rotation": 270,
           "connections": {
-            "west": "1,2"
+            "west": "1,2",
+            "east": "1,4"
           },
           "portals": {
-            "west": "portal_1770724448196_4mfd4mgom"
+            "west": "portal_1770723916745_dtri7lila",
+            "east": "portal_1770723931285_tso6bvs29"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
+          "has_key": true,
+          "key_for_cell": "1,4",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "1,2",
+          "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
-          "key_position": [
-            -5.2,
-            1,
-            -1.6
-          ],
-          "key_drop_position": [
-            -17.1,
-            1,
-            -16.3
-          ],
           "objects": [
             {
               "type": "enemy",
@@ -202,35 +194,7 @@
                 0,
                 -12.3
               ]
-            }
-          ]
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s03a_tb3",
-          "rotation": 180,
-          "connections": {
-            "north": "1,2",
-            "east": "2,3",
-            "west": "2,1"
-          },
-          "portals": {
-            "north": "portal_1770724548563_bnzuctak9",
-            "east": "portal_1771825168757_c70171yhn",
-            "west": "portal_1771825175495_9mmsbwqbd"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 3,
-          "objects": [
+            },
             {
               "type": "enemy",
               "position": [
@@ -306,26 +270,50 @@
           ]
         },
         {
-          "pos": "2,3",
-          "stage_id": "s03a_ic3",
+          "pos": "1,1",
+          "stage_id": "s03a_nb2",
           "rotation": 270,
           "connections": {
-            "east": "2,4",
-            "west": "2,2"
+            "east": "1,2"
           },
           "portals": {
-            "east": "portal_1770724158723_pb0rd3r6e",
-            "west": "portal_1770724176247_38q7705rp"
+            "east": "portal_1770724424456_ucexb8mrp"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "1,4",
+          "stage_id": "s03a_tb3",
+          "rotation": 90,
+          "connections": {
+            "west": "1,3",
+            "north": "0,4",
+            "south": "2,4"
+          },
+          "portals": {
+            "west": "portal_1770724548563_bnzuctak9",
+            "north": "portal_1771825168757_c70171yhn",
+            "south": "portal_1771825175495_9mmsbwqbd"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 4,
           "objects": [
@@ -382,31 +370,7 @@
                 11.4
               ],
               "text": "Expedition Log: We're finding it hard to avoid encounters. Previsions are starting to run low. "
-            }
-          ]
-        },
-        {
-          "pos": "2,1",
-          "stage_id": "s03a_nc2",
-          "rotation": 270,
-          "connections": {
-            "east": "2,2"
-          },
-          "portals": {
-            "east": "portal_1770724448196_4mfd4mgom"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 5,
-          "objects": [
+            },
             {
               "type": "message",
               "position": [
@@ -462,16 +426,16 @@
           ]
         },
         {
-          "pos": "2,4",
-          "stage_id": "s03a_lc2",
+          "pos": "0,4",
+          "stage_id": "s03a_lb3",
           "rotation": 180,
           "connections": {
-            "south": "3,4",
-            "west": "2,3"
+            "south": "1,4",
+            "west": "0,3"
           },
           "portals": {
-            "south": "portal_1770724373813_qo6ja9myl",
-            "west": "portal_1771825120791_adw7ezl6e"
+            "south": "portal_1770724266872_rv1ah2vnl",
+            "west": "portal_1771825077219_e71k3428s"
           },
           "is_start": false,
           "is_end": false,
@@ -483,7 +447,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6,
+          "path_order": 5,
           "objects": [
             {
               "type": "box",
@@ -539,15 +503,37 @@
           ]
         },
         {
-          "pos": "3,4",
-          "stage_id": "s03a_ib2",
+          "pos": "2,4",
+          "stage_id": "s03a_nc2",
           "rotation": 180,
           "connections": {
-            "north": "2,4"
+            "north": "1,4"
           },
           "portals": {
-            "north": "portal_1770724007474_9kh6jog21",
-            "south": "portal_1770724021228_2sbc5cfro"
+            "north": "portal_1770724448196_4mfd4mgom"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s03a_lb1",
+          "rotation": 0,
+          "connections": {
+            "east": "0,4"
+          },
+          "portals": {
+            "east": "portal_1771825059929_uhomc3vsu",
+            "north": "portal_1770724222445_x2qvptt3a"
           },
           "is_start": false,
           "is_end": true,
@@ -558,7 +544,7 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "south",
+          "warp_edge": "north",
           "path_order": 7,
           "objects": [
             {
@@ -710,7 +696,7 @@
       "type": "grid",
       "area": "b",
       "start_pos": "0,2",
-      "end_pos": "4,3",
+      "end_pos": "4,1",
       "cells": [
         {
           "pos": "0,2",
@@ -737,21 +723,19 @@
         },
         {
           "pos": "1,2",
-          "stage_id": "s03b_tb3",
+          "stage_id": "s03b_lb3",
           "rotation": 270,
           "connections": {
-            "east": "1,3",
-            "north": "0,2",
-            "south": "2,2"
+            "west": "1,1",
+            "north": "0,2"
           },
           "portals": {
-            "east": "portal_1770726593904_v64l4z5lm",
-            "north": "portal_1771826388908_ypj0vdq8b",
-            "south": "portal_1771826394546_zx3c0s02z"
+            "west": "portal_1770725946219_ha5vwnji3",
+            "north": "portal_1771825482627_93ccoohau"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -791,18 +775,22 @@
           ]
         },
         {
-          "pos": "1,3",
-          "stage_id": "s03b_ga1",
-          "rotation": 90,
+          "pos": "1,1",
+          "stage_id": "s03b_tb3",
+          "rotation": 0,
           "connections": {
-            "west": "1,2"
+            "south": "2,1",
+            "east": "1,2",
+            "west": "1,0"
           },
           "portals": {
-            "west": "portal_1770725676213_mbx0o9fxx"
+            "south": "portal_1770726593904_v64l4z5lm",
+            "east": "portal_1771826388908_ypj0vdq8b",
+            "west": "portal_1771826394546_zx3c0s02z"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -851,28 +839,50 @@
           ]
         },
         {
-          "pos": "2,2",
-          "stage_id": "s03b_lc2",
-          "rotation": 0,
+          "pos": "2,1",
+          "stage_id": "s03b_ga1",
+          "rotation": 180,
           "connections": {
-            "north": "1,2",
-            "east": "2,3"
+            "north": "1,1"
           },
           "portals": {
-            "north": "portal_1770726393370_2nra42l1h",
-            "east": "portal_1771826359864_3iztbfrsg"
+            "north": "portal_1770725676213_mbx0o9fxx"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": true,
+          "key_for_cell": "1,0",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s03b_lc2",
+          "rotation": 90,
+          "connections": {
+            "east": "1,1",
+            "south": "2,0"
+          },
+          "portals": {
+            "east": "portal_1770726393370_2nra42l1h",
+            "south": "portal_1771826359864_3iztbfrsg"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
-          "path_order": 3,
+          "path_order": 4,
           "objects": [
             {
               "type": "enemy",
@@ -924,22 +934,20 @@
           ]
         },
         {
-          "pos": "2,3",
-          "stage_id": "s03b_tb3",
-          "rotation": 0,
+          "pos": "2,0",
+          "stage_id": "s03b_ib2",
+          "rotation": 180,
           "connections": {
-            "south": "3,3",
-            "east": "2,4",
-            "west": "2,2"
+            "south": "3,0",
+            "north": "1,0"
           },
           "portals": {
-            "south": "portal_1770726593904_v64l4z5lm",
-            "east": "portal_1771826388908_ypj0vdq8b",
-            "west": "portal_1771826394546_zx3c0s02z"
+            "south": "portal_1770725725304_4aaht7788",
+            "north": "portal_1770725739472_at4z8xlml"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -947,7 +955,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 4,
+          "path_order": 5,
           "objects": [
             {
               "type": "box",
@@ -1003,20 +1011,22 @@
           ]
         },
         {
-          "pos": "3,3",
-          "stage_id": "s03b_ib1",
-          "rotation": 180,
+          "pos": "3,0",
+          "stage_id": "s03b_tb3",
+          "rotation": 270,
           "connections": {
-            "north": "2,3",
-            "south": "4,3"
+            "east": "3,1",
+            "north": "2,0",
+            "south": "4,0"
           },
           "portals": {
-            "north": "portal_1770725695157_thdqlrjg4",
-            "south": "portal_1770725706335_vtdmi7t4r"
+            "east": "portal_1770726593904_v64l4z5lm",
+            "north": "portal_1771826388908_ypj0vdq8b",
+            "south": "portal_1771826394546_zx3c0s02z"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -1024,7 +1034,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5,
+          "path_order": 6,
           "objects": [
             {
               "type": "enemy",
@@ -1076,14 +1086,38 @@
           ]
         },
         {
-          "pos": "2,4",
-          "stage_id": "s03b_nb2",
+          "pos": "3,1",
+          "stage_id": "s03b_ga1",
           "rotation": 90,
           "connections": {
-            "west": "2,3"
+            "west": "3,0"
           },
           "portals": {
-            "west": "portal_1770726458075_bz9f98pru"
+            "west": "portal_1770725676213_mbx0o9fxx"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s03b_lc2",
+          "rotation": 0,
+          "connections": {
+            "north": "3,0",
+            "east": "4,1"
+          },
+          "portals": {
+            "north": "portal_1770726393370_2nra42l1h",
+            "east": "portal_1771826359864_3iztbfrsg"
           },
           "is_start": false,
           "is_end": false,
@@ -1095,7 +1129,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6,
+          "path_order": 8,
           "objects": [
             {
               "type": "message",
@@ -1136,14 +1170,15 @@
           ]
         },
         {
-          "pos": "4,3",
-          "stage_id": "s03b_nc2",
+          "pos": "4,1",
+          "stage_id": "s03b_lb1",
           "rotation": 180,
           "connections": {
-            "north": "3,3"
+            "west": "4,0"
           },
           "portals": {
-            "north": "portal_1770726478489_wuhnlspfg"
+            "west": "portal_1771825467825_tj152hzva",
+            "south": "portal_1770725890680_sdcyeuwye"
           },
           "is_start": false,
           "is_end": true,
@@ -1154,8 +1189,8 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 7,
+          "warp_edge": "south",
+          "path_order": 9,
           "objects": [
             {
               "type": "story_prop",
@@ -1239,7 +1274,7 @@
               "dialog": [
                 {
                   "speaker": "Dr. Carlo:",
-                  "text": "Thank you. The creatures came out of nowhere \u2014 we lost contact trying to call for help."
+                  "text": "Thank you. The creatures came out of nowhere — we lost contact trying to call for help."
                 },
                 {
                   "speaker": "Kai:",

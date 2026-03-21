@@ -116,31 +116,48 @@ function tryGenerateGrid(
   if (!startStageName) return null;
 
   const candidateStages = allStages.filter(s => s !== startStageName);
+  const usedStages = new Set<string>();
   const path: [number, number][] = [];
 
-  // Place sa1 at top-center, exiting south
-  const sa1Row = 0;
-  const sa1Col = Math.floor(gridSize / 2);
-
-  // Check sa1's original gates: must have south, other gates must point outside grid
+  // Try all 4 rotations for sa1, pick a valid one randomly
   const sa1Gates = getOriginalGates(startStageName);
-  if (!sa1Gates.has('south')) return null;
+  const sa1Placements: { row: number; col: number; rotation: number; exitDir: Direction }[] = [];
 
-  let sa1Valid = true;
-  for (const gate of sa1Gates) {
-    if (gate === 'south') continue;
-    const [nr, nc] = getNeighbor(sa1Row, sa1Col, gate);
-    if (isValidPos(nr, nc, gridSize)) {
-      sa1Valid = false;
-      break;
+  for (const rot of [0, 90, 180, 270]) {
+    const rotatedGates = [...sa1Gates].map(g => rotateDirection(g, rot));
+
+    // For each rotated gate, try it as the exit direction
+    for (const exitDir of rotatedGates) {
+      // Determine edge placement: exit must lead into the grid
+      let row: number, col: number;
+      switch (exitDir) {
+        case 'south': row = 0; col = Math.floor(gridSize / 2); break;
+        case 'north': row = gridSize - 1; col = Math.floor(gridSize / 2); break;
+        case 'east': row = Math.floor(gridSize / 2); col = 0; break;
+        case 'west': row = Math.floor(gridSize / 2); col = gridSize - 1; break;
+        default: continue;
+      }
+
+      // All other gates must point outside the grid
+      let valid = true;
+      for (const gate of rotatedGates) {
+        if (gate === exitDir) continue;
+        const [nr, nc] = getNeighbor(row, col, gate);
+        if (isValidPos(nr, nc, gridSize)) { valid = false; break; }
+      }
+      if (valid) {
+        sa1Placements.push({ row, col, rotation: rot, exitDir });
+      }
     }
   }
-  if (!sa1Valid) return null;
+
+  if (sa1Placements.length === 0) return null;
+  const sa1Pick = sa1Placements[Math.floor(Math.random() * sa1Placements.length)];
 
   // Place start cell
-  grid[sa1Row][sa1Col] = {
+  grid[sa1Pick.row][sa1Pick.col] = {
     stageName: startStageName,
-    rotation: 0,
+    rotation: sa1Pick.rotation,
     entryDirection: null,
     isKeyGate: false,
     keyGateDirection: null,
@@ -151,12 +168,13 @@ function tryGenerateGrid(
     isBranch: false,
     pathOrder: 0,
   };
-  path.push([sa1Row, sa1Col]);
+  usedStages.add(startStageName);
+  path.push([sa1Pick.row, sa1Pick.col]);
 
   // Build linear path
-  let currentRow = sa1Row;
-  let currentCol = sa1Col;
-  let lastExitDir: Direction = 'south';
+  let currentRow = sa1Pick.row;
+  let currentCol = sa1Pick.col;
+  let lastExitDir: Direction = sa1Pick.exitDir;
 
   while (path.length < usedCells) {
     const [nextRow, nextCol] = getNeighbor(currentRow, currentCol, lastExitDir);
@@ -197,7 +215,11 @@ function tryGenerateGrid(
       // Try to end early if we have enough cells
       if (path.length >= 3) {
         let earlyEnd = false;
-        for (const stage of candidateStages) {
+        // Prefer unused stages for early end too
+        const earlyEndStages = [...candidateStages].sort((a, b) =>
+          (usedStages.has(a) ? 1 : 0) - (usedStages.has(b) ? 1 : 0)
+        );
+        for (const stage of earlyEndStages) {
           if (earlyEnd) break;
           for (const rot of [0, 90, 180, 270]) {
             const gates = getRotatedGates(stage, rot);
@@ -230,7 +252,11 @@ function tryGenerateGrid(
       break;
     }
 
-    const chosen = validCandidates[Math.floor(Math.random() * validCandidates.length)];
+    // Prefer stages not yet used in this grid
+    const unused = validCandidates.filter(c => !usedStages.has(c.stage));
+    const pool = unused.length > 0 ? unused : validCandidates;
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    usedStages.add(chosen.stage);
 
     grid[nextRow][nextCol] = {
       stageName: chosen.stage,
@@ -264,7 +290,10 @@ function tryGenerateGrid(
     if (!entryDir) return null;
 
     let foundValidEnd = false;
-    for (const stage of candidateStages) {
+    const endStages = [...candidateStages].sort((a, b) =>
+      (usedStages.has(a) ? 1 : 0) - (usedStages.has(b) ? 1 : 0)
+    );
+    for (const stage of endStages) {
       if (foundValidEnd) break;
       for (const rot of [0, 90, 180, 270]) {
         const gates = getRotatedGates(stage, rot);
@@ -392,7 +421,13 @@ function tryGenerateGrid(
       }
 
       const branchEntry = oppositeDirection(branchDir);
-      const shuffledStages = [...candidateStages].sort(() => Math.random() - 0.5);
+      // Prefer unused stages, shuffle within each group
+      const shuffledStages = [...candidateStages].sort((a, b) => {
+        const aUsed = usedStages.has(a) ? 1 : 0;
+        const bUsed = usedStages.has(b) ? 1 : 0;
+        if (aUsed !== bUsed) return aUsed - bUsed;
+        return Math.random() - 0.5;
+      });
 
       let placed = false;
       for (const stage of shuffledStages) {
@@ -417,6 +452,7 @@ function tryGenerateGrid(
             pathOrder: -1,
           };
           branchCells.push([br, bc]);
+          usedStages.add(stage);
           placedBranches++;
           placed = true;
           break;
@@ -513,7 +549,7 @@ function tryGenerateGrid(
   // BFS validation — ensure end is reachable
   const simVisited = new Set<string>();
   const simKeys = new Set<string>();
-  const simQueue: [number, number][] = [[sa1Row, sa1Col]];
+  const simQueue: [number, number][] = [[sa1Pick.row, sa1Pick.col]];
 
   while (simQueue.length > 0) {
     const [r, c] = simQueue.shift()!;

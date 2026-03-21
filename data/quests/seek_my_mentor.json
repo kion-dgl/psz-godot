@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-08",
+  "last_updated": "2026-03-20",
   "id": "seek_my_mentor",
   "name": "Seek My Mentor",
   "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Vash, who went missing three days ago and hasn't come back.",
@@ -10,7 +10,7 @@
       "type": "grid",
       "area": "a",
       "start_pos": "0,2",
-      "end_pos": "0,3",
+      "end_pos": "1,4",
       "cells": [
         {
           "pos": "0,2",
@@ -59,12 +59,74 @@
         },
         {
           "pos": "1,2",
+          "stage_id": "s04a_ib1",
+          "rotation": 0,
+          "connections": {
+            "south": "2,2",
+            "north": "0,2"
+          },
+          "portals": {
+            "south": "portal_1770745604078_a1wjzjtr9",
+            "north": "portal_1770745613177_vqwq2i24x"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                3
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -5
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                1
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                -3
+              ],
+              "enemy_id": "batt"
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
           "stage_id": "s04a_tb3",
           "rotation": 180,
           "connections": {
-            "north": "0,2",
-            "west": "1,1",
-            "east": "1,3"
+            "north": "1,2",
+            "west": "2,1",
+            "east": "2,3"
           },
           "portals": {
             "north": "portal_1770751103697_6gtystxvs",
@@ -81,55 +143,15 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [-6, 0, 3],
-              "enemy_id": "batt"
-            },
-            {
-              "type": "enemy",
-              "position": [-3, 0, -5],
-              "enemy_id": "batt"
-            },
-            {
-              "type": "enemy",
-              "position": [4, 0, 1],
-              "enemy_id": "rohjade"
-            },
-            {
-              "type": "enemy",
-              "position": [7, 0, -3],
-              "enemy_id": "batt"
-            }
-          ]
-        },
-        {
-          "pos": "1,1",
-          "stage_id": "s04a_na1",
-          "rotation": 270,
-          "connections": {
-            "east": "1,2"
-          },
-          "portals": {
-            "east": "portal_1770745860162_egll9murc"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
           "path_order": 2,
           "objects": [
             {
               "type": "message",
-              "position": [-10, 0, 8],
+              "position": [
+                -10,
+                0,
+                8
+              ],
               "locked": true,
               "text": "Vash, log one. Made it past the outer corridors. The ruins go deep — much deeper than anyone told me. Quiet so far. Should be back by morning.",
               "reaction_dialog": [
@@ -145,126 +167,92 @@
             },
             {
               "type": "enemy",
-              "position": [3, 0, -4],
+              "position": [
+                3,
+                0,
+                -4
+              ],
               "enemy_id": "batt"
             },
             {
               "type": "enemy",
-              "position": [6, 0, 2],
+              "position": [
+                6,
+                0,
+                2
+              ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
-              "position": [-4, 0, -2],
+              "position": [
+                -4,
+                0,
+                -2
+              ],
               "enemy_id": "batt"
             }
           ]
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s04a_nb2",
+          "rotation": 270,
+          "connections": {
+            "east": "2,2"
+          },
+          "portals": {
+            "east": "portal_1770745873567_6z54sf0du"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": true,
+          "key_for_cell": "2,3",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s04a_tb3",
+          "rotation": 180,
+          "connections": {
+            "north": "1,3",
+            "west": "2,2",
+            "east": "2,4"
+          },
+          "portals": {
+            "north": "portal_1770751103697_6gtystxvs",
+            "west": "portal_1771827518414_l4784hb2g",
+            "east": "portal_1771827527824_pjkc0qjuj"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "north",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 4
         },
         {
           "pos": "1,3",
           "stage_id": "s04a_ic1",
-          "rotation": 90,
-          "connections": {
-            "west": "1,2",
-            "east": "1,4"
-          },
-          "portals": {
-            "west": "portal_1770745656750_00rpy2uoa",
-            "east": "portal_1770745669356_cwfsqif9q"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 3,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [15, 0, 10.3],
-              "enemy_id": "rohjade"
-            },
-            {
-              "type": "enemy",
-              "position": [11.2, 0, 8.4],
-              "enemy_id": "batt"
-            },
-            {
-              "type": "enemy",
-              "position": [7.9, 0, 11.5],
-              "enemy_id": "kapantha"
-            }
-          ]
-        },
-        {
-          "pos": "1,4",
-          "stage_id": "s04a_lb3",
-          "rotation": 270,
-          "connections": {
-            "west": "1,3",
-            "north": "0,4"
-          },
-          "portals": {
-            "west": "portal_1770745790484_vs9h5kjjr",
-            "north": "portal_1771827378951_x97055j0y"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 4,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [-5, 0, 4],
-              "enemy_id": "batt"
-            },
-            {
-              "type": "enemy",
-              "position": [3, 0, -6],
-              "enemy_id": "rohjade"
-            },
-            {
-              "type": "enemy",
-              "position": [7, 0, 2],
-              "enemy_id": "batt"
-            },
-            {
-              "type": "enemy",
-              "position": [-2, 0, -3],
-              "enemy_id": "kapantha",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [5, 0, 8],
-              "enemy_id": "batt",
-              "wave": 2
-            }
-          ]
-        },
-        {
-          "pos": "0,4",
-          "stage_id": "s04a_lc1",
           "rotation": 180,
           "connections": {
-            "south": "1,4",
-            "west": "0,3"
+            "north": "0,3",
+            "south": "2,3"
           },
           "portals": {
-            "south": "portal_1770745802746_wsibp2wyo",
-            "west": "portal_1771827393605_782axhisv"
+            "north": "portal_1770745656750_00rpy2uoa",
+            "south": "portal_1770745669356_cwfsqif9q"
           },
           "is_start": false,
           "is_end": false,
@@ -279,8 +267,160 @@
           "path_order": 5,
           "objects": [
             {
+              "type": "enemy",
+              "position": [
+                15,
+                0,
+                10.3
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.2,
+                0,
+                8.4
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.9,
+                0,
+                11.5
+              ],
+              "enemy_id": "kapantha"
+            }
+          ]
+        },
+        {
+          "pos": "2,4",
+          "stage_id": "s04a_nb2",
+          "rotation": 90,
+          "connections": {
+            "west": "2,3"
+          },
+          "portals": {
+            "west": "portal_1770745873567_6z54sf0du"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s04a_lc2",
+          "rotation": 90,
+          "connections": {
+            "east": "0,4",
+            "south": "1,3"
+          },
+          "portals": {
+            "east": "portal_1770745830791_9ya9gscne",
+            "south": "portal_1771827433835_gi40dj7cg"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                4
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -6
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                2
+              ],
+              "enemy_id": "batt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2,
+                0,
+                -3
+              ],
+              "enemy_id": "kapantha",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                8
+              ],
+              "enemy_id": "batt",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "0,4",
+          "stage_id": "s04a_lb3",
+          "rotation": 180,
+          "connections": {
+            "south": "1,4",
+            "west": "0,3"
+          },
+          "portals": {
+            "south": "portal_1770745790484_vs9h5kjjr",
+            "west": "portal_1771827378951_x97055j0y"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 8,
+          "objects": [
+            {
               "type": "message",
-              "position": [8, 0, -10],
+              "position": [
+                8,
+                0,
+                -10
+              ],
               "locked": true,
               "text": "Vash, log two. Took a bad hit from something I didn't see coming. Patched myself up but my leg's not right. The creatures down here are different — faster, more coordinated. They're not just wandering. They know I'm here.",
               "reaction_dialog": [
@@ -296,31 +436,43 @@
             },
             {
               "type": "enemy",
-              "position": [10.8, 0, 3.1],
+              "position": [
+                10.8,
+                0,
+                3.1
+              ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
-              "position": [7.5, 0, 8.4],
+              "position": [
+                7.5,
+                0,
+                8.4
+              ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
-              "position": [6, 0, 13.1],
+              "position": [
+                6,
+                0,
+                13.1
+              ],
               "enemy_id": "batt"
             }
           ]
         },
         {
-          "pos": "0,3",
-          "stage_id": "s04a_lb1",
+          "pos": "1,4",
+          "stage_id": "s04a_lb3",
           "rotation": 0,
           "connections": {
-            "east": "0,4"
+            "north": "0,4"
           },
           "portals": {
-            "east": "portal_1771827363714_svm8vkpvg",
-            "north": "portal_1770745715691_ffpa3wy8w"
+            "north": "portal_1770745790484_vs9h5kjjr",
+            "east": "portal_1771827378951_x97055j0y"
           },
           "is_start": false,
           "is_end": true,
@@ -331,14 +483,22 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "north",
-          "path_order": 6,
+          "warp_edge": "east",
+          "path_order": 9,
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [0, 1, -6],
+              "position": [
+                0,
+                1,
+                -6
+              ],
               "trigger_id": "ren_end_a",
-              "trigger_size": [1, 1, 1],
+              "trigger_size": [
+                1,
+                1,
+                1
+              ],
               "trigger_condition": "room_clear",
               "dialog": [
                 {
@@ -349,28 +509,48 @@
             },
             {
               "type": "enemy",
-              "position": [-8, 0, 6],
+              "position": [
+                -8,
+                0,
+                6
+              ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
-              "position": [4, 0, 2],
+              "position": [
+                4,
+                0,
+                2
+              ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
-              "position": [-3, 0, -4],
+              "position": [
+                -3,
+                0,
+                -4
+              ],
               "enemy_id": "batt"
             },
             {
               "type": "enemy",
-              "position": [10, 0, -8],
+              "position": [
+                10,
+                0,
+                -8
+              ],
               "enemy_id": "kapantha",
               "wave": 2
             },
             {
               "type": "enemy",
-              "position": [-6, 0, -10],
+              "position": [
+                -6,
+                0,
+                -10
+              ],
               "enemy_id": "rohjade",
               "wave": 2
             }
@@ -382,7 +562,7 @@
       "type": "grid",
       "area": "b",
       "start_pos": "0,2",
-      "end_pos": "4,1",
+      "end_pos": "1,4",
       "cells": [
         {
           "pos": "0,2",
@@ -409,9 +589,17 @@
           "objects": [
             {
               "type": "dialog_trigger",
-              "position": [0, 1, 6],
+              "position": [
+                0,
+                1,
+                6
+              ],
               "trigger_id": "ren_entry_b",
-              "trigger_size": [24.5, 3, 4],
+              "trigger_size": [
+                24.5,
+                3,
+                4
+              ],
               "dialog": [
                 {
                   "speaker": "Ren",
@@ -423,12 +611,74 @@
         },
         {
           "pos": "1,2",
+          "stage_id": "s04b_ic3",
+          "rotation": 180,
+          "connections": {
+            "south": "2,2",
+            "north": "0,2"
+          },
+          "portals": {
+            "south": "portal_1770756699695_yrebq1j7c",
+            "north": "portal_1770756714642_5qlztsshk"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                6
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -4
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8,
+                0,
+                3
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2,
+                0,
+                -8
+              ],
+              "enemy_id": "kapantha"
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
           "stage_id": "s04b_tb3",
           "rotation": 90,
           "connections": {
-            "west": "1,1",
-            "north": "0,2",
-            "south": "2,2"
+            "west": "2,1",
+            "north": "1,2",
+            "south": "3,2"
           },
           "portals": {
             "west": "portal_1770758589812_rue3bl194",
@@ -445,96 +695,92 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [-5, 0, 6],
-              "enemy_id": "bullbatt"
-            },
-            {
-              "type": "enemy",
-              "position": [3, 0, -4],
-              "enemy_id": "rohjade"
-            },
-            {
-              "type": "enemy",
-              "position": [8, 0, 3],
-              "enemy_id": "bullbatt"
-            },
-            {
-              "type": "enemy",
-              "position": [-2, 0, -8],
-              "enemy_id": "kapantha"
-            }
-          ]
-        },
-        {
-          "pos": "1,1",
-          "stage_id": "s04b_ib1",
-          "rotation": 90,
-          "connections": {
-            "west": "1,0",
-            "east": "1,2"
-          },
-          "portals": {
-            "west": "portal_1770752697255_depfakwo2",
-            "east": "portal_1770752710424_h95o8nta3"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
           "path_order": 2,
           "objects": [
             {
               "type": "enemy",
-              "position": [-6, 0, 2],
+              "position": [
+                -6,
+                0,
+                2
+              ],
               "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
-              "position": [4, 0, -5],
+              "position": [
+                4,
+                0,
+                -5
+              ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
-              "position": [10, 0, 4],
+              "position": [
+                10,
+                0,
+                4
+              ],
               "enemy_id": "kapantha"
             }
           ]
         },
         {
-          "pos": "2,2",
+          "pos": "2,1",
           "stage_id": "s04b_ga1",
-          "rotation": 180,
+          "rotation": 270,
           "connections": {
-            "north": "1,2"
+            "east": "2,2"
           },
           "portals": {
-            "north": "portal_1771589950722_o9feednfr"
+            "east": "portal_1771589950722_o9feednfr"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
+          "is_branch": true,
+          "has_key": true,
+          "key_for_cell": "3,2",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3,
+          "path_order": 3
+        },
+        {
+          "pos": "3,2",
+          "stage_id": "s04b_tb3",
+          "rotation": 90,
+          "connections": {
+            "west": "3,1",
+            "north": "2,2",
+            "south": "4,2"
+          },
+          "portals": {
+            "west": "portal_1770758589812_rue3bl194",
+            "north": "portal_1771827962828_pvljykcmj",
+            "south": "portal_1771827971498_ef8w0905n"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 4,
           "objects": [
             {
               "type": "quest_item",
-              "position": [0.4, 0, -13.7],
+              "position": [
+                0.4,
+                0,
+                -13.7
+              ],
               "dialog": [
                 {
                   "speaker": "Ren",
@@ -550,130 +796,70 @@
             },
             {
               "type": "enemy",
-              "position": [-4.1, 0, 8.7],
+              "position": [
+                -4.1,
+                0,
+                8.7
+              ],
               "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
-              "position": [0.2, 0, 4.1],
+              "position": [
+                0.2,
+                0,
+                4.1
+              ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
-              "position": [4.7, 0, 7.5],
+              "position": [
+                4.7,
+                0,
+                7.5
+              ],
               "enemy_id": "rohjade"
             }
           ]
         },
         {
-          "pos": "1,0",
-          "stage_id": "s04b_lb3",
-          "rotation": 90,
-          "connections": {
-            "east": "1,1",
-            "south": "2,0"
-          },
-          "portals": {
-            "east": "portal_1770755672499_5shpt6w8q",
-            "south": "portal_1771827771529_3becrqtew"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 4,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [-7, 0, -3],
-              "enemy_id": "bullbatt"
-            },
-            {
-              "type": "enemy",
-              "position": [4.8, 0, -12.7],
-              "enemy_id": "kapantha"
-            },
-            {
-              "type": "enemy",
-              "position": [-0.7, 0, -10.7],
-              "enemy_id": "rohjade"
-            },
-            {
-              "type": "enemy",
-              "position": [8, 0, -5],
-              "enemy_id": "bullbatt"
-            }
-          ]
-        },
-        {
-          "pos": "2,0",
-          "stage_id": "s04b_ic1",
-          "rotation": 180,
-          "connections": {
-            "south": "3,0",
-            "north": "1,0"
-          },
-          "portals": {
-            "south": "portal_1770755769988_z5jmafocx",
-            "north": "portal_1770755781563_3ylf76w8h"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 5,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [-1.5, 0, -6.5],
-              "enemy_id": "kapantha"
-            },
-            {
-              "type": "enemy",
-              "position": [3, 0, -6],
-              "enemy_id": "bullbatt"
-            },
-            {
-              "type": "enemy",
-              "position": [-0.3, 0, -12.4],
-              "enemy_id": "rohjade"
-            },
-            {
-              "type": "enemy",
-              "position": [-6, 0, -12.9],
-              "enemy_id": "rumole"
-            }
-          ]
-        },
-        {
-          "pos": "3,0",
-          "stage_id": "s04b_tb3",
+          "pos": "3,1",
+          "stage_id": "s04b_na1",
           "rotation": 270,
           "connections": {
-            "east": "3,1",
-            "south": "4,0",
-            "north": "2,0"
+            "east": "3,2"
           },
           "portals": {
-            "east": "portal_1770758589812_rue3bl194",
-            "south": "portal_1771827962828_pvljykcmj",
-            "north": "portal_1771827971498_ef8w0905n"
+            "east": "portal_1770758482431_92sesiygw"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "4,2",
+          "stage_id": "s04b_lb1",
+          "rotation": 0,
+          "connections": {
+            "north": "3,2",
+            "east": "4,3"
+          },
+          "portals": {
+            "north": "portal_1770752832341_ikwnyi9yf",
+            "east": "portal_1771827754920_82zvpn2zf"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -685,50 +871,57 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-6, 0, 5],
-              "enemy_id": "kapantha"
-            },
-            {
-              "type": "enemy",
-              "position": [4, 0, -3],
+              "position": [
+                -7,
+                0,
+                -3
+              ],
               "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
-              "position": [9, 0, 8],
+              "position": [
+                4.8,
+                0,
+                -12.7
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.7,
+                0,
+                -10.7
+              ],
               "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
-              "position": [-3, 0, -7],
-              "enemy_id": "rumole",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [6, 0, -9],
-              "enemy_id": "bullbatt",
-              "wave": 2
+              "position": [
+                8,
+                0,
+                -5
+              ],
+              "enemy_id": "bullbatt"
             }
           ]
         },
         {
-          "pos": "3,1",
-          "stage_id": "s04b_tb3",
-          "rotation": 90,
+          "pos": "4,3",
+          "stage_id": "s04b_lb1",
+          "rotation": 270,
           "connections": {
-            "west": "3,0",
-            "north": "2,1",
-            "south": "4,1"
+            "west": "4,2",
+            "north": "3,3"
           },
           "portals": {
-            "west": "portal_1770758589812_rue3bl194",
-            "north": "portal_1771827962828_pvljykcmj",
-            "south": "portal_1771827971498_ef8w0905n"
+            "west": "portal_1770752832341_ikwnyi9yf",
+            "north": "portal_1771827754920_82zvpn2zf"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -740,35 +933,100 @@
           "objects": [
             {
               "type": "enemy",
-              "position": [-7, 0, 4],
-              "enemy_id": "rumole"
-            },
-            {
-              "type": "enemy",
-              "position": [5, 0, -5],
+              "position": [
+                -1.5,
+                0,
+                -6.5
+              ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
-              "position": [2, 0, 7],
+              "position": [
+                3,
+                0,
+                -6
+              ],
               "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
-              "position": [-4, 0, -8],
+              "position": [
+                -0.3,
+                0,
+                -12.4
+              ],
               "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                -12.9
+              ],
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                5
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -3
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9,
+                0,
+                8
+              ],
+              "enemy_id": "rohjade"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -7
+              ],
+              "enemy_id": "rumole",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                -9
+              ],
+              "enemy_id": "bullbatt",
+              "wave": 2
             }
           ]
         },
         {
-          "pos": "4,0",
-          "stage_id": "s04b_ga1",
-          "rotation": 180,
+          "pos": "3,3",
+          "stage_id": "s04b_ib2",
+          "rotation": 0,
           "connections": {
-            "north": "3,0"
+            "north": "2,3",
+            "south": "4,3"
           },
           "portals": {
-            "north": "portal_1771589950722_o9feednfr"
+            "north": "portal_1770752725951_f0184aye9",
+            "south": "portal_1770752739023_v2mpq62e0"
           },
           "is_start": false,
           "is_end": false,
@@ -783,8 +1041,74 @@
           "path_order": 8,
           "objects": [
             {
+              "type": "enemy",
+              "position": [
+                -7,
+                0,
+                4
+              ],
+              "enemy_id": "rumole"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                -5
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2,
+                0,
+                7
+              ],
+              "enemy_id": "bullbatt"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                -8
+              ],
+              "enemy_id": "rohjade"
+            }
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s04b_ib2",
+          "rotation": 180,
+          "connections": {
+            "south": "3,3",
+            "north": "1,3"
+          },
+          "portals": {
+            "south": "portal_1770752725951_f0184aye9",
+            "north": "portal_1770752739023_v2mpq62e0"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 9,
+          "objects": [
+            {
               "type": "message",
-              "position": [5, 0, 0],
+              "position": [
+                5,
+                0,
+                0
+              ],
               "locked": true,
               "text": "Vash... log three. Had to drop my weapon to squeeze through a collapsed passage. Bleeding through the bandages. They're still behind me. I can hear them. I just need to find somewhere they can't reach...",
               "reaction_dialog": [
@@ -800,30 +1124,44 @@
             },
             {
               "type": "enemy",
-              "position": [-6, 0, 6],
+              "position": [
+                -6,
+                0,
+                6
+              ],
               "enemy_id": "rumole"
             },
             {
               "type": "enemy",
-              "position": [1.7, 0, 4.3],
+              "position": [
+                1.7,
+                0,
+                4.3
+              ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
-              "position": [-3, 0, -10.3],
+              "position": [
+                -3,
+                0,
+                -10.3
+              ],
               "enemy_id": "bullbatt"
             }
           ]
         },
         {
-          "pos": "2,1",
-          "stage_id": "s04b_ga1",
-          "rotation": 0,
+          "pos": "1,3",
+          "stage_id": "s04b_lb1",
+          "rotation": 90,
           "connections": {
-            "south": "3,1"
+            "east": "1,4",
+            "south": "2,3"
           },
           "portals": {
-            "south": "portal_1771589950722_o9feednfr"
+            "east": "portal_1770752832341_ikwnyi9yf",
+            "south": "portal_1771827754920_82zvpn2zf"
           },
           "is_start": false,
           "is_end": false,
@@ -835,34 +1173,47 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 9,
+          "path_order": 10,
           "objects": [
             {
               "type": "enemy",
-              "position": [-5.1, 0, 10.1],
+              "position": [
+                -5.1,
+                0,
+                10.1
+              ],
               "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
-              "position": [1, 0, 5.2],
+              "position": [
+                1,
+                0,
+                5.2
+              ],
               "enemy_id": "rumole"
             },
             {
               "type": "enemy",
-              "position": [4.1, 0, 7.6],
+              "position": [
+                4.1,
+                0,
+                7.6
+              ],
               "enemy_id": "bullbatt"
             }
           ]
         },
         {
-          "pos": "4,1",
-          "stage_id": "s04b_na1",
-          "rotation": 180,
+          "pos": "1,4",
+          "stage_id": "s04b_ib1",
+          "rotation": 270,
           "connections": {
-            "north": "3,1"
+            "west": "1,3"
           },
           "portals": {
-            "north": "portal_1770758482431_92sesiygw"
+            "west": "portal_1770752710424_h95o8nta3",
+            "east": "portal_1770752697255_depfakwo2"
           },
           "is_start": false,
           "is_end": true,
@@ -873,20 +1224,32 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 10,
+          "warp_edge": "east",
+          "path_order": 11,
           "objects": [
             {
               "type": "npc",
-              "position": [-12, 0, -8],
+              "position": [
+                -12,
+                0,
+                -8
+              ],
               "npc_id": "vash",
               "npc_name": "Vash"
             },
             {
               "type": "dialog_trigger",
-              "position": [-8, 1, -4],
+              "position": [
+                -8,
+                1,
+                -4
+              ],
               "trigger_id": "final_transmission",
-              "trigger_size": [12, 4, 12],
+              "trigger_size": [
+                12,
+                4,
+                12
+              ],
               "actions": [
                 "complete_quest",
                 "telepipe"
