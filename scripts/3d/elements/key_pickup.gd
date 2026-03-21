@@ -61,13 +61,21 @@ func _update_animation(delta: float) -> void:
 func _apply_state() -> void:
 	match element_state:
 		"available":
-			set_element_visible(true)
+			visible = true
 			set_process(true)
+			interactable = true
 		"collected":
-			set_element_visible(false)
+			# Hide everything — the entire node tree
+			visible = false
 			set_process(false)
+			interactable = false
+			if interaction_area:
+				interaction_area.set_deferred("monitoring", false)
+				interaction_area.set_deferred("monitorable", false)
 			if _prompt_label:
 				_prompt_label.visible = false
+			# Remove from scene after a frame so signals finish
+			queue_free()
 
 
 func _on_body_entered(body: Node3D) -> void:
