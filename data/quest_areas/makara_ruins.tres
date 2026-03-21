@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "makara_ruins"
 area_id = "makara-ruins"
-area_name = "Makara Ruins"
+area_name = "Ruins"
 description = "Desert ruins hiding ancient technology. The harsh environment tests even veteran hunters."
 unlock_condition = "Complete 'Artifacts' story quest"
 recommended_level = 35

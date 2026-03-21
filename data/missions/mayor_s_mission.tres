@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "mayor_s_mission"
 name = "Mayor's Mission"
-area = "Gurhacia Valley"
+area = "Valley"
 is_main = true
 is_secret = false
 requires = PackedStringArray()

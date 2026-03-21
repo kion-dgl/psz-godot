@@ -1,0 +1,2227 @@
+#!/usr/bin/env python3
+"""Procedurally generate field quest JSON files.
+
+Reads stage configs from unified-stage-configs.json, picks a grid template,
+assigns stages with correct rotations, places enemies/boxes in walkable zones,
+validates clearability, and writes v1 quest JSON.
+
+Usage:
+    python scripts/tools/generate_field_quest.py --area gurhacia --name "Valley Patrol" \
+        --output data/field_quests/valley_field_02.json [--seed 42]
+"""
+
+import argparse
+import json
+import math
+import os
+import random
+import re
+import struct
+import sys
+import time
+from typing import Any
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.join(SCRIPT_DIR, "..", "..")
+STAGE_CONFIG_PATH = os.path.join(
+    PROJECT_ROOT, "data", "stage_configs", "unified-stage-configs.json"
+)
+
+# ---------------------------------------------------------------------------
+# Direction helpers
+# ---------------------------------------------------------------------------
+
+DIRECTIONS = ("north", "east", "south", "west")
+
+OPPOSITE_DIR = {"north": "south", "south": "north", "east": "west", "west": "east"}
+
+# 90-degree CW rotation steps: north->east->south->west->north
+DIR_INDEX = {d: i for i, d in enumerate(DIRECTIONS)}
+
+ROTATION_MAP = {
+    0: {d: d for d in DIRECTIONS},
+    90: {d: DIRECTIONS[(DIR_INDEX[d] + 1) % 4] for d in DIRECTIONS},
+    180: {d: DIRECTIONS[(DIR_INDEX[d] + 2) % 4] for d in DIRECTIONS},
+    270: {d: DIRECTIONS[(DIR_INDEX[d] + 3) % 4] for d in DIRECTIONS},
+}
+
+REVERSE_ROTATION = {0: 0, 90: 270, 180: 180, 270: 90}
+
+# Grid movement: direction -> (row_delta, col_delta)
+DIR_DELTA = {"north": (-1, 0), "south": (1, 0), "east": (0, 1), "west": (0, -1)}
+
+# ---------------------------------------------------------------------------
+# Area / enemy configuration
+# ---------------------------------------------------------------------------
+
+AREA_CONFIG = {
+    "gurhacia": {"prefix": "s01"},
+    "ozette": {"prefix": "s02"},
+    "rioh": {"prefix": "s03"},
+    "makara": {"prefix": "s04"},
+    "paru": {"prefix": "s05"},
+    "arca": {"prefix": "s06"},
+    "dark": {"prefix": "s07"},
+    "tower": {"prefix": "s08"},
+}
+
+# Maps area prefix -> folder basename in assets/stages/
+# Full subfolder is "{folder}_{area_letter}", e.g. "valley_a", "wetlands_b"
+AREA_FOLDERS = {
+    "s00": "city",
+    "s01": "valley",
+    "s02": "wetlands",
+    "s03": "snowfield",
+    "s04": "makara",
+    "s05": "paru",
+    "s06": "arca",
+    "s07": "shrine",
+    "s08": "tower",
+}
+
+STAGES_DIR = os.path.join(PROJECT_ROOT, "assets", "stages")
+
+ENEMY_POOLS = {
+    "gurhacia": {
+        "common": ["ghowl", "vulkure", "garapython"],
+        "uncommon": ["garahadan", "grimble", "tormatible"],
+        "bosses": ["reyburn"],
+    },
+    "ozette": {
+        "common": ["porel", "pomarr", "hypao"],
+        "uncommon": ["vespao", "pelcatraz"],
+        "bosses": ["octo-diablo"],
+    },
+    "rioh": {
+        "common": ["usanny", "usanimere", "reyhound"],
+        "uncommon": ["stagg", "hildeghana"],
+        "bosses": ["hildegao"],
+    },
+    "makara": {
+        "common": ["batt", "bullbatt", "rumole"],
+        "uncommon": ["kapantha", "rohjade"],
+        "bosses": ["rohcrysta"],
+    },
+    "paru": {
+        "common": ["pobomma", "bolix", "izhirak-s6"],
+        "uncommon": ["goldix", "froutang"],
+        "bosses": ["frunaked"],
+    },
+    "arca": {
+        "common": ["korse", "akorse", "finjer-r"],
+        "uncommon": ["finjer-g", "finjer-b"],
+        "bosses": ["blade-mother"],
+    },
+    "dark": {
+        "common": ["eulid", "eulidveil", "eulada"],
+        "uncommon": ["euladaveil", "arkzein"],
+        "bosses": ["dark-falz"],
+    },
+    "tower": {
+        "common": ["ghowl", "korse", "eulid"],
+        "uncommon": ["arkzein", "garahadan"],
+        "bosses": ["dark-falz"],
+    },
+}
+
+# ---------------------------------------------------------------------------
+# Floor mesh GLB parsing
+# ---------------------------------------------------------------------------
+
+
+def get_floor_glb_path(stage_id: str) -> str | None:
+    """Resolve the floor GLB path for a stage_id.
+
+    Pattern: assets/stages/{folder}_{area_letter}/{stage_id}/lndmd/{stage_id}-floor.glb
+    The area letter is extracted from the stage_id (e.g., s01a_sa1 -> 'a').
+    The folder comes from the prefix (e.g., s01 -> 'valley').
+    """
+    m = re.match(r'^(s\d{2})([a-z0-9])_', stage_id)
+    if not m:
+        return None
+    prefix = m.group(1)
+    area_letter = m.group(2)
+    folder = AREA_FOLDERS.get(prefix)
+    if not folder:
+        return None
+    subfolder_name = f"{folder}_{area_letter}"
+    path = os.path.join(
+        STAGES_DIR, subfolder_name, stage_id, "lndmd", f"{stage_id}-floor.glb"
+    )
+    if os.path.exists(path):
+        return path
+    return None
+
+
+def load_floor_triangles(glb_path: str) -> list[tuple]:
+    """Extract floor triangles as list of [(x1,z1), (x2,z2), (x3,z3)] from a GLB file.
+
+    Floor meshes are flat (Y=0), so we only need X and Z coordinates.
+    Handles both indexed and non-indexed meshes.
+    """
+    with open(glb_path, "rb") as f:
+        magic, version, length = struct.unpack("<III", f.read(12))
+        if magic != 0x46546C67:  # 'glTF'
+            raise ValueError(f"Not a valid GLB file: {glb_path}")
+        chunk_len, chunk_type = struct.unpack("<II", f.read(8))
+        json_data = json.loads(f.read(chunk_len))
+        pos = f.tell()
+        remaining = length - pos
+        if remaining > 8:
+            chunk_len2, chunk_type2 = struct.unpack("<II", f.read(8))
+            bin_data = f.read(chunk_len2)
+        else:
+            bin_data = b""
+
+    accessors = json_data.get("accessors", [])
+    buffer_views = json_data.get("bufferViews", [])
+    triangles: list[tuple] = []
+
+    for mesh in json_data.get("meshes", []):
+        for prim in mesh.get("primitives", []):
+            pos_idx = prim.get("attributes", {}).get("POSITION")
+            idx_idx = prim.get("indices")
+            if pos_idx is None:
+                continue
+
+            # Read vertex positions
+            acc = accessors[pos_idx]
+            bv = buffer_views[acc["bufferView"]]
+            offset = bv.get("byteOffset", 0) + acc.get("byteOffset", 0)
+            stride = bv.get("byteStride", 12)  # Default 12 for VEC3 float
+            verts = []
+            for i in range(acc["count"]):
+                x, y, z = struct.unpack_from("<fff", bin_data, offset + i * stride)
+                verts.append((x, z))
+
+            if idx_idx is not None:
+                # Indexed mesh
+                iacc = accessors[idx_idx]
+                ibv = buffer_views[iacc["bufferView"]]
+                ioff = ibv.get("byteOffset", 0) + iacc.get("byteOffset", 0)
+                comp_type = iacc["componentType"]
+                if comp_type == 5121:      # UNSIGNED_BYTE
+                    idx_size, fmt = 1, "<B"
+                elif comp_type == 5123:    # UNSIGNED_SHORT
+                    idx_size, fmt = 2, "<H"
+                else:                      # UNSIGNED_INT (5125)
+                    idx_size, fmt = 4, "<I"
+                indices = [
+                    struct.unpack_from(fmt, bin_data, ioff + i * idx_size)[0]
+                    for i in range(iacc["count"])
+                ]
+                for i in range(0, len(indices), 3):
+                    triangles.append((
+                        verts[indices[i]],
+                        verts[indices[i + 1]],
+                        verts[indices[i + 2]],
+                    ))
+            else:
+                # Non-indexed mesh: vertices are in triangle order
+                for i in range(0, len(verts), 3):
+                    if i + 2 < len(verts):
+                        triangles.append((verts[i], verts[i + 1], verts[i + 2]))
+
+    return triangles
+
+
+def point_in_triangle(px: float, pz: float, tri: tuple) -> bool:
+    """Test if point (px, pz) is inside triangle tri = ((x1,z1), (x2,z2), (x3,z3))."""
+    (x1, z1), (x2, z2), (x3, z3) = tri
+    d1 = (px - x2) * (z1 - z2) - (x1 - x2) * (pz - z2)
+    d2 = (px - x3) * (z2 - z3) - (x2 - x3) * (pz - z3)
+    d3 = (px - x1) * (z3 - z1) - (x3 - x1) * (pz - z1)
+    has_neg = (d1 < 0) or (d2 < 0) or (d3 < 0)
+    has_pos = (d1 > 0) or (d2 > 0) or (d3 > 0)
+    return not (has_neg and has_pos)
+
+
+def is_on_floor(
+    x: float,
+    z: float,
+    triangles: list[tuple],
+    excluded_indices: set[int] | None = None,
+) -> bool:
+    """Check if (x, z) lies on any non-excluded floor triangle."""
+    for i, tri in enumerate(triangles):
+        if excluded_indices and i in excluded_indices:
+            continue
+        if point_in_triangle(x, z, tri):
+            return True
+    return False
+
+
+def get_excluded_triangle_indices(stage_config: dict) -> set[int]:
+    """Get set of triangle indices marked as excluded in the stage config."""
+    fc = stage_config.get("floorCollision", {})
+    tris = fc.get("triangles", {})
+    excluded: set[int] = set()
+    for key, value in tris.items():
+        if value:  # True = excluded
+            m_idx = re.match(r"tri_(\d+)", key)
+            if m_idx:
+                excluded.add(int(m_idx.group(1)))
+    return excluded
+
+
+def rotate_point_xz(x: float, z: float, rotation: int) -> tuple[float, float]:
+    """Rotate a point (x, z) clockwise by rotation degrees (matching Godot stage rotation)."""
+    if rotation == 0:
+        return (x, z)
+    rad = math.radians(rotation)
+    cos_r = math.cos(rad)
+    sin_r = math.sin(rad)
+    return (x * cos_r + z * sin_r, -x * sin_r + z * cos_r)
+
+
+def rotate_triangle(tri: tuple, rotation: int) -> tuple:
+    """Rotate all 3 points of a floor triangle."""
+    if rotation == 0:
+        return tri
+    return tuple(rotate_point_xz(p[0], p[1], rotation) for p in tri)
+
+
+def get_floor_bounds(triangles: list[tuple]) -> tuple[float, float, float, float]:
+    """Get the bounding box of the floor mesh: (min_x, max_x, min_z, max_z)."""
+    all_x = [p[0] for t in triangles for p in t]
+    all_z = [p[1] for t in triangles for p in t]
+    return (min(all_x), max(all_x), min(all_z), max(all_z))
+
+
+class FloorCache:
+    """Cache for floor mesh data per stage+rotation, avoiding repeated GLB parsing."""
+
+    def __init__(self, stage_configs: dict):
+        self._cache: dict[str, dict | None] = {}
+        self._stage_configs = stage_configs
+
+    def load(self, stage_id: str, rotation: int = 0) -> dict | None:
+        """Load floor data for a stage (unrotated — rotation only remaps gate names).
+
+        Returns dict with: triangles, excluded, obstacles, bounds, or None if unavailable.
+        """
+        cache_key = stage_id  # No rotation in cache key — floor is always unrotated
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        glb_path = get_floor_glb_path(stage_id)
+        if not glb_path:
+            self._cache[cache_key] = None
+            return None
+
+        try:
+            raw_triangles = load_floor_triangles(glb_path)
+        except Exception as e:
+            print(f"  WARNING: Could not parse floor GLB for {stage_id}: {e}", file=sys.stderr)
+            self._cache[cache_key] = None
+            return None
+
+        if not raw_triangles:
+            self._cache[cache_key] = None
+            return None
+
+        # No rotation applied — stage geometry is never rotated.
+        # "Rotation" only remaps gate names, not coordinates.
+        triangles = list(raw_triangles)
+
+        # Get excluded triangle indices from stage config
+        stage_cfg = self._stage_configs.get(stage_id, {})
+        excluded = get_excluded_triangle_indices(stage_cfg)
+
+        # Obstacles are in stage-local space (unrotated)
+        obstacles = stage_cfg.get("obstacles", [])
+
+        bounds = get_floor_bounds(triangles)
+
+        result = {
+            "triangles": triangles,
+            "excluded": excluded,
+            "obstacles": obstacles,
+            "bounds": bounds,
+        }
+        self._cache[cache_key] = result
+        return result
+
+
+# ---------------------------------------------------------------------------
+# Floor-validated position sampling
+# ---------------------------------------------------------------------------
+
+
+def sample_positions_on_floor(
+    count: int,
+    floor_data: dict,
+    portal_positions: list[tuple[float, float]] | None = None,
+    min_spacing: float = 3.0,
+    min_portal_dist: float = 5.0,
+    min_edge_margin: float = 2.5,
+    rng: random.Random | None = None,
+) -> list[list[float]]:
+    """Sample `count` positions validated against actual floor mesh geometry.
+
+    Each sampled point is guaranteed to:
+      - Lie on a walkable (non-excluded) floor triangle
+      - Be clear of obstacles
+      - Be at least min_spacing from other sampled points
+      - Be at least min_portal_dist from portal positions
+      - Be at least min_edge_margin from the floor bounding box edges
+    """
+    if rng is None:
+        rng = random.Random()
+    if portal_positions is None:
+        portal_positions = []
+
+    triangles = floor_data["triangles"]
+    excluded = floor_data["excluded"]
+    obstacles = floor_data["obstacles"]
+    min_x, max_x, min_z, max_z = floor_data["bounds"]
+
+    # Shrink bounds slightly to avoid edge placements
+    sample_min_x = min_x + min_edge_margin
+    sample_max_x = max_x - min_edge_margin
+    sample_min_z = min_z + min_edge_margin
+    sample_max_z = max_z - min_edge_margin
+
+    if sample_min_x >= sample_max_x or sample_min_z >= sample_max_z:
+        # Bounds too small after margin, use raw bounds
+        sample_min_x, sample_max_x = min_x, max_x
+        sample_min_z, sample_max_z = min_z, max_z
+
+    placed: list[list[float]] = []
+    max_attempts = count * 300
+
+    for _ in range(max_attempts):
+        if len(placed) >= count:
+            break
+
+        x = round(rng.uniform(sample_min_x, sample_max_x), 1)
+        z = round(rng.uniform(sample_min_z, sample_max_z), 1)
+
+        # Must be on walkable floor
+        if not is_on_floor(x, z, triangles, excluded):
+            continue
+
+        # Must be clear of obstacles
+        if not is_clear_of_obstacles(x, z, obstacles):
+            continue
+
+        # Must be far enough from portal positions
+        too_close_to_portal = False
+        for px, pz in portal_positions:
+            if (x - px) ** 2 + (z - pz) ** 2 < min_portal_dist ** 2:
+                too_close_to_portal = True
+                break
+        if too_close_to_portal:
+            continue
+
+        # Must be far enough from already-placed objects
+        too_close = False
+        for existing in placed:
+            if (x - existing[0]) ** 2 + (z - existing[2]) ** 2 < min_spacing ** 2:
+                too_close = True
+                break
+        if too_close:
+            continue
+
+        placed.append([x, 0, z])
+
+    return placed
+
+
+# ---------------------------------------------------------------------------
+# --check-floors: validate all positioned objects lie on walkable floor
+# ---------------------------------------------------------------------------
+
+
+def check_floors(quest_path: str) -> int:
+    """Validate that all positioned objects in a quest JSON are on walkable floor.
+
+    Returns the number of errors found.
+    """
+    with open(quest_path) as f:
+        quest = json.load(f)
+
+    quest_id = quest.get("id", os.path.basename(quest_path))
+    with open(STAGE_CONFIG_PATH) as f:
+        stage_configs = json.load(f)
+
+    floor_cache = FloorCache(stage_configs)
+    errors = 0
+    warnings = 0
+    checked = 0
+
+    print(f"Checking floors for: {quest_id}")
+    print(f"  Area: {quest.get('area_id', '?')}")
+
+    for si, section in enumerate(quest.get("sections", [])):
+        sec_type = section.get("type", "?")
+        sec_area = section.get("area", "?")
+
+        for cell in section.get("cells", []):
+            stage_id = cell["stage_id"]
+            rotation = cell.get("rotation", 0)
+            pos = cell.get("pos", "?")
+
+            floor_data = floor_cache.load(stage_id, rotation)
+            if floor_data is None:
+                print(
+                    f"  WARNING: No floor GLB for {stage_id} "
+                    f"(section {si} area={sec_area} cell={pos})"
+                )
+                warnings += 1
+                continue
+
+            # Check key_position
+            if cell.get("key_position"):
+                kp = cell["key_position"]
+                checked += 1
+                if not is_on_floor(kp[0], kp[2], floor_data["triangles"], floor_data["excluded"]):
+                    print(
+                        f"  ERROR: key_position [{kp[0]}, {kp[2]}] NOT on floor "
+                        f"in {stage_id} (cell {pos})"
+                    )
+                    errors += 1
+
+            # Check key_drop_position
+            if cell.get("key_drop_position"):
+                kdp = cell["key_drop_position"]
+                checked += 1
+                if not is_on_floor(
+                    kdp[0], kdp[2], floor_data["triangles"], floor_data["excluded"]
+                ):
+                    print(
+                        f"  ERROR: key_drop_position [{kdp[0]}, {kdp[2]}] NOT on floor "
+                        f"in {stage_id} (cell {pos})"
+                    )
+                    errors += 1
+
+            # Check objects
+            for oi, obj in enumerate(cell.get("objects", [])):
+                obj_type = obj.get("type", "?")
+                obj_pos = obj.get("position")
+                if obj_pos is None:
+                    continue
+
+                checked += 1
+                ox, oz = obj_pos[0], obj_pos[2]
+
+                on_floor = is_on_floor(
+                    ox, oz, floor_data["triangles"], floor_data["excluded"]
+                )
+                if not on_floor:
+                    eid = obj.get("enemy_id", "")
+                    label = f"{obj_type}"
+                    if eid:
+                        label += f" ({eid})"
+                    print(
+                        f"  ERROR: {label} at [{ox}, {oz}] NOT on floor "
+                        f"in {stage_id} (cell {pos}, obj {oi})"
+                    )
+                    errors += 1
+
+                # Also check obstacle clearance
+                if not is_clear_of_obstacles(ox, oz, floor_data["obstacles"], clearance=0.5):
+                    eid = obj.get("enemy_id", "")
+                    label = f"{obj_type}"
+                    if eid:
+                        label += f" ({eid})"
+                    print(
+                        f"  WARNING: {label} at [{ox}, {oz}] is inside an obstacle "
+                        f"in {stage_id} (cell {pos}, obj {oi})"
+                    )
+                    warnings += 1
+
+    print(f"\nResults: {checked} positions checked, {errors} error(s), {warnings} warning(s)")
+    return errors
+
+
+# ---------------------------------------------------------------------------
+# Stage catalog
+# ---------------------------------------------------------------------------
+
+# Portal topology categories based on the set of portal directions.
+# After reading the actual config, each stage is assigned to one of these.
+TOPOLOGY_NAMES = {
+    frozenset(["south"]): "N",  # dead-end (config south only)
+    frozenset(["east"]): "N",  # dead-end (config east only, e.g. s01b_na1)
+    frozenset(["north", "south"]): "I",  # inline corridor
+    frozenset(["east", "north"]): "L",  # L-bend
+    frozenset(["east", "south", "west"]): "T",  # T-junction
+    frozenset(["east", "north", "south", "west"]): "X",  # crossroads
+    frozenset(["north", "south", "west"]): "T",  # T-junction variant
+}
+
+
+def _portal_dir_set(portals: list[dict]) -> frozenset:
+    return frozenset(p["direction"] for p in portals if "direction" in p)
+
+
+class StageCatalog:
+    """Indexes stage configs by area prefix + variant and topology."""
+
+    def __init__(self, config_path: str):
+        with open(config_path) as f:
+            self.raw = json.load(f)
+
+        # stage_id -> {portals: [...], obstacles: [...], defaultSpawn: ...}
+        self.configs: dict[str, dict] = {}
+        # (prefix, variant) -> topology -> [stage_id, ...]
+        self.by_topology: dict[tuple[str, str], dict[str, list[str]]] = {}
+
+        for stage_id, cfg in self.raw.items():
+            portals = cfg.get("portals", [])
+            obstacles = cfg.get("obstacles", [])
+            default_spawn = cfg.get("defaultSpawn", None)
+            self.configs[stage_id] = {
+                "portals": portals,
+                "obstacles": obstacles,
+                "defaultSpawn": default_spawn,
+            }
+
+            dir_set = _portal_dir_set(portals)
+            topo = TOPOLOGY_NAMES.get(dir_set)
+
+            # Classify special stages
+            prefix, variant, base_name = self._parse_stage_id(stage_id)
+            if prefix is None:
+                continue
+
+            # Mark start stages (sa1, sa0) specially
+            if base_name.startswith("sa"):
+                if len(dir_set) == 1:
+                    topo = "S"  # start with single portal
+                elif len(dir_set) == 2 and dir_set == frozenset(["north", "south"]):
+                    topo = "S2"  # b-variant sa1 with north+south
+                else:
+                    topo = "S"
+
+            # ga1 is a gate/inline -- but some b-variants only have south
+            if base_name == "ga1":
+                if len(dir_set) == 2:
+                    topo = "I"  # north+south
+                elif len(dir_set) == 1:
+                    topo = "N"  # dead-end (b-variant ga1 with south only)
+                else:
+                    topo = TOPOLOGY_NAMES.get(dir_set)
+
+            # ia1 is a transition
+            if base_name == "ia1":
+                topo = "TRANS"
+
+            if topo is None:
+                # Stages with no portals (z-variant boss rooms, etc)
+                if len(dir_set) == 0:
+                    topo = "BOSS"
+                else:
+                    continue  # skip unknown topologies
+
+            key = (prefix, variant)
+            if key not in self.by_topology:
+                self.by_topology[key] = {}
+            self.by_topology[key].setdefault(topo, []).append(stage_id)
+
+    @staticmethod
+    def _parse_stage_id(stage_id: str):
+        """Parse 's01a_lb1' -> ('s01', 'a', 'lb1'). Returns (None,...) for tower etc."""
+        parts = stage_id.split("_", 1)
+        if len(parts) != 2:
+            return None, None, None
+        prefix_variant = parts[0]
+        base_name = parts[1]
+
+        # Tower: s080_sa0, s081_ga1, etc.
+        if len(prefix_variant) == 4 and prefix_variant[:3] == "s08":
+            # floor digit is the variant
+            return "s08", prefix_variant[3], base_name
+
+        if len(prefix_variant) < 4:
+            return None, None, None
+
+        prefix = prefix_variant[:3]
+        variant = prefix_variant[3]
+        return prefix, variant, base_name
+
+    def get_stages(self, prefix: str, variant: str, topo: str) -> list[str]:
+        """Get stage IDs matching prefix+variant+topology."""
+        key = (prefix, variant)
+        return list(self.by_topology.get(key, {}).get(topo, []))
+
+    def get_portal_by_config_dir(
+        self, stage_id: str, config_dir: str
+    ) -> dict | None:
+        """Get the portal object for a given config-space direction."""
+        cfg = self.configs.get(stage_id)
+        if not cfg:
+            return None
+        for p in cfg["portals"]:
+            if p.get("direction") == config_dir:
+                return p
+        return None
+
+    def get_config_directions(self, stage_id: str) -> set[str]:
+        """Return the set of config-space portal directions for a stage."""
+        cfg = self.configs.get(stage_id)
+        if not cfg:
+            return set()
+        return {p["direction"] for p in cfg["portals"]}
+
+    def get_obstacles(self, stage_id: str) -> list[dict]:
+        cfg = self.configs.get(stage_id)
+        return cfg["obstacles"] if cfg else []
+
+    def get_default_spawn(self, stage_id: str) -> dict | None:
+        cfg = self.configs.get(stage_id)
+        return cfg["defaultSpawn"] if cfg else None
+
+
+# ---------------------------------------------------------------------------
+# Walkable zone estimation
+# ---------------------------------------------------------------------------
+
+
+def compute_walkable_bounds(
+    portals: list[dict], obstacles: list[dict]
+) -> tuple[float, float, float, float]:
+    """Compute (min_x, max_x, min_z, max_z) safe zone for a stage.
+
+    Based on portal positions + origin, shrunk by 4 units, with minimum 8-unit span.
+    """
+    points_x = [0.0]
+    points_z = [0.0]
+    for p in portals:
+        pos = p.get("position", [0, 0, 0])
+        points_x.append(pos[0])
+        points_z.append(pos[2])
+
+    min_x = min(points_x)
+    max_x = max(points_x)
+    min_z = min(points_z)
+    max_z = max(points_z)
+
+    # Shrink inward by 4 units
+    margin = 4.0
+    min_x += margin
+    max_x -= margin
+    min_z += margin
+    max_z -= margin
+
+    # Ensure minimum 8-unit span
+    min_span = 8.0
+    for attr in [("x", "min_x", "max_x"), ("z", "min_z", "max_z")]:
+        lo_name, hi_name = attr[1], attr[2]
+        lo = locals()[lo_name]
+        hi = locals()[hi_name]
+        if hi - lo < min_span:
+            center = (lo + hi) / 2.0
+            lo = center - min_span / 2.0
+            hi = center + min_span / 2.0
+        if lo_name == "min_x":
+            min_x, max_x = lo, hi
+        else:
+            min_z, max_z = lo, hi
+
+    return min_x, max_x, min_z, max_z
+
+
+def is_clear_of_obstacles(
+    x: float, z: float, obstacles: list[dict], clearance: float = 2.0
+) -> bool:
+    """Check if position (x, z) is clear of all obstacles."""
+    for obs in obstacles:
+        ox, _, oz = obs.get("position", [0, 0, 0])
+        if obs.get("type") == "cylinder":
+            radius = obs.get("radius", 1.0) + clearance
+            dist = math.sqrt((x - ox) ** 2 + (z - oz) ** 2)
+            if dist < radius:
+                return False
+        elif obs.get("type") == "box":
+            half_w = obs.get("width", 2.0) / 2.0 + clearance
+            half_d = obs.get("depth", 2.0) / 2.0 + clearance
+            # Simplified AABB check (ignoring rotation for safety margin)
+            if abs(x - ox) < max(half_w, half_d) and abs(z - oz) < max(half_w, half_d):
+                return False
+    return True
+
+
+def sample_positions(
+    count: int,
+    portals: list[dict],
+    obstacles: list[dict],
+    min_spacing: float = 3.0,
+    rng: random.Random | None = None,
+    floor_data: dict | None = None,
+    portal_positions: list[tuple[float, float]] | None = None,
+) -> list[list[float]]:
+    """Sample `count` positions within walkable zone, spaced apart.
+
+    If floor_data is provided, uses actual floor mesh triangles for validation.
+    Otherwise falls back to bounding-box estimation from portal positions.
+    """
+    if rng is None:
+        rng = random.Random()
+
+    # Use floor-mesh-validated sampling when available
+    if floor_data is not None:
+        return sample_positions_on_floor(
+            count,
+            floor_data,
+            portal_positions=portal_positions,
+            min_spacing=min_spacing,
+            rng=rng,
+        )
+
+    # Fallback: bounding-box estimation
+    min_x, max_x, min_z, max_z = compute_walkable_bounds(portals, obstacles)
+    placed: list[list[float]] = []
+    attempts = 0
+    max_attempts = count * 80
+
+    while len(placed) < count and attempts < max_attempts:
+        attempts += 1
+        x = round(rng.uniform(min_x, max_x), 1)
+        z = round(rng.uniform(min_z, max_z), 1)
+
+        if not is_clear_of_obstacles(x, z, obstacles):
+            continue
+
+        # Check spacing from already-placed objects
+        too_close = False
+        for px, _, pz in placed:
+            if math.sqrt((x - px) ** 2 + (z - pz) ** 2) < min_spacing:
+                too_close = True
+                break
+        if too_close:
+            continue
+
+        placed.append([x, 0, z])
+
+    return placed
+
+
+# ---------------------------------------------------------------------------
+# Portal ID generation
+# ---------------------------------------------------------------------------
+
+_portal_counter = 0
+
+
+def make_portal_id() -> str:
+    """Generate a unique portal ID similar to the quest editor format."""
+    global _portal_counter
+    _portal_counter += 1
+    ts = int(time.time() * 1000) + _portal_counter
+    suffix = "".join(
+        random.choice("abcdefghijklmnopqrstuvwxyz0123456789") for _ in range(9)
+    )
+    return f"portal_{ts}_{suffix}"
+
+
+def reset_portal_ids():
+    global _portal_counter
+    _portal_counter = 0
+
+
+# ---------------------------------------------------------------------------
+# Grid templates
+# ---------------------------------------------------------------------------
+# Each template is a list of cell descriptors:
+#   (row, col, role, needed_game_dirs)
+# role: S=start, I=inline, L=L-bend, T=T-junction, X=crossroads, N=dead-end, E=end(warp)
+# needed_game_dirs: directions the cell needs in game space (after rotation)
+# connections are inferred from adjacency + matching directions
+
+TemplateCell = tuple[int, int, str, set[str]]
+
+
+def _template_t_branch() -> list[TemplateCell]:
+    """Template 1 -- T-Branch (8 cells)."""
+    return [
+        (0, 2, "S", {"south"}),
+        (1, 2, "X", {"north", "south", "east", "west"}),
+        (1, 1, "N", {"east"}),
+        (1, 3, "N", {"west"}),
+        (2, 2, "I", {"north", "south"}),
+        (3, 2, "T", {"north", "east", "west"}),
+        (3, 1, "N", {"east"}),
+        (3, 3, "E", {"west"}),
+    ]
+
+
+def _template_zigzag() -> list[TemplateCell]:
+    """Template 2 -- Zigzag (6 cells)."""
+    return [
+        (0, 0, "S", {"south"}),
+        (1, 0, "L", {"north", "east"}),
+        (1, 1, "I", {"west", "east"}),
+        (1, 2, "L", {"west", "south"}),
+        (2, 2, "I", {"north", "south"}),
+        (3, 2, "N", {"north"}),
+    ]
+
+
+def _template_linear() -> list[TemplateCell]:
+    """Template 3 -- Linear (5 cells)."""
+    return [
+        (0, 0, "S", {"south"}),
+        (1, 0, "I", {"north", "south"}),
+        (2, 0, "I", {"north", "south"}),
+        (3, 0, "I", {"north", "south"}),
+        (4, 0, "E", {"north", "south"}),
+    ]
+
+
+def _template_hub() -> list[TemplateCell]:
+    """Template 4 -- Hub (7 cells).
+
+    The center T-junction connects north (to start), south (to continuation),
+    east (to corridor), and west (to dead-end). This requires an X (crossroads)
+    stage since it needs 4 directions.
+    """
+    return [
+        (0, 1, "S", {"south"}),
+        (1, 1, "X", {"north", "south", "east", "west"}),
+        (1, 0, "N", {"east"}),
+        (1, 2, "I", {"west", "east"}),
+        (1, 3, "N", {"west"}),
+        (2, 1, "I", {"north", "south"}),
+        (3, 1, "N", {"north"}),
+    ]
+
+
+def _template_tower_linear() -> list[TemplateCell]:
+    """Tower-specific linear template (4 cells per floor)."""
+    return [
+        (0, 0, "S", {"south"}),
+        (1, 0, "I", {"north", "south"}),
+        (2, 0, "I", {"north", "south"}),
+        (3, 0, "I", {"north", "south"}),
+        (4, 0, "E", {"north", "south"}),
+    ]
+
+
+def _template_tower_l() -> list[TemplateCell]:
+    """Tower-specific L-shaped template (5 cells)."""
+    return [
+        (0, 0, "S", {"south"}),
+        (1, 0, "L", {"north", "east"}),
+        (1, 1, "I", {"west", "east"}),
+        (1, 2, "I", {"west", "east"}),
+        (1, 3, "E", {"west"}),
+    ]
+
+
+def _template_maze_5x5() -> list[TemplateCell]:
+    """Template 5 -- 5x5 Maze (15 cells). Winding path with dead-end branches."""
+    return [
+        # Start at top-center, wind through the grid
+        (0, 2, "S", {"south"}),
+        (1, 2, "T", {"north", "east", "west"}),
+        (1, 1, "L", {"east", "south"}),                   # west branch turns south
+        (2, 1, "L", {"north", "east"}),                    # turns east
+        (2, 2, "T", {"west", "south", "east"}),            # rejoin + continue
+        (2, 3, "L", {"west", "south"}),                    # east branch turns south
+        (3, 3, "I", {"north", "south"}),
+        (4, 3, "L", {"north", "west"}),                    # turn west at bottom
+        (4, 2, "I", {"east", "west"}),
+        (4, 1, "T", {"east", "north", "west"}),            # T at bottom-left
+        (4, 0, "N", {"east"}),                              # dead end with loot
+        (3, 1, "I", {"south", "north"}),                    # north from T
+        (3, 0, "N", {"south"}),                             # branch dead end
+        (1, 3, "I", {"west", "east"}),                      # east corridor from top T
+        (1, 4, "E", {"west"}),                              # end room far east
+    ]
+
+
+def _template_sprawl_5x5() -> list[TemplateCell]:
+    """Template 6 -- 5x5 Sprawl (18 cells). Large exploration area with multiple branches."""
+    return [
+        (0, 2, "S", {"south"}),
+        (1, 2, "X", {"north", "south", "east", "west"}),   # central hub
+        # West wing
+        (1, 1, "I", {"east", "west"}),
+        (1, 0, "L", {"east", "south"}),
+        (2, 0, "I", {"north", "south"}),
+        (3, 0, "N", {"north"}),                              # dead end west
+        # East wing
+        (1, 3, "I", {"east", "west"}),
+        (1, 4, "L", {"west", "south"}),
+        (2, 4, "I", {"north", "south"}),
+        (3, 4, "N", {"north"}),                              # dead end east
+        # South corridor
+        (2, 2, "T", {"north", "south", "west"}),
+        (2, 1, "N", {"east"}),                               # side room
+        (3, 2, "T", {"north", "east", "west"}),
+        (3, 1, "N", {"east"}),                               # side room with loot
+        (3, 3, "L", {"west", "south"}),
+        (4, 3, "I", {"north", "south"}),
+        (4, 2, "L", {"east", "north"}),                      # turn toward end
+        (4, 4, "E", {"north"}),                              # end room far corner
+    ]
+
+
+def _template_gauntlet_5x5() -> list[TemplateCell]:
+    """Template 7 -- 5x5 Gauntlet (14 cells). Long winding path, few branches, more combat rooms."""
+    return [
+        (0, 0, "S", {"south"}),
+        (1, 0, "I", {"north", "south"}),
+        (2, 0, "L", {"north", "east"}),
+        (2, 1, "I", {"west", "east"}),
+        (2, 2, "L", {"west", "south"}),
+        (3, 2, "I", {"north", "south"}),
+        (4, 2, "L", {"north", "east"}),
+        (4, 3, "I", {"west", "east"}),
+        (4, 4, "L", {"west", "north"}),
+        (3, 4, "T", {"south", "north", "west"}),
+        (3, 3, "N", {"east"}),                               # side room
+        (2, 4, "I", {"south", "north"}),
+        (1, 4, "I", {"south", "north"}),
+        (0, 4, "E", {"south"}),                              # end room top-right
+    ]
+
+
+_BASE_TEMPLATES = [
+    _template_t_branch, _template_zigzag, _template_linear, _template_hub,
+    _template_maze_5x5, _template_sprawl_5x5, _template_gauntlet_5x5,
+]
+TOWER_TEMPLATES = [_template_tower_linear, _template_tower_l]
+
+# Pre-bake all 4 rotations of each template at import time.
+# No runtime rotation — just a flat list of concrete layouts to pick from.
+_DIR_ROTATE_90 = {"north": "east", "east": "south", "south": "west", "west": "north"}
+
+
+def _rotate_template_90(cells: list[TemplateCell]) -> list[TemplateCell]:
+    """Rotate an entire template 90 degrees clockwise."""
+    if not cells:
+        return cells
+    max_row = max(r for r, c, _, _ in cells)
+    rotated = []
+    for row, col, role, dirs in cells:
+        new_row = col
+        new_col = max_row - row
+        new_dirs = {_DIR_ROTATE_90[d] for d in dirs}
+        rotated.append((new_row, new_col, role, new_dirs))
+    min_r = min(r for r, c, _, _ in rotated)
+    min_c = min(c for r, c, _, _ in rotated)
+    return [(r - min_r, c - min_c, role, dirs) for r, c, role, dirs in rotated]
+
+
+def _bake_all_rotations(base_templates: list) -> list[list[TemplateCell]]:
+    """Pre-compute all 4 rotations of each base template."""
+    baked = []
+    for fn in base_templates:
+        cells = fn()
+        for _ in range(4):
+            baked.append(list(cells))
+            cells = _rotate_template_90(cells)
+    return baked
+
+
+ALL_TEMPLATES = _bake_all_rotations(_BASE_TEMPLATES)
+
+
+def pick_template(rng: random.Random) -> list[TemplateCell]:
+    """Pick a random pre-baked template (already includes rotated variants)."""
+    return rng.choice(ALL_TEMPLATES)
+
+# ---------------------------------------------------------------------------
+# Rotation solver
+# ---------------------------------------------------------------------------
+
+
+def find_rotation_for_stage(
+    config_dirs: set[str], needed_game_dirs: set[str]
+) -> int | None:
+    """Find a rotation (0/90/180/270) that maps config_dirs to needed_game_dirs.
+
+    Returns None if no rotation works.
+    """
+    for rot in (0, 90, 180, 270):
+        rmap = ROTATION_MAP[rot]
+        rotated = {rmap[d] for d in config_dirs}
+        if needed_game_dirs.issubset(rotated):
+            return rot
+    return None
+
+
+def game_dir_to_config_dir(game_dir: str, rotation: int) -> str:
+    """Reverse-rotate a game direction to find the config direction."""
+    rev = REVERSE_ROTATION[rotation]
+    return ROTATION_MAP[rev][game_dir]
+
+
+# ---------------------------------------------------------------------------
+# Stage assignment
+# ---------------------------------------------------------------------------
+
+
+def _topology_for_role(role: str) -> list[str]:
+    """Map a template role to acceptable topology categories."""
+    if role == "S":
+        # S2 covers b-variant sa1 with north+south (superset of south-only)
+        return ["S", "S2"]
+    elif role == "I":
+        return ["I"]
+    elif role == "L":
+        return ["L"]
+    elif role == "T":
+        return ["T"]
+    elif role == "X":
+        return ["X"]
+    elif role == "N":
+        return ["N"]
+    elif role == "E":
+        # End cells can use inline stages (ga1) or dead-ends
+        return ["I", "N"]
+    return ["I"]
+
+
+def assign_stages(
+    template: list[TemplateCell],
+    catalog: StageCatalog,
+    prefix: str,
+    variant: str,
+    rng: random.Random,
+) -> list[dict] | None:
+    """Assign concrete stage IDs and rotations to template cells.
+
+    Returns list of cell dicts or None if assignment fails.
+    """
+    cells = []
+    used_stages: list[str] = []  # Track recently used stages to avoid repetition
+
+    for row, col, role, needed_dirs in template:
+        topos = _topology_for_role(role)
+        assigned = False
+
+        for topo in topos:
+            candidates = catalog.get_stages(prefix, variant, topo)
+            rng.shuffle(candidates)
+
+            # Sort candidates: prefer stages not recently used
+            candidates.sort(key=lambda s: s in used_stages)
+
+            for stage_id in candidates:
+                config_dirs = catalog.get_config_directions(stage_id)
+                rot = find_rotation_for_stage(config_dirs, needed_dirs)
+                if rot is not None:
+                    cells.append(
+                        {
+                            "row": row,
+                            "col": col,
+                            "role": role,
+                            "stage_id": stage_id,
+                            "rotation": rot,
+                            "needed_dirs": needed_dirs,
+                            "config_dirs": config_dirs,
+                        }
+                    )
+                    used_stages.append(stage_id)
+                    # Keep only last 3 to allow eventual reuse in large grids
+                    if len(used_stages) > 3:
+                        used_stages.pop(0)
+                    assigned = True
+                    break
+
+            if assigned:
+                break
+
+        if not assigned:
+            return None
+
+    return cells
+
+
+def assign_stages_for_b_start(
+    catalog: StageCatalog, prefix: str
+) -> dict | None:
+    """Assign the b-grid start cell (b-variant sa1 with north+south)."""
+    # b-variant sa1 has north+south
+    candidates = catalog.get_stages(prefix, "b", "S2")
+    if not candidates:
+        # fall back to regular start
+        candidates = catalog.get_stages(prefix, "b", "S")
+    if not candidates:
+        return None
+    stage_id = candidates[0]
+    config_dirs = catalog.get_config_directions(stage_id)
+    rot = find_rotation_for_stage(config_dirs, {"south"})
+    if rot is None:
+        rot = find_rotation_for_stage(config_dirs, {"north", "south"})
+    if rot is None:
+        return None
+    return {
+        "stage_id": stage_id,
+        "rotation": rot,
+        "config_dirs": config_dirs,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Cell builder (JSON output)
+# ---------------------------------------------------------------------------
+
+
+def build_cell_json(
+    cell: dict,
+    catalog: StageCatalog,
+    connections: dict[str, str],
+    path_order: int,
+    is_start: bool = False,
+    is_end: bool = False,
+    is_branch: bool = False,
+    warp_edge: str = "",
+    objects: list[dict] | None = None,
+) -> dict:
+    """Build a single cell dict matching the v1 quest schema."""
+    stage_id = cell["stage_id"]
+    rotation = cell["rotation"]
+
+    # Build portals dict: game_dir -> portal_id
+    portals = {}
+    for game_dir in connections:
+        config_dir = game_dir_to_config_dir(game_dir, rotation)
+        portal_obj = catalog.get_portal_by_config_dir(stage_id, config_dir)
+        if portal_obj:
+            portals[game_dir] = portal_obj["id"]
+        else:
+            portals[game_dir] = make_portal_id()
+
+    # Add warp_edge portal if present
+    if warp_edge and warp_edge not in portals:
+        config_dir = game_dir_to_config_dir(warp_edge, rotation)
+        portal_obj = catalog.get_portal_by_config_dir(stage_id, config_dir)
+        if portal_obj:
+            portals[warp_edge] = portal_obj["id"]
+        else:
+            portals[warp_edge] = make_portal_id()
+
+    # Add default spawn for start cells
+    if is_start:
+        spawn = catalog.get_default_spawn(stage_id)
+        if spawn:
+            portals["default"] = "default"
+
+    pos_str = f"{cell['row']},{cell['col']}"
+
+    return {
+        "pos": pos_str,
+        "stage_id": stage_id,
+        "rotation": rotation,
+        "connections": connections,
+        "portals": portals,
+        "is_start": is_start,
+        "is_end": is_end,
+        "is_branch": is_branch,
+        "has_key": False,
+        "key_for_cell": "",
+        "is_key_gate": False,
+        "key_gate_direction": "",
+        "key_drop": "",
+        "required_keys": 0,
+        "warp_edge": warp_edge,
+        "path_order": path_order,
+        "objects": objects or [],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Connection inference
+# ---------------------------------------------------------------------------
+
+
+def infer_connections(
+    cells: list[dict],
+) -> dict[tuple[int, int], dict[str, str]]:
+    """From assigned cells with positions and needed_dirs, compute connections.
+
+    Returns {(row, col): {dir: "row,col", ...}}.
+    """
+    pos_set = {(c["row"], c["col"]) for c in cells}
+    connections: dict[tuple[int, int], dict[str, str]] = {
+        (c["row"], c["col"]): {} for c in cells
+    }
+    cell_lookup = {(c["row"], c["col"]): c for c in cells}
+
+    for c in cells:
+        r, col = c["row"], c["col"]
+        for d in c["needed_dirs"]:
+            dr, dc = DIR_DELTA[d]
+            nr, nc = r + dr, col + dc
+            if (nr, nc) in pos_set:
+                opp = OPPOSITE_DIR[d]
+                neighbor = cell_lookup[(nr, nc)]
+                if opp in neighbor["needed_dirs"]:
+                    connections[(r, col)][d] = f"{nr},{nc}"
+
+    return connections
+
+
+# ---------------------------------------------------------------------------
+# Enemy / object placement
+# ---------------------------------------------------------------------------
+
+
+def _get_portal_positions_rotated(
+    catalog: StageCatalog, stage_id: str, rotation: int
+) -> list[tuple[float, float]]:
+    """Get rotated portal positions for a stage, used to keep objects away from gates."""
+    cfg = catalog.configs.get(stage_id, {})
+    positions: list[tuple[float, float]] = []
+    for portal in cfg.get("portals", []):
+        pos = portal.get("position", [0, 0, 0])
+        rx, rz = rotate_point_xz(pos[0], pos[2], rotation)
+        positions.append((rx, rz))
+    # Also include defaultSpawn position
+    default_spawn = cfg.get("defaultSpawn")
+    if default_spawn:
+        pos = default_spawn.get("position", [0, 0, 0])
+        rx, rz = rotate_point_xz(pos[0], pos[2], rotation)
+        positions.append((rx, rz))
+    return positions
+
+
+def place_objects_for_cell(
+    cell: dict,
+    catalog: StageCatalog,
+    pool: dict,
+    path_order: int,
+    total_cells: int,
+    is_branch_end: bool,
+    is_boss: bool,
+    rare_box_placed: list[bool],
+    rng: random.Random,
+    floor_cache: FloorCache | None = None,
+) -> list[dict]:
+    """Place enemies and boxes for a single cell.
+
+    When floor_cache is provided, positions are validated against actual floor
+    mesh geometry. Otherwise falls back to portal-based bounding box estimation.
+    """
+    stage_id = cell["stage_id"]
+    rotation = cell.get("rotation", 0)
+    portals_cfg = catalog.configs.get(stage_id, {}).get("portals", [])
+    obstacles = catalog.get_obstacles(stage_id)
+    objects: list[dict] = []
+
+    # Only the very first start cell (grid A) is empty — gives the player a safe landing.
+    # Grid B/later start cells get enemies so gates lock and the flow is clear.
+    if cell.get("role") == "S" and cell.get("is_first_start", True):
+        return []
+
+    # Try to load floor data
+    floor_data = None
+    portal_positions: list[tuple[float, float]] | None = None
+    if floor_cache is not None:
+        floor_data = floor_cache.load(stage_id, rotation)
+        if floor_data is not None:
+            portal_positions = _get_portal_positions_rotated(catalog, stage_id, rotation)
+
+    if is_boss:
+        # Boss cell: 1 boss + 2 common support
+        enemy_ids = [rng.choice(pool["bosses"])]
+        enemy_ids.extend(rng.choices(pool["common"], k=2))
+        positions = sample_positions(
+            len(enemy_ids), portals_cfg, obstacles, rng=rng,
+            floor_data=floor_data, portal_positions=portal_positions,
+        )
+        for eid, pos in zip(enemy_ids, positions):
+            objects.append({"type": "enemy", "position": pos, "enemy_id": eid})
+        return objects
+
+    # Determine enemy count and mix based on position
+    late_threshold = total_cells * 0.6
+    if is_branch_end:
+        # Dead-end branches: 1-2 enemies + 2-3 boxes
+        enemy_count = rng.randint(1, 2)
+        box_count = rng.randint(2, 3)
+        enemy_ids = []
+        for _ in range(enemy_count):
+            if rng.random() < 0.4:
+                enemy_ids.append(rng.choice(pool["uncommon"]))
+            else:
+                enemy_ids.append(rng.choice(pool["common"]))
+    elif path_order >= late_threshold:
+        # Late cells: 2-3 with mix of common + uncommon
+        enemy_count = rng.randint(2, 3)
+        box_count = 0
+        enemy_ids = []
+        for _ in range(enemy_count):
+            if rng.random() < 0.5:
+                enemy_ids.append(rng.choice(pool["uncommon"]))
+            else:
+                enemy_ids.append(rng.choice(pool["common"]))
+    else:
+        # Corridor/junction cells: 2-3 common enemies
+        enemy_count = rng.randint(2, 3)
+        box_count = 0
+        enemy_ids = rng.choices(pool["common"], k=enemy_count)
+
+    total_needed = enemy_count + (box_count if is_branch_end else 0)
+    positions = sample_positions(
+        total_needed, portals_cfg, obstacles, rng=rng,
+        floor_data=floor_data, portal_positions=portal_positions,
+    )
+
+    idx = 0
+    for eid in enemy_ids:
+        if idx < len(positions):
+            objects.append(
+                {"type": "enemy", "position": positions[idx], "enemy_id": eid}
+            )
+            idx += 1
+
+    if is_branch_end:
+        for i in range(box_count):
+            if idx < len(positions):
+                if not rare_box_placed[0] and i == box_count - 1:
+                    objects.append({"type": "rare_box", "position": positions[idx]})
+                    rare_box_placed[0] = True
+                else:
+                    objects.append({"type": "box", "position": positions[idx]})
+                idx += 1
+
+    return objects
+
+
+# ---------------------------------------------------------------------------
+# Section builders
+# ---------------------------------------------------------------------------
+
+
+def build_grid_section(
+    template_cells: list[dict],
+    catalog: StageCatalog,
+    pool: dict,
+    variant: str,
+    rng: random.Random,
+    rare_box_placed: list[bool],
+    floor_cache: FloorCache | None = None,
+    is_first_grid: bool = True,
+) -> dict:
+    """Build a complete grid section from assigned template cells."""
+    connections = infer_connections(template_cells)
+    total_cells = len(template_cells)
+
+    # Compute path_order via BFS from start
+    start_cell = None
+    for c in template_cells:
+        if c["role"] == "S":
+            start_cell = c
+            break
+    if start_cell is None:
+        start_cell = template_cells[0]
+
+    visited_order = bfs_order(template_cells, connections, start_cell)
+
+    # Identify branch ends (dead-ends that aren't start or warp_edge end)
+    branch_ends = set()
+    for c in template_cells:
+        pos = (c["row"], c["col"])
+        conn = connections.get(pos, {})
+        if len(conn) == 1 and c["role"] not in ("S", "E"):
+            branch_ends.add(pos)
+
+    # Build JSON cells
+    json_cells = []
+    end_cell = None
+    for c in template_cells:
+        if c["role"] == "E":
+            end_cell = c
+            break
+    # If no explicit end, use the cell with highest path_order
+    if end_cell is None:
+        end_cell = max(template_cells, key=lambda x: visited_order.get((x["row"], x["col"]), 0))
+
+    for c in template_cells:
+        pos = (c["row"], c["col"])
+        conn = connections.get(pos, {})
+        path_order = visited_order.get(pos, 0)
+        is_start = c["role"] == "S"
+        is_end = c is end_cell
+        is_branch = len(conn) > 2
+        is_branch_end = pos in branch_ends
+
+        # Determine warp_edge for end cells
+        warp_edge = ""
+        if is_end and c["role"] == "E":
+            # Compute actual game-space directions from the stage's config dirs + rotation
+            rmap = ROTATION_MAP[c["rotation"]]
+            rotated_dirs = {rmap[d] for d in c["config_dirs"]}
+            # warp_edge is a rotated direction that is NOT used as a connection
+            for d in rotated_dirs:
+                if d not in conn:
+                    warp_edge = d
+                    break
+            # Fallback: check needed_dirs too
+            if not warp_edge:
+                for d in c["needed_dirs"]:
+                    if d not in conn:
+                        warp_edge = d
+                        break
+
+        # Mark whether this is the very first start cell (grid A only gets empty start)
+        c_copy = dict(c)
+        if is_start and not is_first_grid:
+            c_copy["is_first_start"] = False
+
+        objects = place_objects_for_cell(
+            c_copy, catalog, pool, path_order, total_cells,
+            is_branch_end, False, rare_box_placed, rng,
+            floor_cache=floor_cache,
+        )
+
+        json_cells.append(
+            build_cell_json(
+                c, catalog, conn, path_order,
+                is_start=is_start, is_end=is_end,
+                is_branch=is_branch, warp_edge=warp_edge,
+                objects=objects,
+            )
+        )
+
+    # Sort by path_order
+    json_cells.sort(key=lambda x: x["path_order"])
+
+    start_pos = f"{start_cell['row']},{start_cell['col']}"
+    end_pos = f"{end_cell['row']},{end_cell['col']}"
+
+    return {
+        "type": "grid",
+        "area": variant,
+        "start_pos": start_pos,
+        "end_pos": end_pos,
+        "cells": json_cells,
+    }
+
+
+def build_transition_section(
+    catalog: StageCatalog,
+    prefix: str,
+    pool: dict,
+    rng: random.Random,
+    floor_cache: FloorCache | None = None,
+) -> dict:
+    """Build a transition section (single ia1 cell)."""
+    stage_id = f"{prefix}e_ia1"
+    if stage_id not in catalog.configs:
+        # fallback
+        stage_id = f"{prefix}a_ia1"
+    if stage_id not in catalog.configs:
+        # Use any available ia1
+        for sid in catalog.configs:
+            if "_ia1" in sid:
+                stage_id = sid
+                break
+
+    config_dirs = catalog.get_config_directions(stage_id)
+    rotation = find_rotation_for_stage(config_dirs, {"north", "south"}) or 0
+    portals_cfg = catalog.configs.get(stage_id, {}).get("portals", [])
+    obstacles = catalog.get_obstacles(stage_id)
+
+    # Load floor data if available
+    floor_data = None
+    portal_positions = None
+    if floor_cache is not None:
+        floor_data = floor_cache.load(stage_id, rotation)
+        if floor_data is not None:
+            portal_positions = _get_portal_positions_rotated(catalog, stage_id, rotation)
+
+    # Place 2-3 enemies
+    enemy_count = rng.randint(2, 3)
+    enemy_ids = []
+    for _ in range(enemy_count):
+        if rng.random() < 0.3:
+            enemy_ids.append(rng.choice(pool["uncommon"]))
+        else:
+            enemy_ids.append(rng.choice(pool["common"]))
+
+    positions = sample_positions(
+        enemy_count + 1, portals_cfg, obstacles, rng=rng,
+        floor_data=floor_data, portal_positions=portal_positions,
+    )
+    objects: list[dict] = []
+    for i, eid in enumerate(enemy_ids):
+        if i < len(positions):
+            objects.append({"type": "enemy", "position": positions[i], "enemy_id": eid})
+
+    # Maybe add a box
+    if len(positions) > len(enemy_ids):
+        objects.append({"type": "box", "position": positions[len(enemy_ids)]})
+
+    cell_data = {
+        "row": 0,
+        "col": 0,
+        "role": "TRANS",
+        "stage_id": stage_id,
+        "rotation": rotation,
+        "needed_dirs": {"north", "south"},
+        "config_dirs": config_dirs,
+    }
+
+    # Portals
+    portals = {}
+    for game_dir in ("north", "south"):
+        config_dir = game_dir_to_config_dir(game_dir, rotation)
+        portal_obj = catalog.get_portal_by_config_dir(stage_id, config_dir)
+        if portal_obj:
+            portals[game_dir] = portal_obj["id"]
+        else:
+            portals[game_dir] = make_portal_id()
+
+    cell_json = {
+        "pos": "0,0",
+        "stage_id": stage_id,
+        "rotation": rotation,
+        "connections": {},
+        "portals": portals,
+        "is_start": True,
+        "is_end": True,
+        "is_branch": False,
+        "has_key": False,
+        "key_for_cell": "",
+        "is_key_gate": False,
+        "key_gate_direction": "",
+        "key_drop": "",
+        "required_keys": 0,
+        "warp_edge": "north",
+        "path_order": 0,
+        "objects": objects,
+    }
+
+    return {
+        "type": "transition",
+        "area": "e",
+        "start_pos": "0,0",
+        "end_pos": "0,0",
+        "entry_direction": "south",
+        "exit_direction": "north",
+        "cells": [cell_json],
+    }
+
+
+def build_boss_section(
+    catalog: StageCatalog,
+    prefix: str,
+    pool: dict,
+    rng: random.Random,
+    floor_cache: FloorCache | None = None,
+) -> dict:
+    """Build a boss section (single na1 cell with boss + support)."""
+    # Prefer z-variant na1, fall back to a-variant
+    stage_id = f"{prefix}z_na1"
+    if stage_id not in catalog.configs or not catalog.get_config_directions(stage_id):
+        stage_id = f"{prefix}a_na1"
+    if stage_id not in catalog.configs:
+        # Use any na1 we can find for this prefix
+        for sid in catalog.configs:
+            if sid.startswith(prefix) and "_na1" in sid:
+                stage_id = sid
+                break
+
+    config_dirs = catalog.get_config_directions(stage_id)
+    # Boss room uses rotation 180 of na1 (so south portal -> north in game)
+    rotation = find_rotation_for_stage(config_dirs, {"north"})
+    if rotation is None:
+        # If na1 has no portals (z-variant), just use 180
+        rotation = 180
+
+    portals_cfg = catalog.configs.get(stage_id, {}).get("portals", [])
+    obstacles = catalog.get_obstacles(stage_id)
+
+    # Load floor data if available
+    floor_data = None
+    portal_positions = None
+    if floor_cache is not None:
+        floor_data = floor_cache.load(stage_id, rotation)
+        if floor_data is not None:
+            portal_positions = _get_portal_positions_rotated(catalog, stage_id, rotation)
+
+    # Place boss + 2 support
+    enemy_ids = [rng.choice(pool["bosses"])]
+    enemy_ids.extend(rng.choices(pool["common"], k=2))
+    positions = sample_positions(
+        3, portals_cfg, obstacles, rng=rng,
+        floor_data=floor_data, portal_positions=portal_positions,
+    )
+
+    objects: list[dict] = []
+    for i, eid in enumerate(enemy_ids):
+        if i < len(positions):
+            objects.append({"type": "enemy", "position": positions[i], "enemy_id": eid})
+
+    # Portal for entry
+    portals = {}
+    if config_dirs:
+        for game_dir in ("north",):
+            config_dir = game_dir_to_config_dir(game_dir, rotation)
+            portal_obj = catalog.get_portal_by_config_dir(stage_id, config_dir)
+            if portal_obj:
+                portals[game_dir] = portal_obj["id"]
+            else:
+                portals[game_dir] = make_portal_id()
+
+    cell_json = {
+        "pos": "0,0",
+        "stage_id": stage_id,
+        "rotation": rotation,
+        "connections": {},
+        "portals": portals,
+        "is_start": True,
+        "is_end": True,
+        "is_branch": False,
+        "has_key": False,
+        "key_for_cell": "",
+        "is_key_gate": False,
+        "key_gate_direction": "",
+        "key_drop": "",
+        "required_keys": 0,
+        "warp_edge": "north",
+        "path_order": 0,
+        "objects": objects,
+    }
+
+    return {
+        "type": "boss",
+        "area": "z",
+        "start_pos": "0,0",
+        "end_pos": "0,0",
+        "cells": [cell_json],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Tower section builder
+# ---------------------------------------------------------------------------
+
+
+def build_tower_sections(
+    catalog: StageCatalog,
+    pool: dict,
+    rng: random.Random,
+    floor_cache: FloorCache | None = None,
+) -> list[dict]:
+    """Build all sections for a tower quest (floors s080-s087)."""
+    sections: list[dict] = []
+    rare_box_placed = [False]
+
+    # Grid A: floors s080 (entrance) through s083
+    # Use entrance s080_sa0 + floors s081-s083
+    a_cells: list[TemplateCell] = [(0, 0, "S", {"south"})]
+    row = 1
+    for floor in ["s081", "s082", "s083"]:
+        a_cells.append((row, 0, "I", {"north", "south"}))
+        row += 1
+
+    # Assign stages manually for tower
+    a_assigned = []
+    # Entrance
+    a_assigned.append({
+        "row": 0, "col": 0, "role": "S",
+        "stage_id": "s080_sa0", "rotation": 0,
+        "needed_dirs": {"south"}, "config_dirs": catalog.get_config_directions("s080_sa0"),
+    })
+    for i, floor in enumerate(["s081", "s082", "s083"]):
+        stage_ids = catalog.get_stages("s08", floor[-1], "I")
+        if not stage_ids:
+            stage_ids = [f"{floor}_ga1"]
+        sid = rng.choice(stage_ids) if stage_ids else f"{floor}_ib1"
+        if sid not in catalog.configs:
+            sid = f"{floor}_ga1"
+        config_dirs = catalog.get_config_directions(sid)
+        rot = find_rotation_for_stage(config_dirs, {"north", "south"}) or 0
+        a_assigned.append({
+            "row": i + 1, "col": 0, "role": "I" if i < 2 else "E",
+            "stage_id": sid, "rotation": rot,
+            "needed_dirs": {"north", "south"}, "config_dirs": config_dirs,
+        })
+
+    # Mark last as end
+    a_assigned[-1]["role"] = "E"
+
+    grid_a = build_grid_section(a_assigned, catalog, pool, "a", rng, rare_box_placed, floor_cache=floor_cache)
+    sections.append(grid_a)
+
+    # Transition
+    trans_stage = "s08e_ib1"
+    if trans_stage not in catalog.configs:
+        # fallback
+        for sid in catalog.configs:
+            if sid.startswith("s08") and "_ib1" in sid:
+                trans_stage = sid
+                break
+
+    config_dirs = catalog.get_config_directions(trans_stage)
+    rot = find_rotation_for_stage(config_dirs, {"north", "south"}) or 0
+    portals_cfg = catalog.configs.get(trans_stage, {}).get("portals", [])
+    obstacles = catalog.get_obstacles(trans_stage)
+
+    # Load floor data for tower transition
+    t_floor_data = None
+    t_portal_positions = None
+    if floor_cache is not None:
+        t_floor_data = floor_cache.load(trans_stage, rot)
+        if t_floor_data is not None:
+            t_portal_positions = _get_portal_positions_rotated(catalog, trans_stage, rot)
+
+    enemy_count = rng.randint(2, 3)
+    enemy_ids = rng.choices(pool["common"], k=enemy_count)
+    positions = sample_positions(
+        enemy_count, portals_cfg, obstacles, rng=rng,
+        floor_data=t_floor_data, portal_positions=t_portal_positions,
+    )
+    objects = []
+    for eid, pos in zip(enemy_ids, positions):
+        objects.append({"type": "enemy", "position": pos, "enemy_id": eid})
+
+    t_portals = {}
+    for game_dir in ("north", "south"):
+        cfg_dir = game_dir_to_config_dir(game_dir, rot)
+        portal_obj = catalog.get_portal_by_config_dir(trans_stage, cfg_dir)
+        if portal_obj:
+            t_portals[game_dir] = portal_obj["id"]
+        else:
+            t_portals[game_dir] = make_portal_id()
+
+    trans_section = {
+        "type": "transition",
+        "area": "e",
+        "start_pos": "0,0",
+        "end_pos": "0,0",
+        "entry_direction": "south",
+        "exit_direction": "north",
+        "cells": [{
+            "pos": "0,0",
+            "stage_id": trans_stage,
+            "rotation": rot,
+            "connections": {},
+            "portals": t_portals,
+            "is_start": True,
+            "is_end": True,
+            "is_branch": False,
+            "has_key": False,
+            "key_for_cell": "",
+            "is_key_gate": False,
+            "key_gate_direction": "",
+            "key_drop": "",
+            "required_keys": 0,
+            "warp_edge": "north",
+            "path_order": 0,
+            "objects": objects,
+        }],
+    }
+    sections.append(trans_section)
+
+    # Grid B: floors s084-s086
+    b_assigned = []
+    for i, floor in enumerate(["s084", "s085", "s086"]):
+        stage_ids = catalog.get_stages("s08", floor[-1], "I")
+        if not stage_ids:
+            stage_ids = [f"{floor}_ga1"]
+        sid = rng.choice(stage_ids) if stage_ids else f"{floor}_ib1"
+        if sid not in catalog.configs:
+            sid = f"{floor}_ga1"
+        config_dirs_b = catalog.get_config_directions(sid)
+        rot_b = find_rotation_for_stage(config_dirs_b, {"north", "south"}) or 0
+        role = "I"
+        if i == 0:
+            role = "S"
+        elif i == len(["s084", "s085", "s086"]) - 1:
+            role = "E"
+        b_assigned.append({
+            "row": i, "col": 0, "role": role,
+            "stage_id": sid, "rotation": rot_b,
+            "needed_dirs": {"north", "south"} if role != "S" else {"south"},
+            "config_dirs": config_dirs_b,
+        })
+
+    # Fix: first cell of B-grid needs south only if it's start
+    # Actually tower B-start uses sa1 with north+south
+    b_first_floor = "s084"
+    sa1_id = f"{b_first_floor}_sa1"
+    if sa1_id in catalog.configs:
+        b_assigned[0]["stage_id"] = sa1_id
+        b_assigned[0]["config_dirs"] = catalog.get_config_directions(sa1_id)
+        b_assigned[0]["needed_dirs"] = {"south"}
+        rot_s = find_rotation_for_stage(b_assigned[0]["config_dirs"], {"south"})
+        if rot_s is not None:
+            b_assigned[0]["rotation"] = rot_s
+
+    grid_b = build_grid_section(b_assigned, catalog, pool, "b", rng, rare_box_placed, floor_cache=floor_cache, is_first_grid=False)
+    # Override area label for tower B
+    grid_b["area"] = "b"
+    sections.append(grid_b)
+
+    # Boss: s087_na1
+    boss_section = {
+        "type": "boss",
+        "area": "z",
+        "start_pos": "0,0",
+        "end_pos": "0,0",
+        "cells": [],
+    }
+    boss_stage = "s087_na1"
+    if boss_stage not in catalog.configs:
+        boss_stage = "s086_ga1"  # fallback
+
+    b_config_dirs = catalog.get_config_directions(boss_stage)
+    b_rot = 180 if not b_config_dirs else (find_rotation_for_stage(b_config_dirs, {"north"}) or 180)
+
+    boss_portals_cfg = catalog.configs.get(boss_stage, {}).get("portals", [])
+    boss_obstacles = catalog.get_obstacles(boss_stage)
+
+    # Load floor data for tower boss
+    boss_floor_data = None
+    boss_portal_positions = None
+    if floor_cache is not None:
+        boss_floor_data = floor_cache.load(boss_stage, b_rot)
+        if boss_floor_data is not None:
+            boss_portal_positions = _get_portal_positions_rotated(catalog, boss_stage, b_rot)
+
+    boss_enemy_ids = [rng.choice(pool["bosses"])] + rng.choices(pool["common"], k=2)
+    boss_positions = sample_positions(
+        3, boss_portals_cfg, boss_obstacles, rng=rng,
+        floor_data=boss_floor_data, portal_positions=boss_portal_positions,
+    )
+    boss_objects = []
+    for eid, pos in zip(boss_enemy_ids, boss_positions):
+        boss_objects.append({"type": "enemy", "position": pos, "enemy_id": eid})
+
+    boss_portals = {}
+    if b_config_dirs:
+        for gd in ("north",):
+            cd = game_dir_to_config_dir(gd, b_rot)
+            po = catalog.get_portal_by_config_dir(boss_stage, cd)
+            if po:
+                boss_portals[gd] = po["id"]
+            else:
+                boss_portals[gd] = make_portal_id()
+
+    boss_section["cells"].append({
+        "pos": "0,0",
+        "stage_id": boss_stage,
+        "rotation": b_rot,
+        "connections": {},
+        "portals": boss_portals,
+        "is_start": True,
+        "is_end": True,
+        "is_branch": False,
+        "has_key": False,
+        "key_for_cell": "",
+        "is_key_gate": False,
+        "key_gate_direction": "",
+        "key_drop": "",
+        "required_keys": 0,
+        "warp_edge": "north",
+        "path_order": 0,
+        "objects": boss_objects,
+    })
+    sections.append(boss_section)
+
+    return sections
+
+
+# ---------------------------------------------------------------------------
+# BFS / clearability
+# ---------------------------------------------------------------------------
+
+
+def bfs_order(
+    cells: list[dict],
+    connections: dict[tuple[int, int], dict[str, str]],
+    start: dict,
+) -> dict[tuple[int, int], int]:
+    """BFS from start cell, return {(row,col): path_order}."""
+    from collections import deque
+
+    visited: dict[tuple[int, int], int] = {}
+    queue: deque[tuple[int, int, int]] = deque()
+    start_pos = (start["row"], start["col"])
+    queue.append((*start_pos, 0))
+    visited[start_pos] = 0
+
+    while queue:
+        r, c, order = queue.popleft()
+        conn = connections.get((r, c), {})
+        for d, target_str in conn.items():
+            tr, tc = map(int, target_str.split(","))
+            if (tr, tc) not in visited:
+                visited[(tr, tc)] = order + 1
+                queue.append((tr, tc, order + 1))
+
+    return visited
+
+
+def validate_clearability(sections: list[dict]) -> bool:
+    """Verify all cells within each grid section are reachable from start."""
+    for section in sections:
+        if section["type"] not in ("grid",):
+            continue
+        cells = section["cells"]
+        if not cells:
+            continue
+
+        # Build adjacency from connections
+        pos_to_cell = {c["pos"]: c for c in cells}
+        start_pos = section["start_pos"]
+        if start_pos not in pos_to_cell:
+            print(f"  WARNING: start_pos {start_pos} not found in section", file=sys.stderr)
+            return False
+
+        visited = {start_pos}
+        queue = [start_pos]
+        while queue:
+            current = queue.pop(0)
+            cell = pos_to_cell[current]
+            for d, target in cell["connections"].items():
+                if target not in visited and target in pos_to_cell:
+                    visited.add(target)
+                    queue.append(target)
+
+        if len(visited) != len(cells):
+            unreachable = set(pos_to_cell.keys()) - visited
+            print(
+                f"  WARNING: {len(unreachable)} unreachable cells: {unreachable}",
+                file=sys.stderr,
+            )
+            return False
+
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Main generation
+# ---------------------------------------------------------------------------
+
+
+def generate_quest(
+    area: str,
+    name: str,
+    output_path: str,
+    seed: int | None = None,
+    description: str | None = None,
+) -> dict:
+    """Generate a complete field quest JSON."""
+    rng = random.Random(seed)
+    reset_portal_ids()
+
+    if area not in AREA_CONFIG:
+        print(f"ERROR: Unknown area '{area}'. Valid: {list(AREA_CONFIG.keys())}", file=sys.stderr)
+        sys.exit(1)
+
+    prefix = AREA_CONFIG[area]["prefix"]
+    pool = ENEMY_POOLS[area]
+    catalog = StageCatalog(STAGE_CONFIG_PATH)
+
+    # Create floor cache for floor-mesh-validated placement
+    floor_cache = FloorCache(catalog.raw)
+
+    quest_id = os.path.splitext(os.path.basename(output_path))[0]
+    if description is None:
+        description = f"Explore the wilds of {area.title()}. Danger lurks around every corner."
+
+    today = time.strftime("%Y-%m-%d")
+
+    if area == "tower":
+        sections = build_tower_sections(catalog, pool, rng, floor_cache=floor_cache)
+    else:
+        sections = _generate_standard_sections(catalog, prefix, pool, rng, floor_cache=floor_cache)
+
+    quest = {
+        "version": 1,
+        "last_updated": today,
+        "id": quest_id,
+        "name": name,
+        "description": description,
+        "area_id": area,
+        "sections": sections,
+    }
+
+    # Validate clearability
+    if not validate_clearability(sections):
+        print("WARNING: Quest may have unreachable cells!", file=sys.stderr)
+
+    return quest
+
+
+def _generate_standard_sections(
+    catalog: StageCatalog,
+    prefix: str,
+    pool: dict,
+    rng: random.Random,
+    floor_cache: FloorCache | None = None,
+) -> list[dict]:
+    """Generate sections for non-tower areas: Grid A + Transition E + Grid B + Boss Z."""
+    sections: list[dict] = []
+    rare_box_placed = [False]
+
+    # --- Grid A --- (prefer larger 5x5 templates)
+    grid_a_cells = None
+    for _attempt in range(10):
+        template = pick_template(rng)
+        cells = assign_stages(template, catalog, prefix, "a", rng)
+        if cells is not None:
+            grid_a_cells = cells
+            break
+
+    if grid_a_cells is None:
+        # Fallback to linear
+        template = _template_linear()
+        grid_a_cells = assign_stages(template, catalog, prefix, "a", rng)
+        if grid_a_cells is None:
+            print("ERROR: Could not assign stages for Grid A", file=sys.stderr)
+            sys.exit(1)
+
+    grid_a = build_grid_section(grid_a_cells, catalog, pool, "a", rng, rare_box_placed, floor_cache=floor_cache)
+    sections.append(grid_a)
+
+    # --- Transition E ---
+    trans = build_transition_section(catalog, prefix, pool, rng, floor_cache=floor_cache)
+    sections.append(trans)
+
+    # --- Grid B --- (can also use 5x5 templates with rotation)
+    grid_b_cells = None
+    for _attempt in range(10):
+        template = pick_template(rng)
+        cells = assign_stages(template, catalog, prefix, "b", rng)
+        if cells is not None:
+            grid_b_cells = cells
+            break
+
+    if grid_b_cells is None:
+        # Fallback: try linear with a-variant stages
+        template = _template_linear()
+        grid_b_cells = assign_stages(template, catalog, prefix, "b", rng)
+        if grid_b_cells is None:
+            grid_b_cells = assign_stages(template, catalog, prefix, "a", rng)
+
+    if grid_b_cells is None:
+        print("ERROR: Could not assign stages for Grid B", file=sys.stderr)
+        sys.exit(1)
+
+    grid_b = build_grid_section(grid_b_cells, catalog, pool, "b", rng, rare_box_placed, floor_cache=floor_cache, is_first_grid=False)
+    sections.append(grid_b)
+
+    # --- Boss Z ---
+    boss = build_boss_section(catalog, prefix, pool, rng, floor_cache=floor_cache)
+    sections.append(boss)
+
+    return sections
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate a field quest JSON file.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Generate a quest
+  %(prog)s --area gurhacia --name "Valley Patrol" \\
+      --output data/quests/valley_patrol.json --seed 42
+
+  # Check all positions in an existing quest lie on walkable floor
+  %(prog)s --check-floors data/quests/search_and_rescue.json
+""",
+    )
+    parser.add_argument(
+        "--check-floors", metavar="QUEST_JSON",
+        help="Validate all positioned objects in a quest are on walkable floor",
+    )
+    parser.add_argument(
+        "--area",
+        choices=list(AREA_CONFIG.keys()),
+        help="Area name (gurhacia, ozette, rioh, makara, paru, arca, dark, tower)",
+    )
+    parser.add_argument(
+        "--name",
+        help="Quest display name (e.g. 'Valley Patrol')",
+    )
+    parser.add_argument(
+        "--output",
+        help="Output JSON file path (e.g. data/quests/valley_patrol.json)",
+    )
+    parser.add_argument(
+        "--seed", type=int, default=None,
+        help="Random seed for reproducible generation",
+    )
+    parser.add_argument(
+        "--description", type=str, default=None,
+        help="Quest description text (optional)",
+    )
+    args = parser.parse_args()
+
+    # --check-floors mode
+    if args.check_floors:
+        quest_path = args.check_floors
+        if not os.path.isabs(quest_path):
+            quest_path = os.path.join(PROJECT_ROOT, quest_path)
+        if not os.path.exists(quest_path):
+            print(f"ERROR: File not found: {quest_path}", file=sys.stderr)
+            sys.exit(1)
+        errors = check_floors(quest_path)
+        sys.exit(1 if errors > 0 else 0)
+
+    # Generation mode: require --area, --name, --output
+    if not args.area or not args.name or not args.output:
+        parser.error("--area, --name, and --output are required for quest generation")
+
+    # Resolve output path relative to project root if not absolute
+    output_path = args.output
+    if not os.path.isabs(output_path):
+        output_path = os.path.join(PROJECT_ROOT, output_path)
+
+    quest = generate_quest(
+        area=args.area,
+        name=args.name,
+        output_path=output_path,
+        seed=args.seed,
+        description=args.description,
+    )
+
+    # Ensure output directory exists
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    with open(output_path, "w") as f:
+        json.dump(quest, f, indent=2)
+        f.write("\n")
+
+    # Print summary
+    total_cells = 0
+    total_enemies = 0
+    total_boxes = 0
+    section_info = []
+    for section in quest["sections"]:
+        cells = section.get("cells", [])
+        total_cells += len(cells)
+        for cell in cells:
+            for obj in cell.get("objects", []):
+                if obj["type"] == "enemy":
+                    total_enemies += 1
+                elif obj["type"] in ("box", "rare_box"):
+                    total_boxes += 1
+        section_info.append(
+            f"  {section['type']}({section['area']}): {len(cells)} cells"
+        )
+
+    print(f"Generated: {output_path}")
+    print(f"  Quest: {quest['name']} ({quest['id']})")
+    print(f"  Area: {quest['area_id']}")
+    print(f"  Total cells: {total_cells}")
+    print(f"  Total enemies: {total_enemies}")
+    print(f"  Total boxes: {total_boxes}")
+    print("  Sections:")
+    for info in section_info:
+        print(f"    {info}")
+
+    # Auto-check floors of the generated quest
+    print(f"\n--- Floor Validation ---")
+    check_floors(output_path)
+
+
+if __name__ == "__main__":
+    main()

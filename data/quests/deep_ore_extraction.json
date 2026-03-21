@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-07",
+  "last_updated": "2026-03-20",
   "id": "deep_ore_extraction",
   "name": "Deep Ore Extraction",
   "description": "Requested by: Weapon Smith. Escort apprentice Dorn into the valley to recover iron ore from creature-infested deposits.",
@@ -10,7 +10,7 @@
       "type": "grid",
       "area": "a",
       "start_pos": "0,2",
-      "end_pos": "3,0",
+      "end_pos": "0,1",
       "cells": [
         {
           "pos": "0,2",
@@ -46,7 +46,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "The first vein should be just ahead. These creatures nest near mineral deposits \u2014 something in the ore attracts them. Clear the room, I'll handle the rest."
+                  "text": "The first vein should be just ahead. These creatures nest near mineral deposits — something in the ore attracts them. Clear the room, I'll handle the rest."
                 }
               ]
             }
@@ -54,32 +54,29 @@
         },
         {
           "pos": "1,2",
-          "stage_id": "s01a_ga1",
-          "rotation": 180,
+          "stage_id": "s01a_tb3",
+          "rotation": 270,
           "connections": {
-            "south": "2,2",
-            "north": "0,2"
+            "east": "1,3",
+            "north": "0,2",
+            "south": "2,2"
           },
           "portals": {
-            "south": "portal_1769002968090_15j7x91gm",
-            "north": "portal_1769002993382_c7pgnyd8v"
+            "east": "portal_1769092758520_qdtk50cms",
+            "north": "portal_1771821631167_wt2zq9xik",
+            "south": "portal_1771821642862_ebervwnls"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
-          "key_drop": "1,2",
-          "required_keys": 1,
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 1,
-          "key_drop_position": [
-            2.3,
-            1,
-            -10
-          ],
           "objects": [
             {
               "type": "enemy",
@@ -131,30 +128,50 @@
           ]
         },
         {
-          "pos": "2,2",
-          "stage_id": "s01a_tb3",
+          "pos": "1,3",
+          "stage_id": "s01a_nb2",
           "rotation": 90,
           "connections": {
-            "west": "2,1",
-            "south": "3,2",
-            "north": "1,2"
+            "west": "1,2"
           },
           "portals": {
-            "west": "portal_1769092758520_qdtk50cms",
-            "south": "portal_1771821631167_wt2zq9xik",
-            "north": "portal_1771821642862_ebervwnls"
+            "west": "portal_1769092327993_a9mir3dem"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": true,
+          "has_key": true,
+          "key_for_cell": "3,1",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s01a_ib1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,2",
+            "south": "3,2"
+          },
+          "portals": {
+            "north": "portal_1769053381372_5av2efj16",
+            "south": "portal_1769053417752_i1yyit48i"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "key_drop": "",
-          "required_keys": 1,
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2,
+          "path_order": 3,
           "objects": [
             {
               "type": "enemy",
@@ -206,14 +223,16 @@
           ]
         },
         {
-          "pos": "2,1",
-          "stage_id": "s01a_nc2",
+          "pos": "3,2",
+          "stage_id": "s01a_lb1",
           "rotation": 270,
           "connections": {
-            "east": "2,2"
+            "west": "3,1",
+            "north": "2,2"
           },
           "portals": {
-            "east": "portal_1769092368149_s8xo45sfu"
+            "west": "portal_1771821299622_yqnbj8zku",
+            "north": "portal_1771821420224_3s36p1dt1"
           },
           "is_start": false,
           "is_end": false,
@@ -222,15 +241,10 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "2,2",
+          "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3,
-          "key_drop_position": [
-            16.6,
-            1,
-            15.4
-          ],
+          "path_order": 4,
           "objects": [
             {
               "type": "enemy",
@@ -292,28 +306,30 @@
           ]
         },
         {
-          "pos": "3,2",
-          "stage_id": "s01a_ic3",
-          "rotation": 180,
+          "pos": "3,1",
+          "stage_id": "s01a_tb3",
+          "rotation": 0,
           "connections": {
-            "south": "4,2",
-            "north": "2,2"
+            "south": "4,1",
+            "east": "3,2",
+            "west": "3,0"
           },
           "portals": {
-            "south": "portal_1769091093818_4fqlpqiz6",
-            "north": "portal_1769091101029_psdymd2kn"
+            "south": "portal_1769092758520_qdtk50cms",
+            "east": "portal_1771821631167_wt2zq9xik",
+            "west": "portal_1771821642862_ebervwnls"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
-          "path_order": 4,
+          "path_order": 5,
           "objects": [
             {
               "type": "quest_item",
@@ -327,11 +343,11 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Good iron. You can tell by the weight \u2014 this hasn't oxidized at all. Most surface ore is rusted through, but the stuff buried deep stays pure."
+                  "text": "Good iron. You can tell by the weight — this hasn't oxidized at all. Most surface ore is rusted through, but the stuff buried deep stays pure."
                 },
                 {
                   "speaker": "Dorn",
-                  "text": "A blade's only as good as what you forge it from. Junk iron makes junk steel \u2014 shatters on the first real hit. This? This'll hold an edge."
+                  "text": "A blade's only as good as what you forge it from. Junk iron makes junk steel — shatters on the first real hit. This? This'll hold an edge."
                 }
               ]
             },
@@ -414,22 +430,42 @@
           ]
         },
         {
-          "pos": "4,2",
-          "stage_id": "s01a_tc3",
+          "pos": "4,1",
+          "stage_id": "s01a_nc2",
           "rotation": 180,
           "connections": {
-            "north": "3,2",
-            "west": "4,1",
-            "east": "4,3"
+            "north": "3,1"
           },
           "portals": {
-            "north": "portal_1769092816311_7180gxd7p",
-            "west": "portal_1771821667543_fnt5gbjpo",
-            "east": "portal_1771821701377_d6xymy9by"
+            "north": "portal_1769092368149_s8xo45sfu"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": true,
+          "has_key": true,
+          "key_for_cell": "0,0",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "3,0",
+          "stage_id": "s01a_lc1",
+          "rotation": 0,
+          "connections": {
+            "north": "2,0",
+            "east": "3,1"
+          },
+          "portals": {
+            "north": "portal_1769091580925_ikdndw3vn",
+            "east": "portal_1771821540428_bdtsarvlb"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -437,7 +473,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5,
+          "path_order": 7,
           "objects": [
             {
               "type": "enemy",
@@ -489,16 +525,16 @@
           ]
         },
         {
-          "pos": "4,1",
-          "stage_id": "s01a_ga1",
-          "rotation": 270,
+          "pos": "2,0",
+          "stage_id": "s01a_ic1",
+          "rotation": 180,
           "connections": {
-            "west": "4,0",
-            "east": "4,2"
+            "south": "3,0",
+            "north": "1,0"
           },
           "portals": {
-            "west": "portal_1769002968090_15j7x91gm",
-            "east": "portal_1769002993382_c7pgnyd8v"
+            "south": "portal_1769090970268_79fl50z0t",
+            "north": "portal_1769090993555_xrh9frw4y"
           },
           "is_start": false,
           "is_end": false,
@@ -510,7 +546,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6,
+          "path_order": 8,
           "objects": [
             {
               "type": "enemy",
@@ -571,21 +607,23 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Another good vein. Two down \u2014 one more and we'll have enough to start a proper batch."
+                  "text": "Another good vein. Two down — one more and we'll have enough to start a proper batch."
                 }
               ]
             }
           ]
         },
         {
-          "pos": "4,3",
-          "stage_id": "s01a_nb2",
-          "rotation": 90,
+          "pos": "1,0",
+          "stage_id": "s01a_ic1",
+          "rotation": 0,
           "connections": {
-            "west": "4,2"
+            "north": "0,0",
+            "south": "2,0"
           },
           "portals": {
-            "west": "portal_1769092327993_a9mir3dem"
+            "north": "portal_1769090970268_79fl50z0t",
+            "south": "portal_1769090993555_xrh9frw4y"
           },
           "is_start": false,
           "is_end": false,
@@ -597,7 +635,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 7,
+          "path_order": 9,
           "objects": [
             {
               "type": "quest_item",
@@ -611,11 +649,11 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "That's three. With this much raw stock, Master can forge something proper \u2014 not the salvage junk everyone's been carrying."
+                  "text": "That's three. With this much raw stock, Master can forge something proper — not the salvage junk everyone's been carrying."
                 },
                 {
                   "speaker": "Dorn",
-                  "text": "But I spotted traces of something deeper in. Darker ore, heavier. The kind you use for a weapon's core \u2014 the part that channels photon energy. Let's push through."
+                  "text": "But I spotted traces of something deeper in. Darker ore, heavier. The kind you use for a weapon's core — the part that channels photon energy. Let's push through."
                 }
               ]
             },
@@ -712,28 +750,28 @@
           ]
         },
         {
-          "pos": "4,0",
-          "stage_id": "s01a_lb1",
-          "rotation": 0,
+          "pos": "0,0",
+          "stage_id": "s01a_lc2",
+          "rotation": 90,
           "connections": {
-            "north": "3,0",
-            "east": "4,1"
+            "east": "0,1",
+            "south": "1,0"
           },
           "portals": {
-            "north": "portal_1771821299622_yqnbj8zku",
-            "east": "portal_1771821420224_3s36p1dt1"
+            "east": "portal_1769092071707_39cmfdsru",
+            "south": "portal_1771821560334_4iz79ipeh"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
-          "path_order": 8,
+          "path_order": 10,
           "objects": [
             {
               "type": "enemy",
@@ -825,15 +863,15 @@
           ]
         },
         {
-          "pos": "3,0",
-          "stage_id": "s01a_lb3",
-          "rotation": 180,
+          "pos": "0,1",
+          "stage_id": "s01a_lc1",
+          "rotation": 270,
           "connections": {
-            "south": "4,0"
+            "west": "0,0"
           },
           "portals": {
-            "south": "portal_1769091205145_nug66fnhl",
-            "west": "portal_1771821466784_b0qj5a0w7"
+            "west": "portal_1769091580925_ikdndw3vn",
+            "north": "portal_1771821540428_bdtsarvlb"
           },
           "is_start": false,
           "is_end": true,
@@ -844,8 +882,8 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "west",
-          "path_order": 9,
+          "warp_edge": "north",
+          "path_order": 11,
           "objects": [
             {
               "type": "enemy",
@@ -1025,7 +1063,7 @@
       "type": "grid",
       "area": "b",
       "start_pos": "0,2",
-      "end_pos": "3,2",
+      "end_pos": "0,0",
       "cells": [
         {
           "pos": "0,2",
@@ -1105,27 +1143,25 @@
         },
         {
           "pos": "1,2",
-          "stage_id": "s01b_tb3",
-          "rotation": 270,
+          "stage_id": "s01b_ib2",
+          "rotation": 0,
           "connections": {
-            "east": "1,3",
             "south": "2,2",
             "north": "0,2"
           },
           "portals": {
-            "east": "portal_1769178882321_vg5tmc8q0",
-            "south": "portal_1771821987242_zul0kf5lb",
-            "north": "portal_1771822003856_nya2odn3u"
+            "south": "portal_1769177159834_wr35kqfh4",
+            "north": "portal_1769177169606_8is1zf24h"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "key_drop": "",
-          "required_keys": 1,
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 1,
           "objects": [
@@ -1159,31 +1195,28 @@
           ]
         },
         {
-          "pos": "1,3",
-          "stage_id": "s01b_nc2",
-          "rotation": 90,
+          "pos": "2,2",
+          "stage_id": "s01b_lc2",
+          "rotation": 270,
           "connections": {
-            "west": "1,2"
+            "west": "2,1",
+            "north": "1,2"
           },
           "portals": {
-            "west": "portal_1769178651383_s7qdsli66"
+            "west": "portal_1769178213949_siczd2y71",
+            "north": "portal_1771821922909_g43he352c"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
+          "has_key": true,
+          "key_for_cell": "1,1",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "1,2",
+          "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
-          "key_drop_position": [
-            -1.3,
-            1,
-            -15.4
-          ],
           "objects": [
             {
               "type": "enemy",
@@ -1235,18 +1268,44 @@
           ]
         },
         {
-          "pos": "2,2",
-          "stage_id": "s01b_td2",
-          "rotation": 90,
+          "pos": "2,1",
+          "stage_id": "s01b_tb3",
+          "rotation": 180,
           "connections": {
-            "west": "2,1",
-            "south": "3,2",
-            "north": "1,2"
+            "north": "1,1",
+            "east": "2,2",
+            "west": "2,0"
           },
           "portals": {
-            "west": "portal_1769242058473_2zfw5ddq3",
-            "south": "portal_1771822108769_5a16gibq0",
-            "north": "portal_1771822119924_26gx7jj8q"
+            "north": "portal_1769178882321_vg5tmc8q0",
+            "east": "portal_1771821987242_zul0kf5lb",
+            "west": "portal_1771822003856_nya2odn3u"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s01b_tb3",
+          "rotation": 90,
+          "connections": {
+            "west": "1,0",
+            "north": "0,1",
+            "south": "2,1"
+          },
+          "portals": {
+            "west": "portal_1769178882321_vg5tmc8q0",
+            "north": "portal_1771821987242_zul0kf5lb",
+            "south": "portal_1771822003856_nya2odn3u"
           },
           "is_start": false,
           "is_end": false,
@@ -1254,11 +1313,11 @@
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": true,
-          "key_gate_direction": "south",
+          "key_gate_direction": "north",
           "key_drop": "",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 3,
+          "path_order": 4,
           "objects": [
             {
               "type": "enemy",
@@ -1311,31 +1370,72 @@
           ]
         },
         {
-          "pos": "2,1",
-          "stage_id": "s01b_nb2",
+          "pos": "2,0",
+          "stage_id": "s01b_ga1",
           "rotation": 270,
           "connections": {
-            "east": "2,2"
+            "east": "2,1"
           },
           "portals": {
-            "east": "portal_1769178600143_idew17o2x"
+            "east": "portal_1769176212440_n5b8n2v53"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": true,
+          "key_for_cell": "0,1",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s01b_nc2",
+          "rotation": 270,
+          "connections": {
+            "east": "1,1"
+          },
+          "portals": {
+            "east": "portal_1769178651383_s7qdsli66"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s01b_lc2",
+          "rotation": 180,
+          "connections": {
+            "south": "1,1",
+            "west": "0,0"
+          },
+          "portals": {
+            "south": "portal_1769178213949_siczd2y71",
+            "west": "portal_1771821922909_g43he352c"
           },
           "is_start": false,
           "is_end": false,
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "2,2",
-          "required_keys": 0,
+          "is_key_gate": true,
+          "key_gate_direction": "west",
+          "key_drop": "",
+          "required_keys": 1,
           "warp_edge": "",
-          "path_order": 4,
-          "key_drop_position": [
-            -10.4,
-            1,
-            13.9
-          ],
+          "path_order": 7,
           "objects": [
             {
               "type": "enemy",
@@ -1385,14 +1485,15 @@
           ]
         },
         {
-          "pos": "3,2",
-          "stage_id": "s01b_ga1",
-          "rotation": 180,
+          "pos": "0,0",
+          "stage_id": "s01b_lb3",
+          "rotation": 0,
           "connections": {
-            "north": "2,2"
+            "east": "0,1"
           },
           "portals": {
-            "north": "portal_1769176212440_n5b8n2v53"
+            "east": "portal_1771821882385_bdi4p10wk",
+            "north": "portal_1769178005473_uw0ikza72"
           },
           "is_start": false,
           "is_end": true,
@@ -1403,8 +1504,8 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 5,
+          "warp_edge": "north",
+          "path_order": 8,
           "objects": [
             {
               "type": "quest_item",
@@ -1422,7 +1523,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "This one's got a dark streak through it \u2014 that's carbon banding. Makes for stronger steel. The old smiths would've killed for stock like this."
+                  "text": "This one's got a dark streak through it — that's carbon banding. Makes for stronger steel. The old smiths would've killed for stock like this."
                 },
                 {
                   "speaker": "Dorn",
@@ -1491,7 +1592,7 @@
     },
     {
       "speaker": "Dorn",
-      "text": "No new weapons, no repairs \u2014 hunters are going out with worn-down gear. It's only going to get worse."
+      "text": "No new weapons, no repairs — hunters are going out with worn-down gear. It's only going to get worse."
     },
     {
       "speaker": "Dorn",

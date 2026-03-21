@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "get_connected"
 name = "Get Connected"
-area = "Gurhacia Valley"
+area = "Valley"
 is_main = false
 is_secret = false
 requires = PackedStringArray("mayor_s_mission")

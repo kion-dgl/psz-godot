@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "gurhacia_valley"
 area_id = "gurhacia_valley"
-area_name = "Gurhacia Valley"
+area_name = "Valley"
 description = "A lush valley with grasslands and forests. The starting area for most adventurers."
 unlock_condition = ""
 recommended_level = 1

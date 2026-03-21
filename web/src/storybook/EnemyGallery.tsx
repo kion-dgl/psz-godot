@@ -46,7 +46,9 @@ function EnemyModel({
   onAnimationsLoaded?: (animationNames: string[]) => void;
 }) {
   const glbPath = getEnemyGlbPath(enemyId);
+  console.log(`[EnemyModel] Loading: ${enemyId} from ${glbPath}`);
   const { scene, animations: modelAnimations } = useGLTF(glbPath);
+  console.log(`[EnemyModel] Scene loaded: ${enemyId}, meshes=${scene.children.length}, anims=${modelAnimations.length}`);
   const animSourceGltf = useGLTF(animationSourcePath || glbPath);
   const animations = animationSourcePath ? animSourceGltf.animations : modelAnimations;
 
@@ -54,15 +56,22 @@ function EnemyModel({
   const actionRef = useRef<THREE.AnimationAction | null>(null);
 
   const clonedScene = useMemo(() => {
+    console.log(`[EnemyModel] Cloning scene for ${enemyId}...`);
     const clone = SkeletonUtils.clone(scene);
+    let meshCount = 0;
+    let vertCount = 0;
     clone.traverse((obj) => {
       if (obj instanceof THREE.Mesh && obj.geometry) {
         obj.geometry.computeVertexNormals();
+        meshCount++;
+        vertCount += obj.geometry.attributes.position?.count || 0;
       }
     });
+    console.log(`[EnemyModel] ${enemyId}: ${meshCount} meshes, ${vertCount} verts`);
     const box = new THREE.Box3().setFromObject(clone);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
+    console.log(`[EnemyModel] ${enemyId}: size=(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)})`);
     clone.position.x = -center.x;
     clone.position.z = -center.z;
     const maxDim = Math.max(size.x, size.y, size.z);
@@ -77,6 +86,7 @@ function EnemyModel({
         obj.material.side = THREE.FrontSide;
       }
     });
+    console.log(`[EnemyModel] ${enemyId}: clone ready`);
     return clone;
   }, [scene]);
 
@@ -268,7 +278,9 @@ export default function EnemyGallery() {
         )}
 
         <div style={{ flex: 1, background: '#0a0a12', position: 'relative' }}>
-          <Canvas camera={{ position: [3, 2, 3], fov: 45 }}>
+          <Canvas camera={{ position: [3, 2, 3], fov: 45 }}
+            onCreated={(state) => console.log('[Canvas] WebGL context created, renderer:', state.gl.info)}
+            gl={{ antialias: true, failIfMajorPerformanceCaveat: false }}>
             <ambientLight intensity={0.5} />
             <directionalLight position={[5, 5, 5]} intensity={1} />
             <directionalLight position={[-5, -5, -5]} intensity={0.3} />

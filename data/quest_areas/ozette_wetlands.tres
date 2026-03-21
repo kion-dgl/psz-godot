@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "ozette_wetlands"
 area_id = "ozette_wetlands"
-area_name = "Ozette Wetlands"
+area_name = "Wetlands"
 description = "A murky swamp filled with dangerous creatures and treacherous terrain."
 unlock_condition = "Complete Human story quest"
 recommended_level = 5

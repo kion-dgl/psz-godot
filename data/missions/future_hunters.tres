@@ -6,7 +6,7 @@
 script = ExtResource("1")
 id = "future_hunters"
 name = "Future Hunters"
-area = "Oblivion City Paru"
+area = "Forgotten City"
 is_main = false
 is_secret = false
 requires = PackedStringArray("a_small_friend")

@@ -8,6 +8,7 @@ const MARGIN := 12.0
 var _stats_panel: Control
 var _quest_log: Control
 var _action_palette: Control
+var _debug_info: Control
 var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
 
@@ -31,9 +32,6 @@ func _ready() -> void:
 	_stats_panel.char_level = _char_level
 	add_child(_stats_panel)
 
-	_quest_log = _QuestLogPanel.new()
-	add_child(_quest_log)
-
 	_action_palette = _ActionPalette.new()
 	add_child(_action_palette)
 
@@ -42,12 +40,8 @@ func _ready() -> void:
 	GameState.mp_changed.connect(_on_stats_changed)
 	GameState.max_mp_changed.connect(_on_stats_changed)
 
-	# Auto-show log if we're in a quest session
-	if _is_in_quest():
-		_log_visible = true
-		_quest_log.visible = true
-	else:
-		_quest_log.visible = false
+	# Quest log disabled for now
+	_log_visible = false
 
 
 func _process(_delta: float) -> void:
@@ -68,6 +62,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _toggle_log() -> void:
+	if not _quest_log:
+		return
 	_log_visible = not _log_visible
 	_quest_log.visible = _log_visible
 
@@ -92,7 +88,12 @@ func restore_after_menu() -> void:
 		if child is Control:
 			child.visible = true
 	# Log respects its own toggle state
-	_quest_log.visible = _log_visible
+	if _quest_log:
+		_quest_log.visible = _log_visible
+	# Grid minimap respects its toggle state (stored as meta by field controller)
+	for child in get_children():
+		if child.has_meta("toggled_off") and child.get_meta("toggled_off"):
+			child.visible = false
 
 
 func _on_stats_changed(_value: int) -> void:
@@ -101,21 +102,95 @@ func _on_stats_changed(_value: int) -> void:
 
 ## Log companion speech to the action log.
 func log_speech(speaker: String, text: String) -> void:
+	if not _quest_log:
+		return
 	_quest_log.add_speech_entry(speaker, text)
 	_auto_show_log()
 
 
 ## Log an arbitrary entry to the action log.
 func log_entry(text: String, color: Color = Color(0.85, 0.85, 0.85)) -> void:
+	if not _quest_log:
+		return
 	_quest_log.add_entry(text, color)
 	_auto_show_log()
 
 
 ## Auto-show log when a new entry arrives during a quest.
 func _auto_show_log() -> void:
+	if not _quest_log:
+		return
 	if not _log_visible:
 		_log_visible = true
 		_quest_log.visible = true
+
+
+## Set the debug info text shown at top-center (quest ID, section, cell).
+func set_debug_info(_quest_id: String, _section_text: String, _cell_pos: String) -> void:
+	pass
+
+
+# ── Debug Info Panel (top-center) ────────────────────────────────────────────
+
+class _DebugInfoPanel extends Control:
+	## Always-visible debug overlay at top-center showing quest context.
+	const FONT_SIZE := 12
+	const BG_COLOR := Color(0.0, 0.0, 0.0, 0.45)
+	const BORDER_COLOR := Color(0.4, 0.4, 0.4, 0.3)
+	const TEXT_COLOR := Color(1.0, 1.0, 1.0, 0.85)
+	const PAD_H := 12.0
+	const PAD_V := 4.0
+
+	var _label: Label
+	var _panel: PanelContainer
+
+	func _ready() -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+
+		_panel = PanelContainer.new()
+		_panel.mouse_filter = MOUSE_FILTER_IGNORE
+
+		# Semi-transparent dark background
+		var style := StyleBoxFlat.new()
+		style.bg_color = BG_COLOR
+		style.border_color = BORDER_COLOR
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(4)
+		style.content_margin_left = PAD_H
+		style.content_margin_right = PAD_H
+		style.content_margin_top = PAD_V
+		style.content_margin_bottom = PAD_V
+		_panel.add_theme_stylebox_override("panel", style)
+
+		# Anchor top-center
+		_panel.anchor_left = 0.5
+		_panel.anchor_right = 0.5
+		_panel.anchor_top = 0.0
+		_panel.anchor_bottom = 0.0
+		_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_panel.offset_top = 6.0
+
+		_label = Label.new()
+		_label.text = ""
+		_label.add_theme_font_size_override("font_size", FONT_SIZE)
+		_label.add_theme_color_override("font_color", TEXT_COLOR)
+		_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_label.mouse_filter = MOUSE_FILTER_IGNORE
+		_panel.add_child(_label)
+
+		add_child(_panel)
+
+	func set_info(quest_id: String, section_text: String, cell_pos: String) -> void:
+		if not _label:
+			return
+		var parts: PackedStringArray = PackedStringArray()
+		if not quest_id.is_empty():
+			parts.append(quest_id)
+		if not section_text.is_empty():
+			parts.append(section_text)
+		if not cell_pos.is_empty():
+			parts.append("Cell %s" % cell_pos)
+		_label.text = " | ".join(parts)
 
 
 # ── Stats Panel (top-left) ───────────────────────────────────────────────────
@@ -433,10 +508,35 @@ class _ActionPalette extends Control:
 	const GAP := 4.0
 	const RAISED := 10.0  # Outer slots raised above center
 
-	const SLOT_KEYS := ["J", "K", "L"]
+	const KENNEY_BASE := "res://assets/kenney_input-prompts/"
+
+	## Slot icons per control scheme: [slot0, slot1, slot2]
+	const SLOT_ICONS := {
+		"keyboard": ["Keyboard & Mouse/Default/keyboard_j.png", "Keyboard & Mouse/Default/keyboard_k.png", "Keyboard & Mouse/Default/keyboard_l.png"],
+		"kb_mouse": ["Keyboard & Mouse/Default/keyboard_j.png", "Keyboard & Mouse/Default/keyboard_k.png", "Keyboard & Mouse/Default/keyboard_l.png"],
+		"xinput":   ["Xbox Series/Default/xbox_button_x.png", "Xbox Series/Default/xbox_button_a.png", "Xbox Series/Default/xbox_button_b.png"],
+		"switch":   ["Nintendo Switch/Default/switch_button_y.png", "Nintendo Switch/Default/switch_button_b.png", "Nintendo Switch/Default/switch_button_a.png"],
+	}
+	## Swap button icon per scheme
+	const SWAP_ICONS := {
+		"keyboard": "Keyboard & Mouse/Default/keyboard_i.png",
+		"kb_mouse": "Keyboard & Mouse/Default/keyboard_i.png",
+		"xinput":   "Xbox Series/Default/xbox_rb.png",
+		"switch":   "Nintendo Switch/Default/switch_button_r.png",
+	}
+	## Fallback text labels if icons can't load
+	const SLOT_KEYS_FALLBACK := {
+		"keyboard": ["J", "K", "L"], "kb_mouse": ["J", "K", "L"],
+		"xinput": ["X", "A", "B"], "switch": ["Y", "B", "A"],
+	}
+	const SWAP_KEY_FALLBACK := {
+		"keyboard": "I", "kb_mouse": "I", "xinput": "RB", "switch": "R",
+	}
 
 	var _bg_pill: StyleBoxFlat
 	var _bg_swap: StyleBoxFlat
+	var _slot_textures: Array = [null, null, null]
+	var _swap_texture: Texture2D = null
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
@@ -471,9 +571,33 @@ class _ActionPalette extends Control:
 		_bg_swap.set_border_width_all(1)
 		_bg_swap.set_corner_radius_all(8)
 
+		# Load icons for current control scheme
+		_load_scheme_icons()
+
 		# Connect to ActionPalette signals for live updates
 		ActionPalette.page_changed.connect(_on_palette_changed)
 		ActionPalette.config_changed.connect(_on_palette_changed)
+		if InputConfig.has_signal("scheme_changed"):
+			InputConfig.scheme_changed.connect(_on_scheme_changed)
+
+	func _on_scheme_changed(_scheme = null) -> void:
+		_load_scheme_icons()
+		queue_redraw()
+
+	func _load_scheme_icons() -> void:
+		var scheme: String = InputConfig.current_scheme
+		var slot_paths: Array = SLOT_ICONS.get(scheme, SLOT_ICONS["keyboard"])
+		for i in range(3):
+			var path: String = KENNEY_BASE + slot_paths[i]
+			if ResourceLoader.exists(path):
+				_slot_textures[i] = load(path)
+			else:
+				_slot_textures[i] = null
+		var swap_path: String = KENNEY_BASE + SWAP_ICONS.get(scheme, SWAP_ICONS["keyboard"])
+		if ResourceLoader.exists(swap_path):
+			_swap_texture = load(swap_path)
+		else:
+			_swap_texture = null
 
 	func _on_palette_changed(_arg = null) -> void:
 		queue_redraw()
@@ -491,11 +615,17 @@ class _ActionPalette extends Control:
 		var swap_y: float = 0.0
 		draw_style_box(_bg_swap, Rect2(swap_x, swap_y, SWAP_W, SWAP_H))
 
-		# "R" key badge
-		var key_rect := Rect2(swap_x + 6, swap_y + 4, 16, 13)
-		draw_rect(key_rect, KEY_BG)
-		draw_string(font, Vector2(swap_x + 10, swap_y + 14), "R",
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
+		# Swap button icon or text fallback
+		if _swap_texture:
+			var icon_size := 14.0
+			draw_texture_rect(_swap_texture, Rect2(swap_x + 4, swap_y + 2, icon_size, icon_size), false)
+		else:
+			var scheme: String = InputConfig.current_scheme
+			var swap_key: String = SWAP_KEY_FALLBACK.get(scheme, "R")
+			var key_rect := Rect2(swap_x + 6, swap_y + 4, 16, 13)
+			draw_rect(key_rect, KEY_BG)
+			draw_string(font, Vector2(swap_x + 10, swap_y + 14), swap_key,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
 
 		# Palette number
 		var pn_text := "%d/%d" % [page_idx + 1, page_count]
@@ -508,19 +638,26 @@ class _ActionPalette extends Control:
 			var action_id: String = slots[i] if i < slots.size() else ""
 			var data: Dictionary = ActionPalette.get_action_data(action_id)
 			var lbl: String = data.get("short", action_id)
-			var key: String = SLOT_KEYS[i] if i < SLOT_KEYS.size() else str(i + 1)
 
 			var px: float = i * (PILL_W + GAP)
 			var py: float = row_y + RAISED if i == 1 else row_y
 
 			draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
 
-			# Key badge
-			var kx: float = px + (PILL_W - 16) * 0.5
-			var ky: float = py + 5
-			draw_rect(Rect2(kx, ky, 16, 13), KEY_BG)
-			draw_string(font, Vector2(kx + 4, ky + 10), key,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
+			# Button icon or text fallback
+			var tex: Texture2D = _slot_textures[i] if i < _slot_textures.size() else null
+			if tex:
+				var icon_sz := 14.0
+				draw_texture_rect(tex, Rect2(px + (PILL_W - icon_sz) * 0.5, py + 4, icon_sz, icon_sz), false)
+			else:
+				var scheme: String = InputConfig.current_scheme
+				var keys: Array = SLOT_KEYS_FALLBACK.get(scheme, ["1", "2", "3"])
+				var key: String = keys[i] if i < keys.size() else str(i + 1)
+				var kx: float = px + (PILL_W - 16) * 0.5
+				var ky: float = py + 5
+				draw_rect(Rect2(kx, ky, 16, 13), KEY_BG)
+				draw_string(font, Vector2(kx + 4, ky + 10), key,
+					HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
 
 			# Action label
 			var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LABEL).x

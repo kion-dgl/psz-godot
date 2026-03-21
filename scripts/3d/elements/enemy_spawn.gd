@@ -24,6 +24,9 @@ var hurtbox: Hurtbox
 ## Resolved model folder name (set in _ready)
 var _model_id: String = ""
 
+## Animation
+var _anim_player: AnimationPlayer
+
 ## Texture manifest — maps model_id → [texture filenames].
 ## Loaded once from JSON so we don't need DirAccess (fails on Android PCK).
 static var _tex_manifest: Dictionary = {}
@@ -73,6 +76,18 @@ func _load_enemy_model() -> void:
 
 	model = packed.instantiate()
 	add_child(model)
+
+	# Find and play idle animation
+	_anim_player = _find_anim_player(model)
+	if _anim_player:
+		var idle_name := _find_animation("wat")
+		if idle_name.is_empty():
+			idle_name = _find_animation("stt")
+		if not idle_name.is_empty():
+			var anim := _anim_player.get_animation(idle_name)
+			if anim:
+				anim.loop_mode = Animation.LOOP_LINEAR
+			_anim_player.play(idle_name)
 
 
 func _setup_enemy_collision() -> void:
@@ -188,6 +203,53 @@ func take_damage(amount: int = 1, _knockback: Vector3 = Vector3.ZERO) -> void:
 
 
 func _die() -> void:
+	# Play death animation before hiding
+	var death_name := _find_animation("ded")
+	if _anim_player and not death_name.is_empty():
+		_anim_player.play(death_name)
+		# Disable hurtbox immediately so enemy can't be hit again
+		if hurtbox:
+			hurtbox.set_deferred("monitorable", false)
+		if collision_body:
+			collision_body.collision_layer = 0
+		await _anim_player.animation_finished
+
 	set_state("dead")
 	defeated.emit()
 	print("[EnemySpawn] %s defeated!" % enemy_id)
+
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found := _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+
+func _find_animation(short_name: String) -> String:
+	if not _anim_player:
+		return ""
+	# Direct match
+	if _anim_player.has_animation(short_name):
+		return short_name
+	# Search for name ending with _<short_name>
+	var anim_list: PackedStringArray = _anim_player.get_animation_list()
+	for i in range(anim_list.size()):
+		var anim_name: String = anim_list[i]
+		if anim_name.ends_with("_" + short_name):
+			return anim_name
+	# Search in libraries
+	var lib_list: Array[StringName] = _anim_player.get_animation_library_list()
+	for j in range(lib_list.size()):
+		var lib_name: StringName = lib_list[j]
+		var lib: AnimationLibrary = _anim_player.get_animation_library(lib_name)
+		var lib_anim_list: PackedStringArray = lib.get_animation_list()
+		for k in range(lib_anim_list.size()):
+			var anim_name: String = lib_anim_list[k]
+			if anim_name.ends_with("_" + short_name):
+				var full: String = str(lib_name) + "/" + anim_name if lib_name else anim_name
+				return full
+	return ""

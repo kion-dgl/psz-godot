@@ -70,6 +70,7 @@ func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 	var svg_path := "res://assets/stages/%s/%s/lndmd/%s_minimap.svg" % [subfolder, stage_id, stage_id]
 	var file := FileAccess.open(svg_path, FileAccess.READ)
 	if not file:
+		push_warning("[RoomMinimap] Could not open SVG: %s (error=%d)" % [svg_path, FileAccess.get_open_error()])
 		return
 	var svg_text := file.get_as_text()
 	file.close()
