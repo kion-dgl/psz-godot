@@ -195,7 +195,15 @@ func _lookup_item(item_id: String) -> Dictionary:
 	# WeaponRegistry (non-stackable)
 	var weapon = WeaponRegistry.get_weapon(item_id)
 	if weapon:
-		return {"name": weapon.name, "max_stack": 1}
+		var display_name: String = weapon.name
+		var character = CharacterManager.get_active_character()
+		if character:
+			var photon_id: String = character.get("weapon_elements", {}).get(item_id, "")
+			if not photon_id.is_empty():
+				var element_prefix: String = _photon_display_name(photon_id)
+				if not element_prefix.is_empty():
+					display_name = element_prefix + " " + display_name
+		return {"name": display_name, "max_stack": 1}
 
 	# ArmorRegistry (non-stackable)
 	var armor = ArmorRegistry.get_armor(item_id)
@@ -275,3 +283,14 @@ func remove_key(key_id: String) -> void:
 			_keys.erase(key_id)
 		else:
 			_keys[key_id] = remaining
+
+
+## Get display name prefix for a photon element
+func _photon_display_name(photon_id: String) -> String:
+	match photon_id:
+		"fire_photon": return "Fire"
+		"ice_photon": return "Ice"
+		"poison_photon": return "Poison"
+		"shock_photon": return "Shock"
+		"devil_photon": return "Devil"
+	return ""

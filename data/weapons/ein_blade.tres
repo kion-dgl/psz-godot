@@ -23,3 +23,6 @@ usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "R
 pso_world_id = 8
 model_id = "wsac01"
 variant_id = ""
+glb_scale = 0.09
+glb_path = "res://assets/weapons/basic/Saber.glb"
+tint_color = Color(0.3, 0.6, 1.0, 1)
