@@ -8,9 +8,11 @@ signal mag_fed(item_id: String, stat_changes: Dictionary)
 signal mag_leveled_up(new_level: int)
 signal mag_evolved(old_form: String, new_form: String)
 
+const MAX_LEVEL := 200
 const MAX_SYNC := 120
 const MAX_IQ := 200
 const STATS_PER_LEVEL := 5
+const MAX_TOTAL_STATS := MAX_LEVEL * STATS_PER_LEVEL  # 1000
 
 ## Feed effects per consumable item
 const FEED_EFFECTS := {
@@ -126,11 +128,17 @@ func feed_mag(mag_state: Dictionary, item_id: String) -> Dictionary:
 	var level_before: int = get_level(mag_state)
 	var form_before: String = mag_state.get("form_id", "mag")
 
-	# Apply stat changes
-	stats["power"] = int(stats.get("power", 0)) + int(effects.get("power", 0))
-	stats["guard"] = int(stats.get("guard", 0)) + int(effects.get("guard", 0))
-	stats["hit"] = int(stats.get("hit", 0)) + int(effects.get("hit", 0))
-	stats["mind"] = int(stats.get("mind", 0)) + int(effects.get("mind", 0))
+	# Check if already at max level
+	if level_before >= MAX_LEVEL:
+		return {"success": false, "message": "Mag is already at max level!"}
+
+	# Apply stat changes (capped at MAX_TOTAL_STATS)
+	var total_before: int = int(stats.get("power", 0)) + int(stats.get("guard", 0)) + int(stats.get("hit", 0)) + int(stats.get("mind", 0))
+	var room: int = MAX_TOTAL_STATS - total_before
+	for key in ["power", "guard", "hit", "mind"]:
+		var add: int = mini(int(effects.get(key, 0)), room)
+		stats[key] = int(stats.get(key, 0)) + add
+		room -= add
 	mag_state["stats"] = stats
 
 	# Apply sync (capped at MAX_SYNC)

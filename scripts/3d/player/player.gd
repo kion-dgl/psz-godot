@@ -79,7 +79,12 @@ var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
 # Mag attachment config
 const MAG_OFFSET := Vector3(0.0, 1.2, -0.4)  # Behind character at shoulder height
+const MAG_BOB_SPEED := 2.0   # Cycles per second
+const MAG_BOB_HEIGHT := 0.06  # Vertical bob amplitude
+const MAG_SWAY_SPEED := 1.3  # Horizontal sway speed (slightly offset from bob)
+const MAG_SWAY_AMOUNT := 0.03
 var mag_node: Node3D
+var _mag_time: float = 0.0
 
 # State tracking
 var current_state: PlayerState = PlayerState.IDLE
@@ -668,6 +673,15 @@ func _physics_process(delta: float) -> void:
 	# Update model rotation
 	if model:
 		model.rotation.y = player_rotation
+
+	# Mag bob and sway
+	if mag_node and is_instance_valid(mag_node):
+		_mag_time += delta
+		mag_node.position = MAG_OFFSET + Vector3(
+			sin(_mag_time * MAG_SWAY_SPEED * TAU) * MAG_SWAY_AMOUNT,
+			sin(_mag_time * MAG_BOB_SPEED * TAU) * MAG_BOB_HEIGHT,
+			0.0
+		)
 
 
 func _respawn() -> void:
