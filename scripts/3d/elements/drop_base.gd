@@ -68,8 +68,8 @@ func _apply_state() -> void:
 			set_process(false)
 			interactable = false
 			if interaction_area:
-				interaction_area.monitoring = false
-				interaction_area.monitorable = false
+				interaction_area.set_deferred("monitoring", false)
+				interaction_area.set_deferred("monitorable", false)
 			if _prompt_label:
 				_prompt_label.visible = false
 			queue_free()

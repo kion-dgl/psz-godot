@@ -102,7 +102,7 @@ func _apply_state() -> void:
 			if collision_body:
 				collision_body.collision_layer = 0
 			if hurtbox:
-				hurtbox.monitorable = false
+				hurtbox.set_deferred("monitorable", false)
 
 
 ## Called when the box takes damage (from player attacks via Hurtbox)
