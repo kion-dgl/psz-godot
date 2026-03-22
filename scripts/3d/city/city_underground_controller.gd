@@ -33,7 +33,7 @@ func _ready() -> void:
 		"PhotonCollectorNPC", Vector3(-6.32, 0, -5.35), PI,
 		"res://assets/npcs/np_018_00_0/np_018_00_0.glb",
 		"Photon Collector",
-		""  # TODO: create photon collector shop scene
+		"res://scenes/2d/shops/photon_shop.tscn"
 	)
 
 	# Interactive exit trigger — back to market
