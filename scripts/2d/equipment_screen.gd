@@ -191,6 +191,8 @@ func _equip_selected_item() -> void:
 			_auto_unequip_excess_units(equipment, 0)
 		if slot_key == "weapon":
 			_notify_player_weapon_changed()
+		if slot_key == "mag":
+			_notify_player_mag_changed()
 		_choosing_item = false
 		if not old_id.is_empty():
 			var info: Dictionary = Inventory._lookup_item(old_id)
@@ -219,6 +221,8 @@ func _equip_selected_item() -> void:
 	# Update 3D weapon model if weapon slot changed
 	if slot_key == "weapon":
 		_notify_player_weapon_changed()
+	if slot_key == "mag":
+		_notify_player_mag_changed()
 
 	_choosing_item = false
 	hint_label.text = "Equipped %s!" % item.name
@@ -477,3 +481,9 @@ func _notify_player_weapon_changed() -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_method("refresh_weapon"):
 		player.refresh_weapon()
+
+
+func _notify_player_mag_changed() -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("refresh_mag"):
+		player.refresh_mag()
