@@ -24,10 +24,10 @@ func _ready() -> void:
 
 	# NPCs
 	_add_npc(
-		"EnemyCollectorNPC", Vector3(8.38, 0, -4.81), PI,
+		"SynthesisNPC", Vector3(8.38, 0, -4.81), PI,
 		"res://assets/npcs/np_017_00_0/np_017_00_0.glb",
-		"Enemy Collector",
-		""  # TODO: create enemy collector shop scene
+		"Synthesis Shop",
+		"res://scenes/2d/shops/crafting_shop.tscn"
 	)
 	_add_npc(
 		"PhotonCollectorNPC", Vector3(-6.32, 0, -5.35), PI,
