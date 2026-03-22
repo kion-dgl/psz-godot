@@ -55,16 +55,21 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 	var item_name: String = info.name
 
 	if _is_per_slot(item_id):
-		# Per-slot items (weapons, armor, units, mags): each copy takes 1 slot
+		# Per-slot items: each copy gets a unique instance ID
 		var available: int = capacity - get_total_slots() if capacity > 0 else quantity
 		var max_add: int = mini(quantity, available)
 		if max_add <= 0:
 			inventory_full.emit()
 			return false
-		_items[item_id] = int(_items.get(item_id, 0)) + max_add
-		var new_total: int = int(_items[item_id])
-		item_added.emit(item_id, max_add, new_total)
-		print("[Inventory] Added ", max_add, "x ", item_name, " (total: ", new_total, ")")
+		var base_id: String = get_base_id(item_id)
+		for _i in range(max_add):
+			var inst_id: String = base_id
+			while _items.has(inst_id):
+				_instance_counter += 1
+				inst_id = "%s#%d" % [base_id, _instance_counter]
+			_items[inst_id] = 1
+		print("[Inventory] Added ", max_add, "x ", item_name)
+		item_added.emit(item_id, max_add, max_add)
 		return true
 	else:
 		# Stackable items: 1 stack = 1 slot, limited by max_stack
