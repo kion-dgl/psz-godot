@@ -79,7 +79,7 @@ var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
 # Mag attachment config
 const MAG_BONE_NAME: String = "020_Spine"
-const MAG_OFFSET := Vector3(-0.3, 0.35, -0.3)  # Behind and above shoulder
+const MAG_OFFSET := Vector3(0.0, 0.4, -0.4)  # Behind and above shoulder
 var mag_node: Node3D
 
 # State tracking
@@ -347,8 +347,6 @@ func _setup_mag() -> void:
 	# Instance the mag model
 	var node := packed.instantiate() as Node3D
 	node.position = MAG_OFFSET
-	var s: float = MagManager.MAG_GLB_SCALE
-	node.scale = Vector3(s, s, s)
 	bone_attachment.add_child(node)
 	mag_node = node
 	print("[Player] Mag '%s' attached to %s (%s)" % [form_id, MAG_BONE_NAME, glb_path])
