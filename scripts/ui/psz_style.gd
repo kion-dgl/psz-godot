@@ -280,7 +280,7 @@ static func create_npc_portrait(model_path: String) -> TextureRect:
 	tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var base_dir := model_path.get_base_dir()
 	for ext in [".jpeg", ".jpg", ".png"]:
-		var path := base_dir + "/portrait" + ext
+		var path: String = base_dir + "/portrait" + ext
 		if ResourceLoader.exists(path):
 			tex_rect.texture = load(path)
 			break
