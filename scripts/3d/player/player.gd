@@ -342,7 +342,7 @@ func _get_equipped_weapon_data() -> WeaponData:
 		return null
 	var all_ids = WeaponRegistry.get_all_weapon_ids()
 	print("[Player] WeaponRegistry has %d weapons: %s" % [all_ids.size(), all_ids])
-	var w = WeaponRegistry.get_weapon(weapon_id)
+	var w = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
 	if w == null:
 		push_warning("[Player] ABORT: weapon '%s' not found in registry" % weapon_id)
 	return w
@@ -409,25 +409,39 @@ const WEAPON_ADDITIVE_MATERIALS: Dictionary = {
 
 
 func _apply_weapon_materials(node: Node3D, weapon_data: WeaponData) -> void:
-	var additive_indices: Array = WEAPON_ADDITIVE_MATERIALS.get(weapon_data.weapon_type, [])
 	var tint: Color = weapon_data.tint_color
-	# Collect all surfaces across all MeshInstance3D children in tree order
+	var has_tint: bool = tint != Color.WHITE and tint != Color(1, 1, 1, 1)
+
 	var surfaces: Array = []  # Array of [MeshInstance3D, surface_index]
 	_collect_surfaces(node, surfaces)
-	for global_idx in additive_indices:
-		if global_idx >= surfaces.size():
-			continue
-		var entry: Array = surfaces[global_idx]
-		var mesh_inst: MeshInstance3D = entry[0]
-		var surf_idx: int = entry[1]
-		var mat := mesh_inst.get_active_material(surf_idx)
-		if mat is StandardMaterial3D:
-			var new_mat := mat.duplicate() as StandardMaterial3D
-			new_mat.albedo_color = tint
-			new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-			new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-			new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
-			mesh_inst.set_surface_override_material(surf_idx, new_mat)
+
+	if has_tint:
+		# Basic weapons: additive blending on blade/energy surfaces
+		var additive_indices: Array = WEAPON_ADDITIVE_MATERIALS.get(weapon_data.weapon_type, [])
+		for global_idx in additive_indices:
+			if global_idx >= surfaces.size():
+				continue
+			var entry: Array = surfaces[global_idx]
+			var mesh_inst: MeshInstance3D = entry[0]
+			var surf_idx: int = entry[1]
+			var mat := mesh_inst.get_active_material(surf_idx)
+			if mat is StandardMaterial3D:
+				var new_mat := mat.duplicate() as StandardMaterial3D
+				new_mat.albedo_color = tint
+				new_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+				mesh_inst.set_surface_override_material(surf_idx, new_mat)
+	else:
+		# Unique weapons: normal textures, double-sided faces
+		for entry in surfaces:
+			var mesh_inst: MeshInstance3D = entry[0]
+			var surf_idx: int = entry[1]
+			var mat := mesh_inst.get_active_material(surf_idx)
+			if mat is StandardMaterial3D:
+				var new_mat := mat.duplicate() as StandardMaterial3D
+				new_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				mesh_inst.set_surface_override_material(surf_idx, new_mat)
 
 
 func _collect_surfaces(node: Node3D, surfaces: Array) -> void:

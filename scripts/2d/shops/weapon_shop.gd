@@ -16,7 +16,7 @@ var _units: Array = []
 var _sell_items: Array = []
 
 var _mode_bar: HBoxContainer
-var _portrait: TextureRect
+var _portrait: Control
 
 ## Set true to show all weapon tiers in the shop (for testing)
 const DEBUG_ALL_TIERS := true

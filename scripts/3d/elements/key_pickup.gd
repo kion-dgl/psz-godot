@@ -9,13 +9,9 @@ class_name KeyPickup
 ## Spin speed (radians per second)
 const SPIN_SPEED: float = 2.0
 
-## Bob amplitude and speed
-const BOB_AMPLITUDE: float = 0.1
-const BOB_SPEED: float = 3.0
-
-var _base_y: float = 0.0
 var _prompt_label: Label3D
 var _player_nearby: bool = false
+var _collected: bool = false
 
 
 func _init() -> void:
@@ -28,7 +24,6 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	_base_y = position.y
 	_setup_prompt()
 
 
@@ -54,9 +49,6 @@ func _update_animation(delta: float) -> void:
 	# Spin
 	model.rotation.y += SPIN_SPEED * delta
 
-	# Bob up and down
-	position.y = _base_y + sin(_time * BOB_SPEED) * BOB_AMPLITUDE
-
 
 func _apply_state() -> void:
 	match element_state:
@@ -65,16 +57,14 @@ func _apply_state() -> void:
 			set_process(true)
 			interactable = true
 		"collected":
-			# Hide everything — the entire node tree
 			visible = false
 			set_process(false)
 			interactable = false
 			if interaction_area:
-				interaction_area.set_deferred("monitoring", false)
-				interaction_area.set_deferred("monitorable", false)
+				interaction_area.monitoring = false
+				interaction_area.monitorable = false
 			if _prompt_label:
 				_prompt_label.visible = false
-			# Remove from scene after a frame so signals finish
 			queue_free()
 
 
@@ -92,8 +82,10 @@ func _on_body_exited(body: Node3D) -> void:
 
 
 func _on_interact(_player: Node3D) -> void:
-	if element_state != "available":
+	if _collected or element_state != "available":
 		return
+	_collected = true
+	interactable = false
 
 	set_state("collected")
 

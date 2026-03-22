@@ -343,7 +343,7 @@ func _calc_equip_bonuses(equip: Dictionary, character: Dictionary) -> Dictionary
 	# Weapon bonuses (with grind)
 	var weapon_id: String = str(equip.get("weapon", ""))
 	if not weapon_id.is_empty():
-		var weapon = WeaponRegistry.get_weapon(weapon_id)
+		var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
 		if weapon:
 			var grind: int = int(character.get("weapon_grinds", {}).get(weapon_id, 0))
 			bonuses["atk"] += weapon.get_attack_at_grind(grind)

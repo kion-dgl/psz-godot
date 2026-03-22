@@ -272,23 +272,63 @@ static func create_bar(label_text: String, ratio: float, value_text: String, fil
 	return pill
 
 
-## Create a flush 4:3 NPC portrait TextureRect from portrait.png in the GLB directory.
-static func create_npc_portrait(model_path: String) -> TextureRect:
+## Create a flush NPC portrait with margin and rounded corners.
+## Returns a MarginContainer wrapping the TextureRect.
+static func create_npc_portrait(model_path: String) -> Control:
+	var margin := MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_bottom", 8)
+
 	var tex_rect := TextureRect.new()
-	tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var portrait_path := model_path.get_base_dir() + "/portrait.png"
-	if ResourceLoader.exists(portrait_path):
-		tex_rect.texture = load(portrait_path)
-	return tex_rect
+	tex_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+
+	var base_dir := model_path.get_base_dir()
+	for ext in [".jpeg", ".jpg", ".png"]:
+		var path: String = base_dir + "/portrait" + ext
+		if ResourceLoader.exists(path):
+			tex_rect.texture = load(path)
+			break
+
+	# Rounded corners via shader
+	var shader := Shader.new()
+	shader.code = """
+shader_type canvas_item;
+uniform float radius = 12.0;
+void fragment() {
+	vec2 size = 1.0 / TEXTURE_PIXEL_SIZE;
+	vec2 px = UV * size;
+	vec2 tl = vec2(radius, radius);
+	vec2 tr = vec2(size.x - radius, radius);
+	vec2 bl = vec2(radius, size.y - radius);
+	vec2 br = vec2(size.x - radius, size.y - radius);
+	float d = 0.0;
+	if (px.x < radius && px.y < radius) d = distance(px, tl) - radius;
+	else if (px.x > size.x - radius && px.y < radius) d = distance(px, tr) - radius;
+	else if (px.x < radius && px.y > size.y - radius) d = distance(px, bl) - radius;
+	else if (px.x > size.x - radius && px.y > size.y - radius) d = distance(px, br) - radius;
+	vec4 tex = texture(TEXTURE, UV);
+	COLOR = vec4(tex.rgb, tex.a * (1.0 - clamp(d, 0.0, 1.0)));
+}
+"""
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	tex_rect.material = mat
+
+	margin.add_child(tex_rect)
+	return margin
 
 
 ## Restructure a shop with list+detail panels into fullscreen layout with portrait.
 ## Left 3/5: title, tabs, list, hints. Right 2/5: detail on top, 4:3 portrait flush at bottom.
 static func setup_shop_portrait(
 		panel: PanelContainer, menu_panel: PanelContainer,
-		detail_ref: PanelContainer, model_path: String) -> TextureRect:
+		detail_ref: PanelContainer, model_path: String) -> Control:
 	# Make panel fullscreen and opaque
 	panel.offset_left = 0
 	panel.offset_top = 0

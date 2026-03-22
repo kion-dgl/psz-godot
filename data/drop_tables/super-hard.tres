@@ -11,38 +11,61 @@ area_drops = {
     "Ghowl": [
       "Eclamasach",
       "Goof Swatter",
-      "Kutune Sirka"
+      "Kutune Sirka",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Vulkure": [
       "Crimson Vis",
       "Riverman Missouri",
-      "Schmeisser"
+      "Schmeisser",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Garapython": [
       "Clear Fin",
       "Fuuma Shuriken",
-      "Garapython Fang"
+      "Garapython Fang",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Garahadan": [
       "Gallanhorne",
       "Garahadan Fang",
-      "M14 Missouri"
+      "M14 Missouri",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Grimble": [
       "Frigiand",
       "Gun Diva",
-      "Pinky Beam"
+      "Pinky Beam",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Tormatible": [
       "Divine/Swift",
       "Eridanus",
-      "Pinky Beam"
+      "Pinky Beam",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ban Photon"
     ],
     "Helion": [
       "Ainsraiffe",
       "Askalon",
       "Hero/Guard",
-      "Zahhak"
+      "Zahhak",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ban Photon"
     ],
     "Blaze Helion": [
       "Ainsraiffe",
@@ -50,7 +73,14 @@ area_drops = {
       "Burning Mane",
       "Divine/HP",
       "Hero/Power",
-      "Zahhak"
+      "Zahhak",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Saber Board",
+      "Ein Blade Board",
+      "Ban Photon",
+      "El Photon"
     ],
     "Rappy": [
       "PA save Lv3",
@@ -65,28 +95,45 @@ area_drops = {
     "Usanny": [
       "H10 Missouri",
       "H44 Missouri",
-      "Ryjarg"
+      "Ryjarg",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Usanimere": [
       "Divine/Hit",
       "Yasminkov M95",
-      "Yellow Sun"
+      "Yellow Sun",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ray Photon"
     ],
     "Reyhound": [
       "Al Azif",
       "Magi Circuit",
-      "Tri-Magenta"
+      "Tri-Magenta",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Stagg": [
       "Argares",
       "Filamare",
-      "Foie Haze"
+      "Foie Haze",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Hildegao": [
       "Adoralphs",
       "Avenlote",
       "Hero/HP",
-      "Pinky Hand"
+      "Pinky Hand",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ray Photon"
     ],
     "Hildegigas": [
       "Adoralphs",
@@ -94,7 +141,13 @@ area_drops = {
       "All Resist Lv5",
       "Heavy Dumbbell",
       "Hero/Mind",
-      "Pinky Hand"
+      "Pinky Hand",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ray Photon",
+      "Ein Ripper Board",
+      "El Photon"
     ],
     "Rappy": [
       "PA save Lv3",
@@ -109,34 +162,57 @@ area_drops = {
     "Porel": [
       "Egalta",
       "Kouga Shuriken",
-      "Star Slicer"
+      "Star Slicer",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Pomarr": [
       "Bangasa Jikomi",
       "Luzparias",
-      "Stormer"
+      "Stormer",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Hypao": [
       "Clear Scissor Twins",
       "M25SE Missouri",
-      "Nersir"
+      "Nersir",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Vespao": [
       "Clear Scissor Twins",
       "Divine/Guard",
-      "M25SE Missouri"
+      "M25SE Missouri",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Gra Photon"
     ],
     "Pelcatraz": [
       "Caster Broom",
       "Hero/Swift",
-      "Kerykeion"
+      "Kerykeion",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Gra Photon"
     ],
     "Pelcatobur": [
       "Asclepios",
       "Caster Broom",
       "Divine/PP",
       "Hero/Hit",
-      "Kerykeion"
+      "Kerykeion",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Gra Photon",
+      "Ein Arm Board",
+      "El Photon"
     ],
     "Rappy": [
       "PA save Lv3",
@@ -154,40 +230,67 @@ area_drops = {
     "Pobomma": [
       "Diopside",
       "Goth Parasol",
-      "Salvador"
+      "Salvador",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Bolix": [
       "Abraham",
       "Iros",
-      "Scarred Tatami"
+      "Scarred Tatami",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Goldix": [
       "Emeraldfield",
       "Scarred Tatami",
-      "Vanguard"
+      "Vanguard",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon"
     ],
     "Izhirak-S6": [
       "Kleingold",
       "N-Tathlam",
-      "Radiant"
+      "Radiant",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Azherowa-B2": [
       "Enfield",
       "M&A33",
-      "M&A41"
+      "M&A41",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon"
     ],
     "Froutang": [
       "Giacobini",
       "Master/HP",
       "Morgenlote",
-      "Roche Limit"
+      "Roche Limit",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon"
     ],
     "Frunaked": [
       "Clair Doubles",
       "Divine/Power",
       "Master/PP",
       "Morgenlote",
-      "Roche Limit"
+      "Roche Limit",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon",
+      "Ein Cutter Board",
+      "El Photon"
     ],
     "Ar Rappy": [
       "PA save Lv3",
@@ -205,35 +308,58 @@ area_drops = {
     "Batt": [
       "Fenrir",
       "Magi Circuit",
-      "Starlight"
+      "Starlight",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Bullbatt": [
       "Divine/Mind",
       "Grand Chariot",
-      "Remjees"
+      "Remjees",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Megi Photon"
     ],
     "Rumole": [
       "Featherhand",
       "Jasper Roar",
-      "Rage Tonfa"
+      "Rage Tonfa",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Kapantha": [
       "Chronos Scythe",
       "Grifone",
-      "Rouge Pulse"
+      "Rouge Pulse",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Rohjade": [
       "Egalta",
       "Gallatin",
       "Master/Swift",
-      "St. Kilda"
+      "St. Kilda",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Megi Photon"
     ],
     "Rohcrysta": [
       "Crescent Cast",
       "Lavateinn",
       "Master/Guard",
       "Rohcrysta Scales",
-      "St. Kilda"
+      "St. Kilda",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Megi Photon",
+      "Ein Pistol Board",
+      "El Photon"
     ],
     "Ar Rappy": [
       "PA save Lv3",
@@ -251,27 +377,45 @@ area_drops = {
     "Korse": [
       "Blue Bulletta",
       "Celesta Laser",
-      "Magi Circuit"
+      "Magi Circuit",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Akorse": [
       "Salvador",
       "Starfish Slicer",
-      "Trois Souther"
+      "Trois Souther",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon",
+      "Ein Rifle Board",
+      "El Photon"
     ],
     "Finjer R": [
       "Gale Bringer",
       "Ka Vorg",
-      "Rika's Claw"
+      "Rika's Claw",
+      "Slaterian",
+      "Kerseline",
+      "Zon Photon"
     ],
     "Finjer G": [
       "Curse Answerer",
       "Emerald Sin",
-      "Nemesis"
+      "Nemesis",
+      "Slaterian",
+      "Kerseline",
+      "Zon Photon"
     ],
     "Finjer B": [
       "Ajax",
       "Schwarz Stihl",
-      "Undulate"
+      "Undulate",
+      "Slaterian",
+      "Kerseline",
+      "Zon Photon"
     ],
     "Rab Rappy": [
       "PA save Lv3",
@@ -302,57 +446,93 @@ area_drops = {
     "Ghowl": [
       "Eclamasach",
       "Goof Swatter",
-      "Kutune Sirka"
+      "Kutune Sirka",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Vulkure": [
       "Crimson Vis",
       "Riverman Missouri",
-      "Schmeisser"
+      "Schmeisser",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Usanny": [
       "H10 Missouri",
       "H44 Missouri",
-      "Ryjarg"
+      "Ryjarg",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Usanimere": [
       "Divine/Hit",
       "Yasminkov M95",
-      "Yellow Sun"
+      "Yellow Sun",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ray Photon"
     ],
     "Porel": [
       "Egalta",
       "Kouga Shuriken",
-      "Star Slicer"
+      "Star Slicer",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Pomarr": [
       "Bangasa Jikomi",
       "Luzparias",
-      "Stormer"
+      "Stormer",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Pobomma": [
       "Diopside",
       "Goth Parasol",
-      "Salvador"
+      "Salvador",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Bolix": [
       "Abraham",
       "Iros",
-      "Scarred Tatami"
+      "Scarred Tatami",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Goldix": [
       "Emeraldfield",
       "Scarred Tatami",
-      "Vanguard"
+      "Vanguard",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon"
     ],
     "Batt": [
       "Fenrir",
       "Magi Circuit",
-      "Starlight"
+      "Starlight",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Bullbatt": [
       "Divine/Mind",
       "Grand Chariot",
-      "Remjees"
+      "Remjees",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Megi Photon"
     ],
     "Rappy": [
       "PA save Lv3",
@@ -378,58 +558,94 @@ area_drops = {
     "Garapython": [
       "Clear Fin",
       "Fuuma Shuriken",
-      "Garapython Fang"
+      "Garapython Fang",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Garahadan": [
       "Gallanhorne",
       "Garahadan Fang",
-      "M14 Missouri"
+      "M14 Missouri",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Grimble": [
       "Frigiand",
       "Gun Diva",
-      "Pinky Beam"
+      "Pinky Beam",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Tormatible": [
       "Divine/Swift",
       "Eridanus",
-      "Pinky Beam"
+      "Pinky Beam",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ban Photon"
     ],
     "Reyhound": [
       "Al Azif",
       "Magi Circuit",
-      "Tri-Magenta"
+      "Tri-Magenta",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Stagg": [
       "Argares",
       "Filamare",
-      "Foie Haze"
+      "Foie Haze",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Hypao": [
       "Clear Scissor Twins",
       "M25SE Missouri",
-      "Nersir"
+      "Nersir",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Vespao": [
       "Clear Scissor Twins",
       "Divine/Guard",
-      "M25SE Missouri"
+      "M25SE Missouri",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Gra Photon"
     ],
     "Rumole": [
       "Featherhand",
       "Jasper Roar",
-      "Rage Tonfa"
+      "Rage Tonfa",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Kapantha": [
       "Chronos Scythe",
       "Grifone",
-      "Rouge Pulse"
+      "Rouge Pulse",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Helion": [
       "Ainsraiffe",
       "Askalon",
       "Hero/Guard",
-      "Zahhak"
+      "Zahhak",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ban Photon"
     ],
     "Blaze Helion": [
       "Ainsraiffe",
@@ -437,13 +653,24 @@ area_drops = {
       "Burning Mane",
       "Divine/HP",
       "Hero/Power",
-      "Zahhak"
+      "Zahhak",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Saber Board",
+      "Ban Photon",
+      "Ein Blade Board",
+      "El Photon"
     ],
     "Hildegao": [
       "Adoralphs",
       "Avenlote",
       "Hero/HP",
-      "Pinky Hand"
+      "Pinky Hand",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ray Photon"
     ],
     "Hildegigas": [
       "Adoralphs",
@@ -451,80 +678,141 @@ area_drops = {
       "All Resist Lv5",
       "Heavy Dumbbell",
       "Hero/Mind",
-      "Pinky Hand"
+      "Pinky Hand",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ray Photon",
+      "Ein Ripper Board",
+      "El Photon"
     ],
     "Pelcatraz": [
       "Caster Broom",
       "Hero/Swift",
-      "Kerykeion"
+      "Kerykeion",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Gra Photon"
     ],
     "Pelcatobur": [
       "Asclepios",
       "Caster Broom",
       "Divine/PP",
       "Hero/Hit",
-      "Kerykeion"
+      "Kerykeion",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ein Arm Board",
+      "Gra Photon",
+      "El Photon"
     ],
     "Froutang": [
       "Giacobini",
       "Master/HP",
       "Morgenlote",
-      "Roche Limit"
+      "Roche Limit",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon"
     ],
     "Frunaked": [
       "Clair Doubles",
       "Divine/Power",
       "Master/PP",
       "Morgenlote",
-      "Roche Limit"
+      "Roche Limit",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Ein Cutter Board",
+      "Zon Photon",
+      "El Photon"
     ],
     "Rohjade": [
       "Egalta",
       "Gallatin",
       "Master/Swift",
-      "St. Kilda"
+      "St. Kilda",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Megi Photon"
     ],
     "Rohcrysta": [
       "Crescent Cast",
       "Lavateinn",
       "Master/Guard",
       "Rohcrysta Scales",
-      "St. Kilda"
+      "St. Kilda",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Megi Photon",
+      "Ein Pistol Board",
+      "El Photon"
     ],
     "Korse": [
       "Blue Bulletta",
       "Celesta Laser",
-      "Magi Circuit"
+      "Magi Circuit",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Akorse": [
       "Salvador",
       "Starfish Slicer",
-      "Trois Souther"
+      "Trois Souther",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon",
+      "Ein Rifle Board",
+      "El Photon"
     ],
     "Izhirak-S6": [
       "Kleingold",
       "N-Tathlam",
-      "Radiant"
+      "Radiant",
+      "Slaterian",
+      "Kerseline",
+      "Im Photon"
     ],
     "Azherowa-B2": [
       "Enfield",
       "M&A33",
-      "M&A41"
+      "M&A41",
+      "Slaterian",
+      "Kerseline",
+      "Grinder Base A",
+      "Zon Photon"
     ],
     "Finjer R": [
       "Gale Bringer",
       "Ka Vorg",
-      "Rika's Claw"
+      "Rika's Claw",
+      "Slaterian",
+      "Kerseline",
+      "Zon Photon"
     ],
     "Finjer G": [
       "Curse Answerer",
       "Emerald Sin",
-      "Nemesis"
+      "Nemesis",
+      "Slaterian",
+      "Kerseline",
+      "Zon Photon"
     ],
     "Finjer B": [
       "Ajax",
       "Schwarz Stihl",
-      "Undulate"
+      "Undulate",
+      "Slaterian",
+      "Kerseline",
+      "Zon Photon"
     ]
   }
 }

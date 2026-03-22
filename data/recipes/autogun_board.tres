@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RecipeBoardData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/recipe_board_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "autogun_board"
+name = "Autogun Board"
+details = "An intermediate synthesis board for crafting an Autogun."
+rarity = 4
+output_weapon_id = "autogun"
+ingredients = [{"item_id": "peparian", "quantity": 3}, {"item_id": "dianaline", "quantity": 2}]
+craft_cost = 500
+has_photon_slot = true
+is_default = true

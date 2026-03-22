@@ -50,6 +50,24 @@ const STATUS_EFFECTS := {
 	"slow": {"duration": 3, "evasion_mod": -0.3},
 	"paralysis": {"duration": 3, "skip_chance": 0.5},
 	"burn": {"duration": 3, "dot_percent": 0.03, "defense_mod": -0.1},
+	"sleep": {"duration": 2, "skip_chance": 1.0, "breaks_on_hit": true},
+}
+
+## Map photon element to status effect
+const ELEMENT_TO_STATUS := {
+	"fire": "burn",
+	"ice": "freeze",
+	"lightning": "stun",
+	"dark": "devil",
+	"light": "sleep",
+}
+
+## Map enemy element to attribute key
+const ENEMY_ELEMENT_TO_ATTR := {
+	"native": "native_pct",
+	"beast": "beast_pct",
+	"machine": "machine_pct",
+	"dark": "dark_pct",
 }
 
 ## Area ID mapping for drop table lookups
@@ -135,7 +153,7 @@ func _get_player_stats(character: Dictionary) -> Dictionary:
 	var weapon_accuracy := 0
 	var weapon_name := ""
 	if not weapon_id.is_empty():
-		var weapon = WeaponRegistry.get_weapon(weapon_id)
+		var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
 		if weapon:
 			var grind_level: int = int(character.get("weapon_grinds", {}).get(weapon_id, 0))
 			weapon_attack = weapon.get_attack_at_grind(grind_level)
@@ -257,6 +275,15 @@ func attack(target_index: int) -> Dictionary:
 	var net_accuracy := player_accuracy - enemy_evasion
 	var hit_chance := clampf(BASE_HIT_CHANCE + net_accuracy * 0.005, MIN_HIT_CHANCE, MAX_HIT_CHANCE)
 
+	# Add weapon hit% attribute to accuracy
+	var equip: Dictionary = character.get("equipment", {})
+	var wpn_id: String = str(equip.get("weapon", ""))
+	var wpn_stats: Dictionary = character.get("weapon_stats", {}).get(wpn_id, {})
+	var hit_bonus: int = int(wpn_stats.get("hit_pct", 0))
+	if hit_bonus > 0:
+		net_accuracy += hit_bonus
+		hit_chance = clampf(BASE_HIT_CHANCE + net_accuracy * 0.005, MIN_HIT_CHANCE, MAX_HIT_CHANCE)
+
 	# Apply evasion modifier from status effects
 	for effect in enemy.get("status_effects", []):
 		var effect_def: Dictionary = STATUS_EFFECTS.get(effect.get("type", ""), {})
@@ -269,8 +296,15 @@ func attack(target_index: int) -> Dictionary:
 	# Calculate damage
 	var base_damage := player_attack + weapon_attack
 
-	# Element multiplier (placeholder)
+	# Element multiplier from weapon attributes
 	var elemental_mult := 1.0
+	var equipment: Dictionary = character.get("equipment", {})
+	var weapon_id: String = str(equipment.get("weapon", ""))
+	var w_stats: Dictionary = character.get("weapon_stats", {}).get(weapon_id, {})
+	var enemy_element: String = str(enemy.get("element", "native"))
+	var attr_key: String = ENEMY_ELEMENT_TO_ATTR.get(enemy_element, "")
+	if not attr_key.is_empty() and w_stats.has(attr_key):
+		elemental_mult = 1.0 + float(w_stats[attr_key]) / 100.0
 
 	# Apply defense: damage - (def * 0.25) - (damage * def / 600)
 	var enemy_defense: int = _get_enemy_defense(enemy)
@@ -285,11 +319,14 @@ func attack(target_index: int) -> Dictionary:
 	if is_critical:
 		after_defense *= CRITICAL_MULTIPLIER
 
-	# Check freeze damage taken multiplier
+	# Check freeze damage taken multiplier and break-on-hit statuses
 	for effect in enemy.get("status_effects", []):
 		if effect.get("type", "") == "freeze":
 			after_defense *= 1.5
 			# Break freeze on hit
+			effect["duration"] = 0
+		elif effect.get("type", "") == "sleep":
+			# Break sleep on hit
 			effect["duration"] = 0
 
 	# Variance ±10%
@@ -321,7 +358,72 @@ func attack(target_index: int) -> Dictionary:
 		else:
 			result["message"] = "%d damage to %s!" % [final_damage, str(enemy.get("name", "Enemy"))]
 
+	# Try element special attack
+	if result.get("hit", false) and not result.get("defeated", false):
+		var special_msg: String = _try_element_special(enemy, w_stats)
+		if not special_msg.is_empty():
+			result["message"] += special_msg
+			result["element_triggered"] = true
+			# Check if devil killed the enemy
+			if int(enemy.get("hp", 0)) <= 0:
+				enemy["alive"] = false
+				result["defeated"] = true
+				result["exp"] = int(enemy.get("exp_reward", 0))
+				result["meseta"] = int(enemy.get("meseta_reward", 0))
+				enemy_defeated.emit(target_index, enemy)
+				_check_wave_cleared()
+
 	return result
+
+
+## Try to trigger an element special attack after a successful hit.
+## Returns a status message if triggered, empty string otherwise.
+func _try_element_special(enemy: Dictionary, w_stats: Dictionary) -> String:
+	var element: String = str(w_stats.get("element", ""))
+	if element.is_empty():
+		return ""
+
+	var element_level: int = int(w_stats.get("element_level", 0))
+	if element_level <= 0:
+		return ""
+
+	# Trigger chance: 10% + 10% per element level
+	var trigger_chance := 0.10 + 0.10 * float(element_level)
+	if randf() > trigger_chance:
+		return ""
+
+	var status_type: String = ELEMENT_TO_STATUS.get(element, "")
+	if status_type.is_empty():
+		return ""
+
+	var enemy_name: String = str(enemy.get("name", "Enemy"))
+
+	# Devil is special — instant 3/4 HP reduction
+	if status_type == "devil":
+		var current_hp: int = int(enemy.get("hp", 0))
+		var new_hp: int = maxi(current_hp / 4, 1)
+		var devil_damage: int = current_hp - new_hp
+		enemy["hp"] = new_hp
+		if int(enemy["hp"]) <= 0:
+			enemy["alive"] = false
+		return " Devil! %s loses %d HP!" % [enemy_name, devil_damage]
+
+	# Apply status effect
+	if not enemy.has("status_effects"):
+		enemy["status_effects"] = []
+
+	# Don't stack same status
+	for existing in enemy["status_effects"]:
+		if existing.get("type", "") == status_type:
+			return ""
+
+	var effect_def: Dictionary = STATUS_EFFECTS.get(status_type, {})
+	var duration: int = int(effect_def.get("duration", 2))
+	enemy["status_effects"].append({"type": status_type, "duration": duration})
+
+	var element_names := {"fire": "Burn", "ice": "Freeze", "lightning": "Stun", "light": "Sleep"}
+	var effect_name: String = element_names.get(element, element.capitalize())
+	return " %s inflicted on %s!" % [effect_name, enemy_name]
 
 
 ## Special attack — lower accuracy, can apply status effects
@@ -500,7 +602,7 @@ func use_photon_art(art_id: String, target_index: int) -> Dictionary:
 	var weapon_id: String = str(equipment.get("weapon", ""))
 	if weapon_id.is_empty():
 		return {"hit": false, "message": "No weapon equipped"}
-	var weapon = WeaponRegistry.get_weapon(weapon_id)
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
 	if weapon == null:
 		return {"hit": false, "message": "Unknown weapon"}
 	if weapon.get_weapon_type_name() != art.weapon_type:
