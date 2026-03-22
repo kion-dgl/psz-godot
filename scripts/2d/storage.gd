@@ -368,7 +368,7 @@ func _get_item_category(item_id: String) -> String:
 		return "Armor"
 	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
 		return "Unit"
-	if ResourceLoader.exists("res://data/mags/%s.tres" % item_id) or ResourceLoader.exists("res://data/mags/%s.tres" % norm_id):
+	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
 		return "Mag"
 	if item_id.begins_with("disk_"):
 		return "Disk"

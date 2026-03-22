@@ -15,6 +15,11 @@ const EXCHANGE_ITEMS := [
 	{"name": "Grinder Base C", "id": "grinder_base_c", "cost": 3, "category": "Materials"},
 	{"name": "Grinder Base B", "id": "grinder_base_b", "cost": 5, "category": "Materials"},
 	{"name": "Grinder Base A", "id": "grinder_base_a", "cost": 8, "category": "Materials"},
+	{"name": "Mag", "id": "debug_mag", "cost": 0, "category": "Debug Mag"},
+	{"name": "Mag POW +50", "id": "debug_mag_power", "cost": 0, "category": "Debug Mag"},
+	{"name": "Mag GRD +50", "id": "debug_mag_guard", "cost": 0, "category": "Debug Mag"},
+	{"name": "Mag HIT +50", "id": "debug_mag_hit", "cost": 0, "category": "Debug Mag"},
+	{"name": "Mag MND +50", "id": "debug_mag_mind", "cost": 0, "category": "Debug Mag"},
 ]
 
 var _selected_index: int = 0
@@ -112,6 +117,11 @@ func _exchange_selected() -> void:
 		hint_label.text = "Not enough Photon Drops! Need %d" % cost
 		return
 
+	# Handle debug mag items
+	if item_id.begins_with("debug_mag"):
+		_handle_debug_mag(item_id, item_name, cost)
+		return
+
 	if not Inventory.can_add_item(item_id):
 		hint_label.text = "Inventory full!"
 		return
@@ -119,6 +129,37 @@ func _exchange_selected() -> void:
 	Inventory.remove_item("photon_drop", cost)
 	Inventory.add_item(item_id, 1)
 	hint_label.text = "Exchanged %d Photon Drops for %s!" % [cost, item_name]
+	_refresh_display()
+
+
+func _handle_debug_mag(item_id: String, item_name: String, cost: int) -> void:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		hint_label.text = "No active character!"
+		return
+
+	if item_id == "debug_mag":
+		# Give a fresh base mag (special: needs mag_state)
+		if not character.has("mag_states"):
+			character["mag_states"] = {}
+		var inst_id: String = MagManager.add_mag_to_character(character, "mag")
+		if inst_id.is_empty():
+			hint_label.text = "Inventory full!"
+		else:
+			if cost > 0:
+				Inventory.remove_item("photon_drop", cost)
+			hint_label.text = "Received a new Mag!"
+		_refresh_display()
+		return
+
+	# Stat boost items — add to inventory as consumable items
+	if not Inventory.can_add_item(item_id):
+		hint_label.text = "Inventory full!"
+		return
+	if cost > 0:
+		Inventory.remove_item("photon_drop", cost)
+	Inventory.add_item(item_id, 1)
+	hint_label.text = "Purchased %s! Feed it to your mag." % item_name
 	_refresh_display()
 
 

@@ -182,7 +182,7 @@ func _is_per_slot(item_id: String) -> bool:
 		return true
 	if UnitRegistry.get_unit(base_id) or UnitRegistry.get_unit(norm_id):
 		return true
-	if ResourceLoader.exists("res://data/mags/%s.tres" % base_id):
+	if MagManager.is_mag(base_id):
 		return true
 	if base_id.begins_with("disk_"):
 		return true
@@ -269,6 +269,16 @@ func _lookup_item(item_id: String) -> Dictionary:
 	if recipe:
 		return {"name": recipe.name, "max_stack": 99}
 
+	# Debug mag feed items (stackable consumables)
+	if base_id.begins_with("debug_mag_"):
+		var debug_names := {
+			"debug_mag_power": "Mag POW +50",
+			"debug_mag_guard": "Mag GRD +50",
+			"debug_mag_hit": "Mag HIT +50",
+			"debug_mag_mind": "Mag MND +50",
+		}
+		return {"name": debug_names.get(base_id, base_id), "max_stack": 10}
+
 	# Technique disks (per-slot, format: disk_<tech_id>_<level>)
 	if base_id.begins_with("disk_"):
 		var parts: PackedStringArray = base_id.split("_", false, 2)
@@ -280,12 +290,16 @@ func _lookup_item(item_id: String) -> Dictionary:
 			return {"name": "Disk: %s Lv.%d" % [tech_name, level], "max_stack": 1}
 		return {"name": base_id, "max_stack": 1}
 
-	# Mags (load directly, no registry)
-	var mag_path := "res://data/mags/%s.tres" % base_id
-	if ResourceLoader.exists(mag_path):
-		var mag = load(mag_path)
-		if mag:
-			return {"name": mag.name, "max_stack": 1}
+	# Mags — show current form name from mag_state if available
+	if MagManager.is_mag(base_id):
+		var character = CharacterManager.get_active_character()
+		if character:
+			var display_name: String = MagManager.get_mag_display_name(character, item_id)
+			return {"name": display_name, "max_stack": 1}
+		var form = MagManager.get_mag_form(base_id)
+		if form:
+			return {"name": form.name, "max_stack": 1}
+		return {"name": base_id, "max_stack": 1}
 
 	# Unknown item — allow with default stack
 	return {"name": item_id, "max_stack": 10}

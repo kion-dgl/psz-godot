@@ -74,6 +74,9 @@ func _use_selected() -> void:
 		return
 	var item: Dictionary = _items[_selected_index]
 	var item_id: String = item.get("id", "")
+	if MagManager.is_mag(item_id):
+		SceneManager.push_scene("res://scenes/2d/mag_feeder.tscn", {"mag_id": item_id})
+		return
 	if Inventory.use_item(item_id):
 		hint_label.text = "Used %s!" % item_id
 		_refresh_items()
@@ -374,6 +377,27 @@ func _refresh_detail() -> void:
 		if unit.effect and not str(unit.effect).is_empty():
 			vbox.add_child(PszStyle.detail_label("Effect: %s" % unit.effect, PszStyle.TEXT_SUCCESS))
 
+	# Mag details
+	if MagManager.is_mag(item_id):
+		var character3 = CharacterManager.get_active_character()
+		if character3:
+			var mag_state: Dictionary = MagManager.get_mag_state(character3, item_id)
+			if not mag_state.is_empty():
+				var mag_level: int = MagManager.get_level(mag_state)
+				var form_id: String = str(mag_state.get("form_id", "mag"))
+				var form = MagManager.get_mag_form(form_id)
+				vbox.add_child(PszStyle.detail_label("Type: Mag"))
+				if form:
+					vbox.add_child(PszStyle.detail_label("Form: %s (Stage %s)" % [form.name, str(form.stage)]))
+					if not str(form.photon_blast).is_empty():
+						vbox.add_child(PszStyle.detail_label("P. Blast: %s" % str(form.photon_blast), PszStyle.TEXT_SUCCESS))
+				vbox.add_child(PszStyle.detail_label("Level: %d" % mag_level))
+				var stats_dict: Dictionary = mag_state.get("stats", {})
+				for stat_key in ["power", "guard", "hit", "mind"]:
+					var raw: int = int(stats_dict.get(stat_key, 0))
+					var stat_lvl: int = int(raw / MagManager.STATS_PER_LEVEL)
+					vbox.add_child(PszStyle.detail_label("%s: %d" % [stat_key.capitalize(), stat_lvl]))
+
 	# Disk details
 	if item_id.begins_with("disk_"):
 		var parts: PackedStringArray = item_id.split("_", false, 2)
@@ -432,7 +456,7 @@ func _get_item_category(item_id: String) -> String:
 		return "Armor"
 	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
 		return "Unit"
-	if ResourceLoader.exists("res://data/mags/%s.tres" % item_id) or ResourceLoader.exists("res://data/mags/%s.tres" % norm_id):
+	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
 		return "Mag"
 	if item_id.begins_with("disk_"):
 		return "Disk"

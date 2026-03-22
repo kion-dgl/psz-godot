@@ -157,8 +157,7 @@ func _item_fits_slot(item_id: String, slot_key: String) -> bool:
 		"unit1", "unit2", "unit3", "unit4":
 			return UnitRegistry.get_unit(item_id) != null
 		"mag":
-			var mag_path := "res://data/mags/%s.tres" % item_id
-			return ResourceLoader.exists(mag_path)
+			return MagManager.is_mag(item_id)
 	return false
 
 
@@ -372,6 +371,17 @@ func _calc_equip_bonuses(equip: Dictionary, character: Dictionary) -> Dictionary
 	var mat_map := {"attack": "atk", "defense": "def", "accuracy": "acc", "evasion": "eva", "technique": "tech", "hp": "hp", "pp": "pp"}
 	for mat_key in mat_map:
 		bonuses[mat_map[mat_key]] += int(mat_bonuses.get(mat_key, 0))
+
+	# Mag bonuses
+	var mag_id: String = str(equip.get("mag", ""))
+	if not mag_id.is_empty():
+		var mag_state: Dictionary = MagManager.get_mag_state(character, mag_id)
+		if not mag_state.is_empty():
+			var mag_bonuses: Dictionary = MagManager.get_stat_bonuses(mag_state)
+			bonuses["atk"] += int(mag_bonuses.get("attack", 0))
+			bonuses["def"] += int(mag_bonuses.get("defense", 0))
+			bonuses["acc"] += int(mag_bonuses.get("accuracy", 0))
+			bonuses["tech"] += int(mag_bonuses.get("technique", 0))
 
 	return bonuses
 
