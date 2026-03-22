@@ -96,16 +96,17 @@ func _build_lists() -> void:
 	if character == null:
 		return
 
-	# Grindable: weapons in inventory
+	# Grindable: weapons in inventory (use instance ID, not base ID)
 	var all_items: Array = Inventory.get_all_items()
 	for item in all_items:
-		var weapon = WeaponRegistry.get_weapon(item.get("id", ""))
+		var inst_id: String = item.get("id", "")
+		var weapon = WeaponRegistry.get_weapon(inst_id)
 		if weapon and weapon.max_grind > 0:
-			var current_grind: int = int(character.get("weapon_grinds", {}).get(weapon.id, 0))
+			var current_grind: int = int(character.get("weapon_grinds", {}).get(inst_id, 0))
 			if current_grind < weapon.max_grind:
 				_grindable_weapons.append({
-					"id": weapon.id,
-					"name": weapon.name,
+					"id": inst_id,
+					"name": item.get("name", weapon.name),
 					"grind": current_grind,
 					"max_grind": weapon.max_grind,
 					"rarity": weapon.rarity,
