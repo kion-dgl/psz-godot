@@ -23,6 +23,7 @@ const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
 const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
 const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
 const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
+const DropMaterialScript := preload("res://scripts/3d/elements/drop_material.gd")
 const MessagePackScript := preload("res://scripts/3d/elements/message_pack.gd")
 const StoryPropScript := preload("res://scripts/3d/elements/story_prop.gd")
 const DialogTriggerScript := preload("res://scripts/3d/elements/dialog_trigger.gd")
@@ -2255,15 +2256,6 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 		meseta_max = int(enemy_data.meseta_max) if int(enemy_data.meseta_max) > 0 else 20
 		enemy_name = str(enemy_data.name)
 
-	# Always drop meseta
-	var dm := DropMesetaScript.new()
-	dm.amount = randi_range(meseta_min, meseta_max)
-	var offset := Vector3(randf_range(-0.8, 0.8), 0.5, randf_range(-0.8, 0.8))
-	_map_root.add_child(dm)
-	dm.position = pos + offset
-	_room_drops.append(dm)
-	print("[EnemyDrop] Meseta %d at %s" % [dm.amount, dm.position])
-
 	# Grant EXP
 	var exp_amount: int = int(enemy_data.exp_reward) if enemy_data else 0
 	if exp_amount > 0:
@@ -2278,23 +2270,39 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 				_field_hud._stats_panel.char_level = result.new_level
 				_field_hud._stats_panel.queue_redraw()
 
-	# Roll for item drop (15% chance)
-	if randf() < 0.15:
-		var area_id: String = SessionManager.get_current_area_id()
-		var difficulty: String = str(SessionManager.get_session().get("difficulty", "normal"))
-		var drop_area: String = AREA_DROP_KEYS.get(area_id, "gurhacia-valley")
-		var drop_list: Array = DropRegistry.get_enemy_drops(difficulty, drop_area, enemy_name)
-		if drop_list.size() > 0:
-			var item_name: String = str(drop_list[randi() % drop_list.size()])
-			var item_id: String = item_name.to_lower().replace(" ", "_").replace("/", "_")
-			var di := DropItemScript.new()
-			di.item_id = item_id
-			di.amount = 1
-			var item_offset := Vector3(randf_range(-0.8, 0.8), 0.5, randf_range(-0.8, 0.8))
-			_map_root.add_child(di)
-			di.position = pos + item_offset
-			_room_drops.append(di)
-			print("[EnemyDrop] Item '%s' (id=%s) at %s" % [item_name, item_id, di.position])
+	# Roll for any drop at all
+	if randf() >= DropConfig.DROP_CHANCE:
+		return
+
+	# Determine what drops — roll item first, fall back to meseta
+	var area_id: String = SessionManager.get_current_area_id()
+	var difficulty: String = str(SessionManager.get_session().get("difficulty", "normal"))
+	var drop_area: String = AREA_DROP_KEYS.get(area_id, "gurhacia-valley")
+	var drop_list: Array = DropRegistry.get_enemy_drops(difficulty, drop_area, enemy_name)
+
+	if not drop_list.is_empty() and randf() < DropConfig.ITEM_VS_MESETA:
+		var item_name: String = str(drop_list[randi() % drop_list.size()])
+		var item_id: String = item_name.to_lower().replace(" ", "_").replace("/", "_")
+		var di: DropBase
+		if MaterialRegistry.get_material(item_id) or RecipeRegistry.get_recipe(item_id):
+			di = DropMaterialScript.new()
+		else:
+			di = DropItemScript.new()
+		di.item_id = item_id
+		di.amount = 1
+		var item_offset := Vector3(randf_range(-0.8, 0.8), 0.5, randf_range(-0.8, 0.8))
+		_map_root.add_child(di)
+		di.position = pos + item_offset
+		_room_drops.append(di)
+		print("[EnemyDrop] Item '%s' (id=%s) at %s" % [item_name, item_id, di.position])
+	else:
+		var dm := DropMesetaScript.new()
+		dm.amount = randi_range(meseta_min, meseta_max)
+		var offset := Vector3(randf_range(-0.8, 0.8), 0.5, randf_range(-0.8, 0.8))
+		_map_root.add_child(dm)
+		dm.position = pos + offset
+		_room_drops.append(dm)
+		print("[EnemyDrop] Meseta %d at %s" % [dm.amount, dm.position])
 
 
 ## Spawn a message pack element.

@@ -50,6 +50,12 @@ func _ready() -> void:
 		"Tekker",
 		"res://scenes/2d/shops/tekker.tscn"
 	)
+	_add_npc(
+		"CraftingNPC", Vector3(10.50, 0, 27.67), -1.4207,
+		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
+		"Synthesis Shop",
+		"res://scenes/2d/shops/crafting_shop.tscn"
+	)
 
 	# Area triggers
 	_add_area_trigger(

@@ -217,6 +217,11 @@ func _lookup_item(item_id: String) -> Dictionary:
 	if modifier:
 		return {"name": modifier.name, "max_stack": 99}
 
+	# RecipeRegistry (recipe boards, stackable)
+	var recipe = RecipeRegistry.get_recipe(item_id)
+	if recipe:
+		return {"name": recipe.name, "max_stack": 99}
+
 	# Technique disks (per-slot, format: disk_<tech_id>_<level>)
 	if item_id.begins_with("disk_"):
 		var parts: PackedStringArray = item_id.split("_", false, 2)

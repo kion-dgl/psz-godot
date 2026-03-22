@@ -10,39 +10,54 @@ area_drops = {
   "gurhacia-valley": {
     "Ghowl": [
       "Chrome Cutlass",
-      "Cutlass"
+      "Cutlass",
+      "Carlian",
+      "Acenaline"
     ],
     "Vulkure": [
       "Chrome Carbine",
       "Gun Slash",
-      "Twin Fire"
+      "Twin Fire",
+      "Carlian",
+      "Acenaline"
     ],
     "Garapython": [
       "Chrome Rod",
       "Iron Spear",
-      "Rod"
+      "Rod",
+      "Carlian",
+      "Acenaline"
     ],
     "Garahadan": [
       "Chrome Gun",
       "Chrome Wand",
-      "Wand"
+      "Wand",
+      "Carlian",
+      "Acenaline"
     ],
     "Grimble": [
       "Cannon",
       "Carbine",
-      "Gun Braver"
+      "Gun Braver",
+      "Carlian",
+      "Acenaline"
     ],
     "Tormatible": [
       "Gun Braver",
       "Gun Slash",
-      "Hero/Swift"
+      "Hero/Swift",
+      "Peparian",
+      "Grinder Base C"
     ],
     "Helion": [
       "Chrome Sword",
       "Ein Calibur",
       "Ein Glaive",
       "Helion's Mane",
-      "Rookie/Guard"
+      "Rookie/Guard",
+      "Peparian",
+      "Grinder Base C",
+      "Im-Photon"
     ],
     "Blaze Helion": [
       "Chrome Sword",
@@ -50,7 +65,11 @@ area_drops = {
       "Ein Glaive",
       "Hero/HP",
       "Rookie/Power",
-      "Shield"
+      "Shield",
+      "Peparian",
+      "Grinder Base C",
+      "Saber Board",
+      "Im-Photon"
     ],
     "Rappy": [
       "PA save Lv1",
@@ -65,28 +84,39 @@ area_drops = {
     "Usanny": [
       "Deo Pistol",
       "Ein Pistol",
-      "Ein Rifle"
+      "Ein Rifle",
+      "Peparian",
+      "Dianaline"
     ],
     "Usanimere": [
       "Deo Twins",
       "Ein Rocket",
-      "Hero/Hit"
+      "Hero/Hit",
+      "Slaterian",
+      "Grinder Base B"
     ],
     "Reyhound": [
       "Chrome Rod",
       "Ein Tact",
-      "Tact"
+      "Tact",
+      "Peparian",
+      "Dianaline"
     ],
     "Stagg": [
       "Blade",
       "Ein Arm",
-      "Ein Blade"
+      "Ein Blade",
+      "Peparian",
+      "Dianaline"
     ],
     "Hildegao": [
       "Deo Ripper",
       "Ein Bazooka",
       "Ein Ripper",
-      "Rookie/HP"
+      "Rookie/HP",
+      "Slaterian",
+      "Grinder Base B",
+      "Im-Photon"
     ],
     "Hildegigas": [
       "All Resist Lv3",
@@ -94,7 +124,10 @@ area_drops = {
       "Deo Ripper",
       "Ein Bazooka",
       "Rookie/Mind",
-      "Twin Assault"
+      "Twin Assault",
+      "Slaterian",
+      "Grinder Base B",
+      "Im-Photon"
     ],
     "Rappy": [
       "PA save Lv1",
@@ -109,32 +142,44 @@ area_drops = {
     "Porel": [
       "Cane",
       "Clear Cane",
-      "Ray Bangle"
+      "Ray Bangle",
+      "Carlian",
+      "Acenaline"
     ],
     "Pomarr": [
       "Clear Saber",
       "Saber",
-      "Sabre"
+      "Sabre",
+      "Carlian",
+      "Acenaline"
     ],
     "Hypao": [
       "Ray Duplex",
-      "Ray Shot"
+      "Ray Shot",
+      "Carlian",
+      "Acenaline"
     ],
     "Vespao": [
       "Clear Pulse",
       "Hero/Guard",
-      "Ray Duplex"
+      "Ray Duplex",
+      "Peparian",
+      "Grinder Base C"
     ],
     "Pelcatraz": [
       "Ray Staff",
       "Ray Wandstick",
-      "Rookie/Swift"
+      "Rookie/Swift",
+      "Peparian",
+      "Grinder Base C"
     ],
     "Pelcatobur": [
       "Claymore",
       "Hero/PP",
       "Ray Staff",
-      "Rookie/Hit"
+      "Rookie/Hit",
+      "Peparian",
+      "Grinder Base C"
     ],
     "Rappy": [
       "PA save Lv1",
@@ -152,41 +197,61 @@ area_drops = {
     "Pobomma": [
       "Ein Cutter",
       "Magi Processor",
-      "Pretty Parasol"
+      "Pretty Parasol",
+      "Slaterian",
+      "Kerseline"
     ],
     "Bolix": [
       "Deo Calibur",
       "Iron Lance",
-      "Tatami Mat"
+      "Tatami Mat",
+      "Slaterian",
+      "Kerseline"
     ],
     "Goldix": [
       "Chrome Shield",
       "Crimsonfield",
-      "Tatami Mat"
+      "Tatami Mat",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A"
     ],
     "Izhirak-S6": [
       "Chrome Gun",
       "Clear Pulse",
-      "Parpua"
+      "Parpua",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Azherowa-B2": [
       "Deo Rifle",
       "Ein Mazurka",
-      "Liese Garland"
+      "Liese Garland",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A",
+      "El-Photon"
     ],
     "Froutang": [
       "Ace/PP",
       "Deo Slicer",
       "Double Blade",
       "Double Edge",
-      "Stag Cutlery"
+      "Stag Cutlery",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A"
     ],
     "Frunaked": [
       "Ace/PP",
       "Deo Slicer",
       "Double Edge",
       "Hero/Power",
-      "Stag Cutlery"
+      "Stag Cutlery",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A"
     ],
     "Ar Rappy": [
       "PA save Lv1",
@@ -204,29 +269,40 @@ area_drops = {
     "Batt": [
       "Bright Moon",
       "Chrome Rod",
-      "Clear Staff"
+      "Clear Staff",
+      "Peparian",
+      "Dianaline"
     ],
     "Bullbatt": [
       "Chrome Lance",
       "Clear Bangle",
-      "Witch's Broom"
+      "Witch's Broom",
+      "Slaterian",
+      "Grinder Base B"
     ],
     "Rumole": [
       "Deo Ripper",
       "Hollow Gimlet",
-      "Ray Knife"
+      "Ray Knife",
+      "Peparian",
+      "Dianaline"
     ],
     "Kapantha": [
       "Binary Saber",
       "Chrome Twins",
-      "Clear Shot"
+      "Clear Shot",
+      "Peparian",
+      "Dianaline"
     ],
     "Rohjade": [
       "Ace/Swift",
       "Clear Beam",
       "Ray Maser",
       "Rohjade Scales",
-      "Slicer"
+      "Slicer",
+      "Slaterian",
+      "Grinder Base B",
+      "Di-Photon"
     ],
     "Rohcrysta": [
       "Ace/Guard",
@@ -234,7 +310,10 @@ area_drops = {
       "Clear Beam",
       "Hero/Mind",
       "Rohcrysta Scales",
-      "Slicer"
+      "Slicer",
+      "Slaterian",
+      "Grinder Base B",
+      "Di-Photon"
     ],
     "Ar Rappy": [
       "PA save Lv1",
@@ -252,27 +331,43 @@ area_drops = {
     "Korse": [
       "Clear Knife",
       "Deo Twins",
-      "Sonic Laser"
+      "Sonic Laser",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Akorse": [
       "Magi Processor",
       "Sasarai",
-      "Slicer"
+      "Slicer",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A",
+      "El-Photon"
     ],
     "Finjer R": [
       "Chrome Sword",
       "Jamshid",
-      "Orgaclaw"
+      "Orgaclaw",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Finjer G": [
       "Chrome Carbine",
       "Delacquer",
-      "Deo Bazooka"
+      "Deo Bazooka",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Finjer B": [
       "Chrome Spear",
       "Deo Cutter",
-      "Tonfa"
+      "Tonfa",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Rab Rappy": [
       "PA save Lv1",
@@ -302,57 +397,80 @@ area_drops = {
   "eternal-tower": {
     "Ghowl": [
       "Chrome Cutlass",
-      "Cutlass"
+      "Cutlass",
+      "Carlian",
+      "Acenaline"
     ],
     "Vulkure": [
       "Chrome Carbine",
       "Gun Slash",
-      "Twin Fire"
+      "Twin Fire",
+      "Carlian",
+      "Acenaline"
     ],
     "Usanny": [
       "Deo Pistol",
       "Ein Pistol",
-      "Ein Rifle"
+      "Ein Rifle",
+      "Peparian",
+      "Dianaline"
     ],
     "Usanimere": [
       "Deo Twins",
       "Ein Rocket",
-      "Hero/Hit"
+      "Hero/Hit",
+      "Slaterian",
+      "Grinder Base B"
     ],
     "Porel": [
       "Cane",
       "Clear Cane",
-      "Ray Bangle"
+      "Ray Bangle",
+      "Carlian",
+      "Acenaline"
     ],
     "Pomarr": [
       "Clear Saber",
       "Saber",
-      "Sabre"
+      "Sabre",
+      "Carlian",
+      "Acenaline"
     ],
     "Pobomma": [
       "Ein Cutter",
       "Magi Processor",
-      "Pretty Parasol"
+      "Pretty Parasol",
+      "Slaterian",
+      "Kerseline"
     ],
     "Bolix": [
       "Deo Calibur",
       "Iron Lance",
-      "Tatami Mat"
+      "Tatami Mat",
+      "Slaterian",
+      "Kerseline"
     ],
     "Goldix": [
       "Chrome Shield",
       "Crimsonfield",
-      "Tatami Mat"
+      "Tatami Mat",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A"
     ],
     "Batt": [
       "Bright Moon",
       "Chrome Rod",
-      "Clear Staff"
+      "Clear Staff",
+      "Peparian",
+      "Dianaline"
     ],
     "Bullbatt": [
       "Chrome Lance",
       "Clear Bangle",
-      "Witch's Broom"
+      "Witch's Broom",
+      "Slaterian",
+      "Grinder Base B"
     ],
     "Rappy": [
       "PA save Lv1",
@@ -378,58 +496,81 @@ area_drops = {
     "Garapython": [
       "Chrome Rod",
       "Iron Spear",
-      "Rod"
+      "Rod",
+      "Carlian",
+      "Acenaline"
     ],
     "Garahadan": [
       "Chrome Gun",
       "Chrome Wand",
-      "Wand"
+      "Wand",
+      "Carlian",
+      "Acenaline"
     ],
     "Grimble": [
       "Cannon",
       "Carbine",
-      "Gun Braver"
+      "Gun Braver",
+      "Carlian",
+      "Acenaline"
     ],
     "Tormatible": [
       "Gun Braver",
       "Gun Slash",
-      "Hero/Swift"
+      "Hero/Swift",
+      "Peparian",
+      "Grinder Base C"
     ],
     "Reyhound": [
       "Chrome Rod",
       "Ein Tact",
-      "Tact"
+      "Tact",
+      "Peparian",
+      "Dianaline"
     ],
     "Stagg": [
       "Blade",
       "Ein Arm",
-      "Ein Blade"
+      "Ein Blade",
+      "Peparian",
+      "Dianaline"
     ],
     "Hypao": [
       "Ray Duplex",
-      "Ray Shot"
+      "Ray Shot",
+      "Carlian",
+      "Acenaline"
     ],
     "Vespao": [
       "Clear Pulse",
       "Hero/Guard",
-      "Ray Duplex"
+      "Ray Duplex",
+      "Peparian",
+      "Grinder Base C"
     ],
     "Rumole": [
       "Deo Ripper",
       "Hollow Gimlet",
-      "Ray Knife"
+      "Ray Knife",
+      "Peparian",
+      "Dianaline"
     ],
     "Kapantha": [
       "Binary Saber",
       "Chrome Twins",
-      "Clear Shot"
+      "Clear Shot",
+      "Peparian",
+      "Dianaline"
     ],
     "Helion": [
       "Chrome Sword",
       "Ein Calibur",
       "Ein Glaive",
       "Helion's Mane",
-      "Rookie/Guard"
+      "Rookie/Guard",
+      "Peparian",
+      "Grinder Base C",
+      "Im-Photon"
     ],
     "Blaze Helion": [
       "Chrome Sword",
@@ -437,13 +578,20 @@ area_drops = {
       "Ein Glaive",
       "Hero/HP",
       "Rookie/Power",
-      "Shield"
+      "Shield",
+      "Peparian",
+      "Grinder Base C",
+      "Saber Board",
+      "Im-Photon"
     ],
     "Hildegao": [
       "Deo Ripper",
       "Ein Bazooka",
       "Ein Ripper",
-      "Rookie/HP"
+      "Rookie/HP",
+      "Slaterian",
+      "Grinder Base B",
+      "Im-Photon"
     ],
     "Hildegigas": [
       "All Resist Lv3",
@@ -451,39 +599,55 @@ area_drops = {
       "Deo Ripper",
       "Ein Bazooka",
       "Rookie/Mind",
-      "Twin Assault"
+      "Twin Assault",
+      "Slaterian",
+      "Grinder Base B",
+      "Im-Photon"
     ],
     "Pelcatraz": [
       "Ray Staff",
       "Ray Wandstick",
-      "Rookie/Swift"
+      "Rookie/Swift",
+      "Peparian",
+      "Grinder Base C"
     ],
     "Pelcatobur": [
       "Claymore",
       "Hero/PP",
       "Ray Staff",
-      "Rookie/Hit"
+      "Rookie/Hit",
+      "Peparian",
+      "Grinder Base C"
     ],
     "Froutang": [
       "Ace/PP",
       "Deo Slicer",
       "Double Blade",
       "Double Edge",
-      "Stag Cutlery"
+      "Stag Cutlery",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A"
     ],
     "Frunaked": [
       "Ace/PP",
       "Deo Slicer",
       "Double Edge",
       "Hero/Power",
-      "Stag Cutlery"
+      "Stag Cutlery",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A"
     ],
     "Rohjade": [
       "Ace/Swift",
       "Clear Beam",
       "Ray Maser",
       "Rohjade Scales",
-      "Slicer"
+      "Slicer",
+      "Slaterian",
+      "Grinder Base B",
+      "Di-Photon"
     ],
     "Rohcrysta": [
       "Ace/Guard",
@@ -491,42 +655,68 @@ area_drops = {
       "Clear Beam",
       "Hero/Mind",
       "Rohcrysta Scales",
-      "Slicer"
+      "Slicer",
+      "Slaterian",
+      "Grinder Base B",
+      "Di-Photon"
     ],
     "Korse": [
       "Clear Knife",
       "Deo Twins",
-      "Sonic Laser"
+      "Sonic Laser",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Akorse": [
       "Magi Processor",
       "Sasarai",
-      "Slicer"
+      "Slicer",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A",
+      "El-Photon"
     ],
     "Izhirak-S6": [
       "Chrome Gun",
       "Clear Pulse",
-      "Parpua"
+      "Parpua",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Azherowa-B2": [
       "Deo Rifle",
       "Ein Mazurka",
-      "Liese Garland"
+      "Liese Garland",
+      "Peparian",
+      "Slaterian",
+      "Grinder Base A",
+      "El-Photon"
     ],
     "Finjer R": [
       "Chrome Sword",
       "Jamshid",
-      "Orgaclaw"
+      "Orgaclaw",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Finjer G": [
       "Chrome Carbine",
       "Delacquer",
-      "Deo Bazooka"
+      "Deo Bazooka",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ],
     "Finjer B": [
       "Chrome Spear",
       "Deo Cutter",
-      "Tonfa"
+      "Tonfa",
+      "Slaterian",
+      "Kerseline",
+      "El-Photon"
     ]
   }
 }
