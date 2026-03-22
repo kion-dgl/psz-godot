@@ -27,13 +27,15 @@ func _ready() -> void:
 		"SynthesisNPC", Vector3(8.38, 0, -4.81), 0,
 		"res://assets/npcs/np_017_00_0/np_017_00_0.glb",
 		"Synthesis Shop",
-		"res://scenes/2d/shops/crafting_shop.tscn"
+		"res://scenes/2d/shops/crafting_shop.tscn",
+		"pso_ro_stand"
 	)
 	_add_npc(
 		"PhotonCollectorNPC", Vector3(-6.32, 0, -5.35), 0,
 		"res://assets/npcs/np_018_00_0/np_018_00_0.glb",
 		"Photon Collector",
-		"res://scenes/2d/shops/photon_shop.tscn"
+		"res://scenes/2d/shops/photon_shop.tscn",
+		"pso_f_ro_stand"
 	)
 
 	# Interactive exit trigger — back to market
