@@ -15,7 +15,7 @@ var _inventory_items: Array = []
 var _storage_items: Array = []
 
 var _mode_bar: HBoxContainer
-var _portrait: TextureRect
+var _portrait: Control
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel

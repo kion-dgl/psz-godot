@@ -8,7 +8,7 @@ var _selected_index: int = 0
 var _selecting_difficulty: bool = false
 var _selected_difficulty: int = 0
 
-var _portrait: TextureRect
+var _portrait: Control
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 

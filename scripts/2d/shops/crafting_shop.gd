@@ -41,7 +41,7 @@ var _result_popup: PanelContainer
 
 var _mode_bar_parent: Control
 var _tab_row: HBoxContainer
-var _portrait: TextureRect
+var _portrait: Control
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeLabel

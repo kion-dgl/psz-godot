@@ -12,7 +12,7 @@ var _unidentified_weapons: Array = []  # Array of {id, name, rarity}
 
 var _mode_bar_parent: Control  # Parent of mode_label for tab bar rebuilding
 var _tab_row: HBoxContainer    # Persistent tab bar container
-var _portrait: TextureRect
+var _portrait: Control
 
 ## Grinder requirements by weapon rarity
 const GRINDER_FOR_RARITY := {
