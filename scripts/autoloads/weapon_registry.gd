@@ -24,11 +24,23 @@ func _load_all_weapons() -> void:
 
 
 func get_weapon(weapon_id: String):
-	return _weapons.get(weapon_id, null)
+	var result = _weapons.get(weapon_id, null)
+	if result != null:
+		return result
+	# Strip instance suffix (e.g., "ein_blade#2" → "ein_blade")
+	var idx: int = weapon_id.rfind("#")
+	if idx >= 0:
+		return _weapons.get(weapon_id.substr(0, idx), null)
+	return null
 
 
 func has_weapon(weapon_id: String) -> bool:
-	return _weapons.has(weapon_id)
+	if _weapons.has(weapon_id):
+		return true
+	var idx: int = weapon_id.rfind("#")
+	if idx >= 0:
+		return _weapons.has(weapon_id.substr(0, idx))
+	return false
 
 
 func get_weapons_by_type(weapon_type: int) -> Array:

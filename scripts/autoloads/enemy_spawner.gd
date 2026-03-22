@@ -163,6 +163,7 @@ func _create_enemy_instance(enemy_id: String, stat_tier: String, diff_mult: floa
 		"is_rare": is_elite,
 		"status_effects": [],
 		"alive": true,
+		"element": _get_enemy_element(enemy_id),
 		# Aggro system: enemies wander before noticing the player
 		"aggroed": is_boss,  # Bosses always start aggroed
 		"aggro_chance": 0.35 if is_boss else (0.12 if is_elite else 0.07),  # Per-turn chance to notice player
@@ -193,6 +194,21 @@ func _format_enemy_name(enemy_id: String) -> String:
 	if ENEMY_NAME_OVERRIDES.has(enemy_id):
 		return ENEMY_NAME_OVERRIDES[enemy_id]
 	return enemy_id.replace("-", " ").capitalize()
+
+
+## Get the element type for an enemy based on its ID
+func _get_enemy_element(enemy_id: String) -> String:
+	# Machine-type enemies
+	if enemy_id in ["izhirak-s6", "azherowa-b2", "finjer-r", "finjer-g", "finjer-b", "korse", "akorse", "bolix", "goldix"]:
+		return "machine"
+	# Beast-type enemies
+	if enemy_id in ["ghowl", "vulkure", "reyhound", "stagg", "hildegao", "hildegigas", "usanny", "usanimere", "helion", "blaze-helion"]:
+		return "beast"
+	# Dark-type enemies
+	if enemy_id in ["batt", "bullbatt", "rohjade", "rohcrysta", "rumole", "kapantha"]:
+		return "dark"
+	# Native-type enemies (default)
+	return "native"
 
 
 ## Get the enemy pool for an area

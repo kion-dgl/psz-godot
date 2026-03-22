@@ -123,31 +123,43 @@ items = [
     "currency": "Meseta"
   },
   {
-    "item": "Fire Photon",
+    "item": "Im Photon",
     "category": "DEBUG Photons",
     "cost": 1,
     "currency": "Meseta"
   },
   {
-    "item": "Ice Photon",
+    "item": "El Photon",
     "category": "DEBUG Photons",
     "cost": 1,
     "currency": "Meseta"
   },
   {
-    "item": "Poison Photon",
+    "item": "Ban Photon",
     "category": "DEBUG Photons",
     "cost": 1,
     "currency": "Meseta"
   },
   {
-    "item": "Shock Photon",
+    "item": "Ray Photon",
     "category": "DEBUG Photons",
     "cost": 1,
     "currency": "Meseta"
   },
   {
-    "item": "Devil Photon",
+    "item": "Zon Photon",
+    "category": "DEBUG Photons",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Megi Photon",
+    "category": "DEBUG Photons",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Gra Photon",
     "category": "DEBUG Photons",
     "cost": 1,
     "currency": "Meseta"

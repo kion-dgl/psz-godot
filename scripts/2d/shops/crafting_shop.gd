@@ -4,28 +4,30 @@ extends Control
 enum Mode { CRAFT, BOARDS }
 
 const TAB_NAMES := ["Craft", "Boards"]
-const PHOTON_OPTIONS := ["None", "Fire Photon", "Ice Photon", "Poison Photon", "Shock Photon", "Devil Photon"]
-const PHOTON_IDS := ["", "fire_photon", "ice_photon", "poison_photon", "shock_photon", "devil_photon"]
+const PHOTON_OPTIONS := ["Im Photon", "El Photon", "Ban Photon", "Ray Photon", "Zon Photon", "Megi Photon", "Gra Photon"]
+const PHOTON_IDS := ["im_photon", "el_photon", "ban_photon", "ray_photon", "zon_photon", "megi_photon", "gra_photon"]
 
 ## Photon ID → element name + special effect description
 const PHOTON_ELEMENT := {
-	"fire_photon": {"name": "Fire", "effect": "Burn (damage over time)"},
-	"ice_photon": {"name": "Ice", "effect": "Freeze (immobilize)"},
-	"poison_photon": {"name": "Poison", "effect": "Chance to poison"},
-	"shock_photon": {"name": "Shock", "effect": "Chance to stun"},
-	"devil_photon": {"name": "Devil", "effect": "Chance to reduce to 1/4 HP"},
+	"ban_photon": {"name": "Fire", "effect": "Burn (damage over time)"},
+	"ray_photon": {"name": "Ice", "effect": "Freeze (immobilize)"},
+	"zon_photon": {"name": "Lightning", "effect": "Stun (skip turn)"},
+	"megi_photon": {"name": "Dark", "effect": "Devil (reduce to 1/4 HP)"},
+	"gra_photon": {"name": "Light", "effect": "Sleep (skip turns, breaks on hit)"},
 }
 
 ## Enemy type names for attribute display
-const ENEMY_TYPES := ["Native", "Beast", "Machine", "Dark"]
+const ENEMY_TYPES := ["Native", "Beast", "Machine", "Dark", "Hit"]
 
-## Photon → hit attribute % vs enemy types
-const PHOTON_ATTRIBUTES := {
-	"fire_photon": {"Native": 30, "Beast": 30, "Machine": 0, "Dark": 0},
-	"ice_photon": {"Native": 30, "Beast": 30, "Machine": 0, "Dark": 0},
-	"poison_photon": {"Native": 0, "Beast": 0, "Machine": 0, "Dark": 30},
-	"shock_photon": {"Native": 0, "Beast": 0, "Machine": 30, "Dark": 0},
-	"devil_photon": {"Native": 0, "Beast": 0, "Machine": 0, "Dark": 30},
+## Photon → roll bonus ranges for attributes (base roll is 0-15 for each)
+const PHOTON_BONUS := {
+	"im_photon": {},
+	"el_photon": {"hit": 35},
+	"ban_photon": {"native": 25, "beast": 25},
+	"ray_photon": {"native": 25, "beast": 25},
+	"zon_photon": {"machine": 35},
+	"megi_photon": {"dark": 35},
+	"gra_photon": {"dark": 20, "native": 20},
 }
 
 var _mode: int = Mode.CRAFT
@@ -268,15 +270,12 @@ func _craft_selected() -> void:
 			hint_label.text = "Not enough %s!" % mat_name
 			return
 
-	if recipe.has_photon_slot:
-		_selecting_photon = true
-		_photon_index = 0
-		_pending_recipe_index = _selected_index
-		hint_label.text = "Choose a photon element (or None)  Up/Down: Select  Enter: Confirm  Esc: Back"
-		_refresh_display()
-		return
-
-	_execute_craft(recipe, "", entry["is_default"])
+	# All synthesis requires a photon crystal
+	_selecting_photon = true
+	_photon_index = 0
+	_pending_recipe_index = _selected_index
+	hint_label.text = "Choose a photon crystal  Up/Down: Select  Enter: Confirm  Esc: Back"
+	_refresh_display()
 
 
 func _confirm_craft_with_photon() -> void:
@@ -288,10 +287,9 @@ func _confirm_craft_with_photon() -> void:
 	var recipe: RecipeBoardData = entry["recipe"]
 	var photon_id: String = PHOTON_IDS[_photon_index]
 
-	if not photon_id.is_empty():
-		if not Inventory.has_item(photon_id):
-			hint_label.text = "You don't have %s!" % PHOTON_OPTIONS[_photon_index]
-			return
+	if not Inventory.has_item(photon_id):
+		hint_label.text = "You don't have %s!" % PHOTON_OPTIONS[_photon_index]
+		return
 
 	_execute_craft(recipe, photon_id, entry["is_default"])
 	_selecting_photon = false
@@ -309,15 +307,41 @@ func _execute_craft(recipe: RecipeBoardData, photon_id: String, is_default: bool
 	for ingredient in recipe.ingredients:
 		Inventory.remove_item(ingredient["item_id"], int(ingredient["quantity"]))
 
-	if not photon_id.is_empty():
-		Inventory.remove_item(photon_id, 1)
+	# Always consume photon
+	Inventory.remove_item(photon_id, 1)
 
-	Inventory.add_item(recipe.output_weapon_id, 1)
+	# Each crafted weapon gets a unique instance ID
+	var inst_id: String = Inventory.add_weapon(recipe.output_weapon_id)
+	if inst_id.is_empty():
+		hint_label.text = "Inventory full!"
+		return
 
-	if not photon_id.is_empty():
+	# Store element in weapon_elements for display prefix (backwards compat)
+	if PHOTON_ELEMENT.has(photon_id):
 		if not character.has("weapon_elements"):
 			character["weapon_elements"] = {}
-		character["weapon_elements"][recipe.output_weapon_id] = photon_id
+		character["weapon_elements"][inst_id] = photon_id
+
+	# Roll and store weapon stats
+	var rolled: Dictionary = _roll_attributes(photon_id)
+	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
+	var w_rarity: int = int(weapon.rarity) if weapon else 1
+	var element_info: Dictionary = PHOTON_ELEMENT.get(photon_id, {})
+	var element_name: String = element_info.get("name", "").to_lower() if not element_info.is_empty() else ""
+	var element_level: int = _get_element_level(w_rarity) if not element_name.is_empty() else 0
+
+	if not character.has("weapon_stats"):
+		character["weapon_stats"] = {}
+	character["weapon_stats"][inst_id] = {
+		"photon_id": photon_id,
+		"element": element_name,
+		"element_level": element_level,
+		"native_pct": rolled["native"],
+		"beast_pct": rolled["beast"],
+		"machine_pct": rolled["machine"],
+		"dark_pct": rolled["dark"],
+		"hit_pct": rolled["hit"],
+	}
 
 	# Consume rare board recipe (single-use)
 	if not is_default:
@@ -328,13 +352,44 @@ func _execute_craft(recipe: RecipeBoardData, photon_id: String, is_default: bool
 
 	_build_lists()
 	_selected_index = mini(_selected_index, maxi(_craft_recipes.size() - 1, 0))
-	_show_result_popup(recipe.output_weapon_id, photon_id, recipe.craft_cost)
+	_show_result_popup(inst_id, photon_id, recipe.craft_cost)
+
+
+func _roll_attributes(photon_id: String) -> Dictionary:
+	var result := {"native": 0, "beast": 0, "machine": 0, "dark": 0, "hit": 0}
+	var bonus: Dictionary = PHOTON_BONUS.get(photon_id, {})
+	for attr in result:
+		result[attr] = randi_range(0, 15)
+		var bonus_max: int = int(bonus.get(attr, 0))
+		if bonus_max > 0:
+			result[attr] += randi_range(0, bonus_max)
+	return result
+
+
+func _get_element_level(rarity: int) -> int:
+	# Randomly rolled; higher rarity weapons are more likely to get higher levels.
+	# Lv3 chance: rarity 1-3 = 5%, 4-5 = 15%, 6-7 = 30%
+	# Lv2 chance: rarity 1-3 = 20%, 4-5 = 40%, 6-7 = 50%
+	var roll := randf()
+	var lv3_chance := 0.05
+	var lv2_chance := 0.20
+	if rarity >= 6:
+		lv3_chance = 0.30
+		lv2_chance = 0.50
+	elif rarity >= 4:
+		lv3_chance = 0.15
+		lv2_chance = 0.40
+	if roll < lv3_chance:
+		return 3
+	elif roll < lv3_chance + lv2_chance:
+		return 2
+	return 1
 
 
 func _show_result_popup(weapon_id: String, photon_id: String, cost: int) -> void:
 	_showing_result = true
-	var weapon = WeaponRegistry.get_weapon(weapon_id)
-	var weapon_name: String = weapon.name if weapon else weapon_id
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
+	var weapon_name: String = weapon.name if weapon else Inventory.get_base_id(weapon_id)
 
 	# Build popup panel
 	_result_popup = PanelContainer.new()
@@ -395,28 +450,34 @@ func _show_result_popup(weapon_id: String, photon_id: String, cost: int) -> void
 		# Element special effect from photon
 		var photon_info: Dictionary = PHOTON_ELEMENT.get(photon_id, {})
 		if not photon_info.is_empty():
-			_add_spec(vbox, "Element", photon_info["name"], PszStyle.TEXT_SUCCESS)
+			var character_for_stats = CharacterManager.get_active_character()
+			var ws: Dictionary = character_for_stats.get("weapon_stats", {}).get(weapon_id, {}) if character_for_stats else {}
+			var el_level: int = int(ws.get("element_level", 1))
+			_add_spec(vbox, "Element", "%s Lv.%d" % [photon_info["name"], el_level], PszStyle.TEXT_SUCCESS)
 			_add_spec(vbox, "Special", photon_info["effect"], PszStyle.TEXT_WARNING)
 
-		# Hit attributes vs enemy types
+		# Hit attributes vs enemy types (rolled values)
 		var sep2 := HSeparator.new()
 		sep2.add_theme_constant_override("separation", 4)
 		vbox.add_child(sep2)
 
 		var attr_label := Label.new()
-		attr_label.text = "Hit Attributes"
+		attr_label.text = "Attributes"
 		attr_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		attr_label.add_theme_color_override("font_color", PszStyle.TEXT_MUTED)
 		attr_label.add_theme_font_size_override("font_size", 13)
 		vbox.add_child(attr_label)
 
-		var attributes: Dictionary = PHOTON_ATTRIBUTES.get(photon_id, {})
-		for etype in ENEMY_TYPES:
-			var pct: int = int(attributes.get(etype, 0))
+		var character_for_attrs = CharacterManager.get_active_character()
+		var ws2: Dictionary = character_for_attrs.get("weapon_stats", {}).get(weapon_id, {}) if character_for_attrs else {}
+		var attr_keys := ["native", "beast", "machine", "dark", "hit"]
+		var attr_names := ["Native", "Beast", "Machine", "Dark", "Hit"]
+		for i in range(attr_keys.size()):
+			var pct: int = int(ws2.get(attr_keys[i] + "_pct", 0))
 			var color := PszStyle.TEXT_MUTED
 			if pct > 0:
 				color = PszStyle.TEXT_SUCCESS
-			_add_spec(vbox, etype, "%d%%" % pct, color)
+			_add_spec(vbox, attr_names[i], "%d%%" % pct, color)
 
 	# Cost
 	var sep3 := HSeparator.new()
@@ -490,18 +551,14 @@ func _refresh_display() -> void:
 	var selected_pill: Control = null
 
 	if _selecting_photon:
-		vbox.add_child(PszStyle.create_section_header("Select photon element for crafting:"))
+		vbox.add_child(PszStyle.create_section_header("Select photon crystal:"))
 		for i in range(PHOTON_OPTIONS.size()):
 			var option_name: String = PHOTON_OPTIONS[i]
-			var has_it: bool = true
-			if i > 0:
-				has_it = Inventory.has_item(PHOTON_IDS[i])
+			var has_it: bool = Inventory.has_item(PHOTON_IDS[i])
 			var text_color := Color.TRANSPARENT
-			if i > 0 and not has_it:
+			if not has_it:
 				text_color = PszStyle.TEXT_DANGER
-			var count_text: String = ""
-			if i > 0:
-				count_text = "x%d" % Inventory.get_item_count(PHOTON_IDS[i])
+			var count_text: String = "x%d" % Inventory.get_item_count(PHOTON_IDS[i])
 			var pill := PszStyle.create_pill(option_name, i == _photon_index, count_text, text_color)
 			vbox.add_child(pill)
 			if i == _photon_index:

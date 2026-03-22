@@ -4,9 +4,9 @@
 
 [resource]
 script = ExtResource("1")
-id = "ice_photon"
-name = "Ice Photon"
+id = "gra_photon"
+name = "Gra Photon"
 japanese_name = ""
-details = "A photon crystal frozen with piercing cold."
+details = "A photon crystal infused with radiant light."
 rarity = 3
 pso_world_id = 0

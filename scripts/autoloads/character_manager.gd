@@ -82,6 +82,7 @@ func create_character(slot: int, class_id: String, char_name: String, appearance
 		"unidentified_weapons": [],
 		"learned_recipes": [],
 		"weapon_elements": {},
+		"weapon_stats": {},
 		"material_bonuses": {},
 		"combat_buffs": {},
 		"completed_missions": [],
