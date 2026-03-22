@@ -275,8 +275,8 @@ static func create_bar(label_text: String, ratio: float, value_text: String, fil
 ## Create a flush 4:3 NPC portrait TextureRect from portrait image in the GLB directory.
 static func create_npc_portrait(model_path: String) -> TextureRect:
 	var tex_rect := TextureRect.new()
-	tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var base_dir := model_path.get_base_dir()
 	for ext in [".jpeg", ".jpg", ".png"]:
