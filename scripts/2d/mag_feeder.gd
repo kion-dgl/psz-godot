@@ -83,6 +83,10 @@ func _feed_selected() -> void:
 		var new_form = MagManager.get_mag_form(str(result.get("form_after", "")))
 		var new_name: String = new_form.name if new_form else str(result.get("form_after", ""))
 		msg += " Evolved to %s!" % new_name
+		# Refresh 3D mag model on player
+		var player_node = get_tree().get_first_node_in_group("player")
+		if player_node and player_node.has_method("refresh_mag"):
+			player_node.refresh_mag()
 	hint_label.text = msg
 
 	_refresh_feedable()

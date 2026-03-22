@@ -78,8 +78,7 @@ const LEFT_WEAPON_BONE_NAME: String = "040_LArm02"  # Left hand (dual-wield)
 var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
 # Mag attachment config
-const MAG_BONE_NAME: String = "020_Spine"
-const MAG_OFFSET := Vector3(0.0, 0.4, -0.4)  # Behind and above shoulder
+const MAG_OFFSET := Vector3(0.0, 1.2, -0.4)  # Behind character at shoulder height
 var mag_node: Node3D
 
 # State tracking
@@ -310,10 +309,7 @@ func _clear_weapon() -> void:
 
 
 func _setup_mag() -> void:
-	if not skeleton:
-		return
-	var bone_idx := skeleton.find_bone(MAG_BONE_NAME)
-	if bone_idx == -1:
+	if not model:
 		return
 
 	var character = CharacterManager.get_active_character()
@@ -338,26 +334,19 @@ func _setup_mag() -> void:
 	if packed == null:
 		return
 
-	# Create bone attachment
-	var bone_attachment := BoneAttachment3D.new()
-	bone_attachment.name = "MagAttachment"
-	bone_attachment.bone_name = skeleton.get_bone_name(bone_idx)
-	skeleton.add_child(bone_attachment)
-
-	# Instance the mag model
+	# Attach as child of PlayerModel so it follows character rotation
 	var node := packed.instantiate() as Node3D
+	node.name = "MagModel"
 	node.position = MAG_OFFSET
-	bone_attachment.add_child(node)
+	model.add_child(node)
 	mag_node = node
-	print("[Player] Mag '%s' attached to %s (%s)" % [form_id, MAG_BONE_NAME, glb_path])
+	print("[Player] Mag '%s' attached to model (%s)" % [form_id, glb_path])
 
 
 func _clear_mag() -> void:
 	if mag_node and is_instance_valid(mag_node):
-		var parent := mag_node.get_parent()
-		if parent:
-			parent.get_parent().remove_child(parent)
-			parent.queue_free()
+		mag_node.get_parent().remove_child(mag_node)
+		mag_node.queue_free()
 		mag_node = null
 
 

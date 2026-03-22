@@ -99,6 +99,14 @@ func _drop_selected() -> void:
 		return
 	var item: Dictionary = _items[_selected_index]
 	var item_id: String = item.get("id", "")
+	# Prevent dropping equipped items
+	var character = CharacterManager.get_active_character()
+	if character:
+		var equip: Dictionary = character.get("equipment", {})
+		for slot_key in equip:
+			if str(equip.get(slot_key, "")) == item_id:
+				hint_label.text = "Unequip first!"
+				return
 	Inventory.remove_item(item_id, 1)
 	hint_label.text = "Dropped %s." % item_id
 	_refresh_items()
@@ -224,7 +232,9 @@ func _refresh_display() -> void:
 
 			# Color coding for equippability
 			var text_color := Color.TRANSPARENT
-			if is_unresolved:
+			if item_id in equipped_ids:
+				text_color = PszStyle.TEXT_MUTED
+			elif is_unresolved:
 				text_color = PszStyle.TEXT_DANGER
 			elif weapon and not class_type_race.is_empty():
 				if not weapon.can_be_used_by(class_type_race):
