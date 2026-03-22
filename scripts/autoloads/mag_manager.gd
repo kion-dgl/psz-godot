@@ -71,7 +71,6 @@ const MAG_MODEL_MAP := {
 	"radam": "res://assets/mags/wmae5_7_1.glb",
 	"arkharz": "res://assets/mags/wmae5_8_1.glb",
 }
-const MAG_GLB_SCALE := 0.09  # Same scale as PSO weapon models
 
 ## All mag form data keyed by id, loaded from .tres files
 var _mag_forms: Dictionary = {}
