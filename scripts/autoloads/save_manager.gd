@@ -17,7 +17,7 @@ func save_game() -> void:
 	CharacterManager.sync_inventory_to_active()
 
 	var save_data := {
-		"version": 4,
+		"version": 5,
 		"characters": CharacterManager.get_save_data(),
 		"shared_storage": GameState.shared_storage.duplicate(),
 		"stored_meseta": GameState.stored_meseta,
@@ -76,6 +76,10 @@ func load_game() -> void:
 		var missions_data: Array = save_data.get("completed_missions", [])
 		CharacterManager.migrate_global_missions(missions_data)
 
+	# Migrate v4 weapon_elements to weapon_stats with new photon IDs
+	if version < 5:
+		_migrate_v4_to_v5(characters)
+
 	# Load shared storage
 	GameState.shared_storage = save_data.get("shared_storage", []).duplicate()
 	GameState.stored_meseta = int(save_data.get("stored_meseta", 0))
@@ -99,3 +103,51 @@ func delete_save() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(SAVE_PATH)
 		print("[SaveManager] Save file deleted")
+
+
+## Migrate v4 saves: map old photon IDs to new ones and create weapon_stats
+func _migrate_v4_to_v5(characters: Array) -> void:
+	var photon_map := {
+		"fire_photon": "ban_photon",
+		"ice_photon": "ray_photon",
+		"poison_photon": "gra_photon",
+		"shock_photon": "zon_photon",
+		"devil_photon": "megi_photon",
+	}
+	var element_map := {
+		"ban_photon": "fire",
+		"ray_photon": "ice",
+		"zon_photon": "lightning",
+		"megi_photon": "dark",
+		"gra_photon": "light",
+	}
+
+	for character in characters:
+		if character == null:
+			continue
+		if not character.has("weapon_stats"):
+			character["weapon_stats"] = {}
+
+		var weapon_elements: Dictionary = character.get("weapon_elements", {})
+		var new_elements: Dictionary = {}
+		for weapon_id in weapon_elements:
+			var old_photon: String = str(weapon_elements[weapon_id])
+			var new_photon: String = photon_map.get(old_photon, old_photon)
+			new_elements[weapon_id] = new_photon
+
+			# Create weapon_stats entry if it doesn't exist
+			if not character["weapon_stats"].has(weapon_id):
+				var element: String = element_map.get(new_photon, "")
+				character["weapon_stats"][weapon_id] = {
+					"photon_id": new_photon,
+					"element": element,
+					"element_level": 1,
+					"native_pct": 0,
+					"beast_pct": 0,
+					"machine_pct": 0,
+					"dark_pct": 0,
+					"hit_pct": 0,
+				}
+
+		character["weapon_elements"] = new_elements
+	print("[SaveManager] Migrated v4→v5: weapon_elements → weapon_stats")

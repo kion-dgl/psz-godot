@@ -143,12 +143,13 @@ func test_inventory() -> void:
 	assert_true(Inventory.has_item("monomate"), "Has monomate")
 
 	assert_true(Inventory.add_item("saber", 1), "Add saber")
-	assert_eq(Inventory.get_item_count("saber"), 1, "Saber count = 1")
-	# Per-slot weapons: can add another if slots available
+	assert_true(Inventory.has_item("saber"), "First saber stored as 'saber'")
+	# Per-slot weapons: each copy gets a unique instance ID (saber, saber#N)
+	var slots_before: int = Inventory.get_total_slots()
 	assert_true(Inventory.can_add_item("saber"), "Can add second saber (per-slot)")
-	assert_true(Inventory.add_item("saber", 1), "Add second saber")
-	assert_eq(Inventory.get_item_count("saber"), 2, "Saber count = 2")
-	Inventory.remove_item("saber", 1)  # remove extra for rest of tests
+	assert_true(Inventory.add_item("saber", 1), "Add second saber (gets instance suffix)")
+	assert_eq(Inventory.get_total_slots(), slots_before + 1, "Second saber uses 1 additional slot")
+	Inventory.remove_item("saber", 1)  # remove first saber for rest of tests
 
 	assert_true(Inventory.remove_item("monomate", 1), "Remove 1 monomate")
 	assert_eq(Inventory.get_item_count("monomate"), 2, "Monomate count = 2")

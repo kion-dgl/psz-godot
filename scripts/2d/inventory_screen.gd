@@ -330,6 +330,25 @@ func _refresh_detail() -> void:
 			if not weapon.can_be_used_by(class_type_race):
 				vbox.add_child(PszStyle.detail_label("[Cannot equip — wrong class]", PszStyle.TEXT_DANGER))
 
+		# Weapon stats (photon attributes) — always shown, defaults to 0%
+		if character2:
+			var ws: Dictionary = character2.get("weapon_stats", {}).get(item_id, {})
+			var el: String = str(ws.get("element", ""))
+			var el_level: int = int(ws.get("element_level", 0))
+			if not el.is_empty() and el_level > 0:
+				vbox.add_child(PszStyle.detail_label("Element: %s Lv.%d" % [el.capitalize(), el_level], PszStyle.TEXT_SUCCESS))
+				var specials := {"fire": "Burn", "ice": "Freeze", "lightning": "Stun", "dark": "Devil", "light": "Sleep"}
+				var special: String = specials.get(el, "")
+				if not special.is_empty():
+					var chance: int = 10 + 10 * el_level
+					vbox.add_child(PszStyle.detail_label("Special: %s (%d%%)" % [special, chance], PszStyle.TEXT_WARNING))
+			var attr_keys := ["native_pct", "beast_pct", "machine_pct", "dark_pct", "hit_pct"]
+			var attr_names := ["Native", "Beast", "Machine", "Dark", "Hit"]
+			for ai in range(attr_keys.size()):
+				var pct: int = int(ws.get(attr_keys[ai], 0))
+				var attr_color := PszStyle.TEXT_SUCCESS if pct > 0 else PszStyle.TEXT_MUTED
+				vbox.add_child(PszStyle.detail_label("%s: %d%%" % [attr_names[ai], pct], attr_color))
+
 	# Armor details
 	var armor = ArmorRegistry.get_armor(item_id)
 	if armor == null:

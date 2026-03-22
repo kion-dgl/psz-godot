@@ -267,7 +267,7 @@ func _open_pa_menu() -> void:
 		_refresh_display()
 		return
 
-	var weapon = WeaponRegistry.get_weapon(weapon_id)
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
 	if weapon == null:
 		_add_log("Unknown weapon!")
 		_refresh_display()

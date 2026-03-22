@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="MaterialData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/material_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "grinder_base_b"
+name = "Grinder Base B"
+japanese_name = ""
+details = "A quality grinding component for intermediate synthesis."
+rarity = 4
+pso_world_id = 0

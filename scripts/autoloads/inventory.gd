@@ -11,10 +11,38 @@ var _items: Dictionary = {}
 ## Separate key storage (field-scoped, doesn't count toward capacity)
 var _keys: Dictionary = {}
 
+## Counter for generating unique weapon instance IDs
+var _instance_counter: int = 0
+
 ## Signals
 signal item_added(item_id: String, quantity: int, total: int)
 signal item_removed(item_id: String, quantity: int, remaining: int)
 signal inventory_full()
+
+
+## Extract base item ID from an instance ID (e.g., "ein_blade#3" → "ein_blade")
+func get_base_id(item_id: String) -> String:
+	var idx: int = item_id.rfind("#")
+	if idx >= 0:
+		return item_id.substr(0, idx)
+	return item_id
+
+
+## Add a weapon to inventory with a unique instance ID.
+## Returns the instance ID, or "" if inventory is full.
+func add_weapon(base_id: String) -> String:
+	if capacity > 0 and get_total_slots() >= capacity:
+		inventory_full.emit()
+		return ""
+	var inst_id: String = base_id
+	while _items.has(inst_id):
+		_instance_counter += 1
+		inst_id = "%s#%d" % [base_id, _instance_counter]
+	_items[inst_id] = 1
+	var info = _lookup_item(inst_id)
+	item_added.emit(inst_id, 1, 1)
+	print("[Inventory] Added 1x ", info.name, " (", inst_id, ")")
+	return inst_id
 
 
 ## Add an item to inventory by ID
@@ -27,16 +55,21 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 	var item_name: String = info.name
 
 	if _is_per_slot(item_id):
-		# Per-slot items (weapons, armor, units, mags): each copy takes 1 slot
+		# Per-slot items: each copy gets a unique instance ID
 		var available: int = capacity - get_total_slots() if capacity > 0 else quantity
 		var max_add: int = mini(quantity, available)
 		if max_add <= 0:
 			inventory_full.emit()
 			return false
-		_items[item_id] = int(_items.get(item_id, 0)) + max_add
-		var new_total: int = int(_items[item_id])
-		item_added.emit(item_id, max_add, new_total)
-		print("[Inventory] Added ", max_add, "x ", item_name, " (total: ", new_total, ")")
+		var base_id: String = get_base_id(item_id)
+		for _i in range(max_add):
+			var inst_id: String = base_id
+			while _items.has(inst_id):
+				_instance_counter += 1
+				inst_id = "%s#%d" % [base_id, _instance_counter]
+			_items[inst_id] = 1
+		print("[Inventory] Added ", max_add, "x ", item_name)
+		item_added.emit(item_id, max_add, max_add)
 		return true
 	else:
 		# Stackable items: 1 stack = 1 slot, limited by max_stack
@@ -141,16 +174,17 @@ func get_total_slots() -> int:
 
 ## Check if an item is per-slot (each copy takes 1 inventory slot)
 func _is_per_slot(item_id: String) -> bool:
-	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
-	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
+	var base_id: String = get_base_id(item_id)
+	var norm_id: String = base_id.replace("-", "_").replace("/", "_")
+	if WeaponRegistry.get_weapon(base_id) or WeaponRegistry.get_weapon(norm_id):
 		return true
-	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
+	if ArmorRegistry.get_armor(base_id) or ArmorRegistry.get_armor(norm_id):
 		return true
-	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
+	if UnitRegistry.get_unit(base_id) or UnitRegistry.get_unit(norm_id):
 		return true
-	if ResourceLoader.exists("res://data/mags/%s.tres" % item_id):
+	if ResourceLoader.exists("res://data/mags/%s.tres" % base_id):
 		return true
-	if item_id.begins_with("disk_"):
+	if base_id.begins_with("disk_"):
 		return true
 	return false
 
@@ -181,55 +215,73 @@ func use_item(item_id: String) -> bool:
 
 ## Lookup item info from all registries. Returns {name: String, max_stack: int}
 func _lookup_item(item_id: String) -> Dictionary:
+	var base_id: String = get_base_id(item_id)
+
 	# ItemRegistry (general items)
-	var item_data = ItemRegistry.get_item(item_id)
+	var item_data = ItemRegistry.get_item(base_id)
 	if item_data:
 		return {"name": item_data.name, "max_stack": item_data.max_stack if item_data.stackable else 1}
 
 	# ConsumableRegistry
-	var consumable = ConsumableRegistry.get_consumable(item_id)
+	var consumable = ConsumableRegistry.get_consumable(base_id)
 	if consumable:
 		var ms = int(consumable.max_stack) if int(consumable.max_stack) > 0 else 10
 		return {"name": consumable.name, "max_stack": ms}
 
-	# WeaponRegistry (non-stackable)
-	var weapon = WeaponRegistry.get_weapon(item_id)
+	# WeaponRegistry (non-stackable) — use base_id for registry, item_id for per-instance data
+	var weapon = WeaponRegistry.get_weapon(base_id)
+	if weapon == null:
+		var norm_base: String = base_id.replace("-", "_").replace("/", "_")
+		weapon = WeaponRegistry.get_weapon(norm_base)
 	if weapon:
-		return {"name": weapon.name, "max_stack": 1}
+		var display_name: String = weapon.name
+		var character = CharacterManager.get_active_character()
+		if character:
+			var photon_id: String = character.get("weapon_elements", {}).get(item_id, "")
+			if not photon_id.is_empty():
+				var element_prefix: String = _photon_display_name(photon_id)
+				if not element_prefix.is_empty():
+					display_name = element_prefix + " " + display_name
+		return {"name": display_name, "max_stack": 1}
 
 	# ArmorRegistry (non-stackable)
-	var armor = ArmorRegistry.get_armor(item_id)
+	var armor = ArmorRegistry.get_armor(base_id)
 	if armor:
 		return {"name": armor.name, "max_stack": 1}
 
 	# UnitRegistry (non-stackable)
-	var unit = UnitRegistry.get_unit(item_id)
+	var unit = UnitRegistry.get_unit(base_id)
 	if unit:
 		return {"name": unit.name, "max_stack": 1}
 
 	# MaterialRegistry (stackable materials)
-	var material = MaterialRegistry.get_material(item_id)
+	var material = MaterialRegistry.get_material(base_id)
 	if material:
 		return {"name": material.name, "max_stack": 99}
 
 	# ModifierRegistry (grinders, elements)
-	var modifier = ModifierRegistry.get_modifier(item_id)
+	var modifier = ModifierRegistry.get_modifier(base_id)
 	if modifier:
 		return {"name": modifier.name, "max_stack": 99}
 
+	# RecipeRegistry (recipe boards, stackable)
+	var recipe = RecipeRegistry.get_recipe(base_id)
+	if recipe:
+		return {"name": recipe.name, "max_stack": 99}
+
 	# Technique disks (per-slot, format: disk_<tech_id>_<level>)
-	if item_id.begins_with("disk_"):
-		var parts: PackedStringArray = item_id.split("_", false, 2)
+	if base_id.begins_with("disk_"):
+		var parts: PackedStringArray = base_id.split("_", false, 2)
 		if parts.size() >= 3:
 			var tech_id: String = parts[1]
 			var level: int = int(parts[2])
 			var tech: Dictionary = TechniqueManager.TECHNIQUES.get(tech_id, {})
 			var tech_name: String = str(tech.get("name", tech_id))
 			return {"name": "Disk: %s Lv.%d" % [tech_name, level], "max_stack": 1}
-		return {"name": item_id, "max_stack": 1}
+		return {"name": base_id, "max_stack": 1}
 
 	# Mags (load directly, no registry)
-	var mag_path := "res://data/mags/%s.tres" % item_id
+	var mag_path := "res://data/mags/%s.tres" % base_id
 	if ResourceLoader.exists(mag_path):
 		var mag = load(mag_path)
 		if mag:
@@ -270,3 +322,20 @@ func remove_key(key_id: String) -> void:
 			_keys.erase(key_id)
 		else:
 			_keys[key_id] = remaining
+
+
+## Get display name prefix for a photon element
+func _photon_display_name(photon_id: String) -> String:
+	match photon_id:
+		"ban_photon": return "Ban"
+		"ray_photon": return "Ray"
+		"zon_photon": return "Zon"
+		"megi_photon": return "Megi"
+		"gra_photon": return "Gra"
+		# Legacy fallback
+		"fire_photon": return "Fire"
+		"ice_photon": return "Ice"
+		"poison_photon": return "Poison"
+		"shock_photon": return "Shock"
+		"devil_photon": return "Devil"
+	return ""

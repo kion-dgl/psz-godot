@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="RecipeBoardData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/recipe_board_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "partisan_board"
+name = "Partisan Board"
+details = "A basic synthesis board for crafting a Partisan."
+rarity = 2
+output_weapon_id = "partisan"
+ingredients = [{"item_id": "carlian", "quantity": 2}, {"item_id": "acenaline", "quantity": 1}]
+craft_cost = 200
+has_photon_slot = true
+is_default = true

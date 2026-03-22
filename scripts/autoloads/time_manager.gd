@@ -150,7 +150,7 @@ func show_hud(visible: bool = true) -> void:
 
 
 func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: DirectionalLight3D) -> void:
-	_hud_layer.visible = true
+	_hud_layer.visible = DebugConfig.show_time_room
 	_tint_layer.visible = true
 	var cfg: Dictionary = get_lighting()
 

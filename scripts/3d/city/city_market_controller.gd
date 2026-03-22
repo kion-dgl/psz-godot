@@ -45,9 +45,9 @@ func _ready() -> void:
 		"res://scenes/2d/shops/weapon_shop.tscn"
 	)
 	_add_npc(
-		"TekkerNPC", Vector3(6.25, 0, 23.45), -0.7533,
+		"GrindShopNPC", Vector3(6.25, 0, 23.45), -0.7533,
 		"res://assets/npcs/np_004_00_0/np_004_00_0.glb",
-		"Tekker",
+		"Grind Shop",
 		"res://scenes/2d/shops/tekker.tscn"
 	)
 
