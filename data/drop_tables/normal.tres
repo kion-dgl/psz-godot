@@ -47,7 +47,8 @@ area_drops = {
       "Gun Slash",
       "Hero/Swift",
       "Peparian",
-      "Grinder Base C"
+      "Grinder Base C",
+      "Fire Photon"
     ],
     "Helion": [
       "Chrome Sword",
@@ -57,7 +58,7 @@ area_drops = {
       "Rookie/Guard",
       "Peparian",
       "Grinder Base C",
-      "Im-Photon"
+      "Fire Photon"
     ],
     "Blaze Helion": [
       "Chrome Sword",
@@ -69,7 +70,8 @@ area_drops = {
       "Peparian",
       "Grinder Base C",
       "Saber Board",
-      "Im-Photon"
+      "Ein Blade Board",
+      "Fire Photon"
     ],
     "Rappy": [
       "PA save Lv1",
@@ -93,7 +95,8 @@ area_drops = {
       "Ein Rocket",
       "Hero/Hit",
       "Slaterian",
-      "Grinder Base B"
+      "Grinder Base B",
+      "Ice Photon"
     ],
     "Reyhound": [
       "Chrome Rod",
@@ -116,7 +119,7 @@ area_drops = {
       "Rookie/HP",
       "Slaterian",
       "Grinder Base B",
-      "Im-Photon"
+      "Ice Photon"
     ],
     "Hildegigas": [
       "All Resist Lv3",
@@ -127,7 +130,8 @@ area_drops = {
       "Twin Assault",
       "Slaterian",
       "Grinder Base B",
-      "Im-Photon"
+      "Ein Ripper Board",
+      "Ice Photon"
     ],
     "Rappy": [
       "PA save Lv1",
@@ -164,14 +168,16 @@ area_drops = {
       "Hero/Guard",
       "Ray Duplex",
       "Peparian",
-      "Grinder Base C"
+      "Grinder Base C",
+      "Poison Photon"
     ],
     "Pelcatraz": [
       "Ray Staff",
       "Ray Wandstick",
       "Rookie/Swift",
       "Peparian",
-      "Grinder Base C"
+      "Grinder Base C",
+      "Poison Photon"
     ],
     "Pelcatobur": [
       "Claymore",
@@ -179,7 +185,9 @@ area_drops = {
       "Ray Staff",
       "Rookie/Hit",
       "Peparian",
-      "Grinder Base C"
+      "Grinder Base C",
+      "Ein Arm Board",
+      "Poison Photon"
     ],
     "Rappy": [
       "PA save Lv1",
@@ -214,15 +222,15 @@ area_drops = {
       "Tatami Mat",
       "Peparian",
       "Slaterian",
-      "Grinder Base A"
+      "Grinder Base A",
+      "Shock Photon"
     ],
     "Izhirak-S6": [
       "Chrome Gun",
       "Clear Pulse",
       "Parpua",
       "Slaterian",
-      "Kerseline",
-      "El-Photon"
+      "Kerseline"
     ],
     "Azherowa-B2": [
       "Deo Rifle",
@@ -231,7 +239,7 @@ area_drops = {
       "Peparian",
       "Slaterian",
       "Grinder Base A",
-      "El-Photon"
+      "Shock Photon"
     ],
     "Froutang": [
       "Ace/PP",
@@ -241,7 +249,8 @@ area_drops = {
       "Stag Cutlery",
       "Peparian",
       "Slaterian",
-      "Grinder Base A"
+      "Grinder Base A",
+      "Shock Photon"
     ],
     "Frunaked": [
       "Ace/PP",
@@ -251,7 +260,9 @@ area_drops = {
       "Stag Cutlery",
       "Peparian",
       "Slaterian",
-      "Grinder Base A"
+      "Grinder Base A",
+      "Ein Cutter Board",
+      "Shock Photon"
     ],
     "Ar Rappy": [
       "PA save Lv1",
@@ -278,7 +289,8 @@ area_drops = {
       "Clear Bangle",
       "Witch's Broom",
       "Slaterian",
-      "Grinder Base B"
+      "Grinder Base B",
+      "Devil Photon"
     ],
     "Rumole": [
       "Deo Ripper",
@@ -302,7 +314,7 @@ area_drops = {
       "Slicer",
       "Slaterian",
       "Grinder Base B",
-      "Di-Photon"
+      "Devil Photon"
     ],
     "Rohcrysta": [
       "Ace/Guard",
@@ -313,7 +325,8 @@ area_drops = {
       "Slicer",
       "Slaterian",
       "Grinder Base B",
-      "Di-Photon"
+      "Ein Pistol Board",
+      "Devil Photon"
     ],
     "Ar Rappy": [
       "PA save Lv1",
@@ -333,8 +346,7 @@ area_drops = {
       "Deo Twins",
       "Sonic Laser",
       "Slaterian",
-      "Kerseline",
-      "El-Photon"
+      "Kerseline"
     ],
     "Akorse": [
       "Magi Processor",
@@ -343,7 +355,8 @@ area_drops = {
       "Peparian",
       "Slaterian",
       "Grinder Base A",
-      "El-Photon"
+      "Ein Rifle Board",
+      "Shock Photon"
     ],
     "Finjer R": [
       "Chrome Sword",
@@ -351,7 +364,7 @@ area_drops = {
       "Orgaclaw",
       "Slaterian",
       "Kerseline",
-      "El-Photon"
+      "Shock Photon"
     ],
     "Finjer G": [
       "Chrome Carbine",
@@ -359,7 +372,7 @@ area_drops = {
       "Deo Bazooka",
       "Slaterian",
       "Kerseline",
-      "El-Photon"
+      "Shock Photon"
     ],
     "Finjer B": [
       "Chrome Spear",
@@ -367,7 +380,7 @@ area_drops = {
       "Tonfa",
       "Slaterian",
       "Kerseline",
-      "El-Photon"
+      "Shock Photon"
     ],
     "Rab Rappy": [
       "PA save Lv1",
@@ -420,7 +433,8 @@ area_drops = {
       "Ein Rocket",
       "Hero/Hit",
       "Slaterian",
-      "Grinder Base B"
+      "Grinder Base B",
+      "Ice Photon"
     ],
     "Porel": [
       "Cane",
@@ -456,7 +470,8 @@ area_drops = {
       "Tatami Mat",
       "Peparian",
       "Slaterian",
-      "Grinder Base A"
+      "Grinder Base A",
+      "Shock Photon"
     ],
     "Batt": [
       "Bright Moon",
@@ -470,7 +485,8 @@ area_drops = {
       "Clear Bangle",
       "Witch's Broom",
       "Slaterian",
-      "Grinder Base B"
+      "Grinder Base B",
+      "Devil Photon"
     ],
     "Rappy": [
       "PA save Lv1",
@@ -519,7 +535,8 @@ area_drops = {
       "Gun Slash",
       "Hero/Swift",
       "Peparian",
-      "Grinder Base C"
+      "Grinder Base C",
+      "Fire Photon"
     ],
     "Reyhound": [
       "Chrome Rod",
@@ -546,7 +563,8 @@ area_drops = {
       "Hero/Guard",
       "Ray Duplex",
       "Peparian",
-      "Grinder Base C"
+      "Grinder Base C",
+      "Poison Photon"
     ],
     "Rumole": [
       "Deo Ripper",
@@ -570,7 +588,7 @@ area_drops = {
       "Rookie/Guard",
       "Peparian",
       "Grinder Base C",
-      "Im-Photon"
+      "Fire Photon"
     ],
     "Blaze Helion": [
       "Chrome Sword",
@@ -582,7 +600,8 @@ area_drops = {
       "Peparian",
       "Grinder Base C",
       "Saber Board",
-      "Im-Photon"
+      "Ein Blade Board",
+      "Fire Photon"
     ],
     "Hildegao": [
       "Deo Ripper",
@@ -591,7 +610,7 @@ area_drops = {
       "Rookie/HP",
       "Slaterian",
       "Grinder Base B",
-      "Im-Photon"
+      "Ice Photon"
     ],
     "Hildegigas": [
       "All Resist Lv3",
@@ -602,14 +621,16 @@ area_drops = {
       "Twin Assault",
       "Slaterian",
       "Grinder Base B",
-      "Im-Photon"
+      "Ein Ripper Board",
+      "Ice Photon"
     ],
     "Pelcatraz": [
       "Ray Staff",
       "Ray Wandstick",
       "Rookie/Swift",
       "Peparian",
-      "Grinder Base C"
+      "Grinder Base C",
+      "Poison Photon"
     ],
     "Pelcatobur": [
       "Claymore",
@@ -617,7 +638,9 @@ area_drops = {
       "Ray Staff",
       "Rookie/Hit",
       "Peparian",
-      "Grinder Base C"
+      "Grinder Base C",
+      "Ein Arm Board",
+      "Poison Photon"
     ],
     "Froutang": [
       "Ace/PP",
@@ -627,7 +650,8 @@ area_drops = {
       "Stag Cutlery",
       "Peparian",
       "Slaterian",
-      "Grinder Base A"
+      "Grinder Base A",
+      "Shock Photon"
     ],
     "Frunaked": [
       "Ace/PP",
@@ -637,7 +661,9 @@ area_drops = {
       "Stag Cutlery",
       "Peparian",
       "Slaterian",
-      "Grinder Base A"
+      "Grinder Base A",
+      "Ein Cutter Board",
+      "Shock Photon"
     ],
     "Rohjade": [
       "Ace/Swift",
@@ -647,7 +673,7 @@ area_drops = {
       "Slicer",
       "Slaterian",
       "Grinder Base B",
-      "Di-Photon"
+      "Devil Photon"
     ],
     "Rohcrysta": [
       "Ace/Guard",
@@ -658,15 +684,15 @@ area_drops = {
       "Slicer",
       "Slaterian",
       "Grinder Base B",
-      "Di-Photon"
+      "Ein Pistol Board",
+      "Devil Photon"
     ],
     "Korse": [
       "Clear Knife",
       "Deo Twins",
       "Sonic Laser",
       "Slaterian",
-      "Kerseline",
-      "El-Photon"
+      "Kerseline"
     ],
     "Akorse": [
       "Magi Processor",
@@ -675,15 +701,15 @@ area_drops = {
       "Peparian",
       "Slaterian",
       "Grinder Base A",
-      "El-Photon"
+      "Ein Rifle Board",
+      "Shock Photon"
     ],
     "Izhirak-S6": [
       "Chrome Gun",
       "Clear Pulse",
       "Parpua",
       "Slaterian",
-      "Kerseline",
-      "El-Photon"
+      "Kerseline"
     ],
     "Azherowa-B2": [
       "Deo Rifle",
@@ -692,7 +718,7 @@ area_drops = {
       "Peparian",
       "Slaterian",
       "Grinder Base A",
-      "El-Photon"
+      "Shock Photon"
     ],
     "Finjer R": [
       "Chrome Sword",
@@ -700,7 +726,7 @@ area_drops = {
       "Orgaclaw",
       "Slaterian",
       "Kerseline",
-      "El-Photon"
+      "Shock Photon"
     ],
     "Finjer G": [
       "Chrome Carbine",
@@ -708,7 +734,7 @@ area_drops = {
       "Deo Bazooka",
       "Slaterian",
       "Kerseline",
-      "El-Photon"
+      "Shock Photon"
     ],
     "Finjer B": [
       "Chrome Spear",
@@ -716,7 +742,7 @@ area_drops = {
       "Tonfa",
       "Slaterian",
       "Kerseline",
-      "El-Photon"
+      "Shock Photon"
     ]
   }
 }

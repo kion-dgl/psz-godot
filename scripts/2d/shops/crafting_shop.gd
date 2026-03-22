@@ -1,20 +1,43 @@
 extends Control
-## Crafting Shop — learn synthesis boards and craft weapons.
+## Synthesis Shop — craft weapons from materials, learn rare boards.
 
-enum Mode { LEARN, CRAFT }
+enum Mode { CRAFT, BOARDS }
 
-const TAB_NAMES := ["Learn Board", "Craft"]
-const PHOTON_OPTIONS := ["None", "El-Photon", "Im-Photon", "Di-Photon"]
-const PHOTON_IDS := ["", "el_photon", "im_photon", "di_photon"]
+const TAB_NAMES := ["Craft", "Boards"]
+const PHOTON_OPTIONS := ["None", "Fire Photon", "Ice Photon", "Poison Photon", "Shock Photon", "Devil Photon"]
+const PHOTON_IDS := ["", "fire_photon", "ice_photon", "poison_photon", "shock_photon", "devil_photon"]
 
-var _mode: int = Mode.LEARN
+## Photon ID → element name + special effect description
+const PHOTON_ELEMENT := {
+	"fire_photon": {"name": "Fire", "effect": "Burn (damage over time)"},
+	"ice_photon": {"name": "Ice", "effect": "Freeze (immobilize)"},
+	"poison_photon": {"name": "Poison", "effect": "Chance to poison"},
+	"shock_photon": {"name": "Shock", "effect": "Chance to stun"},
+	"devil_photon": {"name": "Devil", "effect": "Chance to reduce to 1/4 HP"},
+}
+
+## Enemy type names for attribute display
+const ENEMY_TYPES := ["Native", "Beast", "Machine", "Dark"]
+
+## Photon → hit attribute % vs enemy types
+const PHOTON_ATTRIBUTES := {
+	"fire_photon": {"Native": 30, "Beast": 30, "Machine": 0, "Dark": 0},
+	"ice_photon": {"Native": 30, "Beast": 30, "Machine": 0, "Dark": 0},
+	"poison_photon": {"Native": 0, "Beast": 0, "Machine": 0, "Dark": 30},
+	"shock_photon": {"Native": 0, "Beast": 0, "Machine": 30, "Dark": 0},
+	"devil_photon": {"Native": 0, "Beast": 0, "Machine": 0, "Dark": 30},
+}
+
+var _mode: int = Mode.CRAFT
 var _selected_index: int = 0
 var _board_items: Array = []       # Array of {id, name, rarity}
-var _learned_recipes: Array = []   # Array of RecipeBoardData
+var _craft_recipes: Array = []     # Array of {recipe, is_default, weapon_type, weapon_type_name, rarity, stars}
 
 var _selecting_photon: bool = false
 var _photon_index: int = 0
 var _pending_recipe_index: int = -1
+var _showing_result: bool = false
+var _result_popup: PanelContainer
 
 var _mode_bar_parent: Control
 var _tab_row: HBoxContainer
@@ -82,18 +105,18 @@ func _setup_portrait() -> void:
 
 func _build_lists() -> void:
 	_board_items.clear()
-	_learned_recipes.clear()
+	_craft_recipes.clear()
 
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
-	# Find recipe boards in inventory
+	# Find non-default recipe boards in inventory
 	var all_items: Array = Inventory.get_all_items()
 	for item in all_items:
 		var item_id: String = item.get("id", "")
 		var recipe = RecipeRegistry.get_recipe(item_id)
-		if recipe:
+		if recipe and not recipe.is_default:
 			_board_items.append({
 				"id": recipe.id,
 				"name": recipe.name,
@@ -101,15 +124,51 @@ func _build_lists() -> void:
 				"quantity": item.get("quantity", 1),
 			})
 
-	# Get learned recipes
+	# Build craft list with weapon metadata for sorting
+	for recipe in RecipeRegistry.get_all_recipes():
+		if recipe.is_default:
+			_add_craft_entry(recipe, true)
+
+	# Learned rare recipes
 	var learned_ids: Array = character.get("learned_recipes", [])
 	for recipe_id in learned_ids:
 		var recipe = RecipeRegistry.get_recipe(recipe_id)
-		if recipe:
-			_learned_recipes.append(recipe)
+		if recipe and not recipe.is_default:
+			_add_craft_entry(recipe, false)
+
+	# Sort: default first, then by weapon_type, then by rarity
+	_craft_recipes.sort_custom(func(a, b):
+		if a["is_default"] != b["is_default"]:
+			return a["is_default"]  # defaults first
+		if a["weapon_type"] != b["weapon_type"]:
+			return a["weapon_type"] < b["weapon_type"]
+		return a["rarity"] < b["rarity"]
+	)
+
+
+func _add_craft_entry(recipe: RecipeBoardData, is_default: bool) -> void:
+	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
+	var wtype: int = int(weapon.weapon_type) if weapon else 99
+	var wtype_name: String = weapon.get_weapon_type_name() if weapon else ""
+	var w_rarity: int = int(weapon.rarity) if weapon else int(recipe.rarity)
+	var stars: String = weapon.get_rarity_string() if weapon else ""
+	_craft_recipes.append({
+		"recipe": recipe,
+		"is_default": is_default,
+		"weapon_type": wtype,
+		"weapon_type_name": wtype_name,
+		"rarity": w_rarity,
+		"stars": stars,
+	})
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _showing_result:
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
+			_dismiss_result_popup()
+			get_viewport().set_input_as_handled()
+		return
+
 	if _selecting_photon:
 		_handle_photon_input(event)
 		return
@@ -118,25 +177,25 @@ func _unhandled_input(event: InputEvent) -> void:
 		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
-		_mode = Mode.CRAFT if _mode == Mode.LEARN else Mode.LEARN
+		_mode = Mode.BOARDS if _mode == Mode.CRAFT else Mode.CRAFT
 		_selected_index = 0
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
-		var max_items: int = _board_items.size() if _mode == Mode.LEARN else _learned_recipes.size()
+		var max_items: int = _craft_recipes.size() if _mode == Mode.CRAFT else _board_items.size()
 		_selected_index = wrapi(_selected_index - 1, 0, maxi(max_items, 1))
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
-		var max_items: int = _board_items.size() if _mode == Mode.LEARN else _learned_recipes.size()
+		var max_items: int = _craft_recipes.size() if _mode == Mode.CRAFT else _board_items.size()
 		_selected_index = wrapi(_selected_index + 1, 0, maxi(max_items, 1))
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		if _mode == Mode.LEARN:
-			_learn_selected()
-		else:
+		if _mode == Mode.CRAFT:
 			_craft_selected()
+		else:
+			_learn_selected()
 		get_viewport().set_input_as_handled()
 
 
@@ -171,16 +230,13 @@ func _learn_selected() -> void:
 	var board_info: Dictionary = _board_items[_selected_index]
 	var board_id: String = board_info["id"]
 
-	# Check if already learned
 	var learned: Array = character.get("learned_recipes", [])
 	if learned.has(board_id):
 		hint_label.text = "Already learned this recipe!"
 		return
 
-	# Consume board from inventory
 	Inventory.remove_item(board_id, 1)
 
-	# Add to learned recipes
 	if not character.has("learned_recipes"):
 		character["learned_recipes"] = []
 	character["learned_recipes"].append(board_id)
@@ -192,21 +248,20 @@ func _learn_selected() -> void:
 
 
 func _craft_selected() -> void:
-	if _learned_recipes.is_empty() or _selected_index >= _learned_recipes.size():
+	if _craft_recipes.is_empty() or _selected_index >= _craft_recipes.size():
 		return
 
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
-	var recipe: RecipeBoardData = _learned_recipes[_selected_index]
+	var entry: Dictionary = _craft_recipes[_selected_index]
+	var recipe: RecipeBoardData = entry["recipe"]
 
-	# Check meseta
 	if int(character.get("meseta", 0)) < recipe.craft_cost:
 		hint_label.text = "Not enough meseta! Need %d M" % recipe.craft_cost
 		return
 
-	# Check ingredients
 	for ingredient in recipe.ingredients:
 		var owned: int = Inventory.get_item_count(ingredient["item_id"])
 		if owned < int(ingredient["quantity"]):
@@ -215,7 +270,6 @@ func _craft_selected() -> void:
 			hint_label.text = "Not enough %s!" % mat_name
 			return
 
-	# If has photon slot, enter photon selection
 	if recipe.has_photon_slot:
 		_selecting_photon = true
 		_photon_index = 0
@@ -224,61 +278,189 @@ func _craft_selected() -> void:
 		_refresh_display()
 		return
 
-	# No photon slot — craft directly
-	_execute_craft(recipe, "")
+	_execute_craft(recipe, "", entry["is_default"])
 
 
 func _confirm_craft_with_photon() -> void:
-	if _pending_recipe_index < 0 or _pending_recipe_index >= _learned_recipes.size():
+	if _pending_recipe_index < 0 or _pending_recipe_index >= _craft_recipes.size():
 		_selecting_photon = false
 		return
 
-	var recipe: RecipeBoardData = _learned_recipes[_pending_recipe_index]
+	var entry: Dictionary = _craft_recipes[_pending_recipe_index]
+	var recipe: RecipeBoardData = entry["recipe"]
 	var photon_id: String = PHOTON_IDS[_photon_index]
 
-	# If a photon is selected, check that we have it
 	if not photon_id.is_empty():
 		if not Inventory.has_item(photon_id):
 			hint_label.text = "You don't have %s!" % PHOTON_OPTIONS[_photon_index]
 			return
 
-	_execute_craft(recipe, photon_id)
+	_execute_craft(recipe, photon_id, entry["is_default"])
 	_selecting_photon = false
 	_pending_recipe_index = -1
 
 
-func _execute_craft(recipe: RecipeBoardData, photon_id: String) -> void:
+func _execute_craft(recipe: RecipeBoardData, photon_id: String, is_default: bool) -> void:
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return
 
-	# Deduct meseta
 	character["meseta"] = int(character["meseta"]) - recipe.craft_cost
 	GameState.meseta = int(character["meseta"])
 
-	# Deduct ingredients
 	for ingredient in recipe.ingredients:
 		Inventory.remove_item(ingredient["item_id"], int(ingredient["quantity"]))
 
-	# Deduct photon if used
 	if not photon_id.is_empty():
 		Inventory.remove_item(photon_id, 1)
 
-	# Add crafted weapon to inventory
 	Inventory.add_item(recipe.output_weapon_id, 1)
 
-	# Store photon element on weapon if used
 	if not photon_id.is_empty():
 		if not character.has("weapon_elements"):
 			character["weapon_elements"] = {}
 		character["weapon_elements"][recipe.output_weapon_id] = photon_id
 
-	var photon_text: String = ""
-	if not photon_id.is_empty():
-		photon_text = " [%s]" % PHOTON_OPTIONS[_photon_index]
-	hint_label.text = "Crafted %s%s! (-%d M)" % [recipe.name.replace(" Board", ""), photon_text, recipe.craft_cost]
+	# Consume rare board recipe (single-use)
+	if not is_default:
+		var learned: Array = character.get("learned_recipes", [])
+		var idx: int = learned.find(recipe.id)
+		if idx >= 0:
+			learned.remove_at(idx)
+
 	_build_lists()
-	_selected_index = mini(_selected_index, maxi(_learned_recipes.size() - 1, 0))
+	_selected_index = mini(_selected_index, maxi(_craft_recipes.size() - 1, 0))
+	_show_result_popup(recipe.output_weapon_id, photon_id, recipe.craft_cost)
+
+
+func _show_result_popup(weapon_id: String, photon_id: String, cost: int) -> void:
+	_showing_result = true
+	var weapon = WeaponRegistry.get_weapon(weapon_id)
+	var weapon_name: String = weapon.name if weapon else weapon_id
+
+	# Build popup panel
+	_result_popup = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.12, 0.18, 0.95)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color(0.4, 0.7, 1.0, 0.8)
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_right = 8
+	style.corner_radius_bottom_left = 8
+	style.content_margin_left = 24.0
+	style.content_margin_top = 16.0
+	style.content_margin_right = 24.0
+	style.content_margin_bottom = 16.0
+	_result_popup.add_theme_stylebox_override("panel", style)
+
+	_result_popup.set_anchors_preset(Control.PRESET_CENTER)
+	_result_popup.offset_left = -180
+	_result_popup.offset_right = 180
+	_result_popup.offset_top = -160
+	_result_popup.offset_bottom = 160
+	_result_popup.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_result_popup.grow_vertical = Control.GROW_DIRECTION_BOTH
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+
+	# Title
+	var title := Label.new()
+	title.text = "%s Created!" % weapon_name
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
+	title.add_theme_font_size_override("font_size", 20)
+	vbox.add_child(title)
+
+	# Separator
+	var sep := HSeparator.new()
+	sep.add_theme_constant_override("separation", 4)
+	vbox.add_child(sep)
+
+	if weapon:
+		_add_spec(vbox, "Type", weapon.get_weapon_type_name())
+		_add_spec(vbox, "Rarity", weapon.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT)
+		_add_spec(vbox, "ATK", "%d - %d" % [weapon.attack_base, weapon.attack_max])
+		_add_spec(vbox, "ACC", "%d - %d" % [weapon.accuracy_base, weapon.accuracy_max])
+		_add_spec(vbox, "Max Grind", "+%d" % weapon.max_grind)
+		if weapon.is_ranged():
+			_add_spec(vbox, "Req. ACC", "%d" % weapon.accuracy_base)
+		elif weapon.is_tech_weapon():
+			_add_spec(vbox, "Req. MST", "%d" % weapon.level)
+		else:
+			_add_spec(vbox, "Req. ATK", "%d" % weapon.attack_base)
+
+		# Element special effect from photon
+		var photon_info: Dictionary = PHOTON_ELEMENT.get(photon_id, {})
+		if not photon_info.is_empty():
+			_add_spec(vbox, "Element", photon_info["name"], PszStyle.TEXT_SUCCESS)
+			_add_spec(vbox, "Special", photon_info["effect"], PszStyle.TEXT_WARNING)
+
+		# Hit attributes vs enemy types
+		var sep2 := HSeparator.new()
+		sep2.add_theme_constant_override("separation", 4)
+		vbox.add_child(sep2)
+
+		var attr_label := Label.new()
+		attr_label.text = "Hit Attributes"
+		attr_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		attr_label.add_theme_color_override("font_color", PszStyle.TEXT_MUTED)
+		attr_label.add_theme_font_size_override("font_size", 13)
+		vbox.add_child(attr_label)
+
+		var attributes: Dictionary = PHOTON_ATTRIBUTES.get(photon_id, {})
+		for etype in ENEMY_TYPES:
+			var pct: int = int(attributes.get(etype, 0))
+			var color := PszStyle.TEXT_MUTED
+			if pct > 0:
+				color = PszStyle.TEXT_SUCCESS
+			_add_spec(vbox, etype, "%d%%" % pct, color)
+
+	# Cost
+	var sep3 := HSeparator.new()
+	sep3.add_theme_constant_override("separation", 4)
+	vbox.add_child(sep3)
+	_add_spec(vbox, "Cost", "%d M" % cost, PszStyle.TEXT_MESETA)
+
+	# Dismiss hint
+	var dismiss := Label.new()
+	dismiss.text = "[Enter / Esc] Close"
+	dismiss.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	dismiss.add_theme_color_override("font_color", PszStyle.TEXT_MUTED)
+	dismiss.add_theme_font_size_override("font_size", 12)
+	vbox.add_child(dismiss)
+
+	_result_popup.add_child(vbox)
+	add_child(_result_popup)
+	hint_label.text = ""
+
+
+func _add_spec(parent: VBoxContainer, label_text: String, value_text: String, value_color: Color = PszStyle.TEXT_WHITE) -> void:
+	var hbox := HBoxContainer.new()
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.add_theme_color_override("font_color", PszStyle.TEXT_MUTED)
+	lbl.add_theme_font_size_override("font_size", 14)
+	hbox.add_child(lbl)
+	var val := Label.new()
+	val.text = value_text
+	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	val.add_theme_color_override("font_color", value_color)
+	val.add_theme_font_size_override("font_size", 14)
+	hbox.add_child(val)
+	parent.add_child(hbox)
+
+
+func _dismiss_result_popup() -> void:
+	_showing_result = false
+	if is_instance_valid(_result_popup):
+		_result_popup.queue_free()
+		_result_popup = null
 	_refresh_display()
 
 
@@ -326,35 +508,57 @@ func _refresh_display() -> void:
 			vbox.add_child(pill)
 			if i == _photon_index:
 				selected_pill = pill
-	elif _mode == Mode.LEARN:
-		vbox.add_child(PszStyle.create_section_header("Use a board to learn a new recipe."))
+	elif _mode == Mode.BOARDS:
+		vbox.add_child(PszStyle.create_section_header("Use a rare board to learn a special recipe."))
 
 		if _board_items.is_empty():
 			vbox.add_child(PszStyle.create_pill("(No recipe boards in inventory)", false, "", PszStyle.TEXT_MUTED))
 		else:
 			for i in range(_board_items.size()):
 				var b: Dictionary = _board_items[i]
-				var star_text: String = "%d star" % b["rarity"]
+				var stars: String = ""
+				for s in range(b["rarity"]):
+					stars += "★"
 				var pill := PszStyle.create_pill(
-					"%s" % b["name"],
-					i == _selected_index, star_text)
+					"%s %s" % [b["name"], stars],
+					i == _selected_index)
 				vbox.add_child(pill)
 				if i == _selected_index:
 					selected_pill = pill
 	else:
-		vbox.add_child(PszStyle.create_section_header("Craft weapons from learned recipes."))
-
-		if _learned_recipes.is_empty():
-			vbox.add_child(PszStyle.create_pill("(No learned recipes)", false, "", PszStyle.TEXT_MUTED))
+		# Craft mode — grouped by weapon type with section headers
+		if _craft_recipes.is_empty():
+			vbox.add_child(PszStyle.create_pill("(No recipes available)", false, "", PszStyle.TEXT_MUTED))
 		else:
-			for i in range(_learned_recipes.size()):
-				var recipe: RecipeBoardData = _learned_recipes[i]
+			var last_type_name: String = ""
+			var showed_rare_header: bool = false
+			for i in range(_craft_recipes.size()):
+				var entry: Dictionary = _craft_recipes[i]
+				var recipe: RecipeBoardData = entry["recipe"]
+				var is_def: bool = entry["is_default"]
+				var type_name: String = entry["weapon_type_name"]
+				var stars: String = entry["stars"]
+
+				# Section headers
+				if is_def:
+					if not type_name.is_empty() and type_name != last_type_name:
+						last_type_name = type_name
+						vbox.add_child(PszStyle.create_section_header(type_name))
+				elif not showed_rare_header:
+					showed_rare_header = true
+					last_type_name = ""
+					vbox.add_child(PszStyle.create_section_header("Rare Weapons (single use)"))
+
+				# For rare weapons, also show type sub-headers
+				if not is_def and not type_name.is_empty() and type_name != last_type_name:
+					last_type_name = type_name
+					vbox.add_child(PszStyle.create_section_header(type_name))
+
 				var can_craft: bool = _can_craft_recipe(recipe)
 				var text_color := Color.TRANSPARENT
 				if not can_craft:
 					text_color = PszStyle.TEXT_DANGER
 
-				# Build ingredient summary
 				var ing_parts: PackedStringArray = []
 				for ingredient in recipe.ingredients:
 					var mat = MaterialRegistry.get_material(ingredient["item_id"])
@@ -363,8 +567,9 @@ func _refresh_display() -> void:
 					var needed: int = int(ingredient["quantity"])
 					ing_parts.append("%s %d/%d" % [mat_name, owned, needed])
 
+				var weapon_name: String = recipe.name.replace(" Board", "")
 				var pill := PszStyle.create_pill(
-					"%s  (%s)" % [recipe.name.replace(" Board", ""), ", ".join(ing_parts)],
+					"%s %s  (%s)" % [weapon_name, stars, ", ".join(ing_parts)],
 					i == _selected_index, "%d M" % recipe.craft_cost, text_color)
 				vbox.add_child(pill)
 				if i == _selected_index:

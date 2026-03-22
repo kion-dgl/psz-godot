@@ -108,6 +108,8 @@ var _debug_gate_meshes: Array = []
 var _debug_collision_meshes: Array = []
 var _debug_spawn_meshes: Array = []
 var _debug_all_collision_meshes: Array = []
+var _debug_floor_viz: MeshInstance3D       # DebugFloorViz green overlay
+var _debug_gate_spheres: Array = []        # GateMark/SpawnMark/TriggerMark spheres
 var _debug_panel: PanelContainer
 
 
@@ -494,6 +496,7 @@ func _process(_delta: float) -> void:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
+	_sync_debug_config()
 
 
 func _find_cell(cells: Array, pos: String) -> Dictionary:
@@ -682,7 +685,9 @@ func _debug_show_floor_collision() -> void:
 	mi.name = "DebugFloorViz"
 	mi.mesh = arr_mesh
 	mi.position.y = 0.05  # Slight offset to avoid z-fighting
+	mi.visible = DebugConfig.show_floor_collision
 	add_child(mi)
+	_debug_floor_viz = mi
 	print("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (faces.size() / 3))
 
 
@@ -1218,8 +1223,10 @@ func _add_debug_sphere(pos: Vector3, color: Color, sphere_name: String) -> void:
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.no_depth_test = true
 	mi.material_override = mat
+	mi.visible = DebugConfig.show_gate_dots
 	add_child(mi)
 	mi.global_position = Vector3(pos.x, 1.5, pos.z)
+	_debug_gate_spheres.append(mi)
 
 
 func _create_key_pickup(key_for_cell: String) -> void:
@@ -2280,21 +2287,24 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 	var drop_area: String = AREA_DROP_KEYS.get(area_id, "gurhacia-valley")
 	var drop_list: Array = DropRegistry.get_enemy_drops(difficulty, drop_area, enemy_name)
 
-	if not drop_list.is_empty() and randf() < DropConfig.ITEM_VS_MESETA:
-		var item_name: String = str(drop_list[randi() % drop_list.size()])
+	# Filter drop list to only materials and recipe boards
+	var material_drops: Array = []
+	for drop_name in drop_list:
+		var did: String = str(drop_name).to_lower().replace(" ", "_").replace("/", "_")
+		if MaterialRegistry.get_material(did) or RecipeRegistry.get_recipe(did):
+			material_drops.append(drop_name)
+
+	if not material_drops.is_empty() and randf() < DropConfig.ITEM_VS_MESETA:
+		var item_name: String = str(material_drops[randi() % material_drops.size()])
 		var item_id: String = item_name.to_lower().replace(" ", "_").replace("/", "_")
-		var di: DropBase
-		if MaterialRegistry.get_material(item_id) or RecipeRegistry.get_recipe(item_id):
-			di = DropMaterialScript.new()
-		else:
-			di = DropItemScript.new()
+		var di := DropMaterialScript.new()
 		di.item_id = item_id
 		di.amount = 1
 		var item_offset := Vector3(randf_range(-0.8, 0.8), 0.5, randf_range(-0.8, 0.8))
 		_map_root.add_child(di)
 		di.position = pos + item_offset
 		_room_drops.append(di)
-		print("[EnemyDrop] Item '%s' (id=%s) at %s" % [item_name, item_id, di.position])
+		print("[EnemyDrop] Material '%s' (id=%s) at %s" % [item_name, item_id, di.position])
 	else:
 		var dm := DropMesetaScript.new()
 		dm.amount = randi_range(meseta_min, meseta_max)
@@ -2667,9 +2677,13 @@ func _fixup_element_materials(element: GameElement) -> void:
 
 
 func _setup_debug_panel() -> void:
+	# Sync local state from DebugConfig (persists across field loads)
+	_show_floor_collision = DebugConfig.show_floor_collision
+	_show_gate_markers = DebugConfig.show_gate_dots
+
 	# Collect GLB debug meshes by category
 	_collect_debug_meshes(_map_root)
-	# Build collision debug visualizations (hidden by default)
+	# Build collision debug visualizations
 	_build_collision_debug_meshes(_map_root)
 
 	# Debug HUD panel (top-right corner)
@@ -2790,6 +2804,7 @@ func _toggle_triggers() -> void:
 
 func _toggle_gate_markers() -> void:
 	_show_gate_markers = not _show_gate_markers
+	DebugConfig.show_gate_dots = _show_gate_markers
 	for m in _debug_gate_meshes:
 		if is_instance_valid(m):
 			m.visible = _show_gate_markers
@@ -2798,6 +2813,7 @@ func _toggle_gate_markers() -> void:
 
 func _toggle_floor_collision() -> void:
 	_show_floor_collision = not _show_floor_collision
+	DebugConfig.show_floor_collision = _show_floor_collision
 	for m in _debug_collision_meshes:
 		if is_instance_valid(m):
 			m.visible = _show_floor_collision
@@ -2820,6 +2836,16 @@ func _toggle_all_collision() -> void:
 		if is_instance_valid(m):
 			m.visible = _show_all_collision
 	_update_debug_label()
+
+
+func _sync_debug_config() -> void:
+	# Floor collision green overlay (DebugFloorViz)
+	if _debug_floor_viz and _debug_floor_viz.visible != DebugConfig.show_floor_collision:
+		_debug_floor_viz.visible = DebugConfig.show_floor_collision
+	# Gate dot spheres (GateMark/SpawnMark/TriggerMark)
+	for m in _debug_gate_spheres:
+		if is_instance_valid(m) and m.visible != DebugConfig.show_gate_dots:
+			m.visible = DebugConfig.show_gate_dots
 
 
 func _build_all_collision_debug() -> void:

@@ -67,5 +67,95 @@ items = [
     "category": "Utility",
     "cost": 100,
     "currency": "Meseta"
+  },
+  {
+    "item": "Carlian",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Acenaline",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Peparian",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Dianaline",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Slaterian",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Kerseline",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Grinder Base C",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Grinder Base B",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Grinder Base A",
+    "category": "DEBUG Materials",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Fire Photon",
+    "category": "DEBUG Photons",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Ice Photon",
+    "category": "DEBUG Photons",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Poison Photon",
+    "category": "DEBUG Photons",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Shock Photon",
+    "category": "DEBUG Photons",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Devil Photon",
+    "category": "DEBUG Photons",
+    "cost": 1,
+    "currency": "Meseta"
+  },
+  {
+    "item": "Ein Blade Board",
+    "category": "DEBUG Boards",
+    "cost": 1,
+    "currency": "Meseta"
   }
 ]

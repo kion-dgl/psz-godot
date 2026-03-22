@@ -45,14 +45,8 @@ func _ready() -> void:
 		"res://scenes/2d/shops/weapon_shop.tscn"
 	)
 	_add_npc(
-		"TekkerNPC", Vector3(6.25, 0, 23.45), -0.7533,
+		"SynthesisNPC", Vector3(6.25, 0, 23.45), -0.7533,
 		"res://assets/npcs/np_004_00_0/np_004_00_0.glb",
-		"Tekker",
-		"res://scenes/2d/shops/tekker.tscn"
-	)
-	_add_npc(
-		"CraftingNPC", Vector3(10.50, 0, 27.67), -1.4207,
-		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
 		"Synthesis Shop",
 		"res://scenes/2d/shops/crafting_shop.tscn"
 	)

@@ -68,8 +68,8 @@ func _apply_state() -> void:
 			set_process(false)
 			interactable = false
 			if interaction_area:
-				interaction_area.set_deferred("monitoring", false)
-				interaction_area.set_deferred("monitorable", false)
+				interaction_area.monitoring = false
+				interaction_area.monitorable = false
 			if _prompt_label:
 				_prompt_label.visible = false
 			queue_free()
@@ -95,6 +95,7 @@ func _on_body_exited(body: Node3D) -> void:
 func _on_interact(_player: Node3D) -> void:
 	if element_state != "available":
 		return
+	interactable = false
 
 	set_state("collected")
 	_give_reward()

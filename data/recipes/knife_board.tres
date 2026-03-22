@@ -12,3 +12,4 @@ output_weapon_id = "knife"
 ingredients = [{"item_id": "peparian", "quantity": 3}, {"item_id": "dianaline", "quantity": 2}]
 craft_cost = 500
 has_photon_slot = true
+is_default = true

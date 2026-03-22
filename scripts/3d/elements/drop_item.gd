@@ -1,22 +1,12 @@
 extends DropBase
 class_name DropItem
-## Generic item drop that adds an ItemData item to inventory when collected.
-## Uses item_id to look up the item in ItemRegistry.
+## Generic item drop that uses the weapon drop box model.
+## Uses item_id to look up the item name from registries.
 
 
 func _init() -> void:
 	super._init()
-	# model_path will be set from ItemData if item_id is valid
-
-
-func _ready() -> void:
-	# If item_id is set, try to load model from ItemData
-	if not item_id.is_empty():
-		var item_data = ItemRegistry.get_item(item_id)
-		if item_data and not item_data.model_path.is_empty():
-			model_path = item_data.model_path
-
-	super._ready()
+	model_path = "valley/o0c_dropwe.glb"
 
 
 func _get_display_name() -> String:
@@ -32,7 +22,6 @@ func _give_reward() -> void:
 		return
 
 	if Inventory.add_item(item_id, amount):
-		var item_name: String = _get_display_name()
-		print("[DropItem] Collected ", amount, "x ", item_name)
+		print("[DropItem] Collected ", amount, "x ", _get_display_name())
 	else:
 		print("[DropItem] Failed to add item to inventory: ", item_id)

@@ -12,3 +12,4 @@ output_weapon_id = "lockgun"
 ingredients = [{"item_id": "slaterian", "quantity": 3}, {"item_id": "kerseline", "quantity": 2}]
 craft_cost = 1200
 has_photon_slot = true
+is_default = true

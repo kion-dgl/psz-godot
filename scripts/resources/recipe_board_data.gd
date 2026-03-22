@@ -9,3 +9,4 @@ class_name RecipeBoardData extends Resource
 @export var ingredients: Array = []  # Array of {item_id: String, quantity: int}
 @export var craft_cost: int = 0  # Meseta cost to craft
 @export var has_photon_slot: bool = true
+@export var is_default: bool = false  # Default recipes are always available without a board
