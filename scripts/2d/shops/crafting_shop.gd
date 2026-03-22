@@ -129,24 +129,25 @@ func _build_lists() -> void:
 		if recipe.is_default:
 			_add_craft_entry(recipe, true)
 
-	# Learned rare recipes
+	# Learned rare recipes — count uses per recipe (duplicates = multiple uses)
 	var learned_ids: Array = character.get("learned_recipes", [])
+	var rare_counts: Dictionary = {}
 	for recipe_id in learned_ids:
+		rare_counts[recipe_id] = int(rare_counts.get(recipe_id, 0)) + 1
+	for recipe_id in rare_counts:
 		var recipe = RecipeRegistry.get_recipe(recipe_id)
 		if recipe and not recipe.is_default:
-			_add_craft_entry(recipe, false)
+			_add_craft_entry(recipe, false, int(rare_counts[recipe_id]))
 
-	# Sort: default first, then by weapon_type, then by rarity
+	# Sort by weapon_type then rarity (rare boards mixed into their category)
 	_craft_recipes.sort_custom(func(a, b):
-		if a["is_default"] != b["is_default"]:
-			return a["is_default"]  # defaults first
 		if a["weapon_type"] != b["weapon_type"]:
 			return a["weapon_type"] < b["weapon_type"]
 		return a["rarity"] < b["rarity"]
 	)
 
 
-func _add_craft_entry(recipe: RecipeBoardData, is_default: bool) -> void:
+func _add_craft_entry(recipe: RecipeBoardData, is_default: bool, uses: int = 0) -> void:
 	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
 	var wtype: int = int(weapon.weapon_type) if weapon else 99
 	var wtype_name: String = weapon.get_weapon_type_name() if weapon else ""
@@ -159,6 +160,7 @@ func _add_craft_entry(recipe: RecipeBoardData, is_default: bool) -> void:
 		"weapon_type_name": wtype_name,
 		"rarity": w_rarity,
 		"stars": stars,
+		"uses": uses,
 	})
 
 
@@ -230,18 +232,14 @@ func _learn_selected() -> void:
 	var board_info: Dictionary = _board_items[_selected_index]
 	var board_id: String = board_info["id"]
 
-	var learned: Array = character.get("learned_recipes", [])
-	if learned.has(board_id):
-		hint_label.text = "Already learned this recipe!"
-		return
-
 	Inventory.remove_item(board_id, 1)
 
 	if not character.has("learned_recipes"):
 		character["learned_recipes"] = []
 	character["learned_recipes"].append(board_id)
 
-	hint_label.text = "Learned %s!" % board_info["name"]
+	var uses: int = character["learned_recipes"].count(board_id)
+	hint_label.text = "Learned %s! (%d use%s)" % [board_info["name"], uses, "" if uses == 1 else "s"]
 	_build_lists()
 	_selected_index = mini(_selected_index, maxi(_board_items.size() - 1, 0))
 	_refresh_display()
@@ -531,7 +529,6 @@ func _refresh_display() -> void:
 			vbox.add_child(PszStyle.create_pill("(No recipes available)", false, "", PszStyle.TEXT_MUTED))
 		else:
 			var last_type_name: String = ""
-			var showed_rare_header: bool = false
 			for i in range(_craft_recipes.size()):
 				var entry: Dictionary = _craft_recipes[i]
 				var recipe: RecipeBoardData = entry["recipe"]
@@ -539,18 +536,8 @@ func _refresh_display() -> void:
 				var type_name: String = entry["weapon_type_name"]
 				var stars: String = entry["stars"]
 
-				# Section headers
-				if is_def:
-					if not type_name.is_empty() and type_name != last_type_name:
-						last_type_name = type_name
-						vbox.add_child(PszStyle.create_section_header(type_name))
-				elif not showed_rare_header:
-					showed_rare_header = true
-					last_type_name = ""
-					vbox.add_child(PszStyle.create_section_header("Rare Weapons (single use)"))
-
-				# For rare weapons, also show type sub-headers
-				if not is_def and not type_name.is_empty() and type_name != last_type_name:
+				# Section headers by weapon type
+				if not type_name.is_empty() and type_name != last_type_name:
 					last_type_name = type_name
 					vbox.add_child(PszStyle.create_section_header(type_name))
 
@@ -568,8 +555,12 @@ func _refresh_display() -> void:
 					ing_parts.append("%s %d/%d" % [mat_name, owned, needed])
 
 				var weapon_name: String = recipe.name.replace(" Board", "")
+				var uses_tag: String = ""
+				if not is_def:
+					var uses_left: int = int(entry.get("uses", 0))
+					uses_tag = " [x%d]" % uses_left
 				var pill := PszStyle.create_pill(
-					"%s %s  (%s)" % [weapon_name, stars, ", ".join(ing_parts)],
+					"%s %s%s  (%s)" % [weapon_name, stars, uses_tag, ", ".join(ing_parts)],
 					i == _selected_index, "%d M" % recipe.craft_cost, text_color)
 				vbox.add_child(pill)
 				if i == _selected_index:
