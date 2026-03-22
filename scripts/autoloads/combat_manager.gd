@@ -146,6 +146,17 @@ func _get_player_stats(character: Dictionary) -> Dictionary:
 	player_evasion += int(mat_bonuses.get("evasion", 0))
 	player_technique += int(mat_bonuses.get("technique", 0))
 
+	# Mag bonuses
+	var mag_id: String = str(character.get("equipment", {}).get("mag", ""))
+	if not mag_id.is_empty():
+		var mag_state: Dictionary = MagManager.get_mag_state(character, mag_id)
+		if not mag_state.is_empty():
+			var mag_bonuses: Dictionary = MagManager.get_stat_bonuses(mag_state)
+			player_attack += int(mag_bonuses.get("attack", 0))
+			player_defense += int(mag_bonuses.get("defense", 0))
+			player_accuracy += int(mag_bonuses.get("accuracy", 0))
+			player_technique += int(mag_bonuses.get("technique", 0))
+
 	# Equipment
 	var equipment: Dictionary = character.get("equipment", {})
 	var weapon_id: String = str(equipment.get("weapon", ""))

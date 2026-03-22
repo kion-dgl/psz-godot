@@ -17,7 +17,7 @@ func save_game() -> void:
 	CharacterManager.sync_inventory_to_active()
 
 	var save_data := {
-		"version": 5,
+		"version": 6,
 		"characters": CharacterManager.get_save_data(),
 		"shared_storage": GameState.shared_storage.duplicate(),
 		"stored_meseta": GameState.stored_meseta,
@@ -79,6 +79,10 @@ func load_game() -> void:
 	# Migrate v4 weapon_elements to weapon_stats with new photon IDs
 	if version < 5:
 		_migrate_v4_to_v5(characters)
+
+	# Migrate v5: add mag_states for existing characters
+	if version < 6:
+		_migrate_v5_to_v6(characters)
 
 	# Load shared storage
 	GameState.shared_storage = save_data.get("shared_storage", []).duplicate()
@@ -151,3 +155,22 @@ func _migrate_v4_to_v5(characters: Array) -> void:
 
 		character["weapon_elements"] = new_elements
 	print("[SaveManager] Migrated v4→v5: weapon_elements → weapon_stats")
+
+
+## Migrate v5 saves: add mag_states dict to all characters
+func _migrate_v5_to_v6(characters: Array) -> void:
+	for character in characters:
+		if character == null:
+			continue
+		if not character.has("mag_states"):
+			character["mag_states"] = {}
+		# Create mag state for equipped mag
+		var mag_id: String = str(character.get("equipment", {}).get("mag", ""))
+		if not mag_id.is_empty() and not character["mag_states"].has(mag_id):
+			character["mag_states"][mag_id] = MagManager.create_mag()
+		# Create mag state for inventoried mags
+		var inventory: Dictionary = character.get("inventory", {})
+		for item_id in inventory:
+			if MagManager.is_mag(item_id) and not character["mag_states"].has(item_id):
+				character["mag_states"][item_id] = MagManager.create_mag()
+	print("[SaveManager] Migrated v5→v6: added mag_states")

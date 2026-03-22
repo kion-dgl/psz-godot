@@ -171,6 +171,17 @@ func _calculate_equipment_bonuses(character: Dictionary) -> Dictionary:
 				if effect in bonuses:
 					bonuses[effect] += value
 
+	# Mag bonuses
+	var mag_id: String = str(equipment.get("mag", ""))
+	if not mag_id.is_empty():
+		var mag_state: Dictionary = MagManager.get_mag_state(character, mag_id)
+		if not mag_state.is_empty():
+			var mag_bonuses: Dictionary = MagManager.get_stat_bonuses(mag_state)
+			bonuses["atk"] += int(mag_bonuses.get("attack", 0))
+			bonuses["def"] += int(mag_bonuses.get("defense", 0))
+			bonuses["acc"] += int(mag_bonuses.get("accuracy", 0))
+			bonuses["tech"] += int(mag_bonuses.get("technique", 0))
+
 	return bonuses
 
 
@@ -182,11 +193,9 @@ func _get_item_name(slot_type: String, item_id: String) -> String:
 		var armor = ArmorRegistry.get_armor(item_id)
 		return armor.name if armor else item_id
 	elif slot_type == "mag":
-		var mag_path := "res://data/mags/%s.tres" % item_id
-		if ResourceLoader.exists(mag_path):
-			var mag = load(mag_path)
-			if mag:
-				return mag.name
+		var character = CharacterManager.get_active_character()
+		if character:
+			return MagManager.get_mag_display_name(character, item_id)
 		return item_id
 	else:
 		var unit = UnitRegistry.get_unit(item_id)

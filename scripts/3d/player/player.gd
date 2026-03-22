@@ -77,6 +77,11 @@ const WEAPON_BONE_NAME: String = "070_RArm02"  # Right hand
 const LEFT_WEAPON_BONE_NAME: String = "040_LArm02"  # Left hand (dual-wield)
 var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
+# Mag attachment config
+const MAG_BONE_NAME: String = "020_Spine"
+const MAG_OFFSET := Vector3(-0.3, 0.35, -0.3)  # Behind and above shoulder
+var mag_node: Node3D
+
 # State tracking
 var current_state: PlayerState = PlayerState.IDLE
 var player_rotation: float = 0.0
@@ -129,6 +134,7 @@ func _ready() -> void:
 	print("[Player] _ready: in_city=%s, skeleton=%s" % [in_city, skeleton != null])
 	if not in_city:
 		_setup_weapon()
+	_setup_mag()
 
 	# Initialize animation player if we have one
 	if animation_player:
@@ -282,6 +288,12 @@ func refresh_weapon() -> void:
 	transition_to(current_state)  # Replay current animation with new set
 
 
+## Call this after mag equipment changes to update the 3D mag orb.
+func refresh_mag() -> void:
+	_clear_mag()
+	_setup_mag()
+
+
 func _clear_weapon() -> void:
 	if weapon_node and is_instance_valid(weapon_node):
 		var parent := weapon_node.get_parent()
@@ -295,6 +307,60 @@ func _clear_weapon() -> void:
 			parent.get_parent().remove_child(parent)
 			parent.queue_free()
 		weapon_node_left = null
+
+
+func _setup_mag() -> void:
+	if not skeleton:
+		return
+	var bone_idx := skeleton.find_bone(MAG_BONE_NAME)
+	if bone_idx == -1:
+		return
+
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+	var mag_id: String = str(character.get("equipment", {}).get("mag", ""))
+	if mag_id.is_empty():
+		return
+
+	# Determine mag form and model path
+	var form_id := "mag"
+	var mag_state: Dictionary = MagManager.get_mag_state(character, mag_id)
+	if not mag_state.is_empty():
+		form_id = str(mag_state.get("form_id", "mag"))
+
+	var glb_path: String = MagManager.get_model_path(form_id)
+	if glb_path.is_empty() or not ResourceLoader.exists(glb_path):
+		print("[Player] Mag GLB not found: %s" % glb_path)
+		return
+
+	var packed: PackedScene = load(glb_path) as PackedScene
+	if packed == null:
+		return
+
+	# Create bone attachment
+	var bone_attachment := BoneAttachment3D.new()
+	bone_attachment.name = "MagAttachment"
+	bone_attachment.bone_name = skeleton.get_bone_name(bone_idx)
+	skeleton.add_child(bone_attachment)
+
+	# Instance the mag model
+	var node := packed.instantiate() as Node3D
+	node.position = MAG_OFFSET
+	var s: float = MagManager.MAG_GLB_SCALE
+	node.scale = Vector3(s, s, s)
+	bone_attachment.add_child(node)
+	mag_node = node
+	print("[Player] Mag '%s' attached to %s (%s)" % [form_id, MAG_BONE_NAME, glb_path])
+
+
+func _clear_mag() -> void:
+	if mag_node and is_instance_valid(mag_node):
+		var parent := mag_node.get_parent()
+		if parent:
+			parent.get_parent().remove_child(parent)
+			parent.queue_free()
+		mag_node = null
 
 
 func _setup_weapon() -> void:
