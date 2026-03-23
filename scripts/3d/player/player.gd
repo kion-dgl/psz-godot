@@ -77,6 +77,15 @@ const WEAPON_BONE_NAME: String = "070_RArm02"  # Right hand
 const LEFT_WEAPON_BONE_NAME: String = "040_LArm02"  # Left hand (dual-wield)
 var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
+# Mag attachment config
+const MAG_OFFSET := Vector3(0.0, 1.2, -0.4)  # Behind character at shoulder height
+const MAG_BOB_SPEED := 0.6   # Cycles per second
+const MAG_BOB_HEIGHT := 0.06  # Vertical bob amplitude
+const MAG_SWAY_SPEED := 0.4  # Horizontal sway speed (slightly offset from bob)
+const MAG_SWAY_AMOUNT := 0.03
+var mag_node: Node3D
+var _mag_time: float = 0.0
+
 # State tracking
 var current_state: PlayerState = PlayerState.IDLE
 var player_rotation: float = 0.0
@@ -129,6 +138,7 @@ func _ready() -> void:
 	print("[Player] _ready: in_city=%s, skeleton=%s" % [in_city, skeleton != null])
 	if not in_city:
 		_setup_weapon()
+	_setup_mag()
 
 	# Initialize animation player if we have one
 	if animation_player:
@@ -282,6 +292,12 @@ func refresh_weapon() -> void:
 	transition_to(current_state)  # Replay current animation with new set
 
 
+## Call this after mag equipment changes to update the 3D mag orb.
+func refresh_mag() -> void:
+	_clear_mag()
+	_setup_mag()
+
+
 func _clear_weapon() -> void:
 	if weapon_node and is_instance_valid(weapon_node):
 		var parent := weapon_node.get_parent()
@@ -295,6 +311,48 @@ func _clear_weapon() -> void:
 			parent.get_parent().remove_child(parent)
 			parent.queue_free()
 		weapon_node_left = null
+
+
+func _setup_mag() -> void:
+	if not model:
+		return
+
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+	var mag_id: String = str(character.get("equipment", {}).get("mag", ""))
+	if mag_id.is_empty():
+		return
+
+	# Determine mag form and model path
+	var form_id := "mag"
+	var mag_state: Dictionary = MagManager.get_mag_state(character, mag_id)
+	if not mag_state.is_empty():
+		form_id = str(mag_state.get("form_id", "mag"))
+
+	var glb_path: String = MagManager.get_model_path(form_id)
+	if glb_path.is_empty() or not ResourceLoader.exists(glb_path):
+		print("[Player] Mag GLB not found: %s" % glb_path)
+		return
+
+	var packed: PackedScene = load(glb_path) as PackedScene
+	if packed == null:
+		return
+
+	# Attach as child of PlayerModel so it follows character rotation
+	var node := packed.instantiate() as Node3D
+	node.name = "MagModel"
+	node.position = MAG_OFFSET
+	model.add_child(node)
+	mag_node = node
+	print("[Player] Mag '%s' attached to model (%s)" % [form_id, glb_path])
+
+
+func _clear_mag() -> void:
+	if mag_node and is_instance_valid(mag_node):
+		mag_node.get_parent().remove_child(mag_node)
+		mag_node.queue_free()
+		mag_node = null
 
 
 func _setup_weapon() -> void:
@@ -615,6 +673,15 @@ func _physics_process(delta: float) -> void:
 	# Update model rotation
 	if model:
 		model.rotation.y = player_rotation
+
+	# Mag bob and sway
+	if mag_node and is_instance_valid(mag_node):
+		_mag_time += delta
+		mag_node.position = MAG_OFFSET + Vector3(
+			sin(_mag_time * MAG_SWAY_SPEED * TAU) * MAG_SWAY_AMOUNT,
+			sin(_mag_time * MAG_BOB_SPEED * TAU) * MAG_BOB_HEIGHT,
+			0.0
+		)
 
 
 func _respawn() -> void:

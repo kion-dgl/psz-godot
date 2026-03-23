@@ -1,17 +1,22 @@
 extends Control
 ## Shop — buy consumables or technique disks, toggled with tabs.
 
-enum Tab { ITEMS, DISKS, SELL }
+enum Tab { ITEMS, MATERIALS, DISKS, SELL }
 
-const TAB_COUNT := 3
-const TAB_NAMES := ["Items", "Disks", "Sell"]
+const TAB_COUNT := 4
+const TAB_NAMES := ["Items", "Materials", "Disks", "Sell"]
+
+const MATERIAL_CATEGORIES := ["DEBUG Materials", "DEBUG Photons", "DEBUG Boards"]
 
 var _tab: int = Tab.ITEMS
 var _selected_index: int = 0
 var _confirming: bool = false
 
-# Items tab data
+# Items tab data (consumables only)
 var _shop_items: Array = []
+
+# Materials tab data
+var _material_items: Array = []
 
 # Disks tab data
 var _disk_items: Array = []
@@ -50,12 +55,20 @@ func _setup_portrait() -> void:
 
 
 func _load_shop_items() -> void:
-	_shop_items = ShopManager.get_shop_inventory("item_shop")
-	if _shop_items.is_empty():
+	var all_items: Array = ShopManager.get_shop_inventory("item_shop")
+	if all_items.is_empty():
 		for shop in ShopRegistry.get_all_shops():
 			if "item" in shop.name.to_lower() or "consumable" in shop.description.to_lower():
-				_shop_items = shop.items.duplicate()
+				all_items = shop.items.duplicate()
 				break
+	_shop_items.clear()
+	_material_items.clear()
+	for item in all_items:
+		var cat: String = str(item.get("category", ""))
+		if cat in MATERIAL_CATEGORIES:
+			_material_items.append(item)
+		else:
+			_shop_items.append(item)
 
 
 func _generate_disk_inventory() -> void:
@@ -66,6 +79,16 @@ func _generate_disk_inventory() -> void:
 
 func _generate_sell_list() -> void:
 	_sell_items.clear()
+	# Get equipped IDs to mark them
+	var equipped_ids: Array = []
+	var character = CharacterManager.get_active_character()
+	if character:
+		var equip: Dictionary = character.get("equipment", {})
+		for slot_key in equip:
+			var eid: String = str(equip.get(slot_key, ""))
+			if not eid.is_empty():
+				equipped_ids.append(eid)
+
 	for item_info in Inventory.get_all_items():
 		var item_id: String = str(item_info.get("id", ""))
 		var qty: int = int(item_info.get("quantity", 0))
@@ -73,14 +96,52 @@ func _generate_sell_list() -> void:
 			continue
 		var sell_price: int = 10
 		var item_name: String = str(item_info.get("name", item_id))
-		var consumable = ConsumableRegistry.get_consumable(item_id)
-		if consumable:
-			item_name = consumable.name
-			sell_price = maxi(int(consumable.sell_price), 1)
+		var cat: String = "Other"
+		var is_equipped: bool = item_id in equipped_ids
+
+		var base_id: String = Inventory.get_base_id(item_id)
+		if WeaponRegistry.get_weapon(base_id):
+			var w = WeaponRegistry.get_weapon(base_id)
+			item_name = w.name
+			sell_price = maxi(int(w.attack_base) * 4, 10)
+			cat = "Weapon"
+		elif ArmorRegistry.get_armor(base_id):
+			var a = ArmorRegistry.get_armor(base_id)
+			item_name = a.name
+			sell_price = maxi(int(a.defense_base) * 4, 10)
+			cat = "Armor"
+		elif UnitRegistry.get_unit(base_id):
+			var u = UnitRegistry.get_unit(base_id)
+			item_name = u.name
+			sell_price = maxi(int(u.effect_value) * 5, 10)
+			cat = "Unit"
+		elif MagManager.is_mag(base_id):
+			item_name = str(item_info.get("name", item_id))
+			sell_price = 50
+			cat = "Mag"
+		elif MaterialRegistry.get_material(base_id) or ModifierRegistry.get_modifier(base_id):
+			cat = "Material"
+		else:
+			var consumable = ConsumableRegistry.get_consumable(base_id)
+			if consumable:
+				item_name = consumable.name
+				sell_price = maxi(int(consumable.sell_price), 1)
+			cat = "Item"
 		_sell_items.append({
-			"id": item_id, "name": item_name,
+			"id": item_id, "name": item_name, "category": cat,
 			"sell_price": sell_price, "quantity": qty,
+			"equipped": is_equipped,
 		})
+
+	# Sort by category order
+	var cat_order := ["Weapon", "Armor", "Unit", "Mag", "Item", "Material", "Other"]
+	_sell_items.sort_custom(func(a, b):
+		var ca: int = cat_order.find(a.get("category", "Other"))
+		var cb: int = cat_order.find(b.get("category", "Other"))
+		if ca != cb:
+			return ca < cb
+		return str(a.get("name", "")) < str(b.get("name", ""))
+	)
 
 
 func _update_hint() -> void:
@@ -145,6 +206,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _get_current_list() -> Array:
 	match _tab:
 		Tab.ITEMS: return _shop_items
+		Tab.MATERIALS: return _material_items
 		Tab.DISKS: return _disk_items
 		Tab.SELL: return _sell_items
 	return _shop_items
@@ -158,7 +220,7 @@ func _ask_confirm() -> void:
 	if _tab == Tab.SELL:
 		var sell_price: int = int(item.get("sell_price", 0))
 		hint_label.text = "Sell %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), sell_price]
-	elif _tab == Tab.ITEMS:
+	elif _tab == Tab.ITEMS or _tab == Tab.MATERIALS:
 		var cost: int = int(item.get("cost", 0))
 		hint_label.text = "Buy %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("item", "???")), cost]
 	else:
@@ -168,7 +230,7 @@ func _ask_confirm() -> void:
 
 
 func _on_select() -> void:
-	if _tab == Tab.ITEMS:
+	if _tab == Tab.ITEMS or _tab == Tab.MATERIALS:
 		_buy_item()
 	elif _tab == Tab.DISKS:
 		_buy_disk()
@@ -177,10 +239,11 @@ func _on_select() -> void:
 
 
 func _buy_item() -> void:
-	if _shop_items.is_empty() or _selected_index >= _shop_items.size():
+	var list := _get_current_list()
+	if list.is_empty() or _selected_index >= list.size():
 		return
 
-	var item := _shop_items[_selected_index] as Dictionary
+	var item := list[_selected_index] as Dictionary
 	var item_name: String = str(item.get("item", ""))
 	var cost: int = int(item.get("cost", 0))
 	if ShopManager.buy_item("item_shop", item_name):
@@ -223,6 +286,9 @@ func _sell_selected() -> void:
 	if _sell_items.is_empty() or _selected_index >= _sell_items.size():
 		return
 	var item: Dictionary = _sell_items[_selected_index]
+	if item.get("equipped", false):
+		hint_label.text = "Unequip first!"
+		return
 	var item_id: String = str(item.get("id", ""))
 	var sell_price: int = int(item.get("sell_price", 0))
 	var character = CharacterManager.get_active_character()
@@ -267,22 +333,29 @@ func _refresh_display() -> void:
 	var selected_pill: Control = null
 
 	if list.is_empty():
-		var empty_text := "(Nothing to sell)" if _tab == Tab.SELL else "(No items)" if _tab == Tab.ITEMS else "(No techniques available)"
+		var empty_text := "(Nothing to sell)" if _tab == Tab.SELL else "(No materials)" if _tab == Tab.MATERIALS else "(No items)" if _tab == Tab.ITEMS else "(No techniques available)"
 		var pill := PszStyle.create_pill(empty_text, false, "", PszStyle.TEXT_MUTED)
 		vbox.add_child(pill)
 	elif _tab == Tab.SELL:
+		var last_cat := ""
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
+			var cat: String = str(item.get("category", ""))
+			if cat != last_cat:
+				last_cat = cat
+				vbox.add_child(PszStyle.create_section_header(cat))
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
+			var equip_tag: String = " [E]" if item.get("equipped", false) else ""
+			var text_color := PszStyle.TEXT_MUTED if item.get("equipped", false) else Color.TRANSPARENT
 			var pill := PszStyle.create_pill(
-				str(item.get("name", "???")) + qty_str,
-				i == _selected_index, "%d M" % sell_price)
+				str(item.get("name", "???")) + equip_tag + qty_str,
+				i == _selected_index, "%d M" % sell_price, text_color)
 			vbox.add_child(pill)
 			if i == _selected_index:
 				selected_pill = pill
-	elif _tab == Tab.ITEMS:
+	elif _tab == Tab.ITEMS or _tab == Tab.MATERIALS:
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
 			var shop_name: String = str(item.get("item", "???"))
@@ -355,7 +428,7 @@ func _refresh_detail() -> void:
 	if list.is_empty() or _selected_index >= list.size():
 		return
 
-	if _tab == Tab.ITEMS:
+	if _tab == Tab.ITEMS or _tab == Tab.MATERIALS:
 		_refresh_item_detail(list[_selected_index])
 	elif _tab == Tab.DISKS:
 		_refresh_disk_detail(list[_selected_index])

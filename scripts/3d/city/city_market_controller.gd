@@ -36,13 +36,15 @@ func _ready() -> void:
 		"ShopNPC", Vector3(-10.34, 0, 27.67), 1.4207,
 		"res://assets/npcs/np_003_00_0/np_003_00_0.glb",
 		"Shop",
-		"res://scenes/2d/shops/item_shop.tscn"
+		"res://scenes/2d/shops/item_shop.tscn",
+		"pso_f_sh_stand"
 	)
 	_add_npc(
 		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), 0.7835,
 		"res://assets/npcs/np_002_00_0/np_002_00_0.glb",
 		"Weapon Shop",
-		"res://scenes/2d/shops/weapon_shop.tscn"
+		"res://scenes/2d/shops/weapon_shop.tscn",
+		"pso_ro_stand"
 	)
 	_add_npc(
 		"GrindShopNPC", Vector3(6.25, 0, 23.45), -0.7533,

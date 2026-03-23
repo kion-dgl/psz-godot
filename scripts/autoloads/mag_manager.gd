@@ -8,9 +8,11 @@ signal mag_fed(item_id: String, stat_changes: Dictionary)
 signal mag_leveled_up(new_level: int)
 signal mag_evolved(old_form: String, new_form: String)
 
+const MAX_LEVEL := 200
 const MAX_SYNC := 120
 const MAX_IQ := 200
 const STATS_PER_LEVEL := 5
+const MAX_TOTAL_STATS := MAX_LEVEL * STATS_PER_LEVEL  # 1000
 
 ## Feed effects per consumable item
 const FEED_EFFECTS := {
@@ -25,6 +27,51 @@ const FEED_EFFECTS := {
 	"sol_atomizer":  {"power": 0, "guard": 0, "hit": 2, "mind": 0, "sync": 8},
 	"moon_atomizer": {"power": 1, "guard": 1, "hit": 1, "mind": 1, "sync": 10},
 	"star_atomizer": {"power": 2, "guard": 2, "hit": 2, "mind": 2, "sync": 20},
+	"debug_mag_power": {"power": 50, "guard": 0, "hit": 0, "mind": 0, "sync": 0},
+	"debug_mag_guard": {"power": 0, "guard": 50, "hit": 0, "mind": 0, "sync": 0},
+	"debug_mag_hit": {"power": 0, "guard": 0, "hit": 50, "mind": 0, "sync": 0},
+	"debug_mag_mind": {"power": 0, "guard": 0, "hit": 0, "mind": 50, "sync": 0},
+}
+
+## Mag form_id → GLB model path mapping
+## wmaa=Power, wmab=Guard, wmac=Hit, wmad=Mind, wmae=Rare; number=stage
+const MAG_MODEL_MAP := {
+	# Stage 1
+	"mag": "res://assets/mags/wmaa1_1_1.glb",
+	# Stage 2 (primary stat)
+	"yul": "res://assets/mags/wmaa2_1_1.glb",   # Power
+	"aio": "res://assets/mags/wmab2_1_1.glb",   # Guard
+	"yth": "res://assets/mags/wmac2_1_1.glb",   # Hit
+	"ingh": "res://assets/mags/wmad2_1_1.glb",  # Mind
+	# Stage 3
+	"othel": "res://assets/mags/wmaa3_1_1.glb",  # Power
+	"thohn": "res://assets/mags/wmaa3_2_1.glb",  # Power alt
+	"aiolo": "res://assets/mags/wmab3_1_1.glb",  # Guard
+	"maray": "res://assets/mags/wmab3_2_1.glb",  # Guard alt
+	"peoth": "res://assets/mags/wmac3_1_1.glb",  # Hit
+	"teroo": "res://assets/mags/wmac3_2_1.glb",  # Hit alt
+	"deegh": "res://assets/mags/wmad3_1_1.glb",  # Mind
+	"niid": "res://assets/mags/wmad3_2_1.glb",   # Mind alt
+	# Stage 4
+	"urado": "res://assets/mags/wmaa4_1_1.glb",  # Power
+	"wyn": "res://assets/mags/wmaa4_2_1.glb",    # Power
+	"chato": "res://assets/mags/wmab4_1_1.glb",  # Power
+	"beork": "res://assets/mags/wmab4_2_1.glb",  # Guard
+	"larg": "res://assets/mags/wmab4_3_1.glb",   # Guard
+	"tyrna": "res://assets/mags/wmac4_1_1.glb",  # Guard
+	"ansul": "res://assets/mags/wmac4_2_1.glb",  # Hit
+	"hagal": "res://assets/mags/wmac4_3_1.glb",  # Hit
+	"sig": "res://assets/mags/wmad4_1_1.glb",    # Hit
+	"feo": "res://assets/mags/wmad4_2_1.glb",    # Mind
+	# Rare
+	"toppi": "res://assets/mags/wmae5_1_1.glb",
+	"femini": "res://assets/mags/wmae5_2_1.glb",
+	"lassi": "res://assets/mags/wmae5_3_1.glb",
+	"rappy": "res://assets/mags/wmae5_4_1.glb",
+	"puyo": "res://assets/mags/wmae5_5_1.glb",
+	"soniti": "res://assets/mags/wmae5_6_1.glb",
+	"radam": "res://assets/mags/wmae5_7_1.glb",
+	"arkharz": "res://assets/mags/wmae5_8_1.glb",
 }
 
 ## All mag form data keyed by id, loaded from .tres files
@@ -81,11 +128,17 @@ func feed_mag(mag_state: Dictionary, item_id: String) -> Dictionary:
 	var level_before: int = get_level(mag_state)
 	var form_before: String = mag_state.get("form_id", "mag")
 
-	# Apply stat changes
-	stats["power"] = int(stats.get("power", 0)) + int(effects.get("power", 0))
-	stats["guard"] = int(stats.get("guard", 0)) + int(effects.get("guard", 0))
-	stats["hit"] = int(stats.get("hit", 0)) + int(effects.get("hit", 0))
-	stats["mind"] = int(stats.get("mind", 0)) + int(effects.get("mind", 0))
+	# Check if already at max level
+	if level_before >= MAX_LEVEL:
+		return {"success": false, "message": "Mag is already at max level!"}
+
+	# Apply stat changes (capped at MAX_TOTAL_STATS)
+	var total_before: int = int(stats.get("power", 0)) + int(stats.get("guard", 0)) + int(stats.get("hit", 0)) + int(stats.get("mind", 0))
+	var room: int = MAX_TOTAL_STATS - total_before
+	for key in ["power", "guard", "hit", "mind"]:
+		var add: int = mini(int(effects.get(key, 0)), room)
+		stats[key] = int(stats.get(key, 0)) + add
+		room -= add
 	mag_state["stats"] = stats
 
 	# Apply sync (capped at MAX_SYNC)
@@ -207,6 +260,47 @@ func get_stat_bonuses(mag_state: Dictionary) -> Dictionary:
 	}
 
 
+## Get the GLB model path for a mag form
+func get_model_path(form_id: String) -> String:
+	return MAG_MODEL_MAP.get(form_id, MAG_MODEL_MAP.get("mag", ""))
+
+
 ## Check if an item can be fed to a mag
 func can_feed(item_id: String) -> bool:
 	return FEED_EFFECTS.has(item_id)
+
+
+## Check if an item ID (or instance ID) refers to a mag
+func is_mag(item_id: String) -> bool:
+	var base_id: String = Inventory.get_base_id(item_id)
+	return _mag_forms.has(base_id)
+
+
+## Get mag state from a character dict
+func get_mag_state(character: Dictionary, mag_id: String) -> Dictionary:
+	return character.get("mag_states", {}).get(mag_id, {})
+
+
+## Add a new mag to a character's inventory + mag_states. Returns instance ID.
+func add_mag_to_character(character: Dictionary, base_id: String) -> String:
+	var inst_id: String = Inventory.add_weapon(base_id)
+	if inst_id.is_empty():
+		return ""
+	if not character.has("mag_states"):
+		character["mag_states"] = {}
+	character["mag_states"][inst_id] = create_mag()
+	return inst_id
+
+
+## Get display name for a mag (form name + level)
+func get_mag_display_name(character: Dictionary, mag_id: String) -> String:
+	var state: Dictionary = get_mag_state(character, mag_id)
+	if state.is_empty():
+		var form = get_mag_form(Inventory.get_base_id(mag_id))
+		if form:
+			return form.name
+		return mag_id
+	var form = get_mag_form(state.get("form_id", "mag"))
+	var form_name: String = form.name if form else "Mag"
+	var level: int = get_level(state)
+	return "%s Lv.%d" % [form_name, level]
