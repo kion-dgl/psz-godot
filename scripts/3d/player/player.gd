@@ -79,9 +79,9 @@ var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
 # Mag attachment config
 const MAG_OFFSET := Vector3(0.0, 1.2, -0.4)  # Behind character at shoulder height
-const MAG_BOB_SPEED := 2.0   # Cycles per second
+const MAG_BOB_SPEED := 0.6   # Cycles per second
 const MAG_BOB_HEIGHT := 0.06  # Vertical bob amplitude
-const MAG_SWAY_SPEED := 1.3  # Horizontal sway speed (slightly offset from bob)
+const MAG_SWAY_SPEED := 0.4  # Horizontal sway speed (slightly offset from bob)
 const MAG_SWAY_AMOUNT := 0.03
 var mag_node: Node3D
 var _mag_time: float = 0.0
