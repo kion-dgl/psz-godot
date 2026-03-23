@@ -129,6 +129,15 @@ func _generate_inventory() -> void:
 
 func _generate_sell_list() -> void:
 	_sell_items.clear()
+	var equipped_ids: Array = []
+	var character = CharacterManager.get_active_character()
+	if character:
+		var equip: Dictionary = character.get("equipment", {})
+		for slot_key in equip:
+			var eid: String = str(equip.get(slot_key, ""))
+			if not eid.is_empty():
+				equipped_ids.append(eid)
+
 	for item_info in Inventory.get_all_items():
 		var item_id: String = str(item_info.get("id", ""))
 		var qty: int = int(item_info.get("quantity", 0))
@@ -136,31 +145,50 @@ func _generate_sell_list() -> void:
 			continue
 		var sell_price: int = 0
 		var item_name: String = str(item_info.get("name", item_id))
-		var cat: String = ""
-		var w = WeaponRegistry.get_weapon(item_id)
+		var cat: String = "Item"
+		var base_id: String = Inventory.get_base_id(item_id)
+		var is_equipped: bool = item_id in equipped_ids
+
+		var w = WeaponRegistry.get_weapon(base_id)
 		if w:
 			sell_price = maxi(int(_weapon_price(w) * 0.25), 1)
 			item_name = w.name
-			cat = "weapon"
+			cat = "Weapon"
 		else:
-			var a = ArmorRegistry.get_armor(item_id)
+			var a = ArmorRegistry.get_armor(base_id)
 			if a:
 				sell_price = maxi(int(_armor_price(a) * 0.25), 1)
 				item_name = a.name
-				cat = "armor"
+				cat = "Armor"
 			else:
-				var u = UnitRegistry.get_unit(item_id)
+				var u = UnitRegistry.get_unit(base_id)
 				if u:
 					sell_price = maxi(int(_unit_price(u) * 0.25), 1)
 					item_name = u.name
-					cat = "unit"
+					cat = "Unit"
+				elif MagManager.is_mag(base_id):
+					item_name = str(item_info.get("name", item_id))
+					sell_price = 50
+					cat = "Mag"
+				elif MaterialRegistry.get_material(base_id) or ModifierRegistry.get_modifier(base_id):
+					sell_price = 10
+					cat = "Material"
 				else:
 					sell_price = 10
-					cat = "item"
 		_sell_items.append({
 			"id": item_id, "name": item_name, "category": cat,
 			"sell_price": sell_price, "quantity": qty,
+			"equipped": is_equipped,
 		})
+
+	var cat_order := ["Weapon", "Armor", "Unit", "Mag", "Item", "Material"]
+	_sell_items.sort_custom(func(a, b):
+		var ca: int = cat_order.find(a.get("category", "Item"))
+		var cb: int = cat_order.find(b.get("category", "Item"))
+		if ca != cb:
+			return ca < cb
+		return str(a.get("name", "")) < str(b.get("name", ""))
+	)
 
 
 func _weapon_price(w) -> int:
@@ -338,6 +366,9 @@ func _sell_selected() -> void:
 	if _sell_items.is_empty() or _selected_index >= _sell_items.size():
 		return
 	var item: Dictionary = _sell_items[_selected_index]
+	if item.get("equipped", false):
+		hint_label.text = "Unequip first!"
+		return
 	var item_id: String = str(item.get("id", ""))
 	var sell_price: int = int(item.get("sell_price", 0))
 	var character = CharacterManager.get_active_character()
@@ -386,14 +417,21 @@ func _refresh_display() -> void:
 		var empty_text := "(Nothing to sell)" if _tab == Tab.SELL else "(Nothing for sale)"
 		vbox.add_child(PszStyle.create_pill(empty_text, false, "", PszStyle.TEXT_MUTED))
 	elif _tab == Tab.SELL:
+		var last_cat := ""
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
+			var cat: String = str(item.get("category", ""))
+			if cat != last_cat:
+				last_cat = cat
+				vbox.add_child(PszStyle.create_section_header(cat))
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
+			var equip_tag: String = " [E]" if item.get("equipped", false) else ""
+			var text_color := PszStyle.TEXT_MUTED if item.get("equipped", false) else Color.TRANSPARENT
 			var pill := PszStyle.create_pill(
-				str(item.get("name", "???")) + qty_str,
-				i == _selected_index, "%d M" % sell_price)
+				str(item.get("name", "???")) + equip_tag + qty_str,
+				i == _selected_index, "%d M" % sell_price, text_color)
 			vbox.add_child(pill)
 			if i == _selected_index:
 				selected_pill = pill

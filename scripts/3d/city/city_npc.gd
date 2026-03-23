@@ -3,13 +3,17 @@ class_name CityNPC
 ## Interactive NPC for the 3D city hub. Loads a GLB model and opens
 ## a 2D shop/menu overlay on interaction.
 
+const NPC_IDLE_GLB := "res://assets/player/animations/npc_idles.glb"
+
 @export var npc_model_path: String = ""  # Full res:// path to GLB
 @export var npc_display_name: String = "NPC"
 @export var target_scene_path: String = ""
 @export var npc_rotation_y: float = 0.0
+@export var idle_anim: String = ""  # Animation name from npc_idles.glb
 
 var _prompt_label: Label3D
 var _player_ref: Node3D  # Set by area controller after spawning
+var _anim_player: AnimationPlayer
 
 
 func _init() -> void:
@@ -33,10 +37,69 @@ func _load_model() -> void:
 	# Apply texture if PNG exists alongside GLB
 	var tex_path := npc_model_path.replace(".glb", ".png")
 	if not ResourceLoader.exists(tex_path):
+		_setup_idle_anim()
 		return
 	var texture := load(tex_path) as Texture2D
 	if texture:
 		_apply_npc_texture(model, texture)
+
+	_setup_idle_anim()
+
+
+func _setup_idle_anim() -> void:
+	if idle_anim.is_empty() or not model:
+		return
+	if not ResourceLoader.exists(NPC_IDLE_GLB):
+		return
+
+	# Find skeleton in the NPC model
+	var skel: Skeleton3D = _find_typed(model, "Skeleton3D") as Skeleton3D
+	if not skel:
+		return
+
+	# Load animation source
+	var anim_packed := load(NPC_IDLE_GLB) as PackedScene
+	if not anim_packed:
+		return
+	var anim_scene := anim_packed.instantiate()
+	var source_player: AnimationPlayer = _find_typed(anim_scene, "AnimationPlayer") as AnimationPlayer
+	if not source_player or not source_player.has_animation(idle_anim):
+		anim_scene.queue_free()
+		return
+
+	# Create AnimationPlayer on the skeleton's parent
+	_anim_player = AnimationPlayer.new()
+	_anim_player.name = "NPCAnimPlayer"
+	skel.get_parent().add_child(_anim_player)
+
+	# Remap animation tracks to this NPC's skeleton name
+	var source_anim := source_player.get_animation(idle_anim)
+	var new_anim := source_anim.duplicate() as Animation
+	new_anim.loop_mode = Animation.LOOP_LINEAR
+	for i in range(new_anim.get_track_count()):
+		var track_path := String(new_anim.track_get_path(i))
+		if "Skeleton3D" in track_path:
+			var skel_idx := track_path.find("Skeleton3D")
+			var prop_part := track_path.substr(skel_idx + 10)
+			new_anim.track_set_path(i, NodePath(skel.name + prop_part))
+
+	var lib := AnimationLibrary.new()
+	lib.add_animation(idle_anim, new_anim)
+	_anim_player.add_animation_library("", lib)
+	_anim_player.play(idle_anim)
+
+	anim_scene.queue_free()
+	print("[CityNPC] Playing idle: %s on %s" % [idle_anim, npc_display_name])
+
+
+func _find_typed(root: Node, type_name: String) -> Node:
+	if root.get_class() == type_name:
+		return root
+	for child in root.get_children():
+		var found := _find_typed(child, type_name)
+		if found:
+			return found
+	return null
 
 
 func _ready() -> void:

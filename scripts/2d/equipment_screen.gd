@@ -157,8 +157,7 @@ func _item_fits_slot(item_id: String, slot_key: String) -> bool:
 		"unit1", "unit2", "unit3", "unit4":
 			return UnitRegistry.get_unit(item_id) != null
 		"mag":
-			var mag_path := "res://data/mags/%s.tres" % item_id
-			return ResourceLoader.exists(mag_path)
+			return MagManager.is_mag(item_id)
 	return false
 
 
@@ -192,6 +191,8 @@ func _equip_selected_item() -> void:
 			_auto_unequip_excess_units(equipment, 0)
 		if slot_key == "weapon":
 			_notify_player_weapon_changed()
+		if slot_key == "mag":
+			_notify_player_mag_changed()
 		_choosing_item = false
 		if not old_id.is_empty():
 			var info: Dictionary = Inventory._lookup_item(old_id)
@@ -220,6 +221,8 @@ func _equip_selected_item() -> void:
 	# Update 3D weapon model if weapon slot changed
 	if slot_key == "weapon":
 		_notify_player_weapon_changed()
+	if slot_key == "mag":
+		_notify_player_mag_changed()
 
 	_choosing_item = false
 	hint_label.text = "Equipped %s!" % item.name
@@ -373,6 +376,17 @@ func _calc_equip_bonuses(equip: Dictionary, character: Dictionary) -> Dictionary
 	for mat_key in mat_map:
 		bonuses[mat_map[mat_key]] += int(mat_bonuses.get(mat_key, 0))
 
+	# Mag bonuses
+	var mag_id: String = str(equip.get("mag", ""))
+	if not mag_id.is_empty():
+		var mag_state: Dictionary = MagManager.get_mag_state(character, mag_id)
+		if not mag_state.is_empty():
+			var mag_bonuses: Dictionary = MagManager.get_stat_bonuses(mag_state)
+			bonuses["atk"] += int(mag_bonuses.get("attack", 0))
+			bonuses["def"] += int(mag_bonuses.get("defense", 0))
+			bonuses["acc"] += int(mag_bonuses.get("accuracy", 0))
+			bonuses["tech"] += int(mag_bonuses.get("technique", 0))
+
 	return bonuses
 
 
@@ -467,3 +481,9 @@ func _notify_player_weapon_changed() -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_method("refresh_weapon"):
 		player.refresh_weapon()
+
+
+func _notify_player_mag_changed() -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("refresh_mag"):
+		player.refresh_mag()

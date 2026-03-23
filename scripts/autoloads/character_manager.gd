@@ -87,6 +87,7 @@ func create_character(slot: int, class_id: String, char_name: String, appearance
 		"combat_buffs": {},
 		"completed_missions": [],
 		"storage": [],
+		"mag_states": {"mag": MagManager.create_mag()},
 		"action_palette": ActionPalette.DEFAULT_PAGES.duplicate(true),
 		"created_at": Time.get_unix_time_from_system(),
 	}

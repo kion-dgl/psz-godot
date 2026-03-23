@@ -5,6 +5,7 @@ extends Control
 const BASE_MENU_ITEMS := [
 	"Inventory",
 	"Equipment",
+	"Mag",
 	"Status",
 	"Action Palette",
 	"──────────────",
@@ -111,6 +112,8 @@ func _on_menu_selected(index: int) -> void:
 			SceneManager.push_scene("res://scenes/2d/inventory.tscn")
 		"Equipment":
 			SceneManager.push_scene("res://scenes/2d/equipment.tscn")
+		"Mag":
+			SceneManager.push_scene("res://scenes/2d/mag_list.tscn")
 		"Status":
 			SceneManager.push_scene("res://scenes/2d/status.tscn")
 		"Action Palette":

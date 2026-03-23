@@ -27,6 +27,7 @@ const MENU_ITEMS := [
 	"Resume",
 	"Inventory",
 	"Equipment",
+	"Mag",
 	"Status",
 	"Action Palette",
 	"──────────",
@@ -131,6 +132,9 @@ func _activate_item() -> void:
 		"Equipment":
 			close()
 			SceneManager.push_scene("res://scenes/2d/equipment.tscn")
+		"Mag":
+			close()
+			SceneManager.push_scene("res://scenes/2d/mag_list.tscn")
 		"Status":
 			close()
 			SceneManager.push_scene("res://scenes/2d/status.tscn")

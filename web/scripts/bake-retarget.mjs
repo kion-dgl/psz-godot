@@ -84,6 +84,16 @@ const F_RUN_OFFSETS = {
   '070_RArm02': { x: 90, y: 0, z: 0 },
 };
 
+// Stand idle offsets — arms at rest, spine/head fixes
+const STAND_OFFSETS = {
+  '020_Spine': { x: 0, y: 8, z: 0 },
+  '090_Head': { x: 0, y: 10, z: 0 },
+  '030_LArm01': { x: 0, y: -15, z: 0 },
+  '040_LArm02': { x: 90, y: 0, z: 0 },
+  '060_RArm01': { x: 0, y: 15, z: 0 },
+  '070_RArm02': { x: 90, y: 0, z: 0 },
+};
+
 // Each target GLB gets its own list of retarget animations.
 // To add a new retargeted animation: add an entry with { index, name, offsets }.
 const BAKE_TARGETS = [
@@ -99,6 +109,15 @@ const BAKE_TARGETS = [
     anims: [
       { index: 412, name: 'pwsa_walk', offsets: F_WALK_OFFSETS },
       { index: 416, name: 'pwsa_run_pso', offsets: F_RUN_OFFSETS },
+    ],
+  },
+  {
+    // NPC idle animations — baked into a copy of the PSZ player skeleton
+    targetGlb: '../assets/player/animations/npc_idles.glb',
+    anims: [
+      { index: 70, name: 'pso_ro_stand', offsets: STAND_OFFSETS },
+      { index: 279, name: 'pso_f_sh_stand', offsets: STAND_OFFSETS },
+      { index: 307, name: 'pso_f_ro_stand', offsets: STAND_OFFSETS },
     ],
   },
 ];
