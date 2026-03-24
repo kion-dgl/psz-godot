@@ -7,6 +7,12 @@ class_name EnemyBase extends CharacterBody3D
 ## Current HP
 var current_hp: int = 100
 
+## Defense stat (from EnemyData)
+var current_defense: int = 5
+
+## Evasion stat (from EnemyData)
+var current_evasion: int = 30
+
 ## Is enemy alive?
 var is_alive: bool = true
 
@@ -90,6 +96,8 @@ func _ready() -> void:
 func _setup_from_data() -> void:
 	if enemy_data:
 		current_hp = enemy_data.hp_base
+		current_defense = enemy_data.defense_base
+		current_evasion = enemy_data.evasion_base
 	else:
 		push_warning("[Enemy] No enemy_data set!")
 
@@ -405,13 +413,21 @@ func _start_attack() -> void:
 	attack_cooldown_timer = cooldown
 
 
-func _on_hit_received(damage: int, knockback: Vector3) -> void:
+func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100) -> void:
 	if not is_alive:
 		return
 
-	current_hp -= damage
-	damaged.emit(self, damage)
-	print("[Enemy] ", enemy_data.name if enemy_data else "Enemy", " took ", damage, " damage (HP: ", current_hp, ")")
+	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, current_defense, current_evasion, accuracy)
+	if not result.get("hit", true):
+		print("[Enemy] ", enemy_data.name if enemy_data else "Enemy", " MISS!")
+		return
+
+	var final_damage: int = int(result.get("damage", raw_damage))
+	var is_crit: bool = result.get("is_critical", false)
+	current_hp -= final_damage
+	damaged.emit(self, final_damage)
+	var crit_str: String = " CRIT!" if is_crit else ""
+	print("[Enemy] ", enemy_data.name if enemy_data else "Enemy", " took ", final_damage, crit_str, " damage (HP: ", current_hp, ")")
 
 	if current_hp <= 0:
 		_die()

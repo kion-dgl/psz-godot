@@ -11,6 +11,8 @@ gender = "Female"
 type = "Ranger"
 bonuses = PackedStringArray()
 material_limit = 100
+innate_weapon_type = 9
+allowed_weapon_types = Array[int]([0, 2, 9, 10, 11, 12])
 stats = {
   "hp": {
     "1": 71,
