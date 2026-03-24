@@ -11,6 +11,8 @@ gender = "Female"
 type = "Force"
 bonuses = PackedStringArray("75% damage reduction from technique attacks", "25% boost to Megid and 30% boost to Resta", "Natural PP recovery (+1% every 5 seconds; +5% at rest)")
 material_limit = 80
+innate_weapon_type = 15
+allowed_weapon_types = Array[int]([0, 9, 14, 15])
 stats = {
   "hp": {
     "1": 65,

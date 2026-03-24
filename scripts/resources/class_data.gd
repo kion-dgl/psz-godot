@@ -9,6 +9,14 @@ class_name ClassData extends Resource
 @export var bonuses: PackedStringArray = []
 @export var material_limit: int = 100
 
+## Innate weapon type — class gets bonus damage with this type (-1 = none)
+## Values match WeaponData.WeaponType enum: SABER=0, SWORD=1, DAGGERS=2, CLAW=3, DOUBLE_SABER=4, SPEAR=5, SLICER=6, GUN_BLADE=7, SHIELD=8, HANDGUN=9, MECH_GUN=10, RIFLE=11, BAZOOKA=12, LASER_CANNON=13, ROD=14, WAND=15
+@export var innate_weapon_type: int = -1
+
+## Weapon types this class can equip (WeaponData.WeaponType enum values)
+## Empty array means no restrictions (all weapons allowed)
+@export var allowed_weapon_types: Array[int] = []
+
 ## Stats dict: { "hp": { "1": 82, "20": 258, ... }, "attack": {...}, ... }
 @export var stats: Dictionary = {}
 
@@ -52,6 +60,13 @@ func get_stats_at_level(level: int) -> Dictionary:
 	for stat_name in ["hp", "pp", "attack", "defense", "accuracy", "evasion", "technique"]:
 		result[stat_name] = get_stat_at_level(stat_name, level)
 	return result
+
+
+## Check if this class can equip a weapon type
+func can_equip_weapon_type(weapon_type: int) -> bool:
+	if allowed_weapon_types.is_empty():
+		return true
+	return weapon_type in allowed_weapon_types
 
 
 ## Get short description for class selection

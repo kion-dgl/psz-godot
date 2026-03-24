@@ -8,6 +8,9 @@ class_name Hitbox extends Area3D
 ## Knockback force
 @export var knockback: float = 5.0
 
+## Accuracy for hit/miss calculation
+var accuracy: int = 100
+
 ## Who owns this hitbox (used to prevent self-damage)
 var owner_node: Node3D
 
@@ -45,7 +48,7 @@ func _on_area_entered(area: Area3D) -> void:
 			knockback_dir.y = 0
 
 		# Deal damage
-		hurtbox.take_hit(damage, knockback_dir * knockback)
+		hurtbox.take_hit(damage, knockback_dir * knockback, accuracy)
 
 
 ## Enable the hitbox (call when attack starts)

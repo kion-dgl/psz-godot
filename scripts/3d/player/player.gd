@@ -1028,28 +1028,45 @@ func _setup_attack_hitbox() -> void:
 	attack_hitbox = Hitbox.new()
 	attack_hitbox.name = "AttackHitbox"
 	attack_hitbox.owner_node = self
-	attack_hitbox.damage = _get_attack_damage()
+	attack_hitbox.damage = 10  # Will be set properly on each attack activation
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = ATTACK_HITBOX_SIZE
+	# Use weapon-specific hitbox size from config
+	var weapon_type: int = _get_equipped_weapon_type()
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	box.size = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
 	shape.shape = box
-	shape.position = Vector3(0, ATTACK_HITBOX_SIZE.y / 2, ATTACK_HITBOX_OFFSET)
+	shape.position = Vector3(0, 0.5, -config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
 	attack_hitbox.add_child(shape)
 
 	# Hitbox follows player rotation via model
 	model.add_child(attack_hitbox)
 
 
-func _get_attack_damage() -> int:
-	# TODO: Implement proper damage calculation when combat is ready
-	# For now, use fixed damage while working on timing/animations
-	return 10
+func _get_attack_damage() -> Dictionary:
+	return CombatManager.calculate_attack_damage(combo_state)
+
+
+func _get_equipped_weapon_type() -> int:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return 0
+	var weapon_id: String = str(character.get("equipment", {}).get("weapon", ""))
+	if weapon_id.is_empty():
+		return 0
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
+	if weapon:
+		return weapon.weapon_type
+	return 0
 
 
 func _activate_attack_hitbox() -> void:
 	if attack_hitbox:
-		attack_hitbox.damage = _get_attack_damage()
+		var atk: Dictionary = _get_attack_damage()
+		attack_hitbox.damage = int(atk.get("damage", 10))
+		attack_hitbox.knockback = float(atk.get("knockback", 5.0))
+		attack_hitbox.accuracy = int(atk.get("accuracy", 100))
 		attack_hitbox.activate()
 
 

@@ -11,6 +11,8 @@ gender = "Female"
 type = "Force"
 bonuses = PackedStringArray("75% damage reduction from technique attacks", "25% boost to Grants and 30% boost to Resta")
 material_limit = 100
+innate_weapon_type = 15
+allowed_weapon_types = Array[int]([0, 6, 9, 14, 15])
 stats = {
   "hp": {
     "1": 70,
