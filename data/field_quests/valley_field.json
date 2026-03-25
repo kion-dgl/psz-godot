@@ -34,7 +34,12 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
-          "objects": []
+          "objects": [
+            {"type": "enemy", "position": [2, 0, -4], "enemy_id": "lizard"},
+            {"type": "enemy", "position": [3, 0, -3], "enemy_id": "lizard"},
+            {"type": "enemy", "position": [1, 0, -3], "enemy_id": "lizard"},
+            {"type": "box", "position": [5, 0, -5]}
+          ]
         },
         {
           "pos": "1,2",
