@@ -45,6 +45,9 @@ const HURT_DURATION: float = 0.3
 var is_attacking: bool = false
 var current_anim: String = ""
 
+## Target reticle (shown when player is targeting this enemy)
+var _reticle: Sprite3D
+
 ## Wandering behavior (idle state)
 var wander_timer: float = 0.0
 var wander_direction: Vector3 = Vector3.ZERO
@@ -91,6 +94,7 @@ func _ready() -> void:
 
 	# Randomize initial wander timer so enemies don't sync up
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
+	_setup_reticle()
 
 
 func _setup_from_data() -> void:
@@ -419,15 +423,18 @@ func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100) 
 
 	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, current_defense, current_evasion, accuracy)
 	if not result.get("hit", true):
-		print("[Enemy] ", enemy_data.name if enemy_data else "Enemy", " MISS!")
+		_spawn_damage_number("MISS", Color(0.7, 0.7, 0.7))
 		return
 
 	var final_damage: int = int(result.get("damage", raw_damage))
 	var is_crit: bool = result.get("is_critical", false)
 	current_hp -= final_damage
 	damaged.emit(self, final_damage)
-	var crit_str: String = " CRIT!" if is_crit else ""
-	print("[Enemy] ", enemy_data.name if enemy_data else "Enemy", " took ", final_damage, crit_str, " damage (HP: ", current_hp, ")")
+
+	# Spawn floating damage number
+	var dmg_color := Color(1.0, 1.0, 0.2) if is_crit else Color.WHITE
+	var dmg_text := str(final_damage) + ("!" if is_crit else "")
+	_spawn_damage_number(dmg_text, dmg_color)
 
 	if current_hp <= 0:
 		_die()
@@ -596,3 +603,66 @@ func _on_animation_finished(anim_name: String) -> void:
 			# After threat animation, start chasing
 			if current_state == EnemyState.CHASING:
 				_play_animation("wlk")
+
+
+func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = color
+	label.outline_size = 6
+	label.outline_modulate = Color(0, 0, 0)
+	# Position above the enemy with slight random offset
+	label.position = Vector3(randf_range(-0.3, 0.3), 2.0 + randf_range(0, 0.3), 0)
+	add_child(label)
+
+	# Animate: float up and fade out
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y + 1.0, 0.8).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.8).set_delay(0.3)
+	tween.chain().tween_callback(label.queue_free)
+
+
+func _setup_reticle() -> void:
+	_reticle = Sprite3D.new()
+	_reticle.name = "TargetReticle"
+	_reticle.pixel_size = 0.008
+	_reticle.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_reticle.no_depth_test = true
+	_reticle.modulate = Color(1.0, 0.15, 0.15, 0.9)
+	_reticle.visible = false
+
+	# Draw a filled downward-pointing triangle
+	var size := 48
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var half: int = size / 2
+	for y in range(size):
+		# Triangle: top row is full width, narrows to a point at bottom
+		var progress: float = float(y) / float(size - 1)
+		var half_width: int = int(float(half) * (1.0 - progress))
+		for x in range(half - half_width, half + half_width + 1):
+			if x >= 0 and x < size:
+				img.set_pixel(x, y, Color.WHITE)
+	var tex := ImageTexture.create_from_image(img)
+	_reticle.texture = tex
+
+	var height := 1.5
+	if enemy_data:
+		height = enemy_data.collision_height
+	_reticle.position = Vector3(0, height + 0.5, 0)
+	add_child(_reticle)
+
+
+func show_reticle() -> void:
+	if _reticle:
+		_reticle.visible = true
+
+
+func hide_reticle() -> void:
+	if _reticle:
+		_reticle.visible = false
