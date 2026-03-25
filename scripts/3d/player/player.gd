@@ -1126,7 +1126,8 @@ func _update_combat_targets() -> void:
 
 	# Find enemies in front of the player within weapon range
 	var candidates: Array = []
-	for enemy in get_tree().get_nodes_in_group("enemies"):
+	var enemy_group := get_tree().get_nodes_in_group("enemies")
+	for enemy in enemy_group:
 		if not is_instance_valid(enemy):
 			continue
 		if not enemy.get("is_alive"):
@@ -1164,6 +1165,12 @@ func _update_combat_targets() -> void:
 			mat.albedo_color = Color(1.0, 0.2, 0.2, 0.15)
 		else:
 			mat.albedo_color = Color(0.2, 1.0, 0.2, 0.15)
+
+	# Debug log every 2 seconds
+	if DebugConfig.show_hitboxes and Engine.get_process_frames() % 120 == 0:
+		print("[Target] enemies_in_group=%d fwd=(%.1f,%.1f) range=%.1f width=%.1f candidates=%d targets=%d" % [
+			enemy_group.size(), forward.x, forward.z, attack_range, half_width,
+			candidates.size(), _targeted_enemies.size()])
 
 
 # Interaction System
