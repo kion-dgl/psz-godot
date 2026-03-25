@@ -107,10 +107,26 @@ func _setup_from_data() -> void:
 
 
 func _setup_model() -> void:
-	# Find the Model node (added in scene)
+	# Find existing Model node (from scene), or load from enemy_data
 	model = get_node_or_null("Model")
+	if not model and enemy_data and not str(enemy_data.model_id).is_empty():
+		var glb_path := "res://assets/enemies/%s/%s.glb" % [enemy_data.model_id, enemy_data.model_id]
+		if ResourceLoader.exists(glb_path):
+			var packed := load(glb_path) as PackedScene
+			if packed:
+				model = packed.instantiate()
+				model.name = "Model"
+				add_child(model)
 	if not model:
 		return
+
+	# Apply texture if PNG exists alongside GLB
+	if enemy_data and not str(enemy_data.model_id).is_empty():
+		var tex_path := "res://assets/enemies/%s/%s.png" % [enemy_data.model_id, enemy_data.model_id]
+		if ResourceLoader.exists(tex_path):
+			var texture := load(tex_path) as Texture2D
+			if texture:
+				_apply_texture(model, texture)
 
 	# Find AnimationPlayer in the model hierarchy
 	animation_player = _find_animation_player(model)
@@ -118,6 +134,20 @@ func _setup_model() -> void:
 		animation_player.animation_finished.connect(_on_animation_finished)
 	else:
 		push_warning("[Enemy] No AnimationPlayer found in model")
+
+
+func _apply_texture(node: Node, texture: Texture2D) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var new_mat := mat.duplicate() as StandardMaterial3D
+				new_mat.albedo_texture = texture
+				new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+				mesh_inst.set_surface_override_material(i, new_mat)
+	for child in node.get_children():
+		_apply_texture(child, texture)
 
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
@@ -482,7 +512,7 @@ func _die() -> void:
 
 func _spawn_meseta_drop(amount: int) -> void:
 	# Spawn a meseta drop at our position
-	var drop_scene: PackedScene = load("res://scenes/elements/drop_meseta.tscn")
+	var drop_scene: PackedScene = load("res://scenes/3d/elements/drop_meseta.tscn")
 	if drop_scene:
 		var drop: Node3D = drop_scene.instantiate()
 		drop.set("amount", amount)

@@ -21,6 +21,7 @@ const BoxScript := preload("res://scripts/3d/elements/box.gd")
 const FenceScript := preload("res://scripts/3d/elements/fence.gd")
 const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
 const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
+const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
 const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
 const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
 const DropMaterialScript := preload("res://scripts/3d/elements/drop_material.gd")
@@ -2208,18 +2209,50 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> void:
 	if state == "dead":
 		return  # Don't spawn dead enemies
-	var enemy := EnemySpawnScript.new()
-	enemy.enemy_id = enemy_id
-	_map_root.add_child(enemy)
-	enemy.position = pos
-	_room_enemies.append(enemy)
-	var spawn_pos := pos
-	var spawn_id := enemy_id
-	enemy.defeated.connect(func() -> void:
-		_spawn_enemy_drops(spawn_pos, spawn_id)
-		_check_room_clear()
-	)
-	print("[CellObjects] Enemy '%s' at %s" % [enemy_id, pos])
+
+	# Look up enemy data from registry
+	var edata = EnemyRegistry.get_enemy(enemy_id)
+
+	# Use EnemyBase (AI enemies) when enemy_data exists, otherwise fall back to EnemySpawn
+	if edata:
+		var enemy := EnemyBase.new()
+		enemy.enemy_data = edata
+
+		# Collision shape
+		var col_shape := CollisionShape3D.new()
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = edata.collision_radius
+		capsule.height = edata.collision_height
+		col_shape.shape = capsule
+		col_shape.position.y = capsule.height / 2
+		enemy.add_child(col_shape)
+		enemy.collision_layer = 8
+		enemy.collision_mask = 1
+
+		_map_root.add_child(enemy)
+		enemy.position = pos
+		_room_enemies.append(enemy)
+		var spawn_pos := pos
+		var spawn_id := enemy_id
+		enemy.died.connect(func(_e: EnemyBase) -> void:
+			_spawn_enemy_drops(spawn_pos, spawn_id)
+			_check_room_clear()
+		)
+		print("[CellObjects] EnemyBase '%s' at %s" % [enemy_id, pos])
+	else:
+		# Fallback to static EnemySpawn for unknown enemies
+		var enemy := EnemySpawnScript.new()
+		enemy.enemy_id = enemy_id
+		_map_root.add_child(enemy)
+		enemy.position = pos
+		_room_enemies.append(enemy)
+		var spawn_pos := pos
+		var spawn_id := enemy_id
+		enemy.defeated.connect(func() -> void:
+			_spawn_enemy_drops(spawn_pos, spawn_id)
+			_check_room_clear()
+		)
+		print("[CellObjects] EnemySpawn '%s' at %s (no registry data)" % [enemy_id, pos])
 
 
 func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: float = 1.0) -> void:
@@ -2554,7 +2587,13 @@ func _lock_gates_for_enemies() -> void:
 ## Called when an enemy is defeated — check if all cleared.
 func _check_room_clear() -> void:
 	for enemy in _room_enemies:
-		if is_instance_valid(enemy) and enemy.element_state != "dead":
+		if not is_instance_valid(enemy):
+			continue
+		# EnemyBase uses is_alive, EnemySpawn uses element_state
+		if enemy is EnemyBase:
+			if enemy.is_alive:
+				return
+		elif enemy.get("element_state") != "dead":
 			return  # Still alive enemies
 
 	# Check for next wave
