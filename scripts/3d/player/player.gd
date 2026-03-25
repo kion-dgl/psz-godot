@@ -111,6 +111,7 @@ const INTERACTION_RADIUS: float = 2.0
 
 # Combat system
 var attack_hitbox: Hitbox
+var _targeted_enemies: Array = []
 const ATTACK_HITBOX_SIZE := Vector3(1.5, 1.0, 2.0)  # Width, height, depth
 const ATTACK_HITBOX_OFFSET := 1.5  # Forward offset from player
 
@@ -674,6 +675,9 @@ func _physics_process(delta: float) -> void:
 	if model:
 		model.rotation.y = player_rotation
 
+	# Update combat targeting reticles
+	_update_combat_targets()
+
 	# Mag bob and sway
 	if mag_node and is_instance_valid(mag_node):
 		_mag_time += delta
@@ -1037,7 +1041,8 @@ func _setup_attack_hitbox() -> void:
 	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
 	box.size = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
 	shape.shape = box
-	shape.position = Vector3(0, 0.5, -config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
+	var offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
+	shape.position = Vector3(0, box.size.y * 0.5 + 0.5, offset + box.size.z * 0.5)
 	attack_hitbox.add_child(shape)
 
 	# Hitbox follows player rotation via model
@@ -1067,12 +1072,98 @@ func _activate_attack_hitbox() -> void:
 		attack_hitbox.damage = int(atk.get("damage", 10))
 		attack_hitbox.knockback = float(atk.get("knockback", 5.0))
 		attack_hitbox.accuracy = int(atk.get("accuracy", 100))
+		attack_hitbox.max_targets = int(atk.get("max_targets", 1))
+		attack_hitbox.hits_per_target = int(atk.get("hits", 1))
 		attack_hitbox.activate()
 
 
 func _deactivate_attack_hitbox() -> void:
 	if attack_hitbox:
 		attack_hitbox.deactivate()
+
+
+var _debug_range_mesh: MeshInstance3D
+
+
+func _update_combat_targets() -> void:
+	# Clear old reticles
+	for enemy in _targeted_enemies:
+		if is_instance_valid(enemy) and enemy.has_method("hide_reticle"):
+			enemy.hide_reticle()
+	_targeted_enemies.clear()
+
+	var weapon_type: int = _get_equipped_weapon_type()
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var max_targets: int = int(config.get("max_targets", 1))
+	var hitbox_size: Vector3 = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
+	var hitbox_offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
+	var attack_range: float = hitbox_offset + hitbox_size.z * 0.5
+
+	# Player's forward direction (model rotation)
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var half_width: float = hitbox_size.x * 0.5 + 0.5  # Slight padding
+
+	# Debug: show targeting box attached to model
+	if DebugConfig.show_hitboxes:
+		if not _debug_range_mesh:
+			_debug_range_mesh = MeshInstance3D.new()
+			var box_mesh := BoxMesh.new()
+			box_mesh.size = Vector3(1, 1, 1)
+			_debug_range_mesh.mesh = box_mesh
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = Color(0.2, 1.0, 0.2, 0.15)
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			mat.no_depth_test = true
+			_debug_range_mesh.material_override = mat
+			model.add_child(_debug_range_mesh)
+		var box_depth: float = hitbox_offset + hitbox_size.z * 0.5
+		_debug_range_mesh.scale = Vector3(hitbox_size.x + 1.0, hitbox_size.y, box_depth)
+		_debug_range_mesh.position = Vector3(0, hitbox_size.y * 0.5 + 0.5, box_depth * 0.5)
+		_debug_range_mesh.visible = true
+	elif _debug_range_mesh:
+		_debug_range_mesh.visible = false
+
+	# Find enemies in front of the player within weapon range
+	var candidates: Array = []
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy):
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var to_enemy: Vector3 = enemy.global_position - global_position
+		to_enemy.y = 0
+
+		# Check distance along forward axis
+		var forward_dist: float = to_enemy.dot(forward)
+		if forward_dist < -0.5 or forward_dist > attack_range:
+			continue
+
+		# Check lateral distance (perpendicular to forward)
+		var right := Vector3(-forward.z, 0, forward.x)
+		var lateral_dist: float = absf(to_enemy.dot(right))
+		if lateral_dist > half_width:
+			continue
+
+		candidates.append({"enemy": enemy, "dist": forward_dist})
+
+	# Sort by distance
+	candidates.sort_custom(func(a, b): return a.dist < b.dist)
+
+	# Show reticle on closest N enemies
+	for i in range(mini(max_targets, candidates.size())):
+		var enemy = candidates[i].enemy
+		if enemy.has_method("show_reticle"):
+			enemy.show_reticle()
+		_targeted_enemies.append(enemy)
+
+	# Debug: color box based on targets found
+	if _debug_range_mesh and _debug_range_mesh.visible:
+		var mat: StandardMaterial3D = _debug_range_mesh.material_override
+		if _targeted_enemies.size() > 0:
+			mat.albedo_color = Color(1.0, 0.2, 0.2, 0.15)
+		else:
+			mat.albedo_color = Color(0.2, 1.0, 0.2, 0.15)
 
 
 # Interaction System

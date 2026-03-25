@@ -11,6 +11,12 @@ class_name Hitbox extends Area3D
 ## Accuracy for hit/miss calculation
 var accuracy: int = 100
 
+## Maximum number of unique targets this attack can hit
+var max_targets: int = 1
+
+## Number of hits to apply to each target (daggers hit twice, etc.)
+var hits_per_target: int = 1
+
 ## Who owns this hitbox (used to prevent self-damage)
 var owner_node: Node3D
 
@@ -39,6 +45,10 @@ func _on_area_entered(area: Area3D) -> void:
 		if hurtbox.owner_node in _hit_targets:
 			return
 
+		# Enforce max targets
+		if _hit_targets.size() >= max_targets:
+			return
+
 		_hit_targets.append(hurtbox.owner_node)
 
 		# Calculate knockback direction
@@ -47,8 +57,9 @@ func _on_area_entered(area: Area3D) -> void:
 			knockback_dir = (hurtbox.owner_node.global_position - owner_node.global_position).normalized()
 			knockback_dir.y = 0
 
-		# Deal damage
-		hurtbox.take_hit(damage, knockback_dir * knockback, accuracy)
+		# Deal damage (multi-hit: apply damage multiple times)
+		for _i in range(hits_per_target):
+			hurtbox.take_hit(damage, knockback_dir * knockback, accuracy)
 
 
 ## Enable the hitbox (call when attack starts)

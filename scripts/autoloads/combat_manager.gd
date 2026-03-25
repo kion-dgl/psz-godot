@@ -100,6 +100,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.5,
 		"knockback": [3.0, 3.0, 6.0],
 		"combo_window": 0.5,
+		"max_targets": 1,
 	},
 	1: {  # SWORD — slow heavy hits, big knockback
 		"combo_steps": 3,
@@ -110,6 +111,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.8,
 		"knockback": [5.0, 5.0, 10.0],
 		"combo_window": 0.6,
+		"max_targets": 3,
 	},
 	2: {  # DAGGERS — fast multi-hit, lower per-hit damage
 		"combo_steps": 3,
@@ -120,6 +122,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.2,
 		"knockback": [1.0, 1.0, 2.0],
 		"combo_window": 0.4,
+		"max_targets": 1,
 	},
 	3: {  # CLAW — very fast, close range
 		"combo_steps": 3,
@@ -130,6 +133,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.0,
 		"knockback": [1.5, 1.5, 3.0],
 		"combo_window": 0.35,
+		"max_targets": 1,
 	},
 	4: {  # DOUBLE_SABER — wide sweeps, moderate speed
 		"combo_steps": 3,
@@ -140,6 +144,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.5,
 		"knockback": [3.0, 2.0, 8.0],
 		"combo_window": 0.45,
+		"max_targets": 3,
 	},
 	5: {  # SPEAR — long reach, thrust attacks
 		"combo_steps": 3,
@@ -150,6 +155,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 2.2,
 		"knockback": [4.0, 4.0, 8.0],
 		"combo_window": 0.5,
+		"max_targets": 2,
 	},
 	6: {  # SLICER — ranged melee, moderate speed
 		"combo_steps": 3,
@@ -160,6 +166,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 2.0,
 		"knockback": [2.0, 2.0, 4.0],
 		"combo_window": 0.5,
+		"max_targets": 3,
 	},
 	9: {  # HANDGUN — single shots
 		"combo_steps": 3,
@@ -170,6 +177,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 5.0,
 		"knockback": [1.0, 1.0, 2.0],
 		"combo_window": 0.4,
+		"max_targets": 1,
 	},
 	10: {  # MECH_GUN — rapid fire spray
 		"combo_steps": 3,
@@ -180,6 +188,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 5.0,
 		"knockback": [0.5, 0.5, 1.0],
 		"combo_window": 0.3,
+		"max_targets": 3,
 	},
 	11: {  # RIFLE — slow precision shots
 		"combo_steps": 3,
@@ -190,6 +199,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 8.0,
 		"knockback": [5.0, 5.0, 8.0],
 		"combo_window": 0.6,
+		"max_targets": 1,
 	},
 	12: {  # BAZOOKA/LAUNCHER — slow AoE explosions
 		"combo_steps": 2,
@@ -200,6 +210,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 6.0,
 		"knockback": [8.0, 12.0],
 		"combo_window": 0.7,
+		"max_targets": 5,
 	},
 	14: {  # ROD — melee swing, tech amplifier
 		"combo_steps": 3,
@@ -210,6 +221,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.5,
 		"knockback": [2.0, 2.0, 4.0],
 		"combo_window": 0.5,
+		"max_targets": 1,
 	},
 	15: {  # WAND — melee swing, support amplifier
 		"combo_steps": 3,
@@ -220,6 +232,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 1.5,
 		"knockback": [2.0, 2.0, 3.0],
 		"combo_window": 0.5,
+		"max_targets": 1,
 	},
 }
 
@@ -409,6 +422,8 @@ func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
 	var variance: float = randf_range(1.0 - DAMAGE_VARIANCE, 1.0 + DAMAGE_VARIANCE)
 	var final_damage: int = maxi(int(base_damage * variance), 1)
 
+	var max_targets: int = int(config.get("max_targets", 1))
+
 	return {
 		"damage": final_damage,
 		"hits": hits,
@@ -416,6 +431,7 @@ func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
 		"accuracy": player_accuracy,
 		"is_innate": is_innate,
 		"weapon_type": weapon_type,
+		"max_targets": max_targets,
 	}
 
 
