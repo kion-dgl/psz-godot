@@ -496,10 +496,7 @@ func _die() -> void:
 	# Play death animation
 	_play_animation("ded", true)
 
-	# Drop meseta
-	if enemy_data:
-		var meseta: int = enemy_data.get_meseta_drop()
-		_spawn_meseta_drop(meseta)
+	# Drops are handled by the field controller via the died signal
 
 	# Remove after death animation (or delay if no animation)
 	var delay := 1.5  # Default delay

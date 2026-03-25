@@ -146,7 +146,7 @@ const WEAPON_TYPE_CONFIGS := {
 		"combo_window": 0.45,
 		"max_targets": 3,
 	},
-	5: {  # SPEAR — long reach, thrust attacks
+	5: {  # SPEAR — long reach, thrust attacks. Finisher sweeps 3 targets.
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [1.0, 1.1, 1.4],
@@ -155,7 +155,8 @@ const WEAPON_TYPE_CONFIGS := {
 		"hitbox_offset": 2.2,
 		"knockback": [4.0, 4.0, 8.0],
 		"combo_window": 0.5,
-		"max_targets": 2,
+		"max_targets": 1,
+		"max_targets_per_step": [1, 1, 3],
 	},
 	6: {  # SLICER — ranged melee, moderate speed
 		"combo_steps": 3,
@@ -422,7 +423,11 @@ func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
 	var variance: float = randf_range(1.0 - DAMAGE_VARIANCE, 1.0 + DAMAGE_VARIANCE)
 	var final_damage: int = maxi(int(base_damage * variance), 1)
 
+	# Per-step max_targets if available, otherwise use flat value
 	var max_targets: int = int(config.get("max_targets", 1))
+	var per_step_targets: Array = config.get("max_targets_per_step", [])
+	if step_idx < per_step_targets.size():
+		max_targets = int(per_step_targets[step_idx])
 
 	return {
 		"damage": final_damage,

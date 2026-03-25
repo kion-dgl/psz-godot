@@ -126,6 +126,7 @@ func destroy() -> void:
 		return
 
 	is_alive = false
+	remove_from_group("enemies")
 	set_state("destroyed")
 	destroyed_box.emit()
 
