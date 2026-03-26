@@ -202,6 +202,11 @@ func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
 
+	# Kill enemy if it falls off the stage
+	if global_position.y < -10.0:
+		_die()
+		return
+
 	# Apply gravity
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -224,6 +229,11 @@ func _physics_process(delta: float) -> void:
 		attack_cooldown_timer -= delta
 
 	move_and_slide()
+
+	# Safety: if enemy ends up over empty space, stop horizontal movement
+	if not _has_floor_at(global_position):
+		velocity.x = 0
+		velocity.z = 0
 
 
 func _process_idle(delta: float) -> void:
