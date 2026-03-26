@@ -82,7 +82,7 @@ const ANIMATION_CATEGORIES = [
   { id: 'claw', label: 'Claw', prefix: '05' },
   { id: 'shield', label: 'Shield', prefix: '06' },
   { id: 'handgun', label: 'Handgun', prefix: '08' },
-  { id: 'shotgun', label: 'Rifle', prefix: '10' },
+  { id: 'shotgun', label: 'Rifle', prefix: 'ri' },
   { id: 'machinegun', label: 'Machinegun', prefix: '11' },
   { id: 'grenade', label: 'Grenade', prefix: '12' },
   { id: 'rod', label: 'Rod', prefix: '14' },
@@ -189,11 +189,11 @@ export default function PlayerAnimationStorybook() {
   const category = ANIMATION_CATEGORIES.find((c) => c.id === selectedCategory);
   const animationSetId = category ? `${category.prefix}_${selectedCategory}_${bodyType}` : null;
   const animationGlbPath = animationSetId
-    ? assetUrl(`/player/animations/${selectedCategory}/${bodyType}/${animationSetId}/pc_000_000.glb`)
+    ? assetUrl(`/player/animations/${selectedCategory}_${bodyType}.glb`)
     : null;
   const pcPrefix = CLASS_TO_PC_PREFIX[selectedClass] || 'pc_00';
   const variation = `${pcPrefix}0`;
-  const modelGlbPath = assetUrl(`/player/${variation}/${variation}/${variation}_000.glb`);
+  const modelGlbPath = assetUrl(`/player/${variation}/${variation}_000.glb`);
   const textureUrl = assetUrl(`/player/${variation}/textures/${variation}_000.png`);
   const weaponGlbPath = CATEGORY_WEAPON_MAP[selectedCategory] || null;
 
