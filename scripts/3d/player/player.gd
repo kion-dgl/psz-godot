@@ -442,10 +442,21 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	var node := packed.instantiate() as Node3D
 	bone_attachment.add_child(node)
 
+	# Per-weapon-type hand position and rotation
+	var hand_pos := Vector3(0.31, 0, 0)
+	var hand_rot := Vector3(0, 90, 0)
+	match weapon_data.weapon_type:
+		WeaponData.WeaponType.RIFLE:
+			hand_pos = Vector3(0.19, 0.07, 0.06)
+			hand_rot = Vector3(92, 5, -5)
+		WeaponData.WeaponType.BAZOOKA:
+			hand_pos = Vector3(0.19, 0.07, 0.06)
+			hand_rot = Vector3(92, 5, -5)
+
 	# Position and scale
 	var s: float = weapon_data.glb_scale
-	node.position = Vector3(0.31, 0, 0)
-	node.rotation_degrees = Vector3(0, 90, 0)
+	node.position = hand_pos
+	node.rotation_degrees = hand_rot
 	node.scale = Vector3(s, s, s)
 
 	# Mirror left-hand weapon on X axis
@@ -860,7 +871,8 @@ func _handle_dodge(delta: float) -> void:
 func _start_attack() -> void:
 	if current_state == PlayerState.ATTACKING:
 		# Check if we're in combo window
-		if combo_window_open and combo_state < 3:
+		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+		if combo_window_open and combo_state < max_combo:
 			combo_state += 1
 			combo_window_open = false
 			_play_attack_animation(combo_state)
@@ -994,7 +1006,9 @@ func _on_animation_finished(_anim_name: String) -> void:
 			transition_to(PlayerState.IDLE)
 		PlayerState.ATTACKING:
 			_deactivate_attack_hitbox()
-			if combo_state >= 3:
+			var config: Dictionary = CombatManager.get_weapon_type_config(_get_equipped_weapon_type())
+			var max_combo: int = int(config.get("combo_steps", 3))
+			if combo_state >= max_combo:
 				# Combo finished, return to idle
 				combo_state = 0
 				transition_to(PlayerState.IDLE)
@@ -1111,8 +1125,8 @@ func _fire_projectile(atk: Dictionary) -> void:
 			var spread := randf_range(-0.05, 0.05)
 			proj.direction = Vector3(forward.x + spread, 0, forward.z + spread).normalized()
 
-		proj.global_position = spawn_pos
 		get_tree().current_scene.add_child(proj)
+		proj.global_position = spawn_pos
 
 		# Stagger multi-shot slightly
 		if hits > 1 and i < hits - 1:
