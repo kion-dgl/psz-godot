@@ -1066,15 +1066,54 @@ func _get_equipped_weapon_type() -> int:
 	return 0
 
 
+const RANGED_WEAPON_TYPES := [9, 10, 11, 12]  # HANDGUN, MECH_GUN, RIFLE, BAZOOKA
+
+
 func _activate_attack_hitbox() -> void:
+	var atk: Dictionary = _get_attack_damage()
+	var weapon_type: int = int(atk.get("weapon_type", 0))
+
+	if weapon_type in RANGED_WEAPON_TYPES:
+		_fire_projectile(atk)
+		return
+
 	if attack_hitbox:
-		var atk: Dictionary = _get_attack_damage()
 		attack_hitbox.damage = int(atk.get("damage", 10))
 		attack_hitbox.knockback = float(atk.get("knockback", 5.0))
 		attack_hitbox.accuracy = int(atk.get("accuracy", 100))
 		attack_hitbox.max_targets = int(atk.get("max_targets", 1))
 		attack_hitbox.hits_per_target = int(atk.get("hits", 1))
 		attack_hitbox.activate()
+
+
+func _fire_projectile(atk: Dictionary) -> void:
+	var config: Dictionary = CombatManager.get_weapon_type_config(int(atk.get("weapon_type", 0)))
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
+	var max_range: float = float(config.get("hitbox_offset", 8.0)) + float(config.get("hitbox_size", Vector3(1, 1, 1)).z)
+	var hits: int = int(atk.get("hits", 1))
+
+	for i in range(hits):
+		var proj := Projectile.new()
+		proj.damage = int(atk.get("damage", 10))
+		proj.knockback = float(atk.get("knockback", 3.0))
+		proj.accuracy = int(atk.get("accuracy", 100))
+		proj.direction = forward
+		proj.max_range = max_range
+		proj.owner_node = self
+		proj.speed = 25.0
+
+		# Slight spread for multi-shot (mechgun)
+		if hits > 1:
+			var spread := randf_range(-0.05, 0.05)
+			proj.direction = Vector3(forward.x + spread, 0, forward.z + spread).normalized()
+
+		proj.global_position = spawn_pos
+		get_tree().current_scene.add_child(proj)
+
+		# Stagger multi-shot slightly
+		if hits > 1 and i < hits - 1:
+			spawn_pos += forward * 0.1
 
 
 func _deactivate_attack_hitbox() -> void:
