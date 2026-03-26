@@ -78,6 +78,23 @@ var weapon_node: Node3D  # Attached weapon model
 # Weapon attachment config
 const WEAPON_BONE_NAME: String = "070_RArm02"  # Right hand
 const LEFT_WEAPON_BONE_NAME: String = "040_LArm02"  # Left hand (dual-wield)
+
+# Per-weapon-type hold orientation: idle (walking/standing) vs attack (during combo)
+const WEAPON_HOLD_DEFAULT := {
+	"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, 90, 0)},
+	"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, 90, 0)},
+}
+const WEAPON_HOLD := {
+	# WeaponData.WeaponType enum values as keys
+	11: {  # RIFLE
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(4, 12, 98)},
+		"attack": {"pos": Vector3(0.2, 0.19, 0.1), "rot": Vector3(106, 12, 99)},
+	},
+	12: {  # BAZOOKA
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(4, 12, 98)},
+		"attack": {"pos": Vector3(0.2, 0.19, 0.1), "rot": Vector3(106, 12, 99)},
+	},
+}
 var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
 # Mag attachment config
@@ -442,21 +459,13 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	var node := packed.instantiate() as Node3D
 	bone_attachment.add_child(node)
 
-	# Per-weapon-type hand position and rotation
-	var hand_pos := Vector3(0.31, 0, 0)
-	var hand_rot := Vector3(0, 90, 0)
-	match weapon_data.weapon_type:
-		WeaponData.WeaponType.RIFLE:
-			hand_pos = Vector3(0.19, 0.07, 0.06)
-			hand_rot = Vector3(92, 5, -5)
-		WeaponData.WeaponType.BAZOOKA:
-			hand_pos = Vector3(0.19, 0.07, 0.06)
-			hand_rot = Vector3(92, 5, -5)
+	# Position and scale — use idle hold by default
+	var hold: Dictionary = WEAPON_HOLD.get(weapon_data.weapon_type, WEAPON_HOLD_DEFAULT)
+	var idle_hold: Dictionary = hold.get("idle", {})
 
-	# Position and scale
 	var s: float = weapon_data.glb_scale
-	node.position = hand_pos
-	node.rotation_degrees = hand_rot
+	node.position = idle_hold.get("pos", Vector3(0.31, 0, 0))
+	node.rotation_degrees = idle_hold.get("rot", Vector3(0, 90, 0))
 	node.scale = Vector3(s, s, s)
 
 	# Mirror left-hand weapon on X axis
@@ -967,6 +976,16 @@ func _handle_damaged(_delta: float) -> void:
 			velocity.z = 0
 
 
+func _set_weapon_hold(mode: String) -> void:
+	if not weapon_node or not is_instance_valid(weapon_node):
+		return
+	var wtype: int = _get_equipped_weapon_type()
+	var hold: Dictionary = WEAPON_HOLD.get(wtype, WEAPON_HOLD_DEFAULT)
+	var h: Dictionary = hold.get(mode, hold.get("idle", {}))
+	weapon_node.position = h.get("pos", Vector3(0.31, 0, 0))
+	weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
+
+
 func _play_attack_animation(attack_num: int) -> void:
 	var anim_name := _anim_prefix + "_atk" + str(attack_num)
 	play_animation(anim_name, false)
@@ -974,8 +993,15 @@ func _play_attack_animation(attack_num: int) -> void:
 
 
 func transition_to(new_state: PlayerState) -> void:
+	var was_attacking: bool = current_state == PlayerState.ATTACKING
 	current_state = new_state
 	state_changed.emit(new_state)
+
+	# Swap weapon hold orientation between attack and idle
+	if new_state == PlayerState.ATTACKING and not was_attacking:
+		_set_weapon_hold("attack")
+	elif was_attacking and new_state != PlayerState.ATTACKING:
+		_set_weapon_hold("idle")
 
 	match new_state:
 		PlayerState.IDLE:
