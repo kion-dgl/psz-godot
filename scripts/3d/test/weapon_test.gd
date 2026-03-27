@@ -95,8 +95,8 @@ func _load_animations(character: Dictionary) -> void:
 			10: {"glb_m": "res://assets/player/animations/machinegun_m.glb", "prefix_m": "pmmg", "glb_w": "res://assets/player/animations/machinegun_w.glb", "prefix_w": "pwmgs"},
 			11: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "prefix_m": "pmri", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_w": "pwri"},
 			12: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "prefix_m": "pmri", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_w": "pwri"},
-			14: {"glb_m": "res://assets/player/animations/rod_m.glb", "prefix_m": "pmro", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_w": "pwros"},
-			15: {"glb_m": "res://assets/player/animations/rod_m.glb", "prefix_m": "pmro", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_w": "pwros"},
+			14: {"glb_m": "res://assets/player/animations/rod_m.glb", "prefix_m": "pmro", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_w": "pwro"},
+			15: {"glb_m": "res://assets/player/animations/wand_m.glb", "prefix_m": "pmwa", "glb_w": "res://assets/player/animations/wand_w.glb", "prefix_w": "pwwa"},
 		}
 		var data: Dictionary = WEAPON_ANIM_DATA.get(weapon.weapon_type, {})
 		if not data.is_empty():

@@ -40,7 +40,7 @@ const WEAPON_ANIM_DATA: Dictionary = {
 	WeaponData.WeaponType.MECH_GUN: {"glb_m": "res://assets/player/animations/machinegun_m.glb", "glb_w": "res://assets/player/animations/machinegun_w.glb", "prefix_m": "pmmg", "prefix_w": "pwmgs"},
 	WeaponData.WeaponType.RIFLE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmri", "prefix_w": "pwri"},
 	WeaponData.WeaponType.BAZOOKA: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmri", "prefix_w": "pwri"},
-	WeaponData.WeaponType.ROD: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwros"},
+	WeaponData.WeaponType.ROD: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwro"},
 	WeaponData.WeaponType.WAND: {"glb_m": "res://assets/player/animations/wand_m.glb", "glb_w": "res://assets/player/animations/wand_w.glb", "prefix_m": "pmwa", "prefix_w": "pwwa"},
 }
 const DEFAULT_ANIM_GLB_M := "res://assets/player/animations/saver_m.glb"
@@ -89,6 +89,10 @@ const WEAPON_HOLD := {
 	10: {  # MECH_GUN
 		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},
 		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},
+	},
+	15: {  # WAND
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(-53, 90, 0)},
+		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(-53, 90, 0)},
 	},
 	11: {  # RIFLE
 		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(4, 12, 98)},
@@ -1023,9 +1027,24 @@ func transition_to(new_state: PlayerState) -> void:
 
 
 func play_animation(anim_name: String, _loop: bool = true) -> void:
-	if animation_player and animation_player.has_animation(anim_name):
+	if not animation_player:
+		return
+	if animation_player.has_animation(anim_name):
 		animation_player.play(anim_name)
-		# Note: Animation looping is typically set in the animation resource itself
+		return
+	# Try with 's' suffix variant (e.g. pwros_wait for pwro prefix)
+	var parts := anim_name.rsplit("_", true, 1)
+	if parts.size() == 2:
+		var alt := parts[0] + "s_" + parts[1]
+		if animation_player.has_animation(alt):
+			animation_player.play(alt)
+			return
+	# Search for any animation ending with the suffix
+	var suffix := "_" + anim_name.get_slice("_", anim_name.count("_"))
+	for name in animation_player.get_animation_list():
+		if name.ends_with(suffix):
+			animation_player.play(name)
+			return
 
 
 func _on_animation_finished(_anim_name: String) -> void:
