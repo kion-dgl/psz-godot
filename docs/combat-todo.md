@@ -3,8 +3,8 @@
 ## Phase 1 — Current Branch
 
 - [x] Add missing weapon types to shop (spear, claw, double saber, slicer, launcher)
-- [ ] Handgun hold orientation tuning
-- [ ] Rod hold orientation tuning
+- [x] Handgun hold orientation tuning
+- [x] Rod hold orientation tuning
 - [ ] Launcher/bazooka — weapon in shop, AoE explosion on projectile impact
 - [ ] Knockback refinement — heavy vs light weapon hit reactions
 - [ ] Damage tuning — test and adjust combat feel
