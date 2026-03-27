@@ -21,5 +21,7 @@ element_level = 0
 photon_arts = [{"name": "Funny Dive", "attack_mod": 125, "accuracy_mod": 200, "pp_used": 11, "element": "-"}, {"name": "Magical Sign", "attack_mod": 140, "accuracy_mod": 160, "pp_used": 13, "element": "Level 3 Slow"}, {"name": "Act Trick", "attack_mod": 0, "accuracy_mod": 0, "pp_used": 2, "element": "-"}]
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
 pso_world_id = 382
+glb_path = "res://assets/weapons/basic/Wand.glb"
+glb_scale = 0.09
 model_id = "wwah01"
 variant_id = "wwah01_1_o"
