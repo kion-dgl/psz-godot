@@ -2,10 +2,12 @@
 
 ## Phase 1 — Current Branch
 
-- [x] Add missing weapon types to shop (spear, claw, double saber, slicer, launcher)
+- [x] Add missing weapon types to shop (spear, claw, double saber, slicer)
 - [x] Handgun hold orientation tuning
 - [x] Rod hold orientation tuning
-- [ ] Launcher/bazooka — weapon in shop, AoE explosion on projectile impact
+- [ ] Laser cannon — projectile travels straight, pierces enemies, damages each along the way
+- [ ] Shot weapon — fires 3-5 bullets in a spread (port from PSO)
+- [ ] Grenade launcher — fires in an arc, explodes on ground impact (PSU style)
 - [ ] Knockback refinement — heavy vs light weapon hit reactions
 - [ ] Damage tuning — test and adjust combat feel
 - [ ] Enemy HP bars
