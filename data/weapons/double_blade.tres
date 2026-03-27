@@ -21,5 +21,7 @@ element_level = 0
 photon_arts = [{"name": "Cyclone Run", "attack_mod": 100, "accuracy_mod": 80, "pp_used": 20, "element": "-"}]
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
 pso_world_id = 135
+glb_path = "res://assets/weapons/basic/DoubleSaber.glb"
+glb_scale = 1.0
 model_id = "wdsc01"
 variant_id = "wdsc01_1_b"
