@@ -112,6 +112,22 @@ const BAKE_TARGETS = [
     ],
   },
   {
+    // Mechgun (male) — missing walk/run
+    targetGlb: '../assets/player/animations/machinegun_m.glb',
+    anims: [
+      { index: 28, name: 'pmmg_walk', offsets: WALK_OFFSETS },
+      { index: 35, name: 'pmmg_run', offsets: RUN_OFFSETS },
+    ],
+  },
+  {
+    // Mechgun (female) — missing walk/run
+    targetGlb: '../assets/player/animations/machinegun_w.glb',
+    anims: [
+      { index: 267, name: 'pwmgs_walk', offsets: F_WALK_OFFSETS },
+      { index: 272, name: 'pwmgs_run', offsets: F_RUN_OFFSETS },
+    ],
+  },
+  {
     // Rifle (male) — PSO rifle animations baked into shotgun GLB
     targetGlb: '../assets/player/animations/shotgun_m.glb',
     anims: [

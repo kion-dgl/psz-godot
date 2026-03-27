@@ -41,7 +41,7 @@ const WEAPON_ANIM_DATA: Dictionary = {
 	WeaponData.WeaponType.RIFLE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmri", "prefix_w": "pwri"},
 	WeaponData.WeaponType.BAZOOKA: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmri", "prefix_w": "pwri"},
 	WeaponData.WeaponType.ROD: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwros"},
-	WeaponData.WeaponType.WAND: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwros"},
+	WeaponData.WeaponType.WAND: {"glb_m": "res://assets/player/animations/wand_m.glb", "glb_w": "res://assets/player/animations/wand_w.glb", "prefix_m": "pmwa", "prefix_w": "pwwa"},
 }
 const DEFAULT_ANIM_GLB_M := "res://assets/player/animations/saver_m.glb"
 const DEFAULT_ANIM_GLB_W := "res://assets/player/animations/saver_w.glb"
@@ -86,6 +86,10 @@ const WEAPON_HOLD_DEFAULT := {
 }
 const WEAPON_HOLD := {
 	# WeaponData.WeaponType enum values as keys
+	10: {  # MECH_GUN
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},
+		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},
+	},
 	11: {  # RIFLE
 		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(4, 12, 98)},
 		"attack": {"pos": Vector3(0.2, 0.19, 0.1), "rot": Vector3(106, 12, 99)},
