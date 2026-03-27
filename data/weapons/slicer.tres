@@ -21,5 +21,7 @@ element_level = 0
 photon_arts = [{"name": "Edge Riser", "attack_mod": 150, "accuracy_mod": 200, "pp_used": 15, "element": "-"}]
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Force Human", "Force Newman")
 pso_world_id = 399
+glb_path = "res://assets/weapons/basic/Slicer.glb"
+glb_scale = 1.0
 model_id = "wslc01"
 variant_id = "wslc01_1_o"

@@ -25,6 +25,7 @@ const DEBUG_ALL_TIERS := true
 const SHOP_WEAPON_TIER1 := [
 	"saber", "sword", "dagger", "partisan",
 	"handgun", "rifle", "mechgun", "rod", "wand",
+	"d_fangs", "double_blade", "slicer", "pipe_bazooka",
 ]
 const SHOP_WEAPON_TIER2 := [
 	"brand", "gigush", "knife", "halberd",
