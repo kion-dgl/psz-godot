@@ -416,14 +416,8 @@ func _start_loafing() -> void:
 
 func _process_hurt(delta: float) -> void:
 	hurt_timer -= delta
-
-	# Check floor during knockback - stop if approaching edge
-	if velocity.length() > 0.1:
-		var move_dir := velocity.normalized()
-		move_dir.y = 0
-		if not _can_move_to(move_dir):
-			velocity.x = 0
-			velocity.z = 0
+	velocity.x = 0
+	velocity.z = 0
 
 	if hurt_timer <= 0:
 		current_state = EnemyState.CHASING
@@ -479,18 +473,11 @@ func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100) 
 	if current_hp <= 0:
 		_die()
 	else:
-		# Enter hurt state
+		# Enter hurt state — play stagger animation, no physics knockback
 		is_attacking = false  # Cancel any attack
 		current_state = EnemyState.HURT
 		hurt_timer = HURT_DURATION
-
-		# Only apply knockback if it won't push us off the edge
-		var knockback_dir := knockback.normalized()
-		knockback_dir.y = 0
-		if knockback_dir.length() > 0.1 and _can_move_to(knockback_dir):
-			velocity = knockback
-		else:
-			velocity = Vector3.ZERO  # Stop at edge
+		velocity = Vector3.ZERO  # Stop movement during stagger
 
 		_play_animation("dmg", true)  # Force play damage animation
 

@@ -8,9 +8,7 @@
 - [ ] Laser cannon — projectile travels straight, pierces enemies, damages each along the way
 - [ ] Shot weapon — fires 3-5 bullets in a spread (port from PSO)
 - [ ] Grenade launcher — fires in an arc, explodes on ground impact (PSU style)
-- [ ] Knockback refinement — heavy vs light weapon hit reactions
-- [ ] Damage tuning — test and adjust combat feel
-- [ ] Enemy HP bars
+- [ ] Hit reactions — enemies play dam_n (stagger), dam_h (knockdown+recover), dam_d (knockdown+stay) based on hit strength, not physics knockback
 - [ ] Hit feedback juice (screen shake, hitstop frames)
 - [x] Real damage formula (stats + weapon + defense/evasion + crits)
 - [x] Melee weapons: saber, sword, daggers, spear, rod, wand
