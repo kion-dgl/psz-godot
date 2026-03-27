@@ -86,9 +86,17 @@ const WEAPON_HOLD_DEFAULT := {
 }
 const WEAPON_HOLD := {
 	# WeaponData.WeaponType enum values as keys
+	9: {  # HANDGUN
+		"idle": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
+		"attack": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
+	},
 	10: {  # MECH_GUN
 		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},
 		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},
+	},
+	14: {  # ROD
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(43, 90, -30)},
+		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(43, 90, -30)},
 	},
 	15: {  # WAND
 		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(-53, 90, 0)},
