@@ -1054,7 +1054,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 
 	# Full damage to primary target
 	if target_enemy.hurtbox:
-		var hit_dir := (target_enemy.global_position - global_position).normalized()
+		var hit_dir: Vector3 = (target_enemy.global_position - global_position).normalized()
 		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100)
 
 	# Reduced damage to nearby enemies
@@ -1065,7 +1065,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 			continue
 		var dist: float = enemy.global_position.distance_to(explosion_pos)
 		if dist <= explosion_radius and enemy.hurtbox:
-			var splash_dir := (enemy.global_position - explosion_pos).normalized()
+			var splash_dir: Vector3 = (enemy.global_position - explosion_pos).normalized()
 			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100)
 
 	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
@@ -1181,7 +1181,7 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 				best_enemy = enemy
 		if best_enemy == null:
 			break
-		var chain_dir := (best_enemy.global_position - last_hit.global_position).normalized()
+		var chain_dir: Vector3 = (best_enemy.global_position - last_hit.global_position).normalized()
 		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100)
 		_spawn_zonde_visual(best_enemy.global_position)
 		hit_enemies.append(best_enemy)
@@ -1193,8 +1193,8 @@ func _spawn_razonde(damage: int, kb: float) -> void:
 	var nearby := _get_enemies_in_radius(12.0)
 	for enemy in nearby:
 		if enemy.hurtbox:
-			var dir := (enemy.global_position - global_position).normalized()
-			enemy.hurtbox.take_hit(damage, dir * kb, 100)
+			var hit_dir: Vector3 = (enemy.global_position - global_position).normalized()
+			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100)
 		_spawn_zonde_visual(enemy.global_position)
 	_spawn_aoe_visual(global_position, Color(0.8, 0.8, 1.0), 12.0)
 
