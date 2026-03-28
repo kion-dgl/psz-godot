@@ -8,7 +8,7 @@ func _ready() -> void:
 	# Load a few test icons
 	var test_files := ["attack.png", "Foie.png", "monomate.png", "dodge.png"]
 	for f in test_files:
-		var path := "res://assets/hud/" + f
+		var path: String = "res://assets/hud/" + f
 		if ResourceLoader.exists(path):
 			_icons.append(load(path))
 			_icon_names.append(f)

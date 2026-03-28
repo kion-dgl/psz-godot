@@ -616,18 +616,13 @@ class _ActionPalette extends Control:
 			var px: float = i * (PILL_W + GAP)
 			var py: float = row_y + RAISED if i == 1 else row_y
 
-			draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
-
-			# Action icon (fills the pill with padding)
+			# Action icon — draw raw (icons have their own background)
 			var action_icon: Texture2D = ActionPalette.get_action_icon(action_id)
 			if action_icon:
-				var pad := 2.0
-				var icon_rect := Rect2(px + pad, py + pad, PILL_W - pad * 2, PILL_H - pad * 2)
-				# Icons have semi-transparent black background — draw black behind so they composite correctly
-				draw_rect(icon_rect, Color.BLACK)
-				draw_texture_rect(action_icon, icon_rect, false)
+				draw_texture_rect(action_icon, Rect2(px, py, PILL_W, PILL_H), false)
 			else:
-				# Text fallback if no icon
+				# Text fallback with pill background
+				draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
 				var data: Dictionary = ActionPalette.get_action_data(action_id)
 				var lbl: String = data.get("short", action_id)
 				var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL).x
