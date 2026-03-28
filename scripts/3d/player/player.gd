@@ -1046,12 +1046,18 @@ func play_animation(anim_name: String, _loop: bool = true) -> void:
 		if animation_player.has_animation(alt):
 			animation_player.play(alt)
 			return
-	# Search for any animation ending with the suffix
-	var suffix := "_" + anim_name.get_slice("_", anim_name.count("_"))
-	for name in animation_player.get_animation_list():
-		if name.ends_with(suffix):
-			animation_player.play(name)
-			return
+	# Search for any animation ending with a matching suffix, trying longest first
+	# e.g. for "pmsa_dam_d_lp" try "_dam_d_lp", then "_d_lp", then "_lp"
+	var underscores: PackedInt32Array = []
+	for i in range(anim_name.length()):
+		if anim_name[i] == "_":
+			underscores.append(i)
+	for idx in range(1, underscores.size()):
+		var suffix := anim_name.substr(underscores[idx])
+		for anim in animation_player.get_animation_list():
+			if anim.ends_with(suffix):
+				animation_player.play(anim)
+				return
 
 
 func _on_animation_finished(_anim_name: String) -> void:
