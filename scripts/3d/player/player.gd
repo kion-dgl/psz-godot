@@ -1165,22 +1165,24 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 	# Chain from the last hit enemy to the nearest unhit enemy
 	var hit_enemies: Array = [primary]
 	var last_hit = primary
+	var best_enemy = null
+	var best_dist := 0.0
 	for _chain in range(9):
-		var best_enemy = null
-		var best_dist := 8.0  # Max chain distance
+		best_enemy = null
+		best_dist = 8.0  # Max chain distance
 		for enemy in get_tree().get_nodes_in_group("enemies"):
 			if not is_instance_valid(enemy) or enemy in hit_enemies:
 				continue
 			if not enemy.get("is_alive"):
 				continue
-			var dist: float = enemy.global_position.distance_to(last_hit.global_position)
-			if dist < best_dist and enemy.hurtbox:
-				best_dist = dist
+			var d: float = enemy.global_position.distance_to(last_hit.global_position)
+			if d < best_dist and enemy.hurtbox:
+				best_dist = d
 				best_enemy = enemy
 		if best_enemy == null:
 			break
-		var dir := (best_enemy.global_position - last_hit.global_position).normalized()
-		best_enemy.hurtbox.take_hit(damage, dir * kb, 100)
+		var chain_dir := (best_enemy.global_position - last_hit.global_position).normalized()
+		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100)
 		_spawn_zonde_visual(best_enemy.global_position)
 		hit_enemies.append(best_enemy)
 		last_hit = best_enemy
