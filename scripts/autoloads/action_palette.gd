@@ -86,13 +86,17 @@ func get_action_data(action_id: String) -> Dictionary:
 
 
 func get_action_icon(action_id: String) -> Texture2D:
-	var data := get_action_data(action_id)
-	var icon_file: String = data.get("icon", "")
+	var data: Dictionary = get_action_data(action_id)
+	var icon_file: String = str(data.get("icon", ""))
 	if icon_file.is_empty():
+		if Engine.get_process_frames() < 3:
+			print("[ActionPalette] get_action_icon('%s'): no icon field, data=%s" % [action_id, data])
 		return null
-	var path := ICON_BASE + icon_file
+	var path: String = ICON_BASE + icon_file
 	if ResourceLoader.exists(path):
-		return load(path)
+		return load(path) as Texture2D
+	if Engine.get_process_frames() < 3:
+		print("[ActionPalette] get_action_icon('%s'): file not found: %s" % [action_id, path])
 	return null
 
 
