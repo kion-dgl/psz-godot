@@ -85,18 +85,23 @@ func get_action_data(action_id: String) -> Dictionary:
 	return {}
 
 
+var _icon_debug_done: bool = false
+
 func get_action_icon(action_id: String) -> Texture2D:
 	var data: Dictionary = get_action_data(action_id)
 	var icon_file: String = str(data.get("icon", ""))
 	if icon_file.is_empty():
-		if Engine.get_process_frames() < 3:
+		if not _icon_debug_done:
 			print("[ActionPalette] get_action_icon('%s'): no icon field, data=%s" % [action_id, data])
 		return null
 	var path: String = ICON_BASE + icon_file
 	if ResourceLoader.exists(path):
+		if not _icon_debug_done:
+			print("[ActionPalette] get_action_icon('%s'): LOADED %s" % [action_id, path])
+			_icon_debug_done = true
 		return load(path) as Texture2D
-	if Engine.get_process_frames() < 3:
-		print("[ActionPalette] get_action_icon('%s'): file not found: %s" % [action_id, path])
+	if not _icon_debug_done:
+		print("[ActionPalette] get_action_icon('%s'): NOT FOUND %s" % [action_id, path])
 	return null
 
 
