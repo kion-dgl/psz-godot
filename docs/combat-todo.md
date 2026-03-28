@@ -5,11 +5,7 @@
 - [x] Add missing weapon types to shop (spear, claw, double saber, slicer)
 - [x] Handgun hold orientation tuning
 - [x] Rod hold orientation tuning
-- [ ] Laser cannon — projectile travels straight, pierces enemies, damages each along the way
-- [ ] Shot weapon — fires 3-5 bullets in a spread (port from PSO)
-- [ ] Grenade launcher — fires in an arc, explodes on ground impact (PSU style)
-- [ ] Hit reactions — enemies play dam_n (stagger), dam_h (knockdown+recover), dam_d (knockdown+stay) based on hit strength, not physics knockback
-- [ ] Hit feedback juice (screen shake, hitstop frames)
+- [x] Hit reactions — animation-based stagger/knockdown/death (dam_n, dam_h, dam_d, dam_d_wa, dam_d_lp), no physics knockback
 - [x] Real damage formula (stats + weapon + defense/evasion + crits)
 - [x] Melee weapons: saber, sword, daggers, spear, rod, wand
 - [x] Ranged weapons: handgun, rifle, mechgun (projectiles)
@@ -25,6 +21,10 @@
 
 ## Phase 2 — Future
 
+- [ ] Laser cannon — projectile travels straight, pierces enemies, damages each along the way
+- [ ] Shot weapon — fires 3-5 bullets in a spread (port from PSO)
+- [ ] Grenade launcher — fires in an arc, explodes on ground impact (PSU style)
+- [ ] Hit feedback juice (screen shake, hitstop frames)
 - [ ] Technique casting system (Forces)
 - [ ] More enemy behaviors (ranged, charger, tank, boss patterns)
 - [ ] Sound effects

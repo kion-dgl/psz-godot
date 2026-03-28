@@ -440,9 +440,7 @@ func _start_attack() -> void:
 	var damage := 10
 
 	if target.has_method("take_damage"):
-		var knockback_dir := (target.global_position - global_position).normalized()
-		knockback_dir.y = 0
-		target.take_damage(damage, knockback_dir * 5.0)
+		target.take_damage(damage)
 
 	# Set cooldown
 	var cooldown := 1.5
