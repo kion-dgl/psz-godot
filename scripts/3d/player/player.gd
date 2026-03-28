@@ -1054,8 +1054,8 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 
 	# Full damage to primary target
 	if target_enemy.hurtbox:
-		var dir := (target_enemy.global_position - global_position).normalized()
-		target_enemy.hurtbox.take_hit(damage, dir * kb, 100)
+		var hit_dir := (target_enemy.global_position - global_position).normalized()
+		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100)
 
 	# Reduced damage to nearby enemies
 	for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -1065,8 +1065,8 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 			continue
 		var dist: float = enemy.global_position.distance_to(explosion_pos)
 		if dist <= explosion_radius and enemy.hurtbox:
-			var dir := (enemy.global_position - explosion_pos).normalized()
-			enemy.hurtbox.take_hit(int(damage * 0.6), dir * kb, 100)
+			var splash_dir := (enemy.global_position - explosion_pos).normalized()
+			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100)
 
 	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
 
