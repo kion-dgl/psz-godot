@@ -197,7 +197,7 @@ func _build_diamond_preview() -> CenterContainer:
 		slot.add_theme_stylebox_override("panel", PszStyle.pill_style(is_sel))
 		slot.custom_minimum_size = Vector2(48, 48)
 
-		var center := CenterContainer.new()
+		var slot_center := CenterContainer.new()
 		var icon_tex: Texture2D = ActionPalette.get_action_icon(action_id)
 		if icon_tex:
 			var tex_rect := TextureRect.new()
@@ -205,16 +205,16 @@ func _build_diamond_preview() -> CenterContainer:
 			tex_rect.custom_minimum_size = Vector2(32, 32)
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-			center.add_child(tex_rect)
+			slot_center.add_child(tex_rect)
 		else:
 			var data: Dictionary = ActionPalette.get_action_data(action_id)
 			var action_label := Label.new()
 			action_label.text = data.get("short", action_id)
 			action_label.add_theme_color_override("font_color", PszStyle.TEXT)
 			action_label.add_theme_font_size_override("font_size", 11)
-			center.add_child(action_label)
+			slot_center.add_child(action_label)
 
-		slot.add_child(center)
+		slot.add_child(slot_center)
 
 		# Outer slots raised via bottom margin
 		var margin := MarginContainer.new()
