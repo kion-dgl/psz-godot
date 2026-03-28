@@ -1341,6 +1341,35 @@ func _deactivate_attack_hitbox() -> void:
 var _debug_range_mesh: MeshInstance3D
 
 
+func _get_technique_targeting() -> Dictionary:
+	## Check current palette slots for techniques and return extended targeting params.
+	var slots: Array = ActionPalette.get_current_slots()
+	var best_range := 0.0
+	var best_width := 0.0
+	var has_zonde := false
+	for action_id in slots:
+		if not TechniqueManager.TECHNIQUES.has(action_id):
+			continue
+		var character = CharacterManager.get_active_character()
+		if character and TechniqueManager.get_technique_level(character, action_id) <= 0:
+			continue
+		match action_id:
+			"foie", "gifoie", "rafoie":
+				best_range = maxf(best_range, 15.0)
+				best_width = maxf(best_width, 1.0)
+			"barta", "gibarta", "rabarta":
+				best_range = maxf(best_range, 12.0)
+				best_width = maxf(best_width, 1.0)
+			"zonde", "gizonde", "razonde":
+				has_zonde = true
+				best_range = maxf(best_range, 12.0)
+				best_width = maxf(best_width, 4.0)
+			_:
+				best_range = maxf(best_range, 10.0)
+				best_width = maxf(best_width, 2.0)
+	return {"range": best_range, "half_width": best_width * 0.5, "has_zonde": has_zonde}
+
+
 func _update_combat_targets() -> void:
 	# Clear old reticles
 	for enemy in _targeted_enemies:
@@ -1353,11 +1382,17 @@ func _update_combat_targets() -> void:
 	var max_targets: int = int(config.get("max_targets", 1))
 	var hitbox_size: Vector3 = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
 	var hitbox_offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
-	var attack_range: float = hitbox_offset + hitbox_size.z * 0.5
+	var weapon_range: float = hitbox_offset + hitbox_size.z * 0.5
+	var weapon_half_width: float = hitbox_size.x * 0.5 + 0.5
+
+	# Extend targeting to cover equipped techniques
+	var tech_targeting: Dictionary = _get_technique_targeting()
+	var attack_range: float = maxf(weapon_range, float(tech_targeting.get("range", 0.0)))
+	var half_width: float = maxf(weapon_half_width, float(tech_targeting.get("half_width", 0.0)))
+	var has_zonde: bool = tech_targeting.get("has_zonde", false)
 
 	# Player's forward direction (model rotation)
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
-	var half_width: float = hitbox_size.x * 0.5 + 0.5  # Slight padding
 
 	# Debug: show targeting box attached to model
 	if DebugConfig.show_hitboxes:
@@ -1373,14 +1408,14 @@ func _update_combat_targets() -> void:
 			mat.no_depth_test = true
 			_debug_range_mesh.material_override = mat
 			model.add_child(_debug_range_mesh)
-		var box_depth: float = hitbox_offset + hitbox_size.z * 0.5
-		_debug_range_mesh.scale = Vector3(hitbox_size.x + 1.0, hitbox_size.y, box_depth)
+		var box_depth: float = attack_range
+		_debug_range_mesh.scale = Vector3(half_width * 2.0, hitbox_size.y, box_depth)
 		_debug_range_mesh.position = Vector3(0, hitbox_size.y * 0.5 + 0.5, box_depth * 0.5)
 		_debug_range_mesh.visible = true
 	elif _debug_range_mesh:
 		_debug_range_mesh.visible = false
 
-	# Find enemies in front of the player within weapon range
+	# Find enemies in front of the player within range
 	var candidates: Array = []
 	var enemy_group := get_tree().get_nodes_in_group("enemies")
 	for enemy in enemy_group:
@@ -1399,7 +1434,13 @@ func _update_combat_targets() -> void:
 		# Check lateral distance (perpendicular to forward)
 		var right := Vector3(-forward.z, 0, forward.x)
 		var lateral_dist: float = absf(to_enemy.dot(right))
-		if lateral_dist > half_width:
+
+		# For Zonde: cone widens with distance
+		var effective_width: float = half_width
+		if has_zonde and forward_dist > 0:
+			effective_width = maxf(half_width, forward_dist * 0.4)
+
+		if lateral_dist > effective_width:
 			continue
 
 		candidates.append({"enemy": enemy, "dist": forward_dist})
@@ -1407,8 +1448,13 @@ func _update_combat_targets() -> void:
 	# Sort by distance
 	candidates.sort_custom(func(a, b): return a.dist < b.dist)
 
+	# Techniques can target more enemies than the weapon allows
+	var effective_max: int = max_targets
+	if float(tech_targeting.get("range", 0.0)) > 0:
+		effective_max = maxi(max_targets, 3)
+
 	# Show reticle on closest N enemies
-	for i in range(mini(max_targets, candidates.size())):
+	for i in range(mini(effective_max, candidates.size())):
 		var enemy = candidates[i].enemy
 		if enemy.has_method("show_reticle"):
 			enemy.show_reticle()
