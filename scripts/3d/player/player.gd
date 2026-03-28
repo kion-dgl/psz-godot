@@ -701,7 +701,7 @@ func _physics_process(delta: float) -> void:
 			_handle_dodge(delta)
 		PlayerState.ATTACKING:
 			_handle_attack_state(delta)
-		PlayerState.DAMAGED:
+		PlayerState.DAMAGED, PlayerState.DOWN:
 			_handle_damaged(delta)
 		PlayerState.CUTSCENE:
 			velocity.x = 0
@@ -911,6 +911,9 @@ func _start_attack() -> void:
 
 
 func _execute_palette_action(slot: int) -> void:
+	# Block actions during hit reactions and knockdown
+	if current_state == PlayerState.DAMAGED or current_state == PlayerState.DOWN:
+		return
 	var action_id: String = ActionPalette.get_action_for_slot(slot)
 	match action_id:
 		"attack":
@@ -981,13 +984,9 @@ func _handle_attack_state(delta: float) -> void:
 
 
 func _handle_damaged(_delta: float) -> void:
-	# Check floor during knockback - stop at edges to prevent falling off
-	if velocity.length_squared() > 0.1:
-		var move_dir := velocity.normalized()
-		move_dir.y = 0
-		if move_dir.length() > 0.1 and not _can_move_to(move_dir):
-			velocity.x = 0
-			velocity.z = 0
+	# No physics movement during hit reactions — animation-driven only
+	velocity.x = 0
+	velocity.z = 0
 
 
 func _set_weapon_hold(mode: String) -> void:
@@ -1028,8 +1027,8 @@ func transition_to(new_state: PlayerState) -> void:
 			play_animation(_sprint_anim, true)
 		PlayerState.DODGING:
 			play_animation(_anim_prefix + "_esc_f", false)
-		PlayerState.DAMAGED:
-			play_animation(_anim_prefix + "_dam_n", false)
+		PlayerState.DAMAGED, PlayerState.DOWN:
+			pass  # Animation already set by take_damage / _on_animation_finished
 		PlayerState.CUTSCENE:
 			play_animation(_anim_prefix + "_wait", true)
 
@@ -1073,22 +1072,43 @@ func _on_animation_finished(_anim_name: String) -> void:
 				combo_timer = 0.0
 		PlayerState.DAMAGED:
 			transition_to(PlayerState.IDLE)
+		PlayerState.DOWN:
+			if GameState.hp <= 0:
+				# Dead — stay lying down
+				play_animation(_anim_prefix + "_dam_d_lp", true)
+			else:
+				# Get back up
+				play_animation(_anim_prefix + "_dam_d_wa", false)
+				transition_to(PlayerState.DAMAGED)  # DAMAGED → IDLE when wake-up finishes
 
 
 # Public API for external systems
-func take_damage(damage: int, knockback: Vector3 = Vector3.ZERO) -> void:
+func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
+	# Already dead — ignore further hits
+	if current_state == PlayerState.DOWN and GameState.hp <= 0:
+		return
+
 	GameState.set_hp(GameState.hp - damage)
 
-	# Apply knockback
-	if knockback.length() > 0:
-		velocity = knockback
+	# No physics knockback — animation-driven hit reactions only
+	velocity = Vector3.ZERO
 
-	# Play damage animation (heavy if damage > 20)
-	if damage > 20:
+	if GameState.hp <= 0:
+		# Death: knockdown into lying-down loop
+		play_animation(_anim_prefix + "_dam_d", false)
+		transition_to(PlayerState.DOWN)
+	elif damage > 20:
+		# Heavy hit: knockdown then get back up
+		play_animation(_anim_prefix + "_dam_d", false)
+		transition_to(PlayerState.DOWN)
+	elif damage > 10:
+		# Medium hit: knockdown + immediate recovery (single animation)
 		play_animation(_anim_prefix + "_dam_h", false)
+		transition_to(PlayerState.DAMAGED)
 	else:
+		# Light hit: stagger
 		play_animation(_anim_prefix + "_dam_n", false)
-	transition_to(PlayerState.DAMAGED)
+		transition_to(PlayerState.DAMAGED)
 
 
 func get_state() -> PlayerState:
