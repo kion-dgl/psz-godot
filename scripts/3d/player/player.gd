@@ -950,6 +950,7 @@ func _cast_technique(technique_id: String) -> void:
 		return
 
 	GameState.set_mp(GameState.mp - pp_cost)
+	print("[Player] Cast %s: damage=%d pp_cost=%d" % [technique_id, int(tech_data.get("damage", 0)), pp_cost])
 
 	# Play cast animation — no combo for techniques
 	transition_to(PlayerState.ATTACKING)
@@ -998,9 +999,9 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 	proj.knockback = kb
 	proj.accuracy = 100
 	proj.direction = forward
-	proj.max_range = 12.0
+	proj.max_range = 15.0
 	proj.owner_node = self
-	proj.speed = 15.0
+	proj.speed = 20.0
 	proj.pierce = true
 	proj.color = Color(0.3, 0.7, 1.0)
 	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
@@ -1358,7 +1359,7 @@ func _get_technique_targeting() -> Dictionary:
 				best_range = maxf(best_range, 15.0)
 				best_width = maxf(best_width, 1.0)
 			"barta", "gibarta", "rabarta":
-				best_range = maxf(best_range, 12.0)
+				best_range = maxf(best_range, 15.0)
 				best_width = maxf(best_width, 1.0)
 			"zonde", "gizonde", "razonde":
 				has_zonde = true
