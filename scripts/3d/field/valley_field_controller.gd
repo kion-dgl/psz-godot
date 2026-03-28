@@ -21,6 +21,7 @@ const BoxScript := preload("res://scripts/3d/elements/box.gd")
 const FenceScript := preload("res://scripts/3d/elements/fence.gd")
 const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
 const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
+const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
 const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
 const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
 const DropMaterialScript := preload("res://scripts/3d/elements/drop_material.gd")
@@ -1775,7 +1776,12 @@ func _spawn_cell_objects() -> void:
 	# Count living enemies for gate locking
 	var alive_enemies: int = 0
 	for e in _room_enemies:
-		if is_instance_valid(e) and e.element_state != "dead":
+		if not is_instance_valid(e):
+			continue
+		if e is EnemyBase:
+			if e.is_alive:
+				alive_enemies += 1
+		elif e.get("element_state") != "dead":
 			alive_enemies += 1
 
 	if alive_enemies > 0:
@@ -2051,7 +2057,10 @@ func _save_cell_state() -> void:
 				var is_dead := true
 				for e in _room_enemies:
 					if is_instance_valid(e) and e.position.distance_to(pos) < 0.1:
-						is_dead = (e.element_state == "dead")
+						if e is EnemyBase:
+							is_dead = not e.is_alive
+						else:
+							is_dead = (e.get("element_state") == "dead")
 						break
 				obj_states.append({
 					"type": "enemy",
@@ -2208,18 +2217,50 @@ func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type
 func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> void:
 	if state == "dead":
 		return  # Don't spawn dead enemies
-	var enemy := EnemySpawnScript.new()
-	enemy.enemy_id = enemy_id
-	_map_root.add_child(enemy)
-	enemy.position = pos
-	_room_enemies.append(enemy)
-	var spawn_pos := pos
-	var spawn_id := enemy_id
-	enemy.defeated.connect(func() -> void:
-		_spawn_enemy_drops(spawn_pos, spawn_id)
-		_check_room_clear()
-	)
-	print("[CellObjects] Enemy '%s' at %s" % [enemy_id, pos])
+
+	# Look up enemy data from registry
+	var edata = EnemyRegistry.get_enemy(enemy_id)
+
+	# Use EnemyBase (AI enemies) when enemy_data exists, otherwise fall back to EnemySpawn
+	if edata:
+		var enemy := EnemyBase.new()
+		enemy.enemy_data = edata
+
+		# Collision shape
+		var col_shape := CollisionShape3D.new()
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = edata.collision_radius
+		capsule.height = edata.collision_height
+		col_shape.shape = capsule
+		col_shape.position.y = capsule.height / 2
+		enemy.add_child(col_shape)
+		enemy.collision_layer = 8
+		enemy.collision_mask = 1
+
+		_map_root.add_child(enemy)
+		enemy.position = pos
+		_room_enemies.append(enemy)
+		var spawn_pos := pos
+		var spawn_id := enemy_id
+		enemy.died.connect(func(_e: EnemyBase) -> void:
+			_spawn_enemy_drops(spawn_pos, spawn_id)
+			_check_room_clear()
+		)
+		print("[CellObjects] EnemyBase '%s' at %s" % [enemy_id, pos])
+	else:
+		# Fallback to static EnemySpawn for unknown enemies
+		var enemy := EnemySpawnScript.new()
+		enemy.enemy_id = enemy_id
+		_map_root.add_child(enemy)
+		enemy.position = pos
+		_room_enemies.append(enemy)
+		var spawn_pos := pos
+		var spawn_id := enemy_id
+		enemy.defeated.connect(func() -> void:
+			_spawn_enemy_drops(spawn_pos, spawn_id)
+			_check_room_clear()
+		)
+		print("[CellObjects] EnemySpawn '%s' at %s (no registry data)" % [enemy_id, pos])
 
 
 func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: float = 1.0) -> void:
@@ -2553,9 +2594,21 @@ func _lock_gates_for_enemies() -> void:
 
 ## Called when an enemy is defeated — check if all cleared.
 func _check_room_clear() -> void:
+	var alive_count: int = 0
+	var total_count: int = _room_enemies.size()
 	for enemy in _room_enemies:
-		if is_instance_valid(enemy) and enemy.element_state != "dead":
-			return  # Still alive enemies
+		if not is_instance_valid(enemy):
+			continue
+		# EnemyBase uses is_alive, EnemySpawn uses element_state
+		if enemy is EnemyBase:
+			if enemy.is_alive:
+				alive_count += 1
+		elif enemy.get("element_state") != "dead":
+			alive_count += 1
+	print("[RoomClear] %d/%d enemies alive, %d locked gates, %d locked warps" % [
+		alive_count, total_count, _room_gates_locked.size(), _warp_edge_locked.size()])
+	if alive_count > 0:
+		return
 
 	# Check for next wave
 	if _current_wave < _max_wave:
@@ -3037,6 +3090,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_K:
 				print("[DEBUG] Kill all enemies (%d)" % _room_enemies.size())
 				for enemy in _room_enemies:
-					if is_instance_valid(enemy) and enemy.element_state != "dead":
+					if not is_instance_valid(enemy):
+						continue
+					if enemy is EnemyBase:
+						if enemy.is_alive:
+							enemy._on_hit_received(9999, Vector3.ZERO, 999)
+					elif enemy.get("element_state") != "dead":
 						enemy.take_damage(9999)
 				get_viewport().set_input_as_handled()

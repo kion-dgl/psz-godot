@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "scepter"
+name = "Scepter"
+japanese_name = "セプター"
+rarity = 4
+weapon_type = 15
+max_grind = 35
+level = 55
+resale_value = 115
+attack_base = 0
+attack_max = 0
+accuracy_base = 88
+accuracy_max = 88
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 0
+glb_path = "res://assets/weapons/basic/Wand.glb"
+glb_scale = 0.09
+model_id = "wwah01"
+variant_id = "wwah01_1_o"

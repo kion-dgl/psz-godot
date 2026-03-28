@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SVG Minimap Check</title>
+<style>
+  * { box-sizing: border-box; }
+  body { background: #111; color: #ccc; font-family: monospace; margin: 0; padding: 20px; }
+  h1 { margin: 0 0 12px; font-size: 18px; color: #88bbff; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+  .tab {
+    padding: 6px 12px; background: #222; border: 1px solid #444; color: #aaa;
+    cursor: pointer; font-family: monospace; font-size: 13px; border-radius: 4px;
+  }
+  .tab:hover { background: #333; color: #fff; }
+  .tab.active { background: #335; border-color: #66aaff; color: #88bbff; }
+
+  .stage-section { margin-bottom: 24px; }
+  .stage-section h3 { margin: 0 0 6px; font-size: 14px; color: #aac; }
+  .stage-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stage-cell { text-align: center; }
+  .stage-cell img {
+    display: block; width: 220px; height: 220px; border: 1px solid #333;
+    background: #1a1a2e;
+  }
+  .stage-cell .label { margin-top: 4px; font-size: 12px; color: #888; }
+  .stage-cell img.error { border-color: #600; opacity: 0.3; }
+
+  .no-stages { color: #666; font-style: italic; padding: 20px; }
+  .summary { color: #888; font-size: 13px; margin-bottom: 12px; }
+
+  /* base SVG toggle */
+  .show-base label { color: #888; font-size: 13px; cursor: pointer; }
+  .show-base { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<h1>SVG Minimap Check</h1>
+<div class="show-base">
+  <label><input type="checkbox" id="showBase"> Show base (unrotated) SVG</label>
+</div>
+<div class="tabs" id="tabs"></div>
+<div class="summary" id="summary"></div>
+<div id="content"></div>
+
+<script>
+const PREFIX_TO_AREA = {
+  s00a: 'city_a', s00e: 'city_e',
+  s01a: 'valley_a', s01b: 'valley_b', s01e: 'valley_e', s01z: 'valley_z',
+  s02a: 'wetlands_a', s02b: 'wetlands_b', s02e: 'wetlands_e', s02z: 'wetlands_z',
+  s03a: 'snowfield_a', s03b: 'snowfield_b', s03e: 'snowfield_e', s03z: 'snowfield_z',
+  s04a: 'makara_a', s04b: 'makara_b', s04e: 'makara_e', s04z: 'makara_z',
+  s05a: 'paru_a', s05b: 'paru_b', s05e: 'paru_e', s05z: 'paru_z',
+  s06a: 'arca_a', s06b: 'arca_b', s06e: 'arca_e', s06z: 'arca_z',
+  s07a: 'shrine_a', s07b: 'shrine_b', s07e: 'shrine_e', s07z: 'shrine_z',
+  s08e: 'tower_e',
+};
+// Tower special cases: s080 -> tower_0, s081 -> tower_1, etc.
+for (let i = 0; i <= 7; i++) PREFIX_TO_AREA['s08' + i] = 'tower_' + i;
+
+function getArea(mapId) {
+  const prefix = mapId.substring(0, 4);
+  return PREFIX_TO_AREA[prefix] || prefix;
+}
+
+let allConfigs = {};
+let showBase = false;
+
+async function init() {
+  const resp = await fetch('data/stage_configs/unified-stage-configs.json');
+  allConfigs = await resp.json();
+
+  // Group stages by area
+  const areaStages = {};
+  for (const [mapId, config] of Object.entries(allConfigs)) {
+    const area = getArea(mapId);
+    if (!areaStages[area]) areaStages[area] = [];
+    areaStages[area].push(mapId);
+  }
+  for (const area of Object.keys(areaStages)) {
+    areaStages[area].sort();
+  }
+
+  const areas = Object.keys(areaStages).sort();
+  const tabsEl = document.getElementById('tabs');
+
+  // "All" tab
+  const allTab = document.createElement('div');
+  allTab.className = 'tab';
+  allTab.textContent = 'ALL';
+  allTab.onclick = () => showArea('__all__', areaStages, areas);
+  tabsEl.appendChild(allTab);
+
+  for (const area of areas) {
+    const tab = document.createElement('div');
+    tab.className = 'tab';
+    tab.textContent = area;
+    tab.dataset.area = area;
+    tab.onclick = () => showArea(area, areaStages, areas);
+    tabsEl.appendChild(tab);
+  }
+
+  document.getElementById('showBase').addEventListener('change', (e) => {
+    showBase = e.target.checked;
+    document.querySelectorAll('.base-cell').forEach(el => {
+      el.style.display = showBase ? '' : 'none';
+    });
+  });
+
+  // Default to first area
+  if (areas.length > 0) showArea(areas[0], areaStages, areas);
+}
+
+function showArea(areaKey, areaStages, areas) {
+  // Update active tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const tabs = document.querySelectorAll('.tab');
+  tabs.forEach(t => {
+    if ((areaKey === '__all__' && t.textContent === 'ALL') || t.dataset.area === areaKey) {
+      t.classList.add('active');
+    }
+  });
+
+  const contentEl = document.getElementById('content');
+  contentEl.innerHTML = '';
+
+  const areasToShow = areaKey === '__all__' ? areas : [areaKey];
+  let totalStages = 0;
+
+  for (const area of areasToShow) {
+    const stages = areaStages[area] || [];
+    // Filter to stages that have portals (these are the ones with SVGs)
+    const stagesWithPortals = stages.filter(id => {
+      const cfg = allConfigs[id];
+      return cfg && cfg.portals && cfg.portals.length > 0;
+    });
+
+    if (areaKey === '__all__' && stagesWithPortals.length === 0) continue;
+
+    if (areaKey === '__all__') {
+      const areaHeader = document.createElement('h2');
+      areaHeader.textContent = area;
+      areaHeader.style.cssText = 'color: #66aaff; margin: 20px 0 8px; font-size: 16px; border-bottom: 1px solid #333; padding-bottom: 4px;';
+      contentEl.appendChild(areaHeader);
+    }
+
+    totalStages += stagesWithPortals.length;
+
+    if (stagesWithPortals.length === 0) {
+      const noStages = document.createElement('div');
+      noStages.className = 'no-stages';
+      noStages.textContent = 'No stages with portals in this area.';
+      contentEl.appendChild(noStages);
+      continue;
+    }
+
+    for (const mapId of stagesWithPortals) {
+      const section = document.createElement('div');
+      section.className = 'stage-section';
+
+      const h3 = document.createElement('h3');
+      h3.textContent = mapId;
+      section.appendChild(h3);
+
+      const row = document.createElement('div');
+      row.className = 'stage-row';
+
+      const variants = showBase
+        ? [['base', '_minimap.svg'], ['r0', '_minimap_r0.svg'], ['r90', '_minimap_r90.svg'], ['r180', '_minimap_r180.svg'], ['r270', '_minimap_r270.svg']]
+        : [['r0', '_minimap_r0.svg'], ['r90', '_minimap_r90.svg'], ['r180', '_minimap_r180.svg'], ['r270', '_minimap_r270.svg']];
+
+      for (const [label, suffix] of variants) {
+        const cell = document.createElement('div');
+        cell.className = 'stage-cell';
+        if (label === 'base') cell.classList.add('base-cell');
+        if (label === 'base' && !showBase) cell.style.display = 'none';
+
+        const img = document.createElement('img');
+        img.src = `assets/stages/${area}/${mapId}/lndmd/${mapId}${suffix}`;
+        img.alt = `${mapId} ${label}`;
+        img.onerror = () => img.classList.add('error');
+        cell.appendChild(img);
+
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'label';
+        labelDiv.textContent = label;
+        cell.appendChild(labelDiv);
+
+        row.appendChild(cell);
+      }
+
+      section.appendChild(row);
+      contentEl.appendChild(section);
+    }
+  }
+
+  document.getElementById('summary').textContent =
+    areaKey === '__all__'
+      ? `Showing all ${totalStages} stages with portals`
+      : `${(areaStages[areaKey] || []).length} stages in ${areaKey}, ${totalStages} with portals`;
+}
+
+init();
+</script>
+</body>
+</html>

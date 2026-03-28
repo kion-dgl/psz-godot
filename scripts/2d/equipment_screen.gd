@@ -151,7 +151,16 @@ func _open_item_selection() -> void:
 func _item_fits_slot(item_id: String, slot_key: String) -> bool:
 	match slot_key:
 		"weapon":
-			return WeaponRegistry.has_weapon(item_id)
+			var base_id: String = Inventory.get_base_id(item_id)
+			var weapon = WeaponRegistry.get_weapon(base_id)
+			if weapon == null:
+				return false
+			var character = CharacterManager.get_active_character()
+			if character:
+				var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+				if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type):
+					return false
+			return true
 		"frame":
 			return ArmorRegistry.has_armor(item_id)
 		"unit1", "unit2", "unit3", "unit4":

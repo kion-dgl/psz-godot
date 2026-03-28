@@ -61,7 +61,9 @@ func _build_options_menu() -> void:
 	_menu_items = [
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
+		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
 		"Time + Room: %s" % (on if DebugConfig.show_time_room else off),
+		"Weapon Test",
 	]
 
 	var disabled_mask: Array = []
@@ -95,6 +97,11 @@ func _on_menu_selected(index: int) -> void:
 			DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
 		elif item.begins_with("Gate Dots:"):
 			DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		elif item.begins_with("Hitboxes:"):
+			DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		elif item == "Weapon Test":
+			SceneManager.goto_scene("res://scenes/3d/test/weapon_test.tscn")
+			return
 		elif item.begins_with("Time + Room:"):
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)

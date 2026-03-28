@@ -55,6 +55,9 @@ enum BehaviorType {
 ## Base defense
 @export var defense_base: int = 5
 
+## Base evasion (chance to dodge attacks)
+@export var evasion_base: int = 30
+
 ## Movement speed
 @export var move_speed: float = 3.0
 

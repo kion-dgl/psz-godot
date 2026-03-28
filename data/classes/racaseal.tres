@@ -11,6 +11,8 @@ gender = "Female"
 type = "Ranger"
 bonuses = PackedStringArray("Natural HP recovery (+1% every 5 seconds; +5% at rest)", "Immune to poison status attribute", "Can see and destroy traps")
 material_limit = 80
+innate_weapon_type = 10
+allowed_weapon_types = Array[int]([0, 4, 9, 10, 11, 12])
 stats = {
   "hp": {
     "1": 83,

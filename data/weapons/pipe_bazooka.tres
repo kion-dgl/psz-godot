@@ -21,5 +21,7 @@ element_level = 2
 photon_arts = [{"name": "Crush Bomb", "attack_mod": 210, "accuracy_mod": 100, "pp_used": 24, "element": "-"}]
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
 pso_world_id = 257
+glb_path = "res://assets/weapons/basic/Launcher.glb"
+glb_scale = 1.0
 model_id = ""
 variant_id = ""
