@@ -621,9 +621,11 @@ class _ActionPalette extends Control:
 			# Action icon (fills the pill with padding)
 			var action_icon: Texture2D = ActionPalette.get_action_icon(action_id)
 			if action_icon:
-				var pad := 4.0
+				var pad := 2.0
 				var icon_rect := Rect2(px + pad, py + pad, PILL_W - pad * 2, PILL_H - pad * 2)
-				draw_texture_rect(action_icon, icon_rect, false, Color.WHITE)
+				# Icons have semi-transparent black background — draw black behind so they composite correctly
+				draw_rect(icon_rect, Color.BLACK)
+				draw_texture_rect(action_icon, icon_rect, false)
 			else:
 				# Text fallback if no icon
 				var data: Dictionary = ActionPalette.get_action_data(action_id)
