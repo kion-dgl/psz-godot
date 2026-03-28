@@ -516,10 +516,10 @@ class _ActionPalette extends Control:
 		"keyboard": "I", "kb_mouse": "I", "xinput": "RB", "switch": "R",
 	}
 
-	var _draw_debug_done: bool = false
 	var _bg_pill: StyleBoxFlat
 	var _bg_swap: StyleBoxFlat
 	var _swap_texture: Texture2D = null
+	var _slot_icons: Array = []  # TextureRect nodes for action icons
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
@@ -560,6 +560,21 @@ class _ActionPalette extends Control:
 		# Load icons for current control scheme
 		_load_scheme_icons()
 
+		# Create TextureRect nodes for action slot icons
+		var row_y: float = SWAP_H + 2.0
+		for i in range(3):
+			var tex_rect := TextureRect.new()
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			tex_rect.mouse_filter = MOUSE_FILTER_IGNORE
+			var px: float = i * (PILL_W + GAP)
+			var py: float = row_y + RAISED if i == 1 else row_y
+			tex_rect.position = Vector2(px, py)
+			tex_rect.size = Vector2(PILL_W, PILL_H)
+			add_child(tex_rect)
+			_slot_icons.append(tex_rect)
+		_update_slot_icons()
+
 		# Connect to ActionPalette signals for live updates
 		ActionPalette.page_changed.connect(_on_palette_changed)
 		ActionPalette.config_changed.connect(_on_palette_changed)
@@ -578,7 +593,17 @@ class _ActionPalette extends Control:
 		else:
 			_swap_texture = null
 
+	func _update_slot_icons() -> void:
+		var slots: Array = ActionPalette.get_current_slots()
+		for i in range(3):
+			var action_id: String = slots[i] if i < slots.size() else ""
+			var icon: Texture2D = ActionPalette.get_action_icon(action_id)
+			if i < _slot_icons.size():
+				_slot_icons[i].texture = icon
+				_slot_icons[i].visible = icon != null
+
 	func _on_palette_changed(_arg = null) -> void:
+		_update_slot_icons()
 		queue_redraw()
 
 	func _draw() -> void:
@@ -617,15 +642,9 @@ class _ActionPalette extends Control:
 			var px: float = i * (PILL_W + GAP)
 			var py: float = row_y + RAISED if i == 1 else row_y
 
-			# Action icon — draw raw (icons have their own background)
-			var action_icon: Texture2D = ActionPalette.get_action_icon(action_id)
-			if action_icon:
-				draw_texture_rect(action_icon, Rect2(px, py, PILL_W, PILL_H), false)
-			else:
-				if not _draw_debug_done:
-					print("[Palette HUD] slot %d: id=%s icon=NULL (fallback text)" % [i, action_id])
-					_draw_debug_done = true
-				# Text fallback with pill background
+			# Icons are handled by TextureRect children (_slot_icons)
+			# Only draw text fallback if no icon
+			if i < _slot_icons.size() and not _slot_icons[i].visible:
 				draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
 				var data: Dictionary = ActionPalette.get_action_data(action_id)
 				var lbl: String = data.get("short", action_id)
