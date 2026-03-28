@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Batch SVG Minimap Generator</title>
+<style>
+  * { box-sizing: border-box; }
+  body { background: #111; color: #ccc; font-family: monospace; margin: 0; padding: 20px; }
+  h1 { margin: 0 0 12px; font-size: 18px; color: #88bbff; }
+
+  .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  select, button { font-family: monospace; font-size: 14px; padding: 6px 12px; border-radius: 4px; }
+  select { background: #222; color: #ccc; border: 1px solid #555; }
+  button { background: #335; color: #88bbff; border: 1px solid #557; cursor: pointer; }
+  button:hover { background: #446; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .progress-bar { width: 100%; height: 20px; background: #222; border-radius: 4px; margin-bottom: 12px; display: none; }
+  .progress-fill { height: 100%; background: #4488cc; border-radius: 4px; transition: width 0.2s; }
+  .progress-text { font-size: 13px; color: #888; margin-bottom: 8px; }
+
+  .log { background: #0a0a1a; border: 1px solid #333; padding: 12px; max-height: 400px; overflow-y: auto; font-size: 12px; line-height: 1.6; border-radius: 4px; }
+  .log .ok { color: #6c6; }
+  .log .err { color: #c66; }
+  .log .skip { color: #886; }
+  .log .info { color: #68c; }
+
+  .preview-area { margin-top: 16px; }
+  .preview-row { display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-start; }
+  .preview-row h4 { margin: 0; width: 120px; color: #aac; font-size: 13px; flex-shrink: 0; padding-top: 8px; }
+  .preview-svg { border: 1px solid #333; background: #1a1a2e; }
+</style>
+</head>
+<body>
+<h1>Batch SVG Minimap Generator</h1>
+
+<div class="controls">
+  <select id="areaSelect"><option value="">Loading...</option></select>
+  <button id="runBtn" disabled>Generate SVGs</button>
+  <button id="downloadBtn" disabled>Download ZIP</button>
+  <span class="progress-text" id="progressText"></span>
+</div>
+
+<div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="log" id="log"></div>
+<div class="preview-area" id="preview"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// --- Area mapping ---
+const PREFIX_TO_AREA = {
+  s00a: 'city_a', s00e: 'city_e',
+  s01a: 'valley_a', s01b: 'valley_b', s01e: 'valley_e', s01z: 'valley_z',
+  s02a: 'wetlands_a', s02b: 'wetlands_b', s02e: 'wetlands_e', s02z: 'wetlands_z',
+  s03a: 'snowfield_a', s03b: 'snowfield_b', s03e: 'snowfield_e', s03z: 'snowfield_z',
+  s04a: 'makara_a', s04b: 'makara_b', s04e: 'makara_e', s04z: 'makara_z',
+  s05a: 'paru_a', s05b: 'paru_b', s05e: 'paru_e', s05z: 'paru_z',
+  s06a: 'arca_a', s06b: 'arca_b', s06e: 'arca_e', s06z: 'arca_z',
+  s07a: 'shrine_a', s07b: 'shrine_b', s07e: 'shrine_e', s07z: 'shrine_z',
+  s08e: 'tower_e',
+};
+for (let i = 0; i <= 7; i++) PREFIX_TO_AREA['s08' + i] = 'tower_' + i;
+
+function getArea(mapId) {
+  return PREFIX_TO_AREA[mapId.substring(0, 4)] || mapId.substring(0, 4);
+}
+
+// --- Direction rotation ---
+const DIRECTION_ORDER = ['north', 'east', 'south', 'west'];
+function rotateDirection(dir, rotation) {
+  if (rotation === 0) return dir;
+  const idx = DIRECTION_ORDER.indexOf(dir);
+  if (idx < 0) return dir;
+  const steps = ((rotation / 90) % 4 + 4) % 4;
+  return DIRECTION_ORDER[(idx + steps) % 4];
+}
+
+// --- Floor triangle extraction (ported from ExportTab.tsx) ---
+function extractFloorTriangles(scene, yTolerance) {
+  const triangles = [];
+  let triangleId = 0;
+
+  scene.traverse((object) => {
+    if (!object.isMesh) return;
+    const mesh = object;
+    const geometry = mesh.geometry;
+    const positions = geometry.attributes.position;
+    const index = geometry.index;
+    if (!positions) return;
+
+    const processTriangle = (i0, i1, i2) => {
+      const v0 = new THREE.Vector3(positions.getX(i0), positions.getY(i0), positions.getZ(i0));
+      const v1 = new THREE.Vector3(positions.getX(i1), positions.getY(i1), positions.getZ(i1));
+      const v2 = new THREE.Vector3(positions.getX(i2), positions.getY(i2), positions.getZ(i2));
+
+      v0.applyMatrix4(mesh.matrixWorld);
+      v1.applyMatrix4(mesh.matrixWorld);
+      v2.applyMatrix4(mesh.matrixWorld);
+
+      if (
+        Math.abs(v0.y) < yTolerance &&
+        Math.abs(v1.y) < yTolerance &&
+        Math.abs(v2.y) < yTolerance
+      ) {
+        const edge1 = new THREE.Vector3().subVectors(v1, v0);
+        const edge2 = new THREE.Vector3().subVectors(v2, v0);
+        const area = new THREE.Vector3().crossVectors(edge1, edge2).length() / 2;
+        triangles.push({
+          id: `tri_${triangleId++}`,
+          vertices: [v0.clone(), v1.clone(), v2.clone()],
+          meshName: mesh.name,
+          included: true,
+          area,
+        });
+      }
+    };
+
+    if (index) {
+      for (let i = 0; i < index.count; i += 3) {
+        processTriangle(index.getX(i), index.getX(i + 1), index.getX(i + 2));
+      }
+    } else {
+      for (let i = 0; i < positions.count; i += 3) {
+        processTriangle(i, i + 1, i + 2);
+      }
+    }
+  });
+
+  return triangles;
+}
+
+// --- SVG generation (ported from ExportTab.tsx) ---
+function generateSvgMinimap(triangles, config, rotation = 0, padding = 20) {
+  if (triangles.length === 0) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="50" text-anchor="middle" fill="#666">No floor data</text></svg>';
+  }
+
+  const svgWidth = config.svgSettings?.svgSize ?? 400;
+  const svgHeight = svgWidth;
+  const svgPadding = config.svgSettings?.padding ?? padding;
+
+  let minX, maxX, minZ, maxZ;
+  if (config.svgSettings) {
+    const halfGrid = config.svgSettings.gridSize / 2;
+    minX = config.svgSettings.centerX - halfGrid;
+    maxX = config.svgSettings.centerX + halfGrid;
+    minZ = config.svgSettings.centerZ - halfGrid;
+    maxZ = config.svgSettings.centerZ + halfGrid;
+  } else {
+    minX = Infinity; maxX = -Infinity; minZ = Infinity; maxZ = -Infinity;
+    triangles.forEach((tri) => {
+      tri.vertices.forEach((v) => {
+        minX = Math.min(minX, v.x);
+        maxX = Math.max(maxX, v.x);
+        minZ = Math.min(minZ, v.z);
+        maxZ = Math.max(maxZ, v.z);
+      });
+    });
+  }
+
+  const width = maxX - minX;
+  const height = maxZ - minZ;
+  const scale = Math.min((svgWidth - svgPadding * 2) / width, (svgHeight - svgPadding * 2) / height);
+
+  // Mirror X so west=left, east=right
+  const toSvgX = (x) => (maxX - x) * scale + svgPadding;
+  const toSvgY = (z) => (z - minZ) * scale + svgPadding;
+
+  const cx = svgWidth / 2;
+  const cy = svgHeight / 2;
+
+  // Triangle paths
+  const trianglePaths = triangles
+    .map((tri) => {
+      const points = tri.vertices.map((v) => `${toSvgX(v.x).toFixed(1)},${toSvgY(v.z).toFixed(1)}`);
+      return `M ${points.join(' L ')} Z`;
+    })
+    .join(' ');
+
+  // Boundary edges
+  const edgeMap = new Map();
+  const edgeVertices = new Map();
+
+  triangles.forEach((tri) => {
+    const verts = tri.vertices.map((v) => [v.x, v.z]);
+    for (let i = 0; i < 3; i++) {
+      const v1 = verts[i];
+      const v2 = verts[(i + 1) % 3];
+      const key =
+        v1[0] < v2[0] || (v1[0] === v2[0] && v1[1] < v2[1])
+          ? `${v1[0].toFixed(3)},${v1[1].toFixed(3)}-${v2[0].toFixed(3)},${v2[1].toFixed(3)}`
+          : `${v2[0].toFixed(3)},${v2[1].toFixed(3)}-${v1[0].toFixed(3)},${v1[1].toFixed(3)}`;
+      edgeMap.set(key, (edgeMap.get(key) || 0) + 1);
+      edgeVertices.set(key, [v1, v2]);
+    }
+  });
+
+  const boundaryEdges = [];
+  edgeMap.forEach((count, key) => {
+    if (count === 1) {
+      const [v1, v2] = edgeVertices.get(key);
+      boundaryEdges.push(
+        `M ${toSvgX(v1[0]).toFixed(1)},${toSvgY(v1[1]).toFixed(1)} L ${toSvgX(v2[0]).toFixed(1)},${toSvgY(v2[1]).toFixed(1)}`
+      );
+    }
+  });
+
+  // Gate markers
+  const gateMarkers = (config.portals || [])
+    .map((portal) => {
+      const x = toSvgX(portal.position[0]);
+      const y = toSvgY(portal.position[2]);
+      const isHorizontal = portal.direction === 'north' || portal.direction === 'south';
+      const rectW = isHorizontal ? 48 : 8;
+      const rectH = isHorizontal ? 8 : 48;
+
+      const gridDir = rotateDirection(portal.direction, rotation);
+      const labelText = gridDir[0].toUpperCase();
+
+      let labelX = x;
+      let labelY = y;
+      let anchor = 'middle';
+      const labelOffset = 16;
+      switch (portal.direction) {
+        case 'north': labelY = y - labelOffset; break;
+        case 'south': labelY = y + labelOffset + 8; break;
+        case 'east': labelX = x - labelOffset - 4; anchor = 'end'; break;
+        case 'west': labelX = x + labelOffset + 4; anchor = 'start'; break;
+      }
+
+      const rect = `<rect x="${(x - rectW / 2).toFixed(1)}" y="${(y - rectH / 2).toFixed(1)}" width="${rectW}" height="${rectH}" fill="#ff4444" stroke="white" stroke-width="1" data-gate="true" data-gate-dir="${gridDir}"/>`;
+      const textRotate = rotation !== 0 ? ` transform="rotate(${-rotation}, ${labelX.toFixed(1)}, ${labelY.toFixed(1)})"` : '';
+      const label = `<text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="${anchor}" font-size="10" fill="#ffaaaa" font-family="sans-serif"${textRotate}>${labelText}</text>`;
+      return rect + '\n' + label;
+    })
+    .join('\n');
+
+  const originX = toSvgX(0);
+  const originY = toSvgY(0);
+  const originMarker = `<circle cx="${originX.toFixed(1)}" cy="${originY.toFixed(1)}" r="0" data-origin="true" fill="none"/>`;
+
+  const offsetX = maxX * scale + svgPadding;
+  const offsetY = svgPadding - minZ * scale;
+
+  const dataAttrs = `data-rotation="${rotation}" data-scale="${scale.toFixed(6)}" data-offset-x="${offsetX.toFixed(2)}" data-offset-y="${offsetY.toFixed(2)}" data-center-x="${cx.toFixed(1)}" data-center-y="${cy.toFixed(1)}" data-mirror-x="true"`;
+
+  const rotateOpen = rotation !== 0 ? `<g transform="rotate(${rotation}, ${cx.toFixed(1)}, ${cy.toFixed(1)})">` : '';
+  const rotateClose = rotation !== 0 ? '</g>' : '';
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgWidth} ${svgHeight}" ${dataAttrs}>
+  <rect width="${svgWidth}" height="${svgHeight}" fill="#1a1a2e"/>
+  ${rotateOpen}
+  <path d="${trianglePaths}" fill="#2a2a4e" stroke="none"/>
+  <path d="${boundaryEdges.join(' ')}" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  ${gateMarkers}
+  ${originMarker}
+  ${rotateClose}
+</svg>`;
+}
+
+// --- GLB loader ---
+const loader = new GLTFLoader();
+function loadGLB(url) {
+  return new Promise((resolve, reject) => {
+    loader.load(url, (gltf) => resolve(gltf.scene), undefined, reject);
+  });
+}
+
+// --- State ---
+let allConfigs = {};
+let generatedFiles = new Map(); // path -> svg string
+let running = false;
+
+const areaSelect = document.getElementById('areaSelect');
+const runBtn = document.getElementById('runBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const progressBar = document.getElementById('progressBar');
+const progressFill = document.getElementById('progressFill');
+const progressText = document.getElementById('progressText');
+const logEl = document.getElementById('log');
+const previewEl = document.getElementById('preview');
+
+function log(msg, cls = '') {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function setProgress(current, total) {
+  const pct = total > 0 ? (current / total * 100) : 0;
+  progressFill.style.width = pct + '%';
+  progressText.textContent = `${current} / ${total}`;
+}
+
+// --- Init ---
+async function init() {
+  const resp = await fetch('data/stage_configs/unified-stage-configs.json');
+  allConfigs = await resp.json();
+
+  // Group by area
+  const areaStages = {};
+  for (const [mapId, config] of Object.entries(allConfigs)) {
+    if (!config.portals || config.portals.length === 0) continue;
+    const area = getArea(mapId);
+    if (!areaStages[area]) areaStages[area] = [];
+    areaStages[area].push(mapId);
+  }
+
+  areaSelect.innerHTML = '<option value="__all__">All areas</option>';
+  for (const area of Object.keys(areaStages).sort()) {
+    const count = areaStages[area].length;
+    const opt = document.createElement('option');
+    opt.value = area;
+    opt.textContent = `${area} (${count})`;
+    areaSelect.appendChild(opt);
+  }
+
+  runBtn.disabled = false;
+  window._areaStages = areaStages;
+}
+
+// --- Generate ---
+runBtn.addEventListener('click', async () => {
+  if (running) return;
+  running = true;
+  runBtn.disabled = true;
+  downloadBtn.disabled = true;
+  generatedFiles.clear();
+  logEl.innerHTML = '';
+  previewEl.innerHTML = '';
+  progressBar.style.display = 'block';
+
+  const selectedArea = areaSelect.value;
+  const areaStages = window._areaStages;
+  const areasToProcess = selectedArea === '__all__'
+    ? Object.keys(areaStages).sort()
+    : [selectedArea];
+
+  // Collect all stages
+  const stages = [];
+  for (const area of areasToProcess) {
+    for (const mapId of (areaStages[area] || []).sort()) {
+      stages.push({ mapId, area, config: allConfigs[mapId] });
+    }
+  }
+
+  log(`Starting batch generation for ${stages.length} stages...`, 'info');
+  setProgress(0, stages.length);
+
+  for (let i = 0; i < stages.length; i++) {
+    const { mapId, area, config } = stages[i];
+    setProgress(i, stages.length);
+
+    const glbPath = `assets/stages/${area}/${mapId}/lndmd/${mapId}_m.glb`;
+
+    try {
+      // Load GLB
+      const scene = await loadGLB(glbPath);
+
+      // Extract floor triangles
+      const yTol = config.floorCollision?.yTolerance ?? 0.25;
+      let triangles = extractFloorTriangles(scene, yTol);
+
+      // Apply triangle inclusion/exclusion from config
+      if (config.floorCollision?.triangles) {
+        triangles = triangles.filter(
+          (tri) => config.floorCollision.triangles[tri.id] !== false
+        );
+      }
+
+      // Filter by excluded mesh patterns
+      if (config.floorCollision?.excludedMeshPatterns?.length > 0) {
+        const patterns = config.floorCollision.excludedMeshPatterns;
+        triangles = triangles.filter(
+          (tri) => !patterns.some((p) => tri.meshName.includes(p))
+        );
+      }
+
+      if (triangles.length === 0) {
+        log(`${mapId}: no floor triangles after filtering`, 'skip');
+        continue;
+      }
+
+      // Generate base + 4 rotation variants
+      const rotations = [
+        ['', 0],
+        ['_r0', 0],
+        ['_r90', 90],
+        ['_r180', 180],
+        ['_r270', 270],
+      ];
+
+      for (const [suffix, rot] of rotations) {
+        const svg = generateSvgMinimap(triangles, config, rot);
+        const filePath = `assets/stages/${area}/${mapId}/lndmd/${mapId}_minimap${suffix}.svg`;
+        generatedFiles.set(filePath, svg);
+      }
+
+      log(`${mapId}: OK (${triangles.length} triangles, 5 SVGs)`, 'ok');
+
+      // Dispose geometry to free memory
+      scene.traverse((obj) => {
+        if (obj.isMesh) {
+          obj.geometry?.dispose();
+          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material?.dispose();
+        }
+      });
+    } catch (err) {
+      log(`${mapId}: ERROR - ${err.message}`, 'err');
+    }
+  }
+
+  setProgress(stages.length, stages.length);
+  log(`Done! Generated ${generatedFiles.size} SVG files.`, 'info');
+
+  if (generatedFiles.size > 0) {
+    downloadBtn.disabled = false;
+  }
+
+  running = false;
+  runBtn.disabled = false;
+});
+
+// --- Download ZIP ---
+downloadBtn.addEventListener('click', async () => {
+  downloadBtn.disabled = true;
+  log('Loading JSZip...', 'info');
+
+  // Dynamically load JSZip
+  const { default: JSZip } = await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm');
+
+  const zip = new JSZip();
+  for (const [path, content] of generatedFiles) {
+    zip.file(path, content);
+  }
+
+  log('Creating ZIP...', 'info');
+  const blob = await zip.generateAsync({ type: 'blob' });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'svg-minimaps.zip';
+  a.click();
+  URL.revokeObjectURL(url);
+
+  log('ZIP download started!', 'ok');
+  downloadBtn.disabled = false;
+});
+
+init();
+</script>
+</body>
+</html>
