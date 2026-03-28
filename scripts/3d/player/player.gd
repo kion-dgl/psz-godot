@@ -1022,38 +1022,59 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 
 
 func _spawn_gifoie(damage: int, kb: float) -> void:
-	# Fire eruption around caster — damages all nearby enemies
-	var nearby := _get_enemies_in_radius(6.0)
-	for enemy in nearby:
-		if enemy.hurtbox:
-			var dir := (enemy.global_position - global_position).normalized()
-			enemy.hurtbox.take_hit(damage, dir * kb, 100)
-	_spawn_aoe_visual(global_position, Color(1.0, 0.3, 0.05), 6.0)
-
-
-func _spawn_rafoie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
-	# Large fireball — 3 projectiles in a fan spread
-	for i in range(3):
-		var angle_offset: float = (i - 1) * 0.15  # -0.15, 0, 0.15 radians
-		var rot := player_rotation + angle_offset
-		var dir := Vector3(sin(rot), 0, cos(rot))
+	# Ring of fireballs that spirals outward around the caster (pierce, expanding)
+	var num_fireballs := 6
+	for i in range(num_fireballs):
+		var angle: float = player_rotation + i * TAU / float(num_fireballs)
+		var dir := Vector3(sin(angle), 0, cos(angle))
 		var proj := Projectile.new()
 		proj.damage = damage
 		proj.knockback = kb
 		proj.accuracy = 100
 		proj.direction = dir
-		proj.max_range = 15.0
+		proj.max_range = 6.0
 		proj.owner_node = self
-		proj.speed = 20.0
-		proj.color = Color(1.0, 0.2, 0.0)
+		proj.speed = 8.0
+		proj.pierce = true
+		proj.color = Color(1.0, 0.3, 0.05)
 		get_tree().current_scene.add_child(proj)
-		proj.global_position = spawn_pos
+		proj.global_position = global_position + Vector3(0, 1.0, 0) + dir * 0.5
 
 
-func _spawn_gibarta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
-	# Wide ice wave — 3 piercing projectiles in a fan spread
+func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
+	# Explosion on targeted enemy — damages target + nearby enemies in radius
+	if _targeted_enemies.is_empty():
+		print("[Player] Rafoie: no target")
+		return
+	var target_enemy = _targeted_enemies[0]
+	if not is_instance_valid(target_enemy):
+		return
+	var explosion_pos: Vector3 = target_enemy.global_position
+	var explosion_radius := 5.0
+
+	# Full damage to primary target
+	if target_enemy.hurtbox:
+		var dir := (target_enemy.global_position - global_position).normalized()
+		target_enemy.hurtbox.take_hit(damage, dir * kb, 100)
+
+	# Reduced damage to nearby enemies
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy) or enemy == target_enemy:
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var dist: float = enemy.global_position.distance_to(explosion_pos)
+		if dist <= explosion_radius and enemy.hurtbox:
+			var dir := (enemy.global_position - explosion_pos).normalized()
+			enemy.hurtbox.take_hit(int(damage * 0.6), dir * kb, 100)
+
+	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
+
+
+func _spawn_gibarta(spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
+	# Cone of icy projectiles in front — tight spread, pierce
 	for i in range(3):
-		var angle_offset: float = (i - 1) * 0.12
+		var angle_offset: float = (i - 1) * 0.08
 		var rot := player_rotation + angle_offset
 		var dir := Vector3(sin(rot), 0, cos(rot))
 		var proj := Projectile.new()
@@ -1061,9 +1082,9 @@ func _spawn_gibarta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float
 		proj.knockback = kb
 		proj.accuracy = 100
 		proj.direction = dir
-		proj.max_range = 15.0
+		proj.max_range = 10.0
 		proj.owner_node = self
-		proj.speed = 20.0
+		proj.speed = 18.0
 		proj.pierce = true
 		proj.color = Color(0.3, 0.7, 1.0)
 		var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
@@ -1072,18 +1093,19 @@ func _spawn_gibarta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float
 
 
 func _spawn_rabarta(damage: int, kb: float) -> void:
-	# Ice ring — piercing projectiles in all 8 directions from caster
-	for i in range(8):
-		var angle: float = i * TAU / 8.0
+	# Ice shards in a circle around the user — pierce, largest ice AoE
+	var num_shards := 10
+	for i in range(num_shards):
+		var angle: float = i * TAU / float(num_shards)
 		var dir := Vector3(sin(angle), 0, cos(angle))
 		var proj := Projectile.new()
 		proj.damage = damage
 		proj.knockback = kb
 		proj.accuracy = 100
 		proj.direction = dir
-		proj.max_range = 10.0
+		proj.max_range = 8.0
 		proj.owner_node = self
-		proj.speed = 15.0
+		proj.speed = 12.0
 		proj.pierce = true
 		proj.color = Color(0.5, 0.8, 1.0)
 		get_tree().current_scene.add_child(proj)
@@ -1126,43 +1148,53 @@ func _spawn_zonde_visual(target_pos: Vector3) -> void:
 
 
 func _spawn_gizonde(damage: int, kb: float) -> void:
-	# Chain lightning — hits targeted enemy + up to 2 nearby enemies
+	# Chain lightning — chains from enemy to enemy in front of the user (up to 10)
 	if _targeted_enemies.is_empty():
 		print("[Player] Gizonde: no target")
 		return
 	var primary = _targeted_enemies[0]
 	if not is_instance_valid(primary):
 		return
+
+	# Hit primary target
 	if primary.hurtbox:
 		var fwd := Vector3(sin(player_rotation), 0, cos(player_rotation))
 		primary.hurtbox.take_hit(damage, fwd * kb, 100)
 	_spawn_zonde_visual(primary.global_position)
 
-	# Chain to nearby enemies
-	var chain_count := 0
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if chain_count >= 2:
+	# Chain from the last hit enemy to the nearest unhit enemy
+	var hit_enemies: Array = [primary]
+	var last_hit = primary
+	for _chain in range(9):
+		var best_enemy = null
+		var best_dist := 8.0  # Max chain distance
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if not is_instance_valid(enemy) or enemy in hit_enemies:
+				continue
+			if not enemy.get("is_alive"):
+				continue
+			var dist: float = enemy.global_position.distance_to(last_hit.global_position)
+			if dist < best_dist and enemy.hurtbox:
+				best_dist = dist
+				best_enemy = enemy
+		if best_enemy == null:
 			break
-		if not is_instance_valid(enemy) or enemy == primary:
-			continue
-		if not enemy.get("is_alive"):
-			continue
-		var dist: float = enemy.global_position.distance_to(primary.global_position)
-		if dist < 8.0 and enemy.hurtbox:
-			var dir := (enemy.global_position - primary.global_position).normalized()
-			enemy.hurtbox.take_hit(int(damage * 0.7), dir * kb, 100)
-			_spawn_zonde_visual(enemy.global_position)
-			chain_count += 1
+		var dir := (best_enemy.global_position - last_hit.global_position).normalized()
+		best_enemy.hurtbox.take_hit(damage, dir * kb, 100)
+		_spawn_zonde_visual(best_enemy.global_position)
+		hit_enemies.append(best_enemy)
+		last_hit = best_enemy
 
 
 func _spawn_razonde(damage: int, kb: float) -> void:
-	# Lightning storm — hits all enemies in radius around caster
-	var nearby := _get_enemies_in_radius(8.0)
+	# Lightning spiral around user — largest range, no target required
+	var nearby := _get_enemies_in_radius(12.0)
 	for enemy in nearby:
 		if enemy.hurtbox:
 			var dir := (enemy.global_position - global_position).normalized()
 			enemy.hurtbox.take_hit(damage, dir * kb, 100)
 		_spawn_zonde_visual(enemy.global_position)
+	_spawn_aoe_visual(global_position, Color(0.8, 0.8, 1.0), 12.0)
 
 
 func _get_enemies_in_radius(radius: float) -> Array:
