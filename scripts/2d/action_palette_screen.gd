@@ -81,9 +81,22 @@ func _open_picker() -> void:
 
 func _assign_action() -> void:
 	var action_id: String = _pick_items[_pick_index].id
+	# Block assigning unlearned techniques
+	if not _is_action_available(action_id):
+		hint_label.text = "Not yet learned!"
+		return
 	ActionPalette.set_action(_active_page, _selected_slot, action_id)
 	_picking = false
 	_refresh()
+
+
+func _is_action_available(action_id: String) -> bool:
+	if not TechniqueManager.TECHNIQUES.has(action_id):
+		return true  # Non-technique actions are always available
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
+	return TechniqueManager.get_technique_level(character, action_id) > 0
 
 
 func _refresh() -> void:
@@ -256,8 +269,11 @@ func _build_picker(parent: VBoxContainer) -> void:
 
 		var is_current: bool = action.id == current_id
 		var is_selected: bool = i == _pick_index
+		var available: bool = _is_action_available(action.id)
+		var label_text: String = action.label if available else action.label + "  [Not Learned]"
 		var right_text := "\u2713" if is_current else ""
-		var pill := PszStyle.create_pill(action.label, is_selected, right_text)
+		var grey := Color(0.4, 0.4, 0.4)
+		var pill := PszStyle.create_pill(label_text, is_selected, right_text, Color.TRANSPARENT if available else grey)
 		_prepend_icon(pill, action.id)
 		parent.add_child(pill)
 
