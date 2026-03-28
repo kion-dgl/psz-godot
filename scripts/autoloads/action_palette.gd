@@ -18,6 +18,26 @@ const ALL_ACTIONS: Array = [
 	{"id": "difluid", "label": "Difluid", "short": "D.Flu", "category": "recovery", "icon": "monofluid.png"},
 	{"id": "trifluid", "label": "Trifluid", "short": "T.Flu", "category": "recovery", "icon": "trifluid.png"},
 	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug", "icon": "icon.png"},
+	# Techniques — offensive
+	{"id": "foie", "label": "Foie", "short": "Foie", "category": "technique", "icon": "Foie.png"},
+	{"id": "gifoie", "label": "Gifoie", "short": "Gifoie", "category": "technique", "icon": "Gifoie.png"},
+	{"id": "rafoie", "label": "Rafoie", "short": "Rafoie", "category": "technique", "icon": "Rafoie.png"},
+	{"id": "barta", "label": "Barta", "short": "Barta", "category": "technique", "icon": "Barta.png"},
+	{"id": "gibarta", "label": "Gibarta", "short": "Gibarta", "category": "technique", "icon": "Gibarta.png"},
+	{"id": "rabarta", "label": "Rabarta", "short": "Rabarta", "category": "technique", "icon": "Rabarta.png"},
+	{"id": "zonde", "label": "Zonde", "short": "Zonde", "category": "technique", "icon": "Zonde.png"},
+	{"id": "gizonde", "label": "Gizonde", "short": "Gizonde", "category": "technique", "icon": "Gizonde.png"},
+	{"id": "razonde", "label": "Razonde", "short": "Razonde", "category": "technique", "icon": "Razonde.png"},
+	{"id": "grants", "label": "Grants", "short": "Grants", "category": "technique", "icon": "Grants.png"},
+	{"id": "megid", "label": "Megid", "short": "Megid", "category": "technique", "icon": "Megid.png"},
+	# Techniques — support
+	{"id": "resta", "label": "Resta", "short": "Resta", "category": "technique", "icon": "Resta.png"},
+	{"id": "anti", "label": "Anti", "short": "Anti", "category": "technique", "icon": "Anti.png"},
+	{"id": "reverser", "label": "Reverser", "short": "Reverser", "category": "technique", "icon": "Reverser.png"},
+	{"id": "shifta", "label": "Shifta", "short": "Shifta", "category": "technique", "icon": "Shifta.png"},
+	{"id": "deband", "label": "Deband", "short": "Deband", "category": "technique", "icon": "Deband.png"},
+	{"id": "jellen", "label": "Jellen", "short": "Jellen", "category": "technique", "icon": "Jellen.png"},
+	{"id": "zalure", "label": "Zalure", "short": "Zalure", "category": "technique", "icon": "Zalure.png"},
 ]
 
 const DEFAULT_PAGES: Array = [

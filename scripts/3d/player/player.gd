@@ -926,6 +926,121 @@ func _execute_palette_action(slot: int) -> void:
 			_use_consumable(action_id)
 		"kill_all":
 			_debug_kill_all()
+		_:
+			if TechniqueManager.TECHNIQUES.has(action_id):
+				_cast_technique(action_id)
+
+
+func _cast_technique(technique_id: String) -> void:
+	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+		return
+
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+	if TechniqueManager.get_technique_level(character, technique_id) <= 0:
+		print("[Player] Technique %s not learned" % technique_id)
+		return
+
+	var tech_data: Dictionary = CombatManager.calculate_technique_damage(technique_id)
+	var pp_cost: int = int(tech_data.get("pp_cost", 5))
+
+	if GameState.mp < pp_cost:
+		print("[Player] Not enough PP for %s (need %d, have %d)" % [technique_id, pp_cost, GameState.mp])
+		return
+
+	GameState.set_mp(GameState.mp - pp_cost)
+
+	# Play cast animation — no combo for techniques
+	transition_to(PlayerState.ATTACKING)
+	combo_state = 0
+	combo_window_open = false
+	play_animation(_anim_prefix + "_tec", false)
+
+	_spawn_technique_effect(technique_id, tech_data)
+
+
+func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> void:
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
+	var damage: int = int(tech_data.get("damage", 10))
+	var kb: float = float(tech_data.get("knockback", 3.0))
+
+	match technique_id:
+		"foie":
+			_spawn_foie(spawn_pos, forward, damage, kb)
+		"barta":
+			_spawn_barta(spawn_pos, forward, damage, kb)
+		"zonde":
+			_spawn_zonde(damage, kb)
+		_:
+			# Fallback: fire a basic projectile for unimplemented techniques
+			_spawn_foie(spawn_pos, forward, damage, kb)
+
+
+func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	var proj := Projectile.new()
+	proj.damage = damage
+	proj.knockback = kb
+	proj.accuracy = 100
+	proj.direction = forward
+	proj.max_range = 15.0
+	proj.owner_node = self
+	proj.speed = 20.0
+	proj.color = Color(1.0, 0.3, 0.05)
+	get_tree().current_scene.add_child(proj)
+	proj.global_position = spawn_pos
+
+
+func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	var proj := Projectile.new()
+	proj.damage = damage
+	proj.knockback = kb
+	proj.accuracy = 100
+	proj.direction = forward
+	proj.max_range = 12.0
+	proj.owner_node = self
+	proj.speed = 15.0
+	proj.pierce = true
+	proj.color = Color(0.3, 0.7, 1.0)
+	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
+	get_tree().current_scene.add_child(proj)
+	proj.global_position = ground_pos
+
+
+func _spawn_zonde(damage: int, kb: float) -> void:
+	if _targeted_enemies.is_empty():
+		print("[Player] Zonde: no target")
+		return
+	var target_enemy = _targeted_enemies[0]
+	if not is_instance_valid(target_enemy):
+		return
+	if target_enemy.hurtbox:
+		var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+		target_enemy.hurtbox.take_hit(damage, forward * kb, 100)
+	_spawn_zonde_visual(target_enemy.global_position)
+
+
+func _spawn_zonde_visual(target_pos: Vector3) -> void:
+	var bolt := MeshInstance3D.new()
+	var cylinder := CylinderMesh.new()
+	cylinder.top_radius = 0.08
+	cylinder.bottom_radius = 0.08
+	cylinder.height = 10.0
+	bolt.mesh = cylinder
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 1.0, 0.3)
+	mat.emission_enabled = true
+	mat.emission = Color(0.8, 0.8, 1.0)
+	mat.emission_energy_multiplier = 3.0
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bolt.material_override = mat
+	get_tree().current_scene.add_child(bolt)
+	bolt.global_position = target_pos + Vector3(0, 5.0, 0)
+	var tween := bolt.create_tween()
+	tween.tween_property(mat, "albedo_color:a", 0.0, 0.4)
+	tween.parallel().tween_property(mat, "emission_energy_multiplier", 0.0, 0.4)
+	tween.tween_callback(bolt.queue_free)
 
 
 func _debug_kill_all() -> void:
@@ -1066,6 +1181,10 @@ func _on_animation_finished(_anim_name: String) -> void:
 			transition_to(PlayerState.IDLE)
 		PlayerState.ATTACKING:
 			_deactivate_attack_hitbox()
+			if combo_state == 0:
+				# Technique cast finished (no combo)
+				transition_to(PlayerState.IDLE)
+				return
 			var config: Dictionary = CombatManager.get_weapon_type_config(_get_equipped_weapon_type())
 			var max_combo: int = int(config.get("combo_steps", 3))
 			if combo_state >= max_combo:

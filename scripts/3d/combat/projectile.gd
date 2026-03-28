@@ -1,5 +1,6 @@
 class_name Projectile extends Area3D
-## A projectile that travels forward, damages the first enemy it hits, then despawns.
+## A projectile that travels forward, damages enemies it hits, then despawns.
+## Set pierce = true to hit all enemies along the path (e.g. Barta).
 
 var speed: float = 30.0
 var max_range: float = 20.0
@@ -8,9 +9,12 @@ var knockback: float = 3.0
 var accuracy: int = 100
 var direction: Vector3 = Vector3.FORWARD
 var owner_node: Node3D
+var color: Color = Color(1.0, 0.9, 0.5)
+var pierce: bool = false
 
 var _distance_traveled: float = 0.0
 var _mesh: MeshInstance3D
+var _hit_targets: Array = []
 
 
 func _ready() -> void:
@@ -31,9 +35,9 @@ func _ready() -> void:
 	_mesh.mesh = sphere
 
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(1.0, 0.9, 0.5)
+	mat.albedo_color = color
 	mat.emission_enabled = true
-	mat.emission = Color(1.0, 0.8, 0.3)
+	mat.emission = color
 	mat.emission_energy_multiplier = 2.0
 	_mesh.material_override = mat
 	add_child(_mesh)
@@ -60,5 +64,9 @@ func _on_area_entered(area: Area3D) -> void:
 		var hurtbox := area as Hurtbox
 		if hurtbox.owner_node == owner_node:
 			return
+		if hurtbox.owner_node in _hit_targets:
+			return
+		_hit_targets.append(hurtbox.owner_node)
 		hurtbox.take_hit(damage, direction * knockback, accuracy)
-		queue_free()
+		if not pierce:
+			queue_free()
