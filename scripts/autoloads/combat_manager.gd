@@ -81,6 +81,165 @@ const AREA_DROP_NAMES := {
 	"dark": "dark-shrine",
 }
 
+## Per-weapon-type combat parameters
+## combo_steps: number of attacks in a combo chain
+## hits_per_step: Array of hit counts per step (daggers hit multiple times)
+## damage_mult: Array of damage multipliers per step (finishers hit harder)
+## speed_mult: animation speed multiplier (1.0 = normal)
+## hitbox_size: Vector3 size of the attack hitbox
+## hitbox_offset: how far in front of player the hitbox is placed
+## knockback: Array of knockback force per step
+## combo_window: seconds to input next attack before combo resets
+const WEAPON_TYPE_CONFIGS := {
+	0: {  # SABER — reliable single hits, moderate speed
+		"combo_steps": 3,
+		"hits_per_step": [1, 1, 1],
+		"damage_mult": [1.0, 1.0, 1.3],
+		"speed_mult": 1.0,
+		"hitbox_size": Vector3(1.5, 1.0, 2.0),
+		"hitbox_offset": 1.5,
+		"knockback": [3.0, 3.0, 6.0],
+		"combo_window": 0.5,
+		"max_targets": 1,
+	},
+	1: {  # SWORD — slow heavy hits, big knockback
+		"combo_steps": 3,
+		"hits_per_step": [1, 1, 1],
+		"damage_mult": [1.2, 1.2, 1.8],
+		"speed_mult": 0.8,
+		"hitbox_size": Vector3(2.0, 1.2, 2.5),
+		"hitbox_offset": 1.8,
+		"knockback": [5.0, 5.0, 10.0],
+		"combo_window": 0.6,
+		"max_targets": 3,
+	},
+	2: {  # DAGGERS — fast multi-hit, lower per-hit damage
+		"combo_steps": 3,
+		"hits_per_step": [2, 2, 3],
+		"damage_mult": [0.5, 0.5, 0.4],
+		"speed_mult": 1.3,
+		"hitbox_size": Vector3(1.2, 0.8, 1.5),
+		"hitbox_offset": 1.2,
+		"knockback": [1.0, 1.0, 2.0],
+		"combo_window": 0.4,
+		"max_targets": 1,
+	},
+	3: {  # CLAW — very fast, close range
+		"combo_steps": 3,
+		"hits_per_step": [2, 2, 2],
+		"damage_mult": [0.6, 0.6, 0.8],
+		"speed_mult": 1.4,
+		"hitbox_size": Vector3(1.0, 0.8, 1.2),
+		"hitbox_offset": 1.0,
+		"knockback": [1.5, 1.5, 3.0],
+		"combo_window": 0.35,
+		"max_targets": 1,
+	},
+	4: {  # DOUBLE_SABER — wide sweeps, moderate speed
+		"combo_steps": 3,
+		"hits_per_step": [1, 2, 1],
+		"damage_mult": [1.0, 0.6, 1.5],
+		"speed_mult": 1.1,
+		"hitbox_size": Vector3(2.0, 1.0, 2.0),
+		"hitbox_offset": 1.5,
+		"knockback": [3.0, 2.0, 8.0],
+		"combo_window": 0.45,
+		"max_targets": 3,
+	},
+	5: {  # SPEAR — long reach, thrust attacks. Finisher sweeps 3 targets.
+		"combo_steps": 3,
+		"hits_per_step": [1, 1, 1],
+		"damage_mult": [1.0, 1.1, 1.4],
+		"speed_mult": 0.9,
+		"hitbox_size": Vector3(1.0, 0.8, 3.0),
+		"hitbox_offset": 2.2,
+		"knockback": [4.0, 4.0, 8.0],
+		"combo_window": 0.5,
+		"max_targets": 1,
+		"max_targets_per_step": [1, 1, 3],
+	},
+	6: {  # SLICER — ranged melee, moderate speed
+		"combo_steps": 3,
+		"hits_per_step": [1, 1, 1],
+		"damage_mult": [0.9, 0.9, 1.2],
+		"speed_mult": 1.0,
+		"hitbox_size": Vector3(1.5, 1.0, 2.5),
+		"hitbox_offset": 2.0,
+		"knockback": [2.0, 2.0, 4.0],
+		"combo_window": 0.5,
+		"max_targets": 3,
+	},
+	9: {  # HANDGUN — single shots
+		"combo_steps": 3,
+		"hits_per_step": [1, 1, 1],
+		"damage_mult": [0.8, 0.8, 1.0],
+		"speed_mult": 1.2,
+		"hitbox_size": Vector3(0.5, 0.5, 0.5),
+		"hitbox_offset": 5.0,
+		"knockback": [1.0, 1.0, 2.0],
+		"combo_window": 0.4,
+		"max_targets": 1,
+	},
+	10: {  # MECH_GUN — rapid fire spray
+		"combo_steps": 3,
+		"hits_per_step": [3, 3, 4],
+		"damage_mult": [0.3, 0.3, 0.25],
+		"speed_mult": 1.5,
+		"hitbox_size": Vector3(0.5, 0.5, 0.5),
+		"hitbox_offset": 5.0,
+		"knockback": [0.5, 0.5, 1.0],
+		"combo_window": 0.3,
+		"max_targets": 3,
+	},
+	11: {  # RIFLE — slow precision single shot (PSO rifle has only atk1)
+		"combo_steps": 1,
+		"hits_per_step": [1],
+		"damage_mult": [1.5],
+		"speed_mult": 0.7,
+		"hitbox_size": Vector3(0.5, 0.5, 0.5),
+		"hitbox_offset": 8.0,
+		"knockback": [8.0],
+		"combo_window": 0.6,
+		"max_targets": 1,
+	},
+	12: {  # BAZOOKA/LAUNCHER — slow AoE explosions
+		"combo_steps": 2,
+		"hits_per_step": [1, 1],
+		"damage_mult": [1.5, 2.0],
+		"speed_mult": 0.6,
+		"hitbox_size": Vector3(3.0, 2.0, 3.0),
+		"hitbox_offset": 6.0,
+		"knockback": [8.0, 12.0],
+		"combo_window": 0.7,
+		"max_targets": 5,
+	},
+	14: {  # ROD — melee swing, tech amplifier
+		"combo_steps": 3,
+		"hits_per_step": [1, 1, 1],
+		"damage_mult": [0.7, 0.7, 0.9],
+		"speed_mult": 0.9,
+		"hitbox_size": Vector3(1.5, 1.0, 2.0),
+		"hitbox_offset": 1.5,
+		"knockback": [2.0, 2.0, 4.0],
+		"combo_window": 0.5,
+		"max_targets": 1,
+	},
+	15: {  # WAND — melee swing, support amplifier
+		"combo_steps": 3,
+		"hits_per_step": [1, 1, 1],
+		"damage_mult": [0.6, 0.6, 0.8],
+		"speed_mult": 0.9,
+		"hitbox_size": Vector3(1.5, 1.0, 2.0),
+		"hitbox_offset": 1.5,
+		"knockback": [2.0, 2.0, 3.0],
+		"combo_window": 0.5,
+		"max_targets": 1,
+	},
+}
+
+## Innate weapon damage bonus
+const INNATE_WEAPON_BONUS := 0.15
+
 ## Current combat state
 var _enemies: Array = []
 var _combat_active: bool = false
@@ -216,6 +375,90 @@ func _get_player_stats(character: Dictionary) -> Dictionary:
 		"armor_evasion": armor_evasion,
 		"set_bonus": set_bonus,
 	}
+
+
+## Calculate attack damage for the real-time combat system.
+## Returns: {damage: int, hits: int, knockback: float, accuracy: int, is_innate: bool, weapon_type: int}
+func calculate_attack_damage(combo_step: int = 1) -> Dictionary:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return {"damage": 10, "hits": 1, "knockback": 5.0, "accuracy": 100, "is_innate": false, "weapon_type": 0}
+
+	var stats: Dictionary = _get_player_stats(character)
+	var player_attack: int = int(stats.get("attack", 10))
+	var weapon_attack: int = int(stats.get("weapon_attack", 0))
+	var player_accuracy: int = int(stats.get("accuracy", 100))
+
+	# Get weapon type
+	var weapon_type: int = 0
+	var weapon_id: String = str(character.get("equipment", {}).get("weapon", ""))
+	if not weapon_id.is_empty():
+		var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
+		if weapon:
+			weapon_type = weapon.weapon_type
+
+	# Get weapon config
+	var config: Dictionary = get_weapon_type_config(weapon_type)
+	var step_idx: int = clampi(combo_step - 1, 0, config.get("combo_steps", 3) - 1)
+	var damage_mult_arr: Array = config.get("damage_mult", [1.0, 1.0, 1.3])
+	var hits_arr: Array = config.get("hits_per_step", [1, 1, 1])
+	var knockback_arr: Array = config.get("knockback", [5.0, 5.0, 5.0])
+
+	var damage_mult: float = float(damage_mult_arr[step_idx]) if step_idx < damage_mult_arr.size() else 1.0
+	var hits: int = int(hits_arr[step_idx]) if step_idx < hits_arr.size() else 1
+	var knockback_val: float = float(knockback_arr[step_idx]) if step_idx < knockback_arr.size() else 5.0
+
+	# Check innate weapon bonus
+	var is_innate: bool = false
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+	if class_data and class_data.innate_weapon_type == weapon_type:
+		is_innate = true
+
+	# Base damage per hit
+	var base_damage: float = float(player_attack + weapon_attack) * damage_mult
+	if is_innate:
+		base_damage *= (1.0 + INNATE_WEAPON_BONUS)
+
+	# Apply variance
+	var variance: float = randf_range(1.0 - DAMAGE_VARIANCE, 1.0 + DAMAGE_VARIANCE)
+	var final_damage: int = maxi(int(base_damage * variance), 1)
+
+	# Per-step max_targets if available, otherwise use flat value
+	var max_targets: int = int(config.get("max_targets", 1))
+	var per_step_targets: Array = config.get("max_targets_per_step", [])
+	if step_idx < per_step_targets.size():
+		max_targets = int(per_step_targets[step_idx])
+
+	return {
+		"damage": final_damage,
+		"hits": hits,
+		"knockback": knockback_val,
+		"accuracy": player_accuracy,
+		"is_innate": is_innate,
+		"weapon_type": weapon_type,
+		"max_targets": max_targets,
+	}
+
+
+## Apply damage to an enemy, accounting for defense and evasion.
+## Returns: {hit: bool, damage: int, is_critical: bool}
+func apply_damage_to_enemy(raw_damage: int, enemy_defense: int, enemy_evasion: int, player_accuracy: int) -> Dictionary:
+	# Hit/miss check
+	var acc_ratio: float = float(player_accuracy) / maxf(float(enemy_evasion), 1.0)
+	var hit_chance: float = clampf(BASE_HIT_CHANCE * acc_ratio, MIN_HIT_CHANCE, MAX_HIT_CHANCE)
+	if randf() > hit_chance:
+		return {"hit": false, "damage": 0, "is_critical": false}
+
+	# Defense reduction (PSO-style)
+	var def_reduction: float = float(enemy_defense) * 0.25 + float(raw_damage) * float(enemy_defense) / 600.0
+	var after_def: float = maxf(float(raw_damage) - def_reduction, 1.0)
+
+	# Critical hit check
+	var is_critical: bool = randf() < CRITICAL_BASE_CHANCE
+	if is_critical:
+		after_def *= CRITICAL_MULTIPLIER
+
+	return {"hit": true, "damage": maxi(int(after_def), 1), "is_critical": is_critical}
 
 
 ## Use a material item on the active character. Returns result dict.
@@ -1035,3 +1278,8 @@ func clear_combat() -> void:
 func _check_wave_cleared() -> void:
 	if is_wave_cleared():
 		wave_cleared.emit()
+
+
+## Get weapon type config, falling back to saber defaults
+func get_weapon_type_config(weapon_type: int) -> Dictionary:
+	return WEAPON_TYPE_CONFIGS.get(weapon_type, WEAPON_TYPE_CONFIGS[0])

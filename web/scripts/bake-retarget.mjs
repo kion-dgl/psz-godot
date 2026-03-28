@@ -112,6 +112,44 @@ const BAKE_TARGETS = [
     ],
   },
   {
+    // Mechgun (male) — missing walk/run
+    targetGlb: '../assets/player/animations/machinegun_m.glb',
+    anims: [
+      { index: 28, name: 'pmmg_walk', offsets: WALK_OFFSETS },
+      { index: 35, name: 'pmmg_run', offsets: RUN_OFFSETS },
+    ],
+  },
+  {
+    // Mechgun (female) — missing walk/run
+    targetGlb: '../assets/player/animations/machinegun_w.glb',
+    anims: [
+      { index: 267, name: 'pwmgs_walk', offsets: F_WALK_OFFSETS },
+      { index: 272, name: 'pwmgs_run', offsets: F_RUN_OFFSETS },
+    ],
+  },
+  {
+    // Rifle (male) — PSO rifle animations baked into shotgun GLB
+    targetGlb: '../assets/player/animations/shotgun_m.glb',
+    anims: [
+      { index: 12, name: 'pmri_atk1', offsets: WALK_OFFSETS },
+      { index: 13, name: 'pmri_wait', offsets: WALK_OFFSETS },
+      { index: 15, name: 'pmri_walk', offsets: WALK_OFFSETS },
+      { index: 19, name: 'pmri_dam_n', offsets: WALK_OFFSETS },
+      { index: 22, name: 'pmri_run', offsets: RUN_OFFSETS },
+    ],
+  },
+  {
+    // Rifle (female) — PSO rifle animations
+    targetGlb: '../assets/player/animations/shotgun_w.glb',
+    anims: [
+      { index: 252, name: 'pwri_atk1', offsets: F_WALK_OFFSETS },
+      { index: 253, name: 'pwri_wait', offsets: F_WALK_OFFSETS },
+      { index: 255, name: 'pwri_walk', offsets: F_WALK_OFFSETS },
+      { index: 258, name: 'pwri_dam_n', offsets: F_WALK_OFFSETS },
+      { index: 262, name: 'pwri_run', offsets: F_RUN_OFFSETS },
+    ],
+  },
+  {
     // NPC idle animations — baked into a copy of the PSZ player skeleton
     targetGlb: '../assets/player/animations/npc_idles.glb',
     anims: [

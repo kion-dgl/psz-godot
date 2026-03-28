@@ -82,7 +82,7 @@ const ANIMATION_CATEGORIES = [
   { id: 'claw', label: 'Claw', prefix: '05' },
   { id: 'shield', label: 'Shield', prefix: '06' },
   { id: 'handgun', label: 'Handgun', prefix: '08' },
-  { id: 'shotgun', label: 'Rifle', prefix: '10' },
+  { id: 'shotgun', label: 'Rifle', prefix: 'ri' },
   { id: 'machinegun', label: 'Machinegun', prefix: '11' },
   { id: 'grenade', label: 'Grenade', prefix: '12' },
   { id: 'rod', label: 'Rod', prefix: '14' },
@@ -178,6 +178,7 @@ export default function PlayerAnimationStorybook() {
   const [useSpecialAnimation, setUseSpecialAnimation] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [weaponOffset, setWeaponOffset] = useState({ x: 0, y: 0, z: 0 });
+  const [weaponRotation, setWeaponRotation] = useState({ x: 0, y: 90, z: 0 });
   const [psoLoaded, setPsoLoaded] = useState(false);
   const [psoRetargetedClips, setPsoRetargetedClips] = useState<Record<string, THREE.AnimationClip>>({});
   const [wristRotation, setWristRotation] = useState({ x: 0, y: 0, z: 0 });
@@ -189,11 +190,11 @@ export default function PlayerAnimationStorybook() {
   const category = ANIMATION_CATEGORIES.find((c) => c.id === selectedCategory);
   const animationSetId = category ? `${category.prefix}_${selectedCategory}_${bodyType}` : null;
   const animationGlbPath = animationSetId
-    ? assetUrl(`/player/animations/${selectedCategory}/${bodyType}/${animationSetId}/pc_000_000.glb`)
+    ? assetUrl(`/player/animations/${selectedCategory}_${bodyType}.glb`)
     : null;
   const pcPrefix = CLASS_TO_PC_PREFIX[selectedClass] || 'pc_00';
   const variation = `${pcPrefix}0`;
-  const modelGlbPath = assetUrl(`/player/${variation}/${variation}/${variation}_000.glb`);
+  const modelGlbPath = assetUrl(`/player/${variation}/${variation}_000.glb`);
   const textureUrl = assetUrl(`/player/${variation}/textures/${variation}_000.png`);
   const weaponGlbPath = CATEGORY_WEAPON_MAP[selectedCategory] || null;
 
@@ -514,14 +515,27 @@ export default function PlayerAnimationStorybook() {
     if (restrictions.includes(selectedCategory)) setSelectedCategory('common');
     const defaultOffset = WEAPON_OFFSETS[selectedCategory] || { x: 0, y: 0, z: 0 };
     setWeaponOffset(defaultOffset);
+    setWeaponRotation({ x: 0, y: 90, z: 0 });
   }, [selectedClass, selectedCategory, useSpecialAnimation]);
 
   useEffect(() => {
-    if (sceneRef.current?.weaponRight)
+    if (sceneRef.current?.weaponRight) {
       sceneRef.current.weaponRight.position.set(weaponOffset.x, weaponOffset.y, weaponOffset.z);
-    if (sceneRef.current?.weaponLeft)
+      sceneRef.current.weaponRight.rotation.set(
+        weaponRotation.x * Math.PI / 180,
+        weaponRotation.y * Math.PI / 180,
+        weaponRotation.z * Math.PI / 180,
+      );
+    }
+    if (sceneRef.current?.weaponLeft) {
       sceneRef.current.weaponLeft.position.set(weaponOffset.x, weaponOffset.y, weaponOffset.z);
-  }, [weaponOffset]);
+      sceneRef.current.weaponLeft.rotation.set(
+        Math.PI + weaponRotation.x * Math.PI / 180,
+        weaponRotation.y * Math.PI / 180,
+        weaponRotation.z * Math.PI / 180,
+      );
+    }
+  }, [weaponOffset, weaponRotation]);
 
   // Apply wrist rotation to wrapper nodes (for PSO animation weapon orientation correction)
   useEffect(() => {
@@ -543,7 +557,7 @@ export default function PlayerAnimationStorybook() {
   }, [wristRotation, selectedAnimation]);
 
   const copyOffset = () => {
-    const str = `{ x: ${weaponOffset.x.toFixed(3)}, y: ${weaponOffset.y.toFixed(3)}, z: ${weaponOffset.z.toFixed(3)} }`;
+    const str = `position = Vector3(${weaponOffset.x.toFixed(3)}, ${weaponOffset.y.toFixed(3)}, ${weaponOffset.z.toFixed(3)})\nrotation_degrees = Vector3(${weaponRotation.x.toFixed(1)}, ${weaponRotation.y.toFixed(1)}, ${weaponRotation.z.toFixed(1)})`;
     navigator.clipboard.writeText(str);
   };
 
@@ -693,11 +707,20 @@ export default function PlayerAnimationStorybook() {
                     style={{ width: '100%' }} />
                 </div>
               ))}
+              <h3 style={{ fontSize: '12px', color: '#6b8afd', margin: '10px 0 10px 0', textTransform: 'uppercase' }}>Weapon Rotation</h3>
+              {(['x', 'y', 'z'] as const).map((axis) => (
+                <div key={`rot-${axis}`} style={{ marginBottom: '8px' }}>
+                  <label style={{ fontSize: '11px', color: '#888' }}>{axis.toUpperCase()}: {weaponRotation[axis].toFixed(0)}°</label>
+                  <input type="range" min="-180" max="180" step="1" value={weaponRotation[axis]}
+                    onChange={(e) => setWeaponRotation(prev => ({ ...prev, [axis]: parseFloat(e.target.value) }))}
+                    style={{ width: '100%' }} />
+                </div>
+              ))}
               <button onClick={copyOffset} style={{
                 padding: '8px 12px', background: '#4a4a6a', border: '1px solid #6b8afd',
                 borderRadius: '4px', color: '#fff', cursor: 'pointer', fontSize: '12px', marginTop: '4px',
               }}>
-                Copy Offset
+                Copy Position + Rotation
               </button>
             </div>
           )}

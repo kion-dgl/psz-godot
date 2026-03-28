@@ -34,11 +34,14 @@ const WEAPON_ANIM_DATA: Dictionary = {
 	WeaponData.WeaponType.SWORD: {"glb_m": "res://assets/player/animations/sword_m.glb", "glb_w": "res://assets/player/animations/sword_w.glb", "prefix_m": "pmsw", "prefix_w": "pwsw"},
 	WeaponData.WeaponType.DAGGERS: {"glb_m": "res://assets/player/animations/dagger_m.glb", "glb_w": "res://assets/player/animations/dagger_w.glb", "prefix_m": "pmda", "prefix_w": "pwda"},
 	WeaponData.WeaponType.SPEAR: {"glb_m": "res://assets/player/animations/spear_m.glb", "glb_w": "res://assets/player/animations/spear_w.glb", "prefix_m": "pmsp", "prefix_w": "pwsp"},
+	WeaponData.WeaponType.SLICER: {"glb_m": "res://assets/player/animations/saver_m.glb", "glb_w": "res://assets/player/animations/saver_w.glb", "prefix_m": "pmsa", "prefix_w": "pwsa"},
+	WeaponData.WeaponType.GUN_BLADE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmgb", "prefix_w": "pwgbs"},
 	WeaponData.WeaponType.HANDGUN: {"glb_m": "res://assets/player/animations/handgun_m.glb", "glb_w": "res://assets/player/animations/handgun_w.glb", "prefix_m": "pmhg", "prefix_w": "pwhg"},
 	WeaponData.WeaponType.MECH_GUN: {"glb_m": "res://assets/player/animations/machinegun_m.glb", "glb_w": "res://assets/player/animations/machinegun_w.glb", "prefix_m": "pmmg", "prefix_w": "pwmgs"},
-	WeaponData.WeaponType.RIFLE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmgb", "prefix_w": "pwgbs"},
-	WeaponData.WeaponType.ROD: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwros"},
-	WeaponData.WeaponType.WAND: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwros"},
+	WeaponData.WeaponType.RIFLE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmri", "prefix_w": "pwri"},
+	WeaponData.WeaponType.BAZOOKA: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmri", "prefix_w": "pwri"},
+	WeaponData.WeaponType.ROD: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwro"},
+	WeaponData.WeaponType.WAND: {"glb_m": "res://assets/player/animations/wand_m.glb", "glb_w": "res://assets/player/animations/wand_w.glb", "prefix_m": "pmwa", "prefix_w": "pwwa"},
 }
 const DEFAULT_ANIM_GLB_M := "res://assets/player/animations/saver_m.glb"
 const DEFAULT_ANIM_GLB_W := "res://assets/player/animations/saver_w.glb"
@@ -75,6 +78,39 @@ var weapon_node: Node3D  # Attached weapon model
 # Weapon attachment config
 const WEAPON_BONE_NAME: String = "070_RArm02"  # Right hand
 const LEFT_WEAPON_BONE_NAME: String = "040_LArm02"  # Left hand (dual-wield)
+
+# Per-weapon-type hold orientation: idle (walking/standing) vs attack (during combo)
+const WEAPON_HOLD_DEFAULT := {
+	"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, 90, 0)},
+	"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, 90, 0)},
+}
+const WEAPON_HOLD := {
+	# WeaponData.WeaponType enum values as keys
+	9: {  # HANDGUN
+		"idle": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
+		"attack": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
+	},
+	10: {  # MECH_GUN
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},
+		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},
+	},
+	14: {  # ROD
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(43, 90, -30)},
+		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(43, 90, -30)},
+	},
+	15: {  # WAND
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(-53, 90, 0)},
+		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(-53, 90, 0)},
+	},
+	11: {  # RIFLE
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(4, 12, 98)},
+		"attack": {"pos": Vector3(0.2, 0.19, 0.1), "rot": Vector3(106, 12, 99)},
+	},
+	12: {  # BAZOOKA
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(4, 12, 98)},
+		"attack": {"pos": Vector3(0.2, 0.19, 0.1), "rot": Vector3(106, 12, 99)},
+	},
+}
 var weapon_node_left: Node3D  # Left-hand weapon for dual-wield
 
 # Mag attachment config
@@ -111,6 +147,7 @@ const INTERACTION_RADIUS: float = 2.0
 
 # Combat system
 var attack_hitbox: Hitbox
+var _targeted_enemies: Array = []
 const ATTACK_HITBOX_SIZE := Vector3(1.5, 1.0, 2.0)  # Width, height, depth
 const ATTACK_HITBOX_OFFSET := 1.5  # Forward offset from player
 
@@ -438,10 +475,13 @@ func _attach_weapon_to_bone(bone_name: String, weapon_data: WeaponData, mirror: 
 	var node := packed.instantiate() as Node3D
 	bone_attachment.add_child(node)
 
-	# Position and scale
+	# Position and scale — use idle hold by default
+	var hold: Dictionary = WEAPON_HOLD.get(weapon_data.weapon_type, WEAPON_HOLD_DEFAULT)
+	var idle_hold: Dictionary = hold.get("idle", {})
+
 	var s: float = weapon_data.glb_scale
-	node.position = Vector3(0.31, 0, 0)
-	node.rotation_degrees = Vector3(0, 90, 0)
+	node.position = idle_hold.get("pos", Vector3(0.31, 0, 0))
+	node.rotation_degrees = idle_hold.get("rot", Vector3(0, 90, 0))
 	node.scale = Vector3(s, s, s)
 
 	# Mirror left-hand weapon on X axis
@@ -661,7 +701,7 @@ func _physics_process(delta: float) -> void:
 			_handle_dodge(delta)
 		PlayerState.ATTACKING:
 			_handle_attack_state(delta)
-		PlayerState.DAMAGED:
+		PlayerState.DAMAGED, PlayerState.DOWN:
 			_handle_damaged(delta)
 		PlayerState.CUTSCENE:
 			velocity.x = 0
@@ -673,6 +713,9 @@ func _physics_process(delta: float) -> void:
 	# Update model rotation
 	if model:
 		model.rotation.y = player_rotation
+
+	# Update combat targeting reticles
+	_update_combat_targets()
 
 	# Mag bob and sway
 	if mag_node and is_instance_valid(mag_node):
@@ -853,7 +896,8 @@ func _handle_dodge(delta: float) -> void:
 func _start_attack() -> void:
 	if current_state == PlayerState.ATTACKING:
 		# Check if we're in combo window
-		if combo_window_open and combo_state < 3:
+		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+		if combo_window_open and combo_state < max_combo:
 			combo_state += 1
 			combo_window_open = false
 			_play_attack_animation(combo_state)
@@ -867,6 +911,9 @@ func _start_attack() -> void:
 
 
 func _execute_palette_action(slot: int) -> void:
+	# Block actions during hit reactions and knockdown
+	if current_state == PlayerState.DAMAGED or current_state == PlayerState.DOWN:
+		return
 	var action_id: String = ActionPalette.get_action_for_slot(slot)
 	match action_id:
 		"attack":
@@ -883,24 +930,22 @@ func _execute_palette_action(slot: int) -> void:
 
 func _debug_kill_all() -> void:
 	var kill_count: int = 0
-	# Kill EnemyBase instances (AI enemies in "enemies" group)
+	# Kill all enemies directly (bypass damage formula)
 	for node in get_tree().get_nodes_in_group("enemies"):
 		if node is EnemyBase and node.is_alive:
-			node._on_hit_received(99999, Vector3.ZERO)
+			node.current_hp = 0
+			node._die()
 			kill_count += 1
-	# Kill EnemySpawn instances (static field enemies) via scene tree scan
-	kill_count += _kill_enemy_spawns_recursive(get_tree().current_scene)
+		elif node is EnemySpawn and node.get("element_state") != "dead":
+			node.take_damage(99999)
+			kill_count += 1
 	print("[DEBUG] Kill All from action palette (%d killed)" % kill_count)
-
-
-func _kill_enemy_spawns_recursive(node: Node) -> int:
-	var count: int = 0
-	if node is EnemySpawn and node.element_state != "dead":
-		node.take_damage(9999)
-		count += 1
-	for child in node.get_children():
-		count += _kill_enemy_spawns_recursive(child)
-	return count
+	# Reset player state in case we were mid-attack
+	if current_state == PlayerState.ATTACKING:
+		combo_state = 0
+		combo_window_open = false
+		_deactivate_attack_hitbox()
+		transition_to(PlayerState.IDLE)
 
 
 func _start_strong_attack() -> void:
@@ -939,13 +984,19 @@ func _handle_attack_state(delta: float) -> void:
 
 
 func _handle_damaged(_delta: float) -> void:
-	# Check floor during knockback - stop at edges to prevent falling off
-	if velocity.length_squared() > 0.1:
-		var move_dir := velocity.normalized()
-		move_dir.y = 0
-		if move_dir.length() > 0.1 and not _can_move_to(move_dir):
-			velocity.x = 0
-			velocity.z = 0
+	# No physics movement during hit reactions — animation-driven only
+	velocity.x = 0
+	velocity.z = 0
+
+
+func _set_weapon_hold(mode: String) -> void:
+	if not weapon_node or not is_instance_valid(weapon_node):
+		return
+	var wtype: int = _get_equipped_weapon_type()
+	var hold: Dictionary = WEAPON_HOLD.get(wtype, WEAPON_HOLD_DEFAULT)
+	var h: Dictionary = hold.get(mode, hold.get("idle", {}))
+	weapon_node.position = h.get("pos", Vector3(0.31, 0, 0))
+	weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
 
 
 func _play_attack_animation(attack_num: int) -> void:
@@ -955,8 +1006,15 @@ func _play_attack_animation(attack_num: int) -> void:
 
 
 func transition_to(new_state: PlayerState) -> void:
+	var was_attacking: bool = current_state == PlayerState.ATTACKING
 	current_state = new_state
 	state_changed.emit(new_state)
+
+	# Swap weapon hold orientation between attack and idle
+	if new_state == PlayerState.ATTACKING and not was_attacking:
+		_set_weapon_hold("attack")
+	elif was_attacking and new_state != PlayerState.ATTACKING:
+		_set_weapon_hold("idle")
 
 	match new_state:
 		PlayerState.IDLE:
@@ -969,16 +1027,31 @@ func transition_to(new_state: PlayerState) -> void:
 			play_animation(_sprint_anim, true)
 		PlayerState.DODGING:
 			play_animation(_anim_prefix + "_esc_f", false)
-		PlayerState.DAMAGED:
-			play_animation(_anim_prefix + "_dam_n", false)
+		PlayerState.DAMAGED, PlayerState.DOWN:
+			pass  # Animation already set by take_damage / _on_animation_finished
 		PlayerState.CUTSCENE:
 			play_animation(_anim_prefix + "_wait", true)
 
 
 func play_animation(anim_name: String, _loop: bool = true) -> void:
-	if animation_player and animation_player.has_animation(anim_name):
+	if not animation_player:
+		return
+	if animation_player.has_animation(anim_name):
 		animation_player.play(anim_name)
-		# Note: Animation looping is typically set in the animation resource itself
+		return
+	# Try with 's' suffix variant (e.g. pwros_wait for pwro prefix)
+	var parts := anim_name.rsplit("_", true, 1)
+	if parts.size() == 2:
+		var alt := parts[0] + "s_" + parts[1]
+		if animation_player.has_animation(alt):
+			animation_player.play(alt)
+			return
+	# Search for any animation ending with the suffix
+	var suffix := "_" + anim_name.get_slice("_", anim_name.count("_"))
+	for name in animation_player.get_animation_list():
+		if name.ends_with(suffix):
+			animation_player.play(name)
+			return
 
 
 func _on_animation_finished(_anim_name: String) -> void:
@@ -987,7 +1060,9 @@ func _on_animation_finished(_anim_name: String) -> void:
 			transition_to(PlayerState.IDLE)
 		PlayerState.ATTACKING:
 			_deactivate_attack_hitbox()
-			if combo_state >= 3:
+			var config: Dictionary = CombatManager.get_weapon_type_config(_get_equipped_weapon_type())
+			var max_combo: int = int(config.get("combo_steps", 3))
+			if combo_state >= max_combo:
 				# Combo finished, return to idle
 				combo_state = 0
 				transition_to(PlayerState.IDLE)
@@ -997,22 +1072,43 @@ func _on_animation_finished(_anim_name: String) -> void:
 				combo_timer = 0.0
 		PlayerState.DAMAGED:
 			transition_to(PlayerState.IDLE)
+		PlayerState.DOWN:
+			if GameState.hp <= 0:
+				# Dead — stay lying down
+				play_animation(_anim_prefix + "_dam_d_lp", true)
+			else:
+				# Get back up
+				play_animation(_anim_prefix + "_dam_d_wa", false)
+				transition_to(PlayerState.DAMAGED)  # DAMAGED → IDLE when wake-up finishes
 
 
 # Public API for external systems
-func take_damage(damage: int, knockback: Vector3 = Vector3.ZERO) -> void:
+func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
+	# Already dead — ignore further hits
+	if current_state == PlayerState.DOWN and GameState.hp <= 0:
+		return
+
 	GameState.set_hp(GameState.hp - damage)
 
-	# Apply knockback
-	if knockback.length() > 0:
-		velocity = knockback
+	# No physics knockback — animation-driven hit reactions only
+	velocity = Vector3.ZERO
 
-	# Play damage animation (heavy if damage > 20)
-	if damage > 20:
+	if GameState.hp <= 0:
+		# Death: knockdown into lying-down loop
+		play_animation(_anim_prefix + "_dam_d", false)
+		transition_to(PlayerState.DOWN)
+	elif damage > 20:
+		# Heavy hit: knockdown then get back up
+		play_animation(_anim_prefix + "_dam_d", false)
+		transition_to(PlayerState.DOWN)
+	elif damage > 10:
+		# Medium hit: knockdown + immediate recovery (single animation)
 		play_animation(_anim_prefix + "_dam_h", false)
+		transition_to(PlayerState.DAMAGED)
 	else:
+		# Light hit: stagger
 		play_animation(_anim_prefix + "_dam_n", false)
-	transition_to(PlayerState.DAMAGED)
+		transition_to(PlayerState.DAMAGED)
 
 
 func get_state() -> PlayerState:
@@ -1028,34 +1124,184 @@ func _setup_attack_hitbox() -> void:
 	attack_hitbox = Hitbox.new()
 	attack_hitbox.name = "AttackHitbox"
 	attack_hitbox.owner_node = self
-	attack_hitbox.damage = _get_attack_damage()
+	attack_hitbox.damage = 10  # Will be set properly on each attack activation
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = ATTACK_HITBOX_SIZE
+	# Use weapon-specific hitbox size from config
+	var weapon_type: int = _get_equipped_weapon_type()
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	box.size = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
 	shape.shape = box
-	shape.position = Vector3(0, ATTACK_HITBOX_SIZE.y / 2, ATTACK_HITBOX_OFFSET)
+	var offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
+	shape.position = Vector3(0, box.size.y * 0.5 + 0.5, offset + box.size.z * 0.5)
 	attack_hitbox.add_child(shape)
 
 	# Hitbox follows player rotation via model
 	model.add_child(attack_hitbox)
 
 
-func _get_attack_damage() -> int:
-	# TODO: Implement proper damage calculation when combat is ready
-	# For now, use fixed damage while working on timing/animations
-	return 10
+func _get_attack_damage() -> Dictionary:
+	return CombatManager.calculate_attack_damage(combo_state)
+
+
+func _get_equipped_weapon_type() -> int:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return 0
+	var weapon_id: String = str(character.get("equipment", {}).get("weapon", ""))
+	if weapon_id.is_empty():
+		return 0
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
+	if weapon:
+		return weapon.weapon_type
+	return 0
+
+
+const RANGED_WEAPON_TYPES := [9, 10, 11, 12]  # HANDGUN, MECH_GUN, RIFLE, BAZOOKA
 
 
 func _activate_attack_hitbox() -> void:
+	var atk: Dictionary = _get_attack_damage()
+	var weapon_type: int = int(atk.get("weapon_type", 0))
+
+	if weapon_type in RANGED_WEAPON_TYPES:
+		_fire_projectile(atk)
+		return
+
 	if attack_hitbox:
-		attack_hitbox.damage = _get_attack_damage()
+		attack_hitbox.damage = int(atk.get("damage", 10))
+		attack_hitbox.knockback = float(atk.get("knockback", 5.0))
+		attack_hitbox.accuracy = int(atk.get("accuracy", 100))
+		attack_hitbox.max_targets = int(atk.get("max_targets", 1))
+		attack_hitbox.hits_per_target = int(atk.get("hits", 1))
 		attack_hitbox.activate()
+
+
+func _fire_projectile(atk: Dictionary) -> void:
+	var config: Dictionary = CombatManager.get_weapon_type_config(int(atk.get("weapon_type", 0)))
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
+	var max_range: float = float(config.get("hitbox_offset", 8.0)) + float(config.get("hitbox_size", Vector3(1, 1, 1)).z)
+	var hits: int = int(atk.get("hits", 1))
+
+	for i in range(hits):
+		var proj := Projectile.new()
+		proj.damage = int(atk.get("damage", 10))
+		proj.knockback = float(atk.get("knockback", 3.0))
+		proj.accuracy = int(atk.get("accuracy", 100))
+		proj.direction = forward
+		proj.max_range = max_range
+		proj.owner_node = self
+		proj.speed = 25.0
+
+		# Slight spread for multi-shot (mechgun)
+		if hits > 1:
+			var spread := randf_range(-0.05, 0.05)
+			proj.direction = Vector3(forward.x + spread, 0, forward.z + spread).normalized()
+
+		get_tree().current_scene.add_child(proj)
+		proj.global_position = spawn_pos
+
+		# Stagger multi-shot slightly
+		if hits > 1 and i < hits - 1:
+			spawn_pos += forward * 0.1
 
 
 func _deactivate_attack_hitbox() -> void:
 	if attack_hitbox:
 		attack_hitbox.deactivate()
+
+
+var _debug_range_mesh: MeshInstance3D
+
+
+func _update_combat_targets() -> void:
+	# Clear old reticles
+	for enemy in _targeted_enemies:
+		if is_instance_valid(enemy) and enemy.has_method("hide_reticle"):
+			enemy.hide_reticle()
+	_targeted_enemies.clear()
+
+	var weapon_type: int = _get_equipped_weapon_type()
+	var config: Dictionary = CombatManager.get_weapon_type_config(weapon_type)
+	var max_targets: int = int(config.get("max_targets", 1))
+	var hitbox_size: Vector3 = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
+	var hitbox_offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
+	var attack_range: float = hitbox_offset + hitbox_size.z * 0.5
+
+	# Player's forward direction (model rotation)
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var half_width: float = hitbox_size.x * 0.5 + 0.5  # Slight padding
+
+	# Debug: show targeting box attached to model
+	if DebugConfig.show_hitboxes:
+		if not _debug_range_mesh:
+			_debug_range_mesh = MeshInstance3D.new()
+			var box_mesh := BoxMesh.new()
+			box_mesh.size = Vector3(1, 1, 1)
+			_debug_range_mesh.mesh = box_mesh
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = Color(0.2, 1.0, 0.2, 0.15)
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+			mat.no_depth_test = true
+			_debug_range_mesh.material_override = mat
+			model.add_child(_debug_range_mesh)
+		var box_depth: float = hitbox_offset + hitbox_size.z * 0.5
+		_debug_range_mesh.scale = Vector3(hitbox_size.x + 1.0, hitbox_size.y, box_depth)
+		_debug_range_mesh.position = Vector3(0, hitbox_size.y * 0.5 + 0.5, box_depth * 0.5)
+		_debug_range_mesh.visible = true
+	elif _debug_range_mesh:
+		_debug_range_mesh.visible = false
+
+	# Find enemies in front of the player within weapon range
+	var candidates: Array = []
+	var enemy_group := get_tree().get_nodes_in_group("enemies")
+	for enemy in enemy_group:
+		if not is_instance_valid(enemy):
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var to_enemy: Vector3 = enemy.global_position - global_position
+		to_enemy.y = 0
+
+		# Check distance along forward axis
+		var forward_dist: float = to_enemy.dot(forward)
+		if forward_dist < -0.5 or forward_dist > attack_range:
+			continue
+
+		# Check lateral distance (perpendicular to forward)
+		var right := Vector3(-forward.z, 0, forward.x)
+		var lateral_dist: float = absf(to_enemy.dot(right))
+		if lateral_dist > half_width:
+			continue
+
+		candidates.append({"enemy": enemy, "dist": forward_dist})
+
+	# Sort by distance
+	candidates.sort_custom(func(a, b): return a.dist < b.dist)
+
+	# Show reticle on closest N enemies
+	for i in range(mini(max_targets, candidates.size())):
+		var enemy = candidates[i].enemy
+		if enemy.has_method("show_reticle"):
+			enemy.show_reticle()
+		_targeted_enemies.append(enemy)
+
+	# Debug: color box based on targets found
+	if _debug_range_mesh and _debug_range_mesh.visible:
+		var mat: StandardMaterial3D = _debug_range_mesh.material_override
+		if _targeted_enemies.size() > 0:
+			mat.albedo_color = Color(1.0, 0.2, 0.2, 0.15)
+		else:
+			mat.albedo_color = Color(0.2, 1.0, 0.2, 0.15)
+
+	# Debug log every 2 seconds
+	if DebugConfig.show_hitboxes and Engine.get_process_frames() % 120 == 0:
+		print("[Target] enemies_in_group=%d fwd=(%.1f,%.1f) range=%.1f width=%.1f candidates=%d targets=%d" % [
+			enemy_group.size(), forward.x, forward.z, attack_range, half_width,
+			candidates.size(), _targeted_enemies.size()])
 
 
 # Interaction System

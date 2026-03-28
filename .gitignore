@@ -10,3 +10,16 @@ web/dist/
 web/public/weapons
 web/public/player
 web/public/enemies
+
+# Python cache
+__pycache__/
+
+# Root-level scratch/dev files (not part of project)
+/Gemini_Generated_Image_*
+/Humar_body*
+/Saber.glb
+/Saber_*.png
+/Saber_*.png.import
+/Saber.glb.import
+/Moonlight-*.AppImage
+/Phantasy Star Onine_*

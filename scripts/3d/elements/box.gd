@@ -23,6 +23,10 @@ var collision_body: StaticBody3D
 var hurtbox: Hurtbox
 
 
+var _reticle: Sprite3D
+var is_alive: bool = true
+
+
 func _init() -> void:
 	interactable = false  # Destroyed by attacking, not interacting
 	element_state = "intact"
@@ -30,6 +34,8 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	add_to_group("enemies")
+
 	if is_rare:
 		model_path = "valley/o0c_recont.glb"
 	else:
@@ -39,6 +45,7 @@ func _ready() -> void:
 	_setup_box_collision()
 	_setup_hurtbox()
 	_setup_textures()
+	_setup_reticle()
 
 
 func _setup_box_collision() -> void:
@@ -106,7 +113,7 @@ func _apply_state() -> void:
 
 
 ## Called when the box takes damage (from player attacks via Hurtbox)
-func take_damage(_amount: int = 1, _knockback: Vector3 = Vector3.ZERO) -> void:
+func take_damage(_amount: int = 1, _knockback: Vector3 = Vector3.ZERO, _accuracy: int = 100) -> void:
 	if element_state == "destroyed":
 		return
 
@@ -118,6 +125,8 @@ func destroy() -> void:
 	if element_state == "destroyed":
 		return
 
+	is_alive = false
+	remove_from_group("enemies")
 	set_state("destroyed")
 	destroyed_box.emit()
 
@@ -126,6 +135,40 @@ func destroy() -> void:
 		_spawn_drop()
 
 	print("[Box] Destroyed")
+
+
+func _setup_reticle() -> void:
+	_reticle = Sprite3D.new()
+	_reticle.name = "TargetReticle"
+	_reticle.pixel_size = 0.008
+	_reticle.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_reticle.no_depth_test = true
+	_reticle.modulate = Color(1.0, 0.15, 0.15, 0.9)
+	_reticle.visible = false
+
+	var size := 48
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var half: int = size / 2
+	for y in range(size):
+		var progress: float = float(y) / float(size - 1)
+		var half_width: int = int(float(half) * (1.0 - progress))
+		for x in range(half - half_width, half + half_width + 1):
+			if x >= 0 and x < size:
+				img.set_pixel(x, y, Color.WHITE)
+	_reticle.texture = ImageTexture.create_from_image(img)
+	_reticle.position = Vector3(0, collision_size.y + 0.5, 0)
+	add_child(_reticle)
+
+
+func show_reticle() -> void:
+	if _reticle:
+		_reticle.visible = true
+
+
+func hide_reticle() -> void:
+	if _reticle:
+		_reticle.visible = false
 
 
 func _spawn_drop() -> void:

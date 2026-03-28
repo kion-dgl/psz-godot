@@ -11,6 +11,8 @@ gender = "Male"
 type = "Hunter"
 bonuses = PackedStringArray()
 material_limit = 100
+innate_weapon_type = 0
+allowed_weapon_types = Array[int]([0, 1, 2, 5, 9])
 stats = {
   "hp": {
     "1": 82,

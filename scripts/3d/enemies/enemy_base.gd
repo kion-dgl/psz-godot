@@ -7,6 +7,12 @@ class_name EnemyBase extends CharacterBody3D
 ## Current HP
 var current_hp: int = 100
 
+## Defense stat (from EnemyData)
+var current_defense: int = 5
+
+## Evasion stat (from EnemyData)
+var current_evasion: int = 30
+
 ## Is enemy alive?
 var is_alive: bool = true
 
@@ -38,6 +44,9 @@ const HURT_DURATION: float = 0.3
 ## Animation state tracking
 var is_attacking: bool = false
 var current_anim: String = ""
+
+## Target reticle (shown when player is targeting this enemy)
+var _reticle: Sprite3D
 
 ## Wandering behavior (idle state)
 var wander_timer: float = 0.0
@@ -85,20 +94,39 @@ func _ready() -> void:
 
 	# Randomize initial wander timer so enemies don't sync up
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
+	_setup_reticle()
 
 
 func _setup_from_data() -> void:
 	if enemy_data:
 		current_hp = enemy_data.hp_base
+		current_defense = enemy_data.defense_base
+		current_evasion = enemy_data.evasion_base
 	else:
 		push_warning("[Enemy] No enemy_data set!")
 
 
 func _setup_model() -> void:
-	# Find the Model node (added in scene)
+	# Find existing Model node (from scene), or load from enemy_data
 	model = get_node_or_null("Model")
+	if not model and enemy_data and not str(enemy_data.model_id).is_empty():
+		var glb_path := "res://assets/enemies/%s/%s.glb" % [enemy_data.model_id, enemy_data.model_id]
+		if ResourceLoader.exists(glb_path):
+			var packed := load(glb_path) as PackedScene
+			if packed:
+				model = packed.instantiate()
+				model.name = "Model"
+				add_child(model)
 	if not model:
 		return
+
+	# Apply texture if PNG exists alongside GLB
+	if enemy_data and not str(enemy_data.model_id).is_empty():
+		var tex_path := "res://assets/enemies/%s/%s.png" % [enemy_data.model_id, enemy_data.model_id]
+		if ResourceLoader.exists(tex_path):
+			var texture := load(tex_path) as Texture2D
+			if texture:
+				_apply_texture(model, texture)
 
 	# Find AnimationPlayer in the model hierarchy
 	animation_player = _find_animation_player(model)
@@ -106,6 +134,20 @@ func _setup_model() -> void:
 		animation_player.animation_finished.connect(_on_animation_finished)
 	else:
 		push_warning("[Enemy] No AnimationPlayer found in model")
+
+
+func _apply_texture(node: Node, texture: Texture2D) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var new_mat := mat.duplicate() as StandardMaterial3D
+				new_mat.albedo_texture = texture
+				new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+				mesh_inst.set_surface_override_material(i, new_mat)
+	for child in node.get_children():
+		_apply_texture(child, texture)
 
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
@@ -160,6 +202,11 @@ func _physics_process(delta: float) -> void:
 	if not is_alive:
 		return
 
+	# Kill enemy if it falls off the stage
+	if global_position.y < -10.0:
+		_die()
+		return
+
 	# Apply gravity
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -182,6 +229,11 @@ func _physics_process(delta: float) -> void:
 		attack_cooldown_timer -= delta
 
 	move_and_slide()
+
+	# Safety: if enemy ends up over empty space, stop horizontal movement
+	if not _has_floor_at(global_position):
+		velocity.x = 0
+		velocity.z = 0
 
 
 func _process_idle(delta: float) -> void:
@@ -364,14 +416,8 @@ func _start_loafing() -> void:
 
 func _process_hurt(delta: float) -> void:
 	hurt_timer -= delta
-
-	# Check floor during knockback - stop if approaching edge
-	if velocity.length() > 0.1:
-		var move_dir := velocity.normalized()
-		move_dir.y = 0
-		if not _can_move_to(move_dir):
-			velocity.x = 0
-			velocity.z = 0
+	velocity.x = 0
+	velocity.z = 0
 
 	if hurt_timer <= 0:
 		current_state = EnemyState.CHASING
@@ -394,9 +440,7 @@ func _start_attack() -> void:
 	var damage := 10
 
 	if target.has_method("take_damage"):
-		var knockback_dir := (target.global_position - global_position).normalized()
-		knockback_dir.y = 0
-		target.take_damage(damage, knockback_dir * 5.0)
+		target.take_damage(damage)
 
 	# Set cooldown
 	var cooldown := 1.5
@@ -405,29 +449,33 @@ func _start_attack() -> void:
 	attack_cooldown_timer = cooldown
 
 
-func _on_hit_received(damage: int, knockback: Vector3) -> void:
+func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100) -> void:
 	if not is_alive:
 		return
 
-	current_hp -= damage
-	damaged.emit(self, damage)
-	print("[Enemy] ", enemy_data.name if enemy_data else "Enemy", " took ", damage, " damage (HP: ", current_hp, ")")
+	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, current_defense, current_evasion, accuracy)
+	if not result.get("hit", true):
+		_spawn_damage_number("MISS", Color(0.7, 0.7, 0.7))
+		return
+
+	var final_damage: int = int(result.get("damage", raw_damage))
+	var is_crit: bool = result.get("is_critical", false)
+	current_hp -= final_damage
+	damaged.emit(self, final_damage)
+
+	# Spawn floating damage number
+	var dmg_color := Color(1.0, 1.0, 0.2) if is_crit else Color.WHITE
+	var dmg_text := str(final_damage) + ("!" if is_crit else "")
+	_spawn_damage_number(dmg_text, dmg_color)
 
 	if current_hp <= 0:
 		_die()
 	else:
-		# Enter hurt state
+		# Enter hurt state — play stagger animation, no physics knockback
 		is_attacking = false  # Cancel any attack
 		current_state = EnemyState.HURT
 		hurt_timer = HURT_DURATION
-
-		# Only apply knockback if it won't push us off the edge
-		var knockback_dir := knockback.normalized()
-		knockback_dir.y = 0
-		if knockback_dir.length() > 0.1 and _can_move_to(knockback_dir):
-			velocity = knockback
-		else:
-			velocity = Vector3.ZERO  # Stop at edge
+		velocity = Vector3.ZERO  # Stop movement during stagger
 
 		_play_animation("dmg", true)  # Force play damage animation
 
@@ -443,10 +491,7 @@ func _die() -> void:
 	# Play death animation
 	_play_animation("ded", true)
 
-	# Drop meseta
-	if enemy_data:
-		var meseta: int = enemy_data.get_meseta_drop()
-		_spawn_meseta_drop(meseta)
+	# Drops are handled by the field controller via the died signal
 
 	# Remove after death animation (or delay if no animation)
 	var delay := 1.5  # Default delay
@@ -459,7 +504,7 @@ func _die() -> void:
 
 func _spawn_meseta_drop(amount: int) -> void:
 	# Spawn a meseta drop at our position
-	var drop_scene: PackedScene = load("res://scenes/elements/drop_meseta.tscn")
+	var drop_scene: PackedScene = load("res://scenes/3d/elements/drop_meseta.tscn")
 	if drop_scene:
 		var drop: Node3D = drop_scene.instantiate()
 		drop.set("amount", amount)
@@ -580,3 +625,66 @@ func _on_animation_finished(anim_name: String) -> void:
 			# After threat animation, start chasing
 			if current_state == EnemyState.CHASING:
 				_play_animation("wlk")
+
+
+func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = color
+	label.outline_size = 6
+	label.outline_modulate = Color(0, 0, 0)
+	# Position above the enemy with slight random offset
+	label.position = Vector3(randf_range(-0.3, 0.3), 2.0 + randf_range(0, 0.3), 0)
+	add_child(label)
+
+	# Animate: float up and fade out
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y + 1.0, 0.8).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.8).set_delay(0.3)
+	tween.chain().tween_callback(label.queue_free)
+
+
+func _setup_reticle() -> void:
+	_reticle = Sprite3D.new()
+	_reticle.name = "TargetReticle"
+	_reticle.pixel_size = 0.008
+	_reticle.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_reticle.no_depth_test = true
+	_reticle.modulate = Color(1.0, 0.15, 0.15, 0.9)
+	_reticle.visible = false
+
+	# Draw a filled downward-pointing triangle
+	var size := 48
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var half: int = size / 2
+	for y in range(size):
+		# Triangle: top row is full width, narrows to a point at bottom
+		var progress: float = float(y) / float(size - 1)
+		var half_width: int = int(float(half) * (1.0 - progress))
+		for x in range(half - half_width, half + half_width + 1):
+			if x >= 0 and x < size:
+				img.set_pixel(x, y, Color.WHITE)
+	var tex := ImageTexture.create_from_image(img)
+	_reticle.texture = tex
+
+	var height := 1.5
+	if enemy_data:
+		height = enemy_data.collision_height
+	_reticle.position = Vector3(0, height + 0.5, 0)
+	add_child(_reticle)
+
+
+func show_reticle() -> void:
+	if _reticle:
+		_reticle.visible = true
+
+
+func hide_reticle() -> void:
+	if _reticle:
+		_reticle.visible = false

@@ -39,7 +39,13 @@ func _init() -> void:
 	collision_size = Vector3(1.5, 2.0, 1.5)
 
 
+var _reticle: Sprite3D
+var is_alive: bool = true
+
+
 func _ready() -> void:
+	add_to_group("enemies")
+
 	# Resolve enemy data — enemy_id can be a registry key or a model_id
 	var enemy_data = EnemyRegistry.get_enemy(enemy_id)
 	if enemy_data:
@@ -60,6 +66,7 @@ func _ready() -> void:
 	_setup_enemy_collision()
 	_setup_hurtbox()
 	_apply_enemy_texture()
+	_setup_reticle()
 
 
 func _load_enemy_model() -> void:
@@ -190,12 +197,26 @@ func _apply_state() -> void:
 
 
 ## Called when hit by player attack via Hurtbox
-func take_damage(amount: int = 1, _knockback: Vector3 = Vector3.ZERO) -> void:
+func take_damage(amount: int = 1, _knockback: Vector3 = Vector3.ZERO, accuracy: int = 100) -> void:
 	if element_state == "dead":
 		return
 
-	hp -= amount
-	print("[EnemySpawn] %s took %d damage, hp=%d/%d" % [enemy_id, amount, hp, max_hp])
+	# Apply damage formula with defense/evasion
+	var enemy_data_ref = EnemyRegistry.get_enemy(enemy_id)
+	var defense: int = int(enemy_data_ref.defense_base) if enemy_data_ref else 5
+	var evasion: int = int(enemy_data_ref.evasion_base) if enemy_data_ref else 30
+	var result: Dictionary = CombatManager.apply_damage_to_enemy(amount, defense, evasion, accuracy)
+
+	if not result.get("hit", true):
+		_spawn_damage_number("MISS", Color(0.7, 0.7, 0.7))
+		return
+
+	var final_damage: int = int(result.get("damage", amount))
+	var is_crit: bool = result.get("is_critical", false)
+	hp -= final_damage
+	var dmg_color := Color(1.0, 1.0, 0.2) if is_crit else Color.WHITE
+	var dmg_text := str(final_damage) + ("!" if is_crit else "")
+	_spawn_damage_number(dmg_text, dmg_color)
 
 	if hp <= 0:
 		hp = 0
@@ -203,6 +224,7 @@ func take_damage(amount: int = 1, _knockback: Vector3 = Vector3.ZERO) -> void:
 
 
 func _die() -> void:
+	is_alive = false
 	# Play death animation before hiding
 	var death_name := _find_animation("ded")
 	if _anim_player and not death_name.is_empty():
@@ -253,3 +275,57 @@ func _find_animation(short_name: String) -> String:
 				var full: String = str(lib_name) + "/" + anim_name if lib_name else anim_name
 				return full
 	return ""
+
+
+func _setup_reticle() -> void:
+	_reticle = Sprite3D.new()
+	_reticle.name = "TargetReticle"
+	_reticle.pixel_size = 0.008
+	_reticle.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_reticle.no_depth_test = true
+	_reticle.modulate = Color(1.0, 0.15, 0.15, 0.9)
+	_reticle.visible = false
+
+	var size := 48
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var half: int = size / 2
+	for y in range(size):
+		var progress: float = float(y) / float(size - 1)
+		var half_width: int = int(float(half) * (1.0 - progress))
+		for x in range(half - half_width, half + half_width + 1):
+			if x >= 0 and x < size:
+				img.set_pixel(x, y, Color.WHITE)
+	_reticle.texture = ImageTexture.create_from_image(img)
+	_reticle.position = Vector3(0, collision_size.y + 0.5, 0)
+	add_child(_reticle)
+
+
+func show_reticle() -> void:
+	if _reticle:
+		_reticle.visible = true
+
+
+func hide_reticle() -> void:
+	if _reticle:
+		_reticle.visible = false
+
+
+func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = color
+	label.outline_size = 6
+	label.outline_modulate = Color(0, 0, 0)
+	label.position = Vector3(randf_range(-0.3, 0.3), 2.0 + randf_range(0, 0.3), 0)
+	add_child(label)
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", label.position.y + 1.0, 0.8).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.8).set_delay(0.3)
+	tween.chain().tween_callback(label.queue_free)

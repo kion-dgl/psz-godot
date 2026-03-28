@@ -24,19 +24,20 @@ const DEBUG_ALL_TIERS := true
 ## Shop weapon pool — PSO basic weapon tiers
 const SHOP_WEAPON_TIER1 := [
 	"saber", "sword", "dagger", "partisan",
-	"handgun", "rifle", "mechgun", "rod",
+	"handgun", "rifle", "mechgun", "rod", "wand",
+	"d_fangs", "double_blade", "slicer",
 ]
 const SHOP_WEAPON_TIER2 := [
 	"brand", "gigush", "knife", "halberd",
-	"autogun", "sniper", "assault", "pole",
+	"autogun", "sniper", "assault", "pole", "staff",
 ]
 const SHOP_WEAPON_TIER3 := [
 	"buster", "breaker", "blade", "glaive",
-	"lockgun", "blaster", "repeater", "pillar",
+	"lockgun", "blaster", "repeater", "pillar", "baton",
 ]
 const SHOP_WEAPON_TIER4 := [
 	"pallasch", "claymore", "edge", "berdys",
-	"railgun", "beam", "gatling", "striker",
+	"railgun", "beam", "gatling", "striker", "scepter",
 ]
 
 ## Shop armor pool

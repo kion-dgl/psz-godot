@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "baton"
+name = "Baton"
+japanese_name = "バトン"
+rarity = 3
+weapon_type = 15
+max_grind = 40
+level = 35
+resale_value = 95
+attack_base = 0
+attack_max = 0
+accuracy_base = 86
+accuracy_max = 86
+element = ""
+element_level = 0
+photon_arts = []
+usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
+pso_world_id = 0
+glb_path = "res://assets/weapons/basic/Wand.glb"
+glb_scale = 0.09
+model_id = "wwah01"
+variant_id = "wwah01_1_o"
