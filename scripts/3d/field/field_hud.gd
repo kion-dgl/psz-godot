@@ -516,6 +516,7 @@ class _ActionPalette extends Control:
 		"keyboard": "I", "kb_mouse": "I", "xinput": "RB", "switch": "R",
 	}
 
+	var _draw_debug_done: bool = false
 	var _bg_pill: StyleBoxFlat
 	var _bg_swap: StyleBoxFlat
 	var _swap_texture: Texture2D = null
@@ -620,9 +621,10 @@ class _ActionPalette extends Control:
 			var action_icon: Texture2D = ActionPalette.get_action_icon(action_id)
 			if action_icon:
 				draw_texture_rect(action_icon, Rect2(px, py, PILL_W, PILL_H), false)
-				if Engine.get_process_frames() == 1:
-					print("[Palette HUD] slot %d: id=%s icon=%s size=%s" % [i, action_id, action_icon, action_icon.get_size()])
 			else:
+				if not _draw_debug_done:
+					print("[Palette HUD] slot %d: id=%s icon=NULL (fallback text)" % [i, action_id])
+					_draw_debug_done = true
 				# Text fallback with pill background
 				draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
 				var data: Dictionary = ActionPalette.get_action_data(action_id)
