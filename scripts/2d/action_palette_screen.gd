@@ -133,7 +133,7 @@ func _build_slot_view(parent: VBoxContainer) -> void:
 	for i in range(3):
 		var data: Dictionary = ActionPalette.get_action_data(page[i])
 		var label_text: String = data.get("label", page[i])
-		var pill := PszStyle.create_pill(slot_keys[i], _selected_slot == i, label_text)
+		var pill := _create_icon_pill(slot_keys[i], _selected_slot == i, label_text, page[i])
 		parent.add_child(pill)
 
 
@@ -190,33 +190,31 @@ func _build_diamond_preview() -> CenterContainer:
 
 	var page: Array = ActionPalette.pages[_active_page]
 	for i in range(3):
-		var data: Dictionary = ActionPalette.get_action_data(page[i])
-		var short_label: String = data.get("short", page[i])
+		var action_id: String = page[i]
 
 		var slot := PanelContainer.new()
 		var is_sel: bool = _selected_slot == i
 		slot.add_theme_stylebox_override("panel", PszStyle.pill_style(is_sel))
-		slot.custom_minimum_size = Vector2(60, 36)
+		slot.custom_minimum_size = Vector2(48, 48)
 
-		var slot_vbox := VBoxContainer.new()
-		slot_vbox.add_theme_constant_override("separation", 0)
-		slot_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		var center := CenterContainer.new()
+		var icon_tex: Texture2D = ActionPalette.get_action_icon(action_id)
+		if icon_tex:
+			var tex_rect := TextureRect.new()
+			tex_rect.texture = icon_tex
+			tex_rect.custom_minimum_size = Vector2(32, 32)
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			center.add_child(tex_rect)
+		else:
+			var data: Dictionary = ActionPalette.get_action_data(action_id)
+			var action_label := Label.new()
+			action_label.text = data.get("short", action_id)
+			action_label.add_theme_color_override("font_color", PszStyle.TEXT)
+			action_label.add_theme_font_size_override("font_size", 11)
+			center.add_child(action_label)
 
-		var key_label := Label.new()
-		key_label.text = str(i + 1)
-		key_label.add_theme_color_override("font_color", PszStyle.TEXT_LIGHT)
-		key_label.add_theme_font_size_override("font_size", 9)
-		key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		slot_vbox.add_child(key_label)
-
-		var action_label := Label.new()
-		action_label.text = short_label
-		action_label.add_theme_color_override("font_color", PszStyle.TEXT)
-		action_label.add_theme_font_size_override("font_size", 11)
-		action_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		slot_vbox.add_child(action_label)
-
-		slot.add_child(slot_vbox)
+		slot.add_child(center)
 
 		# Outer slots raised via bottom margin
 		var margin := MarginContainer.new()
@@ -256,5 +254,42 @@ func _build_picker(parent: VBoxContainer) -> void:
 		var is_current: bool = action.id == current_id
 		var is_selected: bool = i == _pick_index
 		var right_text := "\u2713" if is_current else ""
-		var pill := PszStyle.create_pill(action.label, is_selected, right_text)
+		var pill := _create_icon_pill(action.label, is_selected, right_text, action.id)
 		parent.add_child(pill)
+
+
+func _create_icon_pill(left_text: String, selected: bool, right_text: String, action_id: String) -> PanelContainer:
+	var pill := PanelContainer.new()
+	pill.add_theme_stylebox_override("panel", PszStyle.pill_style(selected))
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+
+	# Action icon
+	var icon_tex: Texture2D = ActionPalette.get_action_icon(action_id)
+	if icon_tex:
+		var tex_rect := TextureRect.new()
+		tex_rect.texture = icon_tex
+		tex_rect.custom_minimum_size = Vector2(24, 24)
+		tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		hbox.add_child(tex_rect)
+
+	# Left label
+	var left := Label.new()
+	left.text = left_text
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_theme_color_override("font_color", PszStyle.TEXT if not selected else PszStyle.TEXT_WHITE)
+	left.add_theme_font_size_override("font_size", PszStyle.FONT_BODY)
+	hbox.add_child(left)
+
+	# Right label
+	if not right_text.is_empty():
+		var right := Label.new()
+		right.text = right_text
+		right.add_theme_color_override("font_color", PszStyle.TEXT_LIGHT)
+		right.add_theme_font_size_override("font_size", PszStyle.FONT_BODY)
+		hbox.add_child(right)
+
+	pill.add_child(hbox)
+	return pill

@@ -5,17 +5,19 @@ extends Node
 signal page_changed(new_page: int)
 signal config_changed()
 
+const ICON_BASE := "res://assets/hud/"
+
 const ALL_ACTIONS: Array = [
-	{"id": "attack", "label": "Attack", "short": "Atk", "category": "combat"},
-	{"id": "strong_attack", "label": "Strong Attack", "short": "S.Atk", "category": "combat"},
-	{"id": "dodge", "label": "Dodge Roll", "short": "Dodge", "category": "combat"},
-	{"id": "monomate", "label": "Monomate", "short": "Mono", "category": "recovery"},
-	{"id": "dimate", "label": "Dimate", "short": "Di", "category": "recovery"},
-	{"id": "trimate", "label": "Trimate", "short": "Tri", "category": "recovery"},
-	{"id": "monofluid", "label": "Monofluid", "short": "M.Flu", "category": "recovery"},
-	{"id": "difluid", "label": "Difluid", "short": "D.Flu", "category": "recovery"},
-	{"id": "trifluid", "label": "Trifluid", "short": "T.Flu", "category": "recovery"},
-	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug"},
+	{"id": "attack", "label": "Attack", "short": "Atk", "category": "combat", "icon": "attack.png"},
+	{"id": "strong_attack", "label": "Strong Attack", "short": "S.Atk", "category": "combat", "icon": "strong_attack.png"},
+	{"id": "dodge", "label": "Dodge Roll", "short": "Dodge", "category": "combat", "icon": "special_attack.png"},
+	{"id": "monomate", "label": "Monomate", "short": "Mono", "category": "recovery", "icon": "monomate.png"},
+	{"id": "dimate", "label": "Dimate", "short": "Di", "category": "recovery", "icon": "dimate.png"},
+	{"id": "trimate", "label": "Trimate", "short": "Tri", "category": "recovery", "icon": "trimate.png"},
+	{"id": "monofluid", "label": "Monofluid", "short": "M.Flu", "category": "recovery", "icon": "monofluid.png"},
+	{"id": "difluid", "label": "Difluid", "short": "D.Flu", "category": "recovery", "icon": "monofluid.png"},
+	{"id": "trifluid", "label": "Trifluid", "short": "T.Flu", "category": "recovery", "icon": "trifluid.png"},
+	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug", "icon": "icon.png"},
 ]
 
 const DEFAULT_PAGES: Array = [
@@ -61,6 +63,17 @@ func get_action_data(action_id: String) -> Dictionary:
 		if action.id == action_id:
 			return action
 	return {}
+
+
+func get_action_icon(action_id: String) -> Texture2D:
+	var data := get_action_data(action_id)
+	var icon_file: String = data.get("icon", "")
+	if icon_file.is_empty():
+		return null
+	var path := ICON_BASE + icon_file
+	if ResourceLoader.exists(path):
+		return load(path)
+	return null
 
 
 func load_from_character(character: Dictionary) -> void:
