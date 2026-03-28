@@ -280,7 +280,7 @@ func _create_icon_pill(left_text: String, selected: bool, right_text: String, ac
 	left.text = left_text
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.add_theme_color_override("font_color", PszStyle.TEXT if not selected else PszStyle.TEXT_WHITE)
-	left.add_theme_font_size_override("font_size", PszStyle.FONT_BODY)
+	left.add_theme_font_size_override("font_size", PszStyle.FONT_ITEM)
 	hbox.add_child(left)
 
 	# Right label
@@ -288,7 +288,7 @@ func _create_icon_pill(left_text: String, selected: bool, right_text: String, ac
 		var right := Label.new()
 		right.text = right_text
 		right.add_theme_color_override("font_color", PszStyle.TEXT_LIGHT)
-		right.add_theme_font_size_override("font_size", PszStyle.FONT_BODY)
+		right.add_theme_font_size_override("font_size", PszStyle.FONT_ITEM)
 		hbox.add_child(right)
 
 	pill.add_child(hbox)
