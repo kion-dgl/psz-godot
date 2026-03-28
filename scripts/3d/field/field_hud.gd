@@ -539,6 +539,9 @@ class _ActionPalette extends Control:
 		offset_top = -total_h - MARGIN
 		offset_bottom = -MARGIN
 
+		# Use nearest filtering so pixel art icons don't blur to white
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
 		# Pill style
 		_bg_pill = StyleBoxFlat.new()
 		_bg_pill.bg_color = PILL_BG
@@ -619,7 +622,8 @@ class _ActionPalette extends Control:
 			var action_icon: Texture2D = ActionPalette.get_action_icon(action_id)
 			if action_icon:
 				var pad := 4.0
-				draw_texture_rect(action_icon, Rect2(px + pad, py + pad, PILL_W - pad * 2, PILL_H - pad * 2), false)
+				var icon_rect := Rect2(px + pad, py + pad, PILL_W - pad * 2, PILL_H - pad * 2)
+				draw_texture_rect(action_icon, icon_rect, false, Color.WHITE)
 			else:
 				# Text fallback if no icon
 				var data: Dictionary = ActionPalette.get_action_data(action_id)

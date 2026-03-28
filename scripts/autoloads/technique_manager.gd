@@ -60,16 +60,28 @@ func get_disk_required_level(disk_level: int) -> int:
 	return disk_level * 2 - 5
 
 
-## Generate a randomized shop inventory based on character level
+## Generate shop inventory: always includes Lv.1 disks for all techniques, plus random higher levels
 func generate_shop_inventory(char_level: int) -> Array:
 	var max_basic_level: int = clampi(ceili(float(char_level) * 0.6), 1, 15)
 	var max_mid_level: int = clampi(ceili(float(char_level) * 0.4), 1, 10)
 
 	var items: Array = []
 	var seen: Dictionary = {}
-	var attempts := 0
 
-	while items.size() < 15 and attempts < 60:
+	# Always stock Lv.1 of every technique
+	for tech_id in TECHNIQUES:
+		var tech: Dictionary = TECHNIQUES[tech_id]
+		items.append({
+			"technique_id": tech_id,
+			"name": "Disk: %s Lv.%d" % [tech["name"], 1],
+			"level": 1,
+			"cost": get_disk_price(tech_id, 1),
+		})
+		seen[tech_id + ":1"] = true
+
+	# Add random higher-level disks
+	var attempts := 0
+	while items.size() < 30 and attempts < 60:
 		attempts += 1
 		var is_mid: bool = randf() < 0.3 and max_mid_level >= 1
 		var tech_id: String
@@ -81,7 +93,7 @@ func generate_shop_inventory(char_level: int) -> Array:
 			tech_id = SHOP_BASIC_TECHS[randi() % SHOP_BASIC_TECHS.size()]
 			max_lv = max_basic_level
 
-		var level: int = randi_range(1, max_lv)
+		var level: int = randi_range(2, max_lv)
 		var key: String = "%s:%d" % [tech_id, level]
 		if seen.has(key):
 			continue
