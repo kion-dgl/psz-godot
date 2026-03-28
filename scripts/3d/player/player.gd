@@ -970,10 +970,22 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 	match technique_id:
 		"foie":
 			_spawn_foie(spawn_pos, forward, damage, kb)
+		"gifoie":
+			_spawn_gifoie(damage, kb)
+		"rafoie":
+			_spawn_rafoie(spawn_pos, forward, damage, kb)
 		"barta":
 			_spawn_barta(spawn_pos, forward, damage, kb)
+		"gibarta":
+			_spawn_gibarta(spawn_pos, forward, damage, kb)
+		"rabarta":
+			_spawn_rabarta(damage, kb)
 		"zonde":
 			_spawn_zonde(damage, kb)
+		"gizonde":
+			_spawn_gizonde(damage, kb)
+		"razonde":
+			_spawn_razonde(damage, kb)
 		_:
 			# Fallback: fire a basic projectile for unimplemented techniques
 			_spawn_foie(spawn_pos, forward, damage, kb)
@@ -1009,6 +1021,75 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 	proj.global_position = ground_pos
 
 
+func _spawn_gifoie(damage: int, kb: float) -> void:
+	# Fire eruption around caster — damages all nearby enemies
+	var nearby := _get_enemies_in_radius(6.0)
+	for enemy in nearby:
+		if enemy.hurtbox:
+			var dir := (enemy.global_position - global_position).normalized()
+			enemy.hurtbox.take_hit(damage, dir * kb, 100)
+	_spawn_aoe_visual(global_position, Color(1.0, 0.3, 0.05), 6.0)
+
+
+func _spawn_rafoie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	# Large fireball — 3 projectiles in a fan spread
+	for i in range(3):
+		var angle_offset: float = (i - 1) * 0.15  # -0.15, 0, 0.15 radians
+		var rot := player_rotation + angle_offset
+		var dir := Vector3(sin(rot), 0, cos(rot))
+		var proj := Projectile.new()
+		proj.damage = damage
+		proj.knockback = kb
+		proj.accuracy = 100
+		proj.direction = dir
+		proj.max_range = 15.0
+		proj.owner_node = self
+		proj.speed = 20.0
+		proj.color = Color(1.0, 0.2, 0.0)
+		get_tree().current_scene.add_child(proj)
+		proj.global_position = spawn_pos
+
+
+func _spawn_gibarta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	# Wide ice wave — 3 piercing projectiles in a fan spread
+	for i in range(3):
+		var angle_offset: float = (i - 1) * 0.12
+		var rot := player_rotation + angle_offset
+		var dir := Vector3(sin(rot), 0, cos(rot))
+		var proj := Projectile.new()
+		proj.damage = damage
+		proj.knockback = kb
+		proj.accuracy = 100
+		proj.direction = dir
+		proj.max_range = 15.0
+		proj.owner_node = self
+		proj.speed = 20.0
+		proj.pierce = true
+		proj.color = Color(0.3, 0.7, 1.0)
+		var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
+		get_tree().current_scene.add_child(proj)
+		proj.global_position = ground_pos
+
+
+func _spawn_rabarta(damage: int, kb: float) -> void:
+	# Ice ring — piercing projectiles in all 8 directions from caster
+	for i in range(8):
+		var angle: float = i * TAU / 8.0
+		var dir := Vector3(sin(angle), 0, cos(angle))
+		var proj := Projectile.new()
+		proj.damage = damage
+		proj.knockback = kb
+		proj.accuracy = 100
+		proj.direction = dir
+		proj.max_range = 10.0
+		proj.owner_node = self
+		proj.speed = 15.0
+		proj.pierce = true
+		proj.color = Color(0.5, 0.8, 1.0)
+		get_tree().current_scene.add_child(proj)
+		proj.global_position = global_position + Vector3(0, 0.3, 0)
+
+
 func _spawn_zonde(damage: int, kb: float) -> void:
 	if _targeted_enemies.is_empty():
 		print("[Player] Zonde: no target")
@@ -1042,6 +1123,81 @@ func _spawn_zonde_visual(target_pos: Vector3) -> void:
 	tween.tween_property(mat, "albedo_color:a", 0.0, 0.4)
 	tween.parallel().tween_property(mat, "emission_energy_multiplier", 0.0, 0.4)
 	tween.tween_callback(bolt.queue_free)
+
+
+func _spawn_gizonde(damage: int, kb: float) -> void:
+	# Chain lightning — hits targeted enemy + up to 2 nearby enemies
+	if _targeted_enemies.is_empty():
+		print("[Player] Gizonde: no target")
+		return
+	var primary = _targeted_enemies[0]
+	if not is_instance_valid(primary):
+		return
+	if primary.hurtbox:
+		var fwd := Vector3(sin(player_rotation), 0, cos(player_rotation))
+		primary.hurtbox.take_hit(damage, fwd * kb, 100)
+	_spawn_zonde_visual(primary.global_position)
+
+	# Chain to nearby enemies
+	var chain_count := 0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if chain_count >= 2:
+			break
+		if not is_instance_valid(enemy) or enemy == primary:
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var dist: float = enemy.global_position.distance_to(primary.global_position)
+		if dist < 8.0 and enemy.hurtbox:
+			var dir := (enemy.global_position - primary.global_position).normalized()
+			enemy.hurtbox.take_hit(int(damage * 0.7), dir * kb, 100)
+			_spawn_zonde_visual(enemy.global_position)
+			chain_count += 1
+
+
+func _spawn_razonde(damage: int, kb: float) -> void:
+	# Lightning storm — hits all enemies in radius around caster
+	var nearby := _get_enemies_in_radius(8.0)
+	for enemy in nearby:
+		if enemy.hurtbox:
+			var dir := (enemy.global_position - global_position).normalized()
+			enemy.hurtbox.take_hit(damage, dir * kb, 100)
+		_spawn_zonde_visual(enemy.global_position)
+
+
+func _get_enemies_in_radius(radius: float) -> Array:
+	var result: Array = []
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy):
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var dist: float = enemy.global_position.distance_to(global_position)
+		if dist <= radius:
+			result.append(enemy)
+	return result
+
+
+func _spawn_aoe_visual(center: Vector3, aoe_color: Color, radius: float) -> void:
+	var ring := MeshInstance3D.new()
+	var torus := CylinderMesh.new()
+	torus.top_radius = radius
+	torus.bottom_radius = radius
+	torus.height = 0.3
+	ring.mesh = torus
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(aoe_color.r, aoe_color.g, aoe_color.b, 0.4)
+	mat.emission_enabled = true
+	mat.emission = aoe_color
+	mat.emission_energy_multiplier = 2.0
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring.material_override = mat
+	get_tree().current_scene.add_child(ring)
+	ring.global_position = center + Vector3(0, 0.2, 0)
+	var tween := ring.create_tween()
+	tween.tween_property(mat, "albedo_color:a", 0.0, 0.5)
+	tween.parallel().tween_property(mat, "emission_energy_multiplier", 0.0, 0.5)
+	tween.tween_callback(ring.queue_free)
 
 
 func _debug_kill_all() -> void:
