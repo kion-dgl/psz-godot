@@ -33,6 +33,7 @@ const WEAPON_ANIM_DATA: Dictionary = {
 	WeaponData.WeaponType.SABER: {"glb_m": "res://assets/player/animations/saver_m.glb", "glb_w": "res://assets/player/animations/saver_w.glb", "prefix_m": "pmsa", "prefix_w": "pwsa"},
 	WeaponData.WeaponType.SWORD: {"glb_m": "res://assets/player/animations/sword_m.glb", "glb_w": "res://assets/player/animations/sword_w.glb", "prefix_m": "pmsw", "prefix_w": "pwsw"},
 	WeaponData.WeaponType.DAGGERS: {"glb_m": "res://assets/player/animations/dagger_m.glb", "glb_w": "res://assets/player/animations/dagger_w.glb", "prefix_m": "pmda", "prefix_w": "pwda"},
+	WeaponData.WeaponType.CLAW: {"glb_m": "res://assets/player/animations/claw_m.glb", "glb_w": "res://assets/player/animations/claw_w.glb", "prefix_m": "pmcl", "prefix_w": "pwcl"},
 	WeaponData.WeaponType.SPEAR: {"glb_m": "res://assets/player/animations/spear_m.glb", "glb_w": "res://assets/player/animations/spear_w.glb", "prefix_m": "pmsp", "prefix_w": "pwsp"},
 	WeaponData.WeaponType.SLICER: {"glb_m": "res://assets/player/animations/slicer_m.glb", "glb_w": "res://assets/player/animations/slicer_w.glb", "prefix_m": "pmsl", "prefix_w": "pwsls"},
 	WeaponData.WeaponType.GUN_BLADE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmgb", "prefix_w": "pwgbs"},
@@ -1520,13 +1521,21 @@ func _fire_projectile(atk: Dictionary) -> void:
 		proj.owner_node = self
 		proj.speed = 25.0
 
-		# Slicer: throwing blade that bounces to nearby enemies (up to 4 total)
+		# Slicer: throwing blade aimed at target, bounces to nearby enemies
 		if weapon_type == WeaponData.WeaponType.SLICER:
 			proj.pierce = true
 			proj.bounce_radius = 3.0
 			proj.max_hits = 4
 			proj.speed = 20.0
 			proj.color = Color(0.7, 0.9, 1.0)
+			# Semi-homing: aim at the targeted enemy instead of straight forward
+			if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
+				var to_target: Vector3 = _targeted_enemies[0].global_position - spawn_pos
+				to_target.y = 0  # Keep horizontal
+				if to_target.length() > 0.5:
+					proj.direction = to_target.normalized()
+			# Spawn at enemy height so it doesn't fly over short targets
+			spawn_pos.y = global_position.y + 0.6
 
 		# Slight spread for multi-shot (mechgun)
 		if hits > 1:
@@ -1667,6 +1676,21 @@ func _update_combat_targets() -> void:
 		if enemy.has_method("show_reticle"):
 			enemy.show_reticle()
 		_targeted_enemies.append(enemy)
+
+	# Slicer: show secondary reticles for bounce targets near the primary
+	if weapon_type == WeaponData.WeaponType.SLICER and not _targeted_enemies.is_empty():
+		var primary = _targeted_enemies[0]
+		var bounce_count := 0
+		for c in candidates:
+			if bounce_count >= 3:
+				break
+			if c.enemy == primary or c.enemy in _targeted_enemies:
+				continue
+			var dist_to_primary: float = c.enemy.global_position.distance_to(primary.global_position)
+			if dist_to_primary <= 3.0 and c.enemy.has_method("show_reticle"):
+				c.enemy.show_reticle()
+				_targeted_enemies.append(c.enemy)
+				bounce_count += 1
 
 	# Debug: color box based on targets found
 	if _debug_range_mesh and _debug_range_mesh.visible:
