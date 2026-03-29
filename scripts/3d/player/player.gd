@@ -134,6 +134,7 @@ var walk_timer: float = 0.0
 
 # Combo system
 var combo_state: int = 0  # 0 = not attacking, 1-3 = combo step
+var _is_special_attack: bool = false  # True when current attack carries weapon element
 var combo_window_open: bool = false
 var combo_timer: float = 0.0
 const COMBO_WINDOW_DURATION: float = 0.5
@@ -907,12 +908,14 @@ func _start_attack() -> void:
 		if combo_window_open and combo_state < max_combo:
 			combo_state += 1
 			combo_window_open = false
+			_is_special_attack = false
 			_play_attack_animation(combo_state)
 		return
 
 	# Start fresh attack combo
 	combo_state = 1
 	combo_window_open = false
+	_is_special_attack = false
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
 
@@ -1286,11 +1289,31 @@ func _debug_kill_all() -> void:
 
 
 func _start_strong_attack() -> void:
-	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+	if current_state == PlayerState.DODGING:
 		return
-	# Strong attack uses combo step 3 animation directly
-	combo_state = 3
+
+	# Set weapon element for the special attack
+	var character = CharacterManager.get_active_character()
+	if character:
+		var weapon_id: String = str(character.get("equipment", {}).get("weapon", ""))
+		var ws: Dictionary = character.get("weapon_stats", {}).get(weapon_id, {})
+		_current_attack_element = str(ws.get("element", ""))
+		_current_attack_element_level = int(ws.get("element_level", 0))
+
+	if current_state == PlayerState.ATTACKING:
+		# Chain into combo like normal attack, but flagged as special
+		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+		if combo_window_open and combo_state < max_combo:
+			combo_state += 1
+			combo_window_open = false
+			_is_special_attack = true
+			_play_attack_animation(combo_state)
+		return
+
+	# Start fresh combo step 1 as special
+	combo_state = 1
 	combo_window_open = false
+	_is_special_attack = true
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
 
@@ -1336,10 +1359,20 @@ func _set_weapon_hold(mode: String) -> void:
 	weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
 
 
+const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
+
 func _play_attack_animation(attack_num: int) -> void:
 	var anim_name := _anim_prefix + "_atk" + str(attack_num)
-	play_animation(anim_name, false)
-	_activate_attack_hitbox()
+	if _is_special_attack:
+		# Pause before attack — player is exposed during wind-up
+		play_animation(_anim_prefix + "_wait", true)
+		var tw := create_tween()
+		tw.tween_interval(SPECIAL_ATTACK_DELAY)
+		tw.tween_callback(play_animation.bind(anim_name, false))
+		tw.tween_callback(_activate_attack_hitbox)
+	else:
+		play_animation(anim_name, false)
+		_activate_attack_hitbox()
 
 
 func transition_to(new_state: PlayerState) -> void:
@@ -1522,6 +1555,13 @@ func _activate_attack_hitbox() -> void:
 		attack_hitbox.accuracy = int(atk.get("accuracy", 100))
 		attack_hitbox.max_targets = int(atk.get("max_targets", 1))
 		attack_hitbox.hits_per_target = int(atk.get("hits", 1))
+		# Special attacks carry weapon element for status procs
+		if _is_special_attack:
+			attack_hitbox.element = _current_attack_element
+			attack_hitbox.element_level = _current_attack_element_level
+		else:
+			attack_hitbox.element = ""
+			attack_hitbox.element_level = 0
 		attack_hitbox.activate()
 
 
