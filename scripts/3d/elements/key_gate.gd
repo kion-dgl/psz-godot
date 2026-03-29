@@ -73,20 +73,17 @@ func _update_animation(delta: float) -> void:
 
 
 func _apply_state() -> void:
-	print("[KeyGate] _apply_state: %s, laser_mat=%s" % [element_state, _laser_material != null])
+	# Toggle laser visibility — preserve original alpha scissor mode
 	if _laser_material:
-		print("[KeyGate]   before: transparency=%d albedo_color=%s albedo_tex=%s" % [
-			_laser_material.transparency, _laser_material.albedo_color,
-			_laser_material.albedo_texture.resource_path if _laser_material.albedo_texture else "null"])
 		match element_state:
 			"locked":
-				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 				_laser_material.albedo_color.a = 1.0
+				_laser_material.alpha_scissor_threshold = 0.5
 			"open":
-				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 				_laser_material.albedo_color.a = 0.0
-		print("[KeyGate]   after: transparency=%d albedo_color=%s" % [
-			_laser_material.transparency, _laser_material.albedo_color])
+				_laser_material.alpha_scissor_threshold = 1.0
 
 	if collision_body:
 		match element_state:
@@ -131,11 +128,9 @@ func _on_interact(_player: Node3D) -> void:
 
 ## Open the gate
 func open() -> void:
-	print("[KeyGate] open() called, current_state=%s" % element_state)
 	set_state("open")
 
 
 ## Lock the gate
 func lock() -> void:
-	print("[KeyGate] lock() called, current_state=%s" % element_state)
 	set_state("locked")
