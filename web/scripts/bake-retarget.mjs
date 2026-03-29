@@ -174,6 +174,22 @@ const BAKE_TARGETS = [
       { index: 416, name: 'pwsls_run_pso', offsets: F_RUN_OFFSETS },
     ],
   },
+  {
+    // Claw (male) — PSZ native anims + PSO walk/run
+    targetGlb: '../assets/player/animations/claw_m.glb',
+    anims: [
+      { index: 200, name: 'pmcl_walk', offsets: WALK_OFFSETS },
+      { index: 207, name: 'pmcl_run_pso', offsets: RUN_OFFSETS },
+    ],
+  },
+  {
+    // Claw (female) — PSZ native anims + PSO walk/run
+    targetGlb: '../assets/player/animations/claw_w.glb',
+    anims: [
+      { index: 412, name: 'pwcl_walk', offsets: F_WALK_OFFSETS },
+      { index: 416, name: 'pwcl_run_pso', offsets: F_RUN_OFFSETS },
+    ],
+  },
 ];
 
 // ── Retarget utilities (inlined from retarget-utils.ts) ──────────
