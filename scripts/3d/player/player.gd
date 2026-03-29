@@ -1349,8 +1349,11 @@ func _handle_attack_state(delta: float) -> void:
 	if combo_window_open:
 		combo_timer += delta
 		if combo_timer >= COMBO_WINDOW_DURATION:
-			# Missed the window — combo resets when animation finishes
+			# Missed the rhythm window — combo resets
 			combo_window_open = false
+			combo_state = 0
+			_deactivate_attack_hitbox()
+			transition_to(PlayerState.IDLE)
 
 	# Stop horizontal movement during attacks
 	velocity.x = 0
