@@ -696,6 +696,22 @@ class _QuickWeaponMenu extends Control:
 		size = Vector2(MENU_W, MENU_H)
 
 	func _unhandled_input(event: InputEvent) -> void:
+		# Mouse wheel opens menu and navigates (works when closed or open)
+		if event is InputEventMouseButton:
+			var mb: InputEventMouseButton = event as InputEventMouseButton
+			if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+				if not _is_open:
+					_open()
+				if _weapon_list.size() > 0:
+					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+						_selected_index = wrapi(_selected_index - 1, 0, _weapon_list.size())
+					else:
+						_selected_index = wrapi(_selected_index + 1, 0, _weapon_list.size())
+					_update_scroll()
+					queue_redraw()
+				get_viewport().set_input_as_handled()
+				return
+
 		if event.is_action_pressed("quick_weapon"):
 			if _is_open:
 				_close()
@@ -723,21 +739,6 @@ class _QuickWeaponMenu extends Control:
 		elif event.is_action_pressed("ui_cancel"):
 			_close()
 			get_viewport().set_input_as_handled()
-
-		# Mouse wheel scrolling
-		if event is InputEventMouseButton:
-			var mb: InputEventMouseButton = event as InputEventMouseButton
-			if mb.pressed:
-				if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-					_selected_index = wrapi(_selected_index - 1, 0, _weapon_list.size())
-					_update_scroll()
-					queue_redraw()
-					get_viewport().set_input_as_handled()
-				elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-					_selected_index = wrapi(_selected_index + 1, 0, _weapon_list.size())
-					_update_scroll()
-					queue_redraw()
-					get_viewport().set_input_as_handled()
 
 	func _open() -> void:
 		_build_weapon_list()
