@@ -3087,14 +3087,5 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F9:
 				_toggle_all_collision()
 				get_viewport().set_input_as_handled()
-			KEY_K:
-				print("[DEBUG] Kill all enemies (%d)" % _room_enemies.size())
-				for enemy in _room_enemies:
-					if not is_instance_valid(enemy):
-						continue
-					if enemy is EnemyBase:
-						if enemy.is_alive:
-							enemy._on_hit_received(9999, Vector3.ZERO, 999)
-					elif enemy.get("element_state") != "dead":
-						enemy.take_damage(9999)
+			# K key kill-all removed — use "Kill All" action palette slot instead
 				get_viewport().set_input_as_handled()

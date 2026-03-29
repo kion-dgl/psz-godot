@@ -490,19 +490,14 @@ class _ActionPalette extends Control:
 	## PSO-style action palette: reads from ActionPalette autoload.
 	## Swap centered above, slot 0 and 2 raised, slot 1 lower (diamond-ish layout).
 
-	const PILL_BG := Color(1.0, 1.0, 1.0, 0.5)
-	const PILL_BORDER := Color(0.59, 0.71, 0.82, 0.3)
-	const KEY_BG := Color(0.16, 0.24, 0.31, 0.5)
-	const KEY_TEXT := Color(1.0, 1.0, 1.0)
-	const LABEL_TEXT := Color(0.1, 0.1, 0.17)
+	const PILL_BG := Color(0.08, 0.08, 0.12, 0.7)
+	const PILL_BORDER := Color(0.3, 0.5, 0.3, 0.5)
 	const LABEL_LIGHT := Color(0.23, 0.29, 0.35)
-	const FONT_SIZE_KEY := 8
-	const FONT_SIZE_LABEL := 10
 	const FONT_SIZE_SMALL := 8
 
-	# Layout constants
-	const PILL_W := 44.0
-	const PILL_H := 28.0
+	# Layout constants — square pills for icons
+	const PILL_W := 36.0
+	const PILL_H := 36.0
 	const SWAP_W := 40.0
 	const SWAP_H := 18.0
 	const GAP := 4.0
@@ -510,13 +505,6 @@ class _ActionPalette extends Control:
 
 	const KENNEY_BASE := "res://assets/kenney_input-prompts/"
 
-	## Slot icons per control scheme: [slot0, slot1, slot2]
-	const SLOT_ICONS := {
-		"keyboard": ["Keyboard & Mouse/Default/keyboard_j.png", "Keyboard & Mouse/Default/keyboard_k.png", "Keyboard & Mouse/Default/keyboard_l.png"],
-		"kb_mouse": ["Keyboard & Mouse/Default/keyboard_j.png", "Keyboard & Mouse/Default/keyboard_k.png", "Keyboard & Mouse/Default/keyboard_l.png"],
-		"xinput":   ["Xbox Series/Default/xbox_button_x.png", "Xbox Series/Default/xbox_button_a.png", "Xbox Series/Default/xbox_button_b.png"],
-		"switch":   ["Nintendo Switch/Default/switch_button_y.png", "Nintendo Switch/Default/switch_button_b.png", "Nintendo Switch/Default/switch_button_a.png"],
-	}
 	## Swap button icon per scheme
 	const SWAP_ICONS := {
 		"keyboard": "Keyboard & Mouse/Default/keyboard_i.png",
@@ -524,19 +512,14 @@ class _ActionPalette extends Control:
 		"xinput":   "Xbox Series/Default/xbox_rb.png",
 		"switch":   "Nintendo Switch/Default/switch_button_r.png",
 	}
-	## Fallback text labels if icons can't load
-	const SLOT_KEYS_FALLBACK := {
-		"keyboard": ["J", "K", "L"], "kb_mouse": ["J", "K", "L"],
-		"xinput": ["X", "A", "B"], "switch": ["Y", "B", "A"],
-	}
 	const SWAP_KEY_FALLBACK := {
 		"keyboard": "I", "kb_mouse": "I", "xinput": "RB", "switch": "R",
 	}
 
 	var _bg_pill: StyleBoxFlat
 	var _bg_swap: StyleBoxFlat
-	var _slot_textures: Array = [null, null, null]
 	var _swap_texture: Texture2D = null
+	var _slot_icons: Array = []  # TextureRect nodes for action icons
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
@@ -557,6 +540,9 @@ class _ActionPalette extends Control:
 		offset_top = -total_h - MARGIN
 		offset_bottom = -MARGIN
 
+		# Use nearest filtering so pixel art icons don't blur to white
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
 		# Pill style
 		_bg_pill = StyleBoxFlat.new()
 		_bg_pill.bg_color = PILL_BG
@@ -574,6 +560,21 @@ class _ActionPalette extends Control:
 		# Load icons for current control scheme
 		_load_scheme_icons()
 
+		# Create TextureRect nodes for action slot icons
+		var row_y: float = SWAP_H + 2.0
+		for i in range(3):
+			var tex_rect := TextureRect.new()
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			tex_rect.mouse_filter = MOUSE_FILTER_IGNORE
+			var px: float = i * (PILL_W + GAP)
+			var py: float = row_y + RAISED if i == 1 else row_y
+			tex_rect.position = Vector2(px, py)
+			tex_rect.size = Vector2(PILL_W, PILL_H)
+			add_child(tex_rect)
+			_slot_icons.append(tex_rect)
+		_update_slot_icons()
+
 		# Connect to ActionPalette signals for live updates
 		ActionPalette.page_changed.connect(_on_palette_changed)
 		ActionPalette.config_changed.connect(_on_palette_changed)
@@ -586,20 +587,23 @@ class _ActionPalette extends Control:
 
 	func _load_scheme_icons() -> void:
 		var scheme: String = InputConfig.current_scheme
-		var slot_paths: Array = SLOT_ICONS.get(scheme, SLOT_ICONS["keyboard"])
-		for i in range(3):
-			var path: String = KENNEY_BASE + slot_paths[i]
-			if ResourceLoader.exists(path):
-				_slot_textures[i] = load(path)
-			else:
-				_slot_textures[i] = null
 		var swap_path: String = KENNEY_BASE + SWAP_ICONS.get(scheme, SWAP_ICONS["keyboard"])
 		if ResourceLoader.exists(swap_path):
 			_swap_texture = load(swap_path)
 		else:
 			_swap_texture = null
 
+	func _update_slot_icons() -> void:
+		var slots: Array = ActionPalette.get_current_slots()
+		for i in range(3):
+			var action_id: String = slots[i] if i < slots.size() else ""
+			var icon: Texture2D = ActionPalette.get_action_icon(action_id)
+			if i < _slot_icons.size():
+				_slot_icons[i].texture = icon
+				_slot_icons[i].visible = icon != null
+
 	func _on_palette_changed(_arg = null) -> void:
+		_update_slot_icons()
 		queue_redraw()
 
 	func _draw() -> void:
@@ -622,10 +626,8 @@ class _ActionPalette extends Control:
 		else:
 			var scheme: String = InputConfig.current_scheme
 			var swap_key: String = SWAP_KEY_FALLBACK.get(scheme, "R")
-			var key_rect := Rect2(swap_x + 6, swap_y + 4, 16, 13)
-			draw_rect(key_rect, KEY_BG)
-			draw_string(font, Vector2(swap_x + 10, swap_y + 14), swap_key,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
+			draw_string(font, Vector2(swap_x + 6, swap_y + 14), swap_key,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, Color.WHITE)
 
 		# Palette number
 		var pn_text := "%d/%d" % [page_idx + 1, page_count]
@@ -636,30 +638,16 @@ class _ActionPalette extends Control:
 		var row_y: float = SWAP_H + 2.0
 		for i in range(3):
 			var action_id: String = slots[i] if i < slots.size() else ""
-			var data: Dictionary = ActionPalette.get_action_data(action_id)
-			var lbl: String = data.get("short", action_id)
 
 			var px: float = i * (PILL_W + GAP)
 			var py: float = row_y + RAISED if i == 1 else row_y
 
-			draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
-
-			# Button icon or text fallback
-			var tex: Texture2D = _slot_textures[i] if i < _slot_textures.size() else null
-			if tex:
-				var icon_sz := 14.0
-				draw_texture_rect(tex, Rect2(px + (PILL_W - icon_sz) * 0.5, py + 4, icon_sz, icon_sz), false)
-			else:
-				var scheme: String = InputConfig.current_scheme
-				var keys: Array = SLOT_KEYS_FALLBACK.get(scheme, ["1", "2", "3"])
-				var key: String = keys[i] if i < keys.size() else str(i + 1)
-				var kx: float = px + (PILL_W - 16) * 0.5
-				var ky: float = py + 5
-				draw_rect(Rect2(kx, ky, 16, 13), KEY_BG)
-				draw_string(font, Vector2(kx + 4, ky + 10), key,
-					HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_KEY, KEY_TEXT)
-
-			# Action label
-			var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LABEL).x
-			draw_string(font, Vector2(px + (PILL_W - lbl_w) * 0.5, py + PILL_H - 5),
-				lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LABEL, LABEL_TEXT)
+			# Icons are handled by TextureRect children (_slot_icons)
+			# Only draw text fallback if no icon
+			if i < _slot_icons.size() and not _slot_icons[i].visible:
+				draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
+				var data: Dictionary = ActionPalette.get_action_data(action_id)
+				var lbl: String = data.get("short", action_id)
+				var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL).x
+				draw_string(font, Vector2(px + (PILL_W - lbl_w) * 0.5, py + PILL_H * 0.5 + 4),
+					lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, Color.WHITE)

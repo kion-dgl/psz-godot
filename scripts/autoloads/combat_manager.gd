@@ -461,6 +461,44 @@ func apply_damage_to_enemy(raw_damage: int, enemy_defense: int, enemy_evasion: i
 	return {"hit": true, "damage": maxi(int(after_def), 1), "is_critical": is_critical}
 
 
+## Calculate technique damage and PP cost for a given technique.
+func calculate_technique_damage(technique_id: String) -> Dictionary:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return {"damage": 0, "pp_cost": 0, "element": "none", "target": "single"}
+
+	var tech: Dictionary = TechniqueManager.TECHNIQUES.get(technique_id, {})
+	if tech.is_empty():
+		return {"damage": 0, "pp_cost": 0, "element": "none", "target": "single"}
+
+	var tech_level: int = TechniqueManager.get_technique_level(character, technique_id)
+	if tech_level <= 0:
+		return {"damage": 0, "pp_cost": 0, "element": "none", "target": "single"}
+
+	var stats: Dictionary = _get_player_stats(character)
+	var player_technique: int = int(stats.get("technique", 0))
+
+	# Power scales with technique level
+	var base_power: int = int(tech.get("power", 0))
+	var scaled_power: int = int(float(base_power) * (1.0 + float(tech_level) / 10.0))
+
+	# Final damage = scaled power + technique stat
+	var variance: float = randf_range(1.0 - DAMAGE_VARIANCE, 1.0 + DAMAGE_VARIANCE)
+	var final_damage: int = maxi(int(float(scaled_power + player_technique) * variance), 1)
+
+	# PP cost decreases slightly with level
+	var pp_cost: int = maxi(1, int(tech.get("pp", 5)) - int(float(tech_level) / 5.0))
+
+	return {
+		"damage": final_damage,
+		"pp_cost": pp_cost,
+		"element": str(tech.get("element", "none")),
+		"target": str(tech.get("target", "single")),
+		"technique_id": technique_id,
+		"knockback": 3.0,
+	}
+
+
 ## Use a material item on the active character. Returns result dict.
 func use_material(material_id: String) -> Dictionary:
 	var character = CharacterManager.get_active_character()

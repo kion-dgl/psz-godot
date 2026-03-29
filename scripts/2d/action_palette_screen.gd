@@ -37,27 +37,31 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		if _picking:
-			_pick_index = wrapi(_pick_index - 1, 0, _pick_items.size())
+			_pick_index = wrapi(_pick_index - PICKER_COLS, 0, _pick_items.size())
 		else:
 			_selected_slot = wrapi(_selected_slot - 1, 0, 3)
 		_refresh()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
 		if _picking:
-			_pick_index = wrapi(_pick_index + 1, 0, _pick_items.size())
+			_pick_index = wrapi(_pick_index + PICKER_COLS, 0, _pick_items.size())
 		else:
 			_selected_slot = wrapi(_selected_slot + 1, 0, 3)
 		_refresh()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left"):
-		if not _picking:
+		if _picking:
+			_pick_index = wrapi(_pick_index - 1, 0, _pick_items.size())
+		else:
 			_active_page = wrapi(_active_page - 1, 0, ActionPalette.pages.size())
-			_refresh()
+		_refresh()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right"):
-		if not _picking:
+		if _picking:
+			_pick_index = wrapi(_pick_index + 1, 0, _pick_items.size())
+		else:
 			_active_page = wrapi(_active_page + 1, 0, ActionPalette.pages.size())
-			_refresh()
+		_refresh()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if _picking:
@@ -81,9 +85,22 @@ func _open_picker() -> void:
 
 func _assign_action() -> void:
 	var action_id: String = _pick_items[_pick_index].id
+	# Block assigning unlearned techniques
+	if not _is_action_available(action_id):
+		hint_label.text = "Not yet learned!"
+		return
 	ActionPalette.set_action(_active_page, _selected_slot, action_id)
 	_picking = false
 	_refresh()
+
+
+func _is_action_available(action_id: String) -> bool:
+	if not TechniqueManager.TECHNIQUES.has(action_id):
+		return true  # Non-technique actions are always available
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
+	return TechniqueManager.get_technique_level(character, action_id) > 0
 
 
 func _refresh() -> void:
@@ -127,13 +144,14 @@ func _build_slot_view(parent: VBoxContainer) -> void:
 	spacer2.custom_minimum_size.y = 8
 	parent.add_child(spacer2)
 
-	# Slot list
+	# Slot list — original PszStyle pills with icon prepended
 	var page: Array = ActionPalette.pages[_active_page]
 	var slot_keys := ["Slot 1", "Slot 2", "Slot 3"]
 	for i in range(3):
 		var data: Dictionary = ActionPalette.get_action_data(page[i])
 		var label_text: String = data.get("label", page[i])
 		var pill := PszStyle.create_pill(slot_keys[i], _selected_slot == i, label_text)
+		_prepend_icon(pill, page[i])
 		parent.add_child(pill)
 
 
@@ -230,6 +248,8 @@ func _build_diamond_preview() -> CenterContainer:
 	return center
 
 
+const PICKER_COLS := 3
+
 func _build_picker(parent: VBoxContainer) -> void:
 	var current_page: Array = ActionPalette.pages[_active_page]
 	var current_id: String = current_page[_selected_slot]
@@ -241,20 +261,88 @@ func _build_picker(parent: VBoxContainer) -> void:
 	header.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
 	parent.add_child(header)
 
-	# Group by category
+	# Group by category, render in a grid
 	var last_category := ""
+	var current_row: HBoxContainer = null
+	var col_idx: int = 0
+
 	for i in range(_pick_items.size()):
 		var action: Dictionary = _pick_items[i]
 		var cat: String = action.category
 
-		# Category header
+		# Category header — start a new row
 		if cat != last_category:
+			current_row = null
 			var cat_label: String = cat.capitalize()
 			parent.add_child(PszStyle.create_section_header(cat_label))
 			last_category = cat
+			col_idx = 0
+
+		# Start a new row if needed
+		if current_row == null or col_idx >= PICKER_COLS:
+			current_row = HBoxContainer.new()
+			current_row.add_theme_constant_override("separation", 4)
+			parent.add_child(current_row)
+			col_idx = 0
 
 		var is_current: bool = action.id == current_id
 		var is_selected: bool = i == _pick_index
-		var right_text := "\u2713" if is_current else ""
-		var pill := PszStyle.create_pill(action.label, is_selected, right_text)
-		parent.add_child(pill)
+		var available: bool = _is_action_available(action.id)
+		var grey := Color(0.4, 0.4, 0.4)
+
+		# Compact cell: icon + short label
+		var cell := PanelContainer.new()
+		cell.add_theme_stylebox_override("panel", PszStyle.pill_style(is_selected))
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var hbox := HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 4)
+
+		var icon_tex: Texture2D = ActionPalette.get_action_icon(action.id)
+		if icon_tex:
+			var tex_rect := TextureRect.new()
+			tex_rect.texture = icon_tex
+			tex_rect.custom_minimum_size = Vector2(16, 16)
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			if not available:
+				tex_rect.modulate = Color(0.4, 0.4, 0.4)
+			hbox.add_child(tex_rect)
+
+		var label := Label.new()
+		label.text = action.short
+		var text_color: Color = grey if not available else PszStyle.TEXT
+		if is_selected:
+			text_color = PszStyle.TEXT_WHITE
+		label.add_theme_color_override("font_color", text_color)
+		label.add_theme_font_size_override("font_size", PszStyle.FONT_TAB)
+		hbox.add_child(label)
+
+		if is_current:
+			var check := Label.new()
+			check.text = "\u2713"
+			check.add_theme_color_override("font_color", PszStyle.TEXT_LIGHT)
+			check.add_theme_font_size_override("font_size", PszStyle.FONT_TAB)
+			hbox.add_child(check)
+
+		cell.add_child(hbox)
+		current_row.add_child(cell)
+		col_idx += 1
+
+
+## Insert an action icon at the start of a PszStyle pill's HBoxContainer
+func _prepend_icon(pill: PanelContainer, action_id: String) -> void:
+	var icon_tex: Texture2D = ActionPalette.get_action_icon(action_id)
+	if not icon_tex:
+		return
+	# PszStyle.create_pill puts an HBoxContainer as the first child
+	var hbox: HBoxContainer = pill.get_child(0) as HBoxContainer
+	if not hbox:
+		return
+	var tex_rect := TextureRect.new()
+	tex_rect.texture = icon_tex
+	tex_rect.custom_minimum_size = Vector2(20, 20)
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	hbox.add_child(tex_rect)
+	hbox.move_child(tex_rect, 0)
