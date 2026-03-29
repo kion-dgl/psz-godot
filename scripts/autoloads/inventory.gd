@@ -237,11 +237,19 @@ func _lookup_item(item_id: String) -> Dictionary:
 		var display_name: String = weapon.name
 		var character = CharacterManager.get_active_character()
 		if character:
-			var photon_id: String = character.get("weapon_elements", {}).get(item_id, "")
-			if not photon_id.is_empty():
-				var element_prefix: String = _photon_display_name(photon_id)
-				if not element_prefix.is_empty():
-					display_name = element_prefix + " " + display_name
+			# Use special prefix (e.g. "Heat", "Freeze") if available
+			var special: Dictionary = character.get("weapon_specials", {}).get(item_id, {})
+			if not special.is_empty():
+				var prefix: String = str(special.get("prefix", ""))
+				if not prefix.is_empty():
+					display_name = prefix + " " + display_name
+			else:
+				# Fallback to old photon display name
+				var photon_id: String = character.get("weapon_elements", {}).get(item_id, "")
+				if not photon_id.is_empty():
+					var element_prefix: String = _photon_display_name(photon_id)
+					if not element_prefix.is_empty():
+						display_name = element_prefix + " " + display_name
 		return {"name": display_name, "max_stack": 1}
 
 	# ArmorRegistry (non-stackable)
