@@ -137,7 +137,11 @@ var combo_state: int = 0  # 0 = not attacking, 1-3 = combo step
 var _is_special_attack: bool = false  # True when current attack carries weapon element
 var combo_window_open: bool = false
 var combo_timer: float = 0.0
-const COMBO_WINDOW_DURATION: float = 0.5
+var _attack_anim_length: float = 0.0  # Current attack animation duration
+var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
+var _combo_window_opened: bool = false  # Has the window opened this step yet
+const COMBO_WINDOW_OPEN_PCT: float = 0.55  # Open combo window at 55% of animation
+const COMBO_WINDOW_DURATION: float = 0.35  # Window stays open for 0.35s
 
 # Dodge tracking
 var dodge_direction: float = 0.0
@@ -1328,15 +1332,25 @@ func _use_consumable(item_id: String) -> void:
 
 
 func _handle_attack_state(delta: float) -> void:
+	# Track animation elapsed for mid-animation combo window
+	_attack_anim_elapsed += delta
+
+	# Open combo window at the rhythm point (% of animation)
+	if not _combo_window_opened and _attack_anim_length > 0:
+		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+		if combo_state > 0 and combo_state < max_combo:
+			var open_at: float = _attack_anim_length * COMBO_WINDOW_OPEN_PCT
+			if _attack_anim_elapsed >= open_at:
+				combo_window_open = true
+				combo_timer = 0.0
+				_combo_window_opened = true
+
 	# Handle combo window timeout
 	if combo_window_open:
 		combo_timer += delta
 		if combo_timer >= COMBO_WINDOW_DURATION:
-			# Combo window closed, return to idle
+			# Missed the window — combo resets when animation finishes
 			combo_window_open = false
-			combo_state = 0
-			_deactivate_attack_hitbox()
-			transition_to(PlayerState.IDLE)
 
 	# Stop horizontal movement during attacks
 	velocity.x = 0
@@ -1363,16 +1377,30 @@ const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack anim
 
 func _play_attack_animation(attack_num: int) -> void:
 	var anim_name := _anim_prefix + "_atk" + str(attack_num)
+	_combo_window_opened = false
+	_attack_anim_elapsed = 0.0
+	_attack_anim_length = 0.0
+
 	if _is_special_attack:
 		# Pause before attack — player is exposed during wind-up
 		play_animation(_anim_prefix + "_wait", true)
 		var tw := create_tween()
 		tw.tween_interval(SPECIAL_ATTACK_DELAY)
-		tw.tween_callback(play_animation.bind(anim_name, false))
-		tw.tween_callback(_activate_attack_hitbox)
+		tw.tween_callback(_play_and_track_attack.bind(anim_name))
 	else:
-		play_animation(anim_name, false)
-		_activate_attack_hitbox()
+		_play_and_track_attack(anim_name)
+
+
+func _play_and_track_attack(anim_name: String) -> void:
+	play_animation(anim_name, false)
+	_attack_anim_elapsed = 0.0
+	_combo_window_opened = false
+	# Get animation length for rhythm window timing
+	if animation_player and animation_player.has_animation(anim_name):
+		_attack_anim_length = animation_player.get_animation(anim_name).length
+	else:
+		_attack_anim_length = 0.5  # Fallback
+	_activate_attack_hitbox()
 
 
 func transition_to(new_state: PlayerState) -> void:
@@ -1443,13 +1471,16 @@ func _on_animation_finished(_anim_name: String) -> void:
 			var config: Dictionary = CombatManager.get_weapon_type_config(_get_equipped_weapon_type())
 			var max_combo: int = int(config.get("combo_steps", 3))
 			if combo_state >= max_combo:
-				# Combo finished, return to idle
+				# Final combo step finished
 				combo_state = 0
 				transition_to(PlayerState.IDLE)
+			elif combo_window_open:
+				# Window is still open — let the timer in _handle_attack_state close it
+				pass
 			else:
-				# Open combo window
-				combo_window_open = true
-				combo_timer = 0.0
+				# Window was missed or never opened — combo resets
+				combo_state = 0
+				transition_to(PlayerState.IDLE)
 		PlayerState.DAMAGED:
 			transition_to(PlayerState.IDLE)
 		PlayerState.DOWN:
