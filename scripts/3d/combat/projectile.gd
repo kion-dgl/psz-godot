@@ -15,6 +15,8 @@ var spiral_rate: float = 0.0  # Radians per second to curve direction (0 = strai
 var spiral_origin: Vector3 = Vector3.ZERO  # Center point for spiral expansion
 var bounce_radius: float = 0.0  # On hit, also damage unhit enemies within this radius (slicers)
 var max_hits: int = 0  # Max total enemies to hit (0 = unlimited for pierce, 1 for normal)
+var element: String = ""  # Element type for status effect procs
+var element_level: int = 0  # Element level (higher = more likely to proc)
 
 var _distance_traveled: float = 0.0
 var _mesh: MeshInstance3D
@@ -77,7 +79,7 @@ func _on_area_entered(area: Area3D) -> void:
 		if max_hits > 0 and _hit_targets.size() >= max_hits:
 			return
 		_hit_targets.append(hurtbox.owner_node)
-		hurtbox.take_hit(damage, direction * knockback, accuracy)
+		hurtbox.take_hit(damage, direction * knockback, accuracy, element, element_level)
 
 		# Bounce: damage nearby unhit enemies within radius
 		if bounce_radius > 0.0:
@@ -119,4 +121,4 @@ func _bounce_to_nearby(hit_pos: Vector3) -> void:
 			continue
 		_hit_targets.append(enemy)
 		var bounce_dir: Vector3 = to_enemy
-		enemy.hurtbox.take_hit(damage, bounce_dir * knockback, accuracy)
+		enemy.hurtbox.take_hit(damage, bounce_dir * knockback, accuracy, element, element_level)

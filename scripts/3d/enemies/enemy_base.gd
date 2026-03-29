@@ -45,6 +45,19 @@ const HURT_DURATION: float = 0.3
 var is_attacking: bool = false
 var current_anim: String = ""
 
+## Status effects
+var _status_effects: Array = []  # [{type: String, timer: float, dot_timer: float}]
+var _is_immobilized: bool = false  # frozen/stunned/sleeping
+const DOT_TICK_INTERVAL := 1.0
+const STATUS_COLORS := {
+	"freeze": Color(0.5, 0.7, 1.0),
+	"burn": Color(1.0, 0.6, 0.3),
+	"stun": Color(1.0, 1.0, 0.5),
+	"sleep": Color(0.7, 0.5, 0.9),
+	"poison": Color(0.5, 0.9, 0.3),
+	"slow": Color(0.6, 0.6, 0.8),
+}
+
 ## Target reticle (shown when player is targeting this enemy)
 var _reticle: Sprite3D
 
@@ -207,9 +220,19 @@ func _physics_process(delta: float) -> void:
 		_die()
 		return
 
+	# Process status effects
+	_process_status_effects(delta)
+
 	# Apply gravity
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
+
+	# Immobilized by status effect — skip AI
+	if _is_immobilized:
+		velocity.x = 0
+		velocity.z = 0
+		move_and_slide()
+		return
 
 	# Update state
 	match current_state:
@@ -449,16 +472,26 @@ func _start_attack() -> void:
 	attack_cooldown_timer = cooldown
 
 
-func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100) -> void:
+func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
 	if not is_alive:
 		return
+
+	# Break freeze/sleep on any hit
+	_break_on_hit_effects()
+
+	# Apply damage multiplier from freeze
+	var damage_mult := 1.0
+	for fx in _status_effects:
+		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+		if fx_def.has("damage_taken_mult"):
+			damage_mult *= float(fx_def.damage_taken_mult)
 
 	var result: Dictionary = CombatManager.apply_damage_to_enemy(raw_damage, current_defense, current_evasion, accuracy)
 	if not result.get("hit", true):
 		_spawn_damage_number("MISS", Color(0.7, 0.7, 0.7))
 		return
 
-	var final_damage: int = int(result.get("damage", raw_damage))
+	var final_damage: int = int(int(result.get("damage", raw_damage)) * damage_mult)
 	var is_crit: bool = result.get("is_critical", false)
 	current_hp -= final_damage
 	damaged.emit(self, final_damage)
@@ -471,6 +504,10 @@ func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100) 
 	if current_hp <= 0:
 		_die()
 	else:
+		# Try status effect from element
+		if not hit_element.is_empty() and hit_element_level > 0:
+			_try_apply_status(hit_element, hit_element_level)
+
 		# Enter hurt state — play stagger animation, no physics knockback
 		is_attacking = false  # Cancel any attack
 		current_state = EnemyState.HURT
@@ -688,3 +725,132 @@ func show_reticle() -> void:
 func hide_reticle() -> void:
 	if _reticle:
 		_reticle.visible = false
+
+
+# ── Status Effects ──────────────────────────────────────────────────────────
+
+func _try_apply_status(hit_element: String, level: int) -> void:
+	var status_type: String = CombatManager.ELEMENT_TO_STATUS.get(hit_element, "")
+	if status_type.is_empty():
+		return
+
+	# Trigger chance: 10% + 10% per level
+	var chance := 0.10 + 0.10 * float(level)
+	if randf() > chance:
+		return
+
+	# Devil is instant — reduce to 1/4 HP
+	if status_type == "devil":
+		var old_hp := current_hp
+		current_hp = maxi(current_hp / 4, 1)
+		var devil_dmg := old_hp - current_hp
+		_spawn_damage_number(str(devil_dmg), Color(0.6, 0.0, 0.8))
+		if current_hp <= 0:
+			_die()
+		return
+
+	apply_status_effect(status_type)
+
+
+func apply_status_effect(status_type: String) -> void:
+	# Don't stack same status
+	for fx in _status_effects:
+		if fx.type == status_type:
+			return
+
+	var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(status_type, {})
+	if fx_def.is_empty():
+		return
+
+	var duration: float = float(fx_def.get("duration", 2))
+	_status_effects.append({"type": status_type, "timer": duration, "dot_timer": 0.0})
+	_spawn_damage_number(status_type.capitalize() + "!", STATUS_COLORS.get(status_type, Color.WHITE))
+	_update_status_visuals()
+	_update_immobilized()
+
+
+func _process_status_effects(delta: float) -> void:
+	if _status_effects.is_empty():
+		return
+
+	var hp_before := current_hp
+	var expired: Array = []
+
+	for fx in _status_effects:
+		fx.timer -= delta
+
+		# DoT (burn, poison)
+		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+		var dot_pct: float = float(fx_def.get("dot_percent", 0.0))
+		if dot_pct > 0.0:
+			fx.dot_timer += delta
+			if fx.dot_timer >= DOT_TICK_INTERVAL:
+				fx.dot_timer -= DOT_TICK_INTERVAL
+				var max_hp := 100
+				if enemy_data:
+					max_hp = enemy_data.hp_base
+				var dot_damage: int = maxi(int(float(max_hp) * dot_pct), 1)
+				current_hp -= dot_damage
+				_spawn_damage_number(str(dot_damage), STATUS_COLORS.get(fx.type, Color.RED))
+
+		if fx.timer <= 0:
+			expired.append(fx)
+
+	for fx in expired:
+		_status_effects.erase(fx)
+
+	if current_hp <= 0 and is_alive:
+		_die()
+
+	if not expired.is_empty():
+		_update_status_visuals()
+		_update_immobilized()
+
+
+func _break_on_hit_effects() -> void:
+	var broke: Array = []
+	for fx in _status_effects:
+		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+		if fx_def.get("breaks_on_hit", false):
+			broke.append(fx)
+	for fx in broke:
+		_status_effects.erase(fx)
+	if not broke.is_empty():
+		_update_status_visuals()
+		_update_immobilized()
+
+
+func _update_immobilized() -> void:
+	_is_immobilized = false
+	for fx in _status_effects:
+		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+		if float(fx_def.get("skip_chance", 0.0)) >= 1.0:
+			_is_immobilized = true
+			break
+
+
+func _update_status_visuals() -> void:
+	if not model:
+		return
+	if _status_effects.is_empty():
+		_set_model_tint(Color.WHITE)
+		return
+	# Use the color of the most recent status
+	var latest: Dictionary = _status_effects[_status_effects.size() - 1]
+	var tint: Color = STATUS_COLORS.get(latest.type, Color.WHITE)
+	_set_model_tint(tint)
+
+
+func _set_model_tint(tint: Color) -> void:
+	if not model:
+		return
+	for child in model.get_children():
+		if child is MeshInstance3D:
+			var mi: MeshInstance3D = child as MeshInstance3D
+			for i in range(mi.get_surface_override_material_count()):
+				var mat := mi.get_active_material(i)
+				if mat is StandardMaterial3D:
+					if tint == Color.WHITE:
+						mat.albedo_color = Color.WHITE
+					else:
+						mat.albedo_color = tint
