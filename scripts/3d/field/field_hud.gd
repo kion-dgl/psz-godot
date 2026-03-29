@@ -8,6 +8,7 @@ const MARGIN := 12.0
 var _stats_panel: Control
 var _quest_log: Control
 var _action_palette: Control
+var _quick_weapon: Control
 var _debug_info: Control
 var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
@@ -34,6 +35,9 @@ func _ready() -> void:
 
 	_action_palette = _ActionPalette.new()
 	add_child(_action_palette)
+
+	_quick_weapon = _QuickWeaponMenu.new()
+	add_child(_quick_weapon)
 
 	GameState.hp_changed.connect(_on_stats_changed)
 	GameState.max_hp_changed.connect(_on_stats_changed)
@@ -651,3 +655,202 @@ class _ActionPalette extends Control:
 				var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL).x
 				draw_string(font, Vector2(px + (PILL_W - lbl_w) * 0.5, py + PILL_H * 0.5 + 4),
 					lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, Color.WHITE)
+
+
+# ── Quick Weapon Menu (bottom-left, toggled with quick_weapon input) ─────────
+
+class _QuickWeaponMenu extends Control:
+	## Small scrollable weapon select overlay. Shows equipped weapon + equippable
+	## weapons from inventory. 5 visible lines, scroll with up/down, accept to
+	## equip, cancel to close.
+
+	const MENU_W := 180.0
+	const ROW_H := 22.0
+	const VISIBLE_ROWS := 5
+	const MENU_H: float = ROW_H * VISIBLE_ROWS + 8.0  # 5 rows + padding
+	const BG_COLOR := Color(0.05, 0.05, 0.1, 0.85)
+	const BORDER_COLOR := Color(0.3, 0.5, 0.3, 0.6)
+	const SELECTED_BG := Color(0.15, 0.3, 0.15, 0.8)
+	const EQUIPPED_COLOR := Color(0.3, 0.8, 0.3)
+	const TEXT_COLOR := Color(0.85, 0.85, 0.85)
+	const TEXT_DIM := Color(0.5, 0.5, 0.5)
+
+	var _is_open: bool = false
+	var _selected_index: int = 0
+	var _scroll_offset: int = 0
+	var _weapon_list: Array = []  # [{id, name, equipped}]
+
+	func _ready() -> void:
+		mouse_filter = MOUSE_FILTER_IGNORE
+		visible = false
+		# Bottom-left positioning
+		anchor_left = 0.0
+		anchor_right = 0.0
+		anchor_top = 1.0
+		anchor_bottom = 1.0
+		offset_left = MARGIN
+		offset_right = MARGIN + MENU_W
+		offset_top = -MARGIN - MENU_H
+		offset_bottom = -MARGIN
+		custom_minimum_size = Vector2(MENU_W, MENU_H)
+		size = Vector2(MENU_W, MENU_H)
+
+	func _unhandled_input(event: InputEvent) -> void:
+		if event.is_action_pressed("quick_weapon"):
+			if _is_open:
+				_close()
+			else:
+				_open()
+			get_viewport().set_input_as_handled()
+			return
+
+		if not _is_open:
+			return
+
+		if event.is_action_pressed("ui_up"):
+			_selected_index = wrapi(_selected_index - 1, 0, _weapon_list.size())
+			_update_scroll()
+			queue_redraw()
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_down"):
+			_selected_index = wrapi(_selected_index + 1, 0, _weapon_list.size())
+			_update_scroll()
+			queue_redraw()
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_accept"):
+			_equip_selected()
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_cancel"):
+			_close()
+			get_viewport().set_input_as_handled()
+
+		# Mouse wheel scrolling
+		if event is InputEventMouseButton:
+			var mb: InputEventMouseButton = event as InputEventMouseButton
+			if mb.pressed:
+				if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+					_selected_index = wrapi(_selected_index - 1, 0, _weapon_list.size())
+					_update_scroll()
+					queue_redraw()
+					get_viewport().set_input_as_handled()
+				elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+					_selected_index = wrapi(_selected_index + 1, 0, _weapon_list.size())
+					_update_scroll()
+					queue_redraw()
+					get_viewport().set_input_as_handled()
+
+	func _open() -> void:
+		_build_weapon_list()
+		if _weapon_list.is_empty():
+			return
+		_is_open = true
+		visible = true
+		# Pre-select currently equipped weapon
+		for i in range(_weapon_list.size()):
+			if _weapon_list[i].equipped:
+				_selected_index = i
+				break
+		_update_scroll()
+		queue_redraw()
+
+	func _close() -> void:
+		_is_open = false
+		visible = false
+
+	func _build_weapon_list() -> void:
+		_weapon_list.clear()
+		var character = CharacterManager.get_active_character()
+		if character == null:
+			return
+		var class_id: String = str(character.get("class_id", ""))
+		var class_data = ClassRegistry.get_class_data(class_id)
+		var equipped_id: String = str(character.get("equipment", {}).get("weapon", ""))
+
+		# Gather all weapons from inventory that this class can equip
+		for item_info in Inventory.get_all_items():
+			var item_id: String = str(item_info.get("id", ""))
+			var base_id: String = Inventory.get_base_id(item_id)
+			var weapon = WeaponRegistry.get_weapon(base_id)
+			if weapon == null:
+				continue
+			if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type):
+				continue
+			var is_equipped: bool = item_id == equipped_id
+			_weapon_list.append({"id": item_id, "name": str(item_info.get("name", base_id)), "equipped": is_equipped})
+
+		# Sort: equipped first, then alphabetical
+		_weapon_list.sort_custom(func(a, b):
+			if a.equipped != b.equipped:
+				return a.equipped  # equipped comes first
+			return str(a.name) < str(b.name)
+		)
+
+	func _update_scroll() -> void:
+		# Keep selected item visible in the scroll window
+		if _selected_index < _scroll_offset:
+			_scroll_offset = _selected_index
+		elif _selected_index >= _scroll_offset + VISIBLE_ROWS:
+			_scroll_offset = _selected_index - VISIBLE_ROWS + 1
+		_scroll_offset = clampi(_scroll_offset, 0, maxi(0, _weapon_list.size() - VISIBLE_ROWS))
+
+	func _equip_selected() -> void:
+		if _selected_index < 0 or _selected_index >= _weapon_list.size():
+			return
+		var weapon_entry: Dictionary = _weapon_list[_selected_index]
+		if weapon_entry.equipped:
+			_close()
+			return
+
+		# Equip the weapon
+		var character = CharacterManager.get_active_character()
+		if character == null:
+			return
+		var equipment: Dictionary = character.get("equipment", {})
+		equipment["weapon"] = weapon_entry.id
+		print("[QuickWeapon] Equipped: %s" % weapon_entry.name)
+
+		# Refresh player model
+		var players: Array = get_tree().get_nodes_in_group("player")
+		if players.size() > 0 and players[0].has_method("refresh_weapon"):
+			players[0].refresh_weapon()
+
+		_close()
+
+	func _draw() -> void:
+		if not _is_open:
+			return
+		var font: Font = ThemeDB.fallback_font
+
+		# Background
+		draw_rect(Rect2(Vector2.ZERO, size), BG_COLOR)
+		draw_rect(Rect2(Vector2.ZERO, size), BORDER_COLOR, false, 1.0)
+
+		# Draw visible rows
+		var y := 4.0
+		var end_idx: int = mini(_scroll_offset + VISIBLE_ROWS, _weapon_list.size())
+		for i in range(_scroll_offset, end_idx):
+			var entry: Dictionary = _weapon_list[i]
+			var row_rect := Rect2(2, y, MENU_W - 4, ROW_H)
+
+			# Highlight selected
+			if i == _selected_index:
+				draw_rect(row_rect, SELECTED_BG)
+
+			# Equipped marker
+			var label: String = str(entry.name)
+			var color: Color = TEXT_COLOR
+			if entry.equipped:
+				label = "> " + label
+				color = EQUIPPED_COLOR
+
+			draw_string(font, Vector2(8, y + ROW_H - 6), label,
+				HORIZONTAL_ALIGNMENT_LEFT, MENU_W - 16, 12, color)
+			y += ROW_H
+
+		# Scroll indicators
+		if _scroll_offset > 0:
+			draw_string(font, Vector2(MENU_W - 16, 14), "\u25b2",
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, TEXT_DIM)
+		if end_idx < _weapon_list.size():
+			draw_string(font, Vector2(MENU_W - 16, MENU_H - 4), "\u25bc",
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, TEXT_DIM)
