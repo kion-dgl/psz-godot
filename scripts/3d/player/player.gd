@@ -87,6 +87,10 @@ const WEAPON_HOLD_DEFAULT := {
 }
 const WEAPON_HOLD := {
 	# WeaponData.WeaponType enum values as keys
+	3: {  # CLAW
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, -4, 0)},
+		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, -4, 0)},
+	},
 	9: {  # HANDGUN
 		"idle": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
 		"attack": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
