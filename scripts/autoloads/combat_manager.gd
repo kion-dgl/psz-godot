@@ -45,7 +45,7 @@ const ELEMENT_STATUS := {
 ## Status effect definitions
 const STATUS_EFFECTS := {
 	"freeze": {"duration": 2, "skip_chance": 1.0, "damage_taken_mult": 1.5, "breaks_on_hit": true},
-	"stun": {"duration": 1, "skip_chance": 1.0},
+	"stun": {"duration": 3, "immobilize_duration": 1, "skip_chance": 1.0, "no_attack": true},
 	"poison": {"duration": 3, "dot_percent": 0.05},
 	"slow": {"duration": 3, "evasion_mod": -0.3},
 	"paralysis": {"duration": 3, "skip_chance": 0.5},

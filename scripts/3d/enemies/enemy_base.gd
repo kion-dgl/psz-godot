@@ -46,8 +46,9 @@ var is_attacking: bool = false
 var current_anim: String = ""
 
 ## Status effects
-var _status_effects: Array = []  # [{type: String, timer: float, dot_timer: float}]
-var _is_immobilized: bool = false  # frozen/stunned/sleeping
+var _status_effects: Array = []  # [{type: String, timer: float, dot_timer: float, phase: String}]
+var _is_immobilized: bool = false  # frozen/stunned(phase1)/sleeping
+var _stun_no_attack: bool = false  # stun phase 2: can move, can't attack
 const DOT_TICK_INTERVAL := 1.0
 const STATUS_COLORS := {
 	"freeze": Color(0.5, 0.7, 1.0),
@@ -328,7 +329,7 @@ func _process_chasing(_delta: float) -> void:
 	if enemy_data:
 		attack_range = enemy_data.attack_range
 
-	if dist <= attack_range and attack_cooldown_timer <= 0:
+	if dist <= attack_range and attack_cooldown_timer <= 0 and not _stun_no_attack:
 		current_state = EnemyState.ATTACKING
 		_start_attack()
 		return
@@ -763,7 +764,8 @@ func apply_status_effect(status_type: String) -> void:
 		return
 
 	var duration: float = float(fx_def.get("duration", 2))
-	_status_effects.append({"type": status_type, "timer": duration, "dot_timer": 0.0})
+	var phase: String = "immobilize" if status_type == "stun" else ""
+	_status_effects.append({"type": status_type, "timer": duration, "dot_timer": 0.0, "phase": phase})
 	_spawn_damage_number(status_type.capitalize() + "!", STATUS_COLORS.get(status_type, Color.WHITE))
 	_update_status_visuals()
 	_update_immobilized()
@@ -778,6 +780,15 @@ func _process_status_effects(delta: float) -> void:
 
 	for fx in _status_effects:
 		fx.timer -= delta
+
+		# Stun phase transition: immobilize → no_attack
+		if fx.type == "stun" and fx.phase == "immobilize":
+			var fx_def_stun: Dictionary = CombatManager.STATUS_EFFECTS.get("stun", {})
+			var immob_dur: float = float(fx_def_stun.get("immobilize_duration", 1))
+			var total_dur: float = float(fx_def_stun.get("duration", 3))
+			var elapsed: float = total_dur - fx.timer
+			if elapsed >= immob_dur:
+				fx.phase = "no_attack"
 
 		# DoT (burn, poison)
 		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
@@ -802,9 +813,11 @@ func _process_status_effects(delta: float) -> void:
 	if current_hp <= 0 and is_alive:
 		_die()
 
+	# Update immobilized/no-attack state every frame (stun phase transitions)
+	_update_immobilized()
+
 	if not expired.is_empty():
 		_update_status_visuals()
-		_update_immobilized()
 
 
 func _break_on_hit_effects() -> void:
@@ -822,11 +835,17 @@ func _break_on_hit_effects() -> void:
 
 func _update_immobilized() -> void:
 	_is_immobilized = false
+	_stun_no_attack = false
 	for fx in _status_effects:
-		var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
-		if float(fx_def.get("skip_chance", 0.0)) >= 1.0:
-			_is_immobilized = true
-			break
+		if fx.type == "stun":
+			if fx.phase == "immobilize":
+				_is_immobilized = true
+			else:
+				_stun_no_attack = true
+		else:
+			var fx_def: Dictionary = CombatManager.STATUS_EFFECTS.get(fx.type, {})
+			if float(fx_def.get("skip_chance", 0.0)) >= 1.0:
+				_is_immobilized = true
 
 
 func _update_status_visuals() -> void:
