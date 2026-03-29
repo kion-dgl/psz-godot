@@ -91,16 +91,32 @@ func _on_area_entered(area: Area3D) -> void:
 
 
 func _bounce_to_nearby(hit_pos: Vector3) -> void:
+	# Sort candidates by distance so we pick the closest first
+	var candidates: Array = []
 	var enemies: Array = get_tree().get_nodes_in_group("enemies")
 	for enemy in enemies:
-		if max_hits > 0 and _hit_targets.size() >= max_hits:
-			break
 		if not is_instance_valid(enemy) or enemy in _hit_targets:
 			continue
 		if not enemy.get("is_alive"):
 			continue
+		if not enemy.hurtbox:
+			continue
 		var dist: float = enemy.global_position.distance_to(hit_pos)
-		if dist <= bounce_radius and enemy.hurtbox:
-			_hit_targets.append(enemy)
-			var bounce_dir: Vector3 = (enemy.global_position - hit_pos).normalized()
-			enemy.hurtbox.take_hit(damage, bounce_dir * knockback, accuracy)
+		if dist <= bounce_radius:
+			candidates.append({"enemy": enemy, "dist": dist})
+
+	candidates.sort_custom(func(a, b): return a.dist < b.dist)
+
+	for c in candidates:
+		if max_hits > 0 and _hit_targets.size() >= max_hits:
+			break
+		var enemy = c.enemy
+		# Angle penalty: sharper turns reduce effective bounce range
+		var to_enemy: Vector3 = (enemy.global_position - hit_pos).normalized()
+		var angle_factor: float = maxf(direction.dot(to_enemy), 0.0)  # 1.0=same dir, 0.0=perpendicular
+		var effective_range: float = bounce_radius * (0.5 + 0.5 * angle_factor)
+		if c.dist > effective_range:
+			continue
+		_hit_targets.append(enemy)
+		var bounce_dir: Vector3 = to_enemy
+		enemy.hurtbox.take_hit(damage, bounce_dir * knockback, accuracy)
