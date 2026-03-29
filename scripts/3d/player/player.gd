@@ -926,6 +926,319 @@ func _execute_palette_action(slot: int) -> void:
 			_use_consumable(action_id)
 		"kill_all":
 			_debug_kill_all()
+		_:
+			if TechniqueManager.TECHNIQUES.has(action_id):
+				_cast_technique(action_id)
+
+
+func _cast_technique(technique_id: String) -> void:
+	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+		return
+
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+	if TechniqueManager.get_technique_level(character, technique_id) <= 0:
+		print("[Player] Technique %s not learned" % technique_id)
+		return
+
+	var tech_data: Dictionary = CombatManager.calculate_technique_damage(technique_id)
+	var pp_cost: int = int(tech_data.get("pp_cost", 5))
+
+	if GameState.mp < pp_cost:
+		print("[Player] Not enough PP for %s (need %d, have %d)" % [technique_id, pp_cost, GameState.mp])
+		return
+
+	GameState.set_mp(GameState.mp - pp_cost)
+	print("[Player] Cast %s: damage=%d pp_cost=%d" % [technique_id, int(tech_data.get("damage", 0)), pp_cost])
+
+	# Play cast animation — no combo for techniques
+	transition_to(PlayerState.ATTACKING)
+	combo_state = 0
+	combo_window_open = false
+	play_animation(_anim_prefix + "_tec", false)
+
+	_spawn_technique_effect(technique_id, tech_data)
+
+
+func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> void:
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var spawn_pos := global_position + Vector3(0, 1.0, 0) + forward * 0.5
+	var damage: int = int(tech_data.get("damage", 10))
+	var kb: float = float(tech_data.get("knockback", 3.0))
+
+	match technique_id:
+		"foie":
+			_spawn_foie(spawn_pos, forward, damage, kb)
+		"gifoie":
+			_spawn_gifoie(damage, kb)
+		"rafoie":
+			_spawn_rafoie(spawn_pos, forward, damage, kb)
+		"barta":
+			_spawn_barta(spawn_pos, forward, damage, kb)
+		"gibarta":
+			_spawn_gibarta(spawn_pos, forward, damage, kb)
+		"rabarta":
+			_spawn_rabarta(damage, kb)
+		"zonde":
+			_spawn_zonde(damage, kb)
+		"gizonde":
+			_spawn_gizonde(damage, kb)
+		"razonde":
+			_spawn_razonde(damage, kb)
+		_:
+			# Fallback: fire a basic projectile for unimplemented techniques
+			_spawn_foie(spawn_pos, forward, damage, kb)
+
+
+func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	var proj := Projectile.new()
+	proj.damage = damage
+	proj.knockback = kb
+	proj.accuracy = 100
+	proj.direction = forward
+	proj.max_range = 15.0
+	proj.owner_node = self
+	proj.speed = 20.0
+	proj.color = Color(1.0, 0.3, 0.05)
+	get_tree().current_scene.add_child(proj)
+	proj.global_position = spawn_pos
+
+
+func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
+	var proj := Projectile.new()
+	proj.damage = damage
+	proj.knockback = kb
+	proj.accuracy = 100
+	proj.direction = forward
+	proj.max_range = 15.0
+	proj.owner_node = self
+	proj.speed = 20.0
+	proj.pierce = true
+	proj.color = Color(0.3, 0.7, 1.0)
+	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
+	get_tree().current_scene.add_child(proj)
+	proj.global_position = ground_pos
+
+
+func _spawn_gifoie(damage: int, kb: float) -> void:
+	# Single fireball that spirals outward from the caster (pierce)
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var proj := Projectile.new()
+	proj.damage = damage
+	proj.knockback = kb
+	proj.accuracy = 100
+	proj.direction = forward
+	proj.max_range = 25.0
+	proj.owner_node = self
+	proj.speed = 10.0
+	proj.pierce = true
+	proj.spiral_rate = 4.0  # Radians/sec — tight spiral outward
+	proj.color = Color(1.0, 0.3, 0.05)
+	get_tree().current_scene.add_child(proj)
+	proj.global_position = global_position + Vector3(0, 1.0, 0) + forward * 0.5
+
+
+func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
+	# Explosion on targeted enemy — damages target + nearby enemies in radius
+	if _targeted_enemies.is_empty():
+		print("[Player] Rafoie: no target")
+		return
+	var target_enemy = _targeted_enemies[0]
+	if not is_instance_valid(target_enemy):
+		return
+	var explosion_pos: Vector3 = target_enemy.global_position
+	var explosion_radius := 5.0
+
+	# Full damage to primary target
+	if target_enemy.hurtbox:
+		var hit_dir: Vector3 = (target_enemy.global_position - global_position).normalized()
+		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100)
+
+	# Reduced damage to nearby enemies
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy) or enemy == target_enemy:
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var dist: float = enemy.global_position.distance_to(explosion_pos)
+		if dist <= explosion_radius and enemy.hurtbox:
+			var splash_dir: Vector3 = (enemy.global_position - explosion_pos).normalized()
+			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100)
+
+	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
+
+
+func _spawn_gibarta(spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
+	# Ice flamethrower — 3 waves of 3 fan projectiles (pierce)
+	_spawn_gibarta_wave(spawn_pos, damage, kb)
+	var tw := create_tween()
+	tw.tween_interval(0.15)
+	tw.tween_callback(_spawn_gibarta_wave.bind(spawn_pos, damage, kb))
+	tw.tween_interval(0.15)
+	tw.tween_callback(_spawn_gibarta_wave.bind(spawn_pos, damage, kb))
+
+
+func _spawn_gibarta_wave(spawn_pos: Vector3, damage: int, kb: float) -> void:
+	for i in range(3):
+		var angle_offset: float = (i - 1) * 0.12
+		var rot := player_rotation + angle_offset
+		var dir := Vector3(sin(rot), 0, cos(rot))
+		var proj := Projectile.new()
+		proj.damage = damage
+		proj.knockback = kb
+		proj.accuracy = 100
+		proj.direction = dir
+		proj.max_range = 10.0
+		proj.owner_node = self
+		proj.speed = 18.0
+		proj.pierce = true
+		proj.color = Color(0.3, 0.7, 1.0)
+		var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
+		get_tree().current_scene.add_child(proj)
+		proj.global_position = ground_pos
+
+
+func _spawn_rabarta(damage: int, kb: float) -> void:
+	# Ice shards in a circle around the user — pierce, largest ice AoE
+	var num_shards := 10
+	for i in range(num_shards):
+		var angle: float = i * TAU / float(num_shards)
+		var dir := Vector3(sin(angle), 0, cos(angle))
+		var proj := Projectile.new()
+		proj.damage = damage
+		proj.knockback = kb
+		proj.accuracy = 100
+		proj.direction = dir
+		proj.max_range = 8.0
+		proj.owner_node = self
+		proj.speed = 12.0
+		proj.pierce = true
+		proj.color = Color(0.5, 0.8, 1.0)
+		get_tree().current_scene.add_child(proj)
+		proj.global_position = global_position + Vector3(0, 0.3, 0)
+
+
+func _spawn_zonde(damage: int, kb: float) -> void:
+	if _targeted_enemies.is_empty():
+		print("[Player] Zonde: no target")
+		return
+	var target_enemy = _targeted_enemies[0]
+	if not is_instance_valid(target_enemy):
+		return
+	if target_enemy.hurtbox:
+		var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+		target_enemy.hurtbox.take_hit(damage, forward * kb, 100)
+	_spawn_zonde_visual(target_enemy.global_position)
+
+
+func _spawn_zonde_visual(target_pos: Vector3) -> void:
+	var bolt := MeshInstance3D.new()
+	var cylinder := CylinderMesh.new()
+	cylinder.top_radius = 0.08
+	cylinder.bottom_radius = 0.08
+	cylinder.height = 10.0
+	bolt.mesh = cylinder
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1.0, 1.0, 0.3)
+	mat.emission_enabled = true
+	mat.emission = Color(0.8, 0.8, 1.0)
+	mat.emission_energy_multiplier = 3.0
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bolt.material_override = mat
+	get_tree().current_scene.add_child(bolt)
+	bolt.global_position = target_pos + Vector3(0, 5.0, 0)
+	var tween := bolt.create_tween()
+	tween.tween_property(mat, "albedo_color:a", 0.0, 0.4)
+	tween.parallel().tween_property(mat, "emission_energy_multiplier", 0.0, 0.4)
+	tween.tween_callback(bolt.queue_free)
+
+
+func _spawn_gizonde(damage: int, kb: float) -> void:
+	# Chain lightning — chains from enemy to enemy in front of the user (up to 10)
+	if _targeted_enemies.is_empty():
+		print("[Player] Gizonde: no target")
+		return
+	var primary = _targeted_enemies[0]
+	if not is_instance_valid(primary):
+		return
+
+	# Hit primary target
+	if primary.hurtbox:
+		var fwd := Vector3(sin(player_rotation), 0, cos(player_rotation))
+		primary.hurtbox.take_hit(damage, fwd * kb, 100)
+	_spawn_zonde_visual(primary.global_position)
+
+	# Chain from the last hit enemy to the nearest unhit enemy
+	var hit_enemies: Array = [primary]
+	var last_hit = primary
+	var best_enemy = null
+	var best_dist := 0.0
+	for _chain in range(9):
+		best_enemy = null
+		best_dist = 8.0  # Max chain distance
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if not is_instance_valid(enemy) or enemy in hit_enemies:
+				continue
+			if not enemy.get("is_alive"):
+				continue
+			var d: float = enemy.global_position.distance_to(last_hit.global_position)
+			if d < best_dist and enemy.hurtbox:
+				best_dist = d
+				best_enemy = enemy
+		if best_enemy == null:
+			break
+		var chain_dir: Vector3 = (best_enemy.global_position - last_hit.global_position).normalized()
+		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100)
+		_spawn_zonde_visual(best_enemy.global_position)
+		hit_enemies.append(best_enemy)
+		last_hit = best_enemy
+
+
+func _spawn_razonde(damage: int, kb: float) -> void:
+	# Lightning spiral around user — largest range, no target required
+	var nearby := _get_enemies_in_radius(12.0)
+	for enemy in nearby:
+		if enemy.hurtbox:
+			var hit_dir: Vector3 = (enemy.global_position - global_position).normalized()
+			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100)
+		_spawn_zonde_visual(enemy.global_position)
+	_spawn_aoe_visual(global_position, Color(0.8, 0.8, 1.0), 12.0)
+
+
+func _get_enemies_in_radius(radius: float) -> Array:
+	var result: Array = []
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(enemy):
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var dist: float = enemy.global_position.distance_to(global_position)
+		if dist <= radius:
+			result.append(enemy)
+	return result
+
+
+func _spawn_aoe_visual(center: Vector3, aoe_color: Color, radius: float) -> void:
+	var ring := MeshInstance3D.new()
+	var torus := CylinderMesh.new()
+	torus.top_radius = radius
+	torus.bottom_radius = radius
+	torus.height = 0.3
+	ring.mesh = torus
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(aoe_color.r, aoe_color.g, aoe_color.b, 0.4)
+	mat.emission_enabled = true
+	mat.emission = aoe_color
+	mat.emission_energy_multiplier = 2.0
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring.material_override = mat
+	get_tree().current_scene.add_child(ring)
+	ring.global_position = center + Vector3(0, 0.2, 0)
+	var tween := ring.create_tween()
+	tween.tween_property(mat, "albedo_color:a", 0.0, 0.5)
+	tween.parallel().tween_property(mat, "emission_energy_multiplier", 0.0, 0.5)
+	tween.tween_callback(ring.queue_free)
 
 
 func _debug_kill_all() -> void:
@@ -1046,12 +1359,18 @@ func play_animation(anim_name: String, _loop: bool = true) -> void:
 		if animation_player.has_animation(alt):
 			animation_player.play(alt)
 			return
-	# Search for any animation ending with the suffix
-	var suffix := "_" + anim_name.get_slice("_", anim_name.count("_"))
-	for name in animation_player.get_animation_list():
-		if name.ends_with(suffix):
-			animation_player.play(name)
-			return
+	# Search for any animation ending with a matching suffix, trying longest first
+	# e.g. for "pmsa_dam_d_lp" try "_dam_d_lp", then "_d_lp", then "_lp"
+	var underscores: PackedInt32Array = []
+	for i in range(anim_name.length()):
+		if anim_name[i] == "_":
+			underscores.append(i)
+	for idx in range(1, underscores.size()):
+		var suffix := anim_name.substr(underscores[idx])
+		for anim in animation_player.get_animation_list():
+			if anim.ends_with(suffix):
+				animation_player.play(anim)
+				return
 
 
 func _on_animation_finished(_anim_name: String) -> void:
@@ -1060,6 +1379,10 @@ func _on_animation_finished(_anim_name: String) -> void:
 			transition_to(PlayerState.IDLE)
 		PlayerState.ATTACKING:
 			_deactivate_attack_hitbox()
+			if combo_state == 0:
+				# Technique cast finished (no combo)
+				transition_to(PlayerState.IDLE)
+				return
 			var config: Dictionary = CombatManager.get_weapon_type_config(_get_equipped_weapon_type())
 			var max_combo: int = int(config.get("combo_steps", 3))
 			if combo_state >= max_combo:
@@ -1216,6 +1539,35 @@ func _deactivate_attack_hitbox() -> void:
 var _debug_range_mesh: MeshInstance3D
 
 
+func _get_technique_targeting() -> Dictionary:
+	## Check current palette slots for techniques and return extended targeting params.
+	var slots: Array = ActionPalette.get_current_slots()
+	var best_range := 0.0
+	var best_width := 0.0
+	var has_zonde := false
+	for action_id in slots:
+		if not TechniqueManager.TECHNIQUES.has(action_id):
+			continue
+		var character = CharacterManager.get_active_character()
+		if character and TechniqueManager.get_technique_level(character, action_id) <= 0:
+			continue
+		match action_id:
+			"foie", "gifoie", "rafoie":
+				best_range = maxf(best_range, 15.0)
+				best_width = maxf(best_width, 1.0)
+			"barta", "gibarta", "rabarta":
+				best_range = maxf(best_range, 15.0)
+				best_width = maxf(best_width, 1.0)
+			"zonde", "gizonde", "razonde":
+				has_zonde = true
+				best_range = maxf(best_range, 12.0)
+				best_width = maxf(best_width, 4.0)
+			_:
+				best_range = maxf(best_range, 10.0)
+				best_width = maxf(best_width, 2.0)
+	return {"range": best_range, "half_width": best_width * 0.5, "has_zonde": has_zonde}
+
+
 func _update_combat_targets() -> void:
 	# Clear old reticles
 	for enemy in _targeted_enemies:
@@ -1228,11 +1580,17 @@ func _update_combat_targets() -> void:
 	var max_targets: int = int(config.get("max_targets", 1))
 	var hitbox_size: Vector3 = config.get("hitbox_size", ATTACK_HITBOX_SIZE)
 	var hitbox_offset: float = float(config.get("hitbox_offset", ATTACK_HITBOX_OFFSET))
-	var attack_range: float = hitbox_offset + hitbox_size.z * 0.5
+	var weapon_range: float = hitbox_offset + hitbox_size.z * 0.5
+	var weapon_half_width: float = hitbox_size.x * 0.5 + 0.5
+
+	# Extend targeting to cover equipped techniques
+	var tech_targeting: Dictionary = _get_technique_targeting()
+	var attack_range: float = maxf(weapon_range, float(tech_targeting.get("range", 0.0)))
+	var half_width: float = maxf(weapon_half_width, float(tech_targeting.get("half_width", 0.0)))
+	var has_zonde: bool = tech_targeting.get("has_zonde", false)
 
 	# Player's forward direction (model rotation)
 	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
-	var half_width: float = hitbox_size.x * 0.5 + 0.5  # Slight padding
 
 	# Debug: show targeting box attached to model
 	if DebugConfig.show_hitboxes:
@@ -1248,14 +1606,14 @@ func _update_combat_targets() -> void:
 			mat.no_depth_test = true
 			_debug_range_mesh.material_override = mat
 			model.add_child(_debug_range_mesh)
-		var box_depth: float = hitbox_offset + hitbox_size.z * 0.5
-		_debug_range_mesh.scale = Vector3(hitbox_size.x + 1.0, hitbox_size.y, box_depth)
+		var box_depth: float = attack_range
+		_debug_range_mesh.scale = Vector3(half_width * 2.0, hitbox_size.y, box_depth)
 		_debug_range_mesh.position = Vector3(0, hitbox_size.y * 0.5 + 0.5, box_depth * 0.5)
 		_debug_range_mesh.visible = true
 	elif _debug_range_mesh:
 		_debug_range_mesh.visible = false
 
-	# Find enemies in front of the player within weapon range
+	# Find enemies in front of the player within range
 	var candidates: Array = []
 	var enemy_group := get_tree().get_nodes_in_group("enemies")
 	for enemy in enemy_group:
@@ -1274,7 +1632,13 @@ func _update_combat_targets() -> void:
 		# Check lateral distance (perpendicular to forward)
 		var right := Vector3(-forward.z, 0, forward.x)
 		var lateral_dist: float = absf(to_enemy.dot(right))
-		if lateral_dist > half_width:
+
+		# For Zonde: cone widens with distance
+		var effective_width: float = half_width
+		if has_zonde and forward_dist > 0:
+			effective_width = maxf(half_width, forward_dist * 0.4)
+
+		if lateral_dist > effective_width:
 			continue
 
 		candidates.append({"enemy": enemy, "dist": forward_dist})
@@ -1282,8 +1646,13 @@ func _update_combat_targets() -> void:
 	# Sort by distance
 	candidates.sort_custom(func(a, b): return a.dist < b.dist)
 
+	# Techniques can target more enemies than the weapon allows
+	var effective_max: int = max_targets
+	if float(tech_targeting.get("range", 0.0)) > 0:
+		effective_max = maxi(max_targets, 3)
+
 	# Show reticle on closest N enemies
-	for i in range(mini(max_targets, candidates.size())):
+	for i in range(mini(effective_max, candidates.size())):
 		var enemy = candidates[i].enemy
 		if enemy.has_method("show_reticle"):
 			enemy.show_reticle()
