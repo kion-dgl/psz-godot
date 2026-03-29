@@ -1481,7 +1481,7 @@ func _get_equipped_weapon_type() -> int:
 	return 0
 
 
-const RANGED_WEAPON_TYPES := [9, 10, 11, 12]  # HANDGUN, MECH_GUN, RIFLE, BAZOOKA
+const RANGED_WEAPON_TYPES := [6, 9, 10, 11, 12]  # SLICER, HANDGUN, MECH_GUN, RIFLE, BAZOOKA
 
 
 func _activate_attack_hitbox() -> void:
@@ -1508,6 +1508,8 @@ func _fire_projectile(atk: Dictionary) -> void:
 	var max_range: float = float(config.get("hitbox_offset", 8.0)) + float(config.get("hitbox_size", Vector3(1, 1, 1)).z)
 	var hits: int = int(atk.get("hits", 1))
 
+	var weapon_type: int = int(atk.get("weapon_type", 0))
+
 	for i in range(hits):
 		var proj := Projectile.new()
 		proj.damage = int(atk.get("damage", 10))
@@ -1517,6 +1519,14 @@ func _fire_projectile(atk: Dictionary) -> void:
 		proj.max_range = max_range
 		proj.owner_node = self
 		proj.speed = 25.0
+
+		# Slicer: throwing blade that bounces to nearby enemies (up to 4 total)
+		if weapon_type == WeaponData.WeaponType.SLICER:
+			proj.pierce = true
+			proj.bounce_radius = 3.0
+			proj.max_hits = 4
+			proj.speed = 20.0
+			proj.color = Color(0.7, 0.9, 1.0)
 
 		# Slight spread for multi-shot (mechgun)
 		if hits > 1:

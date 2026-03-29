@@ -13,6 +13,8 @@ var color: Color = Color(1.0, 0.9, 0.5)
 var pierce: bool = false
 var spiral_rate: float = 0.0  # Radians per second to curve direction (0 = straight)
 var spiral_origin: Vector3 = Vector3.ZERO  # Center point for spiral expansion
+var bounce_radius: float = 0.0  # On hit, also damage unhit enemies within this radius (slicers)
+var max_hits: int = 0  # Max total enemies to hit (0 = unlimited for pierce, 1 for normal)
 
 var _distance_traveled: float = 0.0
 var _mesh: MeshInstance3D
@@ -72,7 +74,33 @@ func _on_area_entered(area: Area3D) -> void:
 			return
 		if hurtbox.owner_node in _hit_targets:
 			return
+		if max_hits > 0 and _hit_targets.size() >= max_hits:
+			return
 		_hit_targets.append(hurtbox.owner_node)
 		hurtbox.take_hit(damage, direction * knockback, accuracy)
+
+		# Bounce: damage nearby unhit enemies within radius
+		if bounce_radius > 0.0:
+			_bounce_to_nearby(hurtbox.owner_node.global_position)
+
 		if not pierce:
-			queue_free()
+			if max_hits > 0 and _hit_targets.size() >= max_hits:
+				queue_free()
+			else:
+				queue_free()
+
+
+func _bounce_to_nearby(hit_pos: Vector3) -> void:
+	var enemies: Array = get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if max_hits > 0 and _hit_targets.size() >= max_hits:
+			break
+		if not is_instance_valid(enemy) or enemy in _hit_targets:
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		var dist: float = enemy.global_position.distance_to(hit_pos)
+		if dist <= bounce_radius and enemy.hurtbox:
+			_hit_targets.append(enemy)
+			var bounce_dir: Vector3 = (enemy.global_position - hit_pos).normalized()
+			enemy.hurtbox.take_hit(damage, bounce_dir * knockback, accuracy)
