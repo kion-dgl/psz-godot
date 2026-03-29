@@ -30,14 +30,17 @@ const SHOP_WEAPON_TIER1 := [
 const SHOP_WEAPON_TIER2 := [
 	"brand", "gigush", "knife", "halberd",
 	"autogun", "sniper", "assault", "pole", "staff",
+	"spinner",
 ]
 const SHOP_WEAPON_TIER3 := [
 	"buster", "breaker", "blade", "glaive",
 	"lockgun", "blaster", "repeater", "pillar", "baton",
+	"cutter",
 ]
 const SHOP_WEAPON_TIER4 := [
 	"pallasch", "claymore", "edge", "berdys",
 	"railgun", "beam", "gatling", "striker", "scepter",
+	"sawcer",
 ]
 
 ## Shop armor pool

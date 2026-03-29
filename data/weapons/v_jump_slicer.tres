@@ -22,5 +22,6 @@ photon_arts = [{"name": "Bright Sign", "attack_mod": 110, "accuracy_mod": 120, "
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
 pso_world_id = 401
 model_id = ""
-glb_path = "res://assets/weapons/basic/Slicer.glb"
+glb_path = "res://assets/weapons/Slicer.glb"
+glb_scale = 0.09
 variant_id = ""
