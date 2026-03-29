@@ -317,10 +317,12 @@ func _execute_craft(recipe: RecipeBoardData, photon_id: String, is_default: bool
 		return
 
 	# Store element in weapon_elements for display prefix (backwards compat)
+	print("[Craft] photon_id=%s, has_element=%s" % [photon_id, PHOTON_ELEMENT.has(photon_id)])
 	if PHOTON_ELEMENT.has(photon_id):
 		if not character.has("weapon_elements"):
 			character["weapon_elements"] = {}
 		character["weapon_elements"][inst_id] = photon_id
+		print("[Craft] Stored weapon_elements[%s] = %s" % [inst_id, photon_id])
 
 	# Roll and store weapon stats
 	var rolled: Dictionary = _roll_attributes(photon_id)
@@ -329,6 +331,7 @@ func _execute_craft(recipe: RecipeBoardData, photon_id: String, is_default: bool
 	var element_info: Dictionary = PHOTON_ELEMENT.get(photon_id, {})
 	var element_name: String = element_info.get("name", "").to_lower() if not element_info.is_empty() else ""
 	var element_level: int = _get_element_level(w_rarity) if not element_name.is_empty() else 0
+	print("[Craft] element=%s level=%d rolled=%s" % [element_name, element_level, rolled])
 
 	if not character.has("weapon_stats"):
 		character["weapon_stats"] = {}
