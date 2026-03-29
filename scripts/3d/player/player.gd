@@ -1022,23 +1022,21 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 
 
 func _spawn_gifoie(damage: int, kb: float) -> void:
-	# Ring of fireballs that spirals outward around the caster (pierce, expanding)
-	var num_fireballs := 6
-	for i in range(num_fireballs):
-		var angle: float = player_rotation + i * TAU / float(num_fireballs)
-		var dir := Vector3(sin(angle), 0, cos(angle))
-		var proj := Projectile.new()
-		proj.damage = damage
-		proj.knockback = kb
-		proj.accuracy = 100
-		proj.direction = dir
-		proj.max_range = 6.0
-		proj.owner_node = self
-		proj.speed = 8.0
-		proj.pierce = true
-		proj.color = Color(1.0, 0.3, 0.05)
-		get_tree().current_scene.add_child(proj)
-		proj.global_position = global_position + Vector3(0, 1.0, 0) + dir * 0.5
+	# Single fireball that spirals outward from the caster (pierce)
+	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
+	var proj := Projectile.new()
+	proj.damage = damage
+	proj.knockback = kb
+	proj.accuracy = 100
+	proj.direction = forward
+	proj.max_range = 25.0
+	proj.owner_node = self
+	proj.speed = 10.0
+	proj.pierce = true
+	proj.spiral_rate = 4.0  # Radians/sec — tight spiral outward
+	proj.color = Color(1.0, 0.3, 0.05)
+	get_tree().current_scene.add_child(proj)
+	proj.global_position = global_position + Vector3(0, 1.0, 0) + forward * 0.5
 
 
 func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
@@ -1072,9 +1070,18 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 
 
 func _spawn_gibarta(spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
-	# Cone of icy projectiles in front — tight spread, pierce
+	# Ice flamethrower — 3 waves of 3 fan projectiles (pierce)
+	_spawn_gibarta_wave(spawn_pos, damage, kb)
+	var tw := create_tween()
+	tw.tween_interval(0.15)
+	tw.tween_callback(_spawn_gibarta_wave.bind(spawn_pos, damage, kb))
+	tw.tween_interval(0.15)
+	tw.tween_callback(_spawn_gibarta_wave.bind(spawn_pos, damage, kb))
+
+
+func _spawn_gibarta_wave(spawn_pos: Vector3, damage: int, kb: float) -> void:
 	for i in range(3):
-		var angle_offset: float = (i - 1) * 0.08
+		var angle_offset: float = (i - 1) * 0.12
 		var rot := player_rotation + angle_offset
 		var dir := Vector3(sin(rot), 0, cos(rot))
 		var proj := Projectile.new()

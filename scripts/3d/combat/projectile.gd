@@ -11,6 +11,8 @@ var direction: Vector3 = Vector3.FORWARD
 var owner_node: Node3D
 var color: Color = Color(1.0, 0.9, 0.5)
 var pierce: bool = false
+var spiral_rate: float = 0.0  # Radians per second to curve direction (0 = straight)
+var spiral_origin: Vector3 = Vector3.ZERO  # Center point for spiral expansion
 
 var _distance_traveled: float = 0.0
 var _mesh: MeshInstance3D
@@ -51,6 +53,10 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Spiral: rotate direction around Y axis each frame
+	if spiral_rate != 0.0:
+		direction = direction.rotated(Vector3.UP, spiral_rate * delta)
+
 	var move := direction * speed * delta
 	global_position += move
 	_distance_traveled += move.length()
