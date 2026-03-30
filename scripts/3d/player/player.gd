@@ -147,6 +147,14 @@ const COMBO_WINDOW_DURATION: float = 0.35  # Window stays open for 0.35s
 var _combo_ring: MeshInstance3D = null
 var _combo_ring_mat: StandardMaterial3D = null
 
+# Special attack charge visual
+var _charge_ring: MeshInstance3D = null
+var _charge_ring_mat: StandardMaterial3D = null
+var _charge_particles: GPUParticles3D = null
+var _charge_timer: float = 0.0
+var _charge_active: bool = false
+var _charge_color: Color = Color.WHITE
+
 # Dodge tracking
 var dodge_direction: float = 0.0
 var dodge_timer: float = 0.0
@@ -1362,8 +1370,9 @@ func _handle_attack_state(delta: float) -> void:
 			_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Red flash on miss
 			transition_to(PlayerState.IDLE)
 
-	# Update combo ring visual
+	# Update visuals
 	_update_combo_ring(delta)
+	_update_charge_visual(delta)
 
 	# Stop horizontal movement during attacks
 	velocity.x = 0
@@ -1397,8 +1406,10 @@ func _play_attack_animation(attack_num: int) -> void:
 	if _is_special_attack:
 		# Pause before attack — player is exposed during wind-up
 		play_animation(_anim_prefix + "_wait", true)
+		_start_charge_visual()
 		var tw := create_tween()
 		tw.tween_interval(SPECIAL_ATTACK_DELAY)
+		tw.tween_callback(_end_charge_visual)
 		tw.tween_callback(_play_and_track_attack.bind(anim_name))
 	else:
 		_play_and_track_attack(anim_name)
@@ -1472,6 +1483,137 @@ func _combo_ring_flash(flash_color: Color) -> void:
 	var tw := create_tween()
 	tw.tween_property(_combo_ring_mat, "albedo_color:a", 0.0, 0.3)
 	tw.tween_callback(func(): _combo_ring.visible = false)
+
+
+## Element → charge color mapping
+const ELEMENT_CHARGE_COLORS := {
+	"fire": Color(1.0, 0.4, 0.1),
+	"ice": Color(0.3, 0.6, 1.0),
+	"lightning": Color(1.0, 1.0, 0.3),
+	"dark": Color(0.6, 0.1, 0.8),
+	"light": Color(1.0, 1.0, 0.8),
+	"none": Color(0.8, 0.8, 0.8),
+}
+
+
+func _start_charge_visual() -> void:
+	_charge_color = ELEMENT_CHARGE_COLORS.get(_current_attack_element, Color(0.8, 0.8, 0.8))
+	_charge_active = true
+	_charge_timer = 0.0
+
+	# 1. Expanding ring at feet
+	if not _charge_ring:
+		_charge_ring = MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = 0.6
+		torus.outer_radius = 0.8
+		torus.rings = 16
+		torus.ring_segments = 24
+		_charge_ring.mesh = torus
+		_charge_ring_mat = StandardMaterial3D.new()
+		_charge_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_charge_ring_mat.no_depth_test = true
+		_charge_ring.material_override = _charge_ring_mat
+		add_child(_charge_ring)
+	_charge_ring_mat.albedo_color = Color(_charge_color.r, _charge_color.g, _charge_color.b, 0.6)
+	_charge_ring_mat.emission_enabled = true
+	_charge_ring_mat.emission = _charge_color
+	_charge_ring_mat.emission_energy_multiplier = 2.0
+	_charge_ring.scale = Vector3(0.2, 0.3, 0.2)
+	_charge_ring.global_position = global_position + Vector3(0, 0.05, 0)
+	_charge_ring.visible = true
+
+	# 2. Glow on player model
+	if model:
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				var mi: MeshInstance3D = child as MeshInstance3D
+				for i in range(mi.get_surface_override_material_count()):
+					var mat := mi.get_active_material(i)
+					if mat is StandardMaterial3D:
+						mat.emission_enabled = true
+						mat.emission = _charge_color
+						mat.emission_energy_multiplier = 0.5
+
+	# 3. Particles
+	if not _charge_particles:
+		_charge_particles = GPUParticles3D.new()
+		var particle_mat := ParticleProcessMaterial.new()
+		particle_mat.direction = Vector3(0, 1, 0)
+		particle_mat.spread = 180.0
+		particle_mat.initial_velocity_min = 1.0
+		particle_mat.initial_velocity_max = 2.5
+		particle_mat.gravity = Vector3(0, 1, 0)
+		particle_mat.scale_min = 0.05
+		particle_mat.scale_max = 0.12
+		_charge_particles.process_material = particle_mat
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.04
+		sphere.height = 0.08
+		_charge_particles.draw_pass_1 = sphere
+		_charge_particles.amount = 20
+		_charge_particles.lifetime = 0.4
+		_charge_particles.explosiveness = 0.3
+		add_child(_charge_particles)
+
+	# Set particle color
+	var p_mat: ParticleProcessMaterial = _charge_particles.process_material as ParticleProcessMaterial
+	p_mat.color = _charge_color
+	_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
+	_charge_particles.visible = true
+	_charge_particles.emitting = true
+
+
+func _end_charge_visual() -> void:
+	_charge_active = false
+
+	# Fade out ring
+	if _charge_ring:
+		var tw := create_tween()
+		tw.tween_property(_charge_ring_mat, "albedo_color:a", 0.0, 0.15)
+		tw.tween_callback(func(): _charge_ring.visible = false)
+
+	# Remove model glow
+	if model:
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				var mi: MeshInstance3D = child as MeshInstance3D
+				for i in range(mi.get_surface_override_material_count()):
+					var mat := mi.get_active_material(i)
+					if mat is StandardMaterial3D:
+						mat.emission_enabled = false
+						mat.emission_energy_multiplier = 0.0
+
+	# Stop particles
+	if _charge_particles:
+		_charge_particles.emitting = false
+
+
+func _update_charge_visual(delta: float) -> void:
+	if not _charge_active:
+		return
+	_charge_timer += delta
+	var pct: float = _charge_timer / SPECIAL_ATTACK_DELAY
+
+	# Expand ring during charge
+	if _charge_ring and _charge_ring.visible:
+		var ring_scale: float = 0.2 + pct * 0.8  # 0.2 → 1.0
+		_charge_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
+		_charge_ring.global_position = global_position + Vector3(0, 0.05, 0)
+
+	# Intensify model glow
+	if model:
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				var mi: MeshInstance3D = child as MeshInstance3D
+				for i in range(mi.get_surface_override_material_count()):
+					var mat := mi.get_active_material(i)
+					if mat is StandardMaterial3D and mat.emission_enabled:
+						mat.emission_energy_multiplier = 0.5 + pct * 1.5
+
+	# Update particle position
+	if _charge_particles:
+		_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
 
 
 func transition_to(new_state: PlayerState) -> void:
