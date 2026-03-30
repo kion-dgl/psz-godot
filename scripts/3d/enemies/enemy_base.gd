@@ -144,6 +144,28 @@ func _setup_model() -> void:
 
 	# Find AnimationPlayer in the model hierarchy
 	animation_player = _find_animation_player(model)
+
+	# If no animations in the model, load from animation_model_id source
+	if animation_player and animation_player.get_animation_list().is_empty():
+		animation_player = null  # Discard empty player
+	if not animation_player and enemy_data and not str(enemy_data.animation_model_id).is_empty():
+		var anim_glb_path := "res://assets/enemies/%s/%s.glb" % [enemy_data.animation_model_id, enemy_data.animation_model_id]
+		if ResourceLoader.exists(anim_glb_path):
+			var anim_scene: PackedScene = load(anim_glb_path)
+			if anim_scene:
+				var anim_model := anim_scene.instantiate()
+				var source_player := _find_animation_player(anim_model)
+				if source_player:
+					# Copy animations into our model
+					animation_player = AnimationPlayer.new()
+					animation_player.name = "AnimPlayer"
+					model.add_child(animation_player)
+					var lib := AnimationLibrary.new()
+					for anim_name in source_player.get_animation_list():
+						lib.add_animation(anim_name, source_player.get_animation(anim_name))
+					animation_player.add_animation_library("", lib)
+				anim_model.queue_free()
+
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
 	else:
@@ -185,10 +207,11 @@ func _setup_hurtbox() -> void:
 
 	if enemy_data:
 		capsule.radius = enemy_data.collision_radius
-		capsule.height = enemy_data.collision_height
+		# Ensure hurtbox extends high enough for projectiles (min 2.0 height)
+		capsule.height = maxf(enemy_data.collision_height, 2.0)
 	else:
 		capsule.radius = 0.5
-		capsule.height = 1.5
+		capsule.height = 2.0
 
 	shape.shape = capsule
 	shape.position.y = capsule.height / 2
