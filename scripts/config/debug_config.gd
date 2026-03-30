@@ -5,3 +5,4 @@ static var show_floor_collision := false
 static var show_gate_dots := false
 static var show_time_room := false
 static var show_hitboxes := true  # ON by default during combat implementation
+static var show_combo_timing := true  # Show rhythm combo window indicator
