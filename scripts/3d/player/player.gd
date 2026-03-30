@@ -143,6 +143,10 @@ var _combo_window_opened: bool = false  # Has the window opened this step yet
 const COMBO_WINDOW_OPEN_PCT: float = 0.55  # Open combo window at 55% of animation
 const COMBO_WINDOW_DURATION: float = 0.35  # Window stays open for 0.35s
 
+# Combo timing visual
+var _combo_ring: MeshInstance3D = null
+var _combo_ring_mat: StandardMaterial3D = null
+
 # Dodge tracking
 var dodge_direction: float = 0.0
 var dodge_timer: float = 0.0
@@ -913,6 +917,7 @@ func _start_attack() -> void:
 			combo_state += 1
 			combo_window_open = false
 			_is_special_attack = false
+			_combo_ring_flash(Color(0.2, 1.0, 0.4))  # Green flash on chain
 			_play_attack_animation(combo_state)
 		return
 
@@ -1311,6 +1316,7 @@ func _start_strong_attack() -> void:
 			combo_state += 1
 			combo_window_open = false
 			_is_special_attack = true
+			_combo_ring_flash(Color(1.0, 0.8, 0.2))  # Yellow flash for special chain
 			_play_attack_animation(combo_state)
 		return
 
@@ -1353,7 +1359,11 @@ func _handle_attack_state(delta: float) -> void:
 			combo_window_open = false
 			combo_state = 0
 			_deactivate_attack_hitbox()
+			_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Red flash on miss
 			transition_to(PlayerState.IDLE)
+
+	# Update combo ring visual
+	_update_combo_ring(delta)
 
 	# Stop horizontal movement during attacks
 	velocity.x = 0
@@ -1404,6 +1414,64 @@ func _play_and_track_attack(anim_name: String) -> void:
 	else:
 		_attack_anim_length = 0.5  # Fallback
 	_activate_attack_hitbox()
+
+
+func _ensure_combo_ring() -> void:
+	if _combo_ring:
+		return
+	_combo_ring = MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.8
+	torus.outer_radius = 1.0
+	torus.rings = 16
+	torus.ring_segments = 24
+	_combo_ring.mesh = torus
+	_combo_ring_mat = StandardMaterial3D.new()
+	_combo_ring_mat.albedo_color = Color(0.2, 1.0, 0.4, 0.7)
+	_combo_ring_mat.emission_enabled = true
+	_combo_ring_mat.emission = Color(0.2, 1.0, 0.4)
+	_combo_ring_mat.emission_energy_multiplier = 1.5
+	_combo_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_combo_ring_mat.no_depth_test = true
+	_combo_ring.material_override = _combo_ring_mat
+	_combo_ring.visible = false
+	add_child(_combo_ring)
+
+
+func _update_combo_ring(_delta: float) -> void:
+	if not DebugConfig.show_combo_timing:
+		if _combo_ring:
+			_combo_ring.visible = false
+		return
+
+	_ensure_combo_ring()
+
+	if combo_window_open:
+		_combo_ring.visible = true
+		_combo_ring.global_position = global_position + Vector3(0, 0.05, 0)
+		# Shrink as the window closes
+		var pct: float = 1.0 - (combo_timer / COMBO_WINDOW_DURATION)
+		var ring_scale: float = 0.5 + pct * 0.5  # 1.0 → 0.5
+		_combo_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
+		_combo_ring_mat.albedo_color = Color(0.2, 1.0, 0.4, 0.5 + pct * 0.3)
+		_combo_ring_mat.emission = Color(0.2, 1.0, 0.4)
+	else:
+		if _combo_ring and _combo_ring.visible:
+			_combo_ring.visible = false
+
+
+func _combo_ring_flash(flash_color: Color) -> void:
+	if not DebugConfig.show_combo_timing:
+		return
+	_ensure_combo_ring()
+	_combo_ring.visible = true
+	_combo_ring.global_position = global_position + Vector3(0, 0.05, 0)
+	_combo_ring.scale = Vector3(0.8, 0.3, 0.8)
+	_combo_ring_mat.albedo_color = Color(flash_color.r, flash_color.g, flash_color.b, 0.8)
+	_combo_ring_mat.emission = flash_color
+	var tw := create_tween()
+	tw.tween_property(_combo_ring_mat, "albedo_color:a", 0.0, 0.3)
+	tw.tween_callback(func(): _combo_ring.visible = false)
 
 
 func transition_to(new_state: PlayerState) -> void:
