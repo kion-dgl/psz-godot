@@ -172,6 +172,8 @@ var attack_hitbox: Hitbox
 var _targeted_enemies: Array = []
 var _current_attack_element: String = ""
 var _current_attack_element_level: int = 0
+var _cached_tech_targeting: Dictionary = {}
+var _tech_targeting_dirty: bool = true
 const ATTACK_HITBOX_SIZE := Vector3(1.5, 1.0, 2.0)  # Width, height, depth
 const ATTACK_HITBOX_OFFSET := 1.5  # Forward offset from player
 
@@ -738,8 +740,9 @@ func _physics_process(delta: float) -> void:
 	if model:
 		model.rotation.y = player_rotation
 
-	# Update combat targeting reticles
-	_update_combat_targets()
+	# Update combat targeting reticles (every 3rd frame to reduce CPU)
+	if not _is_in_city() and Engine.get_physics_frames() % 3 == 0:
+		_update_combat_targets()
 
 	# Mag bob and sway
 	if mag_node and is_instance_valid(mag_node):
@@ -767,6 +770,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Palette swap
 	if event.is_action_pressed("palette_swap"):
 		ActionPalette.swap_page()
+		_tech_targeting_dirty = true
 
 	# Action palette inputs — dispatch through ActionPalette
 	if event.is_action_pressed("action_1"):
@@ -1867,6 +1871,9 @@ var _debug_range_mesh: MeshInstance3D
 
 func _get_technique_targeting() -> Dictionary:
 	## Check current palette slots for techniques and return extended targeting params.
+	if not _tech_targeting_dirty and not _cached_tech_targeting.is_empty():
+		return _cached_tech_targeting
+	_tech_targeting_dirty = false
 	var slots: Array = ActionPalette.get_current_slots()
 	var best_range := 0.0
 	var best_width := 0.0
@@ -1891,7 +1898,8 @@ func _get_technique_targeting() -> Dictionary:
 			_:
 				best_range = maxf(best_range, 10.0)
 				best_width = maxf(best_width, 2.0)
-	return {"range": best_range, "half_width": best_width * 0.5, "has_zonde": has_zonde}
+	_cached_tech_targeting = {"range": best_range, "half_width": best_width * 0.5, "has_zonde": has_zonde}
+	return _cached_tech_targeting
 
 
 func _update_combat_targets() -> void:
