@@ -10,6 +10,7 @@ var _quest_log: Control
 var _action_palette: Control
 var _quick_weapon: Control
 var _debug_info: Control
+var _fps_label: Label
 var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
 
@@ -44,11 +45,34 @@ func _ready() -> void:
 	GameState.mp_changed.connect(_on_stats_changed)
 	GameState.max_mp_changed.connect(_on_stats_changed)
 
+	# FPS counter (top-right)
+	_fps_label = Label.new()
+	_fps_label.anchor_left = 1.0
+	_fps_label.anchor_right = 1.0
+	_fps_label.offset_left = -80
+	_fps_label.offset_right = -MARGIN
+	_fps_label.offset_top = MARGIN
+	_fps_label.add_theme_font_size_override("font_size", 12)
+	_fps_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.2))
+	_fps_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	add_child(_fps_label)
+
 	# Quest log disabled for now
 	_log_visible = false
 
 
 func _process(_delta: float) -> void:
+	# FPS counter
+	if _fps_label:
+		var fps: int = int(Engine.get_frames_per_second())
+		_fps_label.text = "%d FPS" % fps
+		if fps < 30:
+			_fps_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+		elif fps < 50:
+			_fps_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
+		else:
+			_fps_label.add_theme_color_override("font_color", Color(0.5, 0.8, 0.3))
+
 	# Hide HUD when an overlay (shop, menu, dialog) is open
 	var has_overlay: bool = not SceneManager._overlay_stack.is_empty()
 	if has_overlay and not _hidden_for_overlay:
