@@ -204,15 +204,17 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
           );
         })}
 
-        {/* Info box — fixed at bottom, above portraits */}
+        {/* Info box — fixed size at bottom, above portraits */}
         <div style={{
           position: 'absolute',
           bottom: 12, left: 12, right: 12,
+          height: 72,
           padding: '10px 14px',
           background: 'rgba(10, 10, 26, 0.85)',
           border: `1px solid ${activeColor}44`,
           borderRadius: 6,
           zIndex: 20,
+          overflow: 'hidden',
         }}>
           {focusedCls ? (
             <>
