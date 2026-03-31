@@ -193,9 +193,7 @@ export default function CharacterPreview({ classId, variationIndex, hairColorInd
       style={{
         width: '100%',
         height: '100%',
-        minHeight: 400,
-        background: '#0a0a1a',
-        borderRadius: 8,
+        background: 'transparent',
         overflow: 'hidden',
       }}
     />
