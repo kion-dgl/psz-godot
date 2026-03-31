@@ -3089,9 +3089,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F9:
 				_toggle_all_collision()
 				get_viewport().set_input_as_handled()
-			KEY_F10:
+			KEY_G:
 				_gate_nudge_mode = not _gate_nudge_mode
-				print("[GateNudge] Mode %s" % ("ON — use arrows to nudge nearest gate, F10 to exit" if _gate_nudge_mode else "OFF"))
+				print("[GateNudge] Mode %s" % ("ON — arrows to nudge, G to exit" if _gate_nudge_mode else "OFF"))
 				get_viewport().set_input_as_handled()
 
 	# Gate nudge mode: arrow keys move nearest gate
