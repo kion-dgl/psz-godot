@@ -184,8 +184,8 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
           {activeClasses.map((cls, i) => {
             const isFocused = cls.id === focusedId;
             const count = activeClasses.length;
-            // Spread characters across ~70% of panel width
-            const spread = 140;
+            // Spread based on class count — fewer classes get more space
+            const spread = count <= 4 ? 180 : 130;
             const offsetX = (i - (count - 1) / 2) * spread;
             return (
               <img
