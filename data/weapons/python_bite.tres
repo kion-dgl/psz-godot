@@ -22,4 +22,5 @@ photon_arts = [{"name": "Serpent Air", "attack_mod": 115, "accuracy_mod": 80, "p
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
 pso_world_id = 99
 model_id = "wclh02"
+glb_path = "res://assets/weapons/basic/Claw.glb"
 variant_id = "wclh02_3_o"

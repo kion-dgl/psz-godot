@@ -30,14 +30,17 @@ const SHOP_WEAPON_TIER1 := [
 const SHOP_WEAPON_TIER2 := [
 	"brand", "gigush", "knife", "halberd",
 	"autogun", "sniper", "assault", "pole", "staff",
+	"spinner",
 ]
 const SHOP_WEAPON_TIER3 := [
 	"buster", "breaker", "blade", "glaive",
 	"lockgun", "blaster", "repeater", "pillar", "baton",
+	"cutter",
 ]
 const SHOP_WEAPON_TIER4 := [
 	"pallasch", "claymore", "edge", "berdys",
 	"railgun", "beam", "gatling", "striker", "scepter",
+	"sawcer",
 ]
 
 ## Shop armor pool
@@ -245,15 +248,11 @@ func _check_equippability(item_id: String, cat: String) -> Dictionary:
 		if w:
 			if not class_str.is_empty() and not w.can_be_used_by(class_str):
 				return {"can_equip": false, "reason": "class"}
-			if w.level > char_level:
-				return {"can_equip": false, "reason": "level", "req_level": w.level}
 	elif cat == "armor":
 		var a = ArmorRegistry.get_armor(item_id)
 		if a:
 			if not class_str.is_empty() and not a.can_be_used_by(class_str):
 				return {"can_equip": false, "reason": "class"}
-			if a.level > char_level:
-				return {"can_equip": false, "reason": "level", "req_level": a.level}
 
 	return {"can_equip": true, "reason": ""}
 
@@ -342,10 +341,7 @@ func _buy_selected() -> void:
 	var equip_check: Dictionary = _check_equippability(item_id, cat)
 	if not equip_check.get("can_equip", true):
 		var reason: String = str(equip_check.get("reason", ""))
-		if reason == "class":
-			hint_label.text = "Your class cannot use this!"
-		elif reason == "level":
-			hint_label.text = "Requires level %d!" % int(equip_check.get("req_level", 1))
+		hint_label.text = "Your class cannot use this!"
 		return
 
 	if int(character.get("meseta", 0)) < cost:
@@ -484,8 +480,6 @@ func _refresh_display() -> void:
 			if not can_equip:
 				if reason == "class":
 					restriction_tag = " [Class]"
-				elif reason == "level":
-					restriction_tag = " [Lv.%d]" % int(equip_check.get("req_level", 1))
 
 			var pill := PszStyle.create_pill(
 				str(item.get("name", "???")) + stars + held_str + restriction_tag,
@@ -529,7 +523,6 @@ func _refresh_detail() -> void:
 			if not w.element.is_empty():
 				vbox.add_child(PszStyle.detail_label("Element: %s Lv.%d" % [w.element, w.element_level]))
 			vbox.add_child(PszStyle.detail_label("Max Grind: +%d" % w.max_grind))
-			vbox.add_child(PszStyle.detail_label("Req. Level: %d" % w.level))
 	elif cat == "armor":
 		var a = ArmorRegistry.get_armor(item_id)
 		if a:
@@ -537,7 +530,7 @@ func _refresh_detail() -> void:
 			vbox.add_child(PszStyle.detail_label("DEF: %d-%d" % [a.defense_base, a.defense_max]))
 			vbox.add_child(PszStyle.detail_label("EVA: %d-%d" % [a.evasion_base, a.evasion_max]))
 			vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % a.max_slots))
-			vbox.add_child(PszStyle.detail_label("Req. Level: %d" % a.level))
+			# Level requirement removed — will switch to stat requirements later
 			var resists: Array = []
 			if a.resist_fire > 0: resists.append("Fire %d" % a.resist_fire)
 			if a.resist_ice > 0: resists.append("Ice %d" % a.resist_ice)
@@ -568,13 +561,7 @@ func _refresh_detail() -> void:
 			if equip_check.get("can_equip", true):
 				vbox.add_child(PszStyle.detail_label("Can equip", PszStyle.TEXT_SUCCESS))
 			else:
-				var reason: String = str(equip_check.get("reason", ""))
-				if reason == "class":
-					vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
-				elif reason == "level":
-					vbox.add_child(PszStyle.detail_label("Cannot equip: Lv.%d required" % int(equip_check.get("req_level", 1)), PszStyle.TEXT_DANGER))
-				else:
-					vbox.add_child(PszStyle.detail_label("Cannot equip", PszStyle.TEXT_DANGER))
+				vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
 
 	detail_panel.add_child(vbox)
 

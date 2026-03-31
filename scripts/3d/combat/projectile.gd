@@ -13,6 +13,10 @@ var color: Color = Color(1.0, 0.9, 0.5)
 var pierce: bool = false
 var spiral_rate: float = 0.0  # Radians per second to curve direction (0 = straight)
 var spiral_origin: Vector3 = Vector3.ZERO  # Center point for spiral expansion
+var bounce_radius: float = 0.0  # On hit, also damage unhit enemies within this radius (slicers)
+var max_hits: int = 0  # Max total enemies to hit (0 = unlimited for pierce, 1 for normal)
+var element: String = ""  # Element type for status effect procs
+var element_level: int = 0  # Element level (higher = more likely to proc)
 
 var _distance_traveled: float = 0.0
 var _mesh: MeshInstance3D
@@ -72,7 +76,49 @@ func _on_area_entered(area: Area3D) -> void:
 			return
 		if hurtbox.owner_node in _hit_targets:
 			return
+		if max_hits > 0 and _hit_targets.size() >= max_hits:
+			return
 		_hit_targets.append(hurtbox.owner_node)
-		hurtbox.take_hit(damage, direction * knockback, accuracy)
-		if not pierce:
+		hurtbox.take_hit(damage, direction * knockback, accuracy, element, element_level)
+
+		# Bounce: damage nearby unhit enemies within radius
+		if bounce_radius > 0.0:
+			_bounce_to_nearby(hurtbox.owner_node.global_position)
+
+		# Stop projectile when done
+		if max_hits > 0 and _hit_targets.size() >= max_hits:
 			queue_free()
+		elif not pierce:
+			queue_free()
+
+
+func _bounce_to_nearby(hit_pos: Vector3) -> void:
+	# Sort candidates by distance so we pick the closest first
+	var candidates: Array = []
+	var enemies: Array = get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if not is_instance_valid(enemy) or enemy in _hit_targets:
+			continue
+		if not enemy.get("is_alive"):
+			continue
+		if not enemy.hurtbox:
+			continue
+		var dist: float = enemy.global_position.distance_to(hit_pos)
+		if dist <= bounce_radius:
+			candidates.append({"enemy": enemy, "dist": dist})
+
+	candidates.sort_custom(func(a, b): return a.dist < b.dist)
+
+	for c in candidates:
+		if max_hits > 0 and _hit_targets.size() >= max_hits:
+			break
+		var enemy = c.enemy
+		# Angle penalty: sharper turns reduce effective bounce range
+		var to_enemy: Vector3 = (enemy.global_position - hit_pos).normalized()
+		var angle_factor: float = maxf(direction.dot(to_enemy), 0.0)  # 1.0=same dir, 0.0=perpendicular
+		var effective_range: float = bounce_radius * (0.5 + 0.5 * angle_factor)
+		if c.dist > effective_range:
+			continue
+		_hit_targets.append(enemy)
+		var bounce_dir: Vector3 = to_enemy
+		enemy.hurtbox.take_hit(damage, bounce_dir * knockback, accuracy, element, element_level)

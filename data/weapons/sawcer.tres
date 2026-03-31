@@ -4,17 +4,17 @@
 
 [resource]
 script = ExtResource("1")
-id = "slicer"
-name = "Slicer"
-rarity = 1
+id = "sawcer"
+name = "Sawcer"
+rarity = 4
 weapon_type = 6
-max_grind = 35
-resale_value = 50
-attack_base = 30
-attack_max = 60
-accuracy_base = 35
-accuracy_max = 45
+max_grind = 50
+resale_value = 600
+attack_base = 110
+attack_max = 175
+accuracy_base = 50
+accuracy_max = 68
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Force Human", "Force Newman")
 glb_path = "res://assets/weapons/Slicer.glb"
 glb_scale = 0.09
-tint_color = Color(0.4, 0.9, 0.4, 1)
+tint_color = Color(1.0, 0.3, 0.3, 1)

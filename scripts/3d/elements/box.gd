@@ -70,9 +70,11 @@ func _setup_hurtbox() -> void:
 	hurtbox.owner_node = self
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = collision_size
+	# Extend hurtbox height so ranged projectiles can hit the box
+	var hurtbox_size := Vector3(collision_size.x, maxf(collision_size.y, 2.0), collision_size.z)
+	box.size = hurtbox_size
 	shape.shape = box
-	shape.position.y = collision_size.y / 2
+	shape.position.y = hurtbox_size.y / 2
 	hurtbox.add_child(shape)
 	add_child(hurtbox)
 

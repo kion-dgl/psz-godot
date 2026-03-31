@@ -22,4 +22,5 @@ photon_arts = [{"name": "Slide End", "attack_mod": 75, "accuracy_mod": 120, "pp_
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
 pso_world_id = 103
 model_id = "wclr01"
+glb_path = "res://assets/weapons/basic/Claw.glb"
 variant_id = "wclr01_1_o"

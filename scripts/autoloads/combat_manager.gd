@@ -45,7 +45,7 @@ const ELEMENT_STATUS := {
 ## Status effect definitions
 const STATUS_EFFECTS := {
 	"freeze": {"duration": 2, "skip_chance": 1.0, "damage_taken_mult": 1.5, "breaks_on_hit": true},
-	"stun": {"duration": 1, "skip_chance": 1.0},
+	"stun": {"duration": 3, "immobilize_duration": 1, "skip_chance": 1.0, "no_attack": true},
 	"poison": {"duration": 3, "dot_percent": 0.05},
 	"slow": {"duration": 3, "evasion_mod": -0.3},
 	"paralysis": {"duration": 3, "skip_chance": 0.5},
@@ -158,16 +158,16 @@ const WEAPON_TYPE_CONFIGS := {
 		"max_targets": 1,
 		"max_targets_per_step": [1, 1, 3],
 	},
-	6: {  # SLICER — ranged melee, moderate speed
+	6: {  # SLICER — thrown blade, narrow long range (pistol-like targeting)
 		"combo_steps": 3,
 		"hits_per_step": [1, 1, 1],
 		"damage_mult": [0.9, 0.9, 1.2],
 		"speed_mult": 1.0,
-		"hitbox_size": Vector3(1.5, 1.0, 2.5),
-		"hitbox_offset": 2.0,
+		"hitbox_size": Vector3(0.5, 0.5, 0.5),
+		"hitbox_offset": 8.0,
 		"knockback": [2.0, 2.0, 4.0],
 		"combo_window": 0.5,
-		"max_targets": 3,
+		"max_targets": 4,
 	},
 	9: {  # HANDGUN — single shots
 		"combo_steps": 3,

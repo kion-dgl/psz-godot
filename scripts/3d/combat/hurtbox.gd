@@ -17,9 +17,11 @@ func _ready() -> void:
 
 
 ## Called by Hitbox when we're hit
-func take_hit(damage: int, knockback: Vector3, accuracy: int = 100) -> void:
+func take_hit(damage: int, knockback: Vector3, accuracy: int = 100, element: String = "", element_level: int = 0) -> void:
 	hit_received.emit(damage, knockback, accuracy)
 
-	# If owner has take_damage method, call it
-	if owner_node and owner_node.has_method("take_damage"):
+	# If owner has _on_hit_received, call with element info
+	if owner_node and owner_node.has_method("_on_hit_received"):
+		owner_node._on_hit_received(damage, knockback, accuracy, element, element_level)
+	elif owner_node and owner_node.has_method("take_damage"):
 		owner_node.take_damage(damage, knockback, accuracy)

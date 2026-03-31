@@ -57,5 +57,25 @@ items = [
     "item": "Cane",
     "category": "Wand",
     "notes": "Base price ~370"
+  },
+  {
+    "item": "Slicer",
+    "category": "Slicer",
+    "notes": "Base price ~200"
+  },
+  {
+    "item": "Spinner",
+    "category": "Slicer",
+    "notes": "Base price ~350"
+  },
+  {
+    "item": "Cutter",
+    "category": "Slicer",
+    "notes": "Base price ~500"
+  },
+  {
+    "item": "Sawcer",
+    "category": "Slicer",
+    "notes": "Base price ~700"
   }
 ]

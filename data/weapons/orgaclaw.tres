@@ -22,4 +22,5 @@ photon_arts = [{"name": "Bite Stamp", "attack_mod": 180, "accuracy_mod": 75, "pp
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast")
 pso_world_id = 81
 model_id = "wclr02"
+glb_path = "res://assets/weapons/basic/Claw.glb"
 variant_id = ""

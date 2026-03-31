@@ -33,8 +33,9 @@ const WEAPON_ANIM_DATA: Dictionary = {
 	WeaponData.WeaponType.SABER: {"glb_m": "res://assets/player/animations/saver_m.glb", "glb_w": "res://assets/player/animations/saver_w.glb", "prefix_m": "pmsa", "prefix_w": "pwsa"},
 	WeaponData.WeaponType.SWORD: {"glb_m": "res://assets/player/animations/sword_m.glb", "glb_w": "res://assets/player/animations/sword_w.glb", "prefix_m": "pmsw", "prefix_w": "pwsw"},
 	WeaponData.WeaponType.DAGGERS: {"glb_m": "res://assets/player/animations/dagger_m.glb", "glb_w": "res://assets/player/animations/dagger_w.glb", "prefix_m": "pmda", "prefix_w": "pwda"},
+	WeaponData.WeaponType.CLAW: {"glb_m": "res://assets/player/animations/claw_m.glb", "glb_w": "res://assets/player/animations/claw_w.glb", "prefix_m": "pmcl", "prefix_w": "pwcl"},
 	WeaponData.WeaponType.SPEAR: {"glb_m": "res://assets/player/animations/spear_m.glb", "glb_w": "res://assets/player/animations/spear_w.glb", "prefix_m": "pmsp", "prefix_w": "pwsp"},
-	WeaponData.WeaponType.SLICER: {"glb_m": "res://assets/player/animations/saver_m.glb", "glb_w": "res://assets/player/animations/saver_w.glb", "prefix_m": "pmsa", "prefix_w": "pwsa"},
+	WeaponData.WeaponType.SLICER: {"glb_m": "res://assets/player/animations/slicer_m.glb", "glb_w": "res://assets/player/animations/slicer_w.glb", "prefix_m": "pmsl", "prefix_w": "pwsls"},
 	WeaponData.WeaponType.GUN_BLADE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmgb", "prefix_w": "pwgbs"},
 	WeaponData.WeaponType.HANDGUN: {"glb_m": "res://assets/player/animations/handgun_m.glb", "glb_w": "res://assets/player/animations/handgun_w.glb", "prefix_m": "pmhg", "prefix_w": "pwhg"},
 	WeaponData.WeaponType.MECH_GUN: {"glb_m": "res://assets/player/animations/machinegun_m.glb", "glb_w": "res://assets/player/animations/machinegun_w.glb", "prefix_m": "pmmg", "prefix_w": "pwmgs"},
@@ -86,6 +87,10 @@ const WEAPON_HOLD_DEFAULT := {
 }
 const WEAPON_HOLD := {
 	# WeaponData.WeaponType enum values as keys
+	3: {  # CLAW
+		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, -4, 0)},
+		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, -4, 0)},
+	},
 	9: {  # HANDGUN
 		"idle": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
 		"attack": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
@@ -129,9 +134,26 @@ var walk_timer: float = 0.0
 
 # Combo system
 var combo_state: int = 0  # 0 = not attacking, 1-3 = combo step
+var _is_special_attack: bool = false  # True when current attack carries weapon element
 var combo_window_open: bool = false
 var combo_timer: float = 0.0
-const COMBO_WINDOW_DURATION: float = 0.5
+var _attack_anim_length: float = 0.0  # Current attack animation duration
+var _attack_anim_elapsed: float = 0.0  # Time since attack animation started
+var _combo_window_opened: bool = false  # Has the window opened this step yet
+const COMBO_WINDOW_OPEN_PCT: float = 0.55  # Open combo window at 55% of animation
+const COMBO_WINDOW_DURATION: float = 0.35  # Window stays open for 0.35s
+
+# Combo timing visual
+var _combo_ring: MeshInstance3D = null
+var _combo_ring_mat: StandardMaterial3D = null
+
+# Special attack charge visual
+var _charge_ring: MeshInstance3D = null
+var _charge_ring_mat: StandardMaterial3D = null
+var _charge_particles: GPUParticles3D = null
+var _charge_timer: float = 0.0
+var _charge_active: bool = false
+var _charge_color: Color = Color.WHITE
 
 # Dodge tracking
 var dodge_direction: float = 0.0
@@ -148,6 +170,10 @@ const INTERACTION_RADIUS: float = 2.0
 # Combat system
 var attack_hitbox: Hitbox
 var _targeted_enemies: Array = []
+var _current_attack_element: String = ""
+var _current_attack_element_level: int = 0
+var _cached_tech_targeting: Dictionary = {}
+var _tech_targeting_dirty: bool = true
 const ATTACK_HITBOX_SIZE := Vector3(1.5, 1.0, 2.0)  # Width, height, depth
 const ATTACK_HITBOX_OFFSET := 1.5  # Forward offset from player
 
@@ -436,7 +462,7 @@ func _get_equipped_weapon_data() -> WeaponData:
 		print("[Player] ABORT: weapon_id is empty")
 		return null
 	var all_ids = WeaponRegistry.get_all_weapon_ids()
-	print("[Player] WeaponRegistry has %d weapons: %s" % [all_ids.size(), all_ids])
+	print("[Player] WeaponRegistry has %d weapons" % all_ids.size())
 	var w = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
 	if w == null:
 		push_warning("[Player] ABORT: weapon '%s' not found in registry" % weapon_id)
@@ -714,8 +740,9 @@ func _physics_process(delta: float) -> void:
 	if model:
 		model.rotation.y = player_rotation
 
-	# Update combat targeting reticles
-	_update_combat_targets()
+	# Update combat targeting reticles (every 3rd frame to reduce CPU)
+	if not _is_in_city() and Engine.get_physics_frames() % 3 == 0:
+		_update_combat_targets()
 
 	# Mag bob and sway
 	if mag_node and is_instance_valid(mag_node):
@@ -743,6 +770,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Palette swap
 	if event.is_action_pressed("palette_swap"):
 		ActionPalette.swap_page()
+		_tech_targeting_dirty = true
 
 	# Action palette inputs — dispatch through ActionPalette
 	if event.is_action_pressed("action_1"):
@@ -900,12 +928,15 @@ func _start_attack() -> void:
 		if combo_window_open and combo_state < max_combo:
 			combo_state += 1
 			combo_window_open = false
+			_is_special_attack = false
+			_combo_ring_flash(Color(0.2, 1.0, 0.4))  # Green flash on chain
 			_play_attack_animation(combo_state)
 		return
 
 	# Start fresh attack combo
 	combo_state = 1
 	combo_window_open = false
+	_is_special_attack = false
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
 
@@ -967,6 +998,13 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 	var damage: int = int(tech_data.get("damage", 10))
 	var kb: float = float(tech_data.get("knockback", 3.0))
 
+	# Set element for status effect procs
+	_current_attack_element = str(tech_data.get("element", ""))
+	var character = CharacterManager.get_active_character()
+	_current_attack_element_level = 0
+	if character:
+		_current_attack_element_level = TechniqueManager.get_technique_level(character, technique_id)
+
 	match technique_id:
 		"foie":
 			_spawn_foie(spawn_pos, forward, damage, kb)
@@ -991,6 +1029,11 @@ func _spawn_technique_effect(technique_id: String, tech_data: Dictionary) -> voi
 			_spawn_foie(spawn_pos, forward, damage, kb)
 
 
+func _apply_element_to_proj(proj: Projectile) -> void:
+	proj.element = _current_attack_element
+	proj.element_level = _current_attack_element_level
+
+
 func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -> void:
 	var proj := Projectile.new()
 	proj.damage = damage
@@ -1001,6 +1044,7 @@ func _spawn_foie(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) -
 	proj.owner_node = self
 	proj.speed = 20.0
 	proj.color = Color(1.0, 0.3, 0.05)
+	_apply_element_to_proj(proj)
 	get_tree().current_scene.add_child(proj)
 	proj.global_position = spawn_pos
 
@@ -1017,6 +1061,7 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 	proj.pierce = true
 	proj.color = Color(0.3, 0.7, 1.0)
 	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
+	_apply_element_to_proj(proj)
 	get_tree().current_scene.add_child(proj)
 	proj.global_position = ground_pos
 
@@ -1035,6 +1080,7 @@ func _spawn_gifoie(damage: int, kb: float) -> void:
 	proj.pierce = true
 	proj.spiral_rate = 4.0  # Radians/sec — tight spiral outward
 	proj.color = Color(1.0, 0.3, 0.05)
+	_apply_element_to_proj(proj)
 	get_tree().current_scene.add_child(proj)
 	proj.global_position = global_position + Vector3(0, 1.0, 0) + forward * 0.5
 
@@ -1053,7 +1099,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 	# Full damage to primary target
 	if target_enemy.hurtbox:
 		var hit_dir: Vector3 = (target_enemy.global_position - global_position).normalized()
-		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100)
+		target_enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level)
 
 	# Reduced damage to nearby enemies
 	for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -1064,7 +1110,7 @@ func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: floa
 		var dist: float = enemy.global_position.distance_to(explosion_pos)
 		if dist <= explosion_radius and enemy.hurtbox:
 			var splash_dir: Vector3 = (enemy.global_position - explosion_pos).normalized()
-			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100)
+			enemy.hurtbox.take_hit(int(damage * 0.6), splash_dir * kb, 100, _current_attack_element, _current_attack_element_level)
 
 	_spawn_aoe_visual(explosion_pos, Color(1.0, 0.3, 0.05), explosion_radius)
 
@@ -1095,6 +1141,7 @@ func _spawn_gibarta_wave(spawn_pos: Vector3, damage: int, kb: float) -> void:
 		proj.pierce = true
 		proj.color = Color(0.3, 0.7, 1.0)
 		var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
+		_apply_element_to_proj(proj)
 		get_tree().current_scene.add_child(proj)
 		proj.global_position = ground_pos
 
@@ -1115,6 +1162,7 @@ func _spawn_rabarta(damage: int, kb: float) -> void:
 		proj.speed = 12.0
 		proj.pierce = true
 		proj.color = Color(0.5, 0.8, 1.0)
+		_apply_element_to_proj(proj)
 		get_tree().current_scene.add_child(proj)
 		proj.global_position = global_position + Vector3(0, 0.3, 0)
 
@@ -1128,7 +1176,7 @@ func _spawn_zonde(damage: int, kb: float) -> void:
 		return
 	if target_enemy.hurtbox:
 		var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
-		target_enemy.hurtbox.take_hit(damage, forward * kb, 100)
+		target_enemy.hurtbox.take_hit(damage, forward * kb, 100, _current_attack_element, _current_attack_element_level)
 	_spawn_zonde_visual(target_enemy.global_position)
 
 
@@ -1166,7 +1214,7 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 	# Hit primary target
 	if primary.hurtbox:
 		var fwd := Vector3(sin(player_rotation), 0, cos(player_rotation))
-		primary.hurtbox.take_hit(damage, fwd * kb, 100)
+		primary.hurtbox.take_hit(damage, fwd * kb, 100, _current_attack_element, _current_attack_element_level)
 	_spawn_zonde_visual(primary.global_position)
 
 	# Chain from the last hit enemy to the nearest unhit enemy
@@ -1189,7 +1237,7 @@ func _spawn_gizonde(damage: int, kb: float) -> void:
 		if best_enemy == null:
 			break
 		var chain_dir: Vector3 = (best_enemy.global_position - last_hit.global_position).normalized()
-		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100)
+		best_enemy.hurtbox.take_hit(damage, chain_dir * kb, 100, _current_attack_element, _current_attack_element_level)
 		_spawn_zonde_visual(best_enemy.global_position)
 		hit_enemies.append(best_enemy)
 		last_hit = best_enemy
@@ -1201,7 +1249,7 @@ func _spawn_razonde(damage: int, kb: float) -> void:
 	for enemy in nearby:
 		if enemy.hurtbox:
 			var hit_dir: Vector3 = (enemy.global_position - global_position).normalized()
-			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100)
+			enemy.hurtbox.take_hit(damage, hit_dir * kb, 100, _current_attack_element, _current_attack_element_level)
 		_spawn_zonde_visual(enemy.global_position)
 	_spawn_aoe_visual(global_position, Color(0.8, 0.8, 1.0), 12.0)
 
@@ -1262,11 +1310,32 @@ func _debug_kill_all() -> void:
 
 
 func _start_strong_attack() -> void:
-	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
+	if current_state == PlayerState.DODGING:
 		return
-	# Strong attack uses combo step 3 animation directly
-	combo_state = 3
+
+	# Set weapon element for the special attack
+	var character = CharacterManager.get_active_character()
+	if character:
+		var weapon_id: String = str(character.get("equipment", {}).get("weapon", ""))
+		var ws: Dictionary = character.get("weapon_stats", {}).get(weapon_id, {})
+		_current_attack_element = str(ws.get("element", ""))
+		_current_attack_element_level = int(ws.get("element_level", 0))
+
+	if current_state == PlayerState.ATTACKING:
+		# Chain into combo like normal attack, but flagged as special
+		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+		if combo_window_open and combo_state < max_combo:
+			combo_state += 1
+			combo_window_open = false
+			_is_special_attack = true
+			_combo_ring_flash(Color(1.0, 0.8, 0.2))  # Yellow flash for special chain
+			_play_attack_animation(combo_state)
+		return
+
+	# Start fresh combo step 1 as special
+	combo_state = 1
 	combo_window_open = false
+	_is_special_attack = true
 	transition_to(PlayerState.ATTACKING)
 	_play_attack_animation(combo_state)
 
@@ -1281,15 +1350,33 @@ func _use_consumable(item_id: String) -> void:
 
 
 func _handle_attack_state(delta: float) -> void:
+	# Track animation elapsed for mid-animation combo window
+	_attack_anim_elapsed += delta
+
+	# Open combo window at the rhythm point (% of animation)
+	if not _combo_window_opened and _attack_anim_length > 0:
+		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+		if combo_state > 0 and combo_state < max_combo:
+			var open_at: float = _attack_anim_length * COMBO_WINDOW_OPEN_PCT
+			if _attack_anim_elapsed >= open_at:
+				combo_window_open = true
+				combo_timer = 0.0
+				_combo_window_opened = true
+
 	# Handle combo window timeout
 	if combo_window_open:
 		combo_timer += delta
 		if combo_timer >= COMBO_WINDOW_DURATION:
-			# Combo window closed, return to idle
+			# Missed the rhythm window — combo resets
 			combo_window_open = false
 			combo_state = 0
 			_deactivate_attack_hitbox()
+			_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Red flash on miss
 			transition_to(PlayerState.IDLE)
+
+	# Update visuals
+	_update_combo_ring(delta)
+	_update_charge_visual(delta)
 
 	# Stop horizontal movement during attacks
 	velocity.x = 0
@@ -1312,10 +1399,225 @@ func _set_weapon_hold(mode: String) -> void:
 	weapon_node.rotation_degrees = h.get("rot", Vector3(0, 90, 0))
 
 
+const SPECIAL_ATTACK_DELAY := 0.4  # Seconds of pause before special attack animation
+
 func _play_attack_animation(attack_num: int) -> void:
 	var anim_name := _anim_prefix + "_atk" + str(attack_num)
+	_combo_window_opened = false
+	_attack_anim_elapsed = 0.0
+	_attack_anim_length = 0.0
+
+	if _is_special_attack:
+		# Pause before attack — player is exposed during wind-up
+		play_animation(_anim_prefix + "_wait", true)
+		_start_charge_visual()
+		var tw := create_tween()
+		tw.tween_interval(SPECIAL_ATTACK_DELAY)
+		tw.tween_callback(_end_charge_visual)
+		tw.tween_callback(_play_and_track_attack.bind(anim_name))
+	else:
+		_play_and_track_attack(anim_name)
+
+
+func _play_and_track_attack(anim_name: String) -> void:
 	play_animation(anim_name, false)
+	_attack_anim_elapsed = 0.0
+	_combo_window_opened = false
+	# Get animation length for rhythm window timing
+	if animation_player and animation_player.has_animation(anim_name):
+		_attack_anim_length = animation_player.get_animation(anim_name).length
+	else:
+		_attack_anim_length = 0.5  # Fallback
 	_activate_attack_hitbox()
+
+
+func _ensure_combo_ring() -> void:
+	if _combo_ring:
+		return
+	_combo_ring = MeshInstance3D.new()
+	var torus := TorusMesh.new()
+	torus.inner_radius = 0.8
+	torus.outer_radius = 1.0
+	torus.rings = 16
+	torus.ring_segments = 24
+	_combo_ring.mesh = torus
+	_combo_ring_mat = StandardMaterial3D.new()
+	_combo_ring_mat.albedo_color = Color(0.2, 1.0, 0.4, 0.7)
+	_combo_ring_mat.emission_enabled = true
+	_combo_ring_mat.emission = Color(0.2, 1.0, 0.4)
+	_combo_ring_mat.emission_energy_multiplier = 1.5
+	_combo_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_combo_ring_mat.no_depth_test = true
+	_combo_ring.material_override = _combo_ring_mat
+	_combo_ring.visible = false
+	add_child(_combo_ring)
+
+
+func _update_combo_ring(_delta: float) -> void:
+	if not DebugConfig.show_combo_timing:
+		if _combo_ring:
+			_combo_ring.visible = false
+		return
+
+	_ensure_combo_ring()
+
+	if combo_window_open:
+		_combo_ring.visible = true
+		_combo_ring.global_position = global_position + Vector3(0, 0.05, 0)
+		# Shrink as the window closes
+		var pct: float = 1.0 - (combo_timer / COMBO_WINDOW_DURATION)
+		var ring_scale: float = 0.5 + pct * 0.5  # 1.0 → 0.5
+		_combo_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
+		_combo_ring_mat.albedo_color = Color(0.2, 1.0, 0.4, 0.5 + pct * 0.3)
+		_combo_ring_mat.emission = Color(0.2, 1.0, 0.4)
+	else:
+		if _combo_ring and _combo_ring.visible:
+			_combo_ring.visible = false
+
+
+func _combo_ring_flash(flash_color: Color) -> void:
+	if not DebugConfig.show_combo_timing:
+		return
+	_ensure_combo_ring()
+	_combo_ring.visible = true
+	_combo_ring.global_position = global_position + Vector3(0, 0.05, 0)
+	_combo_ring.scale = Vector3(0.8, 0.3, 0.8)
+	_combo_ring_mat.albedo_color = Color(flash_color.r, flash_color.g, flash_color.b, 0.8)
+	_combo_ring_mat.emission = flash_color
+	var tw := create_tween()
+	tw.tween_property(_combo_ring_mat, "albedo_color:a", 0.0, 0.3)
+	tw.tween_callback(func(): _combo_ring.visible = false)
+
+
+## Element → charge color mapping
+const ELEMENT_CHARGE_COLORS := {
+	"fire": Color(1.0, 0.4, 0.1),
+	"ice": Color(0.3, 0.6, 1.0),
+	"lightning": Color(1.0, 1.0, 0.3),
+	"dark": Color(0.6, 0.1, 0.8),
+	"light": Color(1.0, 1.0, 0.8),
+	"none": Color(0.8, 0.8, 0.8),
+}
+
+
+func _start_charge_visual() -> void:
+	_charge_color = ELEMENT_CHARGE_COLORS.get(_current_attack_element, Color(0.8, 0.8, 0.8))
+	_charge_active = true
+	_charge_timer = 0.0
+
+	# 1. Expanding ring at feet
+	if not _charge_ring:
+		_charge_ring = MeshInstance3D.new()
+		var torus := TorusMesh.new()
+		torus.inner_radius = 0.6
+		torus.outer_radius = 0.8
+		torus.rings = 16
+		torus.ring_segments = 24
+		_charge_ring.mesh = torus
+		_charge_ring_mat = StandardMaterial3D.new()
+		_charge_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_charge_ring_mat.no_depth_test = true
+		_charge_ring.material_override = _charge_ring_mat
+		add_child(_charge_ring)
+	_charge_ring_mat.albedo_color = Color(_charge_color.r, _charge_color.g, _charge_color.b, 0.6)
+	_charge_ring_mat.emission_enabled = true
+	_charge_ring_mat.emission = _charge_color
+	_charge_ring_mat.emission_energy_multiplier = 2.0
+	_charge_ring.scale = Vector3(0.2, 0.3, 0.2)
+	_charge_ring.global_position = global_position + Vector3(0, 0.05, 0)
+	_charge_ring.visible = true
+
+	# 2. Glow on player model
+	if model:
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				var mi: MeshInstance3D = child as MeshInstance3D
+				for i in range(mi.get_surface_override_material_count()):
+					var mat := mi.get_active_material(i)
+					if mat is StandardMaterial3D:
+						mat.emission_enabled = true
+						mat.emission = _charge_color
+						mat.emission_energy_multiplier = 0.5
+
+	# 3. Particles
+	if not _charge_particles:
+		_charge_particles = GPUParticles3D.new()
+		var particle_mat := ParticleProcessMaterial.new()
+		particle_mat.direction = Vector3(0, 1, 0)
+		particle_mat.spread = 180.0
+		particle_mat.initial_velocity_min = 1.0
+		particle_mat.initial_velocity_max = 2.5
+		particle_mat.gravity = Vector3(0, 1, 0)
+		particle_mat.scale_min = 0.05
+		particle_mat.scale_max = 0.12
+		_charge_particles.process_material = particle_mat
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.04
+		sphere.height = 0.08
+		_charge_particles.draw_pass_1 = sphere
+		_charge_particles.amount = 20
+		_charge_particles.lifetime = 0.4
+		_charge_particles.explosiveness = 0.3
+		add_child(_charge_particles)
+
+	# Set particle color
+	var p_mat: ParticleProcessMaterial = _charge_particles.process_material as ParticleProcessMaterial
+	p_mat.color = _charge_color
+	_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
+	_charge_particles.visible = true
+	_charge_particles.emitting = true
+
+
+func _end_charge_visual() -> void:
+	_charge_active = false
+
+	# Fade out ring
+	if _charge_ring:
+		var tw := create_tween()
+		tw.tween_property(_charge_ring_mat, "albedo_color:a", 0.0, 0.15)
+		tw.tween_callback(func(): _charge_ring.visible = false)
+
+	# Remove model glow
+	if model:
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				var mi: MeshInstance3D = child as MeshInstance3D
+				for i in range(mi.get_surface_override_material_count()):
+					var mat := mi.get_active_material(i)
+					if mat is StandardMaterial3D:
+						mat.emission_enabled = false
+						mat.emission_energy_multiplier = 0.0
+
+	# Stop particles
+	if _charge_particles:
+		_charge_particles.emitting = false
+
+
+func _update_charge_visual(delta: float) -> void:
+	if not _charge_active:
+		return
+	_charge_timer += delta
+	var pct: float = _charge_timer / SPECIAL_ATTACK_DELAY
+
+	# Expand ring during charge
+	if _charge_ring and _charge_ring.visible:
+		var ring_scale: float = 0.2 + pct * 0.8  # 0.2 → 1.0
+		_charge_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
+		_charge_ring.global_position = global_position + Vector3(0, 0.05, 0)
+
+	# Intensify model glow
+	if model:
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				var mi: MeshInstance3D = child as MeshInstance3D
+				for i in range(mi.get_surface_override_material_count()):
+					var mat := mi.get_active_material(i)
+					if mat is StandardMaterial3D and mat.emission_enabled:
+						mat.emission_energy_multiplier = 0.5 + pct * 1.5
+
+	# Update particle position
+	if _charge_particles:
+		_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
 
 
 func transition_to(new_state: PlayerState) -> void:
@@ -1386,13 +1688,16 @@ func _on_animation_finished(_anim_name: String) -> void:
 			var config: Dictionary = CombatManager.get_weapon_type_config(_get_equipped_weapon_type())
 			var max_combo: int = int(config.get("combo_steps", 3))
 			if combo_state >= max_combo:
-				# Combo finished, return to idle
+				# Final combo step finished
 				combo_state = 0
 				transition_to(PlayerState.IDLE)
+			elif combo_window_open:
+				# Window is still open — let the timer in _handle_attack_state close it
+				pass
 			else:
-				# Open combo window
-				combo_window_open = true
-				combo_timer = 0.0
+				# Window was missed or never opened — combo resets
+				combo_state = 0
+				transition_to(PlayerState.IDLE)
 		PlayerState.DAMAGED:
 			transition_to(PlayerState.IDLE)
 		PlayerState.DOWN:
@@ -1481,7 +1786,7 @@ func _get_equipped_weapon_type() -> int:
 	return 0
 
 
-const RANGED_WEAPON_TYPES := [9, 10, 11, 12]  # HANDGUN, MECH_GUN, RIFLE, BAZOOKA
+const RANGED_WEAPON_TYPES := [6, 9, 10, 11, 12]  # SLICER, HANDGUN, MECH_GUN, RIFLE, BAZOOKA
 
 
 func _activate_attack_hitbox() -> void:
@@ -1498,6 +1803,13 @@ func _activate_attack_hitbox() -> void:
 		attack_hitbox.accuracy = int(atk.get("accuracy", 100))
 		attack_hitbox.max_targets = int(atk.get("max_targets", 1))
 		attack_hitbox.hits_per_target = int(atk.get("hits", 1))
+		# Special attacks carry weapon element for status procs
+		if _is_special_attack:
+			attack_hitbox.element = _current_attack_element
+			attack_hitbox.element_level = _current_attack_element_level
+		else:
+			attack_hitbox.element = ""
+			attack_hitbox.element_level = 0
 		attack_hitbox.activate()
 
 
@@ -1508,6 +1820,8 @@ func _fire_projectile(atk: Dictionary) -> void:
 	var max_range: float = float(config.get("hitbox_offset", 8.0)) + float(config.get("hitbox_size", Vector3(1, 1, 1)).z)
 	var hits: int = int(atk.get("hits", 1))
 
+	var weapon_type: int = int(atk.get("weapon_type", 0))
+
 	for i in range(hits):
 		var proj := Projectile.new()
 		proj.damage = int(atk.get("damage", 10))
@@ -1517,6 +1831,22 @@ func _fire_projectile(atk: Dictionary) -> void:
 		proj.max_range = max_range
 		proj.owner_node = self
 		proj.speed = 25.0
+
+		# Slicer: throwing blade aimed at target, bounces to nearby enemies
+		if weapon_type == WeaponData.WeaponType.SLICER:
+			proj.pierce = true
+			proj.bounce_radius = 3.0
+			proj.max_hits = 4
+			proj.speed = 20.0
+			proj.color = Color(0.7, 0.9, 1.0)
+			# Semi-homing: aim at the targeted enemy instead of straight forward
+			if not _targeted_enemies.is_empty() and is_instance_valid(_targeted_enemies[0]):
+				var to_target: Vector3 = _targeted_enemies[0].global_position - spawn_pos
+				to_target.y = 0  # Keep horizontal
+				if to_target.length() > 0.5:
+					proj.direction = to_target.normalized()
+			# Spawn at enemy height so it doesn't fly over short targets
+			spawn_pos.y = global_position.y + 0.6
 
 		# Slight spread for multi-shot (mechgun)
 		if hits > 1:
@@ -1541,6 +1871,9 @@ var _debug_range_mesh: MeshInstance3D
 
 func _get_technique_targeting() -> Dictionary:
 	## Check current palette slots for techniques and return extended targeting params.
+	if not _tech_targeting_dirty and not _cached_tech_targeting.is_empty():
+		return _cached_tech_targeting
+	_tech_targeting_dirty = false
 	var slots: Array = ActionPalette.get_current_slots()
 	var best_range := 0.0
 	var best_width := 0.0
@@ -1565,7 +1898,8 @@ func _get_technique_targeting() -> Dictionary:
 			_:
 				best_range = maxf(best_range, 10.0)
 				best_width = maxf(best_width, 2.0)
-	return {"range": best_range, "half_width": best_width * 0.5, "has_zonde": has_zonde}
+	_cached_tech_targeting = {"range": best_range, "half_width": best_width * 0.5, "has_zonde": has_zonde}
+	return _cached_tech_targeting
 
 
 func _update_combat_targets() -> void:
@@ -1657,6 +1991,21 @@ func _update_combat_targets() -> void:
 		if enemy.has_method("show_reticle"):
 			enemy.show_reticle()
 		_targeted_enemies.append(enemy)
+
+	# Slicer: show secondary reticles for bounce targets near the primary
+	if weapon_type == WeaponData.WeaponType.SLICER and not _targeted_enemies.is_empty():
+		var primary = _targeted_enemies[0]
+		var bounce_count := 0
+		for c in candidates:
+			if bounce_count >= 3:
+				break
+			if c.enemy == primary or c.enemy in _targeted_enemies:
+				continue
+			var dist_to_primary: float = c.enemy.global_position.distance_to(primary.global_position)
+			if dist_to_primary <= 3.0 and c.enemy.has_method("show_reticle"):
+				c.enemy.show_reticle()
+				_targeted_enemies.append(c.enemy)
+				bounce_count += 1
 
 	# Debug: color box based on targets found
 	if _debug_range_mesh and _debug_range_mesh.visible:
