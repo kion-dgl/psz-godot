@@ -81,7 +81,7 @@ export default function CharacterCreator() {
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         <div style={{
-          width: showPreview ? 380 : 1280,
+          width: showPreview ? 260 : 1280,
           flexShrink: 0,
           display: 'flex',
           overflow: 'hidden',

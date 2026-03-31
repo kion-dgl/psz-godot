@@ -127,6 +127,24 @@ export default function AppearanceStep({ state, dispatch }: Props) {
           onNext={() => dispatch({ type: 'SET_SKIN_TONE', index: wrap(state.skinToneIndex, 1, SKIN_TONES.length) })}
           onClick={() => {}}
         />
+        <ArrowSelector
+          label="Voice Type"
+          current={0}
+          total={8}
+          isActive={false}
+          onPrev={() => {}}
+          onNext={() => {}}
+          onClick={() => {}}
+        />
+        <ArrowSelector
+          label="Mag Color"
+          current={0}
+          total={5}
+          isActive={false}
+          onPrev={() => {}}
+          onNext={() => {}}
+          onClick={() => {}}
+        />
       </div>
     </div>
   );
