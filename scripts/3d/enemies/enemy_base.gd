@@ -146,9 +146,14 @@ func _setup_model() -> void:
 	animation_player = _find_animation_player(model)
 
 	# If no animations in the model, load from animation_model_id source
-	if animation_player and animation_player.get_animation_list().is_empty():
-		animation_player = null  # Discard empty player
+	if animation_player:
+		var anim_count: int = animation_player.get_animation_list().size()
+		if anim_count == 0:
+			animation_player = null  # Discard empty player
+		else:
+			print("[Enemy] %s has %d animations in model" % [enemy_data.name if enemy_data else "?", anim_count])
 	if not animation_player and enemy_data and not str(enemy_data.animation_model_id).is_empty():
+		print("[Enemy] %s: loading animations from %s" % [enemy_data.name if enemy_data else "?", enemy_data.animation_model_id])
 		var anim_glb_path := "res://assets/enemies/%s/%s.glb" % [enemy_data.animation_model_id, enemy_data.animation_model_id]
 		if ResourceLoader.exists(anim_glb_path):
 			var anim_scene: PackedScene = load(anim_glb_path)
