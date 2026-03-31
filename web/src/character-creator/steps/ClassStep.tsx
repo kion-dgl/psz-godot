@@ -109,7 +109,7 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
           const isActiveType = activeType === type;
 
           return (
-            <div key={type} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div key={type} style={{ flex: classes.length, display: 'flex', flexDirection: 'column' }}>
               {/* Type header with vertical label */}
               <div style={{
                 display: 'flex', alignItems: 'stretch', flex: 1,
