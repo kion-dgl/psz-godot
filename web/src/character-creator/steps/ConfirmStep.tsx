@@ -54,7 +54,7 @@ export default function ConfirmStep({ state, dispatch }: Props) {
         marginTop: 4,
       }}>
         <SummaryRow label="Name" value={state.name || '(unnamed)'} />
-        <SummaryRow label="Race" value={state.race || '--'} />
+        <SummaryRow label="Race" value={cls?.race || '--'} />
         <SummaryRow label="Class" value={cls?.name || '--'} />
         <SummaryRow label="Type" value={cls?.type || '--'} />
         <SummaryRow label="Gender" value={cls?.gender || '--'} />

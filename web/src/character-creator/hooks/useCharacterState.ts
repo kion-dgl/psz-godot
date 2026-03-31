@@ -1,12 +1,11 @@
 import { useReducer } from 'react';
 
-export type Step = 'race' | 'class' | 'appearance' | 'name' | 'confirm';
+export type Step = 'class' | 'appearance' | 'name' | 'confirm';
 
-const STEP_ORDER: Step[] = ['race', 'class', 'appearance', 'name', 'confirm'];
+const STEP_ORDER: Step[] = ['class', 'appearance', 'name', 'confirm'];
 
 export interface CharacterState {
   step: Step;
-  race: 'Human' | 'Newman' | 'Cast' | null;
   classId: string | null;
   variationIndex: number;
   hairColorIndex: number;
@@ -16,7 +15,6 @@ export interface CharacterState {
 }
 
 export type CharacterAction =
-  | { type: 'SET_RACE'; race: 'Human' | 'Newman' | 'Cast' }
   | { type: 'SET_CLASS'; classId: string }
   | { type: 'SET_VARIATION'; index: number }
   | { type: 'SET_HAIR_COLOR'; index: number }
@@ -29,8 +27,7 @@ export type CharacterAction =
   | { type: 'RESET' };
 
 const initialState: CharacterState = {
-  step: 'race',
-  race: null,
+  step: 'class',
   classId: null,
   variationIndex: 0,
   hairColorIndex: 0,
@@ -41,8 +38,6 @@ const initialState: CharacterState = {
 
 function reducer(state: CharacterState, action: CharacterAction): CharacterState {
   switch (action.type) {
-    case 'SET_RACE':
-      return { ...state, race: action.race, classId: null };
     case 'SET_CLASS':
       return { ...state, classId: action.classId, variationIndex: 0, hairColorIndex: 0, skinToneIndex: 0, bodyColorIndex: 0 };
     case 'SET_VARIATION':
@@ -85,7 +80,6 @@ export function useCharacterState() {
 
   const canGoNext = (): boolean => {
     switch (state.step) {
-      case 'race': return state.race !== null;
       case 'class': return state.classId !== null;
       case 'appearance': return true;
       case 'name': return state.name.trim().length > 0;

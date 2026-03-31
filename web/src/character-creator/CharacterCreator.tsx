@@ -1,22 +1,20 @@
 import { useCharacterState, type Step } from './hooks/useCharacterState';
 import CharacterPreview from './CharacterPreview';
-import RaceStep from './steps/RaceStep';
 import ClassStep from './steps/ClassStep';
 import AppearanceStep from './steps/AppearanceStep';
 import NameStep from './steps/NameStep';
 import ConfirmStep from './steps/ConfirmStep';
 
 const STEP_LABELS: Record<Step, string> = {
-  race: 'Race',
   class: 'Class',
   appearance: 'Appearance',
   name: 'Name',
   confirm: 'Confirm',
 };
 
-const STEPS: Step[] = ['race', 'class', 'appearance', 'name', 'confirm'];
+const STEPS: Step[] = ['class', 'appearance', 'name', 'confirm'];
 
-function StepIndicator({ current, total, step }: { current: number; total: number; step: Step }) {
+function StepIndicator({ current }: { current: number }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', padding: '12px 0' }}>
       {STEPS.map((s, i) => {
@@ -42,11 +40,10 @@ function StepIndicator({ current, total, step }: { current: number; total: numbe
             <span style={{
               fontSize: 11,
               color: isActive ? '#e0e0e0' : '#666',
-              display: i < total - 1 ? 'inline' : 'inline',
             }}>
               {STEP_LABELS[s]}
             </span>
-            {i < total - 1 && (
+            {i < STEPS.length - 1 && (
               <div style={{ width: 20, height: 1, background: '#2a2a4a' }} />
             )}
           </div>
@@ -58,11 +55,10 @@ function StepIndicator({ current, total, step }: { current: number; total: numbe
 
 export default function CharacterCreator() {
   const { state, dispatch, stepIndex, stepCount, canGoNext, canGoBack } = useCharacterState();
-  const showPreview = state.step !== 'race';
+  const showPreview = state.classId !== null;
 
   const renderStep = () => {
     switch (state.step) {
-      case 'race': return <RaceStep state={state} dispatch={dispatch} />;
       case 'class': return <ClassStep state={state} dispatch={dispatch} />;
       case 'appearance': return <AppearanceStep state={state} dispatch={dispatch} />;
       case 'name': return <NameStep state={state} dispatch={dispatch} />;
@@ -81,7 +77,7 @@ export default function CharacterCreator() {
     }}>
       {/* Step indicator */}
       <div style={{ padding: '8px 24px', borderBottom: '1px solid #2a2a4a', background: '#16162a' }}>
-        <StepIndicator current={stepIndex} total={stepCount} step={state.step} />
+        <StepIndicator current={stepIndex} />
       </div>
 
       {/* Main content */}
@@ -93,8 +89,7 @@ export default function CharacterCreator() {
         {/* Left panel: step content */}
         <div style={{
           width: showPreview ? '420px' : '100%',
-          maxWidth: showPreview ? '420px' : '600px',
-          margin: showPreview ? undefined : '0 auto',
+          maxWidth: showPreview ? '420px' : '100%',
           padding: '24px',
           overflowY: 'auto',
           flexShrink: 0,
