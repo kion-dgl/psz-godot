@@ -62,16 +62,15 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	# FPS counter
+	# FPS counter (update text every frame, color only on band change)
 	if _fps_label:
 		var fps: int = int(Engine.get_frames_per_second())
 		_fps_label.text = "%d FPS" % fps
-		if fps < 30:
-			_fps_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-		elif fps < 50:
-			_fps_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2))
-		else:
-			_fps_label.add_theme_color_override("font_color", Color(0.5, 0.8, 0.3))
+		var band: int = 0 if fps < 30 else (1 if fps < 50 else 2)
+		if band != _fps_label.get_meta("band", -1):
+			_fps_label.set_meta("band", band)
+			var colors := [Color(1.0, 0.3, 0.3), Color(1.0, 0.8, 0.2), Color(0.5, 0.8, 0.3)]
+			_fps_label.add_theme_color_override("font_color", colors[band])
 
 	# Hide HUD when an overlay (shop, menu, dialog) is open
 	var has_overlay: bool = not SceneManager._overlay_stack.is_empty()

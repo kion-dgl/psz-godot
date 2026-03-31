@@ -85,11 +85,11 @@ func _on_area_entered(area: Area3D) -> void:
 		if bounce_radius > 0.0:
 			_bounce_to_nearby(hurtbox.owner_node.global_position)
 
-		if not pierce:
-			if max_hits > 0 and _hit_targets.size() >= max_hits:
-				queue_free()
-			else:
-				queue_free()
+		# Stop projectile when done
+		if max_hits > 0 and _hit_targets.size() >= max_hits:
+			queue_free()
+		elif not pierce:
+			queue_free()
 
 
 func _bounce_to_nearby(hit_pos: Vector3) -> void:

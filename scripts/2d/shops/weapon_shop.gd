@@ -341,10 +341,7 @@ func _buy_selected() -> void:
 	var equip_check: Dictionary = _check_equippability(item_id, cat)
 	if not equip_check.get("can_equip", true):
 		var reason: String = str(equip_check.get("reason", ""))
-		if reason == "class":
-			hint_label.text = "Your class cannot use this!"
-		elif reason == "level":
-			hint_label.text = "Cannot equip with this class!"
+		hint_label.text = "Your class cannot use this!"
 		return
 
 	if int(character.get("meseta", 0)) < cost:
