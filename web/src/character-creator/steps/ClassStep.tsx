@@ -188,7 +188,7 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
             const spread = count <= 4 ? 180 : 130;
             let offsetX = (i - (count - 1) / 2) * spread;
             // HUnewearl posture adjustment
-            if (cls.id === 'hunewearl') offsetX -= 20;
+            if (cls.id === 'hunewearl') offsetX -= 40;
             return (
               <img
                 key={cls.id}
