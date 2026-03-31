@@ -163,37 +163,42 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
         flex: 1, position: 'relative', overflow: 'hidden',
         background: '#0a0a16',
       }}>
-        {/* When hovering a type header: show all classes in that type spread out */}
+        {/* When hovering a type header: show all classes spread out with gaps */}
         {visibleClasses.length > 0 && !focusedClassId && (
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            display: 'flex',
+            display: 'flex', gap: 4, padding: '8px',
+            alignItems: 'stretch',
           }}>
             {visibleClasses.map(cls => (
-              <div key={cls.id} style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+              <div key={cls.id} style={{
+                flex: 1, position: 'relative', overflow: 'hidden',
+                borderRadius: 6, background: '#0a0a16',
+              }}>
                 <img
                   src={getClassArtPath(cls.id)}
                   alt={cls.name}
                   style={{
                     width: '100%', height: '100%',
-                    objectFit: 'cover', objectPosition: 'center top',
-                    opacity: 0.7,
+                    objectFit: 'contain', objectPosition: 'center top',
+                    opacity: 0.8,
                   }}
                 />
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0,
-                  padding: '16px 6px 6px',
-                  background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
+                  padding: '20px 6px 8px',
+                  background: 'linear-gradient(transparent, rgba(0,0,0,0.9))',
                   textAlign: 'center',
                 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: '#ccc' }}>{cls.name}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#ccc' }}>{cls.name}</div>
+                  <div style={{ fontSize: 9, color: '#666' }}>{cls.race} · {cls.gender}</div>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* When a specific class is focused/selected: full art with others faded */}
+        {/* When a specific class is focused/selected: full art centered */}
         {focusedClassId && visibleClasses.length > 0 && visibleClasses.map(cls => (
           <img
             key={cls.id}
