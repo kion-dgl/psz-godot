@@ -184,10 +184,9 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
           {activeClasses.map((cls, i) => {
             const isFocused = cls.id === focusedId;
             const count = activeClasses.length;
-            // Spread characters across the full panel width
-            const panelWidth = 1080; // approx right panel width (1280 - 200)
-            const slotWidth = panelWidth / count;
-            const offsetX = (i - (count - 1) / 2) * slotWidth;
+            // Spread characters across ~70% of panel width
+            const spread = 140;
+            const offsetX = (i - (count - 1) / 2) * spread;
             return (
               <img
                 key={cls.id}
