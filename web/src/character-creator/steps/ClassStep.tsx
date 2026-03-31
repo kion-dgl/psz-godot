@@ -101,7 +101,7 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
         display: 'flex', flexDirection: 'column',
         background: '#0e0e1e',
         borderRight: '1px solid #2a2a4a',
-        overflowY: 'auto',
+        overflow: 'hidden',
       }}>
         {TYPE_ORDER.map(type => {
           const color = TYPE_COLORS[type];
@@ -109,10 +109,10 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
           const isActiveType = activeType === type;
 
           return (
-            <div key={type}>
+            <div key={type} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               {/* Type header with vertical label */}
               <div style={{
-                display: 'flex', alignItems: 'stretch',
+                display: 'flex', alignItems: 'stretch', flex: 1,
                 background: isActiveType ? `${color}22` : 'transparent',
                 borderBottom: '1px solid #1a1a3a',
               }}>
