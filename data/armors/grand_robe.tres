@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "grand_robe"
+name = "Grand Robe"
+rarity = 3
+type = 2
+max_grind = 45
+resale_value = 650
+defense_base = 90
+defense_max = 200
+evasion_base = 130
+evasion_max = 240
+max_slots = 4
+resist_fire = 16
+resist_ice = 16
+resist_lightning = 16
+resist_light = 16
+resist_dark = 16
+usable_by = PackedStringArray()

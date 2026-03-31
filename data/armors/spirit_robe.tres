@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "spirit_robe"
+name = "Spirit Robe"
+rarity = 2
+type = 2
+max_grind = 40
+resale_value = 320
+defense_base = 50
+defense_max = 140
+evasion_base = 75
+evasion_max = 165
+max_slots = 4
+resist_fire = 12
+resist_ice = 12
+resist_lightning = 12
+resist_light = 12
+resist_dark = 12
+usable_by = PackedStringArray()
