@@ -13,8 +13,6 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 // ── Dreamcast Style ─────────────────────────────────────────────────────────
-// All 14 classes as vertical slivers. Selected one expands to full width.
-// Colored top border indicates type (red/green/blue).
 
 function DreamcastSelector({ state, dispatch }: { state: CharacterState; dispatch: React.Dispatch<CharacterAction> }) {
   return (
@@ -39,7 +37,6 @@ function DreamcastSelector({ state, dispatch }: { state: CharacterState; dispatc
               borderTop: `3px solid ${color}`,
             }}
           >
-            {/* Character art fills the panel */}
             <img
               src={getClassArtPath(cls.id)}
               alt={cls.name}
@@ -51,8 +48,6 @@ function DreamcastSelector({ state, dispatch }: { state: CharacterState; dispatc
                 transition: 'opacity 0.25s',
               }}
             />
-
-            {/* Name overlay — only when expanded */}
             {isSelected && (
               <div style={{
                 position: 'absolute',
@@ -82,79 +77,124 @@ function DreamcastSelector({ state, dispatch }: { state: CharacterState; dispatc
 
 
 // ── Gamecube Style ──────────────────────────────────────────────────────────
-// Left: type list (Hunter/Ranger/Force) then class names.
-// Right: class art panel. All class images shown, selected is full opacity.
 
 function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch: React.Dispatch<CharacterAction> }) {
-  const [activeType, setActiveType] = useState<string>('Hunter');
+  const [hoveredType, setHoveredType] = useState<string | null>(null);
+  const [hoveredClass, setHoveredClass] = useState<string | null>(null);
 
-  const filteredClasses = ALL_CLASSES.filter(c => c.type === activeType);
-  const selectedCls = ALL_CLASSES.find(c => c.id === state.classId);
+  // Which classes to show art for
+  const visibleType = hoveredType || (state.classId ? ALL_CLASSES.find(c => c.id === state.classId)?.type || null : null);
+  const visibleClasses = visibleType ? ALL_CLASSES.filter(c => c.type === visibleType) : [];
+  const focusedClassId = hoveredClass || state.classId;
 
   return (
     <div style={{ display: 'flex', flex: 1, gap: 0, overflow: 'hidden' }}>
-      {/* Left panel: type tabs + class list */}
+      {/* Left: accordion sections */}
       <div style={{
-        width: 160, flexShrink: 0,
+        width: 170, flexShrink: 0,
         display: 'flex', flexDirection: 'column',
         background: '#0e0e1e',
         borderRight: '1px solid #2a2a4a',
+        overflowY: 'auto',
       }}>
-        {/* Type tabs */}
-        {TYPE_ORDER.map(type => (
-          <div
-            key={type}
-            onClick={() => setActiveType(type)}
-            style={{
-              padding: '10px 14px',
-              cursor: 'pointer',
-              background: activeType === type ? '#1a1a3a' : 'transparent',
-              borderLeft: `3px solid ${activeType === type ? TYPE_COLORS[type] : 'transparent'}`,
-              color: activeType === type ? TYPE_COLORS[type] : '#666',
-              fontSize: 13,
-              fontWeight: activeType === type ? 700 : 400,
-              transition: 'all 0.15s',
-            }}
-          >
-            {type}
-          </div>
-        ))}
-        <div style={{ height: 1, background: '#2a2a4a', margin: '4px 0' }} />
-        {/* Class list */}
-        {filteredClasses.map(cls => {
-          const isSelected = state.classId === cls.id;
+        {TYPE_ORDER.map(type => {
+          const color = TYPE_COLORS[type];
+          const classes = ALL_CLASSES.filter(c => c.type === type);
+
           return (
-            <div
-              key={cls.id}
-              onClick={() => dispatch({ type: 'SET_CLASS', classId: cls.id })}
-              style={{
-                padding: '8px 14px',
-                cursor: 'pointer',
-                background: isSelected ? '#2a3a6a' : 'transparent',
-                color: isSelected ? '#e0e0e0' : '#888',
-                fontSize: 12,
-                fontWeight: isSelected ? 600 : 400,
-                transition: 'all 0.15s',
-                display: 'flex', alignItems: 'center', gap: 6,
-              }}
-            >
-              <span style={{
-                fontSize: 9,
-                color: cls.gender === 'Male' ? '#88aaff' : '#dd88cc',
-              }}>{cls.gender === 'Male' ? '♂' : '♀'}</span>
-              {cls.name}
+            <div key={type}>
+              {/* Type header */}
+              <div
+                onMouseEnter={() => { setHoveredType(type); setHoveredClass(null); }}
+                onMouseLeave={() => setHoveredType(null)}
+                style={{
+                  padding: '10px 14px',
+                  cursor: 'pointer',
+                  borderLeft: `3px solid ${color}`,
+                  background: visibleType === type ? '#1a1a3a' : 'transparent',
+                  color: visibleType === type ? color : '#777',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  transition: 'all 0.15s',
+                  letterSpacing: 0.5,
+                }}
+              >
+                {type}
+              </div>
+
+              {/* Class items inside the section */}
+              {classes.map(cls => {
+                const isSelected = state.classId === cls.id;
+                const isFocused = focusedClassId === cls.id;
+                return (
+                  <div
+                    key={cls.id}
+                    onClick={() => dispatch({ type: 'SET_CLASS', classId: cls.id })}
+                    onMouseEnter={() => { setHoveredType(type); setHoveredClass(cls.id); }}
+                    onMouseLeave={() => setHoveredClass(null)}
+                    style={{
+                      padding: '6px 14px 6px 20px',
+                      cursor: 'pointer',
+                      background: isSelected ? '#2a3a6a' : isFocused ? '#1a2a4a' : 'transparent',
+                      color: isSelected ? '#e0e0e0' : isFocused ? '#ccc' : '#666',
+                      fontSize: 12,
+                      fontWeight: isSelected ? 600 : 400,
+                      transition: 'all 0.1s',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      borderLeft: `3px solid ${isSelected ? color : 'transparent'}`,
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 9,
+                      color: cls.gender === 'Male' ? '#88aaff' : '#dd88cc',
+                    }}>{cls.gender === 'Male' ? '♂' : '♀'}</span>
+                    {cls.name}
+                    <span style={{ fontSize: 9, color: '#555', marginLeft: 'auto' }}>{cls.race}</span>
+                  </div>
+                );
+              })}
             </div>
           );
         })}
       </div>
 
-      {/* Right panel: class art gallery */}
+      {/* Right: class art panel */}
       <div style={{
         flex: 1, position: 'relative', overflow: 'hidden',
         background: '#0a0a16',
       }}>
-        {/* All class images stacked, only selected visible */}
-        {filteredClasses.map(cls => (
+        {/* When hovering a type header: show all classes in that type spread out */}
+        {visibleClasses.length > 0 && !focusedClassId && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            display: 'flex',
+          }}>
+            {visibleClasses.map(cls => (
+              <div key={cls.id} style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                <img
+                  src={getClassArtPath(cls.id)}
+                  alt={cls.name}
+                  style={{
+                    width: '100%', height: '100%',
+                    objectFit: 'cover', objectPosition: 'center top',
+                    opacity: 0.7,
+                  }}
+                />
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  padding: '16px 6px 6px',
+                  background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: '#ccc' }}>{cls.name}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* When a specific class is focused/selected: full art with others faded */}
+        {focusedClassId && visibleClasses.length > 0 && visibleClasses.map(cls => (
           <img
             key={cls.id}
             src={getClassArtPath(cls.id)}
@@ -164,25 +204,40 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
               top: 0, left: 0, right: 0, bottom: 0,
               width: '100%', height: '100%',
               objectFit: 'contain', objectPosition: 'center',
-              opacity: state.classId === cls.id ? 1 : 0.08,
-              transition: 'opacity 0.3s',
+              opacity: cls.id === focusedClassId ? 1 : 0.06,
+              transition: 'opacity 0.25s',
+              zIndex: cls.id === focusedClassId ? 2 : 1,
             }}
           />
         ))}
 
-        {/* Selected class name overlay */}
-        {selectedCls && (
-          <div style={{
-            position: 'absolute',
-            bottom: 0, left: 0, right: 0,
-            padding: '40px 16px 16px',
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
-            zIndex: 1,
-          }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#e0e0e0' }}>{selectedCls.name}</div>
-            <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
-              {selectedCls.race} · {selectedCls.gender} · {selectedCls.type}
+        {/* Name overlay for focused class */}
+        {focusedClassId && (() => {
+          const cls = ALL_CLASSES.find(c => c.id === focusedClassId);
+          if (!cls) return null;
+          return (
+            <div style={{
+              position: 'absolute',
+              bottom: 0, left: 0, right: 0,
+              padding: '40px 16px 16px',
+              background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
+              zIndex: 3,
+            }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#e0e0e0' }}>{cls.name}</div>
+              <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>
+                {cls.race} · {cls.gender} · {cls.type}
+              </div>
             </div>
+          );
+        })()}
+
+        {/* Empty state */}
+        {!visibleType && (
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ color: '#444', fontSize: 14 }}>Hover a class type to preview</span>
           </div>
         )}
       </div>
@@ -194,11 +249,10 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
 // ── Main ClassStep ──────────────────────────────────────────────────────────
 
 export default function ClassStep({ state, dispatch }: { state: CharacterState; dispatch: React.Dispatch<CharacterAction> }) {
-  const [style, setStyle] = useState<SelectorStyle>('dreamcast');
+  const [style, setStyle] = useState<SelectorStyle>('gamecube');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Style toggle */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '8px 0' }}>
         {(['dreamcast', 'gamecube'] as SelectorStyle[]).map(s => (
           <button
@@ -220,8 +274,6 @@ export default function ClassStep({ state, dispatch }: { state: CharacterState; 
           </button>
         ))}
       </div>
-
-      {/* Selected style */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {style === 'dreamcast' ? (
           <DreamcastSelector state={state} dispatch={dispatch} />
