@@ -55,7 +55,8 @@ function StepIndicator({ current }: { current: number }) {
 
 export default function CharacterCreator() {
   const { state, dispatch, stepIndex, stepCount, canGoNext, canGoBack } = useCharacterState();
-  const showPreview = state.classId !== null;
+  // 3D preview only shows from appearance step onward (class step uses art panels)
+  const showPreview = state.classId !== null && state.step !== 'class';
 
   const renderStep = () => {
     switch (state.step) {
