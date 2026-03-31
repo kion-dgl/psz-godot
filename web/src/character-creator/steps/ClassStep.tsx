@@ -95,40 +95,45 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
 
   return (
     <div style={{ display: 'flex', flex: 1, gap: 0, overflow: 'hidden' }}>
-      {/* Left column: PSZ-style cream list with yellow highlight */}
+      {/* Left column: type labels + class list */}
       <div style={{
-        width: 220, flexShrink: 0,
+        width: 280, flexShrink: 0,
         display: 'flex', flexDirection: 'column',
-        background: 'rgba(0,0,0,0.25)',
+        background: 'rgba(0,0,0,0.2)',
         borderRight: '2px solid #8898a8',
         overflow: 'hidden',
-        padding: '6px',
       }}>
         {TYPE_ORDER.map(type => {
+          const color = TYPE_COLORS[type];
           const classes = ALL_CLASSES.filter(c => c.type === type);
           const isActiveType = activeType === type;
 
           return (
-            <div key={type} style={{ flex: classes.length, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {/* Type header — rounded pill, orange when active */}
+            <div key={type} style={{
+              flex: classes.length,
+              display: 'flex',
+              borderBottom: '1px solid #8898a8',
+            }}>
+              {/* Vertical type label */}
               <div style={{
-                padding: '3px 12px',
+                width: 32, flexShrink: 0,
                 background: isActiveType
-                  ? 'linear-gradient(to right, #f0a830, #e8c040, #f0a830)'
-                  : 'linear-gradient(to bottom, #e8e8f0, #c8c8d4)',
-                borderRadius: 12,
-                border: isActiveType ? '1px solid #c08020' : '1px solid #a0a0b0',
-                textAlign: 'center',
-                flexShrink: 0,
+                  ? `linear-gradient(to bottom, ${color}, ${color}cc)`
+                  : 'linear-gradient(to bottom, #b0b8c8, #8890a0)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRight: '1px solid #7888a0',
               }}>
                 <span style={{
-                  fontSize: 12, fontWeight: 700,
-                  color: isActiveType ? '#4a2800' : '#4a4a5a',
+                  writingMode: 'vertical-rl', textOrientation: 'mixed',
+                  fontSize: 12, fontWeight: 800, letterSpacing: 2,
+                  color: isActiveType ? '#fff' : '#4a4a5a',
+                  textShadow: isActiveType ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
+                  textTransform: 'uppercase',
                 }}>{type}</span>
               </div>
 
-              {/* Class items */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {/* Class rows */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 {classes.map(cls => {
                   const isSelected = state.classId === cls.id;
                   const isFocused = focusedId === cls.id;
@@ -140,16 +145,15 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
                       onMouseLeave={() => setHoveredClass(null)}
                       style={{
                         flex: 1,
-                        display: 'flex', alignItems: 'center', gap: 6,
+                        display: 'flex', alignItems: 'center', gap: 8,
                         padding: '0 10px',
                         cursor: 'pointer',
                         background: isSelected
                           ? 'linear-gradient(to right, #f0a830, #e8c040, #f0a830)'
                           : isFocused
-                            ? 'linear-gradient(to bottom, #f0f0f8, #e0e0ec)'
-                            : 'linear-gradient(to bottom, #e8e8f0, #d8d8e4)',
-                        borderRadius: 4,
-                        border: isSelected ? '1px solid #c08020' : '1px solid #b8b8c8',
+                            ? '#eaeaf4'
+                            : '#e0e0ec',
+                        borderBottom: '1px solid #c8c8d8',
                         transition: 'background 0.1s',
                       }}
                     >
@@ -157,14 +161,14 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
                         src={getClassArtPath(cls.id)}
                         alt=""
                         style={{
-                          width: 28, height: '75%',
+                          width: 30, height: '80%',
                           objectFit: 'cover', objectPosition: 'top center',
-                          borderRadius: 3, flexShrink: 0,
+                          borderRadius: 2, flexShrink: 0,
                         }}
                       />
                       <span style={{
-                        fontSize: 13, fontWeight: isSelected ? 700 : 500,
-                        color: isSelected ? '#3a2000' : '#3a3a4a',
+                        fontSize: 14, fontWeight: isSelected ? 700 : 500,
+                        color: isSelected ? '#3a2000' : '#2a2a3a',
                       }}>{cls.name}</span>
                     </div>
                   );
