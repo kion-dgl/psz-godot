@@ -96,23 +96,23 @@ export default function ClassStep({ state, dispatch }: { state: CharacterState; 
                 position: 'relative',
               }}
             >
-              {/* Collapsed: full-height art slivers */}
+              {/* Collapsed: vertical art slivers side by side */}
               {!isExpanded && (
                 <>
-                  {/* Stack class art vertically */}
+                  {/* Class art as vertical strips */}
                   <div style={{
                     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                    display: 'flex', flexDirection: 'column',
+                    display: 'flex', flexDirection: 'row',
                   }}>
                     {classes.map(cls => (
-                      <div key={cls.id} style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+                      <div key={cls.id} style={{ flex: 1, overflow: 'hidden' }}>
                         <img
                           src={getClassArtPath(cls.id)}
                           alt=""
                           style={{
                             width: '100%', height: '100%',
-                            objectFit: 'cover', objectPosition: 'top center',
-                            opacity: state.classId === cls.id ? 0.6 : 0.25,
+                            objectFit: 'cover', objectPosition: 'center top',
+                            opacity: state.classId === cls.id ? 0.6 : 0.2,
                             transition: 'opacity 0.2s',
                           }}
                         />
@@ -128,7 +128,7 @@ export default function ClassStep({ state, dispatch }: { state: CharacterState; 
                       writingMode: 'vertical-rl',
                       textOrientation: 'mixed',
                       fontSize: 14, fontWeight: 700, color,
-                      textShadow: '0 0 8px rgba(0,0,0,0.8)',
+                      textShadow: '0 0 10px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.7)',
                       letterSpacing: 2,
                     }}>
                       {type}
