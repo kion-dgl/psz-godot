@@ -23,9 +23,15 @@ export const BODY_COLORS = ['Red', 'Blue', 'Green', 'Blue & Red', 'Black & Red']
 export const CAST_LABELS = { head: 'Head Parts', hair: 'Body Color A', body: 'Body Color B', skin: 'Body Color C' };
 export const HUMAN_LABELS = { head: 'Head Type', hair: 'Hair Color', body: 'Costume Color', skin: 'Skin Tone' };
 
-/** Class character art path (webp, 250x282) */
+/** Class character art path */
 export function getClassArtPath(classId: string): string {
-  return assetUrl(`/assets/images/Psz_${classId}_solo.webp`);
+  // Map class IDs to image filenames (some have different naming)
+  const FILE_MAP: Record<string, string> = {
+    hucast: 'hucast', hucaseal: 'hucasteal',
+    racast: 'racast', racaseal: 'racasteal',
+  };
+  const filename = FILE_MAP[classId] || classId;
+  return assetUrl(`/assets/images/${filename}.png`);
 }
 
 /**
