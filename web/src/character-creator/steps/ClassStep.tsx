@@ -186,7 +186,9 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
             const count = activeClasses.length;
             // Spread based on class count — fewer classes get more space
             const spread = count <= 4 ? 180 : 130;
-            const offsetX = (i - (count - 1) / 2) * spread;
+            let offsetX = (i - (count - 1) / 2) * spread;
+            // HUnewearl posture adjustment
+            if (cls.id === 'hunewearl') offsetX -= 20;
             return (
               <img
                 key={cls.id}
