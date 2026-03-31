@@ -171,53 +171,48 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
         })}
       </div>
 
-      {/* Right panel: type name + group art + info */}
+      {/* Right panel: art + info overlay */}
       <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
+        flex: 1, position: 'relative',
         background: '#0a0a16', overflow: 'hidden',
       }}>
         {/* Class art — all type's classes shown, focused one highlighted */}
-        <div style={{
-          flex: 1, position: 'relative', overflow: 'hidden',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        }}>
-          {activeClasses.map((cls, i) => {
-            const isFocused = cls.id === focusedId;
-            const count = activeClasses.length;
-            // Spread based on class count — fewer classes get more space
-            const spread = count <= 4 ? 180 : 130;
-            let offsetX = (i - (count - 1) / 2) * spread;
-            // HUnewearl posture adjustment
-            if (cls.id === 'hunewearl') offsetX -= 40;
-            return (
-              <img
-                key={cls.id}
-                src={getClassArtPath(cls.id)}
-                alt={cls.name}
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  left: '50%',
-                  height: '85%',
-                  transform: `translateX(calc(-50% + ${offsetX}px))`,
-                  objectFit: 'contain',
-                  opacity: focusedId ? (isFocused ? 1 : 0.3) : 0.8,
-                  transition: 'opacity 0.2s, transform 0.2s',
-                  zIndex: isFocused ? 10 : 5 - Math.abs(i - (count - 1) / 2),
-                  filter: isFocused ? 'brightness(1.1)' : 'brightness(0.8)',
-                }}
-              />
-            );
-          })}
-        </div>
+        {activeClasses.map((cls, i) => {
+          const isFocused = cls.id === focusedId;
+          const count = activeClasses.length;
+          const spread = count <= 4 ? 180 : 130;
+          let offsetX = (i - (count - 1) / 2) * spread;
+          if (cls.id === 'hunewearl') offsetX -= 40;
+          return (
+            <img
+              key={cls.id}
+              src={getClassArtPath(cls.id)}
+              alt={cls.name}
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: '50%',
+                height: '85%',
+                transform: `translateX(calc(-50% + ${offsetX}px))`,
+                objectFit: 'contain',
+                opacity: focusedId ? (isFocused ? 1 : 0.3) : 0.8,
+                transition: 'opacity 0.2s, transform 0.2s',
+                zIndex: isFocused ? 10 : 5 - Math.abs(i - (count - 1) / 2),
+                filter: isFocused ? 'brightness(1.1)' : 'brightness(0.8)',
+              }}
+            />
+          );
+        })}
 
-        {/* Info box */}
+        {/* Info box — fixed at bottom, above portraits */}
         <div style={{
-          margin: '0 12px 12px',
+          position: 'absolute',
+          bottom: 12, left: 12, right: 12,
           padding: '10px 14px',
-          background: '#12122a',
+          background: 'rgba(10, 10, 26, 0.85)',
           border: `1px solid ${activeColor}44`,
           borderRadius: 6,
+          zIndex: 20,
         }}>
           {focusedCls ? (
             <>
