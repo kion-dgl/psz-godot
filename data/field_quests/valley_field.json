@@ -35,10 +35,41 @@
           "warp_edge": "",
           "path_order": 0,
           "objects": [
-            {"type": "enemy", "position": [2, 0, -4], "enemy_id": "lizard"},
-            {"type": "enemy", "position": [3, 0, -3], "enemy_id": "lizard"},
-            {"type": "enemy", "position": [1, 0, -3], "enemy_id": "lizard"},
-            {"type": "box", "position": [5, 0, -5]}
+            {
+              "type": "enemy",
+              "position": [
+                2,
+                0,
+                -4
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                -3
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1,
+                0,
+                -3
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "box",
+              "position": [
+                5,
+                0,
+                -5
+              ]
+            }
           ]
         },
         {
@@ -2571,24 +2602,6 @@
                 0
               ],
               "enemy_id": "reyburn"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -11,
-                0,
-                6.3
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                10,
-                0,
-                8
-              ],
-              "enemy_id": "ghowl"
             }
           ]
         }
