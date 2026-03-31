@@ -34,22 +34,41 @@ export default function CharacterCreator() {
       overflow: 'hidden',
       position: 'relative',
     }}>
-      {/* Static white particles overlay */}
+      {/* Drifting white particles overlay */}
+      <style>{`
+        @keyframes particleDrift {
+          0% { transform: translate(0, 0); }
+          25% { transform: translate(var(--dx), var(--dy)); }
+          50% { transform: translate(calc(var(--dx) * -0.5), calc(var(--dy) * 1.5)); }
+          75% { transform: translate(calc(var(--dx) * 0.8), calc(var(--dy) * -0.3)); }
+          100% { transform: translate(0, 0); }
+        }
+      `}</style>
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
         pointerEvents: 'none', zIndex: 0, overflow: 'hidden',
       }}>
-        {Array.from({ length: 150 }).map((_, i) => (
-          <div key={i} style={{
-            position: 'absolute',
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            width: Math.random() * 3 + 1,
-            height: Math.random() * 3 + 1,
-            borderRadius: '50%',
-            background: `rgba(255, 255, 255, ${Math.random() * 0.4 + 0.15})`,
-          }} />
-        ))}
+        {Array.from({ length: 150 }).map((_, i) => {
+          const size = Math.random() * 3 + 1;
+          const dx = (Math.random() - 0.5) * 40;
+          const dy = (Math.random() - 0.5) * 30;
+          const duration = 15 + Math.random() * 25;
+          const delay = Math.random() * -duration;
+          return (
+            <div key={i} style={{
+              position: 'absolute',
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: size,
+              height: size,
+              borderRadius: '50%',
+              background: `rgba(255, 255, 255, ${Math.random() * 0.4 + 0.15})`,
+              '--dx': `${dx}px`,
+              '--dy': `${dy}px`,
+              animation: `particleDrift ${duration}s ${delay}s ease-in-out infinite`,
+            } as React.CSSProperties} />
+          );
+        })}
       </div>
 
       {/* Title bar — metallic grey */}
@@ -81,7 +100,7 @@ export default function CharacterCreator() {
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         <div style={{
-          width: showPreview ? 260 : 1280,
+          width: showPreview ? 300 : 1280,
           flexShrink: 0,
           display: 'flex',
           overflow: 'hidden',
