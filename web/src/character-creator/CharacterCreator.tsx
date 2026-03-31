@@ -32,7 +32,26 @@ export default function CharacterCreator() {
       background: 'linear-gradient(to bottom, #a8c8e8, #7aa8d0, #90b8dc)',
       color: '#1a2a3a',
       overflow: 'hidden',
+      position: 'relative',
     }}>
+      {/* Static white particles overlay */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        pointerEvents: 'none', zIndex: 0, overflow: 'hidden',
+      }}>
+        {Array.from({ length: 150 }).map((_, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            width: Math.random() * 3 + 1,
+            height: Math.random() * 3 + 1,
+            borderRadius: '50%',
+            background: `rgba(255, 255, 255, ${Math.random() * 0.4 + 0.15})`,
+          }} />
+        ))}
+      </div>
+
       {/* Title bar — metallic grey */}
       <div style={{
         height: 44,
@@ -41,6 +60,7 @@ export default function CharacterCreator() {
         borderBottom: '2px solid #686c78',
         position: 'relative',
         flexShrink: 0,
+        zIndex: 1,
       }}>
         <span style={{
           fontSize: 22,
@@ -59,7 +79,7 @@ export default function CharacterCreator() {
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', position: 'relative', zIndex: 1 }}>
         <div style={{
           width: showPreview ? 380 : 1280,
           flexShrink: 0,
@@ -87,6 +107,7 @@ export default function CharacterCreator() {
         height: 40,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 20px',
+        zIndex: 1,
         background: 'linear-gradient(to top, #888c98, #a0a4b0, #b8bcc8)',
         borderTop: '2px solid #686c78',
         flexShrink: 0,
