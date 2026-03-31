@@ -20,4 +20,4 @@ resist_ice = 16
 resist_lightning = 16
 resist_light = 16
 resist_dark = 16
-usable_by = PackedStringArray()
+usable_by = PackedStringArray("HUnewm", "HUnewearl", "FOmar", "FOmarl", "FOnewm", "FOnewearl")
