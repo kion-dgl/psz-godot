@@ -42,6 +42,10 @@ enum BehaviorType {
 ## 3D model ID for loading
 @export var model_id: String = ""
 
+## Animation source model — load animations from this model instead of model_id
+## Use for rare variants that share animations with their normal counterpart
+@export var animation_model_id: String = ""
+
 # ============================================================================
 # COMBAT STATS (not in psz-sketch, designed for Godot)
 # ============================================================================

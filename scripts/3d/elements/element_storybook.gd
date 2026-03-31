@@ -430,6 +430,7 @@ func _cycle_state(dir: int) -> void:
 		return
 
 	_state_cursor = (_state_cursor + dir + states.size()) % states.size()
+	# Debug logging removed after gate fix validated
 	if _current_element:
 		_current_element.set_state(states[_state_cursor])
 	_refresh_ui()

@@ -62,6 +62,7 @@ func _build_options_menu() -> void:
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
+		"Combo Timing: %s" % (on if DebugConfig.show_combo_timing else off),
 		"Time + Room: %s" % (on if DebugConfig.show_time_room else off),
 		"Weapon Test",
 	]
@@ -99,6 +100,8 @@ func _on_menu_selected(index: int) -> void:
 			DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
 		elif item.begins_with("Hitboxes:"):
 			DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		elif item.begins_with("Combo Timing:"):
+			DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
 		elif item == "Weapon Test":
 			SceneManager.goto_scene("res://scenes/3d/test/weapon_test.tscn")
 			return

@@ -20,6 +20,10 @@ var hits_per_target: int = 1
 ## Who owns this hitbox (used to prevent self-damage)
 var owner_node: Node3D
 
+## Element for status effect procs (set by special attacks)
+var element: String = ""
+var element_level: int = 0
+
 ## Track what we've already hit this attack (prevent multi-hit)
 var _hit_targets: Array[Node3D] = []
 
@@ -59,7 +63,7 @@ func _on_area_entered(area: Area3D) -> void:
 
 		# Deal damage (multi-hit: apply damage multiple times)
 		for _i in range(hits_per_target):
-			hurtbox.take_hit(damage, knockback_dir * knockback, accuracy)
+			hurtbox.take_hit(damage, knockback_dir * knockback, accuracy, element, element_level)
 
 
 ## Enable the hitbox (call when attack starts)

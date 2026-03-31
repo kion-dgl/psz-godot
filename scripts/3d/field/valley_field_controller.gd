@@ -72,6 +72,7 @@ var _spawn_edge: String = ""
 var _rotation_deg: int = 0
 var _visited_cells: Dictionary = {}  # cell_pos → true
 var _key_hud_label: Label
+var _gate_nudge_mode: bool = false
 var _key_hud_icon: Label
 var _key_hud_panel: PanelContainer
 var _total_keys_in_field: int = 0
@@ -2242,8 +2243,8 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 		_room_enemies.append(enemy)
 		var spawn_pos := pos
 		var spawn_id := enemy_id
-		enemy.died.connect(func(_e: EnemyBase) -> void:
-			_spawn_enemy_drops(spawn_pos, spawn_id)
+		enemy.died.connect(func(e: EnemyBase) -> void:
+			_spawn_enemy_drops(e.global_position, spawn_id)
 			_check_room_clear()
 		)
 		print("[CellObjects] EnemyBase '%s' at %s" % [enemy_id, pos])
@@ -2254,10 +2255,11 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 		_map_root.add_child(enemy)
 		enemy.position = pos
 		_room_enemies.append(enemy)
-		var spawn_pos := pos
+		var enemy_ref := enemy
 		var spawn_id := enemy_id
 		enemy.defeated.connect(func() -> void:
-			_spawn_enemy_drops(spawn_pos, spawn_id)
+			var drop_pos: Vector3 = enemy_ref.global_position if is_instance_valid(enemy_ref) else pos
+			_spawn_enemy_drops(drop_pos, spawn_id)
 			_check_room_clear()
 		)
 		print("[CellObjects] EnemySpawn '%s' at %s (no registry data)" % [enemy_id, pos])
@@ -3087,5 +3089,64 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F9:
 				_toggle_all_collision()
 				get_viewport().set_input_as_handled()
-			# K key kill-all removed — use "Kill All" action palette slot instead
+			KEY_F10:
+				_gate_nudge_mode = not _gate_nudge_mode
+				print("[GateNudge] Mode %s" % ("ON — use arrows to nudge nearest gate, F10 to exit" if _gate_nudge_mode else "OFF"))
 				get_viewport().set_input_as_handled()
+
+	# Gate nudge mode: arrow keys move nearest gate
+	if _gate_nudge_mode and event is InputEventKey and event.pressed:
+		var nudge := Vector3.ZERO
+		var step := 0.25
+		match event.keycode:
+			KEY_UP:
+				nudge = Vector3(0, 0, -step)
+			KEY_DOWN:
+				nudge = Vector3(0, 0, step)
+			KEY_LEFT:
+				nudge = Vector3(-step, 0, 0)
+			KEY_RIGHT:
+				nudge = Vector3(step, 0, 0)
+			KEY_PAGEUP:
+				nudge = Vector3(0, step, 0)
+			KEY_PAGEDOWN:
+				nudge = Vector3(0, -step, 0)
+		if nudge.length() > 0:
+			_nudge_nearest_gate(nudge)
+			get_viewport().set_input_as_handled()
+
+
+func _nudge_nearest_gate(nudge: Vector3) -> void:
+	var player_pos: Vector3 = player.global_position if player else Vector3.ZERO
+	var nearest: Node3D = null
+	var nearest_dist := 999.0
+
+	# Find all gates and key gates in the scene
+	for child in _map_root.get_children():
+		if child is Gate or child is KeyGate:
+			var dist: float = child.global_position.distance_to(player_pos)
+			if dist < nearest_dist:
+				nearest_dist = dist
+				nearest = child
+		# Also check nested children (gates might be deeper)
+		for sub in child.get_children():
+			if sub is Gate or sub is KeyGate:
+				var dist: float = sub.global_position.distance_to(player_pos)
+				if dist < nearest_dist:
+					nearest_dist = dist
+					nearest = sub
+
+	if nearest == null:
+		print("[GateNudge] No gates found")
+		return
+
+	nearest.position += nudge
+	# Also move collision body if it exists
+	if nearest.get("collision_body") and is_instance_valid(nearest.collision_body):
+		nearest.collision_body.position = Vector3.ZERO  # Reset relative pos
+
+	var gate_name: String = nearest.name
+	var cell_pos: String = str(_current_cell.get("pos", ""))
+	print("[GateNudge] %s at cell %s → pos=(%.2f, %.2f, %.2f)" % [
+		gate_name, cell_pos,
+		nearest.position.x, nearest.position.y, nearest.position.z])

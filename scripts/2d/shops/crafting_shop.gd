@@ -7,13 +7,25 @@ const TAB_NAMES := ["Craft", "Boards"]
 const PHOTON_OPTIONS := ["Im Photon", "El Photon", "Ban Photon", "Ray Photon", "Zon Photon", "Megi Photon", "Gra Photon"]
 const PHOTON_IDS := ["im_photon", "el_photon", "ban_photon", "ray_photon", "zon_photon", "megi_photon", "gra_photon"]
 
-## Photon ID → element name + special effect description
+## Photon ID → element + special attack tiers (tier 1-4, rolled by weapon rarity)
 const PHOTON_ELEMENT := {
-	"ban_photon": {"name": "Fire", "effect": "Burn (damage over time)"},
-	"ray_photon": {"name": "Ice", "effect": "Freeze (immobilize)"},
-	"zon_photon": {"name": "Lightning", "effect": "Stun (skip turn)"},
-	"megi_photon": {"name": "Dark", "effect": "Devil (reduce to 1/4 HP)"},
-	"gra_photon": {"name": "Light", "effect": "Sleep (skip turns, breaks on hit)"},
+	"ban_photon": {"element": "fire", "tiers": ["Heat", "Fire", "Flame", "Burning"], "desc": "Fire bonus damage"},
+	"ray_photon": {"element": "ice", "tiers": ["Ice", "Frost", "Freeze", "Blizzard"], "desc": "Chance to freeze"},
+	"zon_photon": {"element": "lightning", "tiers": ["Shock", "Thunder", "Storm", "Tempest"], "desc": "Lightning bonus damage"},
+	"megi_photon": {"element": "dark", "tiers": ["Dim", "Shadow", "Dark", "Hell"], "desc": "Chance to instant kill"},
+	"gra_photon": {"element": "light", "tiers": ["Heart", "Mind", "Soul", "Geist"], "desc": "TP/PP drain on hit"},
+	"el_photon": {"element": "none", "tiers": ["Draw", "Drain", "Fill", "Gush"], "desc": "HP drain on hit"},
+}
+
+## Tier roll weights by weapon rarity (index 0-3 = tier 1-4)
+const TIER_WEIGHTS := {
+	1: [70, 25, 5, 0],
+	2: [55, 30, 12, 3],
+	3: [40, 35, 18, 7],
+	4: [25, 35, 25, 15],
+	5: [15, 30, 30, 25],
+	6: [5, 20, 40, 35],
+	7: [0, 10, 40, 50],
 }
 
 ## Enemy type names for attribute display
@@ -316,26 +328,40 @@ func _execute_craft(recipe: RecipeBoardData, photon_id: String, is_default: bool
 		hint_label.text = "Inventory full!"
 		return
 
-	# Store element in weapon_elements for display prefix (backwards compat)
-	if PHOTON_ELEMENT.has(photon_id):
-		if not character.has("weapon_elements"):
-			character["weapon_elements"] = {}
-		character["weapon_elements"][inst_id] = photon_id
-
-	# Roll and store weapon stats
+	# Roll special attack tier and element from photon
 	var rolled: Dictionary = _roll_attributes(photon_id)
 	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
 	var w_rarity: int = int(weapon.rarity) if weapon else 1
 	var element_info: Dictionary = PHOTON_ELEMENT.get(photon_id, {})
-	var element_name: String = element_info.get("name", "").to_lower() if not element_info.is_empty() else ""
-	var element_level: int = _get_element_level(w_rarity) if not element_name.is_empty() else 0
+	var element_name: String = str(element_info.get("element", ""))
+	var special_prefix := ""
+	var special_tier := 0
+
+	if not element_info.is_empty() and element_info.has("tiers"):
+		special_tier = _roll_special_tier(w_rarity)
+		var tiers: Array = element_info.tiers
+		if special_tier < tiers.size():
+			special_prefix = str(tiers[special_tier])
+
+	# Store prefix in weapon_elements for display name
+	if not special_prefix.is_empty():
+		if not character.has("weapon_elements"):
+			character["weapon_elements"] = {}
+		character["weapon_elements"][inst_id] = photon_id
+
+	if not character.has("weapon_specials"):
+		character["weapon_specials"] = {}
+	if not special_prefix.is_empty():
+		character["weapon_specials"][inst_id] = {"prefix": special_prefix, "tier": special_tier}
+
+	print("[Craft] photon=%s element=%s special=%s tier=%d rolled=%s" % [photon_id, element_name, special_prefix, special_tier, rolled])
 
 	if not character.has("weapon_stats"):
 		character["weapon_stats"] = {}
 	character["weapon_stats"][inst_id] = {
 		"photon_id": photon_id,
 		"element": element_name,
-		"element_level": element_level,
+		"element_level": special_tier + 1,
 		"native_pct": rolled["native"],
 		"beast_pct": rolled["beast"],
 		"machine_pct": rolled["machine"],
@@ -353,6 +379,20 @@ func _execute_craft(recipe: RecipeBoardData, photon_id: String, is_default: bool
 	_build_lists()
 	_selected_index = mini(_selected_index, maxi(_craft_recipes.size() - 1, 0))
 	_show_result_popup(inst_id, photon_id, recipe.craft_cost)
+
+
+func _roll_special_tier(rarity: int) -> int:
+	var weights: Array = TIER_WEIGHTS.get(clampi(rarity, 1, 7), TIER_WEIGHTS[1])
+	var total := 0
+	for w in weights:
+		total += int(w)
+	var roll := randi_range(0, total - 1)
+	var cumulative := 0
+	for i in range(weights.size()):
+		cumulative += int(weights[i])
+		if roll < cumulative:
+			return i
+	return 0
 
 
 func _roll_attributes(photon_id: String) -> Dictionary:
@@ -390,6 +430,13 @@ func _show_result_popup(weapon_id: String, photon_id: String, cost: int) -> void
 	_showing_result = true
 	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
 	var weapon_name: String = weapon.name if weapon else Inventory.get_base_id(weapon_id)
+	# Prepend special prefix
+	var character_for_name = CharacterManager.get_active_character()
+	if character_for_name:
+		var special: Dictionary = character_for_name.get("weapon_specials", {}).get(weapon_id, {})
+		var prefix: String = str(special.get("prefix", ""))
+		if not prefix.is_empty():
+			weapon_name = prefix + " " + weapon_name
 
 	# Build popup panel
 	_result_popup = PanelContainer.new()
@@ -447,14 +494,16 @@ func _show_result_popup(weapon_id: String, photon_id: String, cost: int) -> void
 		else:
 			_add_spec(vbox, "Req. ATK", "%d" % weapon.attack_base)
 
-		# Element special effect from photon
+		# Special attack from photon
 		var photon_info: Dictionary = PHOTON_ELEMENT.get(photon_id, {})
 		if not photon_info.is_empty():
-			var character_for_stats = CharacterManager.get_active_character()
-			var ws: Dictionary = character_for_stats.get("weapon_stats", {}).get(weapon_id, {}) if character_for_stats else {}
-			var el_level: int = int(ws.get("element_level", 1))
-			_add_spec(vbox, "Element", "%s Lv.%d" % [photon_info["name"], el_level], PszStyle.TEXT_SUCCESS)
-			_add_spec(vbox, "Special", photon_info["effect"], PszStyle.TEXT_WARNING)
+			var char_special: Dictionary = character_for_name.get("weapon_specials", {}).get(weapon_id, {}) if character_for_name else {}
+			var sp_prefix: String = str(char_special.get("prefix", ""))
+			var sp_tier: int = int(char_special.get("tier", 0))
+			if not sp_prefix.is_empty():
+				_add_spec(vbox, "Special", "%s (Tier %d)" % [sp_prefix, sp_tier + 1], PszStyle.TEXT_SUCCESS)
+			_add_spec(vbox, "Element", str(photon_info.get("element", "")).capitalize(), PszStyle.TEXT_WARNING)
+			_add_spec(vbox, "Effect", str(photon_info.get("desc", "")), PszStyle.TEXT_MUTED)
 
 		# Hit attributes vs enemy types (rolled values)
 		var sep2 := HSeparator.new()

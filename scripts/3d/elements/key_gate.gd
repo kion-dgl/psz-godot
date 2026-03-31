@@ -73,14 +73,17 @@ func _update_animation(delta: float) -> void:
 
 
 func _apply_state() -> void:
+	# Toggle laser visibility — preserve original alpha scissor mode
 	if _laser_material:
 		match element_state:
 			"locked":
-				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 				_laser_material.albedo_color.a = 1.0
+				_laser_material.alpha_scissor_threshold = 0.5
 			"open":
-				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 				_laser_material.albedo_color.a = 0.0
+				_laser_material.alpha_scissor_threshold = 1.0
 
 	if collision_body:
 		match element_state:

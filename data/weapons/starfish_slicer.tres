@@ -22,4 +22,6 @@ photon_arts = [{"name": "Say Goodbye", "attack_mod": 100, "accuracy_mod": 210, "
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
 pso_world_id = 421
 model_id = "wslr03"
+glb_path = "res://assets/weapons/Slicer.glb"
+glb_scale = 0.09
 variant_id = ""
