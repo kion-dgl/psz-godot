@@ -3117,7 +3117,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _nudge_nearest_gate(nudge: Vector3) -> void:
-	var player_pos: Vector3 = _player.global_position if _player else Vector3.ZERO
+	var player_pos: Vector3 = player.global_position if player else Vector3.ZERO
 	var nearest: Node3D = null
 	var nearest_dist := 999.0
 
