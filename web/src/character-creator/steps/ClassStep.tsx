@@ -183,6 +183,8 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
           const spread = count <= 4 ? 180 : 130;
           let offsetX = (i - (count - 1) / 2) * spread;
           if (cls.id === 'hunewearl') offsetX -= 40;
+          if (cls.id === 'racast') offsetX -= 30;
+          if (cls.id === 'racaseal') offsetX += 20;
           return (
             <img
               key={cls.id}
