@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="PSZ Godot"
-config/version="0.9.0"
+config/version="0.10.0"
 run/main_scene="res://scenes/2d/title.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
@@ -218,5 +218,4 @@ quest_log={
 textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-textures/vram_compression/import_etc2_astc=false
 textures/vram_compression/import_s3tc_bptc=true
