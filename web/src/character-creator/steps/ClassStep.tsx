@@ -157,19 +157,27 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
                         transition: 'background 0.1s',
                       }}
                     >
-                      <img
-                        src={getClassArtPath(cls.id)}
-                        alt=""
-                        style={{
-                          width: 30, height: '80%',
-                          objectFit: 'cover', objectPosition: 'top center',
-                          borderRadius: 2, flexShrink: 0,
-                        }}
-                      />
                       <span style={{
+                        flex: 1,
                         fontSize: 14, fontWeight: isSelected ? 700 : 500,
                         color: isSelected ? '#3a2000' : '#2a2a3a',
                       }}>{cls.name}</span>
+                      {/* Face slice on the right */}
+                      <div style={{
+                        width: 50, height: '100%', flexShrink: 0,
+                        overflow: 'hidden', position: 'relative',
+                      }}>
+                        <img
+                          src={getClassArtPath(cls.id)}
+                          alt=""
+                          style={{
+                            position: 'absolute',
+                            top: '-10%', left: '-20%',
+                            width: '160%', height: '140%',
+                            objectFit: 'cover', objectPosition: 'top center',
+                          }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
