@@ -1,136 +1,176 @@
-import type { CharacterState, CharacterAction } from '../hooks/useCharacterState';
+import { useState } from 'react';
 import { ALL_CLASSES, type ClassInfo } from '../data/classData';
+import type { CharacterState, CharacterAction } from '../hooks/useCharacterState';
 
-interface Props {
-  state: CharacterState;
-  dispatch: React.Dispatch<CharacterAction>;
-}
-
+const TYPE_ORDER = ['Hunter', 'Ranger', 'Force'] as const;
 const TYPE_COLORS: Record<string, string> = {
   Hunter: '#ff6b6b',
   Ranger: '#51cf66',
-  Force: '#748ffc',
+  Force: '#6b8afd',
+};
+const TYPE_DESCRIPTIONS: Record<string, string> = {
+  Hunter: 'Melee combat specialists with high HP and attack power.',
+  Ranger: 'Precision fighters with the highest accuracy and ranged weapons.',
+  Force: 'Technique masters with powerful spells and high PP.',
 };
 
-const STAT_MAX: Record<string, number> = {
-  hp: 100,
-  pp: 110,
-  attack: 65,
-  defense: 15,
-  accuracy: 180,
-  evasion: 25,
-  technique: 60,
-};
-
+const STAT_KEYS = ['hp', 'pp', 'attack', 'defense', 'accuracy', 'evasion', 'technique'] as const;
 const STAT_LABELS: Record<string, string> = {
-  hp: 'HP',
-  pp: 'PP',
-  attack: 'ATK',
-  defense: 'DEF',
-  accuracy: 'ACC',
-  evasion: 'EVA',
-  technique: 'TEC',
+  hp: 'HP', pp: 'PP', attack: 'ATK', defense: 'DEF',
+  accuracy: 'ACC', evasion: 'EVA', technique: 'TEC',
 };
+
+const STAT_MAX: Record<string, number> = {};
+for (const key of STAT_KEYS) {
+  STAT_MAX[key] = Math.max(...ALL_CLASSES.map(c => c.stats[key]));
+}
 
 function StatBar({ label, value, max }: { label: string; value: number; max: number }) {
-  const pct = Math.min(100, (value / max) * 100);
+  const pct = (value / max) * 100;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
-      <span style={{ color: '#888', width: 28, textAlign: 'right', flexShrink: 0 }}>{label}</span>
-      <div style={{ flex: 1, height: 6, background: '#1a1a2e', borderRadius: 3, overflow: 'hidden' }}>
+      <span style={{ width: 28, color: '#888', textAlign: 'right' }}>{label}</span>
+      <div style={{ flex: 1, height: 6, background: '#1a1a2e', borderRadius: 3 }}>
         <div style={{ width: `${pct}%`, height: '100%', background: '#6b8afd', borderRadius: 3, transition: 'width 0.2s' }} />
       </div>
-      <span style={{ color: '#aaa', width: 28, fontSize: 10, flexShrink: 0 }}>{value}</span>
+      <span style={{ width: 28, color: '#aaa', textAlign: 'right' }}>{value}</span>
     </div>
   );
 }
 
 function ClassCard({ cls, selected, onClick }: { cls: ClassInfo; selected: boolean; onClick: () => void }) {
-  const typeColor = TYPE_COLORS[cls.type] || '#888';
   return (
-    <button
+    <div
       onClick={onClick}
       style={{
-        background: selected ? '#2a2a5e' : '#16162a',
-        border: selected ? '2px solid #6b8afd' : '2px solid #2a2a4a',
-        borderRadius: 8,
-        padding: '12px 14px',
-        textAlign: 'left',
+        padding: '8px 12px',
+        margin: '2px 0',
+        background: selected ? '#2a3a6a' : '#1e1e3a',
+        border: selected ? '1px solid #6b8afd' : '1px solid transparent',
+        borderRadius: 6,
         cursor: 'pointer',
-        transition: 'border-color 0.15s, background 0.15s',
-        width: '100%',
+        transition: 'all 0.15s',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <span style={{ color: '#e0e0e0', fontSize: 14, fontWeight: 600 }}>{cls.name}</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#e0e0e0' }}>{cls.name}</span>
         <span style={{
-          fontSize: 10,
-          padding: '1px 6px',
-          borderRadius: 3,
-          background: typeColor + '22',
-          color: typeColor,
-          fontWeight: 600,
-        }}>
-          {cls.type}
-        </span>
-        <span style={{
-          fontSize: 10,
-          padding: '1px 6px',
-          borderRadius: 3,
-          background: cls.gender === 'Male' ? '#4488ff22' : '#ff448822',
-          color: cls.gender === 'Male' ? '#6699ff' : '#ff6699',
-        }}>
-          {cls.gender}
-        </span>
+          fontSize: 10, padding: '1px 6px', borderRadius: 3,
+          background: cls.gender === 'Male' ? '#2a4a8a' : '#6a2a5a',
+          color: cls.gender === 'Male' ? '#88aaff' : '#dd88cc',
+        }}>{cls.gender === 'Male' ? '♂' : '♀'}</span>
+        <span style={{ fontSize: 10, color: '#666' }}>{cls.race}</span>
       </div>
-      {cls.bonuses.length > 0 && (
-        <div style={{ fontSize: 11, color: '#8888cc', marginBottom: 6 }}>
-          {cls.bonuses.join(' / ')}
-        </div>
-      )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {Object.entries(cls.stats).map(([key, value]) => (
-          <StatBar key={key} label={STAT_LABELS[key] || key} value={value} max={STAT_MAX[key] || 200} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {STAT_KEYS.map(key => (
+          <StatBar key={key} label={STAT_LABELS[key]} value={cls.stats[key]} max={STAT_MAX[key]} />
         ))}
       </div>
-    </button>
+      {cls.bonuses.length > 0 && (
+        <div style={{ marginTop: 4, fontSize: 10, color: '#8a8' }}>
+          {cls.bonuses.join(' · ')}
+        </div>
+      )}
+    </div>
   );
 }
 
-export default function ClassStep({ state, dispatch }: Props) {
-  if (!state.race) return null;
+export default function ClassStep({ state, dispatch }: { state: CharacterState; dispatch: React.Dispatch<CharacterAction> }) {
+  const [expandedType, setExpandedType] = useState<string | null>(null);
 
-  const filtered = ALL_CLASSES.filter((c) => c.race === state.race);
-  const grouped: Record<string, ClassInfo[]> = {};
-  for (const cls of filtered) {
-    if (!grouped[cls.type]) grouped[cls.type] = [];
-    grouped[cls.type].push(cls);
+  const classesByType: Record<string, ClassInfo[]> = {};
+  for (const type of TYPE_ORDER) {
+    classesByType[type] = ALL_CLASSES.filter(c => c.type === type);
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <h2 style={{ margin: 0, color: '#e0e0e0', fontSize: 20 }}>Choose Your Class</h2>
-      <p style={{ margin: 0, color: '#888', fontSize: 13 }}>
-        {state.race} classes available. Select one to see their stats.
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 4, overflowY: 'auto', maxHeight: 'calc(100vh - 280px)' }}>
-        {Object.entries(grouped).map(([type, classes]) => (
-          <div key={type}>
-            <div style={{ color: TYPE_COLORS[type] || '#888', fontSize: 12, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
-              {type}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 0, height: '100%' }}>
+      <div style={{ fontSize: 13, color: '#888', marginBottom: 8, textAlign: 'center' }}>
+        Select your class
+      </div>
+      <div style={{ display: 'flex', flex: 1, gap: 0, overflow: 'hidden' }}>
+        {TYPE_ORDER.map(type => {
+          const isExpanded = expandedType === type;
+          const color = TYPE_COLORS[type];
+          const classes = classesByType[type];
+
+          return (
+            <div
+              key={type}
+              onClick={() => !isExpanded && setExpandedType(type)}
+              style={{
+                flex: isExpanded ? 4 : 1,
+                display: 'flex',
+                flexDirection: 'column',
+                background: isExpanded ? '#16162a' : '#1a1a2e',
+                borderLeft: `3px solid ${color}`,
+                cursor: isExpanded ? 'default' : 'pointer',
+                transition: 'flex 0.3s ease',
+                overflow: 'hidden',
+                minWidth: 0,
+              }}
+            >
+              {/* Type header */}
+              <div
+                onClick={(e) => {
+                  if (isExpanded) { e.stopPropagation(); setExpandedType(null); }
+                }}
+                style={{
+                  padding: isExpanded ? '10px 12px' : '10px 6px',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{
+                  fontSize: isExpanded ? 16 : 13,
+                  fontWeight: 700,
+                  color,
+                  writingMode: isExpanded ? 'horizontal-tb' : 'vertical-rl',
+                  textOrientation: 'mixed',
+                  transition: 'font-size 0.2s',
+                }}>
+                  {type}
+                </div>
+                {isExpanded && (
+                  <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>
+                    {TYPE_DESCRIPTIONS[type]}
+                  </div>
+                )}
+              </div>
+
+              {/* Expanded: class cards */}
+              {isExpanded && (
+                <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 8px 8px' }}>
+                  {classes.map(cls => (
+                    <ClassCard
+                      key={cls.id}
+                      cls={cls}
+                      selected={state.classId === cls.id}
+                      onClick={() => dispatch({ type: 'SET_CLASS', classId: cls.id })}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Collapsed: vertical class names */}
+              {!isExpanded && (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '8px 2px' }}>
+                  {classes.map(cls => (
+                    <div key={cls.id} style={{
+                      fontSize: 9,
+                      color: state.classId === cls.id ? '#6b8afd' : '#555',
+                      fontWeight: state.classId === cls.id ? 700 : 400,
+                      writingMode: 'vertical-rl',
+                      textOrientation: 'mixed',
+                    }}>
+                      {cls.name}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {classes.map((cls) => (
-                <ClassCard
-                  key={cls.id}
-                  cls={cls}
-                  selected={state.classId === cls.id}
-                  onClick={() => dispatch({ type: 'SET_CLASS', classId: cls.id })}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
