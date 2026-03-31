@@ -25,7 +25,7 @@ function ArrowSelector({ label, current, total, isActive, onPrev, onNext, onClic
       style={{
         display: 'flex',
         alignItems: 'center',
-        padding: '8px 14px',
+        padding: '12px 14px',
         background: isActive
           ? 'linear-gradient(to right, #f0a830, #e8c040, #f0a830)'
           : 'linear-gradient(to bottom, #e8e8f0, #d8d8e4)',
@@ -84,11 +84,13 @@ export default function AppearanceStep({ state, dispatch }: Props) {
 
   return (
     <div style={{
-      display: 'flex', flexDirection: 'column', gap: 6,
-      padding: '16px',
+      display: 'flex', flexDirection: 'column',
+      justifyContent: 'center',
+      padding: '20px 12px',
       height: '100%',
+      background: 'rgba(0,0,0,0.15)',
     }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <ArrowSelector
           label={labels.head}
           current={state.variationIndex}

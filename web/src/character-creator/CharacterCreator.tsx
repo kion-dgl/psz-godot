@@ -61,7 +61,7 @@ export default function CharacterCreator() {
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         <div style={{
-          width: showPreview ? 500 : 1280,
+          width: showPreview ? 380 : 1280,
           flexShrink: 0,
           display: 'flex',
           overflow: 'hidden',
@@ -70,7 +70,7 @@ export default function CharacterCreator() {
         </div>
 
         {showPreview && (
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, background: 'transparent' }}>
             <CharacterPreview
               classId={state.classId}
               variationIndex={state.variationIndex}
