@@ -408,36 +408,9 @@ function PszSelector({ state, dispatch }: { state: CharacterState; dispatch: Rea
 // ── Main ClassStep ──────────────────────────────────────────────────────────
 
 export default function ClassStep({ state, dispatch }: { state: CharacterState; dispatch: React.Dispatch<CharacterAction> }) {
-  const [style, setStyle] = useState<SelectorStyle>('gamecube');
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 8, padding: '8px 0' }}>
-        {(['dreamcast', 'gamecube', 'psz'] as SelectorStyle[]).map(s => (
-          <button
-            key={s}
-            onClick={() => setStyle(s)}
-            style={{
-              padding: '4px 14px',
-              background: style === s ? '#6b8afd' : '#2a2a4a',
-              border: 'none',
-              borderRadius: 4,
-              color: style === s ? '#fff' : '#888',
-              fontSize: 11,
-              fontWeight: style === s ? 600 : 400,
-              cursor: 'pointer',
-              textTransform: 'capitalize',
-            }}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {style === 'dreamcast' && <DreamcastSelector state={state} dispatch={dispatch} />}
-        {style === 'gamecube' && <GamecubeSelector state={state} dispatch={dispatch} />}
-        {style === 'psz' && <PszSelector state={state} dispatch={dispatch} />}
-      </div>
+    <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <GamecubeSelector state={state} dispatch={dispatch} />
     </div>
   );
 }

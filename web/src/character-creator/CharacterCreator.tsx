@@ -69,12 +69,20 @@ export default function CharacterCreator() {
 
   return (
     <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      height: '100%', background: '#0a0a16',
+    }}>
+    {/* Fixed 720p viewport */}
+    <div style={{
+      width: 1280,
+      height: 720,
       display: 'flex',
       flexDirection: 'column',
-      height: '100%',
       background: '#1a1a2e',
       color: '#e0e0e0',
       overflow: 'hidden',
+      borderRadius: 4,
+      boxShadow: '0 0 40px rgba(0,0,0,0.5)',
     }}>
       {/* Step indicator */}
       <div style={{ padding: '8px 24px', borderBottom: '1px solid #2a2a4a', background: '#16162a' }}>
@@ -162,6 +170,7 @@ export default function CharacterCreator() {
           <div style={{ width: 74 }} />
         )}
       </div>
+    </div>
     </div>
   );
 }
