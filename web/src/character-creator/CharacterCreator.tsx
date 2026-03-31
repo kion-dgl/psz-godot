@@ -90,7 +90,11 @@ export default function CharacterCreator() {
         </div>
 
         {showPreview && (
-          <div style={{ flex: 1, background: 'transparent' }}>
+          <div style={{
+            flex: 1, background: 'transparent',
+            position: 'relative',
+            left: -80, top: 40,
+          }}>
             <CharacterPreview
               classId={state.classId}
               variationIndex={state.variationIndex}
