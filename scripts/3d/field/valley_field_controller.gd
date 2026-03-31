@@ -3121,32 +3121,24 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 	var nearest: Node3D = null
 	var nearest_dist := 999.0
 
-	# Find all gates and key gates in the scene
-	for child in _map_root.get_children():
+	# Find all gates and key gates — they're children of self (the field controller)
+	for child in get_children():
 		if child is Gate or child is KeyGate:
 			var dist: float = child.global_position.distance_to(player_pos)
 			if dist < nearest_dist:
 				nearest_dist = dist
 				nearest = child
-		# Also check nested children (gates might be deeper)
-		for sub in child.get_children():
-			if sub is Gate or sub is KeyGate:
-				var dist: float = sub.global_position.distance_to(player_pos)
-				if dist < nearest_dist:
-					nearest_dist = dist
-					nearest = sub
 
 	if nearest == null:
-		print("[GateNudge] No gates found")
+		print("[GateNudge] No gates found in current room")
 		return
 
-	nearest.position += nudge
-	# Also move collision body if it exists
-	if nearest.get("collision_body") and is_instance_valid(nearest.collision_body):
-		nearest.collision_body.position = Vector3.ZERO  # Reset relative pos
+	nearest.global_position += nudge
 
 	var gate_name: String = nearest.name
 	var cell_pos: String = str(_current_cell.get("pos", ""))
-	print("[GateNudge] %s at cell %s → pos=(%.2f, %.2f, %.2f)" % [
-		gate_name, cell_pos,
+	var stage_id: String = str(_current_cell.get("stage_id", ""))
+	print("[GateNudge] %s at cell=%s stage=%s → global=(%.2f, %.2f, %.2f)  local=(%.2f, %.2f, %.2f)" % [
+		gate_name, cell_pos, stage_id,
+		nearest.global_position.x, nearest.global_position.y, nearest.global_position.z,
 		nearest.position.x, nearest.position.y, nearest.position.z])
