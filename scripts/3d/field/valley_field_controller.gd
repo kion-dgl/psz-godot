@@ -3091,6 +3091,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				get_viewport().set_input_as_handled()
 			KEY_G:
 				_gate_nudge_mode = not _gate_nudge_mode
+				if orbit_camera:
+					orbit_camera.input_enabled = not _gate_nudge_mode
 				print("[GateNudge] Mode %s" % ("ON — arrows to nudge, G to exit" if _gate_nudge_mode else "OFF"))
 				get_viewport().set_input_as_handled()
 
