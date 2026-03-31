@@ -50,20 +50,8 @@ export default function CharacterPreview({ classId, variationIndex, hairColorInd
     dirLight.position.set(5, 5, 5);
     scene.add(dirLight);
 
-    // Static white particles (like PSZ snow/dust)
-    const particleCount = 200;
-    const particleGeometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 8;
-      positions[i * 3 + 1] = Math.random() * 5;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 6;
-    }
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const particleMaterial = new THREE.PointsMaterial({
-      color: 0xffffff, size: 0.03, transparent: true, opacity: 0.5,
-    });
-    scene.add(new THREE.Points(particleGeometry, particleMaterial));
+    // Force canvas to be transparent
+    renderer.domElement.style.background = 'transparent';
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
