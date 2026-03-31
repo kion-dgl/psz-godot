@@ -127,7 +127,7 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
                     letterSpacing: 1, textTransform: 'uppercase',
                   }}>{type}</span>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                   {classes.map(cls => {
                     const isSelected = state.classId === cls.id;
                     const isFocused = focusedId === cls.id;
@@ -138,8 +138,9 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
                         onMouseEnter={() => setHoveredClass(cls.id)}
                         onMouseLeave={() => setHoveredClass(null)}
                         style={{
+                          flex: 1,
                           display: 'flex', alignItems: 'center', gap: 8,
-                          padding: '4px 8px',
+                          padding: '0 8px',
                           cursor: 'pointer',
                           background: isSelected ? `${color}44` : isFocused ? `${color}22` : 'transparent',
                           transition: 'background 0.1s',
@@ -150,7 +151,7 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
                           src={getClassArtPath(cls.id)}
                           alt=""
                           style={{
-                            width: 28, height: 32,
+                            width: 32, height: '80%',
                             objectFit: 'cover', objectPosition: 'top center',
                             borderRadius: 3, flexShrink: 0,
                             border: isSelected ? `1px solid ${color}` : '1px solid transparent',
@@ -175,27 +176,18 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
         flex: 1, display: 'flex', flexDirection: 'column',
         background: '#0a0a16', overflow: 'hidden',
       }}>
-        {/* Type name header */}
-        <div style={{
-          padding: '10px 16px',
-          textAlign: 'center',
-          borderBottom: `2px solid ${activeColor}`,
-        }}>
-          <span style={{ fontSize: 20, fontWeight: 800, color: activeColor }}>{activeType}</span>
-        </div>
-
         {/* Class art — all type's classes shown, focused one highlighted */}
         <div style={{
           flex: 1, position: 'relative', overflow: 'hidden',
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          padding: '8px',
         }}>
           {activeClasses.map((cls, i) => {
             const isFocused = cls.id === focusedId;
             const count = activeClasses.length;
-            // Offset each character horizontally so they stand side by side
-            const spread = Math.min(80, 300 / count);
-            const offsetX = (i - (count - 1) / 2) * spread;
+            // Spread characters across the full panel width
+            const panelWidth = 1080; // approx right panel width (1280 - 200)
+            const slotWidth = panelWidth / count;
+            const offsetX = (i - (count - 1) / 2) * slotWidth;
             return (
               <img
                 key={cls.id}
