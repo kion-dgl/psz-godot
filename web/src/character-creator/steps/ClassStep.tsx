@@ -95,76 +95,80 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
 
   return (
     <div style={{ display: 'flex', flex: 1, gap: 0, overflow: 'hidden' }}>
-      {/* Left column: all classes under type headers with thumbnails */}
+      {/* Left column: PSZ-style cream list with yellow highlight */}
       <div style={{
-        width: 200, flexShrink: 0,
+        width: 220, flexShrink: 0,
         display: 'flex', flexDirection: 'column',
-        background: '#0e0e1e',
-        borderRight: '1px solid #2a2a4a',
+        background: 'rgba(0,0,0,0.25)',
+        borderRight: '2px solid #8898a8',
         overflow: 'hidden',
+        padding: '6px',
       }}>
         {TYPE_ORDER.map(type => {
-          const color = TYPE_COLORS[type];
           const classes = ALL_CLASSES.filter(c => c.type === type);
           const isActiveType = activeType === type;
 
           return (
-            <div key={type} style={{ flex: classes.length, display: 'flex', flexDirection: 'column' }}>
-              {/* Type header with vertical label */}
+            <div key={type} style={{ flex: classes.length, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* Type header — rounded pill, orange when active */}
               <div style={{
-                display: 'flex', alignItems: 'stretch', flex: 1,
-                background: isActiveType ? `${color}22` : 'transparent',
-                borderBottom: '1px solid #1a1a3a',
+                padding: '3px 12px',
+                background: isActiveType
+                  ? 'linear-gradient(to right, #f0a830, #e8c040, #f0a830)'
+                  : 'linear-gradient(to bottom, #e8e8f0, #c8c8d4)',
+                borderRadius: 12,
+                border: isActiveType ? '1px solid #c08020' : '1px solid #a0a0b0',
+                textAlign: 'center',
+                flexShrink: 0,
               }}>
-                <div style={{
-                  width: 28, flexShrink: 0,
-                  background: color,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <span style={{
-                    writingMode: 'vertical-rl', textOrientation: 'mixed',
-                    fontSize: 11, fontWeight: 800, color: '#000',
-                    letterSpacing: 1, textTransform: 'uppercase',
-                  }}>{type}</span>
-                </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  {classes.map(cls => {
-                    const isSelected = state.classId === cls.id;
-                    const isFocused = focusedId === cls.id;
-                    return (
-                      <div
-                        key={cls.id}
-                        onClick={() => dispatch({ type: 'SET_CLASS', classId: cls.id })}
-                        onMouseEnter={() => setHoveredClass(cls.id)}
-                        onMouseLeave={() => setHoveredClass(null)}
+                <span style={{
+                  fontSize: 12, fontWeight: 700,
+                  color: isActiveType ? '#4a2800' : '#4a4a5a',
+                }}>{type}</span>
+              </div>
+
+              {/* Class items */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {classes.map(cls => {
+                  const isSelected = state.classId === cls.id;
+                  const isFocused = focusedId === cls.id;
+                  return (
+                    <div
+                      key={cls.id}
+                      onClick={() => dispatch({ type: 'SET_CLASS', classId: cls.id })}
+                      onMouseEnter={() => setHoveredClass(cls.id)}
+                      onMouseLeave={() => setHoveredClass(null)}
+                      style={{
+                        flex: 1,
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '0 10px',
+                        cursor: 'pointer',
+                        background: isSelected
+                          ? 'linear-gradient(to right, #f0a830, #e8c040, #f0a830)'
+                          : isFocused
+                            ? 'linear-gradient(to bottom, #f0f0f8, #e0e0ec)'
+                            : 'linear-gradient(to bottom, #e8e8f0, #d8d8e4)',
+                        borderRadius: 4,
+                        border: isSelected ? '1px solid #c08020' : '1px solid #b8b8c8',
+                        transition: 'background 0.1s',
+                      }}
+                    >
+                      <img
+                        src={getClassArtPath(cls.id)}
+                        alt=""
                         style={{
-                          flex: 1,
-                          display: 'flex', alignItems: 'center', gap: 8,
-                          padding: '0 8px',
-                          cursor: 'pointer',
-                          background: isSelected ? `${color}44` : isFocused ? `${color}22` : 'transparent',
-                          transition: 'background 0.1s',
+                          width: 28, height: '75%',
+                          objectFit: 'cover', objectPosition: 'top center',
+                          borderRadius: 3, flexShrink: 0,
                         }}
-                      >
-                        {/* Small thumbnail */}
-                        <img
-                          src={getClassArtPath(cls.id)}
-                          alt=""
-                          style={{
-                            width: 32, height: '80%',
-                            objectFit: 'cover', objectPosition: 'top center',
-                            borderRadius: 3, flexShrink: 0,
-                            border: isSelected ? `1px solid ${color}` : '1px solid transparent',
-                          }}
-                        />
-                        <span style={{
-                          fontSize: 13, fontWeight: isSelected ? 700 : 400,
-                          color: isSelected ? '#e0e0e0' : isFocused ? '#ccc' : '#999',
-                        }}>{cls.name}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                      />
+                      <span style={{
+                        fontSize: 13, fontWeight: isSelected ? 700 : 500,
+                        color: isSelected ? '#3a2000' : '#3a3a4a',
+                      }}>{cls.name}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
@@ -174,7 +178,7 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
       {/* Right panel: art + info overlay */}
       <div style={{
         flex: 1, position: 'relative',
-        background: '#0a0a16', overflow: 'hidden',
+        overflow: 'hidden',
       }}>
         {/* Class art — all type's classes shown, focused one highlighted */}
         {activeClasses.map((cls, i) => {
@@ -212,22 +216,22 @@ function GamecubeSelector({ state, dispatch }: { state: CharacterState; dispatch
           bottom: 12, left: 12, right: 12,
           height: 72,
           padding: '10px 14px',
-          background: 'rgba(10, 10, 26, 0.85)',
-          border: `1px solid ${activeColor}44`,
+          background: 'rgba(255, 255, 255, 0.75)',
+          border: '1px solid #8898a8',
           borderRadius: 6,
           zIndex: 20,
           overflow: 'hidden',
         }}>
           {focusedCls ? (
             <>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#e0e0e0', marginBottom: 4 }}>{focusedCls.name}</div>
-              <div style={{ fontSize: 11, color: '#888' }}>{focusedCls.race} · {focusedCls.gender}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#2a3a4a', marginBottom: 4 }}>{focusedCls.name}</div>
+              <div style={{ fontSize: 12, color: '#5a6a7a' }}>{focusedCls.race} · {focusedCls.gender}</div>
               {focusedCls.bonuses.length > 0 && (
-                <div style={{ fontSize: 10, color: '#8a8', marginTop: 4 }}>{focusedCls.bonuses.join(' · ')}</div>
+                <div style={{ fontSize: 11, color: '#6a7a5a', marginTop: 2 }}>{focusedCls.bonuses.join(' · ')}</div>
               )}
             </>
           ) : (
-            <div style={{ fontSize: 12, color: '#888' }}>{TYPE_INFO[activeType]}</div>
+            <div style={{ fontSize: 13, color: '#4a5a6a' }}>{TYPE_INFO[activeType]}</div>
           )}
         </div>
       </div>

@@ -21,7 +21,7 @@ export default function CharacterCreator() {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      height: '100%', background: '#0a0a16',
+      height: '100%', background: '#222',
     }}>
     {/* Fixed 720p viewport */}
     <div style={{
@@ -29,39 +29,37 @@ export default function CharacterCreator() {
       height: 720,
       display: 'flex',
       flexDirection: 'column',
-      background: '#1a1a2e',
-      color: '#e0e0e0',
+      background: 'linear-gradient(to bottom, #a8c8e8, #7aa8d0, #90b8dc)',
+      color: '#1a2a3a',
       overflow: 'hidden',
     }}>
-      {/* Title bar */}
+      {/* Title bar — metallic grey */}
       <div style={{
         height: 44,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'linear-gradient(to bottom, #3a4a6a, #1e2a44)',
-        borderBottom: '2px solid #5a6a8a',
+        background: 'linear-gradient(to bottom, #d0d4dc, #a8aab4, #888c98, #a0a4b0)',
+        borderBottom: '2px solid #686c78',
         position: 'relative',
         flexShrink: 0,
       }}>
         <span style={{
-          fontSize: 20,
+          fontSize: 22,
           fontWeight: 800,
-          color: '#c8d8f8',
-          textShadow: '1px 1px 0 #1a2a44, 2px 2px 0 #0a1a2a',
+          color: '#3a4a5a',
+          textShadow: '1px 1px 0 rgba(255,255,255,0.4)',
           letterSpacing: 3,
-          textTransform: 'uppercase',
         }}>
           Create Character
         </span>
-        {/* Decorative line accents */}
+        {/* Bottom accent lines */}
         <div style={{
-          position: 'absolute', bottom: -2, left: 0, right: 0, height: 2,
-          background: 'linear-gradient(90deg, transparent 10%, #7a8aaa 30%, #7a8aaa 70%, transparent 90%)',
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 2,
+          background: 'linear-gradient(90deg, #888 0%, #bbb 20%, #bbb 80%, #888 100%)',
         }} />
       </div>
 
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Step content — full width on class step, left panel otherwise */}
         <div style={{
           width: showPreview ? 420 : 1280,
           flexShrink: 0,
@@ -71,7 +69,6 @@ export default function CharacterCreator() {
           {renderStep()}
         </div>
 
-        {/* 3D preview (appearance step onward) */}
         {showPreview && (
           <div style={{ flex: 1, padding: 12 }}>
             <CharacterPreview
@@ -85,25 +82,26 @@ export default function CharacterCreator() {
         )}
       </div>
 
-      {/* Bottom nav bar */}
+      {/* Bottom nav bar — metallic */}
       <div style={{
-        height: 44,
+        height: 40,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 20px',
-        background: 'linear-gradient(to top, #2a3a5a, #1a2a44)',
-        borderTop: '1px solid #3a4a6a',
+        background: 'linear-gradient(to top, #888c98, #a0a4b0, #b8bcc8)',
+        borderTop: '2px solid #686c78',
         flexShrink: 0,
       }}>
         {canGoBack ? (
           <button
             onClick={() => dispatch({ type: 'PREV_STEP' })}
             style={{
-              padding: '6px 18px',
-              background: 'transparent',
-              border: '1px solid #4a5a7a',
+              padding: '4px 16px',
+              background: 'linear-gradient(to bottom, #e0e4ec, #c0c4cc)',
+              border: '1px solid #888',
               borderRadius: 4,
-              color: '#8899bb',
+              color: '#3a4a5a',
               fontSize: 13,
+              fontWeight: 600,
               cursor: 'pointer',
             }}
           >
@@ -115,13 +113,15 @@ export default function CharacterCreator() {
           <button
             onClick={() => canGoNext && dispatch({ type: 'NEXT_STEP' })}
             style={{
-              padding: '6px 24px',
-              background: canGoNext ? '#4a6aaa' : '#2a3a5a',
-              border: canGoNext ? '1px solid #6a8acc' : '1px solid #3a4a6a',
+              padding: '4px 22px',
+              background: canGoNext
+                ? 'linear-gradient(to bottom, #ffe080, #f0b830)'
+                : 'linear-gradient(to bottom, #d0d4dc, #b0b4bc)',
+              border: canGoNext ? '1px solid #c89020' : '1px solid #888',
               borderRadius: 4,
-              color: canGoNext ? '#e0e8ff' : '#556',
+              color: canGoNext ? '#4a3000' : '#888',
               fontSize: 13,
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: canGoNext ? 'pointer' : 'default',
             }}
           >
