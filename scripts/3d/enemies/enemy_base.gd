@@ -200,7 +200,7 @@ func _setup_hurtbox() -> void:
 	hurtbox = Hurtbox.new()
 	hurtbox.name = "Hurtbox"
 	hurtbox.owner_node = self
-	hurtbox.hit_received.connect(_on_hit_received)
+	# Don't connect hit_received signal — hurtbox.take_hit() calls _on_hit_received directly
 
 	var shape := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
