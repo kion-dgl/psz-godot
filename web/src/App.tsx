@@ -16,6 +16,7 @@ const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
 const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
 const SettingsMockup = lazy(() => import('./settings/SettingsMockup'));
+const CharacterCreator = lazy(() => import('./character-creator/CharacterCreator'));
 
 function NavBar() {
   const location = useLocation();
@@ -117,6 +118,12 @@ function NavBar() {
       }}>
         Tuner
       </Link>
+      <Link to="/character-creator" style={{
+        color: isActive('/character-creator') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Character
+      </Link>
     </nav>
   );
 }
@@ -143,6 +150,7 @@ export default function App() {
             <Route path="/settings" element={<SettingsMockup />} />
             <Route path="/retarget" element={<RetargetViewer />} />
             <Route path="/retarget-tuner" element={<RetargetTuner />} />
+            <Route path="/character-creator" element={<CharacterCreator />} />
           </Routes>
         </Suspense>
       </div>
