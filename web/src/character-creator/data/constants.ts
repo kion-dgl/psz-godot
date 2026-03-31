@@ -23,6 +23,11 @@ export const BODY_COLORS = ['Red', 'Blue', 'Green', 'Blue & Red', 'Black & Red']
 export const CAST_LABELS = { head: 'Head Parts', hair: 'Body Color A', body: 'Body Color B', skin: 'Body Color C' };
 export const HUMAN_LABELS = { head: 'Head Type', hair: 'Hair Color', body: 'Costume Color', skin: 'Skin Tone' };
 
+/** Class character art path (webp, 250x282) */
+export function getClassArtPath(classId: string): string {
+  return assetUrl(`/assets/images/Psz_${classId}_solo.webp`);
+}
+
 /**
  * Model GLB path for a given class + head variation.
  * Directory: pc_XYZ where XY = class prefix digits, Z = variation (0-3)

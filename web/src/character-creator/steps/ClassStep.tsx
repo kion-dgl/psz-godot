@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ALL_CLASSES, type ClassInfo } from '../data/classData';
+import { getClassArtPath } from '../data/constants';
 import type { CharacterState, CharacterAction } from '../hooks/useCharacterState';
 
 const TYPE_ORDER = ['Hunter', 'Ranger', 'Force'] as const;
@@ -50,27 +51,44 @@ function ClassCard({ cls, selected, onClick }: { cls: ClassInfo; selected: boole
         borderRadius: 6,
         cursor: 'pointer',
         transition: 'all 0.15s',
+        display: 'flex',
+        gap: 10,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#e0e0e0' }}>{cls.name}</span>
-        <span style={{
-          fontSize: 10, padding: '1px 6px', borderRadius: 3,
-          background: cls.gender === 'Male' ? '#2a4a8a' : '#6a2a5a',
-          color: cls.gender === 'Male' ? '#88aaff' : '#dd88cc',
-        }}>{cls.gender === 'Male' ? '♂' : '♀'}</span>
-        <span style={{ fontSize: 10, color: '#666' }}>{cls.race}</span>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {STAT_KEYS.map(key => (
-          <StatBar key={key} label={STAT_LABELS[key]} value={cls.stats[key]} max={STAT_MAX[key]} />
-        ))}
-      </div>
-      {cls.bonuses.length > 0 && (
-        <div style={{ marginTop: 4, fontSize: 10, color: '#8a8' }}>
-          {cls.bonuses.join(' · ')}
+      {/* Class art thumbnail */}
+      <img
+        src={getClassArtPath(cls.id)}
+        alt={cls.name}
+        style={{
+          width: 48,
+          height: 54,
+          objectFit: 'cover',
+          objectPosition: 'top center',
+          borderRadius: 4,
+          flexShrink: 0,
+        }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#e0e0e0' }}>{cls.name}</span>
+          <span style={{
+            fontSize: 10, padding: '1px 6px', borderRadius: 3,
+            background: cls.gender === 'Male' ? '#2a4a8a' : '#6a2a5a',
+            color: cls.gender === 'Male' ? '#88aaff' : '#dd88cc',
+          }}>{cls.gender === 'Male' ? '♂' : '♀'}</span>
+          <span style={{ fontSize: 10, color: '#666' }}>{cls.race}</span>
         </div>
-      )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {STAT_KEYS.map(key => (
+            <StatBar key={key} label={STAT_LABELS[key]} value={cls.stats[key]} max={STAT_MAX[key]} />
+          ))}
+        </div>
+        {cls.bonuses.length > 0 && (
+          <div style={{ marginTop: 4, fontSize: 10, color: '#8a8' }}>
+            {cls.bonuses.join(' · ')}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -152,16 +170,30 @@ export default function ClassStep({ state, dispatch }: { state: CharacterState; 
                 </div>
               )}
 
-              {/* Collapsed: vertical class names */}
+              {/* Collapsed: class art + vertical names */}
               {!isExpanded && (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '8px 2px' }}>
+                <div style={{
+                  flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  gap: 4, padding: '8px 2px', position: 'relative', overflow: 'hidden',
+                }}>
+                  {/* Background art (first class in group) */}
+                  <img
+                    src={getClassArtPath(classes[0].id)}
+                    alt=""
+                    style={{
+                      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                      objectFit: 'cover', opacity: 0.15, pointerEvents: 'none',
+                    }}
+                  />
                   {classes.map(cls => (
                     <div key={cls.id} style={{
                       fontSize: 9,
-                      color: state.classId === cls.id ? '#6b8afd' : '#555',
+                      color: state.classId === cls.id ? '#6b8afd' : '#888',
                       fontWeight: state.classId === cls.id ? 700 : 400,
                       writingMode: 'vertical-rl',
                       textOrientation: 'mixed',
+                      position: 'relative',
+                      zIndex: 1,
                     }}>
                       {cls.name}
                     </div>
