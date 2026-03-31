@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "armor"
+name = "Armor"
+rarity = 1
+type = 0
+max_grind = 50
+resale_value = 120
+defense_base = 35
+defense_max = 135
+evasion_base = 22
+evasion_max = 122
+max_slots = 4
+resist_fire = 3
+resist_ice = 3
+resist_lightning = 3
+resist_light = 0
+resist_dark = 0
+usable_by = PackedStringArray()
