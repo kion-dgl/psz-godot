@@ -3137,10 +3137,22 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 
 	nearest.global_position += nudge
 
-	var gate_name: String = nearest.name
+	# Find which direction/portal this gate belongs to
+	var gate_dir := ""
+	var portal_id := ""
+	for dir in _portal_data:
+		if dir == "default":
+			continue
+		var gp: Vector3 = _portal_data[dir].get("gate_pos", Vector3.INF)
+		# Use a generous distance since we're nudging it away from the original
+		if nearest.global_position.distance_to(gp) < 10.0:
+			gate_dir = dir
+			var portals: Dictionary = _current_cell.get("portals", {})
+			portal_id = str(portals.get(dir, ""))
+			break
+
 	var cell_pos: String = str(_current_cell.get("pos", ""))
 	var stage_id: String = str(_current_cell.get("stage_id", ""))
-	print("[GateNudge] %s at cell=%s stage=%s → global=(%.2f, %.2f, %.2f)  local=(%.2f, %.2f, %.2f)" % [
-		gate_name, cell_pos, stage_id,
-		nearest.global_position.x, nearest.global_position.y, nearest.global_position.z,
-		nearest.position.x, nearest.position.y, nearest.position.z])
+	var gp := nearest.global_position
+	print("[GateNudge] dir=%s cell=%s stage=%s portal=%s → gate_pos=[%.2f, %.2f, %.2f]" % [
+		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])
