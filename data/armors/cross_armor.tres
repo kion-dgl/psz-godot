@@ -20,4 +20,4 @@ resist_ice = 10
 resist_lightning = 10
 resist_light = 0
 resist_dark = 0
-usable_by = PackedStringArray("HUmar", "HUmarl", "HUcast", "HUcaseal", "RAmar", "RAmarl", "RAcast", "RAcaseal")
+usable_by = PackedStringArray("Hunter Human", "Hunter Cast", "Ranger Human", "Ranger Cast")
