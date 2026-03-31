@@ -39,22 +39,20 @@ export default function CharacterPreview({ classId, variationIndex, hairColorInd
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
     camera.position.set(0, 1.2, 2.5);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setClearColor(0x0a0a1a);
+    renderer.setClearColor(0x000000, 0);
     container.appendChild(renderer.domElement);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.7));
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
     dirLight.position.set(5, 5, 5);
     scene.add(dirLight);
-    scene.add(new THREE.GridHelper(10, 10, 0x333333, 0x222222));
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 2;
+    controls.autoRotate = false;
     controls.target.set(0, 0.8, 0);
 
     const clock = new THREE.Clock();
