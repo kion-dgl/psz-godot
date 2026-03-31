@@ -462,7 +462,7 @@ func _get_equipped_weapon_data() -> WeaponData:
 		print("[Player] ABORT: weapon_id is empty")
 		return null
 	var all_ids = WeaponRegistry.get_all_weapon_ids()
-	print("[Player] WeaponRegistry has %d weapons: %s" % [all_ids.size(), all_ids])
+	print("[Player] WeaponRegistry has %d weapons" % all_ids.size())
 	var w = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
 	if w == null:
 		push_warning("[Player] ABORT: weapon '%s' not found in registry" % weapon_id)

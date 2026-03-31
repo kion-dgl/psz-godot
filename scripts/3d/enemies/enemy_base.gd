@@ -372,8 +372,9 @@ func _process_chasing(_delta: float) -> void:
 	var horizontal_dir := Vector3(to_target.x, 0, to_target.z)
 	var direction := horizontal_dir.normalized() if horizontal_dir.length() > 0.1 else Vector3.ZERO
 
-	# Try navigation if available, but keep direct path as fallback
-	nav_agent.target_position = target.global_position
+	# Try navigation if available (update path every 10th frame to save CPU)
+	if Engine.get_physics_frames() % 10 == (get_index() % 10):
+		nav_agent.target_position = target.global_position
 	if not nav_agent.is_navigation_finished():
 		var next_pos := nav_agent.get_next_path_position()
 		var nav_dir := (next_pos - global_position)
