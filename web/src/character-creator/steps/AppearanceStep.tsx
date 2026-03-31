@@ -10,64 +10,61 @@ interface Props {
   dispatch: React.Dispatch<CharacterAction>;
 }
 
-function ArrowSelector({ label, value, valueLabel, onPrev, onNext }: {
+function ArrowSelector({ label, current, total, isActive, onPrev, onNext, onClick }: {
   label: string;
-  value: number;
-  valueLabel: string;
+  current: number;
+  total: number;
+  isActive: boolean;
   onPrev: () => void;
   onNext: () => void;
+  onClick: () => void;
 }) {
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '10px 14px',
-      background: '#16162a',
-      borderRadius: 6,
-      border: '1px solid #2a2a4a',
-    }}>
-      <span style={{ color: '#888', fontSize: 13, width: 120, flexShrink: 0 }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button
-          onClick={onPrev}
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px 14px',
+        background: isActive
+          ? 'linear-gradient(to right, #f0a830, #e8c040, #f0a830)'
+          : 'linear-gradient(to bottom, #e8e8f0, #d8d8e4)',
+        border: isActive ? '1px solid #c08020' : '1px solid #b8b8c8',
+        borderRadius: 3,
+        cursor: 'pointer',
+      }}
+    >
+      <span style={{
+        flex: 1,
+        fontSize: 14, fontWeight: isActive ? 700 : 500,
+        color: isActive ? '#3a2000' : '#2a2a3a',
+      }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span
+          onClick={(e) => { e.stopPropagation(); onPrev(); }}
           style={{
-            background: '#2a2a4a',
-            border: 'none',
-            color: '#e0e0e0',
-            width: 28,
-            height: 28,
-            borderRadius: 4,
-            cursor: 'pointer',
-            fontSize: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            fontSize: 16, fontWeight: 800, cursor: 'pointer',
+            color: '#2a8a2a',
+            userSelect: 'none',
           }}
-        >
-          &lt;
-        </button>
-        <span style={{ color: '#e0e0e0', fontSize: 13, minWidth: 80, textAlign: 'center' }}>
-          {valueLabel}
+        >◀</span>
+        <span style={{
+          fontSize: 13, fontWeight: 600, minWidth: 42, textAlign: 'center',
+          color: isActive ? '#3a2000' : '#4a4a5a',
+          background: 'rgba(255,255,255,0.4)',
+          borderRadius: 8,
+          padding: '1px 8px',
+        }}>
+          {current + 1}/{total}
         </span>
-        <button
-          onClick={onNext}
+        <span
+          onClick={(e) => { e.stopPropagation(); onNext(); }}
           style={{
-            background: '#2a2a4a',
-            border: 'none',
-            color: '#e0e0e0',
-            width: 28,
-            height: 28,
-            borderRadius: 4,
-            cursor: 'pointer',
-            fontSize: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            fontSize: 16, fontWeight: 800, cursor: 'pointer',
+            color: '#2a8a2a',
+            userSelect: 'none',
           }}
-        >
-          &gt;
-        </button>
+        >▶</span>
       </div>
     </div>
   );
@@ -86,39 +83,47 @@ export default function AppearanceStep({ state, dispatch }: Props) {
   const labels = isCast ? CAST_LABELS : HUMAN_LABELS;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <h2 style={{ margin: 0, color: '#e0e0e0', fontSize: 20 }}>Customize Appearance</h2>
-      <p style={{ margin: 0, color: '#888', fontSize: 13 }}>
-        Adjust your character's look. The preview updates in real time.
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: 6,
+      padding: '16px',
+      height: '100%',
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <ArrowSelector
           label={labels.head}
-          value={state.variationIndex}
-          valueLabel={`Type ${state.variationIndex + 1}`}
+          current={state.variationIndex}
+          total={HEAD_VARIATIONS}
+          isActive={true}
           onPrev={() => dispatch({ type: 'SET_VARIATION', index: wrap(state.variationIndex, -1, HEAD_VARIATIONS) })}
           onNext={() => dispatch({ type: 'SET_VARIATION', index: wrap(state.variationIndex, 1, HEAD_VARIATIONS) })}
+          onClick={() => {}}
         />
         <ArrowSelector
           label={labels.hair}
-          value={state.hairColorIndex}
-          valueLabel={isCast ? `Color ${state.hairColorIndex + 1}` : HAIR_COLORS[state.hairColorIndex]}
+          current={state.hairColorIndex}
+          total={HAIR_COLORS.length}
+          isActive={false}
           onPrev={() => dispatch({ type: 'SET_HAIR_COLOR', index: wrap(state.hairColorIndex, -1, HAIR_COLORS.length) })}
           onNext={() => dispatch({ type: 'SET_HAIR_COLOR', index: wrap(state.hairColorIndex, 1, HAIR_COLORS.length) })}
-        />
-        <ArrowSelector
-          label={labels.skin}
-          value={state.skinToneIndex}
-          valueLabel={isCast ? `Color ${state.skinToneIndex + 1}` : SKIN_TONES[state.skinToneIndex]}
-          onPrev={() => dispatch({ type: 'SET_SKIN_TONE', index: wrap(state.skinToneIndex, -1, SKIN_TONES.length) })}
-          onNext={() => dispatch({ type: 'SET_SKIN_TONE', index: wrap(state.skinToneIndex, 1, SKIN_TONES.length) })}
+          onClick={() => {}}
         />
         <ArrowSelector
           label={labels.body}
-          value={state.bodyColorIndex}
-          valueLabel={isCast ? `Color ${state.bodyColorIndex + 1}` : BODY_COLORS[state.bodyColorIndex]}
+          current={state.bodyColorIndex}
+          total={BODY_COLORS.length}
+          isActive={false}
           onPrev={() => dispatch({ type: 'SET_BODY_COLOR', index: wrap(state.bodyColorIndex, -1, BODY_COLORS.length) })}
           onNext={() => dispatch({ type: 'SET_BODY_COLOR', index: wrap(state.bodyColorIndex, 1, BODY_COLORS.length) })}
+          onClick={() => {}}
+        />
+        <ArrowSelector
+          label={labels.skin}
+          current={state.skinToneIndex}
+          total={SKIN_TONES.length}
+          isActive={false}
+          onPrev={() => dispatch({ type: 'SET_SKIN_TONE', index: wrap(state.skinToneIndex, -1, SKIN_TONES.length) })}
+          onNext={() => dispatch({ type: 'SET_SKIN_TONE', index: wrap(state.skinToneIndex, 1, SKIN_TONES.length) })}
+          onClick={() => {}}
         />
       </div>
     </div>
