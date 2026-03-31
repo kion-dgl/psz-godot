@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "soul_frame"
+name = "Soul Frame"
+rarity = 3
+type = 1
+max_grind = 50
+resale_value = 600
+defense_base = 110
+defense_max = 230
+evasion_base = 100
+evasion_max = 220
+max_slots = 3
+resist_fire = 0
+resist_ice = 0
+resist_lightning = 0
+resist_light = 12
+resist_dark = 12
+usable_by = PackedStringArray()

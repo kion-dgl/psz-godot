@@ -20,6 +20,9 @@ var camera_rotation: float = 0.0
 # Mouse drag state
 var _mouse_dragging := false
 
+# Set false to pause camera rotation (e.g. gate nudge mode)
+var input_enabled := true
+
 # Node references
 @onready var camera: Camera3D = $Camera3D
 
@@ -37,13 +40,13 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if Input.is_action_pressed("camera_left"):
-		camera_rotation -= rotation_speed
-	if Input.is_action_pressed("camera_right"):
-		camera_rotation += rotation_speed
-
-	if Input.is_action_just_pressed("camera_lock"):
-		_center_behind_player()
+	if input_enabled:
+		if Input.is_action_pressed("camera_left"):
+			camera_rotation -= rotation_speed
+		if Input.is_action_pressed("camera_right"):
+			camera_rotation += rotation_speed
+		if Input.is_action_just_pressed("camera_lock"):
+			_center_behind_player()
 
 	if target and camera:
 		_update_camera_position()

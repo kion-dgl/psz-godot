@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ArmorData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/armor_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "giga_frame"
+name = "Giga Frame"
+rarity = 2
+type = 1
+max_grind = 45
+resale_value = 300
+defense_base = 65
+defense_max = 165
+evasion_base = 60
+evasion_max = 160
+max_slots = 3
+resist_fire = 0
+resist_ice = 0
+resist_lightning = 0
+resist_light = 8
+resist_dark = 8
+usable_by = PackedStringArray()

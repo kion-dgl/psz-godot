@@ -3089,9 +3089,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F9:
 				_toggle_all_collision()
 				get_viewport().set_input_as_handled()
-			KEY_F10:
+			KEY_G:
 				_gate_nudge_mode = not _gate_nudge_mode
-				print("[GateNudge] Mode %s" % ("ON — use arrows to nudge nearest gate, F10 to exit" if _gate_nudge_mode else "OFF"))
+				if orbit_camera:
+					orbit_camera.input_enabled = not _gate_nudge_mode
+				print("[GateNudge] Mode %s" % ("ON — arrows to nudge, G to exit" if _gate_nudge_mode else "OFF"))
 				get_viewport().set_input_as_handled()
 
 	# Gate nudge mode: arrow keys move nearest gate
@@ -3121,32 +3123,36 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 	var nearest: Node3D = null
 	var nearest_dist := 999.0
 
-	# Find all gates and key gates in the scene
-	for child in _map_root.get_children():
+	# Find all gates and key gates — they're children of self (the field controller)
+	for child in get_children():
 		if child is Gate or child is KeyGate:
 			var dist: float = child.global_position.distance_to(player_pos)
 			if dist < nearest_dist:
 				nearest_dist = dist
 				nearest = child
-		# Also check nested children (gates might be deeper)
-		for sub in child.get_children():
-			if sub is Gate or sub is KeyGate:
-				var dist: float = sub.global_position.distance_to(player_pos)
-				if dist < nearest_dist:
-					nearest_dist = dist
-					nearest = sub
 
 	if nearest == null:
-		print("[GateNudge] No gates found")
+		print("[GateNudge] No gates found in current room")
 		return
 
-	nearest.position += nudge
-	# Also move collision body if it exists
-	if nearest.get("collision_body") and is_instance_valid(nearest.collision_body):
-		nearest.collision_body.position = Vector3.ZERO  # Reset relative pos
+	nearest.global_position += nudge
 
-	var gate_name: String = nearest.name
+	# Find which direction/portal this gate belongs to
+	var gate_dir := ""
+	var portal_id := ""
+	for dir in _portal_data:
+		if dir == "default":
+			continue
+		var gp: Vector3 = _portal_data[dir].get("gate_pos", Vector3.INF)
+		# Use a generous distance since we're nudging it away from the original
+		if nearest.global_position.distance_to(gp) < 10.0:
+			gate_dir = dir
+			var portals: Dictionary = _current_cell.get("portals", {})
+			portal_id = str(portals.get(dir, ""))
+			break
+
 	var cell_pos: String = str(_current_cell.get("pos", ""))
-	print("[GateNudge] %s at cell %s → pos=(%.2f, %.2f, %.2f)" % [
-		gate_name, cell_pos,
-		nearest.position.x, nearest.position.y, nearest.position.z])
+	var stage_id: String = str(_current_cell.get("stage_id", ""))
+	var gp := nearest.global_position
+	print("[GateNudge] dir=%s cell=%s stage=%s portal=%s → gate_pos=[%.2f, %.2f, %.2f]" % [
+		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])

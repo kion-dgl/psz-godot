@@ -43,11 +43,16 @@ const SHOP_WEAPON_TIER4 := [
 	"sawcer",
 ]
 
-## Shop armor pool
+## Shop armor pool — 3 tiers of each type
 const SHOP_ARMOR_IDS := [
-	"normal_frame", "common_armor", "battle_armor",
-	"brigandine_armor", "asgard_frame",
+	"frame", "giga_frame", "soul_frame",
+	"armor", "psy_armor", "cross_armor",
+	"robe", "spirit_robe", "grand_robe",
 ]
+
+## Slot roll weights: index = slot count, value = weight
+## 0 slots: 35%, 1 slot: 30%, 2 slots: 10%, 3 slots: 20%, 4 slots: 5%
+const ARMOR_SLOT_WEIGHTS := [35, 30, 10, 20, 5]
 
 ## Shop unit pool — starter stat and resist units
 const SHOP_UNIT_IDS := [
@@ -112,10 +117,13 @@ func _generate_inventory() -> void:
 		var a = ArmorRegistry.get_armor(aid)
 		if a == null:
 			continue
+		var slots: int = _roll_armor_slots()
 		var price: int = _armor_price(a)
+		var slot_label: String = " [%d slot%s]" % [slots, "" if slots == 1 else "s"]
 		_armors.append({
-			"id": a.id, "name": a.name, "category": "armor",
+			"id": a.id, "name": a.name + slot_label, "category": "armor",
 			"cost": price, "sell_price": int(price * 0.25),
+			"rolled_slots": slots,
 		})
 
 	for uid in SHOP_UNIT_IDS:
@@ -201,8 +209,21 @@ func _weapon_price(w) -> int:
 
 
 func _armor_price(a) -> int:
-	var base: int = int(a.defense_base) * 12 + (int(a.rarity) - 1) * 400 + int(a.max_slots) * 500
+	var base: int = int(a.defense_base) * 12 + (int(a.rarity) - 1) * 400
 	return maxi(base, 50)
+
+
+func _roll_armor_slots() -> int:
+	var total := 0
+	for w in ARMOR_SLOT_WEIGHTS:
+		total += w
+	var roll := randi_range(0, total - 1)
+	var cumulative := 0
+	for i in range(ARMOR_SLOT_WEIGHTS.size()):
+		cumulative += ARMOR_SLOT_WEIGHTS[i]
+		if roll < cumulative:
+			return i
+	return 0
 
 
 func _unit_price(u) -> int:
@@ -354,6 +375,13 @@ func _buy_selected() -> void:
 	character["meseta"] = int(character["meseta"]) - cost
 	GameState.meseta = int(character["meseta"])
 	Inventory.add_item(item_id, 1)
+
+	# Store rolled slot count for armor purchases
+	if cat == "armor" and item.has("rolled_slots"):
+		if not character.has("armor_slots"):
+			character["armor_slots"] = {}
+		character["armor_slots"][item_id] = int(item["rolled_slots"])
+
 	hint_label.text = "Bought %s for %d M!" % [str(item.get("name", "???")), cost]
 	_generate_sell_list()
 	_refresh_display()

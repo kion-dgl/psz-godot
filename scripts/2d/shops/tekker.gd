@@ -13,6 +13,7 @@ var _unidentified_weapons: Array = []  # Array of {id, name, rarity}
 var _mode_bar_parent: Control  # Parent of mode_label for tab bar rebuilding
 var _tab_row: HBoxContainer    # Persistent tab bar container
 var _portrait: Control
+var _grinder_info: VBoxContainer  # Grinder counts + stat preview panel
 
 ## Grinder requirements by weapon rarity
 const GRINDER_FOR_RARITY := {
@@ -76,10 +77,13 @@ func _setup_portrait() -> void:
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.size_flags_stretch_ratio = 2.0
 	right.add_theme_constant_override("separation", 0)
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	spacer.size_flags_stretch_ratio = 1.0
-	right.add_child(spacer)
+	# Grinder info panel (above portrait)
+	_grinder_info = VBoxContainer.new()
+	_grinder_info.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_grinder_info.size_flags_stretch_ratio = 1.0
+	_grinder_info.add_theme_constant_override("separation", 4)
+	right.add_child(_grinder_info)
+
 	_portrait = PszStyle.create_npc_portrait(model_path)
 	_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_portrait.size_flags_stretch_ratio = 1.0
@@ -300,6 +304,74 @@ func _refresh_display() -> void:
 
 	if selected_pill != null:
 		scroll.ensure_control_visible.call_deferred(selected_pill)
+
+	_update_grinder_info()
+
+
+func _update_grinder_info() -> void:
+	if not _grinder_info:
+		return
+	for child in _grinder_info.get_children():
+		child.queue_free()
+
+	# Grinder counts
+	var header := Label.new()
+	header.text = "Grinders"
+	header.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
+	header.add_theme_font_size_override("font_size", PszStyle.FONT_ITEM)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_grinder_info.add_child(header)
+
+	var grinders := ["monogrinder", "digrinder", "trigrinder"]
+	var grinder_labels := ["Monogrinder", "Digrinder", "Trigrinder"]
+	for i in range(grinders.size()):
+		var count: int = Inventory.get_item_count(grinders[i])
+		var color: Color = PszStyle.TEXT if count > 0 else PszStyle.TEXT_MUTED
+		var lbl := Label.new()
+		lbl.text = "%s: %d" % [grinder_labels[i], count]
+		lbl.add_theme_color_override("font_color", color)
+		lbl.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_grinder_info.add_child(lbl)
+
+	# Stat preview for selected weapon (grind mode only)
+	if _mode == Mode.GRIND and not _grindable_weapons.is_empty() and _selected_index < _grindable_weapons.size():
+		var sep := HSeparator.new()
+		sep.add_theme_constant_override("separation", 6)
+		_grinder_info.add_child(sep)
+
+		var w: Dictionary = _grindable_weapons[_selected_index]
+		var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(w["id"]))
+		if weapon:
+			var cur_grind: int = w["grind"]
+			var cur_atk: int = weapon.get_attack_at_grind(cur_grind)
+			var cur_acc: int = weapon.get_accuracy_at_grind(cur_grind)
+			var next_atk: int = weapon.get_attack_at_grind(cur_grind + 1)
+			var next_acc: int = weapon.get_accuracy_at_grind(cur_grind + 1)
+
+			var preview_header := Label.new()
+			preview_header.text = "After Grind"
+			preview_header.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
+			preview_header.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
+			preview_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			_grinder_info.add_child(preview_header)
+
+			var atk_diff: int = next_atk - cur_atk
+			var acc_diff: int = next_acc - cur_acc
+
+			var atk_lbl := Label.new()
+			atk_lbl.text = "ATK: %d → %d (+%d)" % [cur_atk, next_atk, atk_diff]
+			atk_lbl.add_theme_color_override("font_color", PszStyle.TEXT_SUCCESS if atk_diff > 0 else PszStyle.TEXT)
+			atk_lbl.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
+			atk_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			_grinder_info.add_child(atk_lbl)
+
+			var acc_lbl := Label.new()
+			acc_lbl.text = "ACC: %d → %d (+%d)" % [cur_acc, next_acc, acc_diff]
+			acc_lbl.add_theme_color_override("font_color", PszStyle.TEXT_SUCCESS if acc_diff > 0 else PszStyle.TEXT)
+			acc_lbl.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
+			acc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			_grinder_info.add_child(acc_lbl)
 
 
 func _get_meseta() -> int:
