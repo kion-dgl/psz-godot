@@ -472,9 +472,12 @@ func _update_class_select() -> void:
 
 	# Per-class nudge offsets
 	var NUDGE := {
-		"humar": -140.0,
-		"humarl": -80.0,
+		"humar": -40.0,
+		"humarl": -30.0,
+		"hunewm": -20.0,
 		"hunewearl": -50.0,
+		"hucast": 20.0,
+		"hucaseal": 10.0,
 		"racast": -30.0,
 		"racaseal": 20.0,
 	}
