@@ -20,6 +20,13 @@ jobs:
           use-dotnet: false
           include-templates: false
 
+      - name: Cache Godot import
+        uses: actions/cache@v4
+        with:
+          path: .godot/imported
+          key: godot-import-${{ hashFiles('**/*.import') }}
+          restore-keys: godot-import-
+
       - name: Import project
         run: godot --headless --path . --import --quit || true
 
@@ -90,7 +97,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -100,6 +107,19 @@ jobs:
           version: 4.5.1
           use-dotnet: false
           include-templates: true
+
+      - name: Cache Godot import
+        uses: actions/cache@v4
+        with:
+          path: .godot/imported
+          key: godot-import-${{ hashFiles('**/*.import') }}
+          restore-keys: godot-import-
+
+      - name: Cache Godot export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-templates-4.5.1
 
       - name: Import project
         run: godot --headless --path . --import --quit || true
