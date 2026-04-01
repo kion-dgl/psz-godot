@@ -1056,7 +1056,7 @@ func _update_preview_model() -> void:
 
 	_preview_model = packed.instantiate() as Node3D
 	_preview_model.scale = Vector3(0.6, 0.6, 0.6)
-	_preview_model.position.y = -0.7
+	_preview_model.position.y = -0.2
 	_preview_pivot.add_child(_preview_model)
 
 	# Apply texture
