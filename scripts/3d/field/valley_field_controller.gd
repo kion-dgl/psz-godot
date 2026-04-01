@@ -503,13 +503,16 @@ func _unlock_objective_exits() -> void:
 
 
 func _process(_delta: float) -> void:
+	FrameProfiler.mark("field_lighting")
 	if _world_env and _sky_material and _dir_light:
 		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
+	FrameProfiler.mark("field_minimap")
 	if _room_minimap and player and _map_root:
 		_room_minimap.update_player(player.global_position, player.player_rotation, _map_root)
 	_sync_debug_config()
+	FrameProfiler.mark("field_done")
 
 
 func _find_cell(cells: Array, pos: String) -> Dictionary:

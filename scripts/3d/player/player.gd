@@ -741,6 +741,7 @@ func _cache_model_materials() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	FrameProfiler.mark("player_start")
 	# Check for fall and respawn
 	if global_position.y < FALL_RESPAWN_Y:
 		_respawn()
@@ -764,6 +765,7 @@ func _physics_process(delta: float) -> void:
 			velocity.x = 0
 			velocity.z = 0
 
+	FrameProfiler.mark("player_move_slide")
 	# Apply movement
 	move_and_slide()
 
@@ -776,8 +778,10 @@ func _physics_process(delta: float) -> void:
 		_glow_light.visible = TimeManager.is_dark()
 
 	# Update combat targeting reticles (every 3rd frame to reduce CPU)
+	FrameProfiler.mark("player_targeting")
 	if not _is_in_city() and Engine.get_physics_frames() % 3 == 0:
 		_update_combat_targets()
+	FrameProfiler.mark("player_done")
 
 	# Mag bob and sway
 	if mag_node and is_instance_valid(mag_node):
