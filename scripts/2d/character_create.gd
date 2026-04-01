@@ -822,7 +822,7 @@ func _on_name_submitted(text: String) -> void:
 	_char_name = text.strip_edges()
 	if _char_name.is_empty():
 		return
-	_show_confirm()
+	_create_character()
 
 
 # ── Step 4: CONFIRM ─────────────────────────────────────────────

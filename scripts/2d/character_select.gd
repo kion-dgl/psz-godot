@@ -15,6 +15,8 @@ const COL_SLOT_BG := Color(0.88, 0.90, 0.94)
 const COL_EMPTY_TEXT := Color(0.55, 0.60, 0.68)
 
 var _current_slot: int = 0
+var _confirming_delete: bool = false
+var _hint_label: Label
 
 
 func _ready() -> void:
@@ -83,12 +85,12 @@ func _ready() -> void:
 	hint_style.content_margin_left = 20.0
 	hint_style.content_margin_right = 20.0
 	hint_bar.add_theme_stylebox_override("panel", hint_style)
-	var hint_label := Label.new()
-	hint_label.text = "[D-Pad] Navigate   [Confirm] Select   [Cancel] Back   [Delete] Remove"
-	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint_label.add_theme_font_size_override("font_size", 13)
-	hint_label.add_theme_color_override("font_color", COL_DARK_TEXT)
-	hint_bar.add_child(hint_label)
+	_hint_label = Label.new()
+	_hint_label.text = "[D-Pad] Navigate   [Confirm] Select   [Cancel] Back   [Delete] Remove"
+	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint_label.add_theme_font_size_override("font_size", 13)
+	_hint_label.add_theme_color_override("font_color", COL_DARK_TEXT)
+	hint_bar.add_child(_hint_label)
 	root.add_child(hint_bar)
 
 
@@ -101,7 +103,10 @@ func _build_slot(index: int) -> PanelContainer:
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var style := StyleBoxFlat.new()
-	if is_selected:
+	if _confirming_delete and is_selected:
+		style.bg_color = Color(0.85, 0.25, 0.25)
+		style.border_color = Color(0.7, 0.15, 0.15)
+	elif is_selected:
 		style.bg_color = COL_SELECTED
 		style.border_color = Color(0.80, 0.50, 0.10)
 	else:
@@ -286,6 +291,20 @@ func _apply_texture_recursive(node: Node, texture: Texture2D) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Delete confirmation mode
+	if _confirming_delete:
+		if event.is_action_pressed("ui_accept"):
+			CharacterManager.delete_character(_current_slot)
+			SaveManager.save_game()
+			_confirming_delete = false
+			_rebuild_grid()
+			get_viewport().set_input_as_handled()
+		elif event.is_action_pressed("ui_cancel"):
+			_confirming_delete = false
+			_rebuild_grid()
+			get_viewport().set_input_as_handled()
+		return
+
 	if event.is_action_pressed("ui_left"):
 		if _current_slot % GRID_COLS > 0:
 			_current_slot -= 1
@@ -336,6 +355,15 @@ func _rebuild_grid() -> void:
 	for i in range(SLOT_COUNT):
 		grid.add_child(_build_slot(i))
 
+	# Update hint text
+	if _hint_label:
+		if _confirming_delete:
+			_hint_label.text = "Delete this character? This cannot be undone.   [Confirm] Yes   [Cancel] No"
+			_hint_label.add_theme_color_override("font_color", Color(0.7, 0.15, 0.15))
+		else:
+			_hint_label.text = "[D-Pad] Navigate   [Confirm] Select   [Cancel] Back   [Delete] Remove"
+			_hint_label.add_theme_color_override("font_color", COL_DARK_TEXT)
+
 
 func _select_slot() -> void:
 	var character = CharacterManager.get_character(_current_slot)
@@ -350,5 +378,5 @@ func _delete_slot() -> void:
 	var character = CharacterManager.get_character(_current_slot)
 	if character == null:
 		return
-	CharacterManager.delete_character(_current_slot)
+	_confirming_delete = true
 	_rebuild_grid()

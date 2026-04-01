@@ -49,5 +49,6 @@ cd web && npm install && npm run dev
 
 ## Credits
 
+- **Character Portraits** by Rozalin#4270 — class artwork for character creation
 - **Input Prompts** by [Kenney](https://www.kenney.nl/) — CC0 (public domain)
   - [kenney.nl/assets/input-prompts](https://kenney.nl/assets/input-prompts)
