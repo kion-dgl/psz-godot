@@ -76,6 +76,7 @@ jobs:
           godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
 
       - name: Export Android build
+        continue-on-error: true
         run: |
           mkdir -p build/android
           godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
@@ -85,6 +86,15 @@ jobs:
           cd build/web && zip -r ../../psz-godot-web.zip . && cd ../..
           cd build/linux && zip -r ../../psz-godot-linux-x86_64.zip . && cd ../..
           cd build/windows && zip -r ../../psz-godot-windows-x86_64.zip . && cd ../..
+
+      - name: Collect APK if built
+        id: apk
+        run: |
+          if [ -f build/android/psz-godot.apk ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload Release
         if: steps.check_tag.outputs.exists == 'false'
@@ -96,7 +106,7 @@ jobs:
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
-            build/android/psz-godot.apk
+            ${{ steps.apk.outputs.exists == 'true' && 'build/android/psz-godot.apk' || '' }}
           generate_release_notes: true
 
       - name: Upload build (no version bump)
@@ -109,5 +119,5 @@ jobs:
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
-            build/android/psz-godot.apk
+            ${{ steps.apk.outputs.exists == 'true' && 'build/android/psz-godot.apk' || '' }}
           generate_release_notes: true
