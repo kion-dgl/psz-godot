@@ -155,6 +155,7 @@ var _charge_timer: float = 0.0
 var _charge_active: bool = false
 var _charge_color: Color = Color.WHITE
 var _glow_light: OmniLight3D  # Lantern glow, toggled by time of day
+var _cached_materials: Array = []  # Array of StandardMaterial3D for charge/glow effects
 
 # Dodge tracking
 var dodge_direction: float = 0.0
@@ -193,6 +194,7 @@ func _ready() -> void:
 
 	# Load character model/texture based on active character appearance
 	_load_character_model()
+	_cache_model_materials()
 
 	# Set up animations
 	_setup_animations()
@@ -721,6 +723,21 @@ func _apply_texture_to_materials(node: Node, texture: Texture2D) -> void:
 
 	for child in node.get_children():
 		_apply_texture_to_materials(child, texture)
+
+
+func _cache_model_materials() -> void:
+	## Pre-cache StandardMaterial3D references from the player model so charge
+	## visual and glow updates don't need nested get_children() loops every frame.
+	_cached_materials.clear()
+	if not model:
+		return
+	for child in model.get_children():
+		if child is MeshInstance3D:
+			var mi: MeshInstance3D = child as MeshInstance3D
+			for i in range(mi.get_surface_override_material_count()):
+				var mat := mi.get_active_material(i)
+				if mat is StandardMaterial3D:
+					_cached_materials.append(mat)
 
 
 func _physics_process(delta: float) -> void:
@@ -1545,17 +1562,11 @@ func _start_charge_visual() -> void:
 	_charge_ring.global_position = global_position + Vector3(0, 0.05, 0)
 	_charge_ring.visible = true
 
-	# 2. Glow on player model
-	if model:
-		for child in model.get_children():
-			if child is MeshInstance3D:
-				var mi: MeshInstance3D = child as MeshInstance3D
-				for i in range(mi.get_surface_override_material_count()):
-					var mat := mi.get_active_material(i)
-					if mat is StandardMaterial3D:
-						mat.emission_enabled = true
-						mat.emission = _charge_color
-						mat.emission_energy_multiplier = 0.5
+	# 2. Glow on player model (uses cached material references)
+	for mat in _cached_materials:
+		mat.emission_enabled = true
+		mat.emission = _charge_color
+		mat.emission_energy_multiplier = 0.5
 
 	# 3. Particles
 	if not _charge_particles:
@@ -1595,16 +1606,10 @@ func _end_charge_visual() -> void:
 		tw.tween_property(_charge_ring_mat, "albedo_color:a", 0.0, 0.15)
 		tw.tween_callback(func(): _charge_ring.visible = false)
 
-	# Remove model glow
-	if model:
-		for child in model.get_children():
-			if child is MeshInstance3D:
-				var mi: MeshInstance3D = child as MeshInstance3D
-				for i in range(mi.get_surface_override_material_count()):
-					var mat := mi.get_active_material(i)
-					if mat is StandardMaterial3D:
-						mat.emission_enabled = false
-						mat.emission_energy_multiplier = 0.0
+	# Remove model glow (uses cached material references)
+	for mat in _cached_materials:
+		mat.emission_enabled = false
+		mat.emission_energy_multiplier = 0.0
 
 	# Stop particles
 	if _charge_particles:
@@ -1623,15 +1628,10 @@ func _update_charge_visual(delta: float) -> void:
 		_charge_ring.scale = Vector3(ring_scale, 0.3, ring_scale)
 		_charge_ring.global_position = global_position + Vector3(0, 0.05, 0)
 
-	# Intensify model glow
-	if model:
-		for child in model.get_children():
-			if child is MeshInstance3D:
-				var mi: MeshInstance3D = child as MeshInstance3D
-				for i in range(mi.get_surface_override_material_count()):
-					var mat := mi.get_active_material(i)
-					if mat is StandardMaterial3D and mat.emission_enabled:
-						mat.emission_energy_multiplier = 0.5 + pct * 1.5
+	# Intensify model glow (uses cached material references)
+	for mat in _cached_materials:
+		if mat.emission_enabled:
+			mat.emission_energy_multiplier = 0.5 + pct * 1.5
 
 	# Update particle position
 	if _charge_particles:

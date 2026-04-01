@@ -30,6 +30,8 @@ var _gate_entries: Array = []      # Array[{center, color, label, dir}]
 var _gate_dir_index: Dictionary = {}  # direction → index in _gate_entries
 var _player_display_pos := Vector2.ZERO
 var _player_display_dir := Vector2(0, 1)  # arrow direction in display space
+var _last_drawn_pos := Vector2(-999, -999)  # last position that triggered a redraw
+const REDRAW_THRESHOLD := 1.5  # minimum pixel movement to trigger redraw
 var _has_player_tracking := false
 
 # Key counter (drawn below minimap)
@@ -137,7 +139,10 @@ func update_player(global_pos: Vector3, facing_rad: float, map_root: Node3D) -> 
 	var dir := (step_display - _player_display_pos)
 	if dir.length_squared() > 0.0001:
 		_player_display_dir = dir.normalized()
-	queue_redraw()
+	# Only redraw when player moved enough to matter visually
+	if _player_display_pos.distance_squared_to(_last_drawn_pos) > REDRAW_THRESHOLD * REDRAW_THRESHOLD:
+		_last_drawn_pos = _player_display_pos
+		queue_redraw()
 
 
 # ── Drawing ──────────────────────────────────────────────────────────────────
