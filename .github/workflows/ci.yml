@@ -187,9 +187,11 @@ jobs:
           ls -la "$HOME/.android/debug.keystore" 2>/dev/null || echo "No keystore"
 
       - name: Export Android
+        shell: bash --noprofile --norc {0}
         run: |
           mkdir -p build/android
-          godot --headless --path . --export-release "Android" build/android/psz-godot.apk > /tmp/android_export.log 2>&1; EXIT_CODE=$?
+          godot --headless --path . --export-release "Android" build/android/psz-godot.apk > /tmp/android_export.log 2>&1
+          EXIT_CODE=$?
           echo "=== Full export output ==="
           cat /tmp/android_export.log
           echo "=== Exit code: $EXIT_CODE ==="
