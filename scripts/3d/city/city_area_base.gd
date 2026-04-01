@@ -294,7 +294,8 @@ func _fix_materials_recursive(node: Node) -> void:
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
-					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+					new_mat.vertex_color_use_as_albedo = true
 					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 					new_mat.alpha_scissor_threshold = 0.1
 					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
