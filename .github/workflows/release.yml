@@ -75,17 +75,8 @@ jobs:
 
       - name: Configure Godot editor settings for Android
         run: |
-          SETTINGS_DIR="$HOME/.config/godot"
-          mkdir -p "$SETTINGS_DIR"
-          cat > "$SETTINGS_DIR/editor_settings-4.tres" << EOSETTINGS
-          [gd_resource type="EditorSettings" format=3]
-
-          [resource]
-          export/android/android_sdk_path = "$ANDROID_HOME"
-          export/android/debug_keystore = "$HOME/.android/debug.keystore"
-          export/android/debug_keystore_user = "androiddebugkey"
-          export/android/debug_keystore_pass = "android"
-          EOSETTINGS
+          mkdir -p "$HOME/.config/godot"
+          printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "%s"\nexport/android/debug_keystore = "%s/.android/debug.keystore"\nexport/android/debug_keystore_user = "androiddebugkey"\nexport/android/debug_keystore_pass = "android"\n' "$ANDROID_HOME" "$HOME" > "$HOME/.config/godot/editor_settings-4.tres"
 
       - name: Diagnose Android SDK setup
         run: |
