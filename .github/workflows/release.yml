@@ -57,6 +57,33 @@ jobs:
             -storepass android -dname "CN=Android Debug,O=Android,C=US" \
             -validity 9999 -deststoretype pkcs12
 
+      - name: Configure Godot editor settings for Android
+        run: |
+          SETTINGS_DIR="$HOME/.config/godot"
+          mkdir -p "$SETTINGS_DIR"
+          cat > "$SETTINGS_DIR/editor_settings-4.tres" << EOSETTINGS
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOSETTINGS
+
+      - name: Cache Godot import
+        uses: actions/cache@v4
+        with:
+          path: .godot/imported
+          key: godot-import-${{ hashFiles('**/*.import') }}
+          restore-keys: godot-import-
+
+      - name: Cache Godot export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/godot/export_templates
+          key: godot-templates-4.5.1
+
       - name: Import project
         run: godot --headless --path . --import --quit || true
 
@@ -76,6 +103,7 @@ jobs:
           godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
 
       - name: Export Android build
+        continue-on-error: true
         run: |
           mkdir -p build/android
           godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
@@ -85,6 +113,15 @@ jobs:
           cd build/web && zip -r ../../psz-godot-web.zip . && cd ../..
           cd build/linux && zip -r ../../psz-godot-linux-x86_64.zip . && cd ../..
           cd build/windows && zip -r ../../psz-godot-windows-x86_64.zip . && cd ../..
+
+      - name: Collect APK if built
+        id: apk
+        run: |
+          if [ -f build/android/psz-godot.apk ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload Release
         if: steps.check_tag.outputs.exists == 'false'
@@ -96,7 +133,7 @@ jobs:
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
-            build/android/psz-godot.apk
+            ${{ steps.apk.outputs.exists == 'true' && 'build/android/psz-godot.apk' || '' }}
           generate_release_notes: true
 
       - name: Upload build (no version bump)
@@ -109,5 +146,5 @@ jobs:
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
-            build/android/psz-godot.apk
+            ${{ steps.apk.outputs.exists == 'true' && 'build/android/psz-godot.apk' || '' }}
           generate_release_notes: true

@@ -64,6 +64,7 @@ func _build_options_menu() -> void:
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
 		"Combo Timing: %s" % (on if DebugConfig.show_combo_timing else off),
 		"Time + Room: %s" % (on if DebugConfig.show_time_room else off),
+		"Frame Profiler: %s" % (on if DebugConfig.profile_frames else off),
 		"Weapon Test",
 	]
 
@@ -108,6 +109,9 @@ func _on_menu_selected(index: int) -> void:
 		elif item.begins_with("Time + Room:"):
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
+		elif item.begins_with("Frame Profiler:"):
+			DebugConfig.profile_frames = not DebugConfig.profile_frames
+			print("[Debug] Frame profiler: %s" % ("ON" if DebugConfig.profile_frames else "OFF"))
 		var old_index: int = menu_list.get_current_index()
 		_build_options_menu()
 		menu_list.set_current_index(old_index)
