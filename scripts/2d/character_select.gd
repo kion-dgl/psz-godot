@@ -218,9 +218,9 @@ func _build_slot_preview(character: Dictionary) -> SubViewportContainer:
 	container.add_child(viewport)
 
 	var camera := Camera3D.new()
-	camera.position = Vector3(0, 0.5, 2.0)
-	camera.rotation_degrees = Vector3(-5, 0, 0)
-	camera.fov = 32
+	camera.position = Vector3(0, 0.7, 2.8)
+	camera.rotation_degrees = Vector3(-3, 0, 0)
+	camera.fov = 28
 	viewport.add_child(camera)
 
 	var light := DirectionalLight3D.new()
@@ -252,7 +252,7 @@ func _build_slot_preview(character: Dictionary) -> SubViewportContainer:
 		if packed:
 			var model_node := packed.instantiate() as Node3D
 			model_node.scale = Vector3(0.6, 0.6, 0.6)
-			model_node.position.y = -0.7
+			model_node.position.y = -0.3
 			model_node.rotation_degrees.y = -15
 			viewport.add_child(model_node)
 
