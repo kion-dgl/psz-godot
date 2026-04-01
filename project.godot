@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="PSZ Godot"
-config/version="0.12.1"
+config/version="0.12.2"
 run/main_scene="res://scenes/2d/title.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
@@ -52,6 +52,7 @@ QuestLoader="*res://scripts/autoloads/quest_loader.gd"
 ActionPalette="*res://scripts/autoloads/action_palette.gd"
 InputConfig="*res://scripts/autoloads/input_config.gd"
 RecipeRegistry="*res://scripts/autoloads/recipe_registry.gd"
+FrameProfiler="*res://scripts/autoloads/frame_profiler.gd"
 
 [display]
 

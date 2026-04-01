@@ -6,3 +6,4 @@ static var show_gate_dots := false
 static var show_time_room := false
 static var show_hitboxes := false
 static var show_combo_timing := true  # Show rhythm combo window indicator
+static var profile_frames := false  # Log slow frame breakdowns to console
