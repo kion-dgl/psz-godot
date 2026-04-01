@@ -207,6 +207,17 @@ func _ready() -> void:
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
 
+	# Subtle glow so the player is visible at night
+	var glow := OmniLight3D.new()
+	glow.name = "PlayerGlow"
+	glow.light_color = Color(0.9, 0.85, 0.7)
+	glow.light_energy = 0.4
+	glow.omni_range = 4.0
+	glow.omni_attenuation = 1.5
+	glow.shadow_enabled = false
+	glow.position = Vector3(0, 1.0, 0)
+	add_child(glow)
+
 	# Start in idle state
 	transition_to(PlayerState.IDLE)
 
