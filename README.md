@@ -1,5 +1,8 @@
 # PSZ Godot
 
+[![CI](https://github.com/kion-dgl/psz-godot/actions/workflows/ci.yml/badge.svg)](https://github.com/kion-dgl/psz-godot/actions/workflows/ci.yml)
+[![Release](https://github.com/kion-dgl/psz-godot/actions/workflows/release.yml/badge.svg)](https://github.com/kion-dgl/psz-godot/actions/workflows/release.yml)
+
 **Phantasy Star Zero — if it were actually like PSO.**
 
 A fan-made action RPG built in Godot 4.5, inspired by Phantasy Star Online and Phantasy Star Zero. Explore instanced quest areas, fight enemies with real-time melee and ranged combat, cast techniques, and gear up across 14 character classes.
