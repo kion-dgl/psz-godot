@@ -378,16 +378,18 @@ func _update_class_select() -> void:
 		_make_bordered_stylebox(Color(0.82, 0.84, 0.88, 0.95), C_PANEL_BORDER, 1, 8, 0))
 	_content_area.add_child(left_panel)
 
-	# Build sidebar rows
+	# Build sidebar rows — proportional height based on class count
 	var y_offset: float = 0.0
-	var row_height: float = 0.0
+	var total_classes := _class_list.size()  # 14
+	var separator_total: float = (_type_groups.size() - 1) * 2.0
+	var available_height: float = area_size.y - padding * 2 - separator_total
 
 	for gi in range(_type_groups.size()):
 		var group: Dictionary = _type_groups[gi]
 		var group_classes: Array = group["classes"]
 		var type_color: Color = group["color"]
 		var type_name: String = group["type"]
-		var group_height: float = group_classes.size() * 40.0
+		var group_height: float = (float(group_classes.size()) / float(total_classes)) * available_height
 
 		# Type color stripe on the left
 		var stripe := ColorRect.new()
@@ -396,28 +398,22 @@ func _update_class_select() -> void:
 		stripe.color = type_color
 		left_panel.add_child(stripe)
 
-		# Type name label (vertical, rotated would be complex — just put at top)
-		var type_lbl := Label.new()
-		type_lbl.text = type_name.to_upper()
-		type_lbl.add_theme_font_size_override("font_size", 11)
-		type_lbl.add_theme_color_override("font_color", type_color.darkened(0.3))
-		type_lbl.position = Vector2(14, y_offset + 2)
-		type_lbl.size = Vector2(60, 16)
-		left_panel.add_child(type_lbl)
+		# No separate type label — the stripe color indicates the type
 
 		# Class rows within this type
+		var row_h: float = group_height / float(group_classes.size())
 		for ci in range(group_classes.size()):
 			var entry: Dictionary = group_classes[ci]
 			var cls_data = entry["data"]
 			var cls_index: int = entry["index"]
 			var is_selected := (cls_index == _selected_class_index)
 
-			var row_y: float = y_offset + ci * 40.0
+			var row_y: float = y_offset + ci * row_h
 
 			# Row background
 			var row_bg := ColorRect.new()
 			row_bg.position = Vector2(8, row_y)
-			row_bg.size = Vector2(left_width - 8, 40)
+			row_bg.size = Vector2(left_width - 8, row_h)
 			if is_selected:
 				row_bg.color = C_ORANGE
 			elif ci % 2 == 0:
@@ -427,12 +423,12 @@ func _update_class_select() -> void:
 			left_panel.add_child(row_bg)
 
 			# Small class art thumbnail
-			var thumb_size: float = 32.0
+			var thumb_h: float = row_h * 0.8
 			if _class_art_cache.has(cls_data.id):
 				var thumb := TextureRect.new()
 				thumb.texture = _class_art_cache[cls_data.id]
-				thumb.position = Vector2(14, row_y + 4)
-				thumb.size = Vector2(thumb_size, thumb_size)
+				thumb.position = Vector2(14, row_y + (row_h - thumb_h) * 0.5)
+				thumb.size = Vector2(thumb_h * 0.8, thumb_h)
 				thumb.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 				thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 				left_panel.add_child(thumb)
@@ -445,7 +441,7 @@ func _update_class_select() -> void:
 				name_lbl.add_theme_color_override("font_color", C_WHITE)
 			else:
 				name_lbl.add_theme_color_override("font_color", C_DARK)
-			name_lbl.position = Vector2(52, row_y + 10)
+			name_lbl.position = Vector2(52, row_y + (row_h - 20) * 0.5)
 			name_lbl.size = Vector2(left_width - 60, 20)
 			left_panel.add_child(name_lbl)
 
