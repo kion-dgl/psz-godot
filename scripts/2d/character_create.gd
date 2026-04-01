@@ -480,8 +480,8 @@ func _update_class_select() -> void:
 		"hucaseal": 10.0,
 		"ramar": -120.0,
 		"ramarl": -80.0,
-		"racast": -30.0,
-		"racaseal": 40.0,
+		"racast": -60.0,
+		"racaseal": 80.0,
 		"fonewearl": 30.0,
 	}
 
