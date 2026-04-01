@@ -974,9 +974,9 @@ static func _wrap_mode_int(mode: String) -> int:
 
 
 func _fix_materials(node: Node) -> void:
-	## Make stage materials unshaded so pre-baked vertex colors display at full
-	## brightness regardless of mesh normals or enclosure geometry.  TimeManager
-	## applies a screen-space tint overlay for day/night atmosphere instead.
+	## Stage materials use per-vertex shading with vertex_color_use_as_albedo
+	## so pre-baked vertex colors provide surface detail while real 3D lighting
+	## (DirectionalLight3D, ambient, OmniLight3D) drives day/night atmosphere.
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
 		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1020,7 +1020,8 @@ func _fix_materials(node: Node) -> void:
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
-					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+					new_mat.vertex_color_use_as_albedo = true
 					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 					new_mat.alpha_scissor_threshold = 0.1
 					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
