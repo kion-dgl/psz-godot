@@ -27,9 +27,9 @@ var _configs: Dictionary = {
 		"ground_bottom": Color(0.15, 0.12, 0.08),
 		"ground_horizon": Color(0.45, 0.42, 0.35),
 		"ambient_color": Color(0.9, 0.92, 0.88),
-		"ambient_energy": 0.9,
+		"ambient_energy": 1.1,
 		"light_color": Color(1.0, 0.98, 0.94),
-		"light_energy": 0.6,
+		"light_energy": 0.5,
 		"light_pitch": -45.0,
 	},
 	Phase.SUNSET: {
@@ -49,9 +49,9 @@ var _configs: Dictionary = {
 		"ground_bottom": Color(0.02, 0.02, 0.04),
 		"ground_horizon": Color(0.05, 0.06, 0.1),
 		"ambient_color": Color(0.2, 0.25, 0.45),
-		"ambient_energy": 0.3,
+		"ambient_energy": 0.4,
 		"light_color": Color(0.6, 0.7, 1.0),
-		"light_energy": 0.2,
+		"light_energy": 0.15,
 		"light_pitch": -40.0,
 	},
 	Phase.SUNRISE: {
