@@ -189,4 +189,9 @@ jobs:
       - name: Export Android
         run: |
           mkdir -p build/android
-          godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
+          godot --headless --path . --export-release "Android" build/android/psz-godot.apk > /tmp/android_export.log 2>&1; EXIT_CODE=$?
+          echo "=== Full export output ==="
+          cat /tmp/android_export.log
+          echo "=== Exit code: $EXIT_CODE ==="
+          ls -la build/android/ 2>/dev/null || echo "No APK produced"
+          exit $EXIT_CODE
