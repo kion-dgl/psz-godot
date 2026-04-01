@@ -110,17 +110,6 @@ func _ready() -> void:
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
 	_setup_reticle()
 
-	# Enemy glow — visible presence at night, reddish tint
-	var glow := OmniLight3D.new()
-	glow.name = "EnemyGlow"
-	glow.light_color = Color(1.0, 0.6, 0.4)
-	glow.light_energy = 0.8
-	glow.omni_range = 5.0
-	glow.omni_attenuation = 1.2
-	glow.shadow_enabled = false
-	glow.position = Vector3(0, 1.0, 0)
-	add_child(glow)
-
 
 func _setup_from_data() -> void:
 	if enemy_data:

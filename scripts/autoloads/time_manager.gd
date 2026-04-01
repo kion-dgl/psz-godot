@@ -115,14 +115,24 @@ func get_phase() -> String:
 func get_lighting() -> Dictionary:
 	if current_hour >= 21.0 or current_hour < 5.0:
 		return _configs[Phase.NIGHT].duplicate()
-	elif current_hour >= 5.0 and current_hour < 7.0:
-		var t: float = (current_hour - 5.0) / 2.0
-		return _lerp_config(_configs[Phase.NIGHT], _configs[Phase.DAY], t)
+	elif current_hour >= 5.0 and current_hour < 6.0:
+		# Early sunrise: NIGHT → SUNRISE
+		var t: float = current_hour - 5.0
+		return _lerp_config(_configs[Phase.NIGHT], _configs[Phase.SUNRISE], t)
+	elif current_hour >= 6.0 and current_hour < 7.0:
+		# Late sunrise: SUNRISE → DAY
+		var t: float = current_hour - 6.0
+		return _lerp_config(_configs[Phase.SUNRISE], _configs[Phase.DAY], t)
 	elif current_hour >= 7.0 and current_hour < 17.0:
 		return _configs[Phase.DAY].duplicate()
+	elif current_hour >= 17.0 and current_hour < 19.0:
+		# Early sunset: DAY → SUNSET
+		var t: float = (current_hour - 17.0) / 2.0
+		return _lerp_config(_configs[Phase.DAY], _configs[Phase.SUNSET], t)
 	else:
-		var t: float = (current_hour - 17.0) / 4.0
-		return _lerp_config(_configs[Phase.DAY], _configs[Phase.NIGHT], t)
+		# Late sunset: SUNSET → NIGHT (19:00–21:00)
+		var t: float = (current_hour - 19.0) / 2.0
+		return _lerp_config(_configs[Phase.SUNSET], _configs[Phase.NIGHT], t)
 
 
 func show_hud(visible: bool = true) -> void:
@@ -146,11 +156,18 @@ func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: Dir
 	light.rotation_degrees.x = cfg["light_pitch"]
 	light.shadow_enabled = true
 
-	# Moonlight — cool fill light from opposite direction, fades in at night
+	# Moonlight — cool fill from opposite side of sun, fades in at night
 	if moonlight:
 		var moon_energy: float = _get_moonlight_energy()
 		moonlight.light_energy = moon_energy
 		moonlight.visible = moon_energy > 0.01
+		if moonlight.visible:
+			moonlight.rotation_degrees = Vector3(cfg["light_pitch"], light.rotation_degrees.y + 180.0, 0)
+
+
+func is_dark() -> bool:
+	## Returns true when it's dark enough to show entity glow lights (sunset through sunrise).
+	return current_hour >= 19.0 or current_hour < 6.0
 
 
 func _get_moonlight_energy() -> float:

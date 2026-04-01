@@ -122,12 +122,11 @@ func _ready() -> void:
 	_dir_light = $DirectionalLight3D
 	_sky_material = _world_env.environment.sky.sky_material as ProceduralSkyMaterial
 
-	# Moonlight — cool directional fill from the opposite side of the sun
+	# Moonlight — rotation derived from sun direction by TimeManager
 	_moonlight = DirectionalLight3D.new()
 	_moonlight.name = "Moonlight"
 	_moonlight.light_color = Color(0.5, 0.6, 0.9)
 	_moonlight.light_energy = 0.0
-	_moonlight.rotation_degrees = Vector3(-55, 150, 0)
 	_moonlight.shadow_enabled = false
 	_moonlight.visible = false
 	add_child(_moonlight)
