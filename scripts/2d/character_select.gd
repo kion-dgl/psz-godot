@@ -121,24 +121,28 @@ func _build_slot(index: int) -> PanelContainer:
 	info.add_theme_constant_override("separation", 2)
 
 	if character != null:
+		var text_color: Color = Color.WHITE if is_selected else Color(0.1, 0.12, 0.18)
+		var sub_color: Color = Color(1, 1, 1, 0.75) if is_selected else COL_MUTED_TEXT
+		var dim_color: Color = Color(1, 1, 1, 0.55) if is_selected else Color(0.5, 0.54, 0.6)
+
 		var name_label := Label.new()
 		name_label.text = str(character.get("name", "???"))
-		name_label.add_theme_font_size_override("font_size", 18)
-		name_label.add_theme_color_override("font_color", Color(0.1, 0.12, 0.18) if not is_selected else Color.WHITE)
+		name_label.add_theme_font_size_override("font_size", 22)
+		name_label.add_theme_color_override("font_color", text_color)
 		info.add_child(name_label)
 
 		var class_id: String = str(character.get("class_id", ""))
 		var class_data = ClassRegistry.get_class_data(class_id)
 		var class_label := Label.new()
 		class_label.text = class_data.name if class_data else class_id
-		class_label.add_theme_font_size_override("font_size", 13)
-		class_label.add_theme_color_override("font_color", COL_MUTED_TEXT if not is_selected else Color(1, 1, 1, 0.8))
+		class_label.add_theme_font_size_override("font_size", 16)
+		class_label.add_theme_color_override("font_color", sub_color)
 		info.add_child(class_label)
 
 		var level_label := Label.new()
 		level_label.text = "LV %d" % int(character.get("level", 1))
-		level_label.add_theme_font_size_override("font_size", 14)
-		level_label.add_theme_color_override("font_color", Color(0.25, 0.45, 0.70) if not is_selected else Color(1, 1, 0.8))
+		level_label.add_theme_font_size_override("font_size", 18)
+		level_label.add_theme_color_override("font_color", Color(0.3, 0.55, 0.85) if not is_selected else Color(1, 1, 0.8))
 		info.add_child(level_label)
 
 		# Spacer
@@ -146,11 +150,29 @@ func _build_slot(index: int) -> PanelContainer:
 		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		info.add_child(spacer)
 
+		# Meseta
 		var meseta_label := Label.new()
 		meseta_label.text = "%d Meseta" % int(character.get("meseta", 0))
-		meseta_label.add_theme_font_size_override("font_size", 11)
-		meseta_label.add_theme_color_override("font_color", COL_MUTED_TEXT if not is_selected else Color(1, 1, 1, 0.6))
+		meseta_label.add_theme_font_size_override("font_size", 13)
+		meseta_label.add_theme_color_override("font_color", dim_color)
 		info.add_child(meseta_label)
+
+		# Materials used
+		var mat_used: int = int(character.get("materials_used", 0))
+		var mat_label := Label.new()
+		mat_label.text = "Materials: %d / 100" % mat_used
+		mat_label.add_theme_font_size_override("font_size", 13)
+		mat_label.add_theme_color_override("font_color", dim_color)
+		info.add_child(mat_label)
+
+		# Equipped mag
+		var mag_id: String = str(character.get("equipment", {}).get("mag", ""))
+		if not mag_id.is_empty():
+			var mag_label := Label.new()
+			mag_label.text = "Mag: %s" % mag_id.capitalize()
+			mag_label.add_theme_font_size_override("font_size", 13)
+			mag_label.add_theme_color_override("font_color", dim_color)
+			info.add_child(mag_label)
 	else:
 		var spacer := Control.new()
 		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -180,11 +202,12 @@ func _build_slot(index: int) -> PanelContainer:
 
 func _build_slot_preview(character: Dictionary) -> SubViewportContainer:
 	var container := SubViewportContainer.new()
-	container.custom_minimum_size = Vector2(140, 180)
+	container.custom_minimum_size = Vector2(160, 200)
 	container.stretch = true
+	container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 	var viewport := SubViewport.new()
-	viewport.size = Vector2i(140, 180)
+	viewport.size = Vector2i(200, 250)
 	viewport.transparent_bg = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	viewport.own_world_3d = true
@@ -192,9 +215,9 @@ func _build_slot_preview(character: Dictionary) -> SubViewportContainer:
 	container.add_child(viewport)
 
 	var camera := Camera3D.new()
-	camera.position = Vector3(0, 0.0, 2.2)
-	camera.rotation_degrees = Vector3(-3, 0, 0)
-	camera.fov = 30
+	camera.position = Vector3(0, 0.6, 2.4)
+	camera.rotation_degrees = Vector3(-5, 0, 0)
+	camera.fov = 28
 	viewport.add_child(camera)
 
 	var light := DirectionalLight3D.new()
