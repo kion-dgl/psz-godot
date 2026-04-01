@@ -462,23 +462,34 @@ func _update_class_select() -> void:
 	var group_classes: Array = current_group["classes"]
 
 	# Art gallery area (upper portion of right panel)
-	var gallery_height: float = right_height - 100.0  # reserve 100px for info box
+	var gallery_height: float = right_height - 100.0
 	var art_max_height: float = gallery_height - 20.0
-	var art_width: float = minf(right_width / maxf(group_classes.size(), 1) - 8.0, 200.0)
+	var art_width: float = 140.0
+	var count: int = group_classes.size()
+	# Spread based on class count — fewer classes get more space
+	var spread: float = 110.0 if count <= 4 else 80.0
+	var center_x: float = right_width * 0.5 - 40.0  # shift left to keep on screen
 
-	var total_art_width: float = group_classes.size() * (art_width + 8.0) - 8.0
-	var gallery_start_x: float = maxf((right_width - total_art_width) / 2.0, 4.0)
+	# Per-class nudge offsets
+	var NUDGE := {
+		"hunewearl": -50.0,
+		"racast": -30.0,
+		"racaseal": 20.0,
+	}
 
-	for ci in range(group_classes.size()):
+	for ci in range(count):
 		var entry: Dictionary = group_classes[ci]
 		var cls_data = entry["data"]
 		var cls_index: int = entry["index"]
 		var is_selected := (cls_index == _selected_class_index)
 
 		if _class_art_cache.has(cls_data.id):
+			var offset_x: float = (ci - (count - 1) / 2.0) * spread
+			offset_x += NUDGE.get(cls_data.id, 0.0)
+
 			var art := TextureRect.new()
 			art.texture = _class_art_cache[cls_data.id]
-			art.position = Vector2(gallery_start_x + ci * (art_width + 8.0), 10.0)
+			art.position = Vector2(center_x + offset_x - art_width * 0.5, 10.0)
 			art.size = Vector2(art_width, art_max_height)
 			art.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 			art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -493,7 +504,7 @@ func _update_class_select() -> void:
 			# Selected indicator — orange underline
 			if is_selected:
 				var underline := ColorRect.new()
-				underline.position = Vector2(gallery_start_x + ci * (art_width + 8.0), art_max_height + 12.0)
+				underline.position = Vector2(center_x + offset_x - art_width * 0.5, art_max_height + 12.0)
 				underline.size = Vector2(art_width, 3)
 				underline.color = C_ORANGE
 				right_panel.add_child(underline)
