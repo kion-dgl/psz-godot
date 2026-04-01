@@ -193,8 +193,11 @@ func _build_slot(index: int) -> PanelContainer:
 
 	# Right: 3D preview (only for populated slots, skip on web)
 	if character != null and not OS.has_feature("web"):
+		var preview_wrap := CenterContainer.new()
+		preview_wrap.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		var preview := _build_slot_preview(character)
-		hbox.add_child(preview)
+		preview_wrap.add_child(preview)
+		hbox.add_child(preview_wrap)
 
 	panel.add_child(hbox)
 	return panel
@@ -202,12 +205,11 @@ func _build_slot(index: int) -> PanelContainer:
 
 func _build_slot_preview(character: Dictionary) -> SubViewportContainer:
 	var container := SubViewportContainer.new()
-	container.custom_minimum_size = Vector2(160, 200)
+	container.custom_minimum_size = Vector2(120, 180)
 	container.stretch = true
-	container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 
 	var viewport := SubViewport.new()
-	viewport.size = Vector2i(200, 250)
+	viewport.size = Vector2i(160, 240)
 	viewport.transparent_bg = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	viewport.own_world_3d = true
@@ -215,9 +217,9 @@ func _build_slot_preview(character: Dictionary) -> SubViewportContainer:
 	container.add_child(viewport)
 
 	var camera := Camera3D.new()
-	camera.position = Vector3(0, 0.6, 2.4)
+	camera.position = Vector3(0, 0.5, 2.0)
 	camera.rotation_degrees = Vector3(-5, 0, 0)
-	camera.fov = 28
+	camera.fov = 32
 	viewport.add_child(camera)
 
 	var light := DirectionalLight3D.new()
