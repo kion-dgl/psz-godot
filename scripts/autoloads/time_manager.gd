@@ -2,6 +2,10 @@ extends Node
 ## TimeManager — In-game clock with day/night cycle and lighting control.
 ## Autoload that tracks time, calculates phase-based lighting, and applies
 ## it to 3D scenes with WorldEnvironment + DirectionalLight3D.
+##
+## Stage geometry uses shaded materials with vertex_color_use_as_albedo,
+## so DirectionalLight3D + ambient light drive the day/night atmosphere
+## directly.  Scene lights (OmniLight3D, SpotLight3D) also affect geometry.
 
 enum Phase { NIGHT, SUNRISE, DAY, SUNSET }
 
@@ -15,59 +19,51 @@ var _hud_layer: CanvasLayer
 var _hud_label: Label
 var stage_label: String = ""  # Set by field controller for debug display
 
-## Screen tint overlay (multiply blend for day/night atmosphere on unshaded geometry)
-var _tint_layer: CanvasLayer
-var _tint_rect: ColorRect
-
-## Lighting configs per phase
+## Lighting configs per phase — drives real 3D lighting (no screen tint)
 var _configs: Dictionary = {
 	Phase.DAY: {
 		"sky_top": Color(0.3, 0.55, 0.65),
 		"sky_horizon": Color(0.6, 0.7, 0.6),
 		"ground_bottom": Color(0.15, 0.12, 0.08),
 		"ground_horizon": Color(0.45, 0.42, 0.35),
-		"ambient_color": Color(0.85, 0.9, 0.85),
-		"ambient_energy": 0.7,
+		"ambient_color": Color(0.9, 0.92, 0.88),
+		"ambient_energy": 0.9,
 		"light_color": Color(1.0, 0.98, 0.94),
-		"light_energy": 0.8,
+		"light_energy": 0.6,
 		"light_pitch": -45.0,
-		"tint": Color(1.0, 1.0, 1.0),
 	},
 	Phase.SUNSET: {
-		"sky_top": Color(0.25, 0.15, 0.35),
-		"sky_horizon": Color(0.85, 0.4, 0.2),
-		"ground_bottom": Color(0.12, 0.08, 0.1),
-		"ground_horizon": Color(0.5, 0.3, 0.2),
-		"ambient_color": Color(0.9, 0.6, 0.4),
-		"ambient_energy": 0.4,
-		"light_color": Color(1.0, 0.4, 0.15),
-		"light_energy": 0.5,
-		"light_pitch": -10.0,
-		"tint": Color(1.0, 0.75, 0.55),
+		"sky_top": Color(0.2, 0.1, 0.3),
+		"sky_horizon": Color(0.95, 0.45, 0.15),
+		"ground_bottom": Color(0.15, 0.08, 0.04),
+		"ground_horizon": Color(0.6, 0.3, 0.1),
+		"ambient_color": Color(0.85, 0.5, 0.2),
+		"ambient_energy": 0.55,
+		"light_color": Color(1.0, 0.5, 0.1),
+		"light_energy": 0.7,
+		"light_pitch": -12.0,
 	},
 	Phase.NIGHT: {
 		"sky_top": Color(0.02, 0.02, 0.08),
 		"sky_horizon": Color(0.05, 0.08, 0.15),
 		"ground_bottom": Color(0.02, 0.02, 0.04),
 		"ground_horizon": Color(0.05, 0.06, 0.1),
-		"ambient_color": Color(0.3, 0.35, 0.55),
-		"ambient_energy": 0.25,
-		"light_color": Color(0.7, 0.8, 1.0),
-		"light_energy": 0.3,
+		"ambient_color": Color(0.2, 0.25, 0.45),
+		"ambient_energy": 0.3,
+		"light_color": Color(0.6, 0.7, 1.0),
+		"light_energy": 0.2,
 		"light_pitch": -40.0,
-		"tint": Color(0.25, 0.3, 0.5),
 	},
 	Phase.SUNRISE: {
 		"sky_top": Color(0.25, 0.35, 0.55),
 		"sky_horizon": Color(0.9, 0.55, 0.3),
 		"ground_bottom": Color(0.12, 0.1, 0.08),
 		"ground_horizon": Color(0.5, 0.35, 0.25),
-		"ambient_color": Color(0.8, 0.65, 0.5),
-		"ambient_energy": 0.4,
+		"ambient_color": Color(0.75, 0.6, 0.45),
+		"ambient_energy": 0.55,
 		"light_color": Color(1.0, 0.7, 0.4),
 		"light_energy": 0.5,
-		"light_pitch": -10.0,
-		"tint": Color(0.85, 0.75, 0.6),
+		"light_pitch": -12.0,
 	},
 }
 
@@ -95,21 +91,6 @@ func _ready() -> void:
 	_hud_layer.add_child(_hud_label)
 	_hud_layer.visible = false
 
-	# Tint overlay — multiply-blended ColorRect for day/night atmosphere.
-	# Sits below the HUD but above the 3D scene.
-	_tint_layer = CanvasLayer.new()
-	_tint_layer.layer = 105
-	add_child(_tint_layer)
-	_tint_rect = ColorRect.new()
-	_tint_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_tint_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var tint_mat := CanvasItemMaterial.new()
-	tint_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_MUL
-	_tint_rect.material = tint_mat
-	_tint_rect.color = Color(1, 1, 1, 1)
-	_tint_layer.add_child(_tint_rect)
-	_tint_layer.visible = false
-
 
 func _process(delta: float) -> void:
 	if paused:
@@ -134,24 +115,32 @@ func get_phase() -> String:
 func get_lighting() -> Dictionary:
 	if current_hour >= 21.0 or current_hour < 5.0:
 		return _configs[Phase.NIGHT].duplicate()
-	elif current_hour >= 5.0 and current_hour < 7.0:
-		var t: float = (current_hour - 5.0) / 2.0
-		return _lerp_config(_configs[Phase.NIGHT], _configs[Phase.DAY], t)
+	elif current_hour >= 5.0 and current_hour < 6.0:
+		# Early sunrise: NIGHT → SUNRISE
+		var t: float = current_hour - 5.0
+		return _lerp_config(_configs[Phase.NIGHT], _configs[Phase.SUNRISE], t)
+	elif current_hour >= 6.0 and current_hour < 7.0:
+		# Late sunrise: SUNRISE → DAY
+		var t: float = current_hour - 6.0
+		return _lerp_config(_configs[Phase.SUNRISE], _configs[Phase.DAY], t)
 	elif current_hour >= 7.0 and current_hour < 17.0:
 		return _configs[Phase.DAY].duplicate()
+	elif current_hour >= 17.0 and current_hour < 19.0:
+		# Early sunset: DAY → SUNSET
+		var t: float = (current_hour - 17.0) / 2.0
+		return _lerp_config(_configs[Phase.DAY], _configs[Phase.SUNSET], t)
 	else:
-		var t: float = (current_hour - 17.0) / 4.0
-		return _lerp_config(_configs[Phase.DAY], _configs[Phase.NIGHT], t)
+		# Late sunset: SUNSET → NIGHT (19:00–21:00)
+		var t: float = (current_hour - 19.0) / 2.0
+		return _lerp_config(_configs[Phase.SUNSET], _configs[Phase.NIGHT], t)
 
 
 func show_hud(visible: bool = true) -> void:
 	_hud_layer.visible = visible
-	_tint_layer.visible = visible
 
 
-func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: DirectionalLight3D) -> void:
+func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: DirectionalLight3D, moonlight: DirectionalLight3D = null) -> void:
 	_hud_layer.visible = DebugConfig.show_time_room
-	_tint_layer.visible = true
 	var cfg: Dictionary = get_lighting()
 
 	sky_mat.sky_top_color = cfg["sky_top"]
@@ -167,8 +156,34 @@ func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: Dir
 	light.rotation_degrees.x = cfg["light_pitch"]
 	light.shadow_enabled = true
 
-	# Screen-space tint for unshaded stage geometry
-	_tint_rect.color = cfg["tint"]
+	# Moonlight — cool fill from opposite side of sun, fades in at night
+	if moonlight:
+		var moon_energy: float = _get_moonlight_energy()
+		moonlight.light_energy = moon_energy
+		moonlight.visible = moon_energy > 0.01
+		if moonlight.visible:
+			moonlight.rotation_degrees = Vector3(cfg["light_pitch"], light.rotation_degrees.y + 180.0, 0)
+
+
+func is_dark() -> bool:
+	## Returns true when it's dark enough to show entity glow lights (sunset through sunrise).
+	return current_hour >= 19.0 or current_hour < 6.0
+
+
+func _get_moonlight_energy() -> float:
+	## Returns moonlight intensity: 0 during day, ramps up at sunset, full at night,
+	## ramps down at sunrise.
+	if current_hour >= 21.0 or current_hour < 5.0:
+		return 0.35  # Full moonlight
+	elif current_hour >= 17.0 and current_hour < 21.0:
+		# Sunset: fade in from 0 → 0.35
+		var t: float = (current_hour - 17.0) / 4.0
+		return lerpf(0.0, 0.35, t)
+	elif current_hour >= 5.0 and current_hour < 7.0:
+		# Sunrise: fade out from 0.35 → 0
+		var t: float = (current_hour - 5.0) / 2.0
+		return lerpf(0.35, 0.0, t)
+	return 0.0  # Day
 
 
 func set_hour(h: float) -> void:

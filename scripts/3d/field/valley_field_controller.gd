@@ -55,6 +55,7 @@ var orbit_camera: Node3D
 var _map_root: Node3D
 var _world_env: WorldEnvironment
 var _dir_light: DirectionalLight3D
+var _moonlight: DirectionalLight3D
 var _sky_material: ProceduralSkyMaterial
 var _transitioning := false
 var _keys_collected: Dictionary = {}  # cell_pos → true (key pickup, prevents respawn)
@@ -120,7 +121,17 @@ func _ready() -> void:
 	_world_env = $WorldEnvironment
 	_dir_light = $DirectionalLight3D
 	_sky_material = _world_env.environment.sky.sky_material as ProceduralSkyMaterial
-	TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light)
+
+	# Moonlight — rotation derived from sun direction by TimeManager
+	_moonlight = DirectionalLight3D.new()
+	_moonlight.name = "Moonlight"
+	_moonlight.light_color = Color(0.5, 0.6, 0.9)
+	_moonlight.light_energy = 0.0
+	_moonlight.shadow_enabled = false
+	_moonlight.visible = false
+	add_child(_moonlight)
+
+	TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 
 	var data: Dictionary = SceneManager.get_transition_data()
 	var current_cell_pos: String = str(data.get("current_cell_pos", ""))
@@ -493,7 +504,7 @@ func _unlock_objective_exits() -> void:
 
 func _process(_delta: float) -> void:
 	if _world_env and _sky_material and _dir_light:
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light)
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
 	if _room_minimap and player and _map_root:
@@ -974,9 +985,9 @@ static func _wrap_mode_int(mode: String) -> int:
 
 
 func _fix_materials(node: Node) -> void:
-	## Make stage materials unshaded so pre-baked vertex colors display at full
-	## brightness regardless of mesh normals or enclosure geometry.  TimeManager
-	## applies a screen-space tint overlay for day/night atmosphere instead.
+	## Stage materials use per-vertex shading with vertex_color_use_as_albedo
+	## so pre-baked vertex colors provide surface detail while real 3D lighting
+	## (DirectionalLight3D, ambient, OmniLight3D) drives day/night atmosphere.
 	if node is MeshInstance3D:
 		var mesh_inst := node as MeshInstance3D
 		mesh_inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -1020,7 +1031,8 @@ func _fix_materials(node: Node) -> void:
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
-					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+					new_mat.vertex_color_use_as_albedo = true
 					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 					new_mat.alpha_scissor_threshold = 0.1
 					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
