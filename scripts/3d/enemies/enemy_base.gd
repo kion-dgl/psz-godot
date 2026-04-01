@@ -267,6 +267,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Process status effects
+	FrameProfiler.mark("enemy_status")
 	_process_status_effects(delta)
 
 	# Apply gravity
@@ -281,6 +282,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# Update state
+	FrameProfiler.mark("enemy_ai")
 	match current_state:
 		EnemyState.IDLE:
 			_process_idle(delta)
@@ -297,6 +299,7 @@ func _physics_process(delta: float) -> void:
 	if attack_cooldown_timer > 0:
 		attack_cooldown_timer -= delta
 
+	FrameProfiler.mark("enemy_move_slide")
 	move_and_slide()
 
 	# Safety: if enemy ends up over empty space, stop horizontal movement

@@ -52,6 +52,7 @@ QuestLoader="*res://scripts/autoloads/quest_loader.gd"
 ActionPalette="*res://scripts/autoloads/action_palette.gd"
 InputConfig="*res://scripts/autoloads/input_config.gd"
 RecipeRegistry="*res://scripts/autoloads/recipe_registry.gd"
+FrameProfiler="*res://scripts/autoloads/frame_profiler.gd"
 
 [display]
 
