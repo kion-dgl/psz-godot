@@ -252,7 +252,7 @@ func _build_slot_preview(character: Dictionary) -> SubViewportContainer:
 		if packed:
 			var model_node := packed.instantiate() as Node3D
 			model_node.scale = Vector3(0.6, 0.6, 0.6)
-			model_node.position.y = -0.3
+			model_node.position.y = 0.0
 			model_node.rotation_degrees.y = -15
 			viewport.add_child(model_node)
 
