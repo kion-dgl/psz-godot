@@ -129,7 +129,7 @@ func show_hud(visible: bool = true) -> void:
 	_hud_layer.visible = visible
 
 
-func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: DirectionalLight3D) -> void:
+func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: DirectionalLight3D, moonlight: DirectionalLight3D = null) -> void:
 	_hud_layer.visible = DebugConfig.show_time_room
 	var cfg: Dictionary = get_lighting()
 
@@ -145,6 +145,28 @@ func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: Dir
 	light.light_energy = cfg["light_energy"]
 	light.rotation_degrees.x = cfg["light_pitch"]
 	light.shadow_enabled = true
+
+	# Moonlight — cool fill light from opposite direction, fades in at night
+	if moonlight:
+		var moon_energy: float = _get_moonlight_energy()
+		moonlight.light_energy = moon_energy
+		moonlight.visible = moon_energy > 0.01
+
+
+func _get_moonlight_energy() -> float:
+	## Returns moonlight intensity: 0 during day, ramps up at sunset, full at night,
+	## ramps down at sunrise.
+	if current_hour >= 21.0 or current_hour < 5.0:
+		return 0.35  # Full moonlight
+	elif current_hour >= 17.0 and current_hour < 21.0:
+		# Sunset: fade in from 0 → 0.35
+		var t: float = (current_hour - 17.0) / 4.0
+		return lerpf(0.0, 0.35, t)
+	elif current_hour >= 5.0 and current_hour < 7.0:
+		# Sunrise: fade out from 0.35 → 0
+		var t: float = (current_hour - 5.0) / 2.0
+		return lerpf(0.35, 0.0, t)
+	return 0.0  # Day
 
 
 func set_hour(h: float) -> void:
