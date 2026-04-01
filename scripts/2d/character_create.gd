@@ -1023,6 +1023,13 @@ func _build_preview_scene() -> void:
 	var sphere := SphereMesh.new()
 	sphere.radius = 0.03
 	sphere.height = 0.06
+	var sphere_mat := StandardMaterial3D.new()
+	sphere_mat.albedo_color = Color(1, 1, 1, 0.5)
+	sphere_mat.emission_enabled = true
+	sphere_mat.emission = Color(1, 1, 1)
+	sphere_mat.emission_energy_multiplier = 1.5
+	sphere_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sphere.material = sphere_mat
 	particles.draw_pass_1 = sphere
 	particles.amount = 60
 	particles.lifetime = 8.0
