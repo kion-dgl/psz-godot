@@ -207,15 +207,15 @@ func _ready() -> void:
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
 
-	# Subtle glow so the player is visible at night
+	# Lantern-style warm light so the player illuminates nearby ground at night
 	var glow := OmniLight3D.new()
 	glow.name = "PlayerGlow"
-	glow.light_color = Color(0.9, 0.85, 0.7)
-	glow.light_energy = 0.4
-	glow.omni_range = 4.0
-	glow.omni_attenuation = 1.5
+	glow.light_color = Color(1.0, 0.8, 0.5)
+	glow.light_energy = 1.2
+	glow.omni_range = 8.0
+	glow.omni_attenuation = 1.2
 	glow.shadow_enabled = false
-	glow.position = Vector3(0, 1.0, 0)
+	glow.position = Vector3(0, 1.2, 0)
 	add_child(glow)
 
 	# Start in idle state
