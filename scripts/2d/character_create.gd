@@ -977,10 +977,10 @@ func _process(delta: float) -> void:
 
 
 func _build_preview_scene() -> void:
-	# Transparent environment so PSZ light blue shows through the CanvasLayer
+	# PSZ light blue background
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.0, 0.0, 0.0, 0.0)
+	env.background_color = C_BG
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.55, 0.65, 0.75)
 	env.ambient_light_energy = 0.8
@@ -988,11 +988,11 @@ func _build_preview_scene() -> void:
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 
-	# Camera offset left so model appears on the right side
+	# Camera pulled back so full body fits, offset left
 	var camera := Camera3D.new()
-	camera.position = Vector3(-0.3, 0.0, 2.2)
+	camera.position = Vector3(-0.3, 0.5, 3.2)
 	camera.rotation_degrees = Vector3(-3, 0, 0)
-	camera.fov = 30
+	camera.fov = 28
 
 	# Key light
 	var light := DirectionalLight3D.new()
@@ -1008,7 +1008,28 @@ func _build_preview_scene() -> void:
 	_preview_pivot = Node3D.new()
 	_preview_pivot.name = "PreviewPivot"
 
-	_preview_nodes = [world_env, camera, light, fill, _preview_pivot]
+	# White particle dots (static, like PSZ snow)
+	var particles := GPUParticles3D.new()
+	var particle_mat := ParticleProcessMaterial.new()
+	particle_mat.direction = Vector3(0.2, -0.1, 0)
+	particle_mat.spread = 180.0
+	particle_mat.initial_velocity_min = 0.05
+	particle_mat.initial_velocity_max = 0.15
+	particle_mat.gravity = Vector3(0, 0, 0)
+	particle_mat.scale_min = 0.02
+	particle_mat.scale_max = 0.05
+	particle_mat.color = Color(1, 1, 1, 0.4)
+	particles.process_material = particle_mat
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.03
+	sphere.height = 0.06
+	particles.draw_pass_1 = sphere
+	particles.amount = 60
+	particles.lifetime = 8.0
+	particles.visibility_aabb = AABB(Vector3(-4, -2, -2), Vector3(8, 5, 4))
+	particles.position = Vector3(0, 1.0, 0)
+
+	_preview_nodes = [world_env, camera, light, fill, _preview_pivot, particles]
 	for node in _preview_nodes:
 		add_child(node)
 
