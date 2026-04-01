@@ -61,6 +61,7 @@ const STATUS_COLORS := {
 
 ## Target reticle (shown when player is targeting this enemy)
 var _reticle: Sprite3D
+var _cached_materials: Array = []  # Cached StandardMaterial3D refs for tint updates
 
 ## Wandering behavior (idle state)
 var wander_timer: float = 0.0
@@ -176,6 +177,22 @@ func _setup_model() -> void:
 	else:
 		push_warning("[Enemy] No AnimationPlayer found in model")
 
+	# Cache material references for status effect tinting
+	_cache_model_materials()
+
+
+func _cache_model_materials() -> void:
+	_cached_materials.clear()
+	if not model:
+		return
+	for child in model.get_children():
+		if child is MeshInstance3D:
+			var mi: MeshInstance3D = child as MeshInstance3D
+			for i in range(mi.get_surface_override_material_count()):
+				var mat := mi.get_active_material(i)
+				if mat is StandardMaterial3D:
+					_cached_materials.append(mat)
+
 
 func _apply_texture(node: Node, texture: Texture2D) -> void:
 	if node is MeshInstance3D:
@@ -283,9 +300,11 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	# Safety: if enemy ends up over empty space, stop horizontal movement
-	if not _has_floor_at(global_position):
-		velocity.x = 0
-		velocity.z = 0
+	# Only check when actually moving to avoid wasting raycasts on idle enemies
+	if (velocity.x * velocity.x + velocity.z * velocity.z) > 0.001:
+		if not _has_floor_at(global_position):
+			velocity.x = 0
+			velocity.z = 0
 
 
 func _process_idle(delta: float) -> void:
@@ -890,15 +909,5 @@ func _update_status_visuals() -> void:
 
 
 func _set_model_tint(tint: Color) -> void:
-	if not model:
-		return
-	for child in model.get_children():
-		if child is MeshInstance3D:
-			var mi: MeshInstance3D = child as MeshInstance3D
-			for i in range(mi.get_surface_override_material_count()):
-				var mat := mi.get_active_material(i)
-				if mat is StandardMaterial3D:
-					if tint == Color.WHITE:
-						mat.albedo_color = Color.WHITE
-					else:
-						mat.albedo_color = tint
+	for mat in _cached_materials:
+		mat.albedo_color = tint

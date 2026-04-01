@@ -154,7 +154,7 @@ func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: Dir
 	light.light_color = cfg["light_color"]
 	light.light_energy = cfg["light_energy"]
 	light.rotation_degrees.x = cfg["light_pitch"]
-	light.shadow_enabled = true
+	light.shadow_enabled = false  # Stage geometry has baked shadows via vertex colors
 
 	# Moonlight — cool fill from opposite side of sun, fades in at night
 	if moonlight:
