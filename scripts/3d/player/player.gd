@@ -154,6 +154,7 @@ var _charge_particles: GPUParticles3D = null
 var _charge_timer: float = 0.0
 var _charge_active: bool = false
 var _charge_color: Color = Color.WHITE
+var _glow_light: OmniLight3D  # Lantern glow, toggled by time of day
 
 # Dodge tracking
 var dodge_direction: float = 0.0
@@ -206,6 +207,19 @@ func _ready() -> void:
 	# Initialize animation player if we have one
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
+
+	# Lantern-style warm light — only in field areas, toggled by time of day
+	if not in_city:
+		_glow_light = OmniLight3D.new()
+		_glow_light.name = "PlayerGlow"
+		_glow_light.light_color = Color(1.0, 0.8, 0.5)
+		_glow_light.light_energy = 1.2
+		_glow_light.omni_range = 8.0
+		_glow_light.omni_attenuation = 1.2
+		_glow_light.shadow_enabled = false
+		_glow_light.position = Vector3(0, 1.2, 0)
+		_glow_light.visible = TimeManager.is_dark()
+		add_child(_glow_light)
 
 	# Start in idle state
 	transition_to(PlayerState.IDLE)
@@ -739,6 +753,10 @@ func _physics_process(delta: float) -> void:
 	# Update model rotation
 	if model:
 		model.rotation.y = player_rotation
+
+	# Toggle lantern glow based on time of day (check once per second)
+	if _glow_light and Engine.get_physics_frames() % 60 == 0:
+		_glow_light.visible = TimeManager.is_dark()
 
 	# Update combat targeting reticles (every 3rd frame to reduce CPU)
 	if not _is_in_city() and Engine.get_physics_frames() % 3 == 0:
