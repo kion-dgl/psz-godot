@@ -128,26 +128,18 @@ jobs:
           cd build/linux && zip -r ../../psz-godot-linux-x86_64.zip . && cd ../..
           cd build/windows && zip -r ../../psz-godot-windows-x86_64.zip . && cd ../..
 
-      - name: Collect APK if built
-        id: apk
-        run: |
-          if [ -f build/android/psz-godot.apk ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Upload Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.tag }}
+          fail_on_missing_files: false
           files: |
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
-            ${{ steps.apk.outputs.exists == 'true' && 'build/android/psz-godot.apk' || '' }}
+            build/android/psz-godot.apk
           generate_release_notes: true
 
       - name: Upload build (no version bump)
@@ -156,9 +148,10 @@ jobs:
         with:
           tag_name: build-${{ github.sha }}
           name: Build ${{ github.sha }}
+          fail_on_missing_files: false
           files: |
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
-            ${{ steps.apk.outputs.exists == 'true' && 'build/android/psz-godot.apk' || '' }}
+            build/android/psz-godot.apk
           generate_release_notes: true
