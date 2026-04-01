@@ -85,12 +85,12 @@ func _load_classes() -> void:
 		var ta: int = type_order.get(a.type, 9)
 		var tb: int = type_order.get(b.type, 9)
 		if ta != tb: return ta < tb
-		var ga: int = gender_order.get(a.gender, 9)
-		var gb: int = gender_order.get(b.gender, 9)
-		if ga != gb: return ga < gb
 		var ra: int = race_order.get(a.race, 9)
 		var rb: int = race_order.get(b.race, 9)
-		return ra < rb
+		if ra != rb: return ra < rb
+		var ga: int = gender_order.get(a.gender, 9)
+		var gb: int = gender_order.get(b.gender, 9)
+		return ga < gb
 	)
 
 	# Build type groups for sidebar
@@ -422,18 +422,7 @@ func _update_class_select() -> void:
 				row_bg.color = C_CREAM_HOVER
 			left_panel.add_child(row_bg)
 
-			# Small class art thumbnail
-			var thumb_h: float = row_h * 0.8
-			if _class_art_cache.has(cls_data.id):
-				var thumb := TextureRect.new()
-				thumb.texture = _class_art_cache[cls_data.id]
-				thumb.position = Vector2(14, row_y + (row_h - thumb_h) * 0.5)
-				thumb.size = Vector2(thumb_h * 0.8, thumb_h)
-				thumb.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-				thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-				left_panel.add_child(thumb)
-
-			# Class name
+			# Class name (no thumbnail)
 			var name_lbl := Label.new()
 			name_lbl.text = cls_data.name
 			name_lbl.add_theme_font_size_override("font_size", 15)
@@ -441,8 +430,8 @@ func _update_class_select() -> void:
 				name_lbl.add_theme_color_override("font_color", C_WHITE)
 			else:
 				name_lbl.add_theme_color_override("font_color", C_DARK)
-			name_lbl.position = Vector2(52, row_y + (row_h - 20) * 0.5)
-			name_lbl.size = Vector2(left_width - 60, 20)
+			name_lbl.position = Vector2(16, row_y + (row_h - 20) * 0.5)
+			name_lbl.size = Vector2(left_width - 30, 20)
 			left_panel.add_child(name_lbl)
 
 		y_offset += group_height
