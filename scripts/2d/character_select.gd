@@ -193,11 +193,10 @@ func _build_slot(index: int) -> PanelContainer:
 
 	# Right: 3D preview (only for populated slots, skip on web)
 	if character != null and not OS.has_feature("web"):
-		var preview_wrap := CenterContainer.new()
-		preview_wrap.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		var preview := _build_slot_preview(character)
-		preview_wrap.add_child(preview)
-		hbox.add_child(preview_wrap)
+		preview.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		hbox.add_child(preview)
 
 	panel.add_child(hbox)
 	return panel
@@ -205,11 +204,13 @@ func _build_slot(index: int) -> PanelContainer:
 
 func _build_slot_preview(character: Dictionary) -> SubViewportContainer:
 	var container := SubViewportContainer.new()
-	container.custom_minimum_size = Vector2(120, 180)
+	container.custom_minimum_size = Vector2(180, 200)
 	container.stretch = true
+	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	container.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	var viewport := SubViewport.new()
-	viewport.size = Vector2i(160, 240)
+	viewport.size = Vector2i(240, 300)
 	viewport.transparent_bg = true
 	viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	viewport.own_world_3d = true
