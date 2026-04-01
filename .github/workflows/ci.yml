@@ -173,7 +173,20 @@ jobs:
           mkdir -p build/windows
           godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
 
+      - name: Verify Android export config
+        run: |
+          echo "=== Editor settings ==="
+          cat "$HOME/.config/godot/editor_settings-4.tres"
+          echo "=== Export preset Android section ==="
+          sed -n '/\[preset.3\]/,/\[preset.4\]/p' export_presets.cfg || sed -n '/\[preset.3\]/,$p' export_presets.cfg
+          echo "=== Android SDK contents ==="
+          ls "$ANDROID_HOME/" 2>/dev/null
+          echo "=== Android build-tools ==="
+          ls "$ANDROID_HOME/build-tools/" 2>/dev/null
+          echo "=== Debug keystore ==="
+          ls -la "$HOME/.android/debug.keystore" 2>/dev/null || echo "No keystore"
+
       - name: Export Android
         run: |
           mkdir -p build/android
-          godot --headless --verbose --path . --export-release "Android" build/android/psz-godot.apk 2>&1 | tail -50
+          godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
