@@ -2,41 +2,48 @@ import { useState } from 'react';
 
 /**
  * PSO-style start menu mock — fixed 1280x720 viewport.
- * Layout reference: PSO Episode I&II (GameCube)
- * Theme: PSZ blue/silver with octagon pattern
- *
- * Left side:  Character status (top), menu list (middle), description (bottom)
- * Right side: Info panel (bottom) with L/R page tabs
- * Background: Semi-transparent — game world visible behind
+ * Layout: L-shaped backdrop panel (left + bottom) with menu elements on top.
+ * Theme: PSZ blue/silver — light panels, orange selection.
  */
 
-// ── Theme colors ───────────────────────────────────────────────────────────────
+// ── Layout constants ───────────────────────────────────────────────────────────
+const VIEWPORT_W = 1280;
+const VIEWPORT_H = 720;
+const LEFT_PANEL_W = 240;   // Left backdrop strip width
+const BOTTOM_PANEL_H = 200; // Bottom backdrop strip height
+const PANEL_PAD = 12;       // Inner padding for menu elements
+
+// ── PSZ Color palette ──────────────────────────────────────────────────────────
 const C = {
-  // Panel backgrounds
-  panelBg: 'rgba(20, 30, 60, 0.88)',
-  panelBorder: 'rgba(100, 140, 200, 0.5)',
-  panelHighlight: 'rgba(130, 170, 220, 0.15)',
+  // Backdrop panels (L-shaped base layer)
+  backdropBg: 'rgba(40, 60, 100, 0.82)',
+  backdropBorder: 'rgba(100, 150, 210, 0.6)',
+  backdropHighlight: 'rgba(160, 200, 255, 0.12)',
+
+  // Inner panels (menu elements layer)
+  panelBg: 'rgba(200, 215, 235, 0.92)',
+  panelBorder: 'rgba(120, 160, 210, 0.7)',
+  panelShadow: 'rgba(30, 50, 80, 0.3)',
 
   // Text
-  textPrimary: '#e8eaf0',
-  textSecondary: '#8899bb',
-  textMuted: '#556688',
+  textDark: '#1a2540',
+  textMuted: '#4a5a78',
+  textLight: '#e8eef8',
 
   // Selection
-  selectBg: '#d08020',
+  selectBg: '#e08820',
   selectText: '#fff',
 
   // HP/PP bars
-  hpGreen: '#30cc50',
-  ppBlue: '#3088ee',
+  hpGreen: '#28b848',
+  ppBlue: '#2878d8',
 
-  // Decorative
-  borderLight: 'rgba(140, 180, 230, 0.35)',
-  borderAccent: 'rgba(100, 160, 240, 0.6)',
-  patternColor: 'rgba(80, 120, 180, 0.06)',
+  // Accent
+  arrowGreen: '#30b850',
+  pageBg: 'rgba(50, 80, 130, 0.6)',
 };
 
-// ── Data types ─────────────────────────────────────────────────────────────────
+// ── Data ───────────────────────────────────────────────────────────────────────
 interface MenuItem {
   label: string;
   description: string;
@@ -99,302 +106,237 @@ const INFO_PAGES: InfoPage[] = [
   },
 ];
 
-// ── Octagon pattern SVG ────────────────────────────────────────────────────────
-function OctagonPattern() {
-  // Subtle repeating octagon grid for panel backgrounds
-  const size = 24;
-  const r = 10;
-  const cx = size / 2;
-  const cy = size / 2;
-  // Approximate octagon vertices
-  const d = r * 0.383; // sin(22.5deg) * r
-  const a = r * 0.924; // cos(22.5deg) * r
-  const pts = [
-    [cx + d, cy - a], [cx + a, cy - d],
-    [cx + a, cy + d], [cx + d, cy + a],
-    [cx - d, cy + a], [cx - a, cy + d],
-    [cx - a, cy - d], [cx - d, cy - a],
-  ].map(([x, y]) => `${x},${y}`).join(' ');
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><polygon points="${pts}" fill="none" stroke="rgba(100,150,220,0.08)" stroke-width="0.5"/></svg>`;
-  const encoded = btoa(svg);
+// ── Inner panel (drawn on z-index: 2 over the backdrop) ───────────────────────
+function InnerPanel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{
-      position: 'absolute',
-      inset: 0,
-      backgroundImage: `url("data:image/svg+xml;base64,${encoded}")`,
-      backgroundRepeat: 'repeat',
-      pointerEvents: 'none',
-    }} />
-  );
-}
-
-// ── Panel wrapper ──────────────────────────────────────────────────────────────
-function Panel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{
-      position: 'relative',
       background: C.panelBg,
       border: `1.5px solid ${C.panelBorder}`,
       borderRadius: 4,
-      overflow: 'hidden',
+      boxShadow: `0 2px 6px ${C.panelShadow}`,
       ...style,
     }}>
-      <OctagonPattern />
-      {/* Top highlight line */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 4,
-        right: 4,
-        height: 1,
-        background: `linear-gradient(90deg, transparent, ${C.borderAccent}, transparent)`,
-      }} />
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
 
-// ── Character status bar (top-left) ────────────────────────────────────────────
+// ── Character status (top-left) ────────────────────────────────────────────────
 function CharacterStatus() {
-  const hp = 85;
-  const pp = 100;
-
   return (
-    <Panel style={{ padding: '8px 12px' }}>
+    <InnerPanel style={{ padding: '8px 12px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        {/* Section ID icon placeholder */}
         <div style={{
-          width: 16, height: 16,
-          borderRadius: 8,
-          background: '#e04040',
-          border: '1px solid #ff6666',
+          width: 14, height: 14, borderRadius: 7,
+          background: '#d03030', border: '1.5px solid #f06060',
           flexShrink: 0,
         }} />
         <span style={{
-          color: C.textPrimary,
-          fontSize: 16,
-          fontWeight: 600,
-          fontFamily: 'monospace',
-          letterSpacing: 0.5,
+          color: C.textDark, fontSize: 16, fontWeight: 700,
+          fontFamily: 'monospace', letterSpacing: 0.5,
         }}>
           Flauros
         </span>
       </div>
-      {/* HP bar */}
+      {/* HP */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-        <span style={{ color: C.textSecondary, fontSize: 10, fontFamily: 'monospace', width: 18 }}>HP</span>
-        <div style={{ flex: 1, height: 8, background: 'rgba(0,0,0,0.4)', borderRadius: 2, overflow: 'hidden' }}>
-          <div style={{ width: `${hp}%`, height: '100%', background: `linear-gradient(to right, #208830, ${C.hpGreen})`, borderRadius: 2 }} />
+        <span style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace', width: 18 }}>HP</span>
+        <div style={{ flex: 1, height: 10, background: 'rgba(0,0,0,0.15)', borderRadius: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
+          <div style={{ width: '85%', height: '100%', background: `linear-gradient(to right, #1a8830, ${C.hpGreen})`, borderRadius: 2 }} />
         </div>
       </div>
-      {/* PP bar */}
+      {/* PP */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ color: C.textSecondary, fontSize: 10, fontFamily: 'monospace', width: 18 }}>PP</span>
-        <div style={{ flex: 1, height: 8, background: 'rgba(0,0,0,0.4)', borderRadius: 2, overflow: 'hidden' }}>
-          <div style={{ width: `${pp}%`, height: '100%', background: `linear-gradient(to right, #2060aa, ${C.ppBlue})`, borderRadius: 2 }} />
+        <span style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace', width: 18 }}>PP</span>
+        <div style={{ flex: 1, height: 10, background: 'rgba(0,0,0,0.15)', borderRadius: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
+          <div style={{ width: '100%', height: '100%', background: `linear-gradient(to right, #1858a8, ${C.ppBlue})`, borderRadius: 2 }} />
         </div>
       </div>
-    </Panel>
+    </InnerPanel>
   );
 }
 
-// ── Menu list (left side) ──────────────────────────────────────────────────────
+// ── Menu list ──────────────────────────────────────────────────────────────────
 function MenuList({ selectedIndex, onSelect }: { selectedIndex: number; onSelect: (i: number) => void }) {
   return (
-    <Panel style={{ padding: '4px 0' }}>
+    <InnerPanel style={{ padding: '4px 0' }}>
       {MENU_ITEMS.map((item, i) => {
-        const isSelected = i === selectedIndex;
+        const sel = i === selectedIndex;
         return (
           <div
             key={item.label}
             onClick={() => onSelect(i)}
             style={{
-              padding: '8px 16px',
+              padding: '7px 16px',
               cursor: 'pointer',
-              background: isSelected ? C.selectBg : 'transparent',
-              color: isSelected ? C.selectText : C.textPrimary,
-              fontSize: 18,
-              fontFamily: 'monospace',
-              fontWeight: isSelected ? 700 : 400,
+              background: sel ? C.selectBg : 'transparent',
+              color: sel ? C.selectText : C.textDark,
+              fontSize: 17, fontFamily: 'monospace',
+              fontWeight: sel ? 700 : 500,
               letterSpacing: 1,
-              transition: 'background 0.1s',
             }}
           >
             {item.label}
           </div>
         );
       })}
-    </Panel>
+    </InnerPanel>
   );
 }
 
-// ── Description box (bottom-left) ──────────────────────────────────────────────
+// ── Description box ────────────────────────────────────────────────────────────
 function DescriptionBox({ text }: { text: string }) {
   return (
-    <Panel style={{ padding: '10px 14px', minHeight: 44 }}>
+    <InnerPanel style={{ padding: '10px 14px', minHeight: 40 }}>
       <span style={{
-        color: C.textPrimary,
-        fontSize: 16,
-        fontFamily: 'monospace',
-        letterSpacing: 0.5,
+        color: C.textDark, fontSize: 15, fontFamily: 'monospace', letterSpacing: 0.3,
       }}>
         {text}
       </span>
-    </Panel>
+    </InnerPanel>
   );
 }
 
-// ── Info panel with pages (bottom-right) ───────────────────────────────────────
+// ── Info panel with L/R pages ──────────────────────────────────────────────────
 function InfoPanel({ page, totalPages, onPrev, onNext }: {
-  page: number;
-  totalPages: number;
-  onPrev: () => void;
-  onNext: () => void;
+  page: number; totalPages: number; onPrev: () => void; onNext: () => void;
 }) {
   const info = INFO_PAGES[page];
-
   return (
-    <Panel style={{ padding: 0 }}>
-      {/* Page selector bar */}
+    <InnerPanel style={{ padding: 0 }}>
+      {/* Page selector */}
       <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 8,
-        padding: '6px 0',
-        borderBottom: `1px solid ${C.borderLight}`,
+        display: 'flex', justifyContent: 'center', alignItems: 'center',
+        gap: 10, padding: '6px 0',
+        borderBottom: `1px solid rgba(100, 140, 190, 0.3)`,
       }}>
-        <span
-          onClick={onPrev}
-          style={{ color: '#40cc60', fontSize: 16, cursor: 'pointer', userSelect: 'none', fontFamily: 'monospace' }}
-        >
+        <span onClick={onPrev} style={{
+          color: C.arrowGreen, fontSize: 15, cursor: 'pointer',
+          userSelect: 'none', fontFamily: 'monospace', fontWeight: 700,
+        }}>
           ◀
         </span>
         <span style={{
-          color: C.textPrimary,
-          fontSize: 13,
-          fontFamily: 'monospace',
-          background: 'rgba(60, 90, 140, 0.4)',
-          padding: '2px 10px',
-          borderRadius: 3,
-          border: `1px solid ${C.borderLight}`,
+          color: C.textDark, fontSize: 13, fontFamily: 'monospace',
+          background: C.pageBg, color: C.textLight,
+          padding: '2px 12px', borderRadius: 3,
+          border: `1px solid rgba(100,150,210,0.4)`,
         }}>
           L {page + 1}/{totalPages} R
         </span>
-        <span
-          onClick={onNext}
-          style={{ color: '#40cc60', fontSize: 16, cursor: 'pointer', userSelect: 'none', fontFamily: 'monospace' }}
-        >
+        <span onClick={onNext} style={{
+          color: C.arrowGreen, fontSize: 15, cursor: 'pointer',
+          userSelect: 'none', fontFamily: 'monospace', fontWeight: 700,
+        }}>
           ▶
         </span>
       </div>
-      {/* Info rows */}
+      {/* Rows */}
       <div style={{ padding: '8px 16px' }}>
         {info.rows.map((row) => (
           <div key={row.label} style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '4px 0',
-            fontFamily: 'monospace',
-            fontSize: 16,
+            display: 'flex', justifyContent: 'space-between',
+            padding: '4px 0', fontFamily: 'monospace', fontSize: 16,
           }}>
-            <span style={{ color: C.textSecondary }}>{row.label}</span>
-            <span style={{ color: C.textPrimary, fontWeight: 600, textAlign: 'right' }}>{row.value}</span>
+            <span style={{ color: C.textMuted }}>{row.label}</span>
+            <span style={{ color: C.textDark, fontWeight: 600 }}>{row.value}</span>
           </div>
         ))}
       </div>
-    </Panel>
+    </InnerPanel>
   );
 }
 
-// ── Main Start Menu component ──────────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function StartMenu() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [infoPage, setInfoPage] = useState(0);
 
-  // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
       case 'ArrowUp':
-        setSelectedIndex((prev) => (prev - 1 + MENU_ITEMS.length) % MENU_ITEMS.length);
-        e.preventDefault();
-        break;
+        setSelectedIndex((p) => (p - 1 + MENU_ITEMS.length) % MENU_ITEMS.length);
+        e.preventDefault(); break;
       case 'ArrowDown':
-        setSelectedIndex((prev) => (prev + 1) % MENU_ITEMS.length);
-        e.preventDefault();
-        break;
+        setSelectedIndex((p) => (p + 1) % MENU_ITEMS.length);
+        e.preventDefault(); break;
       case 'ArrowLeft':
-      case 'q':
-        setInfoPage((prev) => (prev - 1 + INFO_PAGES.length) % INFO_PAGES.length);
-        e.preventDefault();
-        break;
+        setInfoPage((p) => (p - 1 + INFO_PAGES.length) % INFO_PAGES.length);
+        e.preventDefault(); break;
       case 'ArrowRight':
-      case 'e':
-        setInfoPage((prev) => (prev + 1) % INFO_PAGES.length);
-        e.preventDefault();
-        break;
+        setInfoPage((p) => (p + 1) % INFO_PAGES.length);
+        e.preventDefault(); break;
     }
   };
 
   return (
     <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100%',
-      background: '#0a0a1a',
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      height: '100%', background: '#0a0a1a',
     }}>
       <div
         tabIndex={0}
         onKeyDown={handleKeyDown}
         style={{
-          width: 1280,
-          height: 720,
-          position: 'relative',
-          overflow: 'hidden',
-          outline: 'none',
-          // Simulated game background — gradient placeholder
-          background: 'linear-gradient(135deg, #1a2a3a 0%, #2a3a4a 30%, #1a2a3a 60%, #0a1a2a 100%)',
+          width: VIEWPORT_W, height: VIEWPORT_H,
+          position: 'relative', overflow: 'hidden', outline: 'none',
+          // Simulated game background
+          background: 'linear-gradient(160deg, #1a2a3a 0%, #2a3a4a 30%, #1a2a3a 60%, #0a1a2a 100%)',
         }}
       >
-        {/* Fake game world hint — ground plane */}
+        {/* Fake ground plane */}
         <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 360,
-          background: 'linear-gradient(to bottom, rgba(40, 50, 60, 0.3), rgba(60, 70, 50, 0.5))',
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 360,
+          background: 'linear-gradient(to bottom, rgba(40,50,60,0.3), rgba(60,70,50,0.5))',
         }} />
 
-        {/* ── LEFT COLUMN ─────────────────────────────────────── */}
+        {/* ── Z-INDEX 1: L-shaped backdrop (3 pieces, border on outside only) ── */}
+        {/* Left strip — border-right, stops above the bottom panel */}
         <div style={{
-          position: 'absolute',
-          top: 20,
-          left: 20,
-          width: 210,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
+          position: 'absolute', zIndex: 1,
+          top: 0, left: 0,
+          width: LEFT_PANEL_W,
+          height: VIEWPORT_H - BOTTOM_PANEL_H,
+          background: C.backdropBg,
+          borderRight: `1.5px solid ${C.backdropBorder}`,
+        }} />
+        {/* Bottom strip — border-top, starts after the left panel */}
+        <div style={{
+          position: 'absolute', zIndex: 1,
+          bottom: 0, left: LEFT_PANEL_W,
+          right: 0,
+          height: BOTTOM_PANEL_H,
+          background: C.backdropBg,
+          borderTop: `1.5px solid ${C.backdropBorder}`,
+        }} />
+        {/* Corner fill — no border, covers the bottom-left gap */}
+        <div style={{
+          position: 'absolute', zIndex: 1,
+          bottom: 0, left: 0,
+          width: LEFT_PANEL_W,
+          height: BOTTOM_PANEL_H,
+          background: C.backdropBg,
+        }} />
+
+        {/* ── Z-INDEX 2: Menu elements on top of backdrop ──────── */}
+        {/* Left column: status + menu + description */}
+        <div style={{
+          position: 'absolute', zIndex: 2,
+          top: PANEL_PAD, left: PANEL_PAD,
+          width: LEFT_PANEL_W - PANEL_PAD * 2,
+          display: 'flex', flexDirection: 'column', gap: 10,
         }}>
-          {/* Character status */}
           <CharacterStatus />
-
-          {/* Menu list */}
           <MenuList selectedIndex={selectedIndex} onSelect={setSelectedIndex} />
-
-          {/* Description */}
           <DescriptionBox text={MENU_ITEMS[selectedIndex].description} />
         </div>
 
-        {/* ── BOTTOM-RIGHT INFO PANEL ─────────────────────────── */}
+        {/* Bottom: info panel — right side of bottom strip with margins */}
         <div style={{
-          position: 'absolute',
-          bottom: 20,
-          right: 20,
+          position: 'absolute', zIndex: 2,
+          bottom: 5,
+          right: 30,
+          top: VIEWPORT_H - BOTTOM_PANEL_H + 5,
           width: 440,
         }}>
           <InfoPanel
@@ -405,22 +347,16 @@ export default function StartMenu() {
           />
         </div>
 
-        {/* ── CONTROL HINTS ───────────────────────────────────── */}
+        {/* Control hints */}
         <div style={{
-          position: 'absolute',
-          bottom: 8,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: 20,
-          fontSize: 11,
-          fontFamily: 'monospace',
-          color: 'rgba(180, 200, 230, 0.5)',
+          position: 'absolute', zIndex: 2,
+          bottom: 8, left: LEFT_PANEL_W + 16,
+          fontSize: 11, fontFamily: 'monospace',
+          color: 'rgba(180,200,230,0.5)',
+          display: 'flex', gap: 16,
         }}>
-          <span>Arrow Up/Down: Navigate</span>
-          <span>Arrow Left/Right: Info Pages</span>
-          <span>Enter: Select</span>
-          <span>Esc: Close</span>
+          <span>↑↓ Navigate</span>
+          <span>←→ Info Pages</span>
         </div>
       </div>
     </div>
