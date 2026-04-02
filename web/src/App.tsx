@@ -17,6 +17,7 @@ const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
 const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
 const SettingsMockup = lazy(() => import('./settings/SettingsMockup'));
 const CharacterCreator = lazy(() => import('./character-creator/CharacterCreator'));
+const StartMenu = lazy(() => import('./start-menu/StartMenu'));
 
 function NavBar() {
   const location = useLocation();
@@ -124,6 +125,12 @@ function NavBar() {
       }}>
         Character
       </Link>
+      <Link to="/start-menu" style={{
+        color: isActive('/start-menu') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Start Menu
+      </Link>
     </nav>
   );
 }
@@ -151,6 +158,7 @@ export default function App() {
             <Route path="/retarget" element={<RetargetViewer />} />
             <Route path="/retarget-tuner" element={<RetargetTuner />} />
             <Route path="/character-creator" element={<CharacterCreator />} />
+            <Route path="/start-menu" element={<StartMenu />} />
           </Routes>
         </Suspense>
       </div>

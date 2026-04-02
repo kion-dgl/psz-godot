@@ -38,10 +38,17 @@ const INTRO_DIALOG := [
 	{"speaker": "Principal", "text": "The guild counter is down the hall. Talk to them when you're ready."},
 ]
 
-## NPC models for quest client NPCs (npc_id → GLB path)
+## NPC models for quest client NPCs (npc_id → {glb, texture} paths)
 const CLIENT_MODELS := {
-	"kai": "res://assets/npcs/kai/pc_a01_000.glb",
-	"sarisa": "res://assets/npcs/sarisa/pc_a00_000.glb",
+	"kai": {"glb": "res://assets/npcs/kai/pc_a01_000.glb", "texture": "res://assets/npcs/kai/pc_a01_000.png", "idle": "pmsa_wait"},
+	"sarisa": {"glb": "res://assets/npcs/sarisa/pc_a00_000.glb", "texture": "res://assets/npcs/sarisa/pc_a00_000.png", "idle": "pwsa_wait"},
+	"dorn": {"glb": "res://assets/npcs/dorn/dorn.glb", "texture": "res://assets/npcs/dorn/dorn.png", "idle": "pmsa_wait"},
+	"dr_carlo": {"glb": "res://assets/npcs/dr_carlo/dr_carlo.glb", "texture": "res://assets/npcs/dr_carlo/dr_carlo.png", "idle": "pmsa_wait"},
+	"elio": {"glb": "res://assets/npcs/elio/elio.glb", "texture": "res://assets/npcs/elio/elio.png", "idle": "pwsa_wait"},
+	"fern": {"glb": "res://assets/npcs/fern/fern.glb", "texture": "res://assets/npcs/fern/fern.png", "idle": "pwsa_wait"},
+	"vash": {"glb": "res://assets/npcs/vash/vash.glb", "texture": "res://assets/npcs/vash/vash.png", "idle": "pmsa_wait"},
+	"ren": {"glb": "res://assets/npcs/ren/ren.glb", "texture": "res://assets/npcs/ren/ren.png", "idle": "pmsa_wait"},
+	"mira": {"glb": "res://assets/npcs/mira/mira.glb", "texture": "res://assets/npcs/mira/mira.png", "idle": "pwsa_wait"},
 }
 
 ## Companion capsule colors (for NPCs without GLB models)
@@ -189,9 +196,11 @@ func _setup_briefing() -> void:
 		var spawn_rot: float = slot["rotation"]
 
 		if CLIENT_MODELS.has(npc_id):
+			var model_data: Dictionary = CLIENT_MODELS[npc_id]
+			var idle_name: String = str(model_data.get("idle", ""))
 			var npc := _add_npc(
 				"Briefing_%s" % npc_id, spawn_pos, spawn_rot,
-				CLIENT_MODELS[npc_id], npc_name, ""
+				model_data["glb"], npc_name, "", idle_name
 			)
 			_briefing_npcs.append(npc)
 		else:
