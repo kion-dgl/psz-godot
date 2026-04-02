@@ -24,66 +24,92 @@ const C = {
   arrowGreen: '#30b850',
   pageBg: 'rgba(50, 80, 130, 0.6)',
   labelBg: 'rgba(50, 75, 120, 0.9)',
+  iconBg: '#e8eef4',
+  iconFg: '#2a3a50',
 };
 
-const TYPE_ICONS: Record<string, { color: string; label: string }> = {
-  weapon: { color: '#cc4444', label: 'W' },
-  armor: { color: '#4488cc', label: 'A' },
-  shield: { color: '#44aaaa', label: 'S' },
-  unit: { color: '#8844aa', label: 'U' },
-  tool: { color: '#44aa44', label: 'T' },
-  tech: { color: '#aa44cc', label: 'M' },
-  material: { color: '#aa8833', label: 'R' },
-  mag: { color: '#cc8844', label: 'G' },
-};
+// ── PSO-style icons (white square, dark symbol) ────────────────────────────────
+function TypeIcon({ type, size = 18, selected = false }: { type: string; size?: number; selected?: boolean }) {
+  const bg = selected ? 'rgba(255,255,255,0.4)' : C.iconBg;
+  const fg = selected ? '#fff' : C.iconFg;
+  const symbols: Record<string, string> = {
+    weapon: '⚔', armor: '🛡', shield: '◈', unit: '◆', tool: '♥',
+    tech: '★', material: '●', mag: '◎', consumable: '♥',
+  };
+  return (
+    <span style={{
+      width: size, height: size, borderRadius: 3, flexShrink: 0,
+      background: bg, border: `1px solid ${selected ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.15)'}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.55, color: fg, lineHeight: 1,
+    }}>{symbols[type] || '?'}</span>
+  );
+}
 
-// ── Mock data ──────────────────────────────────────────────────────────────────
-interface InventoryItem {
+// ── Data ────────────────────────────────────────────────────────────────────────
+interface InvItem {
   name: string;
   type: string;
   description: string;
   equipped?: boolean;
-  stats?: string;
+  count?: number;
+  usable?: boolean;
+  stats?: Record<string, string | number>;
 }
 
-const MENU_ITEMS = ['Items', 'Equip', 'Palette', 'Mags', 'Quest', 'System'];
-const MENU_DESCRIPTIONS: Record<string, string> = {
-  Items: 'Use items.', Equip: 'Equip weapons and armor.',
+interface TechItem {
+  name: string;
+  level: number;
+  pp: number;
+  description: string;
+}
+
+const MENU_ITEMS = ['Items', 'Equip', 'Techs', 'Palette', 'Mags', 'Quest', 'System'];
+const MENU_DESC: Record<string, string> = {
+  Items: 'Use items.', Equip: 'Equip weapons and armor.', Techs: 'View learned techniques.',
   Palette: 'Edit the action palette.', Mags: 'Feed and manage your Mag.',
   Quest: 'View current quest objectives.', System: 'System settings and options.',
 };
 
-const INVENTORY: InventoryItem[] = [
-  { name: 'Monomate', type: 'tool', description: 'Restores a small amount of HP.' },
-  { name: 'Dimate', type: 'tool', description: 'Restores a moderate amount of HP.' },
-  { name: 'Monofluid', type: 'tool', description: 'Restores a small amount of PP.' },
-  { name: 'Antidote', type: 'tool', description: 'Cures poison status.' },
-  { name: 'Telepipe', type: 'tool', description: 'Warps to the city.' },
-  { name: 'Saber', type: 'weapon', description: 'A standard blade. ATP +30.' },
-  { name: 'Saber +3', type: 'weapon', description: 'A reinforced blade. ATP +45, Heat special.', equipped: true, stats: 'ATP +45' },
-  { name: 'Handgun', type: 'weapon', description: 'Standard ranged weapon. ATP +18.' },
-  { name: 'Normal Frame', type: 'armor', description: 'Basic body armor. DFP +10.', equipped: true, stats: 'DFP +10' },
-  { name: 'Barrier', type: 'shield', description: 'Basic shield. EVP +8.', equipped: true, stats: 'EVP +8' },
-  { name: 'HP Material', type: 'material', description: 'Permanently increases max HP by 2.' },
-  { name: 'Photon Drop', type: 'material', description: 'A rare crystal. Used for trading.' },
-  { name: 'Grinder', type: 'material', description: 'Used to strengthen weapons.' },
+const INVENTORY: InvItem[] = [
+  { name: 'Monomate', type: 'tool', description: 'Restores a small amount of HP.', count: 8, usable: true },
+  { name: 'Dimate', type: 'tool', description: 'Restores a moderate amount of HP.', count: 3, usable: true },
+  { name: 'Monofluid', type: 'tool', description: 'Restores a small amount of PP.', count: 5, usable: true },
+  { name: 'Antidote', type: 'tool', description: 'Cures poison status.', count: 2, usable: true },
+  { name: 'Telepipe', type: 'tool', description: 'Warps to the city.', count: 1, usable: true },
+  { name: 'Saber', type: 'weapon', description: 'A standard blade.\nATP +30, ATA +35' },
+  { name: 'Saber +3', type: 'weapon', description: 'A reinforced blade.\nATP +45, ATA +38\nSpecial: Heat', equipped: true },
+  { name: 'Handgun', type: 'weapon', description: 'Standard ranged weapon.\nATP +18, ATA +42' },
+  { name: 'Normal Frame', type: 'armor', description: 'Basic body armor.\nDFP +10, EVP +12', equipped: true },
+  { name: 'Barrier', type: 'shield', description: 'Basic shield.\nDFP +3, EVP +8', equipped: true },
+  { name: 'HP Material', type: 'material', description: 'Permanently increases max HP by 2.', count: 1, usable: true },
+  { name: 'Photon Drop', type: 'material', description: 'A rare crystal. Used for trading.', count: 3 },
+  { name: 'Grinder', type: 'material', description: 'Used to strengthen weapons.', count: 5 },
 ];
 
-const EQUIPMENT_SLOTS = [
-  { slot: 'Weapon', item: 'Saber +3', type: 'weapon', description: 'A reinforced blade. ATP +45, Heat special.' },
-  { slot: 'Frame', item: 'Normal Frame', type: 'armor', description: 'Basic body armor. DFP +10.' },
-  { slot: 'Shield', item: 'Barrier', type: 'shield', description: 'Basic shield. EVP +8.' },
-  { slot: 'Unit 1', item: '--', type: 'unit', description: 'No unit equipped.' },
-  { slot: 'Unit 2', item: '--', type: 'unit', description: 'No unit equipped.' },
-  { slot: 'Unit 3', item: '--', type: 'unit', description: 'No unit equipped.' },
-  { slot: 'Unit 4', item: '--', type: 'unit', description: 'No unit equipped.' },
-  { slot: 'Mag', item: 'Mag Lv12', type: 'mag', description: 'DEF 5 / POW 3 / DEX 2 / MIND 2' },
+const TECHNIQUES: TechItem[] = [
+  { name: 'Foie', level: 3, pp: 8, description: 'Fires a ball of flame at the target.' },
+  { name: 'Barta', level: 1, pp: 7, description: 'Launches a shard of ice forward.' },
+  { name: 'Zonde', level: 2, pp: 6, description: 'Strikes the target with lightning.' },
+  { name: 'Resta', level: 1, pp: 10, description: 'Restores HP to nearby allies.' },
+  { name: 'Shifta', level: 1, pp: 15, description: 'Temporarily boosts attack power.' },
+  { name: 'Deband', level: 1, pp: 15, description: 'Temporarily boosts defense.' },
 ];
 
-const PALETTE_PAGES = [
-  ['Attack', 'Strong Attack', 'Monomate'],
-  ['Foie', 'Resta', 'Dodge Roll'],
-  ['Attack', 'Dimate', 'Telepipe'],
+const EQUIP_SLOTS = [
+  { slot: 'Weapon', type: 'weapon' },
+  { slot: 'Frame', type: 'armor' },
+  { slot: 'Shield', type: 'shield' },
+  { slot: 'Unit 1', type: 'unit' },
+  { slot: 'Unit 2', type: 'unit' },
+  { slot: 'Unit 3', type: 'unit' },
+  { slot: 'Unit 4', type: 'unit' },
+  { slot: 'Mag', type: 'mag' },
+];
+
+const MAGS: InvItem[] = [
+  { name: 'Mag Lv12', type: 'mag', description: 'DEF 5 / POW 3 / DEX 2 / MIND 2', equipped: true },
+  { name: 'Varuna Lv5', type: 'mag', description: 'DEF 3 / POW 1 / DEX 1 / MIND 0' },
 ];
 
 const PALETTE_ACTIONS = [
@@ -93,43 +119,24 @@ const PALETTE_ACTIONS = [
   'Telepipe',
 ];
 
-const MAGS: InventoryItem[] = [
-  { name: 'Mag Lv12', type: 'mag', description: 'DEF 5 / POW 3 / DEX 2 / MIND 2. Feed items to evolve.', equipped: true },
+const QUEST_INFO = { name: 'The Paru Pact', objective: 'Investigate the energy signatures deep in the Paru ruins.', client: 'Elio', area: 'Makara Ruins' };
+const SYSTEM_ITEMS = [
+  { label: 'Save', desc: 'Save your progress.' },
+  { label: 'Return to Title', desc: 'Return to the title screen.' },
+  { label: 'Options', desc: 'Adjust game settings.' },
 ];
 
-const QUEST_INFO = {
-  name: 'The Paru Pact',
-  objective: 'Investigate the energy signatures deep in the Paru ruins.',
-  client: 'Elio',
-  area: 'Makara Ruins',
-};
-
-const SYSTEM_ITEMS = ['Save', 'Return to Title', 'Options'];
-
-const TYPE_ORDER: Record<string, number> = { tool: 0, weapon: 1, armor: 2, shield: 3, unit: 4, tech: 5, material: 6 };
-const SORTED_INVENTORY = [...INVENTORY].sort((a, b) => (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9));
+const TYPE_ORDER: Record<string, number> = { tool: 0, weapon: 1, armor: 2, shield: 3, unit: 4, material: 5 };
+const SORTED_INV = [...INVENTORY].sort((a, b) => (TYPE_ORDER[a.type] ?? 9) - (TYPE_ORDER[b.type] ?? 9));
+const FEED_ITEMS = SORTED_INV.filter(i => (i.type === 'tool' || i.type === 'material') && (i.count ?? 0) > 0);
 
 // ── Shared UI ──────────────────────────────────────────────────────────────────
 function InnerPanel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{
-      background: C.panelBg, border: `1.5px solid ${C.panelBorder}`,
-      borderRadius: 4, boxShadow: `0 2px 6px ${C.panelShadow}`, ...style,
-    }}>{children}</div>
-  );
+  return <div style={{ background: C.panelBg, border: `1.5px solid ${C.panelBorder}`, borderRadius: 4, boxShadow: `0 2px 6px ${C.panelShadow}`, ...style }}>{children}</div>;
 }
-
 function SectionLabel({ text }: { text: string }) {
-  return (
-    <div style={{
-      background: C.labelBg, padding: '6px 14px', borderRadius: 4,
-      border: `1px solid ${C.backdropBorder}`,
-    }}>
-      <span style={{ color: C.textLight, fontSize: 15, fontFamily: 'monospace', fontWeight: 600, letterSpacing: 1 }}>{text}</span>
-    </div>
-  );
+  return <div style={{ background: C.labelBg, padding: '6px 14px', borderRadius: 4, border: `1px solid ${C.backdropBorder}` }}><span style={{ color: C.textLight, fontSize: 15, fontFamily: 'monospace', fontWeight: 600, letterSpacing: 1 }}>{text}</span></div>;
 }
-
 function CharacterStatus() {
   return (
     <InnerPanel style={{ padding: '8px 12px' }}>
@@ -137,203 +144,243 @@ function CharacterStatus() {
         <div style={{ width: 14, height: 14, borderRadius: 7, background: '#d03030', border: '1.5px solid #f06060', flexShrink: 0 }} />
         <span style={{ color: C.textDark, fontSize: 16, fontWeight: 700, fontFamily: 'monospace' }}>Flauros</span>
       </div>
-      {[{ label: 'HP', pct: 85, c1: '#1a8830', c2: C.hpGreen }, { label: 'PP', pct: 100, c1: '#1858a8', c2: C.ppBlue }].map(bar => (
-        <div key={bar.label} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-          <span style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace', width: 18 }}>{bar.label}</span>
+      {[{ l: 'HP', p: 85, c1: '#1a8830', c2: C.hpGreen }, { l: 'PP', p: 100, c1: '#1858a8', c2: C.ppBlue }].map(b => (
+        <div key={b.l} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+          <span style={{ color: C.textMuted, fontSize: 10, fontFamily: 'monospace', width: 18 }}>{b.l}</span>
           <div style={{ flex: 1, height: 10, background: 'rgba(0,0,0,0.15)', borderRadius: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
-            <div style={{ width: `${bar.pct}%`, height: '100%', background: `linear-gradient(to right, ${bar.c1}, ${bar.c2})`, borderRadius: 2 }} />
+            <div style={{ width: `${b.p}%`, height: '100%', background: `linear-gradient(to right, ${b.c1}, ${b.c2})`, borderRadius: 2 }} />
           </div>
         </div>
       ))}
     </InnerPanel>
   );
 }
+function DescBox({ text, style }: { text: string; style?: React.CSSProperties }) {
+  return <InnerPanel style={{ padding: '10px 14px', ...style }}><span style={{ color: C.textDark, fontSize: 13, fontFamily: 'monospace', whiteSpace: 'pre-line' }}>{text}</span></InnerPanel>;
+}
 
-function ItemRow({ item, selected, onClick }: { item: InventoryItem; selected: boolean; onClick: () => void }) {
-  const icon = TYPE_ICONS[item.type] || { color: '#888', label: '?' };
+// Left column shared across sub-views
+function LeftCol({ label, children }: { label: string; children?: React.ReactNode }) {
   return (
-    <div onClick={onClick} style={{
-      padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-      background: selected ? C.selectBg : 'transparent',
-      color: selected ? C.selectText : C.textDark,
-      fontSize: 13, fontFamily: 'monospace', fontWeight: selected ? 700 : 400,
-    }}>
-      <span style={{ width: 14, fontSize: 9, fontWeight: 700, color: selected ? '#fff' : '#e08820', opacity: item.equipped ? 1 : 0 }}>E</span>
-      <span style={{ width: 16, height: 16, borderRadius: 3, background: selected ? 'rgba(255,255,255,0.3)' : icon.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{icon.label}</span>
-      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+    <div style={{ position: 'absolute', zIndex: 2, top: PANEL_PAD, left: PANEL_PAD, width: LEFT_PANEL_W - PANEL_PAD * 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <CharacterStatus />
+      <SectionLabel text={label} />
+      {children}
     </div>
   );
 }
 
-function DescriptionBox({ text, style }: { text: string; style?: React.CSSProperties }) {
+// Bottom list + description layout
+function BottomPanels({ list, desc, listWidth = 300, descWidth = 200 }: { list: React.ReactNode; desc: string; listWidth?: number; descWidth?: number }) {
   return (
-    <InnerPanel style={{ padding: '10px 14px', ...style }}>
-      <span style={{ color: C.textDark, fontSize: 13, fontFamily: 'monospace' }}>{text}</span>
-    </InnerPanel>
+    <>
+      <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: listWidth, height: 300 }}>
+        <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>{list}</InnerPanel>
+      </div>
+      <div style={{ position: 'absolute', zIndex: 2, left: listWidth + 10, bottom: 5, width: descWidth, height: 300 }}>
+        <DescBox text={desc} style={{ height: '100%' }} />
+      </div>
+    </>
   );
 }
 
-function InfoPanel({ page, totalPages, onPrev, onNext }: { page: number; totalPages: number; onPrev: () => void; onNext: () => void }) {
-  const pages = [
-    { rows: [{ l: 'Lv', v: '14' }, { l: 'Type', v: 'HUmar' }, { l: 'Exp Pts', v: '12,480' }, { l: 'To Next Lv', v: '3,520' }, { l: 'Meseta', v: '8,250' }] },
-    { rows: [{ l: 'ATP', v: '186' }, { l: 'ATA', v: '94' }, { l: 'Weapon', v: 'Saber +3' }, { l: 'Grind', v: '+3' }, { l: 'Special', v: 'Heat' }] },
-    { rows: [{ l: 'DFP', v: '42' }, { l: 'EVP', v: '68' }, { l: 'Frame', v: 'Normal Frame' }, { l: 'Shield', v: 'Barrier' }, { l: 'Units', v: '0 / 4' }] },
-    { rows: [{ l: 'MST', v: '30' }, { l: 'TP', v: '45 / 45' }, { l: 'Foie', v: 'Lv 3' }, { l: 'Resta', v: 'Lv 1' }, { l: 'Shifta', v: '--' }] },
-  ];
-  const info = pages[page];
+function ItemRow({ item, selected, onClick, showCount }: { item: InvItem; selected: boolean; onClick: () => void; showCount?: boolean }) {
   return (
-    <InnerPanel style={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(100,140,190,0.3)' }}>
-        <span onClick={onPrev} style={{ color: C.arrowGreen, fontSize: 15, cursor: 'pointer', fontFamily: 'monospace', fontWeight: 700 }}>◀</span>
-        <span style={{ color: C.textLight, fontSize: 13, fontFamily: 'monospace', background: C.pageBg, padding: '2px 12px', borderRadius: 3, border: '1px solid rgba(100,150,210,0.4)' }}>L {page + 1}/{totalPages} R</span>
-        <span onClick={onNext} style={{ color: C.arrowGreen, fontSize: 15, cursor: 'pointer', fontFamily: 'monospace', fontWeight: 700 }}>▶</span>
-      </div>
-      <div style={{ padding: '8px 16px', flex: 1 }}>
-        {info.rows.map(r => (
-          <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontFamily: 'monospace', fontSize: 16 }}>
-            <span style={{ color: C.textMuted }}>{r.l}</span>
-            <span style={{ color: C.textDark, fontWeight: 600 }}>{r.v}</span>
-          </div>
-        ))}
-      </div>
-    </InnerPanel>
+    <div onClick={onClick} style={{
+      padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+      background: selected ? C.selectBg : 'transparent', color: selected ? C.selectText : C.textDark,
+      fontSize: 13, fontFamily: 'monospace', fontWeight: selected ? 700 : 400,
+    }}>
+      <span style={{ width: 14, fontSize: 9, fontWeight: 700, color: selected ? '#fff' : '#e08820', opacity: item.equipped ? 1 : 0 }}>E</span>
+      <TypeIcon type={item.type} selected={selected} />
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</span>
+      {showCount && item.count != null && <span style={{ fontSize: 11, color: selected ? 'rgba(255,255,255,0.7)' : C.textMuted }}>x{item.count}</span>}
+    </div>
   );
 }
 
 // ── Sub-views ──────────────────────────────────────────────────────────────────
 
-function ItemsView({ idx, onSelect }: { idx: number; onSelect: (i: number) => void }) {
+function ItemsView({ idx, setIdx }: { idx: number; setIdx: (i: number) => void }) {
+  const item = SORTED_INV[idx];
+  const desc = item ? `${item.description}${item.usable ? '\n\n[Enter] Use' : ''}` : '';
   return (
     <>
-      <div style={{ position: 'absolute', zIndex: 2, top: PANEL_PAD, left: PANEL_PAD, width: LEFT_PANEL_W - PANEL_PAD * 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <CharacterStatus />
-        <SectionLabel text="Items" />
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 300, height: 300 }}>
-        <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>
-          {SORTED_INVENTORY.map((item, i) => <ItemRow key={`${item.name}-${i}`} item={item} selected={i === idx} onClick={() => onSelect(i)} />)}
-        </InnerPanel>
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 310, bottom: 5, width: 200, height: 300 }}>
-        <DescriptionBox text={SORTED_INVENTORY[idx]?.description ?? ''} style={{ height: '100%' }} />
-      </div>
+      <LeftCol label="Items" />
+      <BottomPanels
+        desc={desc}
+        list={SORTED_INV.map((it, i) => <ItemRow key={`${it.name}-${i}`} item={it} selected={i === idx} onClick={() => setIdx(i)} showCount />)}
+      />
     </>
   );
 }
 
-function EquipView({ idx, onSelect }: { idx: number; onSelect: (i: number) => void }) {
-  const sel = EQUIPMENT_SLOTS[idx];
-  return (
-    <>
-      <div style={{ position: 'absolute', zIndex: 2, top: PANEL_PAD, left: PANEL_PAD, width: LEFT_PANEL_W - PANEL_PAD * 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <CharacterStatus />
-        <SectionLabel text="Equip" />
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 300, height: 300 }}>
-        <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>
-          {EQUIPMENT_SLOTS.map((eq, i) => {
-            const icon = TYPE_ICONS[eq.type] || { color: '#888', label: '?' };
-            const selected = i === idx;
-            return (
-              <div key={eq.slot} onClick={() => onSelect(i)} style={{
-                padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                background: selected ? C.selectBg : 'transparent', color: selected ? C.selectText : C.textDark,
-                fontSize: 13, fontFamily: 'monospace', fontWeight: selected ? 700 : 400,
-              }}>
-                <span style={{ width: 16, height: 16, borderRadius: 3, background: selected ? 'rgba(255,255,255,0.3)' : icon.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{icon.label}</span>
-                <span style={{ width: 60, color: selected ? 'rgba(255,255,255,0.7)' : C.textMuted, fontSize: 11 }}>{eq.slot}</span>
-                <span>{eq.item}</span>
-              </div>
-            );
-          })}
-        </InnerPanel>
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 310, bottom: 5, width: 200, height: 300 }}>
-        <DescriptionBox text={sel?.description ?? ''} style={{ height: '100%' }} />
-      </div>
-    </>
-  );
-}
-
-function PaletteView({ pageIdx, slotIdx, picking, onPageChange, onSlotChange, onPick, onAssign, onBack }: {
-  pageIdx: number; slotIdx: number; picking: boolean;
-  onPageChange: (i: number) => void; onSlotChange: (i: number) => void;
-  onPick: () => void; onAssign: (a: string) => void; onBack: () => void;
+function EquipView({ slotIdx, setSlotIdx, picking, itemIdx, setItemIdx, onPick, onEquip, onBack }: {
+  slotIdx: number; setSlotIdx: (i: number) => void;
+  picking: boolean; itemIdx: number; setItemIdx: (i: number) => void;
+  onPick: () => void; onEquip: () => void; onBack: () => void;
 }) {
-  const page = PALETTE_PAGES[pageIdx];
+  const slot = EQUIP_SLOTS[slotIdx];
+  const equipped = INVENTORY.find(i => i.equipped && i.type === slot.type);
+  const candidates = INVENTORY.filter(i => i.type === slot.type);
+
+  if (picking) {
+    const sel = candidates[itemIdx];
+    return (
+      <>
+        <LeftCol label={`Equip: ${slot.slot}`} />
+        <BottomPanels
+          listWidth={320}
+          descWidth={190}
+          desc={sel?.description ?? 'Select equipment.'}
+          list={<>
+            <div style={{ padding: '4px 10px', fontSize: 11, fontFamily: 'monospace', color: C.textMuted }}>Choose {slot.slot}:</div>
+            {candidates.map((it, i) => <ItemRow key={it.name} item={it} selected={i === itemIdx} onClick={() => { setItemIdx(i); }} />)}
+            <div onClick={onBack} style={{ padding: '5px 14px', cursor: 'pointer', fontSize: 13, fontFamily: 'monospace', color: C.textMuted, marginTop: 4 }}>← Back</div>
+          </>}
+        />
+      </>
+    );
+  }
+
   return (
     <>
-      <div style={{ position: 'absolute', zIndex: 2, top: PANEL_PAD, left: PANEL_PAD, width: LEFT_PANEL_W - PANEL_PAD * 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <CharacterStatus />
-        <SectionLabel text="Palette" />
-        {/* Page tabs */}
+      <LeftCol label="Equip" />
+      <BottomPanels
+        listWidth={320}
+        descWidth={190}
+        desc={equipped?.description ?? 'Nothing equipped.'}
+        list={EQUIP_SLOTS.map((eq, i) => {
+          const eqItem = INVENTORY.find(it => it.equipped && it.type === eq.type);
+          const sel = i === slotIdx;
+          return (
+            <div key={eq.slot} onClick={() => { setSlotIdx(i); onPick(); }} style={{
+              padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+              background: sel ? C.selectBg : 'transparent', color: sel ? C.selectText : C.textDark,
+              fontSize: 13, fontFamily: 'monospace', fontWeight: sel ? 700 : 400,
+            }}>
+              <TypeIcon type={eq.type} selected={sel} />
+              <span style={{ width: 55, color: sel ? 'rgba(255,255,255,0.7)' : C.textMuted, fontSize: 11 }}>{eq.slot}</span>
+              <span>{eqItem?.name ?? '--'}</span>
+            </div>
+          );
+        })}
+      />
+    </>
+  );
+}
+
+function TechsView({ idx, setIdx }: { idx: number; setIdx: (i: number) => void }) {
+  const tech = TECHNIQUES[idx];
+  return (
+    <>
+      <LeftCol label="Techs" />
+      <BottomPanels
+        desc={tech ? `${tech.description}\n\nLevel: ${tech.level}  PP: ${tech.pp}` : ''}
+        list={TECHNIQUES.map((t, i) => {
+          const sel = i === idx;
+          return (
+            <div key={t.name} onClick={() => setIdx(i)} style={{
+              padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+              background: sel ? C.selectBg : 'transparent', color: sel ? C.selectText : C.textDark,
+              fontSize: 13, fontFamily: 'monospace', fontWeight: sel ? 700 : 400,
+            }}>
+              <TypeIcon type="tech" selected={sel} />
+              <span style={{ flex: 1 }}>{t.name}</span>
+              <span style={{ fontSize: 11, color: sel ? 'rgba(255,255,255,0.7)' : C.textMuted }}>Lv{t.level}</span>
+              <span style={{ fontSize: 11, color: sel ? 'rgba(255,255,255,0.7)' : C.textMuted, width: 35, textAlign: 'right' }}>{t.pp}PP</span>
+            </div>
+          );
+        })}
+      />
+    </>
+  );
+}
+
+function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking, setPicking, onAssign }: {
+  pages: string[][]; pageIdx: number; setPageIdx: (i: number) => void;
+  slotIdx: number; setSlotIdx: (i: number) => void;
+  picking: boolean; setPicking: (b: boolean) => void;
+  onAssign: (action: string) => void;
+}) {
+  const page = pages[pageIdx];
+  return (
+    <>
+      <LeftCol label="Palette">
         <div style={{ display: 'flex', gap: 4 }}>
-          {PALETTE_PAGES.map((_, i) => (
-            <div key={i} onClick={() => onPageChange(i)} style={{
+          {pages.map((_, i) => (
+            <div key={i} onClick={() => setPageIdx(i)} style={{
               flex: 1, textAlign: 'center', padding: '4px 0', borderRadius: 3, cursor: 'pointer',
               background: i === pageIdx ? C.selectBg : C.panelBg, color: i === pageIdx ? C.selectText : C.textDark,
               fontSize: 12, fontFamily: 'monospace', fontWeight: 700, border: `1px solid ${C.panelBorder}`,
             }}>P{i + 1}</div>
           ))}
         </div>
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 300, height: 300 }}>
-        <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>
-          {picking ? (
-            <>
-              <div style={{ padding: '6px 10px', fontSize: 11, fontFamily: 'monospace', color: C.textMuted }}>Assign to Slot {slotIdx + 1}:</div>
-              {PALETTE_ACTIONS.map((action) => (
-                <div key={action} onClick={() => onAssign(action)} style={{
-                  padding: '5px 14px', cursor: 'pointer', fontSize: 13, fontFamily: 'monospace',
-                  background: page[slotIdx] === action ? C.selectBg : 'transparent',
-                  color: page[slotIdx] === action ? C.selectText : C.textDark,
-                  fontWeight: page[slotIdx] === action ? 700 : 400,
-                }}>{action}</div>
-              ))}
-            </>
-          ) : (
-            page.map((action, i) => (
-              <div key={i} onClick={() => { onSlotChange(i); onPick(); }} style={{
-                padding: '6px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-                background: i === slotIdx ? C.selectBg : 'transparent', color: i === slotIdx ? C.selectText : C.textDark,
-                fontSize: 14, fontFamily: 'monospace', fontWeight: i === slotIdx ? 700 : 400,
-              }}>
-                <span style={{ width: 24, height: 20, borderRadius: 4, background: 'rgba(40,60,80,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{['X', 'A', 'B'][i]}</span>
-                <span>{action}</span>
-              </div>
-            ))
-          )}
-        </InnerPanel>
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 310, bottom: 5, width: 200, height: 300 }}>
-        <DescriptionBox text={picking ? 'Select an action to assign.' : `Slot ${slotIdx + 1}: ${page[slotIdx]}`} style={{ height: '100%' }} />
-      </div>
+      </LeftCol>
+      <BottomPanels
+        listWidth={320}
+        descWidth={190}
+        desc={`Slot ${slotIdx + 1}: ${page[slotIdx]}\n\n[Enter] Change`}
+        list={page.map((action, i) => (
+          <div key={i} onClick={() => { setSlotIdx(i); setPicking(true); }} style={{
+            padding: '6px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+            background: i === slotIdx ? C.selectBg : 'transparent', color: i === slotIdx ? C.selectText : C.textDark,
+            fontSize: 14, fontFamily: 'monospace', fontWeight: i === slotIdx ? 700 : 400,
+          }}>
+            <span style={{ width: 24, height: 20, borderRadius: 4, background: 'rgba(40,60,80,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{['X', 'A', 'B'][i]}</span>
+            <span>{action}</span>
+          </div>
+        ))}
+      />
+      {/* Action picker replaces description panel */}
+      {picking && (
+        <div style={{ position: 'absolute', zIndex: 3, left: 330, bottom: 5, width: 190, height: 300 }}>
+          <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>
+            <div style={{ padding: '4px 10px', fontSize: 11, fontFamily: 'monospace', color: C.textMuted }}>Assign to Slot {slotIdx + 1}:</div>
+            {PALETTE_ACTIONS.map((a) => (
+              <div key={a} onClick={() => onAssign(a)} style={{
+                padding: '4px 14px', cursor: 'pointer', fontSize: 13, fontFamily: 'monospace',
+                background: page[slotIdx] === a ? C.selectBg : 'transparent',
+                color: page[slotIdx] === a ? C.selectText : C.textDark,
+                fontWeight: page[slotIdx] === a ? 700 : 400,
+              }}>{a}</div>
+            ))}
+          </InnerPanel>
+        </div>
+      )}
     </>
   );
 }
 
-function MagsView({ idx, onSelect }: { idx: number; onSelect: (i: number) => void }) {
-  const feedItems = SORTED_INVENTORY.filter(i => i.type === 'tool' || i.type === 'material');
+function MagsView({ magIdx, setMagIdx, feedIdx, setFeedIdx, feeding }: {
+  magIdx: number; setMagIdx: (i: number) => void;
+  feedIdx: number; setFeedIdx: (i: number) => void;
+  feeding: boolean;
+}) {
+  if (feeding) {
+    const item = FEED_ITEMS[feedIdx];
+    return (
+      <>
+        <LeftCol label="Feed Mag">
+          <InnerPanel style={{ padding: '8px 12px' }}>
+            <div style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: C.textDark }}>{MAGS[magIdx]?.name}</div>
+            <div style={{ fontFamily: 'monospace', fontSize: 11, color: C.textMuted, marginTop: 2 }}>{MAGS[magIdx]?.description}</div>
+          </InnerPanel>
+        </LeftCol>
+        <BottomPanels
+          desc={item ? `${item.description}\n\nx${item.count}` : 'Select item to feed.'}
+          list={FEED_ITEMS.map((it, i) => <ItemRow key={`${it.name}-${i}`} item={it} selected={i === feedIdx} onClick={() => setFeedIdx(i)} showCount />)}
+        />
+      </>
+    );
+  }
   return (
     <>
-      <div style={{ position: 'absolute', zIndex: 2, top: PANEL_PAD, left: PANEL_PAD, width: LEFT_PANEL_W - PANEL_PAD * 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <CharacterStatus />
-        <SectionLabel text="Mags" />
-        {/* Current mag */}
-        <InnerPanel style={{ padding: '8px 12px' }}>
-          <div style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: C.textDark, marginBottom: 4 }}>Mag Lv12</div>
-          <div style={{ fontFamily: 'monospace', fontSize: 11, color: C.textMuted }}>DEF 5 / POW 3 / DEX 2 / MIND 2</div>
-        </InnerPanel>
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 300, height: 300 }}>
-        <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>
-          <div style={{ padding: '4px 10px', fontSize: 11, fontFamily: 'monospace', color: C.textMuted }}>Feed item:</div>
-          {feedItems.map((item, i) => <ItemRow key={`${item.name}-${i}`} item={item} selected={i === idx} onClick={() => onSelect(i)} />)}
-        </InnerPanel>
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 310, bottom: 5, width: 200, height: 300 }}>
-        <DescriptionBox text={feedItems[idx]?.description ?? 'Select an item to feed.'} style={{ height: '100%' }} />
-      </div>
+      <LeftCol label="Mags" />
+      <BottomPanels
+        desc={MAGS[magIdx]?.description ?? ''}
+        list={MAGS.map((m, i) => <ItemRow key={m.name} item={m} selected={i === magIdx} onClick={() => setMagIdx(i)} />)}
+      />
     </>
   );
 }
@@ -341,119 +388,156 @@ function MagsView({ idx, onSelect }: { idx: number; onSelect: (i: number) => voi
 function QuestView() {
   return (
     <>
-      <div style={{ position: 'absolute', zIndex: 2, top: PANEL_PAD, left: PANEL_PAD, width: LEFT_PANEL_W - PANEL_PAD * 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <CharacterStatus />
-        <SectionLabel text="Quest" />
-      </div>
+      <LeftCol label="Quest" />
       <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 505, height: 300 }}>
         <InnerPanel style={{ padding: '16px 20px', height: '100%' }}>
-          {[
-            { label: 'Quest', value: QUEST_INFO.name },
-            { label: 'Client', value: QUEST_INFO.client },
-            { label: 'Area', value: QUEST_INFO.area },
-          ].map(r => (
-            <div key={r.label} style={{ display: 'flex', gap: 12, padding: '6px 0', fontFamily: 'monospace', fontSize: 15, borderBottom: '1px solid rgba(100,140,190,0.2)' }}>
-              <span style={{ color: C.textMuted, width: 70 }}>{r.label}</span>
-              <span style={{ color: C.textDark, fontWeight: 600 }}>{r.value}</span>
+          {[{ l: 'Quest', v: QUEST_INFO.name }, { l: 'Client', v: QUEST_INFO.client }, { l: 'Area', v: QUEST_INFO.area }].map(r => (
+            <div key={r.l} style={{ display: 'flex', gap: 12, padding: '6px 0', fontFamily: 'monospace', fontSize: 15, borderBottom: '1px solid rgba(100,140,190,0.2)' }}>
+              <span style={{ color: C.textMuted, width: 70 }}>{r.l}</span>
+              <span style={{ color: C.textDark, fontWeight: 600 }}>{r.v}</span>
             </div>
           ))}
-          <div style={{ marginTop: 12, fontFamily: 'monospace', fontSize: 13, color: C.textDark, lineHeight: 1.6 }}>
-            {QUEST_INFO.objective}
-          </div>
+          <div style={{ marginTop: 12, fontFamily: 'monospace', fontSize: 13, color: C.textDark, lineHeight: 1.6 }}>{QUEST_INFO.objective}</div>
         </InnerPanel>
       </div>
     </>
   );
 }
 
-function SystemView({ idx, onSelect }: { idx: number; onSelect: (i: number) => void }) {
+function SystemView({ idx, setIdx }: { idx: number; setIdx: (i: number) => void }) {
   return (
     <>
-      <div style={{ position: 'absolute', zIndex: 2, top: PANEL_PAD, left: PANEL_PAD, width: LEFT_PANEL_W - PANEL_PAD * 2, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <CharacterStatus />
-        <SectionLabel text="System" />
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 300, height: 300 }}>
-        <InnerPanel style={{ padding: '4px 0', height: '100%' }}>
-          {SYSTEM_ITEMS.map((item, i) => (
-            <div key={item} onClick={() => onSelect(i)} style={{
-              padding: '8px 16px', cursor: 'pointer', fontSize: 15, fontFamily: 'monospace',
-              background: i === idx ? C.selectBg : 'transparent', color: i === idx ? C.selectText : C.textDark,
-              fontWeight: i === idx ? 700 : 500,
-            }}>{item}</div>
-          ))}
-        </InnerPanel>
-      </div>
-      <div style={{ position: 'absolute', zIndex: 2, left: 310, bottom: 5, width: 200, height: 300 }}>
-        <DescriptionBox text={['Save your progress.', 'Return to the title screen.', 'Adjust game settings.'][idx] ?? ''} style={{ height: '100%' }} />
-      </div>
+      <LeftCol label="System" />
+      <BottomPanels
+        desc={SYSTEM_ITEMS[idx]?.desc ?? ''}
+        list={SYSTEM_ITEMS.map((item, i) => (
+          <div key={item.label} onClick={() => setIdx(i)} style={{
+            padding: '8px 16px', cursor: 'pointer', fontSize: 15, fontFamily: 'monospace',
+            background: i === idx ? C.selectBg : 'transparent', color: i === idx ? C.selectText : C.textDark,
+            fontWeight: i === idx ? 700 : 500,
+          }}>{item.label}</div>
+        ))}
+      />
     </>
+  );
+}
+
+function InfoPanel({ page, onPrev, onNext }: { page: number; onPrev: () => void; onNext: () => void }) {
+  const pages = [
+    [{ l: 'Lv', v: '14' }, { l: 'Type', v: 'HUmar' }, { l: 'Exp Pts', v: '12,480' }, { l: 'To Next Lv', v: '3,520' }, { l: 'Meseta', v: '8,250' }],
+    [{ l: 'ATP', v: '186' }, { l: 'ATA', v: '94' }, { l: 'Weapon', v: 'Saber +3' }, { l: 'Grind', v: '+3' }, { l: 'Special', v: 'Heat' }],
+    [{ l: 'DFP', v: '42' }, { l: 'EVP', v: '68' }, { l: 'Frame', v: 'Normal Frame' }, { l: 'Shield', v: 'Barrier' }, { l: 'Units', v: '0 / 4' }],
+    [{ l: 'MST', v: '30' }, { l: 'TP', v: '45 / 45' }, { l: 'Foie', v: 'Lv 3' }, { l: 'Resta', v: 'Lv 1' }, { l: 'Shifta', v: '--' }],
+  ];
+  return (
+    <InnerPanel style={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(100,140,190,0.3)' }}>
+        <span onClick={onPrev} style={{ color: C.arrowGreen, fontSize: 15, cursor: 'pointer', fontFamily: 'monospace', fontWeight: 700 }}>◀</span>
+        <span style={{ color: C.textLight, fontSize: 13, fontFamily: 'monospace', background: C.pageBg, padding: '2px 12px', borderRadius: 3, border: '1px solid rgba(100,150,210,0.4)' }}>L {page + 1}/4 R</span>
+        <span onClick={onNext} style={{ color: C.arrowGreen, fontSize: 15, cursor: 'pointer', fontFamily: 'monospace', fontWeight: 700 }}>▶</span>
+      </div>
+      <div style={{ padding: '8px 16px', flex: 1 }}>
+        {pages[page].map(r => (
+          <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontFamily: 'monospace', fontSize: 16 }}>
+            <span style={{ color: C.textMuted }}>{r.l}</span><span style={{ color: C.textDark, fontWeight: 600 }}>{r.v}</span>
+          </div>
+        ))}
+      </div>
+    </InnerPanel>
   );
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────────
-type MenuMode = 'main' | 'items' | 'equip' | 'palette' | 'mags' | 'quest' | 'system';
+type Mode = 'main' | 'items' | 'equip' | 'techs' | 'palette' | 'mags' | 'quest' | 'system';
 
 export default function StartMenu() {
-  const [mode, setMode] = useState<MenuMode>('main');
+  const [mode, setMode] = useState<Mode>('main');
   const [menuIdx, setMenuIdx] = useState(0);
   const [infoPage, setInfoPage] = useState(0);
   const [subIdx, setSubIdx] = useState(0);
-  const [palettePageIdx, setPalettePageIdx] = useState(0);
-  const [paletteSlotIdx, setPaletteSlotIdx] = useState(0);
-  const [palettePicking, setPalettePicking] = useState(false);
-  const [palettes, setPalettes] = useState(() => PALETTE_PAGES.map(p => [...p]));
+
+  // Equip state
+  const [equipSlotIdx, setEquipSlotIdx] = useState(0);
+  const [equipPicking, setEquipPicking] = useState(false);
+  const [equipItemIdx, setEquipItemIdx] = useState(0);
+
+  // Palette state
+  const [palettes, setPalettes] = useState(() => [['Attack', 'Strong Attack', 'Monomate'], ['Foie', 'Resta', 'Dodge Roll'], ['Attack', 'Dimate', 'Telepipe']]);
+  const [palPageIdx, setPalPageIdx] = useState(0);
+  const [palSlotIdx, setPalSlotIdx] = useState(0);
+  const [palPicking, setPalPicking] = useState(false);
+
+  // Mags state
+  const [magIdx, setMagIdx] = useState(0);
+  const [magFeeding, setMagFeeding] = useState(false);
+  const [magFeedIdx, setMagFeedIdx] = useState(0);
 
   const openSub = (label: string) => {
-    const m = label.toLowerCase() as MenuMode;
-    if (['items', 'equip', 'palette', 'mags', 'quest', 'system'].includes(m)) {
-      setMode(m);
-      setSubIdx(0);
-      setPalettePicking(false);
+    const m = label.toLowerCase() as Mode;
+    if (MENU_ITEMS.map(s => s.toLowerCase()).includes(m)) {
+      setMode(m); setSubIdx(0); setEquipPicking(false); setPalPicking(false); setMagFeeding(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const k = e.key;
     if (mode === 'main') {
-      switch (e.key) {
-        case 'ArrowUp': setMenuIdx(p => (p - 1 + MENU_ITEMS.length) % MENU_ITEMS.length); break;
-        case 'ArrowDown': setMenuIdx(p => (p + 1) % MENU_ITEMS.length); break;
-        case 'ArrowLeft': setInfoPage(p => (p - 1 + 4) % 4); break;
-        case 'ArrowRight': setInfoPage(p => (p + 1) % 4); break;
-        case 'Enter': openSub(MENU_ITEMS[menuIdx]); break;
-        default: return;
+      if (k === 'ArrowUp') setMenuIdx(p => (p - 1 + MENU_ITEMS.length) % MENU_ITEMS.length);
+      else if (k === 'ArrowDown') setMenuIdx(p => (p + 1) % MENU_ITEMS.length);
+      else if (k === 'ArrowLeft') setInfoPage(p => (p - 1 + 4) % 4);
+      else if (k === 'ArrowRight') setInfoPage(p => (p + 1) % 4);
+      else if (k === 'Enter') openSub(MENU_ITEMS[menuIdx]);
+      else return;
+    } else if (k === 'Escape' || k === 'Backspace') {
+      if (mode === 'equip' && equipPicking) { setEquipPicking(false); }
+      else if (mode === 'palette' && palPicking) { setPalPicking(false); }
+      else if (mode === 'mags' && magFeeding) { setMagFeeding(false); }
+      else { setMode('main'); }
+    } else if (mode === 'equip') {
+      if (equipPicking) {
+        const cands = INVENTORY.filter(i => i.type === EQUIP_SLOTS[equipSlotIdx].type);
+        if (k === 'ArrowUp') setEquipItemIdx(p => (p - 1 + cands.length) % cands.length);
+        else if (k === 'ArrowDown') setEquipItemIdx(p => (p + 1) % cands.length);
+        else return;
+      } else {
+        if (k === 'ArrowUp') setEquipSlotIdx(p => (p - 1 + EQUIP_SLOTS.length) % EQUIP_SLOTS.length);
+        else if (k === 'ArrowDown') setEquipSlotIdx(p => (p + 1) % EQUIP_SLOTS.length);
+        else if (k === 'Enter') { setEquipPicking(true); setEquipItemIdx(0); }
+        else return;
       }
-    } else if (mode === 'palette' && palettePicking) {
-      switch (e.key) {
-        case 'ArrowUp': setSubIdx(p => (p - 1 + PALETTE_ACTIONS.length) % PALETTE_ACTIONS.length); break;
-        case 'ArrowDown': setSubIdx(p => (p + 1) % PALETTE_ACTIONS.length); break;
-        case 'Enter':
-          setPalettes(prev => prev.map((pg, pi) => {
-            if (pi !== palettePageIdx) return pg;
-            const np = [...pg]; np[paletteSlotIdx] = PALETTE_ACTIONS[subIdx]; return np;
-          }));
-          setPalettePicking(false);
-          break;
-        case 'Escape': case 'Backspace': setPalettePicking(false); break;
-        default: return;
+    } else if (mode === 'palette') {
+      if (palPicking) {
+        if (k === 'ArrowUp') setSubIdx(p => (p - 1 + PALETTE_ACTIONS.length) % PALETTE_ACTIONS.length);
+        else if (k === 'ArrowDown') setSubIdx(p => (p + 1) % PALETTE_ACTIONS.length);
+        else if (k === 'Enter') {
+          setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = PALETTE_ACTIONS[subIdx]; return np; }));
+          setPalPicking(false);
+        } else return;
+      } else {
+        if (k === 'ArrowUp') setPalSlotIdx(p => (p - 1 + 3) % 3);
+        else if (k === 'ArrowDown') setPalSlotIdx(p => (p + 1) % 3);
+        else if (k === 'ArrowLeft') setPalPageIdx(p => (p - 1 + palettes.length) % palettes.length);
+        else if (k === 'ArrowRight') setPalPageIdx(p => (p + 1) % palettes.length);
+        else if (k === 'Enter') { setPalPicking(true); setSubIdx(0); }
+        else return;
+      }
+    } else if (mode === 'mags') {
+      if (magFeeding) {
+        if (k === 'ArrowUp') setMagFeedIdx(p => (p - 1 + FEED_ITEMS.length) % FEED_ITEMS.length);
+        else if (k === 'ArrowDown') setMagFeedIdx(p => (p + 1) % FEED_ITEMS.length);
+        else return;
+      } else {
+        if (k === 'ArrowUp') setMagIdx(p => (p - 1 + MAGS.length) % MAGS.length);
+        else if (k === 'ArrowDown') setMagIdx(p => (p + 1) % MAGS.length);
+        else if (k === 'Enter') { setMagFeeding(true); setMagFeedIdx(0); }
+        else return;
       }
     } else {
-      const listLen = mode === 'items' ? SORTED_INVENTORY.length
-        : mode === 'equip' ? EQUIPMENT_SLOTS.length
-        : mode === 'palette' ? palettes[palettePageIdx].length
-        : mode === 'mags' ? SORTED_INVENTORY.filter(i => i.type === 'tool' || i.type === 'material').length
-        : mode === 'system' ? SYSTEM_ITEMS.length : 0;
-      switch (e.key) {
-        case 'ArrowUp': if (listLen > 0) setSubIdx(p => (p - 1 + listLen) % listLen); break;
-        case 'ArrowDown': if (listLen > 0) setSubIdx(p => (p + 1) % listLen); break;
-        case 'ArrowLeft': if (mode === 'palette') setPalettePageIdx(p => (p - 1 + palettes.length) % palettes.length); break;
-        case 'ArrowRight': if (mode === 'palette') setPalettePageIdx(p => (p + 1) % palettes.length); break;
-        case 'Enter':
-          if (mode === 'palette') { setPaletteSlotIdx(subIdx); setPalettePicking(true); setSubIdx(0); }
-          break;
-        case 'Escape': case 'Backspace': setMode('main'); break;
-        default: return;
-      }
+      const lens: Record<string, number> = { items: SORTED_INV.length, techs: TECHNIQUES.length, system: SYSTEM_ITEMS.length };
+      const len = lens[mode] ?? 0;
+      if (k === 'ArrowUp' && len > 0) setSubIdx(p => (p - 1 + len) % len);
+      else if (k === 'ArrowDown' && len > 0) setSubIdx(p => (p + 1) % len);
+      else return;
     }
     e.preventDefault();
   };
@@ -464,7 +548,6 @@ export default function StartMenu() {
         width: VIEWPORT_W, height: VIEWPORT_H, position: 'relative', overflow: 'hidden', outline: 'none',
         background: 'linear-gradient(160deg, #1a2a3a 0%, #2a3a4a 30%, #1a2a3a 60%, #0a1a2a 100%)',
       }}>
-        {/* Ground */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 360, background: 'linear-gradient(to bottom, rgba(40,50,60,0.3), rgba(60,70,50,0.5))' }} />
 
         {/* L-shaped backdrop */}
@@ -486,23 +569,23 @@ export default function StartMenu() {
                   }}>{item}</div>
                 ))}
               </InnerPanel>
-              <DescriptionBox text={MENU_DESCRIPTIONS[MENU_ITEMS[menuIdx]] ?? ''} />
+              <DescBox text={MENU_DESC[MENU_ITEMS[menuIdx]] ?? ''} />
             </div>
             <div style={{ position: 'absolute', zIndex: 2, bottom: 5, right: 30, top: VIEWPORT_H - BOTTOM_PANEL_H + 5, width: 440 }}>
-              <InfoPanel page={infoPage} totalPages={4} onPrev={() => setInfoPage(p => (p - 1 + 4) % 4)} onNext={() => setInfoPage(p => (p + 1) % 4)} />
+              <InfoPanel page={infoPage} onPrev={() => setInfoPage(p => (p - 1 + 4) % 4)} onNext={() => setInfoPage(p => (p + 1) % 4)} />
             </div>
           </>
         )}
-        {mode === 'items' && <ItemsView idx={subIdx} onSelect={setSubIdx} />}
-        {mode === 'equip' && <EquipView idx={subIdx} onSelect={setSubIdx} />}
-        {mode === 'palette' && <PaletteView pageIdx={palettePageIdx} slotIdx={paletteSlotIdx} picking={palettePicking} onPageChange={setPalettePageIdx} onSlotChange={setPaletteSlotIdx} onPick={() => { setPaletteSlotIdx(subIdx); setPalettePicking(true); setSubIdx(0); }} onAssign={(a) => { setPalettes(prev => prev.map((pg, pi) => { if (pi !== palettePageIdx) return pg; const np = [...pg]; np[paletteSlotIdx] = a; return np; })); setPalettePicking(false); }} onBack={() => setPalettePicking(false)} />}
-        {mode === 'mags' && <MagsView idx={subIdx} onSelect={setSubIdx} />}
+        {mode === 'items' && <ItemsView idx={subIdx} setIdx={setSubIdx} />}
+        {mode === 'equip' && <EquipView slotIdx={equipSlotIdx} setSlotIdx={setEquipSlotIdx} picking={equipPicking} itemIdx={equipItemIdx} setItemIdx={setEquipItemIdx} onPick={() => { setEquipPicking(true); setEquipItemIdx(0); }} onEquip={() => setEquipPicking(false)} onBack={() => setEquipPicking(false)} />}
+        {mode === 'techs' && <TechsView idx={subIdx} setIdx={setSubIdx} />}
+        {mode === 'palette' && <PaletteView pages={palettes} pageIdx={palPageIdx} setPageIdx={setPalPageIdx} slotIdx={palSlotIdx} setSlotIdx={setPalSlotIdx} picking={palPicking} setPicking={setPalPicking} onAssign={(a) => { setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = a; return np; })); setPalPicking(false); }} />}
+        {mode === 'mags' && <MagsView magIdx={magIdx} setMagIdx={setMagIdx} feedIdx={magFeedIdx} setFeedIdx={setMagFeedIdx} feeding={magFeeding} />}
         {mode === 'quest' && <QuestView />}
-        {mode === 'system' && <SystemView idx={subIdx} onSelect={setSubIdx} />}
+        {mode === 'system' && <SystemView idx={subIdx} setIdx={setSubIdx} />}
 
-        {/* Hints */}
         <div style={{ position: 'absolute', zIndex: 2, bottom: 8, left: LEFT_PANEL_W + 16, fontSize: 11, fontFamily: 'monospace', color: 'rgba(180,200,230,0.5)', display: 'flex', gap: 16 }}>
-          {mode === 'main' ? <><span>↑↓ Navigate</span><span>←→ Info Pages</span><span>Enter: Select</span></> : <><span>↑↓ Navigate</span><span>Esc: Back</span>{mode === 'palette' && <span>←→ Pages</span>}</>}
+          {mode === 'main' ? <><span>↑↓ Navigate</span><span>←→ Info Pages</span><span>Enter: Select</span></> : <><span>↑↓ Navigate</span><span>Esc: Back</span>{mode === 'palette' && !palPicking && <span>←→ Pages</span>}{mode === 'mags' && !magFeeding && <span>Enter: Feed</span>}</>}
         </div>
       </div>
     </div>
