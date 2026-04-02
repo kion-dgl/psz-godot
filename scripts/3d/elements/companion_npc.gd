@@ -66,6 +66,9 @@ var _is_female: bool = false
 var _anim_hold_timer: float = 0.0
 const ANIM_HOLD_TIME: float = 0.3
 var _was_moving: bool = false  # Track delayed state transitions
+var _resume_blend: float = 0.0  # Blend from frozen pos to trail pos on resume
+var _frozen_pos: Vector3 = Vector3.ZERO  # Position when companion froze
+const RESUME_BLEND_SPEED: float = 3.0  # Seconds to fully blend back to trail
 
 ## Trail replay — record every physics frame, interpolate on playback
 var _trail: Array = []  # [{pos: Vector3, rot: float, state: int, time: float}]
@@ -415,10 +418,18 @@ func _process_follow(_delta: float) -> void:
 		var to_player := _player_ref.global_position - candidate_pos
 		to_player.y = 0
 		if to_player.length() < 1.5:
-			# Too close — hold at minimum distance behind player
 			var away_dir := -to_player.normalized() if to_player.length() > 0.01 else Vector3(-sin(player_rot), 0, -cos(player_rot))
 			candidate_pos = _player_ref.global_position + away_dir * 1.5
 			candidate_pos.y = _player_ref.global_position.y
+
+		# Smooth blend from frozen position when resuming movement
+		if not _was_moving:
+			_frozen_pos = global_position
+			_resume_blend = 0.0
+		if _resume_blend < 1.0:
+			_resume_blend = minf(_resume_blend + RESUME_BLEND_SPEED * _delta, 1.0)
+			candidate_pos = _frozen_pos.lerp(candidate_pos, _resume_blend)
+
 		global_position = candidate_pos
 		rotation.y = interp_rot
 		_was_moving = true
