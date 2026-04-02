@@ -6,22 +6,46 @@ extends CharacterBody3D
 signal speech_started
 signal speech_finished
 
-const FOLLOW_SPEED: float = 6.0
-const CATCHUP_SPEED: float = 9.0
-const STOP_DISTANCE: float = 2.5
-const CATCHUP_DISTANCE: float = 6.0
+const FOLLOW_SPEED: float = 7.0
+const CATCHUP_SPEED: float = 10.0
+const STOP_DISTANCE: float = 1.8
+const START_DISTANCE: float = 3.0  # Must exceed START to begin moving (hysteresis)
+const CATCHUP_DISTANCE: float = 5.0
 const TELEPORT_DISTANCE: float = 20.0
 
-## Companion colors by ID
-const COMPANION_COLORS: Dictionary = {
-	"kai": Color(1.0, 0.9, 0.1),       # Yellow
-	"dorn": Color(1.0, 0.6, 0.0),      # Orange
-	"ren": Color(0.0, 0.9, 0.9),       # Cyan
-	"elio": Color(0.2, 0.9, 0.2),      # Green
-	"mira": Color(0.7, 0.3, 0.9),      # Purple
-	"sarisa": Color(1.0, 0.5, 0.7),    # Pink
+## Companion models — maps companion_id to { glb, texture } paths
+const COMPANION_MODELS: Dictionary = {
+	"kai": {"glb": "res://assets/npcs/kai/pc_a01_000.glb", "texture": "res://assets/npcs/kai/pc_a01_000.png"},
+	"sarisa": {"glb": "res://assets/npcs/sarisa/pc_a00_000.glb", "texture": "res://assets/npcs/sarisa/pc_a00_000.png"},
+	"dorn": {"glb": "res://assets/npcs/dorn/dorn.glb", "texture": "res://assets/npcs/dorn/dorn.png"},
+	"dr_carlo": {"glb": "res://assets/npcs/dr_carlo/dr_carlo.glb", "texture": "res://assets/npcs/dr_carlo/dr_carlo.png"},
+	"elio": {"glb": "res://assets/npcs/elio/elio.glb", "texture": "res://assets/npcs/elio/elio.png"},
+	"fern": {"glb": "res://assets/npcs/fern/fern.glb", "texture": "res://assets/npcs/fern/fern.png"},
+	"vash": {"glb": "res://assets/npcs/vash/vash.glb", "texture": "res://assets/npcs/vash/vash.png"},
+	"ren": {"glb": "res://assets/npcs/ren/ren.glb", "texture": "res://assets/npcs/ren/ren.png"},
+	"mira": {"glb": "res://assets/npcs/mira/mira.glb", "texture": "res://assets/npcs/mira/mira.png"},
 }
-const DEFAULT_COLOR := Color(1.0, 1.0, 1.0)  # White
+
+## Fallback colors for NPCs without GLB models
+const COMPANION_COLORS: Dictionary = {
+	"kai": Color(1.0, 0.9, 0.1),
+	"dorn": Color(1.0, 0.6, 0.0),
+	"ren": Color(0.0, 0.9, 0.9),
+	"elio": Color(0.2, 0.9, 0.2),
+	"mira": Color(0.7, 0.3, 0.9),
+	"sarisa": Color(1.0, 0.5, 0.7),
+}
+const DEFAULT_COLOR := Color(1.0, 1.0, 1.0)
+
+## Gender detection for animation prefix (female classes)
+const FEMALE_CLASSES := ["humarl", "ramarl", "fomarl", "hunewearl", "fonewearl", "hucaseal", "racaseal"]
+
+## Companion class IDs for animation selection
+const COMPANION_CLASSES: Dictionary = {
+	"kai": "humar", "sarisa": "hunewearl", "dorn": "hucast",
+	"dr_carlo": "fomar", "elio": "racaseal", "fern": "humarl",
+	"vash": "ramar", "ren": "humar", "mira": "fomarl",
+}
 
 ## Viewport size for speech bubble
 const BUBBLE_WIDTH := 400
@@ -36,6 +60,17 @@ var _name_label: Label3D
 var _player_ref: Node3D = null
 var _speaking: bool = false
 var _speech_timer: float = 0.0
+var _anim_player: AnimationPlayer
+var _current_anim: String = ""
+var _is_female: bool = false
+var _anim_hold_timer: float = 0.0
+const ANIM_HOLD_TIME: float = 0.3
+var _was_moving: bool = false  # Track delayed state transitions
+
+## Trail replay — record every physics frame, interpolate on playback
+var _trail: Array = []  # [{pos: Vector3, rot: float, state: int, time: float}]
+const TRAIL_DELAY: float = 0.5  # Seconds behind the player
+const TRAIL_MAX_ENTRIES: int = 150  # ~2.5s at 60fps
 
 
 func _ready() -> void:
@@ -58,6 +93,25 @@ func _ready() -> void:
 
 
 func _build_capsule() -> void:
+	# Try to load a real model first
+	var entry: Variant = COMPANION_MODELS.get(companion_id, null)
+	if entry != null:
+		var glb_path: String = entry["glb"]
+		var tex_path: String = entry["texture"]
+		if ResourceLoader.exists(glb_path):
+			var packed := load(glb_path) as PackedScene
+			if packed:
+				var npc_model := packed.instantiate()
+				npc_model.name = "CompanionModel"
+				add_child(npc_model)
+				if ResourceLoader.exists(tex_path):
+					var texture := load(tex_path) as Texture2D
+					if texture:
+						_apply_texture(npc_model, texture)
+				_setup_companion_anims(npc_model)
+				return
+
+	# Fallback: colored capsule
 	var mesh_inst := MeshInstance3D.new()
 	mesh_inst.name = "CapsuleMesh"
 	var capsule := CapsuleMesh.new()
@@ -72,6 +126,95 @@ func _build_capsule() -> void:
 	mesh_inst.material_override = mat
 
 	add_child(mesh_inst)
+
+
+func _apply_texture(node: Node, texture: Texture2D) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				var new_mat := mat.duplicate() as StandardMaterial3D
+				new_mat.albedo_texture = texture
+				new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+				mesh_inst.set_surface_override_material(i, new_mat)
+	for child in node.get_children():
+		_apply_texture(child, texture)
+
+
+func _setup_companion_anims(npc_model: Node) -> void:
+	## Load walk/run/idle animations from the saber animation GLB
+	var class_id: String = COMPANION_CLASSES.get(companion_id, "humar")
+	_is_female = class_id in FEMALE_CLASSES
+	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if _is_female else "res://assets/player/animations/saver_m.glb"
+	if not ResourceLoader.exists(anim_glb):
+		return
+
+	var skel: Skeleton3D = _find_typed(npc_model, "Skeleton3D") as Skeleton3D
+	if not skel:
+		return
+
+	var anim_packed := load(anim_glb) as PackedScene
+	if not anim_packed:
+		return
+	var anim_scene := anim_packed.instantiate()
+	var source_player: AnimationPlayer = _find_typed(anim_scene, "AnimationPlayer") as AnimationPlayer
+	if not source_player:
+		anim_scene.queue_free()
+		return
+
+	_anim_player = AnimationPlayer.new()
+	_anim_player.name = "CompanionAnimPlayer"
+	skel.get_parent().add_child(_anim_player)
+
+	var prefix: String = "pwsa" if _is_female else "pmsa"
+	var needed := {
+		"wait": prefix + "_wait",
+		"run": prefix + "_run_pso",
+		"walk": prefix + "_walk",
+	}
+
+	var lib := AnimationLibrary.new()
+	for key in needed:
+		var anim_name: String = needed[key]
+		if source_player.has_animation(anim_name):
+			var anim := source_player.get_animation(anim_name).duplicate() as Animation
+			anim.loop_mode = Animation.LOOP_LINEAR
+			# Remap skeleton tracks
+			for i in range(anim.get_track_count()):
+				var track_path := String(anim.track_get_path(i))
+				if "Skeleton3D" in track_path:
+					var skel_idx := track_path.find("Skeleton3D")
+					var prop_part := track_path.substr(skel_idx + 10)
+					anim.track_set_path(i, NodePath(skel.name + prop_part))
+			lib.add_animation(key, anim)
+
+	_anim_player.add_animation_library("", lib)
+	_play_companion_anim("wait")
+	anim_scene.queue_free()
+	print("[Companion] Loaded anims for %s (female=%s)" % [companion_id, _is_female])
+
+
+func _play_companion_anim(anim_name: String) -> void:
+	if not _anim_player or _current_anim == anim_name:
+		return
+	# Don't switch animations until hold timer expires
+	if _anim_hold_timer > 0.0:
+		return
+	if _anim_player.has_animation(anim_name):
+		_anim_player.play(anim_name)
+		_current_anim = anim_name
+		_anim_hold_timer = ANIM_HOLD_TIME
+
+
+func _find_typed(root: Node, type_name: String) -> Node:
+	if root.get_class() == type_name:
+		return root
+	for child in root.get_children():
+		var found := _find_typed(child, type_name)
+		if found:
+			return found
+	return null
 
 
 func _build_name_label() -> void:
@@ -200,7 +343,7 @@ func _process_speech_timer(delta: float) -> void:
 		_dismiss_speech()
 
 
-func _process_follow(delta: float) -> void:
+func _process_follow(_delta: float) -> void:
 	# Cache player reference
 	if not is_instance_valid(_player_ref):
 		var players := get_tree().get_nodes_in_group("player")
@@ -208,34 +351,87 @@ func _process_follow(delta: float) -> void:
 			return
 		_player_ref = players[0]
 
-	var player_pos := _player_ref.global_position
-	var to_player := player_pos - global_position
-	to_player.y = 0
-	var dist := to_player.length()
+	# Tick animation hold timer
+	_anim_hold_timer = maxf(_anim_hold_timer - _delta, 0.0)
 
-	# Teleport if too far away
-	if dist > TELEPORT_DISTANCE:
+	# Record player state every physics frame
+	var ps: int = 0
+	if "current_state" in _player_ref:
+		ps = _player_ref.current_state
+	var player_rot: float = _player_ref.player_rotation if "player_rotation" in _player_ref else _player_ref.rotation.y
+	var now: float = Time.get_ticks_msec() / 1000.0
+	_trail.append({
+		"pos": _player_ref.global_position,
+		"rot": player_rot,
+		"state": ps,
+		"time": now,
+	})
+
+	# Prune oldest entries
+	while _trail.size() > TRAIL_MAX_ENTRIES:
+		_trail.remove_at(0)
+
+	# Teleport if too far
+	var dist_to_player := global_position.distance_to(_player_ref.global_position)
+	if dist_to_player > TELEPORT_DISTANCE:
 		_teleport_behind_player()
+		_trail.clear()
+		_play_companion_anim("wait")
 		return
 
-	# Match player Y directly (stages are flat)
-	global_position.y = player_pos.y
+	# Find the two trail entries bracketing target_time and interpolate
+	var target_time: float = now - TRAIL_DELAY
+	var entry_a: Dictionary = {}
+	var entry_b: Dictionary = {}
+	for i in range(_trail.size() - 1, 0, -1):
+		if _trail[i - 1]["time"] <= target_time and _trail[i]["time"] >= target_time:
+			entry_a = _trail[i - 1]
+			entry_b = _trail[i]
+			break
 
-	if dist > STOP_DISTANCE:
-		var direction := to_player.normalized()
-		var speed := CATCHUP_SPEED if dist > CATCHUP_DISTANCE else FOLLOW_SPEED
-		velocity.x = direction.x * speed
-		velocity.z = direction.z * speed
-		velocity.y = 0
+	if entry_a.is_empty():
+		# Not enough trail history yet — stay put
+		_play_companion_anim("wait")
+		return
 
-		var target_angle := atan2(direction.x, direction.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, 5.0 * delta)
+	# Interpolate between the two bracketing entries
+	var span: float = entry_b["time"] - entry_a["time"]
+	var t: float = 0.0
+	if span > 0.001:
+		t = clampf((target_time - entry_a["time"]) / span, 0.0, 1.0)
+
+	var interp_pos: Vector3 = entry_a["pos"].lerp(entry_b["pos"], t)
+	var interp_rot: float = lerp_angle(entry_a["rot"], entry_b["rot"], t)
+	var delayed_state: int = entry_a["state"]
+
+	# Mirror the delayed player animation state
+	# IDLE=0, WALKING=1, RUNNING=2, SPRINTING=3
+	var is_moving: bool = delayed_state >= 1
+
+	if is_moving:
+		# Player was moving — follow the interpolated trail
+		# But cap position so we never get closer than 1.5 units to the player
+		var candidate_pos := Vector3(interp_pos.x, _player_ref.global_position.y, interp_pos.z)
+		var to_player := _player_ref.global_position - candidate_pos
+		to_player.y = 0
+		if to_player.length() < 1.5:
+			# Too close — hold at minimum distance behind player
+			var away_dir := -to_player.normalized() if to_player.length() > 0.01 else Vector3(-sin(player_rot), 0, -cos(player_rot))
+			candidate_pos = _player_ref.global_position + away_dir * 1.5
+			candidate_pos.y = _player_ref.global_position.y
+		global_position = candidate_pos
+		rotation.y = interp_rot
+		_was_moving = true
+		if delayed_state == 1:
+			_play_companion_anim("walk")
+		else:
+			_play_companion_anim("run")
 	else:
-		velocity.x = 0
-		velocity.z = 0
-		velocity.y = 0
-
-	move_and_slide()
+		# Player was idle — freeze in place, face player's direction
+		global_position.y = _player_ref.global_position.y
+		rotation.y = lerp_angle(rotation.y, player_rot, 5.0 * _delta)
+		_was_moving = false
+		_play_companion_anim("wait")
 
 
 func _teleport_behind_player() -> void:
