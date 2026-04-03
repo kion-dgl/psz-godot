@@ -33,7 +33,7 @@ const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
 const WarpPointScript := preload("res://scripts/3d/elements/warp_point.gd")
 const QuestItemPickupScript := preload("res://scripts/3d/elements/quest_item_pickup.gd")
 const CompanionNpcScript := preload("res://scripts/3d/elements/companion_npc.gd")
-const MENU_SCENE_PATH := "res://scenes/3d/city/city_menu.tscn"
+# Start menu handled by PsoStartMenu autoload
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
 const DIRECTIONS := ["north", "east", "south", "west"]
@@ -469,6 +469,7 @@ func _ready() -> void:
 	# Connect item collected signal for section-level warp_requires unlocking
 	if not SessionManager.quest_item_collected.is_connected(_on_quest_item_collected_check_exit):
 		SessionManager.quest_item_collected.connect(_on_quest_item_collected_check_exit)
+
 
 
 func _on_quest_item_collected_check_exit(_item_id: String, _new_count: int, _target: int) -> void:
@@ -3071,10 +3072,7 @@ func _return_to_city() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause"):
-		SceneManager.push_scene(MENU_SCENE_PATH)
-		get_viewport().set_input_as_handled()
-		return
+	# Pause/Start handled by PsoStartMenu autoload
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_M:
