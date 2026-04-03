@@ -275,17 +275,17 @@ func _do_equip() -> void:
 
 
 func _input_palette(event: InputEvent) -> bool:
+	var total_slots: int = ActionPalette.pages.size() * 3
+	var flat_idx: int = _pal_page_idx * 3 + _pal_slot_idx
 	if event.is_action_pressed("ui_up"):
-		_pal_slot_idx = wrapi(_pal_slot_idx - 1, 0, 3)
+		flat_idx = wrapi(flat_idx - 1, 0, total_slots)
+		_pal_page_idx = flat_idx / 3
+		_pal_slot_idx = flat_idx % 3
 		return true
 	elif event.is_action_pressed("ui_down"):
-		_pal_slot_idx = wrapi(_pal_slot_idx + 1, 0, 3)
-		return true
-	elif event.is_action_pressed("ui_left"):
-		_pal_page_idx = wrapi(_pal_page_idx - 1, 0, ActionPalette.pages.size())
-		return true
-	elif event.is_action_pressed("ui_right"):
-		_pal_page_idx = wrapi(_pal_page_idx + 1, 0, ActionPalette.pages.size())
+		flat_idx = wrapi(flat_idx + 1, 0, total_slots)
+		_pal_page_idx = flat_idx / 3
+		_pal_slot_idx = flat_idx % 3
 		return true
 	elif event.is_action_pressed("ui_accept"):
 		_mode = Mode.PALETTE_PICK
@@ -784,31 +784,63 @@ func _draw_techs(c: Control, font: Font) -> void:
 
 func _draw_palette(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Palette")
-	# Page tabs
-	var tab_y: float = PAD + 100
-	for i in range(ActionPalette.pages.size()):
-		var tx: float = PAD + i * 50
-		var sel: bool = i == _pal_page_idx
-		if sel:
-			c.draw_rect(Rect2(tx, tab_y, 46, 22), C_SELECT)
-		c.draw_string(ThemeDB.fallback_font, Vector2(tx + 10, tab_y + 16), "P%d" % [i + 1], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_SELECT_TEXT if sel else C_TEXT)
 
-	# Slots
-	var page: Array = ActionPalette.pages[_pal_page_idx] if _pal_page_idx < ActionPalette.pages.size() else []
-	var slot_labels := ["X", "A", "B"]
-	var items: Array = []
-	for i in range(page.size()):
-		var action_id: String = str(page[i]) if i < page.size() else ""
-		var action_data: Dictionary = ActionPalette.get_action_data(action_id) if ActionPalette.has_method("get_action_data") else {}
-		var label: String = str(action_data.get("name", action_id))
-		items.append({"name": "[%s] %s" % [slot_labels[i] if i < 3 else "?", label], "type": "tool"})
-	_draw_bottom_list(c, ThemeDB.fallback_font, items, _pal_slot_idx)
+	# Draw all pages inline in the bottom-left list
+	var px: float = 5.0
+	var py: float = VIEWPORT_H - 305.0
+	var pw: float = 300.0
+	var ph: float = 300.0
+	_draw_inner_panel(c, Rect2(px, py, pw, ph))
 
+	var slot_keys := ["X", "A", "B"]
+	var draw_y: float = py + 4
+	var flat_idx: int = 0  # Global index across all pages for selection tracking
+	var selected_flat: int = _pal_page_idx * 3 + _pal_slot_idx
+
+	for page_i in range(ActionPalette.pages.size()):
+		# Page header
+		c.draw_string(font, Vector2(px + 10, draw_y + 14), "Page %d" % [page_i + 1], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
+		draw_y += 18
+
+		var page: Array = ActionPalette.pages[page_i]
+		for slot_i in range(page.size()):
+			if draw_y > py + ph - 4:
+				break
+			var action_id: String = str(page[slot_i])
+			var action_data: Dictionary = ActionPalette.get_action_data(action_id)
+			var label: String = str(action_data.get("label", action_id))
+			var is_sel: bool = flat_idx == selected_flat
+
+			if is_sel:
+				c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 24), C_SELECT)
+			var col: Color = C_SELECT_TEXT if is_sel else C_TEXT
+
+			# Slot key badge
+			c.draw_rect(Rect2(px + 8, draw_y + 3, 20, 18), Color(0.16, 0.24, 0.31, 0.7))
+			c.draw_string(font, Vector2(px + 13, draw_y + 17), slot_keys[slot_i] if slot_i < 3 else "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+
+			# Action icon
+			var icon: Texture2D = ActionPalette.get_action_icon(action_id)
+			if icon:
+				c.draw_texture_rect(icon, Rect2(px + 32, draw_y + 2, 20, 20), false)
+
+			# Action name
+			c.draw_string(font, Vector2(px + 56, draw_y + 17), label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
+
+			draw_y += 26
+			flat_idx += 1
+
+		draw_y += 4  # Gap between pages
+
+	# Description / picker
 	if _mode == Mode.PALETTE_PICK:
-		_draw_palette_picker(c, ThemeDB.fallback_font)
+		_draw_palette_picker(c, font)
 	else:
-		var current_action: String = str(page[_pal_slot_idx]) if _pal_slot_idx < page.size() else ""
-		_draw_bottom_desc(c, ThemeDB.fallback_font, "Slot %d: %s\n\n[Enter] Change" % [_pal_slot_idx + 1, current_action])
+		var page: Array = ActionPalette.pages[_pal_page_idx] if _pal_page_idx < ActionPalette.pages.size() else []
+		var current_id: String = str(page[_pal_slot_idx]) if _pal_slot_idx < page.size() else ""
+		var current_data: Dictionary = ActionPalette.get_action_data(current_id)
+		var current_label: String = str(current_data.get("label", current_id))
+		_draw_bottom_desc(c, font, "Page %d Slot %d:\n%s\n\n[Enter] Change\n[Left/Right] Page" % [_pal_page_idx + 1, _pal_slot_idx + 1, current_label])
 
 
 func _draw_palette_picker(c: Control, font: Font) -> void:
@@ -841,7 +873,11 @@ func _draw_palette_picker(c: Control, font: Font) -> void:
 			col = Color(0.5, 0.5, 0.5)
 		else:
 			col = C_TEXT
-		c.draw_string(font, Vector2(px + 10, iy + 15), action_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, col)
+		# Action icon
+		var icon: Texture2D = ActionPalette.get_action_icon(action_id)
+		if icon:
+			c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 18, 18), false)
+		c.draw_string(font, Vector2(px + 28, iy + 15), action_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, col)
 		# Checkmark for currently assigned action
 		if action_id == current_id:
 			c.draw_string(font, Vector2(px + pw - 20, iy + 15), "\u2713", HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, Color(0.3, 0.8, 0.3) if i != _sub_idx else C_SELECT_TEXT)
