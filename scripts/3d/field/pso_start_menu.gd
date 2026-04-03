@@ -52,12 +52,28 @@ var _options_idx: int = 0
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
 
-const MENU_LABELS := ["Items", "Equip", "Techs", "Palette", "Mags", "Quest", "System"]
-const MENU_DESCS := [
-	"Use items.", "Equip weapons and armor.", "View learned techniques.",
-	"Edit the action palette.", "Feed and manage your Mag.",
-	"View current quest objectives.", "System settings and options.",
-]
+## Menu labels built dynamically — Techs hidden for Cast race
+func _get_menu_labels() -> Array:
+	var labels: Array = ["Items", "Equip"]
+	if _can_use_techs():
+		labels.append("Techs")
+	labels.append_array(["Palette", "Mags", "Quest", "System"])
+	return labels
+
+func _get_menu_descs() -> Array:
+	var descs: Array = ["Use items.", "Equip weapons and armor."]
+	if _can_use_techs():
+		descs.append("Cast techniques.")
+	descs.append_array(["Edit the action palette.", "Feed and manage your Mag.", "View current quest objectives.", "System settings and options."])
+	return descs
+
+func _can_use_techs() -> bool:
+	var ch := _get_character()
+	var class_id: String = str(ch.get("class_id", ""))
+	var class_data = ClassRegistry.get_class_data(class_id)
+	if class_data and class_data.race == "Cast":
+		return false
+	return true
 const SYSTEM_LABELS := ["Save", "Return to Title", "Options"]
 const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Adjust game settings."]
 ## Equipment slots are built dynamically based on equipped armor's max_slots
@@ -156,10 +172,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _input_main(event: InputEvent) -> bool:
 	if event.is_action_pressed("ui_up"):
-		_menu_idx = wrapi(_menu_idx - 1, 0, MENU_LABELS.size())
+		_menu_idx = wrapi(_menu_idx - 1, 0, _get_menu_labels().size())
 		return true
 	elif event.is_action_pressed("ui_down"):
-		_menu_idx = wrapi(_menu_idx + 1, 0, MENU_LABELS.size())
+		_menu_idx = wrapi(_menu_idx + 1, 0, _get_menu_labels().size())
 		return true
 	elif event.is_action_pressed("ui_left"):
 		_info_page = wrapi(_info_page - 1, 0, 4)
@@ -290,10 +306,12 @@ func _input_palette_pick(event: InputEvent) -> bool:
 		_sub_idx = wrapi(_sub_idx + 1, 0, actions.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
-		var actions_list := _get_palette_actions()
-		if _sub_idx < actions_list.size():
-			ActionPalette.set_action(_pal_page_idx, _pal_slot_idx, actions_list[_sub_idx])
-		_mode = Mode.PALETTE
+		if _sub_idx < actions.size():
+			var action: Dictionary = actions[_sub_idx]
+			var action_id: String = str(action.get("id", ""))
+			if _is_palette_action_available(action_id):
+				ActionPalette.set_action(_pal_page_idx, _pal_slot_idx, action_id)
+				_mode = Mode.PALETTE
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.PALETTE
@@ -378,14 +396,18 @@ func _input_back(event: InputEvent) -> bool:
 
 func _enter_sub(idx: int) -> void:
 	_sub_idx = 0
-	match idx:
-		0: _mode = Mode.ITEMS
-		1: _mode = Mode.EQUIP; _equip_slot_idx = 0
-		2: _mode = Mode.TECHS
-		3: _mode = Mode.PALETTE; _pal_page_idx = 0; _pal_slot_idx = 0
-		4: _mode = Mode.MAGS; _mag_idx = 0
-		5: _mode = Mode.QUEST
-		6: _mode = Mode.SYSTEM
+	var labels := _get_menu_labels()
+	if idx >= labels.size():
+		return
+	var label: String = labels[idx]
+	match label:
+		"Items": _mode = Mode.ITEMS
+		"Equip": _mode = Mode.EQUIP; _equip_slot_idx = 0
+		"Techs": _mode = Mode.TECHS
+		"Palette": _mode = Mode.PALETTE; _pal_page_idx = 0; _pal_slot_idx = 0
+		"Mags": _mode = Mode.MAGS; _mag_idx = 0
+		"Quest": _mode = Mode.QUEST
+		"System": _mode = Mode.SYSTEM
 
 
 func _sub_accept() -> void:
@@ -402,6 +424,14 @@ func _sub_accept() -> void:
 			_equip_item_idx = 0
 			if _equip_slot_idx < slots.size():
 				_mode = Mode.EQUIP_PICK
+		Mode.TECHS:
+			var techs := _get_techniques()
+			if _sub_idx < techs.size():
+				var tech_id: String = str(techs[_sub_idx].get("id", ""))
+				if not tech_id.is_empty():
+					var player_node = get_tree().get_first_node_in_group("player")
+					if player_node and player_node.has_method("_cast_technique"):
+						player_node._cast_technique(tech_id)
 		Mode.MAGS:
 			_mag_idx = _sub_idx
 			_mag_feed_idx = 0
@@ -556,10 +586,20 @@ func _get_feed_items() -> Array:
 
 
 func _get_palette_actions() -> Array:
-	if ActionPalette.has_method("get_all_action_ids"):
-		return ActionPalette.get_all_action_ids()
-	# Fallback: hardcoded list
-	return ["attack", "strong_attack", "dodge", "monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid"]
+	## Returns all assignable actions from ActionPalette.ALL_ACTIONS
+	var result: Array = []
+	for action in ActionPalette.ALL_ACTIONS:
+		result.append(action)
+	return result
+
+
+func _is_palette_action_available(action_id: String) -> bool:
+	if not TechniqueManager.TECHNIQUES.has(action_id):
+		return true  # Non-technique actions always available
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
+	return TechniqueManager.get_technique_level(character, action_id) > 0
 
 
 # ── Drawing ─────────────────────────────────────────────────────────────────────
@@ -626,18 +666,18 @@ func _draw_main(c: Control, font: Font) -> void:
 	var y := PAD + 68.0
 
 	# Menu list
-	_draw_inner_panel(c, Rect2(left_x, y, left_w, MENU_LABELS.size() * 28 + 8))
-	for i in range(MENU_LABELS.size()):
+	_draw_inner_panel(c, Rect2(left_x, y, left_w, _get_menu_labels().size() * 28 + 8))
+	for i in range(_get_menu_labels().size()):
 		var iy: float = y + 4 + i * 28
 		if i == _menu_idx:
 			c.draw_rect(Rect2(left_x + 2, iy, left_w - 4, 26), C_SELECT)
 		var col: Color = C_SELECT_TEXT if i == _menu_idx else C_TEXT
-		c.draw_string(font, Vector2(left_x + 14, iy + 19), MENU_LABELS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LG, col)
+		c.draw_string(font, Vector2(left_x + 14, iy + 19), _get_menu_labels()[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LG, col)
 
 	# Description
-	var desc_y: float = y + MENU_LABELS.size() * 28 + 18
+	var desc_y: float = y + _get_menu_labels().size() * 28 + 18
 	_draw_inner_panel(c, Rect2(left_x, desc_y, left_w, 36))
-	c.draw_string(font, Vector2(left_x + 12, desc_y + 22), MENU_DESCS[_menu_idx], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT)
+	c.draw_string(font, Vector2(left_x + 12, desc_y + 22), _get_menu_descs()[_menu_idx], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT)
 
 	# Info panel (bottom right)
 	_draw_info_panel(c, font)
@@ -773,20 +813,38 @@ func _draw_palette(c: Control, font: Font) -> void:
 
 func _draw_palette_picker(c: Control, font: Font) -> void:
 	var actions := _get_palette_actions()
+	var page: Array = ActionPalette.pages[_pal_page_idx] if _pal_page_idx < ActionPalette.pages.size() else []
+	var current_id: String = str(page[_pal_slot_idx]) if _pal_slot_idx < page.size() else ""
 	var px: float = 310.0
 	var py: float = VIEWPORT_H - 305.0
 	var pw: float = 200.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
+	var scroll_offset: int = maxi(0, _sub_idx - 12)  # Simple scroll for long lists
 	for i in range(actions.size()):
-		var iy: float = py + 4 + i * 22
+		var draw_i: int = i - scroll_offset
+		if draw_i < 0:
+			continue
+		var iy: float = py + 4 + draw_i * 22
 		if iy > py + ph - 4:
 			break
+		var action: Dictionary = actions[i]
+		var action_id: String = str(action.get("id", ""))
+		var action_label: String = str(action.get("label", action_id))
+		var available: bool = _is_palette_action_available(action_id)
 		if i == _sub_idx:
 			c.draw_rect(Rect2(px + 2, iy, pw - 4, 20), C_SELECT)
-		var col: Color = C_SELECT_TEXT if i == _sub_idx else C_TEXT
-		var action_data: Dictionary = ActionPalette.get_action_data(str(actions[i])) if ActionPalette.has_method("get_action_data") else {}
-		c.draw_string(font, Vector2(px + 10, iy + 15), str(action_data.get("name", actions[i])), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, col)
+		var col: Color
+		if i == _sub_idx:
+			col = C_SELECT_TEXT
+		elif not available:
+			col = Color(0.5, 0.5, 0.5)
+		else:
+			col = C_TEXT
+		c.draw_string(font, Vector2(px + 10, iy + 15), action_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, col)
+		# Checkmark for currently assigned action
+		if action_id == current_id:
+			c.draw_string(font, Vector2(px + pw - 20, iy + 15), "\u2713", HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, Color(0.3, 0.8, 0.3) if i != _sub_idx else C_SELECT_TEXT)
 
 
 func _draw_mags(c: Control, font: Font) -> void:
