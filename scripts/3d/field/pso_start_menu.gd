@@ -456,14 +456,69 @@ func _get_character() -> Dictionary:
 	return ch if ch else {}
 
 
+const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable", "Material", "Modifier", "Key Item", "Other"]
+
 func _get_inventory() -> Array:
+	## Returns inventory sorted by category (matching inventory_screen.gd)
 	var items := Inventory.get_all_items()
 	items.sort_custom(func(a, b):
-		var ta: int = {"consumable": 0, "weapon": 1, "armor": 2, "shield": 3, "unit": 4, "disk": 5, "material": 6}.get(str(a.get("type", "")), 9)
-		var tb: int = {"consumable": 0, "weapon": 1, "armor": 2, "shield": 3, "unit": 4, "disk": 5, "material": 6}.get(str(b.get("type", "")), 9)
-		return ta < tb
+		var id_a: String = str(a.get("id", ""))
+		var id_b: String = str(b.get("id", ""))
+		var ca: int = CATEGORY_ORDER.find(_get_item_category(id_a))
+		var cb: int = CATEGORY_ORDER.find(_get_item_category(id_b))
+		if ca == -1: ca = 99
+		if cb == -1: cb = 99
+		if ca != cb:
+			return ca < cb
+		if ca == 0:  # Weapon — sub-sort by type then rarity
+			var wa = WeaponRegistry.get_weapon(id_a)
+			var wb = WeaponRegistry.get_weapon(id_b)
+			if wa and wb:
+				if int(wa.weapon_type) != int(wb.weapon_type):
+					return int(wa.weapon_type) < int(wb.weapon_type)
+				return int(wa.rarity) < int(wb.rarity)
+		if ca == 1:  # Armor — sub-sort by rarity
+			var aa = ArmorRegistry.get_armor(id_a)
+			var ab_armor = ArmorRegistry.get_armor(id_b)
+			if aa and ab_armor:
+				return int(aa.rarity) < int(ab_armor.rarity)
+		return str(a.get("name", "")) < str(b.get("name", ""))
 	)
+	# Add category and equipped flags
+	var ch := _get_character()
+	var equipped_ids: Array = []
+	if not ch.is_empty():
+		var equip: Dictionary = ch.get("equipment", {})
+		for key in equip:
+			var eid: String = str(equip.get(key, ""))
+			if not eid.is_empty():
+				equipped_ids.append(eid)
+	for item in items:
+		var item_id: String = str(item.get("id", ""))
+		item["category"] = _get_item_category(item_id)
+		item["equipped"] = item_id in equipped_ids
 	return items
+
+
+func _get_item_category(item_id: String) -> String:
+	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
+	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
+		return "Weapon"
+	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
+		return "Armor"
+	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
+		return "Unit"
+	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
+		return "Mag"
+	if item_id.begins_with("disk_"):
+		return "Disk"
+	if ConsumableRegistry.get_consumable(item_id) or ConsumableRegistry.get_consumable(norm_id):
+		return "Consumable"
+	if CombatManager.MATERIAL_STAT_MAP.has(item_id) or MaterialRegistry.get_material(item_id):
+		return "Material"
+	if ModifierRegistry.get_modifier(item_id) or ModifierRegistry.get_modifier(norm_id):
+		return "Modifier"
+	return "Other"
 
 
 func _get_techniques() -> Array:
@@ -572,12 +627,38 @@ func _item_fits_slot(item_id: String, slot_key: String) -> bool:
 
 
 func _get_mags() -> Array:
-	# For now return equipped mag
+	## Scan inventory for all mags, matching mag_list.gd logic.
 	var ch := _get_character()
-	var mag_id: String = str(ch.get("equipment", {}).get("mag", ""))
-	if mag_id.is_empty():
+	if ch.is_empty():
 		return []
-	return [{"id": mag_id, "name": mag_id.capitalize()}]
+	var equipped_mag: String = str(ch.get("equipment", {}).get("mag", ""))
+	var result: Array = []
+	for item_id in Inventory._items:
+		if not MagManager.is_mag(item_id):
+			continue
+		var mag_state: Dictionary = MagManager.get_mag_state(ch, item_id)
+		var form_id := "mag"
+		var level := 0
+		if not mag_state.is_empty():
+			form_id = str(mag_state.get("form_id", "mag"))
+			level = MagManager.get_level(mag_state)
+		var form = MagManager.get_mag_form(form_id)
+		var form_name: String = form.name if form else "Mag"
+		result.append({
+			"id": item_id,
+			"name": "%s Lv.%d" % [form_name, level],
+			"level": level,
+			"form_id": form_id,
+			"equipped": item_id == equipped_mag,
+			"type": "mag",
+		})
+	# Equipped first, then by level descending
+	result.sort_custom(func(a, b):
+		if a.equipped != b.equipped:
+			return a.equipped
+		return int(a.level) > int(b.level)
+	)
+	return result
 
 
 func _get_feed_items() -> Array:
@@ -712,8 +793,78 @@ func _draw_info_panel(c: Control, font: Font) -> void:
 func _draw_items(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Items")
 	var inv := _get_inventory()
-	_draw_bottom_list(c, font, inv, _sub_idx)
-	var desc: String = str(inv[_sub_idx].get("name", "")) + "\n" + str(inv[_sub_idx].get("description", "")) if _sub_idx < inv.size() else ""
+
+	# Draw item list with category headers
+	var px: float = 5.0
+	var py: float = VIEWPORT_H - 305.0
+	var pw: float = 300.0
+	var ph: float = 300.0
+	_draw_inner_panel(c, Rect2(px, py, pw, ph))
+
+	# Slot count header
+	c.draw_string(font, Vector2(px + 10, py + 14), "%d/40 slots" % Inventory.get_total_slots(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
+
+	var draw_y: float = py + 20
+	var item_draw_idx: int = 0  # Tracks which inventory item we're on
+	var scroll_offset: int = maxi(0, _sub_idx - 10)  # Simple scroll
+	var current_cat := ""
+	var drawn_count: int = 0
+
+	for i in range(inv.size()):
+		var item: Dictionary = inv[i]
+		var cat: String = str(item.get("category", "Other"))
+
+		# Category header
+		if cat != current_cat:
+			current_cat = cat
+			if i >= scroll_offset:
+				if draw_y < py + ph - 6:
+					c.draw_string(font, Vector2(px + 8, draw_y + 12), cat, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
+					draw_y += 16
+
+		if i < scroll_offset:
+			continue
+		if draw_y > py + ph - 6:
+			break
+
+		var is_sel: bool = i == _sub_idx
+		if is_sel:
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), C_SELECT)
+		var col: Color = C_SELECT_TEXT if is_sel else C_TEXT
+
+		# Equipped badge
+		if item.get("equipped", false):
+			c.draw_string(font, Vector2(px + 6, draw_y + 14), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.88, 0.53, 0.13) if not is_sel else Color.WHITE)
+
+		# Item name
+		var item_name: String = str(item.get("name", ""))
+		c.draw_string(font, Vector2(px + 20, draw_y + 14), item_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
+
+		# Quantity
+		var qty: int = int(item.get("quantity", 1))
+		if qty > 1:
+			c.draw_string(font, Vector2(px + pw - 40, draw_y + 14), "x%d" % qty, HORIZONTAL_ALIGNMENT_RIGHT, -1, FONT_SIZE_XS, Color(col, 0.7))
+
+		draw_y += 22
+
+	# Description
+	var desc: String = ""
+	if _sub_idx < inv.size():
+		var item: Dictionary = inv[_sub_idx]
+		var item_id: String = str(item.get("id", ""))
+		desc = str(item.get("name", ""))
+		# Try to get details from registries
+		var weapon = WeaponRegistry.get_weapon(item_id)
+		if weapon:
+			desc += "\nATK: %d  ACC: %d" % [weapon.attack_base, weapon.accuracy_base]
+			if not weapon.element.is_empty() and weapon.element != "None":
+				desc += "\nElement: %s" % weapon.element
+		var armor = ArmorRegistry.get_armor(item_id)
+		if armor:
+			desc += "\nDEF: %d  EVA: %d\nSlots: %d" % [armor.defense_base, armor.evasion_base, armor.max_slots]
+		var consumable = ConsumableRegistry.get_consumable(item_id)
+		if consumable and not str(consumable.details).is_empty():
+			desc += "\n%s" % str(consumable.details)
 	_draw_bottom_desc(c, font, desc)
 
 
@@ -888,16 +1039,46 @@ func _draw_mags(c: Control, font: Font) -> void:
 		_draw_section_label(c, font, "Feed Mag")
 		var feed := _get_feed_items()
 		_draw_bottom_list(c, font, feed, _sub_idx)
-		var desc: String = str(feed[_sub_idx].get("name", "")) if _sub_idx < feed.size() else ""
+		var desc: String = ""
+		if _sub_idx < feed.size():
+			var item: Dictionary = feed[_sub_idx]
+			desc = str(item.get("name", ""))
+			var consumable = ConsumableRegistry.get_consumable(str(item.get("id", "")))
+			if consumable and not str(consumable.details).is_empty():
+				desc += "\n%s" % str(consumable.details)
+			var qty: int = int(item.get("quantity", 0))
+			if qty > 1:
+				desc += "\n\nx%d" % qty
 		_draw_bottom_desc(c, font, desc)
 	else:
 		_draw_section_label(c, font, "Mags")
 		var mags := _get_mags()
+		# Draw mag list with equipped badge
 		var items: Array = []
 		for m in mags:
-			items.append({"name": str(m.get("name", "")), "type": "mag"})
+			var tag: String = " [E]" if m.get("equipped", false) else ""
+			items.append({"name": str(m.get("name", "")) + tag, "type": "mag", "equipped": m.get("equipped", false)})
 		_draw_bottom_list(c, font, items, _sub_idx)
-		_draw_bottom_desc(c, font, "Select a Mag.\n\n[Enter] Feed")
+		# Mag detail
+		var desc: String = ""
+		if _sub_idx < mags.size():
+			var mag: Dictionary = mags[_sub_idx]
+			var ch := _get_character()
+			var mag_state: Dictionary = MagManager.get_mag_state(ch, str(mag.get("id", ""))) if not ch.is_empty() else {}
+			if not mag_state.is_empty():
+				var form_id: String = str(mag_state.get("form_id", "mag"))
+				var form = MagManager.get_mag_form(form_id)
+				if form:
+					desc += "Form: %s\n" % form.name
+					if not str(form.photon_blast).is_empty():
+						desc += "P.Blast: %s\n" % str(form.photon_blast)
+				var stats_dict: Dictionary = mag_state.get("stats", {})
+				for stat_key in ["power", "guard", "hit", "mind"]:
+					var raw: int = int(stats_dict.get(stat_key, 0))
+					var stat_lvl: int = int(raw / MagManager.STATS_PER_LEVEL)
+					desc += "%s: %d  " % [stat_key.capitalize(), stat_lvl]
+				desc += "\n\n[Enter] Feed"
+		_draw_bottom_desc(c, font, desc)
 
 
 func _draw_quest(c: Control, font: Font) -> void:
