@@ -16,7 +16,7 @@ sky_material = SubResource("sky_mat")
 background_mode = 2
 sky = SubResource("sky")
 ambient_light_source = 3
-ambient_light_energy = 0.4
+ambient_light_energy = 0.9
 
 [node name="CityUnderground" type="Node3D"]
 script = ExtResource("1_script")
@@ -26,7 +26,7 @@ environment = SubResource("env")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 0)
-light_energy = 0.5
+light_energy = 0.3
 shadow_enabled = true
 
 [node name="Underground" parent="." instance=ExtResource("2_glb")]
