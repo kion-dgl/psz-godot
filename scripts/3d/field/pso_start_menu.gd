@@ -140,9 +140,9 @@ func toggle() -> void:
 
 # ── Input ───────────────────────────────────────────────────────────────────────
 func _unhandled_input(event: InputEvent) -> void:
-	# Open menu from anywhere with ESC/pause (only when closed and no overlay active)
+	# Open menu from anywhere with ESC/pause (only when closed, no overlay, and in gameplay)
 	if not _is_open:
-		if event.is_action_pressed("pause") and SceneManager._overlay_stack.is_empty():
+		if event.is_action_pressed("pause") and SceneManager._overlay_stack.is_empty() and _is_gameplay_scene():
 			open()
 			get_viewport().set_input_as_handled()
 		return
@@ -590,6 +590,23 @@ func _count_equipped_units(equip: Dictionary) -> int:
 		if not str(equip.get("unit%d" % (i + 1), "")).is_empty():
 			count += 1
 	return count
+
+
+func _is_gameplay_scene() -> bool:
+	## Returns true if we're in a city or field scene (not title/select/create)
+	var scene := get_tree().current_scene
+	if scene == null:
+		return false
+	var path: String = scene.scene_file_path if "scene_file_path" in scene else ""
+	if path.is_empty() and scene.has_method("get_scene_file_path"):
+		path = scene.get_scene_file_path()
+	# Block on menu/UI screens
+	var blocked := ["title.tscn", "character_select.tscn", "character_create.tscn"]
+	for b in blocked:
+		if b in path:
+			return false
+	# Must have a player in the scene
+	return get_tree().get_first_node_in_group("player") != null
 
 
 func _is_in_field() -> bool:
