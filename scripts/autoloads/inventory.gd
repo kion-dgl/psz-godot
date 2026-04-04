@@ -189,28 +189,63 @@ func _is_per_slot(item_id: String) -> bool:
 	return false
 
 
+## Consumable effects — percentage of max HP or max PP restored
+const CONSUMABLE_EFFECTS := {
+	"monomate": {"type": "hp", "percent": 0.30},
+	"dimate": {"type": "hp", "percent": 0.60},
+	"trimate": {"type": "hp", "percent": 1.00},
+	"monofluid": {"type": "pp", "percent": 0.30},
+	"difluid": {"type": "pp", "percent": 0.60},
+	"trifluid": {"type": "pp", "percent": 1.00},
+}
+
+
 ## Use a consumable item (removes it and applies effect)
-## Returns true if item was used
+## Returns a dict: {success: bool, type: String, amount: int} or {success: false}
 func use_item(item_id: String) -> bool:
-	var item_data = ItemRegistry.get_item(item_id)
-	if item_data == null or not has_item(item_id):
+	if not has_item(item_id):
 		return false
 
-	# ItemType.CONSUMABLE = 2
-	if item_data.type != 2:
+	var effect: Dictionary = CONSUMABLE_EFFECTS.get(item_id, {})
+	if effect.is_empty():
+		# Not a known consumable — try legacy path for other usable items
+		var item_data = ItemRegistry.get_item(item_id)
+		if item_data and item_data.type == 2:
+			remove_item(item_id, 1)
+			return true
 		return false
 
-	# Apply effects
-	if item_data.has_stat("heal"):
-		GameState.heal(item_data.get_stat("heal"))
+	var effect_type: String = str(effect.get("type", ""))
+	var percent: float = float(effect.get("percent", 0))
 
-	if item_data.has_stat("mp_restore"):
-		GameState.restore_mp(item_data.get_stat("mp_restore"))
+	if effect_type == "hp":
+		if GameState.hp >= GameState.max_hp:
+			return false  # Already full
+		var amount: int = int(float(GameState.max_hp) * percent)
+		GameState.heal(amount)
+		_last_use_type = "hp"
+		_last_use_amount = amount
+	elif effect_type == "pp":
+		if GameState.mp >= GameState.max_mp:
+			return false  # Already full
+		var amount: int = int(float(GameState.max_mp) * percent)
+		GameState.restore_mp(amount)
+		_last_use_type = "pp"
+		_last_use_amount = amount
+	else:
+		return false
 
-	# Remove from inventory
 	remove_item(item_id, 1)
-	print("[Inventory] Used: ", item_data.name)
+	print("[Inventory] Used %s: +%d %s" % [item_id, _last_use_amount, _last_use_type.to_upper()])
 	return true
+
+
+## Last use info — read by player for visual feedback
+var _last_use_type: String = ""
+var _last_use_amount: int = 0
+
+func get_last_use_info() -> Dictionary:
+	return {"type": _last_use_type, "amount": _last_use_amount}
 
 
 ## Lookup item info from all registries. Returns {name: String, max_stack: int}
