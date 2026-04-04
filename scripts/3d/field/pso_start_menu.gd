@@ -48,7 +48,7 @@ var _pal_slot_idx: int = 0
 var _mag_idx: int = 0
 var _mag_feed_idx: int = 0
 var _options_idx: int = 0
-var _item_scroll: int = 0  # Scroll offset for items list
+var _item_scroll: float = 0.0  # Pixel scroll offset for items list
 
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
@@ -889,17 +889,31 @@ func _draw_items(c: Control, font: Font) -> void:
 	# Slot count header
 	c.draw_string(font, Vector2(px + 10, py + 14), "%d/40 slots" % Inventory.get_total_slots(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
 
-	# Keep selected item in view
-	var visible_rows: int = int((ph - 24) / 22)
-	if _sub_idx < _item_scroll:
-		_item_scroll = _sub_idx
-	elif _sub_idx >= _item_scroll + visible_rows:
-		_item_scroll = _sub_idx - visible_rows + 1
-	_item_scroll = clampi(_item_scroll, 0, maxi(inv.size() - visible_rows, 0))
-
-	var draw_y: float = py + 20
+	# Two-pass: first compute Y position for each item, then scroll to keep selected visible
+	var content_y: float = 20.0  # Start offset within panel
+	var item_positions: Array = []  # Y offset for each inventory item
 	var current_cat := ""
+	for i in range(inv.size()):
+		var cat: String = str(inv[i].get("category", "Other"))
+		if cat != current_cat:
+			current_cat = cat
+			content_y += 20  # Category header height
+		item_positions.append(content_y)
+		content_y += 22  # Item row height
 
+	# Scroll to keep selected item in view
+	var view_h: float = ph - 6
+	if _sub_idx >= 0 and _sub_idx < item_positions.size():
+		var sel_y: float = item_positions[_sub_idx]
+		if sel_y - _item_scroll < 20:
+			_item_scroll = int(sel_y - 20)
+		elif sel_y - _item_scroll + 22 > view_h:
+			_item_scroll = int(sel_y + 22 - view_h)
+	_item_scroll = maxf(_item_scroll, 0.0)
+
+	# Draw pass
+	var draw_y: float = py + 20.0 - _item_scroll
+	current_cat = ""
 	for i in range(inv.size()):
 		var item: Dictionary = inv[i]
 		var cat: String = str(item.get("category", "Other"))
@@ -907,16 +921,14 @@ func _draw_items(c: Control, font: Font) -> void:
 		# Category header
 		if cat != current_cat:
 			current_cat = cat
-			if i >= _item_scroll:
-				if draw_y < py + ph - 6:
-					c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 18), Color(0.12, 0.16, 0.28))
-					c.draw_string(font, Vector2(px + 8, draw_y + 13), cat, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
-					draw_y += 20
+			if draw_y + 18 > py and draw_y < py + ph:
+				c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 18), Color(0.12, 0.16, 0.28))
+				c.draw_string(font, Vector2(px + 8, draw_y + 13), cat, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
+			draw_y += 20
 
-		if i < _item_scroll:
+		if draw_y + 22 < py or draw_y > py + ph:
+			draw_y += 22
 			continue
-		if draw_y > py + ph - 6:
-			break
 
 		var is_sel: bool = i == _sub_idx
 		# White row background, yellow/orange for selected
