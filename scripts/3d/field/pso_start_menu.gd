@@ -434,8 +434,9 @@ func _sub_accept() -> void:
 		Mode.TECHS:
 			var techs := _get_techniques()
 			if _sub_idx < techs.size():
-				var tech_id: String = str(techs[_sub_idx].get("id", ""))
-				if not tech_id.is_empty():
+				var tech: Dictionary = techs[_sub_idx]
+				if tech.get("learned", false) and _is_in_field():
+					var tech_id: String = str(tech.get("id", ""))
 					var player_node = get_tree().get_first_node_in_group("player")
 					if player_node and player_node.has_method("_cast_technique"):
 						player_node._cast_technique(tech_id)
@@ -529,14 +530,50 @@ func _get_item_category(item_id: String) -> String:
 
 
 func _get_techniques() -> Array:
+	## Returns all techniques the character's class can use (same list as palette techs).
+	## Learned techs show their level, unlearned ones show as disabled.
 	var ch := _get_character()
+	if ch.is_empty():
+		return []
+	var class_id: String = str(ch.get("class_id", ""))
+	var class_data = ClassRegistry.get_class_data(class_id)
+	if class_data == null or class_data.technique_limits.is_empty():
+		return []
 	var learned: Dictionary = ch.get("techniques", {})
 	var result: Array = []
-	for tech_id in learned:
-		var data: Dictionary = TechniqueManager.TECHNIQUES.get(tech_id, {})
-		if not data.is_empty():
-			result.append({"id": tech_id, "name": data.get("name", tech_id), "level": learned[tech_id], "pp": data.get("pp", 0)})
+	for tech_id in TechniqueManager.TECHNIQUES:
+		var data: Dictionary = TechniqueManager.TECHNIQUES[tech_id]
+		var group: String = str(data.get("group", ""))
+		if not class_data.technique_limits.has(group):
+			continue
+		var max_level: int = int(class_data.technique_limits.get(group, 0))
+		if max_level <= 0:
+			continue
+		var current_level: int = int(learned.get(tech_id, 0))
+		result.append({
+			"id": tech_id,
+			"name": str(data.get("name", tech_id)),
+			"level": current_level,
+			"max_level": max_level,
+			"pp": int(data.get("pp", 0)),
+			"learned": current_level > 0,
+		})
 	return result
+
+
+func _count_equipped_units(equip: Dictionary) -> int:
+	var count: int = 0
+	for i in range(4):
+		if not str(equip.get("unit%d" % (i + 1), "")).is_empty():
+			count += 1
+	return count
+
+
+func _is_in_field() -> bool:
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("_is_in_city"):
+		return not player._is_in_city()
+	return false
 
 
 func _get_equip_slots() -> Array:
@@ -782,13 +819,53 @@ func _draw_info_panel(c: Control, font: Font) -> void:
 	var page_label := "L %d/4 R" % [_info_page + 1]
 	c.draw_string(font, Vector2(px + pw / 2 - 30, py + 20), page_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT)
 
-	# Stat rows
+	# Stat rows — pull real data from character + class + equipment
 	var ch := _get_character()
+	var class_id: String = str(ch.get("class_id", ""))
+	var class_data = ClassRegistry.get_class_data(class_id)
+	var level: int = int(ch.get("level", 1))
+	var equip: Dictionary = ch.get("equipment", {})
+
+	# Base stats from class at current level
+	var base_hp: int = class_data.get_stat_at_level("hp", level) if class_data else 0
+	var base_pp: int = class_data.get_stat_at_level("pp", level) if class_data else 0
+	var base_atk: int = class_data.get_stat_at_level("attack", level) if class_data else 0
+	var base_def: int = class_data.get_stat_at_level("defense", level) if class_data else 0
+	var base_acc: int = class_data.get_stat_at_level("accuracy", level) if class_data else 0
+	var base_eva: int = class_data.get_stat_at_level("evasion", level) if class_data else 0
+	var base_mst: int = class_data.get_stat_at_level("technique", level) if class_data else 0
+
+	# Equipment bonuses
+	var weapon_id: String = str(equip.get("weapon", ""))
+	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id)) if not weapon_id.is_empty() else null
+	var weapon_grind: int = int(ch.get("weapon_grinds", {}).get(weapon_id, 0))
+	var weapon_atk: int = weapon.get_attack_at_grind(weapon_grind) if weapon else 0
+	var weapon_acc: int = weapon.get_accuracy_at_grind(weapon_grind) if weapon else 0
+	var weapon_name: String = weapon.name if weapon else "--"
+
+	var frame_id: String = str(equip.get("frame", ""))
+	var armor = ArmorRegistry.get_armor(frame_id) if not frame_id.is_empty() else null
+	var armor_def: int = int(armor.defense_base) if armor else 0
+	var armor_eva: int = int(armor.evasion_base) if armor else 0
+	var frame_name: String = armor.name if armor else "--"
+
+	# Material bonuses
+	var mat_bonuses: Dictionary = ch.get("material_bonuses", {})
+
+	# EXP progress
+	var exp_progress: Dictionary = CharacterManager.get_exp_progress() if CharacterManager.has_method("get_exp_progress") else {}
+	var to_next: String = str(exp_progress.get("needed", "---"))
+
+	# Weapon special
+	var ws: Dictionary = ch.get("weapon_stats", {}).get(weapon_id, {})
+	var special_el: String = str(ws.get("element", ""))
+	var special_str: String = special_el.capitalize() if not special_el.is_empty() else "--"
+
 	var pages := [
-		[["Lv", str(ch.get("level", 1))], ["Type", str(ch.get("class_id", ""))], ["Exp Pts", str(ch.get("experience", 0))], ["To Next Lv", "---"], ["Meseta", str(ch.get("meseta", 0))]],
-		[["ATP", "---"], ["ATA", "---"], ["Weapon", str(ch.get("equipment", {}).get("weapon", "--"))], ["Grind", "---"], ["Special", "---"]],
-		[["DFP", "---"], ["EVP", "---"], ["Frame", str(ch.get("equipment", {}).get("frame", "--"))], ["Shield", "---"], ["Units", "---"]],
-		[["MST", "---"], ["TP", "---"]],
+		[["Lv", str(level)], ["Type", class_data.name if class_data else class_id], ["Exp Pts", str(ch.get("experience", 0))], ["To Next Lv", to_next], ["Meseta", str(ch.get("meseta", 0))]],
+		[["ATP", str(base_atk + weapon_atk + int(mat_bonuses.get("attack", 0)))], ["ATA", str(base_acc + weapon_acc + int(mat_bonuses.get("accuracy", 0)))], ["Weapon", weapon_name], ["Grind", "+%d" % weapon_grind if weapon_grind > 0 else "--"], ["Special", special_str]],
+		[["DFP", str(base_def + armor_def + int(mat_bonuses.get("defense", 0)))], ["EVP", str(base_eva + armor_eva + int(mat_bonuses.get("evasion", 0)))], ["Frame", frame_name], ["Slots", str(armor.max_slots) if armor else "0"], ["Units", "%d / %d" % [_count_equipped_units(equip), armor.max_slots if armor else 0]]],
+		[["MST", str(base_mst + int(mat_bonuses.get("technique", 0)))], ["HP", "%d / %d" % [int(ch.get("hp", base_hp)), base_hp + int(mat_bonuses.get("hp", 0))]], ["PP", "%d / %d" % [int(ch.get("pp", base_pp)), base_pp + int(mat_bonuses.get("pp", 0))]]],
 	]
 	var rows: Array = pages[_info_page] if _info_page < pages.size() else []
 	for i in range(rows.size()):
@@ -929,14 +1006,70 @@ func _draw_equip_picker(c: Control, font: Font) -> void:
 func _draw_techs(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Techs")
 	var techs := _get_techniques()
-	var items: Array = []
-	for t in techs:
-		items.append({"name": "%s  Lv%d  %dPP" % [str(t.name), int(t.level), int(t.pp)], "type": "tech"})
-	_draw_bottom_list(c, font, items, _sub_idx)
+	var in_field: bool = _is_in_field()
+
+	# Draw tech list
+	var px: float = 5.0
+	var py: float = VIEWPORT_H - 305.0
+	var pw: float = 300.0
+	var ph: float = 300.0
+	_draw_inner_panel(c, Rect2(px, py, pw, ph))
+
+	var scroll_offset: int = maxi(0, _sub_idx - 11)
+	for i in range(techs.size()):
+		var draw_i: int = i - scroll_offset
+		if draw_i < 0:
+			continue
+		var iy: float = py + 4 + draw_i * 24
+		if iy > py + ph - 6:
+			break
+		var tech: Dictionary = techs[i]
+		var is_sel: bool = i == _sub_idx
+		var learned: bool = tech.get("learned", false)
+
+		if is_sel:
+			c.draw_rect(Rect2(px + 2, iy, pw - 4, 22), C_SELECT)
+
+		var col: Color
+		if is_sel:
+			col = C_SELECT_TEXT
+		elif not learned:
+			col = Color(0.5, 0.5, 0.5)
+		else:
+			col = C_TEXT
+
+		# Tech icon
+		var icon: Texture2D = _icon_cache.get(str(tech.get("id", "")), null) as Texture2D
+		if icon:
+			if not learned:
+				c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 20, 20), false, Color(0.4, 0.4, 0.4))
+			else:
+				c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 20, 20), false)
+
+		# Tech name
+		var level_str: String = "Lv%d" % tech.level if learned else "--"
+		c.draw_string(font, Vector2(px + 30, iy + 16), str(tech.get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
+		c.draw_string(font, Vector2(px + pw - 80, iy + 16), level_str, HORIZONTAL_ALIGNMENT_RIGHT, -1, FONT_SIZE_XS, col)
+		c.draw_string(font, Vector2(px + pw - 30, iy + 16), "%dPP" % tech.pp, HORIZONTAL_ALIGNMENT_RIGHT, -1, FONT_SIZE_XS, col)
+
+	# Description
 	var desc: String = ""
 	if _sub_idx < techs.size():
-		var td: Dictionary = TechniqueManager.TECHNIQUES.get(str(techs[_sub_idx].id), {})
-		desc = str(td.get("name", "")) + "\n" + str(td.get("element", "")) + " element\nPP: " + str(td.get("pp", 0))
+		var tech: Dictionary = techs[_sub_idx]
+		var td: Dictionary = TechniqueManager.TECHNIQUES.get(str(tech.get("id", "")), {})
+		desc = str(td.get("name", ""))
+		desc += "\n%s element" % str(td.get("element", "none")).capitalize()
+		desc += "\nPP: %d" % int(td.get("pp", 0))
+		desc += "\nTarget: %s" % str(td.get("target", "single")).capitalize()
+		desc += "\nMax Level: %d" % tech.max_level
+		if tech.get("learned", false):
+			desc += "\nCurrent: Lv %d" % tech.level
+			if in_field:
+				desc += "\n\n[Enter] Cast"
+			else:
+				desc += "\n\n(Only in field)"
+		else:
+			desc += "\n\nNot yet learned"
 	_draw_bottom_desc(c, font, desc)
 
 
