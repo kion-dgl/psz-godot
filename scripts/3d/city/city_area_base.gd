@@ -207,6 +207,31 @@ func _fix_city_materials() -> void:
 	## Apply texture fixes from global-texture-fixes.json to all city GLB meshes.
 	_load_global_texture_fixes()
 	_fix_materials_recursive(self)
+	_add_interior_lights()
+
+
+func _add_interior_lights() -> void:
+	## Add OmniLight3D sources to illuminate enclosed indoor city stages.
+	## Placed at ceiling height to light rooms evenly from above.
+	var light := OmniLight3D.new()
+	light.name = "InteriorLight"
+	light.light_color = Color(1.0, 0.95, 0.88)
+	light.light_energy = 1.5
+	light.omni_range = 25.0
+	light.omni_attenuation = 1.0
+	light.shadow_enabled = false
+	light.position = Vector3(0, 6, 0)
+	add_child(light)
+	# Second light further back for longer hallways
+	var light2 := OmniLight3D.new()
+	light2.name = "InteriorLight2"
+	light2.light_color = Color(1.0, 0.95, 0.88)
+	light2.light_energy = 1.2
+	light2.omni_range = 25.0
+	light2.omni_attenuation = 1.0
+	light2.shadow_enabled = false
+	light2.position = Vector3(0, 6, -15)
+	add_child(light2)
 
 
 static func _load_global_texture_fixes() -> void:
