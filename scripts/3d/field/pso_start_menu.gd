@@ -528,6 +528,7 @@ func _get_inventory() -> Array:
 		var item_id: String = str(item.get("id", ""))
 		item["category"] = _get_item_category(item_id)
 		item["equipped"] = item_id in equipped_ids
+		item["usable"] = Inventory.CONSUMABLE_EFFECTS.has(item_id)
 	return items
 
 
