@@ -194,9 +194,8 @@ func _handle_esc() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause"):
-		_handle_esc()
-		get_viewport().set_input_as_handled()
+	# Pause/Start handled by PsoStartMenu autoload
+	pass
 
 
 ## Override in subclasses to return the area identifier string.
