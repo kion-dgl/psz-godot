@@ -45,6 +45,11 @@ const HURT_DURATION: float = 0.3
 var is_attacking: bool = false
 var current_anim: String = ""
 
+## Stuck detection — try perpendicular direction when blocked
+var _stuck_frames: int = 0
+var _stuck_side: float = 1.0  # 1.0 or -1.0 to try left/right
+const STUCK_THRESHOLD := 10  # Frames before trying alternate direction
+
 ## Status effects
 var _status_effects: Array = []  # [{type: String, timer: float, dot_timer: float, phase: String}]
 var _is_immobilized: bool = false  # frozen/stunned(phase1)/sleeping
@@ -101,6 +106,7 @@ signal damaged(enemy: EnemyBase, amount: int)
 
 func _ready() -> void:
 	add_to_group("enemies")
+	collision_mask = 3  # Environment (1) + Player (2) — enemies collide with both
 	_setup_from_data()
 	_setup_model()
 	_setup_hurtbox()
@@ -423,8 +429,21 @@ func _process_chasing(_delta: float) -> void:
 	if direction.length() > 0.1 and _can_move_to(direction):
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
-		# Face movement direction (model faces -Z, so look opposite)
 		_face_direction(direction)
+		_stuck_frames = 0
+	elif direction.length() > 0.1:
+		# Blocked — try perpendicular direction to go around obstacle
+		_stuck_frames += 1
+		if _stuck_frames > STUCK_THRESHOLD:
+			var perp := Vector3(-direction.z, 0, direction.x) * _stuck_side
+			if _can_move_to(perp):
+				velocity.x = perp.x * speed * 0.7
+				velocity.z = perp.z * speed * 0.7
+				_face_direction(perp)
+			else:
+				# Try other side
+				_stuck_side *= -1.0
+				_stuck_frames = 0
 
 
 func _process_attacking(_delta: float) -> void:
