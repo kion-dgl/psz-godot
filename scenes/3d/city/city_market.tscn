@@ -16,7 +16,8 @@ sky_material = SubResource("sky_mat")
 background_mode = 2
 sky = SubResource("sky")
 ambient_light_source = 3
-ambient_light_energy = 1.2
+ambient_light_color = Color(0.9, 0.88, 0.82, 1)
+ambient_light_energy = 1.5
 
 [node name="CityMarket" type="Node3D"]
 script = ExtResource("1_script")
@@ -26,7 +27,7 @@ environment = SubResource("env")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 20, 10)
-light_energy = 0.4
-shadow_enabled = true
+light_energy = 0.3
+shadow_enabled = false
 
 [node name="Market" parent="." instance=ExtResource("2_glb")]
