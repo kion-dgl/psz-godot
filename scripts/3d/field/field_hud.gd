@@ -20,7 +20,7 @@ var _char_level: int = 1
 
 
 func _ready() -> void:
-	layer = 99
+	layer = 200  # Above start menu (150) so HP/PP shows on top
 	name = "FieldHud"
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
@@ -233,8 +233,8 @@ class _StatsPanel extends Control:
 	const FONT_SIZE_BAR := 8
 
 	# PSZ palette — semi-transparent for single-screen
-	const BG_BLUE := Color(0.66, 0.80, 0.91, 0.6)   # Pale icy blue, translucent
-	const BORDER_BLUE := Color(0.48, 0.63, 0.75, 0.5)
+	const BG_BLUE := Color(0.66, 0.80, 0.91, 1.0)   # Pale icy blue, opaque
+	const BORDER_BLUE := Color(0.48, 0.63, 0.75, 1.0)
 	const TEXT_DARK := Color(0.1, 0.1, 0.17)         # Near-black text
 	const TEXT_LIGHT := Color(0.23, 0.29, 0.35)      # Secondary text
 	const HP_COLOR := Color(0.27, 0.73, 0.27)        # Green HP fill

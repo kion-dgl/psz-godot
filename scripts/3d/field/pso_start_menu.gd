@@ -11,7 +11,7 @@ const VIEWPORT_W := 1280.0
 const VIEWPORT_H := 720.0
 const LEFT_W := 240.0       # Left backdrop strip
 const BOTTOM_H := 320.0     # Bottom backdrop strip
-const HUD_GAP := 80.0       # Top gap for HUD HP/PP panel (don't cover it)
+const HUD_STATS_LAYER := 200  # HUD stats drawn above start menu
 const PAD := 12.0           # Inner padding
 
 # ── Colors ──────────────────────────────────────────────────────────────────────
@@ -763,12 +763,12 @@ func _draw_menu() -> void:
 	var font := ThemeDB.fallback_font
 	var vp := Vector2(VIEWPORT_W, VIEWPORT_H)
 
-	# L-shaped backdrop — starts below HUD gap to not cover HP/PP
-	c.draw_rect(Rect2(0, HUD_GAP, LEFT_W, vp.y - BOTTOM_H - HUD_GAP), C_BACKDROP)
+	# L-shaped backdrop
+	c.draw_rect(Rect2(0, 0, LEFT_W, vp.y - BOTTOM_H), C_BACKDROP)
 	c.draw_rect(Rect2(LEFT_W, vp.y - BOTTOM_H, vp.x - LEFT_W, BOTTOM_H), C_BACKDROP)
 	c.draw_rect(Rect2(0, vp.y - BOTTOM_H, LEFT_W, BOTTOM_H), C_BACKDROP)
 	# Borders
-	c.draw_line(Vector2(LEFT_W, HUD_GAP), Vector2(LEFT_W, vp.y - BOTTOM_H), C_BACKDROP_BORDER, 1.5)
+	c.draw_line(Vector2(LEFT_W, 0), Vector2(LEFT_W, vp.y - BOTTOM_H), C_BACKDROP_BORDER, 1.5)
 	c.draw_line(Vector2(LEFT_W, vp.y - BOTTOM_H), Vector2(vp.x, vp.y - BOTTOM_H), C_BACKDROP_BORDER, 1.5)
 
 	# HUD draws its own HP/PP — no duplicate status panel here
@@ -817,7 +817,7 @@ func _draw_bar(c: Control, rect: Rect2, pct: float, color: Color) -> void:
 func _draw_main(c: Control, font: Font) -> void:
 	var left_x := PAD
 	var left_w: float = LEFT_W - PAD * 2
-	var y := HUD_GAP + PAD
+	var y := PAD
 
 	# Menu list
 	_draw_inner_panel(c, Rect2(left_x, y, left_w, _get_menu_labels().size() * 28 + 8))
@@ -1416,7 +1416,7 @@ func _draw_inner_panel(c: Control, rect: Rect2) -> void:
 
 func _draw_section_label(c: Control, font: Font, text: String) -> void:
 	var lx := PAD
-	var ly := HUD_GAP + PAD
+	var ly := PAD
 	var lw: float = LEFT_W - PAD * 2
 	c.draw_rect(Rect2(lx, ly, lw, 28), C_LABEL_BG)
 	c.draw_string(font, Vector2(lx + 12, ly + 20), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, C_TEXT_LIGHT)
