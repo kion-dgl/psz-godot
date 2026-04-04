@@ -51,6 +51,7 @@ var _options_idx: int = 0
 
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
+var _icon_cache: Dictionary = {}  # action_id → Texture2D
 
 ## Menu labels built dynamically — Techs hidden for Cast race
 func _get_menu_labels() -> Array:
@@ -91,7 +92,13 @@ func _ready() -> void:
 	name = "PsoStartMenu"
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	print("[PsoStartMenu] Ready — layer %d" % layer)
+	# Pre-cache all action icons
+	for action in ActionPalette.ALL_ACTIONS:
+		var aid: String = str(action.get("id", ""))
+		var icon: Texture2D = ActionPalette.get_action_icon(aid)
+		if icon:
+			_icon_cache[aid] = icon
+	print("[PsoStartMenu] Ready — layer %d, cached %d icons" % [layer, _icon_cache.size()])
 
 	_canvas = Control.new()
 	_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -971,7 +978,7 @@ func _draw_palette(c: Control, font: Font) -> void:
 			c.draw_string(font, Vector2(px + 13, draw_y + 17), slot_keys[slot_i] if slot_i < 3 else "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
 
 			# Action icon
-			var icon: Texture2D = ActionPalette.get_action_icon(action_id)
+			var icon: Texture2D = _icon_cache.get(action_id, null) as Texture2D
 			if icon:
 				c.draw_texture_rect(icon, Rect2(px + 32, draw_y + 2, 20, 20), false)
 
@@ -1025,7 +1032,7 @@ func _draw_palette_picker(c: Control, font: Font) -> void:
 		else:
 			col = C_TEXT
 		# Action icon
-		var icon: Texture2D = ActionPalette.get_action_icon(action_id)
+		var icon: Texture2D = _icon_cache.get(action_id, null) as Texture2D
 		if icon:
 			c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 18, 18), false)
 		c.draw_string(font, Vector2(px + 28, iy + 15), action_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, col)
