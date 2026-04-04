@@ -218,9 +218,9 @@ func _add_interior_lights(positions: Array = []) -> void:
 		var light := OmniLight3D.new()
 		light.name = "InteriorLight_%d" % i
 		light.light_color = Color(1.0, 0.95, 0.88)
-		light.light_energy = 1.5
-		light.omni_range = 20.0
-		light.omni_attenuation = 0.8
+		light.light_energy = 2.0
+		light.omni_range = 15.0
+		light.omni_attenuation = 1.0
 		light.shadow_enabled = false
 		light.position = positions[i]
 		add_child(light)
