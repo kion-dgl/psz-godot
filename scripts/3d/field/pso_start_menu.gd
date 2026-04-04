@@ -1007,16 +1007,56 @@ func _draw_items(c: Control, font: Font) -> void:
 func _draw_equip(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Equip")
 	var slots := _get_equip_slots()
-	var items: Array = []
-	for s in slots:
-		var item_name: String = str(s.get("item", ""))
-		if item_name.is_empty():
-			item_name = "--"
-		items.append({"name": str(s.get("label", "")) + ":  " + item_name, "type": str(s.get("type", ""))})
 	var idx: int = _sub_idx if _mode == Mode.EQUIP else _equip_slot_idx
 	if idx >= slots.size():
 		idx = 0
-	_draw_bottom_list(c, font, items, idx)
+
+	# Custom equip list with headers and white rows
+	var px: float = 5.0
+	var py: float = VIEWPORT_H - 305.0
+	var pw: float = 300.0
+	var ph: float = 300.0
+	_draw_inner_panel(c, Rect2(px, py, pw, ph))
+
+	var draw_y: float = py + 4
+	var last_type := ""
+	for i in range(slots.size()):
+		var s: Dictionary = slots[i]
+		var slot_type: String = str(s.get("type", ""))
+
+		# Section header for each type group
+		var header := ""
+		match slot_type:
+			"weapon": header = "Weapon" if last_type != "weapon" else ""
+			"armor": header = "Armor" if last_type != "armor" else ""
+			"unit": header = "Units" if last_type != "unit" else ""
+			"mag": header = "Mag" if last_type != "mag" else ""
+		if not header.is_empty():
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 18), Color(0.12, 0.16, 0.28))
+			c.draw_string(font, Vector2(px + 8, draw_y + 13), header, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
+			draw_y += 20
+		last_type = slot_type
+
+		var is_sel: bool = i == idx
+		if is_sel:
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 22), C_SELECT)
+		else:
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 22), Color(1, 1, 1, 0.85))
+		var col: Color = C_SELECT_TEXT if is_sel else C_TEXT
+
+		# Slot label
+		var slot_label: String = str(s.get("label", ""))
+		c.draw_string(font, Vector2(px + 8, draw_y + 16), slot_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, Color(col, 0.6) if not is_sel else col)
+
+		# Item name — look up proper display name
+		var item_id: String = str(s.get("item", ""))
+		var display_name: String = "--"
+		if not item_id.is_empty():
+			var info: Dictionary = Inventory._lookup_item(item_id)
+			display_name = str(info.get("name", item_id))
+		c.draw_string(font, Vector2(px + 80, draw_y + 16), display_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
+
+		draw_y += 24
 
 	if _mode == Mode.EQUIP_PICK:
 		_draw_equip_picker(c, font)
@@ -1026,17 +1066,18 @@ func _draw_equip(c: Control, font: Font) -> void:
 		if desc_idx < slots.size():
 			var item_id: String = str(slots[desc_idx].get("item", ""))
 			if not item_id.is_empty():
-				# Try to get item description from registries
-				var wdata = WeaponRegistry.get_weapon(item_id) if WeaponRegistry.has_method("get_weapon") else null
-				var adata = ArmorRegistry.get_armor(item_id) if ArmorRegistry.has_method("get_armor") else null
-				if wdata and "name" in wdata:
-					desc = "%s\nATP: %s" % [str(wdata.name), str(wdata.attack_base if "attack_base" in wdata else "?")]
-				elif adata and "name" in adata:
-					desc = "%s\nDFP: %s  Slots: %s" % [str(adata.name), str(adata.defense_base if "defense_base" in adata else "?"), str(adata.max_slots if "max_slots" in adata else 0)]
-				else:
-					desc = item_id
+				var info: Dictionary = Inventory._lookup_item(item_id)
+				desc = str(info.get("name", item_id))
+				var wdata = WeaponRegistry.get_weapon(Inventory.get_base_id(item_id))
+				var adata = ArmorRegistry.get_armor(item_id)
+				if wdata:
+					desc += "\nATK: %d  ACC: %d" % [wdata.attack_base, wdata.accuracy_base]
+					if not wdata.element.is_empty() and wdata.element != "None":
+						desc += "\nElement: %s" % wdata.element
+				elif adata:
+					desc += "\nDEF: %d  EVA: %d\nSlots: %d" % [adata.defense_base, adata.evasion_base, adata.max_slots]
 			else:
-				desc = "Nothing equipped.\n\n[Enter] Equip"
+				desc = "Empty slot\n\n[Enter] Equip"
 		_draw_bottom_desc(c, font, desc)
 
 
@@ -1227,35 +1268,98 @@ func _draw_palette_picker(c: Control, font: Font) -> void:
 
 
 func _draw_mags(c: Control, font: Font) -> void:
+	var ch := _get_character()
+	var mags := _get_mags()
+
 	if _mode == Mode.MAG_FEED:
 		_draw_section_label(c, font, "Feed Mag")
+
+		# Left panel: mag stats with gauge bars
+		var px: float = 5.0
+		var py: float = VIEWPORT_H - 305.0
+		var pw: float = 300.0
+		var ph: float = 300.0
+		_draw_inner_panel(c, Rect2(px, py, pw, ph))
+
+		var mag_id: String = str(mags[_mag_idx].get("id", "")) if _mag_idx < mags.size() else ""
+		var mag_state: Dictionary = MagManager.get_mag_state(ch, mag_id) if not ch.is_empty() and not mag_id.is_empty() else {}
+
+		var dy: float = py + 4
+		if not mag_state.is_empty():
+			var form_id: String = str(mag_state.get("form_id", "mag"))
+			var form = MagManager.get_mag_form(form_id)
+			var form_name: String = form.name if form else "Mag"
+			var level: int = MagManager.get_level(mag_state)
+
+			c.draw_rect(Rect2(px + 2, dy, pw - 4, 18), Color(0.12, 0.16, 0.28))
+			c.draw_string(font, Vector2(px + 8, dy + 13), "%s  Lv.%d" % [form_name, level], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT_LIGHT)
+			dy += 22
+
+			var stats_dict: Dictionary = mag_state.get("stats", {})
+			var stat_colors := {"power": Color(0.9, 0.3, 0.3), "guard": Color(0.3, 0.5, 0.9), "hit": Color(0.3, 0.8, 0.3), "mind": Color(0.7, 0.3, 0.9)}
+			var stat_labels := {"power": "POW", "guard": "GRD", "hit": "HIT", "mind": "MND"}
+			for stat_key in ["power", "guard", "hit", "mind"]:
+				var raw: int = int(stats_dict.get(stat_key, 0))
+				var stat_lvl: int = int(raw / MagManager.STATS_PER_LEVEL)
+				var gauge: int = raw % MagManager.STATS_PER_LEVEL
+				var gauge_pct: float = float(gauge) / float(MagManager.STATS_PER_LEVEL)
+
+				c.draw_rect(Rect2(px + 2, dy, pw - 4, 24), Color(1, 1, 1, 0.85))
+				c.draw_string(font, Vector2(px + 8, dy + 17), stat_labels[stat_key], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT)
+				c.draw_string(font, Vector2(px + 55, dy + 17), str(stat_lvl), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT)
+				# Gauge bar
+				var bar_x: float = px + 80
+				var bar_w: float = pw - 90
+				c.draw_rect(Rect2(bar_x, dy + 6, bar_w, 12), Color(0, 0, 0, 0.15))
+				if gauge_pct > 0:
+					c.draw_rect(Rect2(bar_x, dy + 6, bar_w * gauge_pct, 12), stat_colors[stat_key])
+				dy += 26
+
+			dy += 4
+			c.draw_rect(Rect2(px + 2, dy, pw - 4, 20), Color(1, 1, 1, 0.85))
+			c.draw_string(font, Vector2(px + 8, dy + 14), "Sync: %d/%d" % [int(mag_state.get("sync", 0)), MagManager.MAX_SYNC], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
+			c.draw_string(font, Vector2(px + 150, dy + 14), "IQ: %d/%d" % [int(mag_state.get("iq", 0)), MagManager.MAX_IQ], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
+			dy += 22
+
+			if form and not str(form.photon_blast).is_empty():
+				c.draw_rect(Rect2(px + 2, dy, pw - 4, 20), Color(1, 1, 1, 0.85))
+				c.draw_string(font, Vector2(px + 8, dy + 14), "P.Blast: %s" % str(form.photon_blast), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, Color(0.2, 0.6, 0.3))
+				dy += 22
+
+		# Right panel: feedable items
 		var feed := _get_feed_items()
-		_draw_bottom_list(c, font, feed, _sub_idx)
-		var desc: String = ""
-		if _sub_idx < feed.size():
-			var item: Dictionary = feed[_sub_idx]
-			desc = str(item.get("name", ""))
-			var consumable = ConsumableRegistry.get_consumable(str(item.get("id", "")))
-			if consumable and not str(consumable.details).is_empty():
-				desc += "\n%s" % str(consumable.details)
-			var qty: int = int(item.get("quantity", 0))
+		var dpx: float = 310.0
+		var dpy: float = VIEWPORT_H - 305.0
+		var dpw: float = 200.0
+		var dph: float = 300.0
+		_draw_inner_panel(c, Rect2(dpx, dpy, dpw, dph))
+		c.draw_rect(Rect2(dpx + 2, dpy + 2, dpw - 4, 16), Color(0.12, 0.16, 0.28))
+		c.draw_string(font, Vector2(dpx + 6, dpy + 14), "Feed Item", HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
+		var feed_y: float = dpy + 20
+		for i in range(feed.size()):
+			if feed_y > dpy + dph - 6:
+				break
+			var is_sel: bool = i == _sub_idx
+			if is_sel:
+				c.draw_rect(Rect2(dpx + 2, feed_y, dpw - 4, 20), C_SELECT)
+			else:
+				c.draw_rect(Rect2(dpx + 2, feed_y, dpw - 4, 20), Color(1, 1, 1, 0.85))
+			var col: Color = C_SELECT_TEXT if is_sel else C_TEXT
+			c.draw_string(font, Vector2(dpx + 6, feed_y + 14), str(feed[i].get("name", "")), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, col)
+			var qty: int = int(feed[i].get("quantity", 0))
 			if qty > 1:
-				desc += "\n\nx%d" % qty
-		_draw_bottom_desc(c, font, desc)
+				c.draw_string(font, Vector2(dpx + dpw - 30, feed_y + 14), "x%d" % qty, HORIZONTAL_ALIGNMENT_RIGHT, -1, FONT_SIZE_XS, Color(col, 0.7))
+			feed_y += 22
 	else:
 		_draw_section_label(c, font, "Mags")
-		var mags := _get_mags()
-		# Draw mag list with equipped badge
 		var items: Array = []
 		for m in mags:
 			var tag: String = " [E]" if m.get("equipped", false) else ""
 			items.append({"name": str(m.get("name", "")) + tag, "type": "mag", "equipped": m.get("equipped", false)})
 		_draw_bottom_list(c, font, items, _sub_idx)
-		# Mag detail
 		var desc: String = ""
 		if _sub_idx < mags.size():
 			var mag: Dictionary = mags[_sub_idx]
-			var ch := _get_character()
 			var mag_state: Dictionary = MagManager.get_mag_state(ch, str(mag.get("id", ""))) if not ch.is_empty() else {}
 			if not mag_state.is_empty():
 				var form_id: String = str(mag_state.get("form_id", "mag"))
@@ -1269,7 +1373,7 @@ func _draw_mags(c: Control, font: Font) -> void:
 					var raw: int = int(stats_dict.get(stat_key, 0))
 					var stat_lvl: int = int(raw / MagManager.STATS_PER_LEVEL)
 					desc += "%s: %d\n" % [stat_key.capitalize(), stat_lvl]
-				desc += "\n\n[Enter] Feed"
+				desc += "\n[Enter] Feed"
 		_draw_bottom_desc(c, font, desc)
 
 
