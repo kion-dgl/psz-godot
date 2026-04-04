@@ -207,53 +207,23 @@ func _fix_city_materials() -> void:
 	## Apply texture fixes from global-texture-fixes.json to all city GLB meshes.
 	_load_global_texture_fixes()
 	_fix_materials_recursive(self)
-	_add_debug_lights()
 
 
-func _add_debug_lights() -> void:
-	## DEBUG: Multiple colored lights to see what affects the scene
-	# Red omni at origin
-	var red := OmniLight3D.new()
-	red.name = "DebugRed"
-	red.light_color = Color.RED
-	red.light_energy = 3.0
-	red.omni_range = 30.0
-	red.shadow_enabled = false
-	red.position = Vector3(0, 3, 0)
-	add_child(red)
-
-	# Green omni offset
-	var green := OmniLight3D.new()
-	green.name = "DebugGreen"
-	green.light_color = Color.GREEN
-	green.light_energy = 3.0
-	green.omni_range = 30.0
-	green.shadow_enabled = false
-	green.position = Vector3(0, 3, -10)
-	add_child(green)
-
-	# Blue spot pointing down
-	var blue := SpotLight3D.new()
-	blue.name = "DebugBlue"
-	blue.light_color = Color.BLUE
-	blue.light_energy = 5.0
-	blue.spot_range = 30.0
-	blue.spot_angle = 60.0
-	blue.shadow_enabled = false
-	blue.position = Vector3(0, 8, 5)
-	blue.rotation_degrees = Vector3(-90, 0, 0)
-	add_child(blue)
-
-	# White directional from above
-	var white := DirectionalLight3D.new()
-	white.name = "DebugWhiteDir"
-	white.light_color = Color.WHITE
-	white.light_energy = 2.0
-	white.rotation_degrees = Vector3(-80, 0, 0)
-	white.shadow_enabled = false
-	add_child(white)
-
-	print("[CityDebugLights] Added RED omni(0,3,0) GREEN omni(0,3,-10) BLUE spot(0,8,5) WHITE dir")
+func _add_interior_lights(positions: Array = []) -> void:
+	## Add warm OmniLight3D sources at the given positions.
+	## If no positions given, place a default grid of lights.
+	if positions.is_empty():
+		positions = [Vector3(0, 4, 0), Vector3(0, 4, -10), Vector3(0, 4, 10)]
+	for i in range(positions.size()):
+		var light := OmniLight3D.new()
+		light.name = "InteriorLight_%d" % i
+		light.light_color = Color(1.0, 0.95, 0.88)
+		light.light_energy = 1.5
+		light.omni_range = 20.0
+		light.omni_attenuation = 0.8
+		light.shadow_enabled = false
+		light.position = positions[i]
+		add_child(light)
 
 
 static func _load_global_texture_fixes() -> void:
