@@ -447,7 +447,28 @@ func _sub_accept() -> void:
 			_sub_idx = 0
 			_mode = Mode.MAG_FEED
 		Mode.MAG_FEED:
-			pass  # TODO: feed mag
+			_do_feed_mag()
+
+
+func _do_feed_mag() -> void:
+	var feed := _get_feed_items()
+	if _sub_idx >= feed.size():
+		return
+	var mags := _get_mags()
+	if _mag_idx >= mags.size():
+		return
+	var ch := _get_character()
+	if ch.is_empty():
+		return
+	var mag_id: String = str(mags[_mag_idx].get("id", ""))
+	var mag_state: Dictionary = MagManager.get_mag_state(ch, mag_id)
+	if mag_state.is_empty():
+		return
+	var item: Dictionary = feed[_sub_idx]
+	var item_id: String = str(item.get("id", ""))
+	var result: Dictionary = MagManager.feed_mag(mag_state, item_id)
+	if result.get("success", false):
+		Inventory.remove_item(item_id, 1)
 
 
 func _go_back() -> void:
@@ -707,8 +728,15 @@ func _get_mags() -> Array:
 
 
 func _get_feed_items() -> Array:
-	var items := Inventory.get_all_items()
-	return items.filter(func(i): return str(i.get("type", "")) in ["consumable", "material"])
+	## Get feedable items matching mag_feeder.gd logic
+	var result: Array = []
+	for item_id in Inventory._items:
+		if MagManager.can_feed(item_id):
+			var qty: int = int(Inventory._items[item_id])
+			var info: Dictionary = Inventory._lookup_item(item_id)
+			var effects: Dictionary = MagManager.FEED_EFFECTS.get(item_id, {})
+			result.append({"id": item_id, "name": str(info.get("name", item_id)), "quantity": qty, "effects": effects, "type": "tool"})
+	return result
 
 
 func _get_palette_actions() -> Array:
