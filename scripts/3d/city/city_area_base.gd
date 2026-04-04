@@ -207,6 +207,53 @@ func _fix_city_materials() -> void:
 	## Apply texture fixes from global-texture-fixes.json to all city GLB meshes.
 	_load_global_texture_fixes()
 	_fix_materials_recursive(self)
+	_add_debug_lights()
+
+
+func _add_debug_lights() -> void:
+	## DEBUG: Multiple colored lights to see what affects the scene
+	# Red omni at origin
+	var red := OmniLight3D.new()
+	red.name = "DebugRed"
+	red.light_color = Color.RED
+	red.light_energy = 3.0
+	red.omni_range = 30.0
+	red.shadow_enabled = false
+	red.position = Vector3(0, 3, 0)
+	add_child(red)
+
+	# Green omni offset
+	var green := OmniLight3D.new()
+	green.name = "DebugGreen"
+	green.light_color = Color.GREEN
+	green.light_energy = 3.0
+	green.omni_range = 30.0
+	green.shadow_enabled = false
+	green.position = Vector3(0, 3, -10)
+	add_child(green)
+
+	# Blue spot pointing down
+	var blue := SpotLight3D.new()
+	blue.name = "DebugBlue"
+	blue.light_color = Color.BLUE
+	blue.light_energy = 5.0
+	blue.spot_range = 30.0
+	blue.spot_angle = 60.0
+	blue.shadow_enabled = false
+	blue.position = Vector3(0, 8, 5)
+	blue.rotation_degrees = Vector3(-90, 0, 0)
+	add_child(blue)
+
+	# White directional from above
+	var white := DirectionalLight3D.new()
+	white.name = "DebugWhiteDir"
+	white.light_color = Color.WHITE
+	white.light_energy = 2.0
+	white.rotation_degrees = Vector3(-80, 0, 0)
+	white.shadow_enabled = false
+	add_child(white)
+
+	print("[CityDebugLights] Added RED omni(0,3,0) GREEN omni(0,3,-10) BLUE spot(0,8,5) WHITE dir")
 
 
 static func _load_global_texture_fixes() -> void:
@@ -293,10 +340,9 @@ func _fix_materials_recursive(node: Node) -> void:
 					mesh_inst.set_surface_override_material(i, shader_mat)
 				else:
 					var new_mat := std_mat.duplicate() as StandardMaterial3D
-					# City stages are indoors with pre-baked vertex colors —
-					# use UNSHADED so they display at full brightness without
-					# needing directional/omni lights to penetrate enclosed geometry.
-					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+					# PER_VERTEX so lights affect the geometry
+					new_mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+					new_mat.vertex_color_use_as_albedo = true
 					new_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
 					new_mat.alpha_scissor_threshold = 0.1
 					new_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
