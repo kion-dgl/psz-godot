@@ -16,7 +16,7 @@ sky_material = SubResource("sky_mat")
 background_mode = 2
 sky = SubResource("sky")
 ambient_light_source = 3
-ambient_light_energy = 0.6
+ambient_light_energy = 1.2
 
 [node name="CityWarp" type="Node3D"]
 script = ExtResource("1_script")
@@ -26,7 +26,7 @@ environment = SubResource("env")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 20, 10)
-light_energy = 0.8
+light_energy = 0.4
 shadow_enabled = true
 
 [node name="Warp" parent="." instance=ExtResource("2_glb")]
