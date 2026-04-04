@@ -17,7 +17,7 @@ var _laser_material: StandardMaterial3D = null
 func _init() -> void:
 	model_path = "valley/o0c_gate.glb"
 	element_state = "locked"
-	collision_size = Vector3(2, 3, 0.5)
+	collision_size = Vector3(6, 3, 0.5)
 
 
 func _ready() -> void:

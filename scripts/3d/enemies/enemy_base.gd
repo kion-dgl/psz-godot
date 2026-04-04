@@ -46,9 +46,9 @@ var is_attacking: bool = false
 var current_anim: String = ""
 
 ## Stuck detection — try perpendicular direction when blocked
-var _stuck_frames: int = 0
+var _stuck_time: float = 0.0
 var _stuck_side: float = 1.0  # 1.0 or -1.0 to try left/right
-const STUCK_THRESHOLD := 10  # Frames before trying alternate direction
+const STUCK_THRESHOLD := 0.2  # Seconds blocked before trying alternate direction
 
 ## Status effects
 var _status_effects: Array = []  # [{type: String, timer: float, dot_timer: float, phase: String}]
@@ -106,7 +106,7 @@ signal damaged(enemy: EnemyBase, amount: int)
 
 func _ready() -> void:
 	add_to_group("enemies")
-	collision_mask = 3  # Environment (1) + Player (2) — enemies collide with both
+	set_collision_mask_value(2, true)  # Enable player layer collision (preserve other mask bits)
 	_setup_from_data()
 	_setup_model()
 	_setup_hurtbox()
@@ -306,10 +306,28 @@ func _physics_process(delta: float) -> void:
 		attack_cooldown_timer -= delta
 
 	FrameProfiler.mark("enemy_move_slide")
+	var pos_before := global_position
 	move_and_slide()
 
+	# Stuck detection: if we tried to move but barely displaced, try going around
+	if current_state == EnemyState.CHASING:
+		var attempted_speed := Vector2(velocity.x, velocity.z).length()
+		var actual_disp := Vector2(global_position.x - pos_before.x, global_position.z - pos_before.z).length()
+		if attempted_speed > 0.5 and actual_disp < delta * 0.5:
+			_stuck_time += delta
+			if _stuck_time > STUCK_THRESHOLD and target and is_instance_valid(target):
+				var to_target := (target.global_position - global_position)
+				var dir := Vector3(to_target.x, 0, to_target.z).normalized()
+				var perp := Vector3(-dir.z, 0, dir.x) * _stuck_side
+				velocity.x = perp.x * attempted_speed * 0.7
+				velocity.z = perp.z * attempted_speed * 0.7
+				if _stuck_time > STUCK_THRESHOLD * 3:
+					_stuck_side *= -1.0
+					_stuck_time = STUCK_THRESHOLD
+		else:
+			_stuck_time = 0.0
+
 	# Safety: if enemy ends up over empty space, stop horizontal movement
-	# Only check when actually moving to avoid wasting raycasts on idle enemies
 	if (velocity.x * velocity.x + velocity.z * velocity.z) > 0.001:
 		if not _has_floor_at(global_position):
 			velocity.x = 0
@@ -425,25 +443,11 @@ func _process_chasing(_delta: float) -> void:
 	if is_charging:
 		speed = base_speed * CHARGE_SPEED_MULT
 
-	# Apply movement if we have a valid direction and floor ahead
+	# Apply movement toward target
 	if direction.length() > 0.1 and _can_move_to(direction):
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
 		_face_direction(direction)
-		_stuck_frames = 0
-	elif direction.length() > 0.1:
-		# Blocked — try perpendicular direction to go around obstacle
-		_stuck_frames += 1
-		if _stuck_frames > STUCK_THRESHOLD:
-			var perp := Vector3(-direction.z, 0, direction.x) * _stuck_side
-			if _can_move_to(perp):
-				velocity.x = perp.x * speed * 0.7
-				velocity.z = perp.z * speed * 0.7
-				_face_direction(perp)
-			else:
-				# Try other side
-				_stuck_side *= -1.0
-				_stuck_frames = 0
 
 
 func _process_attacking(_delta: float) -> void:
