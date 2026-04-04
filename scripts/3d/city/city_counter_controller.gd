@@ -26,6 +26,18 @@ const SPAWN_VARIANTS := {
 func _ready() -> void:
 	# Apply texture fixes from global config
 	_fix_city_materials()
+	# Override: disable vertex colors for SA2 — they're baked too dark
+	_override_vertex_colors(false)
+	# Interior lights along the hallway (Z runs from ~20 to ~-22, y=2 is floor)
+	_add_interior_lights([
+		Vector3(0, 4, 18),
+		Vector3(0, 4, 12),
+		Vector3(0, 4, 6),
+		Vector3(0, 4, 0),
+		Vector3(0, 4, -6),
+		Vector3(0, 4, -12),
+		Vector3(0, 4, -18),
+	])
 
 	# Spawn player
 	_spawn_player(DEFAULT_SPAWN, DEFAULT_ROT, SPAWN_VARIANTS)

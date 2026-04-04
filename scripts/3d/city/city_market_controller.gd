@@ -18,6 +18,7 @@ const SPAWN_VARIANTS := {
 
 func _ready() -> void:
 	# s00e_sa1 uses baked textures from psz-asset-viewer — no runtime fixes needed
+	_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
 
 	# Heal on city entry
 	_heal_character()

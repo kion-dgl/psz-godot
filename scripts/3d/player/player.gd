@@ -1106,22 +1106,104 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 
 
 func _spawn_gifoie(damage: int, kb: float) -> void:
-	# Single fireball that spirals outward from the caster (pierce)
-	var forward := Vector3(sin(player_rotation), 0, cos(player_rotation))
-	var proj := Projectile.new()
-	proj.damage = damage
-	proj.knockback = kb
-	proj.accuracy = 100
-	proj.direction = forward
-	proj.max_range = 25.0
-	proj.owner_node = self
-	proj.speed = 10.0
-	proj.pierce = true
-	proj.spiral_rate = 4.0  # Radians/sec — tight spiral outward
-	proj.color = Color(1.0, 0.3, 0.05)
-	_apply_element_to_proj(proj)
-	get_tree().current_scene.add_child(proj)
-	proj.global_position = global_position + Vector3(0, 1.0, 0) + forward * 0.5
+	# Single fireball that spirals outward from the caster — orbits 2-3 times
+	# with increasing radius, hitting everything in its path, then fizzles
+	var spiral := _GifoieSpiral.new()
+	spiral.caster = self
+	spiral.damage = damage
+	spiral.knockback = kb
+	spiral.accuracy = 100
+	spiral.element = _current_attack_element
+	spiral.element_level = _current_attack_element_level
+	spiral.start_angle = player_rotation
+	get_tree().current_scene.add_child(spiral)
+	spiral.global_position = global_position + Vector3(0, 1.0, 0)
+
+
+class _GifoieSpiral extends Area3D:
+	var caster: Node3D
+	var damage: int = 10
+	var knockback: float = 3.0
+	var accuracy: int = 100
+	var element: String = ""
+	var element_level: int = 0
+	var start_angle: float = 0.0
+
+	const ROTATION_SPEED := 12.0   # Radians/sec — how fast it orbits
+	const EXPAND_SPEED := 2.0      # Units/sec — how fast radius grows
+	const MAX_RADIUS := 5.0        # Fizzle distance
+	const FIZZLE_START := 4.0      # Start shrinking at this radius
+
+	var _angle: float = 0.0
+	var _radius: float = 0.3
+	var _mesh: MeshInstance3D
+	var _mat: StandardMaterial3D
+	var _hit_targets: Array = []
+
+	func _ready() -> void:
+		_angle = start_angle
+		collision_layer = 0
+		collision_mask = 32  # Hurtboxes
+		monitoring = true
+		monitorable = false
+		area_entered.connect(_on_area_entered)
+
+		# Visual
+		_mesh = MeshInstance3D.new()
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.2
+		sphere.height = 0.4
+		sphere.radial_segments = 8
+		sphere.rings = 4
+		_mesh.mesh = sphere
+		_mat = StandardMaterial3D.new()
+		_mat.albedo_color = Color(1.0, 0.4, 0.05)
+		_mat.emission_enabled = true
+		_mat.emission = Color(1.0, 0.3, 0.0)
+		_mat.emission_energy_multiplier = 3.0
+		_mesh.material_override = _mat
+		add_child(_mesh)
+
+		# Collision
+		var col := CollisionShape3D.new()
+		var shape := SphereShape3D.new()
+		shape.radius = 0.3
+		col.shape = shape
+		add_child(col)
+
+	func _physics_process(delta: float) -> void:
+		if not is_instance_valid(caster):
+			queue_free()
+			return
+
+		# Orbit: increase angle and radius each frame
+		_angle += ROTATION_SPEED * delta
+		_radius += EXPAND_SPEED * delta
+
+		# Position relative to caster
+		var offset := Vector3(sin(_angle), 0, cos(_angle)) * _radius
+		global_position = caster.global_position + Vector3(0, 1.0, 0) + offset
+
+		# Fizzle: shrink and fade near max radius
+		if _radius > FIZZLE_START:
+			var fizzle_t: float = (_radius - FIZZLE_START) / (MAX_RADIUS - FIZZLE_START)
+			var scale_val: float = maxf(1.0 - fizzle_t, 0.05)
+			_mesh.scale = Vector3(scale_val, scale_val, scale_val)
+			_mat.albedo_color.a = scale_val
+
+		if _radius >= MAX_RADIUS:
+			queue_free()
+
+	func _on_area_entered(area: Area3D) -> void:
+		if area is Hurtbox:
+			var hurtbox := area as Hurtbox
+			if hurtbox.owner_node == caster:
+				return
+			if hurtbox.owner_node in _hit_targets:
+				return
+			_hit_targets.append(hurtbox.owner_node)
+			var hit_dir: Vector3 = (hurtbox.owner_node.global_position - caster.global_position).normalized()
+			hurtbox.take_hit(damage, hit_dir * knockback, accuracy, element, element_level)
 
 
 func _spawn_rafoie(_spawn_pos: Vector3, _forward: Vector3, damage: int, kb: float) -> void:
