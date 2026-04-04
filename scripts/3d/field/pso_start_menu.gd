@@ -54,6 +54,7 @@ var _item_scroll: float = 0.0  # Pixel scroll offset for items list
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
+var _rstick_held: bool = false  # Prevents right stick repeat until released
 
 ## Menu labels built dynamically — Techs hidden for Cast race
 func _get_menu_labels() -> Array:
@@ -147,6 +148,53 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		return
 
+	# ── Menu is open — consume ALL input except movement ──
+
+	# Toggle close with pause/start
+	if event.is_action_pressed("pause") or event.is_action_pressed("start"):
+		close()
+		get_viewport().set_input_as_handled()
+		return
+
+	# Let movement actions pass through (WASD + left stick)
+	if event.is_action("move_forward") or event.is_action("move_backward") or \
+	   event.is_action("move_left") or event.is_action("move_right"):
+		return  # Don't consume — let player walk
+
+	# LB/RB → page flip when in main view
+	if _mode == Mode.MAIN:
+		if event.is_action_pressed("palette_swap"):  # LB
+			_info_page = wrapi(_info_page - 1, 0, 4)
+			_canvas.queue_redraw()
+			get_viewport().set_input_as_handled()
+			return
+		if event.is_action_pressed("quest_log"):  # RB
+			_info_page = wrapi(_info_page + 1, 0, 4)
+			_canvas.queue_redraw()
+			get_viewport().set_input_as_handled()
+			return
+
+	# Right stick Y axis → menu scroll (alternative to d-pad)
+	if event is InputEventJoypadMotion:
+		var joy: InputEventJoypadMotion = event as InputEventJoypadMotion
+		if joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) > 0.5:
+			# Throttle: only trigger once per stick deflection
+			if not _rstick_held:
+				_rstick_held = true
+				if joy.axis_value > 0:
+					_simulate_menu_down()
+				else:
+					_simulate_menu_up()
+				_canvas.queue_redraw()
+			get_viewport().set_input_as_handled()
+			return
+		elif joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) < 0.3:
+			_rstick_held = false
+			# Don't consume deadzone return
+			get_viewport().set_input_as_handled()
+			return
+
+	# Route to mode-specific handler
 	var handled := true
 	match _mode:
 		Mode.MAIN:
@@ -176,7 +224,24 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if handled:
 		_canvas.queue_redraw()
-		get_viewport().set_input_as_handled()
+
+	# ALWAYS consume input when menu is open (blocks camera, interact, quick weapon, palette)
+	get_viewport().set_input_as_handled()
+
+
+func _simulate_menu_up() -> void:
+	## Simulate pressing ui_up for right stick scroll
+	var fake := InputEventAction.new()
+	fake.action = "ui_up"
+	fake.pressed = true
+	_unhandled_input(fake)
+
+
+func _simulate_menu_down() -> void:
+	var fake := InputEventAction.new()
+	fake.action = "ui_down"
+	fake.pressed = true
+	_unhandled_input(fake)
 
 
 func _input_main(event: InputEvent) -> bool:
