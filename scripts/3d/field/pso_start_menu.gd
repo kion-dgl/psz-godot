@@ -140,9 +140,9 @@ func toggle() -> void:
 
 # ── Input ───────────────────────────────────────────────────────────────────────
 func _unhandled_input(event: InputEvent) -> void:
-	# Open menu from anywhere with ESC/pause (only when closed)
+	# Open menu from anywhere with ESC/pause (only when closed and no overlay active)
 	if not _is_open:
-		if event.is_action_pressed("pause"):
+		if event.is_action_pressed("pause") and SceneManager._overlay_stack.is_empty():
 			open()
 			get_viewport().set_input_as_handled()
 		return
