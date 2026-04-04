@@ -209,6 +209,22 @@ func _fix_city_materials() -> void:
 	_fix_materials_recursive(self)
 
 
+func _override_vertex_colors(enabled: bool) -> void:
+	## Override vertex_color_use_as_albedo on all StandardMaterial3D in the scene.
+	_set_vertex_colors_recursive(self, enabled)
+
+
+func _set_vertex_colors_recursive(node: Node, enabled: bool) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst := node as MeshInstance3D
+		for i in range(mesh_inst.get_surface_override_material_count()):
+			var mat := mesh_inst.get_active_material(i)
+			if mat is StandardMaterial3D:
+				mat.vertex_color_use_as_albedo = enabled
+	for child in node.get_children():
+		_set_vertex_colors_recursive(child, enabled)
+
+
 func _add_interior_lights(positions: Array = []) -> void:
 	## Add warm OmniLight3D sources at the given positions.
 	## If no positions given, place a default grid of lights.
@@ -224,6 +240,7 @@ func _add_interior_lights(positions: Array = []) -> void:
 		light.shadow_enabled = false
 		light.position = positions[i]
 		add_child(light)
+	print("[CityLights] Added %d interior lights" % positions.size())
 
 
 static func _load_global_texture_fixes() -> void:
