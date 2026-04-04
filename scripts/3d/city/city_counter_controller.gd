@@ -26,6 +26,13 @@ const SPAWN_VARIANTS := {
 func _ready() -> void:
 	# Apply texture fixes from global config
 	_fix_city_materials()
+	# Interior lights along the hallway (Z runs from ~20 to ~-22, y=2 is floor)
+	_add_interior_lights([
+		Vector3(0, 5, 15),
+		Vector3(0, 5, 5),
+		Vector3(0, 5, -5),
+		Vector3(0, 5, -15),
+	])
 
 	# Spawn player
 	_spawn_player(DEFAULT_SPAWN, DEFAULT_ROT, SPAWN_VARIANTS)
