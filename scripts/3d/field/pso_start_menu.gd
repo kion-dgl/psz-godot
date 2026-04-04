@@ -1216,7 +1216,7 @@ func _draw_mags(c: Control, font: Font) -> void:
 				for stat_key in ["power", "guard", "hit", "mind"]:
 					var raw: int = int(stats_dict.get(stat_key, 0))
 					var stat_lvl: int = int(raw / MagManager.STATS_PER_LEVEL)
-					desc += "%s: %d  " % [stat_key.capitalize(), stat_lvl]
+					desc += "%s: %d\n" % [stat_key.capitalize(), stat_lvl]
 				desc += "\n\n[Enter] Feed"
 		_draw_bottom_desc(c, font, desc)
 
