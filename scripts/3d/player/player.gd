@@ -1465,9 +1465,36 @@ func _use_consumable(item_id: String) -> void:
 	if current_state == PlayerState.ATTACKING or current_state == PlayerState.DODGING:
 		return
 	if Inventory.use_item(item_id):
-		print("[Player] Used %s from action palette" % item_id)
+		var info: Dictionary = Inventory.get_last_use_info()
+		var use_type: String = str(info.get("type", ""))
+		var amount: int = int(info.get("amount", 0))
+		_spawn_heal_number(use_type, amount)
 	else:
-		print("[Player] No %s in inventory" % item_id)
+		print("[Player] Cannot use %s" % item_id)
+
+
+func _spawn_heal_number(heal_type: String, amount: int) -> void:
+	var label := Label3D.new()
+	if heal_type == "hp":
+		label.text = "+%d HP" % amount
+		label.modulate = Color(0.3, 1.0, 0.3)
+	else:
+		label.text = "+%d PP" % amount
+		label.modulate = Color(0.3, 0.6, 1.0)
+	label.font_size = 48
+	label.pixel_size = 0.01
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.outline_size = 6
+	label.outline_modulate = Color(0, 0, 0)
+	label.position = Vector3(0, 2.5, 0)
+	add_child(label)
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position:y", 3.5, 0.8).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate:a", 0.0, 0.8).set_delay(0.3)
+	tween.chain().tween_callback(label.queue_free)
 
 
 func _handle_attack_state(delta: float) -> void:
