@@ -34,7 +34,7 @@ func _setup_gate_collision() -> void:
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(2, 3, 0.3)
+	box.size = Vector3(6, 3, 0.5)  # Wide enough to cover full gate opening
 	shape.shape = box
 	shape.position.y = 1.5
 	collision_body.add_child(shape)
