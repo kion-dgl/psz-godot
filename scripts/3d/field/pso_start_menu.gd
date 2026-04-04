@@ -912,8 +912,11 @@ func _draw_items(c: Control, font: Font) -> void:
 			break
 
 		var is_sel: bool = i == _sub_idx
+		# White row background, yellow/orange for selected
 		if is_sel:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), C_SELECT)
+		else:
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(1, 1, 1, 0.85))
 		var col: Color = C_SELECT_TEXT if is_sel else C_TEXT
 
 		# Equipped badge
