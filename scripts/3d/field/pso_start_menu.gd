@@ -48,6 +48,7 @@ var _pal_slot_idx: int = 0
 var _mag_idx: int = 0
 var _mag_feed_idx: int = 0
 var _options_idx: int = 0
+var _item_scroll: int = 0  # Scroll offset for items list
 
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
@@ -178,16 +179,16 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _input_main(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up"):
+	if event.is_action_pressed("ui_up", true):
 		_menu_idx = wrapi(_menu_idx - 1, 0, _get_menu_labels().size())
 		return true
-	elif event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_down", true):
 		_menu_idx = wrapi(_menu_idx + 1, 0, _get_menu_labels().size())
 		return true
-	elif event.is_action_pressed("ui_left"):
+	elif event.is_action_pressed("ui_left", true):
 		_info_page = wrapi(_info_page - 1, 0, 4)
 		return true
-	elif event.is_action_pressed("ui_right"):
+	elif event.is_action_pressed("ui_right", true):
 		_info_page = wrapi(_info_page + 1, 0, 4)
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -200,10 +201,10 @@ func _input_main(event: InputEvent) -> bool:
 
 
 func _input_list(event: InputEvent, count: int) -> bool:
-	if event.is_action_pressed("ui_up") and count > 0:
+	if event.is_action_pressed("ui_up", true) and count > 0:
 		_sub_idx = wrapi(_sub_idx - 1, 0, count)
 		return true
-	elif event.is_action_pressed("ui_down") and count > 0:
+	elif event.is_action_pressed("ui_down", true) and count > 0:
 		_sub_idx = wrapi(_sub_idx + 1, 0, count)
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -217,10 +218,10 @@ func _input_list(event: InputEvent, count: int) -> bool:
 
 func _input_equip_pick(event: InputEvent) -> bool:
 	var candidates := _get_equip_candidates(_equip_slot_idx)
-	if event.is_action_pressed("ui_up") and candidates.size() > 0:
+	if event.is_action_pressed("ui_up", true) and candidates.size() > 0:
 		_equip_item_idx = wrapi(_equip_item_idx - 1, 0, candidates.size())
 		return true
-	elif event.is_action_pressed("ui_down") and candidates.size() > 0:
+	elif event.is_action_pressed("ui_down", true) and candidates.size() > 0:
 		_equip_item_idx = wrapi(_equip_item_idx + 1, 0, candidates.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -284,12 +285,12 @@ func _do_equip() -> void:
 func _input_palette(event: InputEvent) -> bool:
 	var total_slots: int = ActionPalette.pages.size() * 3
 	var flat_idx: int = _pal_page_idx * 3 + _pal_slot_idx
-	if event.is_action_pressed("ui_up"):
+	if event.is_action_pressed("ui_up", true):
 		flat_idx = wrapi(flat_idx - 1, 0, total_slots)
 		_pal_page_idx = flat_idx / 3
 		_pal_slot_idx = flat_idx % 3
 		return true
-	elif event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_down", true):
 		flat_idx = wrapi(flat_idx + 1, 0, total_slots)
 		_pal_page_idx = flat_idx / 3
 		_pal_slot_idx = flat_idx % 3
@@ -306,10 +307,10 @@ func _input_palette(event: InputEvent) -> bool:
 
 func _input_palette_pick(event: InputEvent) -> bool:
 	var actions := _get_palette_actions()
-	if event.is_action_pressed("ui_up") and actions.size() > 0:
+	if event.is_action_pressed("ui_up", true) and actions.size() > 0:
 		_sub_idx = wrapi(_sub_idx - 1, 0, actions.size())
 		return true
-	elif event.is_action_pressed("ui_down") and actions.size() > 0:
+	elif event.is_action_pressed("ui_down", true) and actions.size() > 0:
 		_sub_idx = wrapi(_sub_idx + 1, 0, actions.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -327,10 +328,10 @@ func _input_palette_pick(event: InputEvent) -> bool:
 
 
 func _input_system(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up"):
+	if event.is_action_pressed("ui_up", true):
 		_sub_idx = wrapi(_sub_idx - 1, 0, SYSTEM_LABELS.size())
 		return true
-	elif event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_down", true):
 		_sub_idx = wrapi(_sub_idx + 1, 0, SYSTEM_LABELS.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -352,10 +353,10 @@ func _input_system(event: InputEvent) -> bool:
 
 func _input_options(event: InputEvent) -> bool:
 	var opts := _get_options_list()
-	if event.is_action_pressed("ui_up") and opts.size() > 0:
+	if event.is_action_pressed("ui_up", true) and opts.size() > 0:
 		_options_idx = wrapi(_options_idx - 1, 0, opts.size())
 		return true
-	elif event.is_action_pressed("ui_down") and opts.size() > 0:
+	elif event.is_action_pressed("ui_down", true) and opts.size() > 0:
 		_options_idx = wrapi(_options_idx + 1, 0, opts.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -888,11 +889,16 @@ func _draw_items(c: Control, font: Font) -> void:
 	# Slot count header
 	c.draw_string(font, Vector2(px + 10, py + 14), "%d/40 slots" % Inventory.get_total_slots(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
 
+	# Keep selected item in view
+	var visible_rows: int = int((ph - 24) / 22)
+	if _sub_idx < _item_scroll:
+		_item_scroll = _sub_idx
+	elif _sub_idx >= _item_scroll + visible_rows:
+		_item_scroll = _sub_idx - visible_rows + 1
+	_item_scroll = clampi(_item_scroll, 0, maxi(inv.size() - visible_rows, 0))
+
 	var draw_y: float = py + 20
-	var item_draw_idx: int = 0  # Tracks which inventory item we're on
-	var scroll_offset: int = maxi(0, _sub_idx - 10)  # Simple scroll
 	var current_cat := ""
-	var drawn_count: int = 0
 
 	for i in range(inv.size()):
 		var item: Dictionary = inv[i]
@@ -901,13 +907,13 @@ func _draw_items(c: Control, font: Font) -> void:
 		# Category header
 		if cat != current_cat:
 			current_cat = cat
-			if i >= scroll_offset:
+			if i >= _item_scroll:
 				if draw_y < py + ph - 6:
 					c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 18), Color(0.12, 0.16, 0.28))
 					c.draw_string(font, Vector2(px + 8, draw_y + 13), cat, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
 					draw_y += 20
 
-		if i < scroll_offset:
+		if i < _item_scroll:
 			continue
 		if draw_y > py + ph - 6:
 			break
