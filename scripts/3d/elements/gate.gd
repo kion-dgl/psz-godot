@@ -17,7 +17,7 @@ var _laser_material: StandardMaterial3D = null
 func _init() -> void:
 	model_path = "valley/o0c_gate.glb"
 	element_state = "locked"
-	collision_size = Vector3(2, 3, 0.5)
+	collision_size = Vector3(6, 3, 0.5)
 
 
 func _ready() -> void:
@@ -34,7 +34,7 @@ func _setup_gate_collision() -> void:
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(2, 3, 0.3)
+	box.size = Vector3(6, 3, 0.5)  # Wide enough to cover full gate opening
 	shape.shape = box
 	shape.position.y = 1.5
 	collision_body.add_child(shape)
