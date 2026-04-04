@@ -903,8 +903,9 @@ func _draw_items(c: Control, font: Font) -> void:
 			current_cat = cat
 			if i >= scroll_offset:
 				if draw_y < py + ph - 6:
-					c.draw_string(font, Vector2(px + 8, draw_y + 12), cat, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
-					draw_y += 16
+					c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 18), Color(0.12, 0.16, 0.28))
+					c.draw_string(font, Vector2(px + 8, draw_y + 13), cat, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
+					draw_y += 20
 
 		if i < scroll_offset:
 			continue
@@ -919,9 +920,11 @@ func _draw_items(c: Control, font: Font) -> void:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(1, 1, 1, 0.85))
 		var col: Color = C_SELECT_TEXT if is_sel else C_TEXT
 
-		# Equipped badge
+		# Equipped badge — colored pill
 		if item.get("equipped", false):
-			c.draw_string(font, Vector2(px + 6, draw_y + 14), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.88, 0.53, 0.13) if not is_sel else Color.WHITE)
+			var badge_color: Color = Color(0.2, 0.5, 0.9) if not is_sel else Color(1, 1, 1, 0.3)
+			c.draw_rect(Rect2(px + 4, draw_y + 4, 14, 12), badge_color)
+			c.draw_string(font, Vector2(px + 6, draw_y + 14), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 
 		# Item name
 		var item_name: String = str(item.get("name", ""))
