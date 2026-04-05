@@ -40,7 +40,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if input_enabled:
+	if input_enabled and not PsoStartMenu.is_open():
 		if Input.is_action_pressed("camera_left"):
 			camera_rotation -= rotation_speed
 		if Input.is_action_pressed("camera_right"):
