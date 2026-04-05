@@ -18,6 +18,7 @@ const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
 const SettingsMockup = lazy(() => import('./settings/SettingsMockup'));
 const CharacterCreator = lazy(() => import('./character-creator/CharacterCreator'));
 const StartMenu = lazy(() => import('./start-menu/StartMenu'));
+const ControlsDiagram = lazy(() => import('./controls/ControlsDiagram'));
 
 function NavBar() {
   const location = useLocation();
@@ -131,6 +132,12 @@ function NavBar() {
       }}>
         Start Menu
       </Link>
+      <Link to="/controls" style={{
+        color: isActive('/controls') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Controls
+      </Link>
     </nav>
   );
 }
@@ -159,6 +166,7 @@ export default function App() {
             <Route path="/retarget-tuner" element={<RetargetTuner />} />
             <Route path="/character-creator" element={<CharacterCreator />} />
             <Route path="/start-menu" element={<StartMenu />} />
+            <Route path="/controls" element={<ControlsDiagram />} />
           </Routes>
         </Suspense>
       </div>
