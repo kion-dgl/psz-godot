@@ -1,0 +1,212 @@
+{
+  "version": 1,
+  "last_updated": "2026-04-05",
+  "id": "finding_ogi",
+  "name": "Finding Ogi",
+  "description": "A veteran CAST hunter has gone missing in the Rioh Snowfield. Find him and recover his body parts.",
+  "area_id": "rioh",
+  "office_npcs": [],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "We've lost contact with Ogi, a veteran CAST hunter who was surveying the snowfield."
+    },
+    {
+      "speaker": "Principal",
+      "text": "His transponder is still active but fragmented \u2014 multiple signals across the region."
+    },
+    {
+      "speaker": "Principal",
+      "text": "It's possible his body was... disassembled. Find him and bring back whatever you can."
+    }
+  ],
+  "sections": [
+    {
+      "area_id": "rioh",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s03a_na1",
+          "connections": {
+            "south": "0,1"
+          },
+          "default": "default",
+          "rotation": 0,
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s03a_sa1",
+          "connections": {
+            "north": "0,0",
+            "south": "0,2"
+          },
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "deer",
+              "position": [
+                4,
+                0,
+                3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "deer",
+              "position": [
+                -2,
+                0,
+                -4
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "wolf",
+              "position": [
+                0,
+                0,
+                6
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s03a_sa1",
+          "connections": {
+            "north": "0,1",
+            "south": "0,3"
+          },
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "wolf",
+              "position": [
+                5,
+                0,
+                0
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "wolf",
+              "position": [
+                -3,
+                0,
+                2
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "seal",
+              "position": [
+                0,
+                0,
+                -5
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s03z_na1",
+          "connections": {
+            "north": "0,2"
+          },
+          "warp_edge": "south",
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "hyena",
+              "position": [
+                3,
+                0,
+                3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "hyena",
+              "position": [
+                -3,
+                0,
+                -3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "hyena_rare",
+              "position": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          }
+        }
+      ],
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "0,3"
+    }
+  ]
+}
