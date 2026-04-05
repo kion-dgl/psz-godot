@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "last_updated": "2026-04-05",
+  "id": "arca_plant_b",
+  "name": "Arca Plant B",
+  "description": "Penetrate the decaying industrial sector of the Moon base. Mother Trinity awaits.",
+  "area_id": "arca",
+  "office_npcs": [],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "You've broken through the outer defenses. The inner plant is falling apart."
+    },
+    {
+      "speaker": "Principal",
+      "text": "Two hundred years of neglect. But Mother Trinity is still operational somewhere inside."
+    },
+    {
+      "speaker": "Principal",
+      "text": "End this. For everyone who was lost in the Great Blank."
+    }
+  ],
+  "sections": [
+    {
+      "area_id": "arca",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s06b_na1",
+          "connections": {
+            "south": "0,1"
+          },
+          "default": "default",
+          "rotation": 0,
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s06b_sa1",
+          "connections": {
+            "north": "0,0",
+            "south": "0,2"
+          },
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "mother_sword",
+              "position": [
+                4,
+                0,
+                2
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "mother_gun",
+              "position": [
+                -3,
+                0,
+                -3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "mother_tech",
+              "position": [
+                0,
+                0,
+                5
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s06z_na1",
+          "connections": {
+            "north": "0,1"
+          },
+          "warp_edge": "south",
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "boss_mother",
+              "position": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          }
+        }
+      ],
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "0,2"
+    }
+  ]
+}
