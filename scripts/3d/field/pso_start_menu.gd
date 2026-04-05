@@ -150,8 +150,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# ── Menu is open — consume ALL input except movement ──
 
-	# Toggle close with pause/start
-	if event.is_action_pressed("pause") or event.is_action_pressed("start"):
+	# Close menu — only on joypad Start button, or keyboard Esc when in MAIN mode
+	# (Enter maps to "start" action so we must NOT close on Enter)
+	if event.is_action_pressed("pause"):
+		if _mode == Mode.MAIN:
+			close()
+			get_viewport().set_input_as_handled()
+			return
+		# In sub-menus, Esc/pause acts as back (falls through to mode handler)
+	elif event.is_action_pressed("start") and event is InputEventJoypadButton:
 		close()
 		get_viewport().set_input_as_handled()
 		return
