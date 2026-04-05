@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "last_updated": "2026-04-05",
+  "id": "claiming_a_stake",
+  "name": "Claiming a Stake",
+  "description": "Clear out hostile creatures from a mining site in Gurhacia Valley.",
+  "area_id": "gurhacia",
+  "office_npcs": [],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "The mining company has put in an emergency request."
+    },
+    {
+      "speaker": "Principal",
+      "text": "Hostile creatures have overrun their extraction site in the valley. They can't work."
+    },
+    {
+      "speaker": "Principal",
+      "text": "Clear the area so they can resume operations. Watch out \u2014 there are reports of a large creature deeper in."
+    }
+  ],
+  "sections": [
+    {
+      "area_id": "gurhacia",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s01a_na1",
+          "connections": {
+            "south": "0,1"
+          },
+          "default": "default",
+          "rotation": 0,
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s01a_sa1",
+          "connections": {
+            "north": "0,0",
+            "south": "0,2"
+          },
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "booma",
+              "position": [
+                4,
+                0,
+                3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "booma",
+              "position": [
+                -3,
+                0,
+                -1
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "jigobooma",
+              "position": [
+                0,
+                0,
+                5
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s01a_sa1",
+          "connections": {
+            "north": "0,1",
+            "south": "0,3"
+          },
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "gorilla",
+              "position": [
+                5,
+                0,
+                0
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "gorilla",
+              "position": [
+                -4,
+                0,
+                3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "gorilla_rare",
+              "position": [
+                0,
+                0,
+                -4
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s01z_na1",
+          "connections": {
+            "north": "0,2"
+          },
+          "warp_edge": "south",
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "boss_dragon",
+              "position": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          }
+        }
+      ],
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "0,3"
+    }
+  ]
+}

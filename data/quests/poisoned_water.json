@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "last_updated": "2026-04-05",
+  "id": "poisoned_water",
+  "name": "Poisoned Water",
+  "description": "Investigate the source of pollution in Dairon's water supply.",
+  "area_id": "ozette",
+  "office_npcs": [],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "Dairon city depends on the wetlands as a source of water for industry and livestock."
+    },
+    {
+      "speaker": "Principal",
+      "text": "But something is causing the water to become poisoned. We need you to investigate."
+    },
+    {
+      "speaker": "Principal",
+      "text": "Reports suggest the pollution originates from deep within the wetlands. Be careful out there."
+    }
+  ],
+  "sections": [
+    {
+      "area_id": "ozette",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s02a_na1",
+          "connections": {
+            "south": "0,1"
+          },
+          "default": "default",
+          "rotation": 0,
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s02a_sa1",
+          "connections": {
+            "north": "0,0",
+            "south": "0,2"
+          },
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "frog",
+              "position": [
+                3,
+                0,
+                5
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "frog",
+              "position": [
+                -3,
+                0,
+                -2
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "frog_bomb",
+              "position": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          },
+          "warp_edge": ""
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s02z_na1",
+          "connections": {
+            "north": "0,1"
+          },
+          "warp_edge": "south",
+          "objects": [
+            {
+              "type": "enemy",
+              "enemy_id": "boss_octopus",
+              "position": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "rotation": 0,
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "path_order": 0,
+          "portals": {
+            "default": "default"
+          }
+        }
+      ],
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "0,2"
+    }
+  ]
+}
