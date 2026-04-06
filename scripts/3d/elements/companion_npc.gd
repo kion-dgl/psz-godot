@@ -69,6 +69,7 @@ var _was_moving: bool = false  # Track delayed state transitions
 var _resume_blend: float = 0.0  # Blend from frozen pos to trail pos on resume
 var _frozen_pos: Vector3 = Vector3.ZERO  # Position when companion froze
 const RESUME_BLEND_SPEED: float = 3.0  # Seconds to fully blend back to trail
+var _dismissed: bool = false  # When true, stop following and idle in place
 
 ## Trail replay — record every physics frame, interpolate on playback
 var _trail: Array = []  # [{pos: Vector3, rot: float, state: int, time: float}]
@@ -346,7 +347,15 @@ func _process_speech_timer(delta: float) -> void:
 		_dismiss_speech()
 
 
+func dismiss() -> void:
+	_dismissed = true
+	_play_companion_anim("wait")
+	print("[Companion] %s dismissed — stopped following" % companion_id)
+
+
 func _process_follow(_delta: float) -> void:
+	if _dismissed:
+		return
 	# Cache player reference
 	if not is_instance_valid(_player_ref):
 		var players := get_tree().get_nodes_in_group("player")
