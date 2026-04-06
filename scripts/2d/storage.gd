@@ -101,7 +101,7 @@ func _load_items() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		SceneManager.pop_scene()
+		SceneManager.pop_scene({"storage_closed": true})
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
 		_tab = Tab.MESETA if _tab == Tab.ITEMS else Tab.ITEMS
