@@ -172,26 +172,30 @@ func _setup_companion_anims(npc_model: Node) -> void:
 	skel.get_parent().add_child(_anim_player)
 
 	var prefix: String = "pwsa" if _is_female else "pmsa"
+	# Map companion anim keys to source anim names, with fallbacks
+	# Male GLB lacks _run_pso and _walk — fall back to _run for both
 	var needed := {
-		"wait": prefix + "_wait",
-		"run": prefix + "_run_pso",
-		"walk": prefix + "_walk",
+		"wait": [prefix + "_wait"],
+		"run": [prefix + "_run_pso", prefix + "_run"],
+		"walk": [prefix + "_walk", prefix + "_run"],
 	}
 
 	var lib := AnimationLibrary.new()
 	for key in needed:
-		var anim_name: String = needed[key]
-		if source_player.has_animation(anim_name):
-			var anim := source_player.get_animation(anim_name).duplicate() as Animation
-			anim.loop_mode = Animation.LOOP_LINEAR
-			# Remap skeleton tracks
-			for i in range(anim.get_track_count()):
-				var track_path := String(anim.track_get_path(i))
-				if "Skeleton3D" in track_path:
-					var skel_idx := track_path.find("Skeleton3D")
-					var prop_part := track_path.substr(skel_idx + 10)
-					anim.track_set_path(i, NodePath(skel.name + prop_part))
-			lib.add_animation(key, anim)
+		var candidates: Array = needed[key]
+		for anim_name: String in candidates:
+			if source_player.has_animation(anim_name):
+				var anim := source_player.get_animation(anim_name).duplicate() as Animation
+				anim.loop_mode = Animation.LOOP_LINEAR
+				# Remap skeleton tracks
+				for i in range(anim.get_track_count()):
+					var track_path := String(anim.track_get_path(i))
+					if "Skeleton3D" in track_path:
+						var skel_idx := track_path.find("Skeleton3D")
+						var prop_part := track_path.substr(skel_idx + 10)
+						anim.track_set_path(i, NodePath(skel.name + prop_part))
+				lib.add_animation(key, anim)
+				break
 
 	_anim_player.add_animation_library("", lib)
 	_play_companion_anim("wait")
