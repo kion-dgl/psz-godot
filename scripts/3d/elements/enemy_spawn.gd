@@ -30,8 +30,18 @@ var _anim_player: AnimationPlayer
 ## Animation source — rare variants that share animations with their base model.
 ## Maps model_id → source model_id whose GLB contains the animations.
 const ANIM_SOURCE: Dictionary = {
+	"armadillo_rare": "armadillo",
+	"frog_rare": "frog",
+	"gorilla_rare": "gorilla",
+	"lion_rare": "lion",
+	"orangutan_rare": "orangutan",
+	"quad_rare": "quad",
+	"rabbit_rare": "rabbit",
+	"roc_rare": "roc",
+	"seal_rare": "seal",
+	"shrimp_rare": "shrimp",
 	"snake_rare": "snake",
-	"hyena_rare": "hyena",
+	"swordman_rare": "swordman",
 }
 
 ## Texture manifest — maps model_id → [texture filenames].
