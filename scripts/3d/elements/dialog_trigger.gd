@@ -9,8 +9,9 @@ class_name DialogTrigger
 ##   "item_pickup"     — fires when a quest item is collected in the same room
 ##
 ## actions[] runs after dialog finishes:
-##   "complete_quest"  — SessionManager.complete_quest()
-##   "telepipe"        — return to city
+##   "complete_quest"      — SessionManager.complete_quest()
+##   "telepipe"            — return to city
+##   "dismiss_companion"   — companion stops following and idles in place
 
 signal dialog_finished
 
@@ -206,6 +207,10 @@ func _execute_actions() -> void:
 					continue
 				print("[DialogTrigger] Action: spawning telepipe at trigger position")
 				_spawn_telepipe_at_position()
+			"dismiss_companion":
+				if companion_node and is_instance_valid(companion_node) and companion_node.has_method("dismiss"):
+					print("[DialogTrigger] Action: dismiss_companion")
+					companion_node.dismiss()
 
 
 func _spawn_telepipe_at_position() -> void:

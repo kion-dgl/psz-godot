@@ -2029,6 +2029,7 @@
               ],
               "trigger_condition": "room_clear",
               "actions": [
+                "dismiss_companion",
                 "complete_quest",
                 "telepipe"
               ],
