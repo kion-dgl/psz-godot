@@ -94,9 +94,11 @@ func _load_enemy_model() -> void:
 	# Find and play idle animation
 	_anim_player = _find_anim_player(model)
 
-	# Rare variants — always load animations from base model to avoid track path mismatches
+	# Rare variants without embedded animations — load from base model
 	if ANIM_SOURCE.has(_model_id):
-		_load_anims_from_source(ANIM_SOURCE[_model_id])
+		var has_anims := _anim_player != null and _anim_player.get_animation_list().size() > 0
+		if not has_anims:
+			_load_anims_from_source(ANIM_SOURCE[_model_id])
 
 	if _anim_player:
 		var idle_name := _find_animation("wat")
@@ -129,11 +131,12 @@ func _load_anims_from_source(source_id: String) -> void:
 		src_scene.queue_free()
 		return
 
-	# Create AnimationPlayer on our model if needed
+	# Create AnimationPlayer on the model scene root (not inside the mesh node)
+	# so track paths like "m_103/Skeleton3D:bone" resolve correctly
 	if not _anim_player:
 		_anim_player = AnimationPlayer.new()
 		_anim_player.name = "SourceAnimPlayer"
-		skel.get_parent().add_child(_anim_player)
+		model.add_child(_anim_player)
 
 	# Copy animations, remapping skeleton paths to our model
 	var src_skel: Skeleton3D = _find_typed(src_scene, "Skeleton3D") as Skeleton3D
