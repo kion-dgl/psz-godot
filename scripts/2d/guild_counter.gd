@@ -22,6 +22,13 @@ const QUEST_ORDER := {
 	"messages_from_the_past": 6,
 	"native_research": 7,
 	"seek_my_mentor": 8,
+	"claiming_a_stake": 9,
+	"poisoned_water": 10,
+	"finding_ogi": 11,
+	"rescue_at_makara": 12,
+	"arca_plant_a": 13,
+	"arca_plant_b": 14,
+	"dark_shrine": 15,
 }
 
 ## area_id → display area name
