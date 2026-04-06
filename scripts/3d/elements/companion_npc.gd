@@ -150,7 +150,7 @@ func _setup_companion_anims(npc_model: Node) -> void:
 	## Load walk/run/idle animations from the saber animation GLB
 	var class_id: String = COMPANION_CLASSES.get(companion_id, "humar")
 	_is_female = class_id in FEMALE_CLASSES
-	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if _is_female else "res://assets/player/animations/saver_m.glb"
+	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if _is_female else "res://assets/player/animations/saber_m.glb"
 	if not ResourceLoader.exists(anim_glb):
 		return
 
