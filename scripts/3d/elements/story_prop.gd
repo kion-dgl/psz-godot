@@ -24,12 +24,13 @@ func _ready() -> void:
 		model.scale = Vector3.ONE * prop_scale
 	add_child(model)
 
-	# Offset model so its bottom sits at y=0
-	var aabb := _get_combined_aabb(model)
-	if aabb.size.y > 0:
-		model.position.y -= aabb.position.y * prop_scale
+	# Offset model so its bottom sits at y=0, accounting for internal node transforms
+	var visual_min_y := _get_visual_min_y(model)
+	if visual_min_y != 0.0:
+		model.position.y -= visual_min_y
 
 	# Add static collision based on AABB (skip for dropship — mesh is pre-scaled in GLB)
+	var aabb := _get_combined_aabb(model)
 	if aabb.size.length() > 0 and not prop_path.contains("dropship"):
 		_add_collision(aabb)
 
@@ -50,6 +51,29 @@ func _add_collision(aabb: AABB) -> void:
 
 	body.add_child(shape)
 	add_child(body)
+
+
+func _get_visual_min_y(node: Node) -> float:
+	## Walk all MeshInstance3D children and find the lowest y after applying
+	## each node's local transform chain. Handles GLBs with internal scaling.
+	var result := [INF]  # Array so recursion can mutate it
+	_collect_visual_min_y(node, Transform3D.IDENTITY, result)
+	return result[0] if result[0] != INF else 0.0
+
+
+func _collect_visual_min_y(node: Node, parent_xform: Transform3D, result: Array) -> void:
+	var xform := parent_xform
+	if node is Node3D:
+		xform = parent_xform * (node as Node3D).transform
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		var mesh_aabb := mi.get_aabb()
+		var transformed: AABB = xform * mesh_aabb
+		var bottom: float = transformed.position.y
+		if bottom < result[0]:
+			result[0] = bottom
+	for child in node.get_children():
+		_collect_visual_min_y(child, xform, result)
 
 
 func _get_combined_aabb(node: Node) -> AABB:
