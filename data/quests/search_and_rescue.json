@@ -435,9 +435,9 @@
             {
               "type": "step_switch",
               "position": [
-                15.1,
+                -19.5,
                 0,
-                -8.1
+                11.6
               ],
               "link_id": "a"
             },
