@@ -94,11 +94,9 @@ func _load_enemy_model() -> void:
 	# Find and play idle animation
 	_anim_player = _find_anim_player(model)
 
-	# Rare variants may lack embedded animations — load from base model
+	# Rare variants — always load animations from base model to avoid track path mismatches
 	if ANIM_SOURCE.has(_model_id):
-		var has_anims := _anim_player != null and _anim_player.get_animation_list().size() > 0
-		if not has_anims:
-			_load_anims_from_source(ANIM_SOURCE[_model_id])
+		_load_anims_from_source(ANIM_SOURCE[_model_id])
 
 	if _anim_player:
 		var idle_name := _find_animation("wat")
