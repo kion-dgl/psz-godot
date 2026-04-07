@@ -51,7 +51,7 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "The energy signature is strong here. Mag Cells give off a faint resonance, like a heartbeat. Stay close and keep your eyes open."
+                  "text": "Mag Cells give off a faint resonance, like a heartbeat. Stay close and keep your eyes open."
                 },
                 {
                   "speaker": "Elio",
@@ -450,7 +450,7 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "The deepest part of these ruins. The architects built inward. The most important things are always at the center."
+                  "text": "This is as deep as I've ever been. Stay close."
                 },
                 {
                   "speaker": "Elio",
@@ -694,7 +694,7 @@
     },
     {
       "speaker": "Elio",
-      "text": "I've been tracking energy signatures deep in Paru. There are dormant Mag Cells down there, enough to assemble another one."
+      "text": "There are dormant Mag Cells deep in Paru, enough to assemble another one."
     },
     {
       "speaker": "Elio",
