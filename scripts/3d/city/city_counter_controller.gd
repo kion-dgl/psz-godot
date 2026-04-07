@@ -53,13 +53,15 @@ func _ready() -> void:
 		"StorageNPC", Vector3(-10.66, 0, -7.93), 4.06 + PI,
 		"res://assets/npcs/np_000_00_0/np_000_00_0.glb",
 		"Storage",
-		"res://scenes/2d/storage.tscn"
+		"res://scenes/2d/storage.tscn",
+		"pso_f_sa_stand"
 	)
 	_add_npc(
 		"QuestCounterNPC", Vector3(-8.31, 0, -10.37), 3.86 + PI,
 		"res://assets/npcs/np_001_00_0/np_001_00_0.glb",
 		"Guild Counter",
-		"res://scenes/2d/guild_counter.tscn"
+		"res://scenes/2d/guild_counter.tscn",
+		"pso_f_sa_stand"
 	)
 
 	# Area triggers
@@ -90,9 +92,12 @@ func _notification(what: int) -> void:
 
 func _check_quest_accepted() -> void:
 	var data := SceneManager.get_transition_data()
+	if data.get("storage_closed", false):
+		_play_npc_reaction("StorageNPC", "plymotiondata_421")
+		return
 	if not data.get("quest_accepted", false):
 		return
-	# Find the QuestCounterNPC and show a speech bubble above it
+	# Find the QuestCounterNPC and show a speech bubble + bow
 	var counter_npc: Node3D = null
 	for npc in _npcs:
 		if npc.name == "QuestCounterNPC":
@@ -100,8 +105,17 @@ func _check_quest_accepted() -> void:
 			break
 	if not counter_npc:
 		return
+	if counter_npc.has_method("play_oneshot"):
+		counter_npc.play_oneshot("pso_f_emote_bow")
 	_show_npc_speech_bubble(counter_npc, Vector3(-8.31, 2.8, -10.37),
 		"Please head to the Principal's office for your briefing.")
+
+
+func _play_npc_reaction(npc_name: String, anim_name: String) -> void:
+	for npc in _npcs:
+		if npc.name == npc_name and npc.has_method("play_oneshot"):
+			npc.play_oneshot(anim_name)
+			return
 
 
 func _show_npc_speech_bubble(npc: Node3D, world_pos: Vector3, text: String) -> void:

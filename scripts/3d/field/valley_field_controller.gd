@@ -1869,7 +1869,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var npc_id: String = str(obj.get("npc_id", ""))
 				var npc_name: String = str(obj.get("npc_name", ""))
 				var dlg: Array = obj.get("dialog", [])
-				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot)
+				var npc_anim: String = str(obj.get("animation", ""))
+				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot, npc_anim)
 			"telepipe":
 				var spawn_cond: String = str(obj.get("spawn_condition", "immediate"))
 				if spawn_cond == "room_clear":
@@ -1959,7 +1960,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var npc_id: String = str(obj.get("npc_id", ""))
 				var npc_name: String = str(obj.get("npc_name", ""))
 				var dlg: Array = obj.get("dialog", [])
-				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot)
+				var npc_anim: String = str(obj.get("animation", ""))
+				_spawn_field_npc(pos, npc_id, npc_name, dlg, obj_rot, npc_anim)
 			"telepipe":
 				# Telepipes are always spawned on restore (player already cleared the room)
 				_spawn_telepipe(pos)
@@ -2445,17 +2447,18 @@ func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: 
 	print("[CellObjects] DialogTrigger at %s (id=%s, condition=%s, pages=%d, actions=%s, companion=%s)" % [pos, trigger_id, condition, dlg.size(), str(act), trigger.companion_node != null])
 
 
-func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array, rot_deg: float = 0) -> void:
+func _spawn_field_npc(pos: Vector3, npc_id: String, npc_name: String, dlg: Array, rot_deg: float = 0, anim: String = "") -> void:
 	var npc := FieldNpcScript.new()
 	npc.npc_id = npc_id
 	npc.npc_name = npc_name
 	npc.dialog = dlg
+	npc.npc_animation = anim
 	_map_root.add_child(npc)
 	npc.position = pos
 	if rot_deg != 0:
 		npc.rotation.y = deg_to_rad(rot_deg)
 	_room_npcs.append(npc)
-	print("[CellObjects] FieldNpc '%s' (%s) at %s (dialog=%d pages)" % [npc_name, npc_id, pos, dlg.size()])
+	print("[CellObjects] FieldNpc '%s' (%s) at %s (dialog=%d pages, anim='%s')" % [npc_name, npc_id, pos, dlg.size(), anim])
 
 
 func _is_companion_dialog(dlg: Array) -> bool:

@@ -156,6 +156,9 @@ const BAKE_TARGETS = [
       { index: 70, name: 'pso_ro_stand', offsets: STAND_OFFSETS },
       { index: 279, name: 'pso_f_sh_stand', offsets: STAND_OFFSETS },
       { index: 307, name: 'pso_f_ro_stand', offsets: STAND_OFFSETS },
+      { index: 335, name: 'pso_f_sa_stand', offsets: STAND_OFFSETS },
+      { index: 421, name: 'plymotiondata_421', offsets: STAND_OFFSETS },
+      { index: 429, name: 'pso_f_emote_bow', offsets: STAND_OFFSETS },
     ],
   },
   {

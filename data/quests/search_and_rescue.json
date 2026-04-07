@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-20",
+  "last_updated": "2026-04-06",
   "id": "search_and_rescue",
   "name": "Search and Rescue",
   "description": "Investigate reports of something falling from the sky in Gurhacia Valley.",
@@ -58,15 +58,15 @@
         },
         {
           "pos": "1,2",
-          "stage_id": "s01a_lc2",
+          "stage_id": "s01a_lb1",
           "rotation": 270,
           "connections": {
             "west": "1,1",
             "north": "0,2"
           },
           "portals": {
-            "west": "portal_1769092071707_39cmfdsru",
-            "north": "portal_1771821560334_4iz79ipeh"
+            "west": "portal_1771821299622_yqnbj8zku",
+            "north": "portal_1771821420224_3s36p1dt1"
           },
           "is_start": false,
           "is_end": false,
@@ -81,74 +81,85 @@
           "path_order": 1,
           "objects": [
             {
-              "type": "box",
+              "type": "enemy",
               "position": [
-                3.1,
                 0,
-                -15.8
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                6.3,
                 0,
-                -16.3
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                8.9,
-                0,
-                -15.6
-              ]
+                5.8
+              ],
+              "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
               "position": [
-                -11.9,
+                -4.3,
                 0,
-                1.8
+                -0.2
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1,
+                0,
+                -11.6
               ],
               "enemy_id": "grimble"
             },
             {
-              "type": "enemy",
+              "type": "box",
               "position": [
-                -6.7,
+                -20.8,
                 0,
-                -2.3
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                0.6,
-                0,
-                -6.8
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -14.7,
-                0,
-                -15.5
-              ],
-              "trigger_size": [
-                16,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Kai",
-                  "text": "The miners said the impact was south of here. Keep your weapon ready — the creatures in this area don't wait for you to swing first."
-                }
+                11.8
               ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -18.6,
+                0,
+                15.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -13.8,
+                0,
+                15.8
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.2,
+                0,
+                -7.2
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13,
+                0,
+                0.4
+              ],
+              "enemy_id": "garahadan",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.3,
+                0,
+                9.4
+              ],
+              "enemy_id": "garahadan",
+              "wave": 2
             }
           ]
         },
@@ -167,8 +178,8 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "2,1",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
@@ -179,20 +190,17 @@
             {
               "type": "dialog_trigger",
               "position": [
-                -4.2,
-                0,
-                -14.4
+                -13.8,
+                1,
+                15.9
               ],
               "trigger_size": [
-                4,
-                3,
-                13
+                1,
+                1,
+                1
               ],
+              "trigger_condition": "room_clear",
               "dialog": [
-                {
-                  "speaker": "Kai",
-                  "text": "Usually it's just meteors, but every now and then a satellite comes down. Either way, we should go check it out."
-                },
                 {
                   "speaker": "Kai",
                   "text": "The wildlife out there is dangerous. Try not to get hurt too bad, rookie."
@@ -202,29 +210,83 @@
             {
               "type": "enemy",
               "position": [
-                13.1,
+                -5.3,
                 0,
-                5
+                -1.5
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
               "position": [
-                9.4,
+                -1.5,
                 0,
-                9.6
+                2.5
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
               "position": [
-                3.8,
+                1.2,
                 0,
-                7.6
+                -3.8
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.1,
+                0,
+                14
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.2,
+                0,
+                8.7
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.2,
+                0,
+                4.4
+              ],
+              "enemy_id": "garahadan",
+              "wave": 2
+            },
+            {
+              "type": "box",
+              "position": [
+                11.7,
+                0,
+                -6.4
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                16.2,
+                0,
+                -7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -8.1,
+                0,
+                7.9
+              ]
             }
           ]
         },
@@ -248,11 +310,94 @@
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": true,
-          "key_gate_direction": "south",
+          "key_gate_direction": "east",
           "key_drop": "",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -15.6,
+                0,
+                4.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -15.1,
+                0,
+                8.2
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                11.1,
+                0,
+                -8.7
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.9,
+                0,
+                -0.7
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.4,
+                0,
+                2.9
+              ],
+              "enemy_id": "garapython"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.4,
+                0,
+                9.3
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.7,
+                0,
+                -16.1
+              ],
+              "enemy_id": "vulkure",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.7,
+                0,
+                -11.2
+              ],
+              "enemy_id": "grimble",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.1,
+                0,
+                -4.6
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -281,63 +426,77 @@
             {
               "type": "fence",
               "position": [
-                5.2,
+                -15.2,
                 0,
-                13.2
+                0.3
               ],
-              "rotation": 90,
-              "link_id": "a",
-              "scale_x": 1.5
+              "link_id": "a"
             },
             {
               "type": "step_switch",
               "position": [
-                2.3,
+                -19.5,
                 0,
-                -18.3
+                11.6
               ],
               "link_id": "a"
             },
             {
               "type": "enemy",
               "position": [
-                -12.4,
+                -3.9,
                 0,
-                -15.9
+                -11.5
               ],
               "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.8,
+                0,
+                -9.1
+              ],
+              "enemy_id": "garapython"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.5,
+                0,
+                -10.9
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.5,
+                0,
+                15.5
+              ],
+              "enemy_id": "vulkure",
+              "wave": 2
             },
             {
               "type": "enemy",
               "position": [
                 -8.9,
                 0,
-                -16.5
+                16.3
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "grimble",
+              "wave": 2
             },
             {
               "type": "enemy",
               "position": [
-                -5.7,
+                -13.7,
                 0,
-                -16.9
+                16.2
               ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                -1.2,
-                0,
-                11.4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Kai",
-                  "text": "Some gates need a key to open. Keep an eye out — keys are usually hidden nearby in a side room."
-                }
-              ]
+              "enemy_id": "tormatible",
+              "wave": 2
             }
           ]
         },
@@ -353,15 +512,98 @@
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_drop": "2,1",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "key_drop_position": [
+            -15.1,
+            1,
+            -10.6
+          ],
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -4,
+                0,
+                14
+              ],
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "The gates are a security measure. "
+                },
+                {
+                  "speaker": "Kai",
+                  "text": "We do what we can to try and prevent hostiles from overrunning everything. "
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                15.6,
+                0,
+                0.5
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.1,
+                0,
+                0.5
+              ],
+              "enemy_id": "garapython"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.1,
+                0,
+                2.5
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.5,
+                0,
+                -10.1
+              ],
+              "enemy_id": "vulkure",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.1,
+                0,
+                -7.3
+              ],
+              "enemy_id": "grimble",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.3,
+                0,
+                -2.9
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "2,3",
@@ -392,53 +634,115 @@
             {
               "type": "box",
               "position": [
-                -19.3,
+                9.8,
                 0,
-                -8.1
+                -8.6
               ]
             },
             {
               "type": "box",
               "position": [
-                -19.1,
+                12.7,
                 0,
-                -11.7
+                -7.2
               ]
             },
             {
               "type": "box",
               "position": [
-                -19.5,
+                14.4,
                 0,
-                -5.2
+                -5.1
+              ]
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                11.5,
+                0,
+                -5.7
+              ],
+              "trigger_size": [
+                6.5,
+                4.5,
+                6.5
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "Boxes are provisions other folks have brought out here."
+                },
+                {
+                  "speaker": "Kai",
+                  "text": "Most of the time they're abandoned, so you're free to take what you find."
+                }
               ]
             },
             {
               "type": "enemy",
               "position": [
-                -6.6,
+                -9,
                 0,
-                -2.3
+                -13.9
               ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
               "position": [
-                -1.1,
+                -6.1,
                 0,
-                -4.3
+                -10.2
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garapython"
             },
             {
               "type": "enemy",
               "position": [
-                -1,
+                -9.7,
                 0,
-                -10.6
+                -3.6
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.4,
+                0,
+                -0.1
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.7,
+                0,
+                1.6
+              ],
+              "enemy_id": "grimble",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.5,
+                0,
+                7.5
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.2,
+                0,
+                2.2
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
             }
           ]
         },
@@ -454,7 +758,7 @@
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -462,7 +766,108 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "rare_box",
+              "position": [
+                4.1,
+                0,
+                -16.8
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                0.9,
+                0,
+                -18.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -1.3,
+                0,
+                -18.4
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -4.3,
+                0,
+                -17.3
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.3,
+                0,
+                -13.9
+              ],
+              "enemy_id": "rappy",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                16.4,
+                0,
+                4.7
+              ],
+              "enemy_id": "garapython"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.6,
+                0,
+                5.6
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.7,
+                0,
+                11.9
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -17,
+                0,
+                -8.1
+              ],
+              "enemy_id": "grimble",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.6,
+                0,
+                -6.7
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.5,
+                0,
+                -2.4
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "2,4",
@@ -490,15 +895,16 @@
             {
               "type": "dialog_trigger",
               "position": [
-                -1.6,
-                0,
-                -14.5
+                7.9,
+                1,
+                19
               ],
               "trigger_size": [
-                4,
-                3,
-                11.5
+                1,
+                1,
+                1
               ],
+              "trigger_condition": "room_clear",
               "dialog": [
                 {
                   "speaker": "Kai",
@@ -509,29 +915,93 @@
             {
               "type": "enemy",
               "position": [
-                14.9,
+                -10.1,
                 0,
-                8.7
+                8.5
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garapython"
             },
             {
               "type": "enemy",
               "position": [
-                10.4,
+                -6.5,
                 0,
-                11.7
+                8.9
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
               "position": [
-                4.5,
+                -1.8,
                 0,
-                8.7
+                10.6
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.8,
+                0,
+                -2.1
+              ],
+              "enemy_id": "grimble",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.5,
+                0,
+                4.7
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.5,
+                0,
+                -0.2
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.7,
+                0,
+                -7.5
+              ],
+              "enemy_id": "garapython",
+              "wave": 2
+            },
+            {
+              "type": "box",
+              "position": [
+                16.3,
+                0,
+                0
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                15.1,
+                0,
+                3.1
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                13.9,
+                0,
+                5.7
+              ]
             }
           ]
         }
@@ -567,15 +1037,16 @@
             {
               "type": "dialog_trigger",
               "position": [
-                3.3,
-                0,
-                14.2
+                23.4,
+                1,
+                -1.6
               ],
               "trigger_size": [
-                9.5,
+                1,
                 3,
-                4
+                1
               ],
+              "trigger_condition": "room_clear",
               "dialog": [
                 {
                   "speaker": "Kai",
@@ -724,92 +1195,95 @@
           "is_start": false,
           "is_end": false,
           "is_branch": true,
-          "has_key": true,
-          "key_for_cell": "3,2",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 1,
           "objects": [
             {
               "type": "box",
               "position": [
-                -15.6,
+                -15.3,
                 0,
-                17.4
+                9.8
               ]
             },
             {
               "type": "box",
               "position": [
-                -13.4,
+                -12.2,
                 0,
-                18.6
+                5.7
               ]
             },
             {
               "type": "box",
               "position": [
-                -10.8,
+                -12.2,
                 0,
-                17.5
+                9.2
               ]
             },
             {
-              "type": "rare_box",
+              "type": "enemy",
               "position": [
-                -20.4,
+                10.3,
                 0,
-                -7.4
-              ]
-            },
-            {
-              "type": "step_switch",
-              "position": [
-                9.9,
-                0,
-                5.8
+                -14.5
               ],
-              "link_id": "b"
-            },
-            {
-              "type": "fence",
-              "position": [
-                11.1,
-                0,
-                1.5
-              ],
-              "link_id": "b",
-              "scale_x": 3.5
+              "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
               "position": [
-                -19.7,
+                15.3,
                 0,
-                5
+                -12.9
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
               "position": [
-                -16.4,
+                19,
                 0,
-                9.1
+                6.9
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "grimble"
             },
             {
               "type": "enemy",
               "position": [
-                -11.7,
+                -1.2,
                 0,
-                12.7
+                9.9
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "tormatible",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.5,
+                0,
+                19.9
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.5,
+                0,
+                11.6
+              ],
+              "enemy_id": "garapython",
+              "wave": 2
             }
           ]
         },
@@ -825,15 +1299,103 @@
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
-          "has_key": true,
-          "key_for_cell": "4,2",
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_drop": "1,2",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "key_drop_position": [
+            13.3,
+            1,
+            -16
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -15,
+                0,
+                13
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.1,
+                0,
+                5.6
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.9,
+                0,
+                11.3
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.1,
+                0,
+                11.2
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                16.1,
+                0,
+                7
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                18.4,
+                0,
+                0.4
+              ],
+              "enemy_id": "garapython",
+              "wave": 2
+            },
+            {
+              "type": "box",
+              "position": [
+                -12.2,
+                0,
+                -7.9
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -10.6,
+                0,
+                -11.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -7.4,
+                0,
+                -12.2
+              ]
+            }
+          ]
         },
         {
           "pos": "2,2",
@@ -860,85 +1422,91 @@
           "path_order": 3,
           "objects": [
             {
-              "type": "fence",
-              "position": [
-                -18.1,
-                0,
-                -3.7
-              ],
-              "link_id": "b",
-              "scale_x": 2
-            },
-            {
-              "type": "step_switch",
-              "position": [
-                12.1,
-                0,
-                15.9
-              ],
-              "link_id": "b"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -18.5,
-                0,
-                11.3
-              ],
-              "enemy_id": "ghowl",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -14.6,
-                0,
-                14.7
-              ],
-              "enemy_id": "ghowl",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -12.7,
-                0,
-                10.7
-              ],
-              "enemy_id": "ghowl",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -17.9,
-                0,
-                -15.3
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -14.3,
-                0,
-                -9.4
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
               "type": "dialog_trigger",
               "position": [
-                -1.3,
-                0,
-                -11.2
+                14.9,
+                1,
+                -16.5
               ],
+              "trigger_size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_condition": "room_clear",
               "dialog": [
                 {
                   "speaker": "Kai",
                   "text": "Focus on one enemy at a time. Take down the smaller ones first if they're in the way."
                 }
               ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.8,
+                0,
+                11.4
+              ],
+              "enemy_id": "garahadan"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.8,
+                0,
+                13.1
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.1,
+                0,
+                5.3
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.4,
+                0,
+                9.8
+              ],
+              "enemy_id": "tormatible",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.8,
+                0,
+                4.1
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                17.4,
+                0,
+                2.1
+              ],
+              "enemy_id": "garapython",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                17.2,
+                0,
+                8.1
+              ],
+              "enemy_id": "garahadan",
+              "wave": 2
             }
           ]
         },
@@ -959,12 +1527,117 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "key_drop": "",
-          "required_keys": 1,
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                7.3,
+                0,
+                -12.5
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.4,
+                0,
+                -7
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                16.1,
+                0,
+                -12.8
+              ],
+              "enemy_id": "tormatible"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -16.7,
+                0,
+                -7.2
+              ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.3,
+                0,
+                -2.7
+              ],
+              "enemy_id": "garapython",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -17.5,
+                0,
+                1.7
+              ],
+              "enemy_id": "garahadan",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.8,
+                0,
+                16.2
+              ],
+              "enemy_id": "vulkure",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.9,
+                0,
+                15.1
+              ],
+              "enemy_id": "grimble",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.7,
+                0,
+                13.4
+              ],
+              "enemy_id": "tormatible",
+              "wave": 3
+            },
+            {
+              "type": "box",
+              "position": [
+                12.9,
+                0,
+                5.7
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                12.2,
+                0,
+                8.7
+              ]
+            }
+          ]
         },
         {
           "pos": "4,2",
@@ -983,10 +1656,10 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "west",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "key_drop": "",
-          "required_keys": 1,
+          "required_keys": 0,
           "warp_edge": "",
           "path_order": 5,
           "objects": [
@@ -997,7 +1670,8 @@
                 0,
                 20.1
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "ghowl",
+              "wave": 2
             },
             {
               "type": "enemy",
@@ -1006,7 +1680,8 @@
                 0,
                 19.8
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "ghowl",
+              "wave": 2
             },
             {
               "type": "enemy",
@@ -1015,7 +1690,35 @@
                 0,
                 13.2
               ],
+              "enemy_id": "ghowl",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.1,
+                0,
+                -4.1
+              ],
               "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.4,
+                0,
+                -1.9
+              ],
+              "enemy_id": "garapython"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                17.2,
+                0,
+                -4.8
+              ],
+              "enemy_id": "garahadan"
             }
           ]
         },
@@ -1044,44 +1747,78 @@
           "path_order": 6,
           "objects": [
             {
-              "type": "enemy",
-              "position": [
-                -4.3,
-                0,
-                2.2
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -3.9,
-                0,
-                -6.3
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -0.5,
-                0,
-                -2
-              ],
-              "enemy_id": "ghowl"
-            },
-            {
               "type": "dialog_trigger",
               "position": [
                 14.7,
                 0,
                 -11.7
               ],
+              "trigger_condition": "room_clear",
               "dialog": [
                 {
                   "speaker": "Kai",
-                  "text": "Something big is up ahead. Stay sharp — don't rush in."
+                  "text": "Stay sharp, don't rush in."
                 }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                -10.4
+              ],
+              "enemy_id": "vulkure"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.6,
+                0,
+                -4.1
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.8,
+                0,
+                -12.2
+              ],
+              "enemy_id": "tormatible"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.3,
+                0,
+                -5.9
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "box",
+              "position": [
+                -16.9,
+                0,
+                15.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -13.6,
+                0,
+                15.3
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -10.6,
+                0,
+                13.5
               ]
             }
           ]
@@ -1105,71 +1842,76 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "west",
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 7,
           "objects": [
             {
-              "type": "fence",
+              "type": "enemy",
               "position": [
-                -10.5,
+                -4.4,
                 0,
-                -7.3
+                7.5
               ],
-              "rotation": 90,
-              "link_id": "c"
-            },
-            {
-              "type": "step_switch",
-              "position": [
-                -4.1,
-                0,
-                -18.4
-              ],
-              "link_id": "c"
+              "enemy_id": "garapython"
             },
             {
               "type": "enemy",
               "position": [
-                -1.4,
+                0.1,
                 0,
-                0
+                3.8
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
               "position": [
-                1.5,
+                5.1,
                 0,
-                -6.4
+                9
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
               "position": [
-                6,
+                -2.9,
                 0,
-                -3.8
+                12.6
               ],
-              "enemy_id": "ghowl"
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "box",
+              "position": [
+                -12.6,
+                0,
+                23
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -8.3,
+                0,
+                23.1
+              ]
             }
           ]
         },
         {
           "pos": "3,0",
-          "stage_id": "s01b_ic3",
-          "rotation": 270,
+          "stage_id": "s01b_na1",
+          "rotation": 0,
           "connections": {
             "east": "3,1"
           },
           "portals": {
-            "east": "portal_1769177283330_csi1dmrty",
-            "west": "portal_1769177274869_ioe4andnx"
+            "east": "portal_1771821935869_9c2no14o8"
           },
           "is_start": false,
           "is_end": true,
@@ -1180,88 +1922,121 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "west",
+          "warp_edge": "",
           "path_order": 8,
           "objects": [
             {
-              "type": "dialog_trigger",
-              "position": [
-                3.6,
-                0,
-                2.7
-              ],
-              "dialog": [
-                {
-                  "speaker": "Kai",
-                  "text": "There's someone here. She's unconscious but still breathing."
-                }
-              ]
-            },
-            {
               "type": "story_prop",
               "position": [
-                -7.4,
+                -6.8,
                 0,
-                -10.3
+                -11.4
               ],
               "prop_path": "assets/objects/story/dropship_crash.glb"
             },
             {
               "type": "npc",
               "position": [
-                -3.8,
+                -4.4,
                 0,
-                -10.3
+                -6.8
               ],
-              "npc_id": "sarisa"
+              "npc_id": "sarisa",
+              "animation": "~dam_d_lp"
             },
             {
               "type": "enemy",
               "position": [
-                -6.8,
+                -6.6,
                 0,
-                7.8
+                1.4
+              ],
+              "enemy_id": "tormatible"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.9,
+                0,
+                4.4
               ],
               "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
               "position": [
-                -11,
+                -5.3,
                 0,
-                3.5
+                10
               ],
-              "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -8.7,
-                0,
-                -3.5
-              ],
-              "enemy_id": "ghowl"
+              "enemy_id": "garapython"
             },
             {
               "type": "dialog_trigger",
               "position": [
-                -12.8,
+                4,
                 0,
-                8.3
+                1.9
+              ],
+              "trigger_size": [
+                4,
+                3,
+                8
+              ],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "There's someone on the ground"
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -15.5,
+                0,
+                1.3
+              ],
+              "enemy_id": "garahadan",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -14.7,
+                0,
+                7.8
+              ],
+              "enemy_id": "vulkure",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.1,
+                0,
+                12.8
+              ],
+              "enemy_id": "grimble",
+              "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                -10.3,
+                0,
+                8.5
               ],
               "trigger_condition": "room_clear",
               "actions": [
+                "dismiss_companion",
                 "complete_quest",
                 "telepipe"
               ],
               "dialog": [
                 {
                   "speaker": "Kai",
-                  "text": "I'll carry her back to the city. You head to the Guild and file the report."
-                },
-                {
-                  "speaker": "Kai",
-                  "text": "You handled yourself well out there, rookie. See you back in town."
+                  "text": "You can report back to the guild, I'll take her back to the city."
                 }
               ]
             }
@@ -1279,15 +2054,79 @@
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_drop": "3,1",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 9
+          "path_order": 9,
+          "key_drop_position": [
+            13.4,
+            1,
+            -15.5
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -2.6,
+                0,
+                12.4
+              ],
+              "enemy_id": "tormatible"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.1,
+                0,
+                12
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.5,
+                0,
+                12.4
+              ],
+              "enemy_id": "garapython"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.7,
+                0,
+                1.7
+              ],
+              "enemy_id": "garahadan",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11,
+                0,
+                -5.5
+              ],
+              "enemy_id": "vulkure",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.2,
+                0,
+                -10.8
+              ],
+              "enemy_id": "grimble",
+              "wave": 2
+            }
+          ]
         }
       ]
     }

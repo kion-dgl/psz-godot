@@ -101,6 +101,53 @@ func _setup_idle_anim() -> void:
 	print("[CityNPC] Playing idle: %s on %s" % [idle_anim, npc_display_name])
 
 
+## Play a one-shot animation, then return to the idle anim.
+func play_oneshot(anim_name: String) -> void:
+	if not model or not _anim_player:
+		return
+	# Load the animation if not already in the library
+	if not _anim_player.has_animation(anim_name):
+		var anim := _load_anim_from_sources(anim_name)
+		if not anim:
+			push_warning("[CityNPC] One-shot animation '%s' not found" % anim_name)
+			return
+		var lib: AnimationLibrary = _anim_player.get_animation_library("")
+		lib.add_animation(anim_name, anim)
+	_anim_player.play(anim_name)
+	_anim_player.animation_finished.connect(func(_finished_name: StringName) -> void:
+		if not idle_anim.is_empty() and _anim_player.has_animation(idle_anim):
+			_anim_player.play(idle_anim)
+	, CONNECT_ONE_SHOT)
+	print("[CityNPC] One-shot: %s on %s" % [anim_name, npc_display_name])
+
+
+func _load_anim_from_sources(anim_name: String) -> Animation:
+	var skel: Skeleton3D = _find_typed(model, "Skeleton3D") as Skeleton3D
+	if not skel:
+		return null
+	for source_path in NPC_ANIM_SOURCES:
+		if not ResourceLoader.exists(source_path):
+			continue
+		var anim_packed := load(source_path) as PackedScene
+		if not anim_packed:
+			continue
+		var anim_scene := anim_packed.instantiate()
+		var source_player: AnimationPlayer = _find_typed(anim_scene, "AnimationPlayer") as AnimationPlayer
+		if source_player and source_player.has_animation(anim_name):
+			var anim := source_player.get_animation(anim_name).duplicate() as Animation
+			anim.loop_mode = Animation.LOOP_NONE
+			for i in range(anim.get_track_count()):
+				var track_path := String(anim.track_get_path(i))
+				if "Skeleton3D" in track_path:
+					var skel_idx := track_path.find("Skeleton3D")
+					var prop_part := track_path.substr(skel_idx + 10)
+					anim.track_set_path(i, NodePath(skel.name + prop_part))
+			anim_scene.queue_free()
+			return anim
+		anim_scene.queue_free()
+	return null
+
+
 func _find_typed(root: Node, type_name: String) -> Node:
 	if root.get_class() == type_name:
 		return root

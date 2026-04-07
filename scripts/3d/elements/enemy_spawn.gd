@@ -27,6 +27,23 @@ var _model_id: String = ""
 ## Animation
 var _anim_player: AnimationPlayer
 
+## Animation source — rare variants that share animations with their base model.
+## Maps model_id → source model_id whose GLB contains the animations.
+const ANIM_SOURCE: Dictionary = {
+	"armadillo_rare": "armadillo",
+	"frog_rare": "frog",
+	"gorilla_rare": "gorilla",
+	"lion_rare": "lion",
+	"orangutan_rare": "orangutan",
+	"quad_rare": "quad",
+	"rabbit_rare": "rabbit",
+	"roc_rare": "roc",
+	"seal_rare": "seal",
+	"shrimp_rare": "shrimp",
+	"snake_rare": "snake",
+	"swordman_rare": "swordman",
+}
+
 ## Texture manifest — maps model_id → [texture filenames].
 ## Loaded once from JSON so we don't need DirAccess (fails on Android PCK).
 static var _tex_manifest: Dictionary = {}
@@ -86,6 +103,13 @@ func _load_enemy_model() -> void:
 
 	# Find and play idle animation
 	_anim_player = _find_anim_player(model)
+
+	# Rare variants without embedded animations — load from base model
+	if ANIM_SOURCE.has(_model_id):
+		var has_anims := _anim_player != null and _anim_player.get_animation_list().size() > 0
+		if not has_anims:
+			_load_anims_from_source(ANIM_SOURCE[_model_id])
+
 	if _anim_player:
 		var idle_name := _find_animation("wat")
 		if idle_name.is_empty():
@@ -95,6 +119,53 @@ func _load_enemy_model() -> void:
 			if anim:
 				anim.loop_mode = Animation.LOOP_LINEAR
 			_anim_player.play(idle_name)
+
+
+func _load_anims_from_source(source_id: String) -> void:
+	var src_path := "res://assets/enemies/%s/%s.glb" % [source_id, source_id]
+	if not ResourceLoader.exists(src_path):
+		push_warning("[EnemySpawn] Animation source not found: %s" % src_path)
+		return
+	var src_packed := load(src_path) as PackedScene
+	if not src_packed:
+		return
+	var src_scene := src_packed.instantiate()
+	var src_anim: AnimationPlayer = _find_anim_player(src_scene)
+	if not src_anim:
+		src_scene.queue_free()
+		return
+
+	# Find skeleton in our model for track remapping
+	var skel: Skeleton3D = _find_typed(model, "Skeleton3D") as Skeleton3D
+	if not skel:
+		src_scene.queue_free()
+		return
+
+	# Create AnimationPlayer on the model scene root (not inside the mesh node)
+	# so track paths like "m_103/Skeleton3D:bone" resolve correctly
+	if not _anim_player:
+		_anim_player = AnimationPlayer.new()
+		_anim_player.name = "SourceAnimPlayer"
+		model.add_child(_anim_player)
+
+	# Copy animations, remapping skeleton paths to our model
+	var src_skel: Skeleton3D = _find_typed(src_scene, "Skeleton3D") as Skeleton3D
+	var src_skel_parent_name: String = src_skel.get_parent().name if src_skel else ""
+	var dst_skel_parent_name: String = skel.get_parent().name
+
+	var lib := AnimationLibrary.new()
+	for anim_name in src_anim.get_animation_list():
+		var anim := src_anim.get_animation(anim_name).duplicate() as Animation
+		for i in range(anim.get_track_count()):
+			var track_path := String(anim.track_get_path(i))
+			if not src_skel_parent_name.is_empty() and track_path.begins_with(src_skel_parent_name + "/"):
+				track_path = dst_skel_parent_name + track_path.substr(src_skel_parent_name.length())
+				anim.track_set_path(i, NodePath(track_path))
+		lib.add_animation(anim_name, anim)
+
+	_anim_player.add_animation_library("", lib)
+	src_scene.queue_free()
+	print("[EnemySpawn] Loaded %d animations from %s for %s" % [lib.get_animation_list().size(), source_id, _model_id])
 
 
 func _setup_enemy_collision() -> void:
@@ -246,6 +317,16 @@ func _find_anim_player(node: Node) -> AnimationPlayer:
 		return node
 	for child in node.get_children():
 		var found := _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+
+func _find_typed(root: Node, type_name: String) -> Node:
+	if root.get_class() == type_name:
+		return root
+	for child in root.get_children():
+		var found := _find_typed(child, type_name)
 		if found:
 			return found
 	return null

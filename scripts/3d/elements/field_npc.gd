@@ -9,6 +9,15 @@ signal dialog_finished
 @export var npc_id: String = ""
 @export var npc_name: String = ""
 @export var dialog: Array = []  # Array of {speaker: String, text: String}
+@export var npc_animation: String = ""  # e.g. "~dam_d_lp" — tilde prefix resolved to gender
+
+## NPC class IDs for animation prefix selection
+const NPC_CLASSES: Dictionary = {
+	"kai": "humar", "sarisa": "hunewearl", "dorn": "hucast",
+	"dr_carlo": "fomar", "elio": "racaseal", "fern": "humarl",
+	"vash": "ramar", "ren": "humar", "mira": "fomarl",
+}
+const FEMALE_CLASSES := ["humarl", "ramarl", "fomarl", "hunewearl", "fonewearl", "hucaseal", "racaseal"]
 
 ## Known NPC models — maps npc_id to { glb, texture } paths
 const NPC_MODELS: Dictionary = {
@@ -35,6 +44,8 @@ func _ready() -> void:
 	_load_npc_model()
 	_setup_collision()
 	_apply_state()
+	if not npc_animation.is_empty():
+		_load_and_play_animation(npc_animation)
 
 
 ## Capsule colors for NPCs without GLB models
@@ -157,3 +168,65 @@ func _apply_state() -> void:
 			set_element_visible(true)
 		"hidden":
 			set_element_visible(false)
+
+
+func _load_and_play_animation(anim_field: String) -> void:
+	if not model:
+		return
+	var skel: Skeleton3D = _find_typed(model, "Skeleton3D") as Skeleton3D
+	if not skel:
+		return
+
+	# Resolve animation name: "~dam_d_lp" → "pwsa_dam_d_lp" (female) or "pmsa_dam_d_lp" (male)
+	var anim_name := anim_field
+	if anim_name.begins_with("~"):
+		var class_id: String = NPC_CLASSES.get(npc_id, "humar")
+		var is_female: bool = class_id in FEMALE_CLASSES
+		var prefix: String = "pwsa_" if is_female else "pmsa_"
+		anim_name = prefix + anim_name.substr(1)
+
+	# Pick animation source GLB based on gender
+	var class_id: String = NPC_CLASSES.get(npc_id, "humar")
+	var is_female: bool = class_id in FEMALE_CLASSES
+	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if is_female else "res://assets/player/animations/saber_m.glb"
+	if not ResourceLoader.exists(anim_glb):
+		return
+
+	var anim_packed := load(anim_glb) as PackedScene
+	if not anim_packed:
+		return
+	var anim_scene := anim_packed.instantiate()
+	var source_player: AnimationPlayer = _find_typed(anim_scene, "AnimationPlayer") as AnimationPlayer
+	if not source_player or not source_player.has_animation(anim_name):
+		push_warning("[FieldNpc] Animation '%s' not found in %s" % [anim_name, anim_glb])
+		anim_scene.queue_free()
+		return
+
+	var anim := source_player.get_animation(anim_name).duplicate() as Animation
+	anim.loop_mode = Animation.LOOP_LINEAR
+	for i in range(anim.get_track_count()):
+		var track_path := String(anim.track_get_path(i))
+		if "Skeleton3D" in track_path:
+			var skel_idx := track_path.find("Skeleton3D")
+			var prop_part := track_path.substr(skel_idx + 10)
+			anim.track_set_path(i, NodePath(skel.name + prop_part))
+
+	var player := AnimationPlayer.new()
+	player.name = "NpcAnimPlayer"
+	skel.get_parent().add_child(player)
+	var lib := AnimationLibrary.new()
+	lib.add_animation(anim_name, anim)
+	player.add_animation_library("", lib)
+	player.play(anim_name)
+	anim_scene.queue_free()
+	print("[FieldNpc] Playing '%s' on %s" % [anim_name, npc_id])
+
+
+func _find_typed(root: Node, type_name: String) -> Node:
+	if root.get_class() == type_name:
+		return root
+	for child in root.get_children():
+		var found := _find_typed(child, type_name)
+		if found:
+			return found
+	return null
