@@ -69,6 +69,7 @@ var _was_moving: bool = false  # Track delayed state transitions
 var _resume_blend: float = 0.0  # Blend from frozen pos to trail pos on resume
 var _frozen_pos: Vector3 = Vector3.ZERO  # Position when companion froze
 const RESUME_BLEND_SPEED: float = 3.0  # Seconds to fully blend back to trail
+var _dismissed: bool = false  # When true, stop following and idle in place
 
 ## Trail replay — record every physics frame, interpolate on playback
 var _trail: Array = []  # [{pos: Vector3, rot: float, state: int, time: float}]
@@ -146,10 +147,10 @@ func _apply_texture(node: Node, texture: Texture2D) -> void:
 
 
 func _setup_companion_anims(npc_model: Node) -> void:
-	## Load walk/run/idle animations from the saber animation GLB
+	## Load walk/run/idle animations (saber_m.glb for male, saver_w.glb for female)
 	var class_id: String = COMPANION_CLASSES.get(companion_id, "humar")
 	_is_female = class_id in FEMALE_CLASSES
-	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if _is_female else "res://assets/player/animations/saver_m.glb"
+	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if _is_female else "res://assets/player/animations/saber_m.glb"
 	if not ResourceLoader.exists(anim_glb):
 		return
 
@@ -171,26 +172,30 @@ func _setup_companion_anims(npc_model: Node) -> void:
 	skel.get_parent().add_child(_anim_player)
 
 	var prefix: String = "pwsa" if _is_female else "pmsa"
+	# Map companion anim keys to source anim names, with fallbacks
+	# Male GLB lacks _run_pso and _walk — fall back to _run for both
 	var needed := {
-		"wait": prefix + "_wait",
-		"run": prefix + "_run_pso",
-		"walk": prefix + "_walk",
+		"wait": [prefix + "_wait"],
+		"run": [prefix + "_run_pso", prefix + "_run"],
+		"walk": [prefix + "_walk", prefix + "_run"],
 	}
 
 	var lib := AnimationLibrary.new()
 	for key in needed:
-		var anim_name: String = needed[key]
-		if source_player.has_animation(anim_name):
-			var anim := source_player.get_animation(anim_name).duplicate() as Animation
-			anim.loop_mode = Animation.LOOP_LINEAR
-			# Remap skeleton tracks
-			for i in range(anim.get_track_count()):
-				var track_path := String(anim.track_get_path(i))
-				if "Skeleton3D" in track_path:
-					var skel_idx := track_path.find("Skeleton3D")
-					var prop_part := track_path.substr(skel_idx + 10)
-					anim.track_set_path(i, NodePath(skel.name + prop_part))
-			lib.add_animation(key, anim)
+		var candidates: Array = needed[key]
+		for anim_name: String in candidates:
+			if source_player.has_animation(anim_name):
+				var anim := source_player.get_animation(anim_name).duplicate() as Animation
+				anim.loop_mode = Animation.LOOP_LINEAR
+				# Remap skeleton tracks
+				for i in range(anim.get_track_count()):
+					var track_path := String(anim.track_get_path(i))
+					if "Skeleton3D" in track_path:
+						var skel_idx := track_path.find("Skeleton3D")
+						var prop_part := track_path.substr(skel_idx + 10)
+						anim.track_set_path(i, NodePath(skel.name + prop_part))
+				lib.add_animation(key, anim)
+				break
 
 	_anim_player.add_animation_library("", lib)
 	_play_companion_anim("wait")
@@ -346,7 +351,15 @@ func _process_speech_timer(delta: float) -> void:
 		_dismiss_speech()
 
 
+func dismiss() -> void:
+	_dismissed = true
+	_play_companion_anim("wait")
+	print("[Companion] %s dismissed — stopped following" % companion_id)
+
+
 func _process_follow(_delta: float) -> void:
+	if _dismissed:
+		return
 	# Cache player reference
 	if not is_instance_valid(_player_ref):
 		var players := get_tree().get_nodes_in_group("player")
