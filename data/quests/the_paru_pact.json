@@ -51,11 +51,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "The energy signature is strong here. Mag Cells give off a faint resonance — like a heartbeat. Stay close and keep your eyes open."
+                  "text": "The energy signature is strong here. Mag Cells give off a faint resonance, like a heartbeat. Stay close and keep your eyes open."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Don't worry about your Mag — it'll keep up on its own. They always do."
+                  "text": "Don't worry about your Mag. It'll keep up on its own. They always do."
                 }
               ]
             }
@@ -241,7 +241,7 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "One down. Feel that warmth? It's not heat — it's memory. These cells stored something before the Great Blank wiped everything."
+                  "text": "One down. Feel that warmth? It's not heat. It's memory. These cells stored something before the Great Blank wiped everything."
                 },
                 {
                   "speaker": "Elio",
@@ -291,7 +291,7 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Tip: A Mag's stat balance — POW, DEX, MIND, DEF — decides how it evolves. Pick a direction and stick with it."
+                  "text": "Tip: A Mag's stats decide how it evolves. POW, DEX, MIND, DEF. Pick a direction and stick with it."
                 }
               ]
             }
@@ -369,7 +369,7 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Tip: When your Mag's PB gauge fills, you can trigger a Photon Blast. They're rare — save them for when it counts."
+                  "text": "Tip: When your Mag's PB gauge fills, you can trigger a Photon Blast. They're rare, so save them for when it counts."
                 }
               ]
             },
@@ -450,11 +450,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "The deepest part of these ruins. The architects built inward — the most important things are always at the center."
+                  "text": "The deepest part of these ruins. The architects built inward. The most important things are always at the center."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Tip: Synchro — how attuned your Mag is to you — affects everything. Spend time in the field together to build it up."
+                  "text": "Tip: Synchro is how attuned your Mag is to you. It affects everything. Spend time in the field together to build it up."
                 }
               ]
             }
@@ -617,7 +617,7 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "That's all four! The cells are resonating together — I can feel it through the case."
+                  "text": "That's all four! The cells are resonating together. I can feel it through the case."
                 },
                 {
                   "speaker": "Elio",
@@ -625,7 +625,7 @@
                 },
                 {
                   "speaker": "",
-                  "text": "The four cells lock together. Light pulses through the seams, faster and faster — then the new Mag rises and drifts toward Elio."
+                  "text": "The four cells lock together. Light pulses through the seams, faster and faster, then the new Mag rises and drifts toward Elio."
                 },
                 {
                   "speaker": "Elio",
@@ -633,7 +633,7 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "I'll raise this one for the guild. When it's ready, it'll find its hunter — just like yours found you."
+                  "text": "I'll raise this one for the guild. When it's ready, it'll find its hunter, just like yours found you."
                 },
                 {
                   "speaker": "Elio",
@@ -690,11 +690,11 @@
     },
     {
       "speaker": "Elio",
-      "text": "I'm the guild's Mag custodian — I look after the Mags we provision to new hunters. Yours came through me, actually."
+      "text": "I'm the guild's Mag custodian. I look after the Mags we provision to new hunters. Yours came through me, actually."
     },
     {
       "speaker": "Elio",
-      "text": "I've been tracking energy signatures deep in Paru. There are dormant Mag Cells down there — enough to assemble another one."
+      "text": "I've been tracking energy signatures deep in Paru. There are dormant Mag Cells down there, enough to assemble another one."
     },
     {
       "speaker": "Elio",
