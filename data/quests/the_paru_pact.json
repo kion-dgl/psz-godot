@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "last_updated": "2026-03-20",
+  "last_updated": "2026-04-07",
   "id": "the_paru_pact",
   "name": "The Paru Pact",
-  "description": "Requested by: Research Division. Assist researcher Elio in recovering Mag Cells from Paru ruins to reconstruct an ancient companion artifact.",
+  "description": "Requested by: Research Division. Help Elio, the guild's Mag custodian, recover Mag Cells from Paru ruins to assemble a new Mag for guild rotation.",
   "area_id": "paru",
   "sections": [
     {
@@ -52,6 +52,10 @@
                 {
                   "speaker": "Elio",
                   "text": "The energy signature is strong here. Mag Cells give off a faint resonance — like a heartbeat. Stay close and keep your eyes open."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Don't worry about your Mag — it'll keep up on its own. They always do."
                 }
               ]
             }
@@ -238,6 +242,10 @@
                 {
                   "speaker": "Elio",
                   "text": "One down. Feel that warmth? It's not heat — it's memory. These cells stored something before the Great Blank wiped everything."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Tip: Feed your Mag healing items to grow it. Different items raise different stats."
                 }
               ]
             }
@@ -279,7 +287,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Two cells! The resonance is getting stronger. Whatever these powered — it wanted to be found."
+                  "text": "Two cells! The resonance is getting stronger."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Tip: A Mag's stat balance — POW, DEX, MIND, DEF — decides how it evolves. Pick a direction and stick with it."
                 }
               ]
             }
@@ -354,6 +366,10 @@
                 {
                   "speaker": "Elio",
                   "text": "Three cells. One more and we have a complete set. The last one should be deeper in."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Tip: When your Mag's PB gauge fills, you can trigger a Photon Blast. They're rare — save them for when it counts."
                 }
               ]
             },
@@ -373,7 +389,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "I've been studying Mags my entire career. The texts say they bonded with people — not as tools, but as partners. If we can reassemble one..."
+                  "text": "I've been raising Mags for the guild for years. Every hunter who comes through gets one of mine."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Yours has good instincts. It picked you for a reason."
                 }
               ]
             }
@@ -431,6 +451,10 @@
                 {
                   "speaker": "Elio",
                   "text": "The deepest part of these ruins. The architects built inward — the most important things are always at the center."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Tip: Synchro — how attuned your Mag is to you — affects everything. Spend time in the field together to build it up."
                 }
               ]
             }
@@ -593,7 +617,7 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "That's all four! The cells are resonating together — I can feel it through the case. Let's push to the chamber ahead."
+                  "text": "That's all four! The cells are resonating together — I can feel it through the case."
                 },
                 {
                   "speaker": "Elio",
@@ -601,18 +625,23 @@
                 },
                 {
                   "speaker": "",
-                  "text": "The four cells lock together. Light pulses through the seams, faster and faster — then the Mag lifts off Elio's hands and drifts toward you."
+                  "text": "The four cells lock together. Light pulses through the seams, faster and faster — then the new Mag rises and drifts toward Elio."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "It... chose you. The old texts said Mags pick their partner, not the other way around. I've never seen it happen before."
+                  "text": "There you are. Welcome to the family."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Take care of it. And take care of yourself — a Mag bond is for life."
+                  "text": "I'll raise this one for the guild. When it's ready, it'll find its hunter — just like yours found you."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Thank you for the escort. Let's head back."
                 }
               ],
               "actions": [
+                "dismiss_companion",
                 "complete_quest",
                 "telepipe"
               ]
@@ -657,27 +686,27 @@
   "briefing_dialog": [
     {
       "speaker": "Principal",
-      "text": "This is Elio, from the Research Division. She has an unusual request."
+      "text": "This is Elio, from the Research Division. She has a request."
     },
     {
       "speaker": "Elio",
-      "text": "I study Mags — the companion artifacts from before the Great Blank. Everyone thinks they're extinct."
+      "text": "I'm the guild's Mag custodian — I look after the Mags we provision to new hunters. Yours came through me, actually."
     },
     {
       "speaker": "Elio",
-      "text": "But I've been tracking energy signatures deep in Paru. Something is still active down there."
+      "text": "I've been tracking energy signatures deep in Paru. There are dormant Mag Cells down there — enough to assemble another one."
     },
     {
       "speaker": "Elio",
-      "text": "I need to recover Mag Cells from the ruins. With enough of them, I can reconstruct a living Mag. This could change everything."
+      "text": "The guild's stock is low. If we recover them, I can raise another for the next hunter who needs a partner."
     },
     {
       "speaker": "Elio",
-      "text": "The automata won't make it easy. I need someone who can handle themselves while I work."
+      "text": "The automata won't make it easy. I need someone who can fight while I work."
     },
     {
       "speaker": "Principal",
-      "text": "The Research Division has authorized this expedition. Keep Elio safe and bring back what you find."
+      "text": "The Research Division has authorized the expedition. Keep Elio safe and bring back what you find."
     }
   ],
   "objectives": [
