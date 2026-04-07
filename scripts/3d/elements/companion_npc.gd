@@ -147,7 +147,7 @@ func _apply_texture(node: Node, texture: Texture2D) -> void:
 
 
 func _setup_companion_anims(npc_model: Node) -> void:
-	## Load walk/run/idle animations from the saber animation GLB
+	## Load walk/run/idle animations (saber_m.glb for male, saver_w.glb for female)
 	var class_id: String = COMPANION_CLASSES.get(companion_id, "humar")
 	_is_female = class_id in FEMALE_CLASSES
 	var anim_glb: String = "res://assets/player/animations/saver_w.glb" if _is_female else "res://assets/player/animations/saber_m.glb"
