@@ -68,9 +68,12 @@ const STATUS_COLORS := {
 var _reticle: Sprite3D
 var _cached_materials: Array = []  # Cached StandardMaterial3D refs for tint updates
 
-## Walk variant cycling — for enemies with wlk_l/wlk_r instead of plain wlk
+## Walk variant cycling — for enemies with wlk_l/wlk_r instead of plain wlk.
+## _uses_walk_variants is set to true the first time the fallback fires, so
+## the timer only ticks (and forces re-plays) for enemies that actually need it.
 var _walk_variant_timer: float = 0.0
 var _walk_use_left: bool = false
+var _uses_walk_variants: bool = false
 const WALK_VARIANT_INTERVAL: float = 1.5  # Switch every 1.5s for circling effect
 
 ## Wandering behavior (idle state)
@@ -174,16 +177,23 @@ func _setup_model() -> void:
 				var source_player := _find_animation_player(anim_model)
 				if source_player:
 					# Find the skeleton parents on both models so we can remap
-					# track paths from source mesh root → destination mesh root
+					# track paths from source mesh root → destination mesh root.
+					# Guard get_parent() in case the Skeleton3D ends up at the
+					# scene root with no parent (shouldn't happen for these GLBs
+					# but is cheap to handle).
 					var dst_skel := _find_skeleton(model)
 					var src_skel := _find_skeleton(anim_model)
-					var src_root_name: String = src_skel.get_parent().name if src_skel else ""
-					var dst_root_name: String = dst_skel.get_parent().name if dst_skel else ""
+					var src_root_name: String = ""
+					var dst_root_name: String = ""
+					if src_skel and src_skel.get_parent():
+						src_root_name = src_skel.get_parent().name
+					if dst_skel and dst_skel.get_parent():
+						dst_root_name = dst_skel.get_parent().name
 
-					# Place AnimationPlayer on the model scene root (matching how
-					# Godot's GLB importer does it). Adding it inside `model` would
-					# break track path resolution because tracks are relative to the
-					# AP's parent.
+					# `model` is the instantiated GLB scene root. Godot's GLB
+					# importer puts the AnimationPlayer at this same level as a
+					# sibling of the mesh node, so the remapped track paths
+					# (which start with the mesh root name) resolve correctly.
 					animation_player = AnimationPlayer.new()
 					animation_player.name = "AnimPlayer"
 					model.add_child(animation_player)
@@ -309,14 +319,15 @@ func _physics_process(delta: float) -> void:
 	FrameProfiler.mark("enemy_status")
 	_process_status_effects(delta)
 
-	# Tick walk variant timer for enemies that alternate wlk_l/wlk_r
-	_walk_variant_timer += delta
-	if _walk_variant_timer >= WALK_VARIANT_INTERVAL:
-		_walk_variant_timer = 0.0
-		_walk_use_left = not _walk_use_left
-		# If currently walking, force a re-play to switch variant
-		if current_anim == "wlk":
-			current_anim = ""
+	# Tick walk variant timer only for enemies that use the wlk_l/wlk_r fallback
+	if _uses_walk_variants:
+		_walk_variant_timer += delta
+		if _walk_variant_timer >= WALK_VARIANT_INTERVAL:
+			_walk_variant_timer = 0.0
+			_walk_use_left = not _walk_use_left
+			# If currently walking, force a re-play to switch variant
+			if current_anim == "wlk":
+				current_anim = ""
 
 	# Apply gravity
 	if not is_on_floor():
@@ -730,6 +741,8 @@ func _play_animation(anim_name: String, force: bool = false) -> void:
 	if full_name.is_empty() and anim_name == "wlk":
 		var variant := "wlk_l" if _walk_use_left else "wlk_r"
 		full_name = _find_animation(variant)
+		if not full_name.is_empty():
+			_uses_walk_variants = true
 
 	if full_name.is_empty():
 		return
