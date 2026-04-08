@@ -68,6 +68,11 @@ const STATUS_COLORS := {
 var _reticle: Sprite3D
 var _cached_materials: Array = []  # Cached StandardMaterial3D refs for tint updates
 
+## Walk variant cycling — for enemies with wlk_l/wlk_r instead of plain wlk
+var _walk_variant_timer: float = 0.0
+var _walk_use_left: bool = false
+const WALK_VARIANT_INTERVAL: float = 1.5  # Switch every 1.5s for circling effect
+
 ## Wandering behavior (idle state)
 var wander_timer: float = 0.0
 var wander_direction: Vector3 = Vector3.ZERO
@@ -303,6 +308,15 @@ func _physics_process(delta: float) -> void:
 	# Process status effects
 	FrameProfiler.mark("enemy_status")
 	_process_status_effects(delta)
+
+	# Tick walk variant timer for enemies that alternate wlk_l/wlk_r
+	_walk_variant_timer += delta
+	if _walk_variant_timer >= WALK_VARIANT_INTERVAL:
+		_walk_variant_timer = 0.0
+		_walk_use_left = not _walk_use_left
+		# If currently walking, force a re-play to switch variant
+		if current_anim == "wlk":
+			current_anim = ""
 
 	# Apply gravity
 	if not is_on_floor():
@@ -710,6 +724,13 @@ func _play_animation(anim_name: String, force: bool = false) -> void:
 
 	# Try to find the animation - GLB animations are named like "s_001_atk"
 	var full_name := _find_animation(anim_name)
+
+	# Walk fallback: some enemies (e.g. hyena) only have wlk_l/wlk_r variants
+	# instead of a plain wlk. Alternate between them for a circling effect.
+	if full_name.is_empty() and anim_name == "wlk":
+		var variant := "wlk_l" if _walk_use_left else "wlk_r"
+		full_name = _find_animation(variant)
+
 	if full_name.is_empty():
 		return
 
