@@ -12,6 +12,7 @@ locations = PackedStringArray("Rioh Snowfield", "Eternal Tower")
 is_rare = true
 is_boss = false
 model_id = "gorilla_rare"
+animation_model_id = "gorilla"
 hp_base = 200
 attack_base = 15
 defense_base = 8

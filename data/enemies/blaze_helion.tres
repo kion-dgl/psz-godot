@@ -12,6 +12,7 @@ locations = PackedStringArray("Gurhacia Valley", "Eternal Tower")
 is_rare = true
 is_boss = false
 model_id = "lion_rare"
+animation_model_id = "lion"
 hp_base = 200
 attack_base = 15
 defense_base = 8

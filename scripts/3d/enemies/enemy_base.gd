@@ -168,13 +168,31 @@ func _setup_model() -> void:
 				var anim_model := anim_scene.instantiate()
 				var source_player := _find_animation_player(anim_model)
 				if source_player:
-					# Copy animations into our model
+					# Find the skeleton parents on both models so we can remap
+					# track paths from source mesh root → destination mesh root
+					var dst_skel := _find_skeleton(model)
+					var src_skel := _find_skeleton(anim_model)
+					var src_root_name: String = src_skel.get_parent().name if src_skel else ""
+					var dst_root_name: String = dst_skel.get_parent().name if dst_skel else ""
+
+					# Place AnimationPlayer on the model scene root (matching how
+					# Godot's GLB importer does it). Adding it inside `model` would
+					# break track path resolution because tracks are relative to the
+					# AP's parent.
 					animation_player = AnimationPlayer.new()
 					animation_player.name = "AnimPlayer"
 					model.add_child(animation_player)
 					var lib := AnimationLibrary.new()
 					for anim_name in source_player.get_animation_list():
-						lib.add_animation(anim_name, source_player.get_animation(anim_name))
+						var anim := source_player.get_animation(anim_name).duplicate() as Animation
+						# Remap "src_root/Skeleton3D:bone" → "dst_root/Skeleton3D:bone"
+						if not src_root_name.is_empty() and src_root_name != dst_root_name:
+							for i in range(anim.get_track_count()):
+								var tp := String(anim.track_get_path(i))
+								if tp.begins_with(src_root_name + "/"):
+									tp = dst_root_name + tp.substr(src_root_name.length())
+									anim.track_set_path(i, NodePath(tp))
+						lib.add_animation(anim_name, anim)
 					animation_player.add_animation_library("", lib)
 				anim_model.queue_free()
 
@@ -219,6 +237,16 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 		return node
 	for child in node.get_children():
 		var found := _find_animation_player(child)
+		if found:
+			return found
+	return null
+
+
+func _find_skeleton(node: Node) -> Skeleton3D:
+	if node is Skeleton3D:
+		return node
+	for child in node.get_children():
+		var found := _find_skeleton(child)
 		if found:
 			return found
 	return null

@@ -12,6 +12,7 @@ locations = PackedStringArray("Oblivion City Paru", "Eternal Tower")
 is_rare = false
 is_boss = false
 model_id = "frog_bomb"
+animation_model_id = "frog"
 hp_base = 100
 attack_base = 10
 defense_base = 5
