@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-04-07",
+  "last_updated": "2026-04-08",
   "id": "the_paru_pact",
   "name": "The Paru Pact",
   "description": "Requested by: Research Division. Help Elio, the guild's Mag custodian, recover Mag Cells from Paru ruins to assemble a new Mag for guild rotation.",
@@ -77,9 +77,9 @@
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
-          "has_key": true,
-          "key_for_cell": "2,0",
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
@@ -124,8 +124,8 @@
           "is_start": false,
           "is_end": false,
           "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
+          "has_key": true,
+          "key_for_cell": "2,0",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
@@ -179,7 +179,29 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [
+                0,
+                1,
+                0
+              ],
+              "item_id": "mag_cell",
+              "item_label": "Mag Cell",
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "One down. Feel that warmth? It's not heat. It's memory. These cells stored something before the Great Blank wiped everything."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Tip: Feed your Mag healing items to grow it. Different items raise different stats."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "2,0",
@@ -241,11 +263,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "One down. Feel that warmth? It's not heat. It's memory. These cells stored something before the Great Blank wiped everything."
+                  "text": "Two cells! The resonance is getting stronger."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Tip: Feed your Mag healing items to grow it. Different items raise different stats."
+                  "text": "Tip: A Mag's stats decide how it evolves. POW, DEX, MIND, DEF. Pick a direction and stick with it."
                 }
               ]
             }
@@ -273,29 +295,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 8,
-          "objects": [
-            {
-              "type": "quest_item",
-              "position": [
-                0.1,
-                1,
-                7.6
-              ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "Two cells! The resonance is getting stronger."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "Tip: A Mag's stats decide how it evolves. POW, DEX, MIND, DEF. Pick a direction and stick with it."
-                }
-              ]
-            }
-          ]
+          "path_order": 8
         },
         {
           "pos": "4,1",
@@ -576,7 +576,7 @@
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": true,
-          "key_gate_direction": "east",
+          "key_gate_direction": "west",
           "key_drop": "",
           "required_keys": 1,
           "warp_edge": "",
@@ -668,7 +668,17 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "rare_box",
+              "position": [
+                0,
+                0,
+                0
+              ]
+            }
+          ]
         }
       ]
     }
