@@ -367,17 +367,6 @@
     "is_boss": false
   },
   {
-    "id": "heavens_mother",
-    "name": "Heaven's Mother",
-    "model_id": "",
-    "element": "Dark",
-    "locations": [
-      "tower"
-    ],
-    "is_rare": false,
-    "is_boss": true
-  },
-  {
     "id": "helion",
     "name": "Helion",
     "model_id": "lion",
