@@ -14,6 +14,8 @@ ENEMIES=(
   "boss_octopus:z_002:z_002_st z_002_tt:z_002:z_002.nsbtx"
   "boss_robot:z_003:z_003n z_003u:z003:z_003n.nsbtx"
   "boss_mother:z_004:z_004_kao_a z_004_kao_b:z_004:z_004.nsbtx"
+  "orangutan:b_044:b_044_gun:b_044:b_044.nsbtx"
+  "orangutan_rare:b_144:b_144_gun:b_144:b_144.nsbtx"
 )
 
 bake_one() {
