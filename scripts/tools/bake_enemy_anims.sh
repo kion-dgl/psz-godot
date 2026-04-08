@@ -1,6 +1,24 @@
 #!/bin/bash
-SRC_BASE="$HOME/Github/psz-asset-viewer"
-DST_BASE="$HOME/Github/psz-godot/assets/enemies"
+# Bake enemy animations from psz-asset-viewer NARC extracts into psz-godot.
+# Requires `apicula` on PATH and the temp/ directories from running
+# psz-asset-viewer's processFailedEnemies.ts (or equivalent extractor).
+#
+# Override paths via env vars if the repos live elsewhere:
+#   SRC_BASE=/path/to/psz-asset-viewer DST_BASE=/path/to/psz-godot/assets/enemies bash bake_enemy_anims.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SRC_BASE="${SRC_BASE:-$HOME/Github/psz-asset-viewer}"
+DST_BASE="${DST_BASE:-$REPO_ROOT/assets/enemies}"
+
+if [ ! -d "$SRC_BASE/temp" ]; then
+  echo "ERROR: $SRC_BASE/temp not found. Run psz-asset-viewer's NARC extractor first." >&2
+  echo "       Or set SRC_BASE=/path/to/psz-asset-viewer" >&2
+  exit 1
+fi
+if [ ! -d "$DST_BASE" ]; then
+  echo "ERROR: $DST_BASE not found. Set DST_BASE=/path/to/psz-godot/assets/enemies" >&2
+  exit 1
+fi
 
 # entry: <enemy_name>:<main_model>:<extra_models>:<anim_prefix>:<texture_files>
 # texture_files is a space-separated list of .nsbtx files (relative to temp/<name>/).
