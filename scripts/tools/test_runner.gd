@@ -1553,6 +1553,22 @@ func test_technique_disks() -> void:
 	assert_eq(TechniqueManager.get_technique_level(fomar, "foie"), 8, "Foie still Lv.8")
 	print("  INFO: %s" % downgrade_result["message"])
 
+	# ── Use disk via Inventory.use_item (the path the start menu hits) ──
+	print("  ── Inventory.use_item with disk ──")
+	# Reset foie and add a Lv.10 disk to inventory
+	fomar["techniques"].erase("foie")
+	Inventory.add_item("disk_foie_10", 1)
+	assert_eq(Inventory.get_item_count("disk_foie_10"), 1, "Disk added to inventory")
+	var use_ok := Inventory.use_item("disk_foie_10")
+	assert_true(use_ok, "Inventory.use_item('disk_foie_10') succeeded")
+	assert_eq(TechniqueManager.get_technique_level(fomar, "foie"), 10, "Foie learned at Lv.10")
+	assert_eq(Inventory.get_item_count("disk_foie_10"), 0, "Disk consumed from inventory")
+	# Different tech id: barta should also parse correctly
+	Inventory.add_item("disk_barta_5", 1)
+	var use_barta := Inventory.use_item("disk_barta_5")
+	assert_true(use_barta, "Inventory.use_item('disk_barta_5') succeeded")
+	assert_eq(TechniqueManager.get_technique_level(fomar, "barta"), 5, "Barta learned at Lv.5")
+
 	# ── Reject for CASTs (empty technique_limits) ──
 	print("  ── CAST Restriction ──")
 	CharacterManager._characters[1] = null
