@@ -50,6 +50,7 @@ var _mag_idx: int = 0
 var _mag_feed_idx: int = 0
 var _options_idx: int = 0
 var _item_scroll: float = 0.0  # Pixel scroll offset for items list
+var _action_message: String = ""  # One-shot message after Items use, cleared on navigation
 
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
@@ -276,14 +277,17 @@ func _input_main(event: InputEvent) -> bool:
 func _input_list(event: InputEvent, count: int) -> bool:
 	if event.is_action_pressed("ui_up", true) and count > 0:
 		_sub_idx = wrapi(_sub_idx - 1, 0, count)
+		_action_message = ""
 		return true
 	elif event.is_action_pressed("ui_down", true) and count > 0:
 		_sub_idx = wrapi(_sub_idx + 1, 0, count)
+		_action_message = ""
 		return true
 	elif event.is_action_pressed("ui_accept"):
 		_sub_accept()
 		return true
 	elif event.is_action_pressed("ui_cancel"):
+		_action_message = ""
 		_go_back()
 		return true
 	return false
@@ -498,7 +502,19 @@ func _sub_accept() -> void:
 			if _sub_idx < inv.size():
 				var item: Dictionary = inv[_sub_idx]
 				if item.get("usable", false):
-					Inventory.use_item(str(item.get("id", "")))
+					var item_id_to_use: String = str(item.get("id", ""))
+					var item_name: String = str(item.get("name", ""))
+					var ok := Inventory.use_item(item_id_to_use)
+					if ok:
+						var info: Dictionary = Inventory.get_last_use_info()
+						var t: String = str(info.get("type", ""))
+						match t:
+							"hp": _action_message = "Restored %d HP" % int(info.get("amount", 0))
+							"pp": _action_message = "Restored %d PP" % int(info.get("amount", 0))
+							"tech": _action_message = "Learned %s!" % item_name
+							_: _action_message = "Used %s" % item_name
+					else:
+						_action_message = "Couldn't use %s" % item_name
 		Mode.EQUIP:
 			var slots := _get_equip_slots()
 			_equip_slot_idx = _sub_idx
@@ -1091,6 +1107,21 @@ func _draw_items(c: Control, font: Font) -> void:
 		var consumable = ConsumableRegistry.get_consumable(item_id)
 		if consumable and not str(consumable.details).is_empty():
 			desc += "\n%s" % str(consumable.details)
+		# Technique disks: show what they teach and the use prompt
+		if item_id.begins_with("disk_"):
+			var rest := item_id.substr(5)
+			var us := rest.rfind("_")
+			if us >= 0:
+				var tech_id := rest.substr(0, us)
+				var tech_lvl := rest.substr(us + 1)
+				var tech_name := tech_id.capitalize()
+				if TechniqueManager.TECHNIQUES.has(tech_id):
+					tech_name = str(TechniqueManager.TECHNIQUES[tech_id].get("name", tech_name))
+				desc += "\nTeaches %s Lv.%s" % [tech_name, tech_lvl]
+		if item.get("usable", false):
+			desc += "\n[Enter] Use"
+	if not _action_message.is_empty():
+		desc += "\n\n" + _action_message
 	_draw_bottom_desc(c, font, desc)
 
 
