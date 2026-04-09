@@ -33,7 +33,34 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "elio_a_entry",
+              "trigger_condition": "enter",
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "It's quieter than I imagined. I always thought ruins like these would feel angrier."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "If a cell starts to glow, it's noticed us. Stay close to me when it does."
+                }
+              ],
+              "trigger_size": [
+                12,
+                3,
+                4
+              ]
+            }
+          ]
         },
         {
           "pos": "2,3",
@@ -114,7 +141,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Stay sharp. The deeper we get, the more active they are."
+                  "text": "Are you hurt? They came so fast."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "I'm sorry. I didn't think there'd be this many."
                 }
               ]
             }
@@ -207,7 +238,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Got it. That should open the way south."
+                  "text": "There. The little keystone, on the floor."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Take it. I shouldn't be the one carrying it."
                 }
               ]
             }
@@ -335,13 +370,44 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "One down. Feel that warmth? It's not heat. It's memory. These cells stored something before the Great Blank wiped everything."
+                  "text": "Oh. Oh, it's warm."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Tip: Feed your Mag healing items to grow it. Different items raise different stats."
+                  "text": "I haven't held one this old before. It feels like a heartbeat that's been waiting."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "When you take care of a Mag, it remembers everything. Even from before it could think."
                 }
               ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.1,
+                0,
+                -15.7
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.1,
+                0,
+                -9.8
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.4,
+                0,
+                -15
+              ],
+              "enemy_id": "bolix"
             }
           ]
         },
@@ -367,7 +433,133 @@
           "key_drop": "",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                7.8,
+                0,
+                17.3
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.1,
+                0,
+                17.4
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.6,
+                0,
+                16.5
+              ],
+              "enemy_id": "azherowa_b2"
+            },
+            {
+              "type": "fence",
+              "position": [
+                -2.2,
+                0,
+                8
+              ],
+              "link_id": "c"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                -19.2,
+                0,
+                -18.6
+              ],
+              "link_id": "c"
+            },
+            {
+              "type": "box",
+              "position": [
+                -20.9,
+                0,
+                -12.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -17.3,
+                0,
+                -13.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -18.7,
+                0,
+                -11
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.6,
+                0,
+                3.1
+              ],
+              "enemy_id": "goldix",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.9,
+                0,
+                7.4
+              ],
+              "enemy_id": "pobomma",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.5,
+                0,
+                13.8
+              ],
+              "enemy_id": "bolix",
+              "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "elio_gate_clear",
+              "trigger_condition": "room_clear",
+              "trigger_size": [
+                1,
+                1,
+                1
+              ],
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "Whoever lived here didn't want anyone leaving in a hurry."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "There's a switch on the far side. The fence moves when something stands on it."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "4,4",
@@ -400,7 +592,7 @@
                 0,
                 6.1
               ],
-              "enemy_id": "goldix"
+              "enemy_id": "izhirak_s6"
             },
             {
               "type": "enemy",
@@ -409,7 +601,7 @@
                 0,
                 -7.4
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             },
             {
               "type": "enemy",
@@ -418,7 +610,7 @@
                 0,
                 2.6
               ],
-              "enemy_id": "bolix"
+              "enemy_id": "azherowa_b2"
             }
           ]
         },
@@ -453,7 +645,7 @@
                 0,
                 5.7
               ],
-              "enemy_id": "izhirak_s6"
+              "enemy_id": "goldix"
             },
             {
               "type": "enemy",
@@ -462,7 +654,7 @@
                 0,
                 5.7
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
@@ -471,7 +663,7 @@
                 0,
                 -4.8
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -480,7 +672,7 @@
                 0,
                 -14.7
               ],
-              "enemy_id": "goldix",
+              "enemy_id": "izhirak_s6",
               "wave": 2
             },
             {
@@ -490,7 +682,7 @@
                 0,
                 -9.8
               ],
-              "enemy_id": "pobomma",
+              "enemy_id": "froutang",
               "wave": 2
             },
             {
@@ -500,7 +692,7 @@
                 0,
                 -15.4
               ],
-              "enemy_id": "bolix",
+              "enemy_id": "azherowa_b2",
               "wave": 2
             },
             {
@@ -520,11 +712,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Nice work. Hunters earn their disks the hard way."
+                  "text": "Two waves. They were waiting for us."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Tip: A Mag with high POW boosts your attack. Feed it striking items if you want it to fight beside you."
+                  "text": "If your Mag's gauge fills up, you can ask it to fight beside you. It might be the difference."
                 }
               ]
             }
@@ -561,7 +753,7 @@
                 0,
                 -9.7
               ],
-              "enemy_id": "izhirak_s6"
+              "enemy_id": "goldix"
             },
             {
               "type": "enemy",
@@ -570,7 +762,7 @@
                 0,
                 -9.7
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
@@ -579,7 +771,7 @@
                 0,
                 -11.3
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -588,7 +780,7 @@
                 0,
                 11.8
               ],
-              "enemy_id": "goldix",
+              "enemy_id": "izhirak_s6",
               "wave": 2
             },
             {
@@ -598,7 +790,7 @@
                 0,
                 10.7
               ],
-              "enemy_id": "pobomma",
+              "enemy_id": "froutang",
               "wave": 2
             },
             {
@@ -608,7 +800,7 @@
                 0,
                 10.7
               ],
-              "enemy_id": "bolix",
+              "enemy_id": "azherowa_b2",
               "wave": 2
             }
           ]
@@ -643,7 +835,7 @@
                 0,
                 0.1
               ],
-              "enemy_id": "izhirak_s6"
+              "enemy_id": "goldix"
             },
             {
               "type": "enemy",
@@ -652,7 +844,7 @@
                 0,
                 -0.2
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
@@ -661,7 +853,7 @@
                 0,
                 -9.7
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -670,7 +862,7 @@
                 0,
                 -12.2
               ],
-              "enemy_id": "goldix"
+              "enemy_id": "izhirak_s6"
             },
             {
               "type": "rare_box",
@@ -745,11 +937,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Two cells. The resonance is getting stronger."
+                  "text": "Two of them now. Listen. Can you hear it?"
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Tip: A Mag's stats decide how it evolves. POW, DEX, MIND, DEF. Pick a direction and stick with it."
+                  "text": "They're talking to each other through my hands."
                 }
               ]
             },
@@ -760,7 +952,7 @@
                 0,
                 6.1
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             },
             {
               "type": "enemy",
@@ -769,7 +961,7 @@
                 0,
                 -0.2
               ],
-              "enemy_id": "bolix"
+              "enemy_id": "azherowa_b2"
             },
             {
               "type": "enemy",
@@ -778,7 +970,7 @@
                 0,
                 4.9
               ],
-              "enemy_id": "izhirak_s6"
+              "enemy_id": "goldix"
             },
             {
               "type": "enemy",
@@ -787,7 +979,7 @@
                 0,
                 -2.1
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             },
             {
               "type": "dialog_trigger",
@@ -796,7 +988,7 @@
                 0,
                 0
               ],
-              "trigger_id": "elio_transition_clear",
+              "trigger_id": "elio_transition_personal",
               "trigger_condition": "room_clear",
               "trigger_size": [
                 1,
@@ -806,11 +998,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "I've been raising Mags for the guild for years. Every hunter who comes through gets one of mine."
+                  "text": "I had a Mag once. A long time ago. I lost it while it was still little."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Yours has good instincts. It picked you for a reason."
+                  "text": "That's why I take care of the guild's. I keep telling myself the next one won't be lonely."
                 }
               ]
             }
@@ -880,7 +1072,7 @@
                 0,
                 -8.6
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -889,7 +1081,7 @@
                 0,
                 -3.1
               ],
-              "enemy_id": "goldix"
+              "enemy_id": "izhirak_s6"
             },
             {
               "type": "enemy",
@@ -898,7 +1090,7 @@
                 0,
                 -15.1
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             },
             {
               "type": "enemy",
@@ -907,25 +1099,15 @@
                 0,
                 -9.4
               ],
-              "enemy_id": "bolix"
+              "enemy_id": "azherowa_b2"
             },
             {
-              "type": "fence",
+              "type": "rare_box",
               "position": [
-                16.3,
+                -2.8,
                 0,
-                -6.8
-              ],
-              "link_id": "a"
-            },
-            {
-              "type": "step_switch",
-              "position": [
-                -2.9,
-                0,
-                15.3
-              ],
-              "link_id": "a"
+                16.8
+              ]
             }
           ]
         },
@@ -960,7 +1142,7 @@
                 0,
                 -9
               ],
-              "enemy_id": "izhirak_s6"
+              "enemy_id": "goldix"
             },
             {
               "type": "enemy",
@@ -969,7 +1151,7 @@
                 0,
                 -1.1
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
@@ -978,7 +1160,7 @@
                 0,
                 -7.4
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -987,7 +1169,7 @@
                 0,
                 -1.7
               ],
-              "enemy_id": "goldix"
+              "enemy_id": "izhirak_s6"
             },
             {
               "type": "enemy",
@@ -996,7 +1178,7 @@
                 0,
                 -12
               ],
-              "enemy_id": "pobomma",
+              "enemy_id": "froutang",
               "wave": 2
             },
             {
@@ -1006,7 +1188,7 @@
                 0,
                 -7
               ],
-              "enemy_id": "bolix",
+              "enemy_id": "azherowa_b2",
               "wave": 2
             },
             {
@@ -1016,7 +1198,7 @@
                 0,
                 -1.3
               ],
-              "enemy_id": "izhirak_s6",
+              "enemy_id": "goldix",
               "wave": 2
             },
             {
@@ -1026,7 +1208,7 @@
                 0,
                 5.6
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             }
           ]
         },
@@ -1068,7 +1250,7 @@
                 0,
                 -3.7
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -1077,7 +1259,7 @@
                 0,
                 -3.5
               ],
-              "enemy_id": "goldix"
+              "enemy_id": "izhirak_s6"
             },
             {
               "type": "enemy",
@@ -1086,7 +1268,7 @@
                 0,
                 3.5
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             },
             {
               "type": "enemy",
@@ -1095,7 +1277,7 @@
                 0,
                 4.7
               ],
-              "enemy_id": "bolix"
+              "enemy_id": "azherowa_b2"
             },
             {
               "type": "dialog_trigger",
@@ -1104,7 +1286,7 @@
                 0,
                 0
               ],
-              "trigger_id": "elio_gate_room",
+              "trigger_id": "elio_keydrop_observe",
               "trigger_condition": "room_clear",
               "trigger_size": [
                 1,
@@ -1114,7 +1296,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Whoever sealed this place wanted to slow people down, not stop them. Look around for the mechanism."
+                  "text": "One of them was carrying it. Why would they carry a key?"
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Maybe whoever made the locks knew they'd be opened by something living."
                 }
               ]
             }
@@ -1154,11 +1340,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Three cells. One more and we have a complete set. The last one should be deeper in."
+                  "text": "Three. The set is almost whole."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Tip: When your Mag's PB gauge fills, you can trigger a Photon Blast. They're rare, so save them for when it counts."
+                  "text": "I've put hundreds of these together back at the workshop. None of them ever felt like this one."
                 }
               ]
             },
@@ -1169,7 +1355,7 @@
                 0,
                 9.3
               ],
-              "enemy_id": "izhirak_s6"
+              "enemy_id": "goldix"
             },
             {
               "type": "enemy",
@@ -1178,7 +1364,7 @@
                 0,
                 -11.3
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
@@ -1187,7 +1373,7 @@
                 0,
                 -12.7
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -1196,7 +1382,7 @@
                 0,
                 -14.5
               ],
-              "enemy_id": "goldix"
+              "enemy_id": "izhirak_s6"
             },
             {
               "type": "fence",
@@ -1215,6 +1401,27 @@
                 15.9
               ],
               "link_id": "b"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "elio_switch_observe",
+              "trigger_condition": "room_clear",
+              "trigger_size": [
+                1,
+                1,
+                1
+              ],
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "There's a switch on the far wall. The fence won't move on its own."
+                }
+              ]
             }
           ]
         },
@@ -1249,7 +1456,7 @@
                 0,
                 -10.3
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             },
             {
               "type": "enemy",
@@ -1258,7 +1465,7 @@
                 0,
                 -10.2
               ],
-              "enemy_id": "bolix"
+              "enemy_id": "azherowa_b2"
             },
             {
               "type": "enemy",
@@ -1267,7 +1474,7 @@
                 0,
                 15.5
               ],
-              "enemy_id": "izhirak_s6"
+              "enemy_id": "goldix"
             },
             {
               "type": "enemy",
@@ -1276,7 +1483,7 @@
                 0,
                 17
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             }
           ]
         },
@@ -1311,7 +1518,7 @@
                 0,
                 8.6
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -1320,7 +1527,7 @@
                 0,
                 8.7
               ],
-              "enemy_id": "goldix"
+              "enemy_id": "izhirak_s6"
             },
             {
               "type": "enemy",
@@ -1329,7 +1536,7 @@
                 0,
                 -14.6
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             },
             {
               "type": "enemy",
@@ -1338,7 +1545,7 @@
                 0,
                 -11.9
               ],
-              "enemy_id": "bolix",
+              "enemy_id": "azherowa_b2",
               "wave": 2
             },
             {
@@ -1348,7 +1555,7 @@
                 0,
                 -4.1
               ],
-              "enemy_id": "izhirak_s6",
+              "enemy_id": "goldix",
               "wave": 2
             }
           ]
@@ -1384,7 +1591,7 @@
                 0,
                 0.4
               ],
-              "enemy_id": "froutang"
+              "enemy_id": "pobomma"
             },
             {
               "type": "enemy",
@@ -1393,7 +1600,7 @@
                 0,
                 5.5
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -1402,7 +1609,7 @@
                 0,
                 3.8
               ],
-              "enemy_id": "goldix"
+              "enemy_id": "izhirak_s6"
             },
             {
               "type": "enemy",
@@ -1411,7 +1618,7 @@
                 0,
                 -5.4
               ],
-              "enemy_id": "pobomma"
+              "enemy_id": "froutang"
             }
           ]
         },
@@ -1454,27 +1661,27 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "That's all four! The cells are resonating together. I can feel it through the case."
+                  "text": "There. The fourth one."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Hold still. I'm fitting the cells into the housing..."
+                  "text": "Wait. Hold still while I fit them into the housing. I've practiced this a hundred times, but my hands are shaking."
                 },
                 {
                   "speaker": "",
-                  "text": "The four cells lock together. Light pulses through the seams, faster and faster, then the new Mag rises and drifts toward Elio."
+                  "text": "The four cells lock together. Light pulses through the seams, faster and faster. The new Mag rises from Elio's palms, hesitates, then drifts toward her."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "There you are. Welcome to the family."
+                  "text": "Oh. Oh, hello."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "I'll raise this one for the guild. When it's ready, it'll find its hunter, just like yours found you."
+                  "text": "I'll take care of you. I promise. I'll do better this time."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Thank you for the escort. Let's head back."
+                  "text": "Thank you for keeping me alive out here. I want to walk back with this one. Just the two of us."
                 }
               ]
             }
@@ -1500,23 +1707,23 @@
     },
     {
       "speaker": "Elio",
-      "text": "I'm the guild's Mag custodian. I look after the Mags we provision to new hunters. Yours came through me, actually."
+      "text": "Sorry. Hi. I'm the guild's Mag custodian. The Mags we give to new hunters come through me first. Yours, too."
     },
     {
       "speaker": "Elio",
-      "text": "There are dormant Mag Cells deep in Paru, enough to assemble another one."
+      "text": "There's a cache of dormant Mag Cells out in Paru. The kind we use to make a new Mag. We don't have many left."
     },
     {
       "speaker": "Elio",
-      "text": "The guild's stock is low. If we recover them, I can raise another for the next hunter who needs a partner."
+      "text": "I have to be the one to fetch them. The cells listen for someone who knows how to wake them up."
     },
     {
       "speaker": "Elio",
-      "text": "The automata won't make it easy. I need someone who can fight while I work."
+      "text": "I'm not a fighter. I'm asking you to come with me."
     },
     {
       "speaker": "Principal",
-      "text": "The Research Division has authorized the expedition. Keep Elio safe and bring back what you find."
+      "text": "The Research Division has authorized the expedition. Bring her back safely."
     }
   ],
   "objectives": [
