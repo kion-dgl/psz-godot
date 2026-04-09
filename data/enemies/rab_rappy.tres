@@ -12,6 +12,7 @@ locations = PackedStringArray("Arca Plant", "Dark Shrine", "Eternal Tower")
 is_rare = true
 is_boss = false
 model_id = "rappy_red"
+animation_model_id = "rappy"
 hp_base = 200
 attack_base = 15
 defense_base = 8

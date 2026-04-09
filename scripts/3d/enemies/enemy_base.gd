@@ -68,6 +68,14 @@ const STATUS_COLORS := {
 var _reticle: Sprite3D
 var _cached_materials: Array = []  # Cached StandardMaterial3D refs for tint updates
 
+## Walk variant cycling — for enemies with wlk_l/wlk_r instead of plain wlk.
+## _uses_walk_variants is set to true the first time the fallback fires, so
+## the timer only ticks (and forces re-plays) for enemies that actually need it.
+var _walk_variant_timer: float = 0.0
+var _walk_use_left: bool = false
+var _uses_walk_variants: bool = false
+const WALK_VARIANT_INTERVAL: float = 1.5  # Switch every 1.5s for circling effect
+
 ## Wandering behavior (idle state)
 var wander_timer: float = 0.0
 var wander_direction: Vector3 = Vector3.ZERO
@@ -168,13 +176,38 @@ func _setup_model() -> void:
 				var anim_model := anim_scene.instantiate()
 				var source_player := _find_animation_player(anim_model)
 				if source_player:
-					# Copy animations into our model
+					# Find the skeleton parents on both models so we can remap
+					# track paths from source mesh root → destination mesh root.
+					# Guard get_parent() in case the Skeleton3D ends up at the
+					# scene root with no parent (shouldn't happen for these GLBs
+					# but is cheap to handle).
+					var dst_skel := _find_skeleton(model)
+					var src_skel := _find_skeleton(anim_model)
+					var src_root_name: String = ""
+					var dst_root_name: String = ""
+					if src_skel and src_skel.get_parent():
+						src_root_name = src_skel.get_parent().name
+					if dst_skel and dst_skel.get_parent():
+						dst_root_name = dst_skel.get_parent().name
+
+					# `model` is the instantiated GLB scene root. Godot's GLB
+					# importer puts the AnimationPlayer at this same level as a
+					# sibling of the mesh node, so the remapped track paths
+					# (which start with the mesh root name) resolve correctly.
 					animation_player = AnimationPlayer.new()
 					animation_player.name = "AnimPlayer"
 					model.add_child(animation_player)
 					var lib := AnimationLibrary.new()
 					for anim_name in source_player.get_animation_list():
-						lib.add_animation(anim_name, source_player.get_animation(anim_name))
+						var anim := source_player.get_animation(anim_name).duplicate() as Animation
+						# Remap "src_root/Skeleton3D:bone" → "dst_root/Skeleton3D:bone"
+						if not src_root_name.is_empty() and src_root_name != dst_root_name:
+							for i in range(anim.get_track_count()):
+								var tp := String(anim.track_get_path(i))
+								if tp.begins_with(src_root_name + "/"):
+									tp = dst_root_name + tp.substr(src_root_name.length())
+									anim.track_set_path(i, NodePath(tp))
+						lib.add_animation(anim_name, anim)
 					animation_player.add_animation_library("", lib)
 				anim_model.queue_free()
 
@@ -219,6 +252,16 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 		return node
 	for child in node.get_children():
 		var found := _find_animation_player(child)
+		if found:
+			return found
+	return null
+
+
+func _find_skeleton(node: Node) -> Skeleton3D:
+	if node is Skeleton3D:
+		return node
+	for child in node.get_children():
+		var found := _find_skeleton(child)
 		if found:
 			return found
 	return null
@@ -275,6 +318,16 @@ func _physics_process(delta: float) -> void:
 	# Process status effects
 	FrameProfiler.mark("enemy_status")
 	_process_status_effects(delta)
+
+	# Tick walk variant timer only for enemies that use the wlk_l/wlk_r fallback
+	if _uses_walk_variants:
+		_walk_variant_timer += delta
+		if _walk_variant_timer >= WALK_VARIANT_INTERVAL:
+			_walk_variant_timer = 0.0
+			_walk_use_left = not _walk_use_left
+			# If currently walking, force a re-play to switch variant
+			if current_anim == "wlk":
+				current_anim = ""
 
 	# Apply gravity
 	if not is_on_floor():
@@ -682,6 +735,15 @@ func _play_animation(anim_name: String, force: bool = false) -> void:
 
 	# Try to find the animation - GLB animations are named like "s_001_atk"
 	var full_name := _find_animation(anim_name)
+
+	# Walk fallback: some enemies (e.g. hyena) only have wlk_l/wlk_r variants
+	# instead of a plain wlk. Alternate between them for a circling effect.
+	if full_name.is_empty() and anim_name == "wlk":
+		var variant := "wlk_l" if _walk_use_left else "wlk_r"
+		full_name = _find_animation(variant)
+		if not full_name.is_empty():
+			_uses_walk_variants = true
+
 	if full_name.is_empty():
 		return
 

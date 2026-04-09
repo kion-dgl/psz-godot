@@ -31,17 +31,22 @@ var _anim_player: AnimationPlayer
 ## Maps model_id → source model_id whose GLB contains the animations.
 const ANIM_SOURCE: Dictionary = {
 	"armadillo_rare": "armadillo",
+	"bat_blue": "bat",
+	"circle_black": "circle",
+	"frog_bomb": "frog",
 	"frog_rare": "frog",
+	"gorilla_female": "gorilla",
 	"gorilla_rare": "gorilla",
 	"lion_rare": "lion",
 	"orangutan_rare": "orangutan",
 	"quad_rare": "quad",
 	"rabbit_rare": "rabbit",
+	"rappy_blue": "rappy",
+	"rappy_red": "rappy",
 	"roc_rare": "roc",
 	"seal_rare": "seal",
 	"shrimp_rare": "shrimp",
 	"snake_rare": "snake",
-	"swordman_rare": "swordman",
 }
 
 ## Texture manifest — maps model_id → [texture filenames].
