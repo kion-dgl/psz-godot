@@ -695,27 +695,6 @@
                 0,
                 -8.5
               ]
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_section_a_end",
-              "trigger_condition": "room_clear",
-              "trigger_size": [
-                1,
-                1,
-                1
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "That's the way out. The next chamber should be just past the warp."
-                }
-              ]
             }
           ]
         }
