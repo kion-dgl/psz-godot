@@ -34,33 +34,7 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_a_entry",
-              "trigger_condition": "enter",
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "It's quieter than I imagined. I always thought ruins like these would feel angrier."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "If a cell starts to glow, it's noticed us. Stay close to me when it does."
-                }
-              ],
-              "trigger_size": [
-                12,
-                3,
-                4
-              ]
-            }
-          ]
+          "objects": []
         },
         {
           "pos": "2,3",
@@ -123,31 +97,6 @@
                 -0.9
               ],
               "enemy_id": "froutang"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_first_combat",
-              "trigger_condition": "room_clear",
-              "trigger_size": [
-                1,
-                1,
-                1
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "Are you hurt? They came so fast."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "I'm sorry. I didn't think there'd be this many."
-                }
-              ]
             }
           ]
         },
@@ -219,31 +168,6 @@
                 8.6,
                 0,
                 2.8
-              ]
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_key_found",
-              "trigger_condition": "room_clear",
-              "trigger_size": [
-                1,
-                1,
-                1
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "There. The little keystone, on the floor."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "Take it. I shouldn't be the one carrying it."
-                }
               ]
             }
           ]
@@ -370,15 +294,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Oh. Oh, it's warm."
+                  "text": "Here's the first one. Older than the cells we usually work with. Feel that resonance? It's been dormant for a long time."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "I haven't held one this old before. It feels like a heartbeat that's been waiting."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "When you take care of a Mag, it remembers everything. Even from before it could think."
+                  "text": "Cells this old carry imprints from before they were sealed. The Mag we build from these is going to have a personality forming before we even put it in a body."
                 }
               ]
             },
@@ -533,31 +453,6 @@
               ],
               "enemy_id": "bolix",
               "wave": 2
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_gate_clear",
-              "trigger_condition": "room_clear",
-              "trigger_size": [
-                1,
-                1,
-                1
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "Whoever lived here didn't want anyone leaving in a hurry."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "There's a switch on the far side. The fence moves when something stands on it."
-                }
-              ]
             }
           ]
         },
@@ -694,31 +589,6 @@
               ],
               "enemy_id": "azherowa_b2",
               "wave": 2
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_wave_clear",
-              "trigger_condition": "room_clear",
-              "trigger_size": [
-                1,
-                1,
-                1
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "Two waves. They were waiting for us."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "If your Mag's gauge fills up, you can ask it to fight beside you. It might be the difference."
-                }
-              ]
             }
           ]
         },
@@ -937,11 +807,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Two of them now. Listen. Can you hear it?"
+                  "text": "Second cell. They're already tuning to each other."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "They're talking to each other through my hands."
+                  "text": "When two cells get close, they sync up. By the fourth one the Mag's essentially already alive. We just need to give it a shell."
                 }
               ]
             },
@@ -980,31 +850,6 @@
                 -2.1
               ],
               "enemy_id": "pobomma"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_transition_personal",
-              "trigger_condition": "room_clear",
-              "trigger_size": [
-                1,
-                1,
-                1
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "I had a Mag once. A long time ago. I lost it while it was still little."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "That's why I take care of the guild's. I keep telling myself the next one won't be lonely."
-                }
-              ]
             }
           ]
         }
@@ -1278,31 +1123,6 @@
                 4.7
               ],
               "enemy_id": "azherowa_b2"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_keydrop_observe",
-              "trigger_condition": "room_clear",
-              "trigger_size": [
-                1,
-                1,
-                1
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "One of them was carrying it. Why would they carry a key?"
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "Maybe whoever made the locks knew they'd be opened by something living."
-                }
-              ]
             }
           ]
         },
@@ -1340,11 +1160,11 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Three. The set is almost whole."
+                  "text": "Three. Almost a full set."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "I've put hundreds of these together back at the workshop. None of them ever felt like this one."
+                  "text": "Most hunters never see this stage. The cells decide what the Mag will become before we ever build the housing. Stat ratios, photon affinity, all of it."
                 }
               ]
             },
@@ -1401,27 +1221,6 @@
                 15.9
               ],
               "link_id": "b"
-            },
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "elio_switch_observe",
-              "trigger_condition": "room_clear",
-              "trigger_size": [
-                1,
-                1,
-                1
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "There's a switch on the far wall. The fence won't move on its own."
-                }
-              ]
             }
           ]
         },
@@ -1661,27 +1460,27 @@
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "There. The fourth one."
+                  "text": "There it is. The fourth cell."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Wait. Hold still while I fit them into the housing. I've practiced this a hundred times, but my hands are shaking."
+                  "text": "Hold on. Let me fit them into the housing. This part I can do in my sleep."
                 },
                 {
                   "speaker": "",
-                  "text": "The four cells lock together. Light pulses through the seams, faster and faster. The new Mag rises from Elio's palms, hesitates, then drifts toward her."
+                  "text": "The four cells lock together. Light pulses through the seams, faster and faster. The new Mag rises from Elio's palms and drifts in a slow circle around her."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Oh. Oh, hello."
+                  "text": "Hello, you. Welcome to the guild."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "I'll take care of you. I promise. I'll do better this time."
+                  "text": "It'll spend the next few months on my shelf, learning. When it's ready, the next hunter who needs a partner will get it."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Thank you for keeping me alive out here. I want to walk back with this one. Just the two of us."
+                  "text": "Thanks for the escort. Let's head back."
                 }
               ]
             }
@@ -1707,23 +1506,23 @@
     },
     {
       "speaker": "Elio",
-      "text": "Sorry. Hi. I'm the guild's Mag custodian. The Mags we give to new hunters come through me first. Yours, too."
+      "text": "I'm the guild's Mag custodian. Every Mag a hunter carries passes through me first. Yours included."
     },
     {
       "speaker": "Elio",
-      "text": "There's a cache of dormant Mag Cells out in Paru. The kind we use to make a new Mag. We don't have many left."
+      "text": "We're running low on Mag Cells. A fresh cache turned up in the Paru ruins, and I need to bring them back to the workshop."
     },
     {
       "speaker": "Elio",
-      "text": "I have to be the one to fetch them. The cells listen for someone who knows how to wake them up."
+      "text": "The cells respond to specific frequencies during assembly. I'm the only one at the guild who can read them, so I have to recover them in person."
     },
     {
       "speaker": "Elio",
-      "text": "I'm not a fighter. I'm asking you to come with me."
+      "text": "I'm not a fighter. That's where you come in. Get me to each cell and back."
     },
     {
       "speaker": "Principal",
-      "text": "The Research Division has authorized the expedition. Bring her back safely."
+      "text": "The Research Division has authorized the expedition. Keep her safe."
     }
   ],
   "objectives": [
