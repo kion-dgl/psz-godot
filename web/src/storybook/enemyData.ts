@@ -134,7 +134,10 @@ const ENEMY_CATEGORY_MAP: Record<string, string> = {
   boss_darkfalz: 'bosses', boss_robot: 'bosses',
 };
 
-// 60 enemies imported into psz-godot (bosses excluded — multi-part models not imported)
+// All 65 enemies imported into psz-godot. Multi-part bosses (boss_octopus,
+// boss_robot, swordman series) had their animations baked in via
+// scripts/tools/bake_enemy_anims.sh — see kion-dgl/psz-godot#99 for the
+// remaining gaps (swordman atk_th_sw, boss_octopus tt*/st*, boss_robot ve_*).
 export const ALL_ENEMY_IDS = [
   'armadillo', 'armadillo_rare', 'bat', 'bat_blue',
   'board', 'board_blue', 'board_green', 'booma',

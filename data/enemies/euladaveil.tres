@@ -12,6 +12,7 @@ locations = PackedStringArray("Dark Shrine", "Eternal Tower")
 is_rare = false
 is_boss = false
 model_id = "circle_black"
+animation_model_id = "circle"
 hp_base = 100
 attack_base = 10
 defense_base = 5

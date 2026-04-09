@@ -206,6 +206,10 @@ func use_item(item_id: String) -> bool:
 	if not has_item(item_id):
 		return false
 
+	# Technique disks: parse disk_<tech>_<level> and route to TechniqueManager
+	if item_id.begins_with("disk_"):
+		return _use_disk(item_id)
+
 	var effect: Dictionary = CONSUMABLE_EFFECTS.get(item_id, {})
 	if effect.is_empty():
 		# Not a known consumable — try legacy path for other usable items
@@ -237,6 +241,41 @@ func use_item(item_id: String) -> bool:
 
 	remove_item(item_id, 1)
 	print("[Inventory] Used %s: +%d %s" % [item_id, _last_use_amount, _last_use_type.to_upper()])
+	return true
+
+
+## Use a technique disk to learn or upgrade a tech.
+## Disk id format: disk_<technique_id>_<level>, e.g. "disk_foie_3"
+func _use_disk(item_id: String) -> bool:
+	# Strip "disk_" prefix, then split off the trailing _<level>
+	var rest := item_id.substr(5)
+	var underscore := rest.rfind("_")
+	if underscore < 0:
+		return false
+	var technique_id := rest.substr(0, underscore)
+	var level := int(rest.substr(underscore + 1))
+	if technique_id.is_empty() or level <= 0:
+		return false
+
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
+
+	var disk: Dictionary = {"technique_id": technique_id, "level": level}
+	var result: Dictionary = TechniqueManager.use_disk(character, disk)
+	if not result.get("success", false):
+		_last_use_type = "tech_fail"
+		_last_use_amount = 0
+		print("[Inventory] Disk %s failed: %s" % [item_id, str(result.get("message", ""))])
+		return false
+
+	# TechniqueManager.use_disk() mutates the character dict in place,
+	# so the change persists for the rest of the session. SaveManager
+	# will pick it up on the next auto-save.
+	remove_item(item_id, 1)
+	_last_use_type = "tech"
+	_last_use_amount = int(result.get("new_level", level))
+	print("[Inventory] %s" % str(result.get("message", "")))
 	return true
 
 
