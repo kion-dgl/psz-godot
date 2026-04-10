@@ -3,7 +3,7 @@
   "last_updated": "2026-04-09",
   "id": "the_paru_pact",
   "name": "The Paru Pact",
-  "description": "Requested by: Research Division. Help Elio, the guild's Mag custodian, recover Mag Cells from Paru ruins to assemble a new Mag for guild rotation.",
+  "description": "Requested by: Research Division. Help Elio, the guild's Mag custodian, recover Mag fragments from Paru ruins to assemble a new Mag for guild rotation.",
   "area_id": "paru",
   "sections": [
     {
@@ -289,16 +289,16 @@
                 0,
                 -18
               ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
+              "item_id": "mag_fragment",
+              "item_label": "Mag Fragment",
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Here's the first one. Older than the cells we usually work with. Feel that resonance? It's been dormant for a long time."
+                  "text": "Here's the first one. It's warm. I can already feel it responding."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Cells this old carry imprints from before they were sealed. The Mag we build from these is going to have a personality forming before we even put it in a body."
+                  "text": "Did you know Mags are intelligent? When a hunter equips one, it learns to recognize them. Some get clever enough to protect or heal their master on their own."
                 }
               ]
             },
@@ -763,7 +763,7 @@
       ],
       "warp_requires": [
         {
-          "item_id": "mag_cell",
+          "item_id": "mag_fragment",
           "target": 1
         }
       ]
@@ -802,16 +802,16 @@
                 0,
                 -4.2
               ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
+              "item_id": "mag_fragment",
+              "item_label": "Mag Fragment",
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Second cell. They're already tuning to each other."
+                  "text": "Second fragment. They're starting to sync up."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "When two cells get close, they sync up. By the fourth one the Mag's essentially already alive. We just need to give it a shell."
+                  "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack. Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
                 }
               ]
             },
@@ -1155,16 +1155,16 @@
                 0,
                 14.7
               ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
+              "item_id": "mag_fragment",
+              "item_label": "Mag Fragment",
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Three. Almost a full set."
+                  "text": "Three fragments. Almost a full set."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Most hunters never see this stage. The cells decide what the Mag will become before we ever build the housing. Stat ratios, photon affinity, all of it."
+                  "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy. Once it's fully charged, it can release a Photon Blast. It's something to see."
                 }
               ]
             },
@@ -1455,20 +1455,20 @@
                 "complete_quest",
                 "telepipe"
               ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
+              "item_id": "mag_fragment",
+              "item_label": "Mag Fragment",
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "There it is. The fourth cell."
+                  "text": "There it is. The last piece."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Hold on. Let me fit them into the housing. This part I can do in my sleep."
+                  "text": "Hold on. Let me fit them together."
                 },
                 {
                   "speaker": "",
-                  "text": "The four cells lock together. Light pulses through the seams, faster and faster. The new Mag rises from Elio's palms and drifts in a slow circle around her."
+                  "text": "Elio presses the four fragments into a housing. Light pulses through the seams, faster and faster. A new Mag rises from her hands and drifts in a slow circle around her."
                 },
                 {
                   "speaker": "Elio",
@@ -1476,11 +1476,11 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "It'll spend the next few months on my shelf, learning. When it's ready, the next hunter who needs a partner will get it."
+                  "text": "It'll need time on my shelf before it's ready. When a new hunter signs up and needs a partner, this one will be waiting."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Thanks for the escort. Let's head back."
+                  "text": "Thanks for keeping me safe out here. Let's head back."
                 }
               ]
             }
@@ -1510,15 +1510,15 @@
     },
     {
       "speaker": "Elio",
-      "text": "We're running low on Mag Cells. A fresh cache turned up in the Paru ruins, and I need to bring them back to the workshop."
+      "text": "We're running low on parts to build new Mags. There are old fragments scattered through the Paru ruins, enough to piece one together."
     },
     {
       "speaker": "Elio",
-      "text": "The cells respond to specific frequencies during assembly. I'm the only one at the guild who can read them, so I have to recover them in person."
+      "text": "I need to be the one to recover them. Each fragment has to be handled a certain way or it won't bond with the others."
     },
     {
       "speaker": "Elio",
-      "text": "I'm not a fighter. That's where you come in. Get me to each cell and back."
+      "text": "I'm not a fighter. That's where you come in. Get me to each fragment and back."
     },
     {
       "speaker": "Principal",
@@ -1527,8 +1527,8 @@
   ],
   "objectives": [
     {
-      "item_id": "mag_cell",
-      "label": "Mag Cells",
+      "item_id": "mag_fragment",
+      "label": "Mag Fragments",
       "target": 4
     }
   ]
