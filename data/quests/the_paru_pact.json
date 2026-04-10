@@ -1,26 +1,26 @@
 {
   "version": 1,
-  "last_updated": "2026-03-20",
+  "last_updated": "2026-04-09",
   "id": "the_paru_pact",
   "name": "The Paru Pact",
-  "description": "Requested by: Research Division. Assist researcher Elio in recovering Mag Cells from Paru ruins to reconstruct an ancient companion artifact.",
+  "description": "Requested by: Research Division. Help Elio, the guild's Mag custodian, recover Mag fragments from Paru ruins to assemble a new Mag for guild rotation.",
   "area_id": "paru",
   "sections": [
     {
       "type": "grid",
       "area": "a",
-      "start_pos": "0,2",
+      "start_pos": "2,4",
       "end_pos": "4,1",
       "cells": [
         {
-          "pos": "0,2",
+          "pos": "2,4",
           "stage_id": "s05a_sa1",
-          "rotation": 0,
+          "rotation": 90,
           "connections": {
-            "south": "1,2"
+            "west": "2,3"
           },
           "portals": {
-            "south": "portal_1770761006966_6mtpsian4",
+            "west": "portal_1770761006966_6mtpsian4",
             "default": "default"
           },
           "is_start": true,
@@ -34,109 +34,16 @@
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0.3,
-                1,
-                6.6
-              ],
-              "trigger_id": "elio_entry_a",
-              "trigger_size": [
-                7.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "The energy signature is strong here. Mag Cells give off a faint resonance — like a heartbeat. Stay close and keep your eyes open."
-                }
-              ]
-            }
-          ]
+          "objects": []
         },
         {
-          "pos": "1,2",
-          "stage_id": "s05a_tb3",
-          "rotation": 90,
-          "connections": {
-            "west": "1,1",
-            "south": "2,2",
-            "north": "0,2"
-          },
-          "portals": {
-            "west": "portal_1770761049776_griu8xjfq",
-            "south": "portal_1771829093307_g1yhv2kbh",
-            "north": "portal_1771829105283_ee4dtrk4x"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": true,
-          "key_for_cell": "2,0",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 1
-        },
-        {
-          "pos": "1,1",
-          "stage_id": "s05a_ic3",
-          "rotation": 270,
-          "connections": {
-            "east": "1,2",
-            "west": "1,0"
-          },
-          "portals": {
-            "east": "portal_1770760600012_6tt4l6ptg",
-            "west": "portal_1770760610447_5cc6x7u3o"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s05a_nb2",
-          "rotation": 180,
-          "connections": {
-            "north": "1,2"
-          },
-          "portals": {
-            "north": "portal_1770760968113_5ywbkpk2i"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 3
-        },
-        {
-          "pos": "1,0",
+          "pos": "2,3",
           "stage_id": "s05a_tb3",
           "rotation": 270,
           "connections": {
-            "east": "1,1",
-            "north": "0,0",
-            "south": "2,0"
+            "east": "2,4",
+            "north": "1,3",
+            "south": "3,3"
           },
           "portals": {
             "east": "portal_1770761049776_griu8xjfq",
@@ -153,17 +60,131 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7.6,
+                0,
+                9.7
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.5,
+                0,
+                9.8
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.7,
+                0,
+                0.7
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.1,
+                0,
+                -0.9
+              ],
+              "enemy_id": "froutang"
+            }
+          ]
         },
         {
-          "pos": "0,0",
-          "stage_id": "s05a_nc2",
+          "pos": "1,3",
+          "stage_id": "s05a_na1",
           "rotation": 0,
           "connections": {
-            "south": "1,0"
+            "south": "2,3"
           },
           "portals": {
-            "south": "portal_1770760986569_ghsb7pjh3"
+            "south": "portal_1770760954951_cldar2pe9"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": true,
+          "key_for_cell": "3,4",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "key_position": [
+            0.9,
+            1,
+            1.7
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -2.6,
+                0,
+                11.6
+              ],
+              "enemy_id": "azherowa_b2"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.1,
+                0,
+                6.7
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.7,
+                0,
+                7.4
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "box",
+              "position": [
+                7,
+                0,
+                0.1
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                8.6,
+                0,
+                2.8
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "3,3",
+          "stage_id": "s05a_tc3",
+          "rotation": 180,
+          "connections": {
+            "north": "2,3",
+            "west": "3,2",
+            "east": "3,4"
+          },
+          "portals": {
+            "north": "portal_1770761099875_8gf2w8jts",
+            "west": "portal_1771829125797_w5m5zbnl9",
+            "east": "portal_1771829134496_rn8sxft8b"
           },
           "is_start": false,
           "is_end": false,
@@ -175,19 +196,164 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -14.2,
+                0,
+                6.8
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.3,
+                0,
+                8.4
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -14.4,
+                0,
+                -1.9
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.2,
+                0,
+                -11.5
+              ],
+              "enemy_id": "azherowa_b2"
+            },
+            {
+              "type": "box",
+              "position": [
+                16.7,
+                0,
+                -20.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                20.8,
+                0,
+                -20.4
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                8.4,
+                0,
+                16
+              ]
+            }
+          ]
         },
         {
-          "pos": "2,0",
-          "stage_id": "s05a_ib2",
-          "rotation": 0,
+          "pos": "3,2",
+          "stage_id": "s05a_nb2",
+          "rotation": 270,
           "connections": {
-            "south": "3,0",
-            "north": "1,0"
+            "east": "3,3"
           },
           "portals": {
-            "south": "portal_1770760475809_o935wst5m",
-            "north": "portal_1770760498696_s6sgv5h90"
+            "east": "portal_1770760968113_5ywbkpk2i"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [
+                -1.4,
+                0,
+                -18
+              ],
+              "item_id": "mag_fragment",
+              "item_label": "Mag Fragment",
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "Here's the first one. It's warm. I can already feel it responding."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Everything we know about Mags comes from what we've pulled out of ruins like these."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Whoever built them had technology similar to CASTs."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Once a Mag bonds with a hunter, it learns to recognize them."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Some get clever enough to protect or heal their partner on their own."
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.1,
+                0,
+                -15.7
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.1,
+                0,
+                -9.8
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.4,
+                0,
+                -15
+              ],
+              "enemy_id": "bolix"
+            }
+          ]
+        },
+        {
+          "pos": "3,4",
+          "stage_id": "s05a_lc2",
+          "rotation": 180,
+          "connections": {
+            "south": "4,4",
+            "west": "3,3"
+          },
+          "portals": {
+            "south": "portal_1770760918909_r4a8yoq2a",
+            "west": "portal_1771829063859_q0a4gsqi9"
           },
           "is_start": false,
           "is_end": false,
@@ -199,19 +365,173 @@
           "key_drop": "",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 6
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                7.8,
+                0,
+                17.3
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.1,
+                0,
+                17.4
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.6,
+                0,
+                16.5
+              ],
+              "enemy_id": "azherowa_b2"
+            },
+            {
+              "type": "fence",
+              "position": [
+                -2.2,
+                0,
+                8
+              ],
+              "link_id": "c"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                -19.2,
+                0,
+                -18.6
+              ],
+              "link_id": "c"
+            },
+            {
+              "type": "box",
+              "position": [
+                -20.9,
+                0,
+                -12.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -17.3,
+                0,
+                -13.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -18.7,
+                0,
+                -11
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.6,
+                0,
+                3.1
+              ],
+              "enemy_id": "goldix",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.9,
+                0,
+                7.4
+              ],
+              "enemy_id": "pobomma",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -18.5,
+                0,
+                13.8
+              ],
+              "enemy_id": "bolix",
+              "wave": 2
+            }
+          ]
         },
         {
-          "pos": "3,0",
-          "stage_id": "s05a_ic3",
-          "rotation": 0,
+          "pos": "4,4",
+          "stage_id": "s05a_lb1",
+          "rotation": 270,
           "connections": {
-            "south": "4,0",
-            "north": "2,0"
+            "west": "4,3",
+            "north": "3,4"
           },
           "portals": {
-            "south": "portal_1770760600012_6tt4l6ptg",
-            "north": "portal_1770760610447_5cc6x7u3o"
+            "west": "portal_1770760630219_wzrky8k77",
+            "north": "portal_1771829019999_q7a7k4jhj"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.1,
+                0,
+                6.1
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.1,
+                0,
+                -7.4
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.2,
+                0,
+                2.6
+              ],
+              "enemy_id": "azherowa_b2"
+            }
+          ]
+        },
+        {
+          "pos": "4,3",
+          "stage_id": "s05a_ib1",
+          "rotation": 270,
+          "connections": {
+            "east": "4,4",
+            "west": "4,2"
+          },
+          "portals": {
+            "east": "portal_1770760450958_wy2ptrups",
+            "west": "portal_1770760460971_148gify38"
           },
           "is_start": false,
           "is_end": false,
@@ -226,34 +546,75 @@
           "path_order": 7,
           "objects": [
             {
-              "type": "quest_item",
+              "type": "enemy",
               "position": [
-                -13.2,
-                1,
-                15.6
+                -5.8,
+                0,
+                5.7
               ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "One down. Feel that warmth? It's not heat — it's memory. These cells stored something before the Great Blank wiped everything."
-                }
-              ]
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.3,
+                0,
+                5.7
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.5,
+                0,
+                -4.8
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.9,
+                0,
+                -14.7
+              ],
+              "enemy_id": "izhirak_s6",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.4,
+                0,
+                -9.8
+              ],
+              "enemy_id": "froutang",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.5,
+                0,
+                -15.4
+              ],
+              "enemy_id": "azherowa_b2",
+              "wave": 2
             }
           ]
         },
         {
-          "pos": "4,0",
-          "stage_id": "s05a_lc1",
-          "rotation": 0,
+          "pos": "4,2",
+          "stage_id": "s05a_ib2",
+          "rotation": 270,
           "connections": {
-            "north": "3,0",
-            "east": "4,1"
+            "east": "4,3",
+            "west": "4,1"
           },
           "portals": {
-            "north": "portal_1770760882904_0kcwqxwih",
-            "east": "portal_1771829050902_igqqcz686"
+            "east": "portal_1770760475809_o935wst5m",
+            "west": "portal_1770760498696_s6sgv5h90"
           },
           "is_start": false,
           "is_end": false,
@@ -268,33 +629,74 @@
           "path_order": 8,
           "objects": [
             {
-              "type": "quest_item",
+              "type": "enemy",
+              "position": [
+                -0.3,
+                0,
+                -9.7
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.9,
+                0,
+                -9.7
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10,
+                0,
+                -11.3
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.4,
+                0,
+                11.8
+              ],
+              "enemy_id": "izhirak_s6",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
               "position": [
                 0.1,
-                1,
-                7.6
+                0,
+                10.7
               ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "Two cells! The resonance is getting stronger. Whatever these powered — it wanted to be found."
-                }
-              ]
+              "enemy_id": "froutang",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.6,
+                0,
+                10.7
+              ],
+              "enemy_id": "azherowa_b2",
+              "wave": 2
             }
           ]
         },
         {
           "pos": "4,1",
-          "stage_id": "s05a_lc2",
-          "rotation": 180,
+          "stage_id": "s05a_lb3",
+          "rotation": 90,
           "connections": {
-            "west": "4,0"
+            "east": "4,2"
           },
           "portals": {
-            "west": "portal_1771829063859_q0a4gsqi9",
-            "south": "portal_1770760918909_r4a8yoq2a"
+            "east": "portal_1770760727901_mxkpm6cdw",
+            "south": "portal_1771829034747_dr1nuvw1a"
           },
           "is_start": false,
           "is_end": true,
@@ -306,24 +708,86 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "south",
-          "path_order": 9
+          "path_order": 9,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                6.7,
+                0,
+                0.1
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.5,
+                0,
+                -0.2
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.3,
+                0,
+                -9.7
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.7,
+                0,
+                -12.2
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -7.7,
+                0,
+                -16.4
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -7.1,
+                0,
+                -12.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -8,
+                0,
+                -8.5
+              ]
+            }
+          ]
         }
       ],
       "warp_requires": [
         {
-          "item_id": "mag_cell",
-          "target": 2
+          "item_id": "mag_fragment",
+          "target": 1
         }
       ]
     },
     {
       "type": "transition",
       "area": "e",
-      "start_pos": "1,1",
-      "end_pos": "1,1",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
       "cells": [
         {
-          "pos": "1,1",
+          "pos": "0,0",
           "stage_id": "s05e_ia1",
           "rotation": 0,
           "connections": {},
@@ -338,48 +802,72 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "warp_edge": "north",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
           "path_order": 0,
           "objects": [
             {
               "type": "quest_item",
               "position": [
-                10,
+                -12.7,
                 0,
-                -5
+                -4.2
               ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
+              "item_id": "mag_fragment",
+              "item_label": "Mag Fragment",
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "Three cells. One more and we have a complete set. The last one should be deeper in."
+                  "text": "Second fragment. They're starting to sync up."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
                 }
               ]
             },
             {
-              "type": "dialog_trigger",
+              "type": "enemy",
               "position": [
+                -5.7,
                 0,
+                6.1
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.2,
                 0,
-                0
+                -0.2
               ],
-              "trigger_id": "elio_transition",
-              "trigger_size": [
-                44.5,
-                5,
-                4
+              "enemy_id": "azherowa_b2"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.2,
+                0,
+                4.9
               ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "I've been studying Mags my entire career. The texts say they bonded with people — not as tools, but as partners. If we can reassemble one..."
-                }
-              ]
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.7,
+                0,
+                -2.1
+              ],
+              "enemy_id": "pobomma"
             }
-          ],
-          "key_drop": "",
-          "required_keys": 0
+          ]
         }
       ],
       "entry_direction": "south",
@@ -389,18 +877,18 @@
       "type": "grid",
       "area": "b",
       "start_pos": "0,2",
-      "end_pos": "4,1",
+      "end_pos": "0,1",
       "cells": [
         {
           "pos": "0,2",
           "stage_id": "s05b_sa1",
-          "rotation": 0,
+          "rotation": 180,
           "connections": {
             "south": "1,2"
           },
           "portals": {
-            "south": "portal_1770762490612_xk9edjq18",
-            "north": "portal_1770762480435_w1vi860kj"
+            "south": "portal_1770762480435_w1vi860kj",
+            "north": "portal_1770762490612_xk9edjq18"
           },
           "is_start": true,
           "is_end": false,
@@ -412,89 +900,89 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0,
+          "path_order": 0
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s05b_ic3",
+          "rotation": 180,
+          "connections": {
+            "south": "2,2",
+            "north": "0,2"
+          },
+          "portals": {
+            "south": "portal_1770762222618_pkq7mzaxv",
+            "north": "portal_1770762240912_d4tbxftvu"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
           "objects": [
             {
-              "type": "dialog_trigger",
+              "type": "enemy",
               "position": [
+                -16,
                 0,
+                -8.6
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -15.8,
                 0,
-                0
+                -3.1
               ],
-              "trigger_id": "elio_entry_b",
-              "trigger_size": [
-                24.5,
-                3,
-                2
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.4,
+                0,
+                -15.1
               ],
-              "dialog": [
-                {
-                  "speaker": "Elio",
-                  "text": "The deepest part of these ruins. The architects built inward — the most important things are always at the center."
-                }
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.6,
+                0,
+                -9.4
+              ],
+              "enemy_id": "azherowa_b2"
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -2.8,
+                0,
+                16.8
               ]
             }
           ]
         },
         {
-          "pos": "1,2",
-          "stage_id": "s05b_tb3",
-          "rotation": 90,
-          "connections": {
-            "west": "1,1",
-            "south": "2,2",
-            "north": "0,2"
-          },
-          "portals": {
-            "west": "portal_1770762531421_11k1p8yus",
-            "south": "portal_1771829330163_9b0zqjyzr",
-            "north": "portal_1771829344220_qsvtcsi6h"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 1
-        },
-        {
-          "pos": "1,1",
-          "stage_id": "s05b_nc2",
+          "pos": "2,2",
+          "stage_id": "s05b_lb3",
           "rotation": 270,
           "connections": {
-            "east": "1,2"
+            "west": "2,1",
+            "north": "1,2"
           },
           "portals": {
-            "east": "portal_1770762463884_eccghdr22"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": true,
-          "key_for_cell": "4,2",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2
-        },
-        {
-          "pos": "2,2",
-          "stage_id": "s05b_ic3",
-          "rotation": 0,
-          "connections": {
-            "north": "1,2",
-            "south": "3,2"
-          },
-          "portals": {
-            "north": "portal_1770762222618_pkq7mzaxv",
-            "south": "portal_1770762240912_d4tbxftvu"
+            "west": "portal_1770762310334_psw7r9aa9",
+            "north": "portal_1771829272606_ryg70e085"
           },
           "is_start": false,
           "is_end": false,
@@ -506,45 +994,98 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -9.7,
+                0,
+                -9
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.9,
+                0,
+                -1.1
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.9,
+                0,
+                -7.4
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.6,
+                0,
+                -1.7
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.6,
+                0,
+                -12
+              ],
+              "enemy_id": "froutang",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.2,
+                0,
+                -7
+              ],
+              "enemy_id": "azherowa_b2",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.4,
+                0,
+                -1.3
+              ],
+              "enemy_id": "goldix",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.4,
+                0,
+                5.6
+              ],
+              "enemy_id": "pobomma"
+            }
+          ]
         },
         {
-          "pos": "3,2",
-          "stage_id": "s05b_ib2",
-          "rotation": 0,
-          "connections": {
-            "south": "4,2",
-            "north": "2,2"
-          },
-          "portals": {
-            "south": "portal_1770762135903_raq1yxheg",
-            "north": "portal_1770762149006_koouccay5"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 4
-        },
-        {
-          "pos": "4,2",
+          "pos": "2,1",
           "stage_id": "s05b_tb3",
-          "rotation": 180,
+          "rotation": 0,
           "connections": {
-            "north": "3,2",
-            "west": "4,1",
-            "east": "4,3"
+            "south": "3,1",
+            "east": "2,2",
+            "west": "2,0"
           },
           "portals": {
-            "north": "portal_1770762531421_11k1p8yus",
-            "west": "portal_1771829330163_9b0zqjyzr",
-            "east": "portal_1771829344220_qsvtcsi6h"
+            "south": "portal_1770762531421_11k1p8yus",
+            "east": "portal_1771829330163_9b0zqjyzr",
+            "west": "portal_1771829344220_qsvtcsi6h"
           },
           "is_start": false,
           "is_end": false,
@@ -552,22 +1093,363 @@
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": true,
-          "key_gate_direction": "east",
-          "key_drop": "",
+          "key_gate_direction": "south",
+          "key_drop": "2,1",
           "required_keys": 1,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 3,
+          "key_drop_position": [
+            3.9,
+            1,
+            9.4
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3.1,
+                0,
+                -3.7
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.3,
+                0,
+                -3.5
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9,
+                0,
+                3.5
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                4.7
+              ],
+              "enemy_id": "azherowa_b2"
+            }
+          ]
         },
         {
-          "pos": "4,1",
-          "stage_id": "s05b_lb3",
-          "rotation": 90,
+          "pos": "3,1",
+          "stage_id": "s05b_nc2",
+          "rotation": 180,
           "connections": {
-            "east": "4,2"
+            "north": "2,1"
           },
           "portals": {
-            "east": "portal_1770762310334_psw7r9aa9",
-            "south": "portal_1771829272606_ryg70e085"
+            "north": "portal_1770762463884_eccghdr22"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "quest_item",
+              "position": [
+                -17.9,
+                0,
+                14.7
+              ],
+              "item_id": "mag_fragment",
+              "item_label": "Mag Fragment",
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "Three fragments. Almost a full set."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Once it's fully charged, it can release a Photon Blast. It's something to see."
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.7,
+                0,
+                9.3
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.8,
+                0,
+                -11.3
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.2,
+                0,
+                -12.7
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11,
+                0,
+                -14.5
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "fence",
+              "position": [
+                -18.4,
+                0,
+                -3.2
+              ],
+              "link_id": "b"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                21.1,
+                0,
+                15.9
+              ],
+              "link_id": "b"
+            }
+          ]
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s05b_lc1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,0",
+            "east": "2,1"
+          },
+          "portals": {
+            "north": "portal_1770762338736_egi4mo9sv",
+            "east": "portal_1771829283696_uottk4qr3"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -13.4,
+                0,
+                -10.3
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.7,
+                0,
+                -10.2
+              ],
+              "enemy_id": "azherowa_b2"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -16.7,
+                0,
+                15.5
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.7,
+                0,
+                17
+              ],
+              "enemy_id": "pobomma"
+            }
+          ]
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s05b_ic1",
+          "rotation": 180,
+          "connections": {
+            "south": "2,0",
+            "north": "0,0"
+          },
+          "portals": {
+            "south": "portal_1770762163771_3emtnz6kq",
+            "north": "portal_1770762175378_pdu241uss"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -15.1,
+                0,
+                8.6
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.1,
+                0,
+                8.7
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.3,
+                0,
+                -14.6
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.4,
+                0,
+                -11.9
+              ],
+              "enemy_id": "azherowa_b2",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.3,
+                0,
+                -4.1
+              ],
+              "enemy_id": "goldix",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "0,0",
+          "stage_id": "s05b_lb1",
+          "rotation": 90,
+          "connections": {
+            "east": "0,1",
+            "south": "1,0"
+          },
+          "portals": {
+            "east": "portal_1770762284199_dgwf6ksmg",
+            "south": "portal_1771829258919_afduhhqi4"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                2.1,
+                0,
+                0.4
+              ],
+              "enemy_id": "pobomma"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.4,
+                0,
+                5.5
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.6,
+                0,
+                3.8
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.2,
+                0,
+                -5.4
+              ],
+              "enemy_id": "froutang"
+            }
+          ]
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s05b_ga1",
+          "rotation": 90,
+          "connections": {
+            "west": "0,0"
+          },
+          "portals": {
+            "west": "portal_1770762066212_1u5cs6987"
           },
           "is_start": false,
           "is_end": true,
@@ -578,68 +1460,51 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "south",
-          "path_order": 6,
+          "warp_edge": "",
+          "path_order": 8,
           "objects": [
             {
               "type": "quest_item",
               "position": [
-                10.6,
+                0.6,
                 0,
-                -11
+                -9.9
               ],
-              "item_id": "mag_cell",
-              "item_label": "Mag Cell",
+              "actions": [
+                "dismiss_companion",
+                "complete_quest",
+                "telepipe"
+              ],
+              "item_id": "mag_fragment",
+              "item_label": "Mag Fragment",
               "dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "That's all four! The cells are resonating together — I can feel it through the case. Let's push to the chamber ahead."
+                  "text": "There it is. The last piece."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Hold still. I'm fitting the cells into the housing..."
+                  "text": "Hold on. Let me fit them together."
                 },
                 {
                   "speaker": "",
-                  "text": "The four cells lock together. Light pulses through the seams, faster and faster — then the Mag lifts off Elio's hands and drifts toward you."
+                  "text": "Elio presses the four fragments into a housing. Light pulses through the seams, faster and faster. A new Mag rises from her hands and drifts in a slow circle around her."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "It... chose you. The old texts said Mags pick their partner, not the other way around. I've never seen it happen before."
+                  "text": "Hello, you. Welcome to the guild."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Take care of it. And take care of yourself — a Mag bond is for life."
+                  "text": "I'll take care of this one until someone signs up who needs a partner."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Thanks for keeping me safe out here. Let's head back."
                 }
-              ],
-              "actions": [
-                "complete_quest",
-                "telepipe"
               ]
             }
           ]
-        },
-        {
-          "pos": "4,3",
-          "stage_id": "s05b_nb2",
-          "rotation": 90,
-          "connections": {
-            "west": "4,2"
-          },
-          "portals": {
-            "west": "portal_1770762447606_t7fyxk2xi"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 7
         }
       ]
     }
@@ -657,35 +1522,34 @@
   "briefing_dialog": [
     {
       "speaker": "Principal",
-      "text": "This is Elio, from the Research Division. She has an unusual request."
+      "text": "This is Elio, from the Research Division. She has a request."
     },
     {
       "speaker": "Elio",
-      "text": "I study Mags — the companion artifacts from before the Great Blank. Everyone thinks they're extinct."
+      "text": "I'm the guild's Mag custodian. Every Mag a hunter carries passes through me first. Yours included."
     },
     {
       "speaker": "Elio",
-      "text": "But I've been tracking energy signatures deep in Paru. Something is still active down there."
+      "text": "We're running low on parts to build new Mags. There are old fragments scattered through the Paru ruins, enough to piece one together."
     },
     {
       "speaker": "Elio",
-      "text": "I need to recover Mag Cells from the ruins. With enough of them, I can reconstruct a living Mag. This could change everything."
+      "text": "I need to be the one to recover them. Each fragment has to be handled a certain way or it won't bond with the others."
     },
     {
       "speaker": "Elio",
-      "text": "The automata won't make it easy. I need someone who can handle themselves while I work."
+      "text": "I'm not a fighter. That's where you come in. Get me to each fragment and back."
     },
     {
       "speaker": "Principal",
-      "text": "The Research Division has authorized this expedition. Keep Elio safe and bring back what you find."
+      "text": "The Research Division has authorized the expedition. Keep her safe."
     }
   ],
   "objectives": [
     {
-      "item_id": "mag_cell",
-      "label": "Mag Cells",
+      "item_id": "mag_fragment",
+      "label": "Mag Fragments",
       "target": 4
     }
-  ],
-  "report_to": "guild_counter"
+  ]
 }
