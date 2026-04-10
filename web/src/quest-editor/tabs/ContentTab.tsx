@@ -1464,7 +1464,7 @@ function CellContentInspector({
                       <div style={{ marginBottom: '4px' }}>
                         <span style={{ fontSize: '10px', color: '#888' }}>Actions:</span>
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '2px' }}>
-                          {['complete_quest', 'telepipe'].map(action => {
+                          {['complete_quest', 'telepipe', 'dismiss_companion'].map(action => {
                             const active = (obj.actions || []).includes(action);
                             return (
                               <button
@@ -1694,7 +1694,7 @@ function CellContentInspector({
                     <div style={{ marginTop: '4px' }}>
                       <span style={{ fontSize: '10px', color: '#888' }}>Actions:</span>
                       <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '2px' }}>
-                        {['complete_quest', 'telepipe'].map(action => {
+                        {['complete_quest', 'telepipe', 'dismiss_companion'].map(action => {
                           const active = (obj.actions || []).includes(action);
                           return (
                             <button

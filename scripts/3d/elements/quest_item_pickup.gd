@@ -183,6 +183,10 @@ func _execute_pickup_actions(actions: Array) -> void:
 					continue
 				print("[QuestItem] Action: complete_quest")
 				SessionManager.complete_quest()
+			"dismiss_companion":
+				if companion_node and is_instance_valid(companion_node) and companion_node.has_method("dismiss"):
+					print("[QuestItem] Action: dismiss_companion")
+					companion_node.dismiss()
 			"telepipe":
 				if not objectives_met:
 					continue

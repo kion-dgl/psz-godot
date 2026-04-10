@@ -175,6 +175,7 @@ func _ready() -> void:
 	var subfolder: String = _get_stage_subfolder(stage_id, area_cfg["folder"])
 	var scene_path := "res://assets/stages/%s/%s/lndmd/%s_m.glb" % [subfolder, stage_id, stage_id]
 	var floor_path := "res://assets/stages/%s/%s/lndmd/%s-floor.glb" % [subfolder, stage_id, stage_id]
+	var obstacles_path := "res://assets/stages/%s/%s/lndmd/%s-obstacles.glb" % [subfolder, stage_id, stage_id]
 
 	var packed_scene := load(scene_path) as PackedScene
 	if not packed_scene:
@@ -228,6 +229,20 @@ func _ready() -> void:
 			_setup_map_collision(_map_root)
 	else:
 		_setup_map_collision(_map_root)
+
+	# Load obstacle collision (walls) from separate obstacles GLB
+	if ResourceLoader.exists(obstacles_path):
+		var obs_scene := load(obstacles_path) as PackedScene
+		if obs_scene:
+			var obs_root := obs_scene.instantiate() as Node3D
+			obs_root.name = "ObstacleCollision"
+			add_child(obs_root)
+			if _has_static_body(obs_root):
+				_configure_collision_nodes(obs_root)
+				print("[ValleyField] Obstacle collision from GLB import suffix: %s" % obstacles_path)
+			else:
+				_create_collision_from_meshes(obs_root)
+				print("[ValleyField] Obstacle collision built manually from mesh: %s" % obstacles_path)
 
 	# DEBUG: Visualize floor collision mesh as semi-transparent green overlay
 	_debug_show_floor_collision()
