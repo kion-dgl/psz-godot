@@ -16,6 +16,23 @@ func _init() -> void:
 	collision_size = Vector3(2.0, 2.0, 2.0)
 
 
+func _apply_state() -> void:
+	match element_state:
+		"collected":
+			visible = false
+			set_process(false)
+			interactable = false
+			if interaction_area:
+				interaction_area.set_deferred("monitoring", false)
+				interaction_area.set_deferred("monitorable", false)
+			if _prompt_label:
+				_prompt_label.visible = false
+			# Don't queue_free() here — dialog callbacks need this node alive.
+			# Cleanup happens after the pickup dialog sequence completes.
+		_:
+			super._apply_state()
+
+
 func _load_model() -> void:
 	# Build a flat 6-pointed star (two overlapping triangles) — gold material
 	var mesh_instance := MeshInstance3D.new()
@@ -106,6 +123,7 @@ func _show_pickup_dialog() -> void:
 		hud = get_tree().root.find_child("FieldHud", true, false) as CanvasLayer
 	if not hud:
 		SessionManager.collect_quest_item(quest_item_id)
+		queue_free()
 		return
 
 	var dialog_box := hud.get_node_or_null("DialogBox")
@@ -136,9 +154,18 @@ func _show_companion_pages(comp: Node, pages: Array, index: int, actions: Array)
 	var page: Dictionary = pages[index]
 	var text: String = str(page.get("text", ""))
 	var speaker: String = str(page.get("speaker", ""))
+	var next_idx := index + 1
+	# Empty speaker = narration — show in HUD dialog box instead of speech bubble
+	if speaker.is_empty():
+		var dialog_box := _find_dialog_box()
+		if dialog_box:
+			dialog_box.dialog_complete.connect(func() -> void:
+				_show_companion_pages(comp, pages, next_idx, actions)
+			, CONNECT_ONE_SHOT)
+			dialog_box.show_dialog([{"speaker": "", "text": text}])
+			return
 	var duration: float = maxf(3.0, text.length() / 20.0)
 	comp.show_speech(text, speaker, duration)
-	var next_idx := index + 1
 	comp.speech_finished.connect(func() -> void:
 		_show_companion_pages(comp, pages, next_idx, actions)
 	, CONNECT_ONE_SHOT)
@@ -146,6 +173,7 @@ func _show_companion_pages(comp: Node, pages: Array, index: int, actions: Array)
 
 func _execute_pickup_actions(actions: Array) -> void:
 	if actions.is_empty():
+		queue_free()
 		return
 	var objectives_met := SessionManager.are_objectives_complete()
 	for action in actions:
@@ -166,13 +194,22 @@ func _execute_pickup_actions(actions: Array) -> void:
 				telepipe.position = position
 				var fc := _find_field_controller()
 				if fc and fc.has_method("_on_end_reached"):
-					telepipe.activated.connect(func() -> void:
-						fc._on_end_reached()
-					)
+					telepipe.activated.connect(Callable(fc, "_on_end_reached"))
 				else:
-					telepipe.activated.connect(func() -> void:
-						SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
-					)
+					telepipe.activated.connect(Callable(SceneManager, "goto_scene").bind("res://scenes/3d/city/city_warp.tscn"))
+	queue_free()
+
+
+func _find_dialog_box() -> Node:
+	var hud: CanvasLayer = null
+	for node in get_tree().get_nodes_in_group("hud"):
+		hud = node as CanvasLayer
+		break
+	if not hud:
+		hud = get_tree().root.find_child("FieldHud", true, false) as CanvasLayer
+	if not hud:
+		return null
+	return hud.get_node_or_null("DialogBox")
 
 
 func _find_field_controller() -> Node:

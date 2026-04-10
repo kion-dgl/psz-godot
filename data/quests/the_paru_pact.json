@@ -298,11 +298,19 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Everything we know about Mags comes from what we've pulled out of ruins like these. Whoever built them had technology similar to CASTs."
+                  "text": "Everything we know about Mags comes from what we've pulled out of ruins like these."
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Once a Mag bonds with a hunter, it learns to recognize them. Some get clever enough to protect or heal their partner on their own."
+                  "text": "Whoever built them had technology similar to CASTs."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Once a Mag bonds with a hunter, it learns to recognize them."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Some get clever enough to protect or heal their partner on their own."
                 }
               ]
             },
@@ -815,7 +823,11 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack. Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
+                  "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
                 }
               ]
             },
@@ -1168,7 +1180,11 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy. Once it's fully charged, it can release a Photon Blast. It's something to see."
+                  "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "Once it's fully charged, it can release a Photon Blast. It's something to see."
                 }
               ]
             },
