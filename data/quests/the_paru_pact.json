@@ -298,7 +298,11 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "Did you know Mags are intelligent? When a hunter equips one, it learns to recognize them. Some get clever enough to protect or heal their master on their own."
+                  "text": "We've only been finding Mags since the Great Blank. Nobody knows who made them or why. The technology is similar to CASTs, but older. Much older."
+                },
+                {
+                  "speaker": "Elio",
+                  "text": "When a hunter equips one, it learns to recognize them. Some get clever enough to protect or heal their master on their own."
                 }
               ]
             },
@@ -1476,7 +1480,7 @@
                 },
                 {
                   "speaker": "Elio",
-                  "text": "It'll need time on my shelf before it's ready. When a new hunter signs up and needs a partner, this one will be waiting."
+                  "text": "I'll take care of this one until someone signs up who needs a partner."
                 },
                 {
                   "speaker": "Elio",
