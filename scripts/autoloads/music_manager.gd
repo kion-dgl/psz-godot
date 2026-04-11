@@ -98,7 +98,6 @@ var _player_a: AudioStreamPlayer
 var _player_b: AudioStreamPlayer
 var _active_player: AudioStreamPlayer
 var _current_track: String = ""
-var _fading: bool = false
 var _stream_cache: Dictionary = {}
 
 
@@ -195,7 +194,7 @@ func _play_track(track_key: String) -> void:
 	tw.set_parallel(true)
 	if old_player.playing:
 		tw.tween_property(old_player, "volume_db", -40.0, FADE_DURATION)
-	tw.tween_property(new_player, "volume_db", linear_to_db(music_volume), FADE_DURATION)
+	tw.tween_property(new_player, "volume_db", 0.0, FADE_DURATION)
 	tw.set_parallel(false)
 	tw.tween_callback(func():
 		old_player.stop()
