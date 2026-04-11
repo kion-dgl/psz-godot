@@ -92,7 +92,10 @@ export default function SfxLabeler() {
   const [playing, setPlaying] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'unlabeled' | 'starred' | 'labeled'>('all');
   const [search, setSearch] = useState('');
+  const [autoAdvance, setAutoAdvance] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const autoAdvanceRef = useRef(autoAdvance);
+  autoAdvanceRef.current = autoAdvance;
 
   // Load file list for category
   useEffect(() => {
@@ -125,6 +128,8 @@ export default function SfxLabeler() {
     saveLabels(labels);
   }, [labels]);
 
+  const filteredFilesRef = useRef<string[]>([]);
+
   const playSound = useCallback((file: string) => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -134,7 +139,18 @@ export default function SfxLabeler() {
     audioRef.current = audio;
     setPlaying(file);
     audio.play();
-    audio.onended = () => setPlaying(null);
+    audio.onended = () => {
+      if (autoAdvanceRef.current) {
+        const ff = filteredFilesRef.current;
+        const idx = ff.indexOf(file);
+        if (idx >= 0 && idx < ff.length - 1) {
+          // Small delay so the UI updates
+          setTimeout(() => playSound(ff[idx + 1]), 150);
+          return;
+        }
+      }
+      setPlaying(null);
+    };
   }, [category]);
 
   const updateEntry = useCallback((file: string, updates: Partial<SfxEntry>) => {
@@ -158,6 +174,7 @@ export default function SfxLabeler() {
     if (search && !entry?.label && !file.includes(search)) return false;
     return true;
   });
+  filteredFilesRef.current = filteredFiles;
 
   const [copied, setCopied] = useState(false);
 
@@ -263,6 +280,52 @@ export default function SfxLabeler() {
 
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Playback bar */}
+        <div style={{
+          padding: '8px 16px', borderBottom: '1px solid #222',
+          display: 'flex', gap: '8px', alignItems: 'center',
+          background: '#0d0d1e',
+        }}>
+          <button onClick={() => {
+            const idx = filteredFiles.indexOf(playing || '');
+            const prev = idx > 0 ? idx - 1 : filteredFiles.length - 1;
+            if (filteredFiles[prev]) playSound(filteredFiles[prev]);
+          }} style={transportBtnStyle} title="Previous (Shift+Left)">
+            {'\u23EE'}
+          </button>
+          <button onClick={() => {
+            if (playing && audioRef.current) { audioRef.current.pause(); setPlaying(null); }
+            else if (filteredFiles.length > 0) playSound(filteredFiles[0]);
+          }} style={{ ...transportBtnStyle, width: '40px', fontSize: '18px', background: playing ? '#4a9eff' : '#333' }}>
+            {playing ? '\u23F9' : '\u25B6'}
+          </button>
+          <button onClick={() => {
+            const idx = filteredFiles.indexOf(playing || '');
+            const next = idx >= 0 && idx < filteredFiles.length - 1 ? idx + 1 : 0;
+            playSound(filteredFiles[next]);
+          }} style={transportBtnStyle} title="Next (Shift+Right)">
+            {'\u23ED'}
+          </button>
+          <button onClick={() => setAutoAdvance(a => !a)} style={{
+            ...transportBtnStyle,
+            background: autoAdvance ? '#2a4a2a' : '#333',
+            color: autoAdvance ? '#88ff88' : '#888',
+            fontSize: '11px', width: 'auto', padding: '4px 10px',
+          }} title="Auto-advance to next sound when current finishes">
+            Auto
+          </button>
+          <span style={{
+            flex: 1, fontSize: '12px', fontFamily: 'monospace',
+            color: playing ? '#4a9eff' : '#555',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {playing || 'No sound playing'}
+          </span>
+          {playing && getEntry(playing)?.label && (
+            <span style={{ fontSize: '11px', color: '#88ff88' }}>{getEntry(playing)?.label}</span>
+          )}
+        </div>
+
         {/* Toolbar */}
         <div style={{
           padding: '8px 16px', borderBottom: '1px solid #333',
@@ -339,6 +402,12 @@ export default function SfxLabeler() {
     </div>
   );
 }
+
+const transportBtnStyle: React.CSSProperties = {
+  width: '32px', height: '32px', borderRadius: '4px',
+  background: '#333', border: 'none', color: '#ccc',
+  cursor: 'pointer', fontSize: '14px',
+};
 
 const pageBtnStyle: React.CSSProperties = {
   padding: '4px 12px', fontSize: '11px', background: '#333',
