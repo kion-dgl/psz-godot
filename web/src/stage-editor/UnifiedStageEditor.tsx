@@ -15,6 +15,8 @@ import TextureTab, { type AnimatedTextureInfo } from './tabs/TextureTab';
 import ObstacleTab, { type PlacementDimensions, DEFAULT_PLACEMENT_DIMENSIONS } from './tabs/ObstacleTab';
 import ExportTab from './tabs/ExportTab';
 import SvgTab from './tabs/SvgTab';
+import SceneTab, { computeLighting, PLACED_PRESETS } from './tabs/SceneTab';
+import ParticleOverlay, { type ParticleEffect } from './ParticleOverlay';
 
 // Extract floor triangles from scene
 function extractFloorTriangles(
@@ -93,6 +95,7 @@ const TABS: { id: EditorTab; label: string }[] = [
   { id: 'portals', label: 'Portals' },
   { id: 'textures', label: 'Textures' },
   { id: 'obstacles', label: 'Obstacles' },
+  { id: 'scene', label: 'Scene' },
   { id: 'svg', label: 'SVG' },
   { id: 'export', label: 'Export' },
 ];
@@ -122,6 +125,15 @@ export default function UnifiedStageEditor() {
   const [obstaclePlacementDimensions, setObstaclePlacementDimensions] = useState<PlacementDimensions>(DEFAULT_PLACEMENT_DIMENSIONS);
   const [selectedObstacleId, setSelectedObstacleId] = useState<string | null>(null);
   const [obstaclePlacementLabel, setObstaclePlacementLabel] = useState('Boulder');
+
+  // Scene tab state
+  const [timeOfDay, setTimeOfDay] = useState(10.0);
+  const [particles, setParticles] = useState<ParticleEffect[]>([]);
+  const [particlePlacementMode, setParticlePlacementMode] = useState(false);
+  const [particlePlacementPreset, setParticlePlacementPreset] = useState('spores');
+  const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
+
+  const lighting = useMemo(() => computeLighting(timeOfDay), [timeOfDay]);
 
   // Animated textures state
   const [animatedTextures, setAnimatedTextures] = useState<AnimatedTextureInfo[]>([]);
@@ -298,6 +310,20 @@ export default function UnifiedStageEditor() {
     setSelectedObstacleId(id);
   }, []);
 
+  // Handle particle effect placement
+  const handlePlaceEffect = useCallback(
+    (position: [number, number, number]) => {
+      const base = PLACED_PRESETS[particlePlacementPreset];
+      if (!base) return;
+      const id = `placed_${particlePlacementPreset}_${Date.now()}`;
+      const newEffect = { id, position, ...base };
+      setParticles(prev => [...prev, newEffect]);
+      setSelectedEffectId(id);
+      setParticlePlacementMode(false);
+    },
+    [particlePlacementPreset]
+  );
+
   // Render the active tab's control panel
   const renderTabPanel = () => {
     if (!config) return null;
@@ -357,6 +383,21 @@ export default function UnifiedStageEditor() {
             setSelectedObstacleId={setSelectedObstacleId}
             placementLabel={obstaclePlacementLabel}
             setPlacementLabel={setObstaclePlacementLabel}
+          />
+        );
+      case 'scene':
+        return (
+          <SceneTab
+            timeOfDay={timeOfDay}
+            onTimeChange={setTimeOfDay}
+            particles={particles}
+            onParticlesChange={setParticles}
+            placementMode={particlePlacementMode}
+            onSetPlacementMode={setParticlePlacementMode}
+            placementPreset={particlePlacementPreset}
+            onSetPlacementPreset={setParticlePlacementPreset}
+            selectedEffectId={selectedEffectId}
+            onSelectEffect={setSelectedEffectId}
           />
         );
       case 'svg':
@@ -621,9 +662,21 @@ export default function UnifiedStageEditor() {
               onSceneReady={handleSceneReady}
               showGrid={true}
               showStage={showStage}
+              lighting={activeTab === 'scene' ? lighting : null}
             >
               {renderCanvasOverlays()}
               <TextureAnimator animatedTextures={animatedTextures} />
+              {activeTab === 'scene' && (
+                <ParticleOverlay
+                  effects={particles}
+                  placementMode={particlePlacementMode}
+                  placementPreset={particlePlacementPreset}
+                  placementColor={PLACED_PRESETS[particlePlacementPreset]?.color || [0.2, 1.0, 0.3]}
+                  selectedEffectId={selectedEffectId}
+                  onPlaceEffect={handlePlaceEffect}
+                  onSelectEffect={setSelectedEffectId}
+                />
+              )}
             </StageCanvas>
           </Suspense>
         </div>
