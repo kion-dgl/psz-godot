@@ -640,7 +640,8 @@
             }
           ]
         }
-      ]
+      ],
+      "exit_direction": "north"
     },
     {
       "type": "transition",
@@ -1512,7 +1513,8 @@
             }
           ]
         }
-      ]
+      ],
+      "entry_direction": "north"
     }
   ],
   "companions": [

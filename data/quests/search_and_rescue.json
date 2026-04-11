@@ -1005,7 +1005,8 @@
             }
           ]
         }
-      ]
+      ],
+      "exit_direction": "east"
     },
     {
       "type": "transition",
@@ -2128,7 +2129,8 @@
             }
           ]
         }
-      ]
+      ],
+      "entry_direction": "north"
     }
   ],
   "companions": [

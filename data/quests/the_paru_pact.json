@@ -778,7 +778,8 @@
           "item_id": "mag_fragment",
           "target": 1
         }
-      ]
+      ],
+      "exit_direction": "south"
     },
     {
       "type": "transition",
@@ -1506,7 +1507,8 @@
             }
           ]
         }
-      ]
+      ],
+      "entry_direction": "north"
     }
   ],
   "companions": [

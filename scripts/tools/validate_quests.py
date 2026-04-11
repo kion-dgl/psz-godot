@@ -78,6 +78,32 @@ def validate_quest(filepath: str) -> list[str]:
                 if target_pos not in cell_positions:
                     errors.append(f'{cell_label}: connection "{dir_key}" -> "{target_pos}" not in section cells')
 
+    # Validate entry/exit directions for multi-section quests
+    sections = quest.get('sections', [])
+    if len(sections) > 1:
+        for si, section in enumerate(sections):
+            sec_label = f'{fname} section[{si}]'
+            cells = section.get('cells', [])
+
+            # entry_direction needed if start cell has an unconnected non-default portal
+            if si > 0 and not section.get('entry_direction'):
+                start_pos = section.get('start_pos', '')
+                start_cell = next((c for c in cells if c.get('pos') == start_pos), None)
+                if start_cell:
+                    conns = set(start_cell.get('connections', {}).keys())
+                    portals = {d for d in start_cell.get('portals', {}) if d != 'default'}
+                    unconnected = portals - conns
+                    if unconnected:
+                        errors.append(f'{sec_label}: missing entry_direction (start cell has unconnected portals: {unconnected})')
+
+            # exit_direction needed if end cell has no warp_edge and has unconnected portals
+            if si < len(sections) - 1 and not section.get('exit_direction'):
+                end_pos = section.get('end_pos', '')
+                end_cell = next((c for c in cells if c.get('pos') == end_pos), None)
+                has_warp_edge = end_cell and end_cell.get('warp_edge', '')
+                if not has_warp_edge:
+                    errors.append(f'{sec_label}: missing exit_direction (required for non-final section)')
+
     return errors
 
 

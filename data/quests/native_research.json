@@ -680,7 +680,8 @@
             }
           ]
         }
-      ]
+      ],
+      "exit_direction": "south"
     },
     {
       "type": "grid",
@@ -1277,7 +1278,8 @@
             }
           ]
         }
-      ]
+      ],
+      "exit_direction": "south"
     },
     {
       "type": "grid",
