@@ -1,0 +1,64 @@
+{
+  "tracks": {
+    "title_screen": "phantasy_star_zero",
+    "city": "full_of_life",
+    "office": "general",
+    "teleporter": "flowing",
+
+    "valley_a": "desolate_scape",
+    "valley_b": "desolate_wilds",
+    "valley_boss": "growl_from_the_red_beat",
+
+    "wetlands_a": "damp_swamp",
+    "wetlands_b": "damp_clump",
+    "wetlands_boss": "chaotic_swells",
+
+    "snowfield_a": "snowflake",
+    "snowfield_b": "snowstorm",
+    "snowfield_boss": "rush_to_struggle",
+
+    "paru_a": "secret_alter",
+    "paru_b": "secret_ritual",
+    "paru_boss": "machinery_pressure",
+
+    "ruins_a": "trickle_maze",
+    "ruins_b": "trickle_labyrinth",
+    "ruins_boss": "rush_to_struggle",
+
+    "plant_a": "overflow",
+    "plant_b": "overdrive",
+    "plant_boss": "machinery_conqueror",
+
+    "shrine_a": "crescent_serenade",
+    "shrine_b": "crescent_crusade",
+    "shrine_boss_mt": "idola_the_imitated_god",
+    "shrine_boss_df": "idola_the_devils_shadow"
+  },
+  "files": {
+    "phantasy_star_zero": "res://assets/music/phantasy_star_zero.ogg",
+    "full_of_life": "res://assets/music/full_of_life.ogg",
+    "general": "res://assets/music/general.ogg",
+    "flowing": "res://assets/music/flowing.ogg",
+    "desolate_scape": "res://assets/music/desolate_scape.ogg",
+    "desolate_wilds": "res://assets/music/desolate_wilds.ogg",
+    "growl_from_the_red_beat": "res://assets/music/growl_from_the_red_beat.ogg",
+    "damp_swamp": "res://assets/music/damp_swamp.ogg",
+    "damp_clump": "res://assets/music/damp_clump.ogg",
+    "chaotic_swells": "res://assets/music/chaotic_swells.ogg",
+    "snowflake": "res://assets/music/snowflake.ogg",
+    "snowstorm": "res://assets/music/snowstorm.ogg",
+    "rush_to_struggle": "res://assets/music/rush_to_struggle.ogg",
+    "secret_alter": "res://assets/music/secret_alter.ogg",
+    "secret_ritual": "res://assets/music/secret_ritual.ogg",
+    "machinery_pressure": "res://assets/music/machinery_pressure.ogg",
+    "trickle_maze": "res://assets/music/trickle_maze.ogg",
+    "trickle_labyrinth": "res://assets/music/trickle_labyrinth.ogg",
+    "overflow": "res://assets/music/overflow.ogg",
+    "overdrive": "res://assets/music/overdrive.ogg",
+    "machinery_conqueror": "res://assets/music/machinery_conqueror.ogg",
+    "crescent_serenade": "res://assets/music/crescent_serenade.ogg",
+    "crescent_crusade": "res://assets/music/crescent_crusade.ogg",
+    "idola_the_imitated_god": "res://assets/music/idola_the_imitated_god.ogg",
+    "idola_the_devils_shadow": "res://assets/music/idola_the_devils_shadow.ogg"
+  }
+}
