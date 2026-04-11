@@ -68,6 +68,25 @@ export default function SfxLabeler() {
   const [category, setCategory] = useState('common');
   const [files, setFiles] = useState<string[]>([]);
   const [labels, setLabels] = useState<Record<string, SfxEntry>>(loadLabels);
+  const [loaded, setLoaded] = useState(false);
+
+  // Load saved labels from data/sfx_labels.json on first mount
+  useEffect(() => {
+    if (loaded) return;
+    fetch(assetUrl('data/sfx_labels.json'))
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setLabels(prev => {
+            // File labels are base, localStorage overrides
+            const merged = { ...data, ...prev };
+            return merged;
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, [loaded]);
   const [playing, setPlaying] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'unlabeled' | 'starred' | 'labeled'>('all');
   const [search, setSearch] = useState('');
@@ -138,18 +157,38 @@ export default function SfxLabeler() {
     return true;
   });
 
+  const [copied, setCopied] = useState(false);
+
   const exportJSON = () => {
-    // Export only labeled entries, grouped by label
-    const byLabel: Record<string, string[]> = {};
+    // Export full labels map — only entries that have a label, star, or notes
+    const filtered: Record<string, SfxEntry> = {};
     for (const [key, entry] of Object.entries(labels)) {
-      if (entry.label) {
-        if (!byLabel[entry.label]) byLabel[entry.label] = [];
-        byLabel[entry.label].push(key);
+      if (entry.label || entry.starred || entry.notes) {
+        filtered[key] = entry;
       }
     }
-    const json = JSON.stringify(byLabel, null, 2);
+    const json = JSON.stringify(filtered, null, 2);
     navigator.clipboard.writeText(json);
-    alert('Copied to clipboard!');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const importJSON = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        const imported = JSON.parse(text) as Record<string, SfxEntry>;
+        setLabels(prev => ({ ...prev, ...imported }));
+      } catch {
+        alert('Invalid JSON file');
+      }
+    };
+    input.click();
   };
 
   const stats = {
@@ -193,13 +232,21 @@ export default function SfxLabeler() {
             );
           })}
         </div>
-        <div style={{ padding: '8px', borderTop: '1px solid #333' }}>
+        <div style={{ padding: '8px', borderTop: '1px solid #333', display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <button onClick={exportJSON} style={{
-            width: '100%', padding: '8px', background: '#224422',
-            border: '1px solid #446644', borderRadius: '4px',
-            color: '#88cc88', fontSize: '12px', cursor: 'pointer',
+            width: '100%', padding: '8px',
+            background: copied ? '#2a4a2a' : '#224422',
+            border: `1px solid ${copied ? '#66aa66' : '#446644'}`, borderRadius: '4px',
+            color: copied ? '#88ff88' : '#88cc88', fontSize: '12px', cursor: 'pointer',
           }}>
-            Export Labels JSON
+            {copied ? 'Copied!' : 'Copy Labels JSON'}
+          </button>
+          <button onClick={importJSON} style={{
+            width: '100%', padding: '8px', background: '#222244',
+            border: '1px solid #444466', borderRadius: '4px',
+            color: '#8888cc', fontSize: '12px', cursor: 'pointer',
+          }}>
+            Import Labels JSON
           </button>
         </div>
       </div>
