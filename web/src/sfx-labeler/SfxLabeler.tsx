@@ -395,7 +395,7 @@ export default function SfxLabeler() {
         )}
 
         {/* Sound list */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '8px', paddingBottom: '48px' }}>
           {pagedFiles.map(file => (
             <SfxRow
               key={file}
