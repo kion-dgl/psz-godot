@@ -880,33 +880,37 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	mat.gravity = Vector3(0, 0, 0)
 	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
 	mat.emission_sphere_radius = radius
-	mat.scale_min = 0.06
-	mat.scale_max = 0.12
+	mat.scale_min = 1.0
+	mat.scale_max = 2.0
 	mat.color = color
-	# Fade out over lifetime
-	var alpha_curve := CurveTexture.new()
-	var curve := Curve.new()
-	curve.add_point(Vector2(0.0, 0.0))
-	curve.add_point(Vector2(0.15, 1.0))
-	curve.add_point(Vector2(0.7, 1.0))
-	curve.add_point(Vector2(1.0, 0.0))
-	alpha_curve.curve = curve
-	mat.alpha_curve = alpha_curve
+	# Fade in then out over lifetime
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(color.r, color.g, color.b, 0.0))
+	gradient.add_point(0.15, Color(color.r, color.g, color.b, 1.0))
+	gradient.add_point(0.7, Color(color.r, color.g, color.b, 1.0))
+	gradient.set_color(gradient.get_point_count() - 1, Color(color.r, color.g, color.b, 0.0))
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = gradient
+	mat.color_ramp = ramp
 	particles.process_material = mat
 
-	# Draw pass — small glowing sphere
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.06
-	sphere.height = 0.12
-	var sphere_mat := StandardMaterial3D.new()
-	sphere_mat.albedo_color = color
-	sphere_mat.emission_enabled = true
-	sphere_mat.emission = color
-	sphere_mat.emission_energy_multiplier = 2.0
-	sphere_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	sphere.material = sphere_mat
-	particles.draw_pass_1 = sphere
-
+	# Draw pass — soft glowing dot using radial gradient texture
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.15, 0.15)
+	var quad_mat := StandardMaterial3D.new()
+	quad_mat.albedo_color = color
+	quad_mat.albedo_texture = _get_glow_dot_texture()
+	quad_mat.emission_enabled = true
+	quad_mat.emission = color
+	quad_mat.emission_energy_multiplier = 3.0
+	quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	quad_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	quad_mat.no_depth_test = true
+	quad.material = quad_mat
+	particles.draw_pass_1 = quad
 	root.add_child(particles)
 
 	# Point light for ambient glow
@@ -914,12 +918,37 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 		var light := OmniLight3D.new()
 		light.name = "SporeLight"
 		light.light_color = color
-		light.light_energy = light_intensity
-		light.omni_range = light_radius
-		light.omni_attenuation = 1.5
+		light.light_energy = light_intensity * 8.0
+		light.omni_range = light_radius * 2.0
+		light.omni_attenuation = 0.8
 		light.shadow_enabled = false
 		light.position = Vector3(0, 1.5, 0)
 		root.add_child(light)
+		print("[StageEffect] Spore light at %s energy=%.1f range=%.1f" % [pos, light.light_energy, light_radius])
+
+
+## Cached radial gradient texture for spore particles.
+static var _glow_dot_tex: ImageTexture = null
+
+static func _get_glow_dot_texture() -> ImageTexture:
+	if _glow_dot_tex:
+		return _glow_dot_tex
+	var size := 32
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	var center := Vector2(size / 2.0, size / 2.0)
+	var max_r := size / 2.0
+	for y in range(size):
+		for x in range(size):
+			var dist: float = Vector2(x + 0.5, y + 0.5).distance_to(center) / max_r
+			var alpha: float = clampf(1.0 - _smoothstep(0.0, 1.0, dist), 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, alpha))
+	_glow_dot_tex = ImageTexture.create_from_image(img)
+	return _glow_dot_tex
+
+
+static func _smoothstep(edge0: float, edge1: float, x: float) -> float:
+	var t: float = clampf((x - edge0) / (edge1 - edge0), 0.0, 1.0)
+	return t * t * (3.0 - 2.0 * t)
 
 
 ## Direction base rotations for portal position math (matches quest-io.ts DIRECTION_ROTATIONS).
