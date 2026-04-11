@@ -438,6 +438,38 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
     return section;
   }));
 
+  // Auto-compute entry/exit directions for sections that don't have them.
+  // Infer from neighboring sections so area warps work in both directions.
+  const OPPOSITE_DIR: Record<string, string> = { north: 'south', south: 'north', east: 'west', west: 'east' };
+  for (let i = 0; i < godotSections.length; i++) {
+    const sec = godotSections[i] as Record<string, unknown>;
+    // Infer entry from previous section's exit
+    if (!sec.entry_direction && i > 0) {
+      const prev = godotSections[i - 1] as Record<string, unknown>;
+      const prevExit = prev.exit_direction as string | undefined;
+      if (prevExit && OPPOSITE_DIR[prevExit]) {
+        sec.entry_direction = OPPOSITE_DIR[prevExit];
+      } else {
+        // Fall back: find end cell's warp_edge in previous section
+        const prevCells = prev.cells as Array<Record<string, unknown>>;
+        const prevEnd = prev.end_pos as string;
+        const endCell = prevCells?.find(c => c.pos === prevEnd);
+        const warpEdge = endCell?.warp_edge as string | undefined;
+        if (warpEdge && OPPOSITE_DIR[warpEdge]) {
+          sec.entry_direction = OPPOSITE_DIR[warpEdge];
+        }
+      }
+    }
+    // Infer exit from next section's entry
+    if (!sec.exit_direction && i + 1 < godotSections.length) {
+      const next = godotSections[i + 1] as Record<string, unknown>;
+      const nextEntry = next.entry_direction as string | undefined;
+      if (nextEntry && OPPOSITE_DIR[nextEntry]) {
+        sec.exit_direction = OPPOSITE_DIR[nextEntry];
+      }
+    }
+  }
+
   // Warp link resolution: scan all sections for warp_dest objects, then inject
   // warp_section/warp_cell/warp_position into matching warp objects
   const warpDestMap = new Map<string, { sectionIndex: number; cellPos: string; position: [number, number, number] }>();

@@ -1614,6 +1614,30 @@ func _spawn_field_elements() -> void:
 	var current_section_data: Dictionary = sections_for_warp[section_idx_for_warp] if section_idx_for_warp < sections_for_warp.size() else {}
 	var entry_dir: String = str(current_section_data.get("entry_direction", ""))
 	var exit_dir: String = str(current_section_data.get("exit_direction", ""))
+
+	# Infer entry direction from previous section's exit if missing
+	if entry_dir.is_empty() and section_idx_for_warp > 0:
+		var prev_sec: Dictionary = sections_for_warp[section_idx_for_warp - 1]
+		var prev_exit: String = str(prev_sec.get("exit_direction", ""))
+		# If previous section also has no exit_direction, check its end cell's warp_edge
+		if prev_exit.is_empty():
+			var prev_cells: Array = prev_sec.get("cells", [])
+			var prev_end_pos: String = str(prev_sec.get("end_pos", ""))
+			for pc in prev_cells:
+				if str(pc.get("pos", "")) == prev_end_pos:
+					prev_exit = str(pc.get("warp_edge", ""))
+					break
+		if not prev_exit.is_empty() and OPPOSITE.has(prev_exit):
+			entry_dir = OPPOSITE[prev_exit]
+			print("[ValleyField] Inferred entry_direction='%s' from prev section exit='%s'" % [entry_dir, prev_exit])
+
+	# Infer exit direction from next section's entry if missing (and no warp_edge)
+	if exit_dir.is_empty() and warp_edge.is_empty() and section_idx_for_warp + 1 < sections_for_warp.size():
+		var next_sec: Dictionary = sections_for_warp[section_idx_for_warp + 1]
+		var next_entry: String = str(next_sec.get("entry_direction", ""))
+		if not next_entry.is_empty() and OPPOSITE.has(next_entry):
+			exit_dir = OPPOSITE[next_entry]
+			print("[ValleyField] Inferred exit_direction='%s' from next section entry='%s'" % [exit_dir, next_entry])
 	var room_has_enemies: bool = _cell_has_enemies(_current_cell)
 
 	for portal_dir in _portal_data:
@@ -1674,9 +1698,15 @@ func _spawn_field_elements() -> void:
 		if is_exit and t_section < sections_for_warp.size():
 			var target_sec: Dictionary = sections_for_warp[t_section]
 			aw_entry_edge = str(target_sec.get("entry_direction", ""))
+			# Infer from current section's exit if target has no entry_direction
+			if aw_entry_edge.is_empty() and OPPOSITE.has(portal_dir):
+				aw_entry_edge = OPPOSITE[portal_dir]
 		elif is_entry and t_section >= 0 and t_section < sections_for_warp.size():
 			var target_sec: Dictionary = sections_for_warp[t_section]
 			aw_entry_edge = str(target_sec.get("exit_direction", ""))
+			# Infer from current section's entry if target has no exit_direction
+			if aw_entry_edge.is_empty() and OPPOSITE.has(portal_dir):
+				aw_entry_edge = OPPOSITE[portal_dir]
 
 		var is_final := is_final_exit
 		var aw_callback := func(_body: Node3D) -> void:
