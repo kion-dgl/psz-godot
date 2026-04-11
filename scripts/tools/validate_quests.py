@@ -16,6 +16,7 @@ import os
 import sys
 
 QUEST_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'quests')
+FIELD_QUEST_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'field_quests')
 
 REQUIRED_QUEST_FIELDS = {'version', 'last_updated', 'id', 'name', 'description', 'area_id', 'sections'}
 REQUIRED_SECTION_FIELDS = {'type', 'area', 'start_pos', 'end_pos', 'cells'}
@@ -107,19 +108,24 @@ def validate_quest(filepath: str) -> list[str]:
     return errors
 
 
-def main():
+def validate_directory(dir_path: str, label: str, use_manifest: bool = True) -> tuple[list[str], int]:
+    """Validate all quest files in a directory. Returns (errors, count)."""
     all_errors = []
-    manifest_path = os.path.join(QUEST_DIR, 'manifest.json')
-    if not os.path.exists(manifest_path):
-        print('WARNING: manifest.json not found', file=sys.stderr)
-        quest_files = [f for f in os.listdir(QUEST_DIR) if f.endswith('.json') and f != 'manifest.json']
+    if use_manifest:
+        manifest_path = os.path.join(dir_path, 'manifest.json')
+        if not os.path.exists(manifest_path):
+            print(f'WARNING: {label} manifest.json not found', file=sys.stderr)
+            quest_files = [f for f in os.listdir(dir_path) if f.endswith('.json') and f != 'manifest.json']
+        else:
+            with open(manifest_path) as f:
+                quest_files = json.load(f)
     else:
-        with open(manifest_path) as f:
-            quest_files = json.load(f)
+        quest_files = [f for f in os.listdir(dir_path) if f.endswith('.json') and f != 'manifest.json']
 
+    print(f'\n{label}:')
     for raw_name in sorted(quest_files):
         fname = raw_name if raw_name.endswith('.json') else raw_name + '.json'
-        fpath = os.path.join(QUEST_DIR, fname)
+        fpath = os.path.join(dir_path, fname)
         if not os.path.exists(fpath):
             all_errors.append(f'{fname}: file not found (listed in manifest)')
             continue
@@ -129,13 +135,23 @@ def main():
         else:
             print(f'  OK: {fname}')
 
+    return all_errors, len(quest_files)
+
+
+def main():
+    errors1, count1 = validate_directory(QUEST_DIR, 'Guild Quests', use_manifest=True)
+    errors2, count2 = validate_directory(FIELD_QUEST_DIR, 'Field Quests', use_manifest=False)
+
+    all_errors = errors1 + errors2
+    total = count1 + count2
+
     if all_errors:
         print(f'\n{len(all_errors)} error(s):', file=sys.stderr)
         for e in all_errors:
             print(f'  ERROR: {e}', file=sys.stderr)
         sys.exit(1)
     else:
-        print(f'\nAll {len(quest_files)} quest files valid.')
+        print(f'\nAll {total} quest files valid.')
 
 
 if __name__ == '__main__':

@@ -18,6 +18,7 @@ from pathlib import Path
 
 OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
 QUEST_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "quests"
+FIELD_QUEST_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "field_quests"
 
 
 def get_unconnected_portals(cell: dict) -> list[str]:
@@ -142,19 +143,19 @@ def fix_quest(path: Path) -> bool:
     return False
 
 
-def main():
-    quest_files = sorted(QUEST_DIR.glob("*.json"))
+def process_directory(dir_path: Path, label: str) -> tuple[int, int]:
+    quest_files = sorted(dir_path.glob("*.json"))
     quest_files = [f for f in quest_files if f.name != "manifest.json"]
 
     total = 0
     fixed = 0
+    print(f"\n=== {label} ({dir_path}) ===")
     for qf in quest_files:
         total += 1
         try:
             if fix_quest(qf):
                 fixed += 1
                 print(f"  FIXED: {qf.name}")
-                # Print the directions
                 with open(qf) as f:
                     q = json.load(f)
                 for i, sec in enumerate(q.get("sections", [])):
@@ -168,7 +169,14 @@ def main():
                 print(f"  OK:    {qf.name}")
         except Exception as e:
             print(f"  ERROR: {qf.name}: {e}")
+    return total, fixed
 
+
+def main():
+    t1, f1 = process_directory(QUEST_DIR, "Guild Quests")
+    t2, f2 = process_directory(FIELD_QUEST_DIR, "Field Quests")
+    total = t1 + t2
+    fixed = f1 + f2
     print(f"\n{fixed}/{total} quest files updated.")
 
 
