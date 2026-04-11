@@ -2,9 +2,10 @@
  * MetadataTab — Edit quest metadata: name, description, companions, briefing dialog
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type { QuestProject, QuestMetadata, QuestObjective, OfficeNpc, ReportDestination } from '../types';
 import { AVAILABLE_COMPANIONS, OFFICE_POSITIONS } from '../types';
+import CompanionPreview from '../CompanionPreview';
 
 interface MetadataTabProps {
   project: QuestProject;
@@ -40,6 +41,8 @@ export default function MetadataTab({ project, onUpdateProject, isMobile }: Meta
   const updateName = useCallback((name: string) => {
     onUpdateProject(prev => ({ ...prev, name }));
   }, [onUpdateProject]);
+
+  const [previewCompanion, setPreviewCompanion] = useState<string | null>(null);
 
   const toggleCompanion = useCallback((companionId: string) => {
     onUpdateProject(prev => {
@@ -157,16 +160,21 @@ export default function MetadataTab({ project, onUpdateProject, isMobile }: Meta
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {AVAILABLE_COMPANIONS.map(c => {
               const active = (meta.companions || []).includes(c.id);
+              const previewing = previewCompanion === c.id;
               return (
                 <button
                   key={c.id}
                   onClick={() => toggleCompanion(c.id)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (active) setPreviewCompanion(previewing ? null : c.id);
+                  }}
                   style={{
                     padding: '8px 16px',
-                    background: active ? '#3a5a3a' : '#1a1a2e',
-                    border: `1px solid ${active ? '#66aa66' : '#333'}`,
+                    background: previewing ? '#2a4a6a' : active ? '#3a5a3a' : '#1a1a2e',
+                    border: `1px solid ${previewing ? '#6699cc' : active ? '#66aa66' : '#333'}`,
                     borderRadius: '6px',
-                    color: active ? '#88ff88' : '#888',
+                    color: previewing ? '#88ccff' : active ? '#88ff88' : '#888',
                     fontSize: '13px',
                     fontWeight: active ? 600 : 400,
                     cursor: 'pointer',
@@ -178,8 +186,40 @@ export default function MetadataTab({ project, onUpdateProject, isMobile }: Meta
             })}
           </div>
           <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
-            NPCs that join the player's party for this quest.
+            NPCs that join the player's party for this quest. Click to toggle, right-click to preview.
           </div>
+
+          {/* 3D companion preview */}
+          {previewCompanion && (meta.companions || []).includes(previewCompanion) && (
+            <div style={{
+              marginTop: '12px',
+              height: '280px',
+              background: '#0a0a1a',
+              border: '1px solid #333',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              position: 'relative',
+            }}>
+              <CompanionPreview companionId={previewCompanion} />
+              <div style={{
+                position: 'absolute', top: '8px', right: '8px',
+                fontSize: '11px', color: '#666', pointerEvents: 'none',
+              }}>
+                {AVAILABLE_COMPANIONS.find(c => c.id === previewCompanion)?.name}
+              </div>
+              <button
+                onClick={() => setPreviewCompanion(null)}
+                style={{
+                  position: 'absolute', top: '6px', left: '6px',
+                  padding: '2px 8px', background: 'rgba(0,0,0,0.6)',
+                  border: '1px solid #444', borderRadius: '4px',
+                  color: '#888', fontSize: '11px', cursor: 'pointer',
+                }}
+              >
+                X
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Quest Objectives */}

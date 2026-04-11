@@ -7,7 +7,7 @@ export type GateEdge = GateDirection; // Alias for compatibility
 export type GateType = 'Gate' | 'KeyGate' | 'AreaWarp'; // Still used for preview only
 export type PreviewModel = 'Gate' | 'AreaWarp';
 export type ObstacleType = 'box' | 'cylinder';
-export type EditorTab = 'floor' | 'portals' | 'textures' | 'obstacles' | 'svg' | 'export';
+export type EditorTab = 'floor' | 'portals' | 'textures' | 'obstacles' | 'scene' | 'svg' | 'export';
 
 // =============== Floor Collision ===============
 

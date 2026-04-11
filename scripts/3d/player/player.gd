@@ -215,12 +215,11 @@ func _ready() -> void:
 		_glow_light = OmniLight3D.new()
 		_glow_light.name = "PlayerGlow"
 		_glow_light.light_color = Color(1.0, 0.8, 0.5)
-		_glow_light.light_energy = 1.2
+		_glow_light.light_energy = 1.2 * TimeManager.get_darkness_factor()
 		_glow_light.omni_range = 8.0
 		_glow_light.omni_attenuation = 1.2
 		_glow_light.shadow_enabled = false
 		_glow_light.position = Vector3(0, 1.2, 0)
-		_glow_light.visible = TimeManager.is_dark()
 		add_child(_glow_light)
 
 	# Start in idle state
@@ -773,9 +772,10 @@ func _physics_process(delta: float) -> void:
 	if model:
 		model.rotation.y = player_rotation
 
-	# Toggle lantern glow based on time of day (check once per second)
-	if _glow_light and Engine.get_physics_frames() % 60 == 0:
-		_glow_light.visible = TimeManager.is_dark()
+	# Smoothly fade lantern glow based on time of day (check every ~0.5s)
+	if _glow_light and Engine.get_physics_frames() % 30 == 0:
+		var darkness: float = TimeManager.get_darkness_factor()
+		_glow_light.light_energy = 1.2 * darkness
 
 	# Update combat targeting reticles (every 3rd frame to reduce CPU)
 	FrameProfiler.mark("player_targeting")

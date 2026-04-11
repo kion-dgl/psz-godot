@@ -556,7 +556,8 @@
             }
           ]
         }
-      ]
+      ],
+      "exit_direction": "east"
     },
     {
       "type": "grid",
@@ -1299,7 +1300,8 @@
             }
           ]
         }
-      ]
+      ],
+      "entry_direction": "north"
     }
   ],
   "companions": [
