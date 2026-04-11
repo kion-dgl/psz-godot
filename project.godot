@@ -53,6 +53,7 @@ ActionPalette="*res://scripts/autoloads/action_palette.gd"
 InputConfig="*res://scripts/autoloads/input_config.gd"
 RecipeRegistry="*res://scripts/autoloads/recipe_registry.gd"
 FrameProfiler="*res://scripts/autoloads/frame_profiler.gd"
+MusicManager="*res://scripts/autoloads/music_manager.gd"
 PsoStartMenu="*res://scripts/3d/field/pso_start_menu.gd"
 
 [display]

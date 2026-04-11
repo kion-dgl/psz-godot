@@ -41,6 +41,15 @@ func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dic
 	player.spawn_position = player.global_position
 	CityState.set_spawn_key("")
 
+	# Play city music based on area name
+	var area_name: String = _get_area_name()
+	if area_name == "office":
+		MusicManager.play_location_music("office")
+	elif area_name == "warp":
+		MusicManager.play_location_music("teleporter")
+	else:
+		MusicManager.play_location_music("city")
+
 	# Add field HUD (stats panel + meseta)
 	var field_hud := FieldHudScript.new()
 	add_child(field_hud)

@@ -22,6 +22,7 @@ const ICON_SIZE := 32
 
 
 func _ready() -> void:
+	MusicManager.play_location_music("title")
 	prompt_label.text = "Press Start"
 	var app_version: String = ProjectSettings.get_setting("application/config/version", "0.0.0")
 	version_label.text = "PSZ Godot v%s" % app_version
