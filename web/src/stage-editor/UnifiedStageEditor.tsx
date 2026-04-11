@@ -135,7 +135,7 @@ export default function UnifiedStageEditor() {
   const [repositionEffectId, setRepositionEffectId] = useState<string | null>(null);
   const [indoor, setIndoor] = useState(false);
 
-  const lighting = useMemo(() => computeLighting(timeOfDay), [timeOfDay]);
+  const lighting = useMemo(() => computeLighting(indoor ? 10.0 : timeOfDay), [indoor, timeOfDay]);
 
   // Animated textures state
   const [animatedTextures, setAnimatedTextures] = useState<AnimatedTextureInfo[]>([]);
@@ -326,13 +326,14 @@ export default function UnifiedStageEditor() {
         return;
       }
       // Create new — inherit properties from the last placed effect of the same preset
+      const preset = PLACED_PRESETS[particlePlacementPreset];
       const lastOfPreset = [...particles].reverse().find(
         p => p.category === 'placed' && (p as any).preset === particlePlacementPreset
       );
+      if (!lastOfPreset && !preset) return;
       const base = lastOfPreset
         ? { ...lastOfPreset }
-        : { ...PLACED_PRESETS[particlePlacementPreset] };
-      if (!base) return;
+        : { ...preset };
       const id = `placed_${particlePlacementPreset}_${Date.now()}`;
       const newEffect = { ...base, id, position } as ParticleEffect;
       setParticles(prev => [...prev, newEffect]);

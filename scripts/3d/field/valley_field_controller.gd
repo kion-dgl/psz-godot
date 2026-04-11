@@ -860,14 +860,15 @@ func _spawn_placed_effect(effect: Dictionary) -> void:
 	var light_intensity: float = float(effect.get("light_intensity", 0.0))
 	var light_radius: float = float(effect.get("light_radius", 5.0))
 
+	var effect_type: String = str(effect.get("type", "spores"))
+
 	var root := Node3D.new()
-	root.name = "StageEffect_spores"
+	root.name = "StageEffect_%s" % effect_type
 	root.position = pos
 	_map_root.add_child(root)
 
-	# GPUParticles3D — rising spore particles
 	var particles := GPUParticles3D.new()
-	particles.name = "SporeParticles"
+	particles.name = "%sParticles" % effect_type.capitalize()
 	particles.amount = count
 	particles.lifetime = height / maxf(speed, 0.1)
 	particles.visibility_aabb = AABB(Vector3(-radius, 0, -radius), Vector3(radius * 2, height, radius * 2))

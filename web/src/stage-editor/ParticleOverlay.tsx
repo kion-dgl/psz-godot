@@ -163,8 +163,8 @@ function RisingSystem({ effect }: RisingSystemProps) {
           position={[cx, cy + 2, cz]}
           color={new THREE.Color(...effect.color)}
           intensity={(effect as PlacedEffect).lightIntensity * 10}
-          distance={0}
-          decay={1.2}
+          distance={(effect as PlacedEffect).lightRadius}
+          decay={2}
         />
       )}
     </group>

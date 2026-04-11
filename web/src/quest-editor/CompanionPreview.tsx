@@ -101,6 +101,7 @@ export default function CompanionPreview({ companionId }: Props) {
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(sceneData.animFrameId);
+      sceneRef.current = null;
       renderer.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
