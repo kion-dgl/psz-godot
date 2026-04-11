@@ -16,16 +16,60 @@ interface StageModelProps {
   onSceneReady?: (scene: THREE.Group) => void;
 }
 
+/** Convert MeshBasicMaterial → MeshLambertMaterial so scene lights affect geometry.
+ *  Also computes vertex normals if missing — without normals, point/directional lights
+ *  have no effect (only ambient light works). */
+function convertToLit(root: THREE.Object3D) {
+  root.traverse((obj) => {
+    if (!(obj as THREE.Mesh).isMesh) return;
+    const mesh = obj as THREE.Mesh;
+
+    // Ensure geometry has normals
+    if (mesh.geometry && !mesh.geometry.getAttribute('normal')) {
+      mesh.geometry.computeVertexNormals();
+    }
+
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    const converted = materials.map((mat) => {
+      if (mat instanceof THREE.MeshBasicMaterial) {
+        const lambert = new THREE.MeshLambertMaterial({
+          color: mat.color,
+          map: mat.map,
+          transparent: mat.transparent,
+          opacity: mat.opacity,
+          side: mat.side,
+          alphaTest: mat.alphaTest,
+          vertexColors: mat.vertexColors,
+        });
+        if (lambert.map) {
+          lambert.map.colorSpace = THREE.SRGBColorSpace;
+          lambert.map.needsUpdate = true;
+        }
+        return lambert;
+      }
+      return mat;
+    });
+    mesh.material = Array.isArray(mesh.material) ? converted : converted[0];
+  });
+}
+
 function StageModel({ mapId, onSceneReady }: StageModelProps) {
   const areaKey = getAreaFromMapId(mapId) || 'valley';
   const glbPath = getGlbPath(areaKey, mapId);
   const { scene } = useGLTF(glbPath);
+  const convertedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (scene && onSceneReady) {
+    if (!scene) return;
+    // Convert once per GLB (useGLTF caches the scene)
+    if (!convertedRef.current.has(glbPath)) {
+      convertToLit(scene);
+      convertedRef.current.add(glbPath);
+    }
+    if (onSceneReady) {
       onSceneReady(scene as THREE.Group);
     }
-  }, [scene, onSceneReady]);
+  }, [scene, glbPath, onSceneReady]);
 
   return <primitive object={scene} />;
 }
@@ -42,6 +86,16 @@ function SkyboxGlb({ path }: { path: string }) {
   return <primitive object={scene} />;
 }
 
+export interface TimeOfDayLighting {
+  ambientColor: [number, number, number];
+  ambientIntensity: number;
+  sunColor: [number, number, number];
+  sunIntensity: number;
+  sunPitch: number;
+  moonIntensity: number;
+  bgColor: string;
+}
+
 interface StageCanvasProps {
   mapId: string;
   children?: React.ReactNode;
@@ -51,6 +105,7 @@ interface StageCanvasProps {
   gridSize?: number;
   cameraPosition?: [number, number, number];
   orthographic?: boolean;
+  lighting?: TimeOfDayLighting | null;
 }
 
 export interface StageCanvasRef {
@@ -67,6 +122,7 @@ const StageCanvas = forwardRef<StageCanvasRef, StageCanvasProps>(function StageC
     gridSize = 100,
     cameraPosition = [0, 50, 50],
     orthographic = false,
+    lighting = null,
   },
   ref
 ) {
@@ -87,9 +143,27 @@ const StageCanvas = forwardRef<StageCanvasRef, StageCanvasProps>(function StageC
         sceneRef.current = scene;
       }}
     >
-      <color attach="background" args={['#1a1a2e']} />
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 20, 10]} intensity={0.8} />
+      <color attach="background" args={[lighting?.bgColor || '#1a1a2e']} />
+      <ambientLight
+        intensity={lighting?.ambientIntensity ?? 0.6}
+        color={lighting ? new THREE.Color(...lighting.ambientColor) : undefined}
+      />
+      <directionalLight
+        position={lighting ? [
+          10 * Math.cos(lighting.sunPitch * Math.PI / 180),
+          10 * Math.sin(-lighting.sunPitch * Math.PI / 180),
+          10
+        ] : [10, 20, 10]}
+        intensity={lighting?.sunIntensity ?? 0.8}
+        color={lighting ? new THREE.Color(...lighting.sunColor) : undefined}
+      />
+      {lighting && lighting.moonIntensity > 0.01 && (
+        <directionalLight
+          position={[-8, 12, -8]}
+          intensity={lighting.moonIntensity}
+          color={new THREE.Color(0.6, 0.7, 1.0)}
+        />
+      )}
 
       <Suspense fallback={null}>
         <group visible={showStage}>
