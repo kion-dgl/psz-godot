@@ -178,6 +178,9 @@ func _play_track(track_key: String) -> void:
 		if not stream:
 			print("[MusicManager] Failed to load: %s" % path)
 			return
+		# Enable looping for music tracks
+		if stream is AudioStreamOggVorbis:
+			(stream as AudioStreamOggVorbis).loop = true
 		_stream_cache[track_key] = stream
 
 	# Crossfade: fade out active, fade in inactive
