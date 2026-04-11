@@ -171,6 +171,10 @@ func _ready() -> void:
 	var area_id: String = SessionManager.get_current_area_id()
 	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
 
+	# Play area music based on area_id + section variant
+	var area_variant: String = str(section.get("area", "a"))
+	MusicManager.play_field_music(area_id, area_variant)
+
 	# Load visual mesh from raw stage
 	var subfolder: String = _get_stage_subfolder(stage_id, area_cfg["folder"])
 	var scene_path := "res://assets/stages/%s/%s/lndmd/%s_m.glb" % [subfolder, stage_id, stage_id]
