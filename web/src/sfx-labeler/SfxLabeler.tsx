@@ -6,8 +6,10 @@
  * and export the mapping as JSON.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { assetUrl } from '../utils/assets';
+
+const PAGE_SIZE = 30;
 
 const CATEGORIES = [
   'common', 'forest', 'cave', 'machine', 'ruin', 'ancient',
@@ -191,6 +193,14 @@ export default function SfxLabeler() {
     input.click();
   };
 
+  const [page, setPage] = useState(0);
+
+  // Reset page when category or filter changes
+  useEffect(() => { setPage(0); }, [category, filter, search]);
+
+  const totalPages = Math.ceil(filteredFiles.length / PAGE_SIZE);
+  const pagedFiles = filteredFiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
   const stats = {
     total: files.length,
     labeled: files.filter(f => getEntry(f)?.label).length,
@@ -283,96 +293,133 @@ export default function SfxLabeler() {
           />
         </div>
 
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div style={{
+            padding: '6px 16px', borderBottom: '1px solid #333',
+            display: 'flex', gap: '4px', alignItems: 'center',
+          }}>
+            <button
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={page === 0}
+              style={{ ...pageBtnStyle, opacity: page === 0 ? 0.3 : 1 }}
+            >
+              Prev
+            </button>
+            <span style={{ fontSize: '12px', color: '#888', minWidth: '80px', textAlign: 'center' }}>
+              {page + 1} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              style={{ ...pageBtnStyle, opacity: page >= totalPages - 1 ? 0.3 : 1 }}
+            >
+              Next
+            </button>
+            <span style={{ fontSize: '11px', color: '#555', marginLeft: '8px' }}>
+              {filteredFiles.length} sounds
+            </span>
+          </div>
+        )}
+
         {/* Sound list */}
         <div style={{ flex: 1, overflow: 'auto', padding: '8px' }}>
-          {filteredFiles.map(file => {
-            const entry = getEntry(file);
-            const isPlaying = playing === file;
-            return (
-              <div
-                key={file}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '6px 8px', marginBottom: '2px',
-                  background: isPlaying ? '#1a2a3a' : entry?.label ? '#0a1a0a' : '#0a0a14',
-                  borderRadius: '4px', border: `1px solid ${isPlaying ? '#4a9eff' : entry?.starred ? '#aa8844' : '#1a1a2e'}`,
-                }}
-              >
-                {/* Play button */}
-                <button
-                  onClick={() => playSound(file)}
-                  style={{
-                    width: '32px', height: '32px', borderRadius: '50%',
-                    background: isPlaying ? '#4a9eff' : '#333',
-                    border: 'none', color: '#fff', cursor: 'pointer',
-                    fontSize: '14px', flexShrink: 0,
-                  }}
-                >
-                  {isPlaying ? '||' : '\u25B6'}
-                </button>
-
-                {/* File name */}
-                <span style={{ fontSize: '11px', color: '#666', width: '140px', flexShrink: 0, fontFamily: 'monospace' }}>
-                  {file}
-                </span>
-
-                {/* Star */}
-                <button
-                  onClick={() => updateEntry(file, { starred: !entry?.starred })}
-                  style={{
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: entry?.starred ? '#ffaa44' : '#333', fontSize: '16px', flexShrink: 0,
-                  }}
-                >
-                  {entry?.starred ? '\u2605' : '\u2606'}
-                </button>
-
-                {/* Label select */}
-                <select
-                  value={entry?.label || ''}
-                  onChange={e => updateEntry(file, { label: e.target.value })}
-                  style={{
-                    flex: 1, padding: '4px', background: '#111', border: '1px solid #333',
-                    borderRadius: '3px', color: entry?.label ? '#88ff88' : '#666',
-                    fontSize: '12px', maxWidth: '200px',
-                  }}
-                >
-                  <option value="">-- label --</option>
-                  {LABEL_PRESETS.map(l => (
-                    <option key={l} value={l}>{l}</option>
-                  ))}
-                </select>
-
-                {/* Custom label input */}
-                <input
-                  type="text"
-                  value={entry?.label || ''}
-                  onChange={e => updateEntry(file, { label: e.target.value })}
-                  placeholder="custom label"
-                  style={{
-                    width: '150px', padding: '4px 6px', background: '#111',
-                    border: '1px solid #333', borderRadius: '3px',
-                    color: '#fff', fontSize: '11px', fontFamily: 'monospace',
-                  }}
-                />
-
-                {/* Notes */}
-                <input
-                  type="text"
-                  value={entry?.notes || ''}
-                  onChange={e => updateEntry(file, { notes: e.target.value })}
-                  placeholder="notes"
-                  style={{
-                    width: '120px', padding: '4px 6px', background: '#111',
-                    border: '1px solid #222', borderRadius: '3px',
-                    color: '#888', fontSize: '11px',
-                  }}
-                />
-              </div>
-            );
-          })}
+          {pagedFiles.map(file => (
+            <SfxRow
+              key={file}
+              file={file}
+              entry={getEntry(file)}
+              isPlaying={playing === file}
+              onPlay={playSound}
+              onUpdate={updateEntry}
+            />
+          ))}
         </div>
       </div>
     </div>
   );
 }
+
+const pageBtnStyle: React.CSSProperties = {
+  padding: '4px 12px', fontSize: '11px', background: '#333',
+  border: '1px solid #555', borderRadius: '4px', color: '#aaa', cursor: 'pointer',
+};
+
+const SfxRow = memo(function SfxRow({ file, entry, isPlaying, onPlay, onUpdate }: {
+  file: string;
+  entry: SfxEntry | undefined;
+  isPlaying: boolean;
+  onPlay: (file: string) => void;
+  onUpdate: (file: string, updates: Partial<SfxEntry>) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: '8px',
+        padding: '6px 8px', marginBottom: '2px',
+        background: isPlaying ? '#1a2a3a' : entry?.label ? '#0a1a0a' : '#0a0a14',
+        borderRadius: '4px', border: `1px solid ${isPlaying ? '#4a9eff' : entry?.starred ? '#aa8844' : '#1a1a2e'}`,
+      }}
+    >
+      <button
+        onClick={() => onPlay(file)}
+        style={{
+          width: '32px', height: '32px', borderRadius: '50%',
+          background: isPlaying ? '#4a9eff' : '#333',
+          border: 'none', color: '#fff', cursor: 'pointer',
+          fontSize: '14px', flexShrink: 0,
+        }}
+      >
+        {isPlaying ? '||' : '\u25B6'}
+      </button>
+      <span style={{ fontSize: '11px', color: '#666', width: '140px', flexShrink: 0, fontFamily: 'monospace' }}>
+        {file}
+      </span>
+      <button
+        onClick={() => onUpdate(file, { starred: !entry?.starred })}
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: entry?.starred ? '#ffaa44' : '#333', fontSize: '16px', flexShrink: 0,
+        }}
+      >
+        {entry?.starred ? '\u2605' : '\u2606'}
+      </button>
+      <select
+        value={entry?.label || ''}
+        onChange={e => onUpdate(file, { label: e.target.value })}
+        style={{
+          flex: 1, padding: '4px', background: '#111', border: '1px solid #333',
+          borderRadius: '3px', color: entry?.label ? '#88ff88' : '#666',
+          fontSize: '12px', maxWidth: '200px',
+        }}
+      >
+        <option value="">-- label --</option>
+        {LABEL_PRESETS.map(l => (
+          <option key={l} value={l}>{l}</option>
+        ))}
+      </select>
+      <input
+        type="text"
+        value={entry?.label || ''}
+        onChange={e => onUpdate(file, { label: e.target.value })}
+        placeholder="custom label"
+        style={{
+          width: '150px', padding: '4px 6px', background: '#111',
+          border: '1px solid #333', borderRadius: '3px',
+          color: '#fff', fontSize: '11px', fontFamily: 'monospace',
+        }}
+      />
+      <input
+        type="text"
+        value={entry?.notes || ''}
+        onChange={e => onUpdate(file, { notes: e.target.value })}
+        placeholder="notes"
+        style={{
+          width: '120px', padding: '4px 6px', background: '#111',
+          border: '1px solid #222', borderRadius: '3px',
+          color: '#888', fontSize: '11px',
+        }}
+      />
+    </div>
+  );
+});
