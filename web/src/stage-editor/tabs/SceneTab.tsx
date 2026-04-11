@@ -7,7 +7,7 @@
  *   - Floor:   rise from ground across the whole stage (ambient spores, mist)
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type { TimeOfDayLighting } from '../StageCanvas';
 import type { ParticleEffect, PlacedEffect, WeatherEffect, FloorEffect } from '../ParticleOverlay';
 
@@ -159,13 +159,21 @@ interface SceneTabProps {
   onSetPlacementPreset: (preset: string) => void;
   selectedEffectId: string | null;
   onSelectEffect: (id: string | null) => void;
+  mapId: string;
+  indoor: boolean;
+  onIndoorChange: (indoor: boolean) => void;
+  repositionEffectId: string | null;
+  onStartReposition: (id: string) => void;
 }
 
 export default function SceneTab({
   timeOfDay, onTimeChange, particles, onParticlesChange,
   placementMode, onSetPlacementMode, placementPreset, onSetPlacementPreset,
   selectedEffectId, onSelectEffect,
+  mapId, indoor, onIndoorChange,
+  repositionEffectId, onStartReposition,
 }: SceneTabProps) {
+  const [copied, setCopied] = useState(false);
   const phase = getPhaseLabel(timeOfDay);
   const placed = particles.filter((p): p is PlacedEffect => p.category === 'placed');
   const weather = particles.filter((p): p is WeatherEffect => p.category === 'weather');
@@ -247,6 +255,34 @@ export default function SceneTab({
         </div>
       </div>
 
+      {/* ── Indoor / Outdoor ── */}
+      <div>
+        <div style={labelStyle}>Environment</div>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {([false, true] as const).map(val => {
+            const active = indoor === val;
+            return (
+              <button
+                key={String(val)}
+                onClick={() => onIndoorChange(val)}
+                style={{
+                  ...toggleBtnStyle,
+                  flex: 1,
+                  background: active ? (val ? '#2a2a4a' : '#2a3a2a') : '#1a1a2e',
+                  border: `1px solid ${active ? (val ? '#6666cc' : '#66aa66') : '#333'}`,
+                  color: active ? (val ? '#aaaaff' : '#88ff88') : '#888',
+                }}
+              >
+                {val ? 'Indoor (cave)' : 'Outdoor'}
+              </button>
+            );
+          })}
+        </div>
+        <div style={{ fontSize: '10px', color: '#666', marginTop: '4px' }}>
+          Indoor stages ignore the day/night cycle.
+        </div>
+      </div>
+
       {/* ── Placed Effects ── */}
       <div>
         <div style={labelStyle}>Placed Effects</div>
@@ -288,9 +324,22 @@ export default function SceneTab({
                   style={{ fontSize: '12px', color: selected ? '#4a9eff' : '#ccc', cursor: 'pointer' }}
                   onClick={() => onSelectEffect(selected ? null : p.id)}
                 >
-                  {p.preset} ({p.position[0].toFixed(1)}, {p.position[2].toFixed(1)})
+                  {p.preset} ({p.position[0].toFixed(1)}, {p.position[1].toFixed(1)}, {p.position[2].toFixed(1)})
                 </span>
-                <button onClick={() => remove(p.id)} style={removeBtnStyle}>X</button>
+                <div style={{ display: 'flex', gap: '3px' }}>
+                  <button
+                    onClick={() => onStartReposition(p.id)}
+                    style={{
+                      ...removeBtnStyle,
+                      background: repositionEffectId === p.id ? '#2a3a5a' : '#222244',
+                      border: `1px solid ${repositionEffectId === p.id ? '#4a9eff' : '#444466'}`,
+                      color: repositionEffectId === p.id ? '#4a9eff' : '#8888aa',
+                    }}
+                  >
+                    {repositionEffectId === p.id ? 'Click scene...' : 'Move'}
+                  </button>
+                  <button onClick={() => remove(p.id)} style={removeBtnStyle}>X</button>
+                </div>
               </div>
               {selected && (
                 <>
@@ -382,6 +431,69 @@ export default function SceneTab({
           </div>
         ))}
       </div>
+
+      {/* ── Copy JSON ── */}
+      {(particles.length > 0 || indoor) && (
+        <div>
+          <button
+            onClick={() => {
+              const scene: Record<string, unknown> = {
+                stage_id: mapId,
+                ...(indoor ? { indoor: true } : {}),
+                effects: particles.map(p => {
+                  if (p.category === 'placed') {
+                    return {
+                      type: p.preset,
+                      category: p.category,
+                      position: p.position.map(v => Math.round(v * 10) / 10),
+                      color: p.color,
+                      count: p.count,
+                      radius: p.radius,
+                      height: p.height,
+                      speed: p.speed,
+                      light_intensity: p.lightIntensity,
+                      light_radius: p.lightRadius,
+                    };
+                  }
+                  if (p.category === 'weather') {
+                    return {
+                      type: p.preset,
+                      category: p.category,
+                      color: p.color,
+                      count: p.count,
+                      area: p.area,
+                      height: p.height,
+                      speed: p.speed,
+                    };
+                  }
+                  return {
+                    type: p.preset,
+                    category: p.category,
+                    color: p.color,
+                    count: p.count,
+                    area: (p as FloorEffect).area,
+                    height: p.height,
+                    speed: p.speed,
+                  };
+                }),
+              };
+              navigator.clipboard.writeText(JSON.stringify(scene, null, 2));
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            style={{
+              width: '100%', padding: '10px',
+              background: copied ? '#2a4a2a' : '#1a1a2e',
+              border: `1px solid ${copied ? '#66aa66' : '#444'}`,
+              borderRadius: '6px',
+              color: copied ? '#88ff88' : '#aaa',
+              fontSize: '12px', cursor: 'pointer',
+            }}
+          >
+            {copied ? 'Copied!' : 'Copy Scene JSON'}
+          </button>
+        </div>
+      )}
 
       <div style={{ fontSize: '11px', color: '#555', lineHeight: 1.5 }}>
         Time-of-day mirrors in-game TimeManager. Particle effects are visual previews.

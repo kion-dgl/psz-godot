@@ -10,7 +10,7 @@
  * Supports click-to-place mode with a preview that follows the mouse.
  */
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useCallback, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -162,7 +162,7 @@ function RisingSystem({ effect }: RisingSystemProps) {
         <pointLight
           position={[cx, cy + 2, cz]}
           color={new THREE.Color(...effect.color)}
-          intensity={(effect as PlacedEffect).lightIntensity * 100}
+          intensity={(effect as PlacedEffect).lightIntensity * 10}
           distance={0}
           decay={1.2}
         />
@@ -271,38 +271,64 @@ function WeatherSystem({ effect }: WeatherSystemProps) {
   );
 }
 
-// ---------- Placement preview (follows mouse) ----------
+/** Raycast against scene geometry, falling back to Y=0 ground plane. */
+function raycastScene(
+  raycaster: THREE.Raycaster, scene: THREE.Scene, pointer: THREE.Vector2, camera: THREE.Camera,
+): THREE.Vector3 | null {
+  raycaster.setFromCamera(pointer, camera);
+  // Intersect all visible meshes in the scene
+  const hits = raycaster.intersectObjects(scene.children, true);
+  // Skip invisible/overlay meshes (opacity < 0.01, particles, ring markers)
+  for (const hit of hits) {
+    const mat = (hit.object as THREE.Mesh).material;
+    if (!mat) continue;
+    const m = Array.isArray(mat) ? mat[0] : mat;
+    if ((m as THREE.Material).transparent && (m as any).opacity < 0.01) continue;
+    if (hit.object instanceof THREE.Points) continue;
+    if (hit.object instanceof THREE.Sprite) continue;
+    return hit.point.clone();
+  }
+  // Fallback: Y=0 ground plane
+  const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  const pt = new THREE.Vector3();
+  if (raycaster.ray.intersectPlane(plane, pt)) return pt;
+  return null;
+}
 
-function PlacementPreview({ preset, color }: { preset: string; color: [number, number, number] }) {
-  const { camera, raycaster, pointer } = useThree();
+// ---------- Placement preview (follows mouse, snaps to geometry) ----------
+
+/** Disable raycasting on a subtree so it doesn't interfere with scene raycasts. */
+function disableRaycast(obj: THREE.Object3D) {
+  obj.raycast = () => {};
+  obj.children.forEach(disableRaycast);
+}
+
+function PlacementPreview({ color }: { color: [number, number, number] }) {
+  const { camera, raycaster, pointer, scene } = useThree();
   const groupRef = useRef<THREE.Group>(null);
-  const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
-  const intersection = useMemo(() => new THREE.Vector3(), []);
+
+  useEffect(() => {
+    if (groupRef.current) disableRaycast(groupRef.current);
+  });
 
   useFrame(() => {
     if (!groupRef.current) return;
-    raycaster.setFromCamera(pointer, camera);
-    if (raycaster.ray.intersectPlane(groundPlane, intersection)) {
-      groupRef.current.position.set(intersection.x, 0, intersection.z);
-    }
+    const pt = raycastScene(raycaster, scene, pointer, camera);
+    if (pt) groupRef.current.position.copy(pt);
   });
 
   return (
     <group ref={groupRef}>
-      {/* Ring showing emitter radius */}
+      {/* Center dot */}
+      <mesh>
+        <sphereGeometry args={[0.25, 12, 12]} />
+        <meshBasicMaterial color={new THREE.Color(...color)} />
+      </mesh>
+      {/* Ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
         <ringGeometry args={[2.8, 3, 32]} />
         <meshBasicMaterial color={new THREE.Color(...color)} transparent opacity={0.5} side={THREE.DoubleSide} />
       </mesh>
-      {/* Center dot */}
-      <mesh position={[0, 0.1, 0]}>
-        <sphereGeometry args={[0.2, 8, 8]} />
-        <meshBasicMaterial color={new THREE.Color(...color)} />
-      </mesh>
-      {/* Label */}
-      <sprite position={[0, 1.5, 0]} scale={[2, 0.5, 1]}>
-        <spriteMaterial color={new THREE.Color(...color)} transparent opacity={0.7} />
-      </sprite>
     </group>
   );
 }
@@ -357,31 +383,37 @@ export default function ParticleOverlay({
   onPlaceEffect,
   onSelectEffect,
 }: ParticleOverlayProps) {
-  const { camera, raycaster, pointer } = useThree();
-  const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
-  const intersection = useMemo(() => new THREE.Vector3(), []);
+  const { camera, raycaster, pointer, scene } = useThree();
 
-  const handleClick = () => {
-    if (!placementMode || !onPlaceEffect) return;
-    raycaster.setFromCamera(pointer, camera);
-    if (raycaster.ray.intersectPlane(groundPlane, intersection)) {
-      onPlaceEffect([intersection.x, 0, intersection.z]);
-    }
-  };
+  // Handle clicks on the canvas DOM element — raycasts against scene geometry
+  const placementRef = useRef({ placementMode, onPlaceEffect });
+  placementRef.current = { placementMode, onPlaceEffect };
+
+  const { gl } = useThree();
+  useEffect(() => {
+    if (!placementMode) return;
+    const canvas = gl.domElement;
+    const onClick = () => {
+      if (!placementRef.current.placementMode || !placementRef.current.onPlaceEffect) return;
+      const pt = raycastScene(raycaster, scene, pointer, camera);
+      if (pt) {
+        placementRef.current.onPlaceEffect([
+          Math.round(pt.x * 10) / 10,
+          Math.round(pt.y * 10) / 10,
+          Math.round(pt.z * 10) / 10,
+        ]);
+      }
+    };
+    canvas.addEventListener('click', onClick);
+    return () => canvas.removeEventListener('click', onClick);
+  }, [placementMode, gl, raycaster, scene, pointer, camera]);
 
   return (
     <group>
-      {/* Ground plane for click detection in placement mode */}
-      {placementMode && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} onClick={handleClick}>
-          <planeGeometry args={[200, 200]} />
-          <meshBasicMaterial transparent opacity={0} side={THREE.DoubleSide} />
-        </mesh>
-      )}
 
       {/* Placement preview following mouse */}
       {placementMode && (
-        <PlacementPreview preset={placementPreset} color={placementColor} />
+        <PlacementPreview color={placementColor} />
       )}
 
       {/* Render all effects */}

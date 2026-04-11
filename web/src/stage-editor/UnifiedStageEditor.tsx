@@ -132,6 +132,8 @@ export default function UnifiedStageEditor() {
   const [particlePlacementMode, setParticlePlacementMode] = useState(false);
   const [particlePlacementPreset, setParticlePlacementPreset] = useState('spores');
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
+  const [repositionEffectId, setRepositionEffectId] = useState<string | null>(null);
+  const [indoor, setIndoor] = useState(false);
 
   const lighting = useMemo(() => computeLighting(timeOfDay), [timeOfDay]);
 
@@ -310,18 +312,34 @@ export default function UnifiedStageEditor() {
     setSelectedObstacleId(id);
   }, []);
 
-  // Handle particle effect placement
+  // Handle particle effect placement (new or reposition)
   const handlePlaceEffect = useCallback(
     (position: [number, number, number]) => {
-      const base = PLACED_PRESETS[particlePlacementPreset];
+      if (repositionEffectId) {
+        // Reposition existing effect
+        setParticles(prev => prev.map(p =>
+          p.id === repositionEffectId ? { ...p, position } as ParticleEffect : p
+        ));
+        setSelectedEffectId(repositionEffectId);
+        setRepositionEffectId(null);
+        setParticlePlacementMode(false);
+        return;
+      }
+      // Create new — inherit properties from the last placed effect of the same preset
+      const lastOfPreset = [...particles].reverse().find(
+        p => p.category === 'placed' && (p as any).preset === particlePlacementPreset
+      );
+      const base = lastOfPreset
+        ? { ...lastOfPreset }
+        : { ...PLACED_PRESETS[particlePlacementPreset] };
       if (!base) return;
       const id = `placed_${particlePlacementPreset}_${Date.now()}`;
-      const newEffect = { id, position, ...base };
+      const newEffect = { ...base, id, position } as ParticleEffect;
       setParticles(prev => [...prev, newEffect]);
       setSelectedEffectId(id);
       setParticlePlacementMode(false);
     },
-    [particlePlacementPreset]
+    [particlePlacementPreset, repositionEffectId, particles]
   );
 
   // Render the active tab's control panel
@@ -398,6 +416,14 @@ export default function UnifiedStageEditor() {
             onSetPlacementPreset={setParticlePlacementPreset}
             selectedEffectId={selectedEffectId}
             onSelectEffect={setSelectedEffectId}
+            mapId={selectedMapId}
+            indoor={indoor}
+            onIndoorChange={setIndoor}
+            repositionEffectId={repositionEffectId}
+            onStartReposition={(id) => {
+              setRepositionEffectId(id);
+              setParticlePlacementMode(true);
+            }}
           />
         );
       case 'svg':

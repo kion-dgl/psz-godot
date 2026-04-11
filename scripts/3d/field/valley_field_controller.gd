@@ -244,6 +244,9 @@ func _ready() -> void:
 				_create_collision_from_meshes(obs_root)
 				print("[ValleyField] Obstacle collision built manually from mesh: %s" % obstacles_path)
 
+	# Spawn stage particle effects (spores, embers, etc.)
+	_spawn_stage_effects(stage_id)
+
 	# DEBUG: Visualize floor collision mesh as semi-transparent green overlay
 	_debug_show_floor_collision()
 
@@ -770,6 +773,8 @@ static func _get_stage_subfolder(stage_id: String, folder: String) -> String:
 static var _unified_config_cache: Dictionary = {}
 ## Static cache for global texture fixes (keyed by texture filename, e.g. "s01_2_fall.png#1").
 static var _global_texture_fixes: Dictionary = {}
+## Cache for loaded StageEffects resources (keyed by stage_id).
+static var _stage_effects_cache: Dictionary = {}
 
 
 func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
@@ -800,6 +805,125 @@ func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
 		return _unified_config_cache[stage_id] as Dictionary
 
 	return {}
+
+
+func _spawn_stage_effects(stage_id: String) -> void:
+	# Check cache first
+	if _stage_effects_cache.has(stage_id):
+		var cached: Variant = _stage_effects_cache[stage_id]
+		if cached == null:
+			return  # Already checked, no effects file
+		_apply_stage_effects(cached as StageEffects, stage_id)
+		return
+
+	# Look for .tres alongside the stage GLB
+	var area_id: String = SessionManager.get_current_area_id()
+	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
+	var subfolder: String = _get_stage_subfolder(stage_id, area_cfg["folder"])
+	var tres_path := "res://assets/stages/%s/%s/lndmd/%s_effects.tres" % [subfolder, stage_id, stage_id]
+
+	if ResourceLoader.exists(tres_path):
+		var res := load(tres_path) as StageEffects
+		_stage_effects_cache[stage_id] = res
+		if res:
+			_apply_stage_effects(res, stage_id)
+	else:
+		_stage_effects_cache[stage_id] = null  # Mark as checked
+
+
+func _apply_stage_effects(res: StageEffects, stage_id: String) -> void:
+	var count := 0
+	for effect in res.effects:
+		var category: String = str(effect.get("category", ""))
+		if category == "placed":
+			_spawn_placed_effect(effect)
+			count += 1
+	if count > 0:
+		print("[ValleyField] Spawned %d stage effects for %s" % [count, stage_id])
+
+
+func _spawn_placed_effect(effect: Dictionary) -> void:
+	var pos_val: Variant = effect.get("position", Vector3.ZERO)
+	var pos: Vector3
+	if pos_val is Vector3:
+		pos = pos_val
+	else:
+		var arr: Array = pos_val as Array
+		pos = Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
+	var color_val: Variant = effect.get("color", Color.WHITE)
+	var color: Color
+	if color_val is Color:
+		color = color_val
+	else:
+		var arr: Array = color_val as Array
+		color = Color(float(arr[0]), float(arr[1]), float(arr[2]))
+	var count: int = int(effect.get("count", 10))
+	var radius: float = float(effect.get("radius", 1.0))
+	var height: float = float(effect.get("height", 5.0))
+	var speed: float = float(effect.get("speed", 1.0))
+	var light_intensity: float = float(effect.get("light_intensity", 0.0))
+	var light_radius: float = float(effect.get("light_radius", 5.0))
+
+	var root := Node3D.new()
+	root.name = "StageEffect_spores"
+	root.position = pos
+	_map_root.add_child(root)
+
+	# GPUParticles3D — rising spore particles
+	var particles := GPUParticles3D.new()
+	particles.name = "SporeParticles"
+	particles.amount = count
+	particles.lifetime = height / maxf(speed, 0.1)
+	particles.visibility_aabb = AABB(Vector3(-radius, 0, -radius), Vector3(radius * 2, height, radius * 2))
+
+	var mat := ParticleProcessMaterial.new()
+	mat.direction = Vector3(0, 1, 0)
+	mat.spread = 15.0
+	mat.initial_velocity_min = speed * 0.7
+	mat.initial_velocity_max = speed * 1.3
+	mat.gravity = Vector3(0, 0, 0)
+	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	mat.emission_sphere_radius = radius
+	mat.scale_min = 0.06
+	mat.scale_max = 0.12
+	mat.color = color
+	# Fade out over lifetime
+	var alpha_curve := CurveTexture.new()
+	var curve := Curve.new()
+	curve.add_point(Vector2(0.0, 0.0))
+	curve.add_point(Vector2(0.15, 1.0))
+	curve.add_point(Vector2(0.7, 1.0))
+	curve.add_point(Vector2(1.0, 0.0))
+	alpha_curve.curve = curve
+	mat.alpha_curve = alpha_curve
+	particles.process_material = mat
+
+	# Draw pass — small glowing sphere
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.06
+	sphere.height = 0.12
+	var sphere_mat := StandardMaterial3D.new()
+	sphere_mat.albedo_color = color
+	sphere_mat.emission_enabled = true
+	sphere_mat.emission = color
+	sphere_mat.emission_energy_multiplier = 2.0
+	sphere_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	sphere.material = sphere_mat
+	particles.draw_pass_1 = sphere
+
+	root.add_child(particles)
+
+	# Point light for ambient glow
+	if light_intensity > 0:
+		var light := OmniLight3D.new()
+		light.name = "SporeLight"
+		light.light_color = color
+		light.light_energy = light_intensity
+		light.omni_range = light_radius
+		light.omni_attenuation = 1.5
+		light.shadow_enabled = false
+		light.position = Vector3(0, 1.5, 0)
+		root.add_child(light)
 
 
 ## Direction base rotations for portal position math (matches quest-io.ts DIRECTION_ROTATIONS).
