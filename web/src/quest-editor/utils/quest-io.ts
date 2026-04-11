@@ -439,33 +439,38 @@ export async function projectToGodotQuest(project: QuestProject): Promise<object
   }));
 
   // Auto-compute entry/exit directions for sections that don't have them.
-  // Infer from neighboring sections so area warps work in both directions.
+  // Two passes: first infer exits (from warp_edge / next entry), then entries (from prev exit).
   const OPPOSITE_DIR: Record<string, string> = { north: 'south', south: 'north', east: 'west', west: 'east' };
+
+  // Pass 1: infer exit_direction from end cell warp_edge or next section's entry
   for (let i = 0; i < godotSections.length; i++) {
     const sec = godotSections[i] as Record<string, unknown>;
-    // Infer entry from previous section's exit
-    if (!sec.entry_direction && i > 0) {
+    if (!sec.exit_direction && i + 1 < godotSections.length) {
+      // Try end cell's warp_edge first
+      const cells = sec.cells as Array<Record<string, unknown>>;
+      const endPos = sec.end_pos as string;
+      const endCell = cells?.find(c => c.pos === endPos);
+      const warpEdge = endCell?.warp_edge as string | undefined;
+      if (warpEdge) {
+        sec.exit_direction = warpEdge;
+      } else {
+        const next = godotSections[i + 1] as Record<string, unknown>;
+        const nextEntry = next.entry_direction as string | undefined;
+        if (nextEntry && OPPOSITE_DIR[nextEntry]) {
+          sec.exit_direction = OPPOSITE_DIR[nextEntry];
+        }
+      }
+    }
+  }
+
+  // Pass 2: infer entry_direction from previous section's exit
+  for (let i = 1; i < godotSections.length; i++) {
+    const sec = godotSections[i] as Record<string, unknown>;
+    if (!sec.entry_direction) {
       const prev = godotSections[i - 1] as Record<string, unknown>;
       const prevExit = prev.exit_direction as string | undefined;
       if (prevExit && OPPOSITE_DIR[prevExit]) {
         sec.entry_direction = OPPOSITE_DIR[prevExit];
-      } else {
-        // Fall back: find end cell's warp_edge in previous section
-        const prevCells = prev.cells as Array<Record<string, unknown>>;
-        const prevEnd = prev.end_pos as string;
-        const endCell = prevCells?.find(c => c.pos === prevEnd);
-        const warpEdge = endCell?.warp_edge as string | undefined;
-        if (warpEdge && OPPOSITE_DIR[warpEdge]) {
-          sec.entry_direction = OPPOSITE_DIR[warpEdge];
-        }
-      }
-    }
-    // Infer exit from next section's entry
-    if (!sec.exit_direction && i + 1 < godotSections.length) {
-      const next = godotSections[i + 1] as Record<string, unknown>;
-      const nextEntry = next.entry_direction as string | undefined;
-      if (nextEntry && OPPOSITE_DIR[nextEntry]) {
-        sec.exit_direction = OPPOSITE_DIR[nextEntry];
       }
     }
   }

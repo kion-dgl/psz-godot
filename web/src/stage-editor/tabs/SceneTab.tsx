@@ -212,6 +212,10 @@ export default function SceneTab({
 
   // --- Placed emitter (click-to-place) ---
   const startPlacement = (preset: string) => {
+    if (placementMode && placementPreset === preset) {
+      onSetPlacementMode(false);
+      return;
+    }
     onSetPlacementPreset(preset);
     onSetPlacementMode(true);
   };
