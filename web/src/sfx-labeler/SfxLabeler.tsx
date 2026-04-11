@@ -90,6 +90,7 @@ export default function SfxLabeler() {
       .finally(() => setLoaded(true));
   }, [loaded]);
   const [playing, setPlaying] = useState<string | null>(null);
+  const [lastPlayed, setLastPlayed] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'unlabeled' | 'starred' | 'labeled'>('all');
   const [search, setSearch] = useState('');
   const [autoAdvance, setAutoAdvance] = useState(false);
@@ -138,6 +139,14 @@ export default function SfxLabeler() {
     const audio = new Audio(url);
     audioRef.current = audio;
     setPlaying(file);
+    setLastPlayed(file);
+    // Jump to the page containing this file
+    const ff = filteredFilesRef.current;
+    const fileIdx = ff.indexOf(file);
+    if (fileIdx >= 0) {
+      const targetPage = Math.floor(fileIdx / PAGE_SIZE);
+      setPage(targetPage);
+    }
     audio.play();
     audio.onended = () => {
       if (autoAdvanceRef.current) {
@@ -393,6 +402,7 @@ export default function SfxLabeler() {
               file={file}
               entry={getEntry(file)}
               isPlaying={playing === file}
+              isLastPlayed={lastPlayed === file}
               onPlay={playSound}
               onUpdate={updateEntry}
             />
@@ -414,20 +424,30 @@ const pageBtnStyle: React.CSSProperties = {
   border: '1px solid #555', borderRadius: '4px', color: '#aaa', cursor: 'pointer',
 };
 
-const SfxRow = memo(function SfxRow({ file, entry, isPlaying, onPlay, onUpdate }: {
+const SfxRow = memo(function SfxRow({ file, entry, isPlaying, isLastPlayed, onPlay, onUpdate }: {
   file: string;
   entry: SfxEntry | undefined;
   isPlaying: boolean;
+  isLastPlayed: boolean;
   onPlay: (file: string) => void;
   onUpdate: (file: string, updates: Partial<SfxEntry>) => void;
 }) {
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isLastPlayed && rowRef.current) {
+      rowRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [isLastPlayed]);
+
   return (
     <div
+      ref={rowRef}
       style={{
         display: 'flex', alignItems: 'center', gap: '8px',
         padding: '6px 8px', marginBottom: '2px',
-        background: isPlaying ? '#1a2a3a' : entry?.label ? '#0a1a0a' : '#0a0a14',
-        borderRadius: '4px', border: `1px solid ${isPlaying ? '#4a9eff' : entry?.starred ? '#aa8844' : '#1a1a2e'}`,
+        background: isPlaying ? '#1a2a3a' : isLastPlayed ? '#1a1a2a' : entry?.label ? '#0a1a0a' : '#0a0a14',
+        borderRadius: '4px', border: `1px solid ${isPlaying ? '#4a9eff' : isLastPlayed ? '#335' : entry?.starred ? '#aa8844' : '#1a1a2e'}`,
       }}
     >
       <button
