@@ -773,7 +773,7 @@ static func _get_stage_subfolder(stage_id: String, folder: String) -> String:
 static var _unified_config_cache: Dictionary = {}
 ## Static cache for global texture fixes (keyed by texture filename, e.g. "s01_2_fall.png#1").
 static var _global_texture_fixes: Dictionary = {}
-## Cache for loaded StageEffects resources (keyed by stage_id).
+## Cache for stage effects JSON (keyed by stage_id, null = no file).
 static var _stage_effects_cache: Dictionary = {}
 
 
@@ -812,28 +812,34 @@ func _spawn_stage_effects(stage_id: String) -> void:
 	if _stage_effects_cache.has(stage_id):
 		var cached: Variant = _stage_effects_cache[stage_id]
 		if cached == null:
-			return  # Already checked, no effects file
-		_apply_stage_effects(cached as StageEffects, stage_id)
+			return
+		_apply_stage_effects(cached as Dictionary, stage_id)
 		return
 
-	# Look for .tres alongside the stage GLB
+	# Look for JSON alongside the stage GLB
 	var area_id: String = SessionManager.get_current_area_id()
 	var area_cfg: Dictionary = GridGenerator.AREA_CONFIG.get(area_id, GridGenerator.AREA_CONFIG["gurhacia"])
 	var subfolder: String = _get_stage_subfolder(stage_id, area_cfg["folder"])
-	var tres_path := "res://assets/stages/%s/%s/lndmd/%s_effects.tres" % [subfolder, stage_id, stage_id]
+	var json_path := "res://assets/stages/%s/%s/lndmd/%s_effects.json" % [subfolder, stage_id, stage_id]
 
-	if ResourceLoader.exists(tres_path):
-		var res := load(tres_path) as StageEffects
-		_stage_effects_cache[stage_id] = res
-		if res:
-			_apply_stage_effects(res, stage_id)
-	else:
-		_stage_effects_cache[stage_id] = null  # Mark as checked
+	if FileAccess.file_exists(json_path):
+		var file := FileAccess.open(json_path, FileAccess.READ)
+		if file:
+			var json := JSON.new()
+			if json.parse(file.get_as_text()) == OK:
+				var data: Dictionary = json.data as Dictionary
+				_stage_effects_cache[stage_id] = data
+				_apply_stage_effects(data, stage_id)
+				return
+			else:
+				push_error("[ValleyField] Failed to parse %s: %s" % [json_path, json.get_error_message()])
+	_stage_effects_cache[stage_id] = null
 
 
-func _apply_stage_effects(res: StageEffects, stage_id: String) -> void:
+func _apply_stage_effects(data: Dictionary, stage_id: String) -> void:
+	var effects: Array = data.get("effects", [])
 	var count := 0
-	for effect in res.effects:
+	for effect in effects:
 		var category: String = str(effect.get("category", ""))
 		if category == "placed":
 			_spawn_placed_effect(effect)
@@ -843,20 +849,10 @@ func _apply_stage_effects(res: StageEffects, stage_id: String) -> void:
 
 
 func _spawn_placed_effect(effect: Dictionary) -> void:
-	var pos_val: Variant = effect.get("position", Vector3.ZERO)
-	var pos: Vector3
-	if pos_val is Vector3:
-		pos = pos_val
-	else:
-		var arr: Array = pos_val as Array
-		pos = Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
-	var color_val: Variant = effect.get("color", Color.WHITE)
-	var color: Color
-	if color_val is Color:
-		color = color_val
-	else:
-		var arr: Array = color_val as Array
-		color = Color(float(arr[0]), float(arr[1]), float(arr[2]))
+	var pos_arr: Array = effect.get("position", [0, 0, 0])
+	var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+	var color_arr: Array = effect.get("color", [1, 1, 1])
+	var color := Color(float(color_arr[0]), float(color_arr[1]), float(color_arr[2]))
 	var count: int = int(effect.get("count", 10))
 	var radius: float = float(effect.get("radius", 1.0))
 	var height: float = float(effect.get("height", 5.0))
