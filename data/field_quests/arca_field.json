@@ -648,7 +648,8 @@
             }
           ]
         }
-      ]
+      ],
+      "exit_direction": "west"
     },
     {
       "type": "transition",
@@ -1360,7 +1361,9 @@
             }
           ]
         }
-      ]
+      ],
+      "exit_direction": "east",
+      "entry_direction": "north"
     },
     {
       "type": "boss",
