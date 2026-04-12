@@ -22,6 +22,7 @@ const FenceScript := preload("res://scripts/3d/elements/fence.gd")
 const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
 const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
 const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
+const PoisonLilyScript := preload("res://scripts/3d/enemies/poison_lily.gd")
 const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
 const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
 const DropMaterialScript := preload("res://scripts/3d/elements/drop_material.gd")
@@ -2414,6 +2415,30 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 
 	# Look up enemy data from registry
 	var edata = EnemyRegistry.get_enemy(enemy_id)
+
+	# Use specialized scripts for specific enemy types
+	if edata and enemy_id == "poison_lily":
+		var enemy := PoisonLily.new()
+		enemy.enemy_data = edata
+		var col_shape := CollisionShape3D.new()
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = edata.collision_radius
+		capsule.height = edata.collision_height
+		col_shape.shape = capsule
+		col_shape.position.y = capsule.height / 2
+		enemy.add_child(col_shape)
+		enemy.collision_layer = 8
+		enemy.collision_mask = 1
+		_map_root.add_child(enemy)
+		enemy.position = pos
+		_room_enemies.append(enemy)
+		var spawn_id := enemy_id
+		enemy.died.connect(func(e: EnemyBase) -> void:
+			_spawn_enemy_drops(e.global_position, spawn_id)
+			_check_room_clear()
+		)
+		print("[CellObjects] PoisonLily at %s" % pos)
+		return
 
 	# Use EnemyBase (AI enemies) when enemy_data exists, otherwise fall back to EnemySpawn
 	if edata:

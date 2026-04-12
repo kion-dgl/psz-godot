@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/enemy_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = "poison_lily"
+name = "Poison Lily"
+japanese_name = ""
+element = 3
+locations = PackedStringArray("Ozette Wetlands")
+is_rare = false
+is_boss = false
+model_id = "poison_lily"
+hp_base = 120
+attack_base = 15
+defense_base = 8
+evasion_base = 20
+move_speed = 0.0
+attack_range = 3.0
+detection_range = 12.0
+exp_reward = 15
+meseta_min = 8
+meseta_max = 25
+behavior = 1
+attack_cooldown = 3.0
+collision_radius = 0.6
+collision_height = 1.5
