@@ -2207,6 +2207,21 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 			drop.position = pos
 			_room_drops.append(drop)
 
+	# Re-drop key if room was cleared but key wasn't collected
+	var key_drop_target: String = str(_current_cell.get("key_drop", ""))
+	if not key_drop_target.is_empty():
+		var current_pos: String = str(_current_cell.get("pos", ""))
+		var drop_tracking_key := current_pos + ">" + key_drop_target
+		if not _keys_collected.has(drop_tracking_key):
+			# Check if room is actually cleared (no alive enemies in saved state)
+			var has_alive := false
+			for obj in obj_states:
+				if str(obj.get("type", "")) == "enemy" and str(obj.get("state", "")) == "alive":
+					has_alive = true
+					break
+			if not has_alive:
+				_drop_key_on_clear(key_drop_target, drop_tracking_key)
+
 
 ## Temp state for enemy alive tracking during save (reset per save call)
 var _room_enemy_alive_ids: Array = []
