@@ -27,6 +27,9 @@ func _ready() -> void:
 	super._ready()
 	if model:
 		model.scale = PSO_SCALE
+		print("[PoisonLily] Model loaded and scaled at %s" % global_position)
+	else:
+		print("[PoisonLily] WARNING: No model loaded at %s (model_id=%s)" % [global_position, enemy_data.model_id if enemy_data else "?"])
 
 
 func _play_lily_anim(key: String, looping: bool = false) -> void:
