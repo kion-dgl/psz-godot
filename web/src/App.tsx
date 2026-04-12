@@ -139,6 +139,12 @@ function NavBar() {
       }}>
         Controls
       </Link>
+      <Link to="/sfx-labeler" style={{
+        color: isActive('/sfx-labeler') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        SFX
+      </Link>
     </nav>
   );
 }
