@@ -13,11 +13,12 @@ var _cache: Dictionary = {}
 
 
 func _ready() -> void:
-	if AudioServer.get_bus_index("SFX") == -1:
-		var bus_idx: int = AudioServer.bus_count
+	var bus_idx: int = AudioServer.get_bus_index("SFX")
+	if bus_idx == -1:
+		bus_idx = AudioServer.bus_count
 		AudioServer.add_bus(bus_idx)
 		AudioServer.set_bus_name(bus_idx, "SFX")
-		AudioServer.set_bus_volume_db(bus_idx, linear_to_db(sfx_volume))
+	AudioServer.set_bus_volume_db(bus_idx, linear_to_db(sfx_volume))
 
 	for i in range(POOL_SIZE):
 		var player := AudioStreamPlayer.new()
@@ -94,9 +95,11 @@ func _glob_cache(pattern: String) -> Array:
 	if _glob_results.has(pattern):
 		return _glob_results[pattern]
 
-	# Pattern like "res://assets/sfx/weapons/saber_swing_*.wav"
-	# Split into directory + prefix + suffix
 	var last_slash: int = pattern.rfind("/")
+	if last_slash == -1 or not pattern.contains("*"):
+		_glob_results[pattern] = []
+		return []
+
 	var dir_path: String = pattern.substr(0, last_slash)
 	var file_pattern: String = pattern.substr(last_slash + 1)
 	var star_pos: int = file_pattern.find("*")
@@ -109,9 +112,10 @@ func _glob_cache(pattern: String) -> Array:
 		dir.list_dir_begin()
 		var fname := dir.get_next()
 		while fname != "":
-			if fname.begins_with(prefix) and fname.ends_with(suffix):
+			if not dir.current_is_dir() and fname.begins_with(prefix) and fname.ends_with(suffix):
 				files.append("%s/%s" % [dir_path, fname])
 			fname = dir.get_next()
+		dir.list_dir_end()
 	files.sort()
 	_glob_results[pattern] = files
 	return files
