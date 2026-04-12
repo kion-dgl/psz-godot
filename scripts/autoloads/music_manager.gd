@@ -6,7 +6,7 @@ extends Node
 ## Fade duration in seconds
 const FADE_DURATION := 1.5
 ## Music volume (0.0 to 1.0)
-var music_volume: float = 0.8
+var music_volume: float = 0.5
 
 ## Area variant → track key mapping.
 ## The area_id (e.g. "gurhacia") + variant (e.g. "a") combine to form the lookup key.
@@ -106,7 +106,11 @@ var _stream_cache: Dictionary = {}
 var _crossfade_tween: Tween = null
 
 
+const AUDIO_CONFIG_PATH := "user://audio_settings.cfg"
+
 func _ready() -> void:
+	_load_volume_config()
+
 	_player_a = AudioStreamPlayer.new()
 	_player_a.bus = "Music"
 	_player_a.name = "MusicA"
@@ -124,7 +128,22 @@ func _ready() -> void:
 		var bus_idx: int = AudioServer.bus_count
 		AudioServer.add_bus(bus_idx)
 		AudioServer.set_bus_name(bus_idx, "Music")
-		AudioServer.set_bus_volume_db(bus_idx, linear_to_db(music_volume))
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), linear_to_db(music_volume))
+
+
+func _load_volume_config() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(AUDIO_CONFIG_PATH) == OK:
+		music_volume = cfg.get_value("audio", "music_volume", music_volume)
+		# Also load SFX volume for SfxManager (it initializes after us)
+		SfxManager.sfx_volume = cfg.get_value("audio", "sfx_volume", SfxManager.sfx_volume)
+
+
+func save_volume_config() -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("audio", "music_volume", music_volume)
+	cfg.set_value("audio", "sfx_volume", SfxManager.sfx_volume)
+	cfg.save(AUDIO_CONFIG_PATH)
 
 
 ## Play music for a field area. Called by valley_field_controller on cell load.

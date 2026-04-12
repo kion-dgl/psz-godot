@@ -3,7 +3,7 @@ extends Node
 ## Autoload that provides fire-and-forget SFX with volume control via the SFX bus.
 
 const POOL_SIZE := 8
-var sfx_volume: float = 0.8
+var sfx_volume: float = 0.5
 
 var _pool: Array[AudioStreamPlayer] = []
 var _pool_3d: Array[AudioStreamPlayer3D] = []
