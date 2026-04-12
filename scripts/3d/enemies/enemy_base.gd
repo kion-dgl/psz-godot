@@ -757,6 +757,14 @@ func _play_animation(anim_name: String, force: bool = false) -> void:
 
 
 ## Find animation by short name (e.g., "atk" matches "s_001_atk")
+## Animation name aliases — some enemies use different suffixes for the same action
+const ANIM_ALIASES := {
+	"wat": ["stt"],       # wait/idle → standing
+	"wlk": ["fly"],       # walk → fly (for airborne enemies)
+	"run": ["fly"],       # run → fly
+	"atk": ["atk1"],      # attack → attack variant 1
+}
+
 func _find_animation(short_name: String) -> String:
 	# Direct match first
 	if animation_player.has_animation(short_name):
@@ -780,6 +788,13 @@ func _find_animation(short_name: String) -> String:
 			if anim_name.ends_with("_" + short_name):
 				var full: String = str(lib_name) + "/" + anim_name if lib_name else anim_name
 				return full
+
+	# Try aliases
+	if short_name in ANIM_ALIASES:
+		for alias in ANIM_ALIASES[short_name]:
+			var result := _find_animation(alias)
+			if not result.is_empty():
+				return result
 
 	return ""
 
