@@ -1695,13 +1695,17 @@ func _spawn_field_elements() -> void:
 					SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
 				else:
 					print("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
+					_save_cell_state()
+					SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
+					var target_state: Dictionary = SessionManager.get_section_state(t_section)
 					SessionManager.set_current_section(t_section)
 					SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 						"current_cell_pos": t_cell,
 						"spawn_edge": aw_entry_edge,
-						"keys_collected": {},
-						"gates_opened": {},
-						"visited_cells": {},
+						"keys_collected": target_state.get("keys_collected", {}),
+						"gates_opened": target_state.get("gates_opened", {}),
+						"visited_cells": target_state.get("visited_cells", {}),
+						"cell_states": target_state.get("cell_states", {}),
 						"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 						"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 					})
@@ -2688,14 +2692,18 @@ func _spawn_warp_point(pos: Vector3, target_section: int, target_cell: String, t
 	wp.position = pos
 	wp.activated.connect(func() -> void:
 		print("[ValleyField] Warp activated → section %d, cell %s, position %s" % [target_section, target_cell, target_position])
+		_save_cell_state()
+		SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
+		var target_state: Dictionary = SessionManager.get_section_state(target_section)
 		SessionManager.set_current_section(target_section)
 		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 			"current_cell_pos": target_cell,
 			"spawn_edge": "",
 			"spawn_position": [target_position.x, target_position.y, target_position.z],
-			"keys_collected": {},
-			"gates_opened": {},
-			"visited_cells": {},
+			"keys_collected": target_state.get("keys_collected", {}),
+			"gates_opened": target_state.get("gates_opened", {}),
+			"visited_cells": target_state.get("visited_cells", {}),
+			"cell_states": target_state.get("cell_states", {}),
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 			"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 		})
@@ -3202,6 +3210,10 @@ func _on_end_reached() -> void:
 	if _transitioning:
 		return
 	_transitioning = true
+	# Save current section state before advancing
+	_save_cell_state()
+	SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
+
 	if SessionManager.advance_section():
 		var sections: Array = SessionManager.get_field_sections()
 		var new_idx: int = SessionManager.get_current_section()
@@ -3220,12 +3232,14 @@ func _on_end_reached() -> void:
 			if entry_edge.is_empty():
 				entry_edge = str(new_section.get("entry_direction", ""))
 
+		var target_state: Dictionary = SessionManager.get_section_state(new_idx)
 		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 			"current_cell_pos": str(new_section.get("start_pos", "")),
 			"spawn_edge": entry_edge,
-			"keys_collected": {},
-			"gates_opened": {},
-			"visited_cells": {},
+			"keys_collected": target_state.get("keys_collected", {}),
+			"gates_opened": target_state.get("gates_opened", {}),
+			"visited_cells": target_state.get("visited_cells", {}),
+			"cell_states": target_state.get("cell_states", {}),
 			"map_overlay_visible": _map_overlay.visible if _map_overlay else false,
 			"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 		})
