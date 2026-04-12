@@ -1632,8 +1632,8 @@ func _spawn_field_elements() -> void:
 		var target_section := 0
 		var target_cell := ""
 		var target_position := Vector3.ZERO
-		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir)
 		var is_entry: bool = (portal_dir == entry_dir)
+		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir) and not is_entry
 
 		var is_final_exit: bool = false
 		if is_exit and section_idx_for_warp + 1 < sections_for_warp.size():
