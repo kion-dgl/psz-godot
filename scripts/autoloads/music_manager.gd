@@ -16,6 +16,8 @@ const AREA_TRACKS := {
 	"office": "general",
 	"teleporter": "flowing",
 	"title": "phantasy_star_zero",
+	"character_select": "precede",
+	"character_create": "lets_go_together",
 
 	# Gurhacia Valley
 	"valley_a": "desolate_scape",
@@ -56,6 +58,8 @@ const AREA_TRACKS := {
 ## Track key → file path mapping
 const TRACK_FILES := {
 	"phantasy_star_zero": "res://assets/music/phantasy_star_zero.ogg",
+	"precede": "res://assets/music/precede.ogg",
+	"lets_go_together": "res://assets/music/lets_go_together.ogg",
 	"full_of_life": "res://assets/music/full_of_life.ogg",
 	"general": "res://assets/music/general.ogg",
 	"flowing": "res://assets/music/flowing.ogg",

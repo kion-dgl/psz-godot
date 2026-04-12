@@ -1567,6 +1567,12 @@ func _play_attack_animation(attack_num: int) -> void:
 		_play_and_track_attack(anim_name)
 
 
+## Weapon type → SFX glob pattern
+const WEAPON_SFX := {
+	WeaponData.WeaponType.SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.HANDGUN: "res://assets/sfx/weapons/handgun_shot_*.wav",
+}
+
 func _play_and_track_attack(anim_name: String) -> void:
 	play_animation(anim_name, false)
 	_attack_anim_elapsed = 0.0
@@ -1577,6 +1583,11 @@ func _play_and_track_attack(anim_name: String) -> void:
 	else:
 		_attack_anim_length = 0.5  # Fallback
 	_activate_attack_hitbox()
+	# Play weapon SFX
+	var wtype: int = _get_equipped_weapon_type()
+	var sfx_pattern: String = WEAPON_SFX.get(wtype, "")
+	if not sfx_pattern.is_empty():
+		SfxManager.play_random_at(sfx_pattern, global_position)
 
 
 func _ensure_combo_ring() -> void:
@@ -1848,6 +1859,12 @@ func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
 		return
 
 	GameState.set_hp(GameState.hp - damage)
+
+	# Player hit SFX
+	if damage > 10:
+		SfxManager.play_at("res://assets/sfx/player/take_hard_hit.wav", global_position)
+	else:
+		SfxManager.play_at("res://assets/sfx/player/take_hit.wav", global_position)
 
 	# No physics knockback — animation-driven hit reactions only
 	velocity = Vector3.ZERO

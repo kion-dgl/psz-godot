@@ -20,6 +20,8 @@ var _hint_label: Label
 
 
 func _ready() -> void:
+	MusicManager.play_location_music("character_select")
+
 	# Clear tscn children and build programmatically
 	for child in get_children():
 		child.queue_free()
@@ -310,6 +312,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_current_slot -= 1
 		else:
 			_current_slot += GRID_COLS - 1
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_rebuild_grid()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right"):
@@ -317,20 +320,25 @@ func _unhandled_input(event: InputEvent) -> void:
 			_current_slot += 1
 		else:
 			_current_slot -= GRID_COLS - 1
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_rebuild_grid()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
 		_current_slot = wrapi(_current_slot - GRID_COLS, 0, SLOT_COUNT)
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_rebuild_grid()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
 		_current_slot = wrapi(_current_slot + GRID_COLS, 0, SLOT_COUNT)
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_rebuild_grid()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
+		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 		_select_slot()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
+		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
 		SceneManager.goto_scene("res://scenes/2d/title.tscn")
 		get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_DELETE:

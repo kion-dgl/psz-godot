@@ -205,5 +205,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_accept") \
 			or event.is_action_pressed("start") \
 			or (event is InputEventScreenTouch and event.pressed):
+		SfxManager.play("res://assets/sfx/ui/title_start.wav")
 		get_viewport().set_input_as_handled()
 		SceneManager.goto_scene("res://scenes/2d/character_select.tscn")

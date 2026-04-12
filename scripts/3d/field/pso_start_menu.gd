@@ -124,6 +124,7 @@ func open() -> void:
 func close() -> void:
 	if not _is_open:
 		return
+	SfxManager.play("res://assets/sfx/ui/menu_close.wav")
 	_is_open = false
 	visible = false
 	closed.emit()
@@ -231,6 +232,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			handled = _input_options(event)
 
 	if handled:
+		# Play menu SFX
+		if event.is_action_pressed("ui_accept"):
+			SfxManager.play("res://assets/sfx/ui/menu_select.wav")
+		elif event.is_action_pressed("ui_cancel"):
+			SfxManager.play("res://assets/sfx/ui/menu_back.wav")
+		elif event.is_action_pressed("ui_up", true) or event.is_action_pressed("ui_down", true) \
+			or event.is_action_pressed("ui_left", true) or event.is_action_pressed("ui_right", true):
+			SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_canvas.queue_redraw()
 
 	# ALWAYS consume input when menu is open (blocks camera, interact, quick weapon, palette)
@@ -440,9 +449,15 @@ func _input_options(event: InputEvent) -> bool:
 		if _options_idx == 0:
 			_adjust_music_volume(-0.1)
 			return true
+		elif _options_idx == 1:
+			_adjust_sfx_volume(-0.1)
+			return true
 	elif event.is_action_pressed("ui_right", true):
 		if _options_idx == 0:
 			_adjust_music_volume(0.1)
+			return true
+		elif _options_idx == 1:
+			_adjust_sfx_volume(0.1)
 			return true
 	elif event.is_action_pressed("ui_accept"):
 		_toggle_option(_options_idx)
@@ -452,6 +467,13 @@ func _input_options(event: InputEvent) -> bool:
 		_sub_idx = 2
 		return true
 	return false
+
+
+func _adjust_sfx_volume(delta: float) -> void:
+	SfxManager.sfx_volume = clampf(SfxManager.sfx_volume + delta, 0.0, 1.0)
+	var bus_idx: int = AudioServer.get_bus_index("SFX")
+	if bus_idx >= 0:
+		AudioServer.set_bus_volume_db(bus_idx, linear_to_db(SfxManager.sfx_volume))
 
 
 func _adjust_music_volume(delta: float) -> void:
@@ -464,9 +486,11 @@ func _adjust_music_volume(delta: float) -> void:
 func _get_options_list() -> Array:
 	var on := "ON"
 	var off := "OFF"
-	var vol_pct: int = roundi(MusicManager.music_volume * 100)
+	var music_pct: int = roundi(MusicManager.music_volume * 100)
+	var sfx_pct: int = roundi(SfxManager.sfx_volume * 100)
 	return [
-		"Music Volume: %d%%" % vol_pct,
+		"Music Volume: %d%%" % music_pct,
+		"SFX Volume: %d%%" % sfx_pct,
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
@@ -478,15 +502,16 @@ func _get_options_list() -> Array:
 
 func _toggle_option(idx: int) -> void:
 	match idx:
-		0: _adjust_music_volume(0.1)  # Accept toggles volume up by 10%
-		1: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
-		2: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		3: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		4: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		5:
+		0: _adjust_music_volume(0.1)
+		1: _adjust_sfx_volume(0.1)
+		2: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
+		3: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		4: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		5: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		6:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		6:
+		7:
 			DebugConfig.profile_frames = not DebugConfig.profile_frames
 
 
@@ -575,6 +600,7 @@ func _do_feed_mag() -> void:
 	var item_id: String = str(item.get("id", ""))
 	var result: Dictionary = MagManager.feed_mag(mag_state, item_id)
 	if result.get("success", false):
+		SfxManager.play("res://assets/sfx/ui/mag_feed.wav")
 		Inventory.remove_item(item_id, 1)
 
 

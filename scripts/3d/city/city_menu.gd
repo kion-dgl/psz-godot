@@ -84,6 +84,7 @@ func _connect_menu() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") or event.is_action_pressed("pause"):
+		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
 		if _in_options:
 			_build_main_menu()
 		else:
