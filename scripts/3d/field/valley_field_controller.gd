@@ -2175,8 +2175,17 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				if state != "collected":
 					var qi_id: String = str(obj.get("item_id", ""))
 					var qi_label: String = str(obj.get("item_label", ""))
-					var qi_dlg: Array = obj.get("dialog", [])
-					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg)
+					# Look up full dialog/actions/remaining_dialog from original cell data
+					var qi_dlg: Array = []
+					var qi_act: Array = []
+					var qi_rem: Array = []
+					for orig_obj in _current_cell.get("objects", []):
+						if str(orig_obj.get("type", "")) == "quest_item" and str(orig_obj.get("item_id", "")) == qi_id:
+							qi_dlg = orig_obj.get("dialog", [])
+							qi_act = orig_obj.get("actions", [])
+							qi_rem = orig_obj.get("remaining_dialog", [])
+							break
+					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 
 	# Restore uncollected drops
 	for d in drop_states:
