@@ -14,8 +14,9 @@ const PAGE_SIZE = 30;
 const CATEGORIES = [
   'common', 'forest', 'cave', 'machine', 'ruin', 'ancient',
   'city', 'boss01', 'boss02', 'boss03', 'boss04', 'boss05',
-  'boss06', 'boss07', 'boss08', 'tower', 'jungle', 'water',
+  'boss06', 'boss07', 'boss08', 'boss09', 'tower', 'jungle', 'water',
   'beach', 'ship', 'duel01', 'duel02', 'ephinea',
+  'crater', 'desert', 'wilds',
 ];
 
 // Label presets for quick tagging
@@ -98,31 +99,18 @@ export default function SfxLabeler() {
   const autoAdvanceRef = useRef(autoAdvance);
   autoAdvanceRef.current = autoAdvance;
 
-  // Load file list for category
+  // Load file list from manifest
+  const [manifest, setManifest] = useState<Record<string, string[]>>({});
   useEffect(() => {
-    // Generate file list (we know the pattern: {category}_{000-999}.wav)
-    // We'll try loading sequentially until we get a 404
-    const loadFiles = async () => {
-      const found: string[] = [];
-      for (let i = 0; i < 300; i++) {
-        const name = `${category}_${i.toString().padStart(3, '0')}.wav`;
-        const url = assetUrl(`psobb_sfx/${category}/${name}`);
-        try {
-          const res = await fetch(url, { method: 'HEAD' });
-          if (res.ok) {
-            found.push(name);
-          } else {
-            // Allow gaps up to 5
-            if (found.length > 0 && i - found.length > 5) break;
-          }
-        } catch {
-          break;
-        }
-      }
-      setFiles(found);
-    };
-    loadFiles();
-  }, [category]);
+    fetch(assetUrl('psobb_sfx/manifest.json'))
+      .then(r => r.json())
+      .then(data => setManifest(data))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    setFiles(manifest[category] || []);
+  }, [category, manifest]);
 
   // Save labels on change
   useEffect(() => {
@@ -249,7 +237,8 @@ export default function SfxLabeler() {
           </div>
         </div>
         <div style={{ flex: 1, overflow: 'auto' }}>
-          {CATEGORIES.map(cat => {
+          {CATEGORIES.filter(cat => (manifest[cat]?.length || 0) > 0).map(cat => {
+            const catTotal = manifest[cat]?.length || 0;
             const catLabeled = Object.entries(labels).filter(([k, v]) => k.startsWith(cat + '/') && v.label).length;
             return (
               <button
@@ -263,7 +252,8 @@ export default function SfxLabeler() {
                   textAlign: 'left', cursor: 'pointer', fontSize: '13px',
                 }}
               >
-                {cat} {catLabeled > 0 && <span style={{ color: '#66aa66', fontSize: '11px' }}>({catLabeled})</span>}
+                {cat} <span style={{ color: '#555', fontSize: '11px' }}>({catTotal})</span>
+                {catLabeled > 0 && <span style={{ color: '#66aa66', fontSize: '11px' }}> {catLabeled}</span>}
               </button>
             );
           })}
