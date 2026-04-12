@@ -2257,15 +2257,27 @@ func _save_cell_state() -> void:
 					"wave": wave,
 				})
 			else:
-				# Current wave — check spawned enemies
-				var is_dead := true
+				# Current wave — check if any spawned enemies from this wave are still alive
+				# Don't match by position (enemies move), count alive enemies in this wave instead
+				var alive_in_wave := 0
 				for e in _room_enemies:
-					if is_instance_valid(e) and e.position.distance_to(pos) < 0.1:
-						if e is EnemyBase:
-							is_dead = not e.is_alive
-						else:
-							is_dead = (e.get("element_state") == "dead")
-						break
+					if not is_instance_valid(e):
+						continue
+					if e is EnemyBase:
+						if e.is_alive:
+							alive_in_wave += 1
+					elif e.get("element_state") != "dead":
+						alive_in_wave += 1
+				# Count how many wave enemies we've processed so far
+				var wave_enemies_total := 0
+				var wave_enemies_saved_alive := 0
+				for prev in obj_states:
+					if prev.get("type") == "enemy" and int(prev.get("wave", 1)) == wave:
+						wave_enemies_total += 1
+						if prev.get("state") == "alive":
+							wave_enemies_saved_alive += 1
+				# This enemy is alive if we haven't yet accounted for all alive enemies
+				var is_dead: bool = wave_enemies_saved_alive >= alive_in_wave
 				obj_states.append({
 					"type": "enemy",
 					"px": pos.x, "py": pos.y, "pz": pos.z,
