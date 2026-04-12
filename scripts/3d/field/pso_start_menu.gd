@@ -113,6 +113,7 @@ func _ready() -> void:
 func open() -> void:
 	if _is_open:
 		return
+	SfxManager.play("res://assets/sfx/ui/menu_open.wav")
 	_is_open = true
 	visible = true
 	_mode = Mode.MAIN
