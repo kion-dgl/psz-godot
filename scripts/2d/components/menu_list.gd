@@ -22,12 +22,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_up"):
 		_move_cursor(-1)
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
 		_move_cursor(1)
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if not _disabled[_current_index]:
+			SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 			item_selected.emit(_current_index)
 			get_viewport().set_input_as_handled()
 

@@ -238,7 +238,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			SfxManager.play("res://assets/sfx/ui/menu_back.wav")
 		elif event.is_action_pressed("ui_up", true) or event.is_action_pressed("ui_down", true) \
 			or event.is_action_pressed("ui_left", true) or event.is_action_pressed("ui_right", true):
-			SfxManager.play("res://assets/sfx/ui/menu_select.wav", -6.0)
+			SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_canvas.queue_redraw()
 
 	# ALWAYS consume input when menu is open (blocks camera, interact, quick weapon, palette)
