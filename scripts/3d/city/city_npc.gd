@@ -194,6 +194,7 @@ func set_player(player: Node3D) -> void:
 func _on_interact(_player: Node3D) -> void:
 	if target_scene_path.is_empty():
 		return
+	SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 	# Save position so we return to same spot
 	var area_controller := get_parent()
 	if area_controller and area_controller.has_method("_save_player_state"):

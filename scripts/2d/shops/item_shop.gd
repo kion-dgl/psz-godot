@@ -165,37 +165,26 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left"):
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_confirming = false
-		_tab = wrapi(_tab - 1, 0, TAB_COUNT)
+		_tab = wrapi(_tab + (1 if event.is_action_pressed("ui_right") else -1), 0, TAB_COUNT)
 		_selected_index = 0
 		if _tab == Tab.SELL:
 			_generate_sell_list()
 		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right"):
+	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_confirming = false
-		_tab = wrapi(_tab + 1, 0, TAB_COUNT)
-		_selected_index = 0
-		if _tab == Tab.SELL:
-			_generate_sell_list()
-		_update_hint()
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up"):
-		_confirming = false
-		_selected_index = wrapi(_selected_index - 1, 0, maxi(_get_current_list().size(), 1))
-		_update_hint()
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_down"):
-		_confirming = false
-		_selected_index = wrapi(_selected_index + 1, 0, maxi(_get_current_list().size(), 1))
+		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
+		_selected_index = wrapi(_selected_index + dir, 0, maxi(_get_current_list().size(), 1))
 		_update_hint()
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
+		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 		if _confirming:
 			_confirming = false
 			_on_select()
