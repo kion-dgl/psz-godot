@@ -428,9 +428,12 @@ func _input_system(event: InputEvent) -> bool:
 		return true
 	elif event.is_action_pressed("ui_accept"):
 		match _sub_idx:
-			0: SaveManager.save_game()
+			0:
+				SaveManager.save_game()
+				SfxManager.play("res://assets/sfx/ui/game_saved.wav")
 			1:
 				SaveManager.save_game()
+				SfxManager.play("res://assets/sfx/ui/game_saved.wav")
 				close()
 				SceneManager.goto_scene("res://scenes/2d/title.tscn")
 			2:
