@@ -72,6 +72,8 @@ func _feed_selected() -> void:
 		hint_label.text = str(result.get("message", "Failed!"))
 		return
 
+	SfxManager.play("res://assets/sfx/ui/mag_feed.wav")
+
 	# Consume the item
 	Inventory.remove_item(item_id, 1)
 
