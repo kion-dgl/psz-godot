@@ -113,6 +113,7 @@ func _ready() -> void:
 func open() -> void:
 	if _is_open:
 		return
+	SfxManager.play("res://assets/sfx/ui/menu_open.wav")
 	_is_open = true
 	visible = true
 	_mode = Mode.MAIN
@@ -232,6 +233,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			handled = _input_options(event)
 
 	if handled:
+		# Skip generic SFX if menu was just closed — close() plays its own sound
+		if not _is_open:
+			_canvas.queue_redraw()
+			get_viewport().set_input_as_handled()
+			return
 		# Play menu SFX
 		if event.is_action_pressed("ui_accept"):
 			SfxManager.play("res://assets/sfx/ui/menu_select.wav")
@@ -422,9 +428,12 @@ func _input_system(event: InputEvent) -> bool:
 		return true
 	elif event.is_action_pressed("ui_accept"):
 		match _sub_idx:
-			0: SaveManager.save_game()
+			0:
+				SaveManager.save_game()
+				SfxManager.play("res://assets/sfx/ui/game_saved.wav")
 			1:
 				SaveManager.save_game()
+				SfxManager.play("res://assets/sfx/ui/game_saved.wav")
 				close()
 				SceneManager.goto_scene("res://scenes/2d/title.tscn")
 			2:
