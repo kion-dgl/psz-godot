@@ -86,6 +86,7 @@ func show_dialog(pages: Array) -> void:
 	_current_page = 0
 	_active = true
 	visible = true
+	SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
 	_show_page(0)
 
 

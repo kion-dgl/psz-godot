@@ -1488,6 +1488,7 @@ func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
 	key.position = key_pos
 
 	key.interacted.connect(func(_player: Node3D) -> void:
+		SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
 		_keys_collected[tracking_key] = true
 		_update_key_hud()
 	)
@@ -2914,6 +2915,8 @@ func _check_room_clear() -> void:
 		return
 
 	print("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
+	if _room_gates_locked.size() > 0:
+		SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
 	for gate in _room_gates_locked:
 		if is_instance_valid(gate):
 			gate.open()

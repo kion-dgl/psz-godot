@@ -170,6 +170,7 @@ func add_experience(amount: int) -> Dictionary:
 			character["hp"] = character["max_hp"]
 			character["pp"] = character["max_pp"]
 		level_up.emit(new_level)
+		SfxManager.play("res://assets/sfx/ui/level_up.wav")
 		_sync_to_game_state()
 
 	return {"leveled_up": leveled_up, "new_level": new_level}
