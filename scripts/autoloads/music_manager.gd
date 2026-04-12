@@ -103,6 +103,7 @@ var _player_b: AudioStreamPlayer
 var _active_player: AudioStreamPlayer
 var _current_track: String = ""
 var _stream_cache: Dictionary = {}
+var _crossfade_tween: Tween = null
 
 
 func _ready() -> void:
@@ -153,10 +154,11 @@ func play_location_music(location: String) -> void:
 ## Stop music with a fade out.
 func stop() -> void:
 	if _active_player.playing:
+		var player_to_stop := _active_player
 		var tw := create_tween()
-		tw.tween_property(_active_player, "volume_db", -40.0, FADE_DURATION)
+		tw.tween_property(player_to_stop, "volume_db", -40.0, FADE_DURATION)
 		tw.tween_callback(func():
-			_active_player.stop()
+			player_to_stop.stop()
 			_current_track = ""
 		)
 
@@ -186,23 +188,24 @@ func _play_track(track_key: String) -> void:
 			(stream as AudioStreamOggVorbis).loop = true
 		_stream_cache[track_key] = stream
 
+	# Kill any pending crossfade to prevent stale callbacks from stopping the wrong player
+	if _crossfade_tween and _crossfade_tween.is_valid():
+		_crossfade_tween.kill()
+
 	# Crossfade: fade out active, fade in inactive
 	var old_player := _active_player
 	var new_player := _player_b if _active_player == _player_a else _player_a
+
+	# Stop old player immediately if it's not the one we're about to use
+	if old_player.playing and old_player != new_player:
+		old_player.stop()
 
 	new_player.stream = stream
 	new_player.volume_db = -40.0
 	new_player.play()
 
-	var tw := create_tween()
-	tw.set_parallel(true)
-	if old_player.playing:
-		tw.tween_property(old_player, "volume_db", -40.0, FADE_DURATION)
-	tw.tween_property(new_player, "volume_db", 0.0, FADE_DURATION)
-	tw.set_parallel(false)
-	tw.tween_callback(func():
-		old_player.stop()
-	)
+	_crossfade_tween = create_tween()
+	_crossfade_tween.tween_property(new_player, "volume_db", 0.0, FADE_DURATION)
 
 	_active_player = new_player
 	_current_track = track_key
