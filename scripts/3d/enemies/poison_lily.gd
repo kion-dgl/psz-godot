@@ -44,16 +44,6 @@ func _play_lily_anim(key: String, looping: bool = false) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# Process active projectiles even after death
-	var i := _active_projectiles.size() - 1
-	while i >= 0:
-		var proj: Area3D = _active_projectiles[i]
-		if is_instance_valid(proj):
-			_process_projectile(proj, delta)
-		else:
-			_active_projectiles.remove_at(i)
-		i -= 1
-
 	if not is_alive or current_state == EnemyState.DEAD:
 		return
 
@@ -150,8 +140,21 @@ func _fire_projectile() -> void:
 		return
 	var proj := _create_poison_projectile()
 	get_parent().add_child(proj)
-	proj.global_position = global_position + Vector3(0, 1.0, 0)
-	_active_projectiles.append(proj)
+	var spawn_pos := global_position + Vector3(0, 1.0, 0)
+	proj.global_position = spawn_pos
+
+	# Calculate travel using a tween so projectile is self-sufficient after lily dies
+	var direction: Vector3 = Vector3.ZERO
+	if target and is_instance_valid(target):
+		direction = (target.global_position + Vector3(0, 1, 0) - spawn_pos).normalized()
+	var max_dist: float = enemy_data.detection_range * 1.5 if enemy_data else 18.0
+	var travel_time: float = max_dist / PROJECTILE_SPEED
+	var end_pos := spawn_pos + direction * max_dist
+
+	var tw := proj.create_tween()
+	tw.tween_property(proj, "global_position", end_pos, travel_time)
+	tw.tween_callback(proj.queue_free)
+
 	print("[PoisonLily] Fired projectile toward %s" % target.name)
 
 
@@ -185,24 +188,7 @@ func _create_poison_projectile() -> Node3D:
 	mesh.mesh = sphere_mesh
 	proj.add_child(mesh)
 
-	# Direction toward player (use lily's position since proj isn't in scene yet)
-	var spawn_pos := global_position + Vector3(0, 1.0, 0)
-	var direction: Vector3 = Vector3.ZERO
-	if target and is_instance_valid(target):
-		direction = (target.global_position + Vector3(0, 1, 0) - spawn_pos).normalized()
-
-	var speed: float = PROJECTILE_SPEED
 	var dmg: int = enemy_data.attack_base if enemy_data else 15
-	var max_dist: float = enemy_data.detection_range * 1.5 if enemy_data else 18.0
-	var start_pos := global_position
-
-	# Attach script behavior via _process
-	var elapsed: float = 0.0
-	proj.set_meta("direction", direction)
-	proj.set_meta("speed", speed)
-	proj.set_meta("damage", dmg)
-	proj.set_meta("max_dist", max_dist)
-	proj.set_meta("start_pos", start_pos)
 	proj.set_meta("hit", false)
 
 	proj.body_entered.connect(func(body: Node3D) -> void:
@@ -210,22 +196,12 @@ func _create_poison_projectile() -> Node3D:
 			return
 		if body.is_in_group("player") and body.has_method("take_damage"):
 			proj.set_meta("hit", true)
-			body.take_damage(proj.get_meta("damage"))
+			body.take_damage(dmg)
 			_apply_poison_to(body)
 			proj.queue_free()
 	)
 
 	return proj
-
-
-func _process_projectile(proj: Area3D, delta: float) -> void:
-	var dir: Vector3 = proj.get_meta("direction", Vector3.ZERO)
-	var spd: float = proj.get_meta("speed", 10.0)
-	var max_d: float = proj.get_meta("max_dist", 20.0)
-	var start: Vector3 = proj.get_meta("start_pos", Vector3.ZERO)
-	proj.global_position += dir * spd * delta
-	if proj.global_position.distance_to(start) > max_d:
-		proj.queue_free()
 
 
 func _apply_poison_to(body: Node3D) -> void:
@@ -255,7 +231,6 @@ func _apply_poison_to(body: Node3D) -> void:
 	print("[PoisonLily] Applied poison to %s for %ds" % [body.name, ticks_remaining])
 
 
-var _active_projectiles: Array[Area3D] = []
 
 
 func _face_target() -> void:

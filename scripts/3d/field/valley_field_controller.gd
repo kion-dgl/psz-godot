@@ -2199,8 +2199,13 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 			_room_drops.append(drop)
 
 
+## Temp state for enemy alive tracking during save (reset per save call)
+var _room_enemy_alive_ids: Array = []
+var _room_enemy_alive_ids_built: bool = false
+
 ## Save current cell's object states before transitioning away.
 func _save_cell_state() -> void:
+	_room_enemy_alive_ids_built = false
 	var cell_pos: String = str(_current_cell.get("pos", ""))
 	if cell_pos.is_empty():
 		return
@@ -2270,27 +2275,30 @@ func _save_cell_state() -> void:
 					"wave": wave,
 				})
 			else:
-				# Current wave — check if any spawned enemies from this wave are still alive
-				# Don't match by position (enemies move), count alive enemies in this wave instead
-				var alive_in_wave := 0
-				for e in _room_enemies:
-					if not is_instance_valid(e):
-						continue
-					if e is EnemyBase:
-						if e.is_alive:
-							alive_in_wave += 1
-					elif e.get("element_state") != "dead":
-						alive_in_wave += 1
-				# Count how many wave enemies we've processed so far
-				var wave_enemies_total := 0
-				var wave_enemies_saved_alive := 0
-				for prev in obj_states:
-					if prev.get("type") == "enemy" and int(prev.get("wave", 1)) == wave:
-						wave_enemies_total += 1
-						if prev.get("state") == "alive":
-							wave_enemies_saved_alive += 1
-				# This enemy is alive if we haven't yet accounted for all alive enemies
-				var is_dead: bool = wave_enemies_saved_alive >= alive_in_wave
+				# Current wave — match spawned enemies by enemy_id + alive status
+				# Build a list of alive enemy_ids from _room_enemies (consumed as matched)
+				if not _room_enemy_alive_ids_built:
+					_room_enemy_alive_ids.clear()
+					for e in _room_enemies:
+						if not is_instance_valid(e):
+							continue
+						var alive: bool = false
+						var eid: String = ""
+						if e is EnemyBase:
+							alive = e.is_alive
+							eid = e.enemy_data.id if e.enemy_data else ""
+						else:
+							alive = e.get("element_state") != "dead"
+							eid = str(e.get("enemy_id", ""))
+						if alive:
+							_room_enemy_alive_ids.append(eid)
+					_room_enemy_alive_ids_built = true
+				# Check if this specific enemy_id is still in the alive list
+				var is_dead: bool = true
+				var match_idx: int = _room_enemy_alive_ids.find(enemy_id)
+				if match_idx >= 0:
+					is_dead = false
+					_room_enemy_alive_ids.remove_at(match_idx)
 				obj_states.append({
 					"type": "enemy",
 					"px": pos.x, "py": pos.y, "pz": pos.z,
