@@ -1750,6 +1750,15 @@ func _spawn_field_elements() -> void:
 					if str(act) == "telepipe":
 						has_telepipe_source = true
 						break
+				# Also check remaining_dialog entries for telepipe actions
+				if not has_telepipe_source:
+					for entry in obj.get("remaining_dialog", []):
+						for act in entry.get("actions", []):
+							if str(act) == "telepipe":
+								has_telepipe_source = true
+								break
+						if has_telepipe_source:
+							break
 			if has_telepipe_source:
 				break
 		if not has_telepipe_source:
