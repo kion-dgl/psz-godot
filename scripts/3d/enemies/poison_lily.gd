@@ -4,7 +4,7 @@ class_name PoisonLily extends EnemyBase
 
 const PSO_SCALE := Vector3(0.09, 0.09, 0.09)
 const MELEE_RANGE := 3.0
-const PROJECTILE_SPEED := 12.0
+const PROJECTILE_SPEED := 5.0
 const POISON_DURATION := 5.0
 const POISON_TICK_DAMAGE := 3
 
@@ -185,10 +185,11 @@ func _create_poison_projectile() -> Node3D:
 	mesh.mesh = sphere_mesh
 	proj.add_child(mesh)
 
-	# Direction toward player
+	# Direction toward player (use lily's position since proj isn't in scene yet)
+	var spawn_pos := global_position + Vector3(0, 1.0, 0)
 	var direction: Vector3 = Vector3.ZERO
 	if target and is_instance_valid(target):
-		direction = (target.global_position + Vector3(0, 1, 0) - proj.global_position).normalized()
+		direction = (target.global_position + Vector3(0, 1, 0) - spawn_pos).normalized()
 
 	var speed: float = PROJECTILE_SPEED
 	var dmg: int = enemy_data.attack_base if enemy_data else 15
