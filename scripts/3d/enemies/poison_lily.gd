@@ -160,6 +160,8 @@ func _create_poison_projectile() -> Node3D:
 	proj.name = "PoisonProjectile"
 	proj.collision_layer = 0
 	proj.collision_mask = 2  # Player layer
+	proj.monitoring = true
+	proj.monitorable = false
 
 	# Collision shape
 	var col := CollisionShape3D.new()
