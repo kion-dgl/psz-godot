@@ -130,7 +130,7 @@ func _build_lists() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-			SceneManager.pop_scene()
+		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
 		_mode = Mode.IDENTIFY if _mode == Mode.GRIND else Mode.GRIND

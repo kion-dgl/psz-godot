@@ -124,6 +124,7 @@ func open() -> void:
 func close() -> void:
 	if not _is_open:
 		return
+	SfxManager.play("res://assets/sfx/ui/menu_close.wav")
 	_is_open = false
 	visible = false
 	closed.emit()
