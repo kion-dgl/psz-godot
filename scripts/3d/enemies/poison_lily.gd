@@ -44,10 +44,7 @@ func _play_lily_anim(key: String, looping: bool = false) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if not is_alive or current_state == EnemyState.DEAD:
-		return
-
-	# Process active projectiles
+	# Process active projectiles even after death
 	var i := _active_projectiles.size() - 1
 	while i >= 0:
 		var proj: Area3D = _active_projectiles[i]
@@ -56,6 +53,9 @@ func _physics_process(delta: float) -> void:
 		else:
 			_active_projectiles.remove_at(i)
 		i -= 1
+
+	if not is_alive or current_state == EnemyState.DEAD:
+		return
 
 	_attack_timer -= delta
 

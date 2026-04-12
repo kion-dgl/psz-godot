@@ -2091,6 +2091,16 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 	print("[CellObjects] Restoring %d objects + %d drops from saved state (wave %d/%d)" % [
 		obj_states.size(), drop_states.size(), _current_wave, _max_wave])
 
+	# Rebuild wave enemy data from original cell objects so _spawn_wave works on restore
+	_wave_enemy_data.clear()
+	for obj in _current_cell.get("objects", []):
+		if str(obj.get("type", "")) == "enemy":
+			var wave: int = int(obj.get("wave", 1))
+			if wave > 1:
+				if not _wave_enemy_data.has(wave):
+					_wave_enemy_data[wave] = []
+				_wave_enemy_data[wave].append(obj)
+
 	for obj in obj_states:
 		var obj_type: String = str(obj.get("type", ""))
 		var pos := Vector3(float(obj.get("px", 0)), float(obj.get("py", 0)), float(obj.get("pz", 0)))
