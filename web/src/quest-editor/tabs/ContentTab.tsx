@@ -1350,10 +1350,40 @@ function CellContentInspector({
                         }}
                       >
                         <option value="">-- select prop --</option>
-                        <option value="assets/objects/story/dropship_crash.glb">Dropship (crashed)</option>
-                        <option value="assets/objects/story/campfire.glb">Campfire</option>
-                        <option value="assets/enemies/rabbit/rabbit.glb">Rabbit</option>
-                        <option value="assets/enemies/rabbit_rare/rabbit_rare.glb">Rabbit (rare)</option>
+                        <optgroup label="Story">
+                          <option value="assets/objects/story/dropship_crash.glb">Dropship (crashed)</option>
+                          <option value="assets/objects/story/campfire.glb">Campfire</option>
+                          <option value="assets/enemies/rabbit/rabbit.glb">Rabbit</option>
+                          <option value="assets/enemies/rabbit_rare/rabbit_rare.glb">Rabbit (rare)</option>
+                        </optgroup>
+                        <optgroup label="Trees">
+                          {['tree_oak', 'tree_default', 'tree_detailed', 'tree_tall', 'tree_fat', 'tree_thin', 'tree_small', 'tree_simple', 'tree_cone', 'tree_plateau',
+                            'tree_palm', 'tree_palmTall', 'tree_palmShort', 'tree_palmBend',
+                            'tree_pineTallA', 'tree_pineTallB', 'tree_pineSmallA', 'tree_pineDefaultA', 'tree_pineRoundA',
+                            'tree_oak_fall', 'tree_default_fall', 'tree_detailed_fall', 'tree_oak_dark', 'tree_default_dark',
+                          ].map(t => <option key={t} value={`assets/kenney_nature-pack/${t}.glb`}>{t.replace('tree_', '')}</option>)}
+                        </optgroup>
+                        <optgroup label="Plants">
+                          {['plant_bush', 'plant_bushLarge', 'plant_bushSmall', 'plant_bushDetailed', 'plant_bushTriangle', 'plant_bushLargeTriangle', 'plant_flatShort', 'plant_flatTall',
+                            'flower_redA', 'flower_yellowA', 'flower_purpleA', 'lily_large', 'lily_small',
+                            'mushroom_red', 'mushroom_redTall', 'mushroom_redGroup', 'mushroom_tan', 'mushroom_tanTall', 'mushroom_tanGroup',
+                            'grass', 'grass_large', 'grass_leafs', 'grass_leafsLarge', 'hanging_moss',
+                          ].map(t => <option key={t} value={`assets/kenney_nature-pack/${t}.glb`}>{t}</option>)}
+                        </optgroup>
+                        <optgroup label="Rocks">
+                          {['rock_largeA', 'rock_largeB', 'rock_largeC', 'rock_tallA', 'rock_tallB', 'rock_smallA', 'rock_smallB',
+                            'stone_largeA', 'stone_largeB', 'stone_tallA', 'stone_tallB', 'stone_smallA',
+                          ].map(t => <option key={t} value={`assets/kenney_nature-pack/${t}.glb`}>{t}</option>)}
+                        </optgroup>
+                        <optgroup label="Structures">
+                          {['campfire_logs', 'campfire_stones', 'campfire_planks', 'campfire_bricks',
+                            'fence_simple', 'fence_planks', 'fence_gate', 'sign',
+                            'tent_detailedOpen', 'tent_detailedClosed', 'tent_smallOpen',
+                            'log', 'log_large', 'log_stack', 'log_stackLarge',
+                            'stump_round', 'stump_old', 'stump_square',
+                            'statue_block', 'statue_column', 'statue_obelisk', 'statue_head', 'statue_ring',
+                          ].map(t => <option key={t} value={`assets/kenney_nature-pack/${t}.glb`}>{t}</option>)}
+                        </optgroup>
                       </select>
                       <input
                         type="text"
