@@ -88,7 +88,7 @@ func _physics_process(delta: float) -> void:
 				_lily_state = LilyState.SLEEPING
 				_play_lily_anim("sleep", true)
 			elif _attack_timer <= 0:
-				_start_attack(dist)
+				_start_lily_attack(dist)
 
 		LilyState.ATTACKING:
 			pass
@@ -103,7 +103,7 @@ func _on_wake_finished(_anim_name: String) -> void:
 		_play_lily_anim("idle", true)
 
 
-func _start_attack(dist: float) -> void:
+func _start_lily_attack(dist: float) -> void:
 	_lily_state = LilyState.ATTACKING
 	_attack_fired = false
 	_play_lily_anim("attack")
@@ -281,7 +281,7 @@ func _die() -> void:
 	super._die()
 
 
-func take_damage(amount: int, knockback: Vector3 = Vector3.ZERO, accuracy: int = 100) -> void:
+func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
 	if _lily_state == LilyState.SLEEPING:
 		_lily_state = LilyState.WAKING
 		_play_lily_anim("wake")
@@ -290,7 +290,6 @@ func take_damage(amount: int, knockback: Vector3 = Vector3.ZERO, accuracy: int =
 
 	# Play damage animation briefly but don't override death
 	if _lily_state != LilyState.DYING:
-		var prev_state := _lily_state
 		_lily_state = LilyState.HURT
 		_play_lily_anim("damage")
 		if animation_player:
@@ -300,5 +299,4 @@ func take_damage(amount: int, knockback: Vector3 = Vector3.ZERO, accuracy: int =
 					_play_lily_anim("idle", true)
 			, CONNECT_ONE_SHOT)
 
-	# Apply damage using parent logic
-	super.take_damage(amount, knockback, accuracy)
+	super._on_hit_received(raw_damage, knockback, accuracy, hit_element, hit_element_level)
