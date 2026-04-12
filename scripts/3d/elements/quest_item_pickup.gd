@@ -8,6 +8,7 @@ class_name QuestItemPickup
 @export var quest_item_label: String = ""
 var pickup_dialog: Array = []  # [{speaker, text}, ...] shown after "Picked up X"
 var pickup_actions: Array = []  # ["complete_quest", "telepipe"] run after dialog
+var remaining_dialog: Array = []  # [{condition:{collected:N}, dialog:[...], actions:[...]}]
 var companion_node: Node = null  # CompanionNpc for speech bubble routing
 
 
@@ -137,19 +138,29 @@ func _show_pickup_dialog() -> void:
 	var actions := pickup_actions
 	var dlg := pickup_dialog
 	var comp := companion_node
+	var rem_dlg := remaining_dialog
 	dialog_box.dialog_complete.connect(func() -> void:
 		SessionManager.collect_quest_item(item_id)
 		if not dlg.is_empty() and comp and is_instance_valid(comp) and comp.has_method("show_speech"):
-			_show_companion_pages(comp, dlg, 0, actions)
+			_show_companion_pages(comp, dlg, 0, func() -> void:
+				_show_remaining_dialog(comp, rem_dlg, actions)
+			)
+		elif not rem_dlg.is_empty():
+			_show_remaining_dialog(comp, rem_dlg, actions)
 		else:
 			_execute_pickup_actions(actions)
 	, CONNECT_ONE_SHOT)
 	dialog_box.show_dialog([{"speaker": "", "text": "Picked up %s." % label}])
 
 
-func _show_companion_pages(comp: Node, pages: Array, index: int, actions: Array) -> void:
+func _show_companion_pages(comp: Node, pages: Array, index: int, on_complete: Variant = null) -> void:
 	if index >= pages.size() or not is_instance_valid(comp):
-		_execute_pickup_actions(actions)
+		if on_complete is Callable:
+			(on_complete as Callable).call()
+		elif on_complete is Array:
+			_execute_pickup_actions(on_complete as Array)
+		else:
+			queue_free()
 		return
 	var page: Dictionary = pages[index]
 	var text: String = str(page.get("text", ""))
@@ -160,15 +171,70 @@ func _show_companion_pages(comp: Node, pages: Array, index: int, actions: Array)
 		var dialog_box := _find_dialog_box()
 		if dialog_box:
 			dialog_box.dialog_complete.connect(func() -> void:
-				_show_companion_pages(comp, pages, next_idx, actions)
+				_show_companion_pages(comp, pages, next_idx, on_complete)
 			, CONNECT_ONE_SHOT)
 			dialog_box.show_dialog([{"speaker": "", "text": text}])
 			return
 	var duration: float = maxf(3.0, text.length() / 20.0)
 	comp.show_speech(text, speaker, duration)
 	comp.speech_finished.connect(func() -> void:
-		_show_companion_pages(comp, pages, next_idx, actions)
+		_show_companion_pages(comp, pages, next_idx, on_complete)
 	, CONNECT_ONE_SHOT)
+
+
+func _show_remaining_dialog(comp: Node, rem_entries: Array, fallback_actions: Array) -> void:
+	if rem_entries.is_empty():
+		_execute_pickup_actions(fallback_actions)
+		return
+
+	# Count total collected quest items
+	var total_collected: int = 0
+	var objectives: Array = SessionManager.get_quest_objectives()
+	var remaining_names: Array = []
+	for obj in objectives:
+		var oid: String = str(obj.get("item_id", ""))
+		var target: int = int(obj.get("target", 1))
+		var count: int = SessionManager.get_quest_item_count(oid)
+		if count >= target:
+			total_collected += 1
+		else:
+			remaining_names.append(str(obj.get("label", oid)))
+
+	# Find matching entry
+	var matched: Dictionary = {}
+	for entry in rem_entries:
+		var condition: Dictionary = entry.get("condition", {})
+		var required: int = int(condition.get("collected", -1))
+		if required == total_collected:
+			matched = entry
+			break
+
+	if matched.is_empty():
+		_execute_pickup_actions(fallback_actions)
+		return
+
+	# Resolve {remaining_items} token in dialog text
+	var remaining_str: String = ""
+	if remaining_names.size() == 1:
+		remaining_str = remaining_names[0]
+	elif remaining_names.size() == 2:
+		remaining_str = "%s and %s" % [remaining_names[0], remaining_names[1]]
+	elif remaining_names.size() > 2:
+		remaining_str = ", ".join(remaining_names.slice(0, -1)) + ", and " + remaining_names[-1]
+
+	var dlg: Array = matched.get("dialog", [])
+	var resolved_dlg: Array = []
+	for page in dlg:
+		var text: String = str(page.get("text", "")).replace("{remaining_items}", remaining_str)
+		resolved_dlg.append({"speaker": page.get("speaker", ""), "text": text})
+
+	var entry_actions: Array = matched.get("actions", [])
+	var final_actions: Array = entry_actions if not entry_actions.is_empty() else fallback_actions
+
+	if not resolved_dlg.is_empty() and comp and is_instance_valid(comp) and comp.has_method("show_speech"):
+		_show_companion_pages(comp, resolved_dlg, 0, final_actions)
+	else:
+		_execute_pickup_actions(final_actions)
 
 
 func _execute_pickup_actions(actions: Array) -> void:
