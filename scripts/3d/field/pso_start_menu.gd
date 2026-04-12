@@ -232,6 +232,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			handled = _input_options(event)
 
 	if handled:
+		# Skip generic SFX if menu was just closed — close() plays its own sound
+		if not _is_open:
+			_canvas.queue_redraw()
+			get_viewport().set_input_as_handled()
+			return
 		# Play menu SFX
 		if event.is_action_pressed("ui_accept"):
 			SfxManager.play("res://assets/sfx/ui/menu_select.wav")

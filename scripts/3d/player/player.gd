@@ -1567,10 +1567,22 @@ func _play_attack_animation(attack_num: int) -> void:
 		_play_and_track_attack(anim_name)
 
 
-## Weapon type → SFX glob pattern
+## Weapon type → SFX glob pattern (saber swing used as fallback for melee without unique SFX)
 const WEAPON_SFX := {
 	WeaponData.WeaponType.SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.SWORD: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.DAGGERS: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.CLAW: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.DOUBLE_SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.SPEAR: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.SLICER: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.GUN_BLADE: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.SHIELD: "res://assets/sfx/weapons/saber_swing_*.wav",
 	WeaponData.WeaponType.HANDGUN: "res://assets/sfx/weapons/handgun_shot_*.wav",
+	WeaponData.WeaponType.RIFLE: "res://assets/sfx/weapons/handgun_shot_*.wav",
+	WeaponData.WeaponType.MECH_GUN: "res://assets/sfx/weapons/handgun_shot_*.wav",
+	WeaponData.WeaponType.ROD: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.WAND: "res://assets/sfx/weapons/saber_swing_*.wav",
 }
 
 func _play_and_track_attack(anim_name: String) -> void:
