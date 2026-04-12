@@ -1488,7 +1488,7 @@ func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
 	key.position = key_pos
 
 	key.interacted.connect(func(_player: Node3D) -> void:
-		SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
+		SfxManager.play("res://assets/sfx/ui/item_pickup.wav")
 		_keys_collected[tracking_key] = true
 		_update_key_hud()
 	)
