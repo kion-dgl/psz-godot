@@ -107,6 +107,26 @@
               ],
               "enemy_id": "hypao",
               "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Fern",
+                  "text": "I still can't believe hunters walk into places like this willingly."
+                }
+              ]
             }
           ]
         },
@@ -271,6 +291,30 @@
               ],
               "enemy_id": "porel",
               "wave": 3
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Fern",
+                  "text": "Every time I come out here I'm reminded why I can't do this alone."
+                },
+                {
+                  "speaker": "Fern",
+                  "text": "We've tried cultivating these in the city, but they won't take. The only option is to harvest them wild."
+                }
+              ]
             }
           ]
         },
