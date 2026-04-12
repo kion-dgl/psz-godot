@@ -1924,12 +1924,13 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 	)
 
 
-func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String, dlg: Array = [], actions: Array = []) -> void:
+func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String, dlg: Array = [], actions: Array = [], rem_dlg: Array = []) -> void:
 	var qi := QuestItemPickupScript.new()
 	qi.quest_item_id = item_id
 	qi.quest_item_label = item_label
 	qi.pickup_dialog = dlg
 	qi.pickup_actions = actions
+	qi.remaining_dialog = rem_dlg
 	if _companion and is_instance_valid(_companion):
 		qi.companion_node = _companion
 	_map_root.add_child(qi)
@@ -2064,7 +2065,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var qi_label: String = str(obj.get("item_label", ""))
 				var qi_dlg: Array = obj.get("dialog", [])
 				var qi_act: Array = obj.get("actions", [])
-				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act)
+				var qi_rem: Array = obj.get("remaining_dialog", [])
+				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)

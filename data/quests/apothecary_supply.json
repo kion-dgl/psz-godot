@@ -398,11 +398,59 @@
               "dialog": [
                 {
                   "speaker": "Fern",
-                  "text": "These should help us stock some Star Atomizers"
+                  "text": "Star Atomizers cure most status effects. Poison, paralysis, confusion."
+                },
+                {
+                  "speaker": "Fern",
+                  "text": "Without them, a single sting can be fatal."
                 }
               ],
               "item_id": "star_husk",
-              "item_label": "Star Husk"
+              "item_label": "Star Husk",
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "That's everything. Let's get out of here before more show up."
+                    },
+                    {
+                      "speaker": "Fern",
+                      "text": "Take care of yourself out there. I don't want to hear you ended up needing one of these."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
+                }
+              ]
             },
             {
               "type": "enemy",
@@ -554,11 +602,59 @@
               "dialog": [
                 {
                   "speaker": "Fern",
-                  "text": "These are good for fallen allies, we've lost so many people recently. "
+                  "text": "Moon Atomizers bring hunters back from the brink."
+                },
+                {
+                  "speaker": "Fern",
+                  "text": "Parties have been losing people because they can't restock."
                 }
               ],
               "item_id": "moon_bloom",
-              "item_label": "Moon Bloom"
+              "item_label": "Moon Bloom",
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "That's everything. Let's get out of here before more show up."
+                    },
+                    {
+                      "speaker": "Fern",
+                      "text": "Take care of yourself out there. I don't want to hear you ended up needing one of these."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
+                }
+              ]
             },
             {
               "type": "enemy",
@@ -681,26 +777,62 @@
                 0,
                 -12.9
               ],
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
               "dialog": [
                 {
                   "speaker": "Fern",
-                  "text": "That's the last one — a Sol Leaf! These are the hardest to find."
+                  "text": "Sol Atomizers are the backup for parties without a Force who can cast Resta."
                 },
                 {
                   "speaker": "Fern",
-                  "text": "We've got everything we need. The item shop will be able to synthesize atomizers again."
-                },
-                {
-                  "speaker": "Fern",
-                  "text": "Thank you for keeping me safe out here. Let's head back and deliver these to the shop."
+                  "text": "They're always in demand."
                 }
               ],
               "item_id": "sol_leaf",
-              "item_label": "Sol Leaf"
+              "item_label": "Sol Leaf",
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "That's everything. Let's get out of here before more show up."
+                    },
+                    {
+                      "speaker": "Fern",
+                      "text": "Take care of yourself out there. I don't want to hear you ended up needing one of these."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
+                }
+              ]
             },
             {
               "type": "enemy",
