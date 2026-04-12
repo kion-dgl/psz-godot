@@ -45,10 +45,12 @@ var _quest_objectives: Array = []      # [{item_id, label, target}] — loaded f
 var _quest_item_counts: Dictionary = {} # {item_id: count} — runtime collection state
 var _quest_accepted_shown: bool = false # true after "Quest accepted" log shown once
 var _action_log: Array = []            # [{text, color}] — persists across room transitions
+var _section_cell_states: Dictionary = {} # section_idx → {cell_states, keys_collected, gates_opened, visited_cells}
 
 
 ## Enter a field area
 func enter_field(area_id: String, difficulty: String) -> Dictionary:
+	clear_section_states()
 	_session = {
 		"type": "field",
 		"area_id": area_id,
@@ -66,6 +68,7 @@ func enter_field(area_id: String, difficulty: String) -> Dictionary:
 
 ## Enter a mission
 func enter_mission(mission_id: String, difficulty: String) -> Dictionary:
+	clear_section_states()
 	# Look up area from mission data and convert to spawner area_id
 	var area_id := "gurhacia"
 	var mission = MissionRegistry.get_mission(mission_id)
@@ -89,6 +92,7 @@ func enter_mission(mission_id: String, difficulty: String) -> Dictionary:
 
 ## Enter a quest (hand-authored fixed layout)
 func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
+	clear_section_states()
 	var quest := QuestLoader.load_quest(quest_id)
 	if quest.is_empty():
 		return {}
@@ -169,6 +173,7 @@ func return_to_city() -> Dictionary:
 	_quest_objectives.clear()
 	_quest_item_counts.clear()
 	_action_log.clear()
+	clear_section_states()
 	_location = "city"
 	session_ended.emit()
 	return summary
@@ -281,6 +286,23 @@ func advance_section() -> bool:
 		_session["current_section"] = idx + 1
 		return true
 	return false
+
+
+# ── Section Cell State Persistence ──────────────────────────────
+
+func save_section_state(section_idx: int, cell_states: Dictionary, keys_collected: Dictionary, gates_opened: Dictionary, visited_cells: Dictionary) -> void:
+	_section_cell_states[section_idx] = {
+		"cell_states": cell_states.duplicate(true),
+		"keys_collected": keys_collected.duplicate(true),
+		"gates_opened": gates_opened.duplicate(true),
+		"visited_cells": visited_cells.duplicate(true),
+	}
+
+func get_section_state(section_idx: int) -> Dictionary:
+	return _section_cell_states.get(section_idx, {})
+
+func clear_section_states() -> void:
+	_section_cell_states.clear()
 
 
 # ── Quest Lifecycle ─────────────────────────────────────────────
