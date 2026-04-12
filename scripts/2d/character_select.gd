@@ -20,6 +20,8 @@ var _hint_label: Label
 
 
 func _ready() -> void:
+	MusicManager.play_location_music("character_select")
+
 	# Clear tscn children and build programmatically
 	for child in get_children():
 		child.queue_free()

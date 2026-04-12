@@ -68,6 +68,7 @@ const CLASS_ART_OVERRIDES := {
 
 
 func _ready() -> void:
+	MusicManager.play_location_music("character_create")
 	_slot = SceneManager.get_transition_data().get("slot", 0)
 	_load_classes()
 	_build_ui()
