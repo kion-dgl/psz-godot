@@ -74,6 +74,7 @@ func play_random(base_path: String, volume_db: float = 0.0) -> void:
 func play_random_at(base_path: String, position: Vector3, volume_db: float = 0.0) -> void:
 	var files := _glob_cache(base_path)
 	if files.is_empty():
+		push_warning("[SfxManager] No files found for pattern: %s" % base_path)
 		return
 	play_at(files[randi() % files.size()], position, volume_db)
 
@@ -116,6 +117,14 @@ func _glob_cache(pattern: String) -> Array:
 				files.append("%s/%s" % [dir_path, fname])
 			fname = dir.get_next()
 		dir.list_dir_end()
+
+	# Fallback: DirAccess can fail in exported PCK builds — try numbered files directly
+	if files.is_empty():
+		for i in range(1, 10):
+			var candidate := "%s/%s%d%s" % [dir_path, prefix, i, suffix]
+			if ResourceLoader.exists(candidate):
+				files.append(candidate)
+
 	files.sort()
 	_glob_results[pattern] = files
 	return files
