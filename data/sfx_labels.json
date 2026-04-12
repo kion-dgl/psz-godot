@@ -1,1 +1,478 @@
-{}
+{
+  "common/common_001.wav": {
+    "file": "common_001.wav",
+    "category": "common",
+    "label": "splash",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_003.wav": {
+    "file": "common_003.wav",
+    "category": "common",
+    "label": "splash 2",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_002.wav": {
+    "file": "common_002.wav",
+    "category": "common",
+    "label": "step",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_004.wav": {
+    "file": "common_004.wav",
+    "category": "common",
+    "label": "step 2",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_005.wav": {
+    "file": "common_005.wav",
+    "category": "common",
+    "label": "wooosh",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_006.wav": {
+    "file": "common_006.wav",
+    "category": "common",
+    "label": "go online",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_007.wav": {
+    "file": "common_007.wav",
+    "category": "common",
+    "label": "step on grass",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_010.wav": {
+    "file": "common_010.wav",
+    "category": "common",
+    "label": "warp in",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_011.wav": {
+    "file": "common_011.wav",
+    "category": "common",
+    "label": "poison",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_012.wav": {
+    "file": "common_012.wav",
+    "category": "common",
+    "label": "bind",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_013.wav": {
+    "file": "common_013.wav",
+    "category": "common",
+    "label": "slow",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_014.wav": {
+    "file": "common_014.wav",
+    "category": "common",
+    "label": "confuse",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_015.wav": {
+    "file": "common_015.wav",
+    "category": "common",
+    "label": "barta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_016.wav": {
+    "file": "common_016.wav",
+    "category": "common",
+    "label": "shock",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_017.wav": {
+    "file": "common_017.wav",
+    "category": "common",
+    "label": "target",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_018.wav": {
+    "file": "common_018.wav",
+    "category": "common",
+    "label": "take hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_019.wav": {
+    "file": "common_019.wav",
+    "category": "common",
+    "label": "take hard hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_022.wav": {
+    "file": "common_022.wav",
+    "category": "common",
+    "label": "cant pick up",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_025.wav": {
+    "file": "common_025.wav",
+    "category": "common",
+    "label": "step in water",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_031.wav": {
+    "file": "common_031.wav",
+    "category": "common",
+    "label": "step in water",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_033.wav": {
+    "file": "common_033.wav",
+    "category": "common",
+    "label": "warp in",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_034.wav": {
+    "file": "common_034.wav",
+    "category": "common",
+    "label": "saber hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_035.wav": {
+    "file": "common_035.wav",
+    "category": "common",
+    "label": "saber swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_036.wav": {
+    "file": "common_036.wav",
+    "category": "common",
+    "label": "saber swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_037.wav": {
+    "file": "common_037.wav",
+    "category": "common",
+    "label": "saber swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_040.wav": {
+    "file": "common_040.wav",
+    "category": "common",
+    "label": "saber crit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_041.wav": {
+    "file": "common_041.wav",
+    "category": "common",
+    "label": "handgun shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_070.wav": {
+    "file": "common_070.wav",
+    "category": "common",
+    "label": "gun shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_073.wav": {
+    "file": "common_073.wav",
+    "category": "common",
+    "label": "heavy gun shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_075.wav": {
+    "file": "common_075.wav",
+    "category": "common",
+    "label": "hildebear gets hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_078.wav": {
+    "file": "common_078.wav",
+    "category": "common",
+    "label": "nyaa",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_081.wav": {
+    "file": "common_081.wav",
+    "category": "common",
+    "label": "quit menu",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_086.wav": {
+    "file": "common_086.wav",
+    "category": "common",
+    "label": "booma swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_092.wav": {
+    "file": "common_092.wav",
+    "category": "common",
+    "label": "booma take hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_094.wav": {
+    "file": "common_094.wav",
+    "category": "common",
+    "label": "enemy take hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_096.wav": {
+    "file": "common_096.wav",
+    "category": "common",
+    "label": "laser gun",
+    "notes": "",
+    "starred": false
+  },
+  "ephinea/ephinea_006.wav": {
+    "file": "ephinea_006.wav",
+    "category": "ephinea",
+    "label": "start menu accept",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_101.wav": {
+    "file": "common_101.wav",
+    "category": "common",
+    "label": "slicer throw",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_102.wav": {
+    "file": "common_102.wav",
+    "category": "common",
+    "label": "handgun",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_103.wav": {
+    "file": "common_103.wav",
+    "category": "common",
+    "label": "handgun",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_104.wav": {
+    "file": "common_104.wav",
+    "category": "common",
+    "label": "saber",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_121.wav": {
+    "file": "common_121.wav",
+    "category": "common",
+    "label": "rafoie",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_122.wav": {
+    "file": "common_122.wav",
+    "category": "common",
+    "label": "gifoie",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_124.wav": {
+    "file": "common_124.wav",
+    "category": "common",
+    "label": "gibarta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_125.wav": {
+    "file": "common_125.wav",
+    "category": "common",
+    "label": "rabarta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_127.wav": {
+    "file": "common_127.wav",
+    "category": "common",
+    "label": "barta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_128.wav": {
+    "file": "common_128.wav",
+    "category": "common",
+    "label": "zonde",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_129.wav": {
+    "file": "common_129.wav",
+    "category": "common",
+    "label": "gizonde",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_130.wav": {
+    "file": "common_130.wav",
+    "category": "common",
+    "label": "razonde",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_134.wav": {
+    "file": "common_134.wav",
+    "category": "common",
+    "label": "resta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_136.wav": {
+    "file": "common_136.wav",
+    "category": "common",
+    "label": "anti",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_140.wav": {
+    "file": "common_140.wav",
+    "category": "common",
+    "label": "power up",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_141.wav": {
+    "file": "common_141.wav",
+    "category": "common",
+    "label": "power down",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_146.wav": {
+    "file": "common_146.wav",
+    "category": "common",
+    "label": "telepipe warp",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_157.wav": {
+    "file": "common_157.wav",
+    "category": "common",
+    "label": "give mag item",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_171.wav": {
+    "file": "common_171.wav",
+    "category": "common",
+    "label": "menu select",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_172.wav": {
+    "file": "common_172.wav",
+    "category": "common",
+    "label": "item pick up",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_173.wav": {
+    "file": "common_173.wav",
+    "category": "common",
+    "label": "menu back",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_174.wav": {
+    "file": "common_174.wav",
+    "category": "common",
+    "label": "close menu",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_175.wav": {
+    "file": "common_175.wav",
+    "category": "common",
+    "label": "close out",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_178.wav": {
+    "file": "common_178.wav",
+    "category": "common",
+    "label": "yahoo",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_184.wav": {
+    "file": "common_184.wav",
+    "category": "common",
+    "label": "mag sound",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_185.wav": {
+    "file": "common_185.wav",
+    "category": "common",
+    "label": "level loading",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_186.wav": {
+    "file": "common_186.wav",
+    "category": "common",
+    "label": "use item",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_191.wav": {
+    "file": "common_191.wav",
+    "category": "common",
+    "label": "invalid select",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_192.wav": {
+    "file": "common_192.wav",
+    "category": "common",
+    "label": "new mail",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_200.wav": {
+    "file": "common_200.wav",
+    "category": "common",
+    "label": "door unlocked",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_201.wav": {
+    "file": "common_201.wav",
+    "category": "common",
+    "label": "camera snap",
+    "notes": "",
+    "starred": false
+  }
+}
