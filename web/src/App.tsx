@@ -19,6 +19,7 @@ const SettingsMockup = lazy(() => import('./settings/SettingsMockup'));
 const CharacterCreator = lazy(() => import('./character-creator/CharacterCreator'));
 const StartMenu = lazy(() => import('./start-menu/StartMenu'));
 const ControlsDiagram = lazy(() => import('./controls/ControlsDiagram'));
+const SfxLabeler = lazy(() => import('./sfx-labeler/SfxLabeler'));
 
 function NavBar() {
   const location = useLocation();
@@ -138,6 +139,12 @@ function NavBar() {
       }}>
         Controls
       </Link>
+      <Link to="/sfx-labeler" style={{
+        color: isActive('/sfx-labeler') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        SFX
+      </Link>
     </nav>
   );
 }
@@ -167,6 +174,7 @@ export default function App() {
             <Route path="/character-creator" element={<CharacterCreator />} />
             <Route path="/start-menu" element={<StartMenu />} />
             <Route path="/controls" element={<ControlsDiagram />} />
+            <Route path="/sfx-labeler" element={<SfxLabeler />} />
           </Routes>
         </Suspense>
       </div>
