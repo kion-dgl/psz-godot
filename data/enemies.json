@@ -556,6 +556,17 @@
     "is_boss": false
   },
   {
+    "id": "poison_lily",
+    "name": "Poison Lily",
+    "model_id": "poison_lily",
+    "element": "Dark",
+    "locations": [
+      "wetlands"
+    ],
+    "is_rare": false,
+    "is_boss": false
+  },
+  {
     "id": "pomarr",
     "name": "Pomarr",
     "model_id": "frog_rare",
