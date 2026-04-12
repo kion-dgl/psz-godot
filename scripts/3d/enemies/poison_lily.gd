@@ -47,6 +47,16 @@ func _physics_process(delta: float) -> void:
 	if not is_alive or current_state == EnemyState.DEAD:
 		return
 
+	# Process active projectiles
+	var i := _active_projectiles.size() - 1
+	while i >= 0:
+		var proj: Area3D = _active_projectiles[i]
+		if is_instance_valid(proj):
+			_process_projectile(proj, delta)
+		else:
+			_active_projectiles.remove_at(i)
+		i -= 1
+
 	_attack_timer -= delta
 
 	# Override EnemyBase movement — Poison Lily never moves
@@ -141,6 +151,8 @@ func _fire_projectile() -> void:
 	var proj := _create_poison_projectile()
 	get_parent().add_child(proj)
 	proj.global_position = global_position + Vector3(0, 1.0, 0)
+	_active_projectiles.append(proj)
+	print("[PoisonLily] Fired projectile toward %s" % target.name)
 
 
 func _create_poison_projectile() -> Node3D:
@@ -200,11 +212,17 @@ func _create_poison_projectile() -> Node3D:
 			proj.queue_free()
 	)
 
-	# Movement via process
-	proj.set_process(true)
-	proj.set_script(_get_projectile_script())
-
 	return proj
+
+
+func _process_projectile(proj: Area3D, delta: float) -> void:
+	var dir: Vector3 = proj.get_meta("direction", Vector3.ZERO)
+	var spd: float = proj.get_meta("speed", 10.0)
+	var max_d: float = proj.get_meta("max_dist", 20.0)
+	var start: Vector3 = proj.get_meta("start_pos", Vector3.ZERO)
+	proj.global_position += dir * spd * delta
+	if proj.global_position.distance_to(start) > max_d:
+		proj.queue_free()
 
 
 func _apply_poison_to(body: Node3D) -> void:
@@ -234,25 +252,7 @@ func _apply_poison_to(body: Node3D) -> void:
 	print("[PoisonLily] Applied poison to %s for %ds" % [body.name, ticks_remaining])
 
 
-static var _proj_script: GDScript = null
-
-static func _get_projectile_script() -> GDScript:
-	if _proj_script:
-		return _proj_script
-	_proj_script = GDScript.new()
-	_proj_script.source_code = """extends Area3D
-
-func _process(delta: float) -> void:
-	var dir: Vector3 = get_meta("direction", Vector3.ZERO)
-	var spd: float = get_meta("speed", 10.0)
-	var max_d: float = get_meta("max_dist", 20.0)
-	var start: Vector3 = get_meta("start_pos", Vector3.ZERO)
-	global_position += dir * spd * delta
-	if global_position.distance_to(start) > max_d:
-		queue_free()
-"""
-	_proj_script.reload()
-	return _proj_script
+var _active_projectiles: Array[Area3D] = []
 
 
 func _face_target() -> void:
