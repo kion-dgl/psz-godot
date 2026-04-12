@@ -22,7 +22,7 @@ const FenceScript := preload("res://scripts/3d/elements/fence.gd")
 const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
 const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
 const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
-const PoisonLilyScript := preload("res://scripts/3d/enemies/poison_lily.gd")
+var PoisonLilyScript: GDScript = null
 const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
 const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
 const DropMaterialScript := preload("res://scripts/3d/elements/drop_material.gd")
@@ -2418,7 +2418,12 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 
 	# Use specialized scripts for specific enemy types
 	if edata and enemy_id == "poison_lily":
-		var enemy := PoisonLily.new()
+		if not PoisonLilyScript:
+			PoisonLilyScript = load("res://scripts/3d/enemies/poison_lily.gd")
+		if not PoisonLilyScript:
+			push_error("[CellObjects] Failed to load PoisonLily script")
+			return
+		var enemy: EnemyBase = PoisonLilyScript.new()
 		enemy.enemy_data = edata
 		var col_shape := CollisionShape3D.new()
 		var capsule := CapsuleShape3D.new()
