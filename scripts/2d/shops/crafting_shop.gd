@@ -181,6 +181,7 @@ func _add_craft_entry(recipe: RecipeBoardData, is_default: bool, uses: int = 0) 
 func _unhandled_input(event: InputEvent) -> void:
 	if _showing_result:
 		if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
+			SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 			_dismiss_result_popup()
 			get_viewport().set_input_as_handled()
 		return
@@ -190,6 +191,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("ui_cancel"):
+		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
 		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
@@ -217,6 +219,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _handle_photon_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
+		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
 		_selecting_photon = false
 		_pending_recipe_index = -1
 		hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"

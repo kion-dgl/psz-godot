@@ -29,9 +29,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
 		_selected = 1 - _selected
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_update_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
+		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 		_active = false
 		visible = false
 		if _selected == 0:
