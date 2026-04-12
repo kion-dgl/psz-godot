@@ -2102,6 +2102,9 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_box(pos, obj_type == "rare_box", state,
 					str(obj.get("drop_type", "")), str(obj.get("drop_value", "")))
 			"enemy":
+				var enemy_wave: int = int(obj.get("wave", 1))
+				if enemy_wave > _current_wave:
+					continue  # Future wave — don't spawn yet
 				_spawn_enemy(pos, str(obj.get("enemy_id", "lizard")), state)
 			"fence":
 				var link_id: String = str(obj.get("link_id", ""))
