@@ -599,6 +599,7 @@ func _do_feed_mag() -> void:
 	var item_id: String = str(item.get("id", ""))
 	var result: Dictionary = MagManager.feed_mag(mag_state, item_id)
 	if result.get("success", false):
+		SfxManager.play("res://assets/sfx/ui/mag_feed.wav")
 		Inventory.remove_item(item_id, 1)
 
 
