@@ -480,6 +480,7 @@ func _dismiss_speech() -> void:
 ## Auto-dismisses after duration seconds.
 func show_speech(text: String, _speaker: String = "", duration: float = 4.0) -> void:
 	print("[Companion] show_speech: text='%s' duration=%.1f" % [text.left(50), duration])
+	SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
 	_bubble_text.text = text
 	_bubble_sprite.visible = true
 	_bubble_sprite.modulate.a = 1.0

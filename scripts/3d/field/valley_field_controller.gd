@@ -22,6 +22,7 @@ const FenceScript := preload("res://scripts/3d/elements/fence.gd")
 const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
 const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
 const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
+var PoisonLilyScript: GDScript = null
 const DropMesetaScript := preload("res://scripts/3d/elements/drop_meseta.gd")
 const DropItemScript := preload("res://scripts/3d/elements/drop_item.gd")
 const DropMaterialScript := preload("res://scripts/3d/elements/drop_material.gd")
@@ -1487,6 +1488,7 @@ func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
 	key.position = key_pos
 
 	key.interacted.connect(func(_player: Node3D) -> void:
+		SfxManager.play("res://assets/sfx/ui/item_pickup.wav")
 		_keys_collected[tracking_key] = true
 		_update_key_hud()
 	)
@@ -1631,8 +1633,8 @@ func _spawn_field_elements() -> void:
 		var target_section := 0
 		var target_cell := ""
 		var target_position := Vector3.ZERO
-		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir)
 		var is_entry: bool = (portal_dir == entry_dir)
+		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir) and not is_entry
 
 		var is_final_exit: bool = false
 		if is_exit and section_idx_for_warp + 1 < sections_for_warp.size():
@@ -1749,6 +1751,15 @@ func _spawn_field_elements() -> void:
 					if str(act) == "telepipe":
 						has_telepipe_source = true
 						break
+				# Also check remaining_dialog entries for telepipe actions
+				if not has_telepipe_source:
+					for entry in obj.get("remaining_dialog", []):
+						for act in entry.get("actions", []):
+							if str(act) == "telepipe":
+								has_telepipe_source = true
+								break
+						if has_telepipe_source:
+							break
 			if has_telepipe_source:
 				break
 		if not has_telepipe_source:
@@ -1924,12 +1935,13 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 	)
 
 
-func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String, dlg: Array = [], actions: Array = []) -> void:
+func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String, dlg: Array = [], actions: Array = [], rem_dlg: Array = []) -> void:
 	var qi := QuestItemPickupScript.new()
 	qi.quest_item_id = item_id
 	qi.quest_item_label = item_label
 	qi.pickup_dialog = dlg
 	qi.pickup_actions = actions
+	qi.remaining_dialog = rem_dlg
 	if _companion and is_instance_valid(_companion):
 		qi.companion_node = _companion
 	_map_root.add_child(qi)
@@ -2064,7 +2076,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var qi_label: String = str(obj.get("item_label", ""))
 				var qi_dlg: Array = obj.get("dialog", [])
 				var qi_act: Array = obj.get("actions", [])
-				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act)
+				var qi_rem: Array = obj.get("remaining_dialog", [])
+				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -2079,6 +2092,16 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 	print("[CellObjects] Restoring %d objects + %d drops from saved state (wave %d/%d)" % [
 		obj_states.size(), drop_states.size(), _current_wave, _max_wave])
 
+	# Rebuild wave enemy data from original cell objects so _spawn_wave works on restore
+	_wave_enemy_data.clear()
+	for obj in _current_cell.get("objects", []):
+		if str(obj.get("type", "")) == "enemy":
+			var wave: int = int(obj.get("wave", 1))
+			if wave > 1:
+				if not _wave_enemy_data.has(wave):
+					_wave_enemy_data[wave] = []
+				_wave_enemy_data[wave].append(obj)
+
 	for obj in obj_states:
 		var obj_type: String = str(obj.get("type", ""))
 		var pos := Vector3(float(obj.get("px", 0)), float(obj.get("py", 0)), float(obj.get("pz", 0)))
@@ -2090,6 +2113,9 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_box(pos, obj_type == "rare_box", state,
 					str(obj.get("drop_type", "")), str(obj.get("drop_value", "")))
 			"enemy":
+				var enemy_wave: int = int(obj.get("wave", 1))
+				if enemy_wave > _current_wave:
+					continue  # Future wave — don't spawn yet
 				_spawn_enemy(pos, str(obj.get("enemy_id", "lizard")), state)
 			"fence":
 				var link_id: String = str(obj.get("link_id", ""))
@@ -2150,8 +2176,17 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				if state != "collected":
 					var qi_id: String = str(obj.get("item_id", ""))
 					var qi_label: String = str(obj.get("item_label", ""))
-					var qi_dlg: Array = obj.get("dialog", [])
-					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg)
+					# Look up full dialog/actions/remaining_dialog from original cell data
+					var qi_dlg: Array = []
+					var qi_act: Array = []
+					var qi_rem: Array = []
+					for orig_obj in _current_cell.get("objects", []):
+						if str(orig_obj.get("type", "")) == "quest_item" and str(orig_obj.get("item_id", "")) == qi_id:
+							qi_dlg = orig_obj.get("dialog", [])
+							qi_act = orig_obj.get("actions", [])
+							qi_rem = orig_obj.get("remaining_dialog", [])
+							break
+					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -2173,9 +2208,29 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 			drop.position = pos
 			_room_drops.append(drop)
 
+	# Re-drop key if room was cleared but key wasn't collected
+	var key_drop_target: String = str(_current_cell.get("key_drop", ""))
+	if not key_drop_target.is_empty():
+		var current_pos: String = str(_current_cell.get("pos", ""))
+		var drop_tracking_key := current_pos + ">" + key_drop_target
+		if not _keys_collected.has(drop_tracking_key):
+			# Check if room is actually cleared (no alive enemies in saved state)
+			var has_alive := false
+			for obj in obj_states:
+				if str(obj.get("type", "")) == "enemy" and str(obj.get("state", "")) == "alive":
+					has_alive = true
+					break
+			if not has_alive:
+				_drop_key_on_clear(key_drop_target, drop_tracking_key)
+
+
+## Temp state for enemy alive tracking during save (reset per save call)
+var _room_enemy_alive_ids: Array = []
+var _room_enemy_alive_ids_built: bool = false
 
 ## Save current cell's object states before transitioning away.
 func _save_cell_state() -> void:
+	_room_enemy_alive_ids_built = false
 	var cell_pos: String = str(_current_cell.get("pos", ""))
 	if cell_pos.is_empty():
 		return
@@ -2245,15 +2300,30 @@ func _save_cell_state() -> void:
 					"wave": wave,
 				})
 			else:
-				# Current wave — check spawned enemies
-				var is_dead := true
-				for e in _room_enemies:
-					if is_instance_valid(e) and e.position.distance_to(pos) < 0.1:
+				# Current wave — match spawned enemies by enemy_id + alive status
+				# Build a list of alive enemy_ids from _room_enemies (consumed as matched)
+				if not _room_enemy_alive_ids_built:
+					_room_enemy_alive_ids.clear()
+					for e in _room_enemies:
+						if not is_instance_valid(e):
+							continue
+						var alive: bool = false
+						var eid: String = ""
 						if e is EnemyBase:
-							is_dead = not e.is_alive
+							alive = e.is_alive
+							eid = e.enemy_data.id if e.enemy_data else ""
 						else:
-							is_dead = (e.get("element_state") == "dead")
-						break
+							alive = e.get("element_state") != "dead"
+							eid = str(e.get("enemy_id", ""))
+						if alive:
+							_room_enemy_alive_ids.append(eid)
+					_room_enemy_alive_ids_built = true
+				# Check if this specific enemy_id is still in the alive list
+				var is_dead: bool = true
+				var match_idx: int = _room_enemy_alive_ids.find(enemy_id)
+				if match_idx >= 0:
+					is_dead = false
+					_room_enemy_alive_ids.remove_at(match_idx)
 				obj_states.append({
 					"type": "enemy",
 					"px": pos.x, "py": pos.y, "pz": pos.z,
@@ -2412,6 +2482,35 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 
 	# Look up enemy data from registry
 	var edata = EnemyRegistry.get_enemy(enemy_id)
+
+	# Use specialized scripts for specific enemy types
+	if edata and enemy_id == "poison_lily":
+		if not PoisonLilyScript:
+			PoisonLilyScript = load("res://scripts/3d/enemies/poison_lily.gd")
+		if not PoisonLilyScript:
+			push_error("[CellObjects] Failed to load PoisonLily script")
+			return
+		var enemy: EnemyBase = PoisonLilyScript.new()
+		enemy.enemy_data = edata
+		var col_shape := CollisionShape3D.new()
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = edata.collision_radius
+		capsule.height = edata.collision_height
+		col_shape.shape = capsule
+		col_shape.position.y = capsule.height / 2
+		enemy.add_child(col_shape)
+		enemy.collision_layer = 8
+		enemy.collision_mask = 1
+		_map_root.add_child(enemy)
+		enemy.position = pos
+		_room_enemies.append(enemy)
+		var spawn_id := enemy_id
+		enemy.died.connect(func(e: EnemyBase) -> void:
+			_spawn_enemy_drops(e.global_position, spawn_id)
+			_check_room_clear()
+		)
+		print("[CellObjects] PoisonLily at %s" % pos)
+		return
 
 	# Use EnemyBase (AI enemies) when enemy_data exists, otherwise fall back to EnemySpawn
 	if edata:
@@ -2816,6 +2915,8 @@ func _check_room_clear() -> void:
 		return
 
 	print("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
+	if _room_gates_locked.size() > 0:
+		SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
 	for gate in _room_gates_locked:
 		if is_instance_valid(gate):
 			gate.open()

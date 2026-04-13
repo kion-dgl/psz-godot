@@ -171,11 +171,11 @@ function isEdgeBlocked(
   collectedKeys: Set<string>,
 ): boolean {
   // Gate on the source cell blocking exit in this direction
-  if (fromCell.is_key_gate && fromCell.key_gate_direction === dir) {
+  if (fromCell.is_key_gate && fromCell.key_gate_direction === dir && (fromCell.required_keys || 0) > 0) {
     if (!collectedKeys.has(fromCell.pos)) return true;
   }
   // Gate on the destination cell blocking entry from opposite direction
-  if (toCell?.is_key_gate && toCell.key_gate_direction === OPPOSITE[dir]) {
+  if (toCell?.is_key_gate && toCell.key_gate_direction === OPPOSITE[dir] && (toCell.required_keys || 0) > 0) {
     if (!collectedKeys.has(toCell.pos)) return true;
   }
   return false;
