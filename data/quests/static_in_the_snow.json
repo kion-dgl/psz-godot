@@ -1202,7 +1202,7 @@
               ],
               "rotation": 90,
               "prop_path": "assets/objects/story/campfire.glb",
-              "prop_scale": 2.2
+              "prop_scale": 3.0
             },
             {
               "type": "dialog_trigger",
