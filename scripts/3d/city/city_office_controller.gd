@@ -349,6 +349,7 @@ func _play_bubble_page() -> void:
 	var text: String = str(page.get("text", ""))
 
 	# Show speech bubble for this speaker
+	SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
 	if _npc_bubbles.has(speaker):
 		var bubble: Dictionary = _npc_bubbles[speaker]
 		var label: Label = bubble["label"]

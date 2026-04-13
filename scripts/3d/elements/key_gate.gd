@@ -119,6 +119,7 @@ func _on_interact(_player: Node3D) -> void:
 
 	var count := Inventory.get_key_count(required_key_id)
 	if count >= required_keys:
+		SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
 		for i in required_keys:
 			Inventory.remove_key(required_key_id)
 		open()

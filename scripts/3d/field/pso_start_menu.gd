@@ -483,6 +483,7 @@ func _adjust_sfx_volume(delta: float) -> void:
 	var bus_idx: int = AudioServer.get_bus_index("SFX")
 	if bus_idx >= 0:
 		AudioServer.set_bus_volume_db(bus_idx, linear_to_db(SfxManager.sfx_volume))
+	MusicManager.save_volume_config()
 
 
 func _adjust_music_volume(delta: float) -> void:
@@ -490,6 +491,7 @@ func _adjust_music_volume(delta: float) -> void:
 	var bus_idx: int = AudioServer.get_bus_index("Music")
 	if bus_idx >= 0:
 		AudioServer.set_bus_volume_db(bus_idx, linear_to_db(MusicManager.music_volume))
+	MusicManager.save_volume_config()
 
 
 func _get_options_list() -> Array:
