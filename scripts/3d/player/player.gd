@@ -157,6 +157,13 @@ var _charge_color: Color = Color.WHITE
 var _glow_light: OmniLight3D  # Lantern glow, toggled by time of day
 var _cached_materials: Array = []  # Array of StandardMaterial3D for charge/glow effects
 
+# Footstep SFX
+var _footstep_timer: float = 0.0
+var _footstep_alternate: bool = false
+const FOOTSTEP_WALK_INTERVAL := 0.5
+const FOOTSTEP_RUN_INTERVAL := 0.35
+const FOOTSTEP_SPRINT_INTERVAL := 0.25
+
 # Dodge tracking
 var dodge_direction: float = 0.0
 var dodge_timer: float = 0.0
@@ -771,6 +778,22 @@ func _physics_process(delta: float) -> void:
 	# Update model rotation
 	if model:
 		model.rotation.y = player_rotation
+
+	# Footstep sounds
+	if is_on_floor() and current_state in [PlayerState.WALKING, PlayerState.RUNNING, PlayerState.SPRINTING]:
+		var interval: float = FOOTSTEP_WALK_INTERVAL
+		if current_state == PlayerState.RUNNING:
+			interval = FOOTSTEP_RUN_INTERVAL
+		elif current_state == PlayerState.SPRINTING:
+			interval = FOOTSTEP_SPRINT_INTERVAL
+		_footstep_timer -= delta
+		if _footstep_timer <= 0:
+			_footstep_timer = interval
+			_footstep_alternate = not _footstep_alternate
+			var sfx: String = "res://assets/sfx/player/footstep_1.wav" if _footstep_alternate else "res://assets/sfx/player/footstep_2.wav"
+			SfxManager.play_at(sfx, global_position, -8.0)
+	else:
+		_footstep_timer = 0.0
 
 	# Smoothly fade lantern glow based on time of day (check every ~0.5s)
 	if _glow_light and Engine.get_physics_frames() % 30 == 0:
