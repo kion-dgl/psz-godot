@@ -5,6 +5,7 @@
   "name": "Static in the Snow",
   "description": "Requested by: Research Division. A research team studying the snowfield has gone silent. Their last transmission was garbled with static. Locate the expedition camp and ensure the team's safety.",
   "area_id": "rioh",
+  "weather": "snow",
   "sections": [
     {
       "type": "grid",
