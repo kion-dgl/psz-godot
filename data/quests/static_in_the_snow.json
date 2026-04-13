@@ -33,28 +33,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                5.4
-              ],
-              "trigger_size": [
-                25.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Kai",
-                  "text": "Let's head out, I hope we're not too late."
-                }
-              ]
-            }
-          ]
+          "path_order": 0
         },
         {
           "pos": "1,2",
@@ -688,17 +667,6 @@
           "path_order": 0,
           "objects": [
             {
-              "type": "dialog_trigger",
-              "position": [0, 0, 10],
-              "trigger_size": [20, 3, 4],
-              "dialog": [
-                {
-                  "speaker": "Kai",
-                  "text": "Look at these claw marks. Something big came through here."
-                }
-              ]
-            },
-            {
               "type": "message",
               "position": [
                 5.3,
@@ -767,20 +735,7 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [0, 0, 5.4],
-              "trigger_size": [25.5, 3, 4],
-              "dialog": [
-                {
-                  "speaker": "Kai",
-                  "text": "These tracks are recent. We're getting closer."
-                }
-              ]
-            }
-          ]
+          "path_order": 0
         },
         {
           "pos": "1,2",
@@ -1370,8 +1325,8 @@
                   "text": "Thank you. The creatures came out of nowhere, we lost contact trying to call for help."
                 },
                 {
-                  "speaker": "Kai",
-                  "text": "You're safe now. Let's get you back to town."
+                  "speaker": "Dr. Carlo",
+                  "text": "We owe you one. I'll make sure the Principal hears about this."
                 }
               ]
             }
@@ -1381,41 +1336,20 @@
       "entry_direction": "north"
     }
   ],
-  "companions": [
-    "kai"
-  ],
-  "office_npcs": [
-    {
-      "npc_id": "dr_carlo",
-      "npc_name": "Dr. Carlo",
-      "office_position": "pos_1"
-    },
-    {
-      "npc_id": "kai",
-      "npc_name": "Kai",
-      "office_position": "pos_2"
-    }
-  ],
+  "companions": [],
+  "office_npcs": [],
   "briefing_dialog": [
     {
       "speaker": "Principal",
       "text": "We've lost contact with a research team in the snowfield. Their last transmission was mostly static."
     },
     {
-      "speaker": "Dr. Carlo",
-      "text": "I'm Dr. Carlo, the expedition lead. My team was conducting survey work in the deep snow region when our comms cut out."
-    },
-    {
-      "speaker": "Dr. Carlo",
-      "text": "I made it back, but the rest of the team is still out there. The creatures in that area have been unusually aggressive."
+      "speaker": "Principal",
+      "text": "They were conducting survey work in the deep snow region. We don't know what happened."
     },
     {
       "speaker": "Principal",
-      "text": "We're sending Kai with you. Find the expedition camp and bring the team home safely."
-    },
-    {
-      "speaker": "Kai",
-      "text": "The snowfield's no joke. Stay close and we'll get them out."
+      "text": "Head to the snowfield and locate the expedition camp. Bring the team home safely."
     }
   ]
 }
