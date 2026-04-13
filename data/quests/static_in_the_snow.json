@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-03-20",
+  "last_updated": "2026-04-11",
   "id": "static_in_the_snow",
   "name": "Static in the Snow",
   "description": "Requested by: Research Division. A research team studying the snowfield has gone silent. Their last transmission was garbled with static. Locate the expedition camp and ensure the team's safety.",
@@ -289,7 +289,27 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-6.2, 0, -3.8],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [-2.1, 0, 4.6],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "box",
+              "position": [8.3, 0, -12.5]
+            },
+            {
+              "type": "box",
+              "position": [11.7, 0, -9.1]
+            }
+          ]
         },
         {
           "pos": "1,4",
@@ -369,7 +389,7 @@
                 0,
                 11.4
               ],
-              "text": "Expedition Log: We're finding it hard to avoid encounters. Previsions are starting to run low. "
+              "text": "Expedition Log: We're finding it hard to avoid encounters. Provisions are starting to run low."
             },
             {
               "type": "message",
@@ -378,7 +398,7 @@
                 0,
                 -18
               ],
-              "text": "Expedition Log, Visibility dropping fast. Going to push deeper despite the conditions."
+              "text": "Expedition Log: Visibility dropping fast. Going to push deeper despite the conditions."
             },
             {
               "type": "enemy",
@@ -522,7 +542,23 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-4.5, 0, -5.2],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [3.8, 0, -1.7],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "box",
+              "position": [-10.2, 0, 6.4]
+            }
+          ]
         },
         {
           "pos": "0,3",
@@ -652,13 +688,24 @@
           "path_order": 0,
           "objects": [
             {
+              "type": "dialog_trigger",
+              "position": [0, 0, 10],
+              "trigger_size": [20, 3, 4],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "Look at these claw marks. Something big came through here."
+                }
+              ]
+            },
+            {
               "type": "message",
               "position": [
                 5.3,
                 0,
                 -10.8
               ],
-              "text": "...surrounded... camp is holding ... won't last much longer ..."
+              "text": "...surrounded... camp is holding... won't last much longer..."
             },
             {
               "type": "enemy",
@@ -720,7 +767,20 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [0, 0, 5.4],
+              "trigger_size": [25.5, 3, 4],
+              "dialog": [
+                {
+                  "speaker": "Kai",
+                  "text": "These tracks are recent. We're getting closer."
+                }
+              ]
+            }
+          ]
         },
         {
           "pos": "1,2",
@@ -835,7 +895,7 @@
                 0,
                 -3.4
               ],
-              "text": "Expedition Lo: We more supplies to another creature ambush. The wildlife here is more aggressive than anything in the survey data"
+              "text": "Expedition Log: We lost more supplies to another creature ambush. The wildlife here is more aggressive than anything in the survey data."
             }
           ]
         },
@@ -859,7 +919,23 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-3.4, 0, -7.2],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [5.1, 0, -2.3],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "box",
+              "position": [7.8, 0, 5.6]
+            }
+          ]
         },
         {
           "pos": "1,0",
@@ -1106,7 +1182,23 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [-5.6, 0, 3.1],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [2.3, 0, -4.8],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "rare_box",
+              "position": [-9.4, 0, -8.7]
+            }
+          ]
         },
         {
           "pos": "4,0",
@@ -1139,7 +1231,7 @@
                 0,
                 -16.4
               ],
-              "text": "I don't know how much longer we can hold out. Almost everything is gone now. "
+              "text": "Expedition Log: I don't know how much longer we can hold out. Almost everything is gone now."
             },
             {
               "type": "enemy",
@@ -1218,7 +1310,7 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Dr. Carlo:",
+                  "speaker": "Dr. Carlo",
                   "text": "Over here! They've surrounded the camp!"
                 }
               ]
@@ -1274,11 +1366,11 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Dr. Carlo:",
-                  "text": "Thank you. The creatures came out of nowhere — we lost contact trying to call for help."
+                  "speaker": "Dr. Carlo",
+                  "text": "Thank you. The creatures came out of nowhere, we lost contact trying to call for help."
                 },
                 {
-                  "speaker": "Kai:",
+                  "speaker": "Kai",
                   "text": "You're safe now. Let's get you back to town."
                 }
               ]
