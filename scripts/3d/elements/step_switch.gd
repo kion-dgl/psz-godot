@@ -43,6 +43,7 @@ func turn_on() -> void:
 	if element_state == "on":
 		return
 	set_state("on")
+	SfxManager.play_at("res://assets/sfx/forest/forest_059.wav", global_position)
 	activated.emit()
 	print("[StepSwitch] Activated")
 
