@@ -147,7 +147,7 @@ const CATEGORIES := [
 			{"id": "campfire", "title": "Campfire", "desc": "Campfire prop for quest scenes.",
 			 "script": "res://scripts/3d/elements/story_prop.gd",
 			 "states": ["default"], "default": "default",
-			 "props": {"prop_path": "assets/objects/story/campfire.glb", "prop_scale": 1.5}},
+			 "props": {"prop_path": "assets/kenney_nature-pack/campfire_stones.glb", "prop_scale": 3.0}},
 			{"id": "dropship_crash", "title": "Dropship Crash", "desc": "Crashed dropship wreckage.",
 			 "script": "res://scripts/3d/elements/story_prop.gd",
 			 "states": ["default"], "default": "default",
