@@ -207,11 +207,13 @@ function Starfield({ count = 2500 }: { count?: number }) {
 }
 
 function Moon() {
-  const shader = useMemo(() => ({
+  // Moon disk — sun-lit from upper-right, dark side with eerie blue glow
+  const diskShader = useMemo(() => ({
     uniforms: {
-      coreColor: { value: new THREE.Color('#f5f8ff') },
-      glowColor: { value: new THREE.Color('#7090e8') },
-      haloColor: { value: new THREE.Color('#3a5099') },
+      litColor: { value: new THREE.Color('#e8ecf5') },
+      shadowColor: { value: new THREE.Color('#1a2850') },
+      terminatorTint: { value: new THREE.Color('#6a80c0') },
+      sunDir: { value: new THREE.Vector2(0.6, 0.6).normalize() },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -221,37 +223,109 @@ function Moon() {
       }
     `,
     fragmentShader: `
-      uniform vec3 coreColor;
-      uniform vec3 glowColor;
-      uniform vec3 haloColor;
+      uniform vec3 litColor;
+      uniform vec3 shadowColor;
+      uniform vec3 terminatorTint;
+      uniform vec2 sunDir;
       varying vec2 vUv;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+                   mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+      }
+
       void main() {
         vec2 c = vUv - vec2(0.5);
         float d = length(c) * 2.0;
         if (d > 1.0) discard;
 
-        float core = 1.0 - smoothstep(0.0, 0.45, d);
-        float glow = 1.0 - smoothstep(0.35, 0.65, d);
-        float halo = 1.0 - smoothstep(0.55, 1.0, d);
+        // Sphere normal approximation
+        float z = sqrt(max(0.0, 1.0 - d * d));
+        vec3 n = vec3(c * 2.0, z);
+        vec3 L = normalize(vec3(sunDir.x, sunDir.y, 0.6));
+        float lambert = max(0.0, dot(n, L));
 
-        float n = sin(c.x * 20.0) * sin(c.y * 20.0) * 0.08;
-        n += sin(c.x * 40.0 + 1.0) * sin(c.y * 35.0) * 0.04;
+        // Crater noise for surface detail
+        float crater = noise(c * 18.0) * 0.25 + noise(c * 40.0) * 0.12;
+        crater = (crater - 0.2) * 0.5;
 
-        vec3 color = mix(haloColor, glowColor, glow);
-        color = mix(color, coreColor * (1.0 + n), core);
-        float alpha = max(core, max(glow * 0.9, halo * 0.6));
-        gl_FragColor = vec4(color, alpha);
+        vec3 color = mix(shadowColor, litColor, smoothstep(0.0, 0.7, lambert));
+        // Warm tint near terminator
+        float term = 1.0 - abs(lambert - 0.3) * 3.0;
+        color = mix(color, terminatorTint, max(0.0, term) * 0.2);
+        color += crater;
+
+        // Soft edge
+        float edge = smoothstep(1.0, 0.85, d);
+        gl_FragColor = vec4(color, edge);
       }
     `,
     transparent: true,
     depthWrite: false,
   }), []);
 
+  // Eerie blue halo around the moon
+  const haloShader = useMemo(() => ({
+    uniforms: {
+      time: { value: 0 },
+      inner: { value: new THREE.Color('#6a90e8') },
+      outer: { value: new THREE.Color('#1a2870') },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 inner;
+      uniform vec3 outer;
+      uniform float time;
+      varying vec2 vUv;
+      void main() {
+        vec2 c = vUv - vec2(0.5);
+        float d = length(c) * 2.0;
+        if (d > 1.0) discard;
+        // Halo ring — weak at the moon disk (d < 0.3), fade out by d=1
+        float ring = smoothstep(0.25, 0.35, d) * (1.0 - smoothstep(0.35, 1.0, d));
+        float outerGlow = (1.0 - smoothstep(0.3, 1.0, d)) * 0.5;
+        float pulse = 0.85 + 0.15 * sin(time * 0.8);
+        vec3 color = mix(inner, outer, smoothstep(0.3, 1.0, d));
+        float alpha = (ring * 0.9 + outerGlow) * pulse;
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }), []);
+
+  const haloRef = useRef<THREE.Mesh>(null);
+  useFrame((state) => {
+    if (haloRef.current) {
+      const mat = haloRef.current.material as THREE.ShaderMaterial;
+      mat.uniforms.time.value = state.clock.elapsedTime;
+    }
+  });
+
   return (
-    <mesh position={[0, 10, -30]}>
-      <planeGeometry args={[14, 14]} />
-      <shaderMaterial args={[shader]} />
-    </mesh>
+    <group position={[0, 11, -30]}>
+      <mesh ref={haloRef}>
+        <planeGeometry args={[28, 28]} />
+        <shaderMaterial args={[haloShader]} />
+      </mesh>
+      <mesh position={[0, 0, 0.1]}>
+        <planeGeometry args={[10, 10]} />
+        <shaderMaterial args={[diskShader]} />
+      </mesh>
+    </group>
   );
 }
 
@@ -260,7 +334,7 @@ function LightBeam() {
   const shader = useMemo(() => ({
     uniforms: {
       time: { value: 0 },
-      beamColor: { value: new THREE.Color('#a8c8ff') },
+      beamColor: { value: new THREE.Color('#c8dcff') },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -274,13 +348,20 @@ function LightBeam() {
       uniform float time;
       varying vec2 vUv;
       void main() {
-        float cx = abs(vUv.x - 0.5) * 2.0;
-        float vertical = vUv.y;
-        float edge = smoothstep(1.0, 0.0, cx);
-        float intensity = edge * edge;
-        intensity *= mix(0.3, 1.4, 1.0 - vertical);
-        intensity *= 0.9 + 0.1 * sin(time * 1.5);
-        gl_FragColor = vec4(beamColor * intensity, intensity * 0.9);
+        // Beam rises from a point (bottom center, vUv.y=0) up to the moon (vUv.y=1).
+        // Width grows with height: narrow at source, wider at moon.
+        float y = vUv.y;
+        float beamHalfWidth = mix(0.015, 0.35, y);
+        float cx = abs(vUv.x - 0.5);
+        float edge = 1.0 - smoothstep(0.0, beamHalfWidth, cx);
+        // Soft feathering
+        float feather = pow(edge, 1.8);
+        // Intensity: brightest at source and mid-beam, fading near moon
+        float vertical = smoothstep(0.0, 0.15, y) * (1.0 - smoothstep(0.7, 1.0, y) * 0.4);
+        // Shimmer
+        float shimmer = 0.85 + 0.15 * sin(time * 2.0 + y * 10.0);
+        float intensity = feather * vertical * shimmer;
+        gl_FragColor = vec4(beamColor * intensity * 1.3, intensity);
       }
     `,
     transparent: true,
@@ -296,9 +377,63 @@ function LightBeam() {
     }
   });
 
+  // Plane from y=-5 (source above horizon) up to y=11 (at moon). Center at y=3, height 16.
   return (
-    <mesh ref={meshRef} position={[0, 3, -28]}>
-      <planeGeometry args={[18, 18]} />
+    <mesh ref={meshRef} position={[0, 3, -27]}>
+      <planeGeometry args={[18, 16]} />
+      <shaderMaterial args={[shader]} />
+    </mesh>
+  );
+}
+
+/** Ground-level point where the beam originates — bright spark on the landscape */
+function BeamSource() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const shader = useMemo(() => ({
+    uniforms: {
+      time: { value: 0 },
+      coreColor: { value: new THREE.Color('#ffffff') },
+      glowColor: { value: new THREE.Color('#a8c8ff') },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 coreColor;
+      uniform vec3 glowColor;
+      uniform float time;
+      varying vec2 vUv;
+      void main() {
+        vec2 c = vUv - vec2(0.5);
+        float d = length(c) * 2.0;
+        float pulse = 0.88 + 0.12 * sin(time * 1.6);
+        float core = (1.0 - smoothstep(0.0, 0.1, d)) * pulse;
+        float glow = (1.0 - smoothstep(0.05, 0.55, d)) * 0.7 * pulse;
+        vec3 color = mix(glowColor, coreColor, core);
+        float alpha = max(core, glow);
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }), []);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const mat = meshRef.current.material as THREE.ShaderMaterial;
+      mat.uniforms.time.value = state.clock.elapsedTime;
+    }
+  });
+
+  // Located at the base of the beam, in front of the horizon
+  return (
+    <mesh ref={meshRef} position={[0, -5, -25]}>
+      <planeGeometry args={[6, 6]} />
       <shaderMaterial args={[shader]} />
     </mesh>
   );
@@ -452,9 +587,10 @@ function Scene() {
       <GalaxyField />
       <Starfield count={2500} />
       <SwirlingClouds />
-      <LightBeam />
-      <Moon />
       <HorizonGlow />
+      <LightBeam />
+      <BeamSource />
+      <Moon />
     </>
   );
 }
