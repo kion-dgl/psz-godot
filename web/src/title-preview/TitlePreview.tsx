@@ -439,13 +439,14 @@ function BeamSource() {
   );
 }
 
-/** Dark planet surface at the bottom — we're standing on it looking up at the moon.
- *  Curved horizon silhouette with subtle atmospheric haze at the rim. */
+/** Rocky planet surface — jagged horizon with peaks/ridges and surface texture. */
 function PlanetSurface() {
   const shader = useMemo(() => ({
     uniforms: {
-      groundColor: { value: new THREE.Color('#050714') },
-      rimColor: { value: new THREE.Color('#2a3868') },
+      groundColor: { value: new THREE.Color('#05081a') },
+      rockColor: { value: new THREE.Color('#1a1a2e') },
+      rimLight: { value: new THREE.Color('#3a4a80') },
+      peakTint: { value: new THREE.Color('#6a7ab0') },
       hazeColor: { value: new THREE.Color('#3a4a88') },
     },
     vertexShader: `
@@ -457,28 +458,81 @@ function PlanetSurface() {
     `,
     fragmentShader: `
       uniform vec3 groundColor;
-      uniform vec3 rimColor;
+      uniform vec3 rockColor;
+      uniform vec3 rimLight;
+      uniform vec3 peakTint;
       uniform vec3 hazeColor;
       varying vec2 vUv;
-      void main() {
-        // Curved horizon: planet bulges up in the center (convex curve from below)
-        // Horizon line at y = 0.22 + 0.05 * cos(centered x)
-        float cx = (vUv.x - 0.5) * 2.0;
-        float horizonY = 0.24 + 0.04 * (1.0 - cx * cx);
 
-        // Below horizon = solid dark planet surface
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+                   mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+      }
+      float fbm(vec2 p) {
+        float v = 0.0;
+        float a = 0.5;
+        for (int i = 0; i < 5; i++) {
+          v += a * noise(p);
+          p *= 2.0;
+          a *= 0.5;
+        }
+        return v;
+      }
+
+      void main() {
+        float cx = (vUv.x - 0.5) * 2.0;
+
+        // Jagged terrain skyline — multiple noise layers build ridges and peaks.
+        // Big silhouette first, then finer detail on top.
+        float big = fbm(vec2(vUv.x * 4.0, 1.3)) * 0.08;
+        float mid = fbm(vec2(vUv.x * 10.0, 2.7)) * 0.035;
+        float fine = fbm(vec2(vUv.x * 25.0, 5.1)) * 0.015;
+        // Large central ridge/mountain where the beam stands, falling off at edges
+        float mountain = 0.05 * (1.0 - cx * cx * 0.6);
+        float horizonY = 0.20 + big + mid + fine + mountain;
+
+        // Secondary, further-back ridge (distant mountains in atmospheric haze)
+        float farBig = fbm(vec2(vUv.x * 3.0 + 100.0, 4.2)) * 0.05;
+        float farMid = fbm(vec2(vUv.x * 7.0 + 50.0, 1.9)) * 0.025;
+        float farHorizonY = 0.17 + farBig + farMid;
+
         if (vUv.y < horizonY) {
-          // Subtle gradient: slightly lighter near the horizon edge
-          float edge = 1.0 - smoothstep(horizonY - 0.04, horizonY, vUv.y);
-          vec3 color = mix(rimColor * 0.6, groundColor, edge);
+          // Foreground rocky terrain
+          vec2 rockP = vec2(vUv.x * 80.0, vUv.y * 80.0);
+          float rockTex = fbm(rockP) * 0.5 + fbm(rockP * 2.5) * 0.25;
+          // Dark crevice pattern
+          float cracks = smoothstep(0.35, 0.55, rockTex);
+
+          vec3 color = mix(groundColor, rockColor, cracks);
+          // Rim light along the top edge (silhouetted against sky)
+          float rim = smoothstep(horizonY - 0.012, horizonY, vUv.y);
+          color = mix(color, rimLight, rim * 0.6);
+          // Extra tint on the peaks
+          float peakMask = smoothstep(horizonY - 0.004, horizonY, vUv.y);
+          color = mix(color, peakTint, peakMask * 0.5);
+
           gl_FragColor = vec4(color, 1.0);
           return;
         }
 
-        // Just above horizon — thin atmospheric haze strip
-        float haze = 1.0 - smoothstep(horizonY, horizonY + 0.08, vUv.y);
+        // Between the two horizons: distant mountains in atmospheric haze
+        if (vUv.y < farHorizonY) {
+          float depth = smoothstep(horizonY, horizonY + 0.02, vUv.y);
+          vec3 color = mix(rockColor, hazeColor * 0.5, depth);
+          gl_FragColor = vec4(color, 1.0);
+          return;
+        }
+
+        // Thin atmospheric haze strip just above the distant ridges
+        float haze = 1.0 - smoothstep(farHorizonY, farHorizonY + 0.06, vUv.y);
         if (haze > 0.01) {
-          gl_FragColor = vec4(hazeColor, haze * 0.55);
+          gl_FragColor = vec4(hazeColor, haze * 0.45);
           return;
         }
         discard;
