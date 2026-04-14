@@ -11,15 +11,13 @@ interface NeedleTrapProps extends ElementProps {
 }
 
 const GLB_PATH = assetUrl('/assets/objects/valley/o0c_needle.glb');
-const TEX_OFF = assetUrl('/assets/objects/valley/o0c_1_needle.png');
-const TEX_ON = assetUrl('/assets/objects/valley/o0c_1_needle2.png');
 
 export const needleTrapMeta: StoryMeta = {
   title: 'Needle Trap',
-  description: 'Floor spike trap. Damages players and enemies on contact when active. Texture swaps between gray (off) and orange (on).',
+  description: 'Floor spike trap. Base is always visible. Spikes extend when active, dealing damage on contact.',
   states: [
-    { name: 'off', label: 'Off', description: 'Retracted, safe to walk over' },
-    { name: 'on', label: 'On', description: 'Extended, deals damage on contact' },
+    { name: 'off', label: 'Off', description: 'Spikes retracted, safe to walk over' },
+    { name: 'on', label: 'On', description: 'Spikes extended, deals damage' },
   ],
   defaultState: 'off',
 };
@@ -33,38 +31,21 @@ export default function NeedleTrap({
   const { scene } = useGLTF(GLB_PATH);
   const clonedScene = useMemo(() => scene.clone(), [scene]);
 
-  const texOff = useMemo(() => {
-    const tex = new THREE.TextureLoader().load(TEX_OFF);
-    tex.flipY = false;
-    tex.magFilter = THREE.NearestFilter;
-    tex.minFilter = THREE.NearestFilter;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, []);
-
-  const texOn = useMemo(() => {
-    const tex = new THREE.TextureLoader().load(TEX_ON);
-    tex.flipY = false;
-    tex.magFilter = THREE.NearestFilter;
-    tex.minFilter = THREE.NearestFilter;
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, []);
-
   useEffect(() => {
-    const activeTex = state === 'on' ? texOn : texOff;
     clonedScene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
+      if (child instanceof THREE.Mesh && child.geometry) {
         const materials = Array.isArray(child.material) ? child.material : [child.material];
-        materials.forEach((mat) => {
-          if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshBasicMaterial) {
-            mat.map = activeTex;
+        materials.forEach((mat, idx) => {
+          if (idx === 1) {
+            mat.visible = state === 'on';
+            mat.opacity = state === 'on' ? 1.0 : 0.0;
+            mat.transparent = state !== 'on';
             mat.needsUpdate = true;
           }
         });
       }
     });
-  }, [clonedScene, state, texOff, texOn]);
+  }, [clonedScene, state]);
 
   return (
     <group position={position} rotation={rotation} scale={scale}>
