@@ -20,6 +20,7 @@ const CharacterCreator = lazy(() => import('./character-creator/CharacterCreator
 const StartMenu = lazy(() => import('./start-menu/StartMenu'));
 const ControlsDiagram = lazy(() => import('./controls/ControlsDiagram'));
 const SfxLabeler = lazy(() => import('./sfx-labeler/SfxLabeler'));
+const PhotoMode = lazy(() => import('./photo-mode/PhotoMode'));
 
 function NavBar() {
   const location = useLocation();
@@ -145,6 +146,12 @@ function NavBar() {
       }}>
         SFX
       </Link>
+      <Link to="/photo-mode" style={{
+        color: isActive('/photo-mode') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Photo
+      </Link>
     </nav>
   );
 }
@@ -175,6 +182,7 @@ export default function App() {
             <Route path="/start-menu" element={<StartMenu />} />
             <Route path="/controls" element={<ControlsDiagram />} />
             <Route path="/sfx-labeler" element={<SfxLabeler />} />
+            <Route path="/photo-mode" element={<PhotoMode />} />
           </Routes>
         </Suspense>
       </div>
