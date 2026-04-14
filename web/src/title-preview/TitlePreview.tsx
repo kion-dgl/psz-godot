@@ -490,7 +490,7 @@ function HorizonGlow() {
   );
 }
 
-/** Swirling cloud / nebula layer using flowing domain-warped FBM. */
+/** Clouds swirling up from the beam source and flowing outward to screen edges. */
 function SwirlingClouds() {
   const meshRef = useRef<THREE.Mesh>(null);
   const shader = useMemo(() => ({
@@ -499,6 +499,8 @@ function SwirlingClouds() {
       colorA: { value: new THREE.Color('#1a2050') },
       colorB: { value: new THREE.Color('#4860a8') },
       colorC: { value: new THREE.Color('#8a5090') },
+      // Source point in UV space — bottom center, just above the horizon
+      source: { value: new THREE.Vector2(0.5, 0.18) },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -512,6 +514,7 @@ function SwirlingClouds() {
       uniform vec3 colorA;
       uniform vec3 colorB;
       uniform vec3 colorC;
+      uniform vec2 source;
       varying vec2 vUv;
 
       float hash(vec2 p) {
@@ -535,29 +538,41 @@ function SwirlingClouds() {
         return v;
       }
 
-      // Domain-warped FBM creates curling/swirling motion
-      float swirl(vec2 p, float t) {
-        vec2 q = vec2(fbm(p + vec2(0.0, t * 0.05)),
-                      fbm(p + vec2(5.2, 1.3) + vec2(t * 0.04, 0.0)));
-        vec2 r = vec2(fbm(p + 4.0 * q + vec2(1.7, 9.2) + vec2(t * 0.02, 0.0)),
-                      fbm(p + 4.0 * q + vec2(8.3, 2.8) + vec2(0.0, t * 0.03)));
-        return fbm(p + 4.0 * r);
-      }
-
       void main() {
-        // Mask: cloud band in the mid-sky, fading at top and bottom
-        float band = smoothstep(0.0, 0.25, vUv.y) * smoothstep(0.85, 0.45, vUv.y);
-        // Also keep the center dimmer so the beam reads clearly
-        float centerFade = smoothstep(0.0, 0.35, abs(vUv.x - 0.5));
+        // Scale the sky horizontally to correct aspect — aspect ratio ~1.78.
+        // Offset to source, measure radial distance + angle.
+        vec2 d = vec2((vUv.x - source.x) * 1.78, vUv.y - source.y);
+        float r = length(d);
+        float theta = atan(d.y, d.x);
 
-        vec2 p = vec2(vUv.x * 3.5, vUv.y * 2.0);
-        float n = swirl(p, time);
+        // Flow: radius moves outward over time, angle slowly rotates.
+        // Using log-polar so noise stretches as it moves out (gives the "spiral out" feel).
+        float u = theta * 1.8 + time * 0.08;
+        float v = -log(max(r, 0.02)) * 0.9 + time * 0.25;
 
+        // Domain warping for curling swirl details
+        vec2 p = vec2(u, v);
+        vec2 warp = vec2(fbm(p + vec2(0.0, time * 0.1)),
+                         fbm(p + vec2(5.2, 1.3)));
+        float n = fbm(p + 2.0 * warp);
+
+        // Density gate
         float density = smoothstep(0.35, 0.85, n);
-        vec3 color = mix(colorA, colorB, n);
-        color = mix(color, colorC, smoothstep(0.55, 0.9, n) * 0.6);
 
-        float alpha = density * band * centerFade * 0.85;
+        // Radial mask — fade near the source (let beam read) and fade at the far edge
+        float sourceFade = smoothstep(0.04, 0.18, r);  // don't cover the beam spark
+        float outerFade = 1.0 - smoothstep(0.45, 0.9, r);
+
+        // Vertical mask — let the beam & moon breathe through the center column
+        float centerColumn = smoothstep(0.0, 0.14, abs(vUv.x - 0.5));
+
+        // Prefer upward flow — dim below the source
+        float upward = smoothstep(source.y - 0.05, source.y + 0.15, vUv.y);
+
+        vec3 color = mix(colorA, colorB, n);
+        color = mix(color, colorC, smoothstep(0.55, 0.9, n) * 0.5);
+
+        float alpha = density * sourceFade * outerFade * centerColumn * upward * 0.9;
         gl_FragColor = vec4(color, alpha);
       }
     `,
