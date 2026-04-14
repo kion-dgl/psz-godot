@@ -698,6 +698,7 @@ func _spawn_weather() -> void:
 		quad.material = quad_mat
 		_weather_node.draw_pass_1 = quad
 
+		_weather_node.preprocess = 4.0
 		_weather_node.position.y = 8.0
 		player.add_child(_weather_node)
 		print("[ValleyField] Weather: snow particles attached to player")
