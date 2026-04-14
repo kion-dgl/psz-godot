@@ -790,7 +790,7 @@ func _physics_process(delta: float) -> void:
 		if _footstep_timer <= 0:
 			_footstep_timer = interval
 			_footstep_alternate = not _footstep_alternate
-			var sfx: String = "res://assets/sfx/player/footstep_1.wav" if _footstep_alternate else "res://assets/sfx/player/footstep_2.wav"
+			var sfx: String = "res://assets/sfx/common/common_002.wav" if _footstep_alternate else "res://assets/sfx/common/common_004.wav"
 			SfxManager.play_at(sfx, global_position, -8.0)
 	else:
 		_footstep_timer = 0.0
