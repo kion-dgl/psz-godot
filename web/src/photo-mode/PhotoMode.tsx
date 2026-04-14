@@ -1,4 +1,4 @@
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { Suspense, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as THREE from 'three';
@@ -52,6 +52,10 @@ const LIGHTING_PRESETS: Record<string, { name: string; ambient: [number, number,
 };
 
 const PSZ_SCALE = 1.0;
+const CANVAS_W = 1920;
+const CANVAS_H = 1080;
+const FLY_SPEED = 15;
+const FLY_LOOK_SPEED = 0.002;
 
 type BonePoses = Record<string, [number, number, number]>;
 
@@ -165,33 +169,115 @@ function FloorPlane({ onClick }: { onClick: (point: THREE.Vector3) => void }) {
   );
 }
 
+function FlyCamera({ enabled }: { enabled: boolean }) {
+  const { camera, gl } = useThree();
+  const keysRef = useRef<Set<string>>(new Set());
+  const isLookingRef = useRef(false);
+  const eulerRef = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
+
+  useEffect(() => {
+    if (!enabled) return;
+    eulerRef.current.setFromQuaternion(camera.quaternion, 'YXZ');
+
+    const onKeyDown = (e: KeyboardEvent) => { keysRef.current.add(e.code); };
+    const onKeyUp = (e: KeyboardEvent) => { keysRef.current.delete(e.code); };
+    const onMouseDown = (e: MouseEvent) => {
+      if (e.button === 2) { isLookingRef.current = true; gl.domElement.requestPointerLock(); }
+    };
+    const onMouseUp = (e: MouseEvent) => {
+      if (e.button === 2) { isLookingRef.current = false; document.exitPointerLock(); }
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isLookingRef.current) return;
+      eulerRef.current.y -= e.movementX * FLY_LOOK_SPEED;
+      eulerRef.current.x -= e.movementY * FLY_LOOK_SPEED;
+      eulerRef.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, eulerRef.current.x));
+      camera.quaternion.setFromEuler(eulerRef.current);
+    };
+    const onContextMenu = (e: Event) => e.preventDefault();
+
+    const el = gl.domElement;
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    el.addEventListener('mousedown', onMouseDown);
+    el.addEventListener('mouseup', onMouseUp);
+    el.addEventListener('mousemove', onMouseMove);
+    el.addEventListener('contextmenu', onContextMenu);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      el.removeEventListener('mousedown', onMouseDown);
+      el.removeEventListener('mouseup', onMouseUp);
+      el.removeEventListener('mousemove', onMouseMove);
+      el.removeEventListener('contextmenu', onContextMenu);
+    };
+  }, [enabled, camera, gl]);
+
+  useFrame((_, delta) => {
+    if (!enabled) return;
+    const keys = keysRef.current;
+    const speed = FLY_SPEED * delta * (keys.has('ShiftLeft') ? 2.5 : 1);
+    const forward = new THREE.Vector3();
+    camera.getWorldDirection(forward);
+    const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+
+    if (keys.has('KeyW')) camera.position.addScaledVector(forward, speed);
+    if (keys.has('KeyS')) camera.position.addScaledVector(forward, -speed);
+    if (keys.has('KeyA')) camera.position.addScaledVector(right, -speed);
+    if (keys.has('KeyD')) camera.position.addScaledVector(right, speed);
+    if (keys.has('KeyE') || keys.has('Space')) camera.position.y += speed;
+    if (keys.has('KeyQ')) camera.position.y -= speed;
+  });
+
+  return null;
+}
+
+function ScreenCapture({ onCapture }: { onCapture: () => void }) {
+  const { gl, scene, camera } = useThree();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        gl.render(scene, camera);
+        const dataUrl = gl.domElement.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `psz-photo-${Date.now()}.png`;
+        link.href = dataUrl;
+        link.click();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [gl, scene, camera]);
+
+  return null;
+}
+
 function Screenshot({ onCapture }: { onCapture: () => void }) {
   const { gl, scene, camera } = useThree();
-  const capture = useCallback(() => {
+
+  useEffect(() => {
     gl.render(scene, camera);
     const dataUrl = gl.domElement.toDataURL('image/png');
     const link = document.createElement('a');
-    link.download = 'psz-photo.png';
+    link.download = `psz-photo-${Date.now()}.png`;
     link.href = dataUrl;
     link.click();
     onCapture();
   }, [gl, scene, camera, onCapture]);
 
-  useEffect(() => {
-    (window as any).__photoCapture = capture;
-    return () => { delete (window as any).__photoCapture; };
-  }, [capture]);
-
   return null;
 }
 
 function SceneContent({
-  mapId, npcs, lighting, placementMode, onFloorClick, captureRequested, onCaptured,
+  mapId, npcs, lighting, placementMode, flyMode, onFloorClick, captureRequested, onCaptured,
 }: {
   mapId: string;
   npcs: PlacedNpc[];
   lighting: string;
   placementMode: boolean;
+  flyMode: boolean;
   onFloorClick: (point: THREE.Vector3) => void;
   captureRequested: boolean;
   onCaptured: () => void;
@@ -221,7 +307,9 @@ function SceneContent({
         ))}
       </Suspense>
       {placementMode && <FloorPlane onClick={onFloorClick} />}
-      <OrbitControls makeDefault />
+      {!flyMode && <OrbitControls makeDefault />}
+      <FlyCamera enabled={flyMode} />
+      <ScreenCapture onCapture={onCaptured} />
       {captureRequested && <Screenshot onCapture={onCaptured} />}
     </>
   );
@@ -243,6 +331,7 @@ export default function PhotoMode() {
   const [placedNpcs, setPlacedNpcs] = useState<PlacedNpc[]>([]);
   const [selectedPlacedIdx, setSelectedPlacedIdx] = useState<number | null>(null);
   const [placementMode, setPlacementMode] = useState(false);
+  const [flyMode, setFlyMode] = useState(false);
   const [lighting, setLighting] = useState('day');
   const [captureRequested, setCaptureRequested] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
@@ -373,9 +462,9 @@ export default function PhotoMode() {
             <SliderRow label="Rot" min={-180} max={180} step={1} value={selectedNpcData.rotation * 180 / Math.PI}
               onChange={(v) => updateNpc(selectedPlacedIdx, { rotation: v * Math.PI / 180 })}
               format={(v) => `${v.toFixed(0)}\u00B0`} />
-            <SliderRow label="Scale" min={0.01} max={0.3} step={0.005} value={selectedNpcData.scale}
+            <SliderRow label="Scale" min={0.01} max={5} step={0.01} value={selectedNpcData.scale}
               onChange={(v) => updateNpc(selectedPlacedIdx, { scale: v })}
-              format={(v) => v.toFixed(3)} />
+              format={(v) => v.toFixed(2)} />
           </fieldset>
         )}
 
@@ -419,6 +508,24 @@ export default function PhotoMode() {
           </fieldset>
         )}
 
+        {/* Camera */}
+        <fieldset style={fieldsetStyle}>
+          <legend style={legendStyle}>Camera</legend>
+          <button
+            onClick={() => setFlyMode(!flyMode)}
+            style={{ ...buttonStyle, background: flyMode ? '#4a9eff' : '#444' }}
+          >
+            {flyMode ? 'Fly Mode (WASD)' : 'Orbit Mode'}
+          </button>
+          {flyMode && (
+            <div style={{ fontSize: 10, color: '#777', marginTop: 4, lineHeight: 1.5 }}>
+              WASD move, E/Space up, Q down<br/>
+              Right-click + drag to look<br/>
+              Shift = fast
+            </div>
+          )}
+        </fieldset>
+
         {/* Lighting */}
         <fieldset style={fieldsetStyle}>
           <legend style={legendStyle}>Lighting</legend>
@@ -437,34 +544,44 @@ export default function PhotoMode() {
           style={{ ...buttonStyle, background: '#2a7a2a', fontSize: 14, padding: '10px 16px' }}>
           Take Screenshot
         </button>
+        <div style={{ fontSize: 10, color: '#666', textAlign: 'center' }}>or press F2</div>
       </div>
 
-      {/* Canvas */}
-      <div style={{ flex: 1, position: 'relative' }}>
-        <Canvas
-          gl={{ antialias: true, preserveDrawingBuffer: true }}
-          camera={{ position: [15, 10, 15], fov: 45 }}
-          style={{ background: preset.bg, cursor: placementMode ? 'crosshair' : 'grab' }}
-        >
-          <SceneContent
-            mapId={selectedMap}
-            npcs={placedNpcs}
-            lighting={lighting}
-            placementMode={placementMode}
-            onFloorClick={handleFloorClick}
-            captureRequested={captureRequested}
-            onCaptured={() => setCaptureRequested(false)}
-          />
-        </Canvas>
-        {placementMode && (
-          <div style={{
-            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
-            background: 'rgba(74, 158, 255, 0.9)', padding: '6px 16px', borderRadius: 4,
-            fontSize: 13, pointerEvents: 'none',
-          }}>
-            Click on the stage to place {NPC_LIST.find((n) => n.id === selectedNpc)?.name}
-          </div>
-        )}
+      {/* Canvas — fixed 1920x1080 */}
+      <div style={{
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: '#111', overflow: 'hidden', position: 'relative',
+      }}>
+        <div style={{ width: CANVAS_W, height: CANVAS_H, position: 'relative', flexShrink: 0 }}>
+          <Canvas
+            gl={{ antialias: true, preserveDrawingBuffer: true }}
+            camera={{ position: [15, 10, 15], fov: 45 }}
+            style={{
+              width: CANVAS_W, height: CANVAS_H,
+              background: preset.bg, cursor: placementMode ? 'crosshair' : flyMode ? 'none' : 'grab',
+            }}
+          >
+            <SceneContent
+              mapId={selectedMap}
+              npcs={placedNpcs}
+              lighting={lighting}
+              placementMode={placementMode}
+              flyMode={flyMode}
+              onFloorClick={handleFloorClick}
+              captureRequested={captureRequested}
+              onCaptured={() => setCaptureRequested(false)}
+            />
+          </Canvas>
+          {placementMode && (
+            <div style={{
+              position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+              background: 'rgba(74, 158, 255, 0.9)', padding: '6px 16px', borderRadius: 4,
+              fontSize: 13, pointerEvents: 'none',
+            }}>
+              Click on the stage to place {NPC_LIST.find((n) => n.id === selectedNpc)?.name}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
