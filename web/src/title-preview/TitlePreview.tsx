@@ -410,12 +410,17 @@ function BeamSource() {
       void main() {
         vec2 c = vUv - vec2(0.5);
         float d = length(c) * 2.0;
-        float pulse = 0.88 + 0.12 * sin(time * 1.6);
-        float core = (1.0 - smoothstep(0.0, 0.1, d)) * pulse;
-        float glow = (1.0 - smoothstep(0.05, 0.55, d)) * 0.7 * pulse;
-        vec3 color = mix(glowColor, coreColor, core);
-        float alpha = max(core, glow);
-        gl_FragColor = vec4(color, alpha);
+        float pulse = 0.85 + 0.15 * sin(time * 1.6);
+        // Bright white core
+        float core = (1.0 - smoothstep(0.0, 0.08, d)) * pulse;
+        // Inner glow (blueish)
+        float innerGlow = (1.0 - smoothstep(0.06, 0.3, d)) * pulse;
+        // Outer soft halo
+        float outerGlow = (1.0 - smoothstep(0.15, 1.0, d)) * 0.6 * pulse;
+        vec3 color = mix(glowColor, coreColor, core + innerGlow * 0.6);
+        float alpha = max(core, max(innerGlow * 0.95, outerGlow));
+        // Boost total intensity so it reads
+        gl_FragColor = vec4(color * 1.4, alpha);
       }
     `,
     transparent: true,
@@ -430,10 +435,11 @@ function BeamSource() {
     }
   });
 
-  // Located at the base of the beam, on top of the ground bulge (UV ~0.36 → world y≈2)
+  // Located on top of the mountain bulge. Ground horizon at center is around world y=-3.5
+  // at z=-27; to sit on that peak at z=-25 we need y ≈ -3.
   return (
-    <mesh ref={meshRef} position={[0, 1.5, -25]}>
-      <planeGeometry args={[6, 6]} />
+    <mesh ref={meshRef} position={[0, -3, -25]}>
+      <planeGeometry args={[10, 10]} />
       <shaderMaterial args={[shader]} />
     </mesh>
   );
