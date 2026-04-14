@@ -149,7 +149,7 @@ const CATEGORIES := [
 			 "states": ["off", "on"], "default": "off"},
 			{"id": "bear_trap", "title": "Bear Trap", "desc": "Snaps shut when stepped on. One-shot.",
 			 "script": "res://scripts/3d/elements/bear_trap.gd",
-			 "states": ["open", "closed"], "default": "open"},
+			 "states": ["off", "on"], "default": "off"},
 		]
 	},
 	{
