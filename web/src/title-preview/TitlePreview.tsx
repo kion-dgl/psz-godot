@@ -562,19 +562,30 @@ function PlanetSurface() {
   );
 }
 
-/** Clouds swirling up from the beam source and flowing outward to screen edges.
- *  Color ramp by distance: warm cream near source -> pink -> purple -> deep blue at edges. */
-function SwirlingClouds() {
+/** Single cloud layer with horizontal outward flow and swirl around source. */
+function CloudLayer({
+  z, scale, speed, densityThresh, opacity, bandTop, bandBottom,
+}: {
+  z: number; scale: number; speed: number; densityThresh: [number, number];
+  opacity: number; bandTop: number; bandBottom: number;
+}) {
   const meshRef = useRef<THREE.Mesh>(null);
   const shader = useMemo(() => ({
     uniforms: {
       time: { value: 0 },
-      hotColor: { value: new THREE.Color('#fde8c8') },   // cream near source
-      warmColor: { value: new THREE.Color('#f0a0a8') },  // pink mid
-      coolColor: { value: new THREE.Color('#5a5890') },  // purple
-      darkColor: { value: new THREE.Color('#14193e') },  // deep navy at edges
-      shadowColor: { value: new THREE.Color('#0a0e28') }, // self-shadow
-      source: { value: new THREE.Vector2(0.5, 0.18) },
+      hotColor: { value: new THREE.Color('#fde8c8') },
+      warmColor: { value: new THREE.Color('#f0a0a8') },
+      coolColor: { value: new THREE.Color('#5a5890') },
+      darkColor: { value: new THREE.Color('#14193e') },
+      shadowColor: { value: new THREE.Color('#0a0e28') },
+      source: { value: new THREE.Vector2(0.5, 0.45) },
+      scale: { value: scale },
+      speed: { value: speed },
+      dLo: { value: densityThresh[0] },
+      dHi: { value: densityThresh[1] },
+      opacity: { value: opacity },
+      bandTop: { value: bandTop },
+      bandBottom: { value: bandBottom },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -591,6 +602,13 @@ function SwirlingClouds() {
       uniform vec3 darkColor;
       uniform vec3 shadowColor;
       uniform vec2 source;
+      uniform float scale;
+      uniform float speed;
+      uniform float dLo;
+      uniform float dHi;
+      uniform float opacity;
+      uniform float bandTop;
+      uniform float bandBottom;
       varying vec2 vUv;
 
       float hash(vec2 p) {
@@ -615,59 +633,59 @@ function SwirlingClouds() {
       }
 
       void main() {
+        // Aspect-corrected offset from source
         vec2 d = vec2((vUv.x - source.x) * 1.78, vUv.y - source.y);
         float r = length(d);
 
-        // Directional drift: clouds flow outward at ~60° from vertical
-        // Left half drifts up-and-left, right half drifts up-and-right
-        // 60° from vertical = atan2 angle of ±30° from horizontal
-        float side = sign(d.x);  // -1 left, +1 right
-        // Drift vector per side: (±cos30, sin30) = (±0.866, 0.5)
-        vec2 drift = vec2(side * 0.866, 0.5);
+        // Horizontal flow: left side drifts left, right side drifts right. Pure X.
+        float side = sign(d.x);
 
-        // Sample FBM in world-ish coordinates, offset by time along drift direction.
-        // Larger scale = bigger billows (cumulus feel)
-        vec2 worldP = vec2(d.x * 1.4, d.y * 1.4);
-        worldP -= drift * time * 0.12;
+        // Curl offset — swirl around the source point (stronger near it)
+        float swirlStrength = exp(-r * 3.0) * 0.25;
+        float ang = time * 0.4;
+        vec2 swirlOffset = vec2(cos(ang), sin(ang)) * swirlStrength;
 
-        // Heavy domain warping for curling/billowing shapes
-        vec2 warp1 = vec2(fbm(worldP * 0.8 + vec2(0.0, time * 0.06)),
-                          fbm(worldP * 0.8 + vec2(5.2, 1.3)));
-        vec2 warp2 = vec2(fbm(worldP * 1.5 + warp1 * 2.0),
-                          fbm(worldP * 1.5 + warp1 * 2.0 + vec2(8.3, 2.8)));
-        float n = fbm(worldP + warp1 * 1.5 + warp2 * 0.6);
+        // Sample coordinates: scale the world, drift horizontally with time.
+        vec2 p = vec2(d.x, d.y) * scale + swirlOffset;
+        p.x -= side * time * speed;
 
-        // Thick clouds — lower threshold, wider tonal range
-        float density = smoothstep(0.22, 0.72, n);
+        // Heavy domain warping for thick curling cloud shapes
+        vec2 warp1 = vec2(fbm(p * 0.8 + vec2(0.0, time * 0.05)),
+                          fbm(p * 0.8 + vec2(5.2, 1.3)));
+        vec2 warp2 = vec2(fbm(p * 1.4 + warp1 * 2.0),
+                          fbm(p * 1.4 + warp1 * 2.0 + vec2(8.3, 2.8)));
+        float n = fbm(p + warp1 * 1.5 + warp2 * 0.5);
 
-        // Volume/shading noise — creates billowing self-shadows
-        float volume = fbm(worldP * 2.5 + warp2);
+        float density = smoothstep(dLo, dHi, n);
+
+        // Volume/shading noise for billowing self-shadow
+        float volume = fbm(p * 2.5 + warp2);
         volume = smoothstep(0.1, 0.9, volume);
 
-        // Proximity-based color ramp (closeness to source)
+        // Proximity-based color ramp
         float proximity = 1.0 - smoothstep(0.0, 0.55, r);
         vec3 lit = mix(warmColor, hotColor, smoothstep(0.55, 0.95, proximity));
         vec3 mid = mix(coolColor, warmColor, proximity);
         vec3 far = mix(darkColor, coolColor, smoothstep(0.0, 0.35, proximity));
         vec3 color = mix(far, mid, smoothstep(0.15, 0.55, proximity));
         color = mix(color, lit, smoothstep(0.55, 0.9, proximity));
-
-        // Self-shadow: darker on the anti-light side of each billow
         color = mix(shadowColor, color, volume * 0.7 + 0.3);
 
-        // Masks
-        float sourceFade = smoothstep(0.04, 0.14, r);
-        float outerFade = 1.0 - smoothstep(0.6, 0.98, r);
-        float centerColumn = smoothstep(0.0, 0.08, abs(vUv.x - 0.5));
-        float upward = smoothstep(source.y - 0.08, source.y + 0.08, vUv.y);
+        // Masks: only fade at left/right screen edges and outside the band.
+        // DO NOT fade at top or bottom of the band — clouds fill it fully.
+        float leftRightFade = smoothstep(0.0, 0.06, vUv.x) * smoothstep(1.0, 0.94, vUv.x);
+        float bandMask = step(bandBottom, vUv.y) * step(vUv.y, bandTop);
+        // Soft band edges (2% fade)
+        float softBand = smoothstep(bandBottom - 0.02, bandBottom + 0.02, vUv.y)
+                       * smoothstep(bandTop + 0.02, bandTop - 0.02, vUv.y);
 
-        float alpha = density * sourceFade * outerFade * centerColumn * upward;
+        float alpha = density * leftRightFade * softBand * opacity;
         gl_FragColor = vec4(color, alpha);
       }
     `,
     transparent: true,
     depthWrite: false,
-  }), []);
+  }), [scale, speed, densityThresh, opacity, bandTop, bandBottom]);
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -677,10 +695,35 @@ function SwirlingClouds() {
   });
 
   return (
-    <mesh ref={meshRef} position={[0, 3, -26]}>
+    <mesh ref={meshRef} position={[0, 3, z]}>
       <planeGeometry args={[80, 45]} />
       <shaderMaterial args={[shader]} />
     </mesh>
+  );
+}
+
+function SwirlingClouds() {
+  return (
+    <>
+      {/* Background layer — slower, smaller features, lower opacity */}
+      <CloudLayer
+        z={-26.2} scale={1.2} speed={0.06}
+        densityThresh={[0.30, 0.70]} opacity={0.75}
+        bandTop={0.92} bandBottom={0.30}
+      />
+      {/* Mid layer — main billowing clouds */}
+      <CloudLayer
+        z={-26.0} scale={1.0} speed={0.10}
+        densityThresh={[0.22, 0.68]} opacity={0.95}
+        bandTop={0.88} bandBottom={0.32}
+      />
+      {/* Foreground wisps — faster, bigger, thinner */}
+      <CloudLayer
+        z={-25.8} scale={0.7} speed={0.18}
+        densityThresh={[0.38, 0.80]} opacity={0.55}
+        bandTop={0.85} bandBottom={0.35}
+      />
+    </>
   );
 }
 
