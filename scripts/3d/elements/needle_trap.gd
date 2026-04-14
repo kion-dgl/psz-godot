@@ -1,17 +1,14 @@
 extends GameElement
 class_name NeedleTrap
 ## Floor spike trap that damages players and enemies on contact.
-## States: off (retracted, safe), on (extended, deals damage)
-## Texture swap between o0c_1_needle (off/gray) and o0c_1_needle2 (on/orange).
+## States: off (spikes hidden, safe), on (spikes visible, deals damage)
+## GLB has two sub-meshes: base (always visible) and spikes (toggled).
 
-const NEEDLE_TEX_OFF := "o0c_1_needle"
-const NEEDLE_TEX_ON := "o0c_1_needle2"
+const SPIKE_TEX_NAME := "o0c_1_needle2"
 const DAMAGE_AMOUNT := 15
 const DAMAGE_INTERVAL := 0.8
 
-var _tex_on: Texture2D
-var _tex_off: Texture2D
-var _materials: Array[StandardMaterial3D] = []
+var _spike_material: StandardMaterial3D = null
 var _damage_area: Area3D
 var _damage_timer: float = 0.0
 var _bodies_in_area: Array[Node3D] = []
@@ -27,19 +24,19 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	_tex_off = load("res://assets/objects/valley/o0c_1_needle.png") as Texture2D
-	_tex_on = load("res://assets/objects/valley/o0c_1_needle2.png") as Texture2D
-	_cache_materials()
+	_find_spike_material()
 	_setup_damage_area()
 	_apply_state()
 
 
-func _cache_materials() -> void:
+func _find_spike_material() -> void:
 	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int) -> void:
 		if mat is StandardMaterial3D:
-			var dup := mat.duplicate() as StandardMaterial3D
-			mesh.set_surface_override_material(surface, dup)
-			_materials.append(dup)
+			var std_mat := mat as StandardMaterial3D
+			if std_mat.albedo_texture and SPIKE_TEX_NAME in std_mat.albedo_texture.resource_path:
+				var dup := std_mat.duplicate() as StandardMaterial3D
+				mesh.set_surface_override_material(surface, dup)
+				_spike_material = dup
 	)
 
 
@@ -91,11 +88,16 @@ func _deal_damage(body: Node3D) -> void:
 
 
 func _apply_state() -> void:
-	var tex: Texture2D = _tex_on if element_state == "on" else _tex_off
-	if tex:
-		for mat in _materials:
-			mat.albedo_texture = tex
-			mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	if _spike_material:
+		match element_state:
+			"on":
+				_spike_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				_spike_material.albedo_color.a = 1.0
+				_spike_material.alpha_scissor_threshold = 0.5
+			"off":
+				_spike_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				_spike_material.albedo_color.a = 0.0
+				_spike_material.alpha_scissor_threshold = 1.0
 
 	if _damage_area:
 		_damage_area.set_deferred("monitoring", element_state == "on")

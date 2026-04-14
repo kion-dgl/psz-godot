@@ -1,16 +1,13 @@
 extends GameElement
 class_name BearTrap
 ## Floor bear trap that snaps shut when a player or enemy steps on it.
-## States: open (armed, waiting), closed (triggered, deals damage)
-## Texture swap between o0c_1_tora1 (open) and o0c_1_tora2 (closed).
+## States: open (lasers visible, armed), closed (lasers hidden, triggered)
+## GLB has two sub-meshes: container (always visible) and lasers (toggled).
 
-const TORA_TEX_OPEN := "o0c_1_tora1"
-const TORA_TEX_CLOSED := "o0c_1_tora2"
+const LASER_TEX_NAME := "o0c_1_tora2"
 const DAMAGE_AMOUNT := 25
 
-var _tex_open: Texture2D
-var _tex_closed: Texture2D
-var _materials: Array[StandardMaterial3D] = []
+var _laser_material: StandardMaterial3D = null
 
 
 func _init() -> void:
@@ -23,19 +20,19 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	_tex_open = load("res://assets/objects/valley/o0c_1_tora1.png") as Texture2D
-	_tex_closed = load("res://assets/objects/valley/o0c_1_tora2.png") as Texture2D
-	_cache_materials()
+	_find_laser_material()
 	_setup_trigger_area()
 	_apply_state()
 
 
-func _cache_materials() -> void:
+func _find_laser_material() -> void:
 	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int) -> void:
 		if mat is StandardMaterial3D:
-			var dup := mat.duplicate() as StandardMaterial3D
-			mesh.set_surface_override_material(surface, dup)
-			_materials.append(dup)
+			var std_mat := mat as StandardMaterial3D
+			if std_mat.albedo_texture and LASER_TEX_NAME in std_mat.albedo_texture.resource_path:
+				var dup := std_mat.duplicate() as StandardMaterial3D
+				mesh.set_surface_override_material(surface, dup)
+				_laser_material = dup
 	)
 
 
@@ -68,11 +65,16 @@ func _on_body_stepped(body: Node3D) -> void:
 
 
 func _apply_state() -> void:
-	var tex: Texture2D = _tex_closed if element_state == "closed" else _tex_open
-	if tex:
-		for mat in _materials:
-			mat.albedo_texture = tex
-			mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	if _laser_material:
+		match element_state:
+			"open":
+				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				_laser_material.albedo_color.a = 1.0
+				_laser_material.alpha_scissor_threshold = 0.5
+			"closed":
+				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				_laser_material.albedo_color.a = 0.0
+				_laser_material.alpha_scissor_threshold = 1.0
 
 	if interaction_area:
 		var armed: bool = element_state == "open"
