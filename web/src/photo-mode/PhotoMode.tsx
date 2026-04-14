@@ -79,7 +79,7 @@ function convertToLit(root: THREE.Object3D) {
   });
 }
 
-function StageModel({ mapId }: { mapId: string }) {
+function StageModel({ mapId, onClick }: { mapId: string; onClick?: (point: THREE.Vector3) => void }) {
   const areaKey = getAreaFromMapId(mapId) || 'valley';
   const glbPath = getGlbPath(areaKey, mapId);
   const { scene } = useGLTF(glbPath);
@@ -93,7 +93,12 @@ function StageModel({ mapId }: { mapId: string }) {
     }
   }, [scene, glbPath]);
 
-  return <primitive object={scene} />;
+  return (
+    <primitive
+      object={scene}
+      onClick={onClick ? (e: any) => { e.stopPropagation(); onClick(e.point); } : undefined}
+    />
+  );
 }
 
 function NpcModel({ npcId, position, rotation, scale, bonePoses }: {
@@ -141,12 +146,11 @@ function FloorPlane({ onClick }: { onClick: (point: THREE.Vector3) => void }) {
   return (
     <mesh
       rotation={[-Math.PI / 2, 0, 0]}
-      position={[0, 0.01, 0]}
-      visible={false}
+      position={[0, 0.02, 0]}
       onClick={(e) => { e.stopPropagation(); onClick(e.point); }}
     >
       <planeGeometry args={[200, 200]} />
-      <meshBasicMaterial transparent opacity={0} />
+      <meshBasicMaterial color="#4a9eff" transparent opacity={0.08} side={THREE.DoubleSide} />
     </mesh>
   );
 }
@@ -194,7 +198,7 @@ function SceneContent({
         position={[sunDir.x * 50, sunDir.y * 50, sunDir.z * 50]}
       />
       <Suspense fallback={null}>
-        <StageModel mapId={mapId} />
+        <StageModel mapId={mapId} onClick={placementMode ? onFloorClick : undefined} />
         {npcs.map((npc) => (
           <NpcModel
             key={npc.id}
@@ -349,6 +353,9 @@ export default function PhotoMode() {
             </legend>
             <SliderRow label="X" min={-30} max={30} step={0.1} value={selectedNpcData.position[0]}
               onChange={(v) => updateNpc(selectedPlacedIdx, { position: [v, selectedNpcData.position[1], selectedNpcData.position[2]] })}
+              format={(v) => v.toFixed(1)} />
+            <SliderRow label="Y" min={-5} max={20} step={0.1} value={selectedNpcData.position[1]}
+              onChange={(v) => updateNpc(selectedPlacedIdx, { position: [selectedNpcData.position[0], v, selectedNpcData.position[2]] })}
               format={(v) => v.toFixed(1)} />
             <SliderRow label="Z" min={-30} max={30} step={0.1} value={selectedNpcData.position[2]}
               onChange={(v) => updateNpc(selectedPlacedIdx, { position: [selectedNpcData.position[0], selectedNpcData.position[1], v] })}
