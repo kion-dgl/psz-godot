@@ -61,7 +61,7 @@ export type Direction = 'north' | 'south' | 'east' | 'west';
 // Cell Objects (placed in 3D stage)
 // ============================================================================
 
-export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest' | 'area_warp' | 'quest_item';
+export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest' | 'area_warp' | 'quest_item' | 'needle_trap' | 'bear_trap';
 
 export interface CellObject {
   /** Unique ID within cell (e.g., "box_0", "enemy_1") */
@@ -135,6 +135,8 @@ export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
   warp_dest: '#cc88ff',
   area_warp: '#4a9eff',
   quest_item: '#ffdd44',
+  needle_trap: '#ff6644',
+  bear_trap: '#ff8833',
 };
 
 export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
@@ -152,6 +154,8 @@ export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
   warp_dest: 'Warp Dest',
   area_warp: 'Area Warp',
   quest_item: 'Quest Item',
+  needle_trap: 'Needle Trap',
+  bear_trap: 'Bear Trap',
 };
 
 // ============================================================================

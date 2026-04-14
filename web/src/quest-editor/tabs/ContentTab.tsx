@@ -493,6 +493,27 @@ function QuestItemMarker({ obj, selected, onClick }: { obj: CellObject; selected
   );
 }
 
+function TrapMarker({ obj, selected, onClick, color }: { obj: CellObject; selected: boolean; onClick: () => void; color: string }) {
+  return (
+    <group position={obj.position} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
+        <planeGeometry args={[1.5, 1.5]} />
+        <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={selected ? 0.8 : 0.4} />
+      </mesh>
+      <mesh position={[0, 0.3, 0]}>
+        <coneGeometry args={[0.3, 0.5, 4]} />
+        <meshBasicMaterial color={color} transparent opacity={selected ? 0.9 : 0.6} />
+      </mesh>
+      {selected && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+          <ringGeometry args={[0.9, 1.1, 32]} />
+          <meshBasicMaterial color="#ffffff" side={THREE.DoubleSide} transparent opacity={0.5} />
+        </mesh>
+      )}
+    </group>
+  );
+}
+
 /** Renders the appropriate marker for a CellObject */
 function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
   switch (obj.type) {
@@ -523,6 +544,10 @@ function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: b
       return <AreaWarpMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'quest_item':
       return <QuestItemMarker obj={obj} selected={selected} onClick={onClick} />;
+    case 'needle_trap':
+      return <TrapMarker obj={obj} selected={selected} onClick={onClick} color="#ff6644" />;
+    case 'bear_trap':
+      return <TrapMarker obj={obj} selected={selected} onClick={onClick} color="#ff8833" />;
     default:
       return null;
   }
@@ -1153,7 +1178,7 @@ function CellContentInspector({
 
         {/* Object palette */}
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest', 'area_warp', 'quest_item'] as CellObjectType[]).map(type => (
+          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest', 'area_warp', 'quest_item', 'needle_trap', 'bear_trap'] as CellObjectType[]).map(type => (
             <button
               key={type}
               onClick={() => onSetPlacingObject(placingObject === type ? null : type)}
