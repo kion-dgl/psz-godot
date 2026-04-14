@@ -51,7 +51,7 @@ const LIGHTING_PRESETS: Record<string, { name: string; ambient: [number, number,
   studio: { name: 'Studio', ambient: [1, 1, 1], ambientIntensity: 0.8, sunColor: [1, 1, 1], sunIntensity: 0.6, sunPitch: -45, bg: '#2a2a2a' },
 };
 
-const PSZ_SCALE = 0.09;
+const PSZ_SCALE = 1.0;
 
 type BonePoses = Record<string, [number, number, number]>;
 
@@ -107,22 +107,8 @@ function NpcModel({ npcId, position, rotation, scale, bonePoses }: {
 }) {
   const glbPath = assetUrl(`assets/npcs/${npcId}/${npcId}.glb`);
   const { scene } = useGLTF(glbPath);
-  const groupRef = useRef<THREE.Group>(null);
 
-  const cloned = useMemo(() => {
-    const clone = SkeletonUtils.clone(scene);
-    clone.traverse((obj) => {
-      if (obj instanceof THREE.Mesh) {
-        if (obj.geometry) obj.geometry.computeVertexNormals();
-        if (obj.material) {
-          obj.material = obj.material.clone();
-          obj.material.side = THREE.FrontSide;
-        }
-      }
-    });
-    convertToLit(clone);
-    return clone;
-  }, [scene]);
+  const cloned = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
   useEffect(() => {
     cloned.traverse((obj) => {
@@ -136,7 +122,7 @@ function NpcModel({ npcId, position, rotation, scale, bonePoses }: {
   }, [cloned, bonePoses]);
 
   return (
-    <group ref={groupRef} position={position} rotation={[0, rotation, 0]} scale={[scale, scale, scale]}>
+    <group position={position} rotation={[0, rotation, 0]} scale={[scale, scale, scale]}>
       <primitive object={cloned} />
     </group>
   );
