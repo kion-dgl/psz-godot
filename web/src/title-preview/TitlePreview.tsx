@@ -10,7 +10,7 @@ function SkyGradient() {
     uniforms: {
       topColor: { value: new THREE.Color('#050820') },
       midColor: { value: new THREE.Color('#151a48') },
-      horizonColor: { value: new THREE.Color('#f0b880') },
+      horizonColor: { value: new THREE.Color('#2a3868') },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -439,13 +439,14 @@ function BeamSource() {
   );
 }
 
-function HorizonGlow() {
-  const meshRef = useRef<THREE.Mesh>(null);
+/** Dark planet surface at the bottom — we're standing on it looking up at the moon.
+ *  Curved horizon silhouette with subtle atmospheric haze at the rim. */
+function PlanetSurface() {
   const shader = useMemo(() => ({
     uniforms: {
-      time: { value: 0 },
-      coreColor: { value: new THREE.Color('#fff0d0') },
-      glowColor: { value: new THREE.Color('#f0a070') },
+      groundColor: { value: new THREE.Color('#050714') },
+      rimColor: { value: new THREE.Color('#2a3868') },
+      hazeColor: { value: new THREE.Color('#3a4a88') },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -455,36 +456,41 @@ function HorizonGlow() {
       }
     `,
     fragmentShader: `
-      uniform vec3 coreColor;
-      uniform vec3 glowColor;
-      uniform float time;
+      uniform vec3 groundColor;
+      uniform vec3 rimColor;
+      uniform vec3 hazeColor;
       varying vec2 vUv;
       void main() {
-        vec2 c = vUv - vec2(0.5, 0.1);
-        float d = length(vec2(c.x * 0.7, c.y * 2.2));
-        float core = 1.0 - smoothstep(0.0, 0.25, d);
-        float glow = 1.0 - smoothstep(0.15, 0.8, d);
-        float pulse = 0.92 + 0.08 * sin(time * 1.2);
-        vec3 color = mix(glowColor, coreColor, core);
-        float alpha = max(core, glow * 0.6) * pulse;
-        gl_FragColor = vec4(color, alpha);
+        // Curved horizon: planet bulges up in the center (convex curve from below)
+        // Horizon line at y = 0.22 + 0.05 * cos(centered x)
+        float cx = (vUv.x - 0.5) * 2.0;
+        float horizonY = 0.24 + 0.04 * (1.0 - cx * cx);
+
+        // Below horizon = solid dark planet surface
+        if (vUv.y < horizonY) {
+          // Subtle gradient: slightly lighter near the horizon edge
+          float edge = 1.0 - smoothstep(horizonY - 0.04, horizonY, vUv.y);
+          vec3 color = mix(rimColor * 0.6, groundColor, edge);
+          gl_FragColor = vec4(color, 1.0);
+          return;
+        }
+
+        // Just above horizon — thin atmospheric haze strip
+        float haze = 1.0 - smoothstep(horizonY, horizonY + 0.08, vUv.y);
+        if (haze > 0.01) {
+          gl_FragColor = vec4(hazeColor, haze * 0.55);
+          return;
+        }
+        discard;
       }
     `,
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
   }), []);
 
-  useFrame((state) => {
-    if (meshRef.current) {
-      const mat = meshRef.current.material as THREE.ShaderMaterial;
-      mat.uniforms.time.value = state.clock.elapsedTime;
-    }
-  });
-
   return (
-    <mesh ref={meshRef} position={[0, -4, -27]}>
-      <planeGeometry args={[50, 20]} />
+    <mesh position={[0, 0, -29]}>
+      <planeGeometry args={[120, 70]} />
       <shaderMaterial args={[shader]} />
     </mesh>
   );
@@ -545,26 +551,34 @@ function SwirlingClouds() {
       void main() {
         vec2 d = vec2((vUv.x - source.x) * 1.78, vUv.y - source.y);
         float r = length(d);
-        float theta = atan(d.y, d.x);
 
-        // Log-polar flow — noise spirals out from source
-        float u = theta * 1.8 + time * 0.08;
-        float v = -log(max(r, 0.02)) * 0.9 + time * 0.25;
+        // Directional drift: clouds flow outward at ~60° from vertical
+        // Left half drifts up-and-left, right half drifts up-and-right
+        // 60° from vertical = atan2 angle of ±30° from horizontal
+        float side = sign(d.x);  // -1 left, +1 right
+        // Drift vector per side: (±cos30, sin30) = (±0.866, 0.5)
+        vec2 drift = vec2(side * 0.866, 0.5);
 
-        // Domain-warped FBM for curling cloud shapes
-        vec2 p = vec2(u, v);
-        vec2 warp = vec2(fbm(p + vec2(0.0, time * 0.1)),
-                         fbm(p + vec2(5.2, 1.3)));
-        float n = fbm(p + 2.0 * warp);
+        // Sample FBM in world-ish coordinates, offset by time along drift direction.
+        // Larger scale = bigger billows (cumulus feel)
+        vec2 worldP = vec2(d.x * 1.4, d.y * 1.4);
+        worldP -= drift * time * 0.12;
 
-        // Denser clouds (lower threshold, gentler falloff)
-        float density = smoothstep(0.28, 0.75, n);
+        // Heavy domain warping for curling/billowing shapes
+        vec2 warp1 = vec2(fbm(worldP * 0.8 + vec2(0.0, time * 0.06)),
+                          fbm(worldP * 0.8 + vec2(5.2, 1.3)));
+        vec2 warp2 = vec2(fbm(worldP * 1.5 + warp1 * 2.0),
+                          fbm(worldP * 1.5 + warp1 * 2.0 + vec2(8.3, 2.8)));
+        float n = fbm(worldP + warp1 * 1.5 + warp2 * 0.6);
 
-        // Second noise layer for internal shading — gives clouds volume
-        float volume = fbm(p * 2.5 + warp);
-        volume = smoothstep(0.2, 0.85, volume);
+        // Thick clouds — lower threshold, wider tonal range
+        float density = smoothstep(0.22, 0.72, n);
 
-        // Radial color ramp — proximity to source drives warm->cool
+        // Volume/shading noise — creates billowing self-shadows
+        float volume = fbm(worldP * 2.5 + warp2);
+        volume = smoothstep(0.1, 0.9, volume);
+
+        // Proximity-based color ramp (closeness to source)
         float proximity = 1.0 - smoothstep(0.0, 0.55, r);
         vec3 lit = mix(warmColor, hotColor, smoothstep(0.55, 0.95, proximity));
         vec3 mid = mix(coolColor, warmColor, proximity);
@@ -572,14 +586,14 @@ function SwirlingClouds() {
         vec3 color = mix(far, mid, smoothstep(0.15, 0.55, proximity));
         color = mix(color, lit, smoothstep(0.55, 0.9, proximity));
 
-        // Self-shadow on the thick parts (opposite side of source)
-        color = mix(shadowColor, color, volume * 0.5 + 0.5);
+        // Self-shadow: darker on the anti-light side of each billow
+        color = mix(shadowColor, color, volume * 0.7 + 0.3);
 
         // Masks
         float sourceFade = smoothstep(0.04, 0.14, r);
-        float outerFade = 1.0 - smoothstep(0.55, 0.95, r);
-        float centerColumn = smoothstep(0.0, 0.1, abs(vUv.x - 0.5));
-        float upward = smoothstep(source.y - 0.08, source.y + 0.12, vUv.y);
+        float outerFade = 1.0 - smoothstep(0.6, 0.98, r);
+        float centerColumn = smoothstep(0.0, 0.08, abs(vUv.x - 0.5));
+        float upward = smoothstep(source.y - 0.08, source.y + 0.08, vUv.y);
 
         float alpha = density * sourceFade * outerFade * centerColumn * upward;
         gl_FragColor = vec4(color, alpha);
@@ -611,10 +625,10 @@ function Scene() {
       <GalaxyField />
       <Starfield count={2500} />
       <SwirlingClouds />
-      <HorizonGlow />
       <LightBeam />
-      <BeamSource />
       <Moon />
+      <PlanetSurface />
+      <BeamSource />
     </>
   );
 }
