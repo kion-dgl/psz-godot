@@ -379,7 +379,7 @@ function LightBeam() {
 
   // Plane from y=-5 (source above horizon) up to y=11 (at moon). Center at y=3, height 16.
   return (
-    <mesh ref={meshRef} position={[0, 3, -27]}>
+    <mesh ref={meshRef} position={[0, 3, -26]}>
       <planeGeometry args={[18, 16]} />
       <shaderMaterial args={[shader]} />
     </mesh>
