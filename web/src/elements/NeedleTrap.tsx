@@ -18,11 +18,18 @@ export const needleTrapMeta: StoryMeta = {
   defaultState: 'off',
 };
 
-function isNeedleTexture(mat: THREE.Material): boolean {
+const TEXTURE_CONFIG: Record<string, { offsetX: number; offsetY: number; wrapS: THREE.Wrapping; wrapT: THREE.Wrapping }> = {
+  'o0c_1_needle': { offsetX: 0.00, offsetY: 0.00, wrapS: THREE.MirroredRepeatWrapping, wrapT: THREE.MirroredRepeatWrapping },
+  'o0c_1_needle2': { offsetX: -0.17, offsetY: -0.18, wrapS: THREE.MirroredRepeatWrapping, wrapT: THREE.MirroredRepeatWrapping },
+};
+
+function getTexId(mat: THREE.Material): string | null {
   const m = mat as any;
-  if (!m.map) return false;
-  const src = m.map.image?.src || m.map.name || '';
-  return src.includes('needle2');
+  if (!m.map) return null;
+  const src: string = m.map.image?.src || m.map.name || '';
+  if (src.includes('needle2')) return 'o0c_1_needle2';
+  if (src.includes('needle')) return 'o0c_1_needle';
+  return null;
 }
 
 export default function NeedleTrap({
@@ -39,7 +46,16 @@ export default function NeedleTrap({
       if (!(child instanceof THREE.Mesh)) return;
       const materials = Array.isArray(child.material) ? child.material : [child.material];
       materials.forEach((mat) => {
-        if (isNeedleTexture(mat)) {
+        const texId = getTexId(mat);
+        if (!texId) return;
+        const cfg = TEXTURE_CONFIG[texId];
+        if (cfg && mat.map) {
+          mat.map.offset.set(cfg.offsetX, cfg.offsetY);
+          mat.map.wrapS = cfg.wrapS;
+          mat.map.wrapT = cfg.wrapT;
+          mat.map.needsUpdate = true;
+        }
+        if (texId === 'o0c_1_needle2') {
           mat.visible = state === 'on';
         }
       });
