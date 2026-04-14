@@ -27,6 +27,8 @@ import {
   NpcSarisa, npcSarisaMeta,
   NpcKai, npcKaiMeta,
   DropshipCrash, dropshipCrashMeta,
+  NeedleTrap, needleTrapMeta,
+  BearTrap, bearTrapMeta,
   type StoryMeta,
 } from '../elements';
 
@@ -99,6 +101,13 @@ const CATEGORIES: CategoryEntry[] = [
     name: 'Walls',
     elements: [
       { id: 'wall', Component: Wall as React.ComponentType<{ state?: string }>, meta: wallMeta },
+    ],
+  },
+  {
+    name: 'Traps',
+    elements: [
+      { id: 'needle-trap', Component: NeedleTrap as React.ComponentType<{ state?: string }>, meta: needleTrapMeta },
+      { id: 'bear-trap', Component: BearTrap as React.ComponentType<{ state?: string }>, meta: bearTrapMeta },
     ],
   },
   {
