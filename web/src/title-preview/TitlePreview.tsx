@@ -678,7 +678,7 @@ function CloudLayer({
         // Require |d.x| to be at least some fraction of d.y (i.e. not too vertical).
         // wedge = 0 directly above source, 1 at diagonals, 1 horizontally.
         float horizRatio = abs(d.x) / max(d.y, 0.01);
-        float wedge = smoothstep(0.35, 0.9, horizRatio);
+        float wedge = smoothstep(0.2, 0.6, horizRatio);
         // Below source: fade out (we don't want clouds under the horizon)
         wedge *= smoothstep(-0.02, 0.05, d.y);
 
@@ -715,17 +715,23 @@ function CloudLayer({
 function SwirlingClouds() {
   return (
     <>
-      {/* Background layer — slower, subtle, fills the wedges */}
+      {/* Base layer — slowest, widest, solid fill */}
       <CloudLayer
-        z={-26.2} scale={1.2} speed={0.05}
-        densityThresh={[0.30, 0.72]} opacity={0.70}
-        bandTop={0.75} bandBottom={0.42}
+        z={-26.3} scale={1.3} speed={0.04}
+        densityThresh={[0.18, 0.55]} opacity={1.0}
+        bandTop={0.78} bandBottom={0.40}
       />
-      {/* Foreground wisps — faster, bigger features, accent */}
+      {/* Mid layer — main billow texture, full opacity */}
       <CloudLayer
-        z={-25.9} scale={0.75} speed={0.14}
-        densityThresh={[0.38, 0.80]} opacity={0.50}
-        bandTop={0.72} bandBottom={0.44}
+        z={-26.0} scale={1.0} speed={0.08}
+        densityThresh={[0.20, 0.60]} opacity={1.0}
+        bandTop={0.76} bandBottom={0.42}
+      />
+      {/* Foreground wisps — faster, bigger features */}
+      <CloudLayer
+        z={-25.7} scale={0.7} speed={0.15}
+        densityThresh={[0.28, 0.72]} opacity={0.80}
+        bandTop={0.74} bandBottom={0.44}
       />
     </>
   );
