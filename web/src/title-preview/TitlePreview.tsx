@@ -490,16 +490,18 @@ function HorizonGlow() {
   );
 }
 
-/** Clouds swirling up from the beam source and flowing outward to screen edges. */
+/** Clouds swirling up from the beam source and flowing outward to screen edges.
+ *  Color ramp by distance: warm cream near source -> pink -> purple -> deep blue at edges. */
 function SwirlingClouds() {
   const meshRef = useRef<THREE.Mesh>(null);
   const shader = useMemo(() => ({
     uniforms: {
       time: { value: 0 },
-      colorA: { value: new THREE.Color('#1a2050') },
-      colorB: { value: new THREE.Color('#4860a8') },
-      colorC: { value: new THREE.Color('#8a5090') },
-      // Source point in UV space — bottom center, just above the horizon
+      hotColor: { value: new THREE.Color('#fde8c8') },   // cream near source
+      warmColor: { value: new THREE.Color('#f0a0a8') },  // pink mid
+      coolColor: { value: new THREE.Color('#5a5890') },  // purple
+      darkColor: { value: new THREE.Color('#14193e') },  // deep navy at edges
+      shadowColor: { value: new THREE.Color('#0a0e28') }, // self-shadow
       source: { value: new THREE.Vector2(0.5, 0.18) },
     },
     vertexShader: `
@@ -511,9 +513,11 @@ function SwirlingClouds() {
     `,
     fragmentShader: `
       uniform float time;
-      uniform vec3 colorA;
-      uniform vec3 colorB;
-      uniform vec3 colorC;
+      uniform vec3 hotColor;
+      uniform vec3 warmColor;
+      uniform vec3 coolColor;
+      uniform vec3 darkColor;
+      uniform vec3 shadowColor;
       uniform vec2 source;
       varying vec2 vUv;
 
@@ -539,40 +543,45 @@ function SwirlingClouds() {
       }
 
       void main() {
-        // Scale the sky horizontally to correct aspect — aspect ratio ~1.78.
-        // Offset to source, measure radial distance + angle.
         vec2 d = vec2((vUv.x - source.x) * 1.78, vUv.y - source.y);
         float r = length(d);
         float theta = atan(d.y, d.x);
 
-        // Flow: radius moves outward over time, angle slowly rotates.
-        // Using log-polar so noise stretches as it moves out (gives the "spiral out" feel).
+        // Log-polar flow — noise spirals out from source
         float u = theta * 1.8 + time * 0.08;
         float v = -log(max(r, 0.02)) * 0.9 + time * 0.25;
 
-        // Domain warping for curling swirl details
+        // Domain-warped FBM for curling cloud shapes
         vec2 p = vec2(u, v);
         vec2 warp = vec2(fbm(p + vec2(0.0, time * 0.1)),
                          fbm(p + vec2(5.2, 1.3)));
         float n = fbm(p + 2.0 * warp);
 
-        // Density gate
-        float density = smoothstep(0.35, 0.85, n);
+        // Denser clouds (lower threshold, gentler falloff)
+        float density = smoothstep(0.28, 0.75, n);
 
-        // Radial mask — fade near the source (let beam read) and fade at the far edge
-        float sourceFade = smoothstep(0.04, 0.18, r);  // don't cover the beam spark
-        float outerFade = 1.0 - smoothstep(0.45, 0.9, r);
+        // Second noise layer for internal shading — gives clouds volume
+        float volume = fbm(p * 2.5 + warp);
+        volume = smoothstep(0.2, 0.85, volume);
 
-        // Vertical mask — let the beam & moon breathe through the center column
-        float centerColumn = smoothstep(0.0, 0.14, abs(vUv.x - 0.5));
+        // Radial color ramp — proximity to source drives warm->cool
+        float proximity = 1.0 - smoothstep(0.0, 0.55, r);
+        vec3 lit = mix(warmColor, hotColor, smoothstep(0.55, 0.95, proximity));
+        vec3 mid = mix(coolColor, warmColor, proximity);
+        vec3 far = mix(darkColor, coolColor, smoothstep(0.0, 0.35, proximity));
+        vec3 color = mix(far, mid, smoothstep(0.15, 0.55, proximity));
+        color = mix(color, lit, smoothstep(0.55, 0.9, proximity));
 
-        // Prefer upward flow — dim below the source
-        float upward = smoothstep(source.y - 0.05, source.y + 0.15, vUv.y);
+        // Self-shadow on the thick parts (opposite side of source)
+        color = mix(shadowColor, color, volume * 0.5 + 0.5);
 
-        vec3 color = mix(colorA, colorB, n);
-        color = mix(color, colorC, smoothstep(0.55, 0.9, n) * 0.5);
+        // Masks
+        float sourceFade = smoothstep(0.04, 0.14, r);
+        float outerFade = 1.0 - smoothstep(0.55, 0.95, r);
+        float centerColumn = smoothstep(0.0, 0.1, abs(vUv.x - 0.5));
+        float upward = smoothstep(source.y - 0.08, source.y + 0.12, vUv.y);
 
-        float alpha = density * sourceFade * outerFade * centerColumn * upward * 0.9;
+        float alpha = density * sourceFade * outerFade * centerColumn * upward;
         gl_FragColor = vec4(color, alpha);
       }
     `,
