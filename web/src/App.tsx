@@ -21,6 +21,7 @@ const StartMenu = lazy(() => import('./start-menu/StartMenu'));
 const ControlsDiagram = lazy(() => import('./controls/ControlsDiagram'));
 const SfxLabeler = lazy(() => import('./sfx-labeler/SfxLabeler'));
 const PhotoMode = lazy(() => import('./photo-mode/PhotoMode'));
+const TitlePreview = lazy(() => import('./title-preview/TitlePreview'));
 
 function NavBar() {
   const location = useLocation();
@@ -152,6 +153,12 @@ function NavBar() {
       }}>
         Photo
       </Link>
+      <Link to="/title-preview" style={{
+        color: isActive('/title-preview') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Title
+      </Link>
     </nav>
   );
 }
@@ -183,6 +190,7 @@ export default function App() {
             <Route path="/controls" element={<ControlsDiagram />} />
             <Route path="/sfx-labeler" element={<SfxLabeler />} />
             <Route path="/photo-mode" element={<PhotoMode />} />
+            <Route path="/title-preview" element={<TitlePreview />} />
           </Routes>
         </Suspense>
       </div>
