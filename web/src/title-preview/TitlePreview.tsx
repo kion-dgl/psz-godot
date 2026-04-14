@@ -430,9 +430,9 @@ function BeamSource() {
     }
   });
 
-  // Located at the base of the beam, in front of the horizon
+  // Located at the base of the beam, on top of the ground bulge (UV ~0.36 → world y≈2)
   return (
-    <mesh ref={meshRef} position={[0, -5, -25]}>
+    <mesh ref={meshRef} position={[0, 1.5, -23]} renderOrder={11}>
       <planeGeometry args={[6, 6]} />
       <shaderMaterial args={[shader]} />
     </mesh>
@@ -488,43 +488,49 @@ function PlanetSurface() {
       void main() {
         float cx = (vUv.x - 0.5) * 2.0;
 
-        // Jagged terrain skyline — multiple noise layers build ridges and peaks.
-        // Big silhouette first, then finer detail on top.
-        float big = fbm(vec2(vUv.x * 4.0, 1.3)) * 0.08;
-        float mid = fbm(vec2(vUv.x * 10.0, 2.7)) * 0.035;
-        float fine = fbm(vec2(vUv.x * 25.0, 5.1)) * 0.015;
-        // Large central ridge/mountain where the beam stands, falling off at edges
-        float mountain = 0.05 * (1.0 - cx * cx * 0.6);
-        float horizonY = 0.20 + big + mid + fine + mountain;
+        // Foreground horizon — takes up the bottom ~40% of the frame.
+        // Soft gentle hills with a central bulge under the beam source.
+        float big = fbm(vec2(vUv.x * 3.0, 1.3)) * 0.06;
+        float mid = fbm(vec2(vUv.x * 8.0, 2.7)) * 0.025;
+        float mountain = 0.08 * exp(-cx * cx * 4.0); // gaussian bulge in the middle
+        float horizonY = 0.36 + big + mid + mountain;
 
-        // Secondary, further-back ridge (distant mountains in atmospheric haze)
-        float farBig = fbm(vec2(vUv.x * 3.0 + 100.0, 4.2)) * 0.05;
-        float farMid = fbm(vec2(vUv.x * 7.0 + 50.0, 1.9)) * 0.025;
-        float farHorizonY = 0.17 + farBig + farMid;
+        // Distant secondary ridge behind the foreground (atmospheric haze)
+        float farBig = fbm(vec2(vUv.x * 2.5 + 100.0, 4.2)) * 0.04;
+        float farMid = fbm(vec2(vUv.x * 6.0 + 50.0, 1.9)) * 0.02;
+        float farHorizonY = 0.30 + farBig + farMid;
 
         if (vUv.y < horizonY) {
-          // Foreground rocky terrain
-          vec2 rockP = vec2(vUv.x * 80.0, vUv.y * 80.0);
-          float rockTex = fbm(rockP) * 0.5 + fbm(rockP * 2.5) * 0.25;
-          // Dark crevice pattern
-          float cracks = smoothstep(0.35, 0.55, rockTex);
+          // Solid opaque ground with subtle texture
+          vec2 rockP = vec2(vUv.x * 40.0, vUv.y * 40.0);
+          float rockTex = fbm(rockP) * 0.5 + fbm(rockP * 2.0 + 3.0) * 0.25;
 
-          vec3 color = mix(groundColor, rockColor, cracks);
-          // Rim light along the top edge (silhouetted against sky)
-          float rim = smoothstep(horizonY - 0.012, horizonY, vUv.y);
-          color = mix(color, rimLight, rim * 0.6);
-          // Extra tint on the peaks
-          float peakMask = smoothstep(horizonY - 0.004, horizonY, vUv.y);
-          color = mix(color, peakTint, peakMask * 0.5);
+          // Base dark color, slight variation from rock texture
+          vec3 color = mix(groundColor, rockColor, rockTex);
+
+          // Illumination from the beam source at UV (0.5, 0.33).
+          // Ground under/around the beam source catches warm light.
+          vec2 srcDir = vec2((vUv.x - 0.5) * 1.78, vUv.y - 0.32);
+          float srcDist = length(srcDir);
+          float srcLight = 1.0 - smoothstep(0.0, 0.5, srcDist);
+          color = mix(color, rimLight, srcLight * 0.55);
+
+          // Rim light along the top silhouette (lit against the sky)
+          float rim = smoothstep(horizonY - 0.008, horizonY, vUv.y);
+          color = mix(color, peakTint, rim * 0.7);
+
+          // Darker toward the very bottom of the frame
+          float deep = smoothstep(0.0, 0.1, vUv.y);
+          color *= 0.55 + deep * 0.45;
 
           gl_FragColor = vec4(color, 1.0);
           return;
         }
 
-        // Between the two horizons: distant mountains in atmospheric haze
+        // Between the two horizons: distant hills in haze (still opaque)
         if (vUv.y < farHorizonY) {
-          float depth = smoothstep(horizonY, horizonY + 0.02, vUv.y);
-          vec3 color = mix(rockColor, hazeColor * 0.5, depth);
+          float depth = smoothstep(horizonY, horizonY + 0.025, vUv.y);
+          vec3 color = mix(rockColor, hazeColor * 0.45, depth);
           gl_FragColor = vec4(color, 1.0);
           return;
         }
@@ -543,7 +549,7 @@ function PlanetSurface() {
   }), []);
 
   return (
-    <mesh position={[0, 0, -29]}>
+    <mesh position={[0, 0, -24]} renderOrder={10}>
       <planeGeometry args={[120, 70]} />
       <shaderMaterial args={[shader]} />
     </mesh>
