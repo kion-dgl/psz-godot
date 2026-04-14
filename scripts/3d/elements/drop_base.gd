@@ -98,6 +98,7 @@ func _on_interact(_player: Node3D) -> void:
 	interactable = false
 
 	set_state("collected")
+	SfxManager.play("res://assets/sfx/common/common_172.wav")
 	_give_reward()
 
 
@@ -106,6 +107,7 @@ func _on_collected(_player: Node3D) -> void:
 		return
 
 	set_state("collected")
+	SfxManager.play("res://assets/sfx/common/common_172.wav")
 	_give_reward()
 
 
