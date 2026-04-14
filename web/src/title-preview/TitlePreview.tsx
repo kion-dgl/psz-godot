@@ -432,7 +432,7 @@ function BeamSource() {
 
   // Located at the base of the beam, on top of the ground bulge (UV ~0.36 → world y≈2)
   return (
-    <mesh ref={meshRef} position={[0, 1.5, -23]} renderOrder={11}>
+    <mesh ref={meshRef} position={[0, 1.5, -25]}>
       <planeGeometry args={[6, 6]} />
       <shaderMaterial args={[shader]} />
     </mesh>
@@ -549,7 +549,7 @@ function PlanetSurface() {
   }), []);
 
   return (
-    <mesh position={[0, 0, -24]} renderOrder={10}>
+    <mesh position={[0, 0, -27]}>
       <planeGeometry args={[120, 70]} />
       <shaderMaterial args={[shader]} />
     </mesh>
