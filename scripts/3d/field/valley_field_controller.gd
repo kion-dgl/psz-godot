@@ -393,6 +393,8 @@ func _ready() -> void:
 
 	_spawn_player(spawn_pos, spawn_rot)
 	_spawn_weather()
+	if from_cell_pos.is_empty():
+		SfxManager.play("res://assets/sfx/common/common_010.wav")
 	await get_tree().process_frame
 
 	# Create gate triggers for each connection (entry edge gets delayed activation)
