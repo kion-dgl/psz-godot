@@ -1,7 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
-import { assetUrl } from '../utils/assets';
 
 const CANVAS_W = 1920;
 const CANVAS_H = 1080;
@@ -9,8 +8,8 @@ const CANVAS_H = 1080;
 function SkyGradient() {
   const shader = useMemo(() => ({
     uniforms: {
-      topColor: { value: new THREE.Color('#0a0e2a') },
-      midColor: { value: new THREE.Color('#1a2050') },
+      topColor: { value: new THREE.Color('#050820') },
+      midColor: { value: new THREE.Color('#151a48') },
       horizonColor: { value: new THREE.Color('#f0b880') },
     },
     vertexShader: `
@@ -28,10 +27,10 @@ function SkyGradient() {
       void main() {
         float y = vUv.y;
         vec3 color;
-        if (y < 0.2) {
-          color = mix(horizonColor, midColor, smoothstep(0.0, 0.2, y));
+        if (y < 0.18) {
+          color = mix(horizonColor, midColor, smoothstep(0.0, 0.18, y));
         } else {
-          color = mix(midColor, topColor, smoothstep(0.2, 1.0, y));
+          color = mix(midColor, topColor, smoothstep(0.18, 1.0, y));
         }
         gl_FragColor = vec4(color, 1.0);
       }
@@ -45,20 +44,114 @@ function SkyGradient() {
   );
 }
 
-function Starfield({ count = 800 }: { count?: number }) {
+function GalaxyField() {
+  const meshRef = useRef<THREE.Mesh>(null);
+  const shader = useMemo(() => ({
+    uniforms: {
+      time: { value: 0 },
+      tintA: { value: new THREE.Color('#6a4fb0') },
+      tintB: { value: new THREE.Color('#3a70d8') },
+      tintC: { value: new THREE.Color('#d07090') },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform float time;
+      uniform vec3 tintA;
+      uniform vec3 tintB;
+      uniform vec3 tintC;
+      varying vec2 vUv;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+      }
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x),
+                   mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+      }
+      float fbm(vec2 p) {
+        float v = 0.0;
+        float a = 0.5;
+        for (int i = 0; i < 6; i++) {
+          v += a * noise(p);
+          p *= 2.0;
+          a *= 0.5;
+        }
+        return v;
+      }
+      void main() {
+        // Only render in upper sky (not on horizon)
+        float skyMask = smoothstep(0.25, 0.55, vUv.y);
+
+        vec2 p = vUv * 3.0;
+        float n1 = fbm(p + vec2(time * 0.01, 0.0));
+        float n2 = fbm(p * 1.8 + vec2(5.0, time * 0.015));
+        float n3 = fbm(p * 0.6 + vec2(-2.0, time * 0.008));
+
+        // Sparse nebula patches — only bright in certain regions
+        float nebula = smoothstep(0.55, 0.85, n1) * 0.6;
+        float wisps = smoothstep(0.65, 0.95, n2) * 0.4;
+
+        vec3 color = mix(tintA, tintB, n3);
+        color = mix(color, tintC, smoothstep(0.5, 0.9, n1));
+
+        float alpha = (nebula + wisps) * skyMask;
+        gl_FragColor = vec4(color, alpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }), []);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      const mat = meshRef.current.material as THREE.ShaderMaterial;
+      mat.uniforms.time.value = state.clock.elapsedTime;
+    }
+  });
+
+  return (
+    <mesh ref={meshRef} position={[0, 0, -48]}>
+      <planeGeometry args={[120, 70]} />
+      <shaderMaterial args={[shader]} />
+    </mesh>
+  );
+}
+
+function Starfield({ count = 2500 }: { count?: number }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const { positions, sizes, phases } = useMemo(() => {
+  const { positions, sizes, phases, colors } = useMemo(() => {
     const positions = new Float32Array(count * 3);
     const sizes = new Float32Array(count);
     const phases = new Float32Array(count);
+    const colors = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      positions[i * 3 + 0] = (Math.random() - 0.5) * 100;
-      positions[i * 3 + 1] = Math.random() * 40 + 2;
-      positions[i * 3 + 2] = -40 + Math.random() * 10;
-      sizes[i] = 0.05 + Math.random() * 0.18;
+      positions[i * 3 + 0] = (Math.random() - 0.5) * 110;
+      positions[i * 3 + 1] = Math.random() * 45 + 3;
+      positions[i * 3 + 2] = -42 + Math.random() * 12;
+      const big = Math.random() < 0.08;
+      sizes[i] = big ? 0.25 + Math.random() * 0.35 : 0.04 + Math.random() * 0.15;
       phases[i] = Math.random() * Math.PI * 2;
+      // Mostly white with a few tinted (blue/yellow) stars
+      const tint = Math.random();
+      if (tint < 0.1) {
+        colors[i * 3 + 0] = 0.7; colors[i * 3 + 1] = 0.8; colors[i * 3 + 2] = 1.0;
+      } else if (tint < 0.18) {
+        colors[i * 3 + 0] = 1.0; colors[i * 3 + 1] = 0.9; colors[i * 3 + 2] = 0.7;
+      } else {
+        colors[i * 3 + 0] = 1.0; colors[i * 3 + 1] = 1.0; colors[i * 3 + 2] = 1.0;
+      }
     }
-    return { positions, sizes, phases };
+    return { positions, sizes, phases, colors };
   }, [count]);
 
   const shader = useMemo(() => ({
@@ -66,22 +159,26 @@ function Starfield({ count = 800 }: { count?: number }) {
     vertexShader: `
       attribute float size;
       attribute float phase;
+      attribute vec3 color;
       uniform float time;
       varying float vTwinkle;
+      varying vec3 vColor;
       void main() {
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        vTwinkle = 0.7 + 0.3 * sin(time * 2.0 + phase);
-        gl_PointSize = size * (400.0 / -mvPosition.z) * vTwinkle;
+        vTwinkle = 0.5 + 0.5 * sin(time * 2.0 + phase);
+        vColor = color;
+        gl_PointSize = size * (400.0 / -mvPosition.z) * (0.7 + vTwinkle * 0.6);
         gl_Position = projectionMatrix * mvPosition;
       }
     `,
     fragmentShader: `
       varying float vTwinkle;
+      varying vec3 vColor;
       void main() {
         vec2 c = gl_PointCoord - vec2(0.5);
         float d = length(c);
         float alpha = smoothstep(0.5, 0.0, d);
-        gl_FragColor = vec4(vec3(1.0) * vTwinkle, alpha);
+        gl_FragColor = vec4(vColor * (0.8 + vTwinkle * 0.4), alpha);
       }
     `,
     transparent: true,
@@ -102,6 +199,7 @@ function Starfield({ count = 800 }: { count?: number }) {
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
         <bufferAttribute attach="attributes-size" args={[sizes, 1]} />
         <bufferAttribute attach="attributes-phase" args={[phases, 1]} />
+        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
       </bufferGeometry>
       <shaderMaterial args={[shader]} />
     </points>
@@ -136,7 +234,6 @@ function Moon() {
         float glow = 1.0 - smoothstep(0.35, 0.65, d);
         float halo = 1.0 - smoothstep(0.55, 1.0, d);
 
-        // Subtle crater detail
         float n = sin(c.x * 20.0) * sin(c.y * 20.0) * 0.08;
         n += sin(c.x * 40.0 + 1.0) * sin(c.y * 35.0) * 0.04;
 
@@ -177,14 +274,11 @@ function LightBeam() {
       uniform float time;
       varying vec2 vUv;
       void main() {
-        // Distance from vertical center line
         float cx = abs(vUv.x - 0.5) * 2.0;
-        // Fade from top (narrow) to bottom (wider, brighter)
         float vertical = vUv.y;
         float edge = smoothstep(1.0, 0.0, cx);
         float intensity = edge * edge;
         intensity *= mix(0.3, 1.4, 1.0 - vertical);
-        // Pulsing shimmer
         intensity *= 0.9 + 0.1 * sin(time * 1.5);
         gl_FragColor = vec4(beamColor * intensity, intensity * 0.9);
       }
@@ -261,13 +355,15 @@ function HorizonGlow() {
   );
 }
 
-function Cloud({ position, scale, seed }: { position: [number, number, number]; scale: number; seed: number }) {
+/** Swirling cloud / nebula layer using flowing domain-warped FBM. */
+function SwirlingClouds() {
   const meshRef = useRef<THREE.Mesh>(null);
   const shader = useMemo(() => ({
     uniforms: {
       time: { value: 0 },
-      seed: { value: seed },
-      color: { value: new THREE.Color('#2a3466') },
+      colorA: { value: new THREE.Color('#1a2050') },
+      colorB: { value: new THREE.Color('#4860a8') },
+      colorC: { value: new THREE.Color('#8a5090') },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -278,8 +374,9 @@ function Cloud({ position, scale, seed }: { position: [number, number, number]; 
     `,
     fragmentShader: `
       uniform float time;
-      uniform float seed;
-      uniform vec3 color;
+      uniform vec3 colorA;
+      uniform vec3 colorB;
+      uniform vec3 colorC;
       varying vec2 vUv;
 
       float hash(vec2 p) {
@@ -295,24 +392,43 @@ function Cloud({ position, scale, seed }: { position: [number, number, number]; 
       float fbm(vec2 p) {
         float v = 0.0;
         float a = 0.5;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
           v += a * noise(p);
-          p *= 2.0;
+          p *= 2.02;
           a *= 0.5;
         }
         return v;
       }
+
+      // Domain-warped FBM creates curling/swirling motion
+      float swirl(vec2 p, float t) {
+        vec2 q = vec2(fbm(p + vec2(0.0, t * 0.05)),
+                      fbm(p + vec2(5.2, 1.3) + vec2(t * 0.04, 0.0)));
+        vec2 r = vec2(fbm(p + 4.0 * q + vec2(1.7, 9.2) + vec2(t * 0.02, 0.0)),
+                      fbm(p + 4.0 * q + vec2(8.3, 2.8) + vec2(0.0, t * 0.03)));
+        return fbm(p + 4.0 * r);
+      }
+
       void main() {
-        vec2 c = vUv - vec2(0.5);
-        float shape = 1.0 - smoothstep(0.0, 0.5, length(c * vec2(1.0, 1.6)));
-        float n = fbm(vUv * 3.0 + vec2(seed, time * 0.02));
-        float alpha = shape * smoothstep(0.3, 0.9, n) * 0.7;
+        // Mask: cloud band in the mid-sky, fading at top and bottom
+        float band = smoothstep(0.0, 0.25, vUv.y) * smoothstep(0.85, 0.45, vUv.y);
+        // Also keep the center dimmer so the beam reads clearly
+        float centerFade = smoothstep(0.0, 0.35, abs(vUv.x - 0.5));
+
+        vec2 p = vec2(vUv.x * 3.5, vUv.y * 2.0);
+        float n = swirl(p, time);
+
+        float density = smoothstep(0.35, 0.85, n);
+        vec3 color = mix(colorA, colorB, n);
+        color = mix(color, colorC, smoothstep(0.55, 0.9, n) * 0.6);
+
+        float alpha = density * band * centerFade * 0.85;
         gl_FragColor = vec4(color, alpha);
       }
     `,
     transparent: true,
     depthWrite: false,
-  }), [seed]);
+  }), []);
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -322,8 +438,8 @@ function Cloud({ position, scale, seed }: { position: [number, number, number]; 
   });
 
   return (
-    <mesh ref={meshRef} position={position} scale={[scale, scale, 1]}>
-      <planeGeometry args={[12, 6]} />
+    <mesh ref={meshRef} position={[0, 3, -26]}>
+      <planeGeometry args={[80, 45]} />
       <shaderMaterial args={[shader]} />
     </mesh>
   );
@@ -333,13 +449,9 @@ function Scene() {
   return (
     <>
       <SkyGradient />
-      <Starfield count={800} />
-      <Cloud position={[-14, 4, -26]} scale={1.4} seed={0.1} />
-      <Cloud position={[15, 6, -26]} scale={1.3} seed={0.5} />
-      <Cloud position={[-20, 2, -25]} scale={1.1} seed={0.9} />
-      <Cloud position={[19, 3, -25]} scale={1.2} seed={1.3} />
-      <Cloud position={[-8, 0, -24]} scale={0.9} seed={1.7} />
-      <Cloud position={[10, 1, -24]} scale={1.0} seed={2.1} />
+      <GalaxyField />
+      <Starfield count={2500} />
+      <SwirlingClouds />
       <LightBeam />
       <Moon />
       <HorizonGlow />
@@ -365,24 +477,6 @@ export default function TitlePreview() {
           >
             <Scene />
           </Canvas>
-          {/* PSZ Logo overlay */}
-          <div style={{
-            position: 'absolute', top: '8%', left: '50%', transform: 'translateX(-50%)',
-            pointerEvents: 'none',
-          }}>
-            <img
-              src={assetUrl('assets/images/logo.png')}
-              alt="Phantasy Star Zero"
-              style={{ width: 560, filter: 'drop-shadow(0 4px 20px rgba(0, 0, 0, 0.8))' }}
-            />
-          </div>
-          <div style={{
-            position: 'absolute', bottom: '12%', left: '50%', transform: 'translateX(-50%)',
-            color: '#cfd8f0', fontSize: 24, fontFamily: 'serif', letterSpacing: 4,
-            textShadow: '0 2px 8px rgba(0,0,0,0.8)', pointerEvents: 'none',
-          }}>
-            Press Start
-          </div>
         </div>
       </div>
     </div>
