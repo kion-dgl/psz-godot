@@ -658,9 +658,15 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
 
+const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1"]
+
 func _spawn_weather() -> void:
 	var weather: String = str(SessionManager.get_session().get("weather", ""))
 	if weather.is_empty():
+		return
+	var stage_id: String = str(_current_cell.get("stage_id", ""))
+	if stage_id in INDOOR_STAGES:
+		print("[ValleyField] Weather: skipping %s (indoor stage %s)" % [weather, stage_id])
 		return
 	if weather == "snow":
 		_weather_node = GPUParticles3D.new()
