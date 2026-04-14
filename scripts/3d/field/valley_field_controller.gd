@@ -2125,6 +2125,10 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var qi_act: Array = obj.get("actions", [])
 				var qi_rem: Array = obj.get("remaining_dialog", [])
 				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+			"needle_trap":
+				_spawn_needle_trap(pos)
+			"bear_trap":
+				_spawn_bear_trap(pos)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -2234,6 +2238,10 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 							qi_rem = orig_obj.get("remaining_dialog", [])
 							break
 					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+			"needle_trap":
+				_spawn_needle_trap(pos)
+			"bear_trap":
+				_spawn_bear_trap(pos)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -2742,6 +2750,22 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop
 		prop.rotation.y = deg_to_rad(rot_deg)
 	_room_props.append(prop)
 	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
+
+
+func _spawn_needle_trap(pos: Vector3) -> void:
+	var trap := load("res://scripts/3d/elements/needle_trap.gd").new()
+	_map_root.add_child(trap)
+	trap.position = pos
+	trap.set_state("on")
+	print("[CellObjects] NeedleTrap at %s" % pos)
+
+
+func _spawn_bear_trap(pos: Vector3) -> void:
+	var trap := load("res://scripts/3d/elements/bear_trap.gd").new()
+	_map_root.add_child(trap)
+	trap.position = pos
+	trap.set_state("on")
+	print("[CellObjects] BearTrap at %s" % pos)
 
 
 func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready", condition: String = "enter", act: Array = [], size: Vector3 = Vector3.ZERO) -> void:
