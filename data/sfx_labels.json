@@ -1,136 +1,940 @@
 {
-  "common/common_000.wav": { "file": "common_000.wav", "category": "common", "label": "", "notes": "Walking on Forest Floor", "starred": false },
-  "common/common_001.wav": { "file": "common_001.wav", "category": "common", "label": "splash", "notes": "Walking on Forest Water (Probably Seabed too)", "starred": false },
-  "common/common_002.wav": { "file": "common_002.wav", "category": "common", "label": "step", "notes": "", "starred": false },
-  "common/common_003.wav": { "file": "common_003.wav", "category": "common", "label": "splash 2", "notes": "", "starred": false },
-  "common/common_004.wav": { "file": "common_004.wav", "category": "common", "label": "step 2", "notes": "Walking on Pioneer 2 (HUmar)", "starred": false },
-  "common/common_005.wav": { "file": "common_005.wav", "category": "common", "label": "wooosh", "notes": "Teleporter/Warp", "starred": false },
-  "common/common_006.wav": { "file": "common_006.wav", "category": "common", "label": "go online", "notes": "Principal Warp", "starred": false },
-  "common/common_007.wav": { "file": "common_007.wav", "category": "common", "label": "step on grass", "notes": "Walking on Forest Plant", "starred": false },
-  "common/common_008.wav": { "file": "common_008.wav", "category": "common", "label": "", "notes": "Walking on Pioneer 2 (RAcast)", "starred": false },
-  "common/common_009.wav": { "file": "common_009.wav", "category": "common", "label": "", "notes": "Walking on Pioneer 2 (HUcast)", "starred": false },
-  "common/common_010.wav": { "file": "common_010.wav", "category": "common", "label": "warp in", "notes": "Character warping in sound. Also Armor and Mag Equip. *Weapon equip sounds similar but it's different.", "starred": false },
-  "common/common_011.wav": { "file": "common_011.wav", "category": "common", "label": "poison", "notes": "", "starred": false },
-  "common/common_012.wav": { "file": "common_012.wav", "category": "common", "label": "bind", "notes": "", "starred": false },
-  "common/common_013.wav": { "file": "common_013.wav", "category": "common", "label": "slow", "notes": "", "starred": false },
-  "common/common_014.wav": { "file": "common_014.wav", "category": "common", "label": "confuse", "notes": "", "starred": false },
-  "common/common_015.wav": { "file": "common_015.wav", "category": "common", "label": "frozen", "notes": "", "starred": false },
-  "common/common_016.wav": { "file": "common_016.wav", "category": "common", "label": "shock", "notes": "", "starred": false },
-  "common/common_017.wav": { "file": "common_017.wav", "category": "common", "label": "target", "notes": "", "starred": false },
-  "common/common_018.wav": { "file": "common_018.wav", "category": "common", "label": "take hit", "notes": "", "starred": false },
-  "common/common_019.wav": { "file": "common_019.wav", "category": "common", "label": "take hard hit", "notes": "and knockdown", "starred": false },
-  "common/common_022.wav": { "file": "common_022.wav", "category": "common", "label": "invalid select", "notes": "can't pick up/use item", "starred": false },
-  "common/common_025.wav": { "file": "common_025.wav", "category": "common", "label": "step in water", "notes": "", "starred": false },
-  "common/common_031.wav": { "file": "common_031.wav", "category": "common", "label": "step in water", "notes": "", "starred": false },
-  "common/common_033.wav": { "file": "common_033.wav", "category": "common", "label": "warp in", "notes": "Merging two items I think?", "starred": false },
-  "common/common_034.wav": { "file": "common_034.wav", "category": "common", "label": "saber hit?", "notes": "Saber Hit and Blocking (No Shield Equipped)? #40 and #49 sounds similar", "starred": false },
-  "common/common_035.wav": { "file": "common_035.wav", "category": "common", "label": "saber swing", "notes": "", "starred": false },
-  "common/common_036.wav": { "file": "common_036.wav", "category": "common", "label": "sword swing", "notes": "", "starred": false },
-  "common/common_037.wav": { "file": "common_037.wav", "category": "common", "label": "partisan swing", "notes": "", "starred": false },
-  "common/common_038.wav": { "file": "common_038.wav", "category": "common", "label": "dagger swing", "notes": "", "starred": false },
-  "common/common_039.wav": { "file": "common_039.wav", "category": "common", "label": "slicer swing", "notes": "", "starred": false },
-  "common/common_040.wav": { "file": "common_040.wav", "category": "common", "label": "saber crit?", "notes": "#34 and #49 sounds similar", "starred": false },
-  "common/common_041.wav": { "file": "common_041.wav", "category": "common", "label": "handgun shot", "notes": "", "starred": false },
-  "common/common_042.wav": { "file": "common_042.wav", "category": "common", "label": "mechgun shot", "notes": "", "starred": false },
-  "common/common_043.wav": { "file": "common_043.wav", "category": "common", "label": "rifle shot", "notes": "", "starred": false },
-  "common/common_044.wav": { "file": "common_044.wav", "category": "common", "label": "shot's shot", "notes": "", "starred": false },
-  "common/common_045.wav": { "file": "common_045.wav", "category": "common", "label": "cane swing", "notes": "", "starred": false },
-  "common/common_046.wav": { "file": "common_046.wav", "category": "common", "label": "unarmed/knuckles", "notes": "", "starred": false },
-  "common/common_048.wav": { "file": "common_048.wav", "category": "common", "label": "needle shot?", "notes": "", "starred": false },
-  "common/common_049.wav": { "file": "common_049.wav", "category": "common", "label": "", "notes": "#34 and #40 sounds similar", "starred": false },
-  "common/common_050.wav": { "file": "common_050.wav", "category": "common", "label": "launcher shot?", "notes": "", "starred": false },
-  "common/common_051.wav": { "file": "common_051.wav", "category": "common", "label": "bazooka shot?", "notes": "", "starred": false },
-  "common/common_052.wav": { "file": "common_052.wav", "category": "common", "label": "akiko's frying pan?", "notes": "", "starred": false },
-  "common/common_053.wav": { "file": "common_053.wav", "category": "common", "label": "lavis weapons swing?", "notes": "", "starred": false },
-  "common/common_054.wav": { "file": "common_054.wav", "category": "common", "label": "chainsawd swing?", "notes": "", "starred": false },
-  "common/common_055.wav": { "file": "common_055.wav", "category": "common", "label": "chainsawd hit?", "notes": "", "starred": false },
-  "common/common_056.wav": { "file": "common_056.wav", "category": "common", "label": "katana swing?", "notes": "", "starred": false },
-  "common/common_059.wav": { "file": "common_059.wav", "category": "common", "label": "TJS hit?", "notes": "", "starred": false },
-  "common/common_060.wav": { "file": "common_060.wav", "category": "common", "label": "hard attack", "notes": "", "starred": false },
-  "common/common_061.wav": { "file": "common_061.wav", "category": "common", "label": "special attack", "notes": "", "starred": false },
-  "common/common_062.wav": { "file": "common_062.wav", "category": "common", "label": "shield block?", "notes": "", "starred": false },
-  "common/common_067.wav": { "file": "common_067.wav", "category": "common", "label": "TJS or Zanba swing?", "notes": "", "starred": false },
-  "common/common_070.wav": { "file": "common_070.wav", "category": "common", "label": "gun shot", "notes": "Yasminkovs?", "starred": false },
-  "common/common_073.wav": { "file": "common_073.wav", "category": "common", "label": "heavy gun shot", "notes": "", "starred": false },
-  "common/common_074.wav": { "file": "common_074.wav", "category": "common", "label": "", "notes": "this or the above is maybe NUG Bazooka", "starred": false },
-  "common/common_075.wav": { "file": "common_075.wav", "category": "common", "label": "hildebear gets hit", "notes": "", "starred": false },
-  "common/common_078.wav": { "file": "common_078.wav", "category": "common", "label": "nyaa", "notes": "paku paku stick swing probably", "starred": false },
-  "common/common_081.wav": { "file": "common_081.wav", "category": "common", "label": "quit menu", "notes": "doesn't sound like quit menu imo", "starred": false },
-  "common/common_086.wav": { "file": "common_086.wav", "category": "common", "label": "booma swing", "notes": "", "starred": false },
-  "common/common_087.wav": { "file": "common_087.wav", "category": "common", "label": "dark flow swing", "notes": "", "starred": false },
-  "common/common_088.wav": { "file": "common_088.wav", "category": "common", "label": "dark meteor shot", "notes": "", "starred": false },
-  "common/common_089.wav": { "file": "common_089.wav", "category": "common", "label": "", "notes": "probably dark bridge swings?", "starred": false },
-  "common/common_092.wav": { "file": "common_092.wav", "category": "common", "label": "booma take hit", "notes": "not booma, sounds more like belra? though #94 does too idk", "starred": false },
-  "common/common_094.wav": { "file": "common_094.wav", "category": "common", "label": "enemy take hit", "notes": "", "starred": false },
-  "common/common_096.wav": { "file": "common_096.wav", "category": "common", "label": "laser gun", "notes": "", "starred": false },
-  "common/common_098.wav": { "file": "common_098.wav", "category": "common", "label": "dark flow special", "notes": "", "starred": false },
-  "common/common_101.wav": { "file": "common_101.wav", "category": "common", "label": "slicer swing alt", "notes": "some specific slicer swing", "starred": false },
-  "common/common_102.wav": { "file": "common_102.wav", "category": "common", "label": "heaven striker shot?", "notes": "Identical CRC32 with #103", "starred": false },
-  "common/common_103.wav": { "file": "common_103.wav", "category": "common", "label": "heaven striker shot?", "notes": "Identical CRC32 with #102", "starred": false },
-  "common/common_106.wav": { "file": "common_106.wav", "category": "common", "label": "", "notes": "flowens swing?", "starred": false },
-  "common/common_111.wav": { "file": "common_111.wav", "category": "common", "label": "", "notes": "card throw?", "starred": false },
-  "common/common_120.wav": { "file": "common_120.wav", "category": "common", "label": "foie", "notes": "", "starred": false },
-  "common/common_121.wav": { "file": "common_121.wav", "category": "common", "label": "gifoie", "notes": "", "starred": false },
-  "common/common_122.wav": { "file": "common_122.wav", "category": "common", "label": "rafoie cast", "notes": "", "starred": false },
-  "common/common_123.wav": { "file": "common_123.wav", "category": "common", "label": "rafoie explosion?", "notes": "", "starred": false },
-  "common/common_124.wav": { "file": "common_124.wav", "category": "common", "label": "barta", "notes": "", "starred": false },
-  "common/common_125.wav": { "file": "common_125.wav", "category": "common", "label": "gibarta", "notes": "", "starred": false },
-  "common/common_126.wav": { "file": "common_126.wav", "category": "common", "label": "rabarta", "notes": "", "starred": false },
-  "common/common_127.wav": { "file": "common_127.wav", "category": "common", "label": "", "notes": "#15 sounds similar but not same CRC32", "starred": false },
-  "common/common_128.wav": { "file": "common_128.wav", "category": "common", "label": "zonde", "notes": "", "starred": false },
-  "common/common_129.wav": { "file": "common_129.wav", "category": "common", "label": "gizonde", "notes": "Identical CRC32 with #130", "starred": false },
-  "common/common_130.wav": { "file": "common_130.wav", "category": "common", "label": "razonde", "notes": "Identical CRC32 with #129", "starred": false },
-  "common/common_131.wav": { "file": "common_131.wav", "category": "common", "label": "megid", "notes": "", "starred": false },
-  "common/common_132.wav": { "file": "common_132.wav", "category": "common", "label": "grants cast", "notes": "", "starred": false },
-  "common/common_133.wav": { "file": "common_133.wav", "category": "common", "label": "grants explosion", "notes": "", "starred": false },
-  "common/common_134.wav": { "file": "common_134.wav", "category": "common", "label": "resta", "notes": "", "starred": false },
-  "common/common_135.wav": { "file": "common_135.wav", "category": "common", "label": "resta end of animation sound", "notes": "", "starred": false },
-  "common/common_136.wav": { "file": "common_136.wav", "category": "common", "label": "anti", "notes": "", "starred": false },
-  "common/common_138.wav": { "file": "common_138.wav", "category": "common", "label": "", "notes": "healing ring?", "starred": false },
-  "common/common_139.wav": { "file": "common_139.wav", "category": "common", "label": "reverser?", "notes": "", "starred": false },
-  "common/common_140.wav": { "file": "common_140.wav", "category": "common", "label": "shifta", "notes": "", "starred": false },
-  "common/common_141.wav": { "file": "common_141.wav", "category": "common", "label": "jellen", "notes": "", "starred": false },
-  "common/common_142.wav": { "file": "common_142.wav", "category": "common", "label": "deband", "notes": "", "starred": false },
-  "common/common_143.wav": { "file": "common_143.wav", "category": "common", "label": "zalure", "notes": "", "starred": false },
-  "common/common_144.wav": { "file": "common_144.wav", "category": "common", "label": "create telepipe", "notes": "", "starred": false },
-  "common/common_145.wav": { "file": "common_145.wav", "category": "common", "label": "stand in telepipe", "notes": "", "starred": false },
-  "common/common_146.wav": { "file": "common_146.wav", "category": "common", "label": "telepipe warp", "notes": "", "starred": false },
-  "common/common_147.wav": { "file": "common_147.wav", "category": "common", "label": "ryuker cast?", "notes": "", "starred": false },
-  "common/common_148.wav": { "file": "common_148.wav", "category": "common", "label": "gifoie alt?", "notes": "sounds like #121 alt. maybe higher level gifoie?", "starred": false },
-  "common/common_149.wav": { "file": "common_149.wav", "category": "common", "label": "initial ice tech cast sound?", "notes": "", "starred": false },
-  "common/common_153.wav": { "file": "common_153.wav", "category": "common", "label": "100% PB", "notes": "", "starred": false },
-  "common/common_154.wav": { "file": "common_154.wav", "category": "common", "label": "start PB", "notes": "", "starred": false },
-  "common/common_155.wav": { "file": "common_155.wav", "category": "common", "label": "PB casting", "notes": "", "starred": false },
-  "common/common_157.wav": { "file": "common_157.wav", "category": "common", "label": "mag feed", "notes": "", "starred": false },
-  "common/common_160.wav": { "file": "common_160.wav", "category": "common", "label": "break box", "notes": "", "starred": false },
-  "common/common_161.wav": { "file": "common_161.wav", "category": "common", "label": "", "notes": "Identical CRC32 with #59", "starred": false },
-  "common/common_162.wav": { "file": "common_162.wav", "category": "common", "label": "shifta ticks?", "notes": "", "starred": false },
-  "common/common_163.wav": { "file": "common_163.wav", "category": "common", "label": "jellen ticks?", "notes": "", "starred": false },
-  "common/common_164.wav": { "file": "common_164.wav", "category": "common", "label": "deband ticks?", "notes": "", "starred": false },
-  "common/common_165.wav": { "file": "common_165.wav", "category": "common", "label": "zalure ticks?", "notes": "", "starred": false },
-  "common/common_170.wav": { "file": "common_170.wav", "category": "common", "label": "menu move", "notes": "", "starred": false },
-  "common/common_171.wav": { "file": "common_171.wav", "category": "common", "label": "menu select", "notes": "", "starred": false },
-  "common/common_172.wav": { "file": "common_172.wav", "category": "common", "label": "item pick up", "notes": "", "starred": false },
-  "common/common_173.wav": { "file": "common_173.wav", "category": "common", "label": "menu change", "notes": "when going in or out of menus changes the text boxes", "starred": false },
-  "common/common_174.wav": { "file": "common_174.wav", "category": "common", "label": "close menu", "notes": "", "starred": false },
-  "common/common_175.wav": { "file": "common_175.wav", "category": "common", "label": "bring up menu", "notes": "dialogue sound", "starred": false },
-  "common/common_176.wav": { "file": "common_176.wav", "category": "common", "label": "", "notes": "timer over/incorrect guess?", "starred": false },
-  "common/common_177.wav": { "file": "common_177.wav", "category": "common", "label": "usual symbol chat", "notes": "", "starred": false },
-  "common/common_178.wav": { "file": "common_178.wav", "category": "common", "label": "pleasure symbol chat", "notes": "", "starred": false },
-  "common/common_179.wav": { "file": "common_179.wav", "category": "common", "label": "angry symbol chat", "notes": "", "starred": false },
-  "common/common_180.wav": { "file": "common_180.wav", "category": "common", "label": "sadness symbol chat", "notes": "", "starred": false },
-  "common/common_181.wav": { "file": "common_181.wav", "category": "common", "label": "uneasiness symbol chat", "notes": "", "starred": false },
-  "common/common_182.wav": { "file": "common_182.wav", "category": "common", "label": "surprise symbol chat", "notes": "", "starred": false },
-  "common/common_183.wav": { "file": "common_183.wav", "category": "common", "label": "doubt symbol chat", "notes": "", "starred": false },
-  "common/common_184.wav": { "file": "common_184.wav", "category": "common", "label": "help symbol chat", "notes": "", "starred": false },
-  "common/common_185.wav": { "file": "common_185.wav", "category": "common", "label": "level loading", "notes": "", "starred": false },
-  "common/common_186.wav": { "file": "common_186.wav", "category": "common", "label": "use item", "notes": "", "starred": false },
-  "common/common_191.wav": { "file": "common_191.wav", "category": "common", "label": "menu back", "notes": "", "starred": false },
-  "common/common_192.wav": { "file": "common_192.wav", "category": "common", "label": "new mail", "notes": "", "starred": false },
-  "common/common_193.wav": { "file": "common_193.wav", "category": "common", "label": "timer", "notes": "", "starred": false },
-  "common/common_199.wav": { "file": "common_199.wav", "category": "common", "label": "level up", "notes": "", "starred": false },
-  "common/common_200.wav": { "file": "common_200.wav", "category": "common", "label": "door unlocked", "notes": "", "starred": false },
-  "common/common_201.wav": { "file": "common_201.wav", "category": "common", "label": "camera snap", "notes": "", "starred": false },
-  "ephinea/ephinea_006.wav": { "file": "ephinea_006.wav", "category": "ephinea", "label": "start menu accept", "notes": "", "starred": false },
-  "common/common_104.wav": { "file": "common_104.wav", "category": "common", "label": "saber", "notes": "", "starred": false }
+  "common/common_000.wav": {
+    "file": "common_000.wav",
+    "category": "common",
+    "label": "",
+    "notes": "Walking on Forest Floor",
+    "starred": false
+  },
+  "common/common_001.wav": {
+    "file": "common_001.wav",
+    "category": "common",
+    "label": "splash",
+    "notes": "Walking on Forest Water (Probably Seabed too))",
+    "starred": false
+  },
+  "common/common_002.wav": {
+    "file": "common_002.wav",
+    "category": "common",
+    "label": "step",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_003.wav": {
+    "file": "common_003.wav",
+    "category": "common",
+    "label": "splash 2",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_004.wav": {
+    "file": "common_004.wav",
+    "category": "common",
+    "label": "step 2",
+    "notes": "Walking on Pioneer 2 (HUmar))",
+    "starred": false
+  },
+  "common/common_005.wav": {
+    "file": "common_005.wav",
+    "category": "common",
+    "label": "wooosh",
+    "notes": "Teleporter/Warp",
+    "starred": false
+  },
+  "common/common_006.wav": {
+    "file": "common_006.wav",
+    "category": "common",
+    "label": "go online",
+    "notes": "Principal Warp",
+    "starred": false
+  },
+  "common/common_007.wav": {
+    "file": "common_007.wav",
+    "category": "common",
+    "label": "step on grass",
+    "notes": "Walking on Forest Plant",
+    "starred": false
+  },
+  "common/common_008.wav": {
+    "file": "common_008.wav",
+    "category": "common",
+    "label": "",
+    "notes": "Walking on Pioneer 2 (RAcast))",
+    "starred": false
+  },
+  "common/common_009.wav": {
+    "file": "common_009.wav",
+    "category": "common",
+    "label": "",
+    "notes": "Walking on Pioneer 2 (HUcast))",
+    "starred": false
+  },
+  "common/common_010.wav": {
+    "file": "common_010.wav",
+    "category": "common",
+    "label": "warp in",
+    "notes": "Character warping in sound. Also Armor and Mag Equip. *Weapon equip sounds similar but it's different.",
+    "starred": false
+  },
+  "common/common_011.wav": {
+    "file": "common_011.wav",
+    "category": "common",
+    "label": "poison",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_012.wav": {
+    "file": "common_012.wav",
+    "category": "common",
+    "label": "bind",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_013.wav": {
+    "file": "common_013.wav",
+    "category": "common",
+    "label": "slow",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_014.wav": {
+    "file": "common_014.wav",
+    "category": "common",
+    "label": "confuse",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_015.wav": {
+    "file": "common_015.wav",
+    "category": "common",
+    "label": "frozen",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_016.wav": {
+    "file": "common_016.wav",
+    "category": "common",
+    "label": "shock",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_017.wav": {
+    "file": "common_017.wav",
+    "category": "common",
+    "label": "target",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_018.wav": {
+    "file": "common_018.wav",
+    "category": "common",
+    "label": "take hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_019.wav": {
+    "file": "common_019.wav",
+    "category": "common",
+    "label": "take hard hit",
+    "notes": "and knockdown",
+    "starred": false
+  },
+  "common/common_022.wav": {
+    "file": "common_022.wav",
+    "category": "common",
+    "label": "invalid select",
+    "notes": "can't pick up/use item",
+    "starred": false
+  },
+  "common/common_025.wav": {
+    "file": "common_025.wav",
+    "category": "common",
+    "label": "step in water",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_031.wav": {
+    "file": "common_031.wav",
+    "category": "common",
+    "label": "step in water",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_033.wav": {
+    "file": "common_033.wav",
+    "category": "common",
+    "label": "warp in",
+    "notes": "Merging two items I think?",
+    "starred": false
+  },
+  "common/common_034.wav": {
+    "file": "common_034.wav",
+    "category": "common",
+    "label": "saber hit?",
+    "notes": "Saber Hit and Blocking (No Shield Equipped)? #40 and #49 sounds similar",
+    "starred": false
+  },
+  "common/common_035.wav": {
+    "file": "common_035.wav",
+    "category": "common",
+    "label": "saber swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_036.wav": {
+    "file": "common_036.wav",
+    "category": "common",
+    "label": "sword swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_037.wav": {
+    "file": "common_037.wav",
+    "category": "common",
+    "label": "partisan swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_038.wav": {
+    "file": "common_038.wav",
+    "category": "common",
+    "label": "dagger swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_039.wav": {
+    "file": "common_039.wav",
+    "category": "common",
+    "label": "slicer swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_040.wav": {
+    "file": "common_040.wav",
+    "category": "common",
+    "label": "saber crit?",
+    "notes": "#34 and #49 sounds similar",
+    "starred": false
+  },
+  "common/common_041.wav": {
+    "file": "common_041.wav",
+    "category": "common",
+    "label": "handgun shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_042.wav": {
+    "file": "common_042.wav",
+    "category": "common",
+    "label": "mechgun shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_043.wav": {
+    "file": "common_043.wav",
+    "category": "common",
+    "label": "rifle shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_044.wav": {
+    "file": "common_044.wav",
+    "category": "common",
+    "label": "shot's shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_045.wav": {
+    "file": "common_045.wav",
+    "category": "common",
+    "label": "cane swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_046.wav": {
+    "file": "common_046.wav",
+    "category": "common",
+    "label": "unarmed/knuckles",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_048.wav": {
+    "file": "common_048.wav",
+    "category": "common",
+    "label": "needle shot?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_049.wav": {
+    "file": "common_049.wav",
+    "category": "common",
+    "label": "",
+    "notes": "#34 and #40 sounds similar",
+    "starred": false
+  },
+  "common/common_050.wav": {
+    "file": "common_050.wav",
+    "category": "common",
+    "label": "launcher shot?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_051.wav": {
+    "file": "common_051.wav",
+    "category": "common",
+    "label": "bazooka shot?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_052.wav": {
+    "file": "common_052.wav",
+    "category": "common",
+    "label": "akiko's frying pan?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_053.wav": {
+    "file": "common_053.wav",
+    "category": "common",
+    "label": "lavis weapons swing?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_054.wav": {
+    "file": "common_054.wav",
+    "category": "common",
+    "label": "chainsawd swing?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_055.wav": {
+    "file": "common_055.wav",
+    "category": "common",
+    "label": "chainsawd hit?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_056.wav": {
+    "file": "common_056.wav",
+    "category": "common",
+    "label": "katana swing?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_059.wav": {
+    "file": "common_059.wav",
+    "category": "common",
+    "label": "TJS hit?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_060.wav": {
+    "file": "common_060.wav",
+    "category": "common",
+    "label": "hard attack",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_061.wav": {
+    "file": "common_061.wav",
+    "category": "common",
+    "label": "special attack",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_062.wav": {
+    "file": "common_062.wav",
+    "category": "common",
+    "label": "shield block?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_067.wav": {
+    "file": "common_067.wav",
+    "category": "common",
+    "label": "TJS or Zanba swing?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_070.wav": {
+    "file": "common_070.wav",
+    "category": "common",
+    "label": "gun shot",
+    "notes": "Yasminkovs?",
+    "starred": false
+  },
+  "common/common_073.wav": {
+    "file": "common_073.wav",
+    "category": "common",
+    "label": "heavy gun shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_074.wav": {
+    "file": "common_074.wav",
+    "category": "common",
+    "label": "",
+    "notes": "this or the above is maybe NUG Bazooka",
+    "starred": false
+  },
+  "common/common_075.wav": {
+    "file": "common_075.wav",
+    "category": "common",
+    "label": "hildebear gets hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_078.wav": {
+    "file": "common_078.wav",
+    "category": "common",
+    "label": "nyaa",
+    "notes": "paku paku stick swing probably",
+    "starred": false
+  },
+  "common/common_081.wav": {
+    "file": "common_081.wav",
+    "category": "common",
+    "label": "quit menu",
+    "notes": "doesn't sound like quit menu imo",
+    "starred": false
+  },
+  "common/common_086.wav": {
+    "file": "common_086.wav",
+    "category": "common",
+    "label": "booma swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_087.wav": {
+    "file": "common_087.wav",
+    "category": "common",
+    "label": "dark flow swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_088.wav": {
+    "file": "common_088.wav",
+    "category": "common",
+    "label": "dark meteor shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_089.wav": {
+    "file": "common_089.wav",
+    "category": "common",
+    "label": "",
+    "notes": "probably dark bridge swings?",
+    "starred": false
+  },
+  "common/common_092.wav": {
+    "file": "common_092.wav",
+    "category": "common",
+    "label": "booma take hit",
+    "notes": "not booma, sounds more like belra? though #94 does too idk",
+    "starred": false
+  },
+  "common/common_094.wav": {
+    "file": "common_094.wav",
+    "category": "common",
+    "label": "enemy take hit",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_096.wav": {
+    "file": "common_096.wav",
+    "category": "common",
+    "label": "laser gun",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_098.wav": {
+    "file": "common_098.wav",
+    "category": "common",
+    "label": "dark flow special",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_101.wav": {
+    "file": "common_101.wav",
+    "category": "common",
+    "label": "slicer swing alt",
+    "notes": "some specific slicer swing",
+    "starred": false
+  },
+  "common/common_102.wav": {
+    "file": "common_102.wav",
+    "category": "common",
+    "label": "heaven striker shot?",
+    "notes": "Identical CRC32 with #103",
+    "starred": false
+  },
+  "common/common_103.wav": {
+    "file": "common_103.wav",
+    "category": "common",
+    "label": "heaven striker shot?",
+    "notes": "Identical CRC32 with #102",
+    "starred": false
+  },
+  "common/common_104.wav": {
+    "file": "common_104.wav",
+    "category": "common",
+    "label": "saber",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_106.wav": {
+    "file": "common_106.wav",
+    "category": "common",
+    "label": "",
+    "notes": "flowens swing?",
+    "starred": false
+  },
+  "common/common_111.wav": {
+    "file": "common_111.wav",
+    "category": "common",
+    "label": "",
+    "notes": "card throw?",
+    "starred": false
+  },
+  "common/common_120.wav": {
+    "file": "common_120.wav",
+    "category": "common",
+    "label": "foie",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_121.wav": {
+    "file": "common_121.wav",
+    "category": "common",
+    "label": "gifoie",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_122.wav": {
+    "file": "common_122.wav",
+    "category": "common",
+    "label": "rafoie cast",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_123.wav": {
+    "file": "common_123.wav",
+    "category": "common",
+    "label": "rafoie explosion?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_124.wav": {
+    "file": "common_124.wav",
+    "category": "common",
+    "label": "barta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_125.wav": {
+    "file": "common_125.wav",
+    "category": "common",
+    "label": "gibarta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_126.wav": {
+    "file": "common_126.wav",
+    "category": "common",
+    "label": "rabarta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_127.wav": {
+    "file": "common_127.wav",
+    "category": "common",
+    "label": "",
+    "notes": "#15 sounds similar but not same CRC32",
+    "starred": false
+  },
+  "common/common_128.wav": {
+    "file": "common_128.wav",
+    "category": "common",
+    "label": "zonde",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_129.wav": {
+    "file": "common_129.wav",
+    "category": "common",
+    "label": "gizonde",
+    "notes": "Identical CRC32 with #130",
+    "starred": false
+  },
+  "common/common_130.wav": {
+    "file": "common_130.wav",
+    "category": "common",
+    "label": "razonde",
+    "notes": "Identical CRC32 with #129",
+    "starred": false
+  },
+  "common/common_131.wav": {
+    "file": "common_131.wav",
+    "category": "common",
+    "label": "megid",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_132.wav": {
+    "file": "common_132.wav",
+    "category": "common",
+    "label": "grants cast",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_133.wav": {
+    "file": "common_133.wav",
+    "category": "common",
+    "label": "grants explosion",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_134.wav": {
+    "file": "common_134.wav",
+    "category": "common",
+    "label": "resta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_135.wav": {
+    "file": "common_135.wav",
+    "category": "common",
+    "label": "resta end of animation sound",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_136.wav": {
+    "file": "common_136.wav",
+    "category": "common",
+    "label": "anti",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_138.wav": {
+    "file": "common_138.wav",
+    "category": "common",
+    "label": "",
+    "notes": "healing ring?",
+    "starred": false
+  },
+  "common/common_139.wav": {
+    "file": "common_139.wav",
+    "category": "common",
+    "label": "reverser?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_140.wav": {
+    "file": "common_140.wav",
+    "category": "common",
+    "label": "shifta",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_141.wav": {
+    "file": "common_141.wav",
+    "category": "common",
+    "label": "jellen",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_142.wav": {
+    "file": "common_142.wav",
+    "category": "common",
+    "label": "deband",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_143.wav": {
+    "file": "common_143.wav",
+    "category": "common",
+    "label": "zalure",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_144.wav": {
+    "file": "common_144.wav",
+    "category": "common",
+    "label": "create telepipe",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_145.wav": {
+    "file": "common_145.wav",
+    "category": "common",
+    "label": "stand in telepipe",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_146.wav": {
+    "file": "common_146.wav",
+    "category": "common",
+    "label": "telepipe warp",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_147.wav": {
+    "file": "common_147.wav",
+    "category": "common",
+    "label": "ryuker cast?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_148.wav": {
+    "file": "common_148.wav",
+    "category": "common",
+    "label": "gifoie alt?",
+    "notes": "sounds like #121 alt. maybe higher level gifoie?",
+    "starred": false
+  },
+  "common/common_149.wav": {
+    "file": "common_149.wav",
+    "category": "common",
+    "label": "initial ice tech cast sound?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_153.wav": {
+    "file": "common_153.wav",
+    "category": "common",
+    "label": "100% PB",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_154.wav": {
+    "file": "common_154.wav",
+    "category": "common",
+    "label": "start PB",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_155.wav": {
+    "file": "common_155.wav",
+    "category": "common",
+    "label": "PB casting",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_157.wav": {
+    "file": "common_157.wav",
+    "category": "common",
+    "label": "mag feed",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_160.wav": {
+    "file": "common_160.wav",
+    "category": "common",
+    "label": "break box",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_161.wav": {
+    "file": "common_161.wav",
+    "category": "common",
+    "label": "",
+    "notes": "Identical CRC32 with #59",
+    "starred": false
+  },
+  "common/common_162.wav": {
+    "file": "common_162.wav",
+    "category": "common",
+    "label": "shifta ticks?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_163.wav": {
+    "file": "common_163.wav",
+    "category": "common",
+    "label": "jellen ticks?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_164.wav": {
+    "file": "common_164.wav",
+    "category": "common",
+    "label": "deband ticks?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_165.wav": {
+    "file": "common_165.wav",
+    "category": "common",
+    "label": "zalure ticks?",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_170.wav": {
+    "file": "common_170.wav",
+    "category": "common",
+    "label": "menu move",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_171.wav": {
+    "file": "common_171.wav",
+    "category": "common",
+    "label": "menu select",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_172.wav": {
+    "file": "common_172.wav",
+    "category": "common",
+    "label": "item pick up",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_173.wav": {
+    "file": "common_173.wav",
+    "category": "common",
+    "label": "menu change",
+    "notes": "when going in or out of menus changes the text boxes",
+    "starred": false
+  },
+  "common/common_174.wav": {
+    "file": "common_174.wav",
+    "category": "common",
+    "label": "close menu",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_175.wav": {
+    "file": "common_175.wav",
+    "category": "common",
+    "label": "bring up menu",
+    "notes": "dialogue sound",
+    "starred": false
+  },
+  "common/common_176.wav": {
+    "file": "common_176.wav",
+    "category": "common",
+    "label": "",
+    "notes": "timer over/incorrect guess?",
+    "starred": false
+  },
+  "common/common_177.wav": {
+    "file": "common_177.wav",
+    "category": "common",
+    "label": "usual symbol chat",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_178.wav": {
+    "file": "common_178.wav",
+    "category": "common",
+    "label": "pleasure symbol chat",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_179.wav": {
+    "file": "common_179.wav",
+    "category": "common",
+    "label": "angry symbol chat",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_180.wav": {
+    "file": "common_180.wav",
+    "category": "common",
+    "label": "sadness symbol chat",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_181.wav": {
+    "file": "common_181.wav",
+    "category": "common",
+    "label": "uneasiness symbol chat",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_182.wav": {
+    "file": "common_182.wav",
+    "category": "common",
+    "label": "surprise symbol chat",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_183.wav": {
+    "file": "common_183.wav",
+    "category": "common",
+    "label": "doubt symbol chat",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_184.wav": {
+    "file": "common_184.wav",
+    "category": "common",
+    "label": "help symbol chat",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_185.wav": {
+    "file": "common_185.wav",
+    "category": "common",
+    "label": "level loading",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_186.wav": {
+    "file": "common_186.wav",
+    "category": "common",
+    "label": "use item",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_191.wav": {
+    "file": "common_191.wav",
+    "category": "common",
+    "label": "menu back",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_192.wav": {
+    "file": "common_192.wav",
+    "category": "common",
+    "label": "new mail",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_193.wav": {
+    "file": "common_193.wav",
+    "category": "common",
+    "label": "timer",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_199.wav": {
+    "file": "common_199.wav",
+    "category": "common",
+    "label": "level up",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_200.wav": {
+    "file": "common_200.wav",
+    "category": "common",
+    "label": "door unlocked",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_201.wav": {
+    "file": "common_201.wav",
+    "category": "common",
+    "label": "camera snap",
+    "notes": "",
+    "starred": false
+  },
+  "ephinea/ephinea_006.wav": {
+    "file": "ephinea_006.wav",
+    "category": "ephinea",
+    "label": "start menu accept",
+    "notes": "",
+    "starred": false
+  }
 }
