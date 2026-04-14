@@ -671,15 +671,25 @@ function CloudLayer({
         color = mix(color, lit, smoothstep(0.55, 0.9, proximity));
         color = mix(shadowColor, color, volume * 0.7 + 0.3);
 
-        // Masks: only fade at left/right screen edges and outside the band.
-        // DO NOT fade at top or bottom of the band — clouds fill it fully.
-        float leftRightFade = smoothstep(0.0, 0.06, vUv.x) * smoothstep(1.0, 0.94, vUv.x);
-        float bandMask = step(bandBottom, vUv.y) * step(vUv.y, bandTop);
-        // Soft band edges (2% fade)
-        float softBand = smoothstep(bandBottom - 0.02, bandBottom + 0.02, vUv.y)
-                       * smoothstep(bandTop + 0.02, bandTop - 0.02, vUv.y);
+        // Triangular wedge mask: clouds form two triangles, each with apex at the
+        // source and fanning up-and-outward to the screen edges. A V-shape gap in
+        // the middle lets the beam read clearly.
+        // d.x = horizontal offset, d.y = vertical (positive = above source)
+        // Require |d.x| to be at least some fraction of d.y (i.e. not too vertical).
+        // wedge = 0 directly above source, 1 at diagonals, 1 horizontally.
+        float horizRatio = abs(d.x) / max(d.y, 0.01);
+        float wedge = smoothstep(0.35, 0.9, horizRatio);
+        // Below source: fade out (we don't want clouds under the horizon)
+        wedge *= smoothstep(-0.02, 0.05, d.y);
 
-        float alpha = density * leftRightFade * softBand * opacity;
+        // Soft band edges so clouds taper out at top and bottom of the band
+        float softBand = smoothstep(bandBottom - 0.03, bandBottom + 0.04, vUv.y)
+                       * smoothstep(bandTop + 0.03, bandTop - 0.04, vUv.y);
+
+        // Fade at the left/right screen edges
+        float leftRightFade = smoothstep(0.0, 0.08, vUv.x) * smoothstep(1.0, 0.92, vUv.x);
+
+        float alpha = density * wedge * softBand * leftRightFade * opacity;
         gl_FragColor = vec4(color, alpha);
       }
     `,
@@ -705,23 +715,17 @@ function CloudLayer({
 function SwirlingClouds() {
   return (
     <>
-      {/* Background layer — slower, smaller features, lower opacity */}
+      {/* Background layer — slower, subtle, fills the wedges */}
       <CloudLayer
-        z={-26.2} scale={1.2} speed={0.06}
-        densityThresh={[0.30, 0.70]} opacity={0.75}
-        bandTop={0.92} bandBottom={0.30}
+        z={-26.2} scale={1.2} speed={0.05}
+        densityThresh={[0.30, 0.72]} opacity={0.70}
+        bandTop={0.75} bandBottom={0.42}
       />
-      {/* Mid layer — main billowing clouds */}
+      {/* Foreground wisps — faster, bigger features, accent */}
       <CloudLayer
-        z={-26.0} scale={1.0} speed={0.10}
-        densityThresh={[0.22, 0.68]} opacity={0.95}
-        bandTop={0.88} bandBottom={0.32}
-      />
-      {/* Foreground wisps — faster, bigger, thinner */}
-      <CloudLayer
-        z={-25.8} scale={0.7} speed={0.18}
-        densityThresh={[0.38, 0.80]} opacity={0.55}
-        bandTop={0.85} bandBottom={0.35}
+        z={-25.9} scale={0.75} speed={0.14}
+        densityThresh={[0.38, 0.80]} opacity={0.50}
+        bandTop={0.72} bandBottom={0.44}
       />
     </>
   );
