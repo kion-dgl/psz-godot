@@ -7,16 +7,16 @@ import { assetUrl } from '../utils/assets';
 import { STAGE_AREAS, getGlbPath, getAreaFromMapId, getAllMapsForArea } from '../stage-editor/constants';
 
 const NPC_LIST = [
-  { id: 'fern', name: 'Fern' },
-  { id: 'kai', name: 'Kai' },
-  { id: 'sarisa', name: 'Sarisa' },
-  { id: 'dorn', name: 'Dorn' },
-  { id: 'elio', name: 'Elio' },
-  { id: 'mira', name: 'Mira' },
-  { id: 'ren', name: 'Ren' },
-  { id: 'vash', name: 'Vash' },
-  { id: 'dr_carlo', name: 'Dr. Carlo' },
-  { id: 'principal', name: 'Principal' },
+  { id: 'fern', name: 'Fern', glb: 'fern.glb', tex: 'fern.png' },
+  { id: 'kai', name: 'Kai', glb: 'pc_a01_000.glb', tex: 'pc_a01_000.png' },
+  { id: 'sarisa', name: 'Sarisa', glb: 'pc_a00_000.glb', tex: 'pc_a00_000.png' },
+  { id: 'dorn', name: 'Dorn', glb: 'dorn.glb', tex: 'dorn.png' },
+  { id: 'elio', name: 'Elio', glb: 'elio.glb', tex: 'elio.png' },
+  { id: 'mira', name: 'Mira', glb: 'mira.glb', tex: 'mira.png' },
+  { id: 'ren', name: 'Ren', glb: 'ren.glb', tex: 'ren.png' },
+  { id: 'vash', name: 'Vash', glb: 'vash.glb', tex: 'vash.png' },
+  { id: 'dr_carlo', name: 'Dr. Carlo', glb: 'dr_carlo.glb', tex: 'dr_carlo.png' },
+  { id: 'principal', name: 'Principal', glb: 'principal.glb', tex: 'principal_0.png' },
 ];
 
 const BONE_GROUPS: { label: string; bones: { name: string; label: string }[] }[] = [
@@ -105,10 +105,34 @@ function NpcModel({ npcId, position, rotation, scale, bonePoses }: {
   npcId: string; position: [number, number, number]; rotation: number; scale: number;
   bonePoses: BonePoses;
 }) {
-  const glbPath = assetUrl(`assets/npcs/${npcId}/${npcId}.glb`);
+  const npcEntry = NPC_LIST.find((n) => n.id === npcId);
+  const glbFile = npcEntry?.glb || `${npcId}.glb`;
+  const texFile = npcEntry?.tex || `${npcId}.png`;
+  const glbPath = assetUrl(`assets/npcs/${npcId}/${glbFile}`);
+  const texPath = assetUrl(`assets/npcs/${npcId}/${texFile}`);
   const { scene } = useGLTF(glbPath);
 
-  const cloned = useMemo(() => SkeletonUtils.clone(scene), [scene]);
+  const texture = useMemo(() => {
+    const tex = new THREE.TextureLoader().load(texPath);
+    tex.flipY = false;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    return tex;
+  }, [texPath]);
+
+  const cloned = useMemo(() => {
+    const clone = SkeletonUtils.clone(scene);
+    clone.traverse((obj) => {
+      if (obj instanceof THREE.Mesh && obj.material) {
+        const mat = (obj.material as THREE.Material).clone() as THREE.MeshStandardMaterial;
+        mat.map = texture;
+        mat.needsUpdate = true;
+        obj.material = mat;
+      }
+    });
+    return clone;
+  }, [scene, texture]);
 
   useEffect(() => {
     cloned.traverse((obj) => {
