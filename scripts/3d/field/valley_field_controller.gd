@@ -2761,18 +2761,18 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop
 
 
 func _spawn_needle_trap(pos: Vector3) -> void:
-	var trap := load("res://scripts/3d/elements/needle_trap.gd").new()
+	var trap: Node3D = load("res://scripts/3d/elements/needle_trap.gd").new()
 	_map_root.add_child(trap)
 	trap.position = pos
-	trap.set_state("on")
+	trap.call("set_state", "on")
 	print("[CellObjects] NeedleTrap at %s" % pos)
 
 
 func _spawn_bear_trap(pos: Vector3) -> void:
-	var trap := load("res://scripts/3d/elements/bear_trap.gd").new()
+	var trap: Node3D = load("res://scripts/3d/elements/bear_trap.gd").new()
 	_map_root.add_child(trap)
 	trap.position = pos
-	trap.set_state("on")
+	trap.call("set_state", "on")
 	print("[CellObjects] BearTrap at %s" % pos)
 
 
