@@ -578,7 +578,7 @@ function CloudLayer({
       coolColor: { value: new THREE.Color('#5a5890') },
       darkColor: { value: new THREE.Color('#14193e') },
       shadowColor: { value: new THREE.Color('#0a0e28') },
-      source: { value: new THREE.Vector2(0.5, 0.45) },
+      source: { value: new THREE.Vector2(0.5, 0.22) },
       scale: { value: scale },
       speed: { value: speed },
       dLo: { value: densityThresh[0] },
@@ -671,25 +671,21 @@ function CloudLayer({
         color = mix(color, lit, smoothstep(0.55, 0.9, proximity));
         color = mix(shadowColor, color, volume * 0.7 + 0.3);
 
-        // Triangular wedge mask: clouds form two triangles, each with apex at the
-        // source and fanning up-and-outward to the screen edges. A V-shape gap in
-        // the middle lets the beam read clearly.
-        // d.x = horizontal offset, d.y = vertical (positive = above source)
-        // Require |d.x| to be at least some fraction of d.y (i.e. not too vertical).
-        // wedge = 0 directly above source, 1 at diagonals, 1 horizontally.
-        float horizRatio = abs(d.x) / max(d.y, 0.01);
-        float wedge = smoothstep(0.2, 0.6, horizRatio);
-        // Below source: fade out (we don't want clouds under the horizon)
-        wedge *= smoothstep(-0.02, 0.05, d.y);
+        // V-shape clear corridor in the middle — narrow at the source,
+        // widening upward to let the beam read through.
+        // Corridor half-width grows linearly with height above source.
+        float heightAbove = max(0.0, vUv.y - source.y);
+        float corridorHalf = 0.025 + heightAbove * 0.55;
+        float corridor = smoothstep(corridorHalf, corridorHalf + 0.04, abs(vUv.x - 0.5));
 
-        // Soft band edges so clouds taper out at top and bottom of the band
-        float softBand = smoothstep(bandBottom - 0.03, bandBottom + 0.04, vUv.y)
-                       * smoothstep(bandTop + 0.03, bandTop - 0.04, vUv.y);
+        // Cloud band — only within [bandBottom, bandTop]
+        float softBand = smoothstep(bandBottom - 0.02, bandBottom + 0.05, vUv.y)
+                       * smoothstep(bandTop + 0.02, bandTop - 0.05, vUv.y);
 
-        // Fade at the left/right screen edges
+        // Fade at left/right screen edges
         float leftRightFade = smoothstep(0.0, 0.08, vUv.x) * smoothstep(1.0, 0.92, vUv.x);
 
-        float alpha = density * wedge * softBand * leftRightFade * opacity;
+        float alpha = density * corridor * softBand * leftRightFade * opacity;
         gl_FragColor = vec4(color, alpha);
       }
     `,
@@ -715,23 +711,23 @@ function CloudLayer({
 function SwirlingClouds() {
   return (
     <>
-      {/* Base layer — slowest, widest, solid fill */}
+      {/* Base layer — slow, wide, solid fill */}
       <CloudLayer
         z={-26.3} scale={1.3} speed={0.04}
         densityThresh={[0.18, 0.55]} opacity={1.0}
-        bandTop={0.78} bandBottom={0.40}
+        bandTop={0.55} bandBottom={0.22}
       />
-      {/* Mid layer — main billow texture, full opacity */}
+      {/* Mid layer — main billow texture */}
       <CloudLayer
         z={-26.0} scale={1.0} speed={0.08}
         densityThresh={[0.20, 0.60]} opacity={1.0}
-        bandTop={0.76} bandBottom={0.42}
+        bandTop={0.52} bandBottom={0.24}
       />
       {/* Foreground wisps — faster, bigger features */}
       <CloudLayer
         z={-25.7} scale={0.7} speed={0.15}
-        densityThresh={[0.28, 0.72]} opacity={0.80}
-        bandTop={0.74} bandBottom={0.44}
+        densityThresh={[0.28, 0.72]} opacity={0.85}
+        bandTop={0.50} bandBottom={0.26}
       />
     </>
   );
