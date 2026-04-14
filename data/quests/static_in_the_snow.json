@@ -1201,8 +1201,8 @@
                 7.8
               ],
               "rotation": 90,
-              "prop_path": "assets/objects/story/campfire.glb",
-              "prop_scale": 2.2
+              "prop_path": "assets/kenney_nature-pack/campfire_stones.glb",
+              "prop_scale": 3.0
             },
             {
               "type": "dialog_trigger",
