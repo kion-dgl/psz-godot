@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 import type { ElementProps, StoryMeta } from './types';
 import { assetUrl } from '../utils/assets';
 
@@ -17,13 +18,33 @@ export const needleTrapMeta: StoryMeta = {
   defaultState: 'off',
 };
 
+function isNeedleTexture(mat: THREE.Material): boolean {
+  const m = mat as any;
+  if (!m.map) return false;
+  const src = m.map.image?.src || m.map.name || '';
+  return src.includes('needle2');
+}
+
 export default function NeedleTrap({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 1,
-}: ElementProps) {
+  state = 'off',
+}: ElementProps & { state?: NeedleTrapState }) {
   const { scene } = useGLTF(GLB_PATH);
   const cloned = useMemo(() => scene.clone(), [scene]);
+
+  useEffect(() => {
+    cloned.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      materials.forEach((mat) => {
+        if (isNeedleTexture(mat)) {
+          mat.visible = state === 'on';
+        }
+      });
+    });
+  }, [cloned, state]);
 
   return (
     <group position={position} rotation={rotation} scale={scale}>
