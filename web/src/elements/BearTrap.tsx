@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 import type { ElementProps, StoryMeta } from './types';
 import { assetUrl } from '../utils/assets';
 
@@ -9,21 +10,41 @@ const GLB_PATH = assetUrl('/assets/objects/valley/o0c_torabasami.glb');
 
 export const bearTrapMeta: StoryMeta = {
   title: 'Bear Trap',
-  description: 'Floor bear trap. Container always visible. Lasers active when armed.',
+  description: 'Floor bear trap. Container always visible. Prongs active when armed.',
   states: [
-    { name: 'open', label: 'Open', description: 'Armed, lasers active' },
-    { name: 'closed', label: 'Closed', description: 'Triggered, shut' },
+    { name: 'open', label: 'Open', description: 'Armed, prongs visible' },
+    { name: 'closed', label: 'Closed', description: 'Triggered, prongs hidden' },
   ],
   defaultState: 'open',
 };
+
+function isTora1(mat: THREE.Material): boolean {
+  const m = mat as any;
+  if (!m.map) return false;
+  const src: string = m.map.image?.src || m.map.name || '';
+  return src.includes('tora1');
+}
 
 export default function BearTrap({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 1,
-}: ElementProps) {
+  state = 'open',
+}: ElementProps & { state?: BearTrapState }) {
   const { scene } = useGLTF(GLB_PATH);
   const cloned = useMemo(() => scene.clone(), [scene]);
+
+  useEffect(() => {
+    cloned.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      materials.forEach((mat) => {
+        if (isTora1(mat)) {
+          mat.visible = state === 'open';
+        }
+      });
+    });
+  }, [cloned, state]);
 
   return (
     <group position={position} rotation={rotation} scale={scale}>
