@@ -55,7 +55,6 @@ const PSZ_SCALE = 1.0;
 const CANVAS_W = 1920;
 const CANVAS_H = 1080;
 const FLY_SPEED = 15;
-const FLY_LOOK_SPEED = 0.002;
 
 type BonePoses = Record<string, [number, number, number]>;
 
@@ -169,54 +168,51 @@ function FloorPlane({ onClick }: { onClick: (point: THREE.Vector3) => void }) {
   );
 }
 
+const FLY_TURN_SPEED = 1.5;
+
 function FlyCamera({ enabled }: { enabled: boolean }) {
-  const { camera, gl } = useThree();
+  const { camera } = useThree();
   const keysRef = useRef<Set<string>>(new Set());
-  const isLookingRef = useRef(false);
   const eulerRef = useRef(new THREE.Euler(0, 0, 0, 'YXZ'));
 
   useEffect(() => {
     if (!enabled) return;
     eulerRef.current.setFromQuaternion(camera.quaternion, 'YXZ');
 
-    const onKeyDown = (e: KeyboardEvent) => { keysRef.current.add(e.code); };
+    const onKeyDown = (e: KeyboardEvent) => {
+      keysRef.current.add(e.code);
+      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) {
+        e.preventDefault();
+      }
+    };
     const onKeyUp = (e: KeyboardEvent) => { keysRef.current.delete(e.code); };
-    const onMouseDown = (e: MouseEvent) => {
-      if (e.button === 2) { isLookingRef.current = true; gl.domElement.requestPointerLock(); }
-    };
-    const onMouseUp = (e: MouseEvent) => {
-      if (e.button === 2) { isLookingRef.current = false; document.exitPointerLock(); }
-    };
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isLookingRef.current) return;
-      eulerRef.current.y -= e.movementX * FLY_LOOK_SPEED;
-      eulerRef.current.x -= e.movementY * FLY_LOOK_SPEED;
-      eulerRef.current.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, eulerRef.current.x));
-      camera.quaternion.setFromEuler(eulerRef.current);
-    };
-    const onContextMenu = (e: Event) => e.preventDefault();
 
-    const el = gl.domElement;
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
-    el.addEventListener('mousedown', onMouseDown);
-    el.addEventListener('mouseup', onMouseUp);
-    el.addEventListener('mousemove', onMouseMove);
-    el.addEventListener('contextmenu', onContextMenu);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
-      el.removeEventListener('mousedown', onMouseDown);
-      el.removeEventListener('mouseup', onMouseUp);
-      el.removeEventListener('mousemove', onMouseMove);
-      el.removeEventListener('contextmenu', onContextMenu);
     };
-  }, [enabled, camera, gl]);
+  }, [enabled, camera]);
 
   useFrame((_, delta) => {
     if (!enabled) return;
     const keys = keysRef.current;
-    const speed = FLY_SPEED * delta * (keys.has('ShiftLeft') ? 2.5 : 1);
+    const speed = FLY_SPEED * delta * (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 2.5 : 1);
+    const turnSpeed = FLY_TURN_SPEED * delta;
+
+    if (keys.has('ArrowLeft')) eulerRef.current.y += turnSpeed;
+    if (keys.has('ArrowRight')) eulerRef.current.y -= turnSpeed;
+    if (keys.has('ArrowUp')) {
+      eulerRef.current.x += turnSpeed;
+      eulerRef.current.x = Math.min(Math.PI / 2, eulerRef.current.x);
+    }
+    if (keys.has('ArrowDown')) {
+      eulerRef.current.x -= turnSpeed;
+      eulerRef.current.x = Math.max(-Math.PI / 2, eulerRef.current.x);
+    }
+    camera.quaternion.setFromEuler(eulerRef.current);
+
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
@@ -520,7 +516,7 @@ export default function PhotoMode() {
           {flyMode && (
             <div style={{ fontSize: 10, color: '#777', marginTop: 4, lineHeight: 1.5 }}>
               WASD move, E/Space up, Q down<br/>
-              Right-click + drag to look<br/>
+              Arrow keys to turn<br/>
               Shift = fast
             </div>
           )}
