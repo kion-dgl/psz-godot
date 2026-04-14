@@ -107,6 +107,7 @@ func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 		"total_meseta": 0,
 		"items_collected": [],
 		"companions": quest.get("companions", []),
+		"weather": quest.get("weather", ""),
 	}
 	set_field_sections(quest["sections"])
 	# Load quest objectives if present

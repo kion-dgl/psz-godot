@@ -95,6 +95,7 @@ var _needs_telepipe: bool = false      # End cell without warp_edge — spawn te
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
+var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
 
 # Wave spawning
 var _current_wave: int = 1
@@ -391,6 +392,7 @@ func _ready() -> void:
 	print("[ValleyField] ══════════════════════════════════════════")
 
 	_spawn_player(spawn_pos, spawn_rot)
+	_spawn_weather()
 	await get_tree().process_frame
 
 	# Create gate triggers for each connection (entry edge gets delayed activation)
@@ -655,6 +657,50 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	add_child(_blob_shadow)
 	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
+
+func _spawn_weather() -> void:
+	var weather: String = str(SessionManager.get_session().get("weather", ""))
+	if weather.is_empty():
+		return
+	if weather == "snow":
+		_weather_node = GPUParticles3D.new()
+		_weather_node.name = "WeatherSnow"
+		_weather_node.amount = 300
+		_weather_node.lifetime = 4.0
+		_weather_node.visibility_aabb = AABB(Vector3(-20, -2, -20), Vector3(40, 16, 40))
+
+		var mat := ParticleProcessMaterial.new()
+		mat.direction = Vector3(0, -1, 0)
+		mat.spread = 10.0
+		mat.initial_velocity_min = 2.0
+		mat.initial_velocity_max = 3.5
+		mat.gravity = Vector3(0.3, -0.5, 0.1)
+		mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+		mat.emission_box_extents = Vector3(20, 0.5, 20)
+		mat.angle_min = 0.0
+		mat.angle_max = 360.0
+		mat.angular_velocity_min = -30.0
+		mat.angular_velocity_max = 30.0
+		mat.scale_min = 0.6
+		mat.scale_max = 1.4
+		mat.damping_min = 0.2
+		mat.damping_max = 0.5
+		_weather_node.process_material = mat
+
+		var quad := QuadMesh.new()
+		quad.size = Vector2(0.08, 0.08)
+		var quad_mat := StandardMaterial3D.new()
+		quad_mat.albedo_color = Color(0.95, 0.97, 1.0, 0.8)
+		quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		quad.material = quad_mat
+		_weather_node.draw_pass_1 = quad
+
+		_weather_node.position.y = 8.0
+		player.add_child(_weather_node)
+		print("[ValleyField] Weather: snow particles attached to player")
 
 
 func _setup_map_collision(root: Node) -> void:
