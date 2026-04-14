@@ -160,9 +160,9 @@ var _cached_materials: Array = []  # Array of StandardMaterial3D for charge/glow
 # Footstep SFX
 var _footstep_timer: float = 0.0
 var _footstep_alternate: bool = false
-const FOOTSTEP_WALK_INTERVAL := 0.5
-const FOOTSTEP_RUN_INTERVAL := 0.35
-const FOOTSTEP_SPRINT_INTERVAL := 0.25
+const FOOTSTEP_WALK_INTERVAL := 0.55
+const FOOTSTEP_RUN_INTERVAL := 0.40
+const FOOTSTEP_SPRINT_INTERVAL := 0.30
 
 # Dodge tracking
 var dodge_direction: float = 0.0
