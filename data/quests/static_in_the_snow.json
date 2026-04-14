@@ -1309,7 +1309,7 @@
                 0,
                 10.6
               ],
-              "enemy_id": "gorilla_female",
+              "enemy_id": "stagg",
               "wave": 2
             },
             {
@@ -1391,7 +1391,7 @@
                 0,
                 4.3
               ],
-              "enemy_id": "gorilla_female"
+              "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
@@ -1409,7 +1409,7 @@
                 0,
                 -13.1
               ],
-              "enemy_id": "gorilla_female"
+              "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
@@ -1523,7 +1523,7 @@
                 0,
                 -7.4
               ],
-              "enemy_id": "gorilla_female"
+              "enemy_id": "stagg"
             },
             {
               "type": "enemy",
@@ -1860,7 +1860,7 @@
                 0,
                 9.5
               ],
-              "enemy_id": "gorilla_female"
+              "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
@@ -1869,7 +1869,7 @@
                 0,
                 5.9
               ],
-              "enemy_id": "gorilla_female"
+              "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
@@ -1878,7 +1878,7 @@
                 0,
                 -1.6
               ],
-              "enemy_id": "gorilla_female",
+              "enemy_id": "reyhound",
               "wave": 2
             },
             {
@@ -1950,7 +1950,7 @@
                 0,
                 -3.1
               ],
-              "enemy_id": "gorilla_female"
+              "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
@@ -1968,7 +1968,7 @@
                 0,
                 -0.6
               ],
-              "enemy_id": "hildegao"
+              "enemy_id": "stagg"
             },
             {
               "type": "enemy",
@@ -1977,7 +1977,7 @@
                 0,
                 9.9
               ],
-              "enemy_id": "hildegao",
+              "enemy_id": "reyhound",
               "wave": 2
             },
             {
@@ -1987,7 +1987,7 @@
                 0,
                 6.6
               ],
-              "enemy_id": "hildegao",
+              "enemy_id": "stagg",
               "wave": 2
             },
             {
@@ -2045,7 +2045,7 @@
                 0,
                 7.4
               ],
-              "enemy_id": "hildegao"
+              "enemy_id": "stagg"
             },
             {
               "type": "enemy",
@@ -2064,7 +2064,7 @@
                 0,
                 -4.9
               ],
-              "enemy_id": "hildegao",
+              "enemy_id": "usanny",
               "wave": 2
             },
             {
@@ -2146,7 +2146,7 @@
                 0,
                 -15.5
               ],
-              "enemy_id": "gorilla_female",
+              "enemy_id": "reyhound",
               "wave": 2
             },
             {
@@ -2156,7 +2156,7 @@
                 0,
                 -11.1
               ],
-              "enemy_id": "gorilla_female",
+              "enemy_id": "usanny",
               "wave": 2
             }
           ]
@@ -2210,7 +2210,7 @@
                 0,
                 3.4
               ],
-              "enemy_id": "gorilla_female"
+              "enemy_id": "usanny"
             },
             {
               "type": "enemy",
@@ -2238,7 +2238,7 @@
                 0,
                 12
               ],
-              "enemy_id": "gorilla_female",
+              "enemy_id": "reyhound",
               "wave": 2
             },
             {
