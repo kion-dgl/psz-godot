@@ -1244,7 +1244,7 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "west",
+          "warp_edge": "east",
           "path_order": 0
         },
         {
@@ -2426,7 +2426,7 @@
           ]
         }
       ],
-      "entry_direction": "west"
+      "entry_direction": "east"
     }
   ],
   "briefing_dialog": [
