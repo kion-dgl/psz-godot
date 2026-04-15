@@ -268,7 +268,8 @@
                 18.1,
                 0,
                 -2.1
-              ]
+              ],
+              "text": "Expedition Log, Day 3: Creature activity higher than the survey predicted. Monitoring equipment placed along the ridge line."
             },
             {
               "type": "fence",
@@ -461,7 +462,8 @@
                 14.2,
                 0,
                 -15.6
-              ]
+              ],
+              "text": "Expedition Log, Day 5: Lost two cases of supplies to a reyhound pack. Reconsidering the outpost location."
             },
             {
               "type": "enemy",
@@ -1058,7 +1060,8 @@
                 16,
                 0,
                 9.5
-              ]
+              ],
+              "text": "Expedition Log, Day 7: Retreating to the old survey caves. The wildlife avoids them. Marking the entrance for our return trip."
             },
             {
               "type": "box",
@@ -1269,6 +1272,25 @@
           "path_order": 1,
           "objects": [
             {
+              "type": "dialog_trigger",
+              "position": [
+                10.0,
+                0,
+                3.0
+              ],
+              "trigger_size": [
+                18,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "",
+                  "text": "Needle traps. These look recent. Someone's still out here."
+                }
+              ]
+            },
+            {
               "type": "needle_trap",
               "position": [
                 1.8,
@@ -1367,7 +1389,8 @@
                 -11.9,
                 0,
                 15
-              ]
+              ],
+              "text": "Expedition Log, Day 9: Setting traps at the choke points. If anyone reads this, follow the markings deeper. We've left supplies along the way."
             },
             {
               "type": "box",
@@ -2309,6 +2332,25 @@
           "path_order": 12,
           "objects": [
             {
+              "type": "dialog_trigger",
+              "position": [
+                2,
+                0,
+                5
+              ],
+              "trigger_size": [
+                12,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Over here! Quickly, before they circle back!"
+                }
+              ]
+            },
+            {
               "type": "story_prop",
               "position": [
                 7.9,
@@ -2371,6 +2413,34 @@
                 -3.8
               ],
               "enemy_id": "hildegao"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                2,
+                0,
+                -3
+              ],
+              "trigger_size": [
+                12,
+                3,
+                4
+              ],
+              "trigger_condition": "room_clear",
+              "actions": [
+                "complete_quest",
+                "telepipe"
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Thank you. I wasn't sure anyone would find us out here."
+                },
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "I'm Dr. Carlo. When we're back in town, drinks are on me. Let's move."
+                }
+              ]
             }
           ]
         }
