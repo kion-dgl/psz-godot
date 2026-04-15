@@ -1173,7 +1173,7 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "west",
+          "warp_edge": "east",
           "path_order": 0,
           "objects": [
             {
@@ -1215,8 +1215,8 @@
           ]
         }
       ],
-      "entry_direction": "south",
-      "exit_direction": "north"
+      "entry_direction": "west",
+      "exit_direction": "east"
     },
     {
       "type": "grid",
@@ -1244,7 +1244,7 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "",
+          "warp_edge": "west",
           "path_order": 0
         },
         {
@@ -2426,7 +2426,7 @@
           ]
         }
       ],
-      "entry_direction": "south"
+      "entry_direction": "west"
     }
   ],
   "briefing_dialog": [
