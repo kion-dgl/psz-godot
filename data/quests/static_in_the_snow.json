@@ -1272,25 +1272,6 @@
           "path_order": 1,
           "objects": [
             {
-              "type": "dialog_trigger",
-              "position": [
-                10.0,
-                0,
-                3.0
-              ],
-              "trigger_size": [
-                18,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "",
-                  "text": "Needle traps. These look recent. Someone's still out here."
-                }
-              ]
-            },
-            {
               "type": "needle_trap",
               "position": [
                 1.8,
