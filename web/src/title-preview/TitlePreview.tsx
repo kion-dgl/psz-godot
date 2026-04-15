@@ -326,6 +326,132 @@ function LightBeam({
   );
 }
 
+/** A single puffy cloud — cluster of semi-transparent spheres with soft edges. */
+function Cloud({
+  position,
+  scale = 1,
+  puffCount = 8,
+  seed = 0,
+}: {
+  position: [number, number, number];
+  scale?: number;
+  puffCount?: number;
+  seed?: number;
+}) {
+  // Deterministic pseudo-random puff placement
+  const puffs = useMemo(() => {
+    const out: { pos: [number, number, number]; size: number }[] = [];
+    const rand = (i: number) => {
+      const x = Math.sin(seed * 1000 + i * 12.9898) * 43758.5453;
+      return x - Math.floor(x);
+    };
+    for (let i = 0; i < puffCount; i++) {
+      out.push({
+        pos: [
+          (rand(i * 3) - 0.5) * 4 * scale,
+          (rand(i * 3 + 1) - 0.5) * 1.8 * scale,
+          (rand(i * 3 + 2) - 0.5) * 2.5 * scale,
+        ],
+        size: (0.8 + rand(i * 3 + 7) * 0.9) * scale,
+      });
+    }
+    return out;
+  }, [scale, puffCount, seed]);
+
+  // Soft-edged shader material — sphere with radial falloff on view-space distance
+  const shader = useMemo(() => ({
+    uniforms: {
+      baseColor: { value: new THREE.Color('#d8c8e8') },
+      shadowColor: { value: new THREE.Color('#1a1e44') },
+      lightColor: { value: new THREE.Color('#ffd8b8') },
+      lightPos: { value: new THREE.Vector3(0, -2.5, -25) },
+    },
+    vertexShader: `
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+      void main() {
+        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+        vWorldPos = worldPos.xyz;
+        vNormal = normalize(mat3(modelMatrix) * normal);
+        gl_Position = projectionMatrix * viewMatrix * worldPos;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 baseColor;
+      uniform vec3 shadowColor;
+      uniform vec3 lightColor;
+      uniform vec3 lightPos;
+      varying vec3 vWorldPos;
+      varying vec3 vNormal;
+
+      void main() {
+        vec3 toLight = normalize(lightPos - vWorldPos);
+        float diff = max(0.0, dot(vNormal, toLight)) * 0.6 + 0.4;
+
+        // Distance attenuation from light for warm tint
+        float dist = length(lightPos - vWorldPos);
+        float warm = exp(-dist * 0.03);
+
+        vec3 color = mix(shadowColor, baseColor, diff);
+        color = mix(color, lightColor, warm * 0.55);
+
+        // Fresnel-like edge falloff — softer when facing away from camera
+        vec3 viewDir = normalize(cameraPosition - vWorldPos);
+        float facing = max(0.0, dot(vNormal, viewDir));
+        float alpha = smoothstep(0.0, 0.4, facing);
+
+        gl_FragColor = vec4(color, alpha * 0.85);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+  }), []);
+
+  return (
+    <group position={position}>
+      {puffs.map((puff, i) => (
+        <mesh key={i} position={puff.pos}>
+          <sphereGeometry args={[puff.size, 16, 16]} />
+          <shaderMaterial args={[shader]} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Cloud field in the lower-outer wedges around the beam source. */
+function CloudField() {
+  // Hand-placed clouds forming two triangular wedges left and right of the source
+  const clouds = useMemo(() => {
+    const list: { position: [number, number, number]; scale: number; seed: number }[] = [];
+    // Left wedge (negative X), spreading out and up from the source
+    list.push({ position: [-6, -1, -22], scale: 1.2, seed: 0.1 });
+    list.push({ position: [-10, 0.5, -24], scale: 1.5, seed: 0.2 });
+    list.push({ position: [-14, 2, -26], scale: 1.7, seed: 0.3 });
+    list.push({ position: [-17, 3.5, -28], scale: 1.5, seed: 0.4 });
+    list.push({ position: [-12, -2, -20], scale: 1.0, seed: 0.5 });
+    list.push({ position: [-18, 1, -25], scale: 1.3, seed: 0.6 });
+
+    // Right wedge (positive X)
+    list.push({ position: [6, -1, -22], scale: 1.2, seed: 1.1 });
+    list.push({ position: [10, 0.5, -24], scale: 1.5, seed: 1.2 });
+    list.push({ position: [14, 2, -26], scale: 1.7, seed: 1.3 });
+    list.push({ position: [17, 3.5, -28], scale: 1.5, seed: 1.4 });
+    list.push({ position: [12, -2, -20], scale: 1.0, seed: 1.5 });
+    list.push({ position: [18, 1, -25], scale: 1.3, seed: 1.6 });
+
+    return list;
+  }, []);
+
+  return (
+    <>
+      {clouds.map((c, i) => (
+        <Cloud key={i} position={c.position} scale={c.scale} seed={c.seed} />
+      ))}
+    </>
+  );
+}
+
 function Scene() {
   return (
     <>
@@ -341,6 +467,7 @@ function Scene() {
       <Moon />
       <BeamSource />
       <LightBeam />
+      <CloudField />
     </>
   );
 }
