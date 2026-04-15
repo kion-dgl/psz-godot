@@ -739,7 +739,6 @@ function Scene() {
       <SkyGradient />
       <GalaxyField />
       <Starfield count={2500} />
-      <SwirlingClouds />
       <LightBeam />
       <Moon />
       <PlanetSurface />
