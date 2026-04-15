@@ -1,5 +1,5 @@
 extends Control
-## Title screen — title.jpg background with "Press Start" prompt and control scheme selector.
+## Title screen — title.png background with "Press Start" prompt and control scheme selector.
 
 @onready var prompt_label: Label = $VBox/PromptLabel
 @onready var version_label: Label = $VBox/VersionLabel

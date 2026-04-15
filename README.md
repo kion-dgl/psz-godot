@@ -93,3 +93,5 @@ cd web && npm install && npm run dev
 - **Character Portraits** provided by Rozalin#4270
 - **Input Prompts** by [Kenney](https://www.kenney.nl/) — CC0 (public domain)
   - [kenney.nl/assets/input-prompts](https://kenney.nl/assets/input-prompts)
+- **Title Screen** by Lampe
+  - [VGen](https://vgen.co/lampe) · [TikTok @lampe_debureau](https://www.tiktok.com/@lampe_debureau)
