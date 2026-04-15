@@ -212,9 +212,9 @@ function Planet({
   radius?: number;
   surfaceY?: number;
 }) {
-  // Position so top of planet is just below camera (at y = -0.5)
-  // surface top = surfaceY + radius -> -0.5 = surfaceY + radius -> surfaceY = -radius - 0.5
-  const centerY = -radius - 0.5;
+  // Position so top of planet is below camera (at y = -3). Camera at y=1 → 4 units above surface
+  // surface top = surfaceY + radius -> -3 = surfaceY + radius -> surfaceY = -radius - 3
+  const centerY = -radius - 3;
   return (
     <mesh position={[0, centerY, 0]}>
       <sphereGeometry args={[radius, 128, 64]} />
@@ -231,7 +231,7 @@ function Planet({
 
 /** Glowing sphere at the beam source — emissive, attracts a point light. */
 function BeamSource({
-  position = [0, 0.2, -25] as [number, number, number],
+  position = [0, -2.5, -25] as [number, number, number],
 }) {
   const pointRef = useRef<THREE.PointLight>(null);
   useFrame((state) => {
@@ -258,7 +258,7 @@ function BeamSource({
 
 /** Light beam — plane always facing the camera, going from source up to moon. */
 function LightBeam({
-  from = new THREE.Vector3(0, 0.2, -25),
+  from = new THREE.Vector3(0, -2.5, -25),
   to = new THREE.Vector3(0, 18, -60),
 }: {
   from?: THREE.Vector3;
@@ -358,16 +358,17 @@ export default function TitlePreview() {
         <div style={{ width: CANVAS_W, height: CANVAS_H, position: 'relative', flexShrink: 0 }}>
           <Canvas
             gl={{ antialias: true, preserveDrawingBuffer: true }}
-            camera={{ position: [0, 0, 0], fov: 50, near: 0.1, far: 1000 }}
+            camera={{ position: [0, 1, 8], fov: 50, near: 0.1, far: 1000 }}
             style={{ width: CANVAS_W, height: CANVAS_H, background: '#000' }}
           >
             <Scene />
             <OrbitControls
+              target={[0, 8, -40]}
               enablePan
               enableZoom
               enableRotate
-              minDistance={0.1}
-              maxDistance={50}
+              minDistance={1}
+              maxDistance={100}
             />
           </Canvas>
         </div>
