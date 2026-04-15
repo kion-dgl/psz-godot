@@ -46,6 +46,19 @@ var _quest_item_counts: Dictionary = {} # {item_id: count} — runtime collectio
 var _quest_accepted_shown: bool = false # true after "Quest accepted" log shown once
 var _action_log: Array = []            # [{text, color}] — persists across room transitions
 var _section_cell_states: Dictionary = {} # section_idx → {cell_states, keys_collected, gates_opened, visited_cells}
+var _activated_links: Dictionary = {} # link_id → true (cross-room fence-switch links, persists across cell transitions)
+
+
+func is_link_activated(link_id: String) -> bool:
+	return _activated_links.has(link_id)
+
+
+func set_link_activated(link_id: String) -> void:
+	_activated_links[link_id] = true
+
+
+func clear_activated_links() -> void:
+	_activated_links.clear()
 
 
 ## Enter a field area
@@ -304,6 +317,7 @@ func get_section_state(section_idx: int) -> Dictionary:
 
 func clear_section_states() -> void:
 	_section_cell_states.clear()
+	_activated_links.clear()
 
 
 # ── Quest Lifecycle ─────────────────────────────────────────────

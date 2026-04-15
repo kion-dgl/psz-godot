@@ -89,7 +89,7 @@ var _room_triggers: Array = [] # DialogTrigger nodes in current room
 var _room_npcs: Array = []     # FieldNpc nodes in current room
 var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
-var _activated_links: Dictionary = {}  # link_id → true (persists across rooms)
+# NOTE: activated fence-switch links are stored in SessionManager (persists across cell transitions)
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
 var _warp_edge_locked: Array = []  # AreaWarp + exit trigger locked until enemies cleared
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
@@ -2192,6 +2192,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_switch(pos, link_id)
 				# Restore switch state
 				if state == "on":
+					if not link_id.is_empty():
+						SessionManager.set_link_activated(link_id)
 					for lid in _fence_links:
 						for s in _fence_links[lid]["switches"]:
 							if (s as StepSwitch).position.distance_to(pos) < 0.1:
@@ -2634,7 +2636,7 @@ func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: f
 		if not _fence_links.has(link_id):
 			_fence_links[link_id] = {"fences": [], "switches": []}
 		_fence_links[link_id]["fences"].append(fence)
-		if _activated_links.has(link_id):
+		if SessionManager.is_link_activated(link_id):
 			fence.disable()
 			print("[CellObjects] Fence at %s link='%s' already activated — disabled" % [pos, link_id])
 			return
@@ -2906,20 +2908,14 @@ func _wire_fence_links() -> void:
 		for sw in switches:
 			var step_sw: StepSwitch = sw as StepSwitch
 			step_sw.activated.connect(func() -> void:
-				_activated_links[lid] = true
+				SessionManager.set_link_activated(lid)
+				print("[CellObjects] Link '%s' activated" % lid)
 				for fence in fences:
 					(fence as Fence).disable()
 			)
 		if fences.size() > 0 and switches.size() > 0:
 			print("[CellObjects] Wired link '%s': %d switches → %d fences" % [
 				link_id, switches.size(), fences.size()])
-		elif switches.size() > 0 and fences.is_empty():
-			for sw in switches:
-				var step_sw: StepSwitch = sw as StepSwitch
-				step_sw.activated.connect(func() -> void:
-					_activated_links[lid] = true
-					print("[CellObjects] Cross-room link '%s' activated" % lid)
-				)
 
 
 ## Lock non-entry/non-visited gates when room has enemies.
