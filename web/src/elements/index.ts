@@ -34,6 +34,10 @@ export { default as RareBox, rareBoxMeta, type RareBoxState } from './RareBox';
 // Walls
 export { default as Wall, wallMeta, type WallState } from './Wall';
 
+// Traps
+export { default as NeedleTrap, needleTrapMeta, type NeedleTrapState } from './NeedleTrap';
+export { default as BearTrap, bearTrapMeta, type BearTrapState } from './BearTrap';
+
 // Warps
 export { default as StartWarp, startWarpMeta, type StartWarpState } from './StartWarp';
 export { default as AreaWarp, areaWarpMeta, type AreaWarpState } from './AreaWarp';

@@ -142,6 +142,17 @@ const CATEGORIES := [
 		]
 	},
 	{
+		"name": "Traps",
+		"elements": [
+			{"id": "needle_trap", "title": "Needle Trap", "desc": "Floor spikes. Damages on contact when active.",
+			 "script": "res://scripts/3d/elements/needle_trap.gd",
+			 "states": ["off", "on"], "default": "off"},
+			{"id": "bear_trap", "title": "Bear Trap", "desc": "Snaps shut when stepped on. One-shot.",
+			 "script": "res://scripts/3d/elements/bear_trap.gd",
+			 "states": ["off", "on"], "default": "off"},
+		]
+	},
+	{
 		"name": "Story Props",
 		"elements": [
 			{"id": "campfire", "title": "Campfire", "desc": "Campfire prop for quest scenes.",

@@ -89,12 +89,14 @@ var _room_triggers: Array = [] # DialogTrigger nodes in current room
 var _room_npcs: Array = []     # FieldNpc nodes in current room
 var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
+# NOTE: activated fence-switch links are stored in SessionManager (persists across cell transitions)
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
 var _warp_edge_locked: Array = []  # AreaWarp + exit trigger locked until enemies cleared
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
+var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
 
 # Wave spawning
 var _current_wave: int = 1
@@ -391,6 +393,9 @@ func _ready() -> void:
 	print("[ValleyField] ══════════════════════════════════════════")
 
 	_spawn_player(spawn_pos, spawn_rot)
+	_spawn_weather()
+	if from_cell_pos.is_empty():
+		SfxManager.play("res://assets/sfx/common/common_010.wav")
 	await get_tree().process_frame
 
 	# Create gate triggers for each connection (entry edge gets delayed activation)
@@ -655,6 +660,57 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 	add_child(_blob_shadow)
 	_blob_shadow.global_position = Vector3(pos.x, 0.05, pos.z)
 
+
+const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1"]
+
+func _spawn_weather() -> void:
+	var weather: String = str(SessionManager.get_session().get("weather", ""))
+	if weather.is_empty():
+		return
+	var stage_id: String = str(_current_cell.get("stage_id", ""))
+	if stage_id in INDOOR_STAGES:
+		print("[ValleyField] Weather: skipping %s (indoor stage %s)" % [weather, stage_id])
+		return
+	if weather == "snow":
+		_weather_node = GPUParticles3D.new()
+		_weather_node.name = "WeatherSnow"
+		_weather_node.amount = 300
+		_weather_node.lifetime = 4.0
+		_weather_node.visibility_aabb = AABB(Vector3(-20, -2, -20), Vector3(40, 16, 40))
+
+		var mat := ParticleProcessMaterial.new()
+		mat.direction = Vector3(0, -1, 0)
+		mat.spread = 10.0
+		mat.initial_velocity_min = 2.0
+		mat.initial_velocity_max = 3.5
+		mat.gravity = Vector3(0.3, -0.5, 0.1)
+		mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+		mat.emission_box_extents = Vector3(20, 0.5, 20)
+		mat.angle_min = 0.0
+		mat.angle_max = 360.0
+		mat.angular_velocity_min = -30.0
+		mat.angular_velocity_max = 30.0
+		mat.scale_min = 0.6
+		mat.scale_max = 1.4
+		mat.damping_min = 0.2
+		mat.damping_max = 0.5
+		_weather_node.process_material = mat
+
+		var quad := QuadMesh.new()
+		quad.size = Vector2(0.08, 0.08)
+		var quad_mat := StandardMaterial3D.new()
+		quad_mat.albedo_color = Color(0.95, 0.97, 1.0, 0.8)
+		quad_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		quad_mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+		quad_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		quad_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		quad.material = quad_mat
+		_weather_node.draw_pass_1 = quad
+
+		_weather_node.preprocess = 4.0
+		_weather_node.position.y = 8.0
+		player.add_child(_weather_node)
+		print("[ValleyField] Weather: snow particles attached to player")
 
 
 func _setup_map_collision(root: Node) -> void:
@@ -2078,6 +2134,10 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var qi_act: Array = obj.get("actions", [])
 				var qi_rem: Array = obj.get("remaining_dialog", [])
 				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+			"needle_trap":
+				_spawn_needle_trap(pos)
+			"bear_trap":
+				_spawn_bear_trap(pos)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -2132,6 +2192,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_switch(pos, link_id)
 				# Restore switch state
 				if state == "on":
+					if not link_id.is_empty():
+						SessionManager.set_link_activated(link_id)
 					for lid in _fence_links:
 						for s in _fence_links[lid]["switches"]:
 							if (s as StepSwitch).position.distance_to(pos) < 0.1:
@@ -2187,6 +2249,10 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 							qi_rem = orig_obj.get("remaining_dialog", [])
 							break
 					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+			"needle_trap":
+				_spawn_needle_trap(pos)
+			"bear_trap":
+				_spawn_bear_trap(pos)
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -2570,6 +2636,10 @@ func _spawn_fence(pos: Vector3, rotation_deg: float, link_id: String, scale_x: f
 		if not _fence_links.has(link_id):
 			_fence_links[link_id] = {"fences": [], "switches": []}
 		_fence_links[link_id]["fences"].append(fence)
+		if SessionManager.is_link_activated(link_id):
+			fence.disable()
+			print("[CellObjects] Fence at %s link='%s' already activated — disabled" % [pos, link_id])
+			return
 	print("[CellObjects] Fence at %s rot=%.0f° link='%s'" % [pos, rotation_deg, link_id])
 
 
@@ -2697,6 +2767,22 @@ func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop
 	print("[CellObjects] StoryProp at %s (path=%s)" % [pos, prop_path])
 
 
+func _spawn_needle_trap(pos: Vector3) -> void:
+	var trap: Node3D = load("res://scripts/3d/elements/needle_trap.gd").new()
+	_map_root.add_child(trap)
+	trap.position = pos
+	trap.call("set_state", "on")
+	print("[CellObjects] NeedleTrap at %s" % pos)
+
+
+func _spawn_bear_trap(pos: Vector3) -> void:
+	var trap: Node3D = load("res://scripts/3d/elements/bear_trap.gd").new()
+	_map_root.add_child(trap)
+	trap.position = pos
+	trap.call("set_state", "on")
+	print("[CellObjects] BearTrap at %s" % pos)
+
+
 func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready", condition: String = "enter", act: Array = [], size: Vector3 = Vector3.ZERO) -> void:
 	if state == "triggered":
 		return  # Already triggered — don't respawn
@@ -2818,13 +2904,15 @@ func _wire_fence_links() -> void:
 		var link: Dictionary = _fence_links[link_id]
 		var fences: Array = link["fences"]
 		var switches: Array = link["switches"]
+		var lid: String = link_id
 		for sw in switches:
 			var step_sw: StepSwitch = sw as StepSwitch
-			for fence in fences:
-				var fence_ref: Fence = fence as Fence
-				step_sw.activated.connect(func() -> void:
-					fence_ref.disable()
-				)
+			step_sw.activated.connect(func() -> void:
+				SessionManager.set_link_activated(lid)
+				print("[CellObjects] Link '%s' activated" % lid)
+				for fence in fences:
+					(fence as Fence).disable()
+			)
 		if fences.size() > 0 and switches.size() > 0:
 			print("[CellObjects] Wired link '%s': %d switches → %d fences" % [
 				link_id, switches.size(), fences.size()])

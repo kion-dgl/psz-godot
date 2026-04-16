@@ -1,714 +1,28 @@
 {
   "version": 1,
-  "last_updated": "2026-03-20",
+  "last_updated": "2026-04-14",
   "id": "static_in_the_snow",
   "name": "Static in the Snow",
   "description": "Requested by: Research Division. A research team studying the snowfield has gone silent. Their last transmission was garbled with static. Locate the expedition camp and ensure the team's safety.",
   "area_id": "rioh",
+  "weather": "snow",
   "sections": [
     {
       "type": "grid",
       "area": "a",
-      "start_pos": "0,2",
-      "end_pos": "0,3",
+      "start_pos": "2,0",
+      "end_pos": "3,4",
       "cells": [
         {
-          "pos": "0,2",
+          "pos": "2,0",
           "stage_id": "s03a_sa1",
-          "rotation": 0,
+          "rotation": 270,
           "connections": {
-            "south": "1,2"
+            "east": "2,1"
           },
           "portals": {
-            "south": "portal_1770733436575_0jjzynv4j",
+            "east": "portal_1770733436575_0jjzynv4j",
             "default": "default"
-          },
-          "is_start": true,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                5.4
-              ],
-              "trigger_size": [
-                25.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Kai",
-                  "text": "Let's head out, I hope we're not too late."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "1,2",
-          "stage_id": "s03a_tb3",
-          "rotation": 180,
-          "connections": {
-            "north": "0,2",
-            "east": "1,3",
-            "west": "1,1"
-          },
-          "portals": {
-            "north": "portal_1770724548563_bnzuctak9",
-            "east": "portal_1771825168757_c70171yhn",
-            "west": "portal_1771825175495_9mmsbwqbd"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 1,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -9.7,
-                0,
-                -10.2
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -11.9,
-                0,
-                2
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -5.9,
-                0,
-                7.1
-              ],
-              "enemy_id": "usanny"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -1.3,
-                0,
-                11.5
-              ],
-              "enemy_id": "reyhound"
-            }
-          ]
-        },
-        {
-          "pos": "1,3",
-          "stage_id": "s03a_ib1",
-          "rotation": 270,
-          "connections": {
-            "west": "1,2",
-            "east": "1,4"
-          },
-          "portals": {
-            "west": "portal_1770723916745_dtri7lila",
-            "east": "portal_1770723931285_tso6bvs29"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "1,4",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 2,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -5.3,
-                0,
-                -6.2
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                0.6,
-                0,
-                -5.4
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                2.6,
-                0,
-                0.9
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "box",
-              "position": [
-                11.4,
-                0,
-                -17.6
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                15.4,
-                0,
-                -17.2
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                16.6,
-                0,
-                -12.3
-              ]
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -10.1,
-                0,
-                -9.3
-              ],
-              "enemy_id": "stagg"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -9.2,
-                0,
-                -2.3
-              ],
-              "enemy_id": "stagg"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -7.4,
-                0,
-                5.1
-              ],
-              "enemy_id": "stagg"
-            },
-            {
-              "type": "box",
-              "position": [
-                4.2,
-                0,
-                12.1
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                3.1,
-                0,
-                15.8
-              ]
-            },
-            {
-              "type": "enemy",
-              "position": [
-                11.1,
-                0,
-                -4.9
-              ],
-              "enemy_id": "usanny",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                11.8,
-                0,
-                -13.1
-              ],
-              "enemy_id": "usanny",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -19.3,
-                0,
-                -11
-              ],
-              "enemy_id": "reyhound"
-            }
-          ]
-        },
-        {
-          "pos": "1,1",
-          "stage_id": "s03a_nb2",
-          "rotation": 270,
-          "connections": {
-            "east": "1,2"
-          },
-          "portals": {
-            "east": "portal_1770724424456_ucexb8mrp"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 3
-        },
-        {
-          "pos": "1,4",
-          "stage_id": "s03a_tb3",
-          "rotation": 90,
-          "connections": {
-            "west": "1,3",
-            "north": "0,4",
-            "south": "2,4"
-          },
-          "portals": {
-            "west": "portal_1770724548563_bnzuctak9",
-            "north": "portal_1771825168757_c70171yhn",
-            "south": "portal_1771825175495_9mmsbwqbd"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
-          "key_drop": "",
-          "required_keys": 1,
-          "warp_edge": "",
-          "path_order": 4,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                6.3,
-                0,
-                -11.7
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                1.7,
-                0,
-                -12.6
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -3.7,
-                0,
-                -12
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "fence",
-              "position": [
-                1.7,
-                0,
-                -6.3
-              ],
-              "link_id": "a"
-            },
-            {
-              "type": "step_switch",
-              "position": [
-                -20.1,
-                0,
-                3.2
-              ],
-              "link_id": "a"
-            },
-            {
-              "type": "message",
-              "position": [
-                -3.8,
-                0,
-                11.4
-              ],
-              "text": "Expedition Log: We're finding it hard to avoid encounters. Previsions are starting to run low. "
-            },
-            {
-              "type": "message",
-              "position": [
-                12,
-                0,
-                -18
-              ],
-              "text": "Expedition Log, Visibility dropping fast. Going to push deeper despite the conditions."
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -11.3,
-                0,
-                -4
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -5.2,
-                0,
-                -4.9
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -2.8,
-                0,
-                2.1
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "box",
-              "position": [
-                16.3,
-                0,
-                -16.4
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                17.1,
-                0,
-                -13
-              ]
-            }
-          ]
-        },
-        {
-          "pos": "0,4",
-          "stage_id": "s03a_lb3",
-          "rotation": 180,
-          "connections": {
-            "south": "1,4",
-            "west": "0,3"
-          },
-          "portals": {
-            "south": "portal_1770724266872_rv1ah2vnl",
-            "west": "portal_1771825077219_e71k3428s"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 5,
-          "objects": [
-            {
-              "type": "box",
-              "position": [
-                -15.3,
-                0,
-                15.3
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                14.7,
-                0,
-                -17
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                8.5,
-                0,
-                -17.3
-              ]
-            },
-            {
-              "type": "enemy",
-              "position": [
-                1.5,
-                0,
-                0.1
-              ],
-              "enemy_id": "usanny"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -2.8,
-                0,
-                3.7
-              ],
-              "enemy_id": "usanny"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -7.7,
-                0,
-                5.6
-              ],
-              "enemy_id": "reyhound"
-            }
-          ]
-        },
-        {
-          "pos": "2,4",
-          "stage_id": "s03a_nc2",
-          "rotation": 180,
-          "connections": {
-            "north": "1,4"
-          },
-          "portals": {
-            "north": "portal_1770724448196_4mfd4mgom"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 6
-        },
-        {
-          "pos": "0,3",
-          "stage_id": "s03a_lb1",
-          "rotation": 0,
-          "connections": {
-            "east": "0,4"
-          },
-          "portals": {
-            "east": "portal_1771825059929_uhomc3vsu",
-            "north": "portal_1770724222445_x2qvptt3a"
-          },
-          "is_start": false,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "north",
-          "path_order": 7,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -10.4,
-                0,
-                -8.1
-              ],
-              "enemy_id": "stagg",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -2.6,
-                0,
-                -10.5
-              ],
-              "enemy_id": "stagg",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                6.3,
-                0,
-                -11.4
-              ],
-              "enemy_id": "stagg",
-              "wave": 2
-            },
-            {
-              "type": "box",
-              "position": [
-                -17.6,
-                0,
-                0.7
-              ]
-            },
-            {
-              "type": "box",
-              "position": [
-                -17.9,
-                0,
-                -4.5
-              ]
-            },
-            {
-              "type": "rare_box",
-              "position": [
-                -18.7,
-                0,
-                -11.2
-              ]
-            },
-            {
-              "type": "enemy",
-              "position": [
-                12.6,
-                0,
-                8.9
-              ],
-              "enemy_id": "usanny"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                5.7,
-                0,
-                10
-              ],
-              "enemy_id": "reyhound"
-            }
-          ]
-        }
-      ],
-      "exit_direction": "north"
-    },
-    {
-      "type": "transition",
-      "area": "e",
-      "start_pos": "0,0",
-      "end_pos": "0,0",
-      "cells": [
-        {
-          "pos": "0,0",
-          "stage_id": "s03e_ia1",
-          "rotation": 0,
-          "connections": {},
-          "portals": {
-            "south": "portal_1770730466665_bn69sos50",
-            "north": "portal_1770730482439_o10tefeqr"
-          },
-          "is_start": true,
-          "is_end": true,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "north",
-          "path_order": 0,
-          "objects": [
-            {
-              "type": "message",
-              "position": [
-                5.3,
-                0,
-                -10.8
-              ],
-              "text": "...surrounded... camp is holding ... won't last much longer ..."
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -2.6,
-                0,
-                2.6
-              ],
-              "enemy_id": "stagg"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                3.2,
-                0,
-                -0.8
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                7.5,
-                0,
-                1.8
-              ],
-              "enemy_id": "usanny"
-            }
-          ]
-        }
-      ],
-      "entry_direction": "south",
-      "exit_direction": "north"
-    },
-    {
-      "type": "grid",
-      "area": "b",
-      "start_pos": "0,2",
-      "end_pos": "4,1",
-      "cells": [
-        {
-          "pos": "0,2",
-          "stage_id": "s03b_sa1",
-          "rotation": 0,
-          "connections": {
-            "south": "1,2"
-          },
-          "portals": {
-            "south": "portal_1770726528804_65npyap1o",
-            "north": "portal_1770726548654_oycyfmnn7"
           },
           "is_start": true,
           "is_end": false,
@@ -723,20 +37,22 @@
           "path_order": 0
         },
         {
-          "pos": "1,2",
-          "stage_id": "s03b_lb3",
-          "rotation": 270,
+          "pos": "2,1",
+          "stage_id": "s03a_td1",
+          "rotation": 180,
           "connections": {
-            "west": "1,1",
-            "north": "0,2"
+            "north": "1,1",
+            "west": "2,0",
+            "east": "2,2"
           },
           "portals": {
-            "west": "portal_1770725946219_ha5vwnji3",
-            "north": "portal_1771825482627_93ccoohau"
+            "north": "portal_1770724725322_k3e93g7oo",
+            "west": "portal_1771825327795_36slj66rh",
+            "east": "portal_1771825339711_scglyrkrj"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": false,
+          "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -749,49 +65,84 @@
             {
               "type": "enemy",
               "position": [
-                -5.5,
+                -11.4,
                 0,
-                -10.7
+                -6
               ],
               "enemy_id": "stagg"
             },
             {
               "type": "enemy",
               "position": [
-                0.4,
+                -5.3,
                 0,
-                -4.6
+                -4.1
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.7,
+                0,
+                3.1
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.1,
+                0,
+                5.6
               ],
               "enemy_id": "stagg"
             },
             {
               "type": "enemy",
               "position": [
-                -5.6,
+                10.5,
                 0,
-                -1.8
+                -5.5
               ],
-              "enemy_id": "usanny"
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.7,
+                0,
+                -1.1
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.5,
+                0,
+                7
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
             }
           ]
         },
         {
           "pos": "1,1",
-          "stage_id": "s03b_tb3",
+          "stage_id": "s03a_nc2",
           "rotation": 0,
           "connections": {
-            "south": "2,1",
-            "east": "1,2",
-            "west": "1,0"
+            "south": "2,1"
           },
           "portals": {
-            "south": "portal_1770726593904_v64l4z5lm",
-            "east": "portal_1771826388908_ypj0vdq8b",
-            "west": "portal_1771826394546_zx3c0s02z"
+            "south": "portal_1770724448196_4mfd4mgom"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -802,149 +153,253 @@
           "path_order": 2,
           "objects": [
             {
+              "type": "step_switch",
+              "position": [
+                -17.3,
+                0,
+                -16.7
+              ],
+              "link_id": "a"
+            },
+            {
               "type": "enemy",
               "position": [
-                -0.8,
+                -12.5,
                 0,
-                4.5
+                2.6
               ],
               "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
               "position": [
-                4,
+                -7,
                 0,
-                0.7
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                7.8,
-                0,
-                6.2
-              ],
-              "enemy_id": "usanny"
-            },
-            {
-              "type": "message",
-              "position": [
-                -2,
-                0,
-                -3.4
-              ],
-              "text": "Expedition Lo: We more supplies to another creature ambush. The wildlife here is more aggressive than anything in the survey data"
-            }
-          ]
-        },
-        {
-          "pos": "2,1",
-          "stage_id": "s03b_ga1",
-          "rotation": 180,
-          "connections": {
-            "north": "1,1"
-          },
-          "portals": {
-            "north": "portal_1770725676213_mbx0o9fxx"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": true,
-          "has_key": true,
-          "key_for_cell": "1,0",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
-          "warp_edge": "",
-          "path_order": 3
-        },
-        {
-          "pos": "1,0",
-          "stage_id": "s03b_lc2",
-          "rotation": 90,
-          "connections": {
-            "east": "1,1",
-            "south": "2,0"
-          },
-          "portals": {
-            "east": "portal_1770726393370_2nra42l1h",
-            "south": "portal_1771826359864_3iztbfrsg"
-          },
-          "is_start": false,
-          "is_end": false,
-          "is_branch": false,
-          "has_key": false,
-          "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
-          "key_drop": "",
-          "required_keys": 1,
-          "warp_edge": "",
-          "path_order": 4,
-          "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -11.7,
-                0,
-                15.1
+                6.4
               ],
               "enemy_id": "stagg"
             },
             {
               "type": "enemy",
               "position": [
-                -12.3,
+                -5.8,
                 0,
-                6.1
+                -1.2
               ],
               "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
               "position": [
-                -3.1,
+                0.7,
                 0,
-                6.6
+                -8.1
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                -2.7
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11,
+                0,
+                -11.2
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "2,2",
+          "stage_id": "s03a_tc3",
+          "rotation": 180,
+          "connections": {
+            "north": "1,2",
+            "west": "2,1",
+            "east": "2,3"
+          },
+          "portals": {
+            "north": "portal_1770724587451_v7qyzr36d",
+            "west": "portal_1771825202507_qp3sr9uz5",
+            "east": "portal_1771825212832_073n0aalm"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -18.6,
+                0,
+                -0.1
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -16,
+                0,
+                -2.7
+              ]
+            },
+            {
+              "type": "message",
+              "position": [
+                18.1,
+                0,
+                -2.1
+              ],
+              "text": "Expedition Log, Day 3: The Usanny and Stagg are manageable. They scatter if you stand your ground. It's the Reyhounds you have to watch for."
+            },
+            {
+              "type": "fence",
+              "position": [
+                -1.5,
+                0,
+                -5.5
+              ],
+              "link_id": "a"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.2,
+                0,
+                10.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.9,
+                0,
+                11.9
               ],
               "enemy_id": "usanny"
             },
             {
               "type": "enemy",
               "position": [
-                6.7,
+                -7.6,
                 0,
-                -10.6
+                13.7
               ],
-              "enemy_id": "reyhound",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                12.3,
-                0,
-                -16.1
-              ],
-              "enemy_id": "reyhound",
-              "wave": 2
+              "enemy_id": "usanny"
             }
           ]
         },
         {
-          "pos": "2,0",
-          "stage_id": "s03b_ib2",
-          "rotation": 180,
+          "pos": "1,2",
+          "stage_id": "s03a_nb2",
+          "rotation": 0,
           "connections": {
-            "south": "3,0",
-            "north": "1,0"
+            "south": "2,2"
           },
           "portals": {
-            "south": "portal_1770725725304_4aaht7788",
-            "north": "portal_1770725739472_at4z8xlml"
+            "south": "portal_1770724424456_ucexb8mrp"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "2,2",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "key_drop_position": [
+            11.4,
+            1,
+            -11.8
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                15,
+                0,
+                -6.7
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.4,
+                0,
+                -8.4
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.5,
+                0,
+                -4.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                15.6,
+                0,
+                -16.8
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                11,
+                0,
+                -17.2
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                17.3,
+                0,
+                -14
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s03a_lc2",
+          "rotation": 270,
+          "connections": {
+            "west": "2,2",
+            "north": "1,3"
+          },
+          "portals": {
+            "west": "portal_1770724373813_qo6ja9myl",
+            "north": "portal_1771825120791_adw7ezl6e"
           },
           "is_start": false,
           "is_end": false,
@@ -959,75 +414,140 @@
           "path_order": 5,
           "objects": [
             {
-              "type": "box",
+              "type": "fence",
               "position": [
-                0.5,
+                0.8,
                 0,
-                -16.5
+                -13
+              ],
+              "rotation": 90,
+              "link_id": "b"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                -16.3,
+                0,
+                16.7
+              ],
+              "link_id": "b"
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                12.5,
+                0,
+                -19.3
               ]
             },
             {
               "type": "box",
               "position": [
-                6,
+                16.2,
                 0,
-                -14.7
+                -19.8
               ]
             },
             {
               "type": "box",
               "position": [
-                9.5,
+                17.4,
                 0,
-                -11.6
+                -16.4
               ]
+            },
+            {
+              "type": "message",
+              "position": [
+                14.2,
+                0,
+                -15.6
+              ],
+              "text": "Expedition Log, Day 5: A Reyhound pack hit the supply cache overnight. Lost two cases of monitoring equipment. These things hunt in coordinated groups."
             },
             {
               "type": "enemy",
               "position": [
-                -11.4,
+                -5.7,
                 0,
-                -6.5
+                -6.4
               ],
               "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
               "position": [
-                -2.1,
+                -2.5,
                 0,
-                -3.8
+                -4.5
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.1,
+                0,
+                -0.2
               ],
               "enemy_id": "usanny"
             },
             {
               "type": "enemy",
               "position": [
-                5,
+                -8.9,
                 0,
-                -0.3
+                -4.1
               ],
               "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.2,
+                0,
+                7.9
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                15.7
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.2,
+                0,
+                13.6
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
             }
           ]
         },
         {
-          "pos": "3,0",
-          "stage_id": "s03b_tb3",
-          "rotation": 270,
+          "pos": "1,3",
+          "stage_id": "s03a_ic3",
+          "rotation": 0,
           "connections": {
-            "east": "3,1",
-            "north": "2,0",
-            "south": "4,0"
+            "south": "2,3",
+            "north": "0,3"
           },
           "portals": {
-            "east": "portal_1770726593904_v64l4z5lm",
-            "north": "portal_1771826388908_ypj0vdq8b",
-            "south": "portal_1771826394546_zx3c0s02z"
+            "south": "portal_1770724158723_pb0rd3r6e",
+            "north": "portal_1770724176247_38q7705rp"
           },
           "is_start": false,
           "is_end": false,
-          "is_branch": true,
+          "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": false,
@@ -1040,36 +560,36 @@
             {
               "type": "enemy",
               "position": [
-                -11.2,
+                8.1,
                 0,
-                2.9
-              ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -1,
-                0,
-                5.8
+                -9.4
               ],
               "enemy_id": "stagg"
             },
             {
               "type": "enemy",
               "position": [
-                8.7,
+                1.1,
                 0,
-                0.7
+                -11.1
               ],
-              "enemy_id": "usanny"
+              "enemy_id": "stagg"
             },
             {
               "type": "enemy",
               "position": [
-                -6.7,
+                -7.8,
                 0,
-                10.6
+                -11.2
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.3,
+                0,
+                13.2
               ],
               "enemy_id": "usanny",
               "wave": 2
@@ -1077,24 +597,44 @@
             {
               "type": "enemy",
               "position": [
-                6.8,
+                -3.2,
                 0,
-                11
+                9.6
               ],
-              "enemy_id": "stagg",
+              "enemy_id": "usanny",
               "wave": 2
+            },
+            {
+              "type": "box",
+              "position": [
+                19.2,
+                0,
+                -0.9
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                17.6,
+                0,
+                3.1
+              ]
             }
           ]
         },
         {
-          "pos": "3,1",
-          "stage_id": "s03b_ga1",
-          "rotation": 90,
+          "pos": "0,3",
+          "stage_id": "s03a_tb3",
+          "rotation": 0,
           "connections": {
-            "west": "3,0"
+            "south": "1,3",
+            "west": "0,2",
+            "east": "0,4"
           },
           "portals": {
-            "west": "portal_1770725676213_mbx0o9fxx"
+            "south": "portal_1770724548563_bnzuctak9",
+            "west": "portal_1771825168757_c70171yhn",
+            "east": "portal_1771825175495_9mmsbwqbd"
           },
           "is_start": false,
           "is_end": false,
@@ -1106,19 +646,216 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -10.1,
+                0,
+                -6.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.8,
+                0,
+                0.9
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                8.6
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.7,
+                0,
+                -13.2
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.2,
+                0,
+                -5.5
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            }
+          ]
         },
         {
-          "pos": "4,0",
-          "stage_id": "s03b_lc2",
-          "rotation": 0,
+          "pos": "0,2",
+          "stage_id": "s03a_na1",
+          "rotation": 270,
           "connections": {
-            "north": "3,0",
-            "east": "4,1"
+            "east": "0,3"
           },
           "portals": {
-            "north": "portal_1770726393370_2nra42l1h",
-            "east": "portal_1771826359864_3iztbfrsg"
+            "east": "portal_1770724402240_3wzf2nh7w"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "0,4",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 8,
+          "key_drop_position": [
+            2,
+            1,
+            0.3
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3.2,
+                0,
+                4.6
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1,
+                0,
+                -5.5
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.8,
+                0,
+                1.9
+              ],
+              "enemy_id": "usanny"
+            }
+          ]
+        },
+        {
+          "pos": "0,4",
+          "stage_id": "s03a_lb1",
+          "rotation": 180,
+          "connections": {
+            "south": "1,4",
+            "west": "0,3"
+          },
+          "portals": {
+            "south": "portal_1770724222445_x2qvptt3a",
+            "west": "portal_1771825059929_uhomc3vsu"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 9,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.9,
+                0,
+                -2.8
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.5,
+                0,
+                7
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.1,
+                0,
+                -7.6
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.5,
+                0,
+                -7.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.9,
+                0,
+                0.4
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.5,
+                0,
+                7
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.3,
+                0,
+                8.4
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "1,4",
+          "stage_id": "s03a_ib2",
+          "rotation": 0,
+          "connections": {
+            "south": "2,4",
+            "north": "0,4"
+          },
+          "portals": {
+            "south": "portal_1770724007474_9kh6jog21",
+            "north": "portal_1770724021228_2sbc5cfro"
           },
           "is_start": false,
           "is_end": false,
@@ -1130,56 +867,180 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 8,
+          "path_order": 10,
           "objects": [
             {
-              "type": "message",
+              "type": "box",
               "position": [
-                14.8,
+                -14.7,
                 0,
-                -16.4
-              ],
-              "text": "I don't know how much longer we can hold out. Almost everything is gone now. "
+                3.8
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -17.1,
+                0,
+                1.8
+              ]
             },
             {
               "type": "enemy",
               "position": [
-                -13.2,
+                8.2,
                 0,
-                -3.4
+                -7.8
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                -7.7
               ],
               "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
               "position": [
-                -8.9,
+                -9,
                 0,
-                -13.2
+                -6.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.9,
+                0,
+                -10.1
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.4,
+                0,
+                -11.2
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "2,4",
+          "stage_id": "s03a_ic1",
+          "rotation": 0,
+          "connections": {
+            "south": "3,4",
+            "north": "1,4"
+          },
+          "portals": {
+            "south": "portal_1770724068139_aswsf0cji",
+            "north": "portal_1770724078993_5elsmcsc4"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "2,4",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 11,
+          "key_drop_position": [
+            14.3,
+            1,
+            -14.2
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -14.5,
+                0,
+                -2.6
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.5,
+                0,
+                -2.1
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -16.1,
+                0,
+                3.3
               ],
               "enemy_id": "stagg"
             },
             {
               "type": "enemy",
               "position": [
-                2,
+                -11.2,
                 0,
-                -15.9
+                2.7
               ],
-              "enemy_id": "hildeghana"
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.1,
+                0,
+                4.2
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                19.7,
+                0,
+                8
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.5,
+                0,
+                11.2
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
             }
           ]
         },
         {
-          "pos": "4,1",
-          "stage_id": "s03b_lb1",
-          "rotation": 180,
+          "pos": "3,4",
+          "stage_id": "s03a_lc1",
+          "rotation": 0,
           "connections": {
-            "west": "4,0"
+            "north": "2,4"
           },
           "portals": {
-            "west": "portal_1771825467825_tj152hzva",
-            "south": "portal_1770725890680_sdcyeuwye"
+            "north": "portal_1770724327457_yqz9rnacz",
+            "east": "portal_1771825096918_r3nc1t46b"
           },
           "is_start": false,
           "is_end": true,
@@ -1190,82 +1051,1361 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "south",
-          "path_order": 9,
+          "warp_edge": "east",
+          "path_order": 12,
           "objects": [
             {
-              "type": "story_prop",
+              "type": "message",
               "position": [
-                -9.9,
+                16,
                 0,
-                7.8
+                9.5
               ],
-              "rotation": 90,
-              "prop_path": "assets/kenney_nature-pack/campfire_stones.glb",
-              "prop_scale": 3.0
+              "text": "Expedition Log, Day 7: Retreating to the old survey caves. The Reyhounds won't follow us underground. Marking the entrance for our return trip."
             },
             {
-              "type": "dialog_trigger",
+              "type": "box",
               "position": [
-                15.1,
+                18.1,
                 0,
-                18
-              ],
-              "trigger_size": [
-                8.5,
-                3,
-                4
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dr. Carlo:",
-                  "text": "Over here! They've surrounded the camp!"
-                }
+                13.2
               ]
+            },
+            {
+              "type": "box",
+              "position": [
+                18.5,
+                0,
+                17.4
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                16.4,
+                0,
+                18.9
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.1,
+                0,
+                -8.5
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.3,
+                0,
+                -14.4
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.5,
+                0,
+                -13.8
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.3,
+                0,
+                15.3
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.6,
+                0,
+                19.2
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.3,
+                0,
+                12.2
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            }
+          ]
+        }
+      ],
+      "exit_direction": "east"
+    },
+    {
+      "type": "transition",
+      "area": "e",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s03e_ia1",
+          "rotation": 90,
+          "connections": {},
+          "portals": {
+            "west": "portal_1770730466665_bn69sos50",
+            "east": "portal_1770730482439_o10tefeqr"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "east",
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -0.5,
+                0,
+                3.9
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.8,
+                0,
+                4.1
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.9,
+                0,
+                -3
+              ],
+              "enemy_id": "stagg"
             },
             {
               "type": "enemy",
               "position": [
                 -2.5,
                 0,
-                13.1
+                -7.9
+              ],
+              "enemy_id": "reyhound"
+            }
+          ]
+        }
+      ],
+      "entry_direction": "west",
+      "exit_direction": "east"
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "2,4",
+      "end_pos": "2,0",
+      "cells": [
+        {
+          "pos": "2,4",
+          "stage_id": "s03b_sa1",
+          "rotation": 270,
+          "connections": {
+            "west": "2,3"
+          },
+          "portals": {
+            "west": "portal_1770726548654_oycyfmnn7",
+            "east": "portal_1770726528804_65npyap1o"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "east",
+          "path_order": 0
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s03b_lb1",
+          "rotation": 0,
+          "connections": {
+            "north": "1,3",
+            "east": "2,4"
+          },
+          "portals": {
+            "north": "portal_1770725890680_sdcyeuwye",
+            "east": "portal_1771825467825_tj152hzva"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "needle_trap",
+              "position": [
+                1.8,
+                0,
+                2.7
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.9,
+                0,
+                0.8
               ],
               "enemy_id": "reyhound"
             },
             {
               "type": "enemy",
               "position": [
-                -2,
+                -8.7,
+                0,
+                -7.4
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                -3
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                10.6
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.4,
+                0,
+                3.7
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.9,
+                0,
+                8.8
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s03b_tc3",
+          "rotation": 0,
+          "connections": {
+            "south": "2,3",
+            "east": "1,4",
+            "west": "1,2"
+          },
+          "portals": {
+            "south": "portal_1770730103067_06goco20x",
+            "east": "portal_1771826413188_ywby5854f",
+            "west": "portal_1771826420280_q2nsl0vs3"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "message",
+              "position": [
+                -11.9,
+                0,
+                15
+              ],
+              "text": "Expedition Log, Day 9: Hildegao spotted near the lower caverns. Dr. Carlo's setting traps at the choke points to slow them down. If anyone reads this, follow the markings deeper."
+            },
+            {
+              "type": "box",
+              "position": [
+                -9.5,
+                0,
+                18.5
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -6.3,
+                0,
+                14.9
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.6,
+                0,
+                4.3
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.9,
+                0,
+                -5.2
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.4,
+                0,
+                -13.1
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.3,
+                0,
+                -6.7
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.9,
+                0,
+                -13.7
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "1,4",
+          "stage_id": "s03b_lc1",
+          "rotation": 270,
+          "connections": {
+            "west": "1,3",
+            "north": "0,4"
+          },
+          "portals": {
+            "west": "portal_1770726330568_qzhzh500j",
+            "north": "portal_1771826346799_a8i2jzd4z"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "box",
+              "position": [
+                -14,
+                0,
+                13.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -13.5,
+                0,
+                10.9
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -10.3,
+                0,
+                13.7
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                -13.8,
+                0,
+                16.4
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.4,
+                0,
+                -3.7
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.8,
+                0,
+                -11.9
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                -13.5
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.3,
+                0,
+                -7.4
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.4,
+                0,
+                16.9
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2,
+                0,
+                15.8
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.7,
+                0,
+                12
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "1,2",
+          "stage_id": "s03b_nc2",
+          "rotation": 270,
+          "connections": {
+            "east": "1,3"
+          },
+          "portals": {
+            "east": "portal_1770726478489_wuhnlspfg"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "1,3",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "key_drop_position": [
+            -8.8,
+            1,
+            5.1
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                13.2,
+                0,
+                -0.6
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.7,
+                0,
+                -6.8
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.9,
+                0,
+                -11.9
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.5,
+                0,
+                14.9
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.5,
+                0,
+                8.3
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "0,4",
+          "stage_id": "s03b_lb3",
+          "rotation": 180,
+          "connections": {
+            "south": "1,4",
+            "west": "0,3"
+          },
+          "portals": {
+            "south": "portal_1770725946219_ha5vwnji3",
+            "west": "portal_1771825482627_93ccoohau"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                3,
+                0,
+                6.8
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.3,
+                0,
+                -3.3
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.1,
+                0,
+                7
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.7,
+                0,
+                -3.9
+              ],
+              "enemy_id": "stagg"
+            }
+          ]
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s03b_ib2",
+          "rotation": 270,
+          "connections": {
+            "west": "0,2",
+            "east": "0,4"
+          },
+          "portals": {
+            "west": "portal_1770725725304_4aaht7788",
+            "east": "portal_1770725739472_at4z8xlml"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "bear_trap",
+              "position": [
+                -3.2,
+                0,
+                2.6
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                16.7,
+                0,
+                9
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                16.1,
+                0,
+                5.7
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.2,
+                0,
+                -4.3
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -16.6,
+                0,
+                -8.2
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.6,
+                0,
+                -12.4
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.9,
+                0,
+                -8.1
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.4,
+                0,
+                9.9
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.7,
+                0,
+                10.9
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.9,
+                0,
+                12.3
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s03b_ic1",
+          "rotation": 270,
+          "connections": {
+            "west": "0,1",
+            "east": "0,3"
+          },
+          "portals": {
+            "west": "portal_1770725818346_at5nongav",
+            "east": "portal_1770725830471_io341ffla"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                7.3,
+                0,
+                6.3
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.7,
+                0,
+                2.4
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13,
+                0,
+                9.5
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.3,
+                0,
+                5.9
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -16.4,
+                0,
+                -1.6
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.7,
+                0,
+                -2.3
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                -5.4,
+                0,
+                -11.1
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s03b_td2",
+          "rotation": 0,
+          "connections": {
+            "south": "1,1",
+            "west": "0,0",
+            "east": "0,2"
+          },
+          "portals": {
+            "south": "portal_1770730358671_3utbvtiid",
+            "west": "portal_1771826580279_97thq75lx",
+            "east": "portal_1771826590677_76s29vdos"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "west",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 8,
+          "objects": [
+            {
+              "type": "bear_trap",
+              "position": [
+                10.6,
+                0,
+                6
+              ]
+            },
+            {
+              "type": "bear_trap",
+              "position": [
+                6.8,
+                0,
+                -12.3
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.4,
+                0,
+                -3.1
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.4,
+                0,
+                -0.8
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.6,
+                0,
+                -0.6
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.9,
+                0,
+                9.9
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.7,
+                0,
+                6.6
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.1,
+                0,
+                10.4
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s03b_nb2",
+          "rotation": 180,
+          "connections": {
+            "north": "0,1"
+          },
+          "portals": {
+            "north": "portal_1770726458075_bz9f98pru"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "0,1",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 9,
+          "key_drop_position": [
+            5.2,
+            1,
+            -13.6
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                14,
+                0,
+                13.4
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                17.2,
                 0,
                 7.4
               ],
-              "enemy_id": "reyhound"
+              "enemy_id": "stagg"
             },
             {
               "type": "enemy",
               "position": [
-                -5.8,
+                -14.1,
                 0,
-                0.9
+                -0.2
               ],
-              "enemy_id": "reyhound"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -7.8,
-                0,
-                15.2
-              ],
-              "enemy_id": "hildeghana",
+              "enemy_id": "reyhound",
               "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.2,
+                0,
+                -4.9
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.6,
+                0,
+                -10.6
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "0,0",
+          "stage_id": "s03b_lc2",
+          "rotation": 90,
+          "connections": {
+            "east": "0,1",
+            "south": "1,0"
+          },
+          "portals": {
+            "east": "portal_1770726393370_2nra42l1h",
+            "south": "portal_1771826359864_3iztbfrsg"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 10,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                23.6,
+                0,
+                -34
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -14.8,
+                0,
+                -2.6
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -17.5,
+                0,
+                5.1
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.8,
+                0,
+                6.9
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.1,
+                0,
+                -15.5
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.1,
+                0,
+                -11.1
+              ],
+              "enemy_id": "usanny",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s03b_ib1",
+          "rotation": 180,
+          "connections": {
+            "north": "0,0",
+            "south": "2,0"
+          },
+          "portals": {
+            "north": "portal_1770725695157_thdqlrjg4",
+            "south": "portal_1770725706335_vtdmi7t4r"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 11,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -10.7,
+                0,
+                -5.5
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.6,
+                0,
+                -5
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.5,
+                0,
+                3.4
+              ],
+              "enemy_id": "usanny"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.2,
+                0,
+                2.4
+              ],
+              "enemy_id": "stagg"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7,
+                0,
+                11.9
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1,
+                0,
+                12
+              ],
+              "enemy_id": "reyhound",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.1,
+                0,
+                10.6
+              ],
+              "enemy_id": "stagg",
+              "wave": 2
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                10.1,
+                0,
+                -4
+              ]
+            },
+            {
+              "type": "needle_trap",
+              "position": [
+                -4.7,
+                0,
+                -6.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -12.3,
+                0,
+                13
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -15.1,
+                0,
+                8.3
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s03b_na1",
+          "rotation": 180,
+          "connections": {
+            "north": "1,0"
+          },
+          "portals": {
+            "north": "portal_1770726423430_7ck6f1jmn"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 12,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                2,
+                0,
+                5
+              ],
+              "trigger_size": [
+                12,
+                3,
+                4
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dr. Carlo",
+                  "text": "Over here! Quickly, before they circle back!"
+                }
+              ]
+            },
+            {
+              "type": "story_prop",
+              "position": [
+                7.9,
+                0,
+                -7.5
+              ],
+              "prop_path": "assets/kenney_nature-pack/tent_detailedClosed.glb",
+              "prop_scale": 1.8
+            },
+            {
+              "type": "story_prop",
+              "position": [
+                8,
+                0,
+                -4.6
+              ],
+              "prop_path": "assets/kenney_nature-pack/campfire_logs.glb"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.9,
+                0,
+                0.2
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.6,
+                0,
+                1.1
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.8,
+                0,
+                -1.2
+              ],
+              "enemy_id": "reyhound"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.3,
+                0,
+                -3
+              ],
+              "enemy_id": "hildeghana"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8,
+                0,
+                -3.8
+              ],
+              "enemy_id": "hildegao"
             },
             {
               "type": "dialog_trigger",
               "position": [
-                9.4,
+                2,
                 0,
-                -9.7
+                -3
+              ],
+              "trigger_size": [
+                12,
+                3,
+                4
               ],
               "trigger_condition": "room_clear",
               "actions": [
@@ -1274,34 +2414,19 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Dr. Carlo:",
-                  "text": "Thank you. The creatures came out of nowhere — we lost contact trying to call for help."
+                  "speaker": "Dr. Carlo",
+                  "text": "Thank you. I wasn't sure anyone would find us out here."
                 },
                 {
-                  "speaker": "Kai:",
-                  "text": "You're safe now. Let's get you back to town."
+                  "speaker": "Dr. Carlo",
+                  "text": "I'm Dr. Carlo. When we're back in town, drinks are on me. Let's move."
                 }
               ]
             }
           ]
         }
       ],
-      "entry_direction": "north"
-    }
-  ],
-  "companions": [
-    "kai"
-  ],
-  "office_npcs": [
-    {
-      "npc_id": "dr_carlo",
-      "npc_name": "Dr. Carlo",
-      "office_position": "pos_1"
-    },
-    {
-      "npc_id": "kai",
-      "npc_name": "Kai",
-      "office_position": "pos_2"
+      "entry_direction": "east"
     }
   ],
   "briefing_dialog": [
@@ -1310,20 +2435,12 @@
       "text": "We've lost contact with a research team in the snowfield. Their last transmission was mostly static."
     },
     {
-      "speaker": "Dr. Carlo",
-      "text": "I'm Dr. Carlo, the expedition lead. My team was conducting survey work in the deep snow region when our comms cut out."
-    },
-    {
-      "speaker": "Dr. Carlo",
-      "text": "I made it back, but the rest of the team is still out there. The creatures in that area have been unusually aggressive."
+      "speaker": "Principal",
+      "text": "They were conducting survey work in the deep snow region. We don't know what happened."
     },
     {
       "speaker": "Principal",
-      "text": "We're sending Kai with you. Find the expedition camp and bring the team home safely."
-    },
-    {
-      "speaker": "Kai",
-      "text": "The snowfield's no joke. Stay close and we'll get them out."
+      "text": "Head to the snowfield and locate the expedition camp. Bring the team home safely."
     }
   ]
 }

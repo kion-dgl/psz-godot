@@ -201,6 +201,7 @@ func _execute_actions() -> void:
 				if not objectives_met:
 					continue
 				print("[DialogTrigger] Action: complete_quest")
+				SfxManager.play("res://assets/sfx/ui/quest_complete.wav")
 				SessionManager.complete_quest()
 			"telepipe":
 				if not objectives_met:
