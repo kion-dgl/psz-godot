@@ -23,7 +23,7 @@ var _laser_materials: Array[StandardMaterial3D] = []
 
 func _init() -> void:
 	element_state = "active"
-	collision_size = Vector3(3, 2, 0.5)
+	collision_size = Vector3(8, 2, 1.5)
 
 
 func _ready() -> void:

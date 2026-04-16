@@ -248,6 +248,7 @@ func _execute_pickup_actions(actions: Array) -> void:
 				if not objectives_met:
 					continue
 				print("[QuestItem] Action: complete_quest")
+				SfxManager.play("res://assets/sfx/ui/quest_complete.wav")
 				SessionManager.complete_quest()
 			"dismiss_companion":
 				if companion_node and is_instance_valid(companion_node) and companion_node.has_method("dismiss"):

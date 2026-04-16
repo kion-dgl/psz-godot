@@ -130,6 +130,7 @@ func destroy() -> void:
 	is_alive = false
 	remove_from_group("enemies")
 	set_state("destroyed")
+	SfxManager.play_at("res://assets/sfx/common/common_160.wav", global_position)
 	destroyed_box.emit()
 
 	# Spawn drop if configured

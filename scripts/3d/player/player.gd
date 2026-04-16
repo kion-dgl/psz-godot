@@ -157,6 +157,13 @@ var _charge_color: Color = Color.WHITE
 var _glow_light: OmniLight3D  # Lantern glow, toggled by time of day
 var _cached_materials: Array = []  # Array of StandardMaterial3D for charge/glow effects
 
+# Footstep SFX
+var _footstep_timer: float = 0.0
+var _footstep_alternate: bool = false
+const FOOTSTEP_WALK_INTERVAL := 0.55
+const FOOTSTEP_RUN_INTERVAL := 0.40
+const FOOTSTEP_SPRINT_INTERVAL := 0.30
+
 # Dodge tracking
 var dodge_direction: float = 0.0
 var dodge_timer: float = 0.0
@@ -771,6 +778,26 @@ func _physics_process(delta: float) -> void:
 	# Update model rotation
 	if model:
 		model.rotation.y = player_rotation
+
+	# Footstep sounds
+	if is_on_floor() and current_state in [PlayerState.WALKING, PlayerState.RUNNING, PlayerState.SPRINTING]:
+		var interval: float = FOOTSTEP_WALK_INTERVAL
+		if current_state == PlayerState.RUNNING:
+			interval = FOOTSTEP_RUN_INTERVAL
+		elif current_state == PlayerState.SPRINTING:
+			interval = FOOTSTEP_SPRINT_INTERVAL
+		_footstep_timer -= delta
+		if _footstep_timer <= 0:
+			_footstep_timer = interval
+			_footstep_alternate = not _footstep_alternate
+			var sfx: String
+			if SessionManager.get_location() == "field":
+				sfx = "res://assets/sfx/common/common_026.wav" if _footstep_alternate else "res://assets/sfx/common/common_027.wav"
+			else:
+				sfx = "res://assets/sfx/common/common_002.wav" if _footstep_alternate else "res://assets/sfx/common/common_004.wav"
+			SfxManager.play_at(sfx, global_position, -8.0)
+	else:
+		_footstep_timer = 0.0
 
 	# Smoothly fade lantern glow based on time of day (check every ~0.5s)
 	if _glow_light and Engine.get_physics_frames() % 30 == 0:
@@ -1567,22 +1594,22 @@ func _play_attack_animation(attack_num: int) -> void:
 		_play_and_track_attack(anim_name)
 
 
-## Weapon type → SFX glob pattern (saber swing used as fallback for melee without unique SFX)
+## Weapon type → SFX glob pattern
 const WEAPON_SFX := {
 	WeaponData.WeaponType.SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SWORD: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.DAGGERS: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.CLAW: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.SWORD: "res://assets/sfx/weapons/sword_swing_*.wav",
+	WeaponData.WeaponType.DAGGERS: "res://assets/sfx/weapons/dagger_swing_*.wav",
+	WeaponData.WeaponType.CLAW: "res://assets/sfx/weapons/dagger_swing_*.wav",
 	WeaponData.WeaponType.DOUBLE_SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SPEAR: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SLICER: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.SPEAR: "res://assets/sfx/weapons/spear_swing_*.wav",
+	WeaponData.WeaponType.SLICER: "res://assets/sfx/weapons/slicer_swing_*.wav",
 	WeaponData.WeaponType.GUN_BLADE: "res://assets/sfx/weapons/saber_swing_*.wav",
 	WeaponData.WeaponType.SHIELD: "res://assets/sfx/weapons/saber_swing_*.wav",
 	WeaponData.WeaponType.HANDGUN: "res://assets/sfx/weapons/handgun_shot_*.wav",
-	WeaponData.WeaponType.RIFLE: "res://assets/sfx/weapons/handgun_shot_*.wav",
-	WeaponData.WeaponType.MECH_GUN: "res://assets/sfx/weapons/handgun_shot_*.wav",
-	WeaponData.WeaponType.ROD: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.WAND: "res://assets/sfx/weapons/saber_swing_*.wav",
+	WeaponData.WeaponType.RIFLE: "res://assets/sfx/weapons/rifle_shot_*.wav",
+	WeaponData.WeaponType.MECH_GUN: "res://assets/sfx/weapons/mechgun_shot_*.wav",
+	WeaponData.WeaponType.ROD: "res://assets/sfx/weapons/rod_swing_*.wav",
+	WeaponData.WeaponType.WAND: "res://assets/sfx/weapons/rod_swing_*.wav",
 }
 
 func _play_and_track_attack(anim_name: String) -> void:

@@ -33,6 +33,7 @@ func get_base_id(item_id: String) -> String:
 func add_weapon(base_id: String) -> String:
 	if capacity > 0 and get_total_slots() >= capacity:
 		inventory_full.emit()
+		SfxManager.play("res://assets/sfx/common/common_022.wav")
 		return ""
 	var inst_id: String = base_id
 	while _items.has(inst_id):
@@ -60,6 +61,7 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 		var max_add: int = mini(quantity, available)
 		if max_add <= 0:
 			inventory_full.emit()
+			SfxManager.play("res://assets/sfx/common/common_022.wav")
 			return false
 		var base_id: String = get_base_id(item_id)
 		for _i in range(max_add):
@@ -75,6 +77,7 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 		# Stackable items: 1 stack = 1 slot, limited by max_stack
 		if capacity > 0 and not has_item(item_id) and get_total_slots() >= capacity:
 			inventory_full.emit()
+			SfxManager.play("res://assets/sfx/common/common_022.wav")
 			return false
 		var max_stack: int = info.max_stack
 		var current: int = int(_items.get(item_id, 0))
