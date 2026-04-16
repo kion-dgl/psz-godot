@@ -618,14 +618,20 @@ export default function TitleScreen() {
         uFadeNear: { value: 180 },
         uFadeFar: { value: 720 },
         uFadeColor: { value: new THREE.Color(0x14092c) },
+        uAmbient: { value: 0.55 },
+        uKeyColor: { value: new THREE.Color(0xbfd0ff) },
+        uKeyIntensity: { value: 1.4 },
+        uKeyDir: { value: new THREE.Vector3(0.25, 0.9, 0.35).normalize() },
       },
       vertexShader: `
         varying vec2 vUv;
         varying float vDist;
+        varying vec3 vNormalW;
         void main() {
           vUv = uv;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           vDist = -mv.z;
+          vNormalW = normalize(mat3(modelMatrix) * normal);
           gl_Position = projectionMatrix * mv;
         }
       `,
@@ -635,12 +641,19 @@ export default function TitleScreen() {
         uniform float uFadeNear;
         uniform float uFadeFar;
         uniform vec3 uFadeColor;
+        uniform float uAmbient;
+        uniform vec3 uKeyColor;
+        uniform float uKeyIntensity;
+        uniform vec3 uKeyDir;
         varying vec2 vUv;
         varying float vDist;
+        varying vec3 vNormalW;
         void main() {
           vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
+          float ndotl = max(dot(normalize(vNormalW), uKeyDir), 0.0);
+          vec3 lit = tex * (uAmbient + uKeyColor * uKeyIntensity * ndotl);
           float fog = smoothstep(uFadeNear, uFadeFar, vDist);
-          vec3 col = mix(tex, uFadeColor, fog);
+          vec3 col = mix(lit, uFadeColor, fog);
           float a = 1.0 - smoothstep(uFadeFar * 0.9, uFadeFar, vDist);
           gl_FragColor = vec4(col, a);
         }
@@ -651,11 +664,25 @@ export default function TitleScreen() {
     });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
-    // Sit right under the base of the 4/5/6 beam group.
-    ground.position.set(0, -45, -500);
+    ground.position.set(0, -60, -500);
     ground.name = 'Ground';
     ground.renderOrder = 5;
     scene.add(ground);
+    objectsRef.current.set(ground.uuid, ground);
+    const groundNode: NodeMeta = {
+      uuid: ground.uuid,
+      name: ground.name,
+      type: 'Ground',
+      depth: 0,
+      visible: ground.visible,
+      position: formatVec(ground.position),
+      rotation: formatVec(ground.rotation),
+      scale: formatVec(ground.scale),
+      textureSlot: 'none',
+      hasMesh: true,
+      scrollX: 0,
+      scrollY: 0,
+    };
 
     const bgNode: NodeMeta = {
       uuid: bg.uuid,
@@ -796,7 +823,7 @@ export default function TitleScreen() {
         });
       });
 
-      setNodes([bgNode, ...collected]);
+      setNodes([bgNode, groundNode, ...collected]);
 
       const box = new THREE.Box3().setFromObject(rootDefault);
       const size = new THREE.Vector3();
