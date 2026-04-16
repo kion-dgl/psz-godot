@@ -85,8 +85,8 @@ export default function TitleScreen() {
   const scrollSpeedsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const [nodes, setNodes] = useState<NodeMeta[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [cameraY, setCameraY] = useState(-58);
-  const [cameraZ, setCameraZ] = useState(144);
+  const [cameraY, setCameraY] = useState(-59);
+  const [cameraZ, setCameraZ] = useState(124);
   const [fov, setFov] = useState(45);
   const [bgVisible, setBgVisible] = useState(true);
   const [showHelpers, setShowHelpers] = useState(false);
