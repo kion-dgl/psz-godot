@@ -11,6 +11,21 @@ const ASSET_BASE := "res://assets/title/"
 const GLB_PATH := "res://assets/title/scene.glb"
 const GROUND_SHADER := preload("res://scripts/3d/shaders/title_ground.gdshader")
 
+# Godot's GLTF importer merged the original 6 SkinnedMeshes into a single
+# MeshInstance3D with 5 surfaces. Identified by texture:
+#   surface 0 -> DSimage_dk19_cl (clouds) -> dstitle_2
+#   surface 1 -> DSimage_dk19_cl (clouds) -> dstitle_3
+#   surface 2 -> DSimage_dk19_l02 (waves) -> dstitle_4
+#   surface 3 -> DSimage_dk19_l01 (beam)  -> dstitle_5
+#   surface 4 -> DSimage_dk19_l02 (waves) -> dstitle_6
+const SURFACE_TO_NAME := {
+	0: "dstitle_2",
+	1: "dstitle_3",
+	2: "dstitle_4",
+	3: "dstitle_5",
+	4: "dstitle_6",
+}
+
 # Nodes and materials that need per-frame updates.
 var _scroll_targets: Array[Dictionary] = []  # {mat: StandardMaterial3D, speed: Vector2}
 
@@ -33,7 +48,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	for t in _scroll_targets:
-		var mat: StandardMaterial3D = t["mat"]
+		var mat: BaseMaterial3D = t["mat"]
 		var s: Vector2 = t["speed"]
 		var off := mat.uv1_offset
 		off.x = fposmod(off.x + s.x * delta, 1.0)
@@ -334,7 +349,43 @@ func _instantiate_glb() -> Node3D:
 	if packed == null:
 		push_error("title_backdrop: could not load %s (is it imported?)" % GLB_PATH)
 		return null
-	return packed.instantiate() as Node3D
+	var root := packed.instantiate() as Node3D
+	_split_merged_surfaces(root)
+	return root
+
+
+# The importer merged 6 SkinnedMeshes into one MeshInstance3D with 5
+# surfaces. Split it back into per-surface MeshInstance3Ds named
+# dstitle_2..dstitle_6 sharing the source skeleton, so the group/scroll
+# logic (keyed by name) works the same way it does in three.js.
+func _split_merged_surfaces(root: Node) -> void:
+	var source: MeshInstance3D = null
+	for mi in _walk_mesh_instances(root):
+		if mi.mesh != null and mi.mesh.get_surface_count() > 1:
+			source = mi
+			break
+	if source == null:
+		return
+	var source_mesh: Mesh = source.mesh
+	var skel_path: NodePath = source.skeleton
+	var skin: Skin = source.skin
+	var parent: Node = source.get_parent()
+	for i in source_mesh.get_surface_count():
+		var mat: Material = source_mesh.surface_get_material(i)
+		var new_mesh := ArrayMesh.new()
+		new_mesh.add_surface_from_arrays(
+			source_mesh.surface_get_primitive_type(i),
+			source_mesh.surface_get_arrays(i),
+		)
+		if mat != null:
+			new_mesh.surface_set_material(0, mat)
+		var split := MeshInstance3D.new()
+		split.mesh = new_mesh
+		split.skeleton = skel_path
+		split.skin = skin
+		split.name = SURFACE_TO_NAME.get(i, "surface_%d" % i)
+		parent.add_child(split)
+	source.queue_free()
 
 
 # Visibility filter. `hide_non_match = true` hides everything NOT in `names`;
@@ -373,21 +424,47 @@ func _apply_scrolls(root: Node, scrolls: Dictionary, names: Dictionary, only_mat
 		if is_zero_approx(sx) and is_zero_approx(sy):
 			continue
 		var mat: Material = mi.get_surface_override_material(0)
-		if mat == null:
+		if mat == null and mi.mesh != null:
 			mat = mi.mesh.surface_get_material(0)
-		if mat == null or not (mat is StandardMaterial3D):
+		if mat == null:
+			push_warning("[title_backdrop] no material on %s; can't scroll" % mi.name)
 			continue
-		# Duplicate so per-instance scroll doesn't mutate a shared material.
-		var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-		dup.uv1_triplanar = false
+		# Convert any Material into a StandardMaterial3D-compatible duplicate
+		# so uv1_offset works. GLB imports usually give StandardMaterial3D,
+		# but BaseMaterial3D also carries uv1_offset.
+		if not (mat is BaseMaterial3D):
+			push_warning("[title_backdrop] %s material is %s, not BaseMaterial3D; can't scroll" % [mi.name, mat.get_class()])
+			continue
+		var dup := (mat as BaseMaterial3D).duplicate() as BaseMaterial3D
 		mi.set_surface_override_material(0, dup)
 		_scroll_targets.append({"mat": dup, "speed": Vector2(sx, sy)})
+		print("[title_backdrop] scroll %s -> (%s, %s)" % [mi.name, sx, sy])
 
 
 func _walk_mesh_instances(root: Node) -> Array[MeshInstance3D]:
 	var out: Array[MeshInstance3D] = []
 	_walk_recursive(root, out)
 	return out
+
+
+func _dump_glb_tree(root: Node, indent: int = 0) -> void:
+	var pad := ""
+	for i in indent:
+		pad += "  "
+	print("[title_backdrop] %s%s (%s)" % [pad, root.name, root.get_class()])
+	if root is MeshInstance3D and root.mesh != null:
+		for i in root.mesh.get_surface_count():
+			var mat: Material = root.mesh.surface_get_material(i)
+			var mat_name: String = mat.resource_name if mat != null else "<none>"
+			var mat_class: String = mat.get_class() if mat != null else "<none>"
+			var tex_path: String = "<no tex>"
+			if mat is StandardMaterial3D:
+				var t: Texture2D = (mat as StandardMaterial3D).albedo_texture
+				if t != null:
+					tex_path = t.resource_path if t.resource_path != "" else str(t)
+			print("[title_backdrop] %s  surface[%d] name=%s class=%s tex=%s" % [pad, i, mat_name, mat_class, tex_path])
+	for child in root.get_children():
+		_dump_glb_tree(child, indent + 1)
 
 
 func _walk_recursive(node: Node, out: Array[MeshInstance3D]) -> void:

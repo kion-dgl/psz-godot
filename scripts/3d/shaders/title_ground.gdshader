@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode unshaded, cull_disabled;
+render_mode unshaded, cull_disabled, blend_mix, depth_draw_opaque;
 
 // Ported from web/src/title-screen/TitleScreen.tsx ground shader.
 // Rock texture tiled + Lambert key light + beam point-light pool + fog.
@@ -50,4 +50,7 @@ void fragment() {
 	vec3 lit = tex * light;
 	float fog = smoothstep(fog_near, fog_far, v_view_dist);
 	ALBEDO = mix(lit, fog_color, fog);
+	// Fade alpha near the far edge so the horizon + stars show through
+	// instead of the ground covering them.
+	ALPHA = 1.0 - smoothstep(fog_far * 0.65, fog_far, v_view_dist);
 }
