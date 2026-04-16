@@ -16,6 +16,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.0",
+    "simplex-noise": "^4.0.3",
     "three": "^0.172.0"
   },
   "devDependencies": {

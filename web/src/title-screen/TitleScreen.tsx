@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createNoise3D } from 'simplex-noise';
 
 const CANVAS_W = 1280;
 const CANVAS_H = 720;
@@ -284,60 +285,109 @@ export default function TitleScreen() {
     sparkles.renderOrder = -19;
     scene.add(sparkles);
 
-    // Moon — procedural blue/purple cloudy surface painted to a canvas.
+    // Moon — simplex-noise painted rocky surface. Sample 3D noise on unit
+    // sphere coords so the equirectangular texture has no seam.
     const moonTex = (() => {
       const W = 1024;
       const H = 512;
+      const noise = createNoise3D();
       const c = document.createElement('canvas');
       c.width = W;
       c.height = H;
       const ctx = c.getContext('2d')!;
-      // Base dark purple-blue
-      const base = ctx.createLinearGradient(0, 0, 0, H);
-      base.addColorStop(0, '#1a1838');
-      base.addColorStop(0.5, '#2a2350');
-      base.addColorStop(1, '#1a1838');
-      ctx.fillStyle = base;
-      ctx.fillRect(0, 0, W, H);
-      // Cloud/rock blobs — layered radial gradients.
-      const palette = [
-        '#3a3272', '#4a4590', '#5c6bb0', '#2a1f58',
-        '#8090c8', '#6a5aa0', '#1a1030', '#a0b0e0',
-        '#4a3c78', '#352545',
-      ];
-      for (let i = 0; i < 320; i++) {
-        const x = Math.random() * W;
-        const y = Math.random() * H;
-        const r = 20 + Math.random() * 120;
-        const color = palette[Math.floor(Math.random() * palette.length)];
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, color + 'cc');
-        g.addColorStop(1, color + '00');
-        ctx.fillStyle = g;
-        ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      const img = ctx.createImageData(W, H);
+      const data = img.data;
+
+      const fbm = (x: number, y: number, z: number, octaves: number, lac = 2.0, gain = 0.5) => {
+        let amp = 1;
+        let freq = 1;
+        let v = 0;
+        let tot = 0;
+        for (let i = 0; i < octaves; i++) {
+          v += noise(x * freq, y * freq, z * freq) * amp;
+          tot += amp;
+          amp *= gain;
+          freq *= lac;
+        }
+        return v / tot; // -1..1
+      };
+      const ridged = (x: number, y: number, z: number, octaves: number) => {
+        let amp = 1;
+        let freq = 1;
+        let v = 0;
+        let tot = 0;
+        for (let i = 0; i < octaves; i++) {
+          v += (1 - Math.abs(noise(x * freq, y * freq, z * freq))) * amp;
+          tot += amp;
+          amp *= 0.5;
+          freq *= 2;
+        }
+        return v / tot; // 0..1
+      };
+
+      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+      // Color ramp: dark purple → mid purple → blue-purple → pale blue-white
+      const ramp = (t: number): [number, number, number] => {
+        t = Math.max(0, Math.min(1, t));
+        const stops: [number, [number, number, number]][] = [
+          [0.0, [0x12, 0x10, 0x2a]],
+          [0.3, [0x2a, 0x22, 0x54]],
+          [0.55, [0x48, 0x40, 0x8a]],
+          [0.75, [0x6c, 0x70, 0xb8]],
+          [0.9, [0x9a, 0xa8, 0xd8]],
+          [1.0, [0xd0, 0xdc, 0xf4]],
+        ];
+        for (let i = 0; i < stops.length - 1; i++) {
+          const [t0, c0] = stops[i];
+          const [t1, c1] = stops[i + 1];
+          if (t <= t1) {
+            const k = (t - t0) / (t1 - t0);
+            return [lerp(c0[0], c1[0], k), lerp(c0[1], c1[1], k), lerp(c0[2], c1[2], k)];
+          }
+        }
+        return stops[stops.length - 1][1];
+      };
+
+      for (let y = 0; y < H; y++) {
+        const theta = (y / (H - 1)) * Math.PI; // 0..PI (pole to pole)
+        const sTheta = Math.sin(theta);
+        const cTheta = Math.cos(theta);
+        for (let x = 0; x < W; x++) {
+          const phi = (x / W) * Math.PI * 2; // 0..2PI
+          const nx = sTheta * Math.cos(phi);
+          const ny = sTheta * Math.sin(phi);
+          const nz = cTheta;
+
+          // Base rocky terrain
+          const base = fbm(nx * 2.5, ny * 2.5, nz * 2.5, 5);
+          // Cloud bands — stretch horizontally by scaling y-sample less
+          const cloud = ridged(nx * 3, ny * 1.2 + 5, nz * 3, 4);
+          // Domain-warp the clouds a touch for wispy feel
+          const warp = fbm(nx * 1.5 + 10, ny * 1.5, nz * 1.5, 3) * 0.6;
+
+          let v = (base + 1) * 0.5; // 0..1
+          v = Math.min(1, v + Math.max(0, cloud - 0.45) * 0.7 + warp * 0.15);
+          // Boost contrast
+          v = Math.pow(v, 0.85);
+
+          const [r, g, b] = ramp(v);
+          const idx = (y * W + x) * 4;
+          data[idx + 0] = r | 0;
+          data[idx + 1] = g | 0;
+          data[idx + 2] = b | 0;
+          data[idx + 3] = 255;
+        }
       }
-      // A few bright highlights
-      for (let i = 0; i < 40; i++) {
-        const x = Math.random() * W;
-        const y = Math.random() * H;
-        const r = 4 + Math.random() * 18;
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, 'rgba(220,230,255,0.8)');
-        g.addColorStop(1, 'rgba(220,230,255,0)');
-        ctx.fillStyle = g;
-        ctx.fillRect(x - r, y - r, r * 2, r * 2);
-      }
+      ctx.putImageData(img, 0, 0);
       const t = new THREE.CanvasTexture(c);
       t.colorSpace = THREE.SRGBColorSpace;
       t.wrapS = THREE.RepeatWrapping;
       return t;
     })();
     const moonGeo = new THREE.SphereGeometry(28, 64, 64);
-    const moonMat = new THREE.MeshStandardMaterial({
+    const moonMat = new THREE.MeshLambertMaterial({
       map: moonTex,
-      roughness: 1.0,
-      metalness: 0.0,
-      emissive: 0x0a0a1a,
+      emissive: 0x060614,
     });
     const moon = new THREE.Mesh(moonGeo, moonMat);
     moon.position.set(0, 8, -25);
