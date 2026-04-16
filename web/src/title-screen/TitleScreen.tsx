@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createNoise2D, createNoise3D } from 'simplex-noise';
 
 const CANVAS_W = 1280;
@@ -97,6 +98,7 @@ export default function TitleScreen() {
     bg: THREE.Mesh | null;
     helpers: THREE.Group;
     root: THREE.Object3D | null;
+    controls: OrbitControls;
   } | null>(null);
 
   useEffect(() => {
@@ -114,6 +116,11 @@ export default function TitleScreen() {
     renderer.setSize(CANVAS_W, CANVAS_H);
     renderer.setPixelRatio(1);
     host.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, cameraY, 0);
+    controls.update();
 
     // Low ambient so the moon's shadowed side actually reads dark. The GLB
     // meshes and backdrop use MeshBasicMaterial, which ignores lighting
@@ -617,28 +624,25 @@ export default function TitleScreen() {
       uniforms: {
         uMap: { value: rockTex },
         uTiles: { value: 24.0 },
-        uFadeNear: { value: 120 },
-        uFadeFar: { value: 420 },
-        uFadeColor: { value: new THREE.Color(0x14092c) },
-        uAmbient: { value: 0.55 },
+        uFadeNear: { value: 280 },
+        uFadeFar: { value: 820 },
+        uFadeColor: { value: new THREE.Color(0x2a1850) },
+        uAmbient: { value: 1.0 },
         uKeyColor: { value: new THREE.Color(0xbfd0ff) },
-        uKeyIntensity: { value: 1.4 },
+        uKeyIntensity: { value: 2.2 },
         uKeyDir: { value: new THREE.Vector3(0.25, 0.9, 0.35).normalize() },
-        // Beam spotlight pouring down onto the ground.
-        uBeamPos: { value: new THREE.Vector3(0, -40, 0) },
+        // Directional light from the base of the 4/5/6 group pointing
+        // down and forward toward the camera.
+        uBeamDir: { value: new THREE.Vector3(0, 0.55, -0.83).normalize() },
         uBeamColor: { value: new THREE.Color(0x9ad0ff) },
-        uBeamIntensity: { value: 2.2 },
-        uBeamRadius: { value: 90 },
+        uBeamIntensity: { value: 2.0 },
       },
       vertexShader: `
         varying vec2 vUv;
         varying float vDist;
         varying vec3 vNormalW;
-        varying vec3 vWorldPos;
         void main() {
           vUv = uv;
-          vec4 world = modelMatrix * vec4(position, 1.0);
-          vWorldPos = world.xyz;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           vDist = -mv.z;
           vNormalW = normalize(mat3(modelMatrix) * normal);
@@ -655,34 +659,26 @@ export default function TitleScreen() {
         uniform vec3 uKeyColor;
         uniform float uKeyIntensity;
         uniform vec3 uKeyDir;
-        uniform vec3 uBeamPos;
+        uniform vec3 uBeamDir;
         uniform vec3 uBeamColor;
         uniform float uBeamIntensity;
-        uniform float uBeamRadius;
         varying vec2 vUv;
         varying float vDist;
         varying vec3 vNormalW;
-        varying vec3 vWorldPos;
         void main() {
           vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
           vec3 N = normalize(vNormalW);
-          float ndotl = max(dot(N, uKeyDir), 0.0);
-          // Beam point light with quadratic-ish falloff.
-          vec3 toBeam = uBeamPos - vWorldPos;
-          float beamDist = length(toBeam);
-          vec3 beamDir = toBeam / max(beamDist, 0.0001);
-          float beamNdotL = max(dot(N, beamDir), 0.0);
-          float beamFall = 1.0 - smoothstep(0.0, uBeamRadius, beamDist);
-          beamFall *= beamFall;
-          vec3 beamTerm = uBeamColor * uBeamIntensity * beamFall * beamNdotL;
-          vec3 lit = tex * (uAmbient + uKeyColor * uKeyIntensity * ndotl + beamTerm);
+          float keyN = max(dot(N, uKeyDir), 0.0);
+          float beamN = max(dot(N, uBeamDir), 0.0);
+          vec3 light = vec3(uAmbient)
+            + uKeyColor * uKeyIntensity * keyN
+            + uBeamColor * uBeamIntensity * beamN;
+          vec3 lit = tex * light;
           float fog = smoothstep(uFadeNear, uFadeFar, vDist);
           vec3 col = mix(lit, uFadeColor, fog);
-          float a = 1.0 - smoothstep(uFadeFar * 0.9, uFadeFar, vDist);
-          gl_FragColor = vec4(col, a);
+          gl_FragColor = vec4(col, 1.0);
         }
       `,
-      transparent: true,
       depthWrite: false,
       side: THREE.DoubleSide,
     });
@@ -723,7 +719,7 @@ export default function TitleScreen() {
       scrollY: 0,
     };
 
-    sceneRefs.current = { scene, camera, renderer, bg, helpers, root: null };
+    sceneRefs.current = { scene, camera, renderer, bg, helpers, root: null, controls };
 
     const gltf = new GLTFLoader();
     const loadGLB = () =>
@@ -878,12 +874,14 @@ export default function TitleScreen() {
         if (speed.y !== 0) mat.map.offset.y = (mat.map.offset.y + speed.y * dt) % 1;
       });
       sparkleMat.uniforms.uTime.value = clock.elapsedTime;
+      controls.update();
       renderer.render(scene, camera);
     };
     animate();
 
     return () => {
       cancelAnimationFrame(raf);
+      controls.dispose();
       renderer.dispose();
       if (host.contains(renderer.domElement)) host.removeChild(renderer.domElement);
       objectsRef.current.clear();
@@ -893,14 +891,15 @@ export default function TitleScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Camera updates
+  // Camera updates (sliders reset the orbit camera to a known pose).
   useEffect(() => {
     const s = sceneRefs.current;
     if (!s) return;
     s.camera.position.set(0, cameraY, cameraZ);
-    s.camera.lookAt(0, cameraY, 0);
     s.camera.fov = fov;
     s.camera.updateProjectionMatrix();
+    s.controls.target.set(0, cameraY, 0);
+    s.controls.update();
   }, [cameraY, cameraZ, fov]);
 
   // Background visibility
