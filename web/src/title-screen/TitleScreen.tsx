@@ -228,6 +228,15 @@ export default function TitleScreen() {
         const factor = Object.values(DEFAULT_SCALES)[0] ?? 1;
         rootBoneB.scale.setScalar(factor);
       }
+      // Offset the visible subset of rootB (dstitle_4/5/6). Only those meshes
+      // render from B, so moving the whole root effectively only moves them.
+      rootB.position.y -= 25;
+      // Force scaled meshes to draw on top of the clouds (dstitle_2/3).
+      rootB.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh && DEFAULT_SCALES[obj.name] !== undefined) {
+          obj.renderOrder = 10;
+        }
+      });
 
       const collected: NodeMeta[] = [];
       const walkA = (obj: THREE.Object3D, depth: number) => {
