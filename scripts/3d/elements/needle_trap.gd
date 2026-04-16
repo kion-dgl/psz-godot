@@ -1,17 +1,18 @@
 extends GameElement
 class_name NeedleTrap
-## Floor spike trap that damages players and enemies on contact.
+## Floor spike trap that damages players on contact.
 ## States: off (spikes hidden, safe), on (spikes visible, deals damage)
-## GLB has two sub-meshes: base (always visible) and spikes (toggled).
+## Light damage with invulnerability window so player can recover and leave.
 
 const SPIKE_TEX_NAME := "o0c_1_needle2"
-const DAMAGE_AMOUNT := 15
-const DAMAGE_INTERVAL := 0.8
+const DAMAGE_AMOUNT := 8
+const INVULN_TIME := 2.0
 
 var _spike_material: StandardMaterial3D = null
+var _base_material: StandardMaterial3D = null
 var _damage_area: Area3D
-var _damage_timer: float = 0.0
-var _bodies_in_area: Array[Node3D] = []
+var _invuln_timer: float = 0.0
+var _hit_bodies: Dictionary = {}
 
 
 func _init() -> void:
@@ -24,19 +25,24 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	_find_spike_material()
+	_setup_materials()
 	_setup_damage_area()
 	_apply_state()
 
 
-func _find_spike_material() -> void:
+func _setup_materials() -> void:
 	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int) -> void:
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
+			var dup := std_mat.duplicate() as StandardMaterial3D
+			dup.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			if std_mat.albedo_texture:
+				std_mat.albedo_texture.flags_mirrored_repeat = true
+			mesh.set_surface_override_material(surface, dup)
 			if std_mat.albedo_texture and SPIKE_TEX_NAME in std_mat.albedo_texture.resource_path:
-				var dup := std_mat.duplicate() as StandardMaterial3D
-				mesh.set_surface_override_material(surface, dup)
 				_spike_material = dup
+			else:
+				_base_material = dup
 	)
 
 
@@ -44,7 +50,7 @@ func _setup_damage_area() -> void:
 	_damage_area = Area3D.new()
 	_damage_area.name = "DamageArea"
 	_damage_area.collision_layer = 4
-	_damage_area.collision_mask = 2 | 8
+	_damage_area.collision_mask = 2
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -54,37 +60,28 @@ func _setup_damage_area() -> void:
 	_damage_area.add_child(shape)
 
 	_damage_area.body_entered.connect(_on_damage_body_entered)
-	_damage_area.body_exited.connect(_on_damage_body_exited)
 	add_child(_damage_area)
 
 
 func _on_damage_body_entered(body: Node3D) -> void:
 	if element_state != "on":
 		return
-	_bodies_in_area.append(body)
-	_deal_damage(body)
-
-
-func _on_damage_body_exited(body: Node3D) -> void:
-	_bodies_in_area.erase(body)
+	var body_id: int = body.get_instance_id()
+	if _hit_bodies.has(body_id):
+		return
+	_hit_bodies[body_id] = INVULN_TIME
+	if body.has_method("take_damage"):
+		body.take_damage(DAMAGE_AMOUNT)
 
 
 func _update_animation(delta: float) -> void:
-	if element_state != "on" or _bodies_in_area.is_empty():
-		return
-	_damage_timer += delta
-	if _damage_timer >= DAMAGE_INTERVAL:
-		_damage_timer = 0.0
-		for body in _bodies_in_area:
-			if is_instance_valid(body):
-				_deal_damage(body)
-
-
-func _deal_damage(body: Node3D) -> void:
-	if body.has_method("take_damage"):
-		body.take_damage(DAMAGE_AMOUNT)
-	elif body.has_method("_on_hit_received"):
-		body._on_hit_received(DAMAGE_AMOUNT, global_position)
+	var expired: Array = []
+	for body_id in _hit_bodies:
+		_hit_bodies[body_id] -= delta
+		if _hit_bodies[body_id] <= 0:
+			expired.append(body_id)
+	for body_id in expired:
+		_hit_bodies.erase(body_id)
 
 
 func _apply_state() -> void:
@@ -103,5 +100,4 @@ func _apply_state() -> void:
 		_damage_area.set_deferred("monitoring", element_state == "on")
 		_damage_area.set_deferred("monitorable", element_state == "on")
 
-	_bodies_in_area.clear()
-	_damage_timer = 0.0
+	_hit_bodies.clear()

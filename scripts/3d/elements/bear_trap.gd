@@ -1,18 +1,24 @@
 extends GameElement
 class_name BearTrap
-## Floor bear trap that snaps shut when a player or enemy steps on it.
-## States: on (prongs visible, armed), off (prongs hidden, triggered)
-## GLB has two sub-meshes: container (always visible) and lasers (toggled).
+## Floor bear trap. When stepped on: catches the player, holds them
+## for a few seconds with a scrolling laser texture, then damages and releases.
+## States: on (armed, prongs visible), off (triggered, prongs hidden)
 
-const LASER_TEX_NAME := "o0c_1_tora2"
-const DAMAGE_AMOUNT := 25
+const PRONG_TEX_NAME := "o0c_1_tora1"
+const DAMAGE_AMOUNT := 20
+const HOLD_DURATION := 2.5
+const SCROLL_SPEED := 0.5
 
-var _laser_material: StandardMaterial3D = null
+var _prong_material: StandardMaterial3D = null
+var _base_material: StandardMaterial3D = null
+var _caught_body: Node3D = null
+var _hold_timer: float = 0.0
+var _is_holding: bool = false
 
 
 func _init() -> void:
 	model_path = "valley/o0c_torabasami.glb"
-	element_state = "off"
+	element_state = "on"
 	collision_size = Vector3(2.0, 1.0, 2.0)
 	auto_collect = false
 	interactable = false
@@ -20,19 +26,24 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	_find_laser_material()
+	_setup_materials()
 	_setup_trigger_area()
 	_apply_state()
 
 
-func _find_laser_material() -> void:
+func _setup_materials() -> void:
 	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int) -> void:
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
-			if std_mat.albedo_texture and LASER_TEX_NAME in std_mat.albedo_texture.resource_path:
-				var dup := std_mat.duplicate() as StandardMaterial3D
-				mesh.set_surface_override_material(surface, dup)
-				_laser_material = dup
+			var dup := std_mat.duplicate() as StandardMaterial3D
+			dup.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			if std_mat.albedo_texture:
+				std_mat.albedo_texture.flags_mirrored_repeat = true
+			mesh.set_surface_override_material(surface, dup)
+			if std_mat.albedo_texture and PRONG_TEX_NAME in std_mat.albedo_texture.resource_path:
+				_prong_material = dup
+			else:
+				_base_material = dup
 	)
 
 
@@ -40,7 +51,7 @@ func _setup_trigger_area() -> void:
 	var area := Area3D.new()
 	area.name = "TriggerArea"
 	area.collision_layer = 4
-	area.collision_mask = 2 | 8
+	area.collision_mask = 2
 
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -57,24 +68,55 @@ func _setup_trigger_area() -> void:
 func _on_body_stepped(body: Node3D) -> void:
 	if element_state != "on":
 		return
+	if _is_holding:
+		return
+	_is_holding = true
+	_caught_body = body
+	_hold_timer = 0.0
+	if body.has_method("transition_to") and body.get("PlayerState"):
+		body.transition_to(body.PlayerState.CUTSCENE)
+	print("[BearTrap] Caught player, holding for %.1fs" % HOLD_DURATION)
+
+
+func _update_animation(delta: float) -> void:
+	if not _is_holding:
+		return
+
+	if _prong_material:
+		_prong_material.uv1_offset.y -= SCROLL_SPEED * delta
+
+	_hold_timer += delta
+	if _hold_timer >= HOLD_DURATION:
+		_release()
+
+
+func _release() -> void:
+	_is_holding = false
+	if is_instance_valid(_caught_body):
+		if _caught_body.has_method("take_damage"):
+			_caught_body.take_damage(DAMAGE_AMOUNT)
+		if _caught_body.has_method("transition_to") and _caught_body.get("PlayerState"):
+			var has_input: bool = Input.is_action_pressed("move_forward") or Input.is_action_pressed("move_backward") or Input.is_action_pressed("move_left") or Input.is_action_pressed("move_right")
+			if has_input:
+				_caught_body.transition_to(_caught_body.PlayerState.RUNNING)
+			else:
+				_caught_body.transition_to(_caught_body.PlayerState.IDLE)
+	_caught_body = null
 	set_state("off")
-	if body.has_method("take_damage"):
-		body.take_damage(DAMAGE_AMOUNT)
-	elif body.has_method("_on_hit_received"):
-		body._on_hit_received(DAMAGE_AMOUNT, global_position)
+	print("[BearTrap] Released player, trap disabled")
 
 
 func _apply_state() -> void:
-	if _laser_material:
+	if _prong_material:
 		match element_state:
 			"on":
-				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-				_laser_material.albedo_color.a = 1.0
-				_laser_material.alpha_scissor_threshold = 0.5
+				_prong_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				_prong_material.albedo_color.a = 1.0
+				_prong_material.alpha_scissor_threshold = 0.5
 			"off":
-				_laser_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-				_laser_material.albedo_color.a = 0.0
-				_laser_material.alpha_scissor_threshold = 1.0
+				_prong_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
+				_prong_material.albedo_color.a = 0.0
+				_prong_material.alpha_scissor_threshold = 1.0
 
 	if interaction_area:
 		var armed: bool = element_state == "on"
