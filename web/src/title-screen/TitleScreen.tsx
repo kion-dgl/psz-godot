@@ -237,7 +237,7 @@ export default function TitleScreen() {
     scene.add(sparkles);
 
     // Moon at top center — sphere lit by a side directional for shading.
-    const moonGeo = new THREE.SphereGeometry(12, 48, 48);
+    const moonGeo = new THREE.SphereGeometry(24, 48, 48);
     const moonMat = new THREE.MeshStandardMaterial({
       color: 0xeceaf2,
       roughness: 1.0,
