@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { createNoise3D } from 'simplex-noise';
+import { createNoise2D, createNoise3D } from 'simplex-noise';
 
 const CANVAS_W = 1280;
 const CANVAS_H = 720;
 
 const ASSET_BASE = '/psz-godot/assets/title';
 const GLB_PATH = `${ASSET_BASE}/scene.glb`;
-const BG_PATH = `${ASSET_BASE}/horizon.png`;
 
 const TEXTURE_SLOTS: Record<string, string> = {
   none: '',
@@ -459,12 +458,68 @@ export default function TitleScreen() {
     objectsRef.current.set(bg.uuid, bg);
     materialsRef.current.set(bg.uuid, bgMat);
 
-    const loader = new THREE.TextureLoader();
-    loader.load(BG_PATH, (tex) => {
-      tex.colorSpace = THREE.SRGBColorSpace;
-      bgMat.map = tex;
-      bgMat.needsUpdate = true;
-    });
+    // Horizon texture — painted procedurally from simplex noise so there's
+    // no AI-generated art involved. Atmospheric haze gradient plus three
+    // layered silhouette ridges for depth.
+    const horizonTex = (() => {
+      const W = 1280;
+      const H = 720;
+      const c = document.createElement('canvas');
+      c.width = W;
+      c.height = H;
+      const ctx = c.getContext('2d')!;
+      const noise = createNoise2D();
+
+      const HORIZON_Y = Math.floor(H * 0.6);
+
+      // Atmospheric haze — fades from transparent just above the horizon
+      // into a deep purple at the canvas bottom.
+      const grad = ctx.createLinearGradient(0, HORIZON_Y - H * 0.18, 0, H);
+      grad.addColorStop(0, 'rgba(70, 45, 120, 0)');
+      grad.addColorStop(0.22, 'rgba(95, 60, 150, 0.32)');
+      grad.addColorStop(0.5, 'rgba(60, 35, 105, 0.7)');
+      grad.addColorStop(0.78, 'rgba(25, 15, 55, 0.94)');
+      grad.addColorStop(1, 'rgba(8, 5, 22, 1.0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, HORIZON_Y - H * 0.18, W, H);
+
+      // Three silhouette layers back→front. Earlier layers use higher
+      // alpha color values (more haze); the front layer is near-black.
+      type Layer = { y: number; amp: number; freq: number; fill: string };
+      const layers: Layer[] = [
+        { y: HORIZON_Y + 26, amp: 18, freq: 0.0028, fill: 'rgba(70, 45, 120, 0.6)' },
+        { y: HORIZON_Y + 68, amp: 36, freq: 0.0050, fill: 'rgba(28, 16, 60, 0.95)' },
+        { y: HORIZON_Y + 130, amp: 58, freq: 0.0078, fill: 'rgba(8, 4, 20, 1.0)' },
+      ];
+      for (const L of layers) {
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        for (let x = 0; x <= W; x += 2) {
+          let n = 0;
+          let amp = 1;
+          let freq = L.freq;
+          let tot = 0;
+          for (let o = 0; o < 4; o++) {
+            n += noise(x * freq, o * 31.7) * amp;
+            tot += amp;
+            amp *= 0.5;
+            freq *= 2;
+          }
+          n /= tot;
+          ctx.lineTo(x, L.y + n * L.amp);
+        }
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fillStyle = L.fill;
+        ctx.fill();
+      }
+
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    })();
+    bgMat.map = horizonTex;
+    bgMat.needsUpdate = true;
 
     const bgNode: NodeMeta = {
       uuid: bg.uuid,
