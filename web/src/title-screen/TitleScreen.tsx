@@ -48,17 +48,17 @@ function formatVec(v: THREE.Vector3 | THREE.Euler): [number, number, number] {
   return [+v.x.toFixed(3), +v.y.toFixed(3), +v.z.toFixed(3)];
 }
 
-// Scale a mesh's geometry in-place. For SkinnedMesh, scaling the mesh
-// node is a no-op (bone matrices drive vertices) and scaling a shared
-// skeleton's root bone scales every mesh using that skeleton. Scaling
-// the geometry attribute isolates the effect to just this mesh.
-function applyUniformScale(obj: THREE.Object3D, factor: number) {
-  const mesh = obj as THREE.Mesh;
-  if (mesh.isMesh && mesh.geometry) {
-    mesh.geometry.scale(factor, factor, factor);
-  } else {
-    obj.scale.multiplyScalar(factor);
-  }
+// Find the root bone of a SkinnedMesh's skeleton (bone whose parent isn't a bone).
+function findSkeletonRootBone(root: THREE.Object3D): THREE.Bone | null {
+  let firstSkinned: THREE.SkinnedMesh | null = null;
+  root.traverse((obj) => {
+    const m = obj as THREE.SkinnedMesh;
+    if (!firstSkinned && m.isSkinnedMesh) firstSkinned = m;
+  });
+  if (!firstSkinned) return null;
+  const skel = (firstSkinned as THREE.SkinnedMesh).skeleton;
+  if (!skel || skel.bones.length === 0) return null;
+  return skel.bones.find((b) => !b.parent || !(b.parent as THREE.Bone).isBone) ?? null;
 }
 
 export default function TitleScreen() {
@@ -151,70 +151,105 @@ export default function TitleScreen() {
     sceneRefs.current = { scene, camera, renderer, bg, helpers, root: null };
 
     const gltf = new GLTFLoader();
-    gltf.load(GLB_PATH, (res) => {
-      const root = res.scene;
-      scene.add(root);
-      if (sceneRefs.current) sceneRefs.current.root = root;
+    const loadGLB = () =>
+      new Promise<THREE.Object3D>((resolve) => gltf.load(GLB_PATH, (res) => resolve(res.scene)));
+
+    const processMesh = (obj: THREE.Object3D) => {
+      const mesh = obj as THREE.Mesh;
+      const orig = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+      const origMap = (orig as THREE.MeshStandardMaterial | undefined)?.map ?? null;
+      if (origMap) {
+        origMap.wrapS = THREE.RepeatWrapping;
+        origMap.wrapT = THREE.RepeatWrapping;
+        origMap.needsUpdate = true;
+      }
+      const hasVertexColors = !!mesh.geometry.getAttribute('color');
+      const mat = new THREE.MeshBasicMaterial({
+        map: origMap,
+        color: 0xffffff,
+        vertexColors: hasVertexColors,
+        transparent: true,
+        alphaTest: 0.01,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      });
+      mesh.material = mat;
+      materialsRef.current.set(obj.uuid, mat);
+    };
+
+    const registerNode = (
+      obj: THREE.Object3D,
+      depth: number,
+      collected: NodeMeta[],
+    ) => {
+      objectsRef.current.set(obj.uuid, obj);
+      const hasMesh = !!(obj as THREE.Mesh).isMesh;
+      if (hasMesh) processMesh(obj);
+      const defaults = DEFAULT_SCROLLS[obj.name];
+      if (defaults && hasMesh) {
+        scrollSpeedsRef.current.set(obj.uuid, { x: defaults.scrollX, y: defaults.scrollY });
+      }
+      collected.push({
+        uuid: obj.uuid,
+        name: obj.name || `(unnamed ${obj.type})`,
+        type: obj.type,
+        depth,
+        visible: obj.visible,
+        position: formatVec(obj.position),
+        rotation: formatVec(obj.rotation),
+        scale: formatVec(obj.scale),
+        textureSlot: 'none',
+        hasMesh,
+        scrollX: defaults?.scrollX ?? 0,
+        scrollY: defaults?.scrollY ?? 0,
+      });
+    };
+
+    Promise.all([loadGLB(), loadGLB()]).then(([rootA, rootB]) => {
+      scene.add(rootA);
+      scene.add(rootB);
+      if (sceneRefs.current) sceneRefs.current.root = rootA;
+
+      // rootA: full GLB, hide meshes that will be shown scaled from rootB.
+      // rootB: hide everything except meshes listed in DEFAULT_SCALES, then
+      // scale B's skeleton root bone so only those meshes shrink.
+      rootA.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh && DEFAULT_SCALES[obj.name] !== undefined) {
+          obj.visible = false;
+        }
+      });
+      rootB.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh && DEFAULT_SCALES[obj.name] === undefined) {
+          obj.visible = false;
+        }
+      });
+      const rootBoneB = findSkeletonRootBone(rootB);
+      if (rootBoneB) {
+        const factor = Object.values(DEFAULT_SCALES)[0] ?? 1;
+        rootBoneB.scale.setScalar(factor);
+      }
 
       const collected: NodeMeta[] = [];
-      const walk = (obj: THREE.Object3D, depth: number) => {
-        objectsRef.current.set(obj.uuid, obj);
-
-        let hasMesh = false;
-        if ((obj as THREE.Mesh).isMesh) {
-          hasMesh = true;
-          const mesh = obj as THREE.Mesh;
-          const orig = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-          const origMap = (orig as THREE.MeshStandardMaterial | undefined)?.map ?? null;
-          const hasVertexColors = !!mesh.geometry.getAttribute('color');
-          if (origMap) {
-            origMap.wrapS = THREE.RepeatWrapping;
-            origMap.wrapT = THREE.RepeatWrapping;
-            origMap.needsUpdate = true;
-          }
-          const mat = new THREE.MeshBasicMaterial({
-            map: origMap,
-            color: 0xffffff,
-            vertexColors: hasVertexColors,
-            transparent: true,
-            alphaTest: 0.01,
-            side: THREE.DoubleSide,
-            depthWrite: false,
-          });
-          mesh.material = mat;
-          materialsRef.current.set(obj.uuid, mat);
+      const walkA = (obj: THREE.Object3D, depth: number) => {
+        const isMesh = !!(obj as THREE.Mesh).isMesh;
+        const isScaled = DEFAULT_SCALES[obj.name] !== undefined;
+        if (!(isMesh && isScaled)) {
+          registerNode(obj, depth, collected);
         }
-
-        const defaults = DEFAULT_SCROLLS[obj.name];
-        if (defaults && hasMesh) {
-          scrollSpeedsRef.current.set(obj.uuid, { x: defaults.scrollX, y: defaults.scrollY });
-        }
-        const scaleDefault = DEFAULT_SCALES[obj.name];
-        if (scaleDefault !== undefined) {
-          applyUniformScale(obj, scaleDefault);
-        }
-        collected.push({
-          uuid: obj.uuid,
-          name: obj.name || `(unnamed ${obj.type})`,
-          type: obj.type,
-          depth,
-          visible: obj.visible,
-          position: formatVec(obj.position),
-          rotation: formatVec(obj.rotation),
-          scale: formatVec(obj.scale),
-          textureSlot: 'none',
-          hasMesh,
-          scrollX: defaults?.scrollX ?? 0,
-          scrollY: defaults?.scrollY ?? 0,
-        });
-
-        obj.children.forEach((c) => walk(c, depth + 1));
+        obj.children.forEach((c) => walkA(c, depth + 1));
       };
-      walk(root, 0);
+      walkA(rootA, 0);
+
+      // Pull the scaled meshes from rootB (the ones actually rendering).
+      rootB.traverse((obj) => {
+        if (!(obj as THREE.Mesh).isMesh) return;
+        if (DEFAULT_SCALES[obj.name] === undefined) return;
+        registerNode(obj, 1, collected);
+      });
+
       setNodes([bgNode, ...collected]);
 
-      // Info-only: bbox readout and scaled helpers. Camera stays at user-set cameraZ.
-      const box = new THREE.Box3().setFromObject(root);
+      const box = new THREE.Box3().setFromObject(rootA);
       const size = new THREE.Vector3();
       const center = new THREE.Vector3();
       box.getSize(size);
