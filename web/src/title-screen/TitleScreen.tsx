@@ -116,7 +116,10 @@ export default function TitleScreen() {
     renderer.setPixelRatio(1);
     host.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+    // Low ambient so the moon's shadowed side actually reads dark. The GLB
+    // meshes and backdrop use MeshBasicMaterial, which ignores lighting
+    // entirely, so this only affects the moon.
+    scene.add(new THREE.AmbientLight(0xffffff, 0.12));
 
     const helpers = new THREE.Group();
     helpers.add(new THREE.AxesHelper(1));
@@ -393,10 +396,13 @@ export default function TitleScreen() {
     moon.position.set(0, 8, -25);
     moon.renderOrder = -15;
     scene.add(moon);
-    const moonLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    moonLight.position.set(-40, 30, 20);
+    // Back-light the moon so the camera-facing hemisphere is almost fully
+    // shadowed, with just a rim catching light from behind/above.
+    const moonLight = new THREE.DirectionalLight(0xbfd0ff, 1.6);
+    moonLight.position.set(10, 30, -120);
     moonLight.target = moon;
     scene.add(moonLight);
+    scene.add(moonLight.target);
 
     // Blue halo behind the moon — larger sprite with radial gradient.
     const haloTex = (() => {
