@@ -610,25 +610,35 @@ export default function TitleScreen() {
       t.wrapT = THREE.RepeatWrapping;
       return t;
     })();
-    const groundGeo = new THREE.PlaneGeometry(1400, 1400, 1, 1);
+    // Halve plane depth so the ground doesn't recede all the way to the
+    // horizon (was blocking it). Width stays wide so the sides still fill.
+    const groundGeo = new THREE.PlaneGeometry(1400, 700, 1, 1);
     const groundMat = new THREE.ShaderMaterial({
       uniforms: {
         uMap: { value: rockTex },
         uTiles: { value: 24.0 },
-        uFadeNear: { value: 180 },
-        uFadeFar: { value: 720 },
+        uFadeNear: { value: 120 },
+        uFadeFar: { value: 420 },
         uFadeColor: { value: new THREE.Color(0x14092c) },
         uAmbient: { value: 0.55 },
         uKeyColor: { value: new THREE.Color(0xbfd0ff) },
         uKeyIntensity: { value: 1.4 },
         uKeyDir: { value: new THREE.Vector3(0.25, 0.9, 0.35).normalize() },
+        // Beam spotlight pouring down onto the ground.
+        uBeamPos: { value: new THREE.Vector3(0, -40, 0) },
+        uBeamColor: { value: new THREE.Color(0x9ad0ff) },
+        uBeamIntensity: { value: 2.2 },
+        uBeamRadius: { value: 90 },
       },
       vertexShader: `
         varying vec2 vUv;
         varying float vDist;
         varying vec3 vNormalW;
+        varying vec3 vWorldPos;
         void main() {
           vUv = uv;
+          vec4 world = modelMatrix * vec4(position, 1.0);
+          vWorldPos = world.xyz;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           vDist = -mv.z;
           vNormalW = normalize(mat3(modelMatrix) * normal);
@@ -645,13 +655,27 @@ export default function TitleScreen() {
         uniform vec3 uKeyColor;
         uniform float uKeyIntensity;
         uniform vec3 uKeyDir;
+        uniform vec3 uBeamPos;
+        uniform vec3 uBeamColor;
+        uniform float uBeamIntensity;
+        uniform float uBeamRadius;
         varying vec2 vUv;
         varying float vDist;
         varying vec3 vNormalW;
+        varying vec3 vWorldPos;
         void main() {
           vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
-          float ndotl = max(dot(normalize(vNormalW), uKeyDir), 0.0);
-          vec3 lit = tex * (uAmbient + uKeyColor * uKeyIntensity * ndotl);
+          vec3 N = normalize(vNormalW);
+          float ndotl = max(dot(N, uKeyDir), 0.0);
+          // Beam point light with quadratic-ish falloff.
+          vec3 toBeam = uBeamPos - vWorldPos;
+          float beamDist = length(toBeam);
+          vec3 beamDir = toBeam / max(beamDist, 0.0001);
+          float beamNdotL = max(dot(N, beamDir), 0.0);
+          float beamFall = 1.0 - smoothstep(0.0, uBeamRadius, beamDist);
+          beamFall *= beamFall;
+          vec3 beamTerm = uBeamColor * uBeamIntensity * beamFall * beamNdotL;
+          vec3 lit = tex * (uAmbient + uKeyColor * uKeyIntensity * ndotl + beamTerm);
           float fog = smoothstep(uFadeNear, uFadeFar, vDist);
           vec3 col = mix(lit, uFadeColor, fog);
           float a = 1.0 - smoothstep(uFadeFar * 0.9, uFadeFar, vDist);
@@ -664,7 +688,7 @@ export default function TitleScreen() {
     });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.set(0, -60, -500);
+    ground.position.set(0, -60, -200);
     ground.name = 'Ground';
     ground.renderOrder = -5;
     scene.add(ground);
