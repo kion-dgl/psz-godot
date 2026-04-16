@@ -299,6 +299,34 @@ export default function TitleScreen() {
 
   const selectedNode = nodes.find((n) => n.uuid === selected) || null;
 
+  const [copyStatus, setCopyStatus] = useState<string>('');
+  const copyConfig = async () => {
+    const config = {
+      cameraZ: +cameraZ.toFixed(2),
+      fov,
+      nodes: Object.fromEntries(
+        nodes
+          .filter((n) => n.hasMesh)
+          .map((n) => [
+            n.name,
+            {
+              scrollX: +n.scrollX.toFixed(3),
+              scrollY: +n.scrollY.toFixed(3),
+            },
+          ]),
+      ),
+    };
+    const text = JSON.stringify(config, null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyStatus('copied');
+    } catch {
+      setCopyStatus('failed (see console)');
+      console.log(text);
+    }
+    setTimeout(() => setCopyStatus(''), 1500);
+  };
+
   return (
     <div style={{ display: 'flex', height: '100%', background: '#0a0a1a', color: '#e0e0e0', overflow: 'hidden' }}>
       {/* Canvas column */}
@@ -353,6 +381,21 @@ export default function TitleScreen() {
           <label>
             <input type="checkbox" checked={showHelpers} onChange={(e) => setShowHelpers(e.target.checked)} /> helpers
           </label>
+          <button
+            onClick={copyConfig}
+            style={{
+              background: '#2a2a5a',
+              color: '#88aaff',
+              border: '1px solid #3a3a6a',
+              padding: '3px 10px',
+              fontSize: 11,
+              cursor: 'pointer',
+              borderRadius: 4,
+            }}
+          >
+            Copy config
+          </button>
+          {copyStatus && <span style={{ color: '#88ccff', fontSize: 11 }}>{copyStatus}</span>}
           {bboxInfo && <span style={{ color: '#666', fontFamily: 'monospace' }}>{bboxInfo}</span>}
         </div>
       </div>
