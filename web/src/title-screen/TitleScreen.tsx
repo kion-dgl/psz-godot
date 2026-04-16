@@ -122,28 +122,136 @@ export default function TitleScreen() {
     helpers.add(new THREE.GridHelper(4, 8, 0x444466, 0x222244));
     scene.add(helpers);
 
-    // Starfield sits further back than the horizon plane so it shows through
+    // Backdrop sits further back than the horizon plane so it shows through
     // the transparent parts of horizon.png.
-    const STAR_COUNT = 600;
-    const starPositions = new Float32Array(STAR_COUNT * 3);
-    for (let i = 0; i < STAR_COUNT; i++) {
-      starPositions[i * 3 + 0] = (Math.random() - 0.5) * 500;
-      starPositions[i * 3 + 1] = (Math.random() - 0.5) * 300 - 30;
-      starPositions[i * 3 + 2] = -40 - Math.random() * 20;
+    const STAR_X = 520;
+    const STAR_Y_LO = -220;
+    const STAR_Y_HI = 140;
+    const STAR_Z_MIN = -60;
+    const STAR_Z_MAX = -40;
+    const randY = () => STAR_Y_LO + Math.random() * (STAR_Y_HI - STAR_Y_LO);
+    const randZ = () => STAR_Z_MIN + Math.random() * (STAR_Z_MAX - STAR_Z_MIN);
+
+    // Nebula clouds — soft radial blobs with additive blending.
+    const nebulaTex = (() => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const ctx = c.getContext('2d')!;
+      const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(0.4, 'rgba(255,255,255,0.4)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 128, 128);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    })();
+    const NEBULAE: { pos: [number, number, number]; size: number; color: number; opacity: number }[] = [
+      { pos: [-160, 30, -55], size: 140, color: 0x5566ff, opacity: 0.35 },
+      { pos: [140, 60, -55], size: 120, color: 0xaa55ff, opacity: 0.32 },
+      { pos: [-40, -30, -55], size: 160, color: 0x4488dd, opacity: 0.25 },
+      { pos: [200, -80, -55], size: 100, color: 0xff88cc, opacity: 0.22 },
+      { pos: [-220, -120, -55], size: 130, color: 0x6644aa, opacity: 0.2 },
+    ];
+    NEBULAE.forEach((n) => {
+      const mat = new THREE.MeshBasicMaterial({
+        map: nebulaTex,
+        color: n.color,
+        transparent: true,
+        opacity: n.opacity,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(n.size, n.size), mat);
+      mesh.position.set(...n.pos);
+      mesh.renderOrder = -25;
+      scene.add(mesh);
+    });
+
+    // Static stars — dense, small, and pure white.
+    const STATIC_COUNT = 2400;
+    const staticPositions = new Float32Array(STATIC_COUNT * 3);
+    for (let i = 0; i < STATIC_COUNT; i++) {
+      staticPositions[i * 3 + 0] = (Math.random() - 0.5) * STAR_X;
+      staticPositions[i * 3 + 1] = randY();
+      staticPositions[i * 3 + 2] = randZ();
     }
-    const starGeo = new THREE.BufferGeometry();
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starMat = new THREE.PointsMaterial({
+    const staticGeo = new THREE.BufferGeometry();
+    staticGeo.setAttribute('position', new THREE.BufferAttribute(staticPositions, 3));
+    const staticMat = new THREE.PointsMaterial({
       color: 0xffffff,
-      size: 0.5,
+      size: 0.35,
       sizeAttenuation: true,
       transparent: true,
       depthWrite: false,
     });
-    const stars = new THREE.Points(starGeo, starMat);
+    const stars = new THREE.Points(staticGeo, staticMat);
     stars.name = 'Starfield';
     stars.renderOrder = -20;
     scene.add(stars);
+
+    // Sparkle stars — sparser, custom shader pulses size/alpha by per-vertex phase.
+    const SPARKLE_COUNT = 220;
+    const sparklePositions = new Float32Array(SPARKLE_COUNT * 3);
+    const sparklePhases = new Float32Array(SPARKLE_COUNT);
+    for (let i = 0; i < SPARKLE_COUNT; i++) {
+      sparklePositions[i * 3 + 0] = (Math.random() - 0.5) * STAR_X;
+      sparklePositions[i * 3 + 1] = randY();
+      sparklePositions[i * 3 + 2] = randZ();
+      sparklePhases[i] = Math.random();
+    }
+    const sparkleGeo = new THREE.BufferGeometry();
+    sparkleGeo.setAttribute('position', new THREE.BufferAttribute(sparklePositions, 3));
+    sparkleGeo.setAttribute('aPhase', new THREE.BufferAttribute(sparklePhases, 1));
+    const sparkleMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: `
+        attribute float aPhase;
+        uniform float uTime;
+        varying float vAlpha;
+        void main() {
+          float pulse = 0.5 + 0.5 * sin(uTime * 2.5 + aPhase * 6.2831);
+          vAlpha = 0.2 + 0.8 * pulse;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = (1.5 + 2.5 * pulse) * (200.0 / -mv.z);
+        }
+      `,
+      fragmentShader: `
+        varying float vAlpha;
+        void main() {
+          vec2 c = gl_PointCoord - 0.5;
+          float d = length(c);
+          float a = smoothstep(0.5, 0.0, d) * vAlpha;
+          gl_FragColor = vec4(1.0, 1.0, 1.0, a);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    const sparkles = new THREE.Points(sparkleGeo, sparkleMat);
+    sparkles.name = 'Sparkles';
+    sparkles.renderOrder = -19;
+    scene.add(sparkles);
+
+    // Moon at top center — sphere lit by a side directional for shading.
+    const moonGeo = new THREE.SphereGeometry(12, 48, 48);
+    const moonMat = new THREE.MeshStandardMaterial({
+      color: 0xeceaf2,
+      roughness: 1.0,
+      metalness: 0.0,
+      emissive: 0x1a1a2a,
+    });
+    const moon = new THREE.Mesh(moonGeo, moonMat);
+    moon.position.set(0, 46, -25);
+    moon.renderOrder = -15;
+    scene.add(moon);
+    const moonLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    moonLight.position.set(-40, 30, 20);
+    moonLight.target = moon;
+    scene.add(moonLight);
 
     // Background plane sits in the scene at the back, sized for 16:9.
     // Initial size (240 × 135) roughly matches the GLB Y extent (135) scaled out to 16:9.
@@ -341,6 +449,7 @@ export default function TitleScreen() {
         if (speed.x !== 0) mat.map.offset.x = (mat.map.offset.x + speed.x * dt) % 1;
         if (speed.y !== 0) mat.map.offset.y = (mat.map.offset.y + speed.y * dt) % 1;
       });
+      sparkleMat.uniforms.uTime.value = clock.elapsedTime;
       renderer.render(scene, camera);
     };
     animate();
