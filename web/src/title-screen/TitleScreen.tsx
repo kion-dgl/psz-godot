@@ -132,28 +132,35 @@ export default function TitleScreen() {
     const randY = () => STAR_Y_LO + Math.random() * (STAR_Y_HI - STAR_Y_LO);
     const randZ = () => STAR_Z_MIN + Math.random() * (STAR_Z_MAX - STAR_Z_MIN);
 
-    // Nebula clouds — soft radial blobs with additive blending.
+    // Shared radial-gradient texture used by nebulae and halo.
     const nebulaTex = (() => {
       const c = document.createElement('canvas');
-      c.width = c.height = 128;
+      c.width = c.height = 256;
       const ctx = c.getContext('2d')!;
-      const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
       g.addColorStop(0, 'rgba(255,255,255,1)');
-      g.addColorStop(0.4, 'rgba(255,255,255,0.4)');
+      g.addColorStop(0.35, 'rgba(255,255,255,0.5)');
+      g.addColorStop(0.7, 'rgba(255,255,255,0.15)');
       g.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 128, 128);
+      ctx.fillRect(0, 0, 256, 256);
       const t = new THREE.CanvasTexture(c);
       t.colorSpace = THREE.SRGBColorSpace;
       return t;
     })();
-    const NEBULAE: { pos: [number, number, number]; size: number; color: number; opacity: number }[] = [
-      { pos: [-160, 30, -55], size: 140, color: 0x5566ff, opacity: 0.35 },
-      { pos: [140, 60, -55], size: 120, color: 0xaa55ff, opacity: 0.32 },
-      { pos: [-40, -30, -55], size: 160, color: 0x4488dd, opacity: 0.25 },
-      { pos: [200, -80, -55], size: 100, color: 0xff88cc, opacity: 0.22 },
-      { pos: [-220, -120, -55], size: 130, color: 0x6644aa, opacity: 0.2 },
-    ];
+    // Seeded pseudo-random so nebula/star colors stay stable across hot reloads.
+    const NEBULA_COLORS = [0x5566ff, 0xaa55ff, 0x4488dd, 0xff88cc, 0x6644aa, 0x3355aa, 0xcc66ee, 0x88aaff, 0x552288, 0xffaaee];
+    const NEBULAE: { pos: [number, number, number]; size: number; color: number; opacity: number }[] = [];
+    for (let i = 0; i < 16; i++) {
+      const x = (Math.random() - 0.5) * 480;
+      const y = STAR_Y_LO + Math.random() * (STAR_Y_HI - STAR_Y_LO) + 20;
+      NEBULAE.push({
+        pos: [x, y, -55 - Math.random() * 10],
+        size: 90 + Math.random() * 140,
+        color: NEBULA_COLORS[Math.floor(Math.random() * NEBULA_COLORS.length)],
+        opacity: 0.15 + Math.random() * 0.25,
+      });
+    }
     NEBULAE.forEach((n) => {
       const mat = new THREE.MeshBasicMaterial({
         map: nebulaTex,
@@ -169,22 +176,63 @@ export default function TitleScreen() {
       scene.add(mesh);
     });
 
-    // Static stars — dense, small, and pure white.
-    const STATIC_COUNT = 2400;
+    // Colored, varied-size stars via shader. Temperature-style palette.
+    const STAR_PALETTE: [number, number, number][] = [
+      [1.0, 1.0, 1.0],   // white
+      [1.0, 1.0, 1.0],
+      [1.0, 1.0, 1.0],
+      [1.0, 1.0, 1.0],
+      [0.75, 0.85, 1.0], // blue
+      [0.65, 0.8, 1.0],
+      [1.0, 0.95, 0.75], // pale yellow
+      [1.0, 0.8, 0.55],  // orange
+      [1.0, 0.65, 0.55], // red
+      [0.9, 0.8, 1.0],   // lavender
+    ];
+    const STATIC_COUNT = 3200;
     const staticPositions = new Float32Array(STATIC_COUNT * 3);
+    const staticColors = new Float32Array(STATIC_COUNT * 3);
+    const staticSizes = new Float32Array(STATIC_COUNT);
     for (let i = 0; i < STATIC_COUNT; i++) {
       staticPositions[i * 3 + 0] = (Math.random() - 0.5) * STAR_X;
       staticPositions[i * 3 + 1] = randY();
       staticPositions[i * 3 + 2] = randZ();
+      const [r, g, b] = STAR_PALETTE[Math.floor(Math.random() * STAR_PALETTE.length)];
+      staticColors[i * 3 + 0] = r;
+      staticColors[i * 3 + 1] = g;
+      staticColors[i * 3 + 2] = b;
+      // Mostly small stars, a few larger ones.
+      const roll = Math.random();
+      staticSizes[i] = roll < 0.7 ? 1.0 + Math.random() * 0.8 : roll < 0.95 ? 2.0 + Math.random() * 1.0 : 3.5 + Math.random() * 1.5;
     }
     const staticGeo = new THREE.BufferGeometry();
     staticGeo.setAttribute('position', new THREE.BufferAttribute(staticPositions, 3));
-    const staticMat = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.35,
-      sizeAttenuation: true,
+    staticGeo.setAttribute('aColor', new THREE.BufferAttribute(staticColors, 3));
+    staticGeo.setAttribute('aSize', new THREE.BufferAttribute(staticSizes, 1));
+    const staticMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        attribute vec3 aColor;
+        attribute float aSize;
+        varying vec3 vColor;
+        void main() {
+          vColor = aColor;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mv;
+          gl_PointSize = aSize * (180.0 / -mv.z);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vColor;
+        void main() {
+          vec2 c = gl_PointCoord - 0.5;
+          float d = length(c);
+          float a = smoothstep(0.5, 0.0, d);
+          gl_FragColor = vec4(vColor, a);
+        }
+      `,
       transparent: true,
       depthWrite: false,
+      blending: THREE.AdditiveBlending,
     });
     const stars = new THREE.Points(staticGeo, staticMat);
     stars.name = 'Starfield';
@@ -236,13 +284,60 @@ export default function TitleScreen() {
     sparkles.renderOrder = -19;
     scene.add(sparkles);
 
-    // Moon at top center — sphere lit by a side directional for shading.
-    const moonGeo = new THREE.SphereGeometry(24, 48, 48);
+    // Moon — procedural blue/purple cloudy surface painted to a canvas.
+    const moonTex = (() => {
+      const W = 1024;
+      const H = 512;
+      const c = document.createElement('canvas');
+      c.width = W;
+      c.height = H;
+      const ctx = c.getContext('2d')!;
+      // Base dark purple-blue
+      const base = ctx.createLinearGradient(0, 0, 0, H);
+      base.addColorStop(0, '#1a1838');
+      base.addColorStop(0.5, '#2a2350');
+      base.addColorStop(1, '#1a1838');
+      ctx.fillStyle = base;
+      ctx.fillRect(0, 0, W, H);
+      // Cloud/rock blobs — layered radial gradients.
+      const palette = [
+        '#3a3272', '#4a4590', '#5c6bb0', '#2a1f58',
+        '#8090c8', '#6a5aa0', '#1a1030', '#a0b0e0',
+        '#4a3c78', '#352545',
+      ];
+      for (let i = 0; i < 320; i++) {
+        const x = Math.random() * W;
+        const y = Math.random() * H;
+        const r = 20 + Math.random() * 120;
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, color + 'cc');
+        g.addColorStop(1, color + '00');
+        ctx.fillStyle = g;
+        ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+      // A few bright highlights
+      for (let i = 0; i < 40; i++) {
+        const x = Math.random() * W;
+        const y = Math.random() * H;
+        const r = 4 + Math.random() * 18;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, 'rgba(220,230,255,0.8)');
+        g.addColorStop(1, 'rgba(220,230,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.wrapS = THREE.RepeatWrapping;
+      return t;
+    })();
+    const moonGeo = new THREE.SphereGeometry(28, 64, 64);
     const moonMat = new THREE.MeshStandardMaterial({
-      color: 0xeceaf2,
+      map: moonTex,
       roughness: 1.0,
       metalness: 0.0,
-      emissive: 0x1a1a2a,
+      emissive: 0x0a0a1a,
     });
     const moon = new THREE.Mesh(moonGeo, moonMat);
     moon.position.set(0, 8, -25);
@@ -252,6 +347,35 @@ export default function TitleScreen() {
     moonLight.position.set(-40, 30, 20);
     moonLight.target = moon;
     scene.add(moonLight);
+
+    // Blue halo behind the moon — larger sprite with radial gradient.
+    const haloTex = (() => {
+      const c = document.createElement('canvas');
+      c.width = c.height = 256;
+      const ctx = c.getContext('2d')!;
+      const g = ctx.createRadialGradient(128, 128, 40, 128, 128, 128);
+      g.addColorStop(0, 'rgba(180,210,255,0.9)');
+      g.addColorStop(0.25, 'rgba(140,180,255,0.55)');
+      g.addColorStop(0.55, 'rgba(90,140,220,0.2)');
+      g.addColorStop(1, 'rgba(90,140,220,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 256, 256);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    })();
+    const haloMat = new THREE.SpriteMaterial({
+      map: haloTex,
+      color: 0xffffff,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const halo = new THREE.Sprite(haloMat);
+    halo.scale.set(90, 90, 1);
+    halo.position.set(moon.position.x, moon.position.y, moon.position.z - 2);
+    halo.renderOrder = -16;
+    scene.add(halo);
 
     // Background plane sits in the scene at the back, sized for 16:9.
     // Initial size (240 × 135) roughly matches the GLB Y extent (135) scaled out to 16:9.
