@@ -173,3 +173,9 @@ jobs:
         run: |
           mkdir -p build/android
           godot --headless --path . --export-release "Android" build/android/psz-godot.apk
+
+      - name: Export macOS
+        continue-on-error: true
+        run: |
+          mkdir -p build/macos
+          godot --headless --path . --export-release "macOS" build/macos/psz-godot.zip
