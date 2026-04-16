@@ -521,6 +521,144 @@ export default function TitleScreen() {
     bgMat.map = horizonTex;
     bgMat.needsUpdate = true;
 
+    // Rocky ground surface — horizontal plane receding along -Z. Tiled
+    // simplex-noise rock texture with a ShaderMaterial that fades alpha
+    // with distance, so the near ground is solid rock and the far edge
+    // blends smoothly into the procedural atmospheric horizon above.
+    const rockTex = (() => {
+      const W = 512;
+      const H = 512;
+      const c = document.createElement('canvas');
+      c.width = W;
+      c.height = H;
+      const ctx = c.getContext('2d')!;
+      const img = ctx.createImageData(W, H);
+      const data = img.data;
+      const n2 = createNoise2D();
+      const n2b = createNoise2D();
+      const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+      // Tileable noise: sample on a torus in 4D (approximated here by
+      // blending two offset 2D noises with the domain wrapped).
+      const tileNoise = (x: number, y: number, freq: number) => {
+        const fx = x * freq;
+        const fy = y * freq;
+        // Seamless-ish: blend noise at (x, y) with noise at wrapped coords,
+        // weighted by distance to the texture edges.
+        const wx = x / W;
+        const wy = y / H;
+        const a = n2(fx, fy);
+        const b = n2(fx - W * freq, fy);
+        const c2 = n2(fx, fy - H * freq);
+        const d = n2(fx - W * freq, fy - H * freq);
+        return (
+          a * (1 - wx) * (1 - wy) +
+          b * wx * (1 - wy) +
+          c2 * (1 - wx) * wy +
+          d * wx * wy
+        );
+      };
+      const fbm = (x: number, y: number, octaves: number) => {
+        let amp = 1;
+        let freq = 0.01;
+        let v = 0;
+        let tot = 0;
+        for (let i = 0; i < octaves; i++) {
+          v += tileNoise(x, y, freq) * amp;
+          tot += amp;
+          amp *= 0.5;
+          freq *= 2;
+        }
+        return v / tot;
+      };
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          // Base rocky texture
+          const base = (fbm(x, y, 5) + 1) * 0.5; // 0..1
+          // Darker cracks and divots from a secondary noise
+          const cracks = Math.max(0, 1 - Math.abs(n2b(x * 0.04, y * 0.04)) - 0.35);
+          let v = base - cracks * 0.4;
+          v = Math.max(0, Math.min(1, v));
+          // Color ramp: deep purple-brown -> dusty grey-purple highlights.
+          const stops: [number, [number, number, number]][] = [
+            [0.0, [0x0c, 0x08, 0x18]],
+            [0.35, [0x1e, 0x16, 0x30]],
+            [0.65, [0x38, 0x2a, 0x50]],
+            [0.85, [0x5a, 0x4c, 0x76]],
+            [1.0, [0x82, 0x78, 0x9c]],
+          ];
+          let col: [number, number, number] = stops[stops.length - 1][1];
+          for (let i = 0; i < stops.length - 1; i++) {
+            const [t0, c0] = stops[i];
+            const [t1, c1] = stops[i + 1];
+            if (v <= t1) {
+              const k = (v - t0) / (t1 - t0);
+              col = [lerp(c0[0], c1[0], k), lerp(c0[1], c1[1], k), lerp(c0[2], c1[2], k)];
+              break;
+            }
+          }
+          const idx = (y * W + x) * 4;
+          data[idx + 0] = col[0] | 0;
+          data[idx + 1] = col[1] | 0;
+          data[idx + 2] = col[2] | 0;
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.wrapS = THREE.RepeatWrapping;
+      t.wrapT = THREE.RepeatWrapping;
+      return t;
+    })();
+    const groundGeo = new THREE.PlaneGeometry(900, 900, 1, 1);
+    const GROUND_FADE_NEAR = 120;
+    const GROUND_FADE_FAR = 420;
+    const groundMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uMap: { value: rockTex },
+        uTiles: { value: 20.0 },
+        uFadeNear: { value: GROUND_FADE_NEAR },
+        uFadeFar: { value: GROUND_FADE_FAR },
+        uFadeColor: { value: new THREE.Color(0x10082a) },
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        varying float vDist;
+        void main() {
+          vUv = uv;
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vDist = -mv.z;
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D uMap;
+        uniform float uTiles;
+        uniform float uFadeNear;
+        uniform float uFadeFar;
+        uniform vec3 uFadeColor;
+        varying vec2 vUv;
+        varying float vDist;
+        void main() {
+          vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
+          float fog = smoothstep(uFadeNear, uFadeFar, vDist);
+          vec3 col = mix(tex, uFadeColor, fog);
+          // Fade alpha too so the horizon stars/moon can bleed through.
+          float a = 1.0 - smoothstep(uFadeFar * 0.85, uFadeFar, vDist);
+          gl_FragColor = vec4(col, a);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.set(0, -90, -300);
+    ground.name = 'Ground';
+    ground.renderOrder = -5;
+    scene.add(ground);
+
     const bgNode: NodeMeta = {
       uuid: bg.uuid,
       name: bg.name,
