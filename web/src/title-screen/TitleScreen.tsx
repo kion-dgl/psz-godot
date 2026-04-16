@@ -37,7 +37,7 @@ const GROUPS: Group[] = [
   // Clouds — sit behind the light
   { names: ['dstitle_2', 'dstitle_3'], offset: [0, 16, 0] },
   // Light / title — scaled down and dropped to sit in front of the clouds
-  { names: ['dstitle_4', 'dstitle_5', 'dstitle_6'], offset: [0, -25, 0], scale: 0.7, renderOrder: 10 },
+  { names: ['dstitle_4', 'dstitle_5', 'dstitle_6'], offset: [0, -30, 0], scale: 0.8, renderOrder: 10 },
 ];
 
 // Kept for the copy-config output so per-node scale still appears.
@@ -403,6 +403,12 @@ export default function TitleScreen() {
     moonLight.target = moon;
     scene.add(moonLight);
     scene.add(moonLight.target);
+    // Under-rim light from below-behind for the unnatural crescent: bottom
+    // and sides wrap into light while the face stays dark.
+    const moonUnderLight = new THREE.DirectionalLight(0xa8c4ff, 1.3);
+    moonUnderLight.position.set(0, -80, -40);
+    moonUnderLight.target = moon;
+    scene.add(moonUnderLight);
 
     // Blue halo behind the moon — larger sprite with radial gradient.
     const haloTex = (() => {
