@@ -37,7 +37,7 @@ const GROUPS: Group[] = [
   // Clouds — sit behind the light
   { names: ['dstitle_2', 'dstitle_3'], offset: [0, 16, 0] },
   // Light / title — scaled down and dropped to sit in front of the clouds
-  { names: ['dstitle_4', 'dstitle_5', 'dstitle_6'], offset: [0, -30, 0], scale: 0.8, renderOrder: 10 },
+  { names: ['dstitle_4', 'dstitle_5', 'dstitle_6'], offset: [0, -27, 0], scale: 0.8, renderOrder: 10 },
 ];
 
 // Kept for the copy-config output so per-node scale still appears.
