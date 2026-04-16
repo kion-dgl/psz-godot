@@ -666,7 +666,7 @@ export default function TitleScreen() {
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -60, -500);
     ground.name = 'Ground';
-    ground.renderOrder = 5;
+    ground.renderOrder = -5;
     scene.add(ground);
     objectsRef.current.set(ground.uuid, ground);
     const groundNode: NodeMeta = {
