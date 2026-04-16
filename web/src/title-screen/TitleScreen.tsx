@@ -50,7 +50,7 @@ export default function TitleScreen() {
   const scrollSpeedsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const [nodes, setNodes] = useState<NodeMeta[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [cameraZ, setCameraZ] = useState(143);
+  const [cameraZ, setCameraZ] = useState(144);
   const [fov, setFov] = useState(45);
   const [bgVisible, setBgVisible] = useState(true);
   const [showHelpers, setShowHelpers] = useState(true);
@@ -188,24 +188,18 @@ export default function TitleScreen() {
       walk(root, 0);
       setNodes([bgNode, ...collected]);
 
-      // Auto-frame: compute bbox and set camera to look at it from +Z
+      // Info-only: bbox readout and scaled helpers. Camera stays at user-set cameraZ.
       const box = new THREE.Box3().setFromObject(root);
       const size = new THREE.Vector3();
       const center = new THREE.Vector3();
       box.getSize(size);
       box.getCenter(center);
       const maxDim = Math.max(size.x, size.y, size.z) || 1;
-      const fitDist = (maxDim / 2) / Math.tan((fov * Math.PI) / 360);
-      const z = center.z + fitDist * 2.2;
-      camera.position.set(center.x, center.y, z);
-      camera.lookAt(center);
-      setCameraZ(+z.toFixed(2));
       setBboxInfo(
         `bbox: min(${box.min.x.toFixed(2)}, ${box.min.y.toFixed(2)}, ${box.min.z.toFixed(2)}) ` +
           `max(${box.max.x.toFixed(2)}, ${box.max.y.toFixed(2)}, ${box.max.z.toFixed(2)}) ` +
           `size(${size.x.toFixed(2)}, ${size.y.toFixed(2)}, ${size.z.toFixed(2)})`,
       );
-      // Resize axes/grid to match model scale
       helpers.clear();
       helpers.add(new THREE.AxesHelper(maxDim));
       helpers.add(new THREE.GridHelper(maxDim * 2, 10, 0x444466, 0x222244));
