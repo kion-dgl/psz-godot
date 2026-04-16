@@ -34,7 +34,7 @@ type Group = {
 
 const GROUPS: Group[] = [
   // Clouds — sit behind the light
-  { names: ['dstitle_2', 'dstitle_3'], offset: [0, 10, 0] },
+  { names: ['dstitle_2', 'dstitle_3'], offset: [0, 16, 0] },
   // Light / title — scaled down and dropped to sit in front of the clouds
   { names: ['dstitle_4', 'dstitle_5', 'dstitle_6'], offset: [0, -25, 0], scale: 0.7, renderOrder: 10 },
 ];
