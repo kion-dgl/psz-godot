@@ -16,6 +16,13 @@ const TEXTURE_SLOTS: Record<string, string> = {
   waves: `${ASSET_BASE}/waves.png`,
 };
 
+const DEFAULT_SCROLLS: Record<string, { scrollX: number; scrollY: number }> = {
+  dstitle_2: { scrollX: 0.03, scrollY: 0 },
+  dstitle_3: { scrollX: 0.02, scrollY: 0 },
+  dstitle_4: { scrollX: 0, scrollY: 0.02 },
+  dstitle_6: { scrollX: 0, scrollY: 0.02 },
+};
+
 type NodeMeta = {
   uuid: string;
   name: string;
@@ -43,7 +50,7 @@ export default function TitleScreen() {
   const scrollSpeedsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const [nodes, setNodes] = useState<NodeMeta[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [cameraZ, setCameraZ] = useState(140);
+  const [cameraZ, setCameraZ] = useState(143);
   const [fov, setFov] = useState(45);
   const [bgVisible, setBgVisible] = useState(true);
   const [showHelpers, setShowHelpers] = useState(true);
@@ -157,6 +164,10 @@ export default function TitleScreen() {
           materialsRef.current.set(obj.uuid, mat);
         }
 
+        const defaults = DEFAULT_SCROLLS[obj.name];
+        if (defaults && hasMesh) {
+          scrollSpeedsRef.current.set(obj.uuid, { x: defaults.scrollX, y: defaults.scrollY });
+        }
         collected.push({
           uuid: obj.uuid,
           name: obj.name || `(unnamed ${obj.type})`,
@@ -168,8 +179,8 @@ export default function TitleScreen() {
           scale: formatVec(obj.scale),
           textureSlot: 'none',
           hasMesh,
-          scrollX: 0,
-          scrollY: 0,
+          scrollX: defaults?.scrollX ?? 0,
+          scrollY: defaults?.scrollY ?? 0,
         });
 
         obj.children.forEach((c) => walk(c, depth + 1));
