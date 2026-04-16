@@ -7,7 +7,7 @@ const CANVAS_H = 720;
 
 const ASSET_BASE = '/psz-godot/assets/title';
 const GLB_PATH = `${ASSET_BASE}/scene.glb`;
-const BG_PATH = `${ASSET_BASE}/background.png`;
+const BG_PATH = `${ASSET_BASE}/horizon.png`;
 
 const TEXTURE_SLOTS: Record<string, string> = {
   none: '',
@@ -104,7 +104,7 @@ export default function TitleScreen() {
     if (!host) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000010);
+    scene.background = new THREE.Color(0x05051a);
 
     const camera = new THREE.PerspectiveCamera(fov, CANVAS_W / CANVAS_H, 0.1, 2000);
     camera.position.set(0, cameraY, cameraZ);
@@ -122,6 +122,29 @@ export default function TitleScreen() {
     helpers.add(new THREE.GridHelper(4, 8, 0x444466, 0x222244));
     scene.add(helpers);
 
+    // Starfield sits further back than the horizon plane so it shows through
+    // the transparent parts of horizon.png.
+    const STAR_COUNT = 600;
+    const starPositions = new Float32Array(STAR_COUNT * 3);
+    for (let i = 0; i < STAR_COUNT; i++) {
+      starPositions[i * 3 + 0] = (Math.random() - 0.5) * 500;
+      starPositions[i * 3 + 1] = (Math.random() - 0.5) * 300 - 30;
+      starPositions[i * 3 + 2] = -40 - Math.random() * 20;
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starMat = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 0.5,
+      sizeAttenuation: true,
+      transparent: true,
+      depthWrite: false,
+    });
+    const stars = new THREE.Points(starGeo, starMat);
+    stars.name = 'Starfield';
+    stars.renderOrder = -20;
+    scene.add(stars);
+
     // Background plane sits in the scene at the back, sized for 16:9.
     // Initial size (240 × 135) roughly matches the GLB Y extent (135) scaled out to 16:9.
     const BG_W = 240;
@@ -130,6 +153,7 @@ export default function TitleScreen() {
     const bgMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       side: THREE.DoubleSide,
+      transparent: true,
       depthWrite: false,
     });
     const bg = new THREE.Mesh(bgGeo, bgMat);
