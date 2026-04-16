@@ -27,6 +27,8 @@ type NodeMeta = {
   scale: [number, number, number];
   textureSlot: keyof typeof TEXTURE_SLOTS;
   hasMesh: boolean;
+  scrollX: number;
+  scrollY: number;
 };
 
 function formatVec(v: THREE.Vector3 | THREE.Euler): [number, number, number] {
@@ -38,9 +40,10 @@ export default function TitleScreen() {
   const objectsRef = useRef<Map<string, THREE.Object3D>>(new Map());
   const materialsRef = useRef<Map<string, THREE.MeshBasicMaterial>>(new Map());
   const texCacheRef = useRef<Map<string, THREE.Texture>>(new Map());
+  const scrollSpeedsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const [nodes, setNodes] = useState<NodeMeta[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [cameraZ, setCameraZ] = useState(5);
+  const [cameraZ, setCameraZ] = useState(140);
   const [fov, setFov] = useState(45);
   const [bgVisible, setBgVisible] = useState(true);
   const [showHelpers, setShowHelpers] = useState(true);
@@ -113,6 +116,8 @@ export default function TitleScreen() {
       scale: formatVec(bg.scale),
       textureSlot: 'none',
       hasMesh: true,
+      scrollX: 0,
+      scrollY: 0,
     };
 
     sceneRefs.current = { scene, camera, renderer, bg, helpers, root: null };
@@ -134,6 +139,11 @@ export default function TitleScreen() {
           const orig = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
           const origMap = (orig as THREE.MeshStandardMaterial | undefined)?.map ?? null;
           const hasVertexColors = !!mesh.geometry.getAttribute('color');
+          if (origMap) {
+            origMap.wrapS = THREE.RepeatWrapping;
+            origMap.wrapT = THREE.RepeatWrapping;
+            origMap.needsUpdate = true;
+          }
           const mat = new THREE.MeshBasicMaterial({
             map: origMap,
             color: 0xffffff,
@@ -158,6 +168,8 @@ export default function TitleScreen() {
           scale: formatVec(obj.scale),
           textureSlot: 'none',
           hasMesh,
+          scrollX: 0,
+          scrollY: 0,
         });
 
         obj.children.forEach((c) => walk(c, depth + 1));
@@ -190,8 +202,16 @@ export default function TitleScreen() {
     });
 
     let raf = 0;
+    const clock = new THREE.Clock();
     const animate = () => {
       raf = requestAnimationFrame(animate);
+      const dt = clock.getDelta();
+      scrollSpeedsRef.current.forEach((speed, uuid) => {
+        const mat = materialsRef.current.get(uuid);
+        if (!mat || !mat.map) return;
+        if (speed.x !== 0) mat.map.offset.x = (mat.map.offset.x + speed.x * dt) % 1;
+        if (speed.y !== 0) mat.map.offset.y = (mat.map.offset.y + speed.y * dt) % 1;
+      });
       renderer.render(scene, camera);
     };
     animate();
@@ -263,6 +283,18 @@ export default function TitleScreen() {
         }
       }
     }
+    if (patch.scrollX !== undefined || patch.scrollY !== undefined) {
+      const cur = scrollSpeedsRef.current.get(uuid) ?? { x: 0, y: 0 };
+      const next = {
+        x: patch.scrollX !== undefined ? patch.scrollX : cur.x,
+        y: patch.scrollY !== undefined ? patch.scrollY : cur.y,
+      };
+      if (next.x === 0 && next.y === 0) {
+        scrollSpeedsRef.current.delete(uuid);
+      } else {
+        scrollSpeedsRef.current.set(uuid, next);
+      }
+    }
   };
 
   const selectedNode = nodes.find((n) => n.uuid === selected) || null;
@@ -287,14 +319,20 @@ export default function TitleScreen() {
             Z{' '}
             <input
               type="range"
-              min={-50}
-              max={50}
-              step={0.1}
+              min={-1000}
+              max={1000}
+              step={1}
               value={cameraZ}
               onChange={(e) => setCameraZ(+e.target.value)}
               style={{ verticalAlign: 'middle' }}
             />{' '}
-            {cameraZ.toFixed(1)}
+            <input
+              type="number"
+              step={1}
+              value={cameraZ}
+              onChange={(e) => setCameraZ(+e.target.value)}
+              style={{ width: 70, background: '#12122a', color: '#e0e0e0', border: '1px solid #2a2a4a', padding: '2px 4px', fontSize: 11 }}
+            />
           </label>
           <label>
             FOV{' '}
@@ -358,7 +396,7 @@ export default function TitleScreen() {
             <Vec3Row label="rotation" value={selectedNode.rotation} step={0.05} onChange={(v) => updateNode(selectedNode.uuid, { rotation: v })} />
             <Vec3Row label="scale" value={selectedNode.scale} step={0.05} onChange={(v) => updateNode(selectedNode.uuid, { scale: v })} />
             {selectedNode.hasMesh && (
-              <div style={{ marginTop: 8 }}>
+              <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <label>
                   texture{' '}
                   <select
@@ -372,6 +410,30 @@ export default function TitleScreen() {
                     ))}
                   </select>
                 </label>
+                <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr', gap: 4, alignItems: 'center' }}>
+                  <span style={{ color: '#888' }}>scroll</span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ color: '#888', fontSize: 11 }}>X</span>
+                    <input
+                      type="number"
+                      step={0.01}
+                      value={selectedNode.scrollX}
+                      onChange={(e) => updateNode(selectedNode.uuid, { scrollX: +e.target.value })}
+                      style={{ width: '100%', background: '#12122a', color: '#e0e0e0', border: '1px solid #2a2a4a', padding: '2px 4px', fontSize: 11 }}
+                    />
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ color: '#888', fontSize: 11 }}>Y</span>
+                    <input
+                      type="number"
+                      step={0.01}
+                      value={selectedNode.scrollY}
+                      onChange={(e) => updateNode(selectedNode.uuid, { scrollY: +e.target.value })}
+                      style={{ width: '100%', background: '#12122a', color: '#e0e0e0', border: '1px solid #2a2a4a', padding: '2px 4px', fontSize: 11 }}
+                    />
+                  </label>
+                </div>
+                <div style={{ color: '#666', fontSize: 10 }}>UV units / second · needs RepeatWrapping</div>
               </div>
             )}
           </div>
