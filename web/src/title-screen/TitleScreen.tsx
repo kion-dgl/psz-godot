@@ -48,22 +48,17 @@ function formatVec(v: THREE.Vector3 | THREE.Euler): [number, number, number] {
   return [+v.x.toFixed(3), +v.y.toFixed(3), +v.z.toFixed(3)];
 }
 
-// For a SkinnedMesh, scaling the mesh node has no visible effect because
-// the GPU uses bone matrices. Walk the skeleton to its root bone and scale
-// that instead. For plain meshes, scale the node directly.
-function getScaleTarget(obj: THREE.Object3D): THREE.Object3D {
-  const mesh = obj as THREE.SkinnedMesh;
-  if (mesh.isSkinnedMesh && mesh.skeleton && mesh.skeleton.bones.length > 0) {
-    const bones = mesh.skeleton.bones;
-    const root = bones.find((b) => !b.parent || !(b.parent as THREE.Bone).isBone);
-    if (root) return root;
-  }
-  return obj;
-}
-
+// Scale a mesh's geometry in-place. For SkinnedMesh, scaling the mesh
+// node is a no-op (bone matrices drive vertices) and scaling a shared
+// skeleton's root bone scales every mesh using that skeleton. Scaling
+// the geometry attribute isolates the effect to just this mesh.
 function applyUniformScale(obj: THREE.Object3D, factor: number) {
-  const target = getScaleTarget(obj);
-  target.scale.multiplyScalar(factor);
+  const mesh = obj as THREE.Mesh;
+  if (mesh.isMesh && mesh.geometry) {
+    mesh.geometry.scale(factor, factor, factor);
+  } else {
+    obj.scale.multiplyScalar(factor);
+  }
 }
 
 export default function TitleScreen() {
@@ -293,7 +288,7 @@ export default function TitleScreen() {
     if (patch.visible !== undefined) obj.visible = patch.visible;
     if (patch.position) obj.position.set(...patch.position);
     if (patch.rotation) obj.rotation.set(...patch.rotation);
-    if (patch.scale) getScaleTarget(obj).scale.set(...patch.scale);
+    if (patch.scale) obj.scale.set(...patch.scale);
     if (patch.textureSlot !== undefined) {
       const mat = materialsRef.current.get(uuid);
       const url = TEXTURE_SLOTS[patch.textureSlot];
