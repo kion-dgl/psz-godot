@@ -23,11 +23,26 @@ const DEFAULT_SCROLLS: Record<string, { scrollX: number; scrollY: number }> = {
   dstitle_6: { scrollX: 0, scrollY: 0.02 },
 };
 
-const DEFAULT_SCALES: Record<string, number> = {
-  dstitle_4: 0.7,
-  dstitle_5: 0.7,
-  dstitle_6: 0.7,
+// Meshes share a skeleton in the GLB, so to transform a subset independently
+// we load extra GLB instances — one per group — with everything else hidden.
+type Group = {
+  names: string[];
+  offset?: [number, number, number];
+  scale?: number;
+  renderOrder?: number;
 };
+
+const GROUPS: Group[] = [
+  // Clouds — sit behind the light
+  { names: ['dstitle_2', 'dstitle_3'], offset: [0, 10, 0] },
+  // Light / title — scaled down and dropped to sit in front of the clouds
+  { names: ['dstitle_4', 'dstitle_5', 'dstitle_6'], offset: [0, -25, 0], scale: 0.7, renderOrder: 10 },
+];
+
+// Kept for the copy-config output so per-node scale still appears.
+const DEFAULT_SCALES: Record<string, number> = Object.fromEntries(
+  GROUPS.flatMap((g) => (g.scale !== undefined ? g.names.map((n) => [n, g.scale as number]) : [])),
+);
 
 type NodeMeta = {
   uuid: string;
@@ -205,60 +220,76 @@ export default function TitleScreen() {
       });
     };
 
-    Promise.all([loadGLB(), loadGLB()]).then(([rootA, rootB]) => {
-      scene.add(rootA);
-      scene.add(rootB);
-      if (sceneRefs.current) sceneRefs.current.root = rootA;
+    // All names claimed by some group — hidden from the default instance.
+    const groupedNames = new Set(GROUPS.flatMap((g) => g.names));
 
-      // rootA: full GLB, hide meshes that will be shown scaled from rootB.
-      // rootB: hide everything except meshes listed in DEFAULT_SCALES, then
-      // scale B's skeleton root bone so only those meshes shrink.
-      rootA.traverse((obj) => {
-        if ((obj as THREE.Mesh).isMesh && DEFAULT_SCALES[obj.name] !== undefined) {
+    Promise.all([loadGLB(), ...GROUPS.map(() => loadGLB())]).then((roots) => {
+      const rootDefault = roots[0];
+      const groupRoots = roots.slice(1);
+      roots.forEach((r) => scene.add(r));
+      if (sceneRefs.current) sceneRefs.current.root = rootDefault;
+
+      // Default instance: hide every mesh claimed by a group.
+      rootDefault.traverse((obj) => {
+        if ((obj as THREE.Mesh).isMesh && groupedNames.has(obj.name)) {
           obj.visible = false;
         }
       });
-      rootB.traverse((obj) => {
-        if ((obj as THREE.Mesh).isMesh && DEFAULT_SCALES[obj.name] === undefined) {
-          obj.visible = false;
+
+      // Group instances: hide everything except that group's meshes, then
+      // apply scale/offset/renderOrder to just the visible subset.
+      GROUPS.forEach((group, i) => {
+        const root = groupRoots[i];
+        const keep = new Set(group.names);
+        root.traverse((obj) => {
+          if ((obj as THREE.Mesh).isMesh && !keep.has(obj.name)) {
+            obj.visible = false;
+          }
+        });
+        if (group.scale !== undefined) {
+          const bone = findSkeletonRootBone(root);
+          if (bone) bone.scale.setScalar(group.scale);
         }
-      });
-      const rootBoneB = findSkeletonRootBone(rootB);
-      if (rootBoneB) {
-        const factor = Object.values(DEFAULT_SCALES)[0] ?? 1;
-        rootBoneB.scale.setScalar(factor);
-      }
-      // Offset the visible subset of rootB (dstitle_4/5/6). Only those meshes
-      // render from B, so moving the whole root effectively only moves them.
-      rootB.position.y -= 25;
-      // Force scaled meshes to draw on top of the clouds (dstitle_2/3).
-      rootB.traverse((obj) => {
-        if ((obj as THREE.Mesh).isMesh && DEFAULT_SCALES[obj.name] !== undefined) {
-          obj.renderOrder = 10;
+        if (group.offset) {
+          root.position.set(
+            root.position.x + group.offset[0],
+            root.position.y + group.offset[1],
+            root.position.z + group.offset[2],
+          );
+        }
+        if (group.renderOrder !== undefined) {
+          root.traverse((obj) => {
+            if ((obj as THREE.Mesh).isMesh && keep.has(obj.name)) {
+              obj.renderOrder = group.renderOrder!;
+            }
+          });
         }
       });
 
+      // Inspector: walk default instance (skipping claimed meshes) plus each
+      // group's own visible meshes.
       const collected: NodeMeta[] = [];
-      const walkA = (obj: THREE.Object3D, depth: number) => {
+      const walkDefault = (obj: THREE.Object3D, depth: number) => {
         const isMesh = !!(obj as THREE.Mesh).isMesh;
-        const isScaled = DEFAULT_SCALES[obj.name] !== undefined;
-        if (!(isMesh && isScaled)) {
+        if (!(isMesh && groupedNames.has(obj.name))) {
           registerNode(obj, depth, collected);
         }
-        obj.children.forEach((c) => walkA(c, depth + 1));
+        obj.children.forEach((c) => walkDefault(c, depth + 1));
       };
-      walkA(rootA, 0);
-
-      // Pull the scaled meshes from rootB (the ones actually rendering).
-      rootB.traverse((obj) => {
-        if (!(obj as THREE.Mesh).isMesh) return;
-        if (DEFAULT_SCALES[obj.name] === undefined) return;
-        registerNode(obj, 1, collected);
+      walkDefault(rootDefault, 0);
+      GROUPS.forEach((group, i) => {
+        const root = groupRoots[i];
+        const keep = new Set(group.names);
+        root.traverse((obj) => {
+          if ((obj as THREE.Mesh).isMesh && keep.has(obj.name)) {
+            registerNode(obj, 1, collected);
+          }
+        });
       });
 
       setNodes([bgNode, ...collected]);
 
-      const box = new THREE.Box3().setFromObject(rootA);
+      const box = new THREE.Box3().setFromObject(rootDefault);
       const size = new THREE.Vector3();
       const center = new THREE.Vector3();
       box.getSize(size);
