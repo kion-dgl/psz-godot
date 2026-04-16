@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createNoise2D, createNoise3D } from 'simplex-noise';
+import JSZip from 'jszip';
 
 const CANVAS_W = 1280;
 const CANVAS_H = 720;
@@ -83,6 +84,8 @@ export default function TitleScreen() {
   const materialsRef = useRef<Map<string, THREE.MeshBasicMaterial>>(new Map());
   const texCacheRef = useRef<Map<string, THREE.Texture>>(new Map());
   const scrollSpeedsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const bakedCanvasesRef = useRef<Array<{ name: string; canvas: HTMLCanvasElement }>>([]);
+  const sceneConfigRef = useRef<Record<string, unknown>>({});
   const [nodes, setNodes] = useState<NodeMeta[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [cameraY, setCameraY] = useState(-59);
@@ -154,6 +157,7 @@ export default function TitleScreen() {
       g.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, 256, 256);
+      bakedCanvasesRef.current.push({ name: 'nebula', canvas: c });
       const t = new THREE.CanvasTexture(c);
       t.colorSpace = THREE.SRGBColorSpace;
       return t;
@@ -171,6 +175,12 @@ export default function TitleScreen() {
         opacity: 0.15 + Math.random() * 0.25,
       });
     }
+    sceneConfigRef.current.nebulae = NEBULAE.map((n) => ({
+      pos: n.pos,
+      size: +n.size.toFixed(2),
+      color: '#' + n.color.toString(16).padStart(6, '0'),
+      opacity: +n.opacity.toFixed(3),
+    }));
     NEBULAE.forEach((n) => {
       const mat = new THREE.MeshBasicMaterial({
         map: nebulaTex,
@@ -388,6 +398,7 @@ export default function TitleScreen() {
         }
       }
       ctx.putImageData(img, 0, 0);
+      bakedCanvasesRef.current.push({ name: 'moon', canvas: c });
       const t = new THREE.CanvasTexture(c);
       t.colorSpace = THREE.SRGBColorSpace;
       t.wrapS = THREE.RepeatWrapping;
@@ -428,6 +439,7 @@ export default function TitleScreen() {
       g.addColorStop(1, 'rgba(90,140,220,0)');
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, 256, 256);
+      bakedCanvasesRef.current.push({ name: 'halo', canvas: c });
       const t = new THREE.CanvasTexture(c);
       t.colorSpace = THREE.SRGBColorSpace;
       return t;
@@ -521,6 +533,7 @@ export default function TitleScreen() {
         ctx.fill();
       }
 
+      bakedCanvasesRef.current.push({ name: 'horizon', canvas: c });
       const t = new THREE.CanvasTexture(c);
       t.colorSpace = THREE.SRGBColorSpace;
       return t;
@@ -613,6 +626,7 @@ export default function TitleScreen() {
         }
       }
       ctx.putImageData(img, 0, 0);
+      bakedCanvasesRef.current.push({ name: 'rock', canvas: c });
       const t = new THREE.CanvasTexture(c);
       t.colorSpace = THREE.SRGBColorSpace;
       t.wrapS = THREE.RepeatWrapping;
@@ -1008,6 +1022,84 @@ export default function TitleScreen() {
     setTimeout(() => setCopyStatus(''), 1500);
   };
 
+  const [exportStatus, setExportStatus] = useState<string>('');
+  const exportBundle = async () => {
+    setExportStatus('zipping…');
+    const zip = new JSZip();
+    const toPng = (canvas: HTMLCanvasElement) =>
+      new Promise<Blob | null>((resolve) => canvas.toBlob((b) => resolve(b), 'image/png'));
+    // Dedupe so each named canvas only lands once (effects hot-reload can push duplicates).
+    const seen = new Set<string>();
+    for (const { name, canvas } of bakedCanvasesRef.current) {
+      if (seen.has(name)) continue;
+      seen.add(name);
+      const blob = await toPng(canvas);
+      if (blob) zip.file(`${name}.png`, blob);
+    }
+
+    // Full composition spec for the Godot port.
+    const config = {
+      canvas: { width: CANVAS_W, height: CANVAS_H },
+      camera: { x: 0, y: +cameraY.toFixed(2), z: +cameraZ.toFixed(2), fov, lookAt: [0, +cameraY.toFixed(2), 0] },
+      ambient: { color: '#ffffff', intensity: 0.12 },
+      moon: {
+        position: [0, 8, -25],
+        radius: 28,
+        material: { map: 'moon.png', emissive: '#060614' },
+        lights: [
+          { type: 'directional', color: '#bfd0ff', intensity: 1.6, fromPos: [10, 30, -120], targetPos: [0, 8, -25] },
+          { type: 'directional', color: '#a8c4ff', intensity: 1.3, fromPos: [0, -80, -40], targetPos: [0, 8, -25] },
+        ],
+      },
+      halo: { position: [0, 8, -27], scale: 90, texture: 'halo.png', blend: 'additive' },
+      horizon: { texture: 'horizon.png', planeSize: [240, 135], position: [0, -60, 0], renderOrder: -10 },
+      ground: {
+        texture: 'rock.png',
+        planeSize: [1400, 700],
+        position: [0, -104, -200],
+        rotationX: -Math.PI / 2,
+        tiles: 24,
+        ambient: 0.45,
+        keyLight: { color: '#bfd0ff', intensity: 1.2, dir: [0.25, 0.9, 0.35] },
+        beamLight: { pos: [0, -100, 0], color: '#badcff', intensity: 3.2, radius: 110 },
+        fog: { near: 280, far: 820, color: '#2a1850' },
+      },
+      stars: {
+        staticCount: 3200,
+        sparkleCount: 220,
+        envelope: { x: 520, yLo: -220, yHi: 140, zMin: -60, zMax: -40 },
+        palette: ['#ffffff', '#bfd8ff', '#a6ccff', '#fff2bf', '#ffcc8c', '#ffa68c', '#e6ccff'],
+        sparklePulseHz: 2.5 / (2 * Math.PI),
+      },
+      nebulae: sceneConfigRef.current.nebulae ?? [],
+      glb: {
+        source: 'assets/title/scene.glb',
+        defaultScrollPerNode: Object.fromEntries(
+          nodes
+            .filter((n) => n.hasMesh)
+            .map((n) => [n.name, { scrollX: +n.scrollX.toFixed(3), scrollY: +n.scrollY.toFixed(3) }]),
+        ),
+        groups: [
+          { names: ['dstitle_2', 'dstitle_3'], offset: [0, 16, 0] },
+          { names: ['dstitle_4', 'dstitle_5', 'dstitle_6'], offset: [0, -27, 0], scale: 0.8, renderOrder: 10 },
+        ],
+      },
+    };
+    zip.file('title-config.json', JSON.stringify(config, null, 2));
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'title-bundle.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setExportStatus('downloaded');
+    setTimeout(() => setExportStatus(''), 1500);
+  };
+
   return (
     <div style={{ display: 'flex', height: '100%', background: '#0a0a1a', color: '#e0e0e0', overflow: 'hidden' }}>
       {/* Canvas column */}
@@ -1096,6 +1188,21 @@ export default function TitleScreen() {
             Copy config
           </button>
           {copyStatus && <span style={{ color: '#88ccff', fontSize: 11 }}>{copyStatus}</span>}
+          <button
+            onClick={exportBundle}
+            style={{
+              background: '#2a2a5a',
+              color: '#88ffaa',
+              border: '1px solid #3a3a6a',
+              padding: '3px 10px',
+              fontSize: 11,
+              cursor: 'pointer',
+              borderRadius: 4,
+            }}
+          >
+            Export bundle
+          </button>
+          {exportStatus && <span style={{ color: '#88ccff', fontSize: 11 }}>{exportStatus}</span>}
           {bboxInfo && <span style={{ color: '#666', fontFamily: 'monospace' }}>{bboxInfo}</span>}
         </div>
       </div>
