@@ -50,6 +50,7 @@ export default function TitleScreen() {
   const scrollSpeedsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
   const [nodes, setNodes] = useState<NodeMeta[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [cameraY, setCameraY] = useState(-58);
   const [cameraZ, setCameraZ] = useState(144);
   const [fov, setFov] = useState(45);
   const [bgVisible, setBgVisible] = useState(true);
@@ -71,8 +72,9 @@ export default function TitleScreen() {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000010);
 
-    const camera = new THREE.PerspectiveCamera(fov, CANVAS_W / CANVAS_H, 0.1, 1000);
-    camera.position.set(0, 0, cameraZ);
+    const camera = new THREE.PerspectiveCamera(fov, CANVAS_W / CANVAS_H, 0.1, 2000);
+    camera.position.set(0, cameraY, cameraZ);
+    camera.lookAt(0, cameraY, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(CANVAS_W, CANVAS_H);
@@ -236,10 +238,11 @@ export default function TitleScreen() {
   useEffect(() => {
     const s = sceneRefs.current;
     if (!s) return;
-    s.camera.position.z = cameraZ;
+    s.camera.position.set(0, cameraY, cameraZ);
+    s.camera.lookAt(0, cameraY, 0);
     s.camera.fov = fov;
     s.camera.updateProjectionMatrix();
-  }, [cameraZ, fov]);
+  }, [cameraY, cameraZ, fov]);
 
   // Background visibility
   useEffect(() => {
@@ -307,6 +310,7 @@ export default function TitleScreen() {
   const [copyStatus, setCopyStatus] = useState<string>('');
   const copyConfig = async () => {
     const config = {
+      cameraY: +cameraY.toFixed(2),
       cameraZ: +cameraZ.toFixed(2),
       fov,
       nodes: Object.fromEntries(
@@ -349,6 +353,25 @@ export default function TitleScreen() {
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', fontSize: 11, flexWrap: 'wrap', justifyContent: 'center' }}>
           <span style={{ color: '#666' }}>{CANVAS_W}×{CANVAS_H}</span>
           <label>
+            Y{' '}
+            <input
+              type="range"
+              min={-200}
+              max={200}
+              step={1}
+              value={cameraY}
+              onChange={(e) => setCameraY(+e.target.value)}
+              style={{ verticalAlign: 'middle' }}
+            />{' '}
+            <input
+              type="number"
+              step={1}
+              value={cameraY}
+              onChange={(e) => setCameraY(+e.target.value)}
+              style={{ width: 60, background: '#12122a', color: '#e0e0e0', border: '1px solid #2a2a4a', padding: '2px 4px', fontSize: 11 }}
+            />
+          </label>
+          <label>
             Z{' '}
             <input
               type="range"
@@ -364,7 +387,7 @@ export default function TitleScreen() {
               step={1}
               value={cameraZ}
               onChange={(e) => setCameraZ(+e.target.value)}
-              style={{ width: 70, background: '#12122a', color: '#e0e0e0', border: '1px solid #2a2a4a', padding: '2px 4px', fontSize: 11 }}
+              style={{ width: 60, background: '#12122a', color: '#e0e0e0', border: '1px solid #2a2a4a', padding: '2px 4px', fontSize: 11 }}
             />
           </label>
           <label>
