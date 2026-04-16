@@ -610,16 +610,14 @@ export default function TitleScreen() {
       t.wrapT = THREE.RepeatWrapping;
       return t;
     })();
-    const groundGeo = new THREE.PlaneGeometry(900, 900, 1, 1);
-    const GROUND_FADE_NEAR = 120;
-    const GROUND_FADE_FAR = 420;
+    const groundGeo = new THREE.PlaneGeometry(1400, 1400, 1, 1);
     const groundMat = new THREE.ShaderMaterial({
       uniforms: {
         uMap: { value: rockTex },
-        uTiles: { value: 20.0 },
-        uFadeNear: { value: GROUND_FADE_NEAR },
-        uFadeFar: { value: GROUND_FADE_FAR },
-        uFadeColor: { value: new THREE.Color(0x10082a) },
+        uTiles: { value: 24.0 },
+        uFadeNear: { value: 180 },
+        uFadeFar: { value: 720 },
+        uFadeColor: { value: new THREE.Color(0x14092c) },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -643,8 +641,7 @@ export default function TitleScreen() {
           vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
           float fog = smoothstep(uFadeNear, uFadeFar, vDist);
           vec3 col = mix(tex, uFadeColor, fog);
-          // Fade alpha too so the horizon stars/moon can bleed through.
-          float a = 1.0 - smoothstep(uFadeFar * 0.85, uFadeFar, vDist);
+          float a = 1.0 - smoothstep(uFadeFar * 0.9, uFadeFar, vDist);
           gl_FragColor = vec4(col, a);
         }
       `,
@@ -654,9 +651,10 @@ export default function TitleScreen() {
     });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.set(0, -90, -300);
+    // Sit right under the base of the 4/5/6 beam group.
+    ground.position.set(0, -45, -500);
     ground.name = 'Ground';
-    ground.renderOrder = -5;
+    ground.renderOrder = 5;
     scene.add(ground);
 
     const bgNode: NodeMeta = {
