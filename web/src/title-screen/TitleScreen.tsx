@@ -24,9 +24,9 @@ const DEFAULT_SCROLLS: Record<string, { scrollX: number; scrollY: number }> = {
 };
 
 const DEFAULT_SCALES: Record<string, number> = {
-  dstitle_4: 0.7,
-  dstitle_5: 0.7,
-  dstitle_6: 0.7,
+  dstitle_4: 0.5,
+  dstitle_5: 0.5,
+  dstitle_6: 0.5,
 };
 
 type NodeMeta = {
