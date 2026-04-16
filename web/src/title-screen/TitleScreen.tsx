@@ -54,7 +54,7 @@ export default function TitleScreen() {
   const [cameraZ, setCameraZ] = useState(144);
   const [fov, setFov] = useState(45);
   const [bgVisible, setBgVisible] = useState(true);
-  const [showHelpers, setShowHelpers] = useState(true);
+  const [showHelpers, setShowHelpers] = useState(false);
   const [bboxInfo, setBboxInfo] = useState<string>('');
   const sceneRefs = useRef<{
     scene: THREE.Scene;
