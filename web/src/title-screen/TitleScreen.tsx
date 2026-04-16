@@ -583,15 +583,17 @@ export default function TitleScreen() {
           const base = (fbm(x, y, 5) + 1) * 0.5; // 0..1
           // Darker cracks and divots from a secondary noise
           const cracks = Math.max(0, 1 - Math.abs(n2b(x * 0.04, y * 0.04)) - 0.35);
-          let v = base - cracks * 0.4;
+          // Bright rock highlights from a high-frequency ridged noise
+          const rocks = Math.max(0, 1 - Math.abs(n2(x * 0.08 + 300, y * 0.08)) - 0.55) * 2;
+          let v = base - cracks * 0.35 + rocks * 0.25;
           v = Math.max(0, Math.min(1, v));
-          // Color ramp: deep purple-brown -> dusty grey-purple highlights.
+          // Color ramp: grey-purple rocky surface.
           const stops: [number, [number, number, number]][] = [
-            [0.0, [0x0c, 0x08, 0x18]],
-            [0.35, [0x1e, 0x16, 0x30]],
-            [0.65, [0x38, 0x2a, 0x50]],
-            [0.85, [0x5a, 0x4c, 0x76]],
-            [1.0, [0x82, 0x78, 0x9c]],
+            [0.0, [0x1a, 0x16, 0x22]],
+            [0.3, [0x34, 0x2e, 0x3e]],
+            [0.6, [0x58, 0x4e, 0x62]],
+            [0.85, [0x80, 0x74, 0x8a]],
+            [1.0, [0xa8, 0x9e, 0xb2]],
           ];
           let col: [number, number, number] = stops[stops.length - 1][1];
           for (let i = 0; i < stops.length - 1; i++) {
@@ -627,22 +629,26 @@ export default function TitleScreen() {
         uFadeNear: { value: 280 },
         uFadeFar: { value: 820 },
         uFadeColor: { value: new THREE.Color(0x2a1850) },
-        uAmbient: { value: 1.0 },
+        uAmbient: { value: 0.45 },
         uKeyColor: { value: new THREE.Color(0xbfd0ff) },
-        uKeyIntensity: { value: 2.2 },
+        uKeyIntensity: { value: 1.2 },
         uKeyDir: { value: new THREE.Vector3(0.25, 0.9, 0.35).normalize() },
-        // Directional light from the base of the 4/5/6 group pointing
-        // down and forward toward the camera.
-        uBeamDir: { value: new THREE.Vector3(0, 0.55, -0.83).normalize() },
-        uBeamColor: { value: new THREE.Color(0x9ad0ff) },
-        uBeamIntensity: { value: 2.0 },
+        // Beam point light centered at (0, -100, 0) — just above the
+        // ground — casting a pool of cool blue onto the rocks.
+        uBeamPos: { value: new THREE.Vector3(0, -100, 0) },
+        uBeamColor: { value: new THREE.Color(0xbadcff) },
+        uBeamIntensity: { value: 3.2 },
+        uBeamRadius: { value: 110 },
       },
       vertexShader: `
         varying vec2 vUv;
         varying float vDist;
         varying vec3 vNormalW;
+        varying vec3 vWorldPos;
         void main() {
           vUv = uv;
+          vec4 world = modelMatrix * vec4(position, 1.0);
+          vWorldPos = world.xyz;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           vDist = -mv.z;
           vNormalW = normalize(mat3(modelMatrix) * normal);
@@ -650,47 +656,49 @@ export default function TitleScreen() {
         }
       `,
       fragmentShader: `
-        // Debug mode: flat red, no lighting, no fog — just show me where
-        // the ground is in the scene. Swap back to the commented-out body
-        // below once placement is right.
+        uniform sampler2D uMap;
+        uniform float uTiles;
+        uniform float uFadeNear;
+        uniform float uFadeFar;
+        uniform vec3 uFadeColor;
+        uniform float uAmbient;
+        uniform vec3 uKeyColor;
+        uniform float uKeyIntensity;
+        uniform vec3 uKeyDir;
+        uniform vec3 uBeamPos;
+        uniform vec3 uBeamColor;
+        uniform float uBeamIntensity;
+        uniform float uBeamRadius;
+        varying vec2 vUv;
+        varying float vDist;
+        varying vec3 vNormalW;
+        varying vec3 vWorldPos;
         void main() {
-          gl_FragColor = vec4(1.0, 0.2, 0.2, 1.0);
+          vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
+          vec3 N = normalize(vNormalW);
+          float keyN = max(dot(N, uKeyDir), 0.0);
+          // Beam point light with squared-smoothstep falloff.
+          vec3 toBeam = uBeamPos - vWorldPos;
+          float beamDist = length(toBeam);
+          vec3 beamDir = toBeam / max(beamDist, 0.0001);
+          float beamN = max(dot(N, beamDir), 0.0);
+          float beamFall = 1.0 - smoothstep(0.0, uBeamRadius, beamDist);
+          beamFall *= beamFall;
+          vec3 light = vec3(uAmbient)
+            + uKeyColor * uKeyIntensity * keyN
+            + uBeamColor * uBeamIntensity * beamFall * beamN;
+          vec3 lit = tex * light;
+          float fog = smoothstep(uFadeNear, uFadeFar, vDist);
+          vec3 col = mix(lit, uFadeColor, fog);
+          gl_FragColor = vec4(col, 1.0);
         }
-        // uniform sampler2D uMap;
-        // uniform float uTiles;
-        // uniform float uFadeNear;
-        // uniform float uFadeFar;
-        // uniform vec3 uFadeColor;
-        // uniform float uAmbient;
-        // uniform vec3 uKeyColor;
-        // uniform float uKeyIntensity;
-        // uniform vec3 uKeyDir;
-        // uniform vec3 uBeamDir;
-        // uniform vec3 uBeamColor;
-        // uniform float uBeamIntensity;
-        // varying vec2 vUv;
-        // varying float vDist;
-        // varying vec3 vNormalW;
-        // void main() {
-        //   vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
-        //   vec3 N = normalize(vNormalW);
-        //   float keyN = max(dot(N, uKeyDir), 0.0);
-        //   float beamN = max(dot(N, uBeamDir), 0.0);
-        //   vec3 light = vec3(uAmbient)
-        //     + uKeyColor * uKeyIntensity * keyN
-        //     + uBeamColor * uBeamIntensity * beamN;
-        //   vec3 lit = tex * light;
-        //   float fog = smoothstep(uFadeNear, uFadeFar, vDist);
-        //   vec3 col = mix(lit, uFadeColor, fog);
-        //   gl_FragColor = vec4(col, 1.0);
-        // }
       `,
       depthWrite: true,
       side: THREE.DoubleSide,
     });
     const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.set(0, -60, -200);
+    ground.position.set(0, -104, -200);
     ground.name = 'Ground';
     ground.renderOrder = -5;
     scene.add(ground);
