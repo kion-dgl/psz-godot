@@ -650,36 +650,42 @@ export default function TitleScreen() {
         }
       `,
       fragmentShader: `
-        uniform sampler2D uMap;
-        uniform float uTiles;
-        uniform float uFadeNear;
-        uniform float uFadeFar;
-        uniform vec3 uFadeColor;
-        uniform float uAmbient;
-        uniform vec3 uKeyColor;
-        uniform float uKeyIntensity;
-        uniform vec3 uKeyDir;
-        uniform vec3 uBeamDir;
-        uniform vec3 uBeamColor;
-        uniform float uBeamIntensity;
-        varying vec2 vUv;
-        varying float vDist;
-        varying vec3 vNormalW;
+        // Debug mode: flat red, no lighting, no fog — just show me where
+        // the ground is in the scene. Swap back to the commented-out body
+        // below once placement is right.
         void main() {
-          vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
-          vec3 N = normalize(vNormalW);
-          float keyN = max(dot(N, uKeyDir), 0.0);
-          float beamN = max(dot(N, uBeamDir), 0.0);
-          vec3 light = vec3(uAmbient)
-            + uKeyColor * uKeyIntensity * keyN
-            + uBeamColor * uBeamIntensity * beamN;
-          vec3 lit = tex * light;
-          float fog = smoothstep(uFadeNear, uFadeFar, vDist);
-          vec3 col = mix(lit, uFadeColor, fog);
-          gl_FragColor = vec4(col, 1.0);
+          gl_FragColor = vec4(1.0, 0.2, 0.2, 1.0);
         }
+        // uniform sampler2D uMap;
+        // uniform float uTiles;
+        // uniform float uFadeNear;
+        // uniform float uFadeFar;
+        // uniform vec3 uFadeColor;
+        // uniform float uAmbient;
+        // uniform vec3 uKeyColor;
+        // uniform float uKeyIntensity;
+        // uniform vec3 uKeyDir;
+        // uniform vec3 uBeamDir;
+        // uniform vec3 uBeamColor;
+        // uniform float uBeamIntensity;
+        // varying vec2 vUv;
+        // varying float vDist;
+        // varying vec3 vNormalW;
+        // void main() {
+        //   vec3 tex = texture2D(uMap, vUv * uTiles).rgb;
+        //   vec3 N = normalize(vNormalW);
+        //   float keyN = max(dot(N, uKeyDir), 0.0);
+        //   float beamN = max(dot(N, uBeamDir), 0.0);
+        //   vec3 light = vec3(uAmbient)
+        //     + uKeyColor * uKeyIntensity * keyN
+        //     + uBeamColor * uBeamIntensity * beamN;
+        //   vec3 lit = tex * light;
+        //   float fog = smoothstep(uFadeNear, uFadeFar, vDist);
+        //   vec3 col = mix(lit, uFadeColor, fog);
+        //   gl_FragColor = vec4(col, 1.0);
+        // }
       `,
-      depthWrite: false,
+      depthWrite: true,
       side: THREE.DoubleSide,
     });
     const ground = new THREE.Mesh(groundGeo, groundMat);
