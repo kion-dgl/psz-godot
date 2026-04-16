@@ -245,7 +245,7 @@ export default function TitleScreen() {
       emissive: 0x1a1a2a,
     });
     const moon = new THREE.Mesh(moonGeo, moonMat);
-    moon.position.set(0, 46, -25);
+    moon.position.set(0, 8, -25);
     moon.renderOrder = -15;
     scene.add(moon);
     const moonLight = new THREE.DirectionalLight(0xffffff, 1.2);
