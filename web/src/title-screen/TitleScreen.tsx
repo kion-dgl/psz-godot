@@ -23,6 +23,12 @@ const DEFAULT_SCROLLS: Record<string, { scrollX: number; scrollY: number }> = {
   dstitle_6: { scrollX: 0, scrollY: 0.02 },
 };
 
+const DEFAULT_SCALES: Record<string, number> = {
+  dstitle_4: 0.7,
+  dstitle_5: 0.7,
+  dstitle_6: 0.7,
+};
+
 type NodeMeta = {
   uuid: string;
   name: string;
@@ -169,6 +175,10 @@ export default function TitleScreen() {
         const defaults = DEFAULT_SCROLLS[obj.name];
         if (defaults && hasMesh) {
           scrollSpeedsRef.current.set(obj.uuid, { x: defaults.scrollX, y: defaults.scrollY });
+        }
+        const scaleDefault = DEFAULT_SCALES[obj.name];
+        if (scaleDefault !== undefined) {
+          obj.scale.multiplyScalar(scaleDefault);
         }
         collected.push({
           uuid: obj.uuid,
