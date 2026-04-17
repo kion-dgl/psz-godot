@@ -39,19 +39,19 @@ transparency = 1
 shading_mode = 0
 cull_mode = 2
 albedo_texture = ExtResource("4_horizon")
-render_priority = -10
+render_priority = -5
 
 [sub_resource type="PlaneMesh" id="GroundMesh"]
 size = Vector2(1400, 700)
 
 [sub_resource type="ShaderMaterial" id="GroundMat"]
-render_priority = -5
+render_priority = -10
 shader = ExtResource("6_shader")
 shader_parameter/rock_tex = ExtResource("5_rock")
 shader_parameter/tiles = 24.0
-shader_parameter/ambient_amount = 0.45
+shader_parameter/ambient_amount = 0.15
 shader_parameter/key_color = Color(0.749, 0.815, 1, 1)
-shader_parameter/key_intensity = 1.2
+shader_parameter/key_intensity = 0.5
 shader_parameter/key_dir = Vector3(0.25, 0.9, 0.35)
 shader_parameter/beam_pos = Vector3(0, -100, 0)
 shader_parameter/beam_color = Color(0.729, 0.863, 1, 1)
