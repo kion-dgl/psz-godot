@@ -2,7 +2,7 @@
 
 [ext_resource type="Theme" path="res://themes/rpg_theme.tres" id="1_theme"]
 [ext_resource type="Script" path="res://scripts/2d/title.gd" id="2_script"]
-[ext_resource type="Texture2D" path="res://assets/images/title.jpg" id="3_title_img"]
+[ext_resource type="PackedScene" path="res://scenes/3d/ui/title_backdrop.tscn" id="3_backdrop"]
 [ext_resource type="Texture2D" path="res://assets/images/logo.png" id="4_logo"]
 
 [node name="Title" type="Control"]
@@ -15,17 +15,22 @@ grow_vertical = 2
 theme = ExtResource("1_theme")
 script = ExtResource("2_script")
 
-[node name="BG" type="TextureRect" parent="."]
+[node name="BG" type="SubViewportContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = ExtResource("3_title_img")
-expand_mode = 1
-stretch_mode = 6
-texture_filter = 1
+stretch = true
+mouse_filter = 2
+
+[node name="SubViewport" type="SubViewport" parent="BG"]
+handle_input_locally = false
+size = Vector2i(1280, 720)
+render_target_update_mode = 4
+
+[node name="TitleBackdrop" parent="BG/SubViewport" instance=ExtResource("3_backdrop")]
 
 [node name="Logo" type="TextureRect" parent="."]
 layout_mode = 1
