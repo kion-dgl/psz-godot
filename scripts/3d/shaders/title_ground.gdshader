@@ -19,6 +19,7 @@ uniform float beam_radius = 110.0;
 
 uniform float fog_near = 280.0;
 uniform float fog_far = 820.0;
+uniform float fog_alpha_end_frac = 0.6;  // alpha = 0 at fog_far * this
 uniform vec3 fog_color : source_color = vec3(0.165, 0.094, 0.314);
 
 varying vec3 v_world_pos;
@@ -53,5 +54,5 @@ void fragment() {
 	// Steep alpha fade — ground fully dissolves well before fog_far so
 	// the horizon plane, stars and moon behind it stay visible. Paired
 	// with depth_draw_never so ground never occludes them via depth.
-	ALPHA = 1.0 - smoothstep(fog_near, fog_far * 0.6, v_view_dist);
+	ALPHA = 1.0 - smoothstep(fog_near, fog_far * fog_alpha_end_frac, v_view_dist);
 }
