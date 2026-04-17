@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bwcgc8o085e2k"
+path.s3tc="res://.godot/imported/s00e_office_m_27.png-4014a5c4ceccabd98593a065a37f7e1b.s3tc.ctex"
 path.etc2="res://.godot/imported/s00e_office_m_27.png-4014a5c4ceccabd98593a065a37f7e1b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/stages/city_e/s00e_office/lndmd/s00e_office_m_27.png"
-dest_files=["res://.godot/imported/s00e_office_m_27.png-4014a5c4ceccabd98593a065a37f7e1b.etc2.ctex"]
+dest_files=["res://.godot/imported/s00e_office_m_27.png-4014a5c4ceccabd98593a065a37f7e1b.s3tc.ctex", "res://.godot/imported/s00e_office_m_27.png-4014a5c4ceccabd98593a065a37f7e1b.etc2.ctex"]
 
 [params]
 

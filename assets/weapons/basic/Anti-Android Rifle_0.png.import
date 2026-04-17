@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bse5xxixr2klw"
+path.s3tc="res://.godot/imported/Anti-Android Rifle_0.png-187beda0b6b1895ac998dbcd32c357dc.s3tc.ctex"
 path.etc2="res://.godot/imported/Anti-Android Rifle_0.png-187beda0b6b1895ac998dbcd32c357dc.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/weapons/basic/Anti-Android Rifle_0.png"
-dest_files=["res://.godot/imported/Anti-Android Rifle_0.png-187beda0b6b1895ac998dbcd32c357dc.etc2.ctex"]
+dest_files=["res://.godot/imported/Anti-Android Rifle_0.png-187beda0b6b1895ac998dbcd32c357dc.s3tc.ctex", "res://.godot/imported/Anti-Android Rifle_0.png-187beda0b6b1895ac998dbcd32c357dc.etc2.ctex"]
 
 [params]
 

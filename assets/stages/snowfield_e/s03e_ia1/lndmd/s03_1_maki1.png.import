@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://v5o3c6fe3ocn"
+path.s3tc="res://.godot/imported/s03_1_maki1.png-f5507827c460c53df3ada39654f370cb.s3tc.ctex"
 path.etc2="res://.godot/imported/s03_1_maki1.png-f5507827c460c53df3ada39654f370cb.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/snowfield_e/s03e_ia1/lndmd/s03_1_maki1.png"
-dest_files=["res://.godot/imported/s03_1_maki1.png-f5507827c460c53df3ada39654f370cb.etc2.ctex"]
+dest_files=["res://.godot/imported/s03_1_maki1.png-f5507827c460c53df3ada39654f370cb.s3tc.ctex", "res://.godot/imported/s03_1_maki1.png-f5507827c460c53df3ada39654f370cb.etc2.ctex"]
 
 [params]
 

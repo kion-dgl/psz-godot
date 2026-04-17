@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bokscdux5smkd"
+path.s3tc="res://.godot/imported/s02_1_leaf.png-26ab43898a23907d0f7d83a5adc98a88.s3tc.ctex"
 path.etc2="res://.godot/imported/s02_1_leaf.png-26ab43898a23907d0f7d83a5adc98a88.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/wetlands_e/s02e_ia1/lndmd/s02_1_leaf.png"
-dest_files=["res://.godot/imported/s02_1_leaf.png-26ab43898a23907d0f7d83a5adc98a88.etc2.ctex"]
+dest_files=["res://.godot/imported/s02_1_leaf.png-26ab43898a23907d0f7d83a5adc98a88.s3tc.ctex", "res://.godot/imported/s02_1_leaf.png-26ab43898a23907d0f7d83a5adc98a88.etc2.ctex"]
 
 [params]
 

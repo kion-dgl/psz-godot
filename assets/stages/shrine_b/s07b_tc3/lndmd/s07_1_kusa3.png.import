@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://6fqlliioxbnw"
+path.s3tc="res://.godot/imported/s07_1_kusa3.png-7ea5f7e1a8cff56e9855878fcd4f1f75.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_kusa3.png-7ea5f7e1a8cff56e9855878fcd4f1f75.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_b/s07b_tc3/lndmd/s07_1_kusa3.png"
-dest_files=["res://.godot/imported/s07_1_kusa3.png-7ea5f7e1a8cff56e9855878fcd4f1f75.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_kusa3.png-7ea5f7e1a8cff56e9855878fcd4f1f75.s3tc.ctex", "res://.godot/imported/s07_1_kusa3.png-7ea5f7e1a8cff56e9855878fcd4f1f75.etc2.ctex"]
 
 [params]
 

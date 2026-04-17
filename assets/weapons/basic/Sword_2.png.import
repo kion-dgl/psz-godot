@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dk54fe0dat0ub"
+path.s3tc="res://.godot/imported/Sword_2.png-6e8705c3dae4d5feae8af4eb3b1b657b.s3tc.ctex"
 path.etc2="res://.godot/imported/Sword_2.png-6e8705c3dae4d5feae8af4eb3b1b657b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/weapons/basic/Sword_2.png"
-dest_files=["res://.godot/imported/Sword_2.png-6e8705c3dae4d5feae8af4eb3b1b657b.etc2.ctex"]
+dest_files=["res://.godot/imported/Sword_2.png-6e8705c3dae4d5feae8af4eb3b1b657b.s3tc.ctex", "res://.godot/imported/Sword_2.png-6e8705c3dae4d5feae8af4eb3b1b657b.etc2.ctex"]
 
 [params]
 

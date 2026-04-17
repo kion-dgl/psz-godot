@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cvoqvdu6uipxt"
+path.s3tc="res://.godot/imported/s06_1_door01.png-4352a066b1526c3d64c72f3b8079a5d5.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_1_door01.png-4352a066b1526c3d64c72f3b8079a5d5.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/arca_a/s06a_xb2/lndmd/s06_1_door01.png"
-dest_files=["res://.godot/imported/s06_1_door01.png-4352a066b1526c3d64c72f3b8079a5d5.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_1_door01.png-4352a066b1526c3d64c72f3b8079a5d5.s3tc.ctex", "res://.godot/imported/s06_1_door01.png-4352a066b1526c3d64c72f3b8079a5d5.etc2.ctex"]
 
 [params]
 

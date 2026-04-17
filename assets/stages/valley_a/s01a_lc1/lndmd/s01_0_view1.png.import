@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://3vq8kfwahhf7"
+path.s3tc="res://.godot/imported/s01_0_view1.png-502643207e0d507b299d6137c736bd3b.s3tc.ctex"
 path.etc2="res://.godot/imported/s01_0_view1.png-502643207e0d507b299d6137c736bd3b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/valley_a/s01a_lc1/lndmd/s01_0_view1.png"
-dest_files=["res://.godot/imported/s01_0_view1.png-502643207e0d507b299d6137c736bd3b.etc2.ctex"]
+dest_files=["res://.godot/imported/s01_0_view1.png-502643207e0d507b299d6137c736bd3b.s3tc.ctex", "res://.godot/imported/s01_0_view1.png-502643207e0d507b299d6137c736bd3b.etc2.ctex"]
 
 [params]
 

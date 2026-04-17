@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bh5785ystulji"
+path.s3tc="res://.godot/imported/s08_0_sky10.png-65da8715588ef0e7b4caf7ad147c1251.s3tc.ctex"
 path.etc2="res://.godot/imported/s08_0_sky10.png-65da8715588ef0e7b4caf7ad147c1251.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/tower_1/s081_ib1/lndmd/s08_0_sky10.png"
-dest_files=["res://.godot/imported/s08_0_sky10.png-65da8715588ef0e7b4caf7ad147c1251.etc2.ctex"]
+dest_files=["res://.godot/imported/s08_0_sky10.png-65da8715588ef0e7b4caf7ad147c1251.s3tc.ctex", "res://.godot/imported/s08_0_sky10.png-65da8715588ef0e7b4caf7ad147c1251.etc2.ctex"]
 
 [params]
 

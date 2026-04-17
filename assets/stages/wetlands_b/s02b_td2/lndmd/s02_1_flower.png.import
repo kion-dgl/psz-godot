@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://pju4kjafvq8"
+path.s3tc="res://.godot/imported/s02_1_flower.png-54be553bc110a9447b6b3018d8b55dac.s3tc.ctex"
 path.etc2="res://.godot/imported/s02_1_flower.png-54be553bc110a9447b6b3018d8b55dac.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/wetlands_b/s02b_td2/lndmd/s02_1_flower.png"
-dest_files=["res://.godot/imported/s02_1_flower.png-54be553bc110a9447b6b3018d8b55dac.etc2.ctex"]
+dest_files=["res://.godot/imported/s02_1_flower.png-54be553bc110a9447b6b3018d8b55dac.s3tc.ctex", "res://.godot/imported/s02_1_flower.png-54be553bc110a9447b6b3018d8b55dac.etc2.ctex"]
 
 [params]
 

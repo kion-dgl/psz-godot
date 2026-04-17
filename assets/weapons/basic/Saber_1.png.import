@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://djnky8l5mrwso"
+path.s3tc="res://.godot/imported/Saber_1.png-b04bedc5d17e0cce9de4e57ce69ce4c2.s3tc.ctex"
 path.etc2="res://.godot/imported/Saber_1.png-b04bedc5d17e0cce9de4e57ce69ce4c2.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/weapons/basic/Saber_1.png"
-dest_files=["res://.godot/imported/Saber_1.png-b04bedc5d17e0cce9de4e57ce69ce4c2.etc2.ctex"]
+dest_files=["res://.godot/imported/Saber_1.png-b04bedc5d17e0cce9de4e57ce69ce4c2.s3tc.ctex", "res://.godot/imported/Saber_1.png-b04bedc5d17e0cce9de4e57ce69ce4c2.etc2.ctex"]
 
 [params]
 

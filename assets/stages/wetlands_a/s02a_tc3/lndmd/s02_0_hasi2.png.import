@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b25lvaqkdg1ld"
+path.s3tc="res://.godot/imported/s02_0_hasi2.png-0ed6a89159a64d35527285ebf8b4cf0e.s3tc.ctex"
 path.etc2="res://.godot/imported/s02_0_hasi2.png-0ed6a89159a64d35527285ebf8b4cf0e.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/wetlands_a/s02a_tc3/lndmd/s02_0_hasi2.png"
-dest_files=["res://.godot/imported/s02_0_hasi2.png-0ed6a89159a64d35527285ebf8b4cf0e.etc2.ctex"]
+dest_files=["res://.godot/imported/s02_0_hasi2.png-0ed6a89159a64d35527285ebf8b4cf0e.s3tc.ctex", "res://.godot/imported/s02_0_hasi2.png-0ed6a89159a64d35527285ebf8b4cf0e.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d1t6x2egixqlt"
+path.s3tc="res://.godot/imported/s04_0_wall7.png-22c7164e691ca8875c3b2be4058c93d2.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_wall7.png-22c7164e691ca8875c3b2be4058c93d2.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_b/s04b_lc2/lndmd/s04_0_wall7.png"
-dest_files=["res://.godot/imported/s04_0_wall7.png-22c7164e691ca8875c3b2be4058c93d2.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_wall7.png-22c7164e691ca8875c3b2be4058c93d2.s3tc.ctex", "res://.godot/imported/s04_0_wall7.png-22c7164e691ca8875c3b2be4058c93d2.etc2.ctex"]
 
 [params]
 

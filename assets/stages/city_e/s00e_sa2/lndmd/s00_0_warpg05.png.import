@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cw1makfkpb6tu"
+path.s3tc="res://.godot/imported/s00_0_warpg05.png-37bb86240dfef4f0087d5c2fc8dde4eb.s3tc.ctex"
 path.etc2="res://.godot/imported/s00_0_warpg05.png-37bb86240dfef4f0087d5c2fc8dde4eb.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_e/s00e_sa2/lndmd/s00_0_warpg05.png"
-dest_files=["res://.godot/imported/s00_0_warpg05.png-37bb86240dfef4f0087d5c2fc8dde4eb.etc2.ctex"]
+dest_files=["res://.godot/imported/s00_0_warpg05.png-37bb86240dfef4f0087d5c2fc8dde4eb.s3tc.ctex", "res://.godot/imported/s00_0_warpg05.png-37bb86240dfef4f0087d5c2fc8dde4eb.etc2.ctex"]
 
 [params]
 

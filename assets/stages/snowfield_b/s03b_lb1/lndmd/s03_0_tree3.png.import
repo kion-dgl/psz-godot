@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://hgs4ryec7fit"
+path.s3tc="res://.godot/imported/s03_0_tree3.png-d46f81308136b2f721df6795409d8e78.s3tc.ctex"
 path.etc2="res://.godot/imported/s03_0_tree3.png-d46f81308136b2f721df6795409d8e78.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/snowfield_b/s03b_lb1/lndmd/s03_0_tree3.png"
-dest_files=["res://.godot/imported/s03_0_tree3.png-d46f81308136b2f721df6795409d8e78.etc2.ctex"]
+dest_files=["res://.godot/imported/s03_0_tree3.png-d46f81308136b2f721df6795409d8e78.s3tc.ctex", "res://.godot/imported/s03_0_tree3.png-d46f81308136b2f721df6795409d8e78.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dio7gc07jdsrf"
+path.s3tc="res://.godot/imported/s04_0_yukab.png-08d946129cc0ca4d91cd365ca27dd29b.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_yukab.png-08d946129cc0ca4d91cd365ca27dd29b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_b/s04b_td2/lndmd/s04_0_yukab.png"
-dest_files=["res://.godot/imported/s04_0_yukab.png-08d946129cc0ca4d91cd365ca27dd29b.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_yukab.png-08d946129cc0ca4d91cd365ca27dd29b.s3tc.ctex", "res://.godot/imported/s04_0_yukab.png-08d946129cc0ca4d91cd365ca27dd29b.etc2.ctex"]
 
 [params]
 

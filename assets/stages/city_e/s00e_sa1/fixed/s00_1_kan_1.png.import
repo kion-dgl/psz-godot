@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://wpddmf6r4x27"
+path.s3tc="res://.godot/imported/s00_1_kan_1.png-63f9a3b8dce099b931579298558800bc.s3tc.ctex"
 path.etc2="res://.godot/imported/s00_1_kan_1.png-63f9a3b8dce099b931579298558800bc.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_e/s00e_sa1/fixed/s00_1_kan_1.png"
-dest_files=["res://.godot/imported/s00_1_kan_1.png-63f9a3b8dce099b931579298558800bc.etc2.ctex"]
+dest_files=["res://.godot/imported/s00_1_kan_1.png-63f9a3b8dce099b931579298558800bc.s3tc.ctex", "res://.godot/imported/s00_1_kan_1.png-63f9a3b8dce099b931579298558800bc.etc2.ctex"]
 
 [params]
 

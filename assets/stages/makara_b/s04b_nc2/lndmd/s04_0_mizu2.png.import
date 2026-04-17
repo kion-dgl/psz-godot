@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bninqpt6qjykt"
+path.s3tc="res://.godot/imported/s04_0_mizu2.png-a59eeda802db4a2c514c7ccce8719c34.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_mizu2.png-a59eeda802db4a2c514c7ccce8719c34.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_b/s04b_nc2/lndmd/s04_0_mizu2.png"
-dest_files=["res://.godot/imported/s04_0_mizu2.png-a59eeda802db4a2c514c7ccce8719c34.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_mizu2.png-a59eeda802db4a2c514c7ccce8719c34.s3tc.ctex", "res://.godot/imported/s04_0_mizu2.png-a59eeda802db4a2c514c7ccce8719c34.etc2.ctex"]
 
 [params]
 

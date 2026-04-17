@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://clu0qk06ugil0"
+path.s3tc="res://.godot/imported/s05_0_pil3.png-12d128d134a328fe85dc628631f075c6.s3tc.ctex"
 path.etc2="res://.godot/imported/s05_0_pil3.png-12d128d134a328fe85dc628631f075c6.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/paru_b/s05b_tb3/lndmd/s05_0_pil3.png"
-dest_files=["res://.godot/imported/s05_0_pil3.png-12d128d134a328fe85dc628631f075c6.etc2.ctex"]
+dest_files=["res://.godot/imported/s05_0_pil3.png-12d128d134a328fe85dc628631f075c6.s3tc.ctex", "res://.godot/imported/s05_0_pil3.png-12d128d134a328fe85dc628631f075c6.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://djoju5ihs4tv7"
+path.s3tc="res://.godot/imported/s06_1_clock2.png-c602ec15037e0ba4a5f641be670565e6.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_1_clock2.png-c602ec15037e0ba4a5f641be670565e6.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/arca_a/s06a_tb3/lndmd/s06_1_clock2.png"
-dest_files=["res://.godot/imported/s06_1_clock2.png-c602ec15037e0ba4a5f641be670565e6.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_1_clock2.png-c602ec15037e0ba4a5f641be670565e6.s3tc.ctex", "res://.godot/imported/s06_1_clock2.png-c602ec15037e0ba4a5f641be670565e6.etc2.ctex"]
 
 [params]
 

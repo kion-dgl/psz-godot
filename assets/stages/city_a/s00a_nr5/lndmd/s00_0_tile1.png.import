@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bnlv336w2yd8d"
+path.s3tc="res://.godot/imported/s00_0_tile1.png-76ba4ac720dfa6a4eea5cee9c83455ff.s3tc.ctex"
 path.etc2="res://.godot/imported/s00_0_tile1.png-76ba4ac720dfa6a4eea5cee9c83455ff.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_a/s00a_nr5/lndmd/s00_0_tile1.png"
-dest_files=["res://.godot/imported/s00_0_tile1.png-76ba4ac720dfa6a4eea5cee9c83455ff.etc2.ctex"]
+dest_files=["res://.godot/imported/s00_0_tile1.png-76ba4ac720dfa6a4eea5cee9c83455ff.s3tc.ctex", "res://.godot/imported/s00_0_tile1.png-76ba4ac720dfa6a4eea5cee9c83455ff.etc2.ctex"]
 
 [params]
 

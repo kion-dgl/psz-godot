@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://chr14ugas060i"
+path.s3tc="res://.godot/imported/s04_0_yuka.png-699ce654f6d763606dddba63c4652bdd.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_yuka.png-699ce654f6d763606dddba63c4652bdd.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_e/s04e_ia1/lndmd/s04_0_yuka.png"
-dest_files=["res://.godot/imported/s04_0_yuka.png-699ce654f6d763606dddba63c4652bdd.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_yuka.png-699ce654f6d763606dddba63c4652bdd.s3tc.ctex", "res://.godot/imported/s04_0_yuka.png-699ce654f6d763606dddba63c4652bdd.etc2.ctex"]
 
 [params]
 

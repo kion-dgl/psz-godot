@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://8a76fwks7wgf"
+path.s3tc="res://.godot/imported/s03_0_mosss.png-2614601d146524ede78cae816c2bf764.s3tc.ctex"
 path.etc2="res://.godot/imported/s03_0_mosss.png-2614601d146524ede78cae816c2bf764.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/snowfield_a/s03a_td2/lndmd/s03_0_mosss.png"
-dest_files=["res://.godot/imported/s03_0_mosss.png-2614601d146524ede78cae816c2bf764.etc2.ctex"]
+dest_files=["res://.godot/imported/s03_0_mosss.png-2614601d146524ede78cae816c2bf764.s3tc.ctex", "res://.godot/imported/s03_0_mosss.png-2614601d146524ede78cae816c2bf764.etc2.ctex"]
 
 [params]
 

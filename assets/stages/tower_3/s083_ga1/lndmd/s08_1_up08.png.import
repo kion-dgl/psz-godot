@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqejt3s21qd7m"
+path.s3tc="res://.godot/imported/s08_1_up08.png-639eea98b3252fca93c2a1c2b546b24b.s3tc.ctex"
 path.etc2="res://.godot/imported/s08_1_up08.png-639eea98b3252fca93c2a1c2b546b24b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/tower_3/s083_ga1/lndmd/s08_1_up08.png"
-dest_files=["res://.godot/imported/s08_1_up08.png-639eea98b3252fca93c2a1c2b546b24b.etc2.ctex"]
+dest_files=["res://.godot/imported/s08_1_up08.png-639eea98b3252fca93c2a1c2b546b24b.s3tc.ctex", "res://.godot/imported/s08_1_up08.png-639eea98b3252fca93c2a1c2b546b24b.etc2.ctex"]
 
 [params]
 

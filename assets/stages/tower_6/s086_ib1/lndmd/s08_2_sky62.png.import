@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cap6ic1m1rqyi"
+path.s3tc="res://.godot/imported/s08_2_sky62.png-714c86356d64543c242051effe82770e.s3tc.ctex"
 path.etc2="res://.godot/imported/s08_2_sky62.png-714c86356d64543c242051effe82770e.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/tower_6/s086_ib1/lndmd/s08_2_sky62.png"
-dest_files=["res://.godot/imported/s08_2_sky62.png-714c86356d64543c242051effe82770e.etc2.ctex"]
+dest_files=["res://.godot/imported/s08_2_sky62.png-714c86356d64543c242051effe82770e.s3tc.ctex", "res://.godot/imported/s08_2_sky62.png-714c86356d64543c242051effe82770e.etc2.ctex"]
 
 [params]
 

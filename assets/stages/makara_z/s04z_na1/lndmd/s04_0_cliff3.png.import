@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d0gs4kk742ov"
+path.s3tc="res://.godot/imported/s04_0_cliff3.png-6a0f43f6e8f0fc21e53854706e0f5a11.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_cliff3.png-6a0f43f6e8f0fc21e53854706e0f5a11.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_z/s04z_na1/lndmd/s04_0_cliff3.png"
-dest_files=["res://.godot/imported/s04_0_cliff3.png-6a0f43f6e8f0fc21e53854706e0f5a11.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_cliff3.png-6a0f43f6e8f0fc21e53854706e0f5a11.s3tc.ctex", "res://.godot/imported/s04_0_cliff3.png-6a0f43f6e8f0fc21e53854706e0f5a11.etc2.ctex"]
 
 [params]
 

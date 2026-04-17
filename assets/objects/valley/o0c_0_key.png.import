@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1qicnecwrmr6"
+path.s3tc="res://.godot/imported/o0c_0_key.png-51ce65fe7a13e97a522e99f096be07dd.s3tc.ctex"
 path.etc2="res://.godot/imported/o0c_0_key.png-51ce65fe7a13e97a522e99f096be07dd.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/objects/valley/o0c_0_key.png"
-dest_files=["res://.godot/imported/o0c_0_key.png-51ce65fe7a13e97a522e99f096be07dd.etc2.ctex"]
+dest_files=["res://.godot/imported/o0c_0_key.png-51ce65fe7a13e97a522e99f096be07dd.s3tc.ctex", "res://.godot/imported/o0c_0_key.png-51ce65fe7a13e97a522e99f096be07dd.etc2.ctex"]
 
 [params]
 

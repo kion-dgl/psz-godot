@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://csadk4el6f22l"
+path.s3tc="res://.godot/imported/s00_1_wood01.png-c3eb3a2776db5b6526eea56ca885b080.s3tc.ctex"
 path.etc2="res://.godot/imported/s00_1_wood01.png-c3eb3a2776db5b6526eea56ca885b080.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_e/market/s00_1_wood01.png"
-dest_files=["res://.godot/imported/s00_1_wood01.png-c3eb3a2776db5b6526eea56ca885b080.etc2.ctex"]
+dest_files=["res://.godot/imported/s00_1_wood01.png-c3eb3a2776db5b6526eea56ca885b080.s3tc.ctex", "res://.godot/imported/s00_1_wood01.png-c3eb3a2776db5b6526eea56ca885b080.etc2.ctex"]
 
 [params]
 

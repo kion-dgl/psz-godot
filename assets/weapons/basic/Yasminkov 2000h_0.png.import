@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dpucgallx8g0w"
+path.s3tc="res://.godot/imported/Yasminkov 2000h_0.png-6a0c76350fa2fd044edb4f1069277da6.s3tc.ctex"
 path.etc2="res://.godot/imported/Yasminkov 2000h_0.png-6a0c76350fa2fd044edb4f1069277da6.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/weapons/basic/Yasminkov 2000h_0.png"
-dest_files=["res://.godot/imported/Yasminkov 2000h_0.png-6a0c76350fa2fd044edb4f1069277da6.etc2.ctex"]
+dest_files=["res://.godot/imported/Yasminkov 2000h_0.png-6a0c76350fa2fd044edb4f1069277da6.s3tc.ctex", "res://.godot/imported/Yasminkov 2000h_0.png-6a0c76350fa2fd044edb4f1069277da6.etc2.ctex"]
 
 [params]
 

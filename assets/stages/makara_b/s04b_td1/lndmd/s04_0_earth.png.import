@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cota3l0roc5di"
+path.s3tc="res://.godot/imported/s04_0_earth.png-0a33933fba9eea9dcc7c33c216958168.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_earth.png-0a33933fba9eea9dcc7c33c216958168.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_b/s04b_td1/lndmd/s04_0_earth.png"
-dest_files=["res://.godot/imported/s04_0_earth.png-0a33933fba9eea9dcc7c33c216958168.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_earth.png-0a33933fba9eea9dcc7c33c216958168.s3tc.ctex", "res://.godot/imported/s04_0_earth.png-0a33933fba9eea9dcc7c33c216958168.etc2.ctex"]
 
 [params]
 

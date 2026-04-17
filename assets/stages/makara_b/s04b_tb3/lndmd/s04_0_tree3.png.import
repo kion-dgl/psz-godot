@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3srfqfv80bu5"
+path.s3tc="res://.godot/imported/s04_0_tree3.png-e7d5e81b8fecb68bb3b44113cb8abf5b.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_tree3.png-e7d5e81b8fecb68bb3b44113cb8abf5b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_b/s04b_tb3/lndmd/s04_0_tree3.png"
-dest_files=["res://.godot/imported/s04_0_tree3.png-e7d5e81b8fecb68bb3b44113cb8abf5b.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_tree3.png-e7d5e81b8fecb68bb3b44113cb8abf5b.s3tc.ctex", "res://.godot/imported/s04_0_tree3.png-e7d5e81b8fecb68bb3b44113cb8abf5b.etc2.ctex"]
 
 [params]
 

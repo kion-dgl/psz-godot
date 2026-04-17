@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cajnybvbywe8f"
+path.s3tc="res://.godot/imported/s07_1_akusa.png-0cc72b5f78aff03b54496e66e70f5e17.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_akusa.png-0cc72b5f78aff03b54496e66e70f5e17.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_a/s07a_ic1/lndmd/s07_1_akusa.png"
-dest_files=["res://.godot/imported/s07_1_akusa.png-0cc72b5f78aff03b54496e66e70f5e17.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_akusa.png-0cc72b5f78aff03b54496e66e70f5e17.s3tc.ctex", "res://.godot/imported/s07_1_akusa.png-0cc72b5f78aff03b54496e66e70f5e17.etc2.ctex"]
 
 [params]
 

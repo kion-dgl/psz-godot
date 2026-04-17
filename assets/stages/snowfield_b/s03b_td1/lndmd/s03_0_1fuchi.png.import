@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ccm6afc6vb4h3"
+path.s3tc="res://.godot/imported/s03_0_1fuchi.png-f0a05dc077022b9888d6c71c870f3731.s3tc.ctex"
 path.etc2="res://.godot/imported/s03_0_1fuchi.png-f0a05dc077022b9888d6c71c870f3731.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/snowfield_b/s03b_td1/lndmd/s03_0_1fuchi.png"
-dest_files=["res://.godot/imported/s03_0_1fuchi.png-f0a05dc077022b9888d6c71c870f3731.etc2.ctex"]
+dest_files=["res://.godot/imported/s03_0_1fuchi.png-f0a05dc077022b9888d6c71c870f3731.s3tc.ctex", "res://.godot/imported/s03_0_1fuchi.png-f0a05dc077022b9888d6c71c870f3731.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bf544e8eo83su"
+path.s3tc="res://.godot/imported/s04_0_kabe2.png-cb448c6ccbd365e2cf3c28f5f5c894be.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_kabe2.png-cb448c6ccbd365e2cf3c28f5f5c894be.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_a/s00a_nr4/lndmd/s04_0_kabe2.png"
-dest_files=["res://.godot/imported/s04_0_kabe2.png-cb448c6ccbd365e2cf3c28f5f5c894be.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_kabe2.png-cb448c6ccbd365e2cf3c28f5f5c894be.s3tc.ctex", "res://.godot/imported/s04_0_kabe2.png-cb448c6ccbd365e2cf3c28f5f5c894be.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ddep6ww63dgj"
+path.s3tc="res://.godot/imported/s00_0_water1.png-609bf293e72bc643454e1d8122f6841c.s3tc.ctex"
 path.etc2="res://.godot/imported/s00_0_water1.png-609bf293e72bc643454e1d8122f6841c.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_a/s00a_nr2/lndmd/s00_0_water1.png"
-dest_files=["res://.godot/imported/s00_0_water1.png-609bf293e72bc643454e1d8122f6841c.etc2.ctex"]
+dest_files=["res://.godot/imported/s00_0_water1.png-609bf293e72bc643454e1d8122f6841c.s3tc.ctex", "res://.godot/imported/s00_0_water1.png-609bf293e72bc643454e1d8122f6841c.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://baghbytln5wsq"
+path.s3tc="res://.godot/imported/o0c_0_gatet.png-9b2d8a4dbc7109338e8900804b8ba250.s3tc.ctex"
 path.etc2="res://.godot/imported/o0c_0_gatet.png-9b2d8a4dbc7109338e8900804b8ba250.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/objects/valley/o0c_0_gatet.png"
-dest_files=["res://.godot/imported/o0c_0_gatet.png-9b2d8a4dbc7109338e8900804b8ba250.etc2.ctex"]
+dest_files=["res://.godot/imported/o0c_0_gatet.png-9b2d8a4dbc7109338e8900804b8ba250.s3tc.ctex", "res://.godot/imported/o0c_0_gatet.png-9b2d8a4dbc7109338e8900804b8ba250.etc2.ctex"]
 
 [params]
 

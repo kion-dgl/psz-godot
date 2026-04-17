@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://btlyjoo12fo4e"
+path.s3tc="res://.godot/imported/s01_0_moon.png-6c64d86f05a632c1323e43cd9aa584e0.s3tc.ctex"
 path.etc2="res://.godot/imported/s01_0_moon.png-6c64d86f05a632c1323e43cd9aa584e0.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/valley_e/s01e_ia1/lndmd/s01_0_moon.png"
-dest_files=["res://.godot/imported/s01_0_moon.png-6c64d86f05a632c1323e43cd9aa584e0.etc2.ctex"]
+dest_files=["res://.godot/imported/s01_0_moon.png-6c64d86f05a632c1323e43cd9aa584e0.s3tc.ctex", "res://.godot/imported/s01_0_moon.png-6c64d86f05a632c1323e43cd9aa584e0.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c0ytgawi6n8m5"
+path.s3tc="res://.godot/imported/s06_1_ebsak01.png-fb355e808b757360ff58e8e3ac398a12.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_1_ebsak01.png-fb355e808b757360ff58e8e3ac398a12.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/arca_e/s06e_ia1/lndmd/s06_1_ebsak01.png"
-dest_files=["res://.godot/imported/s06_1_ebsak01.png-fb355e808b757360ff58e8e3ac398a12.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_1_ebsak01.png-fb355e808b757360ff58e8e3ac398a12.s3tc.ctex", "res://.godot/imported/s06_1_ebsak01.png-fb355e808b757360ff58e8e3ac398a12.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cmhj3g0d7o5wl"
+path.s3tc="res://.godot/imported/s05_0_road3.png-8a10432b73ee7c6c77546cb5af881d9b.s3tc.ctex"
 path.etc2="res://.godot/imported/s05_0_road3.png-8a10432b73ee7c6c77546cb5af881d9b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/paru_a/s05a_lc2/lndmd/s05_0_road3.png"
-dest_files=["res://.godot/imported/s05_0_road3.png-8a10432b73ee7c6c77546cb5af881d9b.etc2.ctex"]
+dest_files=["res://.godot/imported/s05_0_road3.png-8a10432b73ee7c6c77546cb5af881d9b.s3tc.ctex", "res://.godot/imported/s05_0_road3.png-8a10432b73ee7c6c77546cb5af881d9b.etc2.ctex"]
 
 [params]
 

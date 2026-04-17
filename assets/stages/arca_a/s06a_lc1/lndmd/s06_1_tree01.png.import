@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dd0rb48v01jbl"
+path.s3tc="res://.godot/imported/s06_1_tree01.png-e292483c8e94151225f0a783d48b1180.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_1_tree01.png-e292483c8e94151225f0a783d48b1180.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/arca_a/s06a_lc1/lndmd/s06_1_tree01.png"
-dest_files=["res://.godot/imported/s06_1_tree01.png-e292483c8e94151225f0a783d48b1180.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_1_tree01.png-e292483c8e94151225f0a783d48b1180.s3tc.ctex", "res://.godot/imported/s06_1_tree01.png-e292483c8e94151225f0a783d48b1180.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b4cbo1qc7dbnt"
+path.s3tc="res://.godot/imported/s07_1_zdoore.png-ee9a28736fa0109db51cc8522a300ba2.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_zdoore.png-ee9a28736fa0109db51cc8522a300ba2.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_z/s07z_na1/lndmd/s07_1_zdoore.png"
-dest_files=["res://.godot/imported/s07_1_zdoore.png-ee9a28736fa0109db51cc8522a300ba2.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_zdoore.png-ee9a28736fa0109db51cc8522a300ba2.s3tc.ctex", "res://.godot/imported/s07_1_zdoore.png-ee9a28736fa0109db51cc8522a300ba2.etc2.ctex"]
 
 [params]
 

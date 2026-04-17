@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dtbfnnpky4n0m"
+path.s3tc="res://.godot/imported/s07_0_pole.png-f670151025854141a0c6b1a72d0f64ef.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_0_pole.png-f670151025854141a0c6b1a72d0f64ef.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_b/s07b_ib2/lndmd/s07_0_pole.png"
-dest_files=["res://.godot/imported/s07_0_pole.png-f670151025854141a0c6b1a72d0f64ef.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_0_pole.png-f670151025854141a0c6b1a72d0f64ef.s3tc.ctex", "res://.godot/imported/s07_0_pole.png-f670151025854141a0c6b1a72d0f64ef.etc2.ctex"]
 
 [params]
 

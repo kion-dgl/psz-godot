@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dugj5n7j0osbx"
+path.s3tc="res://.godot/imported/s07_0_ayuka3.png-5fc53c11ce8a430c2c6324733c1b300b.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_0_ayuka3.png-5fc53c11ce8a430c2c6324733c1b300b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_a/s07a_ib2/lndmd/s07_0_ayuka3.png"
-dest_files=["res://.godot/imported/s07_0_ayuka3.png-5fc53c11ce8a430c2c6324733c1b300b.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_0_ayuka3.png-5fc53c11ce8a430c2c6324733c1b300b.s3tc.ctex", "res://.godot/imported/s07_0_ayuka3.png-5fc53c11ce8a430c2c6324733c1b300b.etc2.ctex"]
 
 [params]
 

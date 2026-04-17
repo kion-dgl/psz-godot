@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://do13ih0btvgs2"
+path.s3tc="res://.godot/imported/s06_0_kaza01.png-ee0a7d8122262a74738a60c05f591d8c.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_0_kaza01.png-ee0a7d8122262a74738a60c05f591d8c.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/arca_a/s06a_ib1/lndmd/s06_0_kaza01.png"
-dest_files=["res://.godot/imported/s06_0_kaza01.png-ee0a7d8122262a74738a60c05f591d8c.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_0_kaza01.png-ee0a7d8122262a74738a60c05f591d8c.s3tc.ctex", "res://.godot/imported/s06_0_kaza01.png-ee0a7d8122262a74738a60c05f591d8c.etc2.ctex"]
 
 [params]
 

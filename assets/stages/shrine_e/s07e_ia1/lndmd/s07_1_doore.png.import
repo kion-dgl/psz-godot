@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qo02hqkhmei2"
+path.s3tc="res://.godot/imported/s07_1_doore.png-9af97b76b67da05152126d8a61dc9dbc.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_doore.png-9af97b76b67da05152126d8a61dc9dbc.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_e/s07e_ia1/lndmd/s07_1_doore.png"
-dest_files=["res://.godot/imported/s07_1_doore.png-9af97b76b67da05152126d8a61dc9dbc.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_doore.png-9af97b76b67da05152126d8a61dc9dbc.s3tc.ctex", "res://.godot/imported/s07_1_doore.png-9af97b76b67da05152126d8a61dc9dbc.etc2.ctex"]
 
 [params]
 

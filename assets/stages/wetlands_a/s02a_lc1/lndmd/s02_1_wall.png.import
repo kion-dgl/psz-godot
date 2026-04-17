@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cpndr72mpct1m"
+path.s3tc="res://.godot/imported/s02_1_wall.png-7f48bbe1fa1e14d14c401bc386159dba.s3tc.ctex"
 path.etc2="res://.godot/imported/s02_1_wall.png-7f48bbe1fa1e14d14c401bc386159dba.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/wetlands_a/s02a_lc1/lndmd/s02_1_wall.png"
-dest_files=["res://.godot/imported/s02_1_wall.png-7f48bbe1fa1e14d14c401bc386159dba.etc2.ctex"]
+dest_files=["res://.godot/imported/s02_1_wall.png-7f48bbe1fa1e14d14c401bc386159dba.s3tc.ctex", "res://.godot/imported/s02_1_wall.png-7f48bbe1fa1e14d14c401bc386159dba.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cd6plvluleij"
+path.s3tc="res://.godot/imported/df_b.png-6d96dd0c73480f85ef3b3b1f9ab7fdaf.s3tc.ctex"
 path.etc2="res://.godot/imported/df_b.png-6d96dd0c73480f85ef3b3b1f9ab7fdaf.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/enemies/boss_darkfalz/df_b.png"
-dest_files=["res://.godot/imported/df_b.png-6d96dd0c73480f85ef3b3b1f9ab7fdaf.etc2.ctex"]
+dest_files=["res://.godot/imported/df_b.png-6d96dd0c73480f85ef3b3b1f9ab7fdaf.s3tc.ctex", "res://.godot/imported/df_b.png-6d96dd0c73480f85ef3b3b1f9ab7fdaf.etc2.ctex"]
 
 [params]
 

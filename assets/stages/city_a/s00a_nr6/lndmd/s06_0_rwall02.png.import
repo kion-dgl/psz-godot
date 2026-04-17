@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://qvmbjuodmmye"
+path.s3tc="res://.godot/imported/s06_0_rwall02.png-55cbbc9eaa1f563e9dab5331ddce90ed.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_0_rwall02.png-55cbbc9eaa1f563e9dab5331ddce90ed.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_a/s00a_nr6/lndmd/s06_0_rwall02.png"
-dest_files=["res://.godot/imported/s06_0_rwall02.png-55cbbc9eaa1f563e9dab5331ddce90ed.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_0_rwall02.png-55cbbc9eaa1f563e9dab5331ddce90ed.s3tc.ctex", "res://.godot/imported/s06_0_rwall02.png-55cbbc9eaa1f563e9dab5331ddce90ed.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rt2weco3rux5"
+path.s3tc="res://.godot/imported/s01_1_mis.png-e2c710bacf06d642748226cbd7d7890d.s3tc.ctex"
 path.etc2="res://.godot/imported/s01_1_mis.png-e2c710bacf06d642748226cbd7d7890d.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_a/s00a_nr1/lndmd/s01_1_mis.png"
-dest_files=["res://.godot/imported/s01_1_mis.png-e2c710bacf06d642748226cbd7d7890d.etc2.ctex"]
+dest_files=["res://.godot/imported/s01_1_mis.png-e2c710bacf06d642748226cbd7d7890d.s3tc.ctex", "res://.godot/imported/s01_1_mis.png-e2c710bacf06d642748226cbd7d7890d.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://2g0eef6j8wpe"
+path.s3tc="res://.godot/imported/s06_1_gren02.png-57e05f0c970d8c68176d4366409fa95d.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_1_gren02.png-57e05f0c970d8c68176d4366409fa95d.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/arca_a/s06a_ga1/lndmd/s06_1_gren02.png"
-dest_files=["res://.godot/imported/s06_1_gren02.png-57e05f0c970d8c68176d4366409fa95d.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_1_gren02.png-57e05f0c970d8c68176d4366409fa95d.s3tc.ctex", "res://.godot/imported/s06_1_gren02.png-57e05f0c970d8c68176d4366409fa95d.etc2.ctex"]
 
 [params]
 

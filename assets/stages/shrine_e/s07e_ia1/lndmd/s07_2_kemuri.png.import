@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c4ulaxgbqlhpa"
+path.s3tc="res://.godot/imported/s07_2_kemuri.png-ebef0780a7ce5588df5278815a7a6bc0.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_2_kemuri.png-ebef0780a7ce5588df5278815a7a6bc0.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_e/s07e_ia1/lndmd/s07_2_kemuri.png"
-dest_files=["res://.godot/imported/s07_2_kemuri.png-ebef0780a7ce5588df5278815a7a6bc0.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_2_kemuri.png-ebef0780a7ce5588df5278815a7a6bc0.s3tc.ctex", "res://.godot/imported/s07_2_kemuri.png-ebef0780a7ce5588df5278815a7a6bc0.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://v46wmuud2f16"
+path.s3tc="res://.godot/imported/s07_0_kumo3.png-28f3dd9807a19a20d360c3323ec5e33b.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_0_kumo3.png-28f3dd9807a19a20d360c3323ec5e33b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_b/s07b_lc2/lndmd/s07_0_kumo3.png"
-dest_files=["res://.godot/imported/s07_0_kumo3.png-28f3dd9807a19a20d360c3323ec5e33b.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_0_kumo3.png-28f3dd9807a19a20d360c3323ec5e33b.s3tc.ctex", "res://.godot/imported/s07_0_kumo3.png-28f3dd9807a19a20d360c3323ec5e33b.etc2.ctex"]
 
 [params]
 
