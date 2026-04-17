@@ -44,6 +44,7 @@ func _ready() -> void:
 	GameState.max_hp_changed.connect(_on_stats_changed)
 	GameState.mp_changed.connect(_on_stats_changed)
 	GameState.max_mp_changed.connect(_on_stats_changed)
+	CharacterManager.level_up.connect(_on_level_up)
 
 	# FPS counter (top-right)
 	_fps_label = Label.new()
@@ -126,7 +127,13 @@ func restore_after_menu() -> void:
 
 
 func _on_stats_changed(_value: int) -> void:
-	_stats_panel.queue_redraw()
+	_stats_panel.update_display()
+
+
+func _on_level_up(new_level: int) -> void:
+	_char_level = new_level
+	_stats_panel.char_level = new_level
+	_stats_panel.update_display()
 
 
 ## Log companion speech to the action log.
@@ -225,125 +232,100 @@ class _DebugInfoPanel extends Control:
 # ── Stats Panel (top-left) ───────────────────────────────────────────────────
 
 class _StatsPanel extends Control:
-	const PANEL_W := 170.0
-	const PANEL_H := 56.0
-	const BAR_H := 10.0
-	const FONT_SIZE_MAIN := 11
-	const FONT_SIZE_SMALL := 9
-	const FONT_SIZE_BAR := 8
+	const PANEL_W := 256.0
+	const PANEL_H := 120.0
+	const BAR_LEFT := 76.0
+	const BAR_WIDTH := 160.0
+	const BAR_HEIGHT := 7.0
+	const HP_BAR_TOP := 62.0
+	const PP_BAR_TOP := 98.0
+	const LEVEL_FONT_SIZE := 16
+	const VAL_FONT_SIZE := 14
 
-	# PSZ palette — semi-transparent for single-screen
-	const BG_BLUE := Color(0.66, 0.80, 0.91, 1.0)   # Pale icy blue, opaque
-	const BORDER_BLUE := Color(0.48, 0.63, 0.75, 1.0)
-	const TEXT_DARK := Color(0.1, 0.1, 0.17)         # Near-black text
-	const TEXT_LIGHT := Color(0.23, 0.29, 0.35)      # Secondary text
-	const HP_COLOR := Color(0.27, 0.73, 0.27)        # Green HP fill
-	const HP_COLOR_TOP := Color(0.4, 0.87, 0.4)      # HP gradient top
-	const HP_BG := Color(0.85, 0.91, 0.85)           # HP bar background
-	const HP_YELLOW := Color(0.9, 0.9, 0.2)
-	const HP_RED := Color(0.9, 0.2, 0.2)
-	const PP_COLOR := Color(0.2, 0.53, 0.93)         # Blue PP fill
-	const PP_COLOR_TOP := Color(0.4, 0.6, 1.0)       # PP gradient top
-	const PP_BG := Color(0.85, 0.85, 0.94)           # PP bar background
-	const HP_LABEL := Color(0.2, 0.53, 0.2)          # Dark green
-	const PP_LABEL := Color(0.2, 0.4, 0.73)          # Dark blue
-	const BAR_VALUE := Color(1.0, 1.0, 1.0)          # White value on bar
-	const MAX_VALUE := Color(0.1, 0.1, 0.17)         # Dark max value at end
+	const HP_COLOR := Color(0.27, 0.85, 0.27)
+	const PP_COLOR := Color(0.22, 0.56, 0.93)
+	const TEXT_COLOR := Color(1, 1, 1, 1)
 
 	var char_name: String = ""
 	var char_level: int = 1
-	var _bg_style: StyleBoxFlat
+
+	var _level_label: Label
+	var _hp_cur_label: Label
+	var _hp_max_label: Label
+	var _pp_cur_label: Label
+	var _pp_max_label: Label
+	var _hp_bar: ColorRect
+	var _pp_bar: ColorRect
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
 		position = Vector2(MARGIN, MARGIN)
 		size = Vector2(PANEL_W, PANEL_H)
 		custom_minimum_size = size
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-		# Rounded panel background
-		_bg_style = StyleBoxFlat.new()
-		_bg_style.bg_color = BG_BLUE
-		_bg_style.border_color = BORDER_BLUE
-		_bg_style.set_border_width_all(2)
-		_bg_style.corner_radius_top_left = 4
-		_bg_style.corner_radius_top_right = 16
-		_bg_style.corner_radius_bottom_right = 10
-		_bg_style.corner_radius_bottom_left = 12
+		var bg := TextureRect.new()
+		bg.texture = preload("res://assets/hud/hp-pp.png")
+		bg.position = Vector2.ZERO
+		bg.size = Vector2(PANEL_W, PANEL_H)
+		bg.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(bg)
 
-	func _draw() -> void:
-		var font := ThemeDB.fallback_font
+		_hp_bar = ColorRect.new()
+		_hp_bar.color = HP_COLOR
+		_hp_bar.position = Vector2(BAR_LEFT, HP_BAR_TOP)
+		_hp_bar.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
+		_hp_bar.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(_hp_bar)
+
+		_pp_bar = ColorRect.new()
+		_pp_bar.color = PP_COLOR
+		_pp_bar.position = Vector2(BAR_LEFT, PP_BAR_TOP)
+		_pp_bar.size = Vector2(BAR_WIDTH, BAR_HEIGHT)
+		_pp_bar.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(_pp_bar)
+
+		_level_label = _make_label(Vector2(109, 13), Vector2(46, 22), LEVEL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT)
+		_hp_cur_label = _make_label(Vector2(109, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT)
+		_hp_max_label = _make_label(Vector2(190, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT)
+		_pp_cur_label = _make_label(Vector2(109, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT)
+		_pp_max_label = _make_label(Vector2(190, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT)
+
+		update_display()
+
+	func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int) -> Label:
+		var lbl := Label.new()
+		lbl.position = pos
+		lbl.size = sz
+		lbl.custom_minimum_size = sz
+		lbl.horizontal_alignment = align
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", font_size)
+		lbl.add_theme_color_override("font_color", TEXT_COLOR)
+		lbl.mouse_filter = MOUSE_FILTER_IGNORE
+		add_child(lbl)
+		return lbl
+
+	func update_display() -> void:
+		if not is_inside_tree():
+			return
 		var hp: int = GameState.hp
 		var max_hp: int = GameState.max_hp
 		var pp: int = GameState.mp
 		var max_pp: int = GameState.max_mp
 
-		# Panel background — rounded with asymmetric corners
-		draw_style_box(_bg_style, Rect2(Vector2.ZERO, Vector2(PANEL_W, PANEL_H)))
+		_level_label.text = str(char_level)
+		_hp_cur_label.text = str(hp)
+		_hp_max_label.text = str(max_hp)
+		_pp_cur_label.text = str(pp)
+		_pp_max_label.text = str(max_pp)
 
-		# Scanline overlay (clipped to panel area)
-		for sy in range(2, int(PANEL_H) - 2, 4):
-			draw_rect(Rect2(2, sy + 2, PANEL_W - 4, 2), Color(0.47, 0.63, 0.78, 0.08))
-
-		var pad := 10.0
-		var y := 14.0
-
-		# Player name + level
-		draw_string(font, Vector2(pad, y), char_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_MAIN, TEXT_DARK)
-		var lv_text := "Lv. %d" % char_level
-		var lv_w: float = font.get_string_size(lv_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL).x
-		draw_string(font, Vector2(PANEL_W - pad - lv_w, y), lv_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, TEXT_LIGHT)
-
-		# Separator line
-		y += 4.0
-		draw_line(Vector2(pad, y), Vector2(PANEL_W - pad, y), Color(0.47, 0.63, 0.78, 0.3), 1.0)
-
-		y += 14.0
-		_draw_stat_bar(font, Vector2(pad, y), "HP", hp, max_hp, true)
-		y += 14.0
-		_draw_stat_bar(font, Vector2(pad, y), "PP", pp, max_pp, false)
-
-	func _draw_stat_bar(font: Font, pos: Vector2, label: String, current: int, maximum: int, is_hp: bool) -> void:
-		var label_color: Color = HP_LABEL if is_hp else PP_LABEL
-		draw_string(font, pos, label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, label_color)
-
-		var label_w: float = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL).x
-		var bar_x: float = pos.x + label_w + 4.0
-		var bar_y: float = pos.y - BAR_H + 1.0
-		var bar_w: float = PANEL_W - bar_x - 30.0  # leave room for max value
-
-		# Bar background (rounded)
-		var bar_bg: Color = HP_BG if is_hp else PP_BG
-		draw_rect(Rect2(bar_x, bar_y, bar_w, BAR_H), bar_bg)
-
-		# Bar fill
-		var pct: float = float(current) / float(maximum) if maximum > 0 else 0.0
-		var fill_w: float = bar_w * clampf(pct, 0.0, 1.0)
-		var fill_color: Color
-		if is_hp:
-			if pct > 0.5:
-				fill_color = HP_COLOR
-			elif pct > 0.25:
-				fill_color = HP_YELLOW
-			else:
-				fill_color = HP_RED
-		else:
-			fill_color = PP_COLOR
-		if fill_w > 0:
-			draw_rect(Rect2(bar_x, bar_y, fill_w, BAR_H), fill_color)
-			# Top gradient highlight
-			var top_color: Color = HP_COLOR_TOP if is_hp else PP_COLOR_TOP
-			draw_rect(Rect2(bar_x, bar_y, fill_w, BAR_H / 2), Color(top_color, 0.3))
-
-		# Current value centered on bar
-		var cur_text := str(current)
-		var cur_w: float = font.get_string_size(cur_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_BAR).x
-		var cur_x: float = bar_x + (bar_w - cur_w) * 0.5
-		draw_string(font, Vector2(cur_x, pos.y - 1), cur_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_BAR, BAR_VALUE)
-
-		# Max value at right end of bar
-		var max_text := str(maximum)
-		var max_w: float = font.get_string_size(max_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_BAR).x
-		draw_string(font, Vector2(PANEL_W - 8.0 - max_w, pos.y - 1), max_text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_BAR, MAX_VALUE)
+		var hp_ratio: float = clampf(float(hp) / float(max_hp), 0.0, 1.0) if max_hp > 0 else 0.0
+		var pp_ratio: float = clampf(float(pp) / float(max_pp), 0.0, 1.0) if max_pp > 0 else 0.0
+		_hp_bar.size.x = BAR_WIDTH * hp_ratio
+		_hp_bar.visible = hp_ratio > 0.0
+		_pp_bar.size.x = BAR_WIDTH * pp_ratio
+		_pp_bar.visible = pp_ratio > 0.0
 
 
 # ── Action Log (bottom-left, fixed box with scroll) ─────────────────────────
