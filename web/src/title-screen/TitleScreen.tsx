@@ -4,11 +4,12 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { createNoise2D, createNoise3D } from 'simplex-noise';
 import JSZip from 'jszip';
+import { assetUrl } from '../utils/assets';
 
 const CANVAS_W = 1280;
 const CANVAS_H = 720;
 
-const ASSET_BASE = '/psz-godot/assets/title';
+const ASSET_BASE = assetUrl('assets/title').replace(/\/$/, '');
 const GLB_PATH = `${ASSET_BASE}/scene.glb`;
 
 const TEXTURE_SLOTS: Record<string, string> = {
@@ -162,7 +163,8 @@ export default function TitleScreen() {
       t.colorSpace = THREE.SRGBColorSpace;
       return t;
     })();
-    // Seeded pseudo-random so nebula/star colors stay stable across hot reloads.
+    // Nebula palette. Positions/colors re-roll each mount — bake via Export
+    // bundle to lock them in (the bundle snapshots whatever is on screen).
     const NEBULA_COLORS = [0x5566ff, 0xaa55ff, 0x4488dd, 0xff88cc, 0x6644aa, 0x3355aa, 0xcc66ee, 0x88aaff, 0x552288, 0xffaaee];
     const NEBULAE: { pos: [number, number, number]; size: number; color: number; opacity: number }[] = [];
     for (let i = 0; i < 16; i++) {
@@ -751,7 +753,14 @@ export default function TitleScreen() {
 
     const gltf = new GLTFLoader();
     const loadGLB = () =>
-      new Promise<THREE.Object3D>((resolve) => gltf.load(GLB_PATH, (res) => resolve(res.scene)));
+      new Promise<THREE.Object3D>((resolve, reject) =>
+        gltf.load(
+          GLB_PATH,
+          (res) => resolve(res.scene),
+          undefined,
+          (err) => reject(err),
+        ),
+      );
 
     const processMesh = (obj: THREE.Object3D) => {
       const mesh = obj as THREE.Mesh;

@@ -1,5 +1,6 @@
 extends Control
-## Title screen — title.jpg background with "Press Start" prompt and control scheme selector.
+## Title screen — 3D backdrop (scenes/3d/ui/title_backdrop.tscn, via SubViewport)
+## with "Press Start" prompt and control-scheme selector overlay.
 
 @onready var prompt_label: Label = $VBox/PromptLabel
 @onready var version_label: Label = $VBox/VersionLabel
