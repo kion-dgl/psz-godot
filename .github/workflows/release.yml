@@ -117,11 +117,18 @@ jobs:
           mkdir -p build/android
           godot --headless --path . --export-release "Android" build/android/psz-godot.apk
 
+      - name: Export macOS build
+        continue-on-error: true
+        run: |
+          mkdir -p build/macos
+          godot --headless --path . --export-release "macOS" build/macos/psz-godot.zip
+
       - name: Package builds
         run: |
           cd build/web && zip -r ../../psz-godot-web.zip . && cd ../..
           cd build/linux && zip -r ../../psz-godot-linux-x86_64.zip . && cd ../..
           cd build/windows && zip -r ../../psz-godot-windows-x86_64.zip . && cd ../..
+          [ -f build/macos/psz-godot.zip ] && cp build/macos/psz-godot.zip psz-godot-macos.zip || true
 
       - name: Upload Release
         if: steps.check_tag.outputs.exists == 'false'
@@ -134,6 +141,7 @@ jobs:
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
+            psz-godot-macos.zip
             build/android/psz-godot.apk
           generate_release_notes: true
 
@@ -148,5 +156,6 @@ jobs:
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
             psz-godot-windows-x86_64.zip
+            psz-godot-macos.zip
             build/android/psz-godot.apk
           generate_release_notes: true
