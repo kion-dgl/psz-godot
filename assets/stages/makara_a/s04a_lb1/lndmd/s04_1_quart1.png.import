@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c5i10o7s2rna3"
+path.s3tc="res://.godot/imported/s04_1_quart1.png-8d4c98a961f11bb4f681266d55425b9c.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_1_quart1.png-8d4c98a961f11bb4f681266d55425b9c.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_a/s04a_lb1/lndmd/s04_1_quart1.png"
-dest_files=["res://.godot/imported/s04_1_quart1.png-8d4c98a961f11bb4f681266d55425b9c.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_1_quart1.png-8d4c98a961f11bb4f681266d55425b9c.s3tc.ctex", "res://.godot/imported/s04_1_quart1.png-8d4c98a961f11bb4f681266d55425b9c.etc2.ctex"]
 
 [params]
 

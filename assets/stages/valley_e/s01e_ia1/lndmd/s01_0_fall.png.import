@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cn1ovmjcgngip"
+path.s3tc="res://.godot/imported/s01_0_fall.png-93f9a0dd2754c84ccb3a265774cf3fde.s3tc.ctex"
 path.etc2="res://.godot/imported/s01_0_fall.png-93f9a0dd2754c84ccb3a265774cf3fde.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/valley_e/s01e_ia1/lndmd/s01_0_fall.png"
-dest_files=["res://.godot/imported/s01_0_fall.png-93f9a0dd2754c84ccb3a265774cf3fde.etc2.ctex"]
+dest_files=["res://.godot/imported/s01_0_fall.png-93f9a0dd2754c84ccb3a265774cf3fde.s3tc.ctex", "res://.godot/imported/s01_0_fall.png-93f9a0dd2754c84ccb3a265774cf3fde.etc2.ctex"]
 
 [params]
 

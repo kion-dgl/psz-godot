@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b3kucwsfd58oj"
+path.s3tc="res://.godot/imported/s02_1_hasib.png-2911a0e08f2f5816bd59b9d5a12d9024.s3tc.ctex"
 path.etc2="res://.godot/imported/s02_1_hasib.png-2911a0e08f2f5816bd59b9d5a12d9024.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/wetlands_b/s02b_sa1/lndmd/s02_1_hasib.png"
-dest_files=["res://.godot/imported/s02_1_hasib.png-2911a0e08f2f5816bd59b9d5a12d9024.etc2.ctex"]
+dest_files=["res://.godot/imported/s02_1_hasib.png-2911a0e08f2f5816bd59b9d5a12d9024.s3tc.ctex", "res://.godot/imported/s02_1_hasib.png-2911a0e08f2f5816bd59b9d5a12d9024.etc2.ctex"]
 
 [params]
 

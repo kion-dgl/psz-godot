@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b0myexw88kd8n"
+path.s3tc="res://.godot/imported/s05_0_hasi1.png-8c575562e32e2039b17cf9bccd8da643.s3tc.ctex"
 path.etc2="res://.godot/imported/s05_0_hasi1.png-8c575562e32e2039b17cf9bccd8da643.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/paru_b/s05b_lb1/lndmd/s05_0_hasi1.png"
-dest_files=["res://.godot/imported/s05_0_hasi1.png-8c575562e32e2039b17cf9bccd8da643.etc2.ctex"]
+dest_files=["res://.godot/imported/s05_0_hasi1.png-8c575562e32e2039b17cf9bccd8da643.s3tc.ctex", "res://.godot/imported/s05_0_hasi1.png-8c575562e32e2039b17cf9bccd8da643.etc2.ctex"]
 
 [params]
 

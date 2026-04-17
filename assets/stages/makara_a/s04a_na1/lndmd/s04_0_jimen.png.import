@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c462lwnj4ris3"
+path.s3tc="res://.godot/imported/s04_0_jimen.png-ca15b8480469dcc150be0a4ad1e2bef7.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_jimen.png-ca15b8480469dcc150be0a4ad1e2bef7.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_a/s04a_na1/lndmd/s04_0_jimen.png"
-dest_files=["res://.godot/imported/s04_0_jimen.png-ca15b8480469dcc150be0a4ad1e2bef7.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_jimen.png-ca15b8480469dcc150be0a4ad1e2bef7.s3tc.ctex", "res://.godot/imported/s04_0_jimen.png-ca15b8480469dcc150be0a4ad1e2bef7.etc2.ctex"]
 
 [params]
 

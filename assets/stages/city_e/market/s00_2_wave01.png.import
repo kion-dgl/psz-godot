@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bl0nmylofixep"
+path.s3tc="res://.godot/imported/s00_2_wave01.png-08a2eca72473ba8fd0a833de8c290aee.s3tc.ctex"
 path.etc2="res://.godot/imported/s00_2_wave01.png-08a2eca72473ba8fd0a833de8c290aee.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_e/market/s00_2_wave01.png"
-dest_files=["res://.godot/imported/s00_2_wave01.png-08a2eca72473ba8fd0a833de8c290aee.etc2.ctex"]
+dest_files=["res://.godot/imported/s00_2_wave01.png-08a2eca72473ba8fd0a833de8c290aee.s3tc.ctex", "res://.godot/imported/s00_2_wave01.png-08a2eca72473ba8fd0a833de8c290aee.etc2.ctex"]
 
 [params]
 

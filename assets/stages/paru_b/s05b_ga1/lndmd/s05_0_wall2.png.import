@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://t2117pmu4ibq"
+path.s3tc="res://.godot/imported/s05_0_wall2.png-928cc34a29e3f888f3bd4e03d1426054.s3tc.ctex"
 path.etc2="res://.godot/imported/s05_0_wall2.png-928cc34a29e3f888f3bd4e03d1426054.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/paru_b/s05b_ga1/lndmd/s05_0_wall2.png"
-dest_files=["res://.godot/imported/s05_0_wall2.png-928cc34a29e3f888f3bd4e03d1426054.etc2.ctex"]
+dest_files=["res://.godot/imported/s05_0_wall2.png-928cc34a29e3f888f3bd4e03d1426054.s3tc.ctex", "res://.godot/imported/s05_0_wall2.png-928cc34a29e3f888f3bd4e03d1426054.etc2.ctex"]
 
 [params]
 

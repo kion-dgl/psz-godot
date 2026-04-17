@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ip4dpr42rwjj"
+path.s3tc="res://.godot/imported/s01a_ga1-scene_0.png-b73971c23ba67ceb1117974591ca980c.s3tc.ctex"
 path.etc2="res://.godot/imported/s01a_ga1-scene_0.png-b73971c23ba67ceb1117974591ca980c.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/stages/valley_a/s01a_ga1/lndmd/s01a_ga1-scene_0.png"
-dest_files=["res://.godot/imported/s01a_ga1-scene_0.png-b73971c23ba67ceb1117974591ca980c.etc2.ctex"]
+dest_files=["res://.godot/imported/s01a_ga1-scene_0.png-b73971c23ba67ceb1117974591ca980c.s3tc.ctex", "res://.godot/imported/s01a_ga1-scene_0.png-b73971c23ba67ceb1117974591ca980c.etc2.ctex"]
 
 [params]
 

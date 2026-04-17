@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dn1dyifww2wvm"
+path.s3tc="res://.godot/imported/s00_1_trbox00.png-d6a05e9dd486556bdec1d2b68b30da9b.s3tc.ctex"
 path.etc2="res://.godot/imported/s00_1_trbox00.png-d6a05e9dd486556bdec1d2b68b30da9b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_e/s00e_sa2/lndmd/s00_1_trbox00.png"
-dest_files=["res://.godot/imported/s00_1_trbox00.png-d6a05e9dd486556bdec1d2b68b30da9b.etc2.ctex"]
+dest_files=["res://.godot/imported/s00_1_trbox00.png-d6a05e9dd486556bdec1d2b68b30da9b.s3tc.ctex", "res://.godot/imported/s00_1_trbox00.png-d6a05e9dd486556bdec1d2b68b30da9b.etc2.ctex"]
 
 [params]
 

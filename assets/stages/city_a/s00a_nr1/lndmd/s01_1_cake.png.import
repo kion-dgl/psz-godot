@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://rouly7xnobwa"
+path.s3tc="res://.godot/imported/s01_1_cake.png-98bfe4209a6162f81a862d09ff7259fb.s3tc.ctex"
 path.etc2="res://.godot/imported/s01_1_cake.png-98bfe4209a6162f81a862d09ff7259fb.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_a/s00a_nr1/lndmd/s01_1_cake.png"
-dest_files=["res://.godot/imported/s01_1_cake.png-98bfe4209a6162f81a862d09ff7259fb.etc2.ctex"]
+dest_files=["res://.godot/imported/s01_1_cake.png-98bfe4209a6162f81a862d09ff7259fb.s3tc.ctex", "res://.godot/imported/s01_1_cake.png-98bfe4209a6162f81a862d09ff7259fb.etc2.ctex"]
 
 [params]
 

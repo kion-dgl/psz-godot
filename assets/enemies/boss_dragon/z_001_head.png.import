@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cx0sddhqmymdc"
+path.s3tc="res://.godot/imported/z_001_head.png-30b741496d0b3d9a36656de61390ee21.s3tc.ctex"
 path.etc2="res://.godot/imported/z_001_head.png-30b741496d0b3d9a36656de61390ee21.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/enemies/boss_dragon/z_001_head.png"
-dest_files=["res://.godot/imported/z_001_head.png-30b741496d0b3d9a36656de61390ee21.etc2.ctex"]
+dest_files=["res://.godot/imported/z_001_head.png-30b741496d0b3d9a36656de61390ee21.s3tc.ctex", "res://.godot/imported/z_001_head.png-30b741496d0b3d9a36656de61390ee21.etc2.ctex"]
 
 [params]
 

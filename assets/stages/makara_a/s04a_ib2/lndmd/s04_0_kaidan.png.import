@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnuftdjxka5bn"
+path.s3tc="res://.godot/imported/s04_0_kaidan.png-1aba86545f5fb3bb5f8b22233ffab62b.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_kaidan.png-1aba86545f5fb3bb5f8b22233ffab62b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_a/s04a_ib2/lndmd/s04_0_kaidan.png"
-dest_files=["res://.godot/imported/s04_0_kaidan.png-1aba86545f5fb3bb5f8b22233ffab62b.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_kaidan.png-1aba86545f5fb3bb5f8b22233ffab62b.s3tc.ctex", "res://.godot/imported/s04_0_kaidan.png-1aba86545f5fb3bb5f8b22233ffab62b.etc2.ctex"]
 
 [params]
 

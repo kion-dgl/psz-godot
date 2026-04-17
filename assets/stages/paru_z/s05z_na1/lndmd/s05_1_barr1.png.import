@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dfvy1byiqi6bo"
+path.s3tc="res://.godot/imported/s05_1_barr1.png-562f0afecb8445d7031fc7b5141abf25.s3tc.ctex"
 path.etc2="res://.godot/imported/s05_1_barr1.png-562f0afecb8445d7031fc7b5141abf25.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/paru_z/s05z_na1/lndmd/s05_1_barr1.png"
-dest_files=["res://.godot/imported/s05_1_barr1.png-562f0afecb8445d7031fc7b5141abf25.etc2.ctex"]
+dest_files=["res://.godot/imported/s05_1_barr1.png-562f0afecb8445d7031fc7b5141abf25.s3tc.ctex", "res://.godot/imported/s05_1_barr1.png-562f0afecb8445d7031fc7b5141abf25.etc2.ctex"]
 
 [params]
 

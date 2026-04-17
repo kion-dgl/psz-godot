@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dofbhiknto6jj"
+path.s3tc="res://.godot/imported/s04_1_hana2.png-7d4a3efc93ccd8fc6b0d64853363ad8e.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_1_hana2.png-7d4a3efc93ccd8fc6b0d64853363ad8e.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_b/s04b_ic3/lndmd/s04_1_hana2.png"
-dest_files=["res://.godot/imported/s04_1_hana2.png-7d4a3efc93ccd8fc6b0d64853363ad8e.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_1_hana2.png-7d4a3efc93ccd8fc6b0d64853363ad8e.s3tc.ctex", "res://.godot/imported/s04_1_hana2.png-7d4a3efc93ccd8fc6b0d64853363ad8e.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1qr30pcxb7av"
+path.s3tc="res://.godot/imported/s07_1_amyaku.png-bb2c9b5023ffd84bc34fa08e398bcc50.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_amyaku.png-bb2c9b5023ffd84bc34fa08e398bcc50.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_a/s07a_ib2/lndmd/s07_1_amyaku.png"
-dest_files=["res://.godot/imported/s07_1_amyaku.png-bb2c9b5023ffd84bc34fa08e398bcc50.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_amyaku.png-bb2c9b5023ffd84bc34fa08e398bcc50.s3tc.ctex", "res://.godot/imported/s07_1_amyaku.png-bb2c9b5023ffd84bc34fa08e398bcc50.etc2.ctex"]
 
 [params]
 

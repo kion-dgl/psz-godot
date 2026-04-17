@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dn4t7g51nmplv"
+path.s3tc="res://.godot/imported/s01_0_wallc.png-371012d11f7173f06b904f896745a1b3.s3tc.ctex"
 path.etc2="res://.godot/imported/s01_0_wallc.png-371012d11f7173f06b904f896745a1b3.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_a/s00a_nr1/lndmd/s01_0_wallc.png"
-dest_files=["res://.godot/imported/s01_0_wallc.png-371012d11f7173f06b904f896745a1b3.etc2.ctex"]
+dest_files=["res://.godot/imported/s01_0_wallc.png-371012d11f7173f06b904f896745a1b3.s3tc.ctex", "res://.godot/imported/s01_0_wallc.png-371012d11f7173f06b904f896745a1b3.etc2.ctex"]
 
 [params]
 

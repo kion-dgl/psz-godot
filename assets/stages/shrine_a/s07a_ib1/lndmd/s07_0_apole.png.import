@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://duti46thaku1l"
+path.s3tc="res://.godot/imported/s07_0_apole.png-d1d0f8ce28fde87da528011bc6ef94ed.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_0_apole.png-d1d0f8ce28fde87da528011bc6ef94ed.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_a/s07a_ib1/lndmd/s07_0_apole.png"
-dest_files=["res://.godot/imported/s07_0_apole.png-d1d0f8ce28fde87da528011bc6ef94ed.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_0_apole.png-d1d0f8ce28fde87da528011bc6ef94ed.s3tc.ctex", "res://.godot/imported/s07_0_apole.png-d1d0f8ce28fde87da528011bc6ef94ed.etc2.ctex"]
 
 [params]
 

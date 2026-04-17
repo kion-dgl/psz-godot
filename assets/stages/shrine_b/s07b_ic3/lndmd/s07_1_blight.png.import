@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bqe5qnf54snen"
+path.s3tc="res://.godot/imported/s07_1_blight.png-8e0cd944eebc54e63a3d93b66f6dc19b.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_blight.png-8e0cd944eebc54e63a3d93b66f6dc19b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_b/s07b_ic3/lndmd/s07_1_blight.png"
-dest_files=["res://.godot/imported/s07_1_blight.png-8e0cd944eebc54e63a3d93b66f6dc19b.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_blight.png-8e0cd944eebc54e63a3d93b66f6dc19b.s3tc.ctex", "res://.godot/imported/s07_1_blight.png-8e0cd944eebc54e63a3d93b66f6dc19b.etc2.ctex"]
 
 [params]
 

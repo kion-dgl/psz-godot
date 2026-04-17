@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmx2l4nqhqivy"
+path.s3tc="res://.godot/imported/s07_1_myaku.png-5f963bc67c5b198049fe4f4225c581ef.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_myaku.png-5f963bc67c5b198049fe4f4225c581ef.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_b/s07b_ga1/lndmd/s07_1_myaku.png"
-dest_files=["res://.godot/imported/s07_1_myaku.png-5f963bc67c5b198049fe4f4225c581ef.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_myaku.png-5f963bc67c5b198049fe4f4225c581ef.s3tc.ctex", "res://.godot/imported/s07_1_myaku.png-5f963bc67c5b198049fe4f4225c581ef.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dcq7tvnw3fr02"
+path.s3tc="res://.godot/imported/s04_0_hasira2.png-134baf03ef70a56403ab861e4ea018ca.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_hasira2.png-134baf03ef70a56403ab861e4ea018ca.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_b/s04b_tb3/lndmd/s04_0_hasira2.png"
-dest_files=["res://.godot/imported/s04_0_hasira2.png-134baf03ef70a56403ab861e4ea018ca.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_hasira2.png-134baf03ef70a56403ab861e4ea018ca.s3tc.ctex", "res://.godot/imported/s04_0_hasira2.png-134baf03ef70a56403ab861e4ea018ca.etc2.ctex"]
 
 [params]
 

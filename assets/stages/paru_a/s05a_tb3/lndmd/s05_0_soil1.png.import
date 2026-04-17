@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c44lyvveh5f2q"
+path.s3tc="res://.godot/imported/s05_0_soil1.png-a43b3358f12c699c453c86e42339de21.s3tc.ctex"
 path.etc2="res://.godot/imported/s05_0_soil1.png-a43b3358f12c699c453c86e42339de21.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/paru_a/s05a_tb3/lndmd/s05_0_soil1.png"
-dest_files=["res://.godot/imported/s05_0_soil1.png-a43b3358f12c699c453c86e42339de21.etc2.ctex"]
+dest_files=["res://.godot/imported/s05_0_soil1.png-a43b3358f12c699c453c86e42339de21.s3tc.ctex", "res://.godot/imported/s05_0_soil1.png-a43b3358f12c699c453c86e42339de21.etc2.ctex"]
 
 [params]
 

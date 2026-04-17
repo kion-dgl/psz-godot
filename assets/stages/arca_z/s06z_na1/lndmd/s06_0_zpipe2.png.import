@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://clxrfor4xchq5"
+path.s3tc="res://.godot/imported/s06_0_zpipe2.png-5f975c9f7f3e07abf62434cd590c8739.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_0_zpipe2.png-5f975c9f7f3e07abf62434cd590c8739.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/arca_z/s06z_na1/lndmd/s06_0_zpipe2.png"
-dest_files=["res://.godot/imported/s06_0_zpipe2.png-5f975c9f7f3e07abf62434cd590c8739.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_0_zpipe2.png-5f975c9f7f3e07abf62434cd590c8739.s3tc.ctex", "res://.godot/imported/s06_0_zpipe2.png-5f975c9f7f3e07abf62434cd590c8739.etc2.ctex"]
 
 [params]
 

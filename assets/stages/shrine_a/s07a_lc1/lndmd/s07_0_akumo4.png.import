@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bb375ato4ng5r"
+path.s3tc="res://.godot/imported/s07_0_akumo4.png-07da53e17a719a30ba4d6fd8dad8c26d.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_0_akumo4.png-07da53e17a719a30ba4d6fd8dad8c26d.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_a/s07a_lc1/lndmd/s07_0_akumo4.png"
-dest_files=["res://.godot/imported/s07_0_akumo4.png-07da53e17a719a30ba4d6fd8dad8c26d.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_0_akumo4.png-07da53e17a719a30ba4d6fd8dad8c26d.s3tc.ctex", "res://.godot/imported/s07_0_akumo4.png-07da53e17a719a30ba4d6fd8dad8c26d.etc2.ctex"]
 
 [params]
 

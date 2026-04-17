@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bsul6rw43o0uc"
+path.s3tc="res://.godot/imported/s00_0_gr1.png-b37a46d43fef8709a62342ca82dad86b.s3tc.ctex"
 path.etc2="res://.godot/imported/s00_0_gr1.png-b37a46d43fef8709a62342ca82dad86b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_e/market/s00_0_gr1.png"
-dest_files=["res://.godot/imported/s00_0_gr1.png-b37a46d43fef8709a62342ca82dad86b.etc2.ctex"]
+dest_files=["res://.godot/imported/s00_0_gr1.png-b37a46d43fef8709a62342ca82dad86b.s3tc.ctex", "res://.godot/imported/s00_0_gr1.png-b37a46d43fef8709a62342ca82dad86b.etc2.ctex"]
 
 [params]
 

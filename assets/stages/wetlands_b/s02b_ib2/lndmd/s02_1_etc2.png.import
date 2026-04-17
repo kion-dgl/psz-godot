@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://brdikdm540vhx"
+path.s3tc="res://.godot/imported/s02_1_etc2.png-4c48a9e6b5e0cb4e3bb2314000a9e3de.s3tc.ctex"
 path.etc2="res://.godot/imported/s02_1_etc2.png-4c48a9e6b5e0cb4e3bb2314000a9e3de.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/wetlands_b/s02b_ib2/lndmd/s02_1_etc2.png"
-dest_files=["res://.godot/imported/s02_1_etc2.png-4c48a9e6b5e0cb4e3bb2314000a9e3de.etc2.ctex"]
+dest_files=["res://.godot/imported/s02_1_etc2.png-4c48a9e6b5e0cb4e3bb2314000a9e3de.s3tc.ctex", "res://.godot/imported/s02_1_etc2.png-4c48a9e6b5e0cb4e3bb2314000a9e3de.etc2.ctex"]
 
 [params]
 

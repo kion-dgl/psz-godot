@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ifmlqopayg6g"
+path.s3tc="res://.godot/imported/s02_1_bush.png-e0bfedd4a153c48dd961e4e5511ebbfb.s3tc.ctex"
 path.etc2="res://.godot/imported/s02_1_bush.png-e0bfedd4a153c48dd961e4e5511ebbfb.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/wetlands_a/s02a_lb3/lndmd/s02_1_bush.png"
-dest_files=["res://.godot/imported/s02_1_bush.png-e0bfedd4a153c48dd961e4e5511ebbfb.etc2.ctex"]
+dest_files=["res://.godot/imported/s02_1_bush.png-e0bfedd4a153c48dd961e4e5511ebbfb.s3tc.ctex", "res://.godot/imported/s02_1_bush.png-e0bfedd4a153c48dd961e4e5511ebbfb.etc2.ctex"]
 
 [params]
 

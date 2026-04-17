@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://blfmqtcitc6ku"
+path.s3tc="res://.godot/imported/s07_0_ayukas.png-77f558536e407727ec5ff6f2347b7e4a.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_0_ayukas.png-77f558536e407727ec5ff6f2347b7e4a.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_a/s07a_lb3/lndmd/s07_0_ayukas.png"
-dest_files=["res://.godot/imported/s07_0_ayukas.png-77f558536e407727ec5ff6f2347b7e4a.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_0_ayukas.png-77f558536e407727ec5ff6f2347b7e4a.s3tc.ctex", "res://.godot/imported/s07_0_ayukas.png-77f558536e407727ec5ff6f2347b7e4a.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b88h2q53ddh3t"
+path.s3tc="res://.godot/imported/s07_1_zmyaku.png-82cb73e1a0a24d3551412f007334133c.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_zmyaku.png-82cb73e1a0a24d3551412f007334133c.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_z/s07z_na1/lndmd/s07_1_zmyaku.png"
-dest_files=["res://.godot/imported/s07_1_zmyaku.png-82cb73e1a0a24d3551412f007334133c.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_zmyaku.png-82cb73e1a0a24d3551412f007334133c.s3tc.ctex", "res://.godot/imported/s07_1_zmyaku.png-82cb73e1a0a24d3551412f007334133c.etc2.ctex"]
 
 [params]
 

@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bjrldbpualfpg"
+path.s3tc="res://.godot/imported/Akiko Wok_0.png-ab92094a0aff34ff5ab1d0efb62e1f4e.s3tc.ctex"
 path.etc2="res://.godot/imported/Akiko Wok_0.png-ab92094a0aff34ff5ab1d0efb62e1f4e.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/weapons/basic/Akiko Wok_0.png"
-dest_files=["res://.godot/imported/Akiko Wok_0.png-ab92094a0aff34ff5ab1d0efb62e1f4e.etc2.ctex"]
+dest_files=["res://.godot/imported/Akiko Wok_0.png-ab92094a0aff34ff5ab1d0efb62e1f4e.s3tc.ctex", "res://.godot/imported/Akiko Wok_0.png-ab92094a0aff34ff5ab1d0efb62e1f4e.etc2.ctex"]
 
 [params]
 

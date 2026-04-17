@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c6o5mkvphban8"
+path.s3tc="res://.godot/imported/Partisan_3.png-5bf1a78f11f496ac45c5710d98dfc8e8.s3tc.ctex"
 path.etc2="res://.godot/imported/Partisan_3.png-5bf1a78f11f496ac45c5710d98dfc8e8.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/weapons/basic/Partisan_3.png"
-dest_files=["res://.godot/imported/Partisan_3.png-5bf1a78f11f496ac45c5710d98dfc8e8.etc2.ctex"]
+dest_files=["res://.godot/imported/Partisan_3.png-5bf1a78f11f496ac45c5710d98dfc8e8.s3tc.ctex", "res://.godot/imported/Partisan_3.png-5bf1a78f11f496ac45c5710d98dfc8e8.etc2.ctex"]
 
 [params]
 

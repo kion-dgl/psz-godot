@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://duopqylcjfo1k"
+path.s3tc="res://.godot/imported/s06_0_bwal05.png-040d089606e857f51c936628ad73a68f.s3tc.ctex"
 path.etc2="res://.godot/imported/s06_0_bwal05.png-040d089606e857f51c936628ad73a68f.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/arca_b/s06b_na1/lndmd/s06_0_bwal05.png"
-dest_files=["res://.godot/imported/s06_0_bwal05.png-040d089606e857f51c936628ad73a68f.etc2.ctex"]
+dest_files=["res://.godot/imported/s06_0_bwal05.png-040d089606e857f51c936628ad73a68f.s3tc.ctex", "res://.godot/imported/s06_0_bwal05.png-040d089606e857f51c936628ad73a68f.etc2.ctex"]
 
 [params]
 

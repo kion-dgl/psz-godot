@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cy8niirl0sqdn"
+path.s3tc="res://.godot/imported/o0s_1_fwarp2.png-5ed7018630b9d81cbc80cfc5bf41234f.s3tc.ctex"
 path.etc2="res://.godot/imported/o0s_1_fwarp2.png-5ed7018630b9d81cbc80cfc5bf41234f.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/objects/special/o0s_1_fwarp2.png"
-dest_files=["res://.godot/imported/o0s_1_fwarp2.png-5ed7018630b9d81cbc80cfc5bf41234f.etc2.ctex"]
+dest_files=["res://.godot/imported/o0s_1_fwarp2.png-5ed7018630b9d81cbc80cfc5bf41234f.s3tc.ctex", "res://.godot/imported/o0s_1_fwarp2.png-5ed7018630b9d81cbc80cfc5bf41234f.etc2.ctex"]
 
 [params]
 

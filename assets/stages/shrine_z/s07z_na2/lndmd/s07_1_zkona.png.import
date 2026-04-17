@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cg5io7v7pk0vg"
+path.s3tc="res://.godot/imported/s07_1_zkona.png-286df58b97c12b960283bd70a4f554cc.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_1_zkona.png-286df58b97c12b960283bd70a4f554cc.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_z/s07z_na2/lndmd/s07_1_zkona.png"
-dest_files=["res://.godot/imported/s07_1_zkona.png-286df58b97c12b960283bd70a4f554cc.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_1_zkona.png-286df58b97c12b960283bd70a4f554cc.s3tc.ctex", "res://.godot/imported/s07_1_zkona.png-286df58b97c12b960283bd70a4f554cc.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bp8mv5bv8to5m"
+path.s3tc="res://.godot/imported/s03_0_zrock2.png-0cc3c5409b00a7c8d8d62bb9890b6668.s3tc.ctex"
 path.etc2="res://.godot/imported/s03_0_zrock2.png-0cc3c5409b00a7c8d8d62bb9890b6668.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/snowfield_z/s03z_na1/lndmd/s03_0_zrock2.png"
-dest_files=["res://.godot/imported/s03_0_zrock2.png-0cc3c5409b00a7c8d8d62bb9890b6668.etc2.ctex"]
+dest_files=["res://.godot/imported/s03_0_zrock2.png-0cc3c5409b00a7c8d8d62bb9890b6668.s3tc.ctex", "res://.godot/imported/s03_0_zrock2.png-0cc3c5409b00a7c8d8d62bb9890b6668.etc2.ctex"]
 
 [params]
 

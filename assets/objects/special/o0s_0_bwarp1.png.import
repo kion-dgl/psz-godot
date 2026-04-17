@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c5nt6akrl12hc"
+path.s3tc="res://.godot/imported/o0s_0_bwarp1.png-f1de186e82ad03d892a32a936da4d2af.s3tc.ctex"
 path.etc2="res://.godot/imported/o0s_0_bwarp1.png-f1de186e82ad03d892a32a936da4d2af.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/objects/special/o0s_0_bwarp1.png"
-dest_files=["res://.godot/imported/o0s_0_bwarp1.png-f1de186e82ad03d892a32a936da4d2af.etc2.ctex"]
+dest_files=["res://.godot/imported/o0s_0_bwarp1.png-f1de186e82ad03d892a32a936da4d2af.s3tc.ctex", "res://.godot/imported/o0s_0_bwarp1.png-f1de186e82ad03d892a32a936da4d2af.etc2.ctex"]
 
 [params]
 

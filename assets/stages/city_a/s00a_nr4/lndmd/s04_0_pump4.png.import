@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cto1wj2lstwmm"
+path.s3tc="res://.godot/imported/s04_0_pump4.png-a2c33f072ba5dd7df0364b2b26c84364.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_0_pump4.png-a2c33f072ba5dd7df0364b2b26c84364.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/city_a/s00a_nr4/lndmd/s04_0_pump4.png"
-dest_files=["res://.godot/imported/s04_0_pump4.png-a2c33f072ba5dd7df0364b2b26c84364.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_0_pump4.png-a2c33f072ba5dd7df0364b2b26c84364.s3tc.ctex", "res://.godot/imported/s04_0_pump4.png-a2c33f072ba5dd7df0364b2b26c84364.etc2.ctex"]
 
 [params]
 

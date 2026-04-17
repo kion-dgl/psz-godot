@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b67yeuee8d6ei"
+path.s3tc="res://.godot/imported/s05_0_wat1.png-74f9f71c0e402a50e008e565e20ca4b1.s3tc.ctex"
 path.etc2="res://.godot/imported/s05_0_wat1.png-74f9f71c0e402a50e008e565e20ca4b1.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/paru_b/s05b_tc3/lndmd/s05_0_wat1.png"
-dest_files=["res://.godot/imported/s05_0_wat1.png-74f9f71c0e402a50e008e565e20ca4b1.etc2.ctex"]
+dest_files=["res://.godot/imported/s05_0_wat1.png-74f9f71c0e402a50e008e565e20ca4b1.s3tc.ctex", "res://.godot/imported/s05_0_wat1.png-74f9f71c0e402a50e008e565e20ca4b1.etc2.ctex"]
 
 [params]
 

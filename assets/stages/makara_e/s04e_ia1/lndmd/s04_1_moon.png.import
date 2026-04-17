@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cssmq6jyfis2b"
+path.s3tc="res://.godot/imported/s04_1_moon.png-f45c75e77de07653a9f219a240e54322.s3tc.ctex"
 path.etc2="res://.godot/imported/s04_1_moon.png-f45c75e77de07653a9f219a240e54322.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/makara_e/s04e_ia1/lndmd/s04_1_moon.png"
-dest_files=["res://.godot/imported/s04_1_moon.png-f45c75e77de07653a9f219a240e54322.etc2.ctex"]
+dest_files=["res://.godot/imported/s04_1_moon.png-f45c75e77de07653a9f219a240e54322.s3tc.ctex", "res://.godot/imported/s04_1_moon.png-f45c75e77de07653a9f219a240e54322.etc2.ctex"]
 
 [params]
 

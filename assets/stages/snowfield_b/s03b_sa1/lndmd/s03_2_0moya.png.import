@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dovc6v2jnck31"
+path.s3tc="res://.godot/imported/s03_2_0moya.png-c33b83f47e0ce63115b6d11228e0a17a.s3tc.ctex"
 path.etc2="res://.godot/imported/s03_2_0moya.png-c33b83f47e0ce63115b6d11228e0a17a.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/snowfield_b/s03b_sa1/lndmd/s03_2_0moya.png"
-dest_files=["res://.godot/imported/s03_2_0moya.png-c33b83f47e0ce63115b6d11228e0a17a.etc2.ctex"]
+dest_files=["res://.godot/imported/s03_2_0moya.png-c33b83f47e0ce63115b6d11228e0a17a.s3tc.ctex", "res://.godot/imported/s03_2_0moya.png-c33b83f47e0ce63115b6d11228e0a17a.etc2.ctex"]
 
 [params]
 

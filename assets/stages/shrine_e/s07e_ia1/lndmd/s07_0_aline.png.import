@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://du7534qciw574"
+path.s3tc="res://.godot/imported/s07_0_aline.png-996584f6e607af08aee9e9423b3a950a.s3tc.ctex"
 path.etc2="res://.godot/imported/s07_0_aline.png-996584f6e607af08aee9e9423b3a950a.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/stages/shrine_e/s07e_ia1/lndmd/s07_0_aline.png"
-dest_files=["res://.godot/imported/s07_0_aline.png-996584f6e607af08aee9e9423b3a950a.etc2.ctex"]
+dest_files=["res://.godot/imported/s07_0_aline.png-996584f6e607af08aee9e9423b3a950a.s3tc.ctex", "res://.godot/imported/s07_0_aline.png-996584f6e607af08aee9e9423b3a950a.etc2.ctex"]
 
 [params]
 
