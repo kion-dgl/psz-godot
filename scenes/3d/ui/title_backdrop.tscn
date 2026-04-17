@@ -1,6 +1,103 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=16 format=3]
 
-[ext_resource type="Script" path="res://scripts/3d/ui/title_backdrop.gd" id="1_backdrop"]
+[ext_resource type="Script" path="res://scripts/3d/ui/title_backdrop.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/title/moon.png" id="2_moon"]
+[ext_resource type="Texture2D" path="res://assets/title/halo.png" id="3_halo"]
+[ext_resource type="Texture2D" path="res://assets/title/horizon.png" id="4_horizon"]
+[ext_resource type="Texture2D" path="res://assets/title/rock.png" id="5_rock"]
+[ext_resource type="Shader" path="res://scripts/3d/shaders/title_ground.gdshader" id="6_shader"]
+
+[sub_resource type="SphereMesh" id="MoonMesh"]
+radius = 28.0
+height = 56.0
+radial_segments = 64
+rings = 32
+
+[sub_resource type="StandardMaterial3D" id="MoonMat"]
+albedo_texture = ExtResource("2_moon")
+emission_enabled = true
+emission = Color(0.023, 0.023, 0.078, 1)
+roughness = 1.0
+metallic = 0.0
+
+[sub_resource type="QuadMesh" id="HaloMesh"]
+size = Vector2(90, 90)
+
+[sub_resource type="StandardMaterial3D" id="HaloMat"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+billboard_mode = 1
+albedo_texture = ExtResource("3_halo")
+render_priority = -16
+
+[sub_resource type="QuadMesh" id="HorizonMesh"]
+size = Vector2(240, 135)
+
+[sub_resource type="StandardMaterial3D" id="HorizonMat"]
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("4_horizon")
+render_priority = -10
+
+[sub_resource type="PlaneMesh" id="GroundMesh"]
+size = Vector2(1400, 700)
+
+[sub_resource type="ShaderMaterial" id="GroundMat"]
+render_priority = -5
+shader = ExtResource("6_shader")
+shader_parameter/rock_tex = ExtResource("5_rock")
+shader_parameter/tiles = 24.0
+shader_parameter/ambient_amount = 0.45
+shader_parameter/key_color = Color(0.749, 0.815, 1, 1)
+shader_parameter/key_intensity = 1.2
+shader_parameter/key_dir = Vector3(0.25, 0.9, 0.35)
+shader_parameter/beam_pos = Vector3(0, -100, 0)
+shader_parameter/beam_color = Color(0.729, 0.863, 1, 1)
+shader_parameter/beam_intensity = 3.2
+shader_parameter/beam_radius = 110.0
+shader_parameter/fog_near = 280.0
+shader_parameter/fog_far = 820.0
+shader_parameter/fog_alpha_end_frac = 0.6
+shader_parameter/fog_color = Color(0.165, 0.094, 0.314, 1)
 
 [node name="TitleBackdrop" type="Node3D"]
-script = ExtResource("1_backdrop")
+script = ExtResource("1_script")
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -59, 124)
+fov = 45.0
+near = 0.1
+far = 2000.0
+current = true
+
+[node name="Moon" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, -25)
+mesh = SubResource("MoonMesh")
+material_override = SubResource("MoonMat")
+
+[node name="Halo" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8, -27)
+mesh = SubResource("HaloMesh")
+material_override = SubResource("HaloMat")
+
+[node name="Horizon" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -60, 0)
+mesh = SubResource("HorizonMesh")
+material_override = SubResource("HorizonMat")
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -104, -200)
+mesh = SubResource("GroundMesh")
+material_override = SubResource("GroundMat")
+
+[node name="GLBClouds" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16, 0)
+
+[node name="GLBLight" type="Node3D" parent="."]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, -27, 0)
+
+[node name="Nebulae" type="Node3D" parent="."]
+
+[node name="Stars" type="MultiMeshInstance3D" parent="."]
