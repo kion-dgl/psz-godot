@@ -83,7 +83,7 @@ mesh = SubResource("HaloMesh")
 material_override = SubResource("HaloMat")
 
 [node name="Horizon" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -60, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -36, 0)
 mesh = SubResource("HorizonMesh")
 material_override = SubResource("HorizonMat")
 
