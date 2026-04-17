@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/3d/ui/hud.gd" id="1"]
 [ext_resource type="Theme" path="res://themes/rpg_theme.tres" id="2_theme"]
-[ext_resource type="Script" path="res://scripts/2d/components/stat_bar.gd" id="3_statbar"]
+[ext_resource type="Texture2D" path="res://assets/hud/hp-pp.png" id="3_hppp"]
 
 [sub_resource type="StyleBoxFlat" id="hud_panel"]
 bg_color = Color(0.66, 0.80, 0.91, 0.95)
@@ -25,78 +25,110 @@ script = ExtResource("1")
 
 [node name="TopLeft" type="MarginContainer" parent="."]
 anchors_preset = 0
-offset_right = 250.0
-offset_bottom = 90.0
+offset_right = 280.0
+offset_bottom = 160.0
 theme = ExtResource("2_theme")
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 12
 
-[node name="Panel" type="PanelContainer" parent="TopLeft"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("hud_panel")
-
-[node name="VBox" type="VBoxContainer" parent="TopLeft/Panel"]
+[node name="VBox" type="VBoxContainer" parent="TopLeft"]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="CharInfoLabel" type="Label" parent="TopLeft/Panel/VBox"]
+[node name="CharInfoLabel" type="Label" parent="TopLeft/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.1, 0.1, 0.17, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
 theme_override_font_sizes/font_size = 12
 text = ""
 
-[node name="HPBar" type="HBoxContainer" parent="TopLeft/Panel/VBox"]
+[node name="StatPanel" type="Control" parent="TopLeft/VBox"]
+custom_minimum_size = Vector2(256, 120)
 layout_mode = 2
-script = ExtResource("3_statbar")
-stat_name = "HP"
-bar_width = 12
-fill_color = Color(0.27, 0.73, 0.27, 1)
-bg_color = Color(0.85, 0.91, 0.85, 1)
 
-[node name="NameLabel" type="Label" parent="TopLeft/Panel/VBox/HPBar"]
-layout_mode = 2
-custom_minimum_size = Vector2(28, 0)
-theme_override_colors/font_color = Color(0.2, 0.53, 0.2, 1)
-text = "HP"
+[node name="BG" type="TextureRect" parent="TopLeft/VBox/StatPanel"]
+layout_mode = 0
+offset_right = 256.0
+offset_bottom = 120.0
+texture = ExtResource("3_hppp")
 
-[node name="BarLabel" type="Label" parent="TopLeft/Panel/VBox/HPBar"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.27, 0.73, 0.27, 1)
-text = "████████████"
-
-[node name="ValueLabel" type="Label" parent="TopLeft/Panel/VBox/HPBar"]
-layout_mode = 2
-custom_minimum_size = Vector2(80, 0)
-theme_override_colors/font_color = Color(0.1, 0.1, 0.17, 1)
-text = "100/100"
+[node name="LevelLabel" type="Label" parent="TopLeft/VBox/StatPanel"]
+layout_mode = 0
+offset_left = 109.0
+offset_top = 13.0
+offset_right = 155.0
+offset_bottom = 35.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "1"
 horizontal_alignment = 2
+vertical_alignment = 1
 
-[node name="PPBar" type="HBoxContainer" parent="TopLeft/Panel/VBox"]
-layout_mode = 2
-script = ExtResource("3_statbar")
-stat_name = "PP"
-bar_width = 12
-fill_color = Color(0.2, 0.53, 0.93, 1)
-bg_color = Color(0.85, 0.85, 0.94, 1)
-show_danger_color = false
-
-[node name="NameLabel" type="Label" parent="TopLeft/Panel/VBox/PPBar"]
-layout_mode = 2
-custom_minimum_size = Vector2(28, 0)
-theme_override_colors/font_color = Color(0.2, 0.4, 0.73, 1)
-text = "PP"
-
-[node name="BarLabel" type="Label" parent="TopLeft/Panel/VBox/PPBar"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.2, 0.53, 0.93, 1)
-text = "████████████"
-
-[node name="ValueLabel" type="Label" parent="TopLeft/Panel/VBox/PPBar"]
-layout_mode = 2
-custom_minimum_size = Vector2(80, 0)
-theme_override_colors/font_color = Color(0.1, 0.1, 0.17, 1)
-text = "50/50"
+[node name="HPCurrent" type="Label" parent="TopLeft/VBox/StatPanel"]
+layout_mode = 0
+offset_left = 109.0
+offset_top = 40.0
+offset_right = 155.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "100"
 horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="HPMax" type="Label" parent="TopLeft/VBox/StatPanel"]
+layout_mode = 0
+offset_left = 190.0
+offset_top = 40.0
+offset_right = 236.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "100"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="PPCurrent" type="Label" parent="TopLeft/VBox/StatPanel"]
+layout_mode = 0
+offset_left = 109.0
+offset_top = 76.0
+offset_right = 155.0
+offset_bottom = 94.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "50"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="PPMax" type="Label" parent="TopLeft/VBox/StatPanel"]
+layout_mode = 0
+offset_left = 190.0
+offset_top = 76.0
+offset_right = 236.0
+offset_bottom = 94.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "50"
+horizontal_alignment = 0
+vertical_alignment = 1
+
+[node name="HPBar" type="ColorRect" parent="TopLeft/VBox/StatPanel"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 62.0
+offset_right = 236.0
+offset_bottom = 69.0
+color = Color(0.27, 0.85, 0.27, 1)
+
+[node name="PPBar" type="ColorRect" parent="TopLeft/VBox/StatPanel"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 98.0
+offset_right = 236.0
+offset_bottom = 105.0
+color = Color(0.22, 0.56, 0.93, 1)
 
 [node name="BottomCenter" type="MarginContainer" parent="."]
 anchors_preset = 7
