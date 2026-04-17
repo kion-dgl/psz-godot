@@ -244,7 +244,9 @@ class _StatsPanel extends Control:
 
 	const HP_COLOR := Color(0.27, 0.85, 0.27)
 	const PP_COLOR := Color(0.22, 0.56, 0.93)
-	const TEXT_COLOR := Color(1, 1, 1, 1)
+	const LEVEL_COLOR := Color(1, 1, 1, 1)
+	const VALUE_COLOR := Color(0, 0, 0, 1)
+	const PANEL_SCALE := 0.8
 
 	var char_name: String = ""
 	var char_level: int = 1
@@ -262,6 +264,8 @@ class _StatsPanel extends Control:
 		position = Vector2(MARGIN, MARGIN)
 		size = Vector2(PANEL_W, PANEL_H)
 		custom_minimum_size = size
+		pivot_offset = Vector2.ZERO
+		scale = Vector2(PANEL_SCALE, PANEL_SCALE)
 		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 		var bg := TextureRect.new()
@@ -285,15 +289,15 @@ class _StatsPanel extends Control:
 		_pp_bar.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(_pp_bar)
 
-		_level_label = _make_label(Vector2(109, 13), Vector2(46, 22), LEVEL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT)
-		_hp_cur_label = _make_label(Vector2(109, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT)
-		_hp_max_label = _make_label(Vector2(190, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT)
-		_pp_cur_label = _make_label(Vector2(109, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT)
-		_pp_max_label = _make_label(Vector2(190, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT)
+		_level_label = _make_label(Vector2(109, 13), Vector2(46, 22), LEVEL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, LEVEL_COLOR)
+		_hp_cur_label = _make_label(Vector2(109, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, VALUE_COLOR)
+		_hp_max_label = _make_label(Vector2(190, 40), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT, VALUE_COLOR)
+		_pp_cur_label = _make_label(Vector2(109, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_RIGHT, VALUE_COLOR)
+		_pp_max_label = _make_label(Vector2(190, 76), Vector2(46, 18), VAL_FONT_SIZE, HORIZONTAL_ALIGNMENT_LEFT, VALUE_COLOR)
 
 		update_display()
 
-	func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int) -> Label:
+	func _make_label(pos: Vector2, sz: Vector2, font_size: int, align: int, color: Color) -> Label:
 		var lbl := Label.new()
 		lbl.position = pos
 		lbl.size = sz
@@ -301,7 +305,7 @@ class _StatsPanel extends Control:
 		lbl.horizontal_alignment = align
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		lbl.add_theme_font_size_override("font_size", font_size)
-		lbl.add_theme_color_override("font_color", TEXT_COLOR)
+		lbl.add_theme_color_override("font_color", color)
 		lbl.mouse_filter = MOUSE_FILTER_IGNORE
 		add_child(lbl)
 		return lbl
