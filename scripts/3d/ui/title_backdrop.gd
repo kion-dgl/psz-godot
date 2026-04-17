@@ -11,6 +11,23 @@ const ASSET_BASE := "res://assets/title/"
 const GLB_PATH := "res://assets/title/scene.glb"
 const GROUND_SHADER := preload("res://scripts/3d/shaders/title_ground.gdshader")
 
+@export_group("Camera")
+@export var camera_y: float = -59.0
+@export var camera_z: float = 124.0
+
+@export_group("Ground")
+@export var ground_position: Vector3 = Vector3(0, -104, -200)
+@export var ground_size: Vector2 = Vector2(1400, 700)
+@export_range(1.0, 128.0) var ground_tiles: float = 24.0
+@export var ground_fade_near: float = 280.0
+@export var ground_fade_far: float = 820.0
+@export_range(0.0, 1.0) var ground_fade_alpha_end_frac: float = 0.6  # at fog_far * this, alpha = 0
+@export var ground_fade_color: Color = Color("#2a1850")
+
+@export_group("Horizon")
+@export var horizon_position: Vector3 = Vector3(0, -60, 0)
+@export var horizon_size: Vector2 = Vector2(240, 135)
+
 # Godot's GLTF importer merged the original 6 SkinnedMeshes into a single
 # MeshInstance3D with 5 surfaces. Identified by texture:
 #   surface 0 -> DSimage_dk19_cl (clouds) -> dstitle_2
@@ -35,6 +52,7 @@ func _ready() -> void:
 	if config.is_empty():
 		push_error("title_backdrop: failed to load %s" % CONFIG_PATH)
 		return
+	print("[title_backdrop] ready — building 3D scene")
 	_build_environment(config)
 	_build_camera(config)
 	_build_moon(config)
@@ -44,6 +62,7 @@ func _ready() -> void:
 	_build_nebulae(config)
 	_build_stars(config)
 	_build_glb(config)
+	print("[title_backdrop] build complete — %d children" % get_child_count())
 
 
 func _process(delta: float) -> void:
@@ -99,14 +118,15 @@ func _build_environment(config: Dictionary) -> void:
 func _build_camera(config: Dictionary) -> void:
 	var cfg: Dictionary = config["camera"]
 	var cam := Camera3D.new()
-	cam.position = Vector3(cfg["x"], cfg["y"], cfg["z"])
+	cam.position = Vector3(cfg["x"], camera_y, camera_z)
 	cam.fov = cfg["fov"]
 	cam.near = 0.1
 	cam.far = 2000.0
 	cam.current = true
 	add_child(cam)
 	# look_at requires the node to be in the tree.
-	cam.look_at(_vec3(cfg["lookAt"]), Vector3.UP)
+	cam.look_at(Vector3(0, camera_y, 0), Vector3.UP)
+	print("[title_backdrop] camera at %s fov=%s" % [cam.position, cam.fov])
 
 
 func _build_moon(config: Dictionary) -> void:
@@ -167,9 +187,8 @@ func _build_halo(config: Dictionary) -> void:
 
 func _build_horizon(config: Dictionary) -> void:
 	var cfg: Dictionary = config["horizon"]
-	var size: Array = cfg["planeSize"]
 	var quad := QuadMesh.new()
-	quad.size = Vector2(size[0], size[1])
+	quad.size = horizon_size
 
 	var mat := StandardMaterial3D.new()
 	mat.albedo_texture = _load_tex(cfg["texture"])
@@ -182,20 +201,20 @@ func _build_horizon(config: Dictionary) -> void:
 	mi.name = "Horizon"
 	mi.mesh = quad
 	mi.material_override = mat
-	mi.position = _vec3(cfg["position"])
+	mi.position = horizon_position
 	add_child(mi)
+	print("[title_backdrop] horizon at %s size=%s" % [mi.position, quad.size])
 
 
 func _build_ground(config: Dictionary) -> void:
 	var cfg: Dictionary = config["ground"]
-	var size: Array = cfg["planeSize"]
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(size[0], size[1])
+	plane.size = ground_size
 
 	var mat := ShaderMaterial.new()
 	mat.shader = GROUND_SHADER
 	mat.set_shader_parameter("rock_tex", _load_tex(cfg["texture"]))
-	mat.set_shader_parameter("tiles", float(cfg["tiles"]))
+	mat.set_shader_parameter("tiles", ground_tiles)
 	mat.set_shader_parameter("ambient_amount", float(cfg["ambient"]))
 	var key: Dictionary = cfg["keyLight"]
 	mat.set_shader_parameter("key_color", _color(key["color"]))
@@ -206,19 +225,21 @@ func _build_ground(config: Dictionary) -> void:
 	mat.set_shader_parameter("beam_color", _color(beam["color"]))
 	mat.set_shader_parameter("beam_intensity", float(beam["intensity"]))
 	mat.set_shader_parameter("beam_radius", float(beam["radius"]))
-	var fog: Dictionary = cfg["fog"]
-	mat.set_shader_parameter("fog_near", float(fog["near"]))
-	mat.set_shader_parameter("fog_far", float(fog["far"]))
-	mat.set_shader_parameter("fog_color", _color(fog["color"]))
+	mat.set_shader_parameter("fog_near", ground_fade_near)
+	mat.set_shader_parameter("fog_far", ground_fade_far)
+	mat.set_shader_parameter("fog_alpha_end_frac", ground_fade_alpha_end_frac)
+	mat.set_shader_parameter("fog_color", ground_fade_color)
 	mat.render_priority = -5
 
 	var mi := MeshInstance3D.new()
 	mi.name = "Ground"
 	mi.mesh = plane
 	mi.material_override = mat
-	mi.position = _vec3(cfg["position"])
+	mi.position = ground_position
 	# PlaneMesh is already XZ (flat), no rotation needed.
 	add_child(mi)
+	print("[title_backdrop] ground at %s size=%s fade=[%s, %s]" % [
+		mi.position, plane.size, ground_fade_near, ground_fade_far])
 
 
 func _build_nebulae(config: Dictionary) -> void:
