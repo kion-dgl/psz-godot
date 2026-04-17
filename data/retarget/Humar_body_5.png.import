@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bw5wqb0s50csg"
+path.s3tc="res://.godot/imported/Humar_body_5.png-932b4605ff0c8848f2816dc4848ec595.s3tc.ctex"
 path.etc2="res://.godot/imported/Humar_body_5.png-932b4605ff0c8848f2816dc4848ec595.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://data/retarget/Humar_body_5.png"
-dest_files=["res://.godot/imported/Humar_body_5.png-932b4605ff0c8848f2816dc4848ec595.etc2.ctex"]
+dest_files=["res://.godot/imported/Humar_body_5.png-932b4605ff0c8848f2816dc4848ec595.s3tc.ctex", "res://.godot/imported/Humar_body_5.png-932b4605ff0c8848f2816dc4848ec595.etc2.ctex"]
 
 [params]
 
