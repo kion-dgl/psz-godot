@@ -448,22 +448,23 @@ func _spawn_capsule_npc(npc_id: String, npc_name: String, pos: Vector3, rot: flo
 func _on_principal_interact(_player: Node3D) -> void:
 	if SessionManager.has_completed_quest():
 		_report_quest()
-	elif not SessionManager.has_active_session():
-		# No active quest — give debug meseta
-		var character = CharacterManager.get_active_character()
-		if character:
-			character["meseta"] = int(character.get("meseta", 0)) + 10000
-			GameState.meseta = int(character["meseta"])
-		_show_dialog([
-			{"speaker": "Principal", "text": "Short on funds? Here's 10,000 meseta. Don't spend it all in one place."},
-		], func() -> void:
-			player.transition_to(player.PlayerState.IDLE)
-		)
-		player.transition_to(player.PlayerState.CUTSCENE)
-	else:
-		# Default: open guild counter
-		_save_player_state()
-		SceneManager.push_scene("res://scenes/2d/guild_counter.tscn")
+		return
+
+	# Default: give debug meseta. The prior `else` path pushed the guild
+	# counter when `_session` was non-empty, but reaching the office with an
+	# active session is an abnormal state — the player can't sensibly browse
+	# quests mid-run. Fall through to the meseta grant so the debug path is
+	# reachable regardless.
+	var character = CharacterManager.get_active_character()
+	if character:
+		character["meseta"] = int(character.get("meseta", 0)) + 10000
+		GameState.meseta = int(character["meseta"])
+	_show_dialog([
+		{"speaker": "Principal", "text": "Short on funds? Here's 10,000 meseta. Don't spend it all in one place."},
+	], func() -> void:
+		player.transition_to(player.PlayerState.IDLE)
+	)
+	player.transition_to(player.PlayerState.CUTSCENE)
 
 
 func _report_quest() -> void:

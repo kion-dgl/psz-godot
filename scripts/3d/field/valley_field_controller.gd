@@ -676,7 +676,14 @@ func _spawn_weather() -> void:
 		_weather_node.name = "WeatherSnow"
 		_weather_node.amount = 300
 		_weather_node.lifetime = 4.0
-		_weather_node.visibility_aabb = AABB(Vector3(-20, -2, -20), Vector3(40, 16, 40))
+		# Large local AABB so the snow volume is always considered visible
+		# regardless of where the player is within the room. Without this, the
+		# particle system can freeze until the camera moves.
+		_weather_node.visibility_aabb = AABB(Vector3(-40, -4, -40), Vector3(80, 20, 80))
+		# Force deterministic simulation; default (fixed_fps=0, interpolate=true)
+		# can freeze the particle sim until something invalidates the transform.
+		_weather_node.fixed_fps = 30
+		_weather_node.interpolate = false
 
 		var mat := ParticleProcessMaterial.new()
 		mat.direction = Vector3(0, -1, 0)
@@ -710,7 +717,21 @@ func _spawn_weather() -> void:
 		_weather_node.preprocess = 4.0
 		_weather_node.position.y = 8.0
 		player.add_child(_weather_node)
+		# Defer a restart after the player transform has settled and the render
+		# loop has had a chance to start. Without this, snow stays frozen until
+		# the player or camera first moves.
+		_kick_weather()
 		print("[ValleyField] Weather: snow particles attached to player")
+
+
+func _kick_weather() -> void:
+	# Wait a couple frames so the player transform is fully committed, then
+	# restart the particle system. preprocess runs again on restart and the
+	# snow appears already falling.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if is_instance_valid(_weather_node):
+		_weather_node.restart()
 
 
 func _setup_map_collision(root: Node) -> void:
@@ -1544,7 +1565,6 @@ func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
 	key.position = key_pos
 
 	key.interacted.connect(func(_player: Node3D) -> void:
-		SfxManager.play("res://assets/sfx/ui/item_pickup.wav")
 		_keys_collected[tracking_key] = true
 		_update_key_hud()
 	)
@@ -2095,7 +2115,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
 				var prop_scale: float = float(obj.get("prop_scale", 1.0))
-				_spawn_story_prop(pos, prop_path, obj_rot, prop_scale)
+				var prop_no_collision: bool = bool(obj.get("no_collision", false))
+				_spawn_story_prop(pos, prop_path, obj_rot, prop_scale, prop_no_collision)
 			"dialog_trigger":
 				var trigger_id: String = str(obj.get("trigger_id", ""))
 				var dlg: Array = obj.get("dialog", [])
@@ -2206,7 +2227,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
 				var prop_scale: float = float(obj.get("prop_scale", 1.0))
-				_spawn_story_prop(pos, prop_path, obj_rot, prop_scale)
+				var prop_no_collision: bool = bool(obj.get("no_collision", false))
+				_spawn_story_prop(pos, prop_path, obj_rot, prop_scale, prop_no_collision)
 			"dialog_trigger":
 				var trigger_id: String = str(obj.get("trigger_id", ""))
 				var dlg: Array = obj.get("dialog", [])
@@ -2453,13 +2475,16 @@ func _save_cell_state() -> void:
 	# Save story prop states
 	for prop in _room_props:
 		if is_instance_valid(prop):
-			obj_states.append({
+			var prop_entry := {
 				"type": "story_prop",
 				"px": prop.position.x, "py": prop.position.y, "pz": prop.position.z,
 				"state": prop.element_state,
 				"prop_path": prop.prop_path,
 				"prop_scale": prop.prop_scale,
-			})
+			}
+			if prop.no_collision:
+				prop_entry["no_collision"] = true
+			obj_states.append(prop_entry)
 
 	# Save dialog trigger states
 	for trigger in _room_triggers:
@@ -2755,10 +2780,11 @@ func _on_message_read_reaction(_text: String, reaction: Array) -> void:
 		delay += duration + 0.5
 
 
-func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop_scale: float = 1.0) -> void:
+func _spawn_story_prop(pos: Vector3, prop_path: String, rot_deg: float = 0, prop_scale: float = 1.0, no_collision: bool = false) -> void:
 	var prop := StoryPropScript.new()
 	prop.prop_path = prop_path
 	prop.prop_scale = prop_scale
+	prop.no_collision = no_collision
 	_map_root.add_child(prop)
 	prop.position = pos
 	if rot_deg != 0:

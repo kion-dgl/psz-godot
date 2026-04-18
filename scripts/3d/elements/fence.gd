@@ -23,7 +23,9 @@ var _laser_materials: Array[StandardMaterial3D] = []
 
 func _init() -> void:
 	element_state = "active"
-	collision_size = Vector3(8, 2, 1.5)
+	# z was 1.5 (player got stuck on empty space ~0.75 each side of the visible fence).
+	# Keep a small tolerance around the actual fence depth.
+	collision_size = Vector3(8, 2, 0.4)
 
 
 func _ready() -> void:

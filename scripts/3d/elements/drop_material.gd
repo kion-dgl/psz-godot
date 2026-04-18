@@ -29,12 +29,13 @@ func _get_display_name() -> String:
 	return item_id
 
 
-func _give_reward() -> void:
+func _give_reward() -> bool:
 	if item_id.is_empty():
 		push_warning("[DropMaterial] No item_id set")
-		return
+		return false
 
 	if Inventory.add_item(item_id, amount):
 		print("[DropMaterial] Collected ", amount, "x ", _get_display_name())
-	else:
-		print("[DropMaterial] Failed to add to inventory: ", item_id)
+		return true
+	print("[DropMaterial] Failed to add to inventory: ", item_id)
+	return false

@@ -978,7 +978,7 @@ func _draw_bar(c: Control, rect: Rect2, pct: float, color: Color) -> void:
 func _draw_main(c: Control, font: Font) -> void:
 	var left_x := PAD
 	var left_w: float = LEFT_W - PAD * 2
-	var y := 90.0  # Below the HUD stats panel
+	var y := 110.0  # Below the HUD stats panel
 
 	# Menu list
 	_draw_inner_panel(c, Rect2(left_x, y, left_w, _get_menu_labels().size() * 28 + 8))
@@ -1592,7 +1592,7 @@ func _draw_inner_panel(c: Control, rect: Rect2) -> void:
 
 func _draw_section_label(c: Control, font: Font, text: String) -> void:
 	var lx := PAD
-	var ly := 90.0  # Below the HUD stats panel
+	var ly := 110.0  # Below the HUD stats panel
 	var lw: float = LEFT_W - PAD * 2
 	c.draw_rect(Rect2(lx, ly, lw, 28), C_LABEL_BG)
 	c.draw_string(font, Vector2(lx + 12, ly + 20), text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, C_TEXT_LIGHT)
