@@ -131,8 +131,14 @@ jobs:
 
       - name: Copy data/ into build output
         # Quest JSON + stage configs still live in the repo and need to be
-        # copied alongside the bundle for GitHub Pages.
-        run: cp -r data/ web/dist/data/
+        # published alongside the bundle for GitHub Pages. Vite may already
+        # have copied them via the web/public/data symlink, so use rsync so
+        # we merge into any existing dist/data/ rather than nesting to
+        # dist/data/data/ (`cp -r` does the wrong thing when the target
+        # directory exists).
+        run: |
+          mkdir -p web/dist/data
+          rsync -a --delete data/ web/dist/data/
 
   build:
     runs-on: ubuntu-latest
