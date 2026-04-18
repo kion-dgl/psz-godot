@@ -65,12 +65,36 @@ jobs:
 
   verify-assets:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Verify asset manifest pack URLs
+      - name: Detect assets_manifest.json change
+        id: check
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="HEAD~1"
+            HEAD_SHA="HEAD"
+          fi
+          if git diff --name-only "$BASE" "$HEAD_SHA" 2>/dev/null | grep -qx 'assets_manifest.json'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "manifest changed: ${{ steps.check.outputs.changed }}"
+
+      - name: Verify pack URLs reachable
+        if: steps.check.outputs.changed != 'true'
         run: python3 scripts/tools/verify_assets_manifest.py
+
+      - name: Verify pack URLs + sha256 (manifest changed)
+        if: steps.check.outputs.changed == 'true'
+        run: python3 scripts/tools/verify_assets_manifest.py --download
 
   web:
     runs-on: ubuntu-latest
