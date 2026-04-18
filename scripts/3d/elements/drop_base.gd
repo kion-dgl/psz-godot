@@ -97,8 +97,8 @@ func _on_interact(_player: Node3D) -> void:
 		return
 
 	if not _give_reward():
-		# Inventory full (or other failure): keep the drop on the ground.
-		# Inventory.add_item has already played the inv-full SFX.
+		# Reward failed (inventory full, stack at max, etc.): keep the drop
+		# in the world. Failure feedback SFX is played by Inventory.add_item.
 		return
 
 	interactable = false
@@ -111,6 +111,7 @@ func _on_collected(_player: Node3D) -> void:
 		return
 
 	if not _give_reward():
+		# Reward failed: keep the drop in the world (see _on_interact).
 		return
 
 	set_state("collected")
