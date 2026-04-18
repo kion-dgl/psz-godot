@@ -1,0 +1,44 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/2d/bootstrap.gd" id="1"]
+
+[node name="Bootstrap" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.0353, 0.0588, 0.1020, 1)
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="BG" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.0353, 0.0588, 0.1020, 1)
+mouse_filter = 2
+
+[node name="Center" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(480, 0)
+theme_override_constants/separation = 16
+alignment = 1
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Center/VBox"]
+text = "Phantasy Star Zero"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.9137, 0.9333, 0.9725, 1)
+theme_override_font_sizes/font_size = 36
+
+[node name="Status" type="Label" parent="Center/VBox"]
+text = "Starting..."
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.6745, 0.7451, 0.8431, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="Progress" type="ProgressBar" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 18)
+show_percentage = true
+max_value = 100.0
