@@ -57,6 +57,16 @@ var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
 var _rstick_held: bool = false  # Prevents right stick repeat until released
 
+# ── Directional scroll repeat (PSO GC timing) ──────────────────────────────────
+# Match PSO's menu scroll: hold 6/30f (~0.2s) before auto-scroll, then 1/30f
+# (~0.033s) between ticks. Applies to both keyboard and gamepad so controller
+# holds repeat at the same rate as keyboard echo would.
+const SCROLL_HOLD := 0.2
+const SCROLL_REPEAT := 1.0 / 30.0
+const NAV_ACTIONS := ["ui_up", "ui_down", "ui_left", "ui_right"]
+var _nav_hold: Dictionary = {}   # action → seconds currently held
+var _nav_next: Dictionary = {}   # action → seconds until next repeat tick
+
 ## Menu labels built dynamically — Techs hidden for Cast race
 func _get_menu_labels() -> Array:
 	var labels: Array = ["Items", "Equip"]
@@ -96,6 +106,9 @@ func _ready() -> void:
 	name = "PsoStartMenu"
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
+	for action in NAV_ACTIONS:
+		_nav_hold[action] = 0.0
+		_nav_next[action] = 0.0
 	# Pre-cache all action icons
 	for action in ActionPalette.ALL_ACTIONS:
 		var aid: String = str(action.get("id", ""))
@@ -108,6 +121,46 @@ func _ready() -> void:
 	_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_canvas.draw.connect(_draw_menu)
 	add_child(_canvas)
+
+
+func _process(delta: float) -> void:
+	_tick_nav_repeat(delta)
+
+
+# Synthesize repeated ui_* action events when the player holds a direction,
+# matching PSO GC's scroll timing. Works the same for keyboard and gamepad so
+# controller users get auto-scroll even though Godot has no built-in gamepad
+# echo. Menu handlers use `allow_echo = false` so OS keyboard echo doesn't
+# also fire and double the tick rate.
+func _tick_nav_repeat(delta: float) -> void:
+	if not _is_open:
+		for action in NAV_ACTIONS:
+			_nav_hold[action] = 0.0
+			_nav_next[action] = 0.0
+		return
+	for action in NAV_ACTIONS:
+		if Input.is_action_pressed(action):
+			var held: float = float(_nav_hold[action]) + delta
+			_nav_hold[action] = held
+			if held >= SCROLL_HOLD:
+				# Decrement first and dispatch same frame so the effective
+				# repeat rate actually is SCROLL_REPEAT, not SCROLL_REPEAT + delta.
+				# The while-loop catches up if a long frame skipped multiple ticks.
+				var next_at: float = float(_nav_next[action]) - delta
+				while next_at <= 0.0:
+					_dispatch_ui_action(action)
+					next_at += SCROLL_REPEAT
+				_nav_next[action] = next_at
+		else:
+			_nav_hold[action] = 0.0
+			_nav_next[action] = 0.0
+
+
+func _dispatch_ui_action(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	Input.parse_input_event(ev)
 
 
 func open() -> void:
@@ -243,8 +296,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 		elif event.is_action_pressed("ui_cancel"):
 			SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-		elif event.is_action_pressed("ui_up", true) or event.is_action_pressed("ui_down", true) \
-			or event.is_action_pressed("ui_left", true) or event.is_action_pressed("ui_right", true):
+		elif event.is_action_pressed("ui_up", false) or event.is_action_pressed("ui_down", false) \
+			or event.is_action_pressed("ui_left", false) or event.is_action_pressed("ui_right", false):
 			SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_canvas.queue_redraw()
 
@@ -268,16 +321,16 @@ func _simulate_menu_down() -> void:
 
 
 func _input_main(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up", true):
+	if event.is_action_pressed("ui_up", false):
 		_menu_idx = wrapi(_menu_idx - 1, 0, _get_menu_labels().size())
 		return true
-	elif event.is_action_pressed("ui_down", true):
+	elif event.is_action_pressed("ui_down", false):
 		_menu_idx = wrapi(_menu_idx + 1, 0, _get_menu_labels().size())
 		return true
-	elif event.is_action_pressed("ui_left", true):
+	elif event.is_action_pressed("ui_left", false):
 		_info_page = wrapi(_info_page - 1, 0, 4)
 		return true
-	elif event.is_action_pressed("ui_right", true):
+	elif event.is_action_pressed("ui_right", false):
 		_info_page = wrapi(_info_page + 1, 0, 4)
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -290,11 +343,11 @@ func _input_main(event: InputEvent) -> bool:
 
 
 func _input_list(event: InputEvent, count: int) -> bool:
-	if event.is_action_pressed("ui_up", true) and count > 0:
+	if event.is_action_pressed("ui_up", false) and count > 0:
 		_sub_idx = wrapi(_sub_idx - 1, 0, count)
 		_action_message = ""
 		return true
-	elif event.is_action_pressed("ui_down", true) and count > 0:
+	elif event.is_action_pressed("ui_down", false) and count > 0:
 		_sub_idx = wrapi(_sub_idx + 1, 0, count)
 		_action_message = ""
 		return true
@@ -310,10 +363,10 @@ func _input_list(event: InputEvent, count: int) -> bool:
 
 func _input_equip_pick(event: InputEvent) -> bool:
 	var candidates := _get_equip_candidates(_equip_slot_idx)
-	if event.is_action_pressed("ui_up", true) and candidates.size() > 0:
+	if event.is_action_pressed("ui_up", false) and candidates.size() > 0:
 		_equip_item_idx = wrapi(_equip_item_idx - 1, 0, candidates.size())
 		return true
-	elif event.is_action_pressed("ui_down", true) and candidates.size() > 0:
+	elif event.is_action_pressed("ui_down", false) and candidates.size() > 0:
 		_equip_item_idx = wrapi(_equip_item_idx + 1, 0, candidates.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -377,12 +430,12 @@ func _do_equip() -> void:
 func _input_palette(event: InputEvent) -> bool:
 	var total_slots: int = ActionPalette.pages.size() * 3
 	var flat_idx: int = _pal_page_idx * 3 + _pal_slot_idx
-	if event.is_action_pressed("ui_up", true):
+	if event.is_action_pressed("ui_up", false):
 		flat_idx = wrapi(flat_idx - 1, 0, total_slots)
 		_pal_page_idx = flat_idx / 3
 		_pal_slot_idx = flat_idx % 3
 		return true
-	elif event.is_action_pressed("ui_down", true):
+	elif event.is_action_pressed("ui_down", false):
 		flat_idx = wrapi(flat_idx + 1, 0, total_slots)
 		_pal_page_idx = flat_idx / 3
 		_pal_slot_idx = flat_idx % 3
@@ -399,10 +452,10 @@ func _input_palette(event: InputEvent) -> bool:
 
 func _input_palette_pick(event: InputEvent) -> bool:
 	var actions := _get_palette_actions()
-	if event.is_action_pressed("ui_up", true) and actions.size() > 0:
+	if event.is_action_pressed("ui_up", false) and actions.size() > 0:
 		_sub_idx = wrapi(_sub_idx - 1, 0, actions.size())
 		return true
-	elif event.is_action_pressed("ui_down", true) and actions.size() > 0:
+	elif event.is_action_pressed("ui_down", false) and actions.size() > 0:
 		_sub_idx = wrapi(_sub_idx + 1, 0, actions.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -420,10 +473,10 @@ func _input_palette_pick(event: InputEvent) -> bool:
 
 
 func _input_system(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up", true):
+	if event.is_action_pressed("ui_up", false):
 		_sub_idx = wrapi(_sub_idx - 1, 0, SYSTEM_LABELS.size())
 		return true
-	elif event.is_action_pressed("ui_down", true):
+	elif event.is_action_pressed("ui_down", false):
 		_sub_idx = wrapi(_sub_idx + 1, 0, SYSTEM_LABELS.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
@@ -448,20 +501,20 @@ func _input_system(event: InputEvent) -> bool:
 
 func _input_options(event: InputEvent) -> bool:
 	var opts := _get_options_list()
-	if event.is_action_pressed("ui_up", true) and opts.size() > 0:
+	if event.is_action_pressed("ui_up", false) and opts.size() > 0:
 		_options_idx = wrapi(_options_idx - 1, 0, opts.size())
 		return true
-	elif event.is_action_pressed("ui_down", true) and opts.size() > 0:
+	elif event.is_action_pressed("ui_down", false) and opts.size() > 0:
 		_options_idx = wrapi(_options_idx + 1, 0, opts.size())
 		return true
-	elif event.is_action_pressed("ui_left", true):
+	elif event.is_action_pressed("ui_left", false):
 		if _options_idx == 0:
 			_adjust_music_volume(-0.1)
 			return true
 		elif _options_idx == 1:
 			_adjust_sfx_volume(-0.1)
 			return true
-	elif event.is_action_pressed("ui_right", true):
+	elif event.is_action_pressed("ui_right", false):
 		if _options_idx == 0:
 			_adjust_music_volume(0.1)
 			return true
