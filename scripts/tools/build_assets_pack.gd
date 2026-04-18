@@ -15,7 +15,15 @@ const DEFAULT_OUT := "res://dist/assets.pck"
 func _init() -> void:
 	var args := _parse_args()
 	var out_path: String = args.get("out", DEFAULT_OUT)
-	var abs_out: String = ProjectSettings.globalize_path(out_path) if out_path.begins_with("res://") else out_path
+	var abs_out: String
+	if out_path.begins_with("res://"):
+		abs_out = ProjectSettings.globalize_path(out_path)
+	elif out_path.is_absolute_path():
+		abs_out = out_path
+	else:
+		# Resolve relative paths against the project directory so
+		# make_dir_recursive_absolute and pck_start get a real absolute path.
+		abs_out = ProjectSettings.globalize_path("res://").path_join(out_path)
 
 	print("[pack] output: ", abs_out)
 
@@ -62,28 +70,37 @@ func _init() -> void:
 
 
 func _add_tree(packer: PCKPacker, dir_path: String) -> int:
-	var count := 0
+	# Walk entries in sorted order so the resulting .pck — and therefore its
+	# sha256 — is stable across machines/OSes regardless of readdir order.
 	var d := DirAccess.open(dir_path)
 	if d == null:
 		push_warning("[pack] could not open dir: %s" % dir_path)
 		return 0
+	var dirs: Array[String] = []
+	var files: Array[String] = []
 	d.list_dir_begin()
 	var name := d.get_next()
 	while name != "":
-		if name == "." or name == "..":
-			name = d.get_next()
-			continue
-		var child_path := "%s/%s" % [dir_path, name]
-		if d.current_is_dir():
-			count += _add_tree(packer, child_path)
-		else:
-			var err := packer.add_file(child_path, child_path)
-			if err != OK:
-				push_warning("[pack] add_file failed for %s: %s" % [child_path, error_string(err)])
+		if name != "." and name != "..":
+			if d.current_is_dir():
+				dirs.append(name)
 			else:
-				count += 1
+				files.append(name)
 		name = d.get_next()
 	d.list_dir_end()
+	dirs.sort()
+	files.sort()
+
+	var count := 0
+	for fn in files:
+		var child_path := "%s/%s" % [dir_path, fn]
+		var err := packer.add_file(child_path, child_path)
+		if err != OK:
+			push_warning("[pack] add_file failed for %s: %s" % [child_path, error_string(err)])
+		else:
+			count += 1
+	for sub in dirs:
+		count += _add_tree(packer, "%s/%s" % [dir_path, sub])
 	return count
 
 
