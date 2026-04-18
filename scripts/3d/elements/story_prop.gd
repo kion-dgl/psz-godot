@@ -5,6 +5,9 @@ class_name StoryProp
 
 @export var prop_path: String = ""
 @export var prop_scale: float = 1.0
+## When true, skip auto-generated collision. Used for quest props that the player
+## needs to walk through (e.g. Apothecary's Supply plants).
+@export var no_collision: bool = false
 
 var element_state: String = "default"
 
@@ -29,9 +32,10 @@ func _ready() -> void:
 	if visual_min_y != 0.0:
 		model.position.y -= visual_min_y
 
-	# Add static collision based on AABB (skip for dropship — mesh is pre-scaled in GLB)
+	# Add static collision based on AABB (skip for dropship — mesh is pre-scaled in GLB).
+	# Quest props can opt out via no_collision (e.g. Apothecary's Supply plants).
 	var aabb := _get_combined_aabb(model)
-	if aabb.size.length() > 0 and not prop_path.contains("dropship"):
+	if aabb.size.length() > 0 and not prop_path.contains("dropship") and not no_collision:
 		_add_collision(aabb)
 
 

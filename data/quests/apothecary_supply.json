@@ -432,7 +432,8 @@
                 0,
                 -8.9
               ],
-              "prop_path": "assets/kenney_nature-pack/plant_bushDetailed.glb"
+              "prop_path": "assets/kenney_nature-pack/plant_bushDetailed.glb",
+              "no_collision": true
             },
             {
               "type": "story_prop",
@@ -441,7 +442,8 @@
                 0,
                 -14.5
               ],
-              "prop_path": "assets/kenney_nature-pack/flower_purpleA.glb"
+              "prop_path": "assets/kenney_nature-pack/flower_purpleA.glb",
+              "no_collision": true
             },
             {
               "type": "quest_item",
@@ -1139,7 +1141,8 @@
                 0,
                 -7.8
               ],
-              "prop_path": "assets/kenney_nature-pack/grass_leafs.glb"
+              "prop_path": "assets/kenney_nature-pack/grass_leafs.glb",
+              "no_collision": true
             },
             {
               "type": "story_prop",
@@ -1293,7 +1296,7 @@
     },
     {
       "speaker": "Principal",
-      "text": "This is Fern, an herbalist who supplies the raw materials. She'll explain the situation."
+      "text": "This is Fern. An herbalist who supplies the raw materials. She'll explain the situation."
     },
     {
       "speaker": "Fern",

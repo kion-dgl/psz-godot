@@ -95,22 +95,29 @@ func _on_body_exited(body: Node3D) -> void:
 func _on_interact(_player: Node3D) -> void:
 	if element_state != "available":
 		return
-	interactable = false
 
+	if not _give_reward():
+		# Inventory full (or other failure): keep the drop on the ground.
+		# Inventory.add_item has already played the inv-full SFX.
+		return
+
+	interactable = false
 	set_state("collected")
 	SfxManager.play("res://assets/sfx/common/common_172.wav")
-	_give_reward()
 
 
 func _on_collected(_player: Node3D) -> void:
 	if element_state == "collected":
 		return
 
+	if not _give_reward():
+		return
+
 	set_state("collected")
 	SfxManager.play("res://assets/sfx/common/common_172.wav")
-	_give_reward()
 
 
-## Override to give the appropriate reward
-func _give_reward() -> void:
-	pass
+## Override to give the appropriate reward. Return true on success, false if
+## the pickup should remain in the world (e.g. inventory full).
+func _give_reward() -> bool:
+	return true
