@@ -119,14 +119,17 @@ jobs:
         run: cd web && npm run test
 
       - name: Build
+        # Asset GLBs / textures / audio aren't in the repo; the built site
+        # points at Cloudflare R2 for everything under /assets/ via the
+        # VITE_ASSETS_BASE env (consumed by web/src/utils/assets.ts).
+        env:
+          VITE_ASSETS_BASE: https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev
         run: cd web && npm run build
 
-      - name: Verify Pages asset copy
-        run: |
-          cp -r assets/enemies/ web/dist/assets/enemies/
-          cp -r assets/objects/ web/dist/assets/objects/
-          cp -r assets/npcs/ web/dist/assets/npcs/
-          cp -r data/ web/dist/data/
+      - name: Copy data/ into build output
+        # Quest JSON + stage configs still live in the repo and need to be
+        # copied alongside the bundle for GitHub Pages.
+        run: cp -r data/ web/dist/data/
 
   build:
     runs-on: ubuntu-latest
