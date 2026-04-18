@@ -28,6 +28,9 @@ jobs:
           restore-keys: godot-import-
 
       - name: Import project
+        # Raw /assets/ files aren't in the repo (hosted on R2; verify-assets
+        # job covers integrity), so imports will log missing-file warnings.
+        # Tests exercise config/logic layers and don't need local GLBs.
         run: godot --headless --path . --import --quit || true
 
       - name: Run tests
@@ -119,14 +122,23 @@ jobs:
         run: cd web && npm run test
 
       - name: Build
+        # Asset GLBs / textures / audio aren't in the repo; the built site
+        # points at Cloudflare R2 for everything under /assets/ via the
+        # VITE_ASSETS_BASE env (consumed by web/src/utils/assets.ts).
+        env:
+          VITE_ASSETS_BASE: https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev
         run: cd web && npm run build
 
-      - name: Verify Pages asset copy
+      - name: Copy data/ into build output
+        # Quest JSON + stage configs still live in the repo and need to be
+        # published alongside the bundle for GitHub Pages. Vite may already
+        # have copied them via the web/public/data symlink, so use rsync so
+        # we merge into any existing dist/data/ rather than nesting to
+        # dist/data/data/ (`cp -r` does the wrong thing when the target
+        # directory exists).
         run: |
-          cp -r assets/enemies/ web/dist/assets/enemies/
-          cp -r assets/objects/ web/dist/assets/objects/
-          cp -r assets/npcs/ web/dist/assets/npcs/
-          cp -r data/ web/dist/data/
+          mkdir -p web/dist/data
+          rsync -a --delete data/ web/dist/data/
 
   build:
     runs-on: ubuntu-latest

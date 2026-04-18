@@ -3,6 +3,12 @@
 /android/
 /build/
 
+# Game assets live on Cloudflare R2 (see assets_manifest.json for the pack
+# URL and scripts/tools/fetch_assets_dev.sh to populate locally).
+/assets/
+# Raw PSOBB SFX pool used by the web labeler; also on R2.
+/web/public/psobb_sfx/
+
 # Web app
 web/node_modules/
 web/dist/
