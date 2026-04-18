@@ -31,16 +31,24 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      - name: Install and build web app
-        run: cd web && npm ci && npm run build
+      - name: Install web deps
+        run: cd web && npm ci
 
-      - name: Copy shared assets into build
+      - name: Build web app
+        # Every /assets/* and /psobb_sfx/* path is routed through
+        # VITE_ASSETS_BASE at build time (see web/src/utils/assets.ts),
+        # so no raw asset bytes need to ship in the Pages artifact.
+        env:
+          VITE_ASSETS_BASE: https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev
+        run: cd web && npm run build
+
+      - name: Copy data/ into build output
+        # Quest JSON + stage configs are still in-repo and need to ride
+        # along with the Pages artifact. rsync so we merge with any
+        # dist/data/ that vite already created via the public symlink.
         run: |
-          cp -r assets/enemies/ web/dist/assets/enemies/
-          cp -r assets/objects/ web/dist/assets/objects/
-          cp -r assets/npcs/ web/dist/assets/npcs/
-          cp -r assets/player/ web/dist/player/
-          cp -r data/ web/dist/data/
+          mkdir -p web/dist/data
+          rsync -a --delete data/ web/dist/data/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
