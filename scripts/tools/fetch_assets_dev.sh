@@ -48,16 +48,35 @@ echo "  $FILE_COUNT files in manifest"
 
 mkdir -p assets
 
-# Emit "path<TAB>md5<TAB>size" for each entry so the worker can parse it.
+# Emit "key<TAB>md5<TAB>size" for each entry so the worker can parse it.
 WORK="$(mktemp)"
 trap 'rm -f "$TREE_FILE" "$WORK"' EXIT
-jq -r '.files[] | "\(.path)\t\(.md5)\t\(.size)"' "$TREE_FILE" > "$WORK"
+jq -r '.files[] | "\(.key)\t\(.md5)\t\(.size)"' "$TREE_FILE" > "$WORK"
+
+# Map each R2 key prefix to the local directory it should be extracted into.
+# Keep in sync with scripts/publish/sync_tree.ts SYNC_ROOTS and
+# web/src/utils/assets.ts CDN_PREFIXES.
+dest_for_key() {
+  local key="$1"
+  case "$key" in
+    assets/*) echo "assets/${key#assets/}" ;;
+    psobb_sfx/*) echo "web/public/psobb_sfx/${key#psobb_sfx/}" ;;
+    *) echo "" ;;
+  esac
+}
+
+export -f dest_for_key
 
 download_one() {
   local line="$1"
-  local path md5 size
-  IFS=$'\t' read -r path md5 size <<< "$line"
-  local dest="assets/$path"
+  local key md5 size
+  IFS=$'\t' read -r key md5 size <<< "$line"
+  local dest
+  dest=$(dest_for_key "$key")
+  if [[ -z "$dest" ]]; then
+    echo "  ! unmapped prefix: $key" >&2
+    return 1
+  fi
   if [[ "$FORCE" -eq 0 && -f "$dest" ]]; then
     local got
     got=$(md5sum "$dest" | awk '{print $1}')
@@ -68,10 +87,10 @@ download_one() {
   mkdir -p "$(dirname "$dest")"
   # Retry a couple times for flaky gateways.
   local attempts=0
-  while ! curl -fsS -A "psz-godot-dev-fetch/1.0" -o "$dest" "$BASE/assets/$path"; do
+  while ! curl -fsS -A "psz-godot-dev-fetch/1.0" -o "$dest" "$BASE/$key"; do
     attempts=$((attempts + 1))
     if [[ "$attempts" -ge 3 ]]; then
-      echo "  ! failed: $path" >&2
+      echo "  ! failed: $key" >&2
       return 1
     fi
     sleep 2
@@ -98,4 +117,4 @@ if [[ "$FAILS" -ne 0 ]]; then
   exit 1
 fi
 
-echo "✓ /assets/ in sync ($FILE_COUNT files)"
+echo "✓ local trees in sync ($FILE_COUNT files: /assets/ + web/public/psobb_sfx/)"
