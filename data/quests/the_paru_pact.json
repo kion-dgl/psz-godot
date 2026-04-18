@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-04-09",
+  "last_updated": "2026-04-18",
   "id": "the_paru_pact",
   "name": "The Paru Pact",
   "description": "Requested by: Research Division. Help Elio, the guild's Mag custodian, recover Mag fragments from Paru ruins to assemble a new Mag for guild rotation.",
@@ -291,26 +291,107 @@
               ],
               "item_id": "mag_fragment",
               "item_label": "Mag Fragment",
-              "dialog": [
+              "remaining_dialog": [
                 {
-                  "speaker": "Elio",
-                  "text": "Here's the first one. It's warm. I can already feel it responding."
+                  "condition": {
+                    "item_count": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Here's the first one. It's warm. I can already feel it responding."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Everything we know about Mags comes from what we've pulled out of ruins like these."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Whoever built them had technology similar to CASTs."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Once a Mag bonds with a hunter, it learns to recognize them."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Some get clever enough to protect or heal their partner on their own."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "Everything we know about Mags comes from what we've pulled out of ruins like these."
+                  "condition": {
+                    "item_count": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Second fragment. They're starting to sync up."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "Whoever built them had technology similar to CASTs."
+                  "condition": {
+                    "item_count": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Three fragments. Almost a full set."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Once it's fully charged, it can release a Photon Blast. It's something to see."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "Once a Mag bonds with a hunter, it learns to recognize them."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "Some get clever enough to protect or heal their partner on their own."
+                  "condition": {
+                    "item_count": 4
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "There it is. The last piece."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Hold on. Let me fit them together."
+                    },
+                    {
+                      "speaker": "",
+                      "text": "Elio presses the four fragments into a housing. Light pulses through the seams, faster and faster. A new Mag rises from her hands and drifts in a slow circle around her."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Hello, you. Welcome to the guild."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "I'll take care of this one until someone signs up who needs a partner."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Thanks for keeping me safe out here. Let's head back."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
                 }
               ]
             },
@@ -817,18 +898,107 @@
               ],
               "item_id": "mag_fragment",
               "item_label": "Mag Fragment",
-              "dialog": [
+              "remaining_dialog": [
                 {
-                  "speaker": "Elio",
-                  "text": "Second fragment. They're starting to sync up."
+                  "condition": {
+                    "item_count": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Here's the first one. It's warm. I can already feel it responding."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Everything we know about Mags comes from what we've pulled out of ruins like these."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Whoever built them had technology similar to CASTs."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Once a Mag bonds with a hunter, it learns to recognize them."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Some get clever enough to protect or heal their partner on their own."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack."
+                  "condition": {
+                    "item_count": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Second fragment. They're starting to sync up."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
+                  "condition": {
+                    "item_count": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Three fragments. Almost a full set."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Once it's fully charged, it can release a Photon Blast. It's something to see."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "item_count": 4
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "There it is. The last piece."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Hold on. Let me fit them together."
+                    },
+                    {
+                      "speaker": "",
+                      "text": "Elio presses the four fragments into a housing. Light pulses through the seams, faster and faster. A new Mag rises from her hands and drifts in a slow circle around her."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Hello, you. Welcome to the guild."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "I'll take care of this one until someone signs up who needs a partner."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Thanks for keeping me safe out here. Let's head back."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
                 }
               ]
             },
@@ -1174,18 +1344,107 @@
               ],
               "item_id": "mag_fragment",
               "item_label": "Mag Fragment",
-              "dialog": [
+              "remaining_dialog": [
                 {
-                  "speaker": "Elio",
-                  "text": "Three fragments. Almost a full set."
+                  "condition": {
+                    "item_count": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Here's the first one. It's warm. I can already feel it responding."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Everything we know about Mags comes from what we've pulled out of ruins like these."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Whoever built them had technology similar to CASTs."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Once a Mag bonds with a hunter, it learns to recognize them."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Some get clever enough to protect or heal their partner on their own."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy."
+                  "condition": {
+                    "item_count": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Second fragment. They're starting to sync up."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "Once it's fully charged, it can release a Photon Blast. It's something to see."
+                  "condition": {
+                    "item_count": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Three fragments. Almost a full set."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Once it's fully charged, it can release a Photon Blast. It's something to see."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "item_count": 4
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "There it is. The last piece."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Hold on. Let me fit them together."
+                    },
+                    {
+                      "speaker": "",
+                      "text": "Elio presses the four fragments into a housing. Light pulses through the seams, faster and faster. A new Mag rises from her hands and drifts in a slow circle around her."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Hello, you. Welcome to the guild."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "I'll take care of this one until someone signs up who needs a partner."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Thanks for keeping me safe out here. Let's head back."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
                 }
               ]
             },
@@ -1471,37 +1730,109 @@
                 0,
                 -9.9
               ],
-              "actions": [
-                "dismiss_companion",
-                "complete_quest",
-                "telepipe"
-              ],
               "item_id": "mag_fragment",
               "item_label": "Mag Fragment",
-              "dialog": [
+              "remaining_dialog": [
                 {
-                  "speaker": "Elio",
-                  "text": "There it is. The last piece."
+                  "condition": {
+                    "item_count": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Here's the first one. It's warm. I can already feel it responding."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Everything we know about Mags comes from what we've pulled out of ruins like these."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Whoever built them had technology similar to CASTs."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Once a Mag bonds with a hunter, it learns to recognize them."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Some get clever enough to protect or heal their partner on their own."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "Hold on. Let me fit them together."
+                  "condition": {
+                    "item_count": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Second fragment. They're starting to sync up."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "By the way, your Mag looks like it could use a feed. They eat items from your pack."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Monomates, Dimates, that sort of thing. Each one has preferences. You learn what they like over time."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "",
-                  "text": "Elio presses the four fragments into a housing. Light pulses through the seams, faster and faster. A new Mag rises from her hands and drifts in a slow circle around her."
+                  "condition": {
+                    "item_count": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "Three fragments. Almost a full set."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Oh, I just remembered. When a Mag takes damage alongside you, it stores the energy."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Once it's fully charged, it can release a Photon Blast. It's something to see."
+                    }
+                  ]
                 },
                 {
-                  "speaker": "Elio",
-                  "text": "Hello, you. Welcome to the guild."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "I'll take care of this one until someone signs up who needs a partner."
-                },
-                {
-                  "speaker": "Elio",
-                  "text": "Thanks for keeping me safe out here. Let's head back."
+                  "condition": {
+                    "item_count": 4
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Elio",
+                      "text": "There it is. The last piece."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Hold on. Let me fit them together."
+                    },
+                    {
+                      "speaker": "",
+                      "text": "Elio presses the four fragments into a housing. Light pulses through the seams, faster and faster. A new Mag rises from her hands and drifts in a slow circle around her."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Hello, you. Welcome to the guild."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "I'll take care of this one until someone signs up who needs a partner."
+                    },
+                    {
+                      "speaker": "Elio",
+                      "text": "Thanks for keeping me safe out here. Let's head back."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
                 }
               ]
             }

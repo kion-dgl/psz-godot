@@ -8,7 +8,15 @@ class_name QuestItemPickup
 @export var quest_item_label: String = ""
 var pickup_dialog: Array = []  # [{speaker, text}, ...] shown after "Picked up X"
 var pickup_actions: Array = []  # ["complete_quest", "telepipe"] run after dialog
-var remaining_dialog: Array = []  # [{condition:{collected:N}, dialog:[...], actions:[...]}]
+## Dynamic dialog branches evaluated on pickup. Each entry:
+##   {condition: {collected: N}, dialog: [...], actions: [...]}
+##   {condition: {item_count: N}, dialog: [...], actions: [...]}
+## - `collected` matches the number of fully-completed objectives (use for
+##   multi-objective quests like Apothecary's Supply)
+## - `item_count` matches the count of this quest_item's own item_id (use for
+##   single-objective collect-N quests like Paru Pact's 4 fragments)
+## Both fields may be combined; both must match for the entry to fire.
+var remaining_dialog: Array = []
 var companion_node: Node = null  # CompanionNpc for speech bubble routing
 
 
@@ -201,12 +209,23 @@ func _show_remaining_dialog(comp: Node, rem_entries: Array, fallback_actions: Ar
 		else:
 			remaining_names.append(str(obj.get("label", oid)))
 
-	# Find matching entry
+	var this_item_count: int = SessionManager.get_quest_item_count(quest_item_id)
+
+	# Find matching entry. A condition matches when every field it specifies
+	# equals the runtime value. An empty condition matches nothing (skip).
 	var matched: Dictionary = {}
 	for entry in rem_entries:
 		var condition: Dictionary = entry.get("condition", {})
-		var required: int = int(condition.get("collected", -1))
-		if required == total_collected:
+		if condition.is_empty():
+			continue
+		var ok := true
+		if condition.has("collected"):
+			if int(condition["collected"]) != total_collected:
+				ok = false
+		if ok and condition.has("item_count"):
+			if int(condition["item_count"]) != this_item_count:
+				ok = false
+		if ok:
 			matched = entry
 			break
 
