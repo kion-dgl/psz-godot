@@ -12,11 +12,16 @@
  * /assets/ tree. That keeps `npm run dev` working for anyone with a local
  * /assets/ populated via scripts/tools/fetch_assets_dev.sh.
  */
+// Prefixes whose content lives on the CDN when VITE_ASSETS_BASE is set.
+// Keep in sync with scripts/publish/sync_tree.ts SYNC_ROOTS and
+// scripts/tools/fetch_assets_dev.sh's prefix → local-dir mapping.
+const CDN_PREFIXES = ['assets/', 'psobb_sfx/'];
+
 export function assetUrl(path: string): string {
   const base = import.meta.env.BASE_URL || '/';
   const cdn = (import.meta.env.VITE_ASSETS_BASE || '').replace(/\/$/, '');
   const clean = path.startsWith('/') ? path.slice(1) : path;
-  if (cdn && clean.startsWith('assets/')) {
+  if (cdn && CDN_PREFIXES.some((p) => clean.startsWith(p))) {
     return `${cdn}/${clean}`;
   }
   return `${base}${clean}`;

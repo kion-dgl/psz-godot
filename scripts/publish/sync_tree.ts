@@ -28,8 +28,17 @@ import { loadR2Config } from "./lib/r2.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const REPO_ROOT = resolve(__dirname, "../..");
-const ASSETS_DIR = resolve(REPO_ROOT, "assets");
-const R2_PREFIX = "assets/"; // object-key prefix in the bucket
+
+// (local dir → R2 key prefix) pairs. Each root is walked, hashed, diffed,
+// and uploaded into its R2 prefix. Adding a new root here is the only
+// code-side change needed to pull another tree into the pipeline.
+//
+// Keep the prefix list in sync with web/src/utils/assets.ts CDN_PREFIXES
+// and scripts/tools/fetch_assets_dev.sh's dest_dir_for().
+const SYNC_ROOTS: Array<{ localDir: string; r2Prefix: string }> = [
+  { localDir: resolve(REPO_ROOT, "assets"), r2Prefix: "assets/" },
+  { localDir: resolve(REPO_ROOT, "web/public/psobb_sfx"), r2Prefix: "psobb_sfx/" },
+];
 
 interface CliArgs {
   dryRun: boolean;
@@ -133,6 +142,14 @@ async function mapLimit<T, R>(
   return results;
 }
 
+interface Local {
+  key: string;
+  prefix: string;
+  path: string;
+  size: number;
+  md5: string;
+}
+
 async function main(): Promise<void> {
   const args = parseArgs();
   const r2 = loadR2Config();
@@ -142,11 +159,13 @@ async function main(): Promise<void> {
     );
     process.exit(2);
   }
-  try {
-    await stat(ASSETS_DIR);
-  } catch {
-    console.error(`No local /assets/ at ${ASSETS_DIR}`);
-    process.exit(2);
+  for (const root of SYNC_ROOTS) {
+    try {
+      await stat(root.localDir);
+    } catch {
+      console.error(`Missing local source: ${root.localDir}`);
+      process.exit(2);
+    }
   }
 
   // Force IPv4 at the socket level — Node's dual-stack behavior has been
@@ -173,18 +192,23 @@ async function main(): Promise<void> {
     maxAttempts: 5,
   });
 
-  // 1. Walk local tree, compute md5 per file.
-  console.log(`→ Scanning ${ASSETS_DIR}`);
-  const locals: Array<{ key: string; path: string; size: number; md5: string }> = [];
-  for await (const p of walkFiles(ASSETS_DIR)) {
-    const rel = relative(ASSETS_DIR, p).split(/[/\\]/).join("/");
-    const key = `${R2_PREFIX}${rel}`;
-    const s = await stat(p);
-    locals.push({ key, path: p, size: s.size, md5: "" });
+  // 1. Walk each local tree, compute md5 per file. Track the source prefix
+  //    so the tree manifest records which local root each file belongs to.
+  const locals: Local[] = [];
+  for (const root of SYNC_ROOTS) {
+    console.log(`→ Scanning ${root.localDir}`);
+    let count = 0;
+    for await (const p of walkFiles(root.localDir)) {
+      const rel = relative(root.localDir, p).split(/[/\\]/).join("/");
+      const key = `${root.r2Prefix}${rel}`;
+      const s = await stat(p);
+      locals.push({ key, prefix: root.r2Prefix, path: p, size: s.size, md5: "" });
+      count++;
+    }
+    console.log(`  ${count} files`);
   }
-  console.log(`  ${locals.length} files`);
 
-  console.log("→ Hashing local files");
+  console.log(`→ Hashing ${locals.length} local files`);
   await mapLimit(locals, args.concurrency, async (f) => {
     f.md5 = await md5Hex(f.path);
   }, (done, total) => {
@@ -194,13 +218,17 @@ async function main(): Promise<void> {
   });
   process.stdout.write("\n");
 
-  // 2. List R2 existing.
-  console.log(`→ Listing s3://${r2.bucket}/${R2_PREFIX}`);
-  const remote = await listR2(client, r2.bucket, R2_PREFIX);
-  console.log(`  ${remote.size} remote objects`);
+  // 2. List R2 per prefix — scopes orphan detection to each tree separately.
+  const remote = new Map<string, { size: number; etag: string }>();
+  for (const root of SYNC_ROOTS) {
+    console.log(`→ Listing s3://${r2.bucket}/${root.r2Prefix}`);
+    const chunk = await listR2(client, r2.bucket, root.r2Prefix);
+    for (const [k, v] of chunk) remote.set(k, v);
+    console.log(`  ${chunk.size} remote objects`);
+  }
 
   // 3. Diff.
-  const toUpload: typeof locals = [];
+  const toUpload: Local[] = [];
   for (const f of locals) {
     const existing = remote.get(f.key);
     if (!existing || existing.etag !== f.md5) {
@@ -293,18 +321,16 @@ async function main(): Promise<void> {
   }
 
   // 6. Publish a tree manifest at a well-known key so anonymous devs can
-  //    enumerate the tree without S3 creds and pull everything via plain HTTP.
+  //    enumerate everything without S3 creds and pull via plain HTTP. Each
+  //    file entry uses its full R2 key — dev fetch looks up the source
+  //    prefix to decide the on-disk destination.
   const tree = {
     generated_at: new Date().toISOString(),
     base_url: r2.publicUrl,
-    asset_prefix: R2_PREFIX,
+    prefixes: SYNC_ROOTS.map((r) => r.r2Prefix),
     files: locals
-      .map((f) => ({
-        path: f.key.slice(R2_PREFIX.length),
-        size: f.size,
-        md5: f.md5,
-      }))
-      .sort((a, b) => a.path.localeCompare(b.path)),
+      .map((f) => ({ key: f.key, size: f.size, md5: f.md5 }))
+      .sort((a, b) => a.key.localeCompare(b.key)),
   };
   const treeBody = Buffer.from(JSON.stringify(tree, null, 0));
   const treeKey = "assets_tree.json";
