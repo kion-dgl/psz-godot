@@ -16,6 +16,7 @@ func _setup_prompt() -> void:
 	pass
 
 
-func _give_reward() -> void:
+func _give_reward() -> bool:
 	GameState.add_meseta(amount)
 	print("[DropMeseta] Collected ", amount, " meseta (total: ", GameState.get_meseta(), ")")
+	return true

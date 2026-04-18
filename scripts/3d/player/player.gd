@@ -159,10 +159,42 @@ var _cached_materials: Array = []  # Array of StandardMaterial3D for charge/glow
 
 # Footstep SFX
 var _footstep_timer: float = 0.0
-var _footstep_alternate: bool = false
 const FOOTSTEP_WALK_INTERVAL := 0.55
 const FOOTSTEP_RUN_INTERVAL := 0.40
 const FOOTSTEP_SPRINT_INTERVAL := 0.30
+
+# Footstep samples keyed by (terrain, race). PSO uses a single sample per combo
+# (no step1/step2 alternation). Terrain is resolved from the current area id;
+# race is derived from class_id. Missing race entries fall back to "human".
+const FOOTSTEP_CLIPS := {
+	"forest":   {"human": "res://assets/sfx/common/common_000.wav"},
+	"caves":    {"human": "res://assets/sfx/common/common_002.wav"},
+	"city":     {
+		"human": "res://assets/sfx/common/common_004.wav",
+		"cast": "res://assets/sfx/common/common_009.wav",
+		"racast": "res://assets/sfx/common/common_008.wav",
+	},
+	"jungle":   {"human": "res://assets/sfx/common/common_007.wav"},
+	"sand":     {"human": "res://assets/sfx/common/common_023.wav"},
+	"water":    {"human": "res://assets/sfx/common/common_025.wav"},
+	"snow":     {"human": "res://assets/sfx/common/common_026.wav"},
+	"generic":  {"human": "res://assets/sfx/common/common_026.wav"},
+}
+
+# Area id (SessionManager.get_current_area_id) → terrain key above.
+const AREA_TO_TERRAIN := {
+	"gurhacia": "forest",
+	"ozette":   "snow",
+	"rioh":     "jungle",
+	"makara":   "sand",
+	"paru":     "caves",
+	"arca":     "city",
+	"dark":     "caves",
+	"tower":    "city",
+}
+
+const CAST_CLASSES := ["hucast", "hucaseal"]
+const RACAST_CLASSES := ["racast", "racaseal"]
 
 # Dodge tracking
 var dodge_direction: float = 0.0
@@ -636,6 +668,31 @@ func _is_in_city() -> bool:
 	return parent is CityAreaBase
 
 
+func _resolve_footstep_clip() -> String:
+	var terrain: String
+	if _is_in_city() or SessionManager.get_location() == "city":
+		terrain = "city"
+	else:
+		var area_id: String = SessionManager.get_current_area_id()
+		terrain = AREA_TO_TERRAIN.get(area_id, "generic")
+	var clips: Dictionary = FOOTSTEP_CLIPS.get(terrain, {})
+	if clips.is_empty():
+		return ""
+
+	var class_id: String = ""
+	var session: Dictionary = SessionManager.get_session()
+	var character: Variant = session.get("character", {})
+	if character is Dictionary:
+		class_id = str(character.get("class_id", ""))
+	var race: String = "human"
+	if class_id in CAST_CLASSES:
+		race = "cast"
+	elif class_id in RACAST_CLASSES:
+		race = "racast"
+	# Fall back to human if the specific race isn't labeled for this terrain yet.
+	return clips.get(race, clips.get("human", ""))
+
+
 func _find_node_of_type(root: Node, type_name: String) -> Node:
 	if root.get_class() == type_name:
 		return root
@@ -789,13 +846,9 @@ func _physics_process(delta: float) -> void:
 		_footstep_timer -= delta
 		if _footstep_timer <= 0:
 			_footstep_timer = interval
-			_footstep_alternate = not _footstep_alternate
-			var sfx: String
-			if SessionManager.get_location() == "field":
-				sfx = "res://assets/sfx/common/common_026.wav" if _footstep_alternate else "res://assets/sfx/common/common_027.wav"
-			else:
-				sfx = "res://assets/sfx/common/common_002.wav" if _footstep_alternate else "res://assets/sfx/common/common_004.wav"
-			SfxManager.play_at(sfx, global_position, -8.0)
+			var sfx: String = _resolve_footstep_clip()
+			if sfx != "":
+				SfxManager.play_at(sfx, global_position, -8.0)
 	else:
 		_footstep_timer = 0.0
 

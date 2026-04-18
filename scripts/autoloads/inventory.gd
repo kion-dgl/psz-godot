@@ -83,6 +83,9 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 		var current: int = int(_items.get(item_id, 0))
 		var max_add: int = mini(quantity, max_stack - current)
 		if max_add <= 0:
+			# Stack already at max_stack — same UX as capacity-full.
+			inventory_full.emit()
+			SfxManager.play("res://assets/sfx/common/common_022.wav")
 			return false
 		_items[item_id] = current + max_add
 		var new_total: int = int(_items[item_id])

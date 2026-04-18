@@ -2,56 +2,56 @@
   "common/common_000.wav": {
     "file": "common_000.wav",
     "category": "common",
-    "label": "",
+    "label": "step",
     "notes": "Walking on Forest Floor",
     "starred": false
   },
   "common/common_001.wav": {
     "file": "common_001.wav",
     "category": "common",
-    "label": "splash",
-    "notes": "Walking on Forest Water (Probably Seabed too))",
+    "label": "wet step",
+    "notes": "Walking on Forest/Seabed Water",
     "starred": false
   },
   "common/common_002.wav": {
     "file": "common_002.wav",
     "category": "common",
-    "label": "step",
-    "notes": "",
+    "label": "step 2",
+    "notes": "Walking on Caves Floor",
     "starred": false
   },
   "common/common_003.wav": {
     "file": "common_003.wav",
     "category": "common",
-    "label": "splash 2",
-    "notes": "",
+    "label": "wet step 2",
+    "notes": "Walking on Caves Water",
     "starred": false
   },
   "common/common_004.wav": {
     "file": "common_004.wav",
     "category": "common",
-    "label": "step 2",
+    "label": "step 3",
     "notes": "Walking on Pioneer 2 (HUmar))",
     "starred": false
   },
   "common/common_005.wav": {
     "file": "common_005.wav",
     "category": "common",
-    "label": "wooosh",
+    "label": "warp",
     "notes": "Teleporter/Warp",
     "starred": false
   },
   "common/common_006.wav": {
     "file": "common_006.wav",
     "category": "common",
-    "label": "go online",
-    "notes": "Principal Warp",
+    "label": "principal warp",
+    "notes": "",
     "starred": false
   },
   "common/common_007.wav": {
     "file": "common_007.wav",
     "category": "common",
-    "label": "step on grass",
+    "label": "foliage step",
     "notes": "Walking on Forest Plant",
     "starred": false
   },
@@ -146,18 +146,46 @@
     "notes": "can't pick up/use item",
     "starred": false
   },
+  "common/common_023.wav": {
+    "file": "common_023.wav",
+    "category": "common",
+    "label": "sand",
+    "notes": "Walking on Seaside Sand Floor",
+    "starred": false
+  },
   "common/common_025.wav": {
     "file": "common_025.wav",
     "category": "common",
-    "label": "step in water",
-    "notes": "",
+    "label": "jungle and seaside water",
+    "notes": "Walking on Jungle/Seaside Water",
+    "starred": false
+  },
+  "common/common_028.wav": {
+    "file": "common_028.wav",
+    "category": "common",
+    "label": "seabed perforated floor",
+    "notes": "Walking on Seabed Perforated Metal Floor",
+    "starred": false
+  },
+  "common/common_029.wav": {
+    "file": "common_029.wav",
+    "category": "common",
+    "label": "",
+    "notes": "Likely CAST version of #28?",
+    "starred": false
+  },
+  "common/common_030.wav": {
+    "file": "common_030.wav",
+    "category": "common",
+    "label": "",
+    "notes": "Likely RAcast version of #28?",
     "starred": false
   },
   "common/common_031.wav": {
     "file": "common_031.wav",
     "category": "common",
-    "label": "step in water",
-    "notes": "",
+    "label": "",
+    "notes": "unknown water sound atm",
     "starred": false
   },
   "common/common_033.wav": {
@@ -170,22 +198,22 @@
   "common/common_034.wav": {
     "file": "common_034.wav",
     "category": "common",
-    "label": "saber hit?",
-    "notes": "Saber Hit and Blocking (No Shield Equipped)? #40 and #49 sounds similar",
+    "label": "generic impact?",
+    "notes": "Identical CRC32 with #49 (sounds similar to #40 too). shows up on shieldless blocking, ranged, melee hits but idk maybe it could be #40 too with how similar it sounds",
     "starred": false
   },
   "common/common_035.wav": {
     "file": "common_035.wav",
     "category": "common",
-    "label": "saber swing",
-    "notes": "",
+    "label": "saber dblsaber claw and rod swing",
+    "notes": "NOT these claws = panther claw/dragon claw/morning glory/rikas claw, NOT these dbl sabers = MKB/BKB/Girasole/double cannon/twin blaze/vivienne, wand = technical crozier/magical piece/solferino, cane = Clio/Decalog, rod = rabbit wand/valkyrie/mercurius rod/dark bridge/psycho wand as well as TypeRO/Halbert and TypeRO/Sword, katana = TypeJS/Saber and TypeJS/Slicer, slicer = TypeSL/Slicer and TypeSL/Saber and TypeSL/Claw, partisan = butterfly net/synthesizer, sword = akiko cleaver",
     "starred": false
   },
   "common/common_036.wav": {
     "file": "common_036.wav",
     "category": "common",
     "label": "sword swing",
-    "notes": "",
+    "notes": "saber = ES axe, claw = dragon claw",
     "starred": false
   },
   "common/common_037.wav": {
@@ -198,8 +226,8 @@
   "common/common_038.wav": {
     "file": "common_038.wav",
     "category": "common",
-    "label": "dagger swing",
-    "notes": "",
+    "label": "dagger and cane swing",
+    "notes": "saber = evil curst",
     "starred": false
   },
   "common/common_039.wav": {
@@ -213,14 +241,14 @@
     "file": "common_040.wav",
     "category": "common",
     "label": "saber crit?",
-    "notes": "#34 and #49 sounds similar",
+    "notes": "#34 and #49 are same CRC32 to each other but not to #40 though sounds incredibly similar",
     "starred": false
   },
   "common/common_041.wav": {
     "file": "common_041.wav",
     "category": "common",
     "label": "handgun shot",
-    "notes": "",
+    "notes": "shot = rambling may, rifle = egg blaster",
     "starred": false
   },
   "common/common_042.wav": {
@@ -247,85 +275,99 @@
   "common/common_045.wav": {
     "file": "common_045.wav",
     "category": "common",
-    "label": "cane swing",
-    "notes": "",
+    "label": "wand swing",
+    "notes": "rod = sorcerer's cane",
     "starred": false
   },
   "common/common_046.wav": {
     "file": "common_046.wav",
     "category": "common",
-    "label": "unarmed/knuckles",
+    "label": "unarmed swing",
     "notes": "",
+    "starred": false
+  },
+  "common/common_047.wav": {
+    "file": "common_047.wav",
+    "category": "common",
+    "label": "knuckles swing",
+    "notes": "Wand = PoM and marina's bag swings too",
     "starred": false
   },
   "common/common_048.wav": {
     "file": "common_048.wav",
     "category": "common",
-    "label": "needle shot?",
-    "notes": "",
+    "label": "needle shot",
+    "notes": "spread needle and ES needle",
     "starred": false
   },
   "common/common_049.wav": {
     "file": "common_049.wav",
     "category": "common",
     "label": "",
-    "notes": "#34 and #40 sounds similar",
+    "notes": "Identical CRC32 with #34 (sounds similar to #40 too).",
     "starred": false
   },
   "common/common_050.wav": {
     "file": "common_050.wav",
     "category": "common",
-    "label": "launcher shot?",
-    "notes": "",
+    "label": "bazooka shot",
+    "notes": "ano bazooka/cannon rouge, shot = inferno bazooka/ES bazooka",
     "starred": false
   },
   "common/common_051.wav": {
     "file": "common_051.wav",
     "category": "common",
-    "label": "bazooka shot?",
-    "notes": "",
+    "label": "bazooka impact",
+    "notes": "bazookas except NUG (uses #123 instead) play this sound when targets like enemy/box are hit but not if explosion hits wall (inferno bazooka/ES bazooka/rocket punch/ES punch plays this hitting a wall), target only like an enemy/box. barely audible with one target but much louder with 2 and 3. 4+ barely much louder. s-curve loudness scaling",
     "starred": false
   },
   "common/common_052.wav": {
     "file": "common_052.wav",
     "category": "common",
-    "label": "akiko's frying pan?",
-    "notes": "",
+    "label": "akiko's frying pan impact",
+    "notes": "when swing hits enemy/box",
     "starred": false
   },
   "common/common_053.wav": {
     "file": "common_053.wav",
     "category": "common",
-    "label": "lavis weapons swing?",
-    "notes": "",
+    "label": "lavis weapons swing",
+    "notes": "double saber = girasole",
     "starred": false
   },
   "common/common_054.wav": {
     "file": "common_054.wav",
     "category": "common",
-    "label": "chainsawd swing?",
+    "label": "chainsawd swing",
     "notes": "",
     "starred": false
   },
   "common/common_055.wav": {
     "file": "common_055.wav",
     "category": "common",
-    "label": "chainsawd hit?",
-    "notes": "",
+    "label": "chainsawd impact",
+    "notes": "chainsawd impact loudness might be like #51's s-curve. rifle = drill launcher impact",
     "starred": false
   },
   "common/common_056.wav": {
     "file": "common_056.wav",
     "category": "common",
-    "label": "katana swing?",
-    "notes": "",
+    "label": "hammer swing",
+    "notes": "katana = toy hammer/ES hammer/akiko's frying pan, sword = SJS, saber = akiko wok, wands = Game Magazine/LOGiN, dbl saber = monkey king bar/black king bar, dagger = wok of akiko, cane = flower cane, rod = plantain leaf/fatsia/demonic fork/branch of pakupaku. #90 sounds similar but lower deeper pitch",
+    "starred": false
+  },
+  "common/common_057.wav": {
+    "file": "common_057.wav",
+    "category": "common",
+    "label": "TJS zanba lastsurvivor impact",
+    "notes": "katana = yamigarasu, doesn't play when hitting box but from enemies which gets layered on top of the normal swing sound upon contact",
     "starred": false
   },
   "common/common_059.wav": {
     "file": "common_059.wav",
     "category": "common",
-    "label": "TJS hit?",
-    "notes": "",
+    "label": "",
+    "notes": "Identical CRC32 with #161",
     "starred": false
   },
   "common/common_060.wav": {
@@ -345,64 +387,148 @@
   "common/common_062.wav": {
     "file": "common_062.wav",
     "category": "common",
-    "label": "shield block?",
+    "label": "shield block",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_064.wav": {
+    "file": "common_064.wav",
+    "category": "common",
+    "label": "harisen swing",
+    "notes": "harisen battle fan/ES harisen/huge battle fan",
+    "starred": false
+  },
+  "common/common_066.wav": {
+    "file": "common_066.wav",
+    "category": "common",
+    "label": "crazy tune swing",
     "notes": "",
     "starred": false
   },
   "common/common_067.wav": {
     "file": "common_067.wav",
     "category": "common",
-    "label": "TJS or Zanba swing?",
-    "notes": "",
+    "label": "TJS zanba lastsurvivor swing",
+    "notes": "katana = yamigarasu",
+    "starred": false
+  },
+  "common/common_069.wav": {
+    "file": "common_069.wav",
+    "category": "common",
+    "label": "plantain fan and plantain huge fan swing",
+    "notes": "and chameleon scythe",
     "starred": false
   },
   "common/common_070.wav": {
     "file": "common_070.wav",
     "category": "common",
-    "label": "gun shot",
-    "notes": "Yasminkovs?",
+    "label": "ammo shot",
+    "notes": "yes I mean all 4 yasminkovs. also l&k38 with Rianov, Rianov 1, Rianov 2, Rianov 3, and Rianov 5. Rianov 4 however uses standard #43 rifle sounds.",
+    "starred": false
+  },
+  "common/common_071.wav": {
+    "file": "common_071.wav",
+    "category": "common",
+    "label": "large physical shot",
+    "notes": "shot = belra cannon, mechgun = ES punch/rocket punch, rifle = drill launcher",
+    "starred": false
+  },
+  "common/common_072.wav": {
+    "file": "common_072.wav",
+    "category": "common",
+    "label": "samba maracas shot",
+    "notes": "",
     "starred": false
   },
   "common/common_073.wav": {
     "file": "common_073.wav",
     "category": "common",
-    "label": "heavy gun shot",
-    "notes": "",
+    "label": "NUG and faust shot",
+    "notes": "yes I mean both iron faust and panzer faust",
     "starred": false
   },
   "common/common_074.wav": {
     "file": "common_074.wav",
     "category": "common",
-    "label": "",
-    "notes": "this or the above is maybe NUG Bazooka",
+    "label": "baranz launcher shot",
+    "notes": "",
     "starred": false
   },
   "common/common_075.wav": {
     "file": "common_075.wav",
     "category": "common",
-    "label": "hildebear gets hit",
+    "label": "hildebear and hildeblue cane swing",
+    "notes": "probably also hildebear gets hit sound",
+    "starred": false
+  },
+  "common/common_076.wav": {
+    "file": "common_076.wav",
+    "category": "common",
+    "label": "broom and flower bouquet swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_077.wav": {
+    "file": "common_077.wav",
+    "category": "common",
+    "label": "panther claw swing",
     "notes": "",
     "starred": false
   },
   "common/common_078.wav": {
     "file": "common_078.wav",
     "category": "common",
-    "label": "nyaa",
-    "notes": "paku paku stick swing probably",
+    "label": "striker of chao swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_079.wav": {
+    "file": "common_079.wav",
+    "category": "common",
+    "label": "twin swords swing",
+    "notes": "except S&Y, jizai, g-assassin's sabers",
+    "starred": false
+  },
+  "common/common_080.wav": {
+    "file": "common_080.wav",
+    "category": "common",
+    "label": "launcher shot",
+    "notes": "",
     "starred": false
   },
   "common/common_081.wav": {
     "file": "common_081.wav",
     "category": "common",
-    "label": "quit menu",
-    "notes": "doesn't sound like quit menu imo",
+    "label": "card throw",
+    "notes": "except kan'ei tsuho",
+    "starred": false
+  },
+  "common/common_083.wav": {
+    "file": "common_083.wav",
+    "category": "common",
+    "label": "sberill hands",
+    "notes": "both sberill hands 0 and 1",
+    "starred": false
+  },
+  "common/common_084.wav": {
+    "file": "common_084.wav",
+    "category": "common",
+    "label": "gi gue bazooka shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_085.wav": {
+    "file": "common_085.wav",
+    "category": "common",
+    "label": "g-assassin's sabers",
+    "notes": "",
     "starred": false
   },
   "common/common_086.wav": {
     "file": "common_086.wav",
     "category": "common",
     "label": "booma swing",
-    "notes": "",
+    "notes": "all 3 booma claws",
     "starred": false
   },
   "common/common_087.wav": {
@@ -422,28 +548,42 @@
   "common/common_089.wav": {
     "file": "common_089.wav",
     "category": "common",
-    "label": "",
-    "notes": "probably dark bridge swings?",
+    "label": "rikas claw swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_090.wav": {
+    "file": "common_090.wav",
+    "category": "common",
+    "label": "katana swing",
+    "notes": "katanas except akiko/murasame/harisen battle fan/toy hammer/ES hammer/ES harisen/raikiri/yamigarasu as well as TypeJS/Saber and TypeJS/Slicer. twin swords = S&Y/jizai, sword = TypeSW/J-Sword, claw = morning glory, slicer = TypeSL/katana, partisan = bamboo spear, dagger = two kamui, saber = battledore/racket/jitte. also sounds similar to #56 but that sound is lighter than this one",
     "starred": false
   },
   "common/common_092.wav": {
     "file": "common_092.wav",
     "category": "common",
-    "label": "booma take hit",
-    "notes": "not booma, sounds more like belra? though #94 does too idk",
+    "label": "",
+    "notes": "belra sounding hurt grunts? though #94 does too idk",
     "starred": false
   },
   "common/common_094.wav": {
     "file": "common_094.wav",
     "category": "common",
-    "label": "enemy take hit",
+    "label": "",
+    "notes": "see #92",
+    "starred": false
+  },
+  "common/common_095.wav": {
+    "file": "common_095.wav",
+    "category": "common",
+    "label": "ruby bullet shot",
     "notes": "",
     "starred": false
   },
   "common/common_096.wav": {
     "file": "common_096.wav",
     "category": "common",
-    "label": "laser gun",
+    "label": "suppressed gun shot",
     "notes": "",
     "starred": false
   },
@@ -458,49 +598,112 @@
     "file": "common_101.wav",
     "category": "common",
     "label": "slicer swing alt",
-    "notes": "some specific slicer swing",
+    "notes": "slicer of fanatic swing",
     "starred": false
   },
   "common/common_102.wav": {
     "file": "common_102.wav",
     "category": "common",
-    "label": "heaven striker shot?",
-    "notes": "Identical CRC32 with #103",
+    "label": "ophelie sieze and mille marteaux shot",
+    "notes": "Identical CRC32 with #103. heaven striker also seems to use this sound but with another sound also layered over it. not sure if that's #66, #80, #95, or none of these three. sounds most like #95 of these three imo but I don't think these three are it",
     "starred": false
   },
   "common/common_103.wav": {
     "file": "common_103.wav",
     "category": "common",
-    "label": "heaven striker shot?",
-    "notes": "Identical CRC32 with #102",
+    "label": "ophelie sieze and mille marteaux shot",
+    "notes": "Identical CRC32 with #102. heaven striker also seems to use this sound but with another sound also layered over it. not sure if that's #66, #80, #95, or none of these three. sounds most like #95 of these three imo but I don't think these three are it",
     "starred": false
   },
   "common/common_104.wav": {
     "file": "common_104.wav",
     "category": "common",
-    "label": "saber",
+    "label": "commander blade swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_105.wav": {
+    "file": "common_105.wav",
+    "category": "common",
+    "label": "vivienne swing",
     "notes": "",
     "starred": false
   },
   "common/common_106.wav": {
     "file": "common_106.wav",
     "category": "common",
-    "label": "",
-    "notes": "flowens swing?",
+    "label": "kusanagi swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_107.wav": {
+    "file": "common_107.wav",
+    "category": "common",
+    "label": "flapjack flapper swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_108.wav": {
+    "file": "common_108.wav",
+    "category": "common",
+    "label": "meteor rouge shot",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_109.wav": {
+    "file": "common_109.wav",
+    "category": "common",
+    "label": "siren glass hammer swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_110.wav": {
+    "file": "common_110.wav",
+    "category": "common",
+    "label": "glide divine swing",
+    "notes": "",
     "starred": false
   },
   "common/common_111.wav": {
     "file": "common_111.wav",
     "category": "common",
-    "label": "",
-    "notes": "card throw?",
+    "label": "murasame swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_112.wav": {
+    "file": "common_112.wav",
+    "category": "common",
+    "label": "daylight scar swing",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_113.wav": {
+    "file": "common_113.wav",
+    "category": "common",
+    "label": "tanegashima shot",
+    "notes": "sounds similar to #64 but that one is lower pitched while #113 is higher",
+    "starred": false
+  },
+  "common/common_115.wav": {
+    "file": "common_115.wav",
+    "category": "common",
+    "label": "excalibur impact",
+    "notes": "Identical CRC32 with #117",
+    "starred": false
+  },
+  "common/common_117.wav": {
+    "file": "common_117.wav",
+    "category": "common",
+    "label": "excalibur impact",
+    "notes": "Identical CRC32 with #115",
     "starred": false
   },
   "common/common_120.wav": {
     "file": "common_120.wav",
     "category": "common",
     "label": "foie",
-    "notes": "",
+    "notes": "shot = flame visit/burning visit",
     "starred": false
   },
   "common/common_121.wav": {
@@ -520,8 +723,8 @@
   "common/common_123.wav": {
     "file": "common_123.wav",
     "category": "common",
-    "label": "rafoie explosion?",
-    "notes": "",
+    "label": "rafoie impact",
+    "notes": "NUG2000 target impact sound plays this too",
     "starred": false
   },
   "common/common_124.wav": {
@@ -556,21 +759,21 @@
     "file": "common_128.wav",
     "category": "common",
     "label": "zonde",
-    "notes": "",
+    "notes": "wand = the sigh of a god, katana = raikiri",
     "starred": false
   },
   "common/common_129.wav": {
     "file": "common_129.wav",
     "category": "common",
     "label": "gizonde",
-    "notes": "Identical CRC32 with #130",
+    "notes": "Identical CRC32 with #130. shot = maser beam's zonde, not the firing sound",
     "starred": false
   },
   "common/common_130.wav": {
     "file": "common_130.wav",
     "category": "common",
     "label": "razonde",
-    "notes": "Identical CRC32 with #129",
+    "notes": "Identical CRC32 with #129. shot = maser beam's zonde, not the firing sound",
     "starred": false
   },
   "common/common_131.wav": {
@@ -590,14 +793,14 @@
   "common/common_133.wav": {
     "file": "common_133.wav",
     "category": "common",
-    "label": "grants explosion",
+    "label": "grants impact",
     "notes": "",
     "starred": false
   },
   "common/common_134.wav": {
     "file": "common_134.wav",
     "category": "common",
-    "label": "resta",
+    "label": "resta and heal ring",
     "notes": "",
     "starred": false
   },
@@ -605,7 +808,7 @@
     "file": "common_135.wav",
     "category": "common",
     "label": "resta end of animation sound",
-    "notes": "",
+    "notes": "this one doesn't interrupt #134 but is played simultaneously so that this shorter sound ends roughly when #134 ends",
     "starred": false
   },
   "common/common_136.wav": {
@@ -619,14 +822,14 @@
     "file": "common_138.wav",
     "category": "common",
     "label": "",
-    "notes": "healing ring?",
+    "notes": "not sure what's this softer resta sound",
     "starred": false
   },
   "common/common_139.wav": {
     "file": "common_139.wav",
     "category": "common",
-    "label": "reverser?",
-    "notes": "",
+    "label": "revival?",
+    "notes": "like scape doll/reverser/moon atomizer?",
     "starred": false
   },
   "common/common_140.wav": {
@@ -681,28 +884,35 @@
   "common/common_147.wav": {
     "file": "common_147.wav",
     "category": "common",
-    "label": "ryuker cast?",
-    "notes": "",
+    "label": "ryuker",
+    "notes": "end of the sound is interrupted into create telepipe when spawned",
     "starred": false
   },
   "common/common_148.wav": {
     "file": "common_148.wav",
     "category": "common",
-    "label": "gifoie alt?",
-    "notes": "sounds like #121 alt. maybe higher level gifoie?",
+    "label": "fire startup",
+    "notes": "sounds like #121 gifoie alt but you only ever hear the first 20% of it as initial fire tech cast sound before its interrupted by the actual foie/gifoie/rafoie sounds.",
     "starred": false
   },
   "common/common_149.wav": {
     "file": "common_149.wav",
     "category": "common",
-    "label": "initial ice tech cast sound?",
-    "notes": "",
+    "label": "ice startup",
+    "notes": "initial ice tech cast sound like #148 but for barta techs",
+    "starred": false
+  },
+  "common/common_150.wav": {
+    "file": "common_150.wav",
+    "category": "common",
+    "label": "lightning startup",
+    "notes": "initial lightning tech cast sound like #148 but for zonde techs",
     "starred": false
   },
   "common/common_153.wav": {
     "file": "common_153.wav",
     "category": "common",
-    "label": "100% PB",
+    "label": "100 PB",
     "notes": "",
     "starred": false
   },
@@ -744,28 +954,35 @@
   "common/common_162.wav": {
     "file": "common_162.wav",
     "category": "common",
-    "label": "shifta ticks?",
+    "label": "shifta ticks",
     "notes": "",
     "starred": false
   },
   "common/common_163.wav": {
     "file": "common_163.wav",
     "category": "common",
-    "label": "jellen ticks?",
+    "label": "jellen ticks",
     "notes": "",
     "starred": false
   },
   "common/common_164.wav": {
     "file": "common_164.wav",
     "category": "common",
-    "label": "deband ticks?",
+    "label": "deband ticks",
     "notes": "",
     "starred": false
   },
   "common/common_165.wav": {
     "file": "common_165.wav",
     "category": "common",
-    "label": "zalure ticks?",
+    "label": "zalure ticks",
+    "notes": "",
+    "starred": false
+  },
+  "common/common_169.wav": {
+    "file": "common_169.wav",
+    "category": "common",
+    "label": "twin blaze swing",
     "notes": "",
     "starred": false
   },
@@ -930,10 +1147,94 @@
     "notes": "",
     "starred": false
   },
+  "forest/forest_051.wav": {
+    "file": "forest_051.wav",
+    "category": "forest",
+    "label": "step switch",
+    "notes": "",
+    "starred": false
+  },
+  "forest/forest_057.wav": {
+    "file": "forest_057.wav",
+    "category": "forest",
+    "label": "floating trap activated",
+    "notes": "",
+    "starred": false
+  },
+  "cave/cave_008.wav": {
+    "file": "cave_008.wav",
+    "category": "cave",
+    "label": "evil shark initial cry",
+    "notes": "",
+    "starred": false
+  },
+  "cave/cave_009.wav": {
+    "file": "cave_009.wav",
+    "category": "cave",
+    "label": "evil shark death",
+    "notes": "",
+    "starred": false
+  },
+  "cave/cave_010.wav": {
+    "file": "cave_010.wav",
+    "category": "cave",
+    "label": "evil shark swing",
+    "notes": "",
+    "starred": false
+  },
+  "cave/cave_017.wav": {
+    "file": "cave_017.wav",
+    "category": "cave",
+    "label": "lily melee pecks",
+    "notes": "",
+    "starred": false
+  },
+  "cave/cave_018.wav": {
+    "file": "cave_018.wav",
+    "category": "cave",
+    "label": "lily laugh",
+    "notes": "when it hits you with poison spit",
+    "starred": false
+  },
+  "cave/cave_012.wav": {
+    "file": "cave_012.wav",
+    "category": "cave",
+    "label": "lily paralysis cry",
+    "notes": "inflicts you with paralysis",
+    "starred": false
+  },
+  "cave/cave_013.wav": {
+    "file": "cave_013.wav",
+    "category": "cave",
+    "label": "lily spinning",
+    "notes": "when it slowly spins and kills itself",
+    "starred": false
+  },
+  "cave/cave_016.wav": {
+    "file": "cave_016.wav",
+    "category": "cave",
+    "label": "lily hurt",
+    "notes": "",
+    "starred": false
+  },
+  "cave/cave_011.wav": {
+    "file": "cave_011.wav",
+    "category": "cave",
+    "label": "lily poison spit",
+    "notes": "sound it makes when the poison spit fires",
+    "starred": false
+  },
+  "cave/cave_015.wav": {
+    "file": "cave_015.wav",
+    "category": "cave",
+    "label": "lily death",
+    "notes": "",
+    "starred": false
+  },
   "ephinea/ephinea_006.wav": {
     "file": "ephinea_006.wav",
     "category": "ephinea",
-    "label": "start menu accept",
+    "label": "quest complete",
     "notes": "",
     "starred": false
   }

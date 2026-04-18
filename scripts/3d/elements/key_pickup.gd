@@ -87,6 +87,7 @@ func _on_interact(_player: Node3D) -> void:
 	_collected = true
 	interactable = false
 
+	SfxManager.play("res://assets/sfx/ui/item_pickup.wav")
 	set_state("collected")
 
 	# Store as quest key (separate from main inventory)

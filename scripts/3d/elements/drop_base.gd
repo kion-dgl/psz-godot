@@ -95,22 +95,30 @@ func _on_body_exited(body: Node3D) -> void:
 func _on_interact(_player: Node3D) -> void:
 	if element_state != "available":
 		return
-	interactable = false
 
+	if not _give_reward():
+		# Reward failed (inventory full, stack at max, etc.): keep the drop
+		# in the world. Failure feedback SFX is played by Inventory.add_item.
+		return
+
+	interactable = false
 	set_state("collected")
 	SfxManager.play("res://assets/sfx/common/common_172.wav")
-	_give_reward()
 
 
 func _on_collected(_player: Node3D) -> void:
 	if element_state == "collected":
 		return
 
+	if not _give_reward():
+		# Reward failed: keep the drop in the world (see _on_interact).
+		return
+
 	set_state("collected")
 	SfxManager.play("res://assets/sfx/common/common_172.wav")
-	_give_reward()
 
 
-## Override to give the appropriate reward
-func _give_reward() -> void:
-	pass
+## Override to give the appropriate reward. Return true on success, false if
+## the pickup should remain in the world (e.g. inventory full).
+func _give_reward() -> bool:
+	return true

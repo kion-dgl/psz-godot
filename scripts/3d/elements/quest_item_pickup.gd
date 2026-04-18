@@ -107,10 +107,11 @@ func _load_model() -> void:
 	add_child(model)
 
 
-func _give_reward() -> void:
+func _give_reward() -> bool:
 	print("[QuestItem] Collected '%s' (%s)" % [quest_item_id, quest_item_label])
 	_show_pickup_dialog()
 	# Signal emitted AFTER pickup dialog so item_pickup triggers don't get overwritten
+	return true
 
 
 func _show_pickup_dialog() -> void:
