@@ -15,6 +15,12 @@ const MANIFEST_PATH := "res://assets_manifest.json"
 const CACHE_DIR := "user://packs"
 const HASH_CHUNK := 1 << 20  # 1 MiB
 
+# Retry policy: Arweave uploads via Turbo take several minutes to propagate
+# to public gateways; treat 4xx/5xx as transient unless we've exhausted our
+# budget. Per-URL attempts; the outer loop rotates through all mirrors first.
+const HTTP_MAX_ATTEMPTS := 4
+const HTTP_RETRY_DELAYS := [5.0, 15.0, 30.0, 60.0]  # seconds between attempts
+
 @onready var _status: Label = $Center/VBox/Status
 @onready var _progress: ProgressBar = $Center/VBox/Progress
 @onready var _title: Label = $Center/VBox/Title
@@ -103,16 +109,23 @@ func _read_manifest() -> Dictionary:
 
 
 func _download_first_available(urls: Array, cache_path: String) -> bool:
-	for raw_url in urls:
-		var url: String = _resolve_url(str(raw_url))
-		print("[bootstrap] trying %s" % url)
-		if url.begins_with("file://"):
-			if await _copy_local(url, cache_path):
+	# First pass: try every URL once quickly. Second+ passes with backoff for
+	# URLs that returned transient 4xx/5xx — covers Arweave gateway propagation.
+	for attempt in HTTP_MAX_ATTEMPTS:
+		for raw_url in urls:
+			var url: String = _resolve_url(str(raw_url))
+			print("[bootstrap] trying %s (attempt %d)" % [url, attempt + 1])
+			if url.begins_with("file://"):
+				if await _copy_local(url, cache_path):
+					return true
+				continue
+			var ok: bool = await _http_download(url, cache_path)
+			if ok:
 				return true
-			continue
-		var ok: bool = await _http_download(url, cache_path)
-		if ok:
-			return true
+		if attempt + 1 < HTTP_MAX_ATTEMPTS:
+			var delay: float = HTTP_RETRY_DELAYS[mini(attempt, HTTP_RETRY_DELAYS.size() - 1)]
+			_status.text = "Waiting for CDN... retry in %ds" % int(delay)
+			await get_tree().create_timer(delay).timeout
 	return false
 
 

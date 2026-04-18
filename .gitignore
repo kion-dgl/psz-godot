@@ -25,6 +25,13 @@ __pycache__/
 /Phantasy Star Onine_*
 /discord_kit_*.txt
 
-# Asset pack build output and dev-local manifest (see assets_manifest.example.json)
+# Asset pack build output (assets_manifest.json is committed with the sha+URL)
 /dist/
-/assets_manifest.json
+
+# Env files (wallet secrets etc. — see .env.example)
+.env
+.env.local
+.env.*.local
+# Arweave wallet keyfiles — never commit
+*wallet*.json
+!assets_manifest.example.json
