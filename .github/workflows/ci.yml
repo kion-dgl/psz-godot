@@ -63,6 +63,15 @@ jobs:
       - name: Validate quest JSON schema
         run: python3 scripts/tools/validate_quests.py
 
+  verify-assets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify asset manifest pack URLs
+        run: python3 scripts/tools/verify_assets_manifest.py
+
   web:
     runs-on: ubuntu-latest
     timeout-minutes: 5
