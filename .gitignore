@@ -24,3 +24,7 @@ __pycache__/
 /Moonlight-*.AppImage
 /Phantasy Star Onine_*
 /discord_kit_*.txt
+
+# Asset pack build output and dev-local manifest (see assets_manifest.example.json)
+/dist/
+/assets_manifest.json
