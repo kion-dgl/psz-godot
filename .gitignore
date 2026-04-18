@@ -3,6 +3,10 @@
 /android/
 /build/
 
+# Game assets live on Cloudflare R2 (see assets_manifest.json for the pack
+# URL and scripts/tools/fetch_assets_dev.sh to populate locally).
+/assets/
+
 # Web app
 web/node_modules/
 web/dist/

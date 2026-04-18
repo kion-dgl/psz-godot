@@ -6,7 +6,8 @@
   "description": "Upload asset packs to Arweave via ArDrive Turbo. Run from repo root.",
   "scripts": {
     "hello": "tsx test_hello.ts",
-    "upload-pack": "tsx publish_assets.ts"
+    "upload-pack": "tsx publish_assets.ts",
+    "sync-tree": "tsx sync_tree.ts"
   },
   "dependencies": {
     "@ardrive/turbo-sdk": "^1.28.1",
