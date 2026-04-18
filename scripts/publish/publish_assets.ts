@@ -23,6 +23,7 @@ import {
   getBalanceWinc,
   uploadToArweave,
 } from "./lib/ardrive.js";
+import { loadR2Config, uploadFileToR2 } from "./lib/r2.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -38,6 +39,7 @@ const BUILD_CMD =
 
 interface CliArgs {
   skipBuild: boolean;
+  skipArweave: boolean;
   dryRun: boolean;
   yes: boolean;
 }
@@ -46,6 +48,7 @@ function parseArgs(): CliArgs {
   const args = process.argv.slice(2);
   return {
     skipBuild: args.includes("--skip-build"),
+    skipArweave: args.includes("--skip-arweave"),
     dryRun: args.includes("--dry-run"),
     yes: args.includes("-y") || args.includes("--yes"),
   };
@@ -108,60 +111,115 @@ async function main(): Promise<void> {
   const version = getVersion();
   console.log(`  version: ${version}`);
 
-  const wallet = loadWallet();
-  const turbo = createTurbo(wallet);
+  let arweaveResultUrls: string[] = [];
 
-  const [balance, estimate] = await Promise.all([
-    getBalanceWinc(turbo),
-    estimateCost(turbo, size),
-  ]);
-  const costAR = wincToAr(estimate.winc);
-  const balanceAR = wincToAr(balance);
-  console.log(`\n→ Turbo credit balance: ${balanceAR} AR-equiv`);
-  console.log(`  estimated upload cost:  ${costAR} AR-equiv`);
+  if (!args.skipArweave) {
+    const wallet = loadWallet();
+    const turbo = createTurbo(wallet);
 
-  if (BigInt(balance) < BigInt(estimate.winc)) {
-    console.error("\n✗ Insufficient credits. Top up at https://turbo-topup.com");
-    process.exit(2);
-  }
+    const [balance, estimate] = await Promise.all([
+      getBalanceWinc(turbo),
+      estimateCost(turbo, size),
+    ]);
+    const costAR = wincToAr(estimate.winc);
+    const balanceAR = wincToAr(balance);
+    console.log(`\n→ Turbo credit balance: ${balanceAR} AR-equiv`);
+    console.log(`  estimated upload cost:  ${costAR} AR-equiv`);
 
-  if (args.dryRun) {
-    console.log("\n--dry-run — skipping upload and manifest rewrite.");
-    return;
-  }
+    if (BigInt(balance) < BigInt(estimate.winc)) {
+      console.error("\n✗ Insufficient credits. Top up at https://turbo-topup.com");
+      process.exit(2);
+    }
 
-  if (!args.yes) {
-    const ok = await confirm(
-      `\nUpload ${formatBytes(size)} to Arweave (costs ~${costAR} AR-equiv)?`,
+    if (args.dryRun) {
+      console.log("\n--dry-run — skipping upload and manifest rewrite.");
+      return;
+    }
+
+    if (!args.yes) {
+      const ok = await confirm(
+        `\nUpload ${formatBytes(size)} to Arweave (costs ~${costAR} AR-equiv)?`,
+      );
+      if (!ok) {
+        console.log("aborted.");
+        return;
+      }
+    }
+
+    console.log("\n→ Uploading to Arweave (Turbo, streaming)...");
+    const arStartMs = Date.now();
+    const packBytes = readFileSync(PACK_OUT);
+    const result = await uploadToArweave(
+      packBytes,
+      "application/octet-stream",
+      wallet,
+      [
+        { name: "App-Name", value: "psz-godot" },
+        { name: "App-Version", value: version },
+        { name: "Pack-Name", value: "assets" },
+        { name: "Pack-SHA256", value: sha256 },
+      ],
     );
-    if (!ok) {
-      console.log("aborted.");
+    console.log(`✓ Arweave upload in ${((Date.now() - arStartMs) / 1000).toFixed(1)}s`);
+    console.log(`  tx id: ${result.id}`);
+    console.log(`  url:   ${result.url}`);
+    const txId = result.id;
+    arweaveResultUrls = [
+      `https://arweave.net/${txId}`,
+      `https://ar-io.dev/${txId}`,
+      `https://permagate.io/${txId}`,
+    ];
+  } else {
+    console.log("\n(skipping Arweave — --skip-arweave passed; retaining existing URLs)");
+    // Preserve existing Arweave URLs from the manifest if one exists.
+    if (existsSync(MANIFEST_OUT)) {
+      const prev = JSON.parse(readFileSync(MANIFEST_OUT, "utf8"));
+      const prevPack = prev?.packs?.find((p: any) => p.name === "assets");
+      if (prevPack?.urls) {
+        arweaveResultUrls = prevPack.urls.filter((u: string) =>
+          /arweave\.net|ar-io\.dev|permagate\.io/.test(u),
+        );
+      }
+    }
+    if (args.dryRun) {
+      console.log("\n--dry-run — skipping R2 upload and manifest rewrite.");
       return;
     }
   }
 
-  console.log("\n→ Uploading (streaming; may take several minutes)...");
-  const startMs = Date.now();
-  const packBytes = readFileSync(PACK_OUT);
-  const result = await uploadToArweave(
-    packBytes,
-    "application/octet-stream",
-    wallet,
-    [
-      { name: "App-Name", value: "psz-godot" },
-      { name: "App-Version", value: version },
-      { name: "Pack-Name", value: "assets" },
-      { name: "Pack-SHA256", value: sha256 },
-    ],
-  );
-  const elapsedS = ((Date.now() - startMs) / 1000).toFixed(1);
-  console.log(`✓ Uploaded in ${elapsedS}s`);
-  console.log(`  tx id: ${result.id}`);
-  console.log(`  url:   ${result.url}`);
+  const urls: string[] = [];
+  // Cloudflare R2 (listed first in the manifest — fastest primary mirror).
+  const r2 = loadR2Config();
+  if (r2) {
+    const r2Key = `packs/assets-${sha256.slice(0, 12)}.pck`;
+    console.log(`\n→ Uploading to R2 (${r2.bucket}/${r2Key})...`);
+    const r2StartMs = Date.now();
+    let lastLog = 0;
+    const r2Url = await uploadFileToR2(
+      PACK_OUT,
+      r2Key,
+      "application/octet-stream",
+      r2,
+      (loaded, total) => {
+        const now = Date.now();
+        if (now - lastLog > 5000) {
+          lastLog = now;
+          const pct = total ? ` (${((loaded / total) * 100).toFixed(1)}%)` : "";
+          const mb = (loaded / 1024 / 1024).toFixed(1);
+          console.log(`  ${mb} MB uploaded${pct}`);
+        }
+      },
+    );
+    console.log(`✓ R2 upload in ${((Date.now() - r2StartMs) / 1000).toFixed(1)}s`);
+    console.log(`  url: ${r2Url}`);
+    urls.push(r2Url);
+  } else {
+    console.log("\n(skipping R2 — R2_* vars not set in .env)");
+  }
 
-  // Multiple public gateways for the same Arweave tx — redundancy if one is
-  // slow or behind on propagation. Client bootstrap tries each in order.
-  const txId = result.id;
+  // Arweave URLs (from this run, or preserved from existing manifest on --skip-arweave).
+  urls.push(...arweaveResultUrls);
+
   const manifest = {
     version,
     godot_version: GODOT_VERSION,
@@ -170,11 +228,7 @@ async function main(): Promise<void> {
         name: "assets",
         sha256,
         size,
-        urls: [
-          `https://arweave.net/${txId}`,
-          `https://ar-io.dev/${txId}`,
-          `https://permagate.io/${txId}`,
-        ],
+        urls,
       },
     ],
   };
