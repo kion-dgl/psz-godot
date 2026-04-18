@@ -212,19 +212,27 @@ func _show_remaining_dialog(comp: Node, rem_entries: Array, fallback_actions: Ar
 	var this_item_count: int = SessionManager.get_quest_item_count(quest_item_id)
 
 	# Find matching entry. A condition matches when every field it specifies
-	# equals the runtime value. An empty condition matches nothing (skip).
+	# equals the runtime value. Unknown keys (typos, future fields) reject the
+	# entry instead of silently matching. An empty condition is skipped too.
 	var matched: Dictionary = {}
 	for entry in rem_entries:
 		var condition: Dictionary = entry.get("condition", {})
 		if condition.is_empty():
 			continue
 		var ok := true
-		if condition.has("collected"):
-			if int(condition["collected"]) != total_collected:
-				ok = false
-		if ok and condition.has("item_count"):
-			if int(condition["item_count"]) != this_item_count:
-				ok = false
+		for key in condition.keys():
+			match str(key):
+				"collected":
+					if int(condition[key]) != total_collected:
+						ok = false
+				"item_count":
+					if int(condition[key]) != this_item_count:
+						ok = false
+				_:
+					push_warning("[QuestItem] unknown remaining_dialog condition key: %s" % str(key))
+					ok = false
+			if not ok:
+				break
 		if ok:
 			matched = entry
 			break

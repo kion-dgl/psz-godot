@@ -143,12 +143,14 @@ func _tick_nav_repeat(delta: float) -> void:
 			var held: float = float(_nav_hold[action]) + delta
 			_nav_hold[action] = held
 			if held >= SCROLL_HOLD:
-				var next_at: float = float(_nav_next[action])
-				if next_at <= 0.0:
-					_nav_next[action] = SCROLL_REPEAT
+				# Decrement first and dispatch same frame so the effective
+				# repeat rate actually is SCROLL_REPEAT, not SCROLL_REPEAT + delta.
+				# The while-loop catches up if a long frame skipped multiple ticks.
+				var next_at: float = float(_nav_next[action]) - delta
+				while next_at <= 0.0:
 					_dispatch_ui_action(action)
-				else:
-					_nav_next[action] = maxf(0.0, next_at - delta)
+					next_at += SCROLL_REPEAT
+				_nav_next[action] = next_at
 		else:
 			_nav_hold[action] = 0.0
 			_nav_next[action] = 0.0
