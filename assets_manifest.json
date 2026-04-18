@@ -1,0 +1,17 @@
+{
+  "version": "0.20.4",
+  "godot_version": "4.5",
+  "packs": [
+    {
+      "name": "assets",
+      "sha256": "5d76f31b4613788c8069d426ef36007a6673cbd5df03470e26b1f4b895ce9361",
+      "size": 367459264,
+      "urls": [
+        "https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev/packs/assets-5d76f31b4613.pck",
+        "https://arweave.net/ZXt-C8DpvyRM_BNpms4mhkOJoqobFgRfu2QMGWUmJ0o",
+        "https://ar-io.dev/ZXt-C8DpvyRM_BNpms4mhkOJoqobFgRfu2QMGWUmJ0o",
+        "https://permagate.io/ZXt-C8DpvyRM_BNpms4mhkOJoqobFgRfu2QMGWUmJ0o"
+      ]
+    }
+  ]
+}
