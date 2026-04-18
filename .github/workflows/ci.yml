@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +19,24 @@ jobs:
           version: 4.5.1
           use-dotnet: false
           include-templates: false
+
+      - name: Cache /assets/ tree (keyed on R2 manifest)
+        id: assets-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            assets
+            web/public/psobb_sfx
+          # Cache key derived from the current R2 tree manifest so a resync
+          # naturally invalidates the cache.
+          key: r2-tree-${{ hashFiles('assets_manifest.json') }}-${{ github.sha }}
+          restore-keys: |
+            r2-tree-${{ hashFiles('assets_manifest.json') }}-
+            r2-tree-
+
+      - name: Fetch /assets/ from R2 (public CDN; no creds)
+        if: steps.assets-cache.outputs.cache-hit != 'true'
+        run: scripts/tools/fetch_assets_dev.sh
 
       - name: Cache Godot import
         uses: actions/cache@v4
