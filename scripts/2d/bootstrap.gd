@@ -59,8 +59,8 @@ func _run() -> void:
 
 	for i in packs.size():
 		var pack: Dictionary = packs[i]
-		var name: String = str(pack.get("name", "pack%d" % i))
-		var sha: String = str(pack.get("sha256", ""))
+		var name: String = _sanitize_pack_name(str(pack.get("name", "pack%d" % i)))
+		var sha: String = str(pack.get("sha256", "")).strip_edges().to_lower()
 		var size: int = int(pack.get("size", 0))
 		var urls: Array = pack.get("urls", [])
 		var cache_path := "%s/%s-%s.pck" % [CACHE_DIR, name, sha.substr(0, 12)]
@@ -146,9 +146,13 @@ func _copy_local(file_url: String, dest: String) -> bool:
 		return false
 	var dest_abs: String = ProjectSettings.globalize_path(dest)
 	var in_f := FileAccess.open(src_abs, FileAccess.READ)
+	if in_f == null:
+		push_warning("[bootstrap] copy open failed: cannot read %s" % src_abs)
+		return false
 	var out_f := FileAccess.open(dest_abs, FileAccess.WRITE)
-	if in_f == null or out_f == null:
-		push_warning("[bootstrap] copy open failed")
+	if out_f == null:
+		in_f.close()
+		push_warning("[bootstrap] copy open failed: cannot write %s" % dest_abs)
 		return false
 	var total: int = in_f.get_length()
 	_total_bytes = total
@@ -167,20 +171,26 @@ func _copy_local(file_url: String, dest: String) -> bool:
 func _http_download(url: String, cache_path: String) -> bool:
 	var dest_abs: String = ProjectSettings.globalize_path(cache_path)
 	_http.download_file = dest_abs
+	# Capture completion via a dictionary (shared by reference inside the
+	# lambda, unlike a re-bound local array) so the progress loop can poll
+	# without racing `await request_completed` — the signal can fire during
+	# a process_frame yield and would otherwise block forever.
+	var done := {"complete": false, "response_code": 0}
+	var cb := func(_r: int, code: int, _h: PackedStringArray, _b: PackedByteArray) -> void:
+		done["response_code"] = code
+		done["complete"] = true
+	_http.request_completed.connect(cb, CONNECT_ONE_SHOT)
 	var err: int = _http.request(url)
 	if err != OK:
+		_http.request_completed.disconnect(cb)
 		push_warning("[bootstrap] http request failed: %s" % error_string(err))
 		return false
-	while _http.get_http_client_status() != HTTPClient.STATUS_DISCONNECTED \
-		and _http.get_http_client_status() != HTTPClient.STATUS_CONNECTION_ERROR:
+	while not done["complete"]:
 		var got: int = _http.get_downloaded_bytes()
 		if _total_bytes > 0:
 			_progress.value = float(got) / float(_total_bytes) * 100.0
-		if not _http.is_processing():
-			break
 		await _yield_frame()
-	var result: Array = await _http.request_completed
-	var response_code: int = int(result[1])
+	var response_code: int = int(done["response_code"])
 	if response_code != 200:
 		push_warning("[bootstrap] http %d on %s" % [response_code, url])
 		return false
@@ -203,7 +213,7 @@ func _verify_hash(path: String, expected_hex: String) -> bool:
 	var hex: String = ""
 	for b in digest:
 		hex += "%02x" % b
-	if hex != expected_hex:
+	if hex != expected_hex.strip_edges().to_lower():
 		push_warning("[bootstrap] hash mismatch: got %s want %s" % [hex, expected_hex])
 		return false
 	return true
@@ -211,6 +221,19 @@ func _verify_hash(path: String, expected_hex: String) -> bool:
 
 func _yield_frame() -> Signal:
 	return get_tree().process_frame
+
+
+func _sanitize_pack_name(name: String) -> String:
+	# Strip anything that could traverse out of CACHE_DIR. Manifest is in the
+	# repo and typically trusted, but belt-and-suspenders.
+	var safe: String = ""
+	for c in name:
+		if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") \
+				or (c >= "0" and c <= "9") or c == "_" or c == "-":
+			safe += c
+	if safe.is_empty():
+		safe = "pack"
+	return safe
 
 
 func _goto_title() -> void:
