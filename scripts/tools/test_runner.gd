@@ -2379,18 +2379,9 @@ func test_field_config() -> void:
 	var hard_sections: Array = hard_field.get("sections", [])
 	assert_eq(hard_sections.size(), 4, "Config-based hard field has 4 sections")
 
-	# ── GLB stage files exist for all referenced stages ──
-	var all_stages_exist := true
-	for stage_id in GridGen.GATES:
-		var sid: String = str(stage_id)
-		var v: String = sid[3] if sid.length() >= 4 else "a"
-		var path := "res://assets/stages/valley_%s/%s/lndmd/%s_m.glb" % [v, sid, sid]
-		if not ResourceLoader.exists(path):
-			print("  INFO: Missing GLB: %s" % path)
-			all_stages_exist = false
-	assert_true(all_stages_exist, "All GATES stage GLBs exist")
-
-	# Portal nodes are config-only — GLBs no longer contain portal nodes.
+	# Per-file GLB existence checks live in R2 (sha256-verified by the
+	# verify-assets CI job + md5-verified by fetch_assets_dev.sh). This
+	# runner just exercises config logic, so no local /assets/ is needed.
 
 	print("")
 
@@ -2482,18 +2473,7 @@ func test_wetlands_field() -> void:
 			break
 	assert_eq(str(b_start.get("stage_id", "")), "s02b_sa1", "Ozette B start uses s02b_sa1")
 
-	# ── All generated cells reference existing GLBs ──
-	# Use FileAccess.file_exists() since GLBs may not be imported yet in headless mode
-	var all_glbs_exist := true
-	for sec in sections:
-		for cell in sec.get("cells", []):
-			var stage_id: String = str(cell.get("stage_id", ""))
-			var wv: String = stage_id[3] if stage_id.length() >= 4 else "a"
-			var glb_path := "res://assets/stages/wetlands_%s/%s/lndmd/%s_m.glb" % [wv, stage_id, stage_id]
-			if not FileAccess.file_exists(glb_path):
-				all_glbs_exist = false
-				print("    Missing GLB: %s" % glb_path)
-	assert_true(all_glbs_exist, "All Ozette grid cell GLBs exist")
+	# Per-file GLB existence is verified server-side against R2 — not here.
 
 	# ── Multiple generations succeed ──
 	var gen_ok := true
@@ -2631,17 +2611,7 @@ func test_tower_field() -> void:
 				sh_floor_ids.append(floor_id)
 	assert_eq(sh_floor_ids.size(), 6, "Super-Hard uses all 6 floor styles (got %d)" % sh_floor_ids.size())
 
-	# ── All stage_ids reference valid tower GLBs ──
-	var all_glbs_exist := true
-	for sec in sh_sections:
-		for cell in sec.get("cells", []):
-			var stage_id: String = str(cell.get("stage_id", ""))
-			var tv: String = stage_id[3] if stage_id.length() >= 4 else "0"
-			var glb_path := "res://assets/stages/tower_%s/%s/lndmd/%s_m.glb" % [tv, stage_id, stage_id]
-			if not FileAccess.file_exists(glb_path):
-				all_glbs_exist = false
-				print("    Missing tower GLB: %s" % glb_path)
-	assert_true(all_glbs_exist, "All tower stage GLBs exist")
+	# Per-file GLB existence is verified server-side against R2 — not here.
 
 	# ── Deterministic: same structure every time ──
 	var consistent := true

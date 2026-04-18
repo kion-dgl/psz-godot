@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -20,24 +20,6 @@ jobs:
           use-dotnet: false
           include-templates: false
 
-      - name: Cache /assets/ tree (keyed on R2 manifest)
-        id: assets-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            assets
-            web/public/psobb_sfx
-          # Cache key derived from the current R2 tree manifest so a resync
-          # naturally invalidates the cache.
-          key: r2-tree-${{ hashFiles('assets_manifest.json') }}-${{ github.sha }}
-          restore-keys: |
-            r2-tree-${{ hashFiles('assets_manifest.json') }}-
-            r2-tree-
-
-      - name: Fetch /assets/ from R2 (public CDN; no creds)
-        if: steps.assets-cache.outputs.cache-hit != 'true'
-        run: scripts/tools/fetch_assets_dev.sh
-
       - name: Cache Godot import
         uses: actions/cache@v4
         with:
@@ -46,6 +28,9 @@ jobs:
           restore-keys: godot-import-
 
       - name: Import project
+        # Raw /assets/ files aren't in the repo (hosted on R2; verify-assets
+        # job covers integrity), so imports will log missing-file warnings.
+        # Tests exercise config/logic layers and don't need local GLBs.
         run: godot --headless --path . --import --quit || true
 
       - name: Run tests
