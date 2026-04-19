@@ -1,10 +1,12 @@
 extends Control
-## Bootstrap scene: resolves the asset pack before entering the game.
+## Bootstrap scene: resolves the asset pack(s) before entering the game.
 ##
 ## Behavior:
 ## - Read res://assets_manifest.json (optional; missing = fast-path to title)
-## - For each pack entry: check user://packs/<name>-<sha>.pck, download if
-##   missing, verify sha256, mount with ProjectSettings.load_resource_pack
+## - For each pack entry: pick the right URL+sha for THIS platform (per-platform
+##   packs use a `platforms` map keyed by OS+arch; universal packs use the
+##   flat `urls`/`sha256` fields), check user://packs/<name>-<sha>.pck, download
+##   if missing, verify sha256, mount with ProjectSettings.load_resource_pack
 ## - On success transition to res://scenes/2d/title.tscn
 ##
 ## The bootstrap itself must not reference res://assets/* — fonts and colors
@@ -20,6 +22,10 @@ const HASH_CHUNK := 1 << 20  # 1 MiB
 # budget. Per-URL attempts; the outer loop rotates through all mirrors first.
 const HTTP_MAX_ATTEMPTS := 4
 const HTTP_RETRY_DELAYS := [5.0, 15.0, 30.0, 60.0]  # seconds between attempts
+
+# Platforms not in this list (e.g. web, ios) fall back to PLATFORM_FALLBACK
+# below. Keep in sync with scripts/publish/packs.json `platforms`.
+const PLATFORM_FALLBACK := "linux-x86_64"
 
 @onready var _status: Label = $Center/VBox/Status
 @onready var _progress: ProgressBar = $Center/VBox/Progress
@@ -57,21 +63,30 @@ func _run() -> void:
 
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(CACHE_DIR))
 
-	for i in packs.size():
+	var platform: String = _detect_platform()
+	print("[bootstrap] platform=%s" % platform)
+
+	var total_packs: int = packs.size()
+	for i in total_packs:
 		var pack: Dictionary = packs[i]
 		var name: String = _sanitize_pack_name(str(pack.get("name", "pack%d" % i)))
-		var sha: String = str(pack.get("sha256", "")).strip_edges().to_lower()
-		var size: int = int(pack.get("size", 0))
-		var urls: Array = pack.get("urls", [])
+		var entry: Dictionary = _resolve_platform_entry(pack, platform)
+		if entry.is_empty():
+			_fatal("No URL for pack '%s' on platform '%s'." % [name, platform])
+			return
+		var sha: String = str(entry.get("sha256", "")).strip_edges().to_lower()
+		var size: int = int(entry.get("size", 0))
+		var urls: Array = entry.get("urls", [])
 		var cache_path := "%s/%s-%s.pck" % [CACHE_DIR, name, sha.substr(0, 12)]
+		var step_prefix := "[%d/%d]" % [i + 1, total_packs]
 
-		_status.text = "Checking %s..." % name
+		_status.text = "%s Checking %s..." % [step_prefix, name]
 		await _yield_frame()
 
 		var cached_ok: bool = FileAccess.file_exists(cache_path) \
 			and await _verify_hash(cache_path, sha)
 		if not cached_ok:
-			_status.text = "Downloading %s..." % name
+			_status.text = "%s Downloading %s..." % [step_prefix, name]
 			_progress.visible = true
 			_progress.value = 0
 			_total_bytes = size
@@ -79,7 +94,7 @@ func _run() -> void:
 			if not ok:
 				_fatal("Failed to download %s — check your connection." % name)
 				return
-			_status.text = "Verifying %s..." % name
+			_status.text = "%s Verifying %s..." % [step_prefix, name]
 			if not await _verify_hash(cache_path, sha):
 				_fatal("Integrity check failed for %s." % name)
 				return
@@ -221,6 +236,47 @@ func _verify_hash(path: String, expected_hex: String) -> bool:
 
 func _yield_frame() -> Signal:
 	return get_tree().process_frame
+
+
+## Map OS.get_name() + Engine.get_architecture_name() to the platform IDs used
+## in scripts/publish/packs.json. Unknown combinations fall through to
+## PLATFORM_FALLBACK so we don't hard-fail on niche targets (web, ios, *bsd).
+func _detect_platform() -> String:
+	var os: String = OS.get_name()
+	var arch: String = Engine.get_architecture_name()
+	match os:
+		"Linux":
+			return "linux-arm64" if arch == "arm64" else "linux-x86_64"
+		"Windows":
+			return "windows-x86_64"
+		"macOS":
+			return "macos"
+		"Android":
+			return "android"
+	push_warning("[bootstrap] unrecognized platform %s/%s, falling back to %s" % [os, arch, PLATFORM_FALLBACK])
+	return PLATFORM_FALLBACK
+
+
+## Manifest entry for a pack can be either flat (universal) or per-platform.
+## Returns a dict {sha256, size, urls} or empty if neither shape is usable.
+func _resolve_platform_entry(pack: Dictionary, platform: String) -> Dictionary:
+	if pack.has("platforms"):
+		var platforms: Dictionary = pack.get("platforms", {})
+		if platforms.has(platform):
+			return platforms[platform]
+		# Try the fallback platform — covers e.g. web → linux-x86_64.
+		if platform != PLATFORM_FALLBACK and platforms.has(PLATFORM_FALLBACK):
+			push_warning("[bootstrap] pack '%s' missing platform '%s', using %s" % [pack.get("name", "?"), platform, PLATFORM_FALLBACK])
+			return platforms[PLATFORM_FALLBACK]
+		return {}
+	# Flat universal entry
+	if pack.has("urls"):
+		return {
+			"sha256": pack.get("sha256", ""),
+			"size": pack.get("size", 0),
+			"urls": pack.get("urls", []),
+		}
+	return {}
 
 
 func _sanitize_pack_name(name: String) -> String:

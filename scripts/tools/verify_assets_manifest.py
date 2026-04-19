@@ -145,6 +145,28 @@ def verify_pack(pack: dict, download: bool) -> bool:
     return False
 
 
+def expand_pack_entries(pack: dict) -> list[dict]:
+    """A manifest pack is either flat (universal) or per-platform. Return a
+    list of pseudo-entries for verification, each with a synthetic name."""
+    name = pack.get("name", "<unnamed>")
+    if "platforms" in pack:
+        out = []
+        for platform, entry in pack["platforms"].items():
+            out.append({
+                "name": f"{name}/{platform}",
+                "sha256": entry.get("sha256", ""),
+                "size": entry.get("size", 0),
+                "urls": entry.get("urls", []),
+            })
+        return out
+    return [{
+        "name": name,
+        "sha256": pack.get("sha256", ""),
+        "size": pack.get("size", 0),
+        "urls": pack.get("urls", []),
+    }]
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument(
@@ -163,12 +185,17 @@ def main() -> int:
         print("manifest has no packs — skipping")
         return 0
 
-    mode = "full (download + hash)" if args.download else "url check only"
-    print(f"Verifying {len(packs)} pack(s) from {MANIFEST.name} — {mode}")
-    failed = []
+    # Flatten the matrix — verify every (pack, platform) combination.
+    entries = []
     for pack in packs:
-        if not verify_pack(pack, download=args.download):
-            failed.append(pack.get("name", "<unnamed>"))
+        entries.extend(expand_pack_entries(pack))
+
+    mode = "full (download + hash)" if args.download else "url check only"
+    print(f"Verifying {len(entries)} pack entry/entries from {MANIFEST.name} — {mode}")
+    failed = []
+    for entry in entries:
+        if not verify_pack(entry, download=args.download):
+            failed.append(entry.get("name", "<unnamed>"))
 
     if failed:
         print(f"\nFAIL: {failed}", file=sys.stderr)
