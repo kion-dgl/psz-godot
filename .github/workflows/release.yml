@@ -118,10 +118,17 @@ jobs:
           godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
 
       - name: Export Android build
-        continue-on-error: true
+        # Use `--export-debug` so Godot signs with the debug keystore from
+        # the editor-settings step above. `--export-release` without a
+        # release keystore configured silently produces an unsigned APK
+        # that can't be installed by adb (INSTALL_PARSE_FAILED_NO_CERTIFICATES).
+        # End users sideload; no Play Store, no release-key requirement.
         run: |
           mkdir -p build/android
-          godot --headless --path . --export-release "Android" build/android/psz-godot.apk
+          godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
+          # Verify the produced APK is actually signed — fail loudly if not.
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | head -1)
+          "$APKSIGNER" verify --verbose build/android/psz-godot.apk | head -10
 
       - name: Export macOS build
         continue-on-error: true

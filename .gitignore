@@ -35,7 +35,8 @@ __pycache__/
 /dist/
 
 # Env files (wallet secrets etc. — see .env.example)
-.env
+# Root-only: web/.env is committed (VITE_ASSETS_BASE default for dev builds).
+/.env
 .env.local
 .env.*.local
 # Arweave wallet keyfiles — never commit
