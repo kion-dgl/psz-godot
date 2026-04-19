@@ -16,19 +16,12 @@ The Nintendo DS original has a combat system and overworld that never quite live
 
 Play on desktop, Android, or in your browser. Join the [Discord](https://discord.gg/qGzGK9UY) to follow development, playtest, or pitch in.
 
-> This is an unofficial fan project. Phantasy Star, Phantasy Star Online, and Phantasy Star Zero are trademarks of SEGA. No affiliation with or endorsement by SEGA is implied. Game assets remain the property of their respective owners.
-
-<hr>
-
-<h2 align="center"><a href="https://github.com/kion-dgl/psz-godot/releases/latest">DOWNLOAD</a></h2>
-
-<h2 align="center"><a href="https://kion-dgl.github.io/psz-godot/">WEB TOOLS</a></h2>
-
-<h2 align="center"><a href="BUILD.md">BUILD FROM SOURCE</a></h2>
-
-<h2 align="center"><a href="docs/ROADMAP.md">ROADMAP</a></h2>
-
-<hr>
+<p align="center">
+  <a href="https://github.com/kion-dgl/psz-godot/releases/latest"><img src="https://img.shields.io/badge/Download-latest%20release-2ea44f?style=for-the-badge&logo=github" alt="Download latest release"></a>
+  <a href="https://kion-dgl.github.io/psz-godot/"><img src="https://img.shields.io/badge/Web%20tools-live-4285f4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Web tools"></a>
+  <a href="BUILD.md"><img src="https://img.shields.io/badge/Build%20from%20source-BUILD.md-555?style=for-the-badge&logo=godotengine&logoColor=white" alt="Build from source"></a>
+  <a href="docs/ROADMAP.md"><img src="https://img.shields.io/badge/Roadmap-quest%20tracker-8957e5?style=for-the-badge" alt="Roadmap"></a>
+</p>
 
 ## What's playable right now
 
@@ -79,3 +72,7 @@ _TODO — add a representative screenshot of the title screen or a combat moment
 PSZ Godot is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. See [LICENSE](LICENSE) for the full text.
 
 Game assets (stage models, textures, music) derived from Phantasy Star titles remain the property of SEGA and are not redistributed as part of this repository. Players download them separately via the bootstrap scene on first launch.
+
+---
+
+> This is an unofficial fan project. Phantasy Star, Phantasy Star Online, and Phantasy Star Zero are trademarks of SEGA. No affiliation with or endorsement by SEGA is implied.
