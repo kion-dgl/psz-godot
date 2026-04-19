@@ -5,8 +5,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { assetUrl } from '../utils/assets';
 import { captureRestPose, getWorldRestQuat, type RestPoseData } from './retarget-utils';
 
-const PSZ_MODEL_PATH = assetUrl('/player/pc_000/pc_000_000.glb');
-const PSZ_TEXTURE_PATH = assetUrl('/player/pc_000/textures/pc_000_000.png');
+const PSZ_MODEL_PATH = assetUrl('assets/player/pc_000/pc_000_000.glb');
+const PSZ_TEXTURE_PATH = assetUrl('assets/player/pc_000/textures/pc_000_000.png');
 const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
 const ANIMATION_MAP_PATH = assetUrl('/data/retarget/pso_animation_map.json');
 

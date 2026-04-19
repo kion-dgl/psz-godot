@@ -38,6 +38,15 @@ const REPO_ROOT = resolve(__dirname, "../..");
 const SYNC_ROOTS: Array<{ localDir: string; r2Prefix: string }> = [
   { localDir: resolve(REPO_ROOT, "assets"), r2Prefix: "assets/" },
   { localDir: resolve(REPO_ROOT, "web/public/psobb_sfx"), r2Prefix: "psobb_sfx/" },
+  // PSZ weapon catalog (info.json + GLBs + PNGs) pulled in from a sibling
+  // checkout of kion-dgl/psz-sketch. ~11 MB total. Powers the /storybook/weapons
+  // page and the animation-storybook weapon-switch models. Maintainers need to
+  // `git clone kion-dgl/psz-sketch` alongside this repo for the sync to include
+  // them; otherwise this entry is skipped at run time.
+  {
+    localDir: resolve(REPO_ROOT, "../psz-sketch/public/weapons"),
+    r2Prefix: "weapons/",
+  },
 ];
 
 interface CliArgs {
@@ -159,13 +168,18 @@ async function main(): Promise<void> {
     );
     process.exit(2);
   }
+  const activeRoots: typeof SYNC_ROOTS = [];
   for (const root of SYNC_ROOTS) {
     try {
       await stat(root.localDir);
+      activeRoots.push(root);
     } catch {
-      console.error(`Missing local source: ${root.localDir}`);
-      process.exit(2);
+      console.warn(`skipping missing source: ${root.localDir}`);
     }
+  }
+  if (activeRoots.length === 0) {
+    console.error("No SYNC_ROOTS resolved — nothing to do");
+    process.exit(2);
   }
 
   // Force IPv4 at the socket level — Node's dual-stack behavior has been
@@ -195,7 +209,7 @@ async function main(): Promise<void> {
   // 1. Walk each local tree, compute md5 per file. Track the source prefix
   //    so the tree manifest records which local root each file belongs to.
   const locals: Local[] = [];
-  for (const root of SYNC_ROOTS) {
+  for (const root of activeRoots) {
     console.log(`→ Scanning ${root.localDir}`);
     let count = 0;
     for await (const p of walkFiles(root.localDir)) {
@@ -220,7 +234,7 @@ async function main(): Promise<void> {
 
   // 2. List R2 per prefix — scopes orphan detection to each tree separately.
   const remote = new Map<string, { size: number; etag: string }>();
-  for (const root of SYNC_ROOTS) {
+  for (const root of activeRoots) {
     console.log(`→ Listing s3://${r2.bucket}/${root.r2Prefix}`);
     const chunk = await listR2(client, r2.bucket, root.r2Prefix);
     for (const [k, v] of chunk) remote.set(k, v);
@@ -327,7 +341,7 @@ async function main(): Promise<void> {
   const tree = {
     generated_at: new Date().toISOString(),
     base_url: r2.publicUrl,
-    prefixes: SYNC_ROOTS.map((r) => r.r2Prefix),
+    prefixes: activeRoots.map((r) => r.r2Prefix),
     files: locals
       .map((f) => ({ key: f.key, size: f.size, md5: f.md5 }))
       .sort((a, b) => a.key.localeCompare(b.key)),

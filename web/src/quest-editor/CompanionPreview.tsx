@@ -128,7 +128,7 @@ export default function CompanionPreview({ companionId }: Props) {
     const modelPath = assetUrl(assets.glb);
     const texturePath = assetUrl(assets.texture);
     const gender = COMPANION_GENDER[companionId] || 'm';
-    const animPath = assetUrl(`player/animations/saver_${gender === 'f' ? 'w' : 'm'}.glb`);
+    const animPath = assetUrl(`assets/player/animations/saver_${gender === 'f' ? 'w' : 'm'}.glb`);
 
     loader.load(modelPath, (gltf) => {
       if (!sceneRef.current) return;
