@@ -61,7 +61,9 @@ export async function uploadFileToR2(
     requestHandler: new NodeHttpHandler({
       httpsAgent,
       connectionTimeout: 15000,
-      requestTimeout: 300000,
+      // Per-part request budget. Generous to absorb slow links — total
+      // upload is bounded by partSize × queueSize / upstream-bandwidth.
+      requestTimeout: 600000,
     }),
     maxAttempts: 5,
   });
@@ -74,8 +76,11 @@ export async function uploadFileToR2(
       Body: createReadStream(filePath),
       ContentType: contentType,
     },
-    partSize: 50 * 1024 * 1024, // 50 MB parts
-    queueSize: 4, // 4 parts in flight
+    // 10 MB parts × 2 concurrent. On a saturated home upstream a 50 MB part
+    // routinely exceeded the per-request timeout and caused EPIPE. Smaller
+    // parts complete faster and recover better from transient resets.
+    partSize: 10 * 1024 * 1024,
+    queueSize: 2,
   });
 
   if (onProgress) {

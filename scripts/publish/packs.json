@@ -1,0 +1,53 @@
+{
+  "_doc": "Asset pack split. Universal packs use the Linux x86_64 export preset (no multi-variant content); per-platform packs build once per entry in `platforms`. Pack names + includes here MUST match the corresponding 'Asset Pack - <name>[ (<platform>)]' entries in export_presets.cfg.",
+  "_platforms_doc": "Web is intentionally absent — Godot's web export texture-format selection is GPU-cap-driven at runtime; bootstrap.gd falls through to linux-x86_64 for unmatched platforms. Add web here once we have a reliable preset.",
+  "platforms": [
+    "linux-x86_64",
+    "linux-arm64",
+    "windows-x86_64",
+    "macos",
+    "android"
+  ],
+  "packs": [
+    {
+      "name": "music",
+      "per_platform": false,
+      "include": ["assets/music/"]
+    },
+    {
+      "name": "sfx",
+      "per_platform": false,
+      "include": ["assets/sfx/"]
+    },
+    {
+      "name": "ui",
+      "per_platform": false,
+      "include": [
+        "assets/player/",
+        "assets/hud/",
+        "assets/icons/",
+        "assets/fonts/",
+        "assets/mags/",
+        "assets/images/"
+      ]
+    },
+    {
+      "name": "world",
+      "per_platform": true,
+      "include": [
+        "assets/stages/",
+        "assets/title/",
+        "assets/objects/"
+      ]
+    },
+    {
+      "name": "chars",
+      "per_platform": true,
+      "include": [
+        "assets/enemies/",
+        "assets/weapons/",
+        "assets/npcs/"
+      ]
+    }
+  ]
+}
