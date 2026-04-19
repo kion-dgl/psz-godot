@@ -66,7 +66,8 @@ func _run() -> void:
 	var platform: String = _detect_platform()
 	print("[bootstrap] platform=%s" % platform)
 
-	for i in packs.size():
+	var total_packs: int = packs.size()
+	for i in total_packs:
 		var pack: Dictionary = packs[i]
 		var name: String = _sanitize_pack_name(str(pack.get("name", "pack%d" % i)))
 		var entry: Dictionary = _resolve_platform_entry(pack, platform)
@@ -77,14 +78,15 @@ func _run() -> void:
 		var size: int = int(entry.get("size", 0))
 		var urls: Array = entry.get("urls", [])
 		var cache_path := "%s/%s-%s.pck" % [CACHE_DIR, name, sha.substr(0, 12)]
+		var step_prefix := "[%d/%d]" % [i + 1, total_packs]
 
-		_status.text = "Checking %s..." % name
+		_status.text = "%s Checking %s..." % [step_prefix, name]
 		await _yield_frame()
 
 		var cached_ok: bool = FileAccess.file_exists(cache_path) \
 			and await _verify_hash(cache_path, sha)
 		if not cached_ok:
-			_status.text = "Downloading %s..." % name
+			_status.text = "%s Downloading %s..." % [step_prefix, name]
 			_progress.visible = true
 			_progress.value = 0
 			_total_bytes = size
@@ -92,7 +94,7 @@ func _run() -> void:
 			if not ok:
 				_fatal("Failed to download %s — check your connection." % name)
 				return
-			_status.text = "Verifying %s..." % name
+			_status.text = "%s Verifying %s..." % [step_prefix, name]
 			if not await _verify_hash(cache_path, sha):
 				_fatal("Integrity check failed for %s." % name)
 				return
