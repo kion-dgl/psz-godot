@@ -1,14 +1,16 @@
-// Build the per-platform asset pack matrix, upload to R2, and rewrite
-// assets_manifest.json. Arweave upload is intentionally not wired in this
-// path — verifying R2 with releases comes first; an Arweave step can be
-// added later as a separate command.
+// Build the per-platform asset pack matrix, upload to R2 + Arweave, and
+// rewrite assets_manifest.json. Arweave is permanent and paid (Turbo
+// credits); R2 is cheap and mutable. Both run by default — skip-if-sha-
+// unchanged keeps iteration costs low.
 //
 //   cd scripts/publish && npm install                # first time
-//   npm run upload-pack                              # build + upload all packs
+//   npm run upload-pack                              # build + R2 + Arweave
 //   npm run upload-pack -- --packs=stages,chars      # only those packs
 //   npm run upload-pack -- --skip-build              # reuse existing dist/*.pck
-//   npm run upload-pack -- --skip-r2                 # build only, don't upload
+//   npm run upload-pack -- --skip-r2                 # no R2 upload this run
+//   npm run upload-pack -- --skip-arweave            # no Arweave upload this run
 //   npm run upload-pack -- --dry-run                 # plan only, no work
+//   npm run upload-pack -- --yes                     # skip cost confirmation prompt
 //
 // All paths resolve relative to the repo root regardless of CWD.
 
@@ -18,7 +20,11 @@ import { readFileSync, writeFileSync, existsSync, statSync, readdirSync, unlinkS
 import { createHash } from "crypto";
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { createInterface } from "readline/promises";
+import { stdin as input, stdout as output } from "process";
 import { loadR2Config, uploadFileToR2 } from "./lib/r2.js";
+import { loadWallet } from "./lib/wallet.js";
+import { createTurbo, estimateCost, getBalanceWinc, uploadFileToArweave } from "./lib/ardrive.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -47,8 +53,13 @@ interface CliArgs {
   packsFilter: Set<string> | null;
   skipBuild: boolean;
   skipR2: boolean;
+  skipArweave: boolean;
   dryRun: boolean;
+  yes: boolean;
 }
+
+const ARWEAVE_URL_RE = /arweave\.net|ar-io\.dev|permagate\.io/;
+const R2_URL_RE = /r2\.dev/;
 
 interface BuildOutput {
   packName: string;
@@ -91,8 +102,24 @@ function parseArgs(): CliArgs {
     packsFilter,
     skipBuild: args.includes("--skip-build"),
     skipR2: args.includes("--skip-r2"),
+    skipArweave: args.includes("--skip-arweave"),
     dryRun: args.includes("--dry-run"),
+    yes: args.includes("--yes") || args.includes("-y"),
   };
+}
+
+async function confirm(prompt: string): Promise<boolean> {
+  const rl = createInterface({ input, output });
+  const answer = (await rl.question(`${prompt} [y/N] `)).trim().toLowerCase();
+  rl.close();
+  return answer === "y" || answer === "yes";
+}
+
+function wincToAr(winc: string | bigint): string {
+  const n = typeof winc === "bigint" ? winc : BigInt(winc);
+  const whole = Number(n / 1_000_000_000_000n);
+  const frac = Number(n % 1_000_000_000_000n) / 1e12;
+  return (whole + frac).toFixed(4);
 }
 
 function loadPacksConfig(): PacksFile {
@@ -205,6 +232,106 @@ function r2KeyFor(packName: string, platform: string | null, sha256: string): st
     : `packs/${packName}/${packName}-${shortSha}.pck`;
 }
 
+function buildKey(packName: string, platform: string | null): string {
+  return `${packName}\u0000${platform ?? ""}`;
+}
+
+/**
+ * Walk every entry in the previous manifest (both flat and per-platform)
+ * and populate `cache` with sha256 → Arweave URLs. Lets subsequent runs
+ * skip re-uploading packs whose bytes haven't changed.
+ */
+function seedArweaveCache(prev: Manifest | null, cache: Map<string, string[]>): void {
+  if (!prev) return;
+  for (const p of prev.packs) {
+    const entries: Array<{ sha256?: string; urls?: string[] }> = [];
+    if (p.platforms) {
+      for (const e of Object.values(p.platforms)) entries.push(e);
+    } else {
+      entries.push(p);
+    }
+    for (const e of entries) {
+      if (!e.sha256 || !e.urls) continue;
+      const arweave = e.urls.filter((u) => ARWEAVE_URL_RE.test(u));
+      if (arweave.length === 0) continue;
+      // First sha wins; byte-identical entries share the same tx anyway.
+      if (!cache.has(e.sha256)) cache.set(e.sha256, arweave);
+    }
+  }
+}
+
+/**
+ * Produce the final urls[] for one (pack, platform) cell: R2 first (skip
+ * upload if the specific prev entry matches sha), then Arweave (skip if
+ * the sha is in the cross-pack cache, otherwise upload + cache).
+ */
+async function publishPack(
+  b: BuildOutput,
+  prev: Manifest | null,
+  r2: ReturnType<typeof loadR2Config>,
+  wallet: ReturnType<typeof loadWallet> | null,
+  arweaveCache: Map<string, string[]>,
+  args: CliArgs,
+  version: string,
+): Promise<string[]> {
+  const label = `${b.packName}${b.platform ? `/${b.platform}` : ""}`;
+  const urls: string[] = [];
+
+  // R2 — keyed per (pack, platform, sha). Don't dedup by sha: storage cost
+  // is trivial and per-platform keys keep the manifest URLs self-describing.
+  if (r2) {
+    const prevEntry = previousEntryFor(prev, b.packName, b.platform);
+    const prevR2 = (prevEntry?.urls ?? []).find((u) => R2_URL_RE.test(u));
+    if (prevEntry?.sha256 === b.sha256 && prevR2) {
+      console.log(`  = ${label}: R2 unchanged (sha=${b.sha256.slice(0, 12)})`);
+      urls.push(prevR2);
+    } else {
+      const key = r2KeyFor(b.packName, b.platform, b.sha256);
+      console.log(`  → ${label}: uploading ${formatBytes(b.size)} → r2://${r2.bucket}/${key}`);
+      const url = await uploadFileToR2(b.pckPath, key, "application/octet-stream", r2, throttledProgress(label));
+      urls.push(url);
+    }
+  } else {
+    // --skip-r2: preserve existing R2 URL if sha matches.
+    const prevEntry = previousEntryFor(prev, b.packName, b.platform);
+    if (prevEntry?.sha256 === b.sha256) {
+      const prevR2 = (prevEntry.urls ?? []).find((u) => R2_URL_RE.test(u));
+      if (prevR2) urls.push(prevR2);
+    }
+  }
+
+  // Arweave — dedup across packs by sha. If sha is already in cache (either
+  // from prev manifest or from an earlier upload this run), reuse URLs verbatim.
+  if (wallet) {
+    if (arweaveCache.has(b.sha256)) {
+      console.log(`  = ${label}: Arweave reused (sha=${b.sha256.slice(0, 12)})`);
+      urls.push(...arweaveCache.get(b.sha256)!);
+    } else {
+      console.log(`  → ${label}: uploading ${formatBytes(b.size)} to Arweave...`);
+      const result = await uploadFileToArweave(
+        b.pckPath,
+        "application/octet-stream",
+        wallet,
+        [
+          { name: "App-Name", value: "psz-godot" },
+          { name: "App-Version", value: version },
+          { name: "Pack-Name", value: b.packName },
+          { name: "Pack-Platform", value: b.platform ?? "universal" },
+          { name: "Pack-SHA256", value: b.sha256 },
+        ],
+      );
+      console.log(`    tx: ${result.id}`);
+      arweaveCache.set(b.sha256, result.urls);
+      urls.push(...result.urls);
+    }
+  } else if (arweaveCache.has(b.sha256)) {
+    // --skip-arweave: preserve existing Arweave URLs.
+    urls.push(...arweaveCache.get(b.sha256)!);
+  }
+
+  return urls;
+}
+
 async function main(): Promise<void> {
   const args = parseArgs();
   const cfg = loadPacksConfig();
@@ -233,74 +360,82 @@ async function main(): Promise<void> {
     }
   }
 
-  // 2. Diff against previous manifest, upload only changed packs
+  // 2. Set up targets + sha-indexed URL caches populated from the previous
+  // manifest. The Arweave cache dedupes across byte-identical packs (e.g.
+  // world/linux-x86_64 + world/windows-x86_64 + world/macos all share the
+  // same s3tc-only bytes → one Arweave tx, three manifest entries).
   const r2 = args.skipR2 ? null : loadR2Config();
   if (!args.skipR2 && !r2) {
-    console.error("\n✗ R2 not configured (set R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_S3_ENDPOINT, CLOUDFLARE_R2_BUCKET, CLOUDFLARE_R2_PUBLIC_URL in scripts/publish/.env)");
+    console.error("\n✗ R2 not configured (set R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_S3_ENDPOINT, CLOUDFLARE_R2_BUCKET, CLOUDFLARE_R2_PUBLIC_URL in .env)");
     process.exit(2);
   }
 
-  const newPacks: ManifestPack[] = [];
-  // Index built outputs by (pack, platform) for assembly.
-  const buildIndex = new Map<string, BuildOutput>();
-  for (const b of built) {
-    buildIndex.set(`${b.packName}\u0000${b.platform ?? ""}`, b);
+  const arweaveUrlsBySha = new Map<string, string[]>();
+  seedArweaveCache(prev, arweaveUrlsBySha);
+
+  // 3. Arweave cost estimate + confirmation. Only count packs whose sha is
+  // absent from the cache (i.e. genuinely new bytes we'd be paying to upload).
+  let wallet: ReturnType<typeof loadWallet> | null = null;
+  if (!args.skipArweave) {
+    wallet = loadWallet();
+    const turbo = createTurbo(wallet);
+    const balance = await getBalanceWinc(turbo);
+
+    const needArweave = new Map<string, number>(); // sha → size
+    for (const b of built) {
+      if (!arweaveUrlsBySha.has(b.sha256)) needArweave.set(b.sha256, b.size);
+    }
+    let totalWinc = 0n;
+    for (const size of needArweave.values()) {
+      const est = await estimateCost(turbo, size);
+      totalWinc += BigInt(est.winc);
+    }
+    const totalSize = [...needArweave.values()].reduce((a, b) => a + b, 0);
+    const reuseCount = built.length - needArweave.size;
+    console.log(`\n→ Arweave plan:`);
+    console.log(`  unique new shas to upload: ${needArweave.size} (${formatBytes(totalSize)})`);
+    console.log(`  reused from prev manifest or dedup: ${reuseCount}`);
+    console.log(`  estimated cost: ${wincToAr(totalWinc)} AR-equiv`);
+    console.log(`  current balance: ${wincToAr(balance)} AR-equiv`);
+    if (BigInt(balance) < totalWinc) {
+      console.error("\n✗ Insufficient Turbo credits. Top up at https://turbo-topup.com");
+      process.exit(2);
+    }
+    if (needArweave.size > 0 && !args.yes) {
+      const ok = await confirm(`\nProceed with Arweave upload (${wincToAr(totalWinc)} AR-equiv for ${needArweave.size} pack(s))?`);
+      if (!ok) { console.log("aborted."); return; }
+    }
   }
 
-  // Walk every pack in packs.json (so the manifest stays complete even when
-  // --packs filtered some). For unfiltered packs that we DIDN'T rebuild,
-  // copy the previous entry verbatim — DOES require previous manifest.
+  // 4. Build + assemble each manifest entry.
+  const newPacks: ManifestPack[] = [];
+  const buildIndex = new Map<string, BuildOutput>();
+  for (const b of built) buildIndex.set(buildKey(b.packName, b.platform), b);
+  const version = getVersion();
+
   for (const pack of cfg.packs) {
     if (pack.per_platform) {
       const platforms: Record<string, ManifestPackPlatformEntry> = {};
       for (const platform of cfg.platforms) {
-        const built = buildIndex.get(`${pack.name}\u0000${platform}`);
-        if (built) {
-          const prevEntry = previousEntryFor(prev, pack.name, platform);
-          if (prevEntry && prevEntry.sha256 === built.sha256) {
-            console.log(`  = ${pack.name}/${platform}: unchanged (sha=${built.sha256.slice(0, 12)}); preserving urls`);
-            platforms[platform] = { sha256: built.sha256, size: built.size, urls: prevEntry.urls };
-          } else if (r2) {
-            const key = r2KeyFor(pack.name, platform, built.sha256);
-            console.log(`  → ${pack.name}/${platform}: uploading ${formatBytes(built.size)} → r2://${r2.bucket}/${key}`);
-            const url = await uploadFileToR2(built.pckPath, key, "application/octet-stream", r2,
-              throttledProgress(`${pack.name}/${platform}`));
-            platforms[platform] = { sha256: built.sha256, size: built.size, urls: [url] };
-          } else {
-            // skipR2: keep what was there (or empty if new pack)
-            platforms[platform] = { sha256: built.sha256, size: built.size, urls: prevEntry?.urls ?? [] };
-          }
+        const b = buildIndex.get(buildKey(pack.name, platform));
+        if (b) {
+          const urls = await publishPack(b, prev, r2, wallet, arweaveUrlsBySha, args, version);
+          platforms[platform] = { sha256: b.sha256, size: b.size, urls };
         } else {
-          // Not in this build's filter — preserve previous entry verbatim
           const prevEntry = previousEntryFor(prev, pack.name, platform);
-          if (!prevEntry) {
-            throw new Error(`No previous entry for ${pack.name}/${platform} and not in current build — manifest would be incomplete`);
-          }
+          if (!prevEntry) throw new Error(`No previous entry for ${pack.name}/${platform} and not in current build`);
           platforms[platform] = { sha256: prevEntry.sha256, size: 0, urls: prevEntry.urls };
         }
       }
       newPacks.push({ name: pack.name, platforms });
     } else {
-      const built = buildIndex.get(`${pack.name}\u0000`);
-      if (built) {
-        const prevEntry = previousEntryFor(prev, pack.name, null);
-        if (prevEntry && prevEntry.sha256 === built.sha256) {
-          console.log(`  = ${pack.name}: unchanged (sha=${built.sha256.slice(0, 12)}); preserving urls`);
-          newPacks.push({ name: pack.name, sha256: built.sha256, size: built.size, urls: prevEntry.urls });
-        } else if (r2) {
-          const key = r2KeyFor(pack.name, null, built.sha256);
-          console.log(`  → ${pack.name}: uploading ${formatBytes(built.size)} → r2://${r2.bucket}/${key}`);
-          const url = await uploadFileToR2(built.pckPath, key, "application/octet-stream", r2,
-            throttledProgress(pack.name));
-          newPacks.push({ name: pack.name, sha256: built.sha256, size: built.size, urls: [url] });
-        } else {
-          newPacks.push({ name: pack.name, sha256: built.sha256, size: built.size, urls: prevEntry?.urls ?? [] });
-        }
+      const b = buildIndex.get(buildKey(pack.name, null));
+      if (b) {
+        const urls = await publishPack(b, prev, r2, wallet, arweaveUrlsBySha, args, version);
+        newPacks.push({ name: pack.name, sha256: b.sha256, size: b.size, urls });
       } else {
         const prevEntry = previousEntryFor(prev, pack.name, null);
-        if (!prevEntry) {
-          throw new Error(`No previous entry for ${pack.name} and not in current build`);
-        }
+        if (!prevEntry) throw new Error(`No previous entry for ${pack.name} and not in current build`);
         newPacks.push({ name: pack.name, sha256: prevEntry.sha256, size: 0, urls: prevEntry.urls });
       }
     }
