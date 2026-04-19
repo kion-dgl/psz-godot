@@ -1,95 +1,81 @@
-# PSZ Godot
+<div align="center">
+  <img src="logo.png" alt="Phantasy Star Zero" width="70%" />
+</div>
 
-[![CI](https://github.com/kion-dgl/psz-godot/actions/workflows/ci.yml/badge.svg)](https://github.com/kion-dgl/psz-godot/actions/workflows/ci.yml)
-[![Release](https://github.com/kion-dgl/psz-godot/actions/workflows/release.yml/badge.svg)](https://github.com/kion-dgl/psz-godot/actions/workflows/release.yml)
+<p align="center">
+<a href="LICENSE"><img src="https://img.shields.io/badge/License-GPL%20v3-%23ff554d.svg" alt="License: GPLv3"></a>
+<a href="https://discord.gg/qGzGK9UY"><img src="https://img.shields.io/badge/Discord-PSZ%20Godot-7289da?logo=discord&logoColor=white" alt="Discord"></a>
+<a href="https://github.com/kion-dgl/psz-godot/actions/workflows/ci.yml"><img src="https://github.com/kion-dgl/psz-godot/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+<a href="https://github.com/kion-dgl/psz-godot/actions/workflows/release.yml"><img src="https://github.com/kion-dgl/psz-godot/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+<a href="https://github.com/kion-dgl/psz-godot/actions/workflows/static.yml"><img src="https://github.com/kion-dgl/psz-godot/actions/workflows/static.yml/badge.svg" alt="Pages"></a>
+</p>
 
-**Phantasy Star Zero — if it were actually like PSO.**
+Phantasy Star Zero, rebuilt in Godot as a fan-made action RPG in the shape of Phantasy Star Online.
 
-A fan-made action RPG built in Godot 4.5, inspired by Phantasy Star Online and Phantasy Star Zero. Explore instanced quest areas, fight enemies with real-time melee and ranged combat, cast techniques, and gear up across 14 character classes.
+The Nintendo DS original has a combat system and overworld that never quite lived up to its PSO heritage. This project takes the PSZ world and characters and reworks them around PSO's real-time combat, technique casting, class system, and quest/field loop. Explore instanced field areas, clear rooms, fight through boss encounters, gear up, cast technics, and take missions from the guild.
 
-> This is a fan project and is not affiliated with SEGA.
+Play on desktop, Android, or in your browser. Join the [Discord](https://discord.gg/qGzGK9UY) to follow development, playtest, or pitch in.
 
-## Play
+> This is an unofficial fan project. Phantasy Star, Phantasy Star Online, and Phantasy Star Zero are trademarks of SEGA. No affiliation with or endorsement by SEGA is implied. Game assets remain the property of their respective owners.
 
-Download the latest build from [Releases](https://github.com/kion-dgl/psz-godot/releases/latest).
+<hr>
 
-## Web Tools
+<h2 align="center"><a href="https://github.com/kion-dgl/psz-godot/releases/latest">DOWNLOAD</a></h2>
 
-Quest editor, stage viewer, and animation storybook are available at:
-**https://kion-dgl.github.io/psz-godot/**
+<h2 align="center"><a href="https://kion-dgl.github.io/psz-godot/">WEB TOOLS</a></h2>
 
-## Features
+<h2 align="center"><a href="BUILD.md">BUILD FROM SOURCE</a></h2>
 
-- **Combat** — Melee combos (saber, sword, daggers, spear, rod, wand), ranged weapons (handgun, rifle, mechgun), and technique casting (Foie, Barta, Zonde + Gi/Ra variants)
-- **14 Classes** — Hunters, Rangers, and Forces with PSU-style archetypes, innate weapon bonuses, and technique limits
-- **Quests** — Instanced field areas with gated rooms, enemy spawns, and boss encounters
-- **NPCs & Shops** — City hub with weapon, item, technique, and crafting shops
-- **Action Palette** — PSO-style configurable action bar with swappable pages
+<h2 align="center"><a href="docs/ROADMAP.md">ROADMAP</a></h2>
 
-## Project Structure
+<hr>
 
-- `scenes/` — Godot scenes (2D menus, 3D field/city areas)
-- `scripts/` — GDScript game logic
-- `assets/` — Models, textures, animations, UI assets
-- `data/` — Game data (quests, enemies, items, stage configs)
-- `web/` — React development tools (quest editor, stage editor, storybook)
+## What's playable right now
 
-## Building from Source
+- **Combat** — melee combos (saber, sword, daggers, spear, rod, wand), ranged weapons (handgun, rifle, mechgun), and technique casting (Foie, Barta, Zonde + Gi/Ra variants, plus support and healing technics)
+- **14 classes** — Hunters, Rangers, and Forces with PSU-style archetypes, innate weapon bonuses, and technique limits
+- **Instanced fields** — grid-generated rooms per area (valley, wetlands, paru, snowfield, makara, arca, tower), gated enemy waves, bosses on the end room
+- **Quests** — hand-authored missions with companion NPCs, briefing dialog at the guild, dynamic fragment/item objectives, telepipe return
+- **City hub** — shops (weapon, item, technique, crafting, tekker), mag feeding, save/load, character creation across 14 classes
+- **Action Palette** — PSO-style swappable hotbar: combat actions, consumables, and technics across three pages
 
-Requires [Godot 4.5+](https://godotengine.org/download/).
+## In progress
 
-```bash
-git clone https://github.com/kion-dgl/psz-godot.git
-cd psz-godot
-# Open in Godot editor, or export from command line
-```
+- Menu overhaul: PSO-style start menu and quick-item palette (see issues [#140](../../issues/140), [#141](../../issues/141))
+- Controller pass: DualShock/Xbox/Switch mappings, PSP2i-style Select-button menu, PSU-style dpad shortcuts ([#124](../../issues/124), [#125](../../issues/125), [#126](../../issues/126), [#127](../../issues/127))
+- Shop UX: multi-item purchases, clear Yes/No confirmation with button prompts ([#137](../../issues/137))
+- Footstep, weapon, and enemy SFX pass against a full PSO label sheet (common sfx labels imported; per-surface footsteps landing)
+- Story pass across the eight story missions for narrative coherence
 
-### Web Tools (development)
+## Considered for later
 
-```bash
-cd web && npm install && npm run dev
-```
+- Photon Arts (weapon-specific special attacks, [#95](../../issues/95))
+- PSO-style trap system (Heat / Ice / Light / Heal, [#94](../../issues/94))
+- Android UI overflow fixes for smaller screens ([#97](../../issues/97))
+- Item telepipes and first-room return teleporter ([#136](../../issues/136))
+- Boosted Aura elite enemies ([#108](../../issues/108))
 
-## Quest Tracker (Alpha)
+## Screenshot
 
-### Story Missions
+_TODO — add a representative screenshot of the title screen or a combat moment._
 
-| # | Quest | NPCs | Area | Boss | Status |
-|---|-------|------|------|------|--------|
-| 1 | Search and Rescue | Kai, Sarisa | Valley | -- | Implemented |
-| 2 | Poisoned Water | -- | Wetlands | Octo Diablo | Not started |
-| 3 | Finding Ogi | -- | Snowfield | Hildegahna | Not started |
-| 4 | Messages from the Past | Mira, Elio | Paru | TBD | Implemented (needs boss) |
-| 5 | Rescue at Makara | Kai | Makara Ruins | Rohjade | Not started |
-| 6 | Arca Plant A | -- | Moon Base | Humilias (Reve's mech) | Not started |
-| 7 | Arca Plant B | -- | Moon Industrial | Mother Trinity | Not started |
-| 8 | Dark Shrine | Kai | Dark Falz Domain | Dark Falz (Kai vessel) | Not started |
+## Team
 
-### Side Quests
-
-| # | Quest | NPCs | Area | Boss | Status |
-|---|-------|------|------|------|--------|
-| S1 | The Paru Pact | Elio | Paru | -- | Implemented (no enemies) |
-| S2 | Apothecary's Supply | Fern | Wetlands | -- | Implemented |
-| S3 | Static in the Snow | Dr. Carlo, Kai | Snowfield | -- | Implemented |
-| S4 | Deep Ore Extraction | Dorn | Valley | -- | Implemented |
-| S5 | Native Research | Dr. Carlo | Valley+Wetlands+Snowfield | -- | Implemented |
-| S6 | Seek My Mentor | Ren | Makara Ruins | -- | Implemented |
-| S7 | Claiming a Stake | -- | Valley | Dragon | Not started |
-
-### Alpha Checklist
-- [ ] All story missions completable end-to-end
-- [ ] All side quests completable end-to-end
-- [ ] Enemies spawn on floor (not floating)
-- [ ] NPC dialog triggers working in field
-- [ ] Boss encounters: Octo Diablo, Dragon, Hildegahna, Rohjade, Humilias, Mother Trinity, Dark Falz
-- [ ] Companion NPCs follow player in field
-- [ ] Quest items collectible and tracked
-- [ ] Moon areas: Arca Plant A (robot base), Arca Plant B (industrial), Dark Shrine (surreal)
-- [ ] Kai corruption arc: normal → changed after Makara → Dark Falz vessel in Dark Shrine
+- **@kion-dgl** — code, design, everything day-to-day
+- **Rozalin** — playtesting, sound-effect labeling, UI mockups, character portraits
 
 ## Credits
 
-- **Character Portraits** provided by Rozalin#4270
-- **Input Prompts** by [Kenney](https://www.kenney.nl/) — CC0 (public domain)
-  - [kenney.nl/assets/input-prompts](https://kenney.nl/assets/input-prompts)
+- **Phantasy Star Zero** original game by SEGA / Sonic Team
+- Extensive sound work and playtest feedback from the PSO community on the project Discord
+- **Input Prompts** by [Kenney](https://kenney.nl/assets/input-prompts) — CC0 (public domain)
+- Character-portrait art by **Rozalin**
+- Runs on [Godot 4.5](https://godotengine.org/) — thanks to the Godot contributors and maintainers
+
+## License
+
+[![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](https://www.gnu.org/licenses/gpl-3.0.en.html)
+
+PSZ Godot is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. See [LICENSE](LICENSE) for the full text.
+
+Game assets (stage models, textures, music) derived from Phantasy Star titles remain the property of SEGA and are not redistributed as part of this repository. Players download them separately via the bootstrap scene on first launch.
