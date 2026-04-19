@@ -64,6 +64,15 @@ dest_for_key() {
   case "$key" in
     assets/*) echo "assets/${key#assets/}" ;;
     psobb_sfx/*) echo "web/public/psobb_sfx/${key#psobb_sfx/}" ;;
+    # PSZ weapons live in the sibling psz-sketch checkout. Skip gracefully
+    # if the sibling checkout isn't present — not every dev needs it.
+    weapons/*)
+      if [ -d "../psz-sketch/public/weapons" ]; then
+        echo "../psz-sketch/public/weapons/${key#weapons/}"
+      else
+        echo ""
+      fi
+      ;;
     *) echo "" ;;
   esac
 }

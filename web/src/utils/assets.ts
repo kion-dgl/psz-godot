@@ -15,7 +15,7 @@
 // Prefixes whose content lives on the CDN when VITE_ASSETS_BASE is set.
 // Keep in sync with scripts/publish/sync_tree.ts SYNC_ROOTS and
 // scripts/tools/fetch_assets_dev.sh's prefix → local-dir mapping.
-const CDN_PREFIXES = ['assets/', 'psobb_sfx/'];
+const CDN_PREFIXES = ['assets/', 'psobb_sfx/', 'weapons/'];
 
 export function assetUrl(path: string): string {
   const base = import.meta.env.BASE_URL || '/';

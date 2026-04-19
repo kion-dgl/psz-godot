@@ -42,7 +42,7 @@ export function getClassArtPath(classId: string): string {
 export function getModelPath(classId: string, variationIndex: number): string {
   const prefix = CLASS_TO_PC_PREFIX[classId] || 'pc_00';
   const variation = `${prefix}${variationIndex}`;
-  return assetUrl(`/player/${variation}/${variation}_000.glb`);
+  return assetUrl(`assets/player/${variation}/${variation}_000.glb`);
 }
 
 /**
@@ -60,7 +60,7 @@ export function getTexturePath(
   const variation = `${prefix}${variationIndex}`;
   const textureIndex = hairIndex * 100 + skinIndex * 10 + bodyIndex;
   const padded = String(textureIndex).padStart(3, '0');
-  return assetUrl(`/player/${variation}/textures/${variation}_${padded}.png`);
+  return assetUrl(`assets/player/${variation}/textures/${variation}_${padded}.png`);
 }
 
 /**
@@ -68,5 +68,5 @@ export function getTexturePath(
  */
 export function getIdleAnimationPath(classId: string): string {
   const gender = GENDER_MAP[classId] || 'm';
-  return assetUrl(`/player/animations/saver_${gender}.glb`);
+  return assetUrl(`assets/player/animations/saver_${gender}.glb`);
 }

@@ -1,16 +1,13 @@
 {
-  "version": "0.20.7",
+  "version": "0.20.9",
   "godot_version": "4.5",
   "packs": [
     {
       "name": "assets",
-      "sha256": "2e2c4cf8fd12b964c4e4788e1a64c9bae96189b21989421080ed23453dde4ad4",
-      "size": 699418004,
+      "sha256": "0bab4325089903f109a1611866566bfe51b4d22cfca5fb5b898aa77690ed33b4",
+      "size": 699507012,
       "urls": [
-        "https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev/packs/assets-2e2c4cf8fd12.pck",
-        "https://arweave.net/e8j-IrWy6ZdRRiMlbPrRV_2AeEIElJe8J4U9pLh88Hs",
-        "https://ar-io.dev/e8j-IrWy6ZdRRiMlbPrRV_2AeEIElJe8J4U9pLh88Hs",
-        "https://permagate.io/e8j-IrWy6ZdRRiMlbPrRV_2AeEIElJe8J4U9pLh88Hs"
+        "https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev/packs/assets-0bab43250899.pck"
       ]
     }
   ]
