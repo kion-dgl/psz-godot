@@ -124,10 +124,19 @@ jobs:
         # that can't be installed by adb (INSTALL_PARSE_FAILED_NO_CERTIFICATES).
         # End users sideload; no Play Store, no release-key requirement.
         run: |
+          set -euo pipefail
           mkdir -p build/android
           godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
-          # Verify the produced APK is actually signed — fail loudly if not.
-          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | head -1)
+          # Pick the newest build-tools version (sort -V handles 34.0.0 vs 35.0.1
+          # correctly). Fail explicitly if no apksigner is resolvable instead of
+          # silently producing an unverified build.
+          APKSIGNER=$(printf '%s\n' "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -z "$APKSIGNER" ] || [ ! -x "$APKSIGNER" ]; then
+            echo "::error::apksigner not found under $ANDROID_HOME/build-tools"
+            ls -la "$ANDROID_HOME/build-tools" || true
+            exit 1
+          fi
+          echo "using $APKSIGNER"
           "$APKSIGNER" verify --verbose build/android/psz-godot.apk | head -10
 
       - name: Export macOS build
