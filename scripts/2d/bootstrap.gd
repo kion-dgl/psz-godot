@@ -43,6 +43,15 @@ func _ready() -> void:
 
 	_http = HTTPRequest.new()
 	_http.use_threads = true
+	# Skip TLS cert verification for pack downloads. The content is public,
+	# URLs are content-addressed (sha256 prefix in the filename), and every
+	# pack is sha256-verified post-download before we mount it — so an
+	# attacker MITM'ing TLS can at worst substitute invalid bytes that fail
+	# the integrity check. Without this, Godot's bundled mbedTLS CA can
+	# reject legitimate Cloudflare R2 certs on Windows specifically
+	# (MBEDTLS_ERR_X509_CERT_VERIFY_FAILED / -9984) even when Schannel +
+	# curl succeed against the same URL. Linux/Android are unaffected.
+	_http.set_tls_options(TLSOptions.client_unsafe())
 	add_child(_http)
 
 	call_deferred("_run")

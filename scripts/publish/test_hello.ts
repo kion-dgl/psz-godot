@@ -5,21 +5,27 @@
 //   npm run hello
 
 import "./lib/env.js";
+import { writeFileSync, unlinkSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { loadWallet } from "./lib/wallet.js";
-import { uploadToArweave } from "./lib/ardrive.js";
+import { uploadFileToArweave } from "./lib/ardrive.js";
 
 async function main(): Promise<void> {
   const wallet = loadWallet();
   const stamp = new Date().toISOString();
-  const data = new TextEncoder().encode(
-    `hello world from psz-godot (${stamp})\n`,
-  );
+  const tmp = join(tmpdir(), `psz-hello-${Date.now()}.txt`);
+  writeFileSync(tmp, `hello world from psz-godot (${stamp})\n`);
 
-  console.log(`Uploading ${data.byteLength} bytes...`);
-  const result = await uploadToArweave(data, "text/plain", wallet);
-  console.log("OK");
-  console.log(`  tx id: ${result.id}`);
-  console.log(`  url:   ${result.url}`);
+  console.log(`Uploading ${tmp}...`);
+  try {
+    const result = await uploadFileToArweave(tmp, "text/plain", wallet);
+    console.log("OK");
+    console.log(`  tx id: ${result.id}`);
+    console.log(`  urls:  ${result.urls.join(", ")}`);
+  } finally {
+    unlinkSync(tmp);
+  }
 }
 
 main().catch((err) => {
