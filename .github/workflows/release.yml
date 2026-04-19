@@ -137,6 +137,25 @@ jobs:
           cd build/windows && zip -r ../../psz-godot-windows-x86_64.zip . && cd ../..
           [ -f build/macos/psz-godot.zip ] && cp build/macos/psz-godot.zip psz-godot-macos.zip || true
 
+      - name: Build release body (pack URL + sha)
+        id: body
+        run: |
+          PACK_URL=$(python3 -c "import json; print(json.load(open('assets_manifest.json'))['packs'][0]['urls'][0])")
+          PACK_SHA=$(python3 -c "import json; print(json.load(open('assets_manifest.json'))['packs'][0]['sha256'])")
+          PACK_SIZE_MB=$(python3 -c "import json; print(f\"{json.load(open('assets_manifest.json'))['packs'][0]['size']/1024/1024:.1f}\")")
+          {
+            echo "## Asset pack"
+            echo ""
+            echo "First launch downloads the shared asset pack (~${PACK_SIZE_MB} MB) from the CDN:"
+            echo ""
+            echo "- \`${PACK_URL}\`"
+            echo "- sha256: \`${PACK_SHA}\`"
+            echo ""
+            echo "Fallback mirrors (Arweave) and verification sha live in"
+            echo "[\`assets_manifest.json\`](../../blob/${{ github.sha }}/assets_manifest.json) and the release asset of the same name."
+          } > release-body.md
+          cat release-body.md
+
       - name: Upload Release
         if: steps.check_tag.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
@@ -151,6 +170,9 @@ jobs:
             psz-godot-windows-x86_64.zip
             psz-godot-macos.zip
             build/android/psz-godot.apk
+            assets_manifest.json
+          body_path: release-body.md
+          append_body: true
           generate_release_notes: true
 
       - name: Upload build (no version bump)
@@ -167,4 +189,7 @@ jobs:
             psz-godot-windows-x86_64.zip
             psz-godot-macos.zip
             build/android/psz-godot.apk
+            assets_manifest.json
+          body_path: release-body.md
+          append_body: true
           generate_release_notes: true

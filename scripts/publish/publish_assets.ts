@@ -40,6 +40,7 @@ const BUILD_CMD =
 interface CliArgs {
   skipBuild: boolean;
   skipArweave: boolean;
+  skipR2: boolean;
   dryRun: boolean;
   yes: boolean;
 }
@@ -49,6 +50,7 @@ function parseArgs(): CliArgs {
   return {
     skipBuild: args.includes("--skip-build"),
     skipArweave: args.includes("--skip-arweave"),
+    skipR2: args.includes("--skip-r2"),
     dryRun: args.includes("--dry-run"),
     yes: args.includes("-y") || args.includes("--yes"),
   };
@@ -192,32 +194,44 @@ async function main(): Promise<void> {
 
   const urls: string[] = [];
   // Cloudflare R2 (listed first in the manifest — fastest primary mirror).
-  const r2 = loadR2Config();
-  if (r2) {
-    const r2Key = `packs/assets-${sha256.slice(0, 12)}.pck`;
-    console.log(`\n→ Uploading to R2 (${r2.bucket}/${r2Key})...`);
-    const r2StartMs = Date.now();
-    let lastLog = 0;
-    const r2Url = await uploadFileToR2(
-      PACK_OUT,
-      r2Key,
-      "application/octet-stream",
-      r2,
-      (loaded, total) => {
-        const now = Date.now();
-        if (now - lastLog > 5000) {
-          lastLog = now;
-          const pct = total ? ` (${((loaded / total) * 100).toFixed(1)}%)` : "";
-          const mb = (loaded / 1024 / 1024).toFixed(1);
-          console.log(`  ${mb} MB uploaded${pct}`);
-        }
-      },
-    );
-    console.log(`✓ R2 upload in ${((Date.now() - r2StartMs) / 1000).toFixed(1)}s`);
-    console.log(`  url: ${r2Url}`);
-    urls.push(r2Url);
+  if (args.skipR2) {
+    console.log("\n(skipping R2 — --skip-r2 passed; reusing URL from existing manifest)");
+    if (existsSync(MANIFEST_OUT)) {
+      const prev = JSON.parse(readFileSync(MANIFEST_OUT, "utf8"));
+      const prevPack = prev?.packs?.find((p: any) => p.name === "assets");
+      if (prevPack?.urls && prevPack.sha256 === sha256) {
+        const r2Url = prevPack.urls.find((u: string) => /r2\.dev/.test(u));
+        if (r2Url) urls.push(r2Url);
+      }
+    }
   } else {
-    console.log("\n(skipping R2 — R2_* vars not set in .env)");
+    const r2 = loadR2Config();
+    if (r2) {
+      const r2Key = `packs/assets-${sha256.slice(0, 12)}.pck`;
+      console.log(`\n→ Uploading to R2 (${r2.bucket}/${r2Key})...`);
+      const r2StartMs = Date.now();
+      let lastLog = 0;
+      const r2Url = await uploadFileToR2(
+        PACK_OUT,
+        r2Key,
+        "application/octet-stream",
+        r2,
+        (loaded, total) => {
+          const now = Date.now();
+          if (now - lastLog > 5000) {
+            lastLog = now;
+            const pct = total ? ` (${((loaded / total) * 100).toFixed(1)}%)` : "";
+            const mb = (loaded / 1024 / 1024).toFixed(1);
+            console.log(`  ${mb} MB uploaded${pct}`);
+          }
+        },
+      );
+      console.log(`✓ R2 upload in ${((Date.now() - r2StartMs) / 1000).toFixed(1)}s`);
+      console.log(`  url: ${r2Url}`);
+      urls.push(r2Url);
+    } else {
+      console.log("\n(skipping R2 — R2_* vars not set in .env)");
+    }
   }
 
   // Arweave URLs (from this run, or preserved from existing manifest on --skip-arweave).
