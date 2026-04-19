@@ -170,12 +170,15 @@ async function main(): Promise<void> {
       `https://permagate.io/${txId}`,
     ];
   } else {
-    console.log("\n(skipping Arweave — --skip-arweave passed; retaining existing URLs)");
-    // Preserve existing Arweave URLs from the manifest if one exists.
+    console.log("\n(skipping Arweave — --skip-arweave passed)");
+    // Preserve existing Arweave URLs ONLY if the previous manifest references
+    // the same pack sha256 we just built. Otherwise those URLs point at a
+    // different (stale) upload and would fail sha verification; drop them so
+    // the R2 URL is the sole source of truth.
     if (existsSync(MANIFEST_OUT)) {
       const prev = JSON.parse(readFileSync(MANIFEST_OUT, "utf8"));
       const prevPack = prev?.packs?.find((p: any) => p.name === "assets");
-      if (prevPack?.urls) {
+      if (prevPack?.urls && prevPack.sha256 === sha256) {
         arweaveResultUrls = prevPack.urls.filter((u: string) =>
           /arweave\.net|ar-io\.dev|permagate\.io/.test(u),
         );

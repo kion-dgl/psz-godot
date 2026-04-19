@@ -36,7 +36,17 @@ func _init() -> void:
 		quit(1)
 		return
 
+	# Godot exported binaries load pre-imported resources (.ctex, .scn,
+	# .sample, .oggvorbisstr under res://.godot/imported/). The source files
+	# alone aren't enough — every .glb/.png/.wav reference in a .tscn gets
+	# redirected through the .import sidecar to the imported cache. Bundle
+	# both trees so a fresh runtime with no local .godot/ can mount the
+	# pack and resolve every resource.
+	#
+	# IMPORTANT: run `godot --headless --path . --import --quit` before
+	# invoking this tool so the imported cache is up to date.
 	var added: int = _add_tree(packer, "res://assets")
+	added += _add_imported_cache(packer)
 	print("[pack] files added: ", added)
 
 	err = packer.flush(true)
@@ -67,6 +77,37 @@ func _init() -> void:
 	print("[pack] sha256: ", hex)
 	print("[pack] done")
 	quit(0)
+
+
+## Add res://.godot/imported/* to the pack, skipping .md5 checksum files
+## which are only used by the editor to detect source changes and aren't
+## referenced at runtime.
+func _add_imported_cache(packer: PCKPacker) -> int:
+	var dir_path := "res://.godot/imported"
+	var d := DirAccess.open(dir_path)
+	if d == null:
+		push_warning("[pack] no .godot/imported cache — run `godot --import` first")
+		return 0
+	var files: Array[String] = []
+	d.list_dir_begin()
+	var name := d.get_next()
+	while name != "":
+		if name != "." and name != ".." and not d.current_is_dir():
+			# .md5 files are editor-side bookkeeping; runtime never reads them.
+			if not name.ends_with(".md5"):
+				files.append(name)
+		name = d.get_next()
+	d.list_dir_end()
+	files.sort()
+	var count := 0
+	for fn in files:
+		var child_path := "%s/%s" % [dir_path, fn]
+		var err := packer.add_file(child_path, child_path)
+		if err != OK:
+			push_warning("[pack] add_file failed for %s: %s" % [child_path, error_string(err)])
+		else:
+			count += 1
+	return count
 
 
 func _add_tree(packer: PCKPacker, dir_path: String) -> int:

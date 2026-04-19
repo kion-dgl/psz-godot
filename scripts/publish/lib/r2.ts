@@ -1,6 +1,8 @@
 import { createReadStream } from "fs";
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
+import { Agent as HttpsAgent } from "https";
 
 export interface R2Config {
   accessKeyId: string;
@@ -40,6 +42,15 @@ export async function uploadFileToR2(
   cfg: R2Config,
   onProgress?: (loaded: number, total: number | undefined) => void,
 ): Promise<string> {
+  // Force IPv4 + keepalive — Node's dual-stack resolver will fall through
+  // to IPv6 on Cloudflare endpoints on some networks and hang there, even
+  // with --dns-result-order=ipv4first. See sync_tree.ts for the same
+  // workaround.
+  const httpsAgent = new HttpsAgent({
+    keepAlive: true,
+    maxSockets: 10,
+    family: 4,
+  });
   const client = new S3Client({
     region: "auto",
     endpoint: cfg.endpoint,
@@ -47,6 +58,12 @@ export async function uploadFileToR2(
       accessKeyId: cfg.accessKeyId,
       secretAccessKey: cfg.secretAccessKey,
     },
+    requestHandler: new NodeHttpHandler({
+      httpsAgent,
+      connectionTimeout: 15000,
+      requestTimeout: 300000,
+    }),
+    maxAttempts: 5,
   });
 
   const upload = new Upload({

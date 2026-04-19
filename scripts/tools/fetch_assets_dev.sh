@@ -48,10 +48,13 @@ echo "  $FILE_COUNT files in manifest"
 
 mkdir -p assets
 
-# Emit "key<TAB>md5<TAB>size" for each entry so the worker can parse it.
+# Emit "key<TAB>urlencoded_key<TAB>md5<TAB>size" for each entry so the
+# worker can parse it. URL-encode each path segment (split on /) so names
+# with spaces or "&" (e.g. "Keyboard & Mouse/Default/..." under
+# kenney_input-prompts) resolve correctly against the R2 public URL.
 WORK="$(mktemp)"
 trap 'rm -f "$TREE_FILE" "$WORK"' EXIT
-jq -r '.files[] | "\(.key)\t\(.md5)\t\(.size)"' "$TREE_FILE" > "$WORK"
+jq -r '.files[] | "\(.key)\t\(.key | split("/") | map(@uri) | join("/"))\t\(.md5)\t\(.size)"' "$TREE_FILE" > "$WORK"
 
 # Map each R2 key prefix to the local directory it should be extracted into.
 # Keep in sync with scripts/publish/sync_tree.ts SYNC_ROOTS and
@@ -69,8 +72,8 @@ export -f dest_for_key
 
 download_one() {
   local line="$1"
-  local key md5 size
-  IFS=$'\t' read -r key md5 size <<< "$line"
+  local key key_enc md5 size
+  IFS=$'\t' read -r key key_enc md5 size <<< "$line"
   local dest
   dest=$(dest_for_key "$key")
   if [[ -z "$dest" ]]; then
@@ -87,7 +90,7 @@ download_one() {
   mkdir -p "$(dirname "$dest")"
   # Retry a couple times for flaky gateways.
   local attempts=0
-  while ! curl -fsS -A "psz-godot-dev-fetch/1.0" -o "$dest" "$BASE/$key"; do
+  while ! curl -fsS -A "psz-godot-dev-fetch/1.0" -o "$dest" "$BASE/$key_enc"; do
     attempts=$((attempts + 1))
     if [[ "$attempts" -ge 3 ]]; then
       echo "  ! failed: $key" >&2

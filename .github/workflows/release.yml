@@ -106,6 +106,12 @@ jobs:
           mkdir -p build/linux
           godot --headless --path . --export-release "Linux x86_64" build/linux/psz-godot.x86_64
 
+      - name: Export Linux arm64 build
+        continue-on-error: true
+        run: |
+          mkdir -p build/linux-arm64
+          godot --headless --path . --export-release "Linux arm64" build/linux-arm64/psz-godot.arm64
+
       - name: Export Windows x86_64 build
         run: |
           mkdir -p build/windows
@@ -127,6 +133,7 @@ jobs:
         run: |
           cd build/web && zip -r ../../psz-godot-web.zip . && cd ../..
           cd build/linux && zip -r ../../psz-godot-linux-x86_64.zip . && cd ../..
+          [ -d build/linux-arm64 ] && cd build/linux-arm64 && zip -r ../../psz-godot-linux-arm64.zip . && cd ../.. || true
           cd build/windows && zip -r ../../psz-godot-windows-x86_64.zip . && cd ../..
           [ -f build/macos/psz-godot.zip ] && cp build/macos/psz-godot.zip psz-godot-macos.zip || true
 
@@ -140,6 +147,7 @@ jobs:
           files: |
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
+            psz-godot-linux-arm64.zip
             psz-godot-windows-x86_64.zip
             psz-godot-macos.zip
             build/android/psz-godot.apk
@@ -155,6 +163,7 @@ jobs:
           files: |
             psz-godot-web.zip
             psz-godot-linux-x86_64.zip
+            psz-godot-linux-arm64.zip
             psz-godot-windows-x86_64.zip
             psz-godot-macos.zip
             build/android/psz-godot.apk
