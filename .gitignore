@@ -4,8 +4,12 @@
 /build/
 
 # Game assets live on Cloudflare R2 (see assets_manifest.json for the pack
-# URL and scripts/tools/fetch_assets_dev.sh to populate locally).
-/assets/
+# URL and scripts/tools/fetch_assets_dev.sh to populate locally). Kenney CC0
+# packs are vendored in-tree as exceptions so contributors don't need to
+# fetch them — see README credits.
+/assets/*
+!/assets/kenney_input-prompts/
+!/assets/kenney_nature-pack/
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
 /web/public/psobb_sfx/
 

@@ -29,6 +29,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const REPO_ROOT = resolve(__dirname, "../..");
 
+// Subdirectory names (relative to a SYNC_ROOTS entry) that are vendored
+// in-tree and must never be re-uploaded to R2. Match against the relative
+// path's first segment when walking. Keep in sync with the LOCAL_ONLY_PREFIXES
+// in web/src/utils/assets.ts.
+const VENDORED_SKIPS = new Set<string>([
+  "kenney_input-prompts",
+  "kenney_nature-pack",
+]);
+
 // (local dir → R2 key prefix) pairs. Each root is walked, hashed, diffed,
 // and uploaded into its R2 prefix. Adding a new root here is the only
 // code-side change needed to pull another tree into the pipeline.
@@ -92,11 +101,12 @@ function contentTypeFor(path: string): string {
   }
 }
 
-async function* walkFiles(dir: string): AsyncGenerator<string> {
+async function* walkFiles(dir: string, depth = 0): AsyncGenerator<string> {
   const entries = await readdir(dir, { withFileTypes: true });
   for (const e of entries) {
+    if (depth === 0 && e.isDirectory() && VENDORED_SKIPS.has(e.name)) continue;
     const p = join(dir, e.name);
-    if (e.isDirectory()) yield* walkFiles(p);
+    if (e.isDirectory()) yield* walkFiles(p, depth + 1);
     else if (e.isFile()) yield p;
   }
 }
