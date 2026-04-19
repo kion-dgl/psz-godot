@@ -17,10 +17,20 @@
 // scripts/tools/fetch_assets_dev.sh's prefix → local-dir mapping.
 const CDN_PREFIXES = ['assets/', 'psobb_sfx/', 'weapons/'];
 
+// Vendored CC0 packs that live in the repo, not on R2. Bypass the CDN even
+// when VITE_ASSETS_BASE is set so they resolve through web/public symlinks.
+const LOCAL_ONLY_PREFIXES = [
+  'assets/kenney_input-prompts/',
+  'assets/kenney_nature-pack/',
+];
+
 export function assetUrl(path: string): string {
   const base = import.meta.env.BASE_URL || '/';
   const cdn = (import.meta.env.VITE_ASSETS_BASE || '').replace(/\/$/, '');
   const clean = path.startsWith('/') ? path.slice(1) : path;
+  if (LOCAL_ONLY_PREFIXES.some((p) => clean.startsWith(p))) {
+    return `${base}${clean}`;
+  }
   if (cdn && CDN_PREFIXES.some((p) => clean.startsWith(p))) {
     return `${cdn}/${clean}`;
   }

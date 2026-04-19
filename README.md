@@ -61,7 +61,7 @@ _TODO — add a representative screenshot of the title screen or a combat moment
 
 - **Phantasy Star Zero** original game by SEGA / Sonic Team
 - Extensive sound work and playtest feedback from the PSO community on the project Discord
-- **Input Prompts** by [Kenney](https://kenney.nl/assets/input-prompts) — CC0 (public domain)
+- **Input Prompts** and **Nature Kit** by [Kenney](https://kenney.nl/assets/nature-kit) — CC0 (public domain)
 - Character-portrait art by **Rozalin**
 - Runs on [Godot 4.5](https://godotengine.org/) — thanks to the Godot contributors and maintainers
 
