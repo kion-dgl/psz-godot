@@ -33,9 +33,20 @@ const PLATFORM_FALLBACK := "linux-x86_64"
 
 var _http: HTTPRequest
 var _total_bytes: int = 0
+# Hosts that returned response_code 0 (TLS handshake or network failure).
+# Once blacklisted, remaining URLs to that host are skipped for this run, so
+# we don't pay a multi-second TLS timeout for every pack. Most commonly hit
+# on Windows builds where Godot 4.5.1's bundled mbedTLS can't negotiate with
+# Cloudflare R2 (MBEDTLS_ERR_SSL_FATAL_ALERT_MESSAGE / -30592). The Arweave
+# mirrors continue to work, so bootstrap still completes.
+var _bad_hosts: Dictionary = {}
 
 
 func _ready() -> void:
+	var version: String = str(ProjectSettings.get_setting("application/config/version", "?"))
+	print("[bootstrap] psz-godot %s on %s/%s (Godot %s)" % [
+		version, OS.get_name(), Engine.get_architecture_name(), Engine.get_version_info().get("string", "?")
+	])
 	_title.text = "Phantasy Star Zero"
 	_status.text = "Starting..."
 	_progress.value = 0
@@ -138,6 +149,10 @@ func _download_first_available(urls: Array, cache_path: String) -> bool:
 	for attempt in HTTP_MAX_ATTEMPTS:
 		for raw_url in urls:
 			var url: String = _resolve_url(str(raw_url))
+			var host: String = _url_host(url)
+			if host != "" and _bad_hosts.has(host):
+				print("[bootstrap] skipping %s (host previously failed this run)" % url)
+				continue
 			print("[bootstrap] trying %s (attempt %d)" % [url, attempt + 1])
 			if url.begins_with("file://"):
 				if await _copy_local(url, cache_path):
@@ -217,8 +232,27 @@ func _http_download(url: String, cache_path: String) -> bool:
 	var response_code: int = int(done["response_code"])
 	if response_code != 200:
 		push_warning("[bootstrap] http %d on %s" % [response_code, url])
+		# response_code == 0 means the request never got an HTTP reply — TLS
+		# handshake aborted, DNS failure, or connection reset. Blacklist the
+		# host so subsequent packs don't repeat the multi-second timeout.
+		if response_code == 0:
+			var host: String = _url_host(url)
+			if host != "":
+				_bad_hosts[host] = true
+				print("[bootstrap] blacklisting host %s for this session" % host)
 		return false
 	return true
+
+
+func _url_host(url: String) -> String:
+	var rest: String = url
+	var scheme_idx: int = url.find("://")
+	if scheme_idx >= 0:
+		rest = url.substr(scheme_idx + 3)
+	var slash: int = rest.find("/")
+	if slash >= 0:
+		rest = rest.substr(0, slash)
+	return rest
 
 
 func _verify_hash(path: String, expected_hex: String) -> bool:
