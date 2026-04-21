@@ -54,7 +54,7 @@ const SYNC_ROOTS: Array<{ localDir: string; r2Prefix: string }> = [
   // them; otherwise this entry is skipped at run time.
   {
     localDir: resolve(REPO_ROOT, "../psz-sketch/public/weapons"),
-    r2Prefix: "weapons/",
+    r2Prefix: "assets/weapons/",
   },
 ];
 
