@@ -66,6 +66,15 @@ jobs:
       - name: Validate quest JSON schema
         run: python3 scripts/tools/validate_quests.py
 
+  check-asset-refs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify res://assets/ refs resolve in asset_tree.txt
+        run: python3 scripts/tools/check_asset_refs.py
+
   verify-assets:
     runs-on: ubuntu-latest
     timeout-minutes: 20

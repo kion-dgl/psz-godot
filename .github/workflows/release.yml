@@ -31,6 +31,9 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Check asset references match published pack
+        run: python3 scripts/tools/check_asset_refs.py
+
       - name: Setup Godot
         uses: chickensoft-games/setup-godot@v2
         with:
