@@ -15,7 +15,7 @@
 // Prefixes whose content lives on the CDN when VITE_ASSETS_BASE is set.
 // Keep in sync with scripts/publish/sync_tree.ts SYNC_ROOTS and
 // scripts/tools/fetch_assets_dev.sh's prefix → local-dir mapping.
-const CDN_PREFIXES = ['assets/', 'weapons/'];
+const CDN_PREFIXES = ['assets/'];
 
 // Vendored CC0 packs that live in the repo, not on R2. Bypass the CDN even
 // when VITE_ASSETS_BASE is set so they resolve through web/public symlinks.

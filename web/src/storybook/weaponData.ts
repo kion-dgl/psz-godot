@@ -1,6 +1,6 @@
 /**
  * Weapon Gallery Data — uses psz-sketch weapon assets via symlink.
- * Weapon GLBs at /weapons/{id}/{id}/{variant}/{variant}.glb
+ * Weapon GLBs at /assets/weapons/{id}/{id}/{variant}/{variant}.glb
  */
 
 import { assetUrl } from '../utils/assets';
@@ -60,17 +60,17 @@ export function getWeaponRarity(weaponId: string): { label: string; color: strin
 
 export function getWeaponGlbPath(weaponId: string, variant: string): string {
   const id = weaponId.toLowerCase();
-  return assetUrl(`/weapons/${id}/${id}/${variant}/${variant}.glb`);
+  return assetUrl(`/assets/weapons/${id}/${id}/${variant}/${variant}.glb`);
 }
 
 export function getWeaponTexturePath(weaponId: string, variant: string): string {
   const id = weaponId.toLowerCase();
-  return assetUrl(`/weapons/${id}/${id}/${variant}/${variant}.png`);
+  return assetUrl(`/assets/weapons/${id}/${id}/${variant}/${variant}.png`);
 }
 
 export function getWeaponInfoPath(weaponId: string): string {
   const id = weaponId.toLowerCase();
-  return assetUrl(`/weapons/${id}/info.json`);
+  return assetUrl(`/assets/weapons/${id}/info.json`);
 }
 
 export const ALL_WEAPON_IDS = [
