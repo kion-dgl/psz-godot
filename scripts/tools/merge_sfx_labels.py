@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-"""Merge authoritative SE_* names from the PSO:BB reverse-engineering TSV
-into data/sfx_labels.json.
+"""Merge authoritative SE_* names from a PSO:BB SE→WAV mapping TSV into
+data/sfx_labels.json.
 
-Source TSV (columns: pac, wav_file, entry_idx, se_id, se_name):
-  http://174.138.36.4/logic-findings/se-to-wav-exact.tsv
-Browsable rendering:
-  http://174.138.36.4/findings/sounds/se-to-wav/
+Expected TSV columns: pac, wav_file, entry_idx, se_id, se_name
 
 Behavior:
 - For every row in the TSV, upsert an entry keyed by wav_file.

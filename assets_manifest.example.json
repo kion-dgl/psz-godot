@@ -1,14 +1,11 @@
 {
-  "version": "0.20.4",
+  "version": "0.22.1",
   "godot_version": "4.5",
-  "packs": [
-    {
-      "name": "assets",
-      "sha256": "5d76f31b4613788c8069d426ef36007a6673cbd5df03470e26b1f4b895ce9361",
-      "size": 367459264,
-      "urls": [
-        "file://LOCAL_DIST/assets.pck"
-      ]
-    }
-  ]
+  "pack": {
+    "sha256": "5d76f31b4613788c8069d426ef36007a6673cbd5df03470e26b1f4b895ce9361",
+    "size": 367459264,
+    "urls": [
+      "file://LOCAL_DIST/assets.pck"
+    ]
+  }
 }
