@@ -64,7 +64,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .godot/imported
-          key: godot-import-${{ hashFiles('**/*.import') }}
+          key: godot-import-${{ hashFiles('**/*.import', 'asset_tree.txt') }}
           restore-keys: godot-import-
 
       - name: Cache Godot export templates
@@ -72,6 +72,14 @@ jobs:
         with:
           path: ~/.local/share/godot/export_templates
           key: godot-templates-4.5.1
+
+      - name: Fetch assets for UID table
+        # exclude_filter drops the actual asset bytes from the exe, but the
+        # uid_cache.bin still needs entries for every res://assets/ path or
+        # runtime UID-based lookups fail with "Cannot get class ''" after the
+        # separately-delivered pack mounts (root cause of #158 / #160 on CI
+        # builds where assets/ was otherwise never present at export time).
+        run: bash scripts/tools/fetch_assets_dev.sh
 
       - name: Import project
         run: godot --headless --path . --import --quit || true
