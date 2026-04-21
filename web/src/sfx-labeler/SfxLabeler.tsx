@@ -102,7 +102,7 @@ export default function SfxLabeler() {
   // Load file list from manifest
   const [manifest, setManifest] = useState<Record<string, string[]>>({});
   useEffect(() => {
-    fetch(assetUrl('psobb_sfx/manifest.json'))
+    fetch(assetUrl('assets/psobb_sfx/manifest.json'))
       .then(r => r.json())
       .then(data => setManifest(data))
       .catch(() => {});
@@ -123,7 +123,7 @@ export default function SfxLabeler() {
     if (audioRef.current) {
       audioRef.current.pause();
     }
-    const url = assetUrl(`psobb_sfx/${category}/${file}`);
+    const url = assetUrl(`assets/psobb_sfx/${category}/${file}`);
     const audio = new Audio(url);
     audioRef.current = audio;
     setPlaying(file);

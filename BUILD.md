@@ -17,7 +17,7 @@ cd psz-godot
 scripts/tools/fetch_assets_dev.sh
 ```
 
-The fetch script reads `assets_manifest.json`, downloads every file listed in `assets_tree.json` from the public R2 URL, verifies md5, and drops everything into `/assets/` and `/web/public/psobb_sfx/`. Subsequent runs only re-download what's changed.
+The fetch script reads `assets_manifest.json`, downloads every file listed in `assets_tree.json` from the public R2 URL, verifies md5, and drops everything into `/assets/` and `/web/public/assets/psobb_sfx/`. Subsequent runs only re-download what's changed.
 
 Once `/assets/` is populated, open the project in the Godot editor and hit **F5**.
 

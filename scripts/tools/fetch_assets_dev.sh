@@ -62,8 +62,8 @@ jq -r '.files[] | "\(.key)\t\(.key | split("/") | map(@uri) | join("/"))\t\(.md5
 dest_for_key() {
   local key="$1"
   case "$key" in
+    assets/psobb_sfx/*) echo "web/public/assets/psobb_sfx/${key#assets/psobb_sfx/}" ;;
     assets/*) echo "assets/${key#assets/}" ;;
-    psobb_sfx/*) echo "web/public/psobb_sfx/${key#psobb_sfx/}" ;;
     # PSZ weapons live in the sibling psz-sketch checkout. Skip gracefully
     # if the sibling checkout isn't present — not every dev needs it.
     weapons/*)
@@ -129,4 +129,4 @@ if [[ "$FAILS" -ne 0 ]]; then
   exit 1
 fi
 
-echo "✓ local trees in sync ($FILE_COUNT files: /assets/ + web/public/psobb_sfx/)"
+echo "✓ local trees in sync ($FILE_COUNT files: /assets/ + web/public/assets/psobb_sfx/)"
