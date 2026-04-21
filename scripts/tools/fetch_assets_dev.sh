@@ -65,12 +65,14 @@ dest_for_key() {
     assets/psobb_sfx/*) echo "web/public/assets/psobb_sfx/${key#assets/psobb_sfx/}" ;;
     assets/*) echo "assets/${key#assets/}" ;;
     # PSZ weapons live in the sibling psz-sketch checkout. Skip gracefully
-    # if the sibling checkout isn't present — not every dev needs it.
+    # if the sibling checkout isn't present — CI and most devs don't have
+    # it. `__SKIP__` is a sentinel for download_one() to return 0 instead
+    # of counting as an error.
     weapons/*)
       if [ -d "../psz-sketch/public/weapons" ]; then
         echo "../psz-sketch/public/weapons/${key#weapons/}"
       else
-        echo ""
+        echo "__SKIP__"
       fi
       ;;
     *) echo "" ;;
@@ -85,6 +87,9 @@ download_one() {
   IFS=$'\t' read -r key key_enc md5 size <<< "$line"
   local dest
   dest=$(dest_for_key "$key")
+  if [[ "$dest" == "__SKIP__" ]]; then
+    return 0
+  fi
   if [[ -z "$dest" ]]; then
     echo "  ! unmapped prefix: $key" >&2
     return 1
