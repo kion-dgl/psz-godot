@@ -5,7 +5,10 @@
     "sha256": "0ec7970c648d430546d28b16cc6d720f4e4aa5e0f87b3c72a7e7d44b967d88d6",
     "size": 264016348,
     "urls": [
-      "https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev/packs/assets-0ec7970c648d.pck"
+      "https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev/packs/assets-0ec7970c648d.pck",
+      "https://arweave.net/me3VnJ89t9IaBBbVaHtDQ0nGnuq1aLnsnXYV-XSydiY",
+      "https://ar-io.dev/me3VnJ89t9IaBBbVaHtDQ0nGnuq1aLnsnXYV-XSydiY",
+      "https://permagate.io/me3VnJ89t9IaBBbVaHtDQ0nGnuq1aLnsnXYV-XSydiY"
     ]
   }
 }
