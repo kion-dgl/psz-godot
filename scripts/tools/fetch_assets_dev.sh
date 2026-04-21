@@ -19,7 +19,7 @@ cd "$REPO_ROOT"
 
 DEFAULT_BASE="https://pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev"
 BASE="$DEFAULT_BASE"
-PARALLEL=16
+PARALLEL=8
 FORCE=0
 
 while [[ $# -gt 0 ]]; do
@@ -101,15 +101,19 @@ download_one() {
     fi
   fi
   mkdir -p "$(dirname "$dest")"
-  # Retry a couple times for flaky gateways.
+  # curl --retry-all-errors (7.71+) retries on any transient failure including
+  # 429 rate-limits, with exponential backoff. Cloudflare R2 rate-limits
+  # aggressive parallel fetches, so we need backoff here, not just an outer
+  # attempt loop.
   local attempts=0
-  while ! curl -fsS -A "psz-godot-dev-fetch/1.0" -o "$dest" "$BASE/$key_enc"; do
+  while ! curl -fsS --retry 6 --retry-delay 2 --retry-all-errors \
+       -A "psz-godot-dev-fetch/1.0" -o "$dest" "$BASE/$key_enc"; do
     attempts=$((attempts + 1))
     if [[ "$attempts" -ge 3 ]]; then
       echo "  ! failed: $key" >&2
       return 1
     fi
-    sleep 2
+    sleep 5
   done
 }
 
