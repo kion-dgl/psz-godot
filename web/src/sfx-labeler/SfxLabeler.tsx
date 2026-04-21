@@ -1,7 +1,8 @@
 /**
  * SfxLabeler — Browse and label PSOBB sound effects.
  *
- * Loads WAV files from web/public/psobb_sfx/{category}/*.wav,
+ * Loads WAV files from web/public/assets/psobb_sfx/{category}/*.wav
+ * (served via /assets/psobb_sfx/... through assetUrl() → CDN in prod),
  * lets you play them, assign labels (e.g. "saber_swing_1", "menu_cursor"),
  * and export the mapping as JSON.
  */
@@ -102,7 +103,7 @@ export default function SfxLabeler() {
   // Load file list from manifest
   const [manifest, setManifest] = useState<Record<string, string[]>>({});
   useEffect(() => {
-    fetch(assetUrl('psobb_sfx/manifest.json'))
+    fetch(assetUrl('assets/psobb_sfx/manifest.json'))
       .then(r => r.json())
       .then(data => setManifest(data))
       .catch(() => {});
@@ -123,7 +124,7 @@ export default function SfxLabeler() {
     if (audioRef.current) {
       audioRef.current.pause();
     }
-    const url = assetUrl(`psobb_sfx/${category}/${file}`);
+    const url = assetUrl(`assets/psobb_sfx/${category}/${file}`);
     const audio = new Audio(url);
     audioRef.current = audio;
     setPlaying(file);

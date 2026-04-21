@@ -46,7 +46,7 @@ const VENDORED_SKIPS = new Set<string>([
 // and scripts/tools/fetch_assets_dev.sh's dest_dir_for().
 const SYNC_ROOTS: Array<{ localDir: string; r2Prefix: string }> = [
   { localDir: resolve(REPO_ROOT, "assets"), r2Prefix: "assets/" },
-  { localDir: resolve(REPO_ROOT, "web/public/psobb_sfx"), r2Prefix: "psobb_sfx/" },
+  { localDir: resolve(REPO_ROOT, "web/public/assets/psobb_sfx"), r2Prefix: "assets/psobb_sfx/" },
   // PSZ weapon catalog (info.json + GLBs + PNGs) pulled in from a sibling
   // checkout of kion-dgl/psz-sketch. ~11 MB total. Powers the /storybook/weapons
   // page and the animation-storybook weapon-switch models. Maintainers need to

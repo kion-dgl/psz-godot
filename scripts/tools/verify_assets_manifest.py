@@ -145,10 +145,10 @@ def verify_pack(pack: dict, download: bool) -> bool:
     return False
 
 
-def expand_pack_entries(pack: dict) -> list[dict]:
-    """A manifest pack is either flat (universal) or per-platform. Return a
-    list of pseudo-entries for verification, each with a synthetic name."""
-    name = pack.get("name", "<unnamed>")
+def expand_pack_entries(pack: dict, name: str = "assets") -> list[dict]:
+    """A manifest pack entry is flat (new single-pack shape) or per-platform
+    (legacy). Return a list of pseudo-entries for verification, each with a
+    synthetic name."""
     if "platforms" in pack:
         out = []
         for platform, entry in pack["platforms"].items():
@@ -180,15 +180,18 @@ def main() -> int:
         print(f"{MANIFEST} missing — nothing to verify")
         return 0
     data = json.loads(MANIFEST.read_text())
-    packs = data.get("packs", [])
-    if not packs:
-        print("manifest has no packs — skipping")
-        return 0
-
-    # Flatten the matrix — verify every (pack, platform) combination.
+    # New shape: {"pack": {...}} — single universal pack.
+    # Legacy shape: {"packs": [{...}, ...]} — kept for graceful handling if
+    # an old tree is re-verified.
     entries = []
-    for pack in packs:
-        entries.extend(expand_pack_entries(pack))
+    if "pack" in data:
+        entries.extend(expand_pack_entries(data["pack"]))
+    elif "packs" in data:
+        for i, pack in enumerate(data["packs"]):
+            entries.extend(expand_pack_entries(pack, pack.get("name", f"pack{i}")))
+    if not entries:
+        print("manifest has no pack entry — skipping")
+        return 0
 
     mode = "full (download + hash)" if args.download else "url check only"
     print(f"Verifying {len(entries)} pack entry/entries from {MANIFEST.name} — {mode}")

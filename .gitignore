@@ -11,7 +11,7 @@
 !/assets/kenney_input-prompts/
 !/assets/kenney_nature-pack/
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
-/web/public/psobb_sfx/
+/web/public/assets/psobb_sfx/
 
 # Web app
 web/node_modules/

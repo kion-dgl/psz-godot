@@ -159,9 +159,9 @@ jobs:
       - name: Build release body (pack URL + sha)
         id: body
         run: |
-          PACK_URL=$(python3 -c "import json; print(json.load(open('assets_manifest.json'))['packs'][0]['urls'][0])")
-          PACK_SHA=$(python3 -c "import json; print(json.load(open('assets_manifest.json'))['packs'][0]['sha256'])")
-          PACK_SIZE_MB=$(python3 -c "import json; print(f\"{json.load(open('assets_manifest.json'))['packs'][0]['size']/1024/1024:.1f}\")")
+          PACK_URL=$(python3 -c "import json; print(json.load(open('assets_manifest.json'))['pack']['urls'][0])")
+          PACK_SHA=$(python3 -c "import json; print(json.load(open('assets_manifest.json'))['pack']['sha256'])")
+          PACK_SIZE_MB=$(python3 -c "import json; print(f\"{json.load(open('assets_manifest.json'))['pack']['size']/1024/1024:.1f}\")")
           {
             echo "## Asset pack"
             echo ""
