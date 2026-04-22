@@ -44,6 +44,7 @@ func _ready() -> void:
 	test_wetlands_field()
 	test_tower_field()
 	test_quest_lifecycle()
+	test_input_config()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -2737,3 +2738,51 @@ func test_quest_lifecycle() -> void:
 	SessionManager._completed_quest.clear()
 	SessionManager._suspended_session.clear()
 	print("")
+
+
+# ── Input scheme regression test ────────────────────────────────
+# SDL's gamepad API pre-normalizes Nintendo A (east) and PlayStation Cross
+# (south) to button index 0 — the "accept" semantic slot. So the only scheme
+# that needs an explicit accept/cancel swap is ds_circle (JP/PSO-style DualSense
+# where the player wants Circle to be accept).
+#
+# This test locks the mapping in place so a future "cleanup" doesn't regress
+# the switch scheme back to double-swapping (which put accept on physical
+# south = Nintendo B — exactly the bug reported by a playtester).
+func test_input_config() -> void:
+	print("── Input scheme bindings ──")
+	var original_scheme: String = InputConfig.current_scheme
+
+	var expected: Dictionary = {
+		"xinput":    {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
+		"switch":    {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
+		"ds_cross":  {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
+		"ds_circle": {"ui_accept": 1, "ui_cancel": 0, "interact": 1},
+	}
+	# Manipulate the scheme in-memory only — going through set_scheme() would
+	# churn the user's on-disk input_config.json during local test runs.
+	for scheme in expected:
+		InputConfig.current_scheme = scheme
+		InputConfig._apply_button_mapping()
+		var exp_buttons: Dictionary = expected[scheme]
+		for action in exp_buttons:
+			var btn: int = _get_joypad_button(action)
+			assert_eq(btn, exp_buttons[action], "%s: %s → button %d" % [scheme, action, exp_buttons[action]])
+
+	# For ds_circle (accept=button 1), action_3 must not also land on button 1
+	# — that would make pressing accept also trigger a palette action.
+	InputConfig.current_scheme = "ds_circle"
+	InputConfig._apply_button_mapping()
+	var a3: int = _get_joypad_button("action_3")
+	assert_true(a3 != 1, "ds_circle: action_3 does not collide with ui_accept (button 1)")
+
+	# Restore original for any tests that run after.
+	InputConfig.current_scheme = original_scheme
+	InputConfig._apply_button_mapping()
+
+
+func _get_joypad_button(action: String) -> int:
+	for e in InputMap.action_get_events(action):
+		if e is InputEventJoypadButton:
+			return e.button_index
+	return -1
