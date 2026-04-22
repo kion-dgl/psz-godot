@@ -1,19 +1,22 @@
 extends Node
 ## InputConfig — stores the active control scheme and persists to user://input_config.json.
-## Control schemes: "keyboard", "kb_mouse", "xinput", "switch"
-## When "switch" is selected, swaps A↔B and X↔Y joypad buttons in the InputMap
-## to match Nintendo physical layout (A=right, B=bottom vs Xbox A=bottom, B=right).
+## Control schemes: "keyboard", "xinput", "switch", "ds_cross", "ds_circle".
+## The three controller schemes all use identical button indices; they differ only in
+## which face button is accept vs cancel (Nintendo swaps A↔B relative to Xbox; the two
+## DualSense schemes let the player pick Cross or Circle as accept). Icon-glyph display
+## will eventually key off the scheme name to show the right label set.
 
 signal scheme_changed(new_scheme: String)
 
 const SAVE_PATH := "user://input_config.json"
 
-const SCHEMES := ["keyboard", "kb_mouse", "xinput", "switch"]
+const SCHEMES := ["keyboard", "xinput", "switch", "ds_cross", "ds_circle"]
 const SCHEME_LABELS := {
 	"keyboard": "Keyboard",
-	"kb_mouse": "KB + Mouse",
 	"xinput": "Xbox / X-Input",
 	"switch": "Switch / Nintendo",
+	"ds_cross": "DualSense (Cross accept)",
+	"ds_circle": "DualSense (Circle accept)",
 }
 
 ## Actions that use face button A (Xbox=0, Switch=1) for confirm/interact
@@ -60,23 +63,30 @@ func is_switch() -> bool:
 	return current_scheme == "switch"
 
 
+func accept_on_east() -> bool:
+	# Schemes where the east face button is "accept" (physical A on Switch, Circle on
+	# Japanese/PSZ-style DualSense). For xinput and ds_cross, accept is south.
+	return current_scheme == "switch" or current_scheme == "ds_circle"
+
+
 func _apply_button_mapping() -> void:
-	## Remap joypad face buttons based on scheme.
-	## Switch layout: physical A is at button index 1, physical B at index 0.
-	if current_scheme == "switch":
-		_set_joypad_button(ACCEPT_ACTIONS, XBOX_B)   # Physical A on Switch = index 1
-		_set_joypad_button(CANCEL_ACTIONS, XBOX_A)    # Physical B on Switch = index 0
-		# Palette: same physical positions as Xbox, different labels
-		# Left face (Y on Switch) = index 2, Bottom (B) = index 0, Right (A) = index 1
-		_set_joypad_button(X_ACTIONS, XBOX_X)         # action_1 → index 2 = Switch Y
-		_set_joypad_button(Y_ACTIONS, XBOX_A)         # action_2 → index 0 = Switch B
-		_set_joypad_button(B_ACTIONS, XBOX_B)         # action_3 → index 1 = Switch A
+	## Remap joypad face buttons based on scheme. All controller families share the
+	## same SDL button indices (0=south, 1=east, 2=west, 3=north); only accept/cancel
+	## placement varies.
+	if accept_on_east():
+		_set_joypad_button(ACCEPT_ACTIONS, XBOX_B)   # east = index 1
+		_set_joypad_button(CANCEL_ACTIONS, XBOX_A)   # south = index 0
+		# Palette uses the three non-accept face buttons: west + south + east
+		_set_joypad_button(X_ACTIONS, XBOX_X)        # action_1 → west
+		_set_joypad_button(Y_ACTIONS, XBOX_A)        # action_2 → south
+		_set_joypad_button(B_ACTIONS, XBOX_B)        # action_3 → east
 	else:
-		_set_joypad_button(ACCEPT_ACTIONS, XBOX_A)    # Standard Xbox layout
-		_set_joypad_button(CANCEL_ACTIONS, XBOX_B)
-		_set_joypad_button(B_ACTIONS, XBOX_B)
-		_set_joypad_button(X_ACTIONS, XBOX_X)
-		_set_joypad_button(Y_ACTIONS, XBOX_Y)
+		_set_joypad_button(ACCEPT_ACTIONS, XBOX_A)   # south = index 0
+		_set_joypad_button(CANCEL_ACTIONS, XBOX_B)   # east = index 1
+		# Palette uses the three non-accept face buttons: west + north + east
+		_set_joypad_button(X_ACTIONS, XBOX_X)        # action_1 → west
+		_set_joypad_button(Y_ACTIONS, XBOX_Y)        # action_2 → north
+		_set_joypad_button(B_ACTIONS, XBOX_B)        # action_3 → east
 
 
 func _set_joypad_button(actions: Array, button_index: int) -> void:
@@ -96,9 +106,32 @@ func _set_joypad_button(actions: Array, button_index: int) -> void:
 
 
 func _save() -> void:
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify({"scheme": current_scheme}))
+	# Read-merge-write so a scheme change never clobbers user-authored fields
+	# (preset, keyboard remaps). Fixes #128.
+	var data: Dictionary = {}
+	if FileAccess.file_exists(SAVE_PATH):
+		var in_file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+		if in_file:
+			var parsed: Variant = JSON.parse_string(in_file.get_as_text())
+			if parsed is Dictionary:
+				data = parsed
+	data["scheme"] = current_scheme
+	var out_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if out_file:
+		out_file.store_string(JSON.stringify(data))
+
+
+func has_saved_config() -> bool:
+	return FileAccess.file_exists(SAVE_PATH)
+
+
+func set_scheme(scheme: String) -> void:
+	if not scheme in SCHEMES:
+		return
+	current_scheme = scheme
+	_apply_button_mapping()
+	scheme_changed.emit(current_scheme)
+	_save()
 
 
 ## Map of web key names to Godot physical keycodes

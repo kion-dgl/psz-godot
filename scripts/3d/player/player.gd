@@ -899,6 +899,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("action_3"):
 		_execute_palette_action(2)
 
+	# Dodge has its own dedicated button (L1 on controller) — no longer on palette
+	if event.is_action_pressed("dodge"):
+		if current_state != PlayerState.DAMAGED and current_state != PlayerState.DOWN:
+			_start_dodge()
+
 	# Handle interact input
 	if event.is_action_pressed("interact"):
 		_try_interact()
@@ -1070,8 +1075,6 @@ func _execute_palette_action(slot: int) -> void:
 			_start_attack()
 		"strong_attack":
 			_start_strong_attack()
-		"dodge":
-			_start_dodge()
 		"monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid":
 			_use_consumable(action_id)
 		"kill_all":
