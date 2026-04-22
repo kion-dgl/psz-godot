@@ -7,7 +7,11 @@ const MOVE_SPEED: float = 6.0
 const SPRINT_SPEED: float = 8.0
 const WALK_SPEED: float = 2.5
 const WALK_TO_RUN_DELAY: float = 1.2
-const ROTATE_SPEED: float = 5.0
+const ROTATE_SPEED: float = 10.0
+## Minimum speed multiplier while rotating — at facing-error PI (180°), speed scales
+## to this value, at 0° it's 1.0. Stops the "skate forward during a 180° flick" feel
+## by slowing the character when their facing is far from input direction.
+const TURN_SPEED_FLOOR: float = 0.3
 const GRAVITY: float = 20.0
 const FALL_RESPAWN_Y: float = -10.0  # Respawn if player falls below this
 
@@ -966,6 +970,11 @@ func _handle_movement(delta: float) -> void:
 			speed = WALK_SPEED
 		elif current_state == PlayerState.SPRINTING:
 			speed = SPRINT_SPEED
+
+		# Scale speed by facing-error so sharp turns tighten instead of skating
+		# forward in the old direction while rotation catches up.
+		var turn_factor: float = lerpf(TURN_SPEED_FLOOR, 1.0, (cos(rot_diff) + 1.0) * 0.5)
+		speed *= turn_factor
 
 		# Calculate desired movement
 		var move_dir := Vector3(sin(player_rotation), 0, cos(player_rotation))
