@@ -64,22 +64,25 @@ func is_switch() -> bool:
 
 
 func accept_on_east() -> bool:
-	# Schemes where the east face button is "accept" (physical A on Switch, Circle on
-	# Japanese/PSZ-style DualSense). For xinput and ds_cross, accept is south.
-	return current_scheme == "switch" or current_scheme == "ds_circle"
+	## Only ds_circle needs the physical accept/cancel swap. SDL's gamepad API
+	## already normalizes Nintendo A (east) and PlayStation Cross (south) to
+	## button 0 — the "accept" semantic slot — so xinput / switch / ds_cross
+	## all share the default "accept=south" layout from the hardware's view.
+	## ds_circle is the explicit JP/PSO-style override where Circle is accept.
+	return current_scheme == "ds_circle"
 
 
 func _apply_button_mapping() -> void:
-	## Remap joypad face buttons based on scheme. All controller families share the
-	## same SDL button indices (0=south, 1=east, 2=west, 3=north); only accept/cancel
-	## placement varies.
+	## Remap joypad face buttons based on scheme. SDL gamepad indices are
+	## 0=south, 1=east, 2=west, 3=north in the controller's native layout, so
+	## only ds_circle needs to swap accept/cancel.
 	if accept_on_east():
 		_set_joypad_button(ACCEPT_ACTIONS, XBOX_B)   # east = index 1
 		_set_joypad_button(CANCEL_ACTIONS, XBOX_A)   # south = index 0
-		# Palette uses the three non-accept face buttons: west + south + east
+		# Palette uses the three non-accept face buttons: west + south + north
 		_set_joypad_button(X_ACTIONS, XBOX_X)        # action_1 → west
 		_set_joypad_button(Y_ACTIONS, XBOX_A)        # action_2 → south
-		_set_joypad_button(B_ACTIONS, XBOX_B)        # action_3 → east
+		_set_joypad_button(B_ACTIONS, XBOX_Y)        # action_3 → north
 	else:
 		_set_joypad_button(ACCEPT_ACTIONS, XBOX_A)   # south = index 0
 		_set_joypad_button(CANCEL_ACTIONS, XBOX_B)   # east = index 1

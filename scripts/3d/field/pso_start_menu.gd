@@ -157,10 +157,14 @@ func _tick_nav_repeat(delta: float) -> void:
 
 
 func _dispatch_ui_action(action: String) -> void:
+	## Route a synthetic press directly to our own input handler. Going through
+	## Input.parse_input_event would mark the action as globally pressed without
+	## a matching release, so Input.is_action_pressed() would return true forever
+	## and _tick_nav_repeat would keep dispatching after the player let go.
 	var ev := InputEventAction.new()
 	ev.action = action
 	ev.pressed = true
-	Input.parse_input_event(ev)
+	_unhandled_input(ev)
 
 
 func open() -> void:
