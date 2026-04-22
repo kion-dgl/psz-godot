@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Pre-push hook — runs the Godot headless test runner so parse errors and
+# regressions are caught locally before they hit CI.
+#
+# Enable for this repo:
+#     git config core.hooksPath .githooks
+#
+# To push without running tests (e.g. docs-only or work-in-progress branch):
+#     git push --no-verify
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT"
+
+if ! command -v godot >/dev/null 2>&1; then
+  echo "pre-push: godot not found on PATH — skipping test run" >&2
+  exit 0
+fi
+
+echo "pre-push: running Godot headless test runner…"
+OUTPUT="$(godot --headless --path . res://scripts/tools/test_runner.tscn 2>&1)"
+STATUS=$?
+
+# Surface the summary regardless of outcome.
+echo "$OUTPUT" | grep -E "RESULTS|FAIL" || true
+
+if [ $STATUS -ne 0 ]; then
+  echo "pre-push: test runner exited with status $STATUS — push blocked" >&2
+  echo "pre-push: full output above; use 'git push --no-verify' to skip" >&2
+  exit $STATUS
+fi
+
+# Belt-and-suspenders: test_runner exit status tracks _fail but some assertion
+# paths only print FAIL without calling get_tree().quit(1), so grep as a backstop.
+if echo "$OUTPUT" | grep -q "FAIL:"; then
+  echo "pre-push: test runner reported failures — push blocked" >&2
+  exit 1
+fi
+
+echo "pre-push: tests passed"
+exit 0

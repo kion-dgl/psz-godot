@@ -45,6 +45,7 @@ func _ready() -> void:
 	test_tower_field()
 	test_quest_lifecycle()
 	test_input_config()
+	test_script_parse()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -2786,3 +2787,46 @@ func _get_joypad_button(action: String) -> int:
 		if e is InputEventJoypadButton:
 			return e.button_index
 	return -1
+
+
+# ── Script parse smoke test ─────────────────────────────────────
+# Walks every .gd file under res://scripts and load()s it. A parse error
+# causes load() to return null and print the error to stderr, so any broken
+# script fails this test — even scripts that aren't referenced by the entry
+# scene (shops, menus opened later at runtime). This is the stop-gap for the
+# common regression where typing a function in one file breaks parsing in a
+# file the test runner doesn't otherwise touch.
+func test_script_parse() -> void:
+	print("── Script parse smoke test ──")
+	var paths: Array = []
+	_collect_gd_files("res://scripts", paths)
+	var failures: int = 0
+	for path in paths:
+		# Skip the test runner itself — it's already running.
+		if path == "res://scripts/tools/test_runner.gd":
+			continue
+		var script: Resource = load(path)
+		if script == null:
+			_fail += 1
+			failures += 1
+			print("  FAIL: Parse error in %s" % path)
+	if failures == 0:
+		_pass += 1
+		print("  PASS: %d scripts parsed cleanly" % paths.size())
+
+
+func _collect_gd_files(dir_path: String, out: Array) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var entry: String = dir.get_next()
+	while entry != "":
+		if not entry.begins_with("."):
+			var sub_path: String = dir_path.path_join(entry)
+			if dir.current_is_dir():
+				_collect_gd_files(sub_path, out)
+			elif entry.ends_with(".gd"):
+				out.append(sub_path)
+		entry = dir.get_next()
+	dir.list_dir_end()

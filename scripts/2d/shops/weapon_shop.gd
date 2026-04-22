@@ -532,15 +532,15 @@ func _refresh_display() -> void:
 # _refresh_display does, which becomes a bottleneck under hold-to-scroll.
 func _update_selection(old_index: int) -> void:
 	if old_index >= 0 and old_index < _pill_nodes.size():
-		var old_pill = _pill_nodes[old_index]
+		var old_pill: Control = _pill_nodes[old_index]
 		if old_pill:
 			old_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(false))
 	if _selected_index >= 0 and _selected_index < _pill_nodes.size():
-		var new_pill = _pill_nodes[_selected_index]
+		var new_pill: Control = _pill_nodes[_selected_index]
 		if new_pill:
 			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
 			# Keep the selected row scrolled into view.
-			var parent := new_pill.get_parent()
+			var parent: Node = new_pill.get_parent()
 			while parent != null and not (parent is ScrollContainer):
 				parent = parent.get_parent()
 			if parent is ScrollContainer:
