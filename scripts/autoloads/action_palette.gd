@@ -10,7 +10,6 @@ const ICON_BASE := "res://assets/hud/"
 const ALL_ACTIONS: Array = [
 	{"id": "attack", "label": "Attack", "short": "Atk", "category": "combat", "icon": "attack.png"},
 	{"id": "strong_attack", "label": "Strong Attack", "short": "S.Atk", "category": "combat", "icon": "strong_attack.png"},
-	{"id": "dodge", "label": "Dodge Roll", "short": "Dodge", "category": "combat", "icon": "dodge.png"},
 	{"id": "monomate", "label": "Monomate", "short": "Mono", "category": "recovery", "icon": "monomate.png"},
 	{"id": "dimate", "label": "Dimate", "short": "Di", "category": "recovery", "icon": "dimate.png"},
 	{"id": "trimate", "label": "Trimate", "short": "Tri", "category": "recovery", "icon": "trimate.png"},
@@ -42,7 +41,7 @@ const ALL_ACTIONS: Array = [
 
 const DEFAULT_PAGES: Array = [
 	["attack", "strong_attack", "monomate"],
-	["attack", "dodge", "dimate"],
+	["attack", "foie", "dimate"],
 ]
 
 var pages: Array = []

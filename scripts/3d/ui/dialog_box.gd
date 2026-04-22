@@ -84,6 +84,8 @@ func show_dialog(pages: Array) -> void:
 
 	_pages = pages
 	_current_page = 0
+	if not _active:
+		GameState.push_modal()
 	_active = true
 	visible = true
 	SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
@@ -113,6 +115,8 @@ func _advance() -> void:
 
 
 func _close() -> void:
+	if _active:
+		GameState.pop_modal()
 	_active = false
 	visible = false
 	_pages.clear()

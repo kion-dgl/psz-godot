@@ -226,3 +226,20 @@ func _refresh_display() -> void:
 
 	if selected_pill != null:
 		scroll.ensure_control_visible.call_deferred(selected_pill)
+
+
+# ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
+var _nav: NavRepeat = null
+
+
+func _process(delta: float) -> void:
+	if _nav == null:
+		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
+	_nav.tick(delta)
+
+
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)

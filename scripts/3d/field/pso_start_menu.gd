@@ -157,20 +157,37 @@ func _tick_nav_repeat(delta: float) -> void:
 
 
 func _dispatch_ui_action(action: String) -> void:
+	## Route a synthetic press directly to our own input handler. Going through
+	## Input.parse_input_event would mark the action as globally pressed without
+	## a matching release, so Input.is_action_pressed() would return true forever
+	## and _tick_nav_repeat would keep dispatching after the player let go.
 	var ev := InputEventAction.new()
 	ev.action = action
 	ev.pressed = true
-	Input.parse_input_event(ev)
+	_unhandled_input(ev)
 
 
 func open() -> void:
 	if _is_open:
 		return
 	SfxManager.play("res://assets/sfx/ui/menu_open.wav")
+	GameState.push_modal()
 	_is_open = true
 	visible = true
 	_mode = Mode.MAIN
 	_menu_idx = 0
+	# Reset all per-mode cursor state so reopening always lands on a clean
+	# main menu and doesn't resume in a sub-mode the player already backed out of.
+	_sub_idx = 0
+	_equip_slot_idx = 0
+	_equip_item_idx = 0
+	_pal_page_idx = 0
+	_pal_slot_idx = 0
+	_mag_idx = 0
+	_mag_feed_idx = 0
+	_options_idx = 0
+	_item_scroll = 0.0
+	_action_message = ""
 	_canvas.queue_redraw()
 	print("[PsoStartMenu] Opened")
 
@@ -179,6 +196,7 @@ func close() -> void:
 	if not _is_open:
 		return
 	SfxManager.play("res://assets/sfx/ui/menu_close.wav")
+	GameState.pop_modal()
 	_is_open = false
 	visible = false
 	closed.emit()
@@ -206,18 +224,21 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	# ── Menu is open — consume ALL input except movement ──
 
-	# Close menu — only on joypad Start button, or keyboard Esc when in MAIN mode
-	# (Enter maps to "start" action so we must NOT close on Enter)
+	# Joypad Start button always closes the menu, regardless of mode.
+	# Checked first because Start and pause share button index 6 — if the pause
+	# branch ran first in a sub-mode it would fall through without closing.
+	# Enter also maps to the "start" action so we guard on InputEventJoypadButton
+	# to keep Enter usable as accept inside menus.
+	if event is InputEventJoypadButton and event.is_action_pressed("start"):
+		close()
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("pause"):
 		if _mode == Mode.MAIN:
 			close()
 			get_viewport().set_input_as_handled()
 			return
 		# In sub-menus, Esc/pause acts as back (falls through to mode handler)
-	elif event.is_action_pressed("start") and event is InputEventJoypadButton:
-		close()
-		get_viewport().set_input_as_handled()
-		return
 
 	# Let movement actions pass through (WASD + left stick)
 	if event.is_action("move_forward") or event.is_action("move_backward") or \

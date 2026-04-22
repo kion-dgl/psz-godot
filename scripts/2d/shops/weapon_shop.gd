@@ -18,6 +18,13 @@ var _sell_items: Array = []
 var _mode_bar: HBoxContainer
 var _portrait: Control
 
+# Cached pill nodes from the last _refresh_display, one entry per list item
+# (null for section headers). Allows cursor moves to toggle selection styling
+# without rebuilding the whole list — critical for hold-scroll performance
+# because the weapon list can be large and rebuild+detail+registry lookups
+# take several ms per cursor tick.
+var _pill_nodes: Array = []
+
 ## Set true to show all weapon tiers in the shop (for testing)
 const DEBUG_ALL_TIERS := true
 
@@ -320,9 +327,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		_confirming = false
 		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
+		var old_index: int = _selected_index
 		_selected_index = wrapi(_selected_index + dir, 0, maxi(_get_current_list().size(), 1))
 		_update_hint()
-		_refresh_display()
+		_update_selection(old_index)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
@@ -426,6 +434,8 @@ func _refresh_display() -> void:
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
 
+	_pill_nodes.clear()
+	_pill_nodes.resize(list.size())
 	var selected_pill: Control = null
 
 	if list.is_empty():
@@ -448,6 +458,7 @@ func _refresh_display() -> void:
 				str(item.get("name", "???")) + equip_tag + qty_str,
 				i == _selected_index, "%d M" % sell_price, text_color)
 			vbox.add_child(pill)
+			_pill_nodes[i] = pill
 			if i == _selected_index:
 				selected_pill = pill
 	else:
@@ -503,6 +514,7 @@ func _refresh_display() -> void:
 				str(item.get("name", "???")) + stars + held_str + restriction_tag,
 				i == _selected_index, "%d M" % cost, text_color)
 			vbox.add_child(pill)
+			_pill_nodes[i] = pill
 			if i == _selected_index:
 				selected_pill = pill
 
@@ -512,6 +524,27 @@ func _refresh_display() -> void:
 	if selected_pill != null:
 		scroll.ensure_control_visible.call_deferred(selected_pill)
 
+	_refresh_detail()
+
+
+# Lightweight cursor-move update: swap the selected stylebox on the affected
+# pills and re-render the detail panel. Avoids the full list rebuild that
+# _refresh_display does, which becomes a bottleneck under hold-to-scroll.
+func _update_selection(old_index: int) -> void:
+	if old_index >= 0 and old_index < _pill_nodes.size():
+		var old_pill: Control = _pill_nodes[old_index]
+		if old_pill:
+			old_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(false))
+	if _selected_index >= 0 and _selected_index < _pill_nodes.size():
+		var new_pill: Control = _pill_nodes[_selected_index]
+		if new_pill:
+			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
+			# Keep the selected row scrolled into view.
+			var parent: Node = new_pill.get_parent()
+			while parent != null and not (parent is ScrollContainer):
+				parent = parent.get_parent()
+			if parent is ScrollContainer:
+				(parent as ScrollContainer).ensure_control_visible.call_deferred(new_pill)
 	_refresh_detail()
 
 
@@ -589,3 +622,20 @@ func _get_meseta() -> int:
 	if character:
 		return int(character.get("meseta", 0))
 	return 0
+
+
+# ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
+var _nav: NavRepeat = null
+
+
+func _process(delta: float) -> void:
+	if _nav == null:
+		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
+	_nav.tick(delta)
+
+
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)

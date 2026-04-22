@@ -522,13 +522,14 @@ class _ActionPalette extends Control:
 
 	## Swap button icon per scheme
 	const SWAP_ICONS := {
-		"keyboard": "Keyboard & Mouse/Default/keyboard_i.png",
-		"kb_mouse": "Keyboard & Mouse/Default/keyboard_i.png",
-		"xinput":   "Xbox Series/Default/xbox_rb.png",
-		"switch":   "Nintendo Switch/Default/switch_button_r.png",
+		"keyboard":  "Keyboard & Mouse/Default/keyboard_i.png",
+		"xinput":    "Xbox Series/Default/xbox_rb.png",
+		"switch":    "Nintendo Switch/Default/switch_button_r.png",
+		"ds_cross":  "PlayStation Series/Default/playstation_trigger_r1.png",
+		"ds_circle": "PlayStation Series/Default/playstation_trigger_r1.png",
 	}
 	const SWAP_KEY_FALLBACK := {
-		"keyboard": "I", "kb_mouse": "I", "xinput": "RB", "switch": "R",
+		"keyboard": "I", "xinput": "RB", "switch": "R", "ds_cross": "R1", "ds_circle": "R1",
 	}
 
 	var _bg_pill: StyleBoxFlat

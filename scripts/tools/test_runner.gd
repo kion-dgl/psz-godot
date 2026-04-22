@@ -44,6 +44,8 @@ func _ready() -> void:
 	test_wetlands_field()
 	test_tower_field()
 	test_quest_lifecycle()
+	test_input_config()
+	test_script_parse()
 
 	print("\n══════════════════════════════════")
 	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
@@ -2737,3 +2739,94 @@ func test_quest_lifecycle() -> void:
 	SessionManager._completed_quest.clear()
 	SessionManager._suspended_session.clear()
 	print("")
+
+
+# ── Input scheme regression test ────────────────────────────────
+# SDL's gamepad API pre-normalizes Nintendo A (east) and PlayStation Cross
+# (south) to button index 0 — the "accept" semantic slot. So the only scheme
+# that needs an explicit accept/cancel swap is ds_circle (JP/PSO-style DualSense
+# where the player wants Circle to be accept).
+#
+# This test locks the mapping in place so a future "cleanup" doesn't regress
+# the switch scheme back to double-swapping (which put accept on physical
+# south = Nintendo B — exactly the bug reported by a playtester).
+func test_input_config() -> void:
+	print("── Input scheme bindings ──")
+	var original_scheme: String = InputConfig.current_scheme
+
+	var expected: Dictionary = {
+		"xinput":    {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
+		"switch":    {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
+		"ds_cross":  {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
+		"ds_circle": {"ui_accept": 1, "ui_cancel": 0, "interact": 1},
+	}
+	# Manipulate the scheme in-memory only — going through set_scheme() would
+	# churn the user's on-disk input_config.json during local test runs.
+	for scheme in expected:
+		InputConfig.current_scheme = scheme
+		InputConfig._apply_button_mapping()
+		var exp_buttons: Dictionary = expected[scheme]
+		for action in exp_buttons:
+			var btn: int = _get_joypad_button(action)
+			assert_eq(btn, exp_buttons[action], "%s: %s → button %d" % [scheme, action, exp_buttons[action]])
+
+	# For ds_circle (accept=button 1), action_3 must not also land on button 1
+	# — that would make pressing accept also trigger a palette action.
+	InputConfig.current_scheme = "ds_circle"
+	InputConfig._apply_button_mapping()
+	var a3: int = _get_joypad_button("action_3")
+	assert_true(a3 != 1, "ds_circle: action_3 does not collide with ui_accept (button 1)")
+
+	# Restore original for any tests that run after.
+	InputConfig.current_scheme = original_scheme
+	InputConfig._apply_button_mapping()
+
+
+func _get_joypad_button(action: String) -> int:
+	for e in InputMap.action_get_events(action):
+		if e is InputEventJoypadButton:
+			return e.button_index
+	return -1
+
+
+# ── Script parse smoke test ─────────────────────────────────────
+# Walks every .gd file under res://scripts and load()s it. A parse error
+# causes load() to return null and print the error to stderr, so any broken
+# script fails this test — even scripts that aren't referenced by the entry
+# scene (shops, menus opened later at runtime). This is the stop-gap for the
+# common regression where typing a function in one file breaks parsing in a
+# file the test runner doesn't otherwise touch.
+func test_script_parse() -> void:
+	print("── Script parse smoke test ──")
+	var paths: Array = []
+	_collect_gd_files("res://scripts", paths)
+	var failures: int = 0
+	for path in paths:
+		# Skip the test runner itself — it's already running.
+		if path == "res://scripts/tools/test_runner.gd":
+			continue
+		var script: Resource = load(path)
+		if script == null:
+			_fail += 1
+			failures += 1
+			print("  FAIL: Parse error in %s" % path)
+	if failures == 0:
+		_pass += 1
+		print("  PASS: %d scripts parsed cleanly" % paths.size())
+
+
+func _collect_gd_files(dir_path: String, out: Array) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	dir.list_dir_begin()
+	var entry: String = dir.get_next()
+	while entry != "":
+		if not entry.begins_with("."):
+			var sub_path: String = dir_path.path_join(entry)
+			if dir.current_is_dir():
+				_collect_gd_files(sub_path, out)
+			elif entry.ends_with(".gd"):
+				out.append(sub_path)
+		entry = dir.get_next()
+	dir.list_dir_end()
