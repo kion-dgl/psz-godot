@@ -239,3 +239,20 @@ func _add_line(parent: VBoxContainer, text: String) -> void:
 	var label := Label.new()
 	label.text = text
 	parent.add_child(label)
+
+
+# ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
+var _nav: NavRepeat = null
+
+
+func _process(delta: float) -> void:
+	if _nav == null:
+		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
+	_nav.tick(delta)
+
+
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)

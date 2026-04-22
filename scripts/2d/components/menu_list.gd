@@ -9,11 +9,27 @@ var _items: Array[String] = []
 var _disabled: Array[bool] = []
 var _current_index: int = 0
 var _active: bool = true
+var _nav: NavRepeat
 
 
 func _ready() -> void:
 	add_theme_constant_override("separation", 3)
+	_nav = NavRepeat.new(["ui_up", "ui_down"], _on_nav_repeat)
 	_update_display()
+
+
+func _process(delta: float) -> void:
+	if _active and not _items.is_empty():
+		_nav.tick(delta)
+	else:
+		_nav.reset()
+
+
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)
 
 
 func _unhandled_input(event: InputEvent) -> void:
