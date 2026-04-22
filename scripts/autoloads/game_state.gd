@@ -29,6 +29,11 @@ var stored_meseta: int = 0
 # UI state
 var is_pause_menu_open: bool = false
 var active_shop_npc: String = ""
+## Count of open non-pausing modal menus (dialog boxes, start menu, etc.) that
+## should block gameplay input even though the scene tree keeps running. Field
+## pause menu and SceneManager overlays are covered by separate checks in the
+## player's input handler; this is for modals that don't pause or push.
+var modal_stack: int = 0
 
 # Signals (equivalent to Zustand subscriptions)
 signal hp_changed(new_hp: int)
@@ -45,6 +50,18 @@ signal meseta_changed(new_amount: int)
 
 func _ready() -> void:
 	pass
+
+
+func push_modal() -> void:
+	modal_stack += 1
+
+
+func pop_modal() -> void:
+	modal_stack = maxi(0, modal_stack - 1)
+
+
+func is_gameplay_blocked() -> bool:
+	return modal_stack > 0 or is_pause_menu_open or SceneManager.can_pop()
 
 
 # HP/MP setters with signals

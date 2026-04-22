@@ -167,6 +167,7 @@ func open() -> void:
 	if _is_open:
 		return
 	SfxManager.play("res://assets/sfx/ui/menu_open.wav")
+	GameState.push_modal()
 	_is_open = true
 	visible = true
 	_mode = Mode.MAIN
@@ -179,6 +180,7 @@ func close() -> void:
 	if not _is_open:
 		return
 	SfxManager.play("res://assets/sfx/ui/menu_close.wav")
+	GameState.pop_modal()
 	_is_open = false
 	visible = false
 	closed.emit()

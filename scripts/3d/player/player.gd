@@ -890,6 +890,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if current_state == PlayerState.CUTSCENE:
 		return
 
+	# Don't process gameplay input while any menu/dialog/overlay is active.
+	# Menu face-button bindings overlap with palette actions (ui_accept shares
+	# button 1/east with action_3 under switch scheme, etc.), so relying on
+	# set_input_as_handled() alone is fragile — an explicit gate is safer.
+	if GameState.is_gameplay_blocked():
+		return
+
 	# Palette swap
 	if event.is_action_pressed("palette_swap"):
 		ActionPalette.swap_page()
