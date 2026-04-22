@@ -57,6 +57,11 @@ var _mode_bar_parent: Control
 var _tab_row: HBoxContainer
 var _portrait: Control
 
+# Cached pill nodes from the last _refresh_display, one entry per selectable
+# row in the current mode. Allows cursor moves to toggle selection styling
+# without rebuilding the whole list, which tanks framerate under hold-scroll.
+var _pill_nodes: Array = []
+
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeLabel
 @onready var content_panel: PanelContainer = $Panel/VBox/ContentPanel
@@ -204,8 +209,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		var max_items: int = _craft_recipes.size() if _mode == Mode.CRAFT else _board_items.size()
 		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
+		var old_index: int = _selected_index
 		_selected_index = wrapi(_selected_index + dir, 0, maxi(max_items, 1))
-		_refresh_display()
+		_update_selection(old_index, _selected_index)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
@@ -225,12 +231,14 @@ func _handle_photon_input(event: InputEvent) -> void:
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up"):
+		var old_index: int = _photon_index
 		_photon_index = wrapi(_photon_index - 1, 0, PHOTON_OPTIONS.size())
-		_refresh_display()
+		_update_selection(old_index, _photon_index)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
+		var old_index: int = _photon_index
 		_photon_index = wrapi(_photon_index + 1, 0, PHOTON_OPTIONS.size())
-		_refresh_display()
+		_update_selection(old_index, _photon_index)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		_confirm_craft_with_photon()
@@ -600,9 +608,11 @@ func _refresh_display() -> void:
 	vbox.add_theme_constant_override("separation", 3)
 
 	var selected_pill: Control = null
+	_pill_nodes.clear()
 
 	if _selecting_photon:
 		vbox.add_child(PszStyle.create_section_header("Select photon crystal:"))
+		_pill_nodes.resize(PHOTON_OPTIONS.size())
 		for i in range(PHOTON_OPTIONS.size()):
 			var option_name: String = PHOTON_OPTIONS[i]
 			var has_it: bool = Inventory.has_item(PHOTON_IDS[i])
@@ -612,6 +622,7 @@ func _refresh_display() -> void:
 			var count_text: String = "x%d" % Inventory.get_item_count(PHOTON_IDS[i])
 			var pill := PszStyle.create_pill(option_name, i == _photon_index, count_text, text_color)
 			vbox.add_child(pill)
+			_pill_nodes[i] = pill
 			if i == _photon_index:
 				selected_pill = pill
 	elif _mode == Mode.BOARDS:
@@ -620,6 +631,7 @@ func _refresh_display() -> void:
 		if _board_items.is_empty():
 			vbox.add_child(PszStyle.create_pill("(No recipe boards in inventory)", false, "", PszStyle.TEXT_MUTED))
 		else:
+			_pill_nodes.resize(_board_items.size())
 			for i in range(_board_items.size()):
 				var b: Dictionary = _board_items[i]
 				var stars: String = ""
@@ -629,6 +641,7 @@ func _refresh_display() -> void:
 					"%s %s" % [b["name"], stars],
 					i == _selected_index)
 				vbox.add_child(pill)
+				_pill_nodes[i] = pill
 				if i == _selected_index:
 					selected_pill = pill
 	else:
@@ -636,6 +649,7 @@ func _refresh_display() -> void:
 		if _craft_recipes.is_empty():
 			vbox.add_child(PszStyle.create_pill("(No recipes available)", false, "", PszStyle.TEXT_MUTED))
 		else:
+			_pill_nodes.resize(_craft_recipes.size())
 			var last_type_name: String = ""
 			for i in range(_craft_recipes.size()):
 				var entry: Dictionary = _craft_recipes[i]
@@ -671,6 +685,7 @@ func _refresh_display() -> void:
 					"%s %s%s  (%s)" % [weapon_name, stars, uses_tag, ", ".join(ing_parts)],
 					i == _selected_index, "%d M" % recipe.craft_cost, text_color)
 				vbox.add_child(pill)
+				_pill_nodes[i] = pill
 				if i == _selected_index:
 					selected_pill = pill
 
@@ -679,6 +694,25 @@ func _refresh_display() -> void:
 
 	if selected_pill != null:
 		scroll.ensure_control_visible.call_deferred(selected_pill)
+
+
+# Cheap cursor-move update — toggle the selected stylebox on the old and new
+# pills instead of rebuilding the list. Required for hold-scroll to not tank
+# the framerate on a large recipe list.
+func _update_selection(old_index: int, new_index: int) -> void:
+	if old_index >= 0 and old_index < _pill_nodes.size():
+		var old_pill: Control = _pill_nodes[old_index]
+		if old_pill:
+			old_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(false))
+	if new_index >= 0 and new_index < _pill_nodes.size():
+		var new_pill: Control = _pill_nodes[new_index]
+		if new_pill:
+			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
+			var parent: Node = new_pill.get_parent()
+			while parent != null and not (parent is ScrollContainer):
+				parent = parent.get_parent()
+			if parent is ScrollContainer:
+				(parent as ScrollContainer).ensure_control_visible.call_deferred(new_pill)
 
 
 func _can_craft_recipe(recipe: RecipeBoardData) -> bool:
