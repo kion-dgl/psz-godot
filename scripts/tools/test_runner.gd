@@ -2754,9 +2754,15 @@ func test_input_config() -> void:
 	print("── Input scheme bindings ──")
 	var original_scheme: String = InputConfig.current_scheme
 
+	# Expected button indices per scheme. xinput/ds_cross use SDL-normalized
+	# indices; switch uses Linux hid-nintendo layout (see FACE_INDICES). All
+	# four schemes bind "accept" to the east face for Nintendo/Circle and
+	# south for Xbox/Cross, but the raw index depends on the controller's
+	# reporting — e.g. switch east happens to be button 0 (same raw index as
+	# xinput south).
 	var expected: Dictionary = {
 		"xinput":    {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
-		"switch":    {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
+		"switch":    {"ui_accept": 0, "ui_cancel": 1, "interact": 0},  # east=0, south=1
 		"ds_cross":  {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
 		"ds_circle": {"ui_accept": 1, "ui_cancel": 0, "interact": 1},
 	}
@@ -2770,15 +2776,20 @@ func test_input_config() -> void:
 			var btn: int = _get_joypad_button(action)
 			assert_eq(btn, exp_buttons[action], "%s: %s → button %d" % [scheme, action, exp_buttons[action]])
 
-	# Palette is scheme-independent: west/south/east with north free for a
-	# future action_4. Under every scheme, one palette slot overlaps accept
-	# and another overlaps cancel — that's by design (PSO parity).
-	for palette_scheme in ["xinput", "switch", "ds_cross", "ds_circle"]:
+	# Palette is physically scheme-independent (west/south/east) but raw button
+	# indices differ by scheme because the OS reports them differently.
+	var palette_expected: Dictionary = {
+		"xinput":    {"action_1": 2, "action_2": 0, "action_3": 1},  # W/S/E in SDL
+		"switch":    {"action_1": 3, "action_2": 1, "action_3": 0},  # W/S/E in hid-nintendo
+		"ds_cross":  {"action_1": 2, "action_2": 0, "action_3": 1},
+		"ds_circle": {"action_1": 2, "action_2": 0, "action_3": 1},
+	}
+	for palette_scheme in palette_expected:
 		InputConfig.current_scheme = palette_scheme
 		InputConfig._apply_button_mapping()
-		assert_eq(_get_joypad_button("action_1"), 2, "%s: action_1 on west (2)" % palette_scheme)
-		assert_eq(_get_joypad_button("action_2"), 0, "%s: action_2 on south (0)" % palette_scheme)
-		assert_eq(_get_joypad_button("action_3"), 1, "%s: action_3 on east (1)" % palette_scheme)
+		var exp: Dictionary = palette_expected[palette_scheme]
+		for action in exp:
+			assert_eq(_get_joypad_button(action), exp[action], "%s: %s on button %d" % [palette_scheme, action, exp[action]])
 
 	# Restore original for any tests that run after.
 	InputConfig.current_scheme = original_scheme

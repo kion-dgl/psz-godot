@@ -29,11 +29,19 @@ const PALETTE_2_ACTIONS := ["action_2"]  # always on south (overlaps accept when
 const PALETTE_3_ACTIONS := ["action_3"]  # always on east  (overlaps cancel when accept_on_south)
 # action_4 (reserved): north — no binding yet, will land here when added.
 
-## SDL gamepad button indices, named by physical face position.
-const FACE_SOUTH := 0
-const FACE_EAST := 1
-const FACE_WEST := 2
-const FACE_NORTH := 3
+## Physical face-button → Godot button index, per scheme. "xinput" uses the
+## SDL-normalized layout (south=0, east=1, west=2, north=3). The "switch"
+## scheme reflects what Linux's hid-nintendo driver exposes for a Switch Pro
+## controller, which differs from SDL's normalized layout because it bypasses
+## the gamepad DB. If a Switch controller on a different platform reports the
+## normalized layout instead, the player should pick xinput in onboarding.
+const FACE_INDICES: Dictionary = {
+	"xinput":    {"south": 0, "east": 1, "west": 2, "north": 3},
+	"switch":    {"south": 1, "east": 0, "west": 3, "north": 2},
+	"ds_cross":  {"south": 0, "east": 1, "west": 2, "north": 3},
+	"ds_circle": {"south": 0, "east": 1, "west": 2, "north": 3},
+	"keyboard":  {"south": 0, "east": 1, "west": 2, "north": 3},  # no-op for keyboard
+}
 
 var current_scheme: String = "keyboard"
 var invert_camera_x: bool = false
@@ -69,27 +77,37 @@ func is_switch() -> bool:
 
 
 func accept_on_east() -> bool:
-	## Only ds_circle needs the physical accept/cancel swap. SDL's gamepad API
-	## already normalizes Nintendo A (east) and PlayStation Cross (south) to
-	## button 0 — the "accept" semantic slot — so xinput / switch / ds_cross
-	## all share the default "accept=south" layout from the hardware's view.
-	## ds_circle is the explicit JP/PSO-style override where Circle is accept.
-	return current_scheme == "ds_circle"
+	## Schemes whose accept button is physically on the east face:
+	##   - switch: Nintendo A is east
+	##   - ds_circle: PSZ/JP PSO uses Circle (east)
+	## For xinput/ds_cross, accept is south (Xbox A / Cross). Actual button
+	## indices are resolved through FACE_INDICES per scheme, so an east-bound
+	## accept here fires the correct physical button regardless of whether
+	## the OS reports SDL-normalized or raw HID indices.
+	return current_scheme == "switch" or current_scheme == "ds_circle"
+
+
+func _face(position: String) -> int:
+	var map: Dictionary = FACE_INDICES.get(current_scheme, FACE_INDICES["xinput"])
+	return int(map.get(position, 0))
 
 
 func _apply_button_mapping() -> void:
-	## Palette is scheme-independent (west/south/east, north reserved).
-	## Scheme only decides whether accept is south or east.
-	_set_joypad_button(PALETTE_1_ACTIONS, FACE_WEST)
-	_set_joypad_button(PALETTE_2_ACTIONS, FACE_SOUTH)
-	_set_joypad_button(PALETTE_3_ACTIONS, FACE_EAST)
+	## Palette assignment to physical positions is scheme-independent
+	## (west/south/east, north reserved). The raw button indices those
+	## positions correspond to come from FACE_INDICES[current_scheme] so the
+	## same physical press fires the same action regardless of how the OS
+	## reports buttons.
+	_set_joypad_button(PALETTE_1_ACTIONS, _face("west"))
+	_set_joypad_button(PALETTE_2_ACTIONS, _face("south"))
+	_set_joypad_button(PALETTE_3_ACTIONS, _face("east"))
 
 	if accept_on_east():
-		_set_joypad_button(ACCEPT_ACTIONS, FACE_EAST)
-		_set_joypad_button(CANCEL_ACTIONS, FACE_SOUTH)
+		_set_joypad_button(ACCEPT_ACTIONS, _face("east"))
+		_set_joypad_button(CANCEL_ACTIONS, _face("south"))
 	else:
-		_set_joypad_button(ACCEPT_ACTIONS, FACE_SOUTH)
-		_set_joypad_button(CANCEL_ACTIONS, FACE_EAST)
+		_set_joypad_button(ACCEPT_ACTIONS, _face("south"))
+		_set_joypad_button(CANCEL_ACTIONS, _face("east"))
 
 
 func _set_joypad_button(actions: Array, button_index: int) -> void:
