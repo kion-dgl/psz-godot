@@ -112,5 +112,4 @@ func _unhandled_input(event: InputEvent) -> void:
 			or (event is InputEventScreenTouch and event.pressed):
 		SfxManager.play("res://assets/sfx/ui/title_start.wav")
 		get_viewport().set_input_as_handled()
-		var next_scene := "res://scenes/2d/input_select.tscn" if not InputConfig.has_saved_config() else "res://scenes/2d/character_select.tscn"
-		SceneManager.goto_scene(next_scene)
+		SceneManager.goto_scene("res://scenes/2d/character_select.tscn")

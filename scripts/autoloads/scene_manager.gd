@@ -52,6 +52,14 @@ func goto_scene(scene_path: String, data: Dictionary = {}) -> void:
 	_overlay_stack.clear()
 	_scene_stack.clear()
 
+	# Dialog boxes and PsoStartMenu push GameState.modal_stack on open and pop
+	# it on _close(). When a scene transition frees them mid-dialog, _close()
+	# never runs and the stack sticks non-zero, blocking gameplay input (palette,
+	# interact, dodge) in the next scene. Reset here so the new scene starts clean.
+	GameState.modal_stack = 0
+	GameState.is_pause_menu_open = false
+	get_tree().paused = false
+
 	# Re-enable base scene if it was disabled
 	var base: Node = get_tree().current_scene
 	if base:

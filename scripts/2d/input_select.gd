@@ -185,4 +185,4 @@ func _confirm() -> void:
 	var scheme: String = str(OPTIONS[_selected]["scheme"])
 	InputConfig.set_scheme(scheme)
 	SfxManager.play("res://assets/sfx/ui/title_start.wav")
-	SceneManager.goto_scene("res://scenes/2d/character_select.tscn")
+	SceneManager.goto_scene("res://scenes/2d/title.tscn")

@@ -384,3 +384,20 @@ func _get_item_category(item_id: String) -> String:
 	if item_data:
 		return "Key Item"
 	return "Other"
+
+
+# ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
+var _nav: NavRepeat = null
+
+
+func _process(delta: float) -> void:
+	if _nav == null:
+		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
+	_nav.tick(delta)
+
+
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)
