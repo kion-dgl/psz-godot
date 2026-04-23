@@ -85,17 +85,17 @@ func _apply_button_mapping() -> void:
 	if accept_on_east():
 		_set_joypad_button(ACCEPT_ACTIONS, XBOX_B)   # east = index 1
 		_set_joypad_button(CANCEL_ACTIONS, XBOX_A)   # south = index 0
-		# Palette uses the three non-accept face buttons: west + south + north
-		_set_joypad_button(X_ACTIONS, XBOX_X)        # action_1 → west
-		_set_joypad_button(Y_ACTIONS, XBOX_A)        # action_2 → south
-		_set_joypad_button(B_ACTIONS, XBOX_Y)        # action_3 → north
 	else:
 		_set_joypad_button(ACCEPT_ACTIONS, XBOX_A)   # south = index 0
 		_set_joypad_button(CANCEL_ACTIONS, XBOX_B)   # east = index 1
-		# Palette uses the three non-accept face buttons: west + north + east
-		_set_joypad_button(X_ACTIONS, XBOX_X)        # action_1 → west
-		_set_joypad_button(Y_ACTIONS, XBOX_Y)        # action_2 → north
-		_set_joypad_button(B_ACTIONS, XBOX_B)        # action_3 → east
+
+	# Palette is scheme-independent: west + south + east face buttons. North
+	# stays free so a future 4th palette slot can go there. One palette slot
+	# always overlaps accept and another overlaps cancel — the scheme only
+	# decides which of the two is the accept button.
+	_set_joypad_button(X_ACTIONS, XBOX_X)            # action_1 → west  (2)
+	_set_joypad_button(Y_ACTIONS, XBOX_A)            # action_2 → south (0)
+	_set_joypad_button(B_ACTIONS, XBOX_B)            # action_3 → east  (1)
 
 
 func _set_joypad_button(actions: Array, button_index: int) -> void:

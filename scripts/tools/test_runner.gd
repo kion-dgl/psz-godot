@@ -2770,12 +2770,15 @@ func test_input_config() -> void:
 			var btn: int = _get_joypad_button(action)
 			assert_eq(btn, exp_buttons[action], "%s: %s → button %d" % [scheme, action, exp_buttons[action]])
 
-	# For ds_circle (accept=button 1), action_3 must not also land on button 1
-	# — that would make pressing accept also trigger a palette action.
-	InputConfig.current_scheme = "ds_circle"
-	InputConfig._apply_button_mapping()
-	var a3: int = _get_joypad_button("action_3")
-	assert_true(a3 != 1, "ds_circle: action_3 does not collide with ui_accept (button 1)")
+	# Palette is scheme-independent: west/south/east with north free for a
+	# future action_4. Under every scheme, one palette slot overlaps accept
+	# and another overlaps cancel — that's by design (PSO parity).
+	for palette_scheme in ["xinput", "switch", "ds_cross", "ds_circle"]:
+		InputConfig.current_scheme = palette_scheme
+		InputConfig._apply_button_mapping()
+		assert_eq(_get_joypad_button("action_1"), 2, "%s: action_1 on west (2)" % palette_scheme)
+		assert_eq(_get_joypad_button("action_2"), 0, "%s: action_2 on south (0)" % palette_scheme)
+		assert_eq(_get_joypad_button("action_3"), 1, "%s: action_3 on east (1)" % palette_scheme)
 
 	# Restore original for any tests that run after.
 	InputConfig.current_scheme = original_scheme
