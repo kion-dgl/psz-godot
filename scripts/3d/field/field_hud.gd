@@ -75,14 +75,23 @@ func _process(_delta: float) -> void:
 				var colors := [Color(1.0, 0.3, 0.3), Color(1.0, 0.8, 0.2), Color(0.5, 0.8, 0.3)]
 				_fps_label.add_theme_color_override("font_color", colors[band])
 
-	# Hide HUD when an overlay (shop, menu, dialog) is open
-	var has_overlay: bool = not SceneManager._overlay_stack.is_empty()
+	# Hide HUD when an overlay (shop, menu, dialog) is open, or when the
+	# PSO start menu is up — the start menu isn't tracked in
+	# SceneManager._overlay_stack so we check its autoload directly.
+	var has_overlay: bool = not SceneManager._overlay_stack.is_empty() or PsoStartMenu.is_open()
 	if has_overlay and not _hidden_for_overlay:
 		_hidden_for_overlay = true
 		hide_for_menu()
 	elif not has_overlay and _hidden_for_overlay:
 		_hidden_for_overlay = false
 		restore_after_menu()
+
+	# Action palette is a combat HUD element — hide it in the city (Dairon
+	# / Pioneer 2 equivalent) where the player is shopping and talking to
+	# NPCs, not fighting. Palette itself is also input-blocked in these
+	# scenes via GameState.is_gameplay_blocked() for safety.
+	if _action_palette and not _hidden_for_overlay:
+		_action_palette.visible = not _is_in_city()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -105,10 +114,15 @@ func _is_in_quest() -> bool:
 	return not session.is_empty() and str(session.get("type", "")) == "quest"
 
 
-## Hide all HUD elements when a menu/shop/dialog is open.
+func _is_in_city() -> bool:
+	return SessionManager.get_location() == "city"
+
+
+## Hide all HUD elements when a menu/shop/dialog is open. HP/PP stays up
+## — players need to see it at all times, including in the PSO start menu.
 func hide_for_menu() -> void:
 	for child in get_children():
-		if child is Control:
+		if child is Control and child != _stats_panel:
 			child.visible = false
 
 
