@@ -30,7 +30,8 @@ PATH_RE = re.compile(r'res://(assets/[^"\'\s\)]+)')
 SCAN_SUFFIXES = {".gd", ".tscn", ".tres", ".cs"}
 
 # Directories that never ship in the asset pack (referenced paths here are OK).
-IN_REPO_PREFIXES = ("assets/kenney_",)
+# assets/ui/ holds small UI sprites committed directly to the repo.
+IN_REPO_PREFIXES = ("assets/kenney_", "assets/ui/")
 
 
 def load_ignore() -> set[str]:
