@@ -14,6 +14,8 @@ const BOTTOM_H := 320.0     # Bottom backdrop strip
 const HUD_STATS_LAYER := 200  # HUD stats drawn above start menu
 const PAD := 12.0           # Inner padding
 
+const STATS_BG: Texture2D = preload("res://assets/ui/stats.png")
+
 # ── Colors ──────────────────────────────────────────────────────────────────────
 const C_BACKDROP := Color(0.16, 0.24, 0.39, 0.82)
 const C_BACKDROP_BORDER := Color(0.39, 0.59, 0.82, 0.6)
@@ -1075,15 +1077,17 @@ func _draw_main(c: Control, font: Font) -> void:
 
 
 func _draw_info_panel(c: Control, font: Font) -> void:
-	var px: float = VIEWPORT_W - 470.0
-	var py: float = VIEWPORT_H - BOTTOM_H + 5
-	var pw: float = 440.0
-	var ph: float = BOTTOM_H - 10.0
-	_draw_inner_panel(c, Rect2(px, py, pw, ph))
+	# Stats panel uses the assets/ui/stats.png sprite (440×273, scaled 1.72×
+	# from a 256×159 DS source). Layout coords inside the sprite:
+	#   page indicator box: x=191, y=24, 65×28 (between the L/R icons)
+	#   stat text area:     x=17,  y=58, 402×162
+	var px: float = VIEWPORT_W - STATS_BG.get_width() - 50
+	var py: float = VIEWPORT_H - STATS_BG.get_height() - 20
+	c.draw_texture(STATS_BG, Vector2(px, py))
 
-	# Page selector
-	var page_label := "L %d/4 R" % [_info_page + 1]
-	c.draw_string(font, Vector2(px + pw / 2 - 30, py + 20), page_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT)
+	# Page selector centered in the indicator box
+	var page_label := "%d/4" % [_info_page + 1]
+	c.draw_string(font, Vector2(px + 191, py + 44), page_label, HORIZONTAL_ALIGNMENT_CENTER, 65, FONT_SIZE_SM, C_TEXT)
 
 	# Stat rows — pull real data from character + class + equipment
 	var ch := _get_character()
@@ -1128,16 +1132,23 @@ func _draw_info_panel(c: Control, font: Font) -> void:
 	var special_str: String = special_el.capitalize() if not special_el.is_empty() else "--"
 
 	var pages := [
-		[["Lv", str(level)], ["Type", class_data.name if class_data else class_id], ["Exp Pts", str(ch.get("experience", 0))], ["To Next Lv", to_next], ["Meseta", str(ch.get("meseta", 0))]],
+		[["Lv", str(level)], ["Type", class_data.name if class_data else class_id], ["Exp Pts", str(int(ch.get("experience", 0)))], ["To Next Lv", to_next], ["Meseta", str(int(ch.get("meseta", 0)))]],
 		[["ATP", str(base_atk + weapon_atk + int(mat_bonuses.get("attack", 0)))], ["ATA", str(base_acc + weapon_acc + int(mat_bonuses.get("accuracy", 0)))], ["Weapon", weapon_name], ["Grind", "+%d" % weapon_grind if weapon_grind > 0 else "--"], ["Special", special_str]],
 		[["DFP", str(base_def + armor_def + int(mat_bonuses.get("defense", 0)))], ["EVP", str(base_eva + armor_eva + int(mat_bonuses.get("evasion", 0)))], ["Frame", frame_name], ["Slots", str(armor.max_slots) if armor else "0"], ["Units", "%d / %d" % [_count_equipped_units(equip), armor.max_slots if armor else 0]]],
 		[["MST", str(base_mst + int(mat_bonuses.get("technique", 0)))], ["HP", "%d / %d" % [int(ch.get("hp", base_hp)), base_hp + int(mat_bonuses.get("hp", 0))]], ["PP", "%d / %d" % [int(ch.get("pp", base_pp)), base_pp + int(mat_bonuses.get("pp", 0))]]],
 	]
 	var rows: Array = pages[_info_page] if _info_page < pages.size() else []
+	# Text area inside the stats sprite: x=17, y=58, 402×162.
+	# Row height targets ~30px so 5 rows fit in 162 with a bit of breathing room.
+	var rows_x: float = px + 17
+	var rows_y: float = py + 58
+	var rows_w: float = 402
+	var row_h: float = 30
 	for i in range(rows.size()):
-		var ry: float = py + 38 + i * 26
-		c.draw_string(font, Vector2(px + 16, ry), str(rows[i][0]), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, C_TEXT_MUTED)
-		c.draw_string(font, Vector2(px + pw - 16, ry), str(rows[i][1]), HORIZONTAL_ALIGNMENT_RIGHT, -1, FONT_SIZE, C_TEXT)
+		var ry: float = rows_y + i * row_h + 22  # +22 for baseline offset inside the row
+		c.draw_string(font, Vector2(rows_x + 8, ry), str(rows[i][0]), HORIZONTAL_ALIGNMENT_LEFT, rows_w - 16, FONT_SIZE, C_TEXT_MUTED)
+		# Right-align value within the same row box so long strings don't overflow off-screen.
+		c.draw_string(font, Vector2(rows_x + 8, ry), str(rows[i][1]), HORIZONTAL_ALIGNMENT_RIGHT, rows_w - 16, FONT_SIZE, C_TEXT)
 
 
 func _draw_items(c: Control, font: Font) -> void:
