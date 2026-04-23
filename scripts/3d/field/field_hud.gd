@@ -76,8 +76,8 @@ func _process(_delta: float) -> void:
 				_fps_label.add_theme_color_override("font_color", colors[band])
 
 	# Hide HUD when an overlay (shop, menu, dialog) is open, or when the
-	# PSO start menu is up — that one lives on a CanvasLayer above the HUD
-	# rather than on the SceneManager overlay stack.
+	# PSO start menu is up — the start menu isn't tracked in
+	# SceneManager._overlay_stack so we check its autoload directly.
 	var has_overlay: bool = not SceneManager._overlay_stack.is_empty() or PsoStartMenu.is_open()
 	if has_overlay and not _hidden_for_overlay:
 		_hidden_for_overlay = true

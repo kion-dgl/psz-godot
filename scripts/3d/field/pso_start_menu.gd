@@ -1067,7 +1067,7 @@ func _draw_bar(c: Control, rect: Rect2, pct: float, color: Color) -> void:
 func _draw_main(c: Control, font: Font) -> void:
 	# Main menu uses the assets/ui/main.png sprite (200×292). Text area inside
 	# the sprite: x=12, y=29, 176×233. Selection highlight and menu rows live
-	# inside that region; description pinned to the bottom of the same region.
+	# inside that region.
 	var bg_x: float = PAD
 	var bg_y: float = 110.0
 	c.draw_texture(MAIN_BG, Vector2(bg_x, bg_y))
@@ -1093,10 +1093,13 @@ func _draw_main(c: Control, font: Font) -> void:
 
 
 func _draw_scanlines(c: Control, rect: Rect2) -> void:
-	var y: float = rect.position.y
 	var x1: float = rect.position.x
 	var x2: float = rect.position.x + rect.size.x
 	var y_end: float = rect.position.y + rect.size.y
+	# Start the first line one SPACING in so the very top edge of the rect
+	# isn't always painted — otherwise a visible dark seam lands exactly on
+	# the bottom-right rect's top border (y = VIEWPORT_H - BOTTOM_H).
+	var y: float = rect.position.y + SCANLINE_SPACING
 	while y < y_end:
 		c.draw_line(Vector2(x1, y), Vector2(x2, y), C_SCANLINE, 1.0)
 		y += SCANLINE_SPACING
