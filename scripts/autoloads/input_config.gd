@@ -19,22 +19,21 @@ const SCHEME_LABELS := {
 	"ds_circle": "DualSense (Circle accept)",
 }
 
-## Actions that use face button A (Xbox=0, Switch=1) for confirm/interact
+## Face button actions, named by logical role. Accept/cancel flip between
+## south and east depending on scheme; palette slots are scheme-independent
+## and always occupy west + south + east physical positions.
 const ACCEPT_ACTIONS := ["ui_accept", "interact"]
-## Actions that use face button B (Xbox=1, Switch=0) for cancel/back
 const CANCEL_ACTIONS := ["ui_cancel"]
-## Actions mapped to X button (Xbox=2, Switch=3)
-const X_ACTIONS := ["action_1"]
-## Actions mapped to Y button (Xbox=3, Switch=2)
-const Y_ACTIONS := ["action_2"]
-## Actions mapped to B button (Xbox=1, Switch=0) — same as cancel
-const B_ACTIONS := ["action_3"]
+const PALETTE_1_ACTIONS := ["action_1"]  # always on west
+const PALETTE_2_ACTIONS := ["action_2"]  # always on south (overlaps accept when accept_on_south)
+const PALETTE_3_ACTIONS := ["action_3"]  # always on east  (overlaps cancel when accept_on_south)
+# action_4 (reserved): north — no binding yet, will land here when added.
 
-## Xbox-standard button indices
-const XBOX_A := 0
-const XBOX_B := 1
-const XBOX_X := 2
-const XBOX_Y := 3
+## SDL gamepad button indices, named by physical face position.
+const FACE_SOUTH := 0
+const FACE_EAST := 1
+const FACE_WEST := 2
+const FACE_NORTH := 3
 
 var current_scheme: String = "keyboard"
 var invert_camera_x: bool = false
@@ -79,23 +78,18 @@ func accept_on_east() -> bool:
 
 
 func _apply_button_mapping() -> void:
-	## Remap joypad face buttons based on scheme. SDL gamepad indices are
-	## 0=south, 1=east, 2=west, 3=north in the controller's native layout, so
-	## only ds_circle needs to swap accept/cancel.
-	if accept_on_east():
-		_set_joypad_button(ACCEPT_ACTIONS, XBOX_B)   # east = index 1
-		_set_joypad_button(CANCEL_ACTIONS, XBOX_A)   # south = index 0
-	else:
-		_set_joypad_button(ACCEPT_ACTIONS, XBOX_A)   # south = index 0
-		_set_joypad_button(CANCEL_ACTIONS, XBOX_B)   # east = index 1
+	## Palette is scheme-independent (west/south/east, north reserved).
+	## Scheme only decides whether accept is south or east.
+	_set_joypad_button(PALETTE_1_ACTIONS, FACE_WEST)
+	_set_joypad_button(PALETTE_2_ACTIONS, FACE_SOUTH)
+	_set_joypad_button(PALETTE_3_ACTIONS, FACE_EAST)
 
-	# Palette is scheme-independent: west + south + east face buttons. North
-	# stays free so a future 4th palette slot can go there. One palette slot
-	# always overlaps accept and another overlaps cancel — the scheme only
-	# decides which of the two is the accept button.
-	_set_joypad_button(X_ACTIONS, XBOX_X)            # action_1 → west  (2)
-	_set_joypad_button(Y_ACTIONS, XBOX_A)            # action_2 → south (0)
-	_set_joypad_button(B_ACTIONS, XBOX_B)            # action_3 → east  (1)
+	if accept_on_east():
+		_set_joypad_button(ACCEPT_ACTIONS, FACE_EAST)
+		_set_joypad_button(CANCEL_ACTIONS, FACE_SOUTH)
+	else:
+		_set_joypad_button(ACCEPT_ACTIONS, FACE_SOUTH)
+		_set_joypad_button(CANCEL_ACTIONS, FACE_EAST)
 
 
 func _set_joypad_button(actions: Array, button_index: int) -> void:
