@@ -15,10 +15,14 @@ const HUD_STATS_LAYER := 200  # HUD stats drawn above start menu
 const PAD := 12.0           # Inner padding
 
 const STATS_BG: Texture2D = preload("res://assets/ui/stats.png")
+const MAIN_BG: Texture2D = preload("res://assets/ui/main.png")
 
 # ── Colors ──────────────────────────────────────────────────────────────────────
 const C_BACKDROP := Color(0.16, 0.24, 0.39, 0.82)
 const C_BACKDROP_BORDER := Color(0.39, 0.59, 0.82, 0.6)
+## Subtle CRT scanline overlay painted on top of the backdrop rects.
+const C_SCANLINE := Color(0, 0, 0, 0.12)
+const SCANLINE_SPACING := 3  # 1 dim line every N pixels
 const C_PANEL := Color(0.78, 0.84, 0.92, 0.92)
 const C_PANEL_BORDER := Color(0.47, 0.63, 0.82, 0.7)
 const C_TEXT := Color(0.10, 0.15, 0.25)
@@ -1003,9 +1007,16 @@ func _draw_menu() -> void:
 	var vp := Vector2(VIEWPORT_W, VIEWPORT_H)
 
 	# L-shaped backdrop
-	c.draw_rect(Rect2(0, 0, LEFT_W, vp.y - BOTTOM_H), C_BACKDROP)
-	c.draw_rect(Rect2(LEFT_W, vp.y - BOTTOM_H, vp.x - LEFT_W, BOTTOM_H), C_BACKDROP)
-	c.draw_rect(Rect2(0, vp.y - BOTTOM_H, LEFT_W, BOTTOM_H), C_BACKDROP)
+	var left_top := Rect2(0, 0, LEFT_W, vp.y - BOTTOM_H)
+	var bottom_right := Rect2(LEFT_W, vp.y - BOTTOM_H, vp.x - LEFT_W, BOTTOM_H)
+	var bottom_left := Rect2(0, vp.y - BOTTOM_H, LEFT_W, BOTTOM_H)
+	c.draw_rect(left_top, C_BACKDROP)
+	c.draw_rect(bottom_right, C_BACKDROP)
+	c.draw_rect(bottom_left, C_BACKDROP)
+	# Subtle scanline overlay
+	_draw_scanlines(c, left_top)
+	_draw_scanlines(c, bottom_right)
+	_draw_scanlines(c, bottom_left)
 	# Borders
 	c.draw_line(Vector2(LEFT_W, 0), Vector2(LEFT_W, vp.y - BOTTOM_H), C_BACKDROP_BORDER, 1.5)
 	c.draw_line(Vector2(LEFT_W, vp.y - BOTTOM_H), Vector2(vp.x, vp.y - BOTTOM_H), C_BACKDROP_BORDER, 1.5)
@@ -1054,26 +1065,41 @@ func _draw_bar(c: Control, rect: Rect2, pct: float, color: Color) -> void:
 
 
 func _draw_main(c: Control, font: Font) -> void:
-	var left_x := PAD
-	var left_w: float = LEFT_W - PAD * 2
-	var y := 110.0  # Below the HUD stats panel
+	# Main menu uses the assets/ui/main.png sprite (200×292). Text area inside
+	# the sprite: x=12, y=29, 176×233. Selection highlight and menu rows live
+	# inside that region; description pinned to the bottom of the same region.
+	var bg_x: float = PAD
+	var bg_y: float = 110.0
+	c.draw_texture(MAIN_BG, Vector2(bg_x, bg_y))
 
-	# Menu list
-	_draw_inner_panel(c, Rect2(left_x, y, left_w, _get_menu_labels().size() * 28 + 8))
-	for i in range(_get_menu_labels().size()):
-		var iy: float = y + 4 + i * 28
+	var text_x: float = bg_x + 12
+	var text_y: float = bg_y + 29
+	var text_w: float = 176
+	var text_h: float = 233
+
+	# Menu list rows — distribute evenly across the full text area height so
+	# we use the space the old description panel took.
+	var labels: Array = _get_menu_labels()
+	var row_h: float = text_h / float(maxi(labels.size(), 1))
+	for i in range(labels.size()):
+		var iy: float = text_y + i * row_h
 		if i == _menu_idx:
-			c.draw_rect(Rect2(left_x + 2, iy, left_w - 4, 26), C_SELECT)
+			c.draw_rect(Rect2(text_x + 2, iy, text_w - 4, row_h - 2), C_SELECT)
 		var col: Color = C_SELECT_TEXT if i == _menu_idx else C_TEXT
-		c.draw_string(font, Vector2(left_x + 14, iy + 19), _get_menu_labels()[i], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_LG, col)
-
-	# Description
-	var desc_y: float = y + _get_menu_labels().size() * 28 + 18
-	_draw_inner_panel(c, Rect2(left_x, desc_y, left_w, 36))
-	c.draw_string(font, Vector2(left_x + 12, desc_y + 22), _get_menu_descs()[_menu_idx], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT)
+		c.draw_string(font, Vector2(text_x + 12, iy + row_h * 0.7), labels[i], HORIZONTAL_ALIGNMENT_LEFT, text_w - 16, FONT_SIZE_LG, col)
 
 	# Info panel (bottom right)
 	_draw_info_panel(c, font)
+
+
+func _draw_scanlines(c: Control, rect: Rect2) -> void:
+	var y: float = rect.position.y
+	var x1: float = rect.position.x
+	var x2: float = rect.position.x + rect.size.x
+	var y_end: float = rect.position.y + rect.size.y
+	while y < y_end:
+		c.draw_line(Vector2(x1, y), Vector2(x2, y), C_SCANLINE, 1.0)
+		y += SCANLINE_SPACING
 
 
 func _draw_info_panel(c: Control, font: Font) -> void:
