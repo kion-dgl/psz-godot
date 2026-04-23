@@ -1,8 +1,9 @@
 extends Control
-## InputSelect — one-time onboarding between title and character-select, shown only
-## when no input_config.json exists. Player picks a controller scheme with left/right
-## + Start/accept; the choice is persisted via InputConfig so future boots skip this
-## screen. To re-run the onboarding, delete user://input_config.json.
+## InputSelect — one-time onboarding between bootstrap (logo check) and the
+## title screen, shown only when no input_config.json exists. Player picks a
+## controller scheme with left/right + Start/accept; the choice is persisted
+## via InputConfig so future boots skip this screen and go straight to title.
+## To re-run the onboarding, delete user://input_config.json.
 
 const KENNEY_BASE := "res://assets/kenney_input-prompts/"
 

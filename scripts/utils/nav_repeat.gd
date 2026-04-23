@@ -63,14 +63,18 @@ func tick(delta: float) -> void:
 		# deflected — real action events (d-pad / keyboard) already reach the
 		# menu's _unhandled_input via the normal input flow, so we don't want
 		# NavRepeat to double-fire the first tap on those.
-		if axis_active and not bool(_axis_prev[action]):
+		var transitioned: bool = axis_active and not bool(_axis_prev[action])
+		if transitioned:
 			_callback.call(action)
 		_axis_prev[action] = axis_active
 
 		if active:
 			var h: float = float(_held[action]) + delta
 			_held[action] = h
-			if h >= HOLD:
+			# Skip the repeat block on the frame we fired a transition press —
+			# otherwise a large delta (frame hitch) past HOLD would trigger the
+			# while-loop too and the cursor would double-step.
+			if h >= HOLD and not transitioned:
 				var n: float = float(_next[action]) - delta
 				while n <= 0.0:
 					_callback.call(action)

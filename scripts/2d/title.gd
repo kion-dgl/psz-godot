@@ -1,8 +1,8 @@
 extends Control
 ## Title screen — 3D backdrop (scenes/3d/ui/title_backdrop.tscn, via SubViewport)
-## with "Press Start" prompt. If no input_config.json exists, routes to the
-## controller-select onboarding before character-select; otherwise straight to
-## character-select.
+## with "Press Start" prompt. Always routes to character-select on Start; the
+## first-run controller prompt runs earlier, between bootstrap (logo check)
+## and this scene (see bootstrap.gd::_goto_title).
 
 @onready var prompt_label: Label = $VBox/PromptLabel
 @onready var version_label: Label = $VBox/VersionLabel
