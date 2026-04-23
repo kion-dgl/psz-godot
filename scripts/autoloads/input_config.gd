@@ -37,11 +37,17 @@ const XBOX_X := 2
 const XBOX_Y := 3
 
 var current_scheme: String = "keyboard"
+var invert_camera_x: bool = false
 
 
 func _ready() -> void:
 	_load()
 	_apply_button_mapping()
+
+
+func toggle_invert_camera_x() -> void:
+	invert_camera_x = not invert_camera_x
+	_save()
 
 
 func cycle(direction: int) -> void:
@@ -119,6 +125,7 @@ func _save() -> void:
 			if parsed is Dictionary:
 				data = parsed
 	data["scheme"] = current_scheme
+	data["invert_camera_x"] = invert_camera_x
 	var out_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if out_file:
 		out_file.store_string(JSON.stringify(data))
@@ -176,6 +183,9 @@ func _load() -> void:
 		var s: String = str(parsed["scheme"])
 		if s in SCHEMES:
 			current_scheme = s
+
+	if parsed.has("invert_camera_x"):
+		invert_camera_x = bool(parsed["invert_camera_x"])
 
 	# Extended format: preset + keyboard remaps
 	if parsed.has("preset") and parsed.has("keyboard"):

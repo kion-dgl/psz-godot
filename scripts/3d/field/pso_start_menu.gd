@@ -576,6 +576,7 @@ func _get_options_list() -> Array:
 	return [
 		"Music Volume: %d%%" % music_pct,
 		"SFX Volume: %d%%" % sfx_pct,
+		"Invert Camera X: %s" % (on if InputConfig.invert_camera_x else off),
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
@@ -589,14 +590,15 @@ func _toggle_option(idx: int) -> void:
 	match idx:
 		0: _adjust_music_volume(0.1)
 		1: _adjust_sfx_volume(0.1)
-		2: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
-		3: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		4: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		5: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		6:
+		2: InputConfig.toggle_invert_camera_x()
+		3: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
+		4: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		5: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		6: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		7:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		7:
+		8:
 			DebugConfig.profile_frames = not DebugConfig.profile_frames
 
 
