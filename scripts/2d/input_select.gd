@@ -163,6 +163,13 @@ func _update_selection() -> void:
 	_label.text = str(opt["label"])
 	_sublabel.text = str(opt["sublabel"])
 
+	# Rebind joypad buttons to the hovered scheme so the player can confirm with
+	# the accept button that matches their controller — e.g. hovering "Switch"
+	# makes Nintendo A (east) fire ui_accept, hovering "PSZ DS" makes Circle (east)
+	# fire it. No write to disk until the player actually confirms.
+	InputConfig.current_scheme = str(opt["scheme"])
+	InputConfig._apply_button_mapping()
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_left"):
