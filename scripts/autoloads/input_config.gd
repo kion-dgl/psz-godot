@@ -19,29 +19,42 @@ const SCHEME_LABELS := {
 	"ds_circle": "DualSense (Circle accept)",
 }
 
-## Actions that use face button A (Xbox=0, Switch=1) for confirm/interact
+## Face button actions, named by logical role. Accept/cancel flip between
+## south and east depending on scheme; palette slots are scheme-independent
+## and always occupy west + south + east physical positions.
 const ACCEPT_ACTIONS := ["ui_accept", "interact"]
-## Actions that use face button B (Xbox=1, Switch=0) for cancel/back
 const CANCEL_ACTIONS := ["ui_cancel"]
-## Actions mapped to X button (Xbox=2, Switch=3)
-const X_ACTIONS := ["action_1"]
-## Actions mapped to Y button (Xbox=3, Switch=2)
-const Y_ACTIONS := ["action_2"]
-## Actions mapped to B button (Xbox=1, Switch=0) — same as cancel
-const B_ACTIONS := ["action_3"]
+const PALETTE_1_ACTIONS := ["action_1"]  # always on west
+const PALETTE_2_ACTIONS := ["action_2"]  # always on south (overlaps accept when accept_on_south)
+const PALETTE_3_ACTIONS := ["action_3"]  # always on east  (overlaps cancel when accept_on_south)
+# action_4 (reserved): north — no binding yet, will land here when added.
 
-## Xbox-standard button indices
-const XBOX_A := 0
-const XBOX_B := 1
-const XBOX_X := 2
-const XBOX_Y := 3
+## Physical face-button → Godot button index, per scheme. "xinput" uses the
+## SDL-normalized layout (south=0, east=1, west=2, north=3). The "switch"
+## scheme reflects what Linux's hid-nintendo driver exposes for a Switch Pro
+## controller, which differs from SDL's normalized layout because it bypasses
+## the gamepad DB. If a Switch controller on a different platform reports the
+## normalized layout instead, the player should pick xinput in onboarding.
+const FACE_INDICES: Dictionary = {
+	"xinput":    {"south": 0, "east": 1, "west": 2, "north": 3},
+	"switch":    {"south": 1, "east": 0, "west": 3, "north": 2},
+	"ds_cross":  {"south": 0, "east": 1, "west": 2, "north": 3},
+	"ds_circle": {"south": 0, "east": 1, "west": 2, "north": 3},
+	"keyboard":  {"south": 0, "east": 1, "west": 2, "north": 3},  # no-op for keyboard
+}
 
 var current_scheme: String = "keyboard"
+var invert_camera_x: bool = false
 
 
 func _ready() -> void:
 	_load()
 	_apply_button_mapping()
+
+
+func toggle_invert_camera_x() -> void:
+	invert_camera_x = not invert_camera_x
+	_save()
 
 
 func cycle(direction: int) -> void:
@@ -64,32 +77,37 @@ func is_switch() -> bool:
 
 
 func accept_on_east() -> bool:
-	## Only ds_circle needs the physical accept/cancel swap. SDL's gamepad API
-	## already normalizes Nintendo A (east) and PlayStation Cross (south) to
-	## button 0 — the "accept" semantic slot — so xinput / switch / ds_cross
-	## all share the default "accept=south" layout from the hardware's view.
-	## ds_circle is the explicit JP/PSO-style override where Circle is accept.
-	return current_scheme == "ds_circle"
+	## Schemes whose accept button is physically on the east face:
+	##   - switch: Nintendo A is east
+	##   - ds_circle: PSZ/JP PSO uses Circle (east)
+	## For xinput/ds_cross, accept is south (Xbox A / Cross). Actual button
+	## indices are resolved through FACE_INDICES per scheme, so an east-bound
+	## accept here fires the correct physical button regardless of whether
+	## the OS reports SDL-normalized or raw HID indices.
+	return current_scheme == "switch" or current_scheme == "ds_circle"
+
+
+func _face(position: String) -> int:
+	var map: Dictionary = FACE_INDICES.get(current_scheme, FACE_INDICES["xinput"])
+	return int(map.get(position, 0))
 
 
 func _apply_button_mapping() -> void:
-	## Remap joypad face buttons based on scheme. SDL gamepad indices are
-	## 0=south, 1=east, 2=west, 3=north in the controller's native layout, so
-	## only ds_circle needs to swap accept/cancel.
+	## Palette assignment to physical positions is scheme-independent
+	## (west/south/east, north reserved). The raw button indices those
+	## positions correspond to come from FACE_INDICES[current_scheme] so the
+	## same physical press fires the same action regardless of how the OS
+	## reports buttons.
+	_set_joypad_button(PALETTE_1_ACTIONS, _face("west"))
+	_set_joypad_button(PALETTE_2_ACTIONS, _face("south"))
+	_set_joypad_button(PALETTE_3_ACTIONS, _face("east"))
+
 	if accept_on_east():
-		_set_joypad_button(ACCEPT_ACTIONS, XBOX_B)   # east = index 1
-		_set_joypad_button(CANCEL_ACTIONS, XBOX_A)   # south = index 0
-		# Palette uses the three non-accept face buttons: west + south + north
-		_set_joypad_button(X_ACTIONS, XBOX_X)        # action_1 → west
-		_set_joypad_button(Y_ACTIONS, XBOX_A)        # action_2 → south
-		_set_joypad_button(B_ACTIONS, XBOX_Y)        # action_3 → north
+		_set_joypad_button(ACCEPT_ACTIONS, _face("east"))
+		_set_joypad_button(CANCEL_ACTIONS, _face("south"))
 	else:
-		_set_joypad_button(ACCEPT_ACTIONS, XBOX_A)   # south = index 0
-		_set_joypad_button(CANCEL_ACTIONS, XBOX_B)   # east = index 1
-		# Palette uses the three non-accept face buttons: west + north + east
-		_set_joypad_button(X_ACTIONS, XBOX_X)        # action_1 → west
-		_set_joypad_button(Y_ACTIONS, XBOX_Y)        # action_2 → north
-		_set_joypad_button(B_ACTIONS, XBOX_B)        # action_3 → east
+		_set_joypad_button(ACCEPT_ACTIONS, _face("south"))
+		_set_joypad_button(CANCEL_ACTIONS, _face("east"))
 
 
 func _set_joypad_button(actions: Array, button_index: int) -> void:
@@ -119,6 +137,7 @@ func _save() -> void:
 			if parsed is Dictionary:
 				data = parsed
 	data["scheme"] = current_scheme
+	data["invert_camera_x"] = invert_camera_x
 	var out_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if out_file:
 		out_file.store_string(JSON.stringify(data))
@@ -176,6 +195,9 @@ func _load() -> void:
 		var s: String = str(parsed["scheme"])
 		if s in SCHEMES:
 			current_scheme = s
+
+	if parsed.has("invert_camera_x"):
+		invert_camera_x = bool(parsed["invert_camera_x"])
 
 	# Extended format: preset + keyboard remaps
 	if parsed.has("preset") and parsed.has("keyboard"):

@@ -41,10 +41,11 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if input_enabled and not PsoStartMenu.is_open():
+		var dir: float = -1.0 if InputConfig.invert_camera_x else 1.0
 		if Input.is_action_pressed("camera_left"):
-			camera_rotation -= rotation_speed
+			camera_rotation -= rotation_speed * dir
 		if Input.is_action_pressed("camera_right"):
-			camera_rotation += rotation_speed
+			camera_rotation += rotation_speed * dir
 		if Input.is_action_just_pressed("camera_lock"):
 			_center_behind_player()
 

@@ -1,8 +1,9 @@
 extends Control
-## InputSelect — one-time onboarding between title and character-select, shown only
-## when no input_config.json exists. Player picks a controller scheme with left/right
-## + Start/accept; the choice is persisted via InputConfig so future boots skip this
-## screen. To re-run the onboarding, delete user://input_config.json.
+## InputSelect — one-time onboarding between bootstrap (logo check) and the
+## title screen, shown only when no input_config.json exists. Player picks a
+## controller scheme with left/right + Start/accept; the choice is persisted
+## via InputConfig so future boots skip this screen and go straight to title.
+## To re-run the onboarding, delete user://input_config.json.
 
 const KENNEY_BASE := "res://assets/kenney_input-prompts/"
 
@@ -163,6 +164,13 @@ func _update_selection() -> void:
 	_label.text = str(opt["label"])
 	_sublabel.text = str(opt["sublabel"])
 
+	# Rebind joypad buttons to the hovered scheme so the player can confirm with
+	# the accept button that matches their controller — e.g. hovering "Switch"
+	# makes Nintendo A (east) fire ui_accept, hovering "PSZ DS" makes Circle (east)
+	# fire it. No write to disk until the player actually confirms.
+	InputConfig.current_scheme = str(opt["scheme"])
+	InputConfig._apply_button_mapping()
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_left"):
@@ -185,4 +193,4 @@ func _confirm() -> void:
 	var scheme: String = str(OPTIONS[_selected]["scheme"])
 	InputConfig.set_scheme(scheme)
 	SfxManager.play("res://assets/sfx/ui/title_start.wav")
-	SceneManager.goto_scene("res://scenes/2d/character_select.tscn")
+	SceneManager.goto_scene("res://scenes/2d/title.tscn")

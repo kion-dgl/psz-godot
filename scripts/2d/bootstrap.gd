@@ -286,7 +286,13 @@ func _yield_frame() -> Signal:
 
 
 func _goto_title() -> void:
-	get_tree().change_scene_to_file(TITLE_SCENE)
+	# First-run controller prompt lands between the logo and the title screen
+	# (MH Rise / PSO2 order). Once the scheme is saved, later boots skip
+	# straight to the title. Delete user://input_config.json to re-onboard.
+	if not InputConfig.has_saved_config():
+		get_tree().change_scene_to_file("res://scenes/2d/input_select.tscn")
+	else:
+		get_tree().change_scene_to_file(TITLE_SCENE)
 
 
 func _fatal(msg: String) -> void:

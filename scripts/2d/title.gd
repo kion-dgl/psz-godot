@@ -1,8 +1,8 @@
 extends Control
 ## Title screen — 3D backdrop (scenes/3d/ui/title_backdrop.tscn, via SubViewport)
-## with "Press Start" prompt. If no input_config.json exists, routes to the
-## controller-select onboarding before character-select; otherwise straight to
-## character-select.
+## with "Press Start" prompt. Always routes to character-select on Start; the
+## first-run controller prompt runs earlier, between bootstrap (logo check)
+## and this scene (see bootstrap.gd::_goto_title).
 
 @onready var prompt_label: Label = $VBox/PromptLabel
 @onready var version_label: Label = $VBox/VersionLabel
@@ -112,5 +112,4 @@ func _unhandled_input(event: InputEvent) -> void:
 			or (event is InputEventScreenTouch and event.pressed):
 		SfxManager.play("res://assets/sfx/ui/title_start.wav")
 		get_viewport().set_input_as_handled()
-		var next_scene := "res://scenes/2d/input_select.tscn" if not InputConfig.has_saved_config() else "res://scenes/2d/character_select.tscn"
-		SceneManager.goto_scene(next_scene)
+		SceneManager.goto_scene("res://scenes/2d/character_select.tscn")
