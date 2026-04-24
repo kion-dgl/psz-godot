@@ -37,7 +37,7 @@ const VERSION_FILE = resolve(REPO_ROOT, "VERSION");
 const DIST_DIR = resolve(REPO_ROOT, "dist");
 const PCK_OUT = join(DIST_DIR, "assets.pck");
 
-const GODOT_VERSION = "4.5";
+const GODOT_VERSION = "4.6";
 const PRESET_NAME = "Asset Pack";
 
 // Asset dirs that ship in the pack (i.e. NOT bundled with the main exe).
