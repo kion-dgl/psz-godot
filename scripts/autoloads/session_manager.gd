@@ -208,6 +208,14 @@ func get_location() -> String:
 	return _location
 
 
+## Force-set the current location. Called by scene controllers on _ready
+## because going to title and back doesn't reset it otherwise — a player who
+## went field → title → Dairon would leave _location = "field" and the HUD
+## would think they're still in combat.
+func set_location(loc: String) -> void:
+	_location = loc
+
+
 ## Get area_id for the current section (supports multi-area quests).
 ## Derives area from the first cell's stage prefix; falls back to session area_id.
 func get_current_area_id() -> String:

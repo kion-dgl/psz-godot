@@ -41,6 +41,11 @@ func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dic
 	player.spawn_position = player.global_position
 	CityState.set_spawn_key("")
 
+	# Force-sync SessionManager location to "city" — without this, a player
+	# who went field → title → Dairon would leave _location = "field" and
+	# the field HUD would treat Dairon as combat (showing the palette).
+	SessionManager.set_location("city")
+
 	# Play city music based on area name
 	var area_name: String = _get_area_name()
 	if area_name == "office":

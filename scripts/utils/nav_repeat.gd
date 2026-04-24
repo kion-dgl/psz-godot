@@ -23,7 +23,7 @@ class_name NavRepeat extends RefCounted
 const HOLD := 0.2
 const REPEAT := 1.0 / 30.0
 ## Right stick deflection above this threshold counts as "pressed" for ui_up/ui_down.
-const RSTICK_DEADZONE := 0.5
+const RSTICK_DEADZONE := 0.3
 
 var _actions: Array[String] = []
 var _callback: Callable

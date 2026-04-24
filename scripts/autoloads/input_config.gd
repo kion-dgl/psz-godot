@@ -44,7 +44,11 @@ const FACE_INDICES: Dictionary = {
 }
 
 var current_scheme: String = "keyboard"
-var invert_camera_x: bool = false
+## Default to inverted because the orbit camera's natural rotation direction
+## reads as "inverted" to most players — flipping the default makes the
+## toggle label ("Invert Camera X: ON") match the camera behaviour on first
+## boot instead of being misleading.
+var invert_camera_x: bool = true
 
 
 func _ready() -> void:
