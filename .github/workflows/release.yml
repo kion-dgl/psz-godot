@@ -37,7 +37,7 @@ jobs:
       - name: Setup Godot
         uses: chickensoft-games/setup-godot@v2
         with:
-          version: 4.5.1
+          version: 4.6.2
           use-dotnet: false
           include-templates: true
 
@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/godot/export_templates
-          key: godot-templates-4.5.1
+          key: godot-templates-4.6.2
 
       - name: Fetch assets for UID table
         # exclude_filter drops the actual asset bytes from the exe, but the
@@ -86,7 +86,7 @@ jobs:
 
       - name: Configure Godot editor settings for Android
         run: |
-          SETTINGS_FILE="$HOME/.config/godot/editor_settings-4.5.tres"
+          SETTINGS_FILE="$HOME/.config/godot/editor_settings-4.6.tres"
           if [ ! -f "$SETTINGS_FILE" ]; then
             SETTINGS_FILE="$HOME/.config/godot/editor_settings-4.tres"
           fi
