@@ -2778,11 +2778,13 @@ func test_input_config() -> void:
 
 	# Palette is physically scheme-independent (west/south/east) but raw button
 	# indices differ by scheme because the OS reports them differently.
+	# quick_weapon is on physical north across every scheme, also routed
+	# through FACE_INDICES so it lands on the right raw index.
 	var palette_expected: Dictionary = {
-		"xinput":    {"action_1": 2, "action_2": 0, "action_3": 1},  # W/S/E in SDL
-		"switch":    {"action_1": 3, "action_2": 1, "action_3": 0},  # W/S/E in hid-nintendo
-		"ds_cross":  {"action_1": 2, "action_2": 0, "action_3": 1},
-		"ds_circle": {"action_1": 2, "action_2": 0, "action_3": 1},
+		"xinput":    {"action_1": 2, "action_2": 0, "action_3": 1, "quick_weapon": 3},
+		"switch":    {"action_1": 3, "action_2": 1, "action_3": 0, "quick_weapon": 2},
+		"ds_cross":  {"action_1": 2, "action_2": 0, "action_3": 1, "quick_weapon": 3},
+		"ds_circle": {"action_1": 2, "action_2": 0, "action_3": 1, "quick_weapon": 3},
 	}
 	for palette_scheme in palette_expected:
 		InputConfig.current_scheme = palette_scheme

@@ -78,10 +78,15 @@ func _process(_delta: float) -> void:
 	# Hide HUD when an overlay (shop, menu, dialog) is open, or when the
 	# PSO start menu is up — the start menu isn't tracked in
 	# SceneManager._overlay_stack so we check its autoload directly.
-	var has_overlay: bool = not SceneManager._overlay_stack.is_empty() or PsoStartMenu.is_open()
+	# HP/PP stays visible only for the PSO start menu path; full-screen
+	# overlays (shops, storage, guild, inventory) hide everything including
+	# stats so the shop UI isn't overlaid with the gameplay HUD.
+	var has_scene_overlay: bool = not SceneManager._overlay_stack.is_empty()
+	var start_menu_open: bool = PsoStartMenu.is_open()
+	var has_overlay: bool = has_scene_overlay or start_menu_open
 	if has_overlay and not _hidden_for_overlay:
 		_hidden_for_overlay = true
-		hide_for_menu()
+		hide_for_menu(start_menu_open and not has_scene_overlay)
 	elif not has_overlay and _hidden_for_overlay:
 		_hidden_for_overlay = false
 		restore_after_menu()
@@ -118,11 +123,15 @@ func _is_in_city() -> bool:
 	return SessionManager.get_location() == "city"
 
 
-## Hide all HUD elements when a menu/shop/dialog is open. HP/PP stays up
-## — players need to see it at all times, including in the PSO start menu.
-func hide_for_menu() -> void:
+## Hide all HUD elements when a menu/shop/dialog is open.
+## HP/PP stays up only for the PSO start menu (keep_stats=true); full-screen
+## SceneManager overlays (shops, storage, guild, inventory) hide everything
+## so the overlay isn't painted on top of the stats panel.
+func hide_for_menu(keep_stats: bool = false) -> void:
 	for child in get_children():
-		if child is Control and child != _stats_panel:
+		if child is Control:
+			if keep_stats and child == _stats_panel:
+				continue
 			child.visible = false
 
 

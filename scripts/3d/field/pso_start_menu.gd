@@ -264,10 +264,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
-	# Right stick Y axis → menu scroll (alternative to d-pad)
+	# Right stick Y axis → menu scroll (alternative to d-pad). Active threshold
+	# 0.3 so a gentle tilt registers; release threshold 0.15 so the hysteresis
+	# band (0.15–0.3) keeps the stick from re-triggering on small oscillations.
 	if event is InputEventJoypadMotion:
 		var joy: InputEventJoypadMotion = event as InputEventJoypadMotion
-		if joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) > 0.5:
+		if joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) > 0.3:
 			# Throttle: only trigger once per stick deflection
 			if not _rstick_held:
 				_rstick_held = true
@@ -278,9 +280,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				_canvas.queue_redraw()
 			get_viewport().set_input_as_handled()
 			return
-		elif joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) < 0.3:
+		elif joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) < 0.15:
 			_rstick_held = false
-			# Don't consume deadzone return
+			# Consume the deadzone-return event after resetting hold state.
 			get_viewport().set_input_as_handled()
 			return
 

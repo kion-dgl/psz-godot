@@ -27,7 +27,11 @@ const CANCEL_ACTIONS := ["ui_cancel"]
 const PALETTE_1_ACTIONS := ["action_1"]  # always on west
 const PALETTE_2_ACTIONS := ["action_2"]  # always on south (overlaps accept when accept_on_south)
 const PALETTE_3_ACTIONS := ["action_3"]  # always on east  (overlaps cancel when accept_on_south)
-# action_4 (reserved): north — no binding yet, will land here when added.
+## Quick weapon menu is on the north face button. Scheme-aware because
+## button indices for "north" differ by controller (3 on SDL-normalized
+## xinput/DS, 2 on Linux hid-nintendo Switch) — hard-binding it in
+## project.godot would collide with palette action_1 on Switch.
+const QUICK_WEAPON_ACTIONS := ["quick_weapon"]
 
 ## Physical face-button → Godot button index, per scheme. "xinput" uses the
 ## SDL-normalized layout (south=0, east=1, west=2, north=3). The "switch"
@@ -44,7 +48,11 @@ const FACE_INDICES: Dictionary = {
 }
 
 var current_scheme: String = "keyboard"
-var invert_camera_x: bool = false
+## Default to inverted because the orbit camera's natural rotation direction
+## reads as "inverted" to most players — flipping the default makes the
+## toggle label ("Invert Camera X: ON") match the camera behaviour on first
+## boot instead of being misleading.
+var invert_camera_x: bool = true
 
 
 func _ready() -> void:
@@ -94,13 +102,14 @@ func _face(position: String) -> int:
 
 func _apply_button_mapping() -> void:
 	## Palette assignment to physical positions is scheme-independent
-	## (west/south/east, north reserved). The raw button indices those
-	## positions correspond to come from FACE_INDICES[current_scheme] so the
-	## same physical press fires the same action regardless of how the OS
-	## reports buttons.
+	## (west/south/east, north holds quick_weapon). The raw button indices
+	## those positions correspond to come from FACE_INDICES[current_scheme]
+	## so the same physical press fires the same action regardless of how
+	## the OS reports buttons.
 	_set_joypad_button(PALETTE_1_ACTIONS, _face("west"))
 	_set_joypad_button(PALETTE_2_ACTIONS, _face("south"))
 	_set_joypad_button(PALETTE_3_ACTIONS, _face("east"))
+	_set_joypad_button(QUICK_WEAPON_ACTIONS, _face("north"))
 
 	if accept_on_east():
 		_set_joypad_button(ACCEPT_ACTIONS, _face("east"))
