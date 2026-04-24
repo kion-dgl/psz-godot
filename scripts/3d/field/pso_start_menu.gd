@@ -282,7 +282,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		elif joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) < 0.15:
 			_rstick_held = false
-			# Don't consume deadzone return
+			# Consume the deadzone-return event after resetting hold state.
 			get_viewport().set_input_as_handled()
 			return
 
