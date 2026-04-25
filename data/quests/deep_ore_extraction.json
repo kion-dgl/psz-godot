@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "last_updated": "2026-03-20",
+  "last_updated": "2026-04-25",
   "id": "deep_ore_extraction",
   "name": "Deep Ore Extraction",
-  "description": "Requested by: Weapon Smith. Escort apprentice Dorn into the valley to recover iron ore from creature-infested deposits.",
+  "description": "Requested by: Weapon Smith. Escort apprentice Dorn into the valley to prospect for new mineral deposits — the known veins are tapped out.",
   "area_id": "gurhacia",
   "sections": [
     {
@@ -46,7 +46,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "The first vein should be just ahead. These creatures nest near mineral deposits — something in the ore attracts them. Clear the room, I'll handle the rest."
+                  "text": "The mineral traces on the survey maps point this way. The creatures nest near deposits — something in the ore attracts them. If we find nests, we’re probably close."
                 }
               ]
             }
@@ -338,16 +338,12 @@
                 0,
                 19.9
               ],
-              "item_id": "iron_ore",
-              "item_label": "Iron Ore",
+              "item_id": "acenaline",
+              "item_label": "Acenaline",
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Good iron. You can tell by the weight — this hasn't oxidized at all. Most surface ore is rusted through, but the stuff buried deep stays pure."
-                },
-                {
-                  "speaker": "Dorn",
-                  "text": "A blade's only as good as what you forge it from. Junk iron makes junk steel — shatters on the first real hit. This? This'll hold an edge."
+                  "text": "Acenaline. Flexible compound — the forge uses it as a binding agent. Not exciting, but we need it."
                 }
               ]
             },
@@ -602,12 +598,12 @@
                 0,
                 8
               ],
-              "item_id": "iron_ore",
-              "item_label": "Iron Ore",
+              "item_id": "acenaline",
+              "item_label": "Acenaline",
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Another good vein. Two down — one more and we'll have enough to start a proper batch."
+                  "text": "More Acenaline, same grade. At least we know there’s material out here. That’s more than the last three teams came back with."
                 }
               ]
             }
@@ -644,16 +640,16 @@
                 0,
                 -15.9
               ],
-              "item_id": "iron_ore",
-              "item_label": "Iron Ore",
+              "item_id": "peparian",
+              "item_label": "Peparian",
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "That's three. With this much raw stock, Master can forge something proper — not the salvage junk everyone's been carrying."
+                  "text": "Wait — feel how dense this is. This isn’t valley-grade at all."
                 },
                 {
                   "speaker": "Dorn",
-                  "text": "But I spotted traces of something deeper in. Darker ore, heavier. The kind you use for a weapon's core — the part that channels photon energy. Let's push through."
+                  "text": "This is Peparian. Sturdy alloy — you normally only find it in snowfield mines or underground. Finding it here means the deeper deposits could have real potential."
                 }
               ]
             },
@@ -991,7 +987,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "See those tool marks on the walls? Miners worked this corridor. Before everything fell apart, this was a trade route. Now it's just us and whatever's living down here."
+                  "text": "See those tool marks on the walls? Miners worked this passage before the creatures moved in. We’re past where anyone’s surveyed."
                 }
               ]
             },
@@ -1100,7 +1096,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "The deeper veins are richer but the creatures are worse. Stay sharp."
+                  "text": "If the surface had Peparian, the deep veins could have anything. Stay sharp."
                 }
               ]
             },
@@ -1515,8 +1511,8 @@
                 0,
                 -7.7
               ],
-              "item_id": "rich_ore",
-              "item_label": "Rich Ore",
+              "item_id": "dianaline",
+              "item_label": "Dianaline",
               "actions": [
                 "complete_quest",
                 "telepipe"
@@ -1524,11 +1520,11 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "This one's got a dark streak through it — that's carbon banding. Makes for stronger steel. The old smiths would've killed for stock like this."
+                  "text": "...I’ve never handled anything like this outside of a textbook. This is Dianaline — refined polymer. Way above anything we expected to find in the valley."
                 },
                 {
                   "speaker": "Dorn",
-                  "text": "That's everything we need. Let's get back to the shop."
+                  "text": "If there’s a vein of this down here, it changes everything for the forge. Let’s get these samples back."
                 }
               ]
             },
@@ -1590,30 +1586,39 @@
     },
     {
       "speaker": "Dorn",
-      "text": "The forge has been cold for weeks. Can't make anything without raw iron, and the valley deposits are crawling with creatures."
+      "text": "The known veins are tapped out. We’ve been stretching the last of the Carlian for weeks, but there’s nothing left worth smelting."
     },
     {
       "speaker": "Dorn",
-      "text": "No new weapons, no repairs — hunters are going out with worn-down gear. It's only going to get worse."
+      "text": "No materials means no weapons, no repairs. Hunters are going out with worn-down gear."
     },
     {
       "speaker": "Dorn",
-      "text": "I know where the veins are. I just need someone to keep the creatures off me while I work."
+      "text": "I’ve been going over the old geological surveys. The deeper caves in the valley have never been properly prospected — every team that’s gone out has been driven back."
+    },
+    {
+      "speaker": "Dorn",
+      "text": "I need someone to keep the creatures off me while I take samples. If the deposits are what I think they are, we can make a case for a real mining operation."
     },
     {
       "speaker": "Principal",
-      "text": "No ore means no equipment. Get down there and bring back what we need."
+      "text": "No ore means no equipment. Get down there and find out what we’re working with."
     }
   ],
   "objectives": [
     {
-      "item_id": "iron_ore",
-      "label": "Iron Ore",
-      "target": 3
+      "item_id": "acenaline",
+      "label": "Acenaline",
+      "target": 2
     },
     {
-      "item_id": "rich_ore",
-      "label": "Rich Ore",
+      "item_id": "peparian",
+      "label": "Peparian",
+      "target": 1
+    },
+    {
+      "item_id": "dianaline",
+      "label": "Dianaline",
       "target": 1
     }
   ],
