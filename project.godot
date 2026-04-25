@@ -56,6 +56,11 @@ FrameProfiler="*res://scripts/autoloads/frame_profiler.gd"
 MusicManager="*res://scripts/autoloads/music_manager.gd"
 SfxManager="*res://scripts/autoloads/sfx_manager.gd"
 PsoStartMenu="*res://scripts/3d/field/pso_start_menu.gd"
+MobileControls="*res://scripts/autoloads/mobile_controls.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/virtual_joystick/plugin.cfg")
 
 [display]
 
