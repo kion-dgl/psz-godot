@@ -338,12 +338,66 @@
                 0,
                 19.9
               ],
-              "item_id": "acenaline",
-              "item_label": "Acenaline",
+              "item_id": "carlian",
+              "item_label": "Carlian",
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Acenaline. Flexible compound — the forge uses it as a binding agent. Not exciting, but we need it."
+                  "text": "Carlian. Same low-grade stuff the forge is already drowning in."
+                },
+                {
+                  "speaker": "Dorn",
+                  "text": "Barely worth smelting, but at least it confirms there are deposits out here. Let’s see if the deeper veins have anything better."
+                }
+              ],
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "One sample down. Let’s keep looking — we need more if we’re going to make a case for mining here."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "Two samples. We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 4
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "That’s everything. With samples like these, Master can’t say no to a mining operation. Let’s get back."
+                    }
+                  ],
+                  "actions": [
+                    "complete_quest",
+                    "telepipe"
+                  ]
                 }
               ]
             },
@@ -603,7 +657,61 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "More Acenaline, same grade. At least we know there’s material out here. That’s more than the last three teams came back with."
+                  "text": "Acenaline — flexible compound, the forge uses it as a binding agent."
+                },
+                {
+                  "speaker": "Dorn",
+                  "text": "Can’t make much without it. This alone makes the trip worth something."
+                }
+              ],
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "One sample down. Let’s keep looking — we need more if we’re going to make a case for mining here."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "Two samples. We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 4
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "That’s everything. With samples like these, Master can’t say no to a mining operation. Let’s get back."
+                    }
+                  ],
+                  "actions": [
+                    "complete_quest",
+                    "telepipe"
+                  ]
                 }
               ]
             }
@@ -650,6 +758,56 @@
                 {
                   "speaker": "Dorn",
                   "text": "This is Peparian. Sturdy alloy — you normally only find it in snowfield mines or underground. Finding it here means the deeper deposits could have real potential."
+                }
+              ],
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "One sample down. Let’s keep looking — we need more if we’re going to make a case for mining here."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "Two samples. We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 4
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "That’s everything. With samples like these, Master can’t say no to a mining operation. Let’s get back."
+                    }
+                  ],
+                  "actions": [
+                    "complete_quest",
+                    "telepipe"
+                  ]
                 }
               ]
             },
@@ -1513,18 +1671,64 @@
               ],
               "item_id": "dianaline",
               "item_label": "Dianaline",
-              "actions": [
-                "complete_quest",
-                "telepipe"
-              ],
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "...I’ve never handled anything like this outside of a textbook. This is Dianaline — refined polymer. Way above anything we expected to find in the valley."
+                  "text": "...I’ve never handled anything like this outside of a textbook. This is Dianaline — refined polymer."
                 },
                 {
                   "speaker": "Dorn",
-                  "text": "If there’s a vein of this down here, it changes everything for the forge. Let’s get these samples back."
+                  "text": "Way above anything we expected to find in the valley."
+                }
+              ],
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "One sample down. Let’s keep looking — we need more if we’re going to make a case for mining here."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "Two samples. We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 4
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Dorn",
+                      "text": "That’s everything. With samples like these, Master can’t say no to a mining operation. Let’s get back."
+                    }
+                  ],
+                  "actions": [
+                    "complete_quest",
+                    "telepipe"
+                  ]
                 }
               ]
             },
@@ -1607,9 +1811,14 @@
   ],
   "objectives": [
     {
+      "item_id": "carlian",
+      "label": "Carlian",
+      "target": 1
+    },
+    {
       "item_id": "acenaline",
       "label": "Acenaline",
-      "target": 2
+      "target": 1
     },
     {
       "item_id": "peparian",
