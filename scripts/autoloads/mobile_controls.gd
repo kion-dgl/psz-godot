@@ -18,11 +18,10 @@ const VirtualJoystickScene := preload("res://addons/virtual_joystick/virtual_joy
 # (16:9); stretch/aspect="keep" gives us letterbox/pillarbox on non-16:9
 # phones so the visible-rect remains 1280×720 in scene units regardless of
 # the OS pixel dims.
-const JOYSTICK_INSET   := Vector2(160, 200)   # from bottom-left corner
-const ACTION_INSET     := Vector2(200, 200)   # from bottom-right (centre of diamond)
-const ACTION_RADIUS    := 80                  # button distance from diamond centre
-const ACTION_BTN_SIZE  := Vector2(120, 120)
-const TOP_BTN_SIZE     := Vector2(130, 56)
+const ACTION_INSET     := Vector2(180, 180)   # from bottom-right (centre of diamond)
+const ACTION_RADIUS    := 95                  # button distance from diamond centre
+const ACTION_BTN_SIZE  := Vector2(80, 80)     # smaller so the diamond doesn't overlap
+const TOP_BTN_SIZE     := Vector2(110, 48)
 const TOP_INSET        := 24
 
 # Joystick → menu mirror. When the joystick output crosses these in any
@@ -80,33 +79,44 @@ func _ready() -> void:
 	_build(v)
 
 func _build(v: Vector2) -> void:
-	# ---- Movement: virtual joystick bottom-left ----
+	# ---- Movement: dynamic Roblox-style joystick on left half ----
+	# The joystick Control fills the left half of the screen but the visual
+	# disc is hidden until touched. Wherever the thumb lands, that's where
+	# the base spawns — and the tip drags from there. Same as the Roblox /
+	# Genshin / mobile-MMO convention.
 	_joystick = VirtualJoystickScene.instantiate()
 	_joystick.use_input_actions = true
 	_joystick.action_left = "move_left"
 	_joystick.action_right = "move_right"
 	_joystick.action_up = "move_forward"
 	_joystick.action_down = "move_backward"
-	_joystick.position = Vector2(JOYSTICK_INSET.x, v.y - JOYSTICK_INSET.y)
+	_joystick.joystick_mode = _joystick.Joystick_mode.DYNAMIC
+	_joystick.visibility_mode = _joystick.Visibility_mode.WHEN_TOUCHED
+	# Make the touch hit-area cover the left half of the screen.
+	_joystick.position = Vector2.ZERO
+	_joystick.size = Vector2(v.x * 0.5, v.y)
+	_joystick.mouse_filter = Control.MOUSE_FILTER_PASS
 	_layer.add_child(_joystick)
 
 	# ---- A/B/X/Y diamond bottom-right (SNES-style) ----
+	# White outline circles only — no fill — so they don't block what's
+	# behind them. Letter is the only solid pixel.
 	var diamond_centre := Vector2(v.x - ACTION_INSET.x, v.y - ACTION_INSET.y)
-	_add_button("interact",      "A", Color(0.96, 0.46, 0.42, 0.85), diamond_centre + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
-	_add_button("dodge",         "B", Color(0.42, 0.74, 0.96, 0.85), diamond_centre + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_button("palette_swap",  "X", Color(0.55, 0.96, 0.65, 0.85), diamond_centre + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_button("quick_weapon",  "Y", Color(0.96, 0.85, 0.42, 0.85), diamond_centre + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_button("interact",      "A", diamond_centre + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_button("dodge",         "B", diamond_centre + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_button("palette_swap",  "X", diamond_centre + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_button("quick_weapon",  "Y", diamond_centre + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
 
 	# ---- Top row ----
 	var start_pos := Vector2(v.x * 0.5, TOP_INSET + TOP_BTN_SIZE.y * 0.5)
-	_add_button("start",         "START", Color(0.7, 0.7, 0.7, 0.7), start_pos, Vector2(150, 60))
-	_add_button("pause",         "II",    Color(0.6, 0.6, 0.6, 0.6), Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, TOP_INSET + TOP_BTN_SIZE.y * 0.5), TOP_BTN_SIZE)
-	_add_button("quest_log",     "LOG",   Color(0.6, 0.6, 0.6, 0.6), Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET, TOP_INSET + TOP_BTN_SIZE.y * 0.5), TOP_BTN_SIZE)
+	_add_button("start",         "START", start_pos,                                                                Vector2(140, 50))
+	_add_button("pause",         "II",    Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, TOP_INSET + TOP_BTN_SIZE.y * 0.5), TOP_BTN_SIZE)
+	_add_button("quest_log",     "LOG",   Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET,        TOP_INSET + TOP_BTN_SIZE.y * 0.5), TOP_BTN_SIZE)
 
 	# ---- Camera shoulder buttons ----
 	var shoulder_y := TOP_INSET + TOP_BTN_SIZE.y + 12 + TOP_BTN_SIZE.y * 0.5
-	_add_button("camera_left",   "◀ CAM", Color(0.45, 0.45, 0.55, 0.6), Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET, shoulder_y), TOP_BTN_SIZE)
-	_add_button("camera_right",  "CAM ▶", Color(0.45, 0.45, 0.55, 0.6), Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, shoulder_y), TOP_BTN_SIZE)
+	_add_button("camera_left",   "◀ CAM", Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET,        shoulder_y), TOP_BTN_SIZE)
+	_add_button("camera_right",  "CAM ▶", Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, shoulder_y), TOP_BTN_SIZE)
 
 func _relayout() -> void:
 	# Tear down + rebuild on resize. Cheap — only a handful of nodes.
@@ -114,7 +124,9 @@ func _relayout() -> void:
 		c.queue_free()
 	_build(get_viewport().get_visible_rect().size)
 
-func _add_button(action: String, label: String, color: Color, centre: Vector2, size: Vector2) -> void:
+func _add_button(action: String, label: String, centre: Vector2, size: Vector2) -> void:
+	# White outlined circle/pill with a centred label. Transparent fill so
+	# what's behind the button stays visible.
 	var btn := TouchScreenButton.new()
 	btn.action = action
 	btn.shape_visible = false
@@ -127,20 +139,22 @@ func _add_button(action: String, label: String, color: Color, centre: Vector2, s
 
 	var panel := Panel.new()
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = color
+	sb.bg_color = Color(0, 0, 0, 0)        # fully transparent fill
 	var corner := int(min(size.x, size.y) * 0.5)
 	sb.corner_radius_top_left = corner
 	sb.corner_radius_top_right = corner
 	sb.corner_radius_bottom_left = corner
 	sb.corner_radius_bottom_right = corner
-	sb.border_width_top = 2
-	sb.border_width_bottom = 2
-	sb.border_width_left = 2
-	sb.border_width_right = 2
-	sb.border_color = Color(1, 1, 1, 0.4)
+	sb.border_width_top = 3
+	sb.border_width_bottom = 3
+	sb.border_width_left = 3
+	sb.border_width_right = 3
+	sb.border_color = Color(1, 1, 1, 0.85)  # white outline
 	panel.add_theme_stylebox_override("panel", sb)
 	panel.size = size
 	panel.position = -size * 0.5
+	# Don't intercept touches — TouchScreenButton needs them.
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(panel)
 
 	var lbl := Label.new()
@@ -148,9 +162,14 @@ func _add_button(action: String, label: String, color: Color, centre: Vector2, s
 	lbl.size = size
 	lbl.position = -size * 0.5
 	lbl.add_theme_color_override("font_color", Color.WHITE)
-	lbl.add_theme_font_size_override("font_size", int(min(size.x, size.y) * 0.32))
+	# Subtle dark drop-shadow so the white text stays readable on bright bg.
+	lbl.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+	lbl.add_theme_constant_override("shadow_offset_x", 1)
+	lbl.add_theme_constant_override("shadow_offset_y", 1)
+	lbl.add_theme_font_size_override("font_size", int(min(size.x, size.y) * 0.36))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(lbl)
 
 	# Mirror to ui_* if applicable
