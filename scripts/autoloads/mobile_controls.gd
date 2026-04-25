@@ -85,33 +85,22 @@ func _ready() -> void:
 
 func _build(v: Vector2) -> void:
 	# ---- Movement: visible joystick anchored bottom-left ----
-	# Always visible (FIXED + ALWAYS) so the player can SEE there's a stick
-	# to grab. The Control still covers the left half of the screen so a
-	# tap anywhere on that side will start dragging the tip — best of both
-	# worlds without depending on the addon's WHEN_TOUCHED mode (which seemed
-	# unreliable on Android in testing).
+	# Keep this dead simple: instantiate the addon scene with its DEFAULTS
+	# (FIXED mode, ALWAYS visible) and just translate the whole Control so
+	# the visible base sits in the bottom-left corner. No size overrides,
+	# no Base reparenting — the previous build's tweaks broke the addon's
+	# internal _base_default_position capture and apparently took the rest
+	# of the scene tree down with it.
 	_joystick = VirtualJoystickScene.instantiate()
 	_joystick.use_input_actions = true
 	_joystick.action_left = "move_left"
 	_joystick.action_right = "move_right"
 	_joystick.action_up = "move_forward"
 	_joystick.action_down = "move_backward"
-	_joystick.joystick_mode = _joystick.Joystick_mode.FIXED
-	_joystick.visibility_mode = _joystick.Visibility_mode.ALWAYS
-	# Cover the bottom half of the left side. The Base is anchored inside
-	# this Control so it sits at JOYSTICK_INSET from the bottom-left.
-	_joystick.size = Vector2(v.x * 0.5, v.y * 0.6)
-	_joystick.position = Vector2(0, v.y - _joystick.size.y)
-	_joystick.mouse_filter = Control.MOUSE_FILTER_PASS
+	# Anchor in scene coords. The joystick's hit area is whatever Control
+	# size the .tscn ships with (typically a few hundred px across).
+	_joystick.position = Vector2(JOYSTICK_INSET.x, v.y - JOYSTICK_INSET.y - 90)
 	_layer.add_child(_joystick)
-	# Once added, nudge the visible Base into the corner. The addon's _ready
-	# captures `_base_default_position` when it enters the tree, so we set
-	# the Base position right after.
-	var base := _joystick.get_node_or_null("Base") as Node
-	if base and base is Control:
-		var base_ctrl := base as Control
-		var bsize := base_ctrl.size
-		base_ctrl.position = Vector2(JOYSTICK_INSET.x - bsize.x * 0.5, _joystick.size.y - JOYSTICK_INSET.y - bsize.y * 0.5)
 
 	# ---- A/B/X/Y diamond bottom-right (SNES layout) ----
 	# A right = interact, B bottom = dodge, X top = quick weapon (menu),
