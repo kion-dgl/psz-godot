@@ -216,21 +216,46 @@ function EnemyMarker({ obj, selected, onClick }: { obj: CellObject; selected: bo
   );
 }
 
-/** Fence marker — blue horizontal bar */
+/** Fence marker — accurate bounding box (6 x 1 x 0.08) */
 function FenceMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
   const yRot = ((obj.rotation || 0) * Math.PI) / 180;
   const sx = obj.scale_x ?? 1;
-  const w = 3 * sx;
+  const w = 6 * sx;
   return (
     <group position={obj.position} rotation={[0, yRot, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
-      <mesh position={[0, 1, 0]}>
-        <boxGeometry args={[w, 2, 0.3]} />
+      <mesh position={[0, 0.5, 0]}>
+        <boxGeometry args={[w, 1, 0.08]} />
         <meshBasicMaterial color="#4488cc" transparent opacity={selected ? 0.7 : 0.4} />
       </mesh>
-      <lineSegments position={[0, 1, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(w, 2, 0.3)]} />
+      <lineSegments position={[0, 0.5, 0]}>
+        <edgesGeometry args={[new THREE.BoxGeometry(w, 1, 0.08)]} />
         <lineBasicMaterial color={selected ? '#ffffff' : '#4488cc'} />
       </lineSegments>
+    </group>
+  );
+}
+
+/** Wall marker — accurate bounding box (6 x 1.85 x 0.52) */
+function WallMarker({ obj, selected, onClick }: { obj: CellObject; selected: boolean; onClick: () => void }) {
+  const yRot = ((obj.rotation || 0) * Math.PI) / 180;
+  const isDestructible = obj.destructible !== false;
+  return (
+    <group position={obj.position} rotation={[0, yRot, 0]} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      <mesh position={[0, 0.73, 0]}>
+        <boxGeometry args={[6, 1.85, 0.52]} />
+        <meshBasicMaterial color={isDestructible ? '#8899aa' : '#667788'} transparent opacity={selected ? 0.7 : 0.4} />
+      </mesh>
+      <lineSegments position={[0, 0.73, 0]}>
+        <edgesGeometry args={[new THREE.BoxGeometry(6, 1.85, 0.52)]} />
+        <lineBasicMaterial color={selected ? '#ffffff' : '#8899aa'} />
+      </lineSegments>
+      {!isDestructible && (
+        <Html position={[0, 2.5, 0]} center style={{ pointerEvents: 'none' }}>
+          <div style={{ background: '#444', color: '#fff', padding: '1px 4px', borderRadius: '3px', fontSize: '9px' }}>
+            SOLID
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
@@ -524,6 +549,8 @@ function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: b
       return <EnemyMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'fence':
       return <FenceMarker obj={obj} selected={selected} onClick={onClick} />;
+    case 'wall':
+      return <WallMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'step_switch':
       return <SwitchMarker obj={obj} selected={selected} onClick={onClick} />;
     case 'message':
@@ -554,7 +581,7 @@ function ObjectMarker({ obj, selected, onClick }: { obj: CellObject; selected: b
 }
 
 /** Object placement cursor — follows mouse on ground plane */
-function ObjectPlacementCursor({ objectType }: { objectType: CellObjectType }) {
+function ObjectPlacementCursor({ objectType, rotation = 0 }: { objectType: CellObjectType; rotation?: number }) {
   const { camera, raycaster, pointer } = useThree();
   const groupRef = useRef<THREE.Group>(null);
   const groundPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
@@ -569,8 +596,10 @@ function ObjectPlacementCursor({ objectType }: { objectType: CellObjectType }) {
     }
   });
 
+  const yRot = (rotation * Math.PI) / 180;
+
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} rotation={[0, yRot, 0]}>
       {(objectType === 'box' || objectType === 'rare_box') && (
         <mesh position={[0, 0.5, 0]}>
           <boxGeometry args={[1, 1, 1]} />
@@ -584,8 +613,14 @@ function ObjectPlacementCursor({ objectType }: { objectType: CellObjectType }) {
         </mesh>
       )}
       {objectType === 'fence' && (
-        <mesh position={[0, 1, 0]}>
-          <boxGeometry args={[3, 2, 0.3]} />
+        <mesh position={[0, 0.5, 0]}>
+          <boxGeometry args={[6, 1, 0.08]} />
+          <meshBasicMaterial color={color} transparent opacity={0.3} />
+        </mesh>
+      )}
+      {objectType === 'wall' && (
+        <mesh position={[0, 0.73, 0]}>
+          <boxGeometry args={[6, 1.85, 0.52]} />
           <meshBasicMaterial color={color} transparent opacity={0.3} />
         </mesh>
       )}
@@ -1178,7 +1213,7 @@ function CellContentInspector({
 
         {/* Object palette */}
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-          {(['box', 'rare_box', 'enemy', 'fence', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest', 'area_warp', 'quest_item', 'needle_trap', 'bear_trap'] as CellObjectType[]).map(type => (
+          {(['box', 'rare_box', 'enemy', 'fence', 'wall', 'step_switch', 'message', 'story_prop', 'dialog_trigger', 'npc', 'telepipe', 'warp', 'warp_dest', 'area_warp', 'quest_item', 'needle_trap', 'bear_trap'] as CellObjectType[]).map(type => (
             <button
               key={type}
               onClick={() => onSetPlacingObject(placingObject === type ? null : type)}
@@ -1356,6 +1391,37 @@ function CellContentInspector({
                             color: '#fff', fontSize: '10px',
                           }}
                         />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Wall: rotation + destructible toggle */}
+                  {isSel && obj.type === 'wall' && (
+                    <>
+                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '10px', color: '#888' }}>Rot:</span>
+                        {[0, 90, 180, 270].map(deg => (
+                          <button
+                            key={deg}
+                            onClick={(e) => { e.stopPropagation(); onUpdateObject(obj.id, { rotation: deg || undefined }); }}
+                            style={{
+                              ...btnStyle, padding: '2px 6px', fontSize: '9px',
+                              background: (obj.rotation || 0) === deg ? '#8899aa' : '#333',
+                            }}
+                          >
+                            {deg}&deg;
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ marginTop: '4px', display: 'flex', gap: '4px', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+                        <label style={{ fontSize: '10px', color: '#888', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            checked={obj.destructible !== false}
+                            onChange={(e) => onUpdateObject(obj.id, { destructible: e.target.checked })}
+                          />
+                          Destructible
+                        </label>
                       </div>
                     </>
                   )}
@@ -1906,6 +1972,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
   const [placingKey, setPlacingKey] = useState(false);
   const [placingKeyDrop, setPlacingKeyDrop] = useState(false);
   const [placingObject, setPlacingObject] = useState<CellObjectType | null>(null);
+  const [placingRotation, setPlacingRotation] = useState(0);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [repositioningObjectId, setRepositioningObjectId] = useState<string | null>(null);
 
@@ -1978,6 +2045,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
 
   const handleSetPlacingObject = useCallback((type: CellObjectType | null) => {
     setPlacingObject(type);
+    setPlacingRotation(0);
     setPlacingKey(false);
     setPlacingKeyDrop(false);
     setRepositioningObjectId(null);
@@ -2021,6 +2089,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
         type: placingObject,
         position: pos,
       };
+      if ((placingObject === 'fence' || placingObject === 'wall') && placingRotation) newObj.rotation = placingRotation;
       if (placingObject === 'enemy') newObj.enemy_id = 'lizard';
       if (placingObject === 'message') newObj.text = '';
       if (placingObject === 'story_prop') newObj.prop_path = '';
@@ -2030,6 +2099,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
       if (placingObject === 'warp_dest') { newObj.link_id = ''; }
       if (placingObject === 'area_warp') { newObj.link_id = ''; newObj.portal_dir = ''; newObj.area_warp_label = ''; }
       if (placingObject === 'quest_item') { newObj.quest_item_id = ''; newObj.quest_item_label = ''; }
+      if (placingObject === 'wall') { newObj.destructible = true; }
       return {
         ...prev,
         cells: {
@@ -2038,7 +2108,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
         },
       };
     });
-  }, [selectedCell, placingObject, onUpdateProject]);
+  }, [selectedCell, placingObject, placingRotation, onUpdateProject]);
 
   const handleDeleteObject = useCallback((objId: string) => {
     if (!selectedCell) return;
@@ -2213,7 +2283,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
               {/* Object placement mode */}
               {placingObject && (
                 <>
-                  <ObjectPlacementCursor objectType={placingObject} />
+                  <ObjectPlacementCursor objectType={placingObject} rotation={placingRotation} />
                   <ObjectClickPlane onPlace={handlePlaceObject} />
                 </>
               )}
@@ -2268,13 +2338,29 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
             {placingObject && (
               <div style={{
                 position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
-                background: CELL_OBJECT_COLORS[placingObject], padding: '8px 20px',
-                borderRadius: '20px', fontSize: '13px', color: '#fff', fontWeight: 600,
-                cursor: 'pointer',
-              }}
-              onClick={() => setPlacingObject(null)}
-              >
-                Click to place {CELL_OBJECT_LABELS[placingObject]} | Click here to cancel
+                display: 'flex', gap: '8px', alignItems: 'center',
+              }}>
+                {(placingObject === 'fence' || placingObject === 'wall') && (
+                  <button
+                    onClick={() => setPlacingRotation(r => (r + 90) % 360)}
+                    style={{
+                      background: '#333', border: '1px solid #888', borderRadius: '20px',
+                      padding: '8px 16px', fontSize: '13px', color: '#fff', fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Rot: {placingRotation}&deg;
+                  </button>
+                )}
+                <div style={{
+                  background: CELL_OBJECT_COLORS[placingObject], padding: '8px 20px',
+                  borderRadius: '20px', fontSize: '13px', color: '#fff', fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+                onClick={() => setPlacingObject(null)}
+                >
+                  Click to place {CELL_OBJECT_LABELS[placingObject]} | Click here to cancel
+                </div>
               </div>
             )}
 

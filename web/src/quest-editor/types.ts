@@ -61,7 +61,7 @@ export type Direction = 'north' | 'south' | 'east' | 'west';
 // Cell Objects (placed in 3D stage)
 // ============================================================================
 
-export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest' | 'area_warp' | 'quest_item' | 'needle_trap' | 'bear_trap';
+export type CellObjectType = 'box' | 'rare_box' | 'enemy' | 'fence' | 'wall' | 'step_switch' | 'message' | 'story_prop' | 'dialog_trigger' | 'npc' | 'telepipe' | 'warp' | 'warp_dest' | 'area_warp' | 'quest_item' | 'needle_trap' | 'bear_trap';
 
 export interface CellObject {
   /** Unique ID within cell (e.g., "box_0", "enemy_1") */
@@ -118,6 +118,8 @@ export interface CellObject {
   area_warp_label?: string;
   /** Gate model Y rotation in radians for type='area_warp' */
   area_warp_rotation_y?: number;
+  /** Whether a wall is destructible (default true) */
+  destructible?: boolean;
 }
 
 export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
@@ -125,6 +127,7 @@ export const CELL_OBJECT_COLORS: Record<CellObjectType, string> = {
   rare_box: '#ddaa33',
   enemy: '#cc4444',
   fence: '#4488cc',
+  wall: '#8899aa',
   step_switch: '#44cc66',
   message: '#cc66ff',
   story_prop: '#cccc44',
@@ -144,6 +147,7 @@ export const CELL_OBJECT_LABELS: Record<CellObjectType, string> = {
   rare_box: 'Rare Box',
   enemy: 'Enemy',
   fence: 'Fence',
+  wall: 'Wall',
   step_switch: 'Switch',
   message: 'Message',
   story_prop: 'Story Prop',

@@ -7,6 +7,9 @@ signal destroyed_wall
 
 const MIRROR_SHADER = preload("res://scripts/3d/shaders/mirror_repeat.gdshader")
 
+## Whether this wall can be destroyed by player attacks
+@export var is_destructible: bool = true
+
 ## Collision body for physical presence
 var collision_body: StaticBody3D
 
@@ -14,7 +17,7 @@ var collision_body: StaticBody3D
 func _init() -> void:
 	element_state = "intact"
 	model_path = "valley/o01_wall.glb"
-	collision_size = Vector3(2, 2, 0.5)
+	collision_size = Vector3(6, 1.85, 0.52)
 
 
 func _ready() -> void:
@@ -70,6 +73,8 @@ func _apply_state() -> void:
 
 ## Called when the wall takes damage (from player attacks)
 func take_damage(_amount: int = 1) -> void:
+	if not is_destructible:
+		return
 	if element_state == "destroyed":
 		return
 
