@@ -45,9 +45,22 @@ var _action_state := {}      # action → bool currently pressed
 var _ui_state := {}          # ui action → bool we currently have pressed
 
 func _ready() -> void:
-	if not DisplayServer.is_touchscreen_available():
+	# Decide whether to activate. Check BOTH the platform feature tag (set at
+	# export time, never lies on Android/iOS) and the runtime touchscreen
+	# probe (covers PCs with a touchscreen). Earlier I queue_free()'d here
+	# when DisplayServer.is_touchscreen_available() returned false at boot —
+	# but that probe can return false on the very first frame on some Android
+	# devices, killing the overlay permanently. Belt + braces.
+	var is_mobile_platform := OS.has_feature("android") or OS.has_feature("ios")
+	var has_touch := DisplayServer.is_touchscreen_available()
+	if not (is_mobile_platform or has_touch):
 		queue_free()
 		return
+	# Mirror desktop behaviour: emulate touch from mouse so we can sanity-test
+	# the overlay on a desktop debug build.
+	Input.set_emulate_mouse_from_touch(true)
+
+	print("[MobileControls] activating — platform_mobile=%s touch=%s" % [is_mobile_platform, has_touch])
 
 	_layer = CanvasLayer.new()
 	_layer.layer = 100
@@ -56,12 +69,14 @@ func _ready() -> void:
 	_layer.follow_viewport_enabled = true
 	add_child(_layer)
 
-	# Use scene/viewport size, NOT DisplayServer.window_get_size() (that returns
-	# OS pixels, which on a high-DPI phone is much bigger than the mobile
-	# viewport — buttons get placed off-screen).
+	# Wait one frame so the viewport size is settled (especially on first boot
+	# where DisplayServer can return 0×0 momentarily).
+	await get_tree().process_frame
 	var v := get_viewport().get_visible_rect().size
-	# Also re-layout if the viewport size changes (orientation flip etc).
+	if v.x < 1 or v.y < 1:
+		v = Vector2(1280, 720)  # fallback to project default
 	get_viewport().size_changed.connect(_relayout)
+	print("[MobileControls] building overlay at viewport size %sx%s" % [v.x, v.y])
 	_build(v)
 
 func _build(v: Vector2) -> void:
@@ -148,13 +163,25 @@ func _add_button(action: String, label: String, color: Color, centre: Vector2, s
 
 func _press_ui(ui_action: String) -> void:
 	if not _ui_state.get(ui_action, false):
-		Input.action_press(ui_action)
+		_dispatch_action(ui_action, true)
 		_ui_state[ui_action] = true
 
 func _release_ui(ui_action: String) -> void:
 	if _ui_state.get(ui_action, false):
-		Input.action_release(ui_action)
+		_dispatch_action(ui_action, false)
 		_ui_state[ui_action] = false
+
+# Inject a real InputEventAction so `_input` / `_unhandled_input` listeners
+# (which is how Godot UI scenes typically read menu nav) actually receive
+# the event. Input.action_press()/action_release() only update the polled
+# state — they do NOT dispatch through the input event pipeline, so menus
+# that listen via _unhandled_input never see them.
+func _dispatch_action(action: String, pressed: bool) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = pressed
+	ev.strength = 1.0 if pressed else 0.0
+	Input.parse_input_event(ev)
 
 func _process(_dt: float) -> void:
 	# Mirror joystick analog axis → ui_left/right/up/down so menus respond
@@ -172,6 +199,6 @@ func _process(_dt: float) -> void:
 func _axis_mirror(ui_action: String, current: float, was_active: bool) -> void:
 	var now_active := current > MENU_AXIS_THRESHOLD
 	if now_active and not was_active:
-		Input.action_press(ui_action)
+		_dispatch_action(ui_action, true)
 	elif (not now_active) and was_active:
-		Input.action_release(ui_action)
+		_dispatch_action(ui_action, false)
