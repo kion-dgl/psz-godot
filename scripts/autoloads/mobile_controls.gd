@@ -14,14 +14,16 @@ extends Node
 
 const VirtualJoystickScene := preload("res://addons/virtual_joystick/virtual_joystick_scene.tscn")
 
-# Layout constants — in scene/viewport units (not OS pixels). With the
-# project's mobile viewport at 854x480 these are tuned to feel emulator-y.
-const JOYSTICK_INSET   := Vector2(110, 130)   # from bottom-left corner
-const ACTION_INSET     := Vector2(140, 130)   # from bottom-right (centre of diamond)
-const ACTION_RADIUS    := 55                  # button distance from diamond centre
-const ACTION_BTN_SIZE  := Vector2(80, 80)
-const TOP_BTN_SIZE     := Vector2(90, 40)
-const TOP_INSET        := 16
+# Layout constants — in scene/viewport units. Project viewport is 1280×720
+# (16:9); stretch/aspect="keep" gives us letterbox/pillarbox on non-16:9
+# phones so the visible-rect remains 1280×720 in scene units regardless of
+# the OS pixel dims.
+const JOYSTICK_INSET   := Vector2(160, 200)   # from bottom-left corner
+const ACTION_INSET     := Vector2(200, 200)   # from bottom-right (centre of diamond)
+const ACTION_RADIUS    := 80                  # button distance from diamond centre
+const ACTION_BTN_SIZE  := Vector2(120, 120)
+const TOP_BTN_SIZE     := Vector2(130, 56)
+const TOP_INSET        := 24
 
 # Joystick → menu mirror. When the joystick output crosses these in any
 # direction we synthesize the corresponding ui_* edge event so menu
@@ -82,7 +84,7 @@ func _build(v: Vector2) -> void:
 
 	# ---- Top row ----
 	var start_pos := Vector2(v.x * 0.5, TOP_INSET + TOP_BTN_SIZE.y * 0.5)
-	_add_button("start",         "START", Color(0.7, 0.7, 0.7, 0.7), start_pos, Vector2(110, 44))
+	_add_button("start",         "START", Color(0.7, 0.7, 0.7, 0.7), start_pos, Vector2(150, 60))
 	_add_button("pause",         "II",    Color(0.6, 0.6, 0.6, 0.6), Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, TOP_INSET + TOP_BTN_SIZE.y * 0.5), TOP_BTN_SIZE)
 	_add_button("quest_log",     "LOG",   Color(0.6, 0.6, 0.6, 0.6), Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET, TOP_INSET + TOP_BTN_SIZE.y * 0.5), TOP_BTN_SIZE)
 
