@@ -2286,6 +2286,11 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var dm := DropMesetaScript.new()
 				dm.amount = int(d.get("amount", 10))
 				drop = dm
+			"material":
+				var dmat := DropMaterialScript.new()
+				dmat.item_id = str(d.get("item_id", ""))
+				dmat.amount = int(d.get("amount", 1))
+				drop = dmat
 			"item":
 				var di := DropItemScript.new()
 				di.item_id = str(d.get("item_id", ""))
@@ -2449,13 +2454,19 @@ func _save_cell_state() -> void:
 	for drop in _room_drops:
 		if is_instance_valid(drop) and drop.element_state == "available":
 			var d: DropBase = drop as DropBase
-			var kind := "meseta" if d is DropMeseta else "item"
+			var kind := "meseta"
+			if d is DropMaterial:
+				kind = "material"
+			elif d is DropMeseta:
+				kind = "meseta"
+			else:
+				kind = "item"
 			var entry := {
 				"kind": kind,
 				"px": d.position.x, "py": d.position.y, "pz": d.position.z,
 				"amount": d.amount,
 			}
-			if kind == "item":
+			if kind in ["item", "material"]:
 				entry["item_id"] = d.item_id
 			drop_states.append(entry)
 
