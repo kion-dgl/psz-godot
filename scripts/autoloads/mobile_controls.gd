@@ -18,11 +18,16 @@ const VirtualJoystickScene := preload("res://addons/virtual_joystick/virtual_joy
 # (16:9); stretch/aspect="keep" gives us letterbox/pillarbox on non-16:9
 # phones so the visible-rect remains 1280×720 in scene units regardless of
 # the OS pixel dims.
+const JOYSTICK_INSET   := Vector2(140, 160)   # from bottom-left, fixed-mode centre
 const ACTION_INSET     := Vector2(180, 180)   # from bottom-right (centre of diamond)
 const ACTION_RADIUS    := 95                  # button distance from diamond centre
-const ACTION_BTN_SIZE  := Vector2(80, 80)     # smaller so the diamond doesn't overlap
+const ACTION_BTN_SIZE  := Vector2(80, 80)
 const TOP_BTN_SIZE     := Vector2(110, 48)
 const TOP_INSET        := 24
+
+# Persistent settings file. The user can flip this from an options screen
+# later — for now we just default ON for any mobile/touchscreen device.
+const SETTINGS_PATH := "user://mobile_controls_settings.json"
 
 # Joystick → menu mirror. When the joystick output crosses these in any
 # direction we synthesize the corresponding ui_* edge event so menu
@@ -44,15 +49,15 @@ var _action_state := {}      # action → bool currently pressed
 var _ui_state := {}          # ui action → bool we currently have pressed
 
 func _ready() -> void:
-	# Decide whether to activate. Check BOTH the platform feature tag (set at
-	# export time, never lies on Android/iOS) and the runtime touchscreen
-	# probe (covers PCs with a touchscreen). Earlier I queue_free()'d here
-	# when DisplayServer.is_touchscreen_available() returned false at boot —
-	# but that probe can return false on the very first frame on some Android
-	# devices, killing the overlay permanently. Belt + braces.
+	# Decide whether to activate. ON by default on Android/iOS (regardless of
+	# what is_touchscreen_available() reports — it's been flaky on first
+	# boot). User can opt out via mobile_controls_settings.json (a future
+	# options screen will write that file).
 	var is_mobile_platform := OS.has_feature("android") or OS.has_feature("ios")
 	var has_touch := DisplayServer.is_touchscreen_available()
-	if not (is_mobile_platform or has_touch):
+	var enabled_by_default := is_mobile_platform or has_touch
+	var enabled := _load_setting("enabled", enabled_by_default)
+	if not enabled:
 		queue_free()
 		return
 	# Mirror desktop behaviour: emulate touch from mouse so we can sanity-test
@@ -79,44 +84,53 @@ func _ready() -> void:
 	_build(v)
 
 func _build(v: Vector2) -> void:
-	# ---- Movement: dynamic Roblox-style joystick on left half ----
-	# The joystick Control fills the left half of the screen but the visual
-	# disc is hidden until touched. Wherever the thumb lands, that's where
-	# the base spawns — and the tip drags from there. Same as the Roblox /
-	# Genshin / mobile-MMO convention.
+	# ---- Movement: visible joystick anchored bottom-left ----
+	# Always visible (FIXED + ALWAYS) so the player can SEE there's a stick
+	# to grab. The Control still covers the left half of the screen so a
+	# tap anywhere on that side will start dragging the tip — best of both
+	# worlds without depending on the addon's WHEN_TOUCHED mode (which seemed
+	# unreliable on Android in testing).
 	_joystick = VirtualJoystickScene.instantiate()
 	_joystick.use_input_actions = true
 	_joystick.action_left = "move_left"
 	_joystick.action_right = "move_right"
 	_joystick.action_up = "move_forward"
 	_joystick.action_down = "move_backward"
-	_joystick.joystick_mode = _joystick.Joystick_mode.DYNAMIC
-	_joystick.visibility_mode = _joystick.Visibility_mode.WHEN_TOUCHED
-	# Make the touch hit-area cover the left half of the screen.
-	_joystick.position = Vector2.ZERO
-	_joystick.size = Vector2(v.x * 0.5, v.y)
+	_joystick.joystick_mode = _joystick.Joystick_mode.FIXED
+	_joystick.visibility_mode = _joystick.Visibility_mode.ALWAYS
+	# Cover the bottom half of the left side. The Base is anchored inside
+	# this Control so it sits at JOYSTICK_INSET from the bottom-left.
+	_joystick.size = Vector2(v.x * 0.5, v.y * 0.6)
+	_joystick.position = Vector2(0, v.y - _joystick.size.y)
 	_joystick.mouse_filter = Control.MOUSE_FILTER_PASS
 	_layer.add_child(_joystick)
+	# Once added, nudge the visible Base into the corner. The addon's _ready
+	# captures `_base_default_position` when it enters the tree, so we set
+	# the Base position right after.
+	var base := _joystick.get_node_or_null("Base") as Node
+	if base and base is Control:
+		var base_ctrl := base as Control
+		var bsize := base_ctrl.size
+		base_ctrl.position = Vector2(JOYSTICK_INSET.x - bsize.x * 0.5, _joystick.size.y - JOYSTICK_INSET.y - bsize.y * 0.5)
 
-	# ---- A/B/X/Y diamond bottom-right (SNES-style) ----
-	# White outline circles only — no fill — so they don't block what's
-	# behind them. Letter is the only solid pixel.
+	# ---- A/B/X/Y diamond bottom-right (SNES layout) ----
+	# A right = interact, B bottom = dodge, X top = quick weapon (menu),
+	# Y left = action_palette slot 1.
 	var diamond_centre := Vector2(v.x - ACTION_INSET.x, v.y - ACTION_INSET.y)
 	_add_button("interact",      "A", diamond_centre + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
 	_add_button("dodge",         "B", diamond_centre + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_button("palette_swap",  "X", diamond_centre + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_button("quick_weapon",  "Y", diamond_centre + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_button("quick_weapon",  "X", diamond_centre + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_button("action_1",      "Y", diamond_centre + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
 
-	# ---- Top row ----
+	# ---- Top row: START centre, II right, LOG left ----
 	var start_pos := Vector2(v.x * 0.5, TOP_INSET + TOP_BTN_SIZE.y * 0.5)
-	_add_button("start",         "START", start_pos,                                                                Vector2(140, 50))
+	_add_button("start",         "START", start_pos,                                                                          Vector2(140, 50))
 	_add_button("pause",         "II",    Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, TOP_INSET + TOP_BTN_SIZE.y * 0.5), TOP_BTN_SIZE)
 	_add_button("quest_log",     "LOG",   Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET,        TOP_INSET + TOP_BTN_SIZE.y * 0.5), TOP_BTN_SIZE)
 
-	# ---- Camera shoulder buttons ----
-	var shoulder_y := TOP_INSET + TOP_BTN_SIZE.y + 12 + TOP_BTN_SIZE.y * 0.5
-	_add_button("camera_left",   "◀ CAM", Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET,        shoulder_y), TOP_BTN_SIZE)
-	_add_button("camera_right",  "CAM ▶", Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, shoulder_y), TOP_BTN_SIZE)
+	# ---- Second row: PAL (palette swap) under LOG ----
+	var second_y := TOP_INSET + TOP_BTN_SIZE.y + 12 + TOP_BTN_SIZE.y * 0.5
+	_add_button("palette_swap",  "PAL",   Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET, second_y), TOP_BTN_SIZE)
 
 func _relayout() -> void:
 	# Tear down + rebuild on resize. Cheap — only a handful of nodes.
@@ -221,3 +235,38 @@ func _axis_mirror(ui_action: String, current: float, was_active: bool) -> void:
 		_dispatch_action(ui_action, true)
 	elif (not now_active) and was_active:
 		_dispatch_action(ui_action, false)
+
+# --- Persistent settings (an options screen will write these later) ---
+
+func _load_setting(key: String, default_value: Variant) -> Variant:
+	if not FileAccess.file_exists(SETTINGS_PATH):
+		return default_value
+	var f := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
+	if f == null:
+		return default_value
+	var raw := f.get_as_text()
+	f.close()
+	var parsed: Variant = JSON.parse_string(raw)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return default_value
+	var d: Dictionary = parsed
+	if not d.has(key):
+		return default_value
+	return d[key]
+
+static func set_enabled(enabled: bool) -> void:
+	# Call from an options screen: e.g. MobileControls.set_enabled(false)
+	# then reload the current scene to apply.
+	var d: Dictionary = {}
+	if FileAccess.file_exists(SETTINGS_PATH):
+		var f := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
+		if f != null:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			f.close()
+			if typeof(parsed) == TYPE_DICTIONARY:
+				d = parsed
+	d["enabled"] = enabled
+	var w := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
+	if w != null:
+		w.store_string(JSON.stringify(d))
+		w.close()
