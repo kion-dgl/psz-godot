@@ -281,6 +281,11 @@ func _handle_class_select_input(event: InputEvent) -> void:
 
 
 func _handle_appearance_input(event: InputEvent) -> void:
+	# Dpad cycles row / value, accept confirms, cancel backs out. The
+	# preview character is rotated by the right analog stick (handled in
+	# _process), NOT by holding a modifier — a stuck or noisy R2 trigger
+	# (which is bound to camera_lock) used to swallow every dpad press
+	# and the accept button on Bluetooth pads with sloppy calibration.
 	if event.is_action_pressed("ui_up"):
 		_appearance_row = wrapi(_appearance_row - 1, 0, 4)
 		_update_appearance()
@@ -289,25 +294,23 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		_appearance_row = wrapi(_appearance_row + 1, 0, 4)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") and not Input.is_action_pressed("camera_lock"):
+	elif event.is_action_pressed("ui_left"):
 		_cycle_appearance_value(-1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_right") and not Input.is_action_pressed("camera_lock"):
+	elif event.is_action_pressed("ui_right"):
 		_cycle_appearance_value(1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept") and not Input.is_action_pressed("camera_lock"):
+	elif event.is_action_pressed("ui_accept"):
 		_teardown_preview()
 		_show_name_entry()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
 		_teardown_preview()
 		_show_class_select()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("camera_lock"):
 		get_viewport().set_input_as_handled()
 
 
@@ -970,11 +973,12 @@ func _add_confirm_row(parent: Node, label_text: String, value_text: String, x: f
 
 func _process(delta: float) -> void:
 	if _preview_active and _preview_pivot:
-		if Input.is_action_pressed("camera_lock"):
-			if Input.is_action_pressed("ui_left"):
-				_preview_pivot.rotate_y(delta * 3.0)
-			elif Input.is_action_pressed("ui_right"):
-				_preview_pivot.rotate_y(-delta * 3.0)
+		# Right analog stick X rotates the preview. Same axis the in-game
+		# camera uses, so it feels consistent and leaves the dpad free for
+		# row/value navigation.
+		var rx := Input.get_joy_axis(0, JOY_AXIS_RIGHT_X)
+		if absf(rx) > 0.2:
+			_preview_pivot.rotate_y(-rx * delta * 3.0)
 
 
 func _build_preview_scene() -> void:
