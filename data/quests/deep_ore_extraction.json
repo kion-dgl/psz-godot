@@ -1060,32 +1060,6 @@
               ]
             },
             {
-              "type": "dialog_trigger",
-              "position": [
-                0,
-                0,
-                0
-              ],
-              "trigger_id": "dorn_s1_transition",
-              "trigger_condition": "enter",
-              "trigger_size": [
-                30,
-                5,
-                30
-              ],
-              "dialog": [
-                {
-                  "speaker": "Dorn",
-                  "text": "See those tool marks on the walls? Other crews have pushed through here when the forge got desperate enough. The creatures never gave them a clean shot at it."
-                },
-                {
-                  "speaker": "Dorn",
-                  "text": "We're past where anyone's surveyed."
-                }
-              ],
-              "actions": []
-            },
-            {
               "type": "enemy",
               "position": [
                 0.0,
@@ -1112,7 +1086,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "That's why the other teams never made it very far."
+                  "text": "That Helion. That's the reason surveys never went deeper into the valley. Most crews that saw one never came back."
                 }
               ],
               "actions": []
