@@ -12,40 +12,72 @@
 # Activates on Android/iOS or any platform reporting a touchscreen. The
 # user can disable via a future options screen by calling
 # MobileControls.set_enabled(false), which writes user://mobile_controls.cfg.
+#
+# Visual: Kenney CC0 input-prompts sprites (Switch face buttons + dpad).
+# Joystick comes from the MarcoFazioRandom virtual_joystick add-on.
+# When ANY menu is active (start menu / shop overlay / character pick), the
+# joystick is hidden and a real + cross dpad takes its place.
 
 extends Node
 
 const VirtualJoystickScene := preload("res://addons/virtual_joystick/virtual_joystick_scene.tscn")
 
+# Kenney sprites (64x64 each, scaled at runtime).
+const TEX_BTN_A      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_a.png")
+const TEX_BTN_B      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_b.png")
+const TEX_BTN_X      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_x.png")
+const TEX_BTN_Y      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_y.png")
+const TEX_BTN_PLUS   := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_plus.png")
+const TEX_BTN_MINUS  := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_minus.png")
+const TEX_BTN_HOME   := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_home.png")
+const TEX_BTN_L      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_l.png")
+const TEX_BTN_R      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_r.png")
+const TEX_DPAD_NONE  := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_dpad_none.png")
+const TEX_DPAD_UP    := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_dpad_up.png")
+const TEX_DPAD_DOWN  := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_dpad_down.png")
+const TEX_DPAD_LEFT  := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_dpad_left.png")
+const TEX_DPAD_RIGHT := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_dpad_right.png")
+
 # 1280×720 viewport coords.
 const ACTION_INSET     := Vector2(180, 180)   # diamond centre, from bottom-right
 const ACTION_RADIUS    := 95
-const ACTION_BTN_SIZE  := Vector2(80, 80)
-const TOP_BTN_SIZE     := Vector2(110, 48)
+const ACTION_BTN_SIZE  := 96                  # square sprite size (pixels)
+const TOP_BTN_SIZE     := 64                  # plus/minus/home in top row
 const TOP_INSET        := 24
+const SHOULDER_BTN_SIZE := 80
 
-# Joystick deadzone for emitting axis events. Anything below this looks
-# like noise to the InputMap layer; past it we emit the raw -1..+1 axis.
 const STICK_DEADZONE := 0.18
-
 const SETTINGS_PATH := "user://mobile_controls.cfg"
+
+# Dpad layout — switch_dpad_none.png is a 64x64 + cross sprite. Scale it up
+# big enough that each arm is comfortably thumb-sized. 256 ≈ 4× original.
+const DPAD_INSET   := Vector2(180, 180)   # centre, from bottom-left
+const DPAD_PX      := 256                 # rendered size
+const DPAD_ARM_HALF := 0.32               # arm hit-zone reach as fraction of DPAD_PX
 
 var _layer: CanvasLayer
 var _joystick: VirtualJoystick
 var _dpad: Node2D
+var _dpad_base_sprite: Sprite2D
+var _dpad_dir_sprites: Dictionary = {}  # button_index -> Sprite2D
 var _last_axis := Vector2.ZERO
 
-# Menu-mode state. When ANY of these flags is set we hide the analog
-# joystick and show a 4-button dpad instead — discrete presses are easier
-# than thumbing an analog stick to scroll a list.
-var _shop_open := false
-var _start_menu_open := false
-var _on_menu_scene := false  # character_select / character_create
+# Menu-mode state. Re-evaluated every frame from authoritative sources
+# (PsoStartMenu, SceneManager, current scene path) — there is no project-
+# wide "menu open" signal so polling is the only reliable way.
+var _menu_mode := false
 
 const MENU_SCENES := {
 	"res://scenes/2d/character_select.tscn": true,
 	"res://scenes/2d/character_create.tscn": true,
 }
+
+# Scene paths that count as a "shop" overlay (storage, weapon shop, item
+# shop, etc). Matched against SceneManager's overlay stack.
+const SHOP_PATH_PREFIXES := [
+	"res://scenes/2d/shops/",
+	"res://scenes/2d/storage",
+]
 
 func _ready() -> void:
 	if not _resolve_enabled():
@@ -60,8 +92,7 @@ func _ready() -> void:
 	_layer.name = "MobileControls"
 	add_child(_layer)
 	_build()
-	_wire_menu_signals()
-	_check_menu_scene()
+	_refresh_mode()  # initial visibility
 
 func _resolve_enabled() -> bool:
 	var default := OS.has_feature("android") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
@@ -78,10 +109,8 @@ func _build() -> void:
 	var v := get_viewport().get_visible_rect().size
 
 	# ---- Joystick bottom-left (gameplay mode) ----
-	# Disable the addon's built-in InputMap action emit — we drive the
-	# joystick output ourselves and emit raw left-stick axis events instead,
-	# so the project's existing axis bindings (move_*, ui_*) all light up
-	# without us touching the InputMap.
+	# We drive the joystick output ourselves and emit raw left-stick axis
+	# events so the project's existing axis bindings light up unmodified.
 	_joystick = VirtualJoystickScene.instantiate()
 	_joystick.use_input_actions = false
 	_joystick.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_KEEP_SIZE)
@@ -89,87 +118,61 @@ func _build() -> void:
 	_layer.add_child(_joystick)
 
 	# ---- Dpad bottom-left (menu mode, hidden by default) ----
-	# Same anchor as the joystick. Visible only when the player is in a
-	# shop / start menu / character-pick screen. Each direction emits
-	# JOY_BUTTON_DPAD_* and the project's input scheme handles the rest.
 	_dpad = _build_dpad(v)
 	_dpad.visible = false
 	_layer.add_child(_dpad)
 
-	# ---- A/B/X/Y diamond bottom-right ----
-	# A south = JOY_BUTTON_A (0)
-	# B east  = JOY_BUTTON_B (1)
-	# X west  = JOY_BUTTON_X (2)
-	# Y north = JOY_BUTTON_Y (3)
-	# Diamond layout: A on the right (east), B at bottom (south of centre),
-	# X at top (north), Y on the left (west) — matches the SNES face plate.
+	# ---- A/B/X/Y diamond bottom-right, Switch face-button sprites ----
+	# Diamond layout: A on the right (east), B at bottom (south), X at top
+	# (north), Y on the left (west) — matches the SNES face plate.
 	var c := Vector2(v.x - ACTION_INSET.x, v.y - ACTION_INSET.y)
-	_add_button(JOY_BUTTON_A, "A", c + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
-	_add_button(JOY_BUTTON_B, "B", c + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_button(JOY_BUTTON_X, "X", c + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_button(JOY_BUTTON_Y, "Y", c + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_A, TEX_BTN_A, c + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_B, TEX_BTN_B, c + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_X, TEX_BTN_X, c + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_Y, TEX_BTN_Y, c + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
 
-	# ---- Top row: LOG | START | II ----
-	var top_y := TOP_INSET + TOP_BTN_SIZE.y * 0.5
-	_add_button(JOY_BUTTON_BACK,  "LOG",   Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET,        top_y), TOP_BTN_SIZE)
-	_add_button(JOY_BUTTON_START, "START", Vector2(v.x * 0.5,                                top_y), Vector2(140, 50))
-	_add_button(JOY_BUTTON_GUIDE, "II",    Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET,   top_y), TOP_BTN_SIZE)
+	# ---- Top row: minus | plus(START) | home ----
+	var top_y := TOP_INSET + TOP_BTN_SIZE * 0.5
+	_add_sprite_button(JOY_BUTTON_BACK,  TEX_BTN_MINUS, Vector2(TOP_BTN_SIZE * 0.5 + TOP_INSET,        top_y), TOP_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_START, TEX_BTN_PLUS,  Vector2(v.x * 0.5,                              top_y), TOP_BTN_SIZE + 8)
+	_add_sprite_button(JOY_BUTTON_GUIDE, TEX_BTN_HOME,  Vector2(v.x - TOP_BTN_SIZE * 0.5 - TOP_INSET,   top_y), TOP_BTN_SIZE)
 
-	# Second row top-left: PAL = L1 (left shoulder).
-	var second_y := top_y + TOP_BTN_SIZE.y + 12
-	_add_button(JOY_BUTTON_LEFT_SHOULDER,  "L1 / PAL", Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET, second_y), TOP_BTN_SIZE)
-	# Right shoulder (R1) on the right edge — useful for whatever the project
-	# binds it to (camera lock, weapon swap, etc).
-	_add_button(JOY_BUTTON_RIGHT_SHOULDER, "R1", Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, second_y), TOP_BTN_SIZE)
+	# ---- Shoulder row: L1 (PAL) on left, R1 on right ----
+	var second_y := top_y + TOP_BTN_SIZE * 0.5 + SHOULDER_BTN_SIZE * 0.5 + 12
+	_add_sprite_button(JOY_BUTTON_LEFT_SHOULDER,  TEX_BTN_L, Vector2(SHOULDER_BTN_SIZE * 0.5 + TOP_INSET, second_y), SHOULDER_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_RIGHT_SHOULDER, TEX_BTN_R, Vector2(v.x - SHOULDER_BTN_SIZE * 0.5 - TOP_INSET, second_y), SHOULDER_BTN_SIZE)
 
-	print("[MobileControls] _build done — overlay active as virtual gamepad")
+	print("[MobileControls] _build done")
 
-func _add_button(button_index: int, label: String, centre: Vector2, size: Vector2) -> void:
-	# TouchScreenButton's `action` field is left empty — we emit raw gamepad
-	# events from the pressed/released signals instead.
+func _add_sprite_button(button_index: int, tex: Texture2D, centre: Vector2, size: float) -> void:
+	# TouchScreenButton with a Sprite2D visual (Kenney prompt). Keeps the
+	# crisp UI look vs. drawing rounded panels at runtime.
 	var btn := TouchScreenButton.new()
 	btn.shape_centered = true
 	var shape := RectangleShape2D.new()
-	shape.size = size
+	shape.size = Vector2(size, size)
 	btn.shape = shape
 	btn.position = centre
 
-	var p := Panel.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0, 0, 0, 0)
-	var corner := int(min(size.x, size.y) * 0.5)
-	sb.corner_radius_top_left = corner
-	sb.corner_radius_top_right = corner
-	sb.corner_radius_bottom_left = corner
-	sb.corner_radius_bottom_right = corner
-	sb.border_width_top = 3
-	sb.border_width_bottom = 3
-	sb.border_width_left = 3
-	sb.border_width_right = 3
-	sb.border_color = Color(1, 1, 1, 0.85)
-	p.add_theme_stylebox_override("panel", sb)
-	p.size = size
-	p.position = -size * 0.5
-	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.add_child(p)
+	var sprite := Sprite2D.new()
+	sprite.texture = tex
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	# Kenney sprites are 64x64; scale to requested size.
+	var scale_factor := size / 64.0
+	sprite.scale = Vector2(scale_factor, scale_factor)
+	btn.add_child(sprite)
 
-	var l := Label.new()
-	l.text = label
-	l.size = size
-	l.position = -size * 0.5
-	l.add_theme_color_override("font_color", Color.WHITE)
-	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
-	l.add_theme_constant_override("shadow_offset_x", 1)
-	l.add_theme_constant_override("shadow_offset_y", 1)
-	l.add_theme_font_size_override("font_size", int(min(size.x, size.y) * 0.36))
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.add_child(l)
-
-	btn.pressed.connect(_emit_button.bind(button_index, true))
-	btn.released.connect(_emit_button.bind(button_index, false))
+	btn.pressed.connect(_on_btn_pressed.bind(button_index, sprite))
+	btn.released.connect(_on_btn_released.bind(button_index, sprite))
 	_layer.add_child(btn)
+
+func _on_btn_pressed(button_index: int, sprite: Sprite2D) -> void:
+	sprite.modulate = Color(0.7, 0.9, 1.4)  # tint blue-ish to show press
+	_emit_button(button_index, true)
+
+func _on_btn_released(button_index: int, sprite: Sprite2D) -> void:
+	sprite.modulate = Color.WHITE
+	_emit_button(button_index, false)
 
 func _emit_button(button_index: int, pressed: bool) -> void:
 	var ev := InputEventJoypadButton.new()
@@ -180,17 +183,43 @@ func _emit_button(button_index: int, pressed: bool) -> void:
 	Input.parse_input_event(ev)
 
 func _process(_dt: float) -> void:
-	# Mirror joystick analog output to JoypadMotion left-stick axes (X = 0,
-	# Y = 1). Edge-emit only when crossing the deadzone or when the value
-	# changes meaningfully so we don't spam the input pipeline every frame.
-	if not _joystick:
-		return
-	var out := _joystick.output
-	if absf(out.x - _last_axis.x) > 0.02:
-		_emit_axis(JOY_AXIS_LEFT_X, out.x if absf(out.x) > STICK_DEADZONE else 0.0)
-	if absf(out.y - _last_axis.y) > 0.02:
-		_emit_axis(JOY_AXIS_LEFT_Y, out.y if absf(out.y) > STICK_DEADZONE else 0.0)
-	_last_axis = out
+	# 1. Mirror joystick output to JoypadMotion left-stick axes.
+	if _joystick:
+		var out := _joystick.output
+		if absf(out.x - _last_axis.x) > 0.02:
+			_emit_axis(JOY_AXIS_LEFT_X, out.x if absf(out.x) > STICK_DEADZONE else 0.0)
+		if absf(out.y - _last_axis.y) > 0.02:
+			_emit_axis(JOY_AXIS_LEFT_Y, out.y if absf(out.y) > STICK_DEADZONE else 0.0)
+		_last_axis = out
+
+	# 2. Re-evaluate menu mode every frame. Cheap (a handful of flag reads)
+	#    and the only reliable detector — there's no global "menu open" signal.
+	var menu := _is_menu_active()
+	if menu != _menu_mode:
+		_menu_mode = menu
+		print("[MobileControls] mode → %s" % ("DPAD" if menu else "STICK"))
+		_refresh_mode()
+
+func _is_menu_active() -> bool:
+	# PSO start menu open?
+	var pso := get_node_or_null("/root/PsoStartMenu")
+	if pso and pso.has_method("is_open") and pso.is_open():
+		return true
+	# Any overlay scene pushed (shops + storage)?
+	var sm := get_node_or_null("/root/SceneManager")
+	if sm and sm.has_method("can_pop") and sm.can_pop():
+		return true
+	# Pause menu via GameState?
+	var gs := get_node_or_null("/root/GameState")
+	if gs and "is_pause_menu_open" in gs and gs.is_pause_menu_open:
+		return true
+	# Character select / create scenes?
+	var scene := get_tree().current_scene
+	if scene:
+		var p := scene.scene_file_path
+		if p in MENU_SCENES:
+			return true
+	return false
 
 func _emit_axis(axis: int, value: float) -> void:
 	var ev := InputEventJoypadMotion.new()
@@ -201,161 +230,78 @@ func _emit_axis(axis: int, value: float) -> void:
 
 # ---- Dpad ------------------------------------------------------------------
 
-const DPAD_INSET   := Vector2(180, 180)   # centre, from bottom-left
-const DPAD_ARM     := 75                  # arm length from centre
-const DPAD_THICK   := 70                  # arm thickness
-
 func _build_dpad(v: Vector2) -> Node2D:
-	# Build a real + cross: a single white outline that traces the full
-	# 12-vertex + polygon, centred on (DPAD_INSET.x, v.y - DPAD_INSET.y).
-	# Each arm has its own TouchScreenButton on top so the up/down/left/right
-	# touch zones are crisp.
+	# Switch dpad sprite (already a + cross) as the visual base, with one
+	# directional highlight sprite per arm (initially hidden) layered on top.
+	# A TouchScreenButton overlays each arm to dispatch JOY_BUTTON_DPAD_*.
 	var root := Node2D.new()
 	var c := Vector2(DPAD_INSET.x, v.y - DPAD_INSET.y)
 	root.position = c
 
-	# Pixel coords for the + outline, walked clockwise.
-	var t := DPAD_THICK * 0.5
-	var a := DPAD_ARM
-	var pts := PackedVector2Array([
-		Vector2(-t, -a), Vector2( t, -a), Vector2( t, -t), Vector2( a, -t),
-		Vector2( a,  t), Vector2( t,  t), Vector2( t,  a), Vector2(-t,  a),
-		Vector2(-t,  t), Vector2(-a,  t), Vector2(-a, -t), Vector2(-t, -t),
-		Vector2(-t, -a),  # close back to start
-	])
-	# Filled background with low opacity so there's a "body" under the outline.
-	var fill := Polygon2D.new()
-	fill.polygon = pts.slice(0, pts.size() - 1)  # Polygon2D doesn't want the closing dup
-	fill.color = Color(0, 0, 0, 0.25)
-	root.add_child(fill)
-	# White outline.
-	var outline := Line2D.new()
-	outline.points = pts
-	outline.width = 4.0
-	outline.default_color = Color(1, 1, 1, 0.9)
-	outline.joint_mode = Line2D.LINE_JOINT_BEVEL
-	root.add_child(outline)
+	_dpad_base_sprite = Sprite2D.new()
+	_dpad_base_sprite.texture = TEX_DPAD_NONE
+	_dpad_base_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	var s := DPAD_PX / 64.0
+	_dpad_base_sprite.scale = Vector2(s, s)
+	root.add_child(_dpad_base_sprite)
 
-	# Touch zones — one per arm. No visible border (the + outline is the visual).
-	var arm_size := Vector2(DPAD_THICK, DPAD_ARM - DPAD_THICK * 0.5 + 8)
-	root.add_child(_make_arm(JOY_BUTTON_DPAD_UP,    "▲", Vector2( 0, -(DPAD_ARM + t) * 0.5), arm_size))
-	root.add_child(_make_arm(JOY_BUTTON_DPAD_DOWN,  "▼", Vector2( 0,  (DPAD_ARM + t) * 0.5), arm_size))
-	root.add_child(_make_arm(JOY_BUTTON_DPAD_LEFT,  "◀", Vector2(-(DPAD_ARM + t) * 0.5, 0),  Vector2(arm_size.y, arm_size.x)))
-	root.add_child(_make_arm(JOY_BUTTON_DPAD_RIGHT, "▶", Vector2( (DPAD_ARM + t) * 0.5, 0),  Vector2(arm_size.y, arm_size.x)))
+	# Directional highlight overlays — same dimensions, hidden by default.
+	for entry in [
+		[JOY_BUTTON_DPAD_UP,    TEX_DPAD_UP],
+		[JOY_BUTTON_DPAD_DOWN,  TEX_DPAD_DOWN],
+		[JOY_BUTTON_DPAD_LEFT,  TEX_DPAD_LEFT],
+		[JOY_BUTTON_DPAD_RIGHT, TEX_DPAD_RIGHT],
+	]:
+		var hi := Sprite2D.new()
+		hi.texture = entry[1]
+		hi.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		hi.scale = Vector2(s, s)
+		hi.visible = false
+		root.add_child(hi)
+		_dpad_dir_sprites[entry[0]] = hi
+
+	# Hit zones — the + cross is symmetric so each arm is a third of the
+	# sprite wide and ~half tall. Position them in the dpad root's local
+	# coords so they follow the sprite.
+	var arm := DPAD_PX * DPAD_ARM_HALF       # arm extent from centre
+	var thick := DPAD_PX * 0.30              # arm thickness
+	root.add_child(_make_arm(JOY_BUTTON_DPAD_UP,    Vector2( 0, -arm * 0.5), Vector2(thick, arm)))
+	root.add_child(_make_arm(JOY_BUTTON_DPAD_DOWN,  Vector2( 0,  arm * 0.5), Vector2(thick, arm)))
+	root.add_child(_make_arm(JOY_BUTTON_DPAD_LEFT,  Vector2(-arm * 0.5, 0),  Vector2(arm, thick)))
+	root.add_child(_make_arm(JOY_BUTTON_DPAD_RIGHT, Vector2( arm * 0.5, 0),  Vector2(arm, thick)))
 	return root
 
-func _make_arm(button_index: int, label: String, centre_local: Vector2, size: Vector2) -> TouchScreenButton:
-	# Touch zone overlaying one arm of the +. Positions are in the dpad
-	# root's LOCAL space (root is positioned at the centre of the cross).
+func _make_arm(button_index: int, centre_local: Vector2, size: Vector2) -> TouchScreenButton:
 	var btn := TouchScreenButton.new()
 	btn.shape_centered = true
 	var shape := RectangleShape2D.new()
 	shape.size = size
 	btn.shape = shape
 	btn.position = centre_local
-
-	var l := Label.new()
-	l.text = label
-	l.size = size
-	l.position = -size * 0.5
-	l.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
-	l.add_theme_font_size_override("font_size", 36)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.add_child(l)
-
-	btn.pressed.connect(_emit_button.bind(button_index, true))
-	btn.released.connect(_emit_button.bind(button_index, false))
+	btn.pressed.connect(_on_dpad_pressed.bind(button_index))
+	btn.released.connect(_on_dpad_released.bind(button_index))
 	return btn
 
-# Same as _add_button but RETURNS the node instead of adding to _layer, so
-# the dpad subtree can own its own buttons.
-func _make_button(button_index: int, label: String, centre: Vector2, size: Vector2) -> TouchScreenButton:
-	var btn := TouchScreenButton.new()
-	btn.shape_centered = true
-	var shape := RectangleShape2D.new()
-	shape.size = size
-	btn.shape = shape
-	btn.position = centre
+func _on_dpad_pressed(button_index: int) -> void:
+	if button_index in _dpad_dir_sprites:
+		_dpad_dir_sprites[button_index].visible = true
+	_emit_button(button_index, true)
 
-	var p := Panel.new()
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0, 0, 0, 0)
-	var corner := int(min(size.x, size.y) * 0.5)
-	sb.corner_radius_top_left = corner
-	sb.corner_radius_top_right = corner
-	sb.corner_radius_bottom_left = corner
-	sb.corner_radius_bottom_right = corner
-	sb.border_width_top = 3; sb.border_width_bottom = 3
-	sb.border_width_left = 3; sb.border_width_right = 3
-	sb.border_color = Color(1, 1, 1, 0.85)
-	p.add_theme_stylebox_override("panel", sb)
-	p.size = size
-	p.position = -size * 0.5
-	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.add_child(p)
+func _on_dpad_released(button_index: int) -> void:
+	if button_index in _dpad_dir_sprites:
+		_dpad_dir_sprites[button_index].visible = false
+	_emit_button(button_index, false)
 
-	var l := Label.new()
-	l.text = label
-	l.size = size
-	l.position = -size * 0.5
-	l.add_theme_color_override("font_color", Color.WHITE)
-	l.add_theme_font_size_override("font_size", int(min(size.x, size.y) * 0.46))
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	btn.add_child(l)
-
-	btn.pressed.connect(_emit_button.bind(button_index, true))
-	btn.released.connect(_emit_button.bind(button_index, false))
-	return btn
-
-# ---- Menu-mode detection ---------------------------------------------------
-
-func _wire_menu_signals() -> void:
-	# GameState autoload broadcasts shop + pause-menu state. Connect both.
-	var gs := get_node_or_null("/root/GameState")
-	if gs:
-		print("[MobileControls] connecting GameState signals")
-		if gs.has_signal("shop_opened"):
-			gs.shop_opened.connect(func(_npc: String) -> void:
-				print("[MobileControls] shop_opened")
-				_shop_open = true; _refresh_mode())
-		if gs.has_signal("shop_closed"):
-			gs.shop_closed.connect(func() -> void:
-				print("[MobileControls] shop_closed")
-				_shop_open = false; _refresh_mode())
-		if gs.has_signal("pause_menu_toggled"):
-			gs.pause_menu_toggled.connect(func(open: bool) -> void:
-				print("[MobileControls] pause_menu_toggled %s" % open)
-				_start_menu_open = open; _refresh_mode())
-	else:
-		push_warning("[MobileControls] GameState autoload not found")
-	# Re-check menu scene flag whenever the active scene changes.
-	get_tree().tree_changed.connect(_check_menu_scene)
-
-func _check_menu_scene() -> void:
-	var scene := get_tree().current_scene
-	var is_menu := false
-	if scene:
-		var path := scene.scene_file_path
-		if path in MENU_SCENES:
-			is_menu = true
-	if is_menu != _on_menu_scene:
-		_on_menu_scene = is_menu
-		print("[MobileControls] menu_scene=%s (%s)" % [is_menu, scene.scene_file_path if scene else "<none>"])
-		_refresh_mode()
+# ---- Mode swap -------------------------------------------------------------
 
 func _refresh_mode() -> void:
-	var menu := _shop_open or _start_menu_open or _on_menu_scene
-	print("[MobileControls] mode → %s  (shop=%s start=%s scene=%s)" % ["DPAD" if menu else "STICK", _shop_open, _start_menu_open, _on_menu_scene])
 	if _joystick:
-		_joystick.visible = not menu
+		_joystick.visible = not _menu_mode
 	if _dpad:
-		_dpad.visible = menu
+		_dpad.visible = _menu_mode
 
-# Options-screen toggle.
+# ---- Options-screen toggle -------------------------------------------------
+
 static func set_enabled(enabled: bool) -> void:
 	var f := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if f:
