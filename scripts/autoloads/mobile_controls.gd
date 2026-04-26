@@ -29,7 +29,6 @@ const TEX_BTN_X      := preload("res://assets/kenney_input-prompts/Nintendo Swit
 const TEX_BTN_Y      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_y.png")
 const TEX_BTN_PLUS   := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_plus.png")
 const TEX_BTN_MINUS  := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_minus.png")
-const TEX_BTN_HOME   := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_home.png")
 const TEX_BTN_L      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_l.png")
 const TEX_BTN_R      := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_button_r.png")
 const TEX_DPAD_NONE  := preload("res://assets/kenney_input-prompts/Nintendo Switch/Default/switch_dpad_none.png")
@@ -124,18 +123,26 @@ func _build() -> void:
 
 	# ---- A/B/X/Y diamond bottom-right, Switch face-button sprites ----
 	# Diamond layout: A on the right (east), B at bottom (south), X at top
-	# (north), Y on the left (west) — matches the SNES face plate.
+	# (north), Y on the left (west) — matches the Switch face plate.
+	#
+	# We emit the button index that maps to each FACE POSITION in the active
+	# InputConfig scheme, not the raw SDL JOY_BUTTON_* constant. Otherwise
+	# on-screen X (north) would fire JOY_BUTTON_X(2), which xinput binds to
+	# the WEST position — silently flipping the player's expectation that
+	# north = quick menu and west = palette 1. Looking up via _face() means
+	# pressing the Switch-labelled X always fires quick_weapon and Y always
+	# fires action_1, no matter which scheme is active.
 	var c := Vector2(v.x - ACTION_INSET.x, v.y - ACTION_INSET.y)
-	_add_sprite_button(JOY_BUTTON_A, TEX_BTN_A, c + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
-	_add_sprite_button(JOY_BUTTON_B, TEX_BTN_B, c + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_sprite_button(JOY_BUTTON_X, TEX_BTN_X, c + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_sprite_button(JOY_BUTTON_Y, TEX_BTN_Y, c + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_face_button("east",  TEX_BTN_A, c + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_face_button("south", TEX_BTN_B, c + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_face_button("north", TEX_BTN_X, c + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_face_button("west",  TEX_BTN_Y, c + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
 
-	# ---- Top row: minus | plus(START) | home ----
+	# ---- Top row: minus(BACK) on left, plus(START) centred ----
+	# Home button removed — nothing in the project binds JOY_BUTTON_GUIDE.
 	var top_y := TOP_INSET + TOP_BTN_SIZE * 0.5
-	_add_sprite_button(JOY_BUTTON_BACK,  TEX_BTN_MINUS, Vector2(TOP_BTN_SIZE * 0.5 + TOP_INSET,        top_y), TOP_BTN_SIZE)
-	_add_sprite_button(JOY_BUTTON_START, TEX_BTN_PLUS,  Vector2(v.x * 0.5,                              top_y), TOP_BTN_SIZE + 8)
-	_add_sprite_button(JOY_BUTTON_GUIDE, TEX_BTN_HOME,  Vector2(v.x - TOP_BTN_SIZE * 0.5 - TOP_INSET,   top_y), TOP_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_BACK,  TEX_BTN_MINUS, Vector2(TOP_BTN_SIZE * 0.5 + TOP_INSET, top_y), TOP_BTN_SIZE)
+	_add_sprite_button(JOY_BUTTON_START, TEX_BTN_PLUS,  Vector2(v.x * 0.5,                       top_y), TOP_BTN_SIZE + 8)
 
 	# ---- Shoulder row: L1 (PAL) on left, R1 on right ----
 	var second_y := top_y + TOP_BTN_SIZE * 0.5 + SHOULDER_BTN_SIZE * 0.5 + 12
@@ -144,35 +151,60 @@ func _build() -> void:
 
 	print("[MobileControls] _build done")
 
-func _add_sprite_button(button_index: int, tex: Texture2D, centre: Vector2, size: float) -> void:
-	# TouchScreenButton with a Sprite2D visual (Kenney prompt). Keeps the
-	# crisp UI look vs. drawing rounded panels at runtime.
+func _add_face_button(face_position: String, tex: Texture2D, centre: Vector2, size: float) -> void:
+	# Resolve the SDL button index for this face position from the active
+	# InputConfig scheme so the on-screen label always matches the bound
+	# action regardless of xinput / switch / ds_cross. The scheme can change
+	# at runtime via the input_select screen, so we re-resolve at press time
+	# inside the closure rather than caching here at build time.
+	var btn := _make_sprite_button(tex, centre, size)
+	var get_idx := func() -> int:
+		var ic := get_node_or_null("/root/InputConfig")
+		if ic and ic.has_method("_face"):
+			return int(ic._face(face_position))
+		# Fallback: SDL-normalized indices.
+		match face_position:
+			"south": return 0
+			"east":  return 1
+			"west":  return 2
+			"north": return 3
+		return 0
+	var sprite: Sprite2D = btn.get_child(0)
+	btn.pressed.connect(func() -> void:
+		sprite.modulate = Color(0.7, 0.9, 1.4)
+		_emit_button(get_idx.call(), true))
+	btn.released.connect(func() -> void:
+		sprite.modulate = Color.WHITE
+		_emit_button(get_idx.call(), false))
+	_layer.add_child(btn)
+
+func _make_sprite_button(tex: Texture2D, centre: Vector2, size: float) -> TouchScreenButton:
 	var btn := TouchScreenButton.new()
 	btn.shape_centered = true
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(size, size)
 	btn.shape = shape
 	btn.position = centre
-
 	var sprite := Sprite2D.new()
 	sprite.texture = tex
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	# Kenney sprites are 64x64; scale to requested size.
 	var scale_factor := size / 64.0
 	sprite.scale = Vector2(scale_factor, scale_factor)
 	btn.add_child(sprite)
+	return btn
 
-	btn.pressed.connect(_on_btn_pressed.bind(button_index, sprite))
-	btn.released.connect(_on_btn_released.bind(button_index, sprite))
+func _add_sprite_button(button_index: int, tex: Texture2D, centre: Vector2, size: float) -> void:
+	# Fixed-button-index variant — used for system buttons (BACK, START, L, R)
+	# whose mapping doesn't depend on the input scheme.
+	var btn := _make_sprite_button(tex, centre, size)
+	var sprite: Sprite2D = btn.get_child(0)
+	btn.pressed.connect(func() -> void:
+		sprite.modulate = Color(0.7, 0.9, 1.4)
+		_emit_button(button_index, true))
+	btn.released.connect(func() -> void:
+		sprite.modulate = Color.WHITE
+		_emit_button(button_index, false))
 	_layer.add_child(btn)
-
-func _on_btn_pressed(button_index: int, sprite: Sprite2D) -> void:
-	sprite.modulate = Color(0.7, 0.9, 1.4)  # tint blue-ish to show press
-	_emit_button(button_index, true)
-
-func _on_btn_released(button_index: int, sprite: Sprite2D) -> void:
-	sprite.modulate = Color.WHITE
-	_emit_button(button_index, false)
 
 func _emit_button(button_index: int, pressed: bool) -> void:
 	var ev := InputEventJoypadButton.new()
