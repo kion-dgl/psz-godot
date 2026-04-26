@@ -73,13 +73,6 @@ const MENU_SCENES := {
 	"res://scenes/2d/character_create.tscn": true,
 }
 
-# Scene paths that count as a "shop" overlay (storage, weapon shop, item
-# shop, etc). Matched against SceneManager's overlay stack.
-const SHOP_PATH_PREFIXES := [
-	"res://scenes/2d/shops/",
-	"res://scenes/2d/storage",
-]
-
 func _ready() -> void:
 	# We stay alive even when disabled so the options menu can toggle us
 	# back on without restarting the game (player paired a Bluetooth pad,
@@ -350,7 +343,7 @@ func _is_menu_active() -> bool:
 		return true
 	# Pause menu via GameState?
 	var gs := get_node_or_null("/root/GameState")
-	if gs and "is_pause_menu_open" in gs and gs.is_pause_menu_open:
+	if gs and gs.is_pause_menu_open:
 		return true
 	# Character select / create scenes?
 	var scene := get_tree().current_scene

@@ -9,6 +9,7 @@ import { useState } from 'react';
 import type { QuestProject, EditorGridCell, Direction, SectionType } from '../types';
 import { getRotatedGates, getStageSuffix } from '../hooks/useStageConfigs';
 import { projectToGodotQuest } from '../utils/quest-io';
+import { copyText } from '../../utils/clipboard';
 
 interface CellInspectorProps {
   project: QuestProject;
@@ -98,7 +99,7 @@ export default function CellInspector({
       if (!found) {
         setCopyStatus('Cell not found in export');
       } else {
-        await navigator.clipboard.writeText(JSON.stringify(found, null, 2));
+        copyText(JSON.stringify(found, null, 2));
         setCopyStatus('Cell JSON copied!');
       }
     } catch (e) {
@@ -381,7 +382,7 @@ export default function CellInspector({
             <>
               <div
                 style={{ fontSize: '11px', color: '#cc88ff', marginTop: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                onClick={() => navigator.clipboard.writeText(selectedCell)}
+                onClick={() => copyText(selectedCell)}
                 title="Click to copy gate position"
               >
                 Gate ID: <span style={{ fontWeight: 700, color: '#ff88ff' }}>{selectedCell}</span>

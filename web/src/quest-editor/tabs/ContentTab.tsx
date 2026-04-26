@@ -16,30 +16,7 @@ import { getRotatedGates, getStageConfig, getStageSuffix, rotateDirection } from
 import { getGlbPath, getAreaFromMapId } from '../constants';
 import { assetUrl } from '../../utils/assets';
 import { projectToGodotQuest } from '../utils/quest-io';
-
-// Clipboard fallback for non-HTTPS contexts. navigator.clipboard.writeText
-// is gated on a Secure Context (HTTPS or localhost), and the editor is
-// served over plain HTTP from the droplet, so we drop down to the
-// deprecated execCommand path which still works in every browser that
-// hasn't fully removed it (every browser today).
-function copyText(text: string): void {
-  if (navigator.clipboard?.writeText) {
-    navigator.clipboard.writeText(text).catch(() => fallback(text));
-    return;
-  }
-  fallback(text);
-
-  function fallback(t: string): void {
-    const ta = document.createElement('textarea');
-    ta.value = t;
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try { document.execCommand('copy'); } finally { document.body.removeChild(ta); }
-  }
-}
+import { copyText } from '../../utils/clipboard';
 import type { GateConfig } from '../types';
 
 /** NPC ID → GLB asset path mapping (mirrors field_npc.gd NPC_MODELS) */
