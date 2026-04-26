@@ -543,12 +543,18 @@ func _input_options(event: InputEvent) -> bool:
 		elif _options_idx == 1:
 			_adjust_sfx_volume(-0.1)
 			return true
+		elif _options_idx == 2:
+			InputConfig.cycle(-1)
+			return true
 	elif event.is_action_pressed("ui_right", false):
 		if _options_idx == 0:
 			_adjust_music_volume(0.1)
 			return true
 		elif _options_idx == 1:
 			_adjust_sfx_volume(0.1)
+			return true
+		elif _options_idx == 2:
+			InputConfig.cycle(1)
 			return true
 	elif event.is_action_pressed("ui_accept"):
 		_toggle_option(_options_idx)
@@ -584,6 +590,7 @@ func _get_options_list() -> Array:
 	return [
 		"Music Volume: %d%%" % music_pct,
 		"SFX Volume: %d%%" % sfx_pct,
+		"Controller: %s" % InputConfig.get_label(),
 		"Invert Camera X: %s" % (on if InputConfig.invert_camera_x else off),
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
@@ -598,15 +605,16 @@ func _toggle_option(idx: int) -> void:
 	match idx:
 		0: _adjust_music_volume(0.1)
 		1: _adjust_sfx_volume(0.1)
-		2: InputConfig.toggle_invert_camera_x()
-		3: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
-		4: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		5: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		6: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		7:
+		2: InputConfig.cycle(1)
+		3: InputConfig.toggle_invert_camera_x()
+		4: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
+		5: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		6: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		7: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		8:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		8:
+		9:
 			DebugConfig.profile_frames = not DebugConfig.profile_frames
 
 

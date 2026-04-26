@@ -87,15 +87,6 @@ func _ready() -> void:
 	print("[MobileControls] activating  os=%s" % OS.get_name())
 	Input.set_emulate_mouse_from_touch(true)
 
-	# We render Switch face buttons (A on east, B on south, etc), so force the
-	# input scheme to match. Otherwise on xinput/keyboard the on-screen A
-	# (east) ends up firing ui_cancel because those schemes put accept on
-	# south. The player can still change it later via the input picker.
-	var ic := get_node_or_null("/root/InputConfig")
-	if ic and ic.has_method("set_scheme") and "current_scheme" in ic and ic.current_scheme != "switch":
-		print("[MobileControls] forcing input scheme switch (was %s)" % ic.current_scheme)
-		ic.set_scheme("switch")
-
 	_layer = CanvasLayer.new()
 	_layer.layer = 100
 	_layer.name = "MobileControls"
