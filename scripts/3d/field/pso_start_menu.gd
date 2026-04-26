@@ -594,7 +594,7 @@ func _get_options_list() -> Array:
 		"SFX Volume: %d%%" % sfx_pct,
 		"Controller: %s" % InputConfig.get_label(),
 		"On-Screen Controls: %s" % mc_state,
-		"Invert Camera X: %s" % (on if InputConfig.invert_camera_x else off),
+		"Camera Rotation: %s" % ("Inverted" if InputConfig.invert_camera_x else "Direct"),
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),

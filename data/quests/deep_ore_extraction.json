@@ -139,16 +139,6 @@
             {
               "type": "enemy",
               "position": [
-                0.2,
-                0,
-                -5.5
-              ],
-              "enemy_id": "helion",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
                 -7.5,
                 0,
                 -11.9
@@ -265,16 +255,6 @@
                 15.2
               ],
               "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -15.2,
-                0,
-                -11.9
-              ],
-              "enemy_id": "helion",
-              "wave": 2
             },
             {
               "type": "enemy",
@@ -413,16 +393,6 @@
                 -9.7
               ],
               "enemy_id": "tormatible",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                6.2,
-                0,
-                -5.5
-              ],
-              "enemy_id": "helion",
               "wave": 2
             }
           ]
@@ -586,15 +556,6 @@
             {
               "type": "enemy",
               "position": [
-                -3.9,
-                0,
-                3.1
-              ],
-              "enemy_id": "helion"
-            },
-            {
-              "type": "enemy",
-              "position": [
                 1.1,
                 0,
                 -6
@@ -731,16 +692,6 @@
               ],
               "enemy_id": "tormatible",
               "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -1.3,
-                0,
-                -13.2
-              ],
-              "enemy_id": "helion",
-              "wave": 2
             }
           ]
         },
@@ -819,16 +770,6 @@
                 -11.9
               ],
               "enemy_id": "tormatible",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                -5.5,
-                0,
-                -14.4
-              ],
-              "enemy_id": "helion",
               "wave": 2
             },
             {
@@ -941,16 +882,6 @@
               ],
               "enemy_id": "garapython",
               "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                5.4,
-                0,
-                16.4
-              ],
-              "enemy_id": "helion",
-              "wave": 3
             },
             {
               "type": "enemy",
@@ -1086,6 +1017,38 @@
                 }
               ],
               "actions": []
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.0,
+                0.0,
+                -8.0
+              ],
+              "enemy_id": "helion",
+              "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "trigger_id": "dorn_e_clear",
+              "trigger_condition": "room_clear",
+              "trigger_size": [
+                30,
+                5,
+                30
+              ],
+              "dialog": [
+                {
+                  "speaker": "Dorn",
+                  "text": "That's why the other teams never made it very far."
+                }
+              ],
+              "actions": []
             }
           ]
         }
@@ -1130,15 +1093,6 @@
                 4.8
               ],
               "enemy_id": "grimble"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                4.5,
-                0,
-                6
-              ],
-              "enemy_id": "helion"
             },
             {
               "type": "enemy",
@@ -1250,15 +1204,6 @@
             {
               "type": "enemy",
               "position": [
-                -14.4,
-                0,
-                -12.8
-              ],
-              "enemy_id": "helion"
-            },
-            {
-              "type": "enemy",
-              "position": [
                 8.9,
                 0,
                 -14.3
@@ -1304,16 +1249,6 @@
                 13.3
               ],
               "enemy_id": "tormatible",
-              "wave": 3
-            },
-            {
-              "type": "enemy",
-              "position": [
-                16.7,
-                0,
-                9.8
-              ],
-              "enemy_id": "helion",
               "wave": 3
             }
           ]
@@ -1383,15 +1318,6 @@
             {
               "type": "enemy",
               "position": [
-                -17.7,
-                0,
-                -9.5
-              ],
-              "enemy_id": "helion"
-            },
-            {
-              "type": "enemy",
-              "position": [
                 -16.7,
                 0,
                 7.4
@@ -1445,15 +1371,6 @@
           "warp_edge": "",
           "path_order": 3,
           "objects": [
-            {
-              "type": "enemy",
-              "position": [
-                -19.3,
-                0,
-                4.1
-              ],
-              "enemy_id": "helion"
-            },
             {
               "type": "enemy",
               "position": [
@@ -1611,16 +1528,6 @@
             {
               "type": "enemy",
               "position": [
-                -12.1,
-                0,
-                18.5
-              ],
-              "enemy_id": "helion",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
                 -2.3,
                 0,
                 20.4
@@ -1757,15 +1664,6 @@
             {
               "type": "enemy",
               "position": [
-                -9.1,
-                0,
-                12.9
-              ],
-              "enemy_id": "helion"
-            },
-            {
-              "type": "enemy",
-              "position": [
                 6.4,
                 0,
                 -7.1
@@ -1862,16 +1760,6 @@
             {
               "type": "enemy",
               "position": [
-                4.8,
-                0,
-                -18.1
-              ],
-              "enemy_id": "helion",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
                 4.9,
                 0,
                 -12.5
@@ -1962,16 +1850,6 @@
                 6.3
               ],
               "enemy_id": "ghowl"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                19.9,
-                0,
-                0.8
-              ],
-              "enemy_id": "helion",
-              "wave": 2
             },
             {
               "type": "enemy",
