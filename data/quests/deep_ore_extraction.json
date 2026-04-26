@@ -203,14 +203,81 @@
                 0,
                 -15.8
               ],
-              "item_id": "carlian",
-              "item_label": "Carlian",
               "dialog": [
                 {
                   "speaker": "Dorn",
                   "text": "Carlian. The forge's bread and butter. It's a basic binding agent, but we're completely dry. Even this small sample helps."
                 }
-              ]
+              ],
+              "item_id": "carlian",
+              "item_label": "Carlian"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.5,
+                0,
+                12.3
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.8,
+                0,
+                4.8
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                16.2,
+                0,
+                9.1
+              ],
+              "enemy_id": "lizard"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -15.3,
+                0,
+                -7.2
+              ],
+              "enemy_id": "lizard",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.9,
+                0,
+                -0.7
+              ],
+              "enemy_id": "lizard",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.2,
+                0,
+                -1.5
+              ],
+              "enemy_id": "lizard",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.8,
+                0,
+                -10.1
+              ],
+              "enemy_id": "lizard",
+              "wave": 2
             }
           ]
         },
