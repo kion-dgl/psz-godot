@@ -278,6 +278,15 @@ func _execute_pickup_actions(actions: Array) -> void:
 				print("[QuestItem] Action: complete_quest")
 				SfxManager.play("res://assets/sfx/ui/quest_complete.wav")
 				SessionManager.complete_quest()
+			"end_quest":
+				# Unconditional finisher. Used when this pickup is the
+				# narrative climax (e.g. deep_ore_extraction's Dianaline) and
+				# the quest should end whether or not the player grabbed the
+				# optional samples earlier in the run.
+				print("[QuestItem] Action: end_quest")
+				SfxManager.play("res://assets/sfx/ui/quest_complete.wav")
+				SessionManager.mark_quest_complete()
+				_spawn_telepipe()
 			"dismiss_companion":
 				if companion_node and is_instance_valid(companion_node) and companion_node.has_method("dismiss"):
 					print("[QuestItem] Action: dismiss_companion")
@@ -286,17 +295,21 @@ func _execute_pickup_actions(actions: Array) -> void:
 				if not objectives_met:
 					continue
 				print("[QuestItem] Action: spawning telepipe")
-				var TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
-				var telepipe := TelepipeScript.new()
-				telepipe.name = "Telepipe"
-				get_parent().add_child(telepipe)
-				telepipe.position = position
-				var fc := _find_field_controller()
-				if fc and fc.has_method("_on_end_reached"):
-					telepipe.activated.connect(Callable(fc, "_on_end_reached"))
-				else:
-					telepipe.activated.connect(Callable(SceneManager, "goto_scene").bind("res://scenes/3d/city/city_warp.tscn"))
+				_spawn_telepipe()
 	queue_free()
+
+
+func _spawn_telepipe() -> void:
+	var TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
+	var telepipe := TelepipeScript.new()
+	telepipe.name = "Telepipe"
+	get_parent().add_child(telepipe)
+	telepipe.position = position
+	var fc := _find_field_controller()
+	if fc and fc.has_method("_on_end_reached"):
+		telepipe.activated.connect(Callable(fc, "_on_end_reached"))
+	else:
+		telepipe.activated.connect(Callable(SceneManager, "goto_scene").bind("res://scenes/3d/city/city_warp.tscn"))
 
 
 func _find_dialog_box() -> Node:

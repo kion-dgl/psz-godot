@@ -1196,7 +1196,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "If the surface had Peparian, the deep veins could have anything. Stay sharp."
+                  "text": "We're past the old surveys now. Whatever's down here, it's never been catalogued. Stay sharp."
                 }
               ],
               "actions": []
@@ -1354,7 +1354,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Wait, feel how dense this is. This is way better than what we found on the surface."
+                  "text": "Wait, feel how dense this is. The grain pattern is something else entirely."
                 },
                 {
                   "speaker": "Dorn",
@@ -1921,8 +1921,7 @@
                 -17.7
               ],
               "actions": [
-                "complete_quest",
-                "telepipe"
+                "end_quest"
               ],
               "item_id": "dianaline",
               "item_label": "Dianaline",
