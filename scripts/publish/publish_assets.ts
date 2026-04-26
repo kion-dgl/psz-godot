@@ -1,5 +1,13 @@
 // Build ONE universal asset pack via Godot's --export-pack, upload it to
-// R2 + Arweave, and rewrite assets_manifest.json.
+// Arweave, and rewrite assets_manifest.json.
+//
+// Why Arweave-only: Godot's bundled mbedtls cannot handshake with
+// Cloudflare's R2 dev URL TLS edge (closed #154), so the runtime would
+// always fall through to Arweave anyway. Uploading the pack to R2 each
+// publish was burning storage for URLs nobody could reach. R2 stays in
+// use for per-file dev asset sync via scripts/tools/fetch_assets_dev.sh
+// and the web storybook's VITE_ASSETS_BASE — that path doesn't go
+// through Godot's mbedtls.
 //
 // Why one pack for all platforms: desktop x86 builds (Linux/Windows/macOS)
 // all ship s3tc-compressed textures with byte-identical pack output; Android
@@ -8,9 +16,8 @@
 // picks whichever variant its GPU supports.
 //
 //   cd scripts/publish && npm install                # first time
-//   npm run upload-pack                              # build + R2 + Arweave
+//   npm run upload-pack                              # build + Arweave
 //   npm run upload-pack -- --skip-build              # reuse existing dist/assets.pck
-//   npm run upload-pack -- --skip-r2                 # no R2 upload this run
 //   npm run upload-pack -- --skip-arweave            # no Arweave upload this run
 //   npm run upload-pack -- --dry-run                 # plan only, no work
 //   npm run upload-pack -- --yes                     # skip cost confirmation prompt
@@ -23,7 +30,6 @@ import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { createInterface } from "readline/promises";
 import { stdin as input, stdout as output } from "process";
-import { loadR2Config, uploadFileToR2 } from "./lib/r2.js";
 import { loadWallet } from "./lib/wallet.js";
 import { createTurbo, estimateCost, getBalanceWinc, uploadFileToArweave } from "./lib/ardrive.js";
 
@@ -63,11 +69,9 @@ const ASSET_DIRS = [
 ];
 
 const ARWEAVE_URL_RE = /arweave\.net|ar-io\.dev|permagate\.io/;
-const R2_URL_RE = /r2\.dev/;
 
 interface CliArgs {
   skipBuild: boolean;
-  skipR2: boolean;
   skipArweave: boolean;
   dryRun: boolean;
   yes: boolean;
@@ -90,7 +94,6 @@ function parseArgs(): CliArgs {
   const args = process.argv.slice(2);
   return {
     skipBuild: args.includes("--skip-build"),
-    skipR2: args.includes("--skip-r2"),
     skipArweave: args.includes("--skip-arweave"),
     dryRun: args.includes("--dry-run"),
     yes: args.includes("--yes") || args.includes("-y"),
@@ -215,17 +218,6 @@ function writeAssetTree(): void {
   console.log(`→ Wrote ${ASSET_TREE_OUT} (${lines.length} files)`);
 }
 
-function throttledProgress(label: string): (loaded: number, total: number | undefined) => void {
-  let last = 0;
-  return (loaded, total) => {
-    const now = Date.now();
-    if (now - last < 5000 && (!total || loaded < total)) return;
-    last = now;
-    const pct = total ? ` (${((loaded / total) * 100).toFixed(1)}%)` : "";
-    console.log(`    ${label}: ${(loaded / 1024 / 1024).toFixed(1)} MB${pct}`);
-  };
-}
-
 async function main(): Promise<void> {
   const args = parseArgs();
   const prev = loadPreviousManifest();
@@ -250,34 +242,10 @@ async function main(): Promise<void> {
 
   writeAssetTree();
 
-  // 2. R2 upload
-  const r2 = args.skipR2 ? null : loadR2Config();
-  if (!args.skipR2 && !r2) {
-    console.error("\n✗ R2 not configured (set R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_S3_ENDPOINT, CLOUDFLARE_R2_BUCKET, CLOUDFLARE_R2_PUBLIC_URL in .env)");
-    process.exit(2);
-  }
-
   const urls: string[] = [];
   const shortSha = sha256.slice(0, 12);
 
-  if (r2) {
-    if (prev && prev.pack.sha256 === sha256) {
-      const prevR2 = prev.pack.urls.find((u) => R2_URL_RE.test(u));
-      if (prevR2) {
-        console.log(`  = R2 unchanged (sha=${shortSha})`);
-        urls.push(prevR2);
-      } else {
-        urls.push(await uploadR2(r2, sha256));
-      }
-    } else {
-      urls.push(await uploadR2(r2, sha256));
-    }
-  } else if (prev && prev.pack.sha256 === sha256) {
-    const prevR2 = prev.pack.urls.find((u) => R2_URL_RE.test(u));
-    if (prevR2) urls.push(prevR2);
-  }
-
-  // 3. Arweave upload
+  // 2. Arweave upload
   if (!args.skipArweave) {
     const wallet = loadWallet();
     const turbo = createTurbo(wallet);
@@ -320,7 +288,7 @@ async function main(): Promise<void> {
     urls.push(...arweaveCache.get(sha256)!);
   }
 
-  // 4. Sidecar manifest upload — a tiny JSON describing the pack uploaded
+  // 3. Sidecar manifest upload — a tiny JSON describing the pack uploaded
   //    above. CI fetches this from Arweave and cross-checks against the
   //    in-repo manifest, so a publish that bumps the manifest but doesn't
   //    actually upload the pack (or where the sidecar's metadata diverges
@@ -361,11 +329,11 @@ async function main(): Promise<void> {
     sidecarUrls = sidecarResult.urls;
   }
 
-  // 5. Write manifest (only if we have at least one URL)
+  // 4. Write manifest (only if we have at least one URL)
   if (urls.length === 0) {
     console.log(`\n⚠ Skipping manifest write: no URLs available.`);
     console.log(`  built pack at ${PCK_OUT} (sha=${sha256}, ${formatBytes(size)})`);
-    console.log(`  (Run without --skip-r2 and --skip-arweave to upload + populate urls.)`);
+    console.log(`  (Run without --skip-arweave to upload + populate urls.)`);
     return;
   }
   const manifest: Manifest = {
@@ -377,17 +345,6 @@ async function main(): Promise<void> {
   writeFileSync(MANIFEST_OUT, JSON.stringify(manifest, null, 2) + "\n");
   console.log(`\n→ Wrote ${MANIFEST_OUT}`);
   console.log("Next: git diff assets_manifest.json && git commit");
-}
-
-async function uploadR2(
-  r2: NonNullable<ReturnType<typeof loadR2Config>>,
-  sha256: string,
-): Promise<string> {
-  const shortSha = sha256.slice(0, 12);
-  const key = `packs/assets-${shortSha}.pck`;
-  const { size } = sha256OfFile(PCK_OUT);
-  console.log(`  → uploading ${formatBytes(size)} → r2://${r2.bucket}/${key}`);
-  return await uploadFileToR2(PCK_OUT, key, "application/octet-stream", r2, throttledProgress("assets"));
 }
 
 main().catch((err) => {
