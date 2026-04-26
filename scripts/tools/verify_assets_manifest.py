@@ -44,13 +44,24 @@ def _request(url: str, method: str = "GET"):
 
 
 def head_ok(url: str, expected_size: int) -> tuple[bool, int, str]:
-    """Returns (ok, length, detail). ok=True iff 200 + length matches."""
+    """Returns (ok, length, detail). Probes with a 16-byte range GET so we
+    confirm the URL actually serves bytes (Arweave AO-backed gateways return
+    200 on HEAD but strip Content-Length, and ar-io.dev gates HEAD behind
+    402). A 200/206 response whose first bytes start with the Godot pack
+    magic `GDPC` is treated as reachable."""
     try:
-        resp = _request(url, "HEAD")
-        length = int(resp.headers.get("Content-Length") or 0)
-        if resp.status == 200 and (expected_size == 0 or length == expected_size):
-            return True, length, f"200 len={length}"
-        return False, length, f"{resp.status} len={length}"
+        req = urllib.request.Request(
+            url,
+            method="GET",
+            headers={"User-Agent": USER_AGENT, "Range": "bytes=0-15"},
+        )
+        resp = urllib.request.urlopen(req, timeout=HTTP_TIMEOUT)
+        if resp.status not in (200, 206):
+            return False, 0, f"{resp.status}"
+        head_bytes = resp.read(16)
+        if not head_bytes.startswith(b"GDPC"):
+            return False, len(head_bytes), f"{resp.status} not-a-pack"
+        return True, expected_size, f"{resp.status} GDPC ok"
     except urllib.error.HTTPError as e:
         return False, 0, f"HTTP {e.code}"
     except Exception as e:  # noqa: BLE001
@@ -95,7 +106,7 @@ def find_reachable_url(pack: dict) -> str | None:
             time.sleep(delay)
         for url in urls:
             ok, _, detail = head_ok(url, expected_size)
-            print(f"    attempt {attempt} HEAD {url} → {detail}")
+            print(f"    attempt {attempt} GET {url} → {detail}")
             if ok:
                 return url
     return None
