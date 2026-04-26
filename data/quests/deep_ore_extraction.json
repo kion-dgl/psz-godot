@@ -1078,7 +1078,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "See those tool marks on the walls? Miners worked this passage before the creatures moved in."
+                  "text": "See those tool marks on the walls? Other crews have pushed through here when the forge got desperate enough. The creatures never gave them a clean shot at it."
                 },
                 {
                   "speaker": "Dorn",
@@ -1996,7 +1996,7 @@
           ]
         }
       ],
-      "entry_direction": "south"
+      "entry_direction": "west"
     }
   ],
   "companions": [

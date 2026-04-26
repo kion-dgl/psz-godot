@@ -9,9 +9,10 @@
 # ds_circle / keyboard) is the one that dispatches B → ui_cancel,
 # south-face → ui_accept, etc. No action-name-mirroring hacks.
 #
-# Activates on Android/iOS or any platform reporting a touchscreen. The
-# user can disable via a future options screen by calling
-# MobileControls.set_enabled(false), which writes user://mobile_controls.cfg.
+# Activates on Android/iOS or any platform reporting a touchscreen.
+# Toggleable at runtime via MobileControls.set_active(bool) — used by the
+# Start menu Options row "On-Screen Controls". State persists to
+# user://mobile_controls.cfg so the choice survives reboots.
 #
 # Visual: Kenney CC0 input-prompts sprites (Switch face buttons + dpad).
 # Joystick comes from the MarcoFazioRandom virtual_joystick add-on.
@@ -80,19 +81,54 @@ const SHOP_PATH_PREFIXES := [
 ]
 
 func _ready() -> void:
-	if not _resolve_enabled():
-		print("[MobileControls] disabled")
-		queue_free()
+	# We stay alive even when disabled so the options menu can toggle us
+	# back on without restarting the game (player paired a Bluetooth pad,
+	# decided they want touch controls back, etc).
+	Input.set_emulate_mouse_from_touch(true)
+	if _resolve_enabled():
+		_activate()
+	else:
+		print("[MobileControls] disabled at boot")
+
+func _activate() -> void:
+	if _layer:
+		_layer.visible = true
 		return
 	print("[MobileControls] activating  os=%s" % OS.get_name())
-	Input.set_emulate_mouse_from_touch(true)
-
 	_layer = CanvasLayer.new()
 	_layer.layer = 100
 	_layer.name = "MobileControls"
 	add_child(_layer)
 	_build()
 	_refresh_mode()  # initial visibility
+
+func _deactivate() -> void:
+	if _layer:
+		_layer.visible = false
+	# Force-zero left stick on disable so we don't leave the character
+	# walking from a stale joystick.output value.
+	_emit_axis(JOY_AXIS_LEFT_X, 0.0)
+	_emit_axis(JOY_AXIS_LEFT_Y, 0.0)
+	_last_axis = Vector2.ZERO
+
+func is_enabled() -> bool:
+	return _layer != null and _layer.visible
+
+func toggle() -> void:
+	set_active(not is_enabled())
+
+func set_active(enabled: bool) -> void:
+	if enabled:
+		_activate()
+	else:
+		_deactivate()
+	_save_enabled(enabled)
+
+func _save_enabled(enabled: bool) -> void:
+	var f := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
+	if f:
+		f.store_string("on" if enabled else "off")
+		f.close()
 
 func _resolve_enabled() -> bool:
 	var default := OS.has_feature("android") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
@@ -270,6 +306,10 @@ func _emit_button(button_index: int, pressed: bool) -> void:
 	Input.parse_input_event(ev)
 
 func _process(_dt: float) -> void:
+	# Disabled — overlay isn't built or has been hidden via options. Don't
+	# poll the joystick or emit any axis events.
+	if not _layer or not _layer.visible:
+		return
 	# 1. Mirror joystick output to JoypadMotion left-stick axes — but only
 	#    while the joystick is actually visible. PsoStartMenu is non-pausing
 	#    and lets move_* actions pass through, so any stale joystick.output
@@ -399,10 +439,3 @@ func _refresh_mode() -> void:
 	if _dpad:
 		_dpad.visible = _menu_mode
 
-# ---- Options-screen toggle -------------------------------------------------
-
-static func set_enabled(enabled: bool) -> void:
-	var f := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
-	if f:
-		f.store_string("on" if enabled else "off")
-		f.close()
