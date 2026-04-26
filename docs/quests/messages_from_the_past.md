@@ -19,7 +19,9 @@ This is the first **classified** quest the player takes — the briefing opens w
 | Data Disk 3 | 1 | r3 | Section B — mid, behind locked door | Plays a fragment of audio on pickup (corrupted speaker). Elio is rattled. |
 | Data Disk 4 | 1 | r4 | Section B — final cell | Triggers the final voice fragment + `end_quest`. Elio: "...They did this to themselves." |
 
-All 4 disks are **required** for completion (objectives.target = 4). Unlike Q5, there's no optional/bonus material — every disk drives a story beat that's important for the worldbuilding, and the audio fragments need to play in order. **Open question:** Do we want any of the early disks to be optional (e.g. disk 2 marked optional, only 3 required)? My read is no — the order of revelation is the point. Confirm?
+**Confirmed approach:** all 4 disks required, picked up in any order, quest ends only when all 4 are collected. The existing `collect_quest_item` auto-completes when objectives_complete (target=4), and the per-pickup `complete_quest` + `telepipe` actions are gated on `objectives_met` so only the LAST disk picked up fires the return telepipe — order doesn't matter mechanically.
+
+**Narrative caveat:** the audio fragments on disks 3 and 4 currently play as a sequential reveal (disk 3 is rattled, disk 4 is the climax "they did this to themselves"). If the player picks up disk 4 first, the climax lands without buildup. Two options when polishing dialog: (a) accept this and let the player choose their pacing, or (b) rewrite each disk's line so any one of them can stand alone. Going with (a) for now per "any order" — flagging in case it's worth revisiting after a playtest.
 
 ## Lore Connection
 
@@ -41,9 +43,9 @@ Player enters from the north. Elio comments on the survey team turning back here
 
 ### Section E — Inner Threshold (1 cell)
 
-Connecting room. Elio remarks they're past the survey's farthest point — anything beyond is uncatalogued. Light combat. Mini-boss-tier automaton **OR** a heavier wave to mark the transition (TBD per Q5 pattern of using section E as the "you should know this is serious" beat).
+Connecting room. Elio remarks they're past the survey's farthest point — anything beyond is uncatalogued.
 
-**Open question:** Do we want a recurring mini-boss here (the way Helion sits in Q5's section E), or just a heavier combat wave? A named automaton type would be cool for the lore (something pre-Blank, dormant for centuries) — but only if we have a model for it.
+**Confirmed approach:** section E should host a mini-boss-tier automaton, same role Helion plays in Q5's transition room. The model will be ported from PSOBB (TBD which one) — until that asset extraction lands, the room keeps its current heavier-wave content (bolix + froutang + bolix) as a placeholder. After the PSOBB asset is in, the room becomes single-mini-boss + maybe one or two adds, with a room_clear callout from Elio about "whatever was guarding this was still on duty after centuries."
 
 ### Section B — Inner Sanctum (grid)
 
@@ -91,12 +93,12 @@ flowchart TD
     RETURN --> REPORT["Report to Guild<br/>Mira receives disks<br/>(reward: data analysis bonus exp/meseta)"]
 ```
 
-## Open Questions for Kion
+## Decisions (resolved)
 
-1. **Optional disks?** My take: no, all 4 should be required since the audio fragments build a sequential story. But if you want any to be optional (so the player can speedrun), say which.
-2. **Section E mini-boss:** Named automaton (do we have an enemy id?) or just a heavier wave?
-3. **Reward:** Standard guild exp/meseta, or does this unlock something story-relevant (e.g. a research log readable from the city)?
-4. **Future arc:** Should Mira/Elio recur in later paru quests, or is this a one-off?
+1. **Disks:** all 4 required, picked up in any order, quest ends only when all 4 are collected. Existing per-pickup `complete_quest` + `telepipe` actions stay (they're gated on `objectives_met` so only the actual last pickup triggers the telepipe).
+2. **Section E mini-boss:** import a PSOBB enemy model (TBD which). Until that asset lands, current bolix/froutang wave stays as placeholder.
+3. **Reward:** standard guild XP/meseta, no story unlock.
+4. **Mira/Elio recurrence:** designed as the Research Division pair so they can recur in later paru quests. Mira stays in the office and delegates; Elio is the field assistant. This quest establishes both characters but commits to nothing further.
 
 ## Known Issues in the Current JSON (to fix during the editor pass)
 
