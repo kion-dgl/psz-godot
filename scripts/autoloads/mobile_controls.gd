@@ -44,6 +44,7 @@ const ACTION_BTN_SIZE  := 96                  # square sprite size (pixels)
 const TOP_BTN_SIZE     := 64                  # plus/minus/home in top row
 const TOP_INSET        := 24
 const SHOULDER_BTN_SIZE := 80
+const CAMERA_BTN_SIZE := 64
 
 const STICK_DEADZONE := 0.18
 const SETTINGS_PATH := "user://mobile_controls.cfg"
@@ -85,6 +86,15 @@ func _ready() -> void:
 		return
 	print("[MobileControls] activating  os=%s" % OS.get_name())
 	Input.set_emulate_mouse_from_touch(true)
+
+	# We render Switch face buttons (A on east, B on south, etc), so force the
+	# input scheme to match. Otherwise on xinput/keyboard the on-screen A
+	# (east) ends up firing ui_cancel because those schemes put accept on
+	# south. The player can still change it later via the input picker.
+	var ic := get_node_or_null("/root/InputConfig")
+	if ic and ic.has_method("set_scheme") and "current_scheme" in ic and ic.current_scheme != "switch":
+		print("[MobileControls] forcing input scheme switch (was %s)" % ic.current_scheme)
+		ic.set_scheme("switch")
 
 	_layer = CanvasLayer.new()
 	_layer.layer = 100
@@ -149,6 +159,15 @@ func _build() -> void:
 	_add_sprite_button(JOY_BUTTON_LEFT_SHOULDER,  TEX_BTN_L, Vector2(SHOULDER_BTN_SIZE * 0.5 + TOP_INSET, second_y), SHOULDER_BTN_SIZE)
 	_add_sprite_button(JOY_BUTTON_RIGHT_SHOULDER, TEX_BTN_R, Vector2(v.x - SHOULDER_BTN_SIZE * 0.5 - TOP_INSET, second_y), SHOULDER_BTN_SIZE)
 
+	# ---- Camera arrows above L1 / R1 ----
+	# camera_left/camera_right in project.godot are bound to right-stick
+	# X axis (axis 2) at -1.0 / +1.0. Emit JoypadMotion events on press
+	# (-1 or +1) and release (0) so a real controller and the on-screen
+	# arrow look identical to the input pipeline.
+	var third_y := second_y + SHOULDER_BTN_SIZE * 0.5 + CAMERA_BTN_SIZE * 0.5 + 12
+	_add_axis_button("◀", Vector2(CAMERA_BTN_SIZE * 0.5 + TOP_INSET, third_y), CAMERA_BTN_SIZE, JOY_AXIS_RIGHT_X, -1.0)
+	_add_axis_button("▶", Vector2(v.x - CAMERA_BTN_SIZE * 0.5 - TOP_INSET, third_y), CAMERA_BTN_SIZE, JOY_AXIS_RIGHT_X,  1.0)
+
 	print("[MobileControls] _build done")
 
 func _add_face_button(face_position: String, tex: Texture2D, centre: Vector2, size: float) -> void:
@@ -206,6 +225,51 @@ func _add_sprite_button(button_index: int, tex: Texture2D, centre: Vector2, size
 		_emit_button(button_index, false))
 	_layer.add_child(btn)
 
+func _add_axis_button(label: String, centre: Vector2, size: float, axis: int, value: float) -> void:
+	# Drawn as a translucent rounded square with a unicode arrow label, since
+	# Kenney doesn't ship a "right-stick X arrow" sprite that fits this slot.
+	var btn := TouchScreenButton.new()
+	btn.shape_centered = true
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(size, size)
+	btn.shape = shape
+	btn.position = centre
+
+	var p := Panel.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 0.35)
+	sb.corner_radius_top_left = int(size * 0.25)
+	sb.corner_radius_top_right = int(size * 0.25)
+	sb.corner_radius_bottom_left = int(size * 0.25)
+	sb.corner_radius_bottom_right = int(size * 0.25)
+	sb.border_width_top = 2; sb.border_width_bottom = 2
+	sb.border_width_left = 2; sb.border_width_right = 2
+	sb.border_color = Color(1, 1, 1, 0.7)
+	p.add_theme_stylebox_override("panel", sb)
+	p.size = Vector2(size, size)
+	p.position = -Vector2(size, size) * 0.5
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(p)
+
+	var l := Label.new()
+	l.text = label
+	l.size = Vector2(size, size)
+	l.position = -Vector2(size, size) * 0.5
+	l.add_theme_color_override("font_color", Color.WHITE)
+	l.add_theme_font_size_override("font_size", int(size * 0.55))
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(l)
+
+	btn.pressed.connect(func() -> void:
+		p.modulate = Color(0.7, 0.9, 1.4)
+		_emit_axis(axis, value))
+	btn.released.connect(func() -> void:
+		p.modulate = Color.WHITE
+		_emit_axis(axis, 0.0))
+	_layer.add_child(btn)
+
 func _emit_button(button_index: int, pressed: bool) -> void:
 	var ev := InputEventJoypadButton.new()
 	ev.device = 0
@@ -215,8 +279,13 @@ func _emit_button(button_index: int, pressed: bool) -> void:
 	Input.parse_input_event(ev)
 
 func _process(_dt: float) -> void:
-	# 1. Mirror joystick output to JoypadMotion left-stick axes.
-	if _joystick:
+	# 1. Mirror joystick output to JoypadMotion left-stick axes — but only
+	#    while the joystick is actually visible. PsoStartMenu is non-pausing
+	#    and lets move_* actions pass through, so any stale joystick.output
+	#    value (left over from when the player was walking with their thumb
+	#    on the stick at the moment the menu opened) would keep the character
+	#    drifting forever while the dpad is being used to navigate menus.
+	if _joystick and not _menu_mode:
 		var out := _joystick.output
 		if absf(out.x - _last_axis.x) > 0.02:
 			_emit_axis(JOY_AXIS_LEFT_X, out.x if absf(out.x) > STICK_DEADZONE else 0.0)
@@ -230,6 +299,13 @@ func _process(_dt: float) -> void:
 	if menu != _menu_mode:
 		_menu_mode = menu
 		print("[MobileControls] mode → %s" % ("DPAD" if menu else "STICK"))
+		# Force-zero the left stick on every transition so the character
+		# can't drift in either direction. Going INTO menu mode: stop walking
+		# even if the joystick.output was non-zero. Coming OUT of menu mode:
+		# don't snap to whatever the stale joystick.output happens to be.
+		_emit_axis(JOY_AXIS_LEFT_X, 0.0)
+		_emit_axis(JOY_AXIS_LEFT_Y, 0.0)
+		_last_axis = Vector2.ZERO
 		_refresh_mode()
 
 func _is_menu_active() -> bool:
