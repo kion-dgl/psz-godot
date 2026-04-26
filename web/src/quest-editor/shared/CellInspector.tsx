@@ -5,8 +5,11 @@
  * start/end toggle, key/key-gate controls, notes.
  */
 
+import { useState } from 'react';
 import type { QuestProject, EditorGridCell, Direction, SectionType } from '../types';
 import { getRotatedGates, getStageSuffix } from '../hooks/useStageConfigs';
+import { projectToGodotQuest } from '../utils/quest-io';
+import { copyText } from '../../utils/clipboard';
 
 interface CellInspectorProps {
   project: QuestProject;
@@ -81,6 +84,30 @@ export default function CellInspector({
     );
   }
 
+  const [copyStatus, setCopyStatus] = useState('');
+  const handleCopyCellJson = async () => {
+    // Re-run the full export so the cell JSON matches what would land in
+    // the on-disk quest file (resolved gates, portals, key gates, dialog
+    // triggers, etc.) — then dig out the one cell at selectedCell.
+    try {
+      const quest = (await projectToGodotQuest(project)) as { sections?: Array<{ cells?: Array<{ pos: string }> }> };
+      let found: object | null = null;
+      for (const sec of quest.sections ?? []) {
+        const match = (sec.cells ?? []).find(c => c.pos === selectedCell);
+        if (match) { found = match; break; }
+      }
+      if (!found) {
+        setCopyStatus('Cell not found in export');
+      } else {
+        copyText(JSON.stringify(found, null, 2));
+        setCopyStatus('Cell JSON copied!');
+      }
+    } catch (e) {
+      setCopyStatus(`Copy failed: ${e}`);
+    }
+    setTimeout(() => setCopyStatus(''), 2000);
+  };
+
   const gates = getRotatedGates(cell.stageName, cell.rotation ?? 0);
   const suffix = getStageSuffix(cell.stageName);
   const isStart = project.startPos === selectedCell;
@@ -106,6 +133,30 @@ export default function CellInspector({
             Manually placed
           </div>
         )}
+        {/* Copy this cell's Godot JSON snippet to clipboard — saves
+            having to copy the entire quest JSON to splice in one fix. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+          <button
+            onClick={handleCopyCellJson}
+            style={{
+              padding: '4px 10px',
+              background: '#448844',
+              border: '1px solid #66aa66',
+              borderRadius: '4px',
+              color: '#fff',
+              fontSize: '11px',
+              cursor: 'pointer',
+            }}
+          >
+            Copy cell as JSON
+          </button>
+          {copyStatus && (
+            <span style={{ fontSize: '11px', color: copyStatus.includes('failed') || copyStatus.includes('not found') ? '#ff8888' : '#88ff88' }}>
+              {copyStatus}
+            </span>
+          )}
+        </div>
+
         {/* Rotation control */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
           <span style={{ fontSize: '11px', color: '#888' }}>Rotation:</span>
@@ -331,7 +382,7 @@ export default function CellInspector({
             <>
               <div
                 style={{ fontSize: '11px', color: '#cc88ff', marginTop: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                onClick={() => navigator.clipboard.writeText(selectedCell)}
+                onClick={() => copyText(selectedCell)}
                 title="Click to copy gate position"
               >
                 Gate ID: <span style={{ fontWeight: 700, color: '#ff88ff' }}>{selectedCell}</span>

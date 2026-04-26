@@ -543,12 +543,18 @@ func _input_options(event: InputEvent) -> bool:
 		elif _options_idx == 1:
 			_adjust_sfx_volume(-0.1)
 			return true
+		elif _options_idx == 2:
+			InputConfig.cycle(-1)
+			return true
 	elif event.is_action_pressed("ui_right", false):
 		if _options_idx == 0:
 			_adjust_music_volume(0.1)
 			return true
 		elif _options_idx == 1:
 			_adjust_sfx_volume(0.1)
+			return true
+		elif _options_idx == 2:
+			InputConfig.cycle(1)
 			return true
 	elif event.is_action_pressed("ui_accept"):
 		_toggle_option(_options_idx)
@@ -581,10 +587,14 @@ func _get_options_list() -> Array:
 	var off := "OFF"
 	var music_pct: int = roundi(MusicManager.music_volume * 100)
 	var sfx_pct: int = roundi(SfxManager.sfx_volume * 100)
+	var mc := get_node_or_null("/root/MobileControls")
+	var mc_state: String = (on if (mc and mc.has_method("is_enabled") and mc.is_enabled()) else off)
 	return [
 		"Music Volume: %d%%" % music_pct,
 		"SFX Volume: %d%%" % sfx_pct,
-		"Invert Camera X: %s" % (on if InputConfig.invert_camera_x else off),
+		"Controller: %s" % InputConfig.get_label(),
+		"On-Screen Controls: %s" % mc_state,
+		"Camera Rotation: %s" % ("Inverted" if InputConfig.invert_camera_x else "Direct"),
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
@@ -598,15 +608,20 @@ func _toggle_option(idx: int) -> void:
 	match idx:
 		0: _adjust_music_volume(0.1)
 		1: _adjust_sfx_volume(0.1)
-		2: InputConfig.toggle_invert_camera_x()
-		3: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
-		4: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		5: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		6: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		7:
+		2: InputConfig.cycle(1)
+		3:
+			var mc := get_node_or_null("/root/MobileControls")
+			if mc and mc.has_method("toggle"):
+				mc.toggle()
+		4: InputConfig.toggle_invert_camera_x()
+		5: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
+		6: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		7: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		8: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		9:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		8:
+		10:
 			DebugConfig.profile_frames = not DebugConfig.profile_frames
 
 

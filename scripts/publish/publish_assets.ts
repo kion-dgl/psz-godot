@@ -17,7 +17,7 @@
 
 import "./lib/env.js";
 import { execSync } from "child_process";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from "fs";
 import { createHash } from "crypto";
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
@@ -36,6 +36,7 @@ const ASSET_TREE_OUT = resolve(REPO_ROOT, "asset_tree.txt");
 const VERSION_FILE = resolve(REPO_ROOT, "VERSION");
 const DIST_DIR = resolve(REPO_ROOT, "dist");
 const PCK_OUT = join(DIST_DIR, "assets.pck");
+const SIDECAR_OUT = join(DIST_DIR, "pack.manifest.json");
 
 const GODOT_VERSION = "4.5";
 const PRESET_NAME = "Asset Pack";
@@ -78,6 +79,9 @@ interface Manifest {
   pack: {
     sha256: string;
     size: number;
+    urls: string[];
+  };
+  sidecar?: {
     urls: string[];
   };
 }
@@ -316,7 +320,48 @@ async function main(): Promise<void> {
     urls.push(...arweaveCache.get(sha256)!);
   }
 
-  // 4. Write manifest (only if we have at least one URL)
+  // 4. Sidecar manifest upload — a tiny JSON describing the pack uploaded
+  //    above. CI fetches this from Arweave and cross-checks against the
+  //    in-repo manifest, so a publish that bumps the manifest but doesn't
+  //    actually upload the pack (or where the sidecar's metadata diverges
+  //    from the in-repo manifest) fails CI. This is the integrity check
+  //    that replaces re-streaming the full 264 MB pack through the Arweave
+  //    gateway.
+  let sidecarUrls: string[] = [];
+  const prevSidecarStillValid =
+    prev?.pack.sha256 === sha256 &&
+    prev.version === getVersion() &&
+    Array.isArray(prev.sidecar?.urls) &&
+    prev!.sidecar!.urls.length > 0;
+  if (prevSidecarStillValid) {
+    console.log(`  = Sidecar reused (pack sha + version unchanged)`);
+    sidecarUrls = [...prev!.sidecar!.urls];
+  } else if (!args.skipArweave) {
+    const wallet = loadWallet();
+    const sidecarBody = {
+      version: getVersion(),
+      godot_version: GODOT_VERSION,
+      pack: { sha256, size, urls: [...urls] },
+    };
+    writeFileSync(SIDECAR_OUT, JSON.stringify(sidecarBody, null, 2) + "\n");
+    console.log(`\n→ Uploading sidecar manifest (${formatBytes(statSync(SIDECAR_OUT).size)}) to Arweave...`);
+    const sidecarResult = await uploadFileToArweave(
+      SIDECAR_OUT,
+      "application/json",
+      wallet,
+      [
+        { name: "App-Name", value: "psz-godot" },
+        { name: "App-Version", value: getVersion() },
+        { name: "Pack-Name", value: "assets" },
+        { name: "Pack-SHA256", value: sha256 },
+        { name: "Sidecar-Of", value: "assets_manifest.json" },
+      ],
+    );
+    console.log(`    tx: ${sidecarResult.id}`);
+    sidecarUrls = sidecarResult.urls;
+  }
+
+  // 5. Write manifest (only if we have at least one URL)
   if (urls.length === 0) {
     console.log(`\n⚠ Skipping manifest write: no URLs available.`);
     console.log(`  built pack at ${PCK_OUT} (sha=${sha256}, ${formatBytes(size)})`);
@@ -327,6 +372,7 @@ async function main(): Promise<void> {
     version: getVersion(),
     godot_version: GODOT_VERSION,
     pack: { sha256, size, urls },
+    ...(sidecarUrls.length ? { sidecar: { urls: sidecarUrls } } : {}),
   };
   writeFileSync(MANIFEST_OUT, JSON.stringify(manifest, null, 2) + "\n");
   console.log(`\n→ Wrote ${MANIFEST_OUT}`);

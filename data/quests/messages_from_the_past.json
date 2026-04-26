@@ -768,7 +768,7 @@
               "dialog": [
                 {
                   "speaker": "Mira",
-                  "text": "People lived here. You can tell from the layout — corridors, junctions. This was a city. Then one day everyone just... left."
+                  "text": "People lived here. You can tell from the layout: corridors, junctions. This was a city. Then one day everyone just... left."
                 }
               ]
             }
@@ -1450,7 +1450,7 @@
                 },
                 {
                   "speaker": "Mira",
-                  "text": "...They did this to themselves. I— I need to process this. Let's get back to the Guild."
+                  "text": "...They did this to themselves. I... I need to process this. Let's get back to the Guild."
                 }
               ],
               "actions": [
@@ -1543,7 +1543,7 @@
     },
     {
       "speaker": "Mira",
-      "text": "The ruins contain data from before the Great Blank — records that could explain what happened to this world."
+      "text": "The ruins contain data from before the Great Blank, records that could explain what happened to this world."
     },
     {
       "speaker": "Mira",
@@ -1551,11 +1551,11 @@
     },
     {
       "speaker": "Mira",
-      "text": "I'd go myself, but the ruins are crawling with active automata. I'm sending Elio with you — she knows what to look for."
+      "text": "I'd go myself, but the ruins are crawling with active automata. I'm sending Elio with you. She knows what to look for."
     },
     {
       "speaker": "Elio",
-      "text": "I've studied Mira's notes. I'll know the disks when I see them — you keep us alive."
+      "text": "I've studied Mira's notes. I'll know the disks when I see them. You keep us alive."
     },
     {
       "speaker": "Principal",

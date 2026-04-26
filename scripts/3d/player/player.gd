@@ -2090,6 +2090,7 @@ func _fire_projectile(atk: Dictionary) -> void:
 		proj.max_range = max_range
 		proj.owner_node = self
 		proj.speed = 25.0
+		proj.max_hits = int(config.get("max_targets", 1))
 
 		# Slicer: throwing blade aimed at target, bounces to nearby enemies
 		if weapon_type == WeaponData.WeaponType.SLICER:

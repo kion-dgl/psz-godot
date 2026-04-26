@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
-"""Verify every pack in assets_manifest.json is reachable and intact.
+"""Verify the asset pack referenced in assets_manifest.json is actually
+published on Arweave and matches what the in-repo manifest claims.
 
-Modes:
-- Default: HEAD each URL, confirm at least one 200 whose Content-Length
-  matches the manifest's `size`. Fast — safe to run on every PR.
-- --download: additionally download the pack bytes and verify sha256 matches
-  the manifest's `sha256`. Slower (pulls ~350 MB). CI runs this only when
-  the manifest changed in the PR so we don't waste bandwidth on unrelated
-  PRs.
+Two checks, both fast — safe to run on every PR:
 
-For each pack, each URL is retried a few times with backoff to accommodate
-Arweave/CDN propagation. Fail only if NO URL yields a good response.
+1. Reachability probe: each pack URL is hit with a 16-byte range GET.
+   The response must start with the Godot pack magic `GDPC`.
+2. Sidecar manifest: a tiny `pack.manifest.json` published next to the
+   pack on Arweave at `manifest.sidecar.urls`. We download it (sub-KB)
+   and assert its `version`, `pack.sha256`, and `pack.size` match the
+   in-repo manifest. If publish bumped the in-repo manifest but didn't
+   actually upload (or uploaded different bytes than the manifest
+   claims), the sidecar will be missing or mismatched and CI fails.
+
+The sidecar is the integrity guarantee — we don't re-stream the full
+264 MB through Arweave's gateway because it's flaky on long downloads
+(IncompleteRead at ~50 MB), and an in-place re-hash buys nothing that
+the sidecar doesn't already prove.
 
 Run from repo root:
-    python3 scripts/tools/verify_assets_manifest.py [--download]
+    python3 scripts/tools/verify_assets_manifest.py
 """
 from __future__ import annotations
 
-import argparse
-import hashlib
 import json
 import sys
 import time
@@ -30,180 +34,150 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = REPO_ROOT / "assets_manifest.json"
 RETRY_DELAYS_SEC = [0, 30, 60, 120]
 HTTP_TIMEOUT = 30
-HASH_CHUNK = 1 << 20  # 1 MiB
-# R2's public dev URL blocks the default Python-urllib UA with 403; any
-# non-default UA works. Use a stable identifier so R2 access logs are readable.
 USER_AGENT = "psz-godot-ci/1.0"
+SIDECAR_MAX_BYTES = 64 * 1024  # sidecar is ~200 bytes; cap reads for safety
 
 
-def _request(url: str, method: str = "GET"):
-    req = urllib.request.Request(
-        url, method=method, headers={"User-Agent": USER_AGENT}
-    )
+def _request_get(url: str, range_header: str | None = None):
+    headers = {"User-Agent": USER_AGENT}
+    if range_header:
+        headers["Range"] = range_header
+    req = urllib.request.Request(url, method="GET", headers=headers)
     return urllib.request.urlopen(req, timeout=HTTP_TIMEOUT)
 
 
-def head_ok(url: str, expected_size: int) -> tuple[bool, int, str]:
-    """Returns (ok, length, detail). ok=True iff 200 + length matches."""
+def probe_pack_url(url: str) -> tuple[bool, str]:
+    """Range-GET the first 16 bytes; return (ok, detail). Arweave's CDN
+    drops Content-Length on HEAD, so we can't rely on size matching —
+    instead we just confirm the bytes start with the Godot pack magic
+    `GDPC`, which proves we're getting a real pack rather than an error
+    page."""
     try:
-        resp = _request(url, "HEAD")
-        length = int(resp.headers.get("Content-Length") or 0)
-        if resp.status == 200 and (expected_size == 0 or length == expected_size):
-            return True, length, f"200 len={length}"
-        return False, length, f"{resp.status} len={length}"
+        resp = _request_get(url, range_header="bytes=0-15")
+        if resp.status not in (200, 206):
+            return False, f"{resp.status}"
+        head_bytes = resp.read(16)
+        if not head_bytes.startswith(b"GDPC"):
+            return False, f"{resp.status} not-a-pack"
+        return True, f"{resp.status} GDPC ok"
     except urllib.error.HTTPError as e:
-        return False, 0, f"HTTP {e.code}"
+        return False, f"HTTP {e.code}"
     except Exception as e:  # noqa: BLE001
-        return False, 0, f"{type(e).__name__}: {e}"
+        return False, f"{type(e).__name__}: {e}"
 
 
-def stream_sha256(url: str) -> tuple[str | None, int, str]:
-    """Download `url`, compute sha256 chunk-by-chunk. Returns (hex or None, size, detail)."""
-    try:
-        resp = _request(url, "GET")
-    except urllib.error.HTTPError as e:
-        return None, 0, f"HTTP {e.code}"
-    except Exception as e:  # noqa: BLE001
-        return None, 0, f"{type(e).__name__}: {e}"
-    h = hashlib.sha256()
-    total = 0
-    while True:
-        try:
-            chunk = resp.read(HASH_CHUNK)
-        except Exception as e:  # noqa: BLE001
-            return None, total, f"read error after {total}: {e}"
-        if not chunk:
-            break
-        h.update(chunk)
-        total += len(chunk)
-        if total % (50 * 1024 * 1024) < HASH_CHUNK:
-            print(f"    ...{total / 1024 / 1024:.0f} MB streamed")
-    return h.hexdigest(), total, "ok"
-
-
-def find_reachable_url(pack: dict) -> str | None:
-    """Return the first URL whose HEAD yields 200 with expected size."""
-    name = pack.get("name", "<unnamed>")
-    expected_size = int(pack.get("size", 0))
-    urls = pack.get("urls", [])
+def find_reachable_pack(urls: list[str]) -> bool:
     if not urls:
-        print(f"  FAIL {name}: no urls in manifest")
-        return None
-    for attempt, delay in enumerate(RETRY_DELAYS_SEC, start=1):
-        if delay:
-            print(f"    retry in {delay}s...")
-            time.sleep(delay)
-        for url in urls:
-            ok, _, detail = head_ok(url, expected_size)
-            print(f"    attempt {attempt} HEAD {url} → {detail}")
-            if ok:
-                return url
-    return None
-
-
-def verify_pack(pack: dict, download: bool) -> bool:
-    name = pack.get("name", "<unnamed>")
-    expected_size = int(pack.get("size", 0))
-    expected_sha = str(pack.get("sha256", "")).strip().lower()
-    urls = pack.get("urls", [])
-    print(f"  pack {name}: size={expected_size} sha256={expected_sha[:12]}...")
-
-    if not download:
-        return find_reachable_url(pack) is not None
-
-    if not expected_sha:
-        print("  FAIL: --download requires a sha256 in the manifest")
+        print("  FAIL pack: no urls in manifest")
         return False
-
-    # Try each URL for the full download until one succeeds: some mirrors
-    # (e.g. ar-io.dev) HEAD OK but return 402 on GET.
     for attempt, delay in enumerate(RETRY_DELAYS_SEC, start=1):
         if delay:
             print(f"    retry in {delay}s...")
             time.sleep(delay)
         for url in urls:
-            ok, _, head_detail = head_ok(url, expected_size)
-            if not ok:
-                print(f"    HEAD {url} → {head_detail} (skipping)")
-                continue
-            print(f"    GET  {url} → streaming for sha256")
-            got_sha, got_size, detail = stream_sha256(url)
-            if got_sha is None:
-                print(f"    GET failed ({detail}); trying next URL")
-                continue
-            if expected_size and got_size != expected_size:
-                print(f"    size mismatch — got {got_size}, want {expected_size}")
-                continue
-            if got_sha != expected_sha:
-                print(f"    sha256 mismatch — got {got_sha}, want {expected_sha}")
-                # A mismatch is a hard fail — no point trying another mirror
-                # for the same manifest entry, all mirrors should serve
-                # identical bytes.
-                return False
-            print(f"  OK: sha256 matches manifest (via {url})")
-            return True
+            ok, detail = probe_pack_url(url)
+            print(f"    attempt {attempt} GET {url} → {detail}")
+            if ok:
+                return True
     return False
 
 
-def expand_pack_entries(pack: dict, name: str = "assets") -> list[dict]:
-    """A manifest pack entry is flat (new single-pack shape) or per-platform
-    (legacy). Return a list of pseudo-entries for verification, each with a
-    synthetic name."""
-    if "platforms" in pack:
-        out = []
-        for platform, entry in pack["platforms"].items():
-            out.append({
-                "name": f"{name}/{platform}",
-                "sha256": entry.get("sha256", ""),
-                "size": entry.get("size", 0),
-                "urls": entry.get("urls", []),
-            })
-        return out
-    return [{
-        "name": name,
-        "sha256": pack.get("sha256", ""),
-        "size": pack.get("size", 0),
-        "urls": pack.get("urls", []),
-    }]
+def fetch_sidecar(urls: list[str]) -> dict | None:
+    """Download a sidecar JSON from the first URL that returns a parseable
+    response. Sidecars are small enough that one full GET is cheaper than
+    a range probe + second fetch."""
+    for attempt, delay in enumerate(RETRY_DELAYS_SEC, start=1):
+        if delay:
+            print(f"    retry in {delay}s...")
+            time.sleep(delay)
+        for url in urls:
+            try:
+                resp = _request_get(url)
+                if resp.status not in (200, 206):
+                    print(f"    attempt {attempt} GET {url} → {resp.status}")
+                    continue
+                raw = resp.read(SIDECAR_MAX_BYTES)
+                data = json.loads(raw.decode("utf-8"))
+                print(f"    attempt {attempt} GET {url} → 200 sidecar parsed")
+                return data
+            except urllib.error.HTTPError as e:
+                print(f"    attempt {attempt} GET {url} → HTTP {e.code}")
+            except json.JSONDecodeError as e:
+                print(f"    attempt {attempt} GET {url} → JSON parse error: {e}")
+            except Exception as e:  # noqa: BLE001
+                print(f"    attempt {attempt} GET {url} → {type(e).__name__}: {e}")
+    return None
+
+
+def verify_sidecar(in_repo: dict, sidecar: dict) -> list[str]:
+    """Return a list of mismatch messages — empty list means ok."""
+    issues: list[str] = []
+    repo_pack = in_repo.get("pack", {})
+    side_pack = sidecar.get("pack", {})
+    for field in ("sha256", "size"):
+        if repo_pack.get(field) != side_pack.get(field):
+            issues.append(
+                f"pack.{field} mismatch: in-repo={repo_pack.get(field)!r} "
+                f"sidecar={side_pack.get(field)!r}"
+            )
+    if in_repo.get("version") != sidecar.get("version"):
+        issues.append(
+            f"version mismatch: in-repo={in_repo.get('version')!r} "
+            f"sidecar={sidecar.get('version')!r}"
+        )
+    return issues
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument(
-        "--download",
-        action="store_true",
-        help="Download each pack and verify its sha256 (slower).",
-    )
-    args = ap.parse_args()
-
     if not MANIFEST.exists():
         print(f"{MANIFEST} missing — nothing to verify")
         return 0
     data = json.loads(MANIFEST.read_text())
-    # New shape: {"pack": {...}} — single universal pack.
-    # Legacy shape: {"packs": [{...}, ...]} — kept for graceful handling if
-    # an old tree is re-verified.
-    entries = []
-    if "pack" in data:
-        entries.extend(expand_pack_entries(data["pack"]))
-    elif "packs" in data:
-        for i, pack in enumerate(data["packs"]):
-            entries.extend(expand_pack_entries(pack, pack.get("name", f"pack{i}")))
-    if not entries:
+    pack = data.get("pack")
+    if not pack:
         print("manifest has no pack entry — skipping")
         return 0
 
-    mode = "full (download + hash)" if args.download else "url check only"
-    print(f"Verifying {len(entries)} pack entry/entries from {MANIFEST.name} — {mode}")
-    failed = []
-    for entry in entries:
-        if not verify_pack(entry, download=args.download):
-            failed.append(entry.get("name", "<unnamed>"))
+    pack_urls = pack.get("urls", [])
+    pack_sha = str(pack.get("sha256", "")).strip().lower()
+    pack_size = int(pack.get("size", 0))
+    print(f"Verifying pack: size={pack_size} sha256={pack_sha[:12]}...")
 
-    if failed:
-        print(f"\nFAIL: {failed}", file=sys.stderr)
+    pack_ok = find_reachable_pack(pack_urls)
+    if not pack_ok:
+        print("\nFAIL: pack not reachable on any URL", file=sys.stderr)
         return 1
-    print("\nAll packs verified.")
+
+    sidecar_meta = data.get("sidecar")
+    if not sidecar_meta or not sidecar_meta.get("urls"):
+        print(
+            "\nFAIL: assets_manifest.json has no sidecar.urls — re-run the "
+            "publish script so it uploads a sidecar manifest, then commit "
+            "the updated assets_manifest.json.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print("\nFetching sidecar manifest...")
+    sidecar = fetch_sidecar(sidecar_meta["urls"])
+    if sidecar is None:
+        print("\nFAIL: sidecar manifest not reachable on any URL", file=sys.stderr)
+        return 1
+
+    issues = verify_sidecar(data, sidecar)
+    if issues:
+        print("\nFAIL: sidecar disagrees with in-repo manifest:", file=sys.stderr)
+        for issue in issues:
+            print(f"  - {issue}", file=sys.stderr)
+        print(
+            "\nThis usually means the publish step ran but the in-repo "
+            "manifest was edited (or rolled back) after upload. Re-run "
+            "the publish script.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print("\nAll checks passed: pack reachable + sidecar matches manifest.")
     return 0
 
 

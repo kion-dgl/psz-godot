@@ -19,6 +19,7 @@ const GridMinimapScript := preload("res://scripts/3d/field/grid_minimap.gd")
 const FieldHudScript := preload("res://scripts/3d/field/field_hud.gd")
 const BoxScript := preload("res://scripts/3d/elements/box.gd")
 const FenceScript := preload("res://scripts/3d/elements/fence.gd")
+const WallScript := preload("res://scripts/3d/elements/wall.gd")
 const StepSwitchScript := preload("res://scripts/3d/elements/step_switch.gd")
 const EnemySpawnScript := preload("res://scripts/3d/elements/enemy_spawn.gd")
 const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
@@ -88,6 +89,7 @@ var _room_props: Array = []    # StoryProp nodes in current room
 var _room_triggers: Array = [] # DialogTrigger nodes in current room
 var _room_npcs: Array = []     # FieldNpc nodes in current room
 var _room_quest_items: Array = [] # QuestItemPickup nodes in current room
+var _room_walls: Array = []       # Wall nodes in current room
 var _fence_links: Dictionary = {}  # link_id → { "fences": [], "switches": [] }
 # NOTE: activated fence-switch links are stored in SessionManager (persists across cell transitions)
 var _room_gates_locked: Array = []  # Gate elements locked until enemies cleared
@@ -1824,14 +1826,14 @@ func _spawn_field_elements() -> void:
 				break
 			if obj_type in ["dialog_trigger", "quest_item"]:
 				for act in obj.get("actions", []):
-					if str(act) == "telepipe":
+					if str(act) in ["telepipe", "end_quest"]:
 						has_telepipe_source = true
 						break
 				# Also check remaining_dialog entries for telepipe actions
 				if not has_telepipe_source:
 					for entry in obj.get("remaining_dialog", []):
 						for act in entry.get("actions", []):
-							if str(act) == "telepipe":
+							if str(act) in ["telepipe", "end_quest"]:
 								has_telepipe_source = true
 								break
 						if has_telepipe_source:
@@ -2038,6 +2040,7 @@ func _spawn_cell_objects() -> void:
 	_room_triggers.clear()
 	_room_npcs.clear()
 	_room_quest_items.clear()
+	_room_walls.clear()
 	_deferred_telepipe = {}
 
 	if objects.is_empty() and saved.is_empty():
@@ -2159,6 +2162,9 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				_spawn_needle_trap(pos)
 			"bear_trap":
 				_spawn_bear_trap(pos)
+			"wall":
+				var w_destructible: bool = bool(obj.get("destructible", true))
+				_spawn_wall(pos, obj_rot, w_destructible)
 
 	if _max_wave > 1:
 		print("[CellObjects] Wave system: %d waves, wave 1 spawned" % _max_wave)
@@ -2275,6 +2281,13 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				_spawn_needle_trap(pos)
 			"bear_trap":
 				_spawn_bear_trap(pos)
+			"wall":
+				var w_destructible: bool = bool(obj.get("destructible", true))
+				_spawn_wall(pos, obj_rot, w_destructible)
+				if state == "destroyed":
+					for w in _room_walls:
+						if is_instance_valid(w) and (w as Node3D).position.distance_to(pos) < 0.1:
+							(w as Wall).set_state("destroyed")
 
 	# Restore uncollected drops
 	for d in drop_states:
@@ -2286,6 +2299,11 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var dm := DropMesetaScript.new()
 				dm.amount = int(d.get("amount", 10))
 				drop = dm
+			"material":
+				var dmat := DropMaterialScript.new()
+				dmat.item_id = str(d.get("item_id", ""))
+				dmat.amount = int(d.get("amount", 1))
+				drop = dmat
 			"item":
 				var di := DropItemScript.new()
 				di.item_id = str(d.get("item_id", ""))
@@ -2449,13 +2467,19 @@ func _save_cell_state() -> void:
 	for drop in _room_drops:
 		if is_instance_valid(drop) and drop.element_state == "available":
 			var d: DropBase = drop as DropBase
-			var kind := "meseta" if d is DropMeseta else "item"
+			var kind := "meseta"
+			if d is DropMaterial:
+				kind = "material"
+			elif d is DropMeseta:
+				kind = "meseta"
+			else:
+				kind = "item"
 			var entry := {
 				"kind": kind,
 				"px": d.position.x, "py": d.position.y, "pz": d.position.z,
 				"amount": d.amount,
 			}
-			if kind == "item":
+			if kind in ["item", "material"]:
 				entry["item_id"] = d.item_id
 			drop_states.append(entry)
 
@@ -2524,6 +2548,18 @@ func _save_cell_state() -> void:
 				"state": qi.element_state,
 				"item_id": qi.quest_item_id,
 				"item_label": qi.quest_item_label,
+			})
+
+	# Save wall states
+	for wall in _room_walls:
+		if is_instance_valid(wall):
+			var w: Wall = wall as Wall
+			obj_states.append({
+				"type": "wall",
+				"px": w.position.x, "py": w.position.y, "pz": w.position.z,
+				"state": w.element_state,
+				"rotation": rad_to_deg(w.rotation.y),
+				"destructible": w.is_destructible,
 			})
 
 	# Save telepipe from original quest data (telepipes are procedural, just preserve placement)
@@ -2807,6 +2843,17 @@ func _spawn_bear_trap(pos: Vector3) -> void:
 	trap.position = pos
 	trap.call("set_state", "on")
 	print("[CellObjects] BearTrap at %s" % pos)
+
+
+func _spawn_wall(pos: Vector3, rotation_deg: float, is_destructible: bool = true) -> void:
+	var wall := WallScript.new()
+	wall.is_destructible = is_destructible
+	_map_root.add_child(wall)
+	wall.position = pos
+	wall.rotation.y = deg_to_rad(rotation_deg)
+	_fixup_element_materials(wall)
+	_room_walls.append(wall)
+	print("[CellObjects] Wall at %s rot=%.0f° destructible=%s" % [pos, rotation_deg, is_destructible])
 
 
 func _spawn_dialog_trigger(pos: Vector3, trigger_id: String, dlg: Array, state: String = "ready", condition: String = "enter", act: Array = [], size: Vector3 = Vector3.ZERO) -> void:

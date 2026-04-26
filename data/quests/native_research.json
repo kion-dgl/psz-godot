@@ -1943,7 +1943,7 @@
               "dialog": [
                 {
                   "speaker": "Dr. Carlo",
-                  "text": "Wait — look at these rabbits. They're not attacking us."
+                  "text": "Wait, look at these rabbits. They're not attacking us."
                 },
                 {
                   "speaker": "Dr. Carlo",
@@ -1959,7 +1959,7 @@
                 },
                 {
                   "speaker": "Dr. Carlo",
-                  "text": "I'm going to collect a sample. Let's head back to the lab — I have a lot of work ahead of me."
+                  "text": "I'm going to collect a sample. Let's head back to the lab. I have a lot of work ahead of me."
                 }
               ]
             }
@@ -1985,7 +1985,7 @@
     },
     {
       "speaker": "Dr. Carlo",
-      "text": "I'm conducting a wildlife survey across three biomes — valley, wetlands, and snowfield."
+      "text": "I'm conducting a wildlife survey across three biomes: valley, wetlands, and snowfield."
     },
     {
       "speaker": "Dr. Carlo",

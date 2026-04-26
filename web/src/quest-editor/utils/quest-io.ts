@@ -354,6 +354,7 @@ async function exportSectionCells(
         if (obj.portal_dir) exported.portal_dir = obj.portal_dir;
         if (obj.area_warp_label) exported.label = obj.area_warp_label;
         if (obj.area_warp_rotation_y !== undefined) exported.rotation_y = obj.area_warp_rotation_y;
+        if (obj.destructible !== undefined) exported.destructible = obj.destructible;
         return exported;
       }).filter(obj => obj.type !== 'warp_dest');
     }
@@ -598,6 +599,7 @@ export function importGodotSection(section: any): QuestSection {
         if (obj.portal_dir) co.portal_dir = obj.portal_dir;
         if (obj.label) co.area_warp_label = obj.label;
         if (obj.rotation_y !== undefined) co.area_warp_rotation_y = obj.rotation_y;
+        if (obj.destructible !== undefined) co.destructible = obj.destructible;
         // warp_section, warp_cell, warp_position are export-only (resolved at export time) — skip on import
         return co;
       });

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="PSZ Godot"
-config/version="0.24.1"
+config/version="0.25.0"
 run/main_scene="res://scenes/2d/bootstrap.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
@@ -56,14 +56,18 @@ FrameProfiler="*res://scripts/autoloads/frame_profiler.gd"
 MusicManager="*res://scripts/autoloads/music_manager.gd"
 SfxManager="*res://scripts/autoloads/sfx_manager.gd"
 PsoStartMenu="*res://scripts/3d/field/pso_start_menu.gd"
+MobileControls="*res://scripts/autoloads/mobile_controls.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/virtual_joystick/plugin.cfg")
 
 [display]
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
-window/size/viewport_width.mobile=854
-window/size/viewport_height.mobile=480
+window/stretch/aspect="keep"
 
 [input]
 
