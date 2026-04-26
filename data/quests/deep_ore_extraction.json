@@ -3,7 +3,7 @@
   "last_updated": "2026-04-25",
   "id": "deep_ore_extraction",
   "name": "Deep Ore Extraction",
-  "description": "Requested by: Weapon Smith. Escort apprentice Dorn into the valley to prospect for new mineral deposits — the known veins are tapped out.",
+  "description": "Requested by: Weapon Smith. Escort apprentice Dorn into the valley to prospect for new mineral deposits. The known veins are tapped out.",
   "area_id": "gurhacia",
   "sections": [
     {
@@ -52,7 +52,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "The mineral traces on the survey maps point this way. The creatures nest near deposits — something in the ore attracts them."
+                  "text": "The mineral traces on the survey maps point this way. The creatures nest near deposits. Something in the ore attracts them."
                 },
                 {
                   "speaker": "Dorn",
@@ -218,7 +218,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Carlian. The forge's bread and butter — it's a basic binding agent, but we're completely dry. Even this small sample helps."
+                  "text": "Carlian. The forge's bread and butter. It's a basic binding agent, but we're completely dry. Even this small sample helps."
                 }
               ]
             }
@@ -465,7 +465,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Acenaline. Flexible compound — the forge uses it as a binding agent. Not exciting, but we need it."
+                  "text": "Acenaline. Flexible compound. The forge uses it as a binding agent. Not exciting, but we need it."
                 },
                 {
                   "speaker": "Dorn",
@@ -1354,7 +1354,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "Wait — feel how dense this is. This is way better than what we found on the surface."
+                  "text": "Wait, feel how dense this is. This is way better than what we found on the surface."
                 },
                 {
                   "speaker": "Dorn",
@@ -1929,7 +1929,7 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "...I've never handled anything like this outside of a textbook. This is Dianaline — refined polymer. Way above anything we expected to find in the valley."
+                  "text": "...I've never handled anything like this outside of a textbook. This is Dianaline, refined polymer. Way above anything we expected to find in the valley."
                 },
                 {
                   "speaker": "Dorn",
@@ -2025,7 +2025,7 @@
     },
     {
       "speaker": "Dorn",
-      "text": "I’ve been going over the old geological surveys. The deeper caves in the valley have never been properly prospected — every team that’s gone out has been driven back."
+      "text": "I’ve been going over the old geological surveys. The deeper caves in the valley have never been properly prospected. Every team that’s gone out has been driven back."
     },
     {
       "speaker": "Dorn",

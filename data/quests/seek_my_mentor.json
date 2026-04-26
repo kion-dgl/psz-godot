@@ -51,7 +51,7 @@
               "dialog": [
                 {
                   "speaker": "Ren",
-                  "text": "His signal was last tracked in this sector. Vash is the toughest hunter I know — if something took him down, we need to be careful."
+                  "text": "His signal was last tracked in this sector. Vash is the toughest hunter I know. If something took him down, we need to be careful."
                 }
               ]
             }
@@ -153,7 +153,7 @@
                 8
               ],
               "locked": true,
-              "text": "Vash, log one. Made it past the outer corridors. The ruins go deep — much deeper than anyone told me. Quiet so far. Should be back by morning.",
+              "text": "Vash, log one. Made it past the outer corridors. The ruins go deep, much deeper than anyone told me. Quiet so far. Should be back by morning.",
               "reaction_dialog": [
                 {
                   "speaker": "Ren",
@@ -422,7 +422,7 @@
                 -10
               ],
               "locked": true,
-              "text": "Vash, log two. Took a bad hit from something I didn't see coming. Patched myself up but my leg's not right. The creatures down here are different — faster, more coordinated. They're not just wandering. They know I'm here.",
+              "text": "Vash, log two. Took a bad hit from something I didn't see coming. Patched myself up but my leg's not right. The creatures down here are different. Faster, more coordinated. They're not just wandering. They know I'm here.",
               "reaction_dialog": [
                 {
                   "speaker": "Ren",
@@ -1321,7 +1321,7 @@
     },
     {
       "speaker": "Ren",
-      "text": "My mentor — Vash — went into the Makara Ruins three days ago. He said he'd be back by morning."
+      "text": "My mentor, Vash, went into the Makara Ruins three days ago. He said he'd be back by morning."
     },
     {
       "speaker": "Ren",

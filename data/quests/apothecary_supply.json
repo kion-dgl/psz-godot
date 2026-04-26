@@ -3,7 +3,7 @@
   "last_updated": "2026-04-12",
   "id": "apothecary_supply",
   "name": "Apothecary's Supply",
-  "description": "Requested by: Item Shop. Asks the player to gather herbs from the wetlands to use for item synthesis. \nCore Objective: Harvest Sol Leaves, Moon Blooms, and Star Husks.\nTheme: Industry — Establishes how the town produces its own Atomizers.",
+  "description": "Requested by: Item Shop. Asks the player to gather herbs from the wetlands to use for item synthesis. \nCore Objective: Harvest Sol Leaves, Moon Blooms, and Star Husks.\nTheme: Industry. Establishes how the town produces its own Atomizers.",
   "area_id": "ozette",
   "sections": [
     {
@@ -1312,7 +1312,7 @@
     },
     {
       "speaker": "Principal",
-      "text": "We need you to escort Fern into the wetlands so she can collect what she needs — Sol Leaves, Moon Blooms, and Star Husks."
+      "text": "We need you to escort Fern into the wetlands so she can collect what she needs: Sol Leaves, Moon Blooms, and Star Husks."
     },
     {
       "speaker": "Fern",
