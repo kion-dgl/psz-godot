@@ -14,7 +14,11 @@ var pierce: bool = false
 var spiral_rate: float = 0.0  # Radians per second to curve direction (0 = straight)
 var spiral_origin: Vector3 = Vector3.ZERO  # Center point for spiral expansion
 var bounce_radius: float = 0.0  # On hit, also damage unhit enemies within this radius (slicers)
-var max_hits: int = 0  # Max total enemies to hit (0 = unlimited for pierce, 1 for normal)
+var max_hits: int = 1  # Max total enemies to hit. 1 = single-target (default, handgun/rifle).
+                       # Set explicitly per spawner: pierce techs (Barta) usually use a high
+                       # number, slicer uses 4, etc. 0 means unlimited but is a footgun — the
+                       # earlier default — so we now default to 1 and force spawners to opt
+                       # into multi-hit consciously.
 var element: String = ""  # Element type for status effect procs
 var element_level: int = 0  # Element level (higher = more likely to proc)
 
@@ -79,6 +83,19 @@ func _on_area_entered(area: Area3D) -> void:
 		if max_hits > 0 and _hit_targets.size() >= max_hits:
 			return
 		_hit_targets.append(hurtbox.owner_node)
+
+		# Stop monitoring BEFORE we apply the hit. queue_free is deferred to
+		# end-of-frame, but Godot can dispatch area_entered for additional
+		# overlapping hurtboxes in the same physics step before that defer
+		# fires — and the size-based gate above only catches them if our
+		# handlers run strictly sequentially. Killing monitoring is
+		# immediate, so no further area_entered signals fire even if more
+		# hurtboxes were already overlapping when we entered. Caps the
+		# damage at exactly max_hits regardless of dispatch order.
+		# (Skipped for pierce/multi-hit projectiles, which need more hits.)
+		if not pierce and (max_hits == 0 or _hit_targets.size() >= max_hits):
+			monitoring = false
+
 		hurtbox.take_hit(damage, direction * knockback, accuracy, element, element_level)
 
 		# Bounce: damage nearby unhit enemies within radius
