@@ -201,19 +201,73 @@ func _emit_axis(axis: int, value: float) -> void:
 
 # ---- Dpad ------------------------------------------------------------------
 
-const DPAD_INSET   := Vector2(170, 170)   # centre, from bottom-left
-const DPAD_BTN     := Vector2(70, 70)     # each direction button
-const DPAD_RADIUS  := 70                  # centre-to-button distance
+const DPAD_INSET   := Vector2(180, 180)   # centre, from bottom-left
+const DPAD_ARM     := 75                  # arm length from centre
+const DPAD_THICK   := 70                  # arm thickness
 
 func _build_dpad(v: Vector2) -> Node2D:
+	# Build a real + cross: a single white outline that traces the full
+	# 12-vertex + polygon, centred on (DPAD_INSET.x, v.y - DPAD_INSET.y).
+	# Each arm has its own TouchScreenButton on top so the up/down/left/right
+	# touch zones are crisp.
 	var root := Node2D.new()
 	var c := Vector2(DPAD_INSET.x, v.y - DPAD_INSET.y)
-	# 4-direction cross. Up/Down/Left/Right map to standard D-pad buttons.
-	root.add_child(_make_button(JOY_BUTTON_DPAD_UP,    "▲", c + Vector2( 0, -DPAD_RADIUS), DPAD_BTN))
-	root.add_child(_make_button(JOY_BUTTON_DPAD_DOWN,  "▼", c + Vector2( 0,  DPAD_RADIUS), DPAD_BTN))
-	root.add_child(_make_button(JOY_BUTTON_DPAD_LEFT,  "◀", c + Vector2(-DPAD_RADIUS,  0), DPAD_BTN))
-	root.add_child(_make_button(JOY_BUTTON_DPAD_RIGHT, "▶", c + Vector2( DPAD_RADIUS,  0), DPAD_BTN))
+	root.position = c
+
+	# Pixel coords for the + outline, walked clockwise.
+	var t := DPAD_THICK * 0.5
+	var a := DPAD_ARM
+	var pts := PackedVector2Array([
+		Vector2(-t, -a), Vector2( t, -a), Vector2( t, -t), Vector2( a, -t),
+		Vector2( a,  t), Vector2( t,  t), Vector2( t,  a), Vector2(-t,  a),
+		Vector2(-t,  t), Vector2(-a,  t), Vector2(-a, -t), Vector2(-t, -t),
+		Vector2(-t, -a),  # close back to start
+	])
+	# Filled background with low opacity so there's a "body" under the outline.
+	var fill := Polygon2D.new()
+	fill.polygon = pts.slice(0, pts.size() - 1)  # Polygon2D doesn't want the closing dup
+	fill.color = Color(0, 0, 0, 0.25)
+	root.add_child(fill)
+	# White outline.
+	var outline := Line2D.new()
+	outline.points = pts
+	outline.width = 4.0
+	outline.default_color = Color(1, 1, 1, 0.9)
+	outline.joint_mode = Line2D.LINE_JOINT_BEVEL
+	root.add_child(outline)
+
+	# Touch zones — one per arm. No visible border (the + outline is the visual).
+	var arm_size := Vector2(DPAD_THICK, DPAD_ARM - DPAD_THICK * 0.5 + 8)
+	root.add_child(_make_arm(JOY_BUTTON_DPAD_UP,    "▲", Vector2( 0, -(DPAD_ARM + t) * 0.5), arm_size))
+	root.add_child(_make_arm(JOY_BUTTON_DPAD_DOWN,  "▼", Vector2( 0,  (DPAD_ARM + t) * 0.5), arm_size))
+	root.add_child(_make_arm(JOY_BUTTON_DPAD_LEFT,  "◀", Vector2(-(DPAD_ARM + t) * 0.5, 0),  Vector2(arm_size.y, arm_size.x)))
+	root.add_child(_make_arm(JOY_BUTTON_DPAD_RIGHT, "▶", Vector2( (DPAD_ARM + t) * 0.5, 0),  Vector2(arm_size.y, arm_size.x)))
 	return root
+
+func _make_arm(button_index: int, label: String, centre_local: Vector2, size: Vector2) -> TouchScreenButton:
+	# Touch zone overlaying one arm of the +. Positions are in the dpad
+	# root's LOCAL space (root is positioned at the centre of the cross).
+	var btn := TouchScreenButton.new()
+	btn.shape_centered = true
+	var shape := RectangleShape2D.new()
+	shape.size = size
+	btn.shape = shape
+	btn.position = centre_local
+
+	var l := Label.new()
+	l.text = label
+	l.size = size
+	l.position = -size * 0.5
+	l.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
+	l.add_theme_font_size_override("font_size", 36)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(l)
+
+	btn.pressed.connect(_emit_button.bind(button_index, true))
+	btn.released.connect(_emit_button.bind(button_index, false))
+	return btn
 
 # Same as _add_button but RETURNS the node instead of adding to _layer, so
 # the dpad subtree can own its own buttons.
@@ -261,28 +315,41 @@ func _make_button(button_index: int, label: String, centre: Vector2, size: Vecto
 
 func _wire_menu_signals() -> void:
 	# GameState autoload broadcasts shop + pause-menu state. Connect both.
-	if Engine.has_singleton("GameState") or has_node("/root/GameState"):
-		var gs := get_node("/root/GameState")
+	var gs := get_node_or_null("/root/GameState")
+	if gs:
+		print("[MobileControls] connecting GameState signals")
 		if gs.has_signal("shop_opened"):
-			gs.shop_opened.connect(func(_npc: String) -> void: _shop_open = true; _refresh_mode())
+			gs.shop_opened.connect(func(_npc: String) -> void:
+				print("[MobileControls] shop_opened")
+				_shop_open = true; _refresh_mode())
 		if gs.has_signal("shop_closed"):
-			gs.shop_closed.connect(func() -> void: _shop_open = false; _refresh_mode())
+			gs.shop_closed.connect(func() -> void:
+				print("[MobileControls] shop_closed")
+				_shop_open = false; _refresh_mode())
 		if gs.has_signal("pause_menu_toggled"):
-			gs.pause_menu_toggled.connect(func(open: bool) -> void: _start_menu_open = open; _refresh_mode())
+			gs.pause_menu_toggled.connect(func(open: bool) -> void:
+				print("[MobileControls] pause_menu_toggled %s" % open)
+				_start_menu_open = open; _refresh_mode())
+	else:
+		push_warning("[MobileControls] GameState autoload not found")
 	# Re-check menu scene flag whenever the active scene changes.
 	get_tree().tree_changed.connect(_check_menu_scene)
 
 func _check_menu_scene() -> void:
 	var scene := get_tree().current_scene
 	var is_menu := false
-	if scene and scene.scene_file_path in MENU_SCENES:
-		is_menu = true
+	if scene:
+		var path := scene.scene_file_path
+		if path in MENU_SCENES:
+			is_menu = true
 	if is_menu != _on_menu_scene:
 		_on_menu_scene = is_menu
+		print("[MobileControls] menu_scene=%s (%s)" % [is_menu, scene.scene_file_path if scene else "<none>"])
 		_refresh_mode()
 
 func _refresh_mode() -> void:
 	var menu := _shop_open or _start_menu_open or _on_menu_scene
+	print("[MobileControls] mode → %s  (shop=%s start=%s scene=%s)" % ["DPAD" if menu else "STICK", _shop_open, _start_menu_open, _on_menu_scene])
 	if _joystick:
 		_joystick.visible = not menu
 	if _dpad:
