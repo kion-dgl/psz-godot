@@ -32,7 +32,20 @@ const SETTINGS_PATH := "user://mobile_controls.cfg"
 
 var _layer: CanvasLayer
 var _joystick: VirtualJoystick
+var _dpad: Node2D
 var _last_axis := Vector2.ZERO
+
+# Menu-mode state. When ANY of these flags is set we hide the analog
+# joystick and show a 4-button dpad instead — discrete presses are easier
+# than thumbing an analog stick to scroll a list.
+var _shop_open := false
+var _start_menu_open := false
+var _on_menu_scene := false  # character_select / character_create
+
+const MENU_SCENES := {
+	"res://scenes/2d/character_select.tscn": true,
+	"res://scenes/2d/character_create.tscn": true,
+}
 
 func _ready() -> void:
 	if not _resolve_enabled():
@@ -47,6 +60,8 @@ func _ready() -> void:
 	_layer.name = "MobileControls"
 	add_child(_layer)
 	_build()
+	_wire_menu_signals()
+	_check_menu_scene()
 
 func _resolve_enabled() -> bool:
 	var default := OS.has_feature("android") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
@@ -62,7 +77,7 @@ func _resolve_enabled() -> bool:
 func _build() -> void:
 	var v := get_viewport().get_visible_rect().size
 
-	# ---- Joystick bottom-left ----
+	# ---- Joystick bottom-left (gameplay mode) ----
 	# Disable the addon's built-in InputMap action emit — we drive the
 	# joystick output ourselves and emit raw left-stick axis events instead,
 	# so the project's existing axis bindings (move_*, ui_*) all light up
@@ -72,6 +87,14 @@ func _build() -> void:
 	_joystick.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_KEEP_SIZE)
 	_joystick.position += Vector2(40, -40)
 	_layer.add_child(_joystick)
+
+	# ---- Dpad bottom-left (menu mode, hidden by default) ----
+	# Same anchor as the joystick. Visible only when the player is in a
+	# shop / start menu / character-pick screen. Each direction emits
+	# JOY_BUTTON_DPAD_* and the project's input scheme handles the rest.
+	_dpad = _build_dpad(v)
+	_dpad.visible = false
+	_layer.add_child(_dpad)
 
 	# ---- A/B/X/Y diamond bottom-right ----
 	# A south = JOY_BUTTON_A (0)
@@ -175,6 +198,95 @@ func _emit_axis(axis: int, value: float) -> void:
 	ev.axis = axis
 	ev.axis_value = value
 	Input.parse_input_event(ev)
+
+# ---- Dpad ------------------------------------------------------------------
+
+const DPAD_INSET   := Vector2(170, 170)   # centre, from bottom-left
+const DPAD_BTN     := Vector2(70, 70)     # each direction button
+const DPAD_RADIUS  := 70                  # centre-to-button distance
+
+func _build_dpad(v: Vector2) -> Node2D:
+	var root := Node2D.new()
+	var c := Vector2(DPAD_INSET.x, v.y - DPAD_INSET.y)
+	# 4-direction cross. Up/Down/Left/Right map to standard D-pad buttons.
+	root.add_child(_make_button(JOY_BUTTON_DPAD_UP,    "▲", c + Vector2( 0, -DPAD_RADIUS), DPAD_BTN))
+	root.add_child(_make_button(JOY_BUTTON_DPAD_DOWN,  "▼", c + Vector2( 0,  DPAD_RADIUS), DPAD_BTN))
+	root.add_child(_make_button(JOY_BUTTON_DPAD_LEFT,  "◀", c + Vector2(-DPAD_RADIUS,  0), DPAD_BTN))
+	root.add_child(_make_button(JOY_BUTTON_DPAD_RIGHT, "▶", c + Vector2( DPAD_RADIUS,  0), DPAD_BTN))
+	return root
+
+# Same as _add_button but RETURNS the node instead of adding to _layer, so
+# the dpad subtree can own its own buttons.
+func _make_button(button_index: int, label: String, centre: Vector2, size: Vector2) -> TouchScreenButton:
+	var btn := TouchScreenButton.new()
+	btn.shape_centered = true
+	var shape := RectangleShape2D.new()
+	shape.size = size
+	btn.shape = shape
+	btn.position = centre
+
+	var p := Panel.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0, 0, 0, 0)
+	var corner := int(min(size.x, size.y) * 0.5)
+	sb.corner_radius_top_left = corner
+	sb.corner_radius_top_right = corner
+	sb.corner_radius_bottom_left = corner
+	sb.corner_radius_bottom_right = corner
+	sb.border_width_top = 3; sb.border_width_bottom = 3
+	sb.border_width_left = 3; sb.border_width_right = 3
+	sb.border_color = Color(1, 1, 1, 0.85)
+	p.add_theme_stylebox_override("panel", sb)
+	p.size = size
+	p.position = -size * 0.5
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(p)
+
+	var l := Label.new()
+	l.text = label
+	l.size = size
+	l.position = -size * 0.5
+	l.add_theme_color_override("font_color", Color.WHITE)
+	l.add_theme_font_size_override("font_size", int(min(size.x, size.y) * 0.46))
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(l)
+
+	btn.pressed.connect(_emit_button.bind(button_index, true))
+	btn.released.connect(_emit_button.bind(button_index, false))
+	return btn
+
+# ---- Menu-mode detection ---------------------------------------------------
+
+func _wire_menu_signals() -> void:
+	# GameState autoload broadcasts shop + pause-menu state. Connect both.
+	if Engine.has_singleton("GameState") or has_node("/root/GameState"):
+		var gs := get_node("/root/GameState")
+		if gs.has_signal("shop_opened"):
+			gs.shop_opened.connect(func(_npc: String) -> void: _shop_open = true; _refresh_mode())
+		if gs.has_signal("shop_closed"):
+			gs.shop_closed.connect(func() -> void: _shop_open = false; _refresh_mode())
+		if gs.has_signal("pause_menu_toggled"):
+			gs.pause_menu_toggled.connect(func(open: bool) -> void: _start_menu_open = open; _refresh_mode())
+	# Re-check menu scene flag whenever the active scene changes.
+	get_tree().tree_changed.connect(_check_menu_scene)
+
+func _check_menu_scene() -> void:
+	var scene := get_tree().current_scene
+	var is_menu := false
+	if scene and scene.scene_file_path in MENU_SCENES:
+		is_menu = true
+	if is_menu != _on_menu_scene:
+		_on_menu_scene = is_menu
+		_refresh_mode()
+
+func _refresh_mode() -> void:
+	var menu := _shop_open or _start_menu_open or _on_menu_scene
+	if _joystick:
+		_joystick.visible = not menu
+	if _dpad:
+		_dpad.visible = menu
 
 # Options-screen toggle.
 static func set_enabled(enabled: bool) -> void:
