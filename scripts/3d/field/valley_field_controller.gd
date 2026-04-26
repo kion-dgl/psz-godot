@@ -1826,14 +1826,14 @@ func _spawn_field_elements() -> void:
 				break
 			if obj_type in ["dialog_trigger", "quest_item"]:
 				for act in obj.get("actions", []):
-					if str(act) == "telepipe":
+					if str(act) in ["telepipe", "end_quest"]:
 						has_telepipe_source = true
 						break
 				# Also check remaining_dialog entries for telepipe actions
 				if not has_telepipe_source:
 					for entry in obj.get("remaining_dialog", []):
 						for act in entry.get("actions", []):
-							if str(act) == "telepipe":
+							if str(act) in ["telepipe", "end_quest"]:
 								has_telepipe_source = true
 								break
 						if has_telepipe_source:

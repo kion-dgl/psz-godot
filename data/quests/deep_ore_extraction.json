@@ -52,11 +52,11 @@
               "dialog": [
                 {
                   "speaker": "Dorn",
-                  "text": "The mineral traces on the survey maps point this way. The creatures nest near deposits. Something in the ore attracts them."
+                  "text": "The mineral traces on the survey maps point this way. The creatures have been so vicious out here that nobody's mapped past the first stretch."
                 },
                 {
                   "speaker": "Dorn",
-                  "text": "If we find nests, we're probably close."
+                  "text": "If we keep pushing, we'll find ground no one's worked yet."
                 }
               ],
               "actions": []
@@ -469,7 +469,7 @@
                 },
                 {
                   "speaker": "Dorn",
-                  "text": "That's two samples now. More than the last three teams came back with."
+                  "text": "More than the last few teams came back with, and we're not even at the deeper veins yet."
                 }
               ]
             },
