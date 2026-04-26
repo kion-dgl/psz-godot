@@ -1,53 +1,45 @@
 # Mobile on-screen controls overlay.
-# Activates on Android/iOS or any platform reporting a touchscreen. Builds
-# a CanvasLayer with: a virtual joystick anchored bottom-left, a SNES-style
-# A/B/X/Y diamond bottom-right, START / LOG / II / PAL across the top.
-# Joystick output → move_* InputMap actions; A also dispatches ui_accept,
-# B + pause dispatch ui_cancel, joystick analog axis edge-mirrors to
-# ui_left/right/up/down so menus respond to the same input.
 #
-# Controls a future options screen flips:
-#   MobileControls.set_enabled(false)  → writes user://mobile_controls.cfg
-#                                          and overlay disappears next boot.
+# Pretends to be a virtual gamepad: every touch emits the SAME
+# InputEventJoypadButton / InputEventJoypadMotion events a real Xbox or
+# Switch controller would, with the standard SDL2 button indices Godot
+# uses (JOY_BUTTON_A = 0, START = 6, LEFT_SHOULDER = 9, …). The project's
+# existing InputConfig + InputMap handles the rest — whichever scheme the
+# player picked on the input_select screen (xinput / switch / ds_cross /
+# ds_circle / keyboard) is the one that dispatches B → ui_cancel,
+# south-face → ui_accept, etc. No action-name-mirroring hacks.
+#
+# Activates on Android/iOS or any platform reporting a touchscreen. The
+# user can disable via a future options screen by calling
+# MobileControls.set_enabled(false), which writes user://mobile_controls.cfg.
 
 extends Node
 
 const VirtualJoystickScene := preload("res://addons/virtual_joystick/virtual_joystick_scene.tscn")
 
-# Layout (1280×720 viewport).
+# 1280×720 viewport coords.
 const ACTION_INSET     := Vector2(180, 180)   # diamond centre, from bottom-right
 const ACTION_RADIUS    := 95
 const ACTION_BTN_SIZE  := Vector2(80, 80)
 const TOP_BTN_SIZE     := Vector2(110, 48)
 const TOP_INSET        := 24
 
-const MENU_AXIS_THRESHOLD := 0.5
-const ACTION_MIRROR := {
-	"interact": "ui_accept",
-	"start":    "ui_accept",
-	"pause":    "ui_cancel",
-}
+# Joystick deadzone for emitting axis events. Anything below this looks
+# like noise to the InputMap layer; past it we emit the raw -1..+1 axis.
+const STICK_DEADZONE := 0.18
 
 const SETTINGS_PATH := "user://mobile_controls.cfg"
 
 var _layer: CanvasLayer
 var _joystick: VirtualJoystick
 var _last_axis := Vector2.ZERO
-var _ui_pressed := {}
 
 func _ready() -> void:
-	var enabled := _is_enabled_default()
-	# Allow user override (options screen will write this file).
-	if FileAccess.file_exists(SETTINGS_PATH):
-		var f := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
-		if f:
-			enabled = (f.get_as_text().strip_edges() != "off")
-			f.close()
-	if not enabled:
-		print("[MobileControls] disabled by user setting")
+	if not _resolve_enabled():
+		print("[MobileControls] disabled")
 		queue_free()
 		return
-	print("[MobileControls] activating  os=%s touchscreen=%s" % [OS.get_name(), DisplayServer.is_touchscreen_available()])
+	print("[MobileControls] activating  os=%s" % OS.get_name())
 	Input.set_emulate_mouse_from_touch(true)
 
 	_layer = CanvasLayer.new()
@@ -56,44 +48,63 @@ func _ready() -> void:
 	add_child(_layer)
 	_build()
 
-func _is_enabled_default() -> bool:
-	return OS.has_feature("android") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
+func _resolve_enabled() -> bool:
+	var default := OS.has_feature("android") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
+	if not FileAccess.file_exists(SETTINGS_PATH):
+		return default
+	var f := FileAccess.open(SETTINGS_PATH, FileAccess.READ)
+	if f == null:
+		return default
+	var v := f.get_as_text().strip_edges()
+	f.close()
+	return v != "off"
 
 func _build() -> void:
 	var v := get_viewport().get_visible_rect().size
 
-	# ---- Joystick bottom-left (default size, just inset from corner) ----
+	# ---- Joystick bottom-left ----
+	# Disable the addon's built-in InputMap action emit — we drive the
+	# joystick output ourselves and emit raw left-stick axis events instead,
+	# so the project's existing axis bindings (move_*, ui_*) all light up
+	# without us touching the InputMap.
 	_joystick = VirtualJoystickScene.instantiate()
-	_joystick.use_input_actions = true
-	_joystick.action_left = "move_left"
-	_joystick.action_right = "move_right"
-	_joystick.action_up = "move_forward"
-	_joystick.action_down = "move_backward"
+	_joystick.use_input_actions = false
 	_joystick.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_KEEP_SIZE)
 	_joystick.position += Vector2(40, -40)
 	_layer.add_child(_joystick)
 
 	# ---- A/B/X/Y diamond bottom-right ----
-	# A right=interact, B bottom=dodge, X top=quick_weapon (menu), Y left=action_1.
+	# A south = JOY_BUTTON_A (0)
+	# B east  = JOY_BUTTON_B (1)
+	# X west  = JOY_BUTTON_X (2)
+	# Y north = JOY_BUTTON_Y (3)
+	# Diamond layout: A on the right (east), B at bottom (south of centre),
+	# X at top (north), Y on the left (west) — matches the SNES face plate.
 	var c := Vector2(v.x - ACTION_INSET.x, v.y - ACTION_INSET.y)
-	_add_button("interact",     "A", c + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
-	_add_button("dodge",        "B", c + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_button("quick_weapon", "X", c + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
-	_add_button("action_1",     "Y", c + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_button(JOY_BUTTON_A, "A", c + Vector2( ACTION_RADIUS,  0), ACTION_BTN_SIZE)
+	_add_button(JOY_BUTTON_B, "B", c + Vector2( 0,  ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_button(JOY_BUTTON_X, "X", c + Vector2( 0, -ACTION_RADIUS), ACTION_BTN_SIZE)
+	_add_button(JOY_BUTTON_Y, "Y", c + Vector2(-ACTION_RADIUS,  0), ACTION_BTN_SIZE)
 
-	# ---- Top row ----
+	# ---- Top row: LOG | START | II ----
 	var top_y := TOP_INSET + TOP_BTN_SIZE.y * 0.5
-	_add_button("start",     "START", Vector2(v.x * 0.5,                                 top_y), Vector2(140, 50))
-	_add_button("pause",     "II",    Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET,    top_y), TOP_BTN_SIZE)
-	_add_button("quest_log", "LOG",   Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET,          top_y), TOP_BTN_SIZE)
-	# Second row, top-left: PAL for palette_swap.
-	var second_y := top_y + TOP_BTN_SIZE.y + 12
-	_add_button("palette_swap", "PAL", Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET, second_y), TOP_BTN_SIZE)
-	print("[MobileControls] _build done")
+	_add_button(JOY_BUTTON_BACK,  "LOG",   Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET,        top_y), TOP_BTN_SIZE)
+	_add_button(JOY_BUTTON_START, "START", Vector2(v.x * 0.5,                                top_y), Vector2(140, 50))
+	_add_button(JOY_BUTTON_GUIDE, "II",    Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET,   top_y), TOP_BTN_SIZE)
 
-func _add_button(action: String, label: String, centre: Vector2, size: Vector2) -> void:
+	# Second row top-left: PAL = L1 (left shoulder).
+	var second_y := top_y + TOP_BTN_SIZE.y + 12
+	_add_button(JOY_BUTTON_LEFT_SHOULDER,  "L1 / PAL", Vector2(TOP_BTN_SIZE.x * 0.5 + TOP_INSET, second_y), TOP_BTN_SIZE)
+	# Right shoulder (R1) on the right edge — useful for whatever the project
+	# binds it to (camera lock, weapon swap, etc).
+	_add_button(JOY_BUTTON_RIGHT_SHOULDER, "R1", Vector2(v.x - TOP_BTN_SIZE.x * 0.5 - TOP_INSET, second_y), TOP_BTN_SIZE)
+
+	print("[MobileControls] _build done — overlay active as virtual gamepad")
+
+func _add_button(button_index: int, label: String, centre: Vector2, size: Vector2) -> void:
+	# TouchScreenButton's `action` field is left empty — we emit raw gamepad
+	# events from the pressed/released signals instead.
 	var btn := TouchScreenButton.new()
-	btn.action = action
 	btn.shape_centered = true
 	var shape := RectangleShape2D.new()
 	shape.size = size
@@ -133,54 +144,39 @@ func _add_button(action: String, label: String, centre: Vector2, size: Vector2) 
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(l)
 
-	if action in ACTION_MIRROR:
-		var ui_action: String = ACTION_MIRROR[action]
-		btn.pressed.connect(_press_ui.bind(ui_action))
-		btn.released.connect(_release_ui.bind(ui_action))
-
+	btn.pressed.connect(_emit_button.bind(button_index, true))
+	btn.released.connect(_emit_button.bind(button_index, false))
 	_layer.add_child(btn)
 
-func _press_ui(ui_action: String) -> void:
-	if not _ui_pressed.get(ui_action, false):
-		_dispatch(ui_action, true)
-		_ui_pressed[ui_action] = true
-
-func _release_ui(ui_action: String) -> void:
-	if _ui_pressed.get(ui_action, false):
-		_dispatch(ui_action, false)
-		_ui_pressed[ui_action] = false
-
-# Inject a real InputEventAction so menus that listen via _input /
-# _unhandled_input actually receive it. Input.action_press() only updates
-# polled state and skips the event pipeline.
-func _dispatch(action: String, pressed: bool) -> void:
-	var ev := InputEventAction.new()
-	ev.action = action
+func _emit_button(button_index: int, pressed: bool) -> void:
+	var ev := InputEventJoypadButton.new()
+	ev.device = 0
+	ev.button_index = button_index
+	ev.pressure = 1.0 if pressed else 0.0
 	ev.pressed = pressed
-	ev.strength = 1.0 if pressed else 0.0
 	Input.parse_input_event(ev)
 
 func _process(_dt: float) -> void:
+	# Mirror joystick analog output to JoypadMotion left-stick axes (X = 0,
+	# Y = 1). Edge-emit only when crossing the deadzone or when the value
+	# changes meaningfully so we don't spam the input pipeline every frame.
 	if not _joystick:
 		return
 	var out := _joystick.output
-	_axis("ui_left",  -out.x, _last_axis.x < 0)
-	_axis("ui_right",  out.x, _last_axis.x > 0)
-	_axis("ui_up",    -out.y, _last_axis.y < 0)
-	_axis("ui_down",   out.y, _last_axis.y > 0)
+	if absf(out.x - _last_axis.x) > 0.02:
+		_emit_axis(JOY_AXIS_LEFT_X, out.x if absf(out.x) > STICK_DEADZONE else 0.0)
+	if absf(out.y - _last_axis.y) > 0.02:
+		_emit_axis(JOY_AXIS_LEFT_Y, out.y if absf(out.y) > STICK_DEADZONE else 0.0)
 	_last_axis = out
 
-func _axis(ui_action: String, current: float, was_active: bool) -> void:
-	var now_active := current > MENU_AXIS_THRESHOLD
-	if now_active and not was_active:
-		_dispatch(ui_action, true)
-	elif (not now_active) and was_active:
-		_dispatch(ui_action, false)
+func _emit_axis(axis: int, value: float) -> void:
+	var ev := InputEventJoypadMotion.new()
+	ev.device = 0
+	ev.axis = axis
+	ev.axis_value = value
+	Input.parse_input_event(ev)
 
-# Options-screen API: MobileControls.set_enabled(false) to hide overlay
-# next boot. Stores a tiny text file because JSON was overkill and the
-# parser path turned out to be where the previous build was silently
-# blowing up.
+# Options-screen toggle.
 static func set_enabled(enabled: bool) -> void:
 	var f := FileAccess.open(SETTINGS_PATH, FileAccess.WRITE)
 	if f:
