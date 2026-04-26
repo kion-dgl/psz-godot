@@ -15,6 +15,7 @@ import { CELL_OBJECT_COLORS, CELL_OBJECT_LABELS } from '../types';
 import { getRotatedGates, getStageConfig, getStageSuffix, rotateDirection } from '../hooks/useStageConfigs';
 import { getGlbPath, getAreaFromMapId } from '../constants';
 import { assetUrl } from '../../utils/assets';
+import { projectToGodotQuest } from '../utils/quest-io';
 import type { GateConfig } from '../types';
 
 /** NPC ID → GLB asset path mapping (mirrors field_npc.gd NPC_MODELS) */
@@ -1015,6 +1016,29 @@ function CellContentInspector({
   const keyPos = cell.keyPosition;
   const keyDropPos = cell.keyDropPosition;
 
+  const [copyStatus, setCopyStatus] = useState('');
+  const handleCopyCellJson = async () => {
+    // Run the full export so the cell snippet matches what would land
+    // in the on-disk quest file, then dig out just the selected cell.
+    try {
+      const quest = (await projectToGodotQuest(project)) as { sections?: Array<{ cells?: Array<{ pos: string }> }> };
+      let found: object | null = null;
+      for (const sec of quest.sections ?? []) {
+        const match = (sec.cells ?? []).find(c => c.pos === selectedCell);
+        if (match) { found = match; break; }
+      }
+      if (!found) {
+        setCopyStatus('Cell not found');
+      } else {
+        await navigator.clipboard.writeText(JSON.stringify(found, null, 2));
+        setCopyStatus('Cell JSON copied!');
+      }
+    } catch (e) {
+      setCopyStatus(`Copy failed: ${e}`);
+    }
+    setTimeout(() => setCopyStatus(''), 2000);
+  };
+
   return (
     <div style={{ padding: '1rem', overflowY: 'auto', maxHeight: 'calc(100vh - 200px)' }}>
       {/* Header */}
@@ -1031,6 +1055,27 @@ function CellContentInspector({
           {hasKey && <span style={badgeStyle('#ff66aa')}>KEY</span>}
           {isKeyDrop && <span style={badgeStyle('#ddaa33')}>DROP</span>}
           {isKeyGate && <span style={badgeStyle('#ff66ff')}>GATE</span>}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+          <button
+            onClick={handleCopyCellJson}
+            style={{
+              padding: '4px 10px',
+              background: '#448844',
+              border: '1px solid #66aa66',
+              borderRadius: '4px',
+              color: '#fff',
+              fontSize: '11px',
+              cursor: 'pointer',
+            }}
+          >
+            Copy cell as JSON
+          </button>
+          {copyStatus && (
+            <span style={{ fontSize: '11px', color: copyStatus.includes('failed') || copyStatus.includes('not found') ? '#ff8888' : '#88ff88' }}>
+              {copyStatus}
+            </span>
+          )}
         </div>
       </div>
 
