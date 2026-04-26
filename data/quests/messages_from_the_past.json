@@ -50,7 +50,7 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "The survey team turned back right around here. They weren't equipped for the automata. We are."
                 }
               ]
@@ -191,7 +191,7 @@
               "item_label": "Data Disk",
               "dialog": [
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "This is military. Something happened here on a scale we can't even imagine. Keep looking."
                 }
               ],
@@ -625,11 +625,11 @@
               "item_label": "Data Disk 1",
               "dialog": [
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "\"...all pers██nel to sh██ters bel██. Sur██ce oper██ions ce██ed... re██very ti██line unk██wn...\""
                 },
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "Shelters? Recovery?"
                 }
               ],
@@ -685,7 +685,7 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "Everything past here is uncharted. The Guild doesn't even have maps. Whatever we find... we're the first to see it in centuries."
                 }
               ]
@@ -767,7 +767,7 @@
               ],
               "dialog": [
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "People lived here. You can tell from the layout: corridors, junctions. This was a city. Then one day everyone just... left."
                 }
               ]
@@ -1342,11 +1342,11 @@
               "item_label": "Data Disk 2",
               "dialog": [
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "\"...orb██al plat██rm 'Tri██ty' w██l res██re... o██e it's ov██... ███ centu██es t██y say...\""
                 },
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "Centuries? Just how long ago did this actually happen?"
                 }
               ],
@@ -1449,7 +1449,7 @@
                   "text": "...we did this to ours██ves... there was no one left to figh█... just us, burning everything..."
                 },
                 {
-                  "speaker": "Mira",
+                  "speaker": "Elio",
                   "text": "...They did this to themselves. I... I need to process this. Let's get back to the Guild."
                 }
               ],
