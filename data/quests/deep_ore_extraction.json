@@ -219,7 +219,7 @@
                 0,
                 12.3
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "ghowl"
             },
             {
               "type": "enemy",
@@ -228,7 +228,7 @@
                 0,
                 4.8
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "garahadan"
             },
             {
               "type": "enemy",
@@ -237,7 +237,7 @@
                 0,
                 9.1
               ],
-              "enemy_id": "lizard"
+              "enemy_id": "vulkure"
             },
             {
               "type": "enemy",
@@ -246,7 +246,7 @@
                 0,
                 -7.2
               ],
-              "enemy_id": "lizard",
+              "enemy_id": "grimble",
               "wave": 2
             },
             {
@@ -256,7 +256,7 @@
                 0,
                 -0.7
               ],
-              "enemy_id": "lizard",
+              "enemy_id": "garapython",
               "wave": 2
             },
             {
@@ -266,7 +266,7 @@
                 0,
                 -1.5
               ],
-              "enemy_id": "lizard",
+              "enemy_id": "tormatible",
               "wave": 2
             },
             {
@@ -276,7 +276,7 @@
                 0,
                 -10.1
               ],
-              "enemy_id": "lizard",
+              "enemy_id": "vulkure",
               "wave": 2
             }
           ]
