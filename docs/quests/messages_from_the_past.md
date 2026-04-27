@@ -12,16 +12,18 @@ This is the first **classified** quest the player takes — the briefing opens w
 
 ## Objectives
 
-| Item | Count | Rarity | Location | Elio's Reaction |
-|------|-------|--------|----------|-----------------|
-| Data Disk 1 | 1 | r2 | Section A — mid corridor | Confirmation: "this is what Mira described, the housing is intact." |
-| Data Disk 2 | 1 | r2 | Section A — past key gate | Spec checks out, second one in a different format. Whoever stored these wanted redundancy. |
-| Data Disk 3 | 1 | r3 | Section B — mid, behind locked door | Plays a fragment of audio on pickup (corrupted speaker). Elio is rattled. |
-| Data Disk 4 | 1 | r4 | Section B — final cell | Triggers the final voice fragment + `end_quest`. Elio: "...They did this to themselves." |
+The objective is **read all 4 message logs** scattered through the ruins. The logs are `message` element types (the existing scrolling-scroll prop), not pickups — the player walks up, presses interact, the popup shows the text, and Elio reacts via speech bubble. Each message has an `objective_item_id: "message_log"` field that ticks `SessionManager.collect_quest_item("message_log")` on first read; quest auto-completes when count hits target=4.
 
-**Confirmed approach:** all 4 disks required, picked up in any order, quest ends only when all 4 are collected. The existing `collect_quest_item` auto-completes when objectives_complete (target=4), and the per-pickup `complete_quest` + `telepipe` actions are gated on `objectives_met` so only the LAST disk picked up fires the return telepipe — order doesn't matter mechanically.
+| # | Location (current JSON) | Log content | Elio's reaction |
+|---|--------------------------|-------------|-----------------|
+| 1 | Section A — cell 3,3 | Survey log fragment 14: site holds, deeper galleries intact, dormant infrastructure | "This was a survey, not an excavation. They expected to come back." |
+| 2 | Section A — cell 4,0 | Personnel directive: evacuation order rescinded, Council silence | "They were evacuating something. And then they weren't." |
+| 3 | Section B — cell 2,3 | Personal log, name redacted: hands shaking, "we knew, we all knew" | "...I want to keep going. Mira needs to hear this." |
+| 4 | Section B — cell 1,0 | Climactic transmission, corrupted: "we did this to ours██ves... burning ev█rything..." | "...They did this to themselves. I... I need to process this." |
 
-**Narrative caveat:** the audio fragments on disks 3 and 4 currently play as a sequential reveal (disk 3 is rattled, disk 4 is the climax "they did this to themselves"). If the player picks up disk 4 first, the climax lands without buildup. Two options when polishing dialog: (a) accept this and let the player choose their pacing, or (b) rewrite each disk's line so any one of them can stand alone. Going with (a) for now per "any order" — flagging in case it's worth revisiting after a playtest.
+**Confirmed approach:** all 4 messages required, picked up in any order, quest auto-completes when all 4 are read. The mechanic uses `MessagePack.objective_item_id` wired to `SessionManager.collect_quest_item` — re-reading a message doesn't re-tick the objective (an `objective_counted` meta flag gates it). On completion, `_on_quest_completed` already unlocks objective-locked area exits, so the player walks back through whichever exit their quest is set up to gate.
+
+**Narrative caveat:** message 4 is the climax ("we did this to ours██ves... burning everything"). If the player reads message 4 first, the climax lands without buildup. Going with "any order" per the design call — flagging in case it's worth revisiting after a playtest. Could rewrite logs 1-3 to stand alone if needed.
 
 ## Lore Connection
 

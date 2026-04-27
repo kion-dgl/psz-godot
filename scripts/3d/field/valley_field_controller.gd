@@ -2114,7 +2114,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var msg_locked: bool = obj.get("locked", false)
 				var reaction: Array = obj.get("reaction_dialog", [])
 				var init_state: String = "locked" if msg_locked else "available"
-				_spawn_message(pos, text, init_state, reaction)
+				var msg_objective_id: String = str(obj.get("objective_item_id", ""))
+				_spawn_message(pos, text, init_state, reaction, msg_objective_id)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
 				var prop_scale: float = float(obj.get("prop_scale", 1.0))
@@ -2229,7 +2230,12 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var text: String = str(obj.get("text", ""))
 				var msg_state: String = state if not state.is_empty() else "available"
 				var reaction: Array = obj.get("reaction_dialog", [])
-				_spawn_message(pos, text, msg_state, reaction)
+				var msg_objective_id: String = str(obj.get("objective_item_id", ""))
+				_spawn_message(pos, text, msg_state, reaction, msg_objective_id)
+				# A message that was already read counts as objective-counted
+				# so re-entering the room doesn't re-tick the objective.
+				if msg_state == "read" and not msg_objective_id.is_empty() and not _room_messages.is_empty():
+					_room_messages[-1].set_meta("objective_counted", true)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
 				var prop_scale: float = float(obj.get("prop_scale", 1.0))
@@ -2494,6 +2500,8 @@ func _save_cell_state() -> void:
 			}
 			if not msg.reaction_dialog.is_empty():
 				msg_entry["reaction_dialog"] = msg.reaction_dialog
+			if not msg.objective_item_id.is_empty():
+				msg_entry["objective_item_id"] = msg.objective_item_id
 			obj_states.append(msg_entry)
 
 	# Save story prop states
@@ -2780,9 +2788,10 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 
 
 ## Spawn a message pack element.
-func _spawn_message(pos: Vector3, text: String, state: String = "available", reaction: Array = []) -> void:
+func _spawn_message(pos: Vector3, text: String, state: String = "available", reaction: Array = [], objective_item_id: String = "") -> void:
 	var msg := MessagePackScript.new()
 	msg.message_text = text
+	msg.objective_item_id = objective_item_id
 	_map_root.add_child(msg)
 	msg.position = pos
 	_fixup_element_materials(msg)
@@ -2794,8 +2803,24 @@ func _spawn_message(pos: Vector3, text: String, state: String = "available", rea
 	msg.reaction_dialog = reaction
 	if not reaction.is_empty() and _companion and is_instance_valid(_companion):
 		msg.message_read.connect(_on_message_read_reaction.bind(reaction))
+	# Wire to SessionManager objective tracking — only fires when the message
+	# is read for the first time (state transition available → read), and only
+	# if objective_item_id is set on the message in the quest JSON. Lets a
+	# quest declare "read N message logs" without inventing a new pickup type.
+	if not objective_item_id.is_empty():
+		msg.message_read.connect(_on_message_read_objective.bind(objective_item_id, msg))
 	_room_messages.append(msg)
-	print("[CellObjects] Message at %s (text=%d chars, state=%s, reaction=%d pages)" % [pos, text.length(), state, reaction.size()])
+	print("[CellObjects] Message at %s (text=%d chars, state=%s, reaction=%d pages, objective=%s)" % [pos, text.length(), state, reaction.size(), objective_item_id])
+
+
+func _on_message_read_objective(_text: String, item_id: String, msg: MessagePack) -> void:
+	# Only count the first read — the message_read signal fires every time the
+	# popup closes, but objectives should tick once per message. Track via
+	# msg metadata so re-reading a message doesn't double-count.
+	if msg.has_meta("objective_counted"):
+		return
+	msg.set_meta("objective_counted", true)
+	SessionManager.collect_quest_item(item_id)
 
 
 func _on_message_read_reaction(_text: String, reaction: Array) -> void:
