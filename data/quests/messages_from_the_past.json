@@ -62,11 +62,11 @@
             {
               "type": "enemy",
               "position": [
+                -18.9,
                 0,
-                0,
-                0
+                -8.7
               ],
-              "enemy_id": "shinowa"
+              "enemy_id": "bolix"
             },
             {
               "type": "enemy",
@@ -94,6 +94,36 @@
                 5.8
               ],
               "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.4,
+                0,
+                7.1
+              ],
+              "enemy_id": "shinowa",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.3,
+                0,
+                11.0
+              ],
+              "enemy_id": "goldix",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                18.5,
+                0,
+                8.2
+              ],
+              "enemy_id": "bolix",
+              "wave": 2
             },
             {
               "type": "box",
@@ -128,36 +158,6 @@
               ],
               "rotation": 90,
               "link_id": "c"
-            },
-            {
-              "type": "enemy",
-              "position": [
-                11.4,
-                0,
-                7.1
-              ],
-              "enemy_id": "azherowa_b2",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                11.3,
-                0,
-                11.0
-              ],
-              "enemy_id": "goldix",
-              "wave": 2
-            },
-            {
-              "type": "enemy",
-              "position": [
-                18.5,
-                0,
-                8.2
-              ],
-              "enemy_id": "bolix",
-              "wave": 2
             },
             {
               "type": "step_switch",
