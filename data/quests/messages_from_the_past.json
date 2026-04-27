@@ -3,7 +3,7 @@
   "last_updated": "2026-04-27",
   "id": "messages_from_the_past",
   "name": "Messages from the Past",
-  "description": "Requested by: Research Division. Enter the classified Paru ruins with Elio to recover ancient data disks from before the Great Blank.",
+  "description": "Requested by: Research Division. Join Elio's excavation team in the classified Paru ruins to recover ancient logs from before the Great Blank.",
   "area_id": "paru",
   "sections": [
     {
@@ -325,12 +325,12 @@
                 0,
                 -1.6
               ],
-              "text": "[Survey log, fragment 14]\n\nSite holds. The deeper galleries are intact, structurally sound. Power infrastructure inert but reads as dormant, not destroyed. Recommend formal cataloguing once the security protocol is understood.",
+              "text": "[Operations log, partial]\n\nDeep galleries cleared today. Power infrastructure inert but reads as dormant, not destroyed. Recommend formal cataloguing once the security protocol is understood. Whatever tripped the automata is still in here with us.",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "This was a survey, not an excavation. Whoever wrote it expected to come back and finish the job."
+                  "text": "They knew what they had — and they knew it was dangerous. They just didn't know what to do about it."
                 }
               ]
             }
@@ -515,12 +515,12 @@
                 0,
                 -18.7
               ],
-              "text": "[Personnel directive, partial]\n\n...evacuation order rescinded. All non-essential staff have refused reassignment regardless. The Council's silence on the question of jurisdiction has been... informative. Internal containment proceeds on local authority.",
+              "text": "[Personnel directive, fragment]\n\n...evacuation order rescinded. All non-essential staff have refused reassignment regardless. The Council's silence on the question of jurisdiction has been... informative. Internal containment proceeds on local authority.",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "They were evacuating something. And then they weren't. The Council just stopped answering."
+                  "text": "They were evacuating something. Then they weren't. The Council just stopped answering."
                 }
               ]
             },
@@ -1842,11 +1842,11 @@
     },
     {
       "speaker": "Mira",
-      "text": "The ruins contain data from before the Great Blank, records that could explain what happened to this world."
+      "text": "The ruins contain records from before the Great Blank, logs that could explain what happened to this world."
     },
     {
       "speaker": "Mira",
-      "text": "A survey team found fragments, enough to confirm there are complete data disks still inside. I need them recovered."
+      "text": "Our excavation crew has been pulling intact message logs out of the deeper galleries. I need every one of them recovered before the automata get to them first."
     },
     {
       "speaker": "Mira",
@@ -1854,11 +1854,11 @@
     },
     {
       "speaker": "Elio",
-      "text": "I've studied Mira's notes. I'll know the disks when I see them. You keep us alive."
+      "text": "I've studied Mira's notes. I'll know the logs when I see them. You keep us alive."
     },
     {
       "speaker": "Principal",
-      "text": "Retrieve the disks and return safely. The Research Division is counting on this."
+      "text": "Recover the logs and return safely. The Research Division is counting on this."
     }
   ],
   "objectives": [

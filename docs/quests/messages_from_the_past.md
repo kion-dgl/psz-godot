@@ -6,7 +6,7 @@
 **Companion:** Elio (Mira's research assistant) | **Office NPCs:** Mira (pos_1), Elio (pos_2)
 **Requested by:** Research Division | **Report to:** Guild Counter
 
-A pre-Great-Blank civilization once lived on Paru and left technology behind in the ruins — including data disks that might explain what happened to this world. A survey team confirmed intact disks exist but turned back when the ruins' dormant automata reactivated. Mira (Research Division lead) can read the disks but isn't combat-trained, so she sends her assistant Elio with the player. Elio knows what to look for; the player keeps both of them alive.
+A pre-Great-Blank civilization once lived on Paru and left technology behind in the ruins. The Research Division is running an active **excavation** — they're cataloguing what they find, and ancient logs that might explain what happened to this world keep turning up in the deeper galleries. Mira (Research Division lead) can read the logs but isn't combat-trained, so she sends her assistant Elio with the player. Elio knows what to look for; the player keeps both of them alive.
 
 This is the first **classified** quest the player takes — the briefing opens with the Principal saying so explicitly. It's also the first time the lore acknowledges that the Great Blank wasn't just a natural disaster.
 
@@ -16,12 +16,14 @@ The objective is **read all 4 message logs** scattered through the ruins. The lo
 
 | # | Location (current JSON) | Log content | Elio's reaction |
 |---|--------------------------|-------------|-----------------|
-| 1 | Section A — cell 3,3 | Survey log fragment 14: site holds, deeper galleries intact, dormant infrastructure | "This was a survey, not an excavation. They expected to come back." |
-| 2 | Section A — cell 4,0 | Personnel directive: evacuation order rescinded, Council silence | "They were evacuating something. And then they weren't." |
+| 1 | Section A — cell 3,3 | Operations log: deep galleries cleared, dormant infrastructure, automata still active | "They knew what they had — and they knew it was dangerous. They just didn't know what to do about it." |
+| 2 | Section A — cell 4,0 | Personnel directive: evacuation rescinded, Council silence on jurisdiction | "They were evacuating something. Then they weren't. The Council just stopped answering." |
 | 3 | Section B — cell 2,3 | Personal log, name redacted: hands shaking, "we knew, we all knew" | "...I want to keep going. Mira needs to hear this." |
 | 4 | Section B — cell 1,0 | Climactic transmission, corrupted: "we did this to ours██ves... burning ev█rything..." | "...They did this to themselves. I... I need to process this." |
 
-**Confirmed approach:** all 4 messages required, picked up in any order, quest auto-completes when all 4 are read. The mechanic uses `MessagePack.objective_item_id` wired to `SessionManager.collect_quest_item` — re-reading a message doesn't re-tick the objective (an `objective_counted` meta flag gates it). On completion, `_on_quest_completed` already unlocks objective-locked area exits, so the player walks back through whichever exit their quest is set up to gate.
+**Confirmed approach:** all 4 messages required, read in any order, quest auto-completes when all 4 are read. The mechanic uses `MessagePack.objective_item_id` wired to `SessionManager.collect_quest_item` — re-reading a message doesn't re-tick the objective (an `objective_counted` meta flag gates it).
+
+**No hand-holding:** the player has to actually find the messages. No quest marker, no minimap pin pointing at unread logs, no auto-unlock that opens a shortcut to the next room. The section's exit warps must be marked **objective-locked** in the quest editor — `_on_quest_completed` will unlock them once all 4 reads land. If the player reaches the locked exit with messages still missing, they backtrack through the rooms until they find the ones they walked past.
 
 **Narrative caveat:** message 4 is the climax ("we did this to ours██ves... burning everything"). If the player reads message 4 first, the climax lands without buildup. Going with "any order" per the design call — flagging in case it's worth revisiting after a playtest. Could rewrite logs 1-3 to stand alone if needed.
 
