@@ -9,6 +9,11 @@ export default defineConfig({
     fs: {
       allow: ['..'],
     },
+    watch: {
+      // public/assets contains thousands of GLBs/PNGs that don't change
+      // during editor work; watching them blows past the 65k inotify cap.
+      ignored: ['**/public/assets/**', '**/node_modules/**'],
+    },
   },
   resolve: {
     alias: {

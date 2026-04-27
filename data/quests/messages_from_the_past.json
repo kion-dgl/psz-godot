@@ -62,9 +62,9 @@
             {
               "type": "enemy",
               "position": [
-                -18.9,
                 0,
-                -8.7
+                0,
+                0
               ],
               "enemy_id": "shinowa"
             },
