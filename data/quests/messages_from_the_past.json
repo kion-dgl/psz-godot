@@ -116,7 +116,7 @@
               "position": [
                 -13.2,
                 0,
-                20
+                20.0
               ]
             },
             {
@@ -124,18 +124,9 @@
               "position": [
                 10.1,
                 0,
-                -15
+                -15.0
               ],
               "rotation": 90,
-              "link_id": "c"
-            },
-            {
-              "type": "step_switch",
-              "position": [
-                -16,
-                0,
-                14.2
-              ],
               "link_id": "c"
             },
             {
@@ -153,7 +144,7 @@
               "position": [
                 11.3,
                 0,
-                11
+                11.0
               ],
               "enemy_id": "goldix",
               "wave": 2
@@ -167,6 +158,15 @@
               ],
               "enemy_id": "bolix",
               "wave": 2
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                8.6,
+                0,
+                7.6
+              ],
+              "link_id": "c"
             }
           ]
         },
@@ -484,7 +484,45 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                6.8,
+                0,
+                -2.6
+              ],
+              "enemy_id": "froutang"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.7,
+                0,
+                -8.4
+              ],
+              "enemy_id": "bolix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.7,
+                0,
+                0.8
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.4,
+                0,
+                8.4
+              ],
+              "enemy_id": "pobomma"
+            }
+          ]
         },
         {
           "pos": "4,0",
