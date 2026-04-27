@@ -102,7 +102,7 @@
                 0,
                 7.1
               ],
-              "enemy_id": "shinowa",
+              "enemy_id": "azherowa_b2",
               "wave": 2
             },
             {
@@ -905,7 +905,7 @@
                 0,
                 0.9
               ],
-              "enemy_id": "azherowa_b2"
+              "enemy_id": "shinowa"
             },
             {
               "type": "enemy",
