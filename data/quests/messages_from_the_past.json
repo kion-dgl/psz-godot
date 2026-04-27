@@ -858,7 +858,45 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "south",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7.5,
+                0,
+                0.9
+              ],
+              "enemy_id": "azherowa_b2"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.6,
+                0,
+                9.6
+              ],
+              "enemy_id": "goldix"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.6,
+                0,
+                -0.9
+              ],
+              "enemy_id": "izhirak_s6"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.0,
+                0,
+                -1.1
+              ],
+              "enemy_id": "pobomma"
+            }
+          ]
         }
       ],
       "entry_direction": "south",
