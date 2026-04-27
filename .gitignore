@@ -49,3 +49,7 @@ __pycache__/
 # Arweave wallet keyfiles — never commit
 *wallet*.json
 !assets_manifest.example.json
+
+web/public/assets/npcs
+web/public/assets/objects
+web/public/assets/stages
