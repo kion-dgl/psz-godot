@@ -97,6 +97,7 @@ var _warp_edge_locked: Array = []  # AreaWarp + exit trigger locked until enemie
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
+var _deferred_quest_complete_telepipe: Dictionary = {} # Telepipe deferred until SessionManager.quest_completed fires
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
 
@@ -516,6 +517,12 @@ func _on_quest_item_collected_check_exit(_item_id: String, _new_count: int, _tar
 func _on_quest_completed() -> void:
 	print("[ValleyField] Quest objectives complete — unlocking exits")
 	_unlock_objective_exits()
+	# Spawn any quest_complete-deferred telepipe authored in the current cell.
+	if not _deferred_quest_complete_telepipe.is_empty():
+		var tp_pos: Vector3 = _deferred_quest_complete_telepipe.get("position", Vector3.ZERO)
+		print("[ValleyField] Spawning quest_complete-deferred telepipe at %s" % tp_pos)
+		_spawn_telepipe(tp_pos)
+		_deferred_quest_complete_telepipe = {}
 
 
 func _unlock_objective_exits() -> void:
@@ -2142,6 +2149,14 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				if spawn_cond == "room_clear":
 					# Defer — store data for _check_room_clear
 					_deferred_telepipe = { "position": pos }
+				elif spawn_cond == "quest_complete":
+					# Defer until SessionManager.quest_completed fires. If
+					# the player saved and reloaded after the quest already
+					# completed (e.g. exited and came back), spawn now.
+					if SessionManager.are_objectives_complete():
+						_spawn_telepipe(pos)
+					else:
+						_deferred_quest_complete_telepipe = { "position": pos }
 				else:
 					_spawn_telepipe(pos)
 			"warp":
@@ -3155,16 +3170,21 @@ func _check_room_clear() -> void:
 		if is_instance_valid(rc_trigger) and rc_trigger.trigger_condition == "room_clear" and rc_trigger.element_state == "ready":
 			rc_trigger.activate()
 
-	# Spawn deferred telepipe objects (spawn_condition=room_clear) — takes precedence
+	# Spawn deferred telepipe objects (spawn_condition=room_clear)
 	if not _deferred_telepipe.is_empty():
 		var tp_pos: Vector3 = _deferred_telepipe.get("position", Vector3.ZERO)
 		_spawn_telepipe(tp_pos)
 		_deferred_telepipe = {}
 		_needs_telepipe = false
 	elif _needs_telepipe:
-		# Fallback: end cells without explicit telepipe object
+		# End cell without an authored telepipe is a quest data bug — the
+		# old fallback spawned one at Vector3.ZERO which (a) is rarely on
+		# the floor mesh (drops into the void) and (b) fires on room_clear
+		# even if there are still quest objectives outstanding. Warn loudly
+		# so this surfaces during dev playtest instead of silently
+		# producing a phantom telepipe at the room origin.
 		_needs_telepipe = false
-		_spawn_telepipe(Vector3.ZERO)
+		push_warning("[ValleyField] End cell %s has no authored telepipe object — add one with spawn_condition: \"quest_complete\" or \"room_clear\" so the player has an exit." % str(_current_cell.get("pos", "?")))
 
 	# Boss room cleared — spawn a return-to-city warp at the default spawn point
 	var sections: Array = SessionManager.get_field_sections()

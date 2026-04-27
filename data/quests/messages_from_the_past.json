@@ -325,12 +325,12 @@
                 0,
                 -1.6
               ],
-              "text": "[Operations log, partial]\n\nDeep galleries cleared today. Power infrastructure inert but reads as dormant, not destroyed. Recommend formal cataloguing once the security protocol is understood. Whatever tripped the automata is still in here with us.",
+              "text": "...sit█ holds. d█ep galler█es █ntact. p██er dorm█nt — n█ver dest██yed. recom██nd cataloguing once we und██stand the secur█ty pr█toc█l...",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "They knew what they had — and they knew it was dangerous. They just didn't know what to do about it."
+                  "text": "Dormant. Not destroyed. They knew exactly what was down here."
                 }
               ]
             }
@@ -553,12 +553,12 @@
                 0,
                 -18.7
               ],
-              "text": "[Personnel directive, fragment]\n\n...evacuation order rescinded. All non-essential staff have refused reassignment regardless. The Council's silence on the question of jurisdiction has been... informative. Internal containment proceeds on local authority.",
+              "text": "...evac█ation order ██scinded. all non-essent█al staff have refused reass█gnment regardl███. council silenc█ on jurisdic█ion has been... inform█tive...",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "They were evacuating something. Then they weren't. The Council just stopped answering."
+                  "text": "Evacuation cancelled. The Council just stopped answering."
                 }
               ]
             },
@@ -1179,12 +1179,12 @@
                 0,
                 -14.9
               ],
-              "text": "[Personal log, name redacted]\n\nMy hands won't stop shaking. We knew, we all knew, and we kept arguing about whose fault it was instead of stopping it. I don't know if anyone will ever find this. I don't know if there's anyone left to find it.",
+              "text": "...my han█s w█n't stop █haking. we kn█w. we al█ knew. and we kept arg██ng about who██ fault it was inst██d of stop██ng it...",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "...I want to keep going. Mira needs to hear this. All of it."
+                  "text": "...this isn't a survey log. Mira needs to hear this."
                 }
               ]
             },
@@ -1861,12 +1861,12 @@
                 0,
                 -11.8
               ],
-              "text": "[Final transmission, source corrupted]\n\n...we did this to ours██ves... there was no one left to figh█... just us, burning ev█rything we c█uldn't carry... the █light wasn't from outside, it was n█ver from outside...",
+              "text": "...we did this to ours██ves... no one l█ft to figh█... just us, burn█ng ev█rything we c█uldn't c██ry... the █light wasn't from outs█de... it was n█ver from outsid█...",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
                   "speaker": "Elio",
-                  "text": "...They did this to themselves. I... I need to process this. Let's get back to the Guild."
+                  "text": "...They did this to themselves. Let's get back."
                 }
               ]
             },
@@ -1885,6 +1885,15 @@
                 0,
                 -1.7
               ]
+            },
+            {
+              "type": "telepipe",
+              "position": [
+                0.4,
+                0,
+                -8.0
+              ],
+              "spawn_condition": "quest_complete"
             }
           ]
         }

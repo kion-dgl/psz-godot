@@ -328,6 +328,23 @@ func clear_section_states() -> void:
 	_activated_links.clear()
 
 
+## Wipe all in-memory session and quest state — call when returning to title
+## screen so a player who completed a quest in field but hadn't reported it
+## yet doesn't have the guild counter still showing the report option after
+## the title round-trip. Reported as a bug by Rozalin.
+func reset_all_state() -> void:
+	_session.clear()
+	_suspended_session.clear()
+	_accepted_quest.clear()
+	_completed_quest.clear()
+	_quest_objectives.clear()
+	_quest_item_counts.clear()
+	_quest_accepted_shown = false
+	_section_cell_states.clear()
+	_activated_links.clear()
+	print("[SessionManager] reset_all_state — quest + session state wiped")
+
+
 # ── Quest Lifecycle ─────────────────────────────────────────────
 
 ## Accept a quest at the guild counter (does NOT start the session yet).
