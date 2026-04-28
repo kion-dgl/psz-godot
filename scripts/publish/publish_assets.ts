@@ -329,6 +329,11 @@ async function main(): Promise<void> {
       ],
     );
     console.log(`    tx: ${sidecarResult.id}`);
+    if (sidecarResult.urls.some((u) => u.includes("undefined"))) {
+      console.error("\n✗ Sidecar upload returned malformed URLs (contains \"undefined\"). Refusing to write manifest.");
+      console.error(`  Look up by tag: Pack-SHA256=${sha256}, Sidecar-Of=assets_manifest.json — then re-run --skip-build.`);
+      process.exit(2);
+    }
     sidecarUrls = sidecarResult.urls;
   }
 

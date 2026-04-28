@@ -342,7 +342,12 @@ func reset_all_state() -> void:
 	_quest_accepted_shown = false
 	_section_cell_states.clear()
 	_activated_links.clear()
-	print("[SessionManager] reset_all_state — quest + session state wiped")
+	# Reset HUD/log state too — otherwise the field action log carries
+	# across into the next session and the location flag stays "field"
+	# (per Copilot review on PR #194).
+	_location = "city"
+	_action_log.clear()
+	print("[SessionManager] reset_all_state — quest + session + HUD state wiped")
 
 
 # ── Quest Lifecycle ─────────────────────────────────────────────

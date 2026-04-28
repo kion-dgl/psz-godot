@@ -2049,6 +2049,7 @@ func _spawn_cell_objects() -> void:
 	_room_quest_items.clear()
 	_room_walls.clear()
 	_deferred_telepipe = {}
+	_deferred_quest_complete_telepipe = {}
 
 	if objects.is_empty() and saved.is_empty():
 		return

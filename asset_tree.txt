@@ -8915,11 +8915,14 @@ assets/weapons/basic/Akiko Wok_0.png
 assets/weapons/basic/Akiko Wok.glb
 assets/weapons/basic/Anti-Android Rifle_0.png
 assets/weapons/basic/Anti-Android Rifle.glb
+assets/weapons/basic/Claw.glb
 assets/weapons/basic/Dagger_0.png
 assets/weapons/basic/Dagger_1.png
 assets/weapons/basic/Dagger.glb
+assets/weapons/basic/DoubleSaber.glb
 assets/weapons/basic/Handgun_0.png
 assets/weapons/basic/Handgun.glb
+assets/weapons/basic/Launcher.glb
 assets/weapons/basic/Mechgun_0.png
 assets/weapons/basic/Mechgun.glb
 assets/weapons/basic/Orotiagito_0.png
@@ -8938,11 +8941,14 @@ assets/weapons/basic/Saber_0.png
 assets/weapons/basic/Saber_1.png
 assets/weapons/basic/Saber_2.png
 assets/weapons/basic/Saber.glb
+assets/weapons/basic/Slicer.glb
 assets/weapons/basic/Sword_0.png
 assets/weapons/basic/Sword_1.png
 assets/weapons/basic/Sword_2.png
 assets/weapons/basic/Sword_3.png
 assets/weapons/basic/Sword.glb
+assets/weapons/basic/Wand_0.png
+assets/weapons/basic/Wand.glb
 assets/weapons/basic/Yasminkov 2000h_0.png
 assets/weapons/basic/Yasminkov 2000h_bullet_0.png
 assets/weapons/basic/Yasminkov 2000h_bullet.glb
@@ -8964,3 +8970,6 @@ assets/weapons/saber/saber_1.png
 assets/weapons/saber/saber_2.png
 assets/weapons/saber/saber.glb
 assets/weapons/saber/saber.png
+assets/weapons/Slicer_0.png
+assets/weapons/Slicer_1.png
+assets/weapons/Slicer.glb

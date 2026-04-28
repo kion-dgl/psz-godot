@@ -14,11 +14,8 @@ var pierce: bool = false
 var spiral_rate: float = 0.0  # Radians per second to curve direction (0 = straight)
 var spiral_origin: Vector3 = Vector3.ZERO  # Center point for spiral expansion
 var bounce_radius: float = 0.0  # On hit, also damage unhit enemies within this radius (slicers)
-var max_hits: int = 1  # Max total enemies to hit. 1 = single-target (default, handgun/rifle).
-                       # Set explicitly per spawner: pierce techs (Barta) usually use a high
-                       # number, slicer uses 4, etc. 0 means unlimited but is a footgun — the
-                       # earlier default — so we now default to 1 and force spawners to opt
-                       # into multi-hit consciously.
+var max_hits: int = 1  # Cap on enemies hit. Default 1 = single-target (handgun/rifle).
+                       # Spawners override per weapon: slicer = 4, pierce techs (Barta) high.
 var element: String = ""  # Element type for status effect procs
 var element_level: int = 0  # Element level (higher = more likely to proc)
 
