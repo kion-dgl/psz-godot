@@ -13,6 +13,13 @@ var _debug_guide: PanelContainer
 
 
 func _ready() -> void:
+	# Wipe any leftover quest/session state. If the player completed a
+	# quest in field, returned to title without reporting at the guild,
+	# and then re-entered the city, the guild counter would still show
+	# the report option (and accepting it would credit the rewards
+	# without re-running the mission). Reported by Rozalin.
+	SessionManager.reset_all_state()
+
 	MusicManager.play_location_music("title")
 	prompt_label.text = "Press Start"
 	var app_version: String = ProjectSettings.get_setting("application/config/version", "0.0.0")

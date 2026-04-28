@@ -1197,6 +1197,7 @@ func _spawn_barta(spawn_pos: Vector3, forward: Vector3, damage: int, kb: float) 
 	proj.owner_node = self
 	proj.speed = 20.0
 	proj.pierce = true
+	proj.max_hits = 0  # Unlimited — Barta runs the full length of the cone
 	proj.color = Color(0.3, 0.7, 1.0)
 	var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
 	_apply_element_to_proj(proj)
@@ -1359,6 +1360,7 @@ func _spawn_gibarta_wave(spawn_pos: Vector3, damage: int, kb: float) -> void:
 		proj.owner_node = self
 		proj.speed = 18.0
 		proj.pierce = true
+		proj.max_hits = 0  # Unlimited — Gibarta wave traverses the full cone
 		proj.color = Color(0.3, 0.7, 1.0)
 		var ground_pos := Vector3(spawn_pos.x, global_position.y + 0.3, spawn_pos.z)
 		_apply_element_to_proj(proj)
@@ -1381,6 +1383,7 @@ func _spawn_rabarta(damage: int, kb: float) -> void:
 		proj.owner_node = self
 		proj.speed = 12.0
 		proj.pierce = true
+		proj.max_hits = 0  # Unlimited — Rabarta shards traverse outward
 		proj.color = Color(0.5, 0.8, 1.0)
 		_apply_element_to_proj(proj)
 		get_tree().current_scene.add_child(proj)

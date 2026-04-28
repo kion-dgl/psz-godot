@@ -72,5 +72,15 @@ export async function uploadFileToArweave(
       ],
     },
   });
+  // Turbo SDK 1.41 returns `{...response, cryptoFundResult}` for chunked
+  // uploads, where `response` came from finalizeUpload(). For some chunked
+  // pack uploads the receipt arrives without an `id` at the top level —
+  // refuse to return a malformed result so callers can't write a bad
+  // manifest. Caller should re-run with --skip-build after the tx propagates,
+  // or look up the tx by tag on Arweave (Pack-SHA256=...).
+  if (!result.id) {
+    const dump = JSON.stringify(result, (_k, v) => typeof v === "bigint" ? v.toString() : v).slice(0, 800);
+    throw new Error(`uploadFileToArweave: SDK returned no tx id for ${filePath}. Raw response: ${dump}`);
+  }
   return { id: result.id, urls: gatewayUrls(result.id), sizeBytes: size };
 }

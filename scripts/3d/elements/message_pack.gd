@@ -9,6 +9,10 @@ signal message_read(text: String)
 @export var message_text: String = ""
 ## Companion reaction dialog played after reading (Array of {speaker, text})
 var reaction_dialog: Array = []
+## If set, reading this message ticks SessionManager.collect_quest_item(this).
+## Lets a quest declare "read N message logs" as the objective without a new
+## pickup type — the controller wires the increment when it spawns the msg.
+var objective_item_id: String = ""
 
 ## Scrolling texture
 const SCROLL_TEXTURE_NAME := "o0c_1_mspack"

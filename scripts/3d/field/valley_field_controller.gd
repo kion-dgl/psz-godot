@@ -97,6 +97,7 @@ var _warp_edge_locked: Array = []  # AreaWarp + exit trigger locked until enemie
 var _needs_telepipe: bool = false      # End cell without warp_edge — spawn telepipe on room clear
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
+var _deferred_quest_complete_telepipe: Dictionary = {} # Telepipe deferred until SessionManager.quest_completed fires
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
 
@@ -516,6 +517,12 @@ func _on_quest_item_collected_check_exit(_item_id: String, _new_count: int, _tar
 func _on_quest_completed() -> void:
 	print("[ValleyField] Quest objectives complete — unlocking exits")
 	_unlock_objective_exits()
+	# Spawn any quest_complete-deferred telepipe authored in the current cell.
+	if not _deferred_quest_complete_telepipe.is_empty():
+		var tp_pos: Vector3 = _deferred_quest_complete_telepipe.get("position", Vector3.ZERO)
+		print("[ValleyField] Spawning quest_complete-deferred telepipe at %s" % tp_pos)
+		_spawn_telepipe(tp_pos)
+		_deferred_quest_complete_telepipe = {}
 
 
 func _unlock_objective_exits() -> void:
@@ -2042,6 +2049,7 @@ func _spawn_cell_objects() -> void:
 	_room_quest_items.clear()
 	_room_walls.clear()
 	_deferred_telepipe = {}
+	_deferred_quest_complete_telepipe = {}
 
 	if objects.is_empty() and saved.is_empty():
 		return
@@ -2114,7 +2122,8 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var msg_locked: bool = obj.get("locked", false)
 				var reaction: Array = obj.get("reaction_dialog", [])
 				var init_state: String = "locked" if msg_locked else "available"
-				_spawn_message(pos, text, init_state, reaction)
+				var msg_objective_id: String = str(obj.get("objective_item_id", ""))
+				_spawn_message(pos, text, init_state, reaction, msg_objective_id)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
 				var prop_scale: float = float(obj.get("prop_scale", 1.0))
@@ -2141,6 +2150,14 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				if spawn_cond == "room_clear":
 					# Defer — store data for _check_room_clear
 					_deferred_telepipe = { "position": pos }
+				elif spawn_cond == "quest_complete":
+					# Defer until SessionManager.quest_completed fires. If
+					# the player saved and reloaded after the quest already
+					# completed (e.g. exited and came back), spawn now.
+					if SessionManager.are_objectives_complete():
+						_spawn_telepipe(pos)
+					else:
+						_deferred_quest_complete_telepipe = { "position": pos }
 				else:
 					_spawn_telepipe(pos)
 			"warp":
@@ -2229,7 +2246,12 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				var text: String = str(obj.get("text", ""))
 				var msg_state: String = state if not state.is_empty() else "available"
 				var reaction: Array = obj.get("reaction_dialog", [])
-				_spawn_message(pos, text, msg_state, reaction)
+				var msg_objective_id: String = str(obj.get("objective_item_id", ""))
+				_spawn_message(pos, text, msg_state, reaction, msg_objective_id)
+				# A message that was already read counts as objective-counted
+				# so re-entering the room doesn't re-tick the objective.
+				if msg_state == "read" and not msg_objective_id.is_empty() and not _room_messages.is_empty():
+					_room_messages[-1].set_meta("objective_counted", true)
 			"story_prop":
 				var prop_path: String = str(obj.get("prop_path", ""))
 				var prop_scale: float = float(obj.get("prop_scale", 1.0))
@@ -2494,6 +2516,8 @@ func _save_cell_state() -> void:
 			}
 			if not msg.reaction_dialog.is_empty():
 				msg_entry["reaction_dialog"] = msg.reaction_dialog
+			if not msg.objective_item_id.is_empty():
+				msg_entry["objective_item_id"] = msg.objective_item_id
 			obj_states.append(msg_entry)
 
 	# Save story prop states
@@ -2780,9 +2804,10 @@ func _spawn_enemy_drops(pos: Vector3, enemy_id: String) -> void:
 
 
 ## Spawn a message pack element.
-func _spawn_message(pos: Vector3, text: String, state: String = "available", reaction: Array = []) -> void:
+func _spawn_message(pos: Vector3, text: String, state: String = "available", reaction: Array = [], objective_item_id: String = "") -> void:
 	var msg := MessagePackScript.new()
 	msg.message_text = text
+	msg.objective_item_id = objective_item_id
 	_map_root.add_child(msg)
 	msg.position = pos
 	_fixup_element_materials(msg)
@@ -2794,8 +2819,24 @@ func _spawn_message(pos: Vector3, text: String, state: String = "available", rea
 	msg.reaction_dialog = reaction
 	if not reaction.is_empty() and _companion and is_instance_valid(_companion):
 		msg.message_read.connect(_on_message_read_reaction.bind(reaction))
+	# Wire to SessionManager objective tracking — only fires when the message
+	# is read for the first time (state transition available → read), and only
+	# if objective_item_id is set on the message in the quest JSON. Lets a
+	# quest declare "read N message logs" without inventing a new pickup type.
+	if not objective_item_id.is_empty():
+		msg.message_read.connect(_on_message_read_objective.bind(objective_item_id, msg))
 	_room_messages.append(msg)
-	print("[CellObjects] Message at %s (text=%d chars, state=%s, reaction=%d pages)" % [pos, text.length(), state, reaction.size()])
+	print("[CellObjects] Message at %s (text=%d chars, state=%s, reaction=%d pages, objective=%s)" % [pos, text.length(), state, reaction.size(), objective_item_id])
+
+
+func _on_message_read_objective(_text: String, item_id: String, msg: MessagePack) -> void:
+	# Only count the first read — the message_read signal fires every time the
+	# popup closes, but objectives should tick once per message. Track via
+	# msg metadata so re-reading a message doesn't double-count.
+	if msg.has_meta("objective_counted"):
+		return
+	msg.set_meta("objective_counted", true)
+	SessionManager.collect_quest_item(item_id)
 
 
 func _on_message_read_reaction(_text: String, reaction: Array) -> void:
@@ -3130,16 +3171,21 @@ func _check_room_clear() -> void:
 		if is_instance_valid(rc_trigger) and rc_trigger.trigger_condition == "room_clear" and rc_trigger.element_state == "ready":
 			rc_trigger.activate()
 
-	# Spawn deferred telepipe objects (spawn_condition=room_clear) — takes precedence
+	# Spawn deferred telepipe objects (spawn_condition=room_clear)
 	if not _deferred_telepipe.is_empty():
 		var tp_pos: Vector3 = _deferred_telepipe.get("position", Vector3.ZERO)
 		_spawn_telepipe(tp_pos)
 		_deferred_telepipe = {}
 		_needs_telepipe = false
 	elif _needs_telepipe:
-		# Fallback: end cells without explicit telepipe object
+		# End cell without an authored telepipe is a quest data bug — the
+		# old fallback spawned one at Vector3.ZERO which (a) is rarely on
+		# the floor mesh (drops into the void) and (b) fires on room_clear
+		# even if there are still quest objectives outstanding. Warn loudly
+		# so this surfaces during dev playtest instead of silently
+		# producing a phantom telepipe at the room origin.
 		_needs_telepipe = false
-		_spawn_telepipe(Vector3.ZERO)
+		push_warning("[ValleyField] End cell %s has no authored telepipe object — add one with spawn_condition: \"quest_complete\" or \"room_clear\" so the player has an exit." % str(_current_cell.get("pos", "?")))
 
 	# Boss room cleared — spawn a return-to-city warp at the default spawn point
 	var sections: Array = SessionManager.get_field_sections()

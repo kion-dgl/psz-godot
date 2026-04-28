@@ -158,7 +158,10 @@ function seedArweaveCache(): Map<string, string[]> {
   }
   for (const e of entries) {
     if (!e.sha256 || !e.urls) continue;
-    const arweave = e.urls.filter((u) => ARWEAVE_URL_RE.test(u));
+    // Filter out URLs containing "undefined" — symptom of an SDK upload that
+    // returned a missing tx id but still wrote the manifest. Reusing those
+    // would propagate a permanently-broken pack reference.
+    const arweave = e.urls.filter((u) => ARWEAVE_URL_RE.test(u) && !u.includes("undefined"));
     if (arweave.length === 0) continue;
     if (!cache.has(e.sha256)) cache.set(e.sha256, arweave);
   }
@@ -326,10 +329,21 @@ async function main(): Promise<void> {
       ],
     );
     console.log(`    tx: ${sidecarResult.id}`);
+    if (sidecarResult.urls.some((u) => u.includes("undefined"))) {
+      console.error("\n✗ Sidecar upload returned malformed URLs (contains \"undefined\"). Refusing to write manifest.");
+      console.error(`  Look up by tag: Pack-SHA256=${sha256}, Sidecar-Of=assets_manifest.json — then re-run --skip-build.`);
+      process.exit(2);
+    }
     sidecarUrls = sidecarResult.urls;
   }
 
   // 4. Write manifest (only if we have at least one URL)
+  if (urls.some((u) => u.includes("undefined"))) {
+    console.error("\n✗ Refusing to write manifest: at least one pack URL is malformed (contains \"undefined\").");
+    console.error(`  Pack uploaded but the SDK didn't return a tx id. Check Arweave for tag Pack-SHA256=${sha256} in a few minutes — or re-run --skip-build.`);
+    console.error(`  Won't update assets_manifest.json this run.`);
+    process.exit(2);
+  }
   if (urls.length === 0) {
     console.log(`\n⚠ Skipping manifest write: no URLs available.`);
     console.log(`  built pack at ${PCK_OUT} (sha=${sha256}, ${formatBytes(size)})`);
