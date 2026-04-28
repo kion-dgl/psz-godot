@@ -1,20 +1,20 @@
 {
-  "version": "0.25.18",
+  "version": "0.25.19",
   "godot_version": "4.5",
   "pack": {
-    "sha256": "60ddfff488b9e622a919d953464fff46b60bc36f53d69ddb0aa871932b4809bc",
-    "size": 264479492,
+    "sha256": "ce6b685db52a8db249d70e3c97b055573470173cafd18b0632708fea456d305d",
+    "size": 265032332,
     "urls": [
-      "https://arweave.net/AyB8WNmXHYVipU2KLVmWXaVQTEvElJRmKWzsbqk3-Lg",
-      "https://ar-io.dev/AyB8WNmXHYVipU2KLVmWXaVQTEvElJRmKWzsbqk3-Lg",
-      "https://permagate.io/AyB8WNmXHYVipU2KLVmWXaVQTEvElJRmKWzsbqk3-Lg"
+      "https://arweave.net/KiQZ7ILuq33dH-Hwi122qTb8LAuK5dHHxjUUxgcISoo",
+      "https://ar-io.dev/KiQZ7ILuq33dH-Hwi122qTb8LAuK5dHHxjUUxgcISoo",
+      "https://permagate.io/KiQZ7ILuq33dH-Hwi122qTb8LAuK5dHHxjUUxgcISoo"
     ]
   },
   "sidecar": {
     "urls": [
-      "https://arweave.net/m3nSBXIdWdPB0jbt9r5l_ahptxB3cK6KCI-aHpVOsOg",
-      "https://ar-io.dev/m3nSBXIdWdPB0jbt9r5l_ahptxB3cK6KCI-aHpVOsOg",
-      "https://permagate.io/m3nSBXIdWdPB0jbt9r5l_ahptxB3cK6KCI-aHpVOsOg"
+      "https://arweave.net/HYMkV68lwOTRRG2QFscR8J4UH3H_pFwHbQOmyAnQLdg",
+      "https://ar-io.dev/HYMkV68lwOTRRG2QFscR8J4UH3H_pFwHbQOmyAnQLdg",
+      "https://permagate.io/HYMkV68lwOTRRG2QFscR8J4UH3H_pFwHbQOmyAnQLdg"
     ]
   }
 }

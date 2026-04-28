@@ -8909,3 +8909,58 @@ assets/title/rock.png
 assets/title/scene.glb
 assets/title/title-config.json
 assets/title/waves.png
+assets/weapons/basic/Akiko_0.png
+assets/weapons/basic/Akiko.glb
+assets/weapons/basic/Akiko Wok_0.png
+assets/weapons/basic/Akiko Wok.glb
+assets/weapons/basic/Anti-Android Rifle_0.png
+assets/weapons/basic/Anti-Android Rifle.glb
+assets/weapons/basic/Dagger_0.png
+assets/weapons/basic/Dagger_1.png
+assets/weapons/basic/Dagger.glb
+assets/weapons/basic/Handgun_0.png
+assets/weapons/basic/Handgun.glb
+assets/weapons/basic/Mechgun_0.png
+assets/weapons/basic/Mechgun.glb
+assets/weapons/basic/Orotiagito_0.png
+assets/weapons/basic/Orotiagito.glb
+assets/weapons/basic/Partisan_0.png
+assets/weapons/basic/Partisan_1.png
+assets/weapons/basic/Partisan_2.png
+assets/weapons/basic/Partisan_3.png
+assets/weapons/basic/Partisan.glb
+assets/weapons/basic/Rifle_0.png
+assets/weapons/basic/Rifle.glb
+assets/weapons/basic/Rod_0.png
+assets/weapons/basic/Rod_1.png
+assets/weapons/basic/Rod.glb
+assets/weapons/basic/Saber_0.png
+assets/weapons/basic/Saber_1.png
+assets/weapons/basic/Saber_2.png
+assets/weapons/basic/Saber.glb
+assets/weapons/basic/Sword_0.png
+assets/weapons/basic/Sword_1.png
+assets/weapons/basic/Sword_2.png
+assets/weapons/basic/Sword_3.png
+assets/weapons/basic/Sword.glb
+assets/weapons/basic/Yasminkov 2000h_0.png
+assets/weapons/basic/Yasminkov 2000h_bullet_0.png
+assets/weapons/basic/Yasminkov 2000h_bullet.glb
+assets/weapons/basic/Yasminkov 2000h.glb
+assets/weapons/basic/Yasminkov 3000r_0.png
+assets/weapons/basic/Yasminkov 3000r_bullet_0.png
+assets/weapons/basic/Yasminkov 3000r_bullet.glb
+assets/weapons/basic/Yasminkov 3000r.glb
+assets/weapons/basic/Yasminkov 7000v_0.png
+assets/weapons/basic/Yasminkov 7000v_bullet_0.png
+assets/weapons/basic/Yasminkov 7000v_bullet.glb
+assets/weapons/basic/Yasminkov 7000v.glb
+assets/weapons/basic/Yasminkov 9000m_0.png
+assets/weapons/basic/Yasminkov 9000m_bullet_0.png
+assets/weapons/basic/Yasminkov 9000m_bullet.glb
+assets/weapons/basic/Yasminkov 9000m.glb
+assets/weapons/saber/saber_0.png
+assets/weapons/saber/saber_1.png
+assets/weapons/saber/saber_2.png
+assets/weapons/saber/saber.glb
+assets/weapons/saber/saber.png
