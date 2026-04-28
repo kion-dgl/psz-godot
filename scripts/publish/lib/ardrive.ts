@@ -72,5 +72,13 @@ export async function uploadFileToArweave(
       ],
     },
   });
+  // Turbo SDK 1.41 returns `{...response, cryptoFundResult}` for chunked
+  // uploads, where `response` came from finalizeUpload(). For some chunked
+  // pack uploads the receipt arrives without an `id` at the top level; the
+  // tx id is one of the dataCaches entries. Fall back to a tag-based GraphQL
+  // lookup if the SDK doesn't surface an id.
+  if (!result.id) {
+    console.warn("[uploadFileToArweave] result.id missing — full response:", JSON.stringify(result, (k, v) => typeof v === "bigint" ? v.toString() : v).slice(0, 800));
+  }
   return { id: result.id, urls: gatewayUrls(result.id), sizeBytes: size };
 }
