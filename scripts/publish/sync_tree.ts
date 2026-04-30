@@ -38,6 +38,14 @@ const VENDORED_SKIPS = new Set<string>([
   "kenney_nature-pack",
 ]);
 
+// Relative-path prefixes (under each SYNC_ROOTS entry) that are licensed
+// for pack-embedded use only. The model goes into the published .pck on
+// Arweave (incorporated into a larger project — allowed) but the raw files
+// must not be mirrored to R2 (= public CDN of the raw model file).
+const RESTRICTED_REL_PREFIXES: string[] = [
+  "npcs/cowgirl/",  // Booth.pm — see assets/npcs/cowgirl/LICENSE_booth.md
+];
+
 // (local dir → R2 key prefix) pairs. Each root is walked, hashed, diffed,
 // and uploaded into its R2 prefix. Adding a new root here is the only
 // code-side change needed to pull another tree into the pipeline.
@@ -224,6 +232,7 @@ async function main(): Promise<void> {
     let count = 0;
     for await (const p of walkFiles(root.localDir)) {
       const rel = relative(root.localDir, p).split(/[/\\]/).join("/");
+      if (RESTRICTED_REL_PREFIXES.some((pre) => rel.startsWith(pre))) continue;
       const key = `${root.r2Prefix}${rel}`;
       const s = await stat(p);
       locals.push({ key, prefix: root.r2Prefix, path: p, size: s.size, md5: "" });

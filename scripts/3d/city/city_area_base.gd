@@ -19,6 +19,7 @@ var player: CharacterBody3D
 var orbit_camera: Node3D
 var _npcs: Array[CityNPC] = []
 var _warp_pads: Array[WarpPad] = []
+var _pos_overlay: Label  # Toggled by DebugConfig.show_player_position
 
 
 func _spawn_player(default_pos: Vector3, default_rot: float, spawn_variants: Dictionary) -> CharacterBody3D:
@@ -69,7 +70,7 @@ func _setup_camera(target: Node3D) -> Node3D:
 	return orbit_camera
 
 
-func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, display_name: String, target_scene: String, npc_idle_anim: String = "") -> CityNPC:
+func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, display_name: String, target_scene: String, npc_idle_anim: String = "", hat_path: String = "") -> CityNPC:
 	var npc := CityNPC.new()
 	npc.name = npc_name
 	npc.npc_model_path = model_path
@@ -77,6 +78,7 @@ func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, di
 	npc.target_scene_path = target_scene
 	npc.npc_rotation_y = rot
 	npc.idle_anim = npc_idle_anim
+	npc.hat_model_path = hat_path
 	npc.position = pos
 	add_child(npc)
 	_npcs.append(npc)
@@ -158,6 +160,30 @@ func _process(_delta: float) -> void:
 		if is_instance_valid(trigger):
 			var label: Label3D = trigger.get_meta("_prompt_label")
 			label.visible = player.get_nearest_interactable() == trigger
+	_update_position_overlay()
+
+
+func _update_position_overlay() -> void:
+	if not DebugConfig.show_player_position:
+		if _pos_overlay and is_instance_valid(_pos_overlay):
+			_pos_overlay.visible = false
+		return
+	if not _pos_overlay or not is_instance_valid(_pos_overlay):
+		var canvas := CanvasLayer.new()
+		canvas.layer = 90
+		add_child(canvas)
+		_pos_overlay = Label.new()
+		_pos_overlay.position = Vector2(8, 4)
+		_pos_overlay.add_theme_font_size_override("font_size", 18)
+		_pos_overlay.add_theme_color_override("font_color", Color(1, 1, 0.6))
+		_pos_overlay.add_theme_color_override("font_outline_color", Color.BLACK)
+		_pos_overlay.add_theme_constant_override("outline_size", 4)
+		canvas.add_child(_pos_overlay)
+	_pos_overlay.visible = true
+	var p: Vector3 = player.global_position
+	var rot: float = player.player_rotation if "player_rotation" in player else player.rotation.y
+	var deg: float = rad_to_deg(rot)
+	_pos_overlay.text = "pos: (%.2f, %.2f, %.2f)  rot: %.2f rad (%.0f°)" % [p.x, p.y, p.z, rot, deg]
 
 
 func _add_floor_collision(center: Vector3, floor_size: Vector3 = Vector3(50, 0.2, 70)) -> void:
