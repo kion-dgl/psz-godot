@@ -45,6 +45,7 @@ func _ready() -> void:
 	test_tower_field()
 	test_quest_lifecycle()
 	test_input_config()
+	test_blackjack()
 	test_script_parse()
 
 	print("\n══════════════════════════════════")
@@ -2812,6 +2813,137 @@ func _get_joypad_button(action: String) -> int:
 # scene (shops, menus opened later at runtime). This is the stop-gap for the
 # common regression where typing a function in one file breaks parsing in a
 # file the test runner doesn't otherwise touch.
+# ── Blackjack (saloon mini-game) ────────────────────────────
+#
+# The card-draw RNG is seeded via _init's seed_value param, so we can play
+# deterministic rounds. Static hand_total tests don't touch RNG. Per-round
+# invariant sweep runs 200 seeded rounds — chips bookkeeping must reconcile
+# regardless of which outcome each round resolves to.
+
+func test_blackjack() -> void:
+	print("── Blackjack ──")
+	var BJ = load("res://scripts/2d/blackjack/blackjack_game.gd")
+
+	# Static hand_total (no RNG dependency)
+	var two_three: Array = [{"rank": "02"}, {"rank": "03"}]
+	assert_eq(BJ.hand_total(two_three), [5, false], "hand_total: 2+3 = 5 hard")
+
+	var natural: Array = [{"rank": "A"}, {"rank": "K"}]
+	assert_eq(BJ.hand_total(natural), [21, true], "hand_total: A+K = 21 soft (blackjack)")
+
+	var soft_17: Array = [{"rank": "A"}, {"rank": "06"}]
+	assert_eq(BJ.hand_total(soft_17), [17, true], "hand_total: A+6 = 17 soft")
+
+	var hard_17: Array = [{"rank": "10"}, {"rank": "06"}, {"rank": "A"}]
+	assert_eq(BJ.hand_total(hard_17), [17, false], "hand_total: 10+6+A = 17 hard (ace flips to 1)")
+
+	var two_aces: Array = [{"rank": "A"}, {"rank": "A"}]
+	assert_eq(BJ.hand_total(two_aces), [12, true], "hand_total: A+A = 12 soft (one flips)")
+
+	var three_aces_nine: Array = [{"rank": "A"}, {"rank": "A"}, {"rank": "A"}, {"rank": "09"}]
+	# 11+1+1+9 = 22 → flip the 11 → 12, no — wait: 11+11+11+9 = 42, flip → 32, flip → 22, flip → 12.
+	# Actually: aces start as 11 each (11*3 + 9 = 42). While >21 and aces>0, subtract 10:
+	# 42 → 32 (aces=2) → 22 (aces=1) → 12 (aces=0). Result: [12, false].
+	assert_eq(BJ.hand_total(three_aces_nine), [12, false], "hand_total: A+A+A+9 = 12 hard")
+
+	var hidden: Array = [{"rank": "A", "hidden": true}, {"rank": "05"}]
+	assert_eq(BJ.hand_total(hidden), [5, false], "hand_total: hidden card is excluded")
+
+	var bust: Array = [{"rank": "K"}, {"rank": "Q"}, {"rank": "05"}]
+	assert_eq(BJ.hand_total(bust), [25, false], "hand_total: K+Q+5 = 25 (bust)")
+
+	# Initial state
+	var g = BJ.new(5000, 12345)  # seeded so subsequent calls are deterministic
+	assert_eq(g.state, BJ.State.BETTING, "Initial state is BETTING")
+	assert_eq(g.chips, 5000, "Initial chips = 5000")
+	assert_eq(g.bet, 0, "Initial bet = 0")
+
+	# Bet validation
+	assert_eq(g.place_bet(0), false, "place_bet(0) rejected")
+	assert_eq(g.place_bet(-50), false, "place_bet(-50) rejected")
+	assert_eq(g.place_bet(99999), false, "place_bet > chips rejected")
+	assert_eq(g.state, BJ.State.BETTING, "Invalid bets don't advance state")
+	assert_eq(g.chips, 5000, "Invalid bets don't deduct chips")
+
+	# State-machine guards on a fresh BETTING-state game
+	var g2 = BJ.new(5000, 1)
+	g2.hit()  # no-op while BETTING
+	assert_eq(g2.state, BJ.State.BETTING, "hit() in BETTING is a no-op")
+	g2.stand()  # no-op
+	assert_eq(g2.state, BJ.State.BETTING, "stand() in BETTING is a no-op")
+	assert_eq(g2.double_down(), false, "double_down() in BETTING returns false")
+	g2.next_round()  # no-op outside RESOLVED — must not change state
+	assert_eq(g2.state, BJ.State.BETTING, "next_round() before RESOLVED is a no-op")
+
+	# Round invariant sweep: 200 seeded rounds, each one stands immediately so
+	# the dealer always plays out. Chips bookkeeping must reconcile every round
+	# regardless of outcome.
+	var bj_count := 0
+	var bust_count := 0
+	var win_count := 0
+	var loss_count := 0
+	var push_count := 0
+	for seed_v in range(1, 201):
+		var sg = BJ.new(5000, seed_v)
+		var pre_chips: int = sg.chips
+		var bet_amount := 100
+		var resolved := {"outcome": -1, "payout": 0}
+		sg.round_resolved.connect(func(o: int, p: int) -> void:
+			resolved.outcome = o
+			resolved.payout = p
+		)
+		assert_true(sg.place_bet(bet_amount), "seed %d: place_bet succeeds" % seed_v)
+		# place_bet may resolve immediately on a natural blackjack; otherwise stand
+		if sg.state == BJ.State.PLAYER_TURN:
+			sg.stand()
+		assert_eq(sg.state, BJ.State.RESOLVED, "seed %d: round reaches RESOLVED" % seed_v)
+		assert_true(resolved.outcome >= 0, "seed %d: round_resolved fired" % seed_v)
+		# Chips delta = payout - bet (bet was deducted at place_bet, payout returned at resolve)
+		var expected_delta: int = resolved.payout - bet_amount
+		assert_eq(sg.chips - pre_chips, expected_delta, "seed %d: chips delta matches payout" % seed_v)
+		# Tally outcome distribution to surface obvious deck-sampling bugs
+		match resolved.outcome:
+			BJ.Outcome.PLAYER_BLACKJACK: bj_count += 1
+			BJ.Outcome.PLAYER_BUST:      bust_count += 1
+			BJ.Outcome.PLAYER_WIN:       win_count += 1
+			BJ.Outcome.DEALER_WIN:       loss_count += 1
+			BJ.Outcome.PUSH:             push_count += 1
+	print("  INFO: outcomes across 200 seeded rounds — BJ=%d BUST=%d WIN=%d LOSS=%d PUSH=%d" %
+		[bj_count, bust_count, win_count, loss_count, push_count])
+	assert_gt(bj_count + win_count + push_count, 0, "Player can win/push at least once")
+	assert_gt(loss_count + bust_count, 0, "Player can lose/bust at least once")
+
+	# 3:2 payout uses integer math (bet + bet * 3 / 2). Spot-check the formula.
+	# bet=100 → 100 + 150 = 250 returned (= 1.5x profit + stake back).
+	# bet=101 → 101 + 151 = 252 (floor on the odd half-cent).
+	var even_payout := 100 + (100 * 3) / 2
+	assert_eq(even_payout, 250, "3:2 on bet=100 returns 250")
+	var odd_payout := 101 + (101 * 3) / 2
+	assert_eq(odd_payout, 252, "3:2 on bet=101 floors to 252 (no float rounding)")
+
+	# Find a seed that produces a natural player blackjack on the opening hand
+	# and lock in the payout. If the deck/shuffle ever changes such that this
+	# seed stops dealing a blackjack, the assertion fires and we re-pick.
+	var found_bj := false
+	for seed_v in range(1, 5000):
+		var bg = BJ.new(5000, seed_v)
+		var bj_resolved := {"hit": false, "payout": 0, "outcome": -1}
+		bg.round_resolved.connect(func(o: int, p: int) -> void:
+			bj_resolved.hit = true
+			bj_resolved.outcome = o
+			bj_resolved.payout = p
+		)
+		bg.place_bet(100)
+		if bj_resolved.hit and bj_resolved.outcome == BJ.Outcome.PLAYER_BLACKJACK:
+			assert_eq(bj_resolved.payout, 250, "Player BJ on bet 100 pays 250 (stake + 3:2)")
+			assert_eq(bg.chips, 5000 - 100 + 250, "Chips reflect BJ payout")
+			found_bj = true
+			break
+	assert_true(found_bj, "At least one seed in [1,5000) produces a player blackjack")
+
+	print("")
+
+
 func test_script_parse() -> void:
 	print("── Script parse smoke test ──")
 	var paths: Array = []
