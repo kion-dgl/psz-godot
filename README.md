@@ -61,7 +61,8 @@ _TODO — add a representative screenshot of the title screen or a combat moment
 
 - **Phantasy Star Zero** original game by SEGA / Sonic Team
 - Extensive sound work and playtest feedback from the PSO community on the project Discord
-- **Input Prompts** and **Nature Kit** by [Kenney](https://kenney.nl/assets/nature-kit) — CC0 (public domain)
+- **Input Prompts**, **Nature Kit**, and **Playing Cards Pack** by [Kenney](https://kenney.nl/) — CC0 (public domain)
+- **Anime Combat Cowboy** model by [Booth.pm seller](https://booth.pm/en/items/7594680) — used as the saloon blackjack dealer; embedded in the asset pack per the model's "incorporate into a larger project" license carve-out
 - Character-portrait art by **Rozalin**
 - Runs on [Godot 4.5](https://godotengine.org/) — thanks to the Godot contributors and maintainers
 

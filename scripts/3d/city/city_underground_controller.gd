@@ -37,6 +37,14 @@ func _ready() -> void:
 		"res://scenes/2d/shops/photon_shop.tscn",
 		"pso_f_ro_stand"
 	)
+	_add_npc(
+		"BlackjackDealerNPC", Vector3(-10.0, 0, 0.0), PI / 2.0,
+		"res://assets/npcs/cowgirl/blackjack.glb",
+		"Blackjack",
+		"res://scenes/2d/blackjack/blackjack_table.tscn",
+		"pso_f_ro_stand",
+		"res://assets/npcs/cowgirl/blackjack_hat.glb"
+	)
 
 	# Interactive exit trigger — back to market
 	_add_interactive_trigger(

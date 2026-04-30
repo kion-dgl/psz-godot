@@ -601,6 +601,7 @@ func _get_options_list() -> Array:
 		"Combo Timing: %s" % (on if DebugConfig.show_combo_timing else off),
 		"Time + Room: %s" % (on if DebugConfig.show_time_room else off),
 		"Frame Profiler: %s" % (on if DebugConfig.profile_frames else off),
+		"Show Player Position: %s" % (on if DebugConfig.show_player_position else off),
 	]
 
 
@@ -623,6 +624,8 @@ func _toggle_option(idx: int) -> void:
 			TimeManager.show_hud(DebugConfig.show_time_room)
 		10:
 			DebugConfig.profile_frames = not DebugConfig.profile_frames
+		11:
+			DebugConfig.show_player_position = not DebugConfig.show_player_position
 
 
 func _input_back(event: InputEvent) -> bool:

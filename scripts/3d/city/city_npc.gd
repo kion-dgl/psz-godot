@@ -15,6 +15,8 @@ const NPC_ANIM_SOURCES := [
 @export var target_scene_path: String = ""
 @export var npc_rotation_y: float = 0.0
 @export var idle_anim: String = ""  # Animation name from npc_idles.glb
+@export var hat_model_path: String = ""  # Optional GLB attached to head bone
+@export var hat_bone_name: String = "090_Head"
 
 var _prompt_label: Label3D
 var _player_ref: Node3D  # Set by area controller after spawning
@@ -41,14 +43,32 @@ func _load_model() -> void:
 
 	# Apply texture if PNG exists alongside GLB
 	var tex_path := npc_model_path.replace(".glb", ".png")
-	if not ResourceLoader.exists(tex_path):
-		_setup_idle_anim()
-		return
-	var texture := load(tex_path) as Texture2D
-	if texture:
-		_apply_npc_texture(model, texture)
+	if ResourceLoader.exists(tex_path):
+		var texture := load(tex_path) as Texture2D
+		if texture:
+			_apply_npc_texture(model, texture)
 
 	_setup_idle_anim()
+	_attach_hat()
+
+
+func _attach_hat() -> void:
+	if hat_model_path.is_empty() or not model:
+		return
+	var skel: Skeleton3D = _find_typed(model, "Skeleton3D") as Skeleton3D
+	if not skel or skel.find_bone(hat_bone_name) == -1:
+		push_warning("[CityNPC] Hat bone '%s' not found on %s" % [hat_bone_name, npc_display_name])
+		return
+	var packed := load(hat_model_path) as PackedScene
+	if not packed:
+		push_warning("[CityNPC] Failed to load hat: " + hat_model_path)
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "HatAttach"
+	attach.bone_name = hat_bone_name
+	skel.add_child(attach)
+	var hat := packed.instantiate()
+	attach.add_child(hat)
 
 
 func _setup_idle_anim() -> void:
