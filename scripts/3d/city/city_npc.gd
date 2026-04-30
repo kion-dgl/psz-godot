@@ -43,12 +43,10 @@ func _load_model() -> void:
 
 	# Apply texture if PNG exists alongside GLB
 	var tex_path := npc_model_path.replace(".glb", ".png")
-	if not ResourceLoader.exists(tex_path):
-		_setup_idle_anim()
-		return
-	var texture := load(tex_path) as Texture2D
-	if texture:
-		_apply_npc_texture(model, texture)
+	if ResourceLoader.exists(tex_path):
+		var texture := load(tex_path) as Texture2D
+		if texture:
+			_apply_npc_texture(model, texture)
 
 	_setup_idle_anim()
 	_attach_hat()

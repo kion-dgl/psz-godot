@@ -177,7 +177,8 @@ func _resolve() -> void:
 		outcome = Outcome.PLAYER_BUST
 	elif p_blackjack and not d_blackjack:
 		outcome = Outcome.PLAYER_BLACKJACK
-		payout = bet + int(round(bet * 1.5))  # 3:2 plus stake back
+		# 3:2 in integer math: stake back + (bet * 3 / 2). Floor on odd bets.
+		payout = bet + (bet * 3) / 2
 	elif d_blackjack and not p_blackjack:
 		outcome = Outcome.DEALER_WIN
 	elif p_blackjack and d_blackjack:
