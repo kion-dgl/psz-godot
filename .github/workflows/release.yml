@@ -8,6 +8,12 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The Android signing secrets (ANDROID_KEYSTORE_B64,
+    # ANDROID_KEYSTORE_PASSWORD) live in the `prod` environment, not as
+    # plain repo secrets. Declaring the environment here is what makes
+    # `${{ secrets.* }}` resolve to those values; without it they read
+    # as empty strings and the Android export step fails fast.
+    environment: prod
     permissions:
       contents: write
     steps:
