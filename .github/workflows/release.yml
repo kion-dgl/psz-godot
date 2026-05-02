@@ -52,13 +52,27 @@ jobs:
         with:
           packages: 'build-tools;34.0.0 platform-tools platforms;android-34 cmdline-tools;latest ndk;26.3.11579264'
 
-      - name: Generate debug keystore
+      - name: Decode release keystore from secret
+        # Stable PKCS12 keystore from `ANDROID_KEYSTORE_B64` secret. Generated
+        # locally once with `keytool -genkeypair -keyalg RSA -keysize 4096
+        # -validity 10000` (see docs/SECRETS.md). Re-using the same keystore
+        # across CI runs means released APKs install as upgrades over previous
+        # ones — previously every CI run minted a fresh debug keystore, so
+        # every install required uninstall+reinstall (lost save data).
+        env:
+          ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
         run: |
+          set -euo pipefail
+          if [ -z "${ANDROID_KEYSTORE_B64:-}" ]; then
+            echo "::error::ANDROID_KEYSTORE_B64 secret not set. See docs/SECRETS.md."
+            exit 1
+          fi
           mkdir -p ~/.android
-          keytool -keyalg RSA -genkeypair -alias androiddebugkey \
-            -keypass android -keystore ~/.android/debug.keystore \
-            -storepass android -dname "CN=Android Debug,O=Android,C=US" \
-            -validity 9999 -deststoretype pkcs12
+          echo "$ANDROID_KEYSTORE_B64" | base64 -d > ~/.android/psz-release.keystore
+          chmod 600 ~/.android/psz-release.keystore
+          # Smoke-check: PKCS12 magic bytes are 30 82 (DER SEQUENCE).
+          head -c 2 ~/.android/psz-release.keystore | xxd | grep -q '3082' \
+            || { echo "::error::Decoded keystore is not a valid PKCS12 file"; exit 1; }
 
       - name: Cache Godot import
         uses: actions/cache@v4
@@ -85,12 +99,16 @@ jobs:
         run: godot --headless --path . --import --quit || true
 
       - name: Configure Godot editor settings for Android
+        # Only inject SDK/Java paths here. The release keystore is supplied to
+        # Godot via the GODOT_ANDROID_KEYSTORE_RELEASE_* env vars on the export
+        # step (added in 4.4+, see godotengine/godot#35930) — that keeps the
+        # passphrase out of the editor settings file.
         run: |
           SETTINGS_FILE="$HOME/.config/godot/editor_settings-4.5.tres"
           if [ ! -f "$SETTINGS_FILE" ]; then
             SETTINGS_FILE="$HOME/.config/godot/editor_settings-4.tres"
           fi
-          sed -i '/\[resource\]/a export/android/android_sdk_path = "'"$ANDROID_HOME"'"\nexport/android/java_sdk_path = "'"$JAVA_HOME"'"\nexport/android/debug_keystore = "'"$HOME"'/.android/debug.keystore"\nexport/android/debug_keystore_user = "androiddebugkey"\nexport/android/debug_keystore_pass = "android"' "$SETTINGS_FILE"
+          sed -i '/\[resource\]/a export/android/android_sdk_path = "'"$ANDROID_HOME"'"\nexport/android/java_sdk_path = "'"$JAVA_HOME"'"' "$SETTINGS_FILE"
           grep -i "android\|java" "$SETTINGS_FILE"
 
       - name: Diagnose Android SDK setup
@@ -129,15 +147,23 @@ jobs:
           godot --headless --path . --export-release "Windows x86_64" build/windows/psz-godot.exe
 
       - name: Export Android build
-        # Use `--export-debug` so Godot signs with the debug keystore from
-        # the editor-settings step above. `--export-release` without a
-        # release keystore configured silently produces an unsigned APK
-        # that can't be installed by adb (INSTALL_PARSE_FAILED_NO_CERTIFICATES).
-        # End users sideload; no Play Store, no release-key requirement.
+        # Release-signed with the stable keystore decoded earlier. Godot reads
+        # the keystore path/alias/password from GODOT_ANDROID_KEYSTORE_RELEASE_*
+        # env vars (4.4+), overriding the empty values committed in
+        # export_presets.cfg. Same keystore on every CI run = APKs install as
+        # upgrades over previous releases without uninstall+reinstall.
+        env:
+          GODOT_ANDROID_KEYSTORE_RELEASE_PATH: /home/runner/.android/psz-release.keystore
+          GODOT_ANDROID_KEYSTORE_RELEASE_USER: psz-release
+          GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           set -euo pipefail
+          if [ -z "${GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD:-}" ]; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD secret not set. See docs/SECRETS.md."
+            exit 1
+          fi
           mkdir -p build/android
-          godot --headless --path . --export-debug "Android" build/android/psz-godot.apk
+          godot --headless --path . --export-release "Android" build/android/psz-godot.apk
           # Pick the newest build-tools version (sort -V handles 34.0.0 vs 35.0.1
           # correctly). Fail explicitly if no apksigner is resolvable instead of
           # silently producing an unverified build.
@@ -148,7 +174,17 @@ jobs:
             exit 1
           fi
           echo "using $APKSIGNER"
-          "$APKSIGNER" verify --verbose build/android/psz-godot.apk | head -10
+          "$APKSIGNER" verify --verbose --print-certs build/android/psz-godot.apk | head -30
+          # Independent cert SHA-256 via openssl — same value should appear in
+          # docs/SECRETS.md (2B:95:17:1D:DB:22:...). A mismatch here means
+          # the wrong keystore was used; that's worth eyeballing in CI logs.
+          # TODO: once we've confirmed the apksigner output format in real CI,
+          # tighten this to a hard fail on mismatch (see issue link in PR).
+          echo "=== Independent cert fingerprint via openssl ==="
+          unzip -p build/android/psz-godot.apk 'META-INF/*.RSA' \
+            | openssl pkcs7 -inform DER -print_certs 2>/dev/null \
+            | openssl x509 -fingerprint -sha256 -noout 2>/dev/null \
+            || echo "(openssl cert dump failed — non-blocking)"
 
       - name: Export macOS build
         continue-on-error: true
