@@ -103,7 +103,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		SceneManager.pop_scene({"storage_closed": true})
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+	elif event.is_action_pressed("palette_swap"):
+		# LB / Shift toggles between Items and Meseta tabs (matches the
+		# fieldMenu "Page left" convention used elsewhere in the game).
 		_tab = Tab.MESETA if _tab == Tab.ITEMS else Tab.ITEMS
 		_selected_index = 0
 		_meseta_action = 0
@@ -116,8 +118,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_items_input(event: InputEvent) -> void:
-	if event.is_action_pressed("palette_swap"):
-		# Switch between inventory and storage panels
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		# Left/Right switches between the inventory panel (left) and storage
+		# panel (right) — matching the visual layout. Previously this toggled
+		# tabs, which trapped items in storage because there was no obvious
+		# way to focus the storage panel and pull items back.
 		_selected_side = 1 - _selected_side
 		_selected_index = clampi(_selected_index, 0, maxi(_get_current_list_size() - 1, 0))
 		_refresh_display()
@@ -140,6 +145,13 @@ func _handle_items_input(event: InputEvent) -> void:
 func _handle_meseta_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
 		_meseta_action = 1 - _meseta_action
+		_refresh_display()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		# Meseta tab has no panels — Left/Right mirrors palette_swap as a way
+		# back to the Items tab so users who don't know about LB aren't stuck.
+		_tab = Tab.ITEMS
+		_selected_index = 0
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
@@ -190,6 +202,15 @@ func _move_item() -> void:
 			return
 		var item: Dictionary = _inventory_items[_selected_index]
 		var item_id: String = str(item.get("id", ""))
+		# Block storing currently-equipped gear. Matches the same rule the
+		# shop's sell flow enforces (item_shop.gd:_sell_selected) — equipped
+		# items can't leave the inventory until the player unequips them
+		# first. Auto-unequipping was the alternative, but silently mutating
+		# equipment from a storage screen is surprising; an explicit "Unequip
+		# first!" hint matches the rest of the game's UX.
+		if _is_equipped(item_id):
+			hint_label.text = "Unequip first!"
+			return
 		var found := false
 		for s_item in GameState.shared_storage:
 			if str(s_item.get("id", "")) == item_id and not Inventory._is_per_slot(item_id):
@@ -230,9 +251,9 @@ func _refresh_display() -> void:
 	_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
 
 	if _tab == Tab.ITEMS:
-		hint_label.text = "Left/Right: Switch Tab  TAB: Switch Panel  Up/Down: Select  Enter: Move  Esc: Back"
+		hint_label.text = "Left/Right: Switch Panel  LB: Switch Tab  Up/Down: Select  Enter: Move  Esc: Back"
 	else:
-		hint_label.text = "Left/Right: Switch Tab  Up/Down: Select  Enter: Transfer 100M  Esc: Back"
+		hint_label.text = "Left/Right: Back to Items  LB: Switch Tab  Up/Down: Select  Enter: Transfer 100M  Esc: Back"
 
 	_refresh_items_panel(inventory_panel, _inventory_items, "INVENTORY (%d/40)" % Inventory.get_total_slots(), 0)
 	_refresh_items_panel(storage_panel, _storage_items, "STORAGE (%d)" % _storage_items.size(), 1)
@@ -333,9 +354,15 @@ func _refresh_items_panel(panel: PanelContainer, items: Array, header_text: Stri
 			var display_name := item_name + equip_tag + suffix
 			var right_text := "x%d" % qty if qty > 1 else ""
 
-			# Determine text color based on equippability
+			# Determine text color based on equippability and equipped-lock state.
+			# Equipped items are locked from being moved into storage (see
+			# _move_item) and shown muted to make the locked state legible —
+			# matches the convention in shops/item_shop.gd:_refresh_display.
 			var text_color := Color.TRANSPARENT
-			if is_unresolved:
+			var is_locked_equipped: bool = item_id in equipped_ids
+			if is_locked_equipped:
+				text_color = PszStyle.TEXT_MUTED
+			elif is_unresolved:
 				text_color = PszStyle.TEXT_DANGER
 			elif weapon and not class_type_race.is_empty():
 				if not weapon.can_be_used_by(class_type_race):
@@ -401,3 +428,20 @@ func _on_nav_repeat(action: String) -> void:
 	ev.action = action
 	ev.pressed = true
 	_unhandled_input(ev)
+
+
+# ── Equipped-item lock ────────────────────────────────────────────────────────
+# Returns true if the active character has item_id in any equipment slot.
+# Used both by _move_item() (block storing equipped gear) and by the row
+# renderer (grey out + tag with [E]). Same rule as item_shop's sell flow.
+func _is_equipped(item_id: String) -> bool:
+	if item_id.is_empty():
+		return false
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
+	var equip: Dictionary = character.get("equipment", {})
+	for slot_key in equip.keys():
+		if str(equip.get(slot_key, "")) == item_id:
+			return true
+	return false

@@ -46,9 +46,11 @@ func _ready() -> void:
 		"res://assets/npcs/cowgirl/blackjack_hat.glb"
 	)
 
-	# Interactive exit trigger — back to market
+	# Interactive exit trigger — back to market. Trigger volume centred at
+	# (0, 0, -3) on the walkable floor; Y=1 raises the box to player-torso
+	# height so the interaction prompt fires reliably regardless of camera angle.
 	_add_interactive_trigger(
-		Vector3(0.04, 1, 3.0), Vector3(3, 3, 1),
+		Vector3(0, 1, -3), Vector3(3, 3, 1),
 		"res://scenes/3d/city/city_market.tscn", "underground-exit",
 		"Exit to City"
 	)
