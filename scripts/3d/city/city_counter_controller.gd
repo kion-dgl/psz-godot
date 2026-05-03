@@ -4,8 +4,16 @@ extends "res://scripts/3d/city/city_area_base.gd"
 const BUBBLE_WIDTH := 400
 const BUBBLE_HEIGHT := 180
 
+const TelepipeScript := preload("res://scripts/3d/elements/telepipe.gd")
+
 const DEFAULT_SPAWN := Vector3(0.06, 2, 12.95)
 const DEFAULT_ROT := PI
+
+# Where the city-side telepipe spawns when one is active. Per spec: (0,0) in
+# the city scene with the quest + storage NPCs (this scene). Player spawn for
+# the "telepipe-arrival" variant lands a step in front of it so they're not
+# clipping the trigger volume on arrival.
+const TELEPIPE_CITY_POS := Vector3(0, 0, 0)
 
 const SPAWN_VARIANTS := {
 	"market-exit": {
@@ -19,6 +27,16 @@ const SPAWN_VARIANTS := {
 	"office-exit": {
 		"position": Vector3(11.496, 0, -11.572),
 		"rotation": PI + PI / 4,
+	},
+	"telepipe-arrival": {
+		# Per spec: (2, 0, 0) drops the player just east of the city-side
+		# telepipe (which lives at TELEPIPE_CITY_POS = 0,0,0), placing them
+		# next to the counter NPCs. Rotation faces west so the cyan pillar
+		# is right in front of the player on arrival — they can press accept
+		# immediately to bounce back to the field, or walk away to use the
+		# storage / quest counter.
+		"position": Vector3(2, 0, 0),
+		"rotation": -PI / 2.0,
 	},
 }
 
@@ -80,8 +98,57 @@ func _ready() -> void:
 		"res://scenes/3d/city/city_office.tscn", "counter-office"
 	)
 
+	# City-side telepipe — spawns if a player-dropped telepipe is active in
+	# TelepipeManager. Interaction (E) consumes it: returns the player to the
+	# field cell where it was dropped, and the telepipe disappears in both
+	# city and field (one-shot return per spec).
+	_maybe_spawn_city_telepipe()
+
 	# Wire up
 	_connect_player_to_interactables()
+
+
+func _maybe_spawn_city_telepipe() -> void:
+	if not TelepipeManager.is_active():
+		return
+	var telepipe := TelepipeScript.new()
+	telepipe.name = "CityTelepipe"
+	add_child(telepipe)
+	telepipe.position = TELEPIPE_CITY_POS
+	telepipe.activated.connect(_on_city_telepipe_activated)
+
+
+func _on_city_telepipe_activated() -> void:
+	# consume_return() snapshots the saved location and clears the manager
+	# state in one call, so by the time the field _ready hook runs we won't
+	# re-spawn the telepipe there. That's the "one-shot" semantic: the round
+	# trip from field → city → field destroys the telepipe.
+	var snapshot: Dictionary = TelepipeManager.consume_return()
+	if snapshot.is_empty():
+		# Defensive: somehow lost the state between spawn and interact.
+		return
+	# Bring back the suspended quest/field session so quest objectives,
+	# companions, and section state come back with the player.
+	if SessionManager.has_suspended_session():
+		SessionManager.resume_session()
+	# Pass the saved position so the field controller can spawn the player
+	# exactly where they dropped the telepipe (rather than the section's
+	# normal entry portal). Section state was saved by _travel_to_city_via_telepipe;
+	# we hand it back through SceneManager's transition_data dict.
+	var section_state: Dictionary = SessionManager.get_section_state(int(snapshot.get("section_idx", 0)))
+	print("[TelepipeDEBUG] city→field section_idx=%d, section_state keys=%s, cell_states keys=%s, target_cell_pos=%s" % [
+		int(snapshot.get("section_idx", 0)),
+		str(section_state.keys()),
+		str(section_state.get("cell_states", {}).keys()),
+		str(snapshot.get("cell_pos", "0,0"))])
+	SceneManager.goto_scene(snapshot.get("field_scene", "res://scenes/3d/field/valley_field.tscn"), {
+		"current_cell_pos": snapshot.get("cell_pos", "0,0"),
+		"telepipe_arrival_pos": snapshot.get("world_pos", Vector3.ZERO),
+		"keys_collected": section_state.get("keys_collected", {}),
+		"gates_opened": section_state.get("gates_opened", {}),
+		"visited_cells": section_state.get("visited_cells", {}),
+		"cell_states": section_state.get("cell_states", {}),
+	})
 
 
 func _notification(what: int) -> void:

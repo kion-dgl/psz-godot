@@ -131,6 +131,18 @@ jobs:
           echo "=== build-tools ==="
           ls "$ANDROID_HOME/build-tools" 2>/dev/null || echo "No build-tools found"
 
+      - name: Mark exports as CI builds
+        # Sets the "ci" custom_feature on every export preset so the runtime
+        # knows it's an official CI build (vs a local dev export). The title
+        # screen reads OS.has_feature("ci") and appends "-local" to the
+        # version label when the flag is missing — makes it obvious from a
+        # screenshot which APK is on a tester's device. Same sed pattern
+        # applies to all platforms so the marker works for Web/Linux/Win/Mac
+        # too, not just Android.
+        run: |
+          sed -i 's/^custom_features=""/custom_features="ci"/' export_presets.cfg
+          grep -n '^custom_features=' export_presets.cfg
+
       - name: Export Web build
         run: |
           mkdir -p build/web

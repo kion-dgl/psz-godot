@@ -63,6 +63,11 @@ func clear_activated_links() -> void:
 
 ## Enter a field area
 func enter_field(area_id: String, difficulty: String) -> Dictionary:
+	# A fresh expedition starts here, so any in-flight telepipe is no longer
+	# reachable. (Same-area "go back to where I dropped my telepipe" is
+	# routed through resume_session() in warp_teleporter._warp_to_field —
+	# that path skips enter_field entirely.)
+	TelepipeManager.cancel("enter_field")
 	clear_section_states()
 	_session = {
 		"type": "field",
@@ -81,6 +86,7 @@ func enter_field(area_id: String, difficulty: String) -> Dictionary:
 
 ## Enter a mission
 func enter_mission(mission_id: String, difficulty: String) -> Dictionary:
+	TelepipeManager.cancel("enter_mission")
 	clear_section_states()
 	# Look up area from mission data and convert to spawner area_id
 	var area_id := "gurhacia"
@@ -105,6 +111,7 @@ func enter_mission(mission_id: String, difficulty: String) -> Dictionary:
 
 ## Enter a quest (hand-authored fixed layout)
 func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
+	TelepipeManager.cancel("enter_quest")
 	clear_section_states()
 	var quest := QuestLoader.load_quest(quest_id)
 	if quest.is_empty():
@@ -182,6 +189,12 @@ func add_rewards(exp_amount: int, meseta: int) -> void:
 
 ## Return to city and end session
 func return_to_city() -> Dictionary:
+	# Full session end → no longer reachable via the in-flight telepipe.
+	# Covers StartWarp, boss-clear, complete_quest, and any explicit "I'm
+	# done with this expedition" path. Telepipe-style suspends use
+	# suspend_session() instead, which intentionally leaves the manager
+	# state alone.
+	TelepipeManager.cancel("return_to_city")
 	var summary: Dictionary = _session.duplicate()
 	_session.clear()
 	_quest_objectives.clear()
@@ -264,6 +277,13 @@ func has_suspended_session() -> bool:
 	return not _suspended_session.is_empty()
 
 
+## Area_id of the currently-suspended session (or "" if none). Used by the
+## warp_teleporter to decide whether the player picking the same area should
+## resume_session() (telepipe stays alive) vs enter_field() (fresh expedition).
+func get_suspended_area() -> String:
+	return str(_suspended_session.get("area_id", ""))
+
+
 ## Check if a session is active
 func has_active_session() -> bool:
 	return not _session.is_empty()
@@ -288,6 +308,20 @@ func set_field_sections(sections: Array) -> void:
 ## Get field sections
 func get_field_sections() -> Array:
 	return _session.get("sections", [])
+
+
+## Returns the sections array of the SUSPENDED session (or {} if none).
+## Used by the warp-teleporter section picker which renders while
+## _session is empty (the player is back in city after a telepipe /
+## StartWarp suspend). Don't confuse with get_field_sections() above
+## which reads from the active _session.
+func get_suspended_field_sections() -> Array:
+	return _suspended_session.get("sections", [])
+
+
+## area_id of the suspended session (or "" if none).
+func get_suspended_area_id() -> String:
+	return str(_suspended_session.get("area_id", ""))
 
 
 ## Get current section index
@@ -323,6 +357,24 @@ func save_section_state(section_idx: int, cell_states: Dictionary, keys_collecte
 func get_section_state(section_idx: int) -> Dictionary:
 	return _section_cell_states.get(section_idx, {})
 
+
+## Section indices the player has entered during the current/suspended
+## expedition, in ascending order. Used by the warp-teleporter section
+## picker so the player can backtrack to any sub-area they've reached.
+##
+## Sections appear here once their cell state has been flushed via
+## `save_section_state()` — happens on cell transitions, on section
+## advance (`_on_end_reached`), and on the suspend paths (telepipe drop,
+## StartWarp). The current section is always included since suspend
+## always saves before clearing _session.
+##
+## Resets when `_section_cell_states` resets — i.e. on `enter_field`,
+## `enter_quest`, `enter_mission`, `return_to_city`, and `reset_all_state`.
+func get_visited_section_indices() -> Array:
+	var keys: Array = _section_cell_states.keys()
+	keys.sort()
+	return keys
+
 func clear_section_states() -> void:
 	_section_cell_states.clear()
 	_activated_links.clear()
@@ -333,6 +385,9 @@ func clear_section_states() -> void:
 ## yet doesn't have the guild counter still showing the report option after
 ## the title round-trip. Reported as a bug by Rozalin.
 func reset_all_state() -> void:
+	# Title-screen path lands here. Telepipes are session-only by spec
+	# (app close, title return, quest accept/end all wipe), so cancel.
+	TelepipeManager.cancel("reset_all_state")
 	_session.clear()
 	_suspended_session.clear()
 	_accepted_quest.clear()
@@ -357,6 +412,9 @@ func accept_quest(quest_id: String, difficulty: String) -> Dictionary:
 	var quest := QuestLoader.load_quest(quest_id)
 	if quest.is_empty():
 		return {}
+	# Per spec: accepting a quest cancels any active telepipe — the player
+	# is committing to a new expedition, the old field run is over.
+	TelepipeManager.cancel("accept_quest")
 	_accepted_quest = {
 		"quest_id": quest_id,
 		"area_id": quest.get("area_id", "gurhacia"),
@@ -383,6 +441,9 @@ func cancel_accepted_quest() -> void:
 	# Also clear any suspended session from this quest
 	if not _suspended_session.is_empty() and _suspended_session.get("type") == "quest":
 		_suspended_session.clear()
+	# Per spec: cancelling a quest closes any active telepipe (it was
+	# anchored to the suspended quest session we just wiped).
+	TelepipeManager.cancel("cancel_accepted_quest")
 
 
 ## Start the accepted quest — calls enter_quest() and clears acceptance.
