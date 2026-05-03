@@ -135,23 +135,38 @@ func _build_section_options() -> void:
 		if section_idx >= sections.size():
 			continue
 		var section: Dictionary = sections[section_idx]
-		var label: String = "%s — Section %d" % [area_name, section_idx + 1]
-		# Try to extract a sub-area letter from the first cell's stage_id.
-		# Stage IDs look like s<area_num><sub_letter>_<room_code> — for
-		# example "s01a_sa1" → sub "a", "s01e_ia1" → sub "e". Char index
-		# 3 is the sub-area letter when the prefix is 3 chars long.
 		var cells: Array = section.get("cells", [])
+		var first_stage_id: String = ""
 		if cells.size() > 0:
-			var stage_id: String = str(cells[0].get("stage_id", ""))
-			if stage_id.length() >= 4 and stage_id[0] == "s":
-				var sub_letter: String = stage_id.substr(3, 1).to_upper()
-				if sub_letter.length() == 1 and sub_letter >= "A" and sub_letter <= "Z":
-					label = "%s %s" % [area_name, sub_letter]
+			first_stage_id = str(cells[0].get("stage_id", ""))
+		var label: String = derive_section_label(area_name, first_stage_id, section_idx)
 		_visible_areas.append({
 			"id": "section_%d" % section_idx,
 			"name": label,
 			"section_idx": section_idx,
 		})
+
+
+## Pure helper — picks the friendly label for a single section in the
+## section-selector list. Pulled out as a static so the test runner can
+## exercise the stage_id parsing without instantiating the scene.
+##
+## Stage IDs look like `s<area_num><sub_letter>_<room_code>` — e.g.
+## `s01a_sa1` → sub "a", `s01e_ia1` → sub "e". Char index 3 is the sub-
+## area letter when the prefix is exactly 3 chars (s + 2-digit area).
+##
+## Falls back to `<area_name> — Section <N+1>` when stage_id doesn't fit
+## the pattern (empty, too short, doesn't start with `s`, or non-alpha
+## sub-letter), so an unusual quest still renders a usable list entry.
+static func derive_section_label(area_name: String, first_stage_id: String,
+		section_idx: int) -> String:
+	var fallback: String = "%s — Section %d" % [area_name, section_idx + 1]
+	if first_stage_id.length() < 4 or first_stage_id[0] != "s":
+		return fallback
+	var sub_letter: String = first_stage_id.substr(3, 1).to_upper()
+	if sub_letter.length() != 1 or sub_letter < "A" or sub_letter > "Z":
+		return fallback
+	return "%s %s" % [area_name, sub_letter]
 
 
 func _is_area_unlocked(area_id: String) -> bool:

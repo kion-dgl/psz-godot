@@ -38,6 +38,14 @@ func _ready() -> void:
 	test_tekker_identification()
 	test_additional_drops()
 	test_telepipe_suspend()
+	test_telepipe_manager_unit()
+	test_telepipe_round_trip()
+	test_telepipe_suspend_resume_keeps_telepipe()
+	test_section_state_round_trip()
+	test_telepipe_cancel_hooks()
+	test_telepipe_use_item_outside_field()
+	test_build_info_sentinel()
+	test_warp_teleporter_section_label()
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
@@ -2063,6 +2071,389 @@ func test_telepipe_suspend() -> void:
 
 	# Clean up
 	SessionManager.return_to_city()
+	print("")
+
+
+# ── Telepipe — extended coverage for PR #202 ────────────────────
+# These tests exercise the data-layer contracts of the telepipe +
+# backtracking system without loading any scenes. They mirror the
+# call sequences the controllers issue (place / suspend_session /
+# consume_return / resume_session / save_section_state) so a
+# regression in the wiring shows up here before it shows up on
+# device. See PR #202 for the spec checklist these map to.
+
+func test_telepipe_manager_unit() -> void:
+	print("── TelepipeManager — unit ──")
+
+	# Reset to known empty state
+	TelepipeManager.cancel("test_setup")
+	assert_true(not TelepipeManager.is_active(), "Inactive after cancel")
+	assert_true(TelepipeManager.get_state().is_empty(), "Empty state when inactive")
+	assert_true(TelepipeManager.consume_return().is_empty(), "consume_return on empty returns {}")
+
+	# place() populates state and flips is_active()
+	TelepipeManager.place("gurhacia", 0, "1,2",
+		Vector3(3.0, 0.0, 4.5),
+		"res://scenes/3d/field/valley_field.tscn")
+	assert_true(TelepipeManager.is_active(), "Active after place")
+	var s: Dictionary = TelepipeManager.get_state()
+	assert_eq(str(s.get("area_id", "")), "gurhacia", "area_id stored")
+	assert_eq(int(s.get("section_idx", -1)), 0, "section_idx stored")
+	assert_eq(str(s.get("cell_pos", "")), "1,2", "cell_pos stored")
+	assert_eq(s.get("world_pos", Vector3.ZERO), Vector3(3.0, 0.0, 4.5), "world_pos stored")
+	assert_eq(str(s.get("field_scene", "")),
+		"res://scenes/3d/field/valley_field.tscn", "field_scene stored")
+
+	# get_state() must return a defensive copy (caller mutation can't bleed in)
+	s["area_id"] = "tampered"
+	assert_eq(str(TelepipeManager.get_state().get("area_id", "")),
+		"gurhacia", "get_state returns defensive copy")
+
+	# Replacing: at-most-one rule. New place() supersedes old, telepipe stays active.
+	TelepipeManager.place("ozette", 1, "0,0",
+		Vector3.ZERO,
+		"res://scenes/3d/field/ozette_field.tscn")
+	assert_true(TelepipeManager.is_active(), "Still active after replace")
+	assert_eq(str(TelepipeManager.get_state().get("area_id", "")),
+		"ozette", "area_id replaced")
+	assert_eq(int(TelepipeManager.get_state().get("section_idx", -1)),
+		1, "section_idx replaced")
+
+	# matches_field(): all three keys must agree
+	assert_true(TelepipeManager.matches_field("ozette", 1, "0,0"),
+		"matches_field exact triple")
+	assert_true(not TelepipeManager.matches_field("gurhacia", 1, "0,0"),
+		"matches_field rejects different area")
+	assert_true(not TelepipeManager.matches_field("ozette", 0, "0,0"),
+		"matches_field rejects different section")
+	assert_true(not TelepipeManager.matches_field("ozette", 1, "5,5"),
+		"matches_field rejects different cell")
+
+	# consume_return() returns snapshot, then clears
+	var snap: Dictionary = TelepipeManager.consume_return()
+	assert_eq(str(snap.get("area_id", "")), "ozette", "consume_return returns snapshot")
+	assert_true(not TelepipeManager.is_active(), "Inactive after consume_return")
+	assert_true(TelepipeManager.get_state().is_empty(), "Empty state after consume_return")
+
+	# cancel() on inactive is a no-op (must not crash, must stay inactive)
+	TelepipeManager.cancel("idempotent_check")
+	assert_true(not TelepipeManager.is_active(), "Cancel on inactive stays inactive")
+
+	# matches_field() on inactive always false (no out-of-bounds index access)
+	assert_true(not TelepipeManager.matches_field("ozette", 1, "0,0"),
+		"matches_field on inactive returns false")
+	print("")
+
+
+func test_telepipe_round_trip() -> void:
+	print("── Telepipe — full round-trip (drop → city → field) ──")
+
+	# Reset
+	TelepipeManager.cancel("test_setup")
+	SessionManager._suspended_session.clear()
+
+	# Player enters field, drops a telepipe in section 0 cell 1,2
+	SessionManager.enter_field("gurhacia", "normal")
+	assert_true(SessionManager.has_active_session(), "Session active in field")
+	assert_eq(SessionManager.get_location(), "field", "Location is field")
+
+	TelepipeManager.place("gurhacia", 0, "1,2",
+		Vector3(7.5, 0.0, -2.5),
+		"res://scenes/3d/field/valley_field.tscn")
+	assert_true(TelepipeManager.is_active(), "Telepipe active after place")
+
+	# Player walks into field telepipe + accept.
+	# Mirrors valley_field_controller._handle_telepipe_travel:
+	#   save_section_state(current section) THEN suspend_session().
+	SessionManager.save_section_state(
+		SessionManager.get_current_section(),
+		{"1,2": {"cleared": true, "items_picked": ["pd"]}},
+		{}, {}, {"1,2": true})
+	SessionManager.suspend_session()
+	assert_true(not SessionManager.has_active_session(),
+		"No active session after suspend")
+	assert_true(SessionManager.has_suspended_session(),
+		"Suspended session present")
+	assert_eq(SessionManager.get_location(), "city", "Location is city")
+	assert_true(TelepipeManager.is_active(),
+		"Telepipe still active across suspend (city pillar can spawn)")
+
+	# Player walks into city telepipe + accept.
+	# Mirrors city_counter_controller._consume_telepipe:
+	#   consume_return() snapshot, then resume_session() to land in field.
+	var snap: Dictionary = TelepipeManager.consume_return()
+	assert_eq(str(snap.get("cell_pos", "")), "1,2",
+		"Snapshot returns the dropped cell")
+	assert_eq(snap.get("world_pos", Vector3.ZERO),
+		Vector3(7.5, 0.0, -2.5), "Snapshot returns the dropped world_pos")
+	assert_true(not TelepipeManager.is_active(),
+		"Telepipe gone after consume_return (one-shot rule)")
+
+	SessionManager.resume_session()
+	assert_true(SessionManager.has_active_session(),
+		"Session resumed after city telepipe")
+	assert_eq(SessionManager.get_location(), "field",
+		"Location back to field")
+
+	# Cleared cell state survives the round trip
+	var st: Dictionary = SessionManager.get_section_state(0)
+	assert_true(not st.is_empty(), "Section 0 state preserved")
+	var cells: Dictionary = st.get("cell_states", {})
+	assert_true(cells.has("1,2"), "Cell 1,2 cleared state preserved")
+	assert_eq(cells["1,2"].get("cleared", false), true,
+		"1,2 still marked cleared after round trip")
+
+	# Cleanup
+	SessionManager.return_to_city()
+	print("")
+
+
+func test_telepipe_suspend_resume_keeps_telepipe() -> void:
+	print("── Telepipe — suspend/resume preserves the active telepipe ──")
+
+	TelepipeManager.cancel("test_setup")
+	SessionManager._suspended_session.clear()
+
+	# Drop a telepipe, then suspend (StartWarp path, or city teleporter
+	# round trip via the same area).
+	SessionManager.enter_field("gurhacia", "normal")
+	TelepipeManager.place("gurhacia", 0, "0,0",
+		Vector3(1.0, 0.0, 1.0),
+		"res://scenes/3d/field/valley_field.tscn")
+	SessionManager.suspend_session()
+	assert_true(TelepipeManager.is_active(),
+		"Telepipe active across suspend (warp pad path)")
+
+	# Player picks the same area in city teleporter → resume_session
+	# (warp_teleporter._warp_to_field path when suspended_area matches selection).
+	SessionManager.resume_session()
+	assert_true(SessionManager.has_active_session(),
+		"Session active after resume")
+	assert_true(TelepipeManager.is_active(),
+		"Telepipe still active after resume — player can walk back to it")
+	assert_eq(int(TelepipeManager.get_state().get("section_idx", -1)),
+		0, "Telepipe section preserved across suspend/resume")
+
+	# Cleanup — return_to_city is the spec'd cancel hook for full session end
+	SessionManager.return_to_city()
+	assert_true(not TelepipeManager.is_active(),
+		"return_to_city cancels telepipe (full session end)")
+	print("")
+
+
+func test_section_state_round_trip() -> void:
+	print("── Section state — multi-section preservation across suspend ──")
+
+	TelepipeManager.cancel("test_setup")
+	SessionManager._suspended_session.clear()
+
+	SessionManager.enter_field("gurhacia", "normal")
+
+	# Section 0: clear room (1,1), pick up a key, open a gate
+	SessionManager.save_section_state(0,
+		{"1,1": {"cleared": true}},
+		{"key_a": true},
+		{"gate_x": true},
+		{"1,1": true})
+
+	# Advance to section 1, clear (2,2)
+	SessionManager.set_current_section(1)
+	SessionManager.save_section_state(1,
+		{"2,2": {"cleared": true}},
+		{}, {},
+		{"2,2": true})
+
+	# Suspend (e.g. via StartWarp), then resume via warp pad
+	SessionManager.suspend_session()
+	SessionManager.resume_session()
+
+	var s0: Dictionary = SessionManager.get_section_state(0)
+	var s1: Dictionary = SessionManager.get_section_state(1)
+	assert_true(not s0.is_empty(), "Section 0 still in cell-state map")
+	assert_true(not s1.is_empty(), "Section 1 still in cell-state map")
+	assert_eq(s0.get("keys_collected", {}).get("key_a", false),
+		true, "Section 0 keys preserved")
+	assert_eq(s0.get("gates_opened", {}).get("gate_x", false),
+		true, "Section 0 gates preserved")
+	assert_eq(s1.get("cell_states", {}).get("2,2", {}).get("cleared", false),
+		true, "Section 1 cleared cell preserved")
+
+	# Visited section indices: both sections, sorted ascending
+	# (this drives the section-selector UI in warp_teleporter)
+	var visited: Array = SessionManager.get_visited_section_indices()
+	assert_eq(visited.size(), 2, "Two visited sections")
+	assert_eq(int(visited[0]), 0, "First visited section is 0")
+	assert_eq(int(visited[1]), 1, "Second visited section is 1")
+
+	# return_to_city wipes section states (full-expedition end)
+	SessionManager.return_to_city()
+	assert_true(SessionManager.get_visited_section_indices().is_empty(),
+		"return_to_city wipes section states")
+	print("")
+
+
+func test_telepipe_cancel_hooks() -> void:
+	print("── Telepipe — every cancel-on-X hook ──")
+
+	# Each block: drop a telepipe to a known active state, call the
+	# session transition that's spec'd to cancel it, assert it's gone.
+
+	# enter_field — fresh expedition, telepipe no longer reachable
+	TelepipeManager.place("gurhacia", 0, "0,0",
+		Vector3.ZERO, "res://scenes/3d/field/valley_field.tscn")
+	SessionManager.enter_field("ozette", "normal")
+	assert_true(not TelepipeManager.is_active(),
+		"enter_field cancels active telepipe")
+	SessionManager.return_to_city()
+
+	# return_to_city — boss-clear / explicit "I'm done" path
+	TelepipeManager.place("gurhacia", 0, "0,0",
+		Vector3.ZERO, "res://scenes/3d/field/valley_field.tscn")
+	SessionManager.return_to_city()
+	assert_true(not TelepipeManager.is_active(),
+		"return_to_city cancels active telepipe")
+
+	# reset_all_state — title-screen path
+	SessionManager.enter_field("gurhacia", "normal")
+	TelepipeManager.place("gurhacia", 0, "0,0",
+		Vector3.ZERO, "res://scenes/3d/field/valley_field.tscn")
+	SessionManager.reset_all_state()
+	assert_true(not TelepipeManager.is_active(),
+		"reset_all_state cancels active telepipe")
+
+	# accept_quest / cancel_accepted_quest / enter_quest — only if quest
+	# fixtures load on this checkout
+	var quest_ids: Array = QuestLoader.list_quests()
+	if quest_ids.is_empty():
+		print("  INFO: No quest files, skipping quest-path cancel hooks")
+	else:
+		var qid: String = str(quest_ids[0])
+
+		TelepipeManager.place("gurhacia", 0, "0,0",
+			Vector3.ZERO, "res://scenes/3d/field/valley_field.tscn")
+		SessionManager.accept_quest(qid, "normal")
+		assert_true(not TelepipeManager.is_active(),
+			"accept_quest cancels active telepipe")
+
+		TelepipeManager.place("gurhacia", 0, "0,0",
+			Vector3.ZERO, "res://scenes/3d/field/valley_field.tscn")
+		SessionManager.cancel_accepted_quest()
+		assert_true(not TelepipeManager.is_active(),
+			"cancel_accepted_quest cancels active telepipe")
+
+		TelepipeManager.place("gurhacia", 0, "0,0",
+			Vector3.ZERO, "res://scenes/3d/field/valley_field.tscn")
+		SessionManager.enter_quest(qid, "normal")
+		assert_true(not TelepipeManager.is_active(),
+			"enter_quest cancels active telepipe")
+		SessionManager.return_to_city()
+
+	# Cleanup — leave the world clean for the next test
+	TelepipeManager.cancel("test_cleanup")
+	SessionManager._accepted_quest.clear()
+	SessionManager._completed_quest.clear()
+	SessionManager._suspended_session.clear()
+	print("")
+
+
+func test_telepipe_use_item_outside_field() -> void:
+	print("── Inventory.use_item('telepipe') — field-only guard ──")
+
+	# Spec: "In city → selecting Telepipe + accept refused with 'Telepipe only
+	# works in the field', item not consumed." Inventory._use_telepipe is the
+	# enforcement point — start menu surfaces the refusal via get_last_use_info.
+	# This test exercises the guard without loading any scene.
+
+	# Setup: clean state, give the player one telepipe
+	TelepipeManager.cancel("test_setup")
+	SessionManager.return_to_city()  # ensures location == "city"
+	Inventory.clear_inventory()
+	Inventory.add_item("telepipe", 1)
+	assert_eq(SessionManager.get_location(), "city",
+		"Location is city before use attempt")
+	assert_eq(Inventory.get_item_count("telepipe"), 1,
+		"Inventory has 1 telepipe before use")
+
+	# Act: try to use it from city → must refuse
+	var ok: bool = Inventory.use_item("telepipe")
+	assert_true(not ok, "use_item('telepipe') returns false in city")
+	assert_eq(Inventory.get_item_count("telepipe"), 1,
+		"Telepipe count NOT decremented on refusal")
+
+	# Refusal type is the signal pso_start_menu uses to render the friendly
+	# "only works in the field" message instead of generic "Couldn't use Telepipe".
+	var info: Dictionary = Inventory.get_last_use_info()
+	assert_eq(str(info.get("type", "")), "telepipe_fail",
+		"last_use_info.type is telepipe_fail (drives city-side refusal message)")
+
+	# TelepipeManager must remain inactive — refusal must not have side effects.
+	assert_true(not TelepipeManager.is_active(),
+		"TelepipeManager stayed inactive on city-side refusal")
+
+	# Cleanup
+	Inventory.clear_inventory()
+	print("")
+
+
+func test_build_info_sentinel() -> void:
+	print("── BuildInfo — committed-sentinel contract ──")
+
+	# scripts/tools/local_build_apk.sh seds LOCAL_BUILD to a counter before
+	# export, then restores via sed back to the original on EXIT. If that
+	# trap ever silently fails (process killed, sed pattern miss, etc.) the
+	# counter would land in a commit. This test catches that on CI BEFORE
+	# the merge — committed value MUST be the sentinel 0.
+	#
+	# CI's release workflow toggles the `ci` custom_feature so title.gd
+	# short-circuits the LOCAL_BUILD display entirely; a non-zero committed
+	# value would only hurt local reinstalls, but it'd still be a lie about
+	# the source-of-truth state of the file.
+	assert_eq(BuildInfo.LOCAL_BUILD, 0,
+		"BuildInfo.LOCAL_BUILD == 0 (sentinel — bumped value must never be committed)")
+	print("")
+
+
+func test_warp_teleporter_section_label() -> void:
+	print("── warp_teleporter.derive_section_label — pure label derivation ──")
+
+	# WarpTeleporter._build_section_options derives sub-area labels by
+	# pulling the letter at index 3 of the first cell's stage_id (e.g.
+	# `s01a_sa1` → "Valley A", `s01e_ia1` → "Valley E"). The labelling
+	# itself is pure, so it lives as a static helper that this test
+	# exercises directly — no scene tree, no SessionManager state.
+	const WarpTeleporter := preload("res://scripts/2d/warp_teleporter.gd")
+
+	# Happy path — every sub-letter a/b/c/d/e produces "<Area> <Letter>"
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "s01a_sa1", 0),
+		"Valley A", "s01a_sa1 → Valley A")
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "s01b_sa1", 1),
+		"Valley B", "s01b_sa1 → Valley B")
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "s01e_ia1", 4),
+		"Valley E", "s01e_ia1 → Valley E (lower 'e' uppercased)")
+	assert_eq(WarpTeleporter.derive_section_label("Wetlands", "s03c_xa2", 2),
+		"Wetlands C", "Different area name carries through")
+
+	# Already-uppercase sub-letter — no double-upper crash
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "s01A_sa1", 0),
+		"Valley A", "Uppercase sub-letter handled idempotently")
+
+	# Fallback paths — these all yield "<Area> — Section <N+1>"
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "", 0),
+		"Valley — Section 1", "Empty stage_id falls back to numeric")
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "s01", 2),
+		"Valley — Section 3", "Too-short stage_id falls back (uses N+1)")
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "x01a_sa1", 0),
+		"Valley — Section 1", "stage_id not starting with 's' falls back")
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "s019_sa1", 0),
+		"Valley — Section 1", "Non-alpha sub char (digit) falls back")
+	assert_eq(WarpTeleporter.derive_section_label("Valley", "s01-_sa1", 0),
+		"Valley — Section 1", "Non-alpha sub char (punctuation) falls back")
+
+	# Empty area_name — function doesn't try to be clever, caller is
+	# expected to supply "Field" as the default. Test we don't crash and
+	# we still produce a usable string.
+	assert_eq(WarpTeleporter.derive_section_label("", "s01a_sa1", 0),
+		" A", "Empty area_name still derives the letter (caller's job to default)")
 	print("")
 
 
