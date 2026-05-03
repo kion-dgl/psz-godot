@@ -45,17 +45,45 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check version was bumped
+      - name: Check version was bumped + all three sources stay synced
         run: |
+          set -euo pipefail
           PR_VERSION=$(cat VERSION | tr -d '[:space:]')
           MAIN_VERSION=$(git show origin/main:VERSION 2>/dev/null | tr -d '[:space:]' || echo "0.0.0")
 
           if [ "$PR_VERSION" = "$MAIN_VERSION" ]; then
-            echo "::error::VERSION not bumped. Current: $MAIN_VERSION. Bump VERSION and project.godot config/version before merging."
+            echo "::error::VERSION not bumped. Current: $MAIN_VERSION. Bump VERSION (and the two synced fields below) before merging."
+            exit 1
+          fi
+
+          # Three places store the version. They MUST agree, otherwise:
+          #   - project.godot config/version drifts from VERSION → in-game
+          #     about screens / GameState lie about which build is running.
+          #   - export_presets.cfg version/name drifts from VERSION → Android
+          #     `dumpsys package`, Play Console, and any future code-signing
+          #     audit lie about which build is shipped (caused the "phone
+          #     reports 0.2.2" bug).
+          # Catching at PR time is much cheaper than catching after a release.
+          GODOT_VERSION=$(grep -oP 'config/version="\K[^"]+' project.godot)
+          ANDROID_VERSION=$(awk -F'"' '/^version\/name=/ {print $2; exit}' export_presets.cfg)
+
+          fail=0
+          if [ "$GODOT_VERSION" != "$PR_VERSION" ]; then
+            echo "::error::project.godot config/version='$GODOT_VERSION' must equal VERSION='$PR_VERSION'"
+            fail=1
+          fi
+          if [ "$ANDROID_VERSION" != "$PR_VERSION" ]; then
+            echo "::error::export_presets.cfg version/name='$ANDROID_VERSION' must equal VERSION='$PR_VERSION' (Android dumpsys reads this)"
+            fail=1
+          fi
+          if [ "$fail" -eq 1 ]; then
             exit 1
           fi
 
           echo "Version bumped: $MAIN_VERSION → $PR_VERSION ✓"
+          echo "  VERSION                          = $PR_VERSION"
+          echo "  project.godot config/version     = $GODOT_VERSION"
+          echo "  export_presets.cfg version/name  = $ANDROID_VERSION"
 
   validate-quests:
     runs-on: ubuntu-latest

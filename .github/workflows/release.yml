@@ -181,16 +181,34 @@ jobs:
           fi
           echo "using $APKSIGNER"
           "$APKSIGNER" verify --verbose --print-certs build/android/psz-godot.apk | head -30
-          # Independent cert SHA-256 via openssl — same value should appear in
-          # docs/SECRETS.md (2B:95:17:1D:DB:22:...). A mismatch here means
-          # the wrong keystore was used; that's worth eyeballing in CI logs.
-          # TODO: once we've confirmed the apksigner output format in real CI,
-          # tighten this to a hard fail on mismatch (see issue link in PR).
-          echo "=== Independent cert fingerprint via openssl ==="
-          unzip -p build/android/psz-godot.apk 'META-INF/*.RSA' \
-            | openssl pkcs7 -inform DER -print_certs 2>/dev/null \
-            | openssl x509 -fingerprint -sha256 -noout 2>/dev/null \
-            || echo "(openssl cert dump failed — non-blocking)"
+          # Pin the cert SHA-256. apksigner emits one line per signature scheme
+          # version (V1.0, V2.0, V3.0, V3.1...) all signed by the same key, so
+          # any of them must match the pinned value. Take the first
+          # `SHA-256 digest:` line — apksigner prints lowercase hex, no colons.
+          # Pinned value matches docs/SECRETS.md and the keystore bundle's
+          # psz-release.fingerprints.txt.
+          EXPECTED_CERT_SHA256="2b95171ddb22ca5e6e28ae4ad5003e824e6c438cd6e38f0a253f7c0144a4fb06"
+          ACTUAL_CERT_SHA256=$("$APKSIGNER" verify --print-certs build/android/psz-godot.apk \
+            | grep -oE 'SHA-256 digest: [0-9a-fA-F]+' \
+            | head -1 \
+            | awk '{print tolower($NF)}')
+          if [ -z "$ACTUAL_CERT_SHA256" ]; then
+            echo "::error::Could not parse cert SHA-256 from apksigner output."
+            echo "Either apksigner's output format changed, or the APK isn't signed."
+            exit 1
+          fi
+          if [ "$ACTUAL_CERT_SHA256" != "$EXPECTED_CERT_SHA256" ]; then
+            echo "::error::APK signing cert SHA-256 doesn't match the pinned PSZ release cert."
+            echo "  expected: $EXPECTED_CERT_SHA256"
+            echo "  actual:   $ACTUAL_CERT_SHA256"
+            echo ""
+            echo "If the keystore was intentionally rotated, update the pinned value"
+            echo "above AND in docs/SECRETS.md AND in the keystore bundle README."
+            echo "If not, the wrong ANDROID_KEYSTORE_B64 secret is configured —"
+            echo "check the prod environment in Settings → Environments → prod."
+            exit 1
+          fi
+          echo "✓ APK signed with pinned release cert (SHA-256 $ACTUAL_CERT_SHA256)"
 
       - name: Export macOS build
         continue-on-error: true
