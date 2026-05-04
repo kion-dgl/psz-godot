@@ -218,16 +218,20 @@ func _on_interact_central() -> void:
 	if SessionManager.has_completed_quest():
 		return
 
-	# Suspended session — resume immediately
-	if SessionManager.has_suspended_session():
-		SessionManager.resume_session()
-		_enter_3d_field()
-		return
-
-	# Save player state before opening menu
+	# Save player state before opening menu (covers all picker paths below)
 	var area_controller := get_parent()
 	if area_controller and area_controller.has_method("_save_player_state"):
 		area_controller._save_player_state()
+
+	# Suspended session — open the warp teleporter in section-selector mode
+	# so the player can choose any sub-area they've visited (Valley A / E /
+	# B etc) instead of being auto-routed to a single fixed cell. Spec from
+	# the user: progressing through sections should ADD destinations to the
+	# picker, and reset only on title return / quest accept / quest end.
+	if SessionManager.has_suspended_session():
+		SceneManager.push_scene("res://scenes/2d/warp_teleporter.tscn",
+			{"section_select": true})
+		return
 
 	# Build transition data based on quest state
 	var data := {}
@@ -252,10 +256,23 @@ func _enter_3d_field() -> void:
 	if GridGenerator.AREA_CONFIG.has(field_area_id):
 		var section_idx: int = SessionManager.get_current_section()
 		var section: Dictionary = sections[section_idx] if section_idx < sections.size() else sections[0]
+
+		# Resume-from-suspension path: this method is reached after the warp
+		# pad called SessionManager.resume_session(). Per spec, the player
+		# always lands at the section's start cell — never warped directly
+		# to the telepipe cell. They navigate from start back to wherever
+		# their telepipe is (or wherever else they want to go) on foot.
+		# State (cleared rooms, picked-up items, opened gates) must persist
+		# across the round trip, so we hydrate from get_section_state.
+		# An empty section_state means fresh expedition — dicts default to {}.
+		var section_state: Dictionary = SessionManager.get_section_state(section_idx)
 		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
 			"current_cell_pos": str(section.get("start_pos", "")),
 			"spawn_edge": "",
-			"keys_collected": {},
+			"keys_collected": section_state.get("keys_collected", {}),
+			"gates_opened": section_state.get("gates_opened", {}),
+			"visited_cells": section_state.get("visited_cells", {}),
+			"cell_states": section_state.get("cell_states", {}),
 		})
 	else:
 		SceneManager.goto_scene("res://scenes/2d/field.tscn")

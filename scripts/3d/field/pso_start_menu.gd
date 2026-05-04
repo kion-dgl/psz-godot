@@ -668,9 +668,18 @@ func _sub_accept() -> void:
 							"hp": _action_message = "Restored %d HP" % int(info.get("amount", 0))
 							"pp": _action_message = "Restored %d PP" % int(info.get("amount", 0))
 							"tech": _action_message = "Learned %s!" % item_name
+							"telepipe": _action_message = "Telepipe placed — step into it to warp"
 							_: _action_message = "Used %s" % item_name
 					else:
-						_action_message = "Couldn't use %s" % item_name
+						# Telepipe fails specifically when the player tries to
+						# use one outside a field (e.g. opened the start menu
+						# while in city). Give a clearer hint rather than the
+						# generic "Couldn't use Telepipe".
+						var fail_info: Dictionary = Inventory.get_last_use_info()
+						if str(fail_info.get("type", "")) == "telepipe_fail":
+							_action_message = "Telepipe only works in the field"
+						else:
+							_action_message = "Couldn't use %s" % item_name
 		Mode.EQUIP:
 			var slots := _get_equip_slots()
 			_equip_slot_idx = _sub_idx
@@ -773,7 +782,14 @@ func _get_inventory() -> Array:
 		var item_id: String = str(item.get("id", ""))
 		item["category"] = _get_item_category(item_id)
 		item["equipped"] = item_id in equipped_ids
-		item["usable"] = Inventory.CONSUMABLE_EFFECTS.has(item_id) or item_id.begins_with("disk_")
+		# Items the start-menu's "Use" action will dispatch to Inventory.use_item().
+		# Add new use-handler ids here when wiring more consumables — see
+		# inventory.gd's use_item() switchboard for the dispatch logic.
+		item["usable"] = (
+			Inventory.CONSUMABLE_EFFECTS.has(item_id)
+			or item_id.begins_with("disk_")
+			or item_id == "telepipe"
+		)
 	return items
 
 

@@ -123,6 +123,10 @@ var _debug_panel: PanelContainer
 
 
 func _ready() -> void:
+	# Group registration so Inventory.use_item("telepipe") can locate the
+	# active field controller without dragging in scene-tree navigation.
+	add_to_group("field_controller")
+
 	# Grab lighting nodes immediately so _process() applies TimeManager from frame 1
 	_world_env = $WorldEnvironment
 	_dir_light = $DirectionalLight3D
@@ -321,8 +325,16 @@ func _ready() -> void:
 	var spawn_pos := Vector3.ZERO
 	var spawn_rot := 0.0
 	var spawn_reason := ""
+	# Telepipe-arrival precedence: when the city-side telepipe handler warped
+	# us back here, it passes telepipe_arrival_pos so the player materialises
+	# exactly where they dropped the pipe rather than at the section's normal
+	# entry portal. Skip if zero (sentinel for "not a telepipe arrival").
+	var telepipe_arrival_pos: Vector3 = data.get("telepipe_arrival_pos", Vector3.ZERO)
+	if telepipe_arrival_pos != Vector3.ZERO:
+		spawn_pos = telepipe_arrival_pos
+		spawn_reason = "telepipe arrival at %s" % telepipe_arrival_pos
 	var raw_spawn_pos: Array = data.get("spawn_position", [])
-	if raw_spawn_pos.size() == 3:
+	if spawn_reason.is_empty() and raw_spawn_pos.size() == 3:
 		var sp := Vector3(raw_spawn_pos[0], raw_spawn_pos[1], raw_spawn_pos[2])
 		if sp != Vector3.ZERO:
 			spawn_pos = _map_root.to_global(sp)
@@ -424,6 +436,19 @@ func _ready() -> void:
 	_spawn_companion()
 	_spawn_cell_objects()
 	_setup_debug_panel()
+
+	# Re-spawn the player-dropped telepipe if one is active in this exact
+	# (area, section, cell). Triggers when the player backtracks via the city
+	# warp teleporter — TelepipeManager.is_active() stays true after suspend,
+	# so we restore the visual cyan pillar at its saved world_pos.
+	#
+	# Skipped on telepipe-traversal arrivals because consume_return() in the
+	# city already wiped the manager state before this scene loaded.
+	var current_area_id: String = SessionManager.get_current_area_id()
+	var current_cell_pos_str: String = str(_current_cell.get("pos", ""))
+	if TelepipeManager.matches_field(current_area_id, section_idx, current_cell_pos_str):
+		var saved: Dictionary = TelepipeManager.get_state()
+		respawn_player_telepipe_from_state(saved.get("world_pos", Vector3.ZERO))
 
 	# Map overlay (toggle with Tab, persists across cell transitions)
 	_map_overlay = CanvasLayer.new()
@@ -1673,11 +1698,17 @@ func _spawn_field_elements() -> void:
 	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
 	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
 
-	# StartWarp on is_start cells at the entry portal (only first section)
+	# StartWarp on is_start cells at the entry portal (only first section).
+	# Spec: pressing E on this warp returns the player to the city teleporter
+	# room — same exit behaviour as the boss-clear telepipe, just available
+	# from the spawn room without needing to clear the area first. This is
+	# the "first-room return teleporter" half of issue #136.
 	var section_idx_for_warp: int = SessionManager.get_current_section()
 	if _current_cell.get("is_start", false) and section_idx_for_warp == 0:
 		var start_warp := StartWarpScript.new()
 		start_warp.auto_collect = false
+		start_warp.interactable = true
+		start_warp.interacted.connect(_on_start_warp_interacted)
 		var start_pos := Vector3.ZERO
 		var start_rot := 0.0
 		if _portal_data.has("default"):
@@ -1957,6 +1988,20 @@ func _spawn_field_elements() -> void:
 			wp_state = "unvisited"
 		print("[Waypoint] dir=%s → target_cell=%s  state=%s" % [dir, target_cell_pos, wp_state])
 
+	# Re-spawn the player telepipe in this room if one is active here. Per spec,
+	# the player can drop a telepipe, go to the city, then walk back via the
+	# city teleporter — when they arrive, the telepipe should still be standing
+	# where they left it. matches_field() checks all three coords (area / section
+	# / cell) so the telepipe only re-appears in the exact room it was placed in.
+	var current_area_id: String = SessionManager.get_current_area_id()
+	var current_cell_pos: String = str(_current_cell.get("pos", ""))
+	if TelepipeManager.matches_field(current_area_id, section_idx_for_warp, current_cell_pos):
+		var saved_state: Dictionary = TelepipeManager.get_state()
+		var saved_pos: Vector3 = saved_state.get("world_pos", Vector3.ZERO)
+		if saved_pos != Vector3.ZERO:
+			print("[FieldElements] Re-spawning player telepipe at %s (came back via city teleporter)" % saved_pos)
+			respawn_player_telepipe_from_state(saved_pos)
+
 
 func _spawn_end_cell_exit(connections: Dictionary) -> void:
 	## Spawn an AreaWarp + exit trigger on quest end cells that have no warp_edge.
@@ -2006,6 +2051,12 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 ## If pos is zero, falls back to room center / default spawn.
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 	print("[FieldElements] Spawning telepipe at %s" % pos)
+	# Per spec: when a quest-completion telepipe spawns, any player-dropped
+	# telepipe is closed. The quest one takes the slot conceptually — the
+	# player has the boss-clear pad RIGHT THERE, no need for the older one
+	# they dropped earlier in the run. The visual node in the prior cell
+	# tears down naturally when that cell unloads.
+	TelepipeManager.cancel("quest_completion_telepipe")
 	var tp_pos := pos
 	if tp_pos == Vector3.ZERO and _portal_data.has("default"):
 		tp_pos = _portal_data["default"]["spawn_pos"]
@@ -2018,6 +2069,107 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 		print("[ValleyField] Player activated telepipe")
 		_on_end_reached()
 	)
+
+
+## Player-dropped telepipe (consumable use, NOT the boss-clear / end-of-section
+## telepipe above). Records placement in TelepipeManager so the city can spawn
+## a matching pad and the field can re-spawn this telepipe on re-entry. Wires
+## the activated signal to _travel_to_city_via_telepipe instead of advancing
+## the section.
+func spawn_player_telepipe(world_pos: Vector3) -> void:
+	# Record the placement first so the cancellation signal (if a previous
+	# telepipe was active) fires before we spawn the new one. The Telepipe
+	# element doesn't observe TelepipeManager directly — TelepipeManager is
+	# the source of truth, this is just a visual instance of it.
+	var area_id: String = SessionManager.get_current_area_id()
+	var section_idx: int = SessionManager.get_current_section()
+	var cell_pos: String = str(_current_cell.get("pos", ""))
+	TelepipeManager.place(area_id, section_idx, cell_pos, world_pos, scene_file_path)
+
+	_spawn_player_telepipe_node(world_pos)
+
+
+## Re-spawn a previously-placed player telepipe (called from _ready / cell
+## load when TelepipeManager indicates one was dropped in this cell).
+## Doesn't re-call TelepipeManager.place() — state is already recorded.
+func respawn_player_telepipe_from_state(world_pos: Vector3) -> void:
+	_spawn_player_telepipe_node(world_pos)
+
+
+## Internal: build the Telepipe node and wire its activated signal to the
+## "travel to city" handler. Used by both fresh placement and re-entry.
+## world_pos is in global coordinates (e.g. player.global_position).
+func _spawn_player_telepipe_node(world_pos: Vector3) -> void:
+	print("[FieldElements] Spawning PLAYER telepipe at %s" % world_pos)
+	var telepipe := TelepipeScript.new()
+	telepipe.name = "PlayerTelepipe"
+	_map_root.add_child(telepipe)
+	# global_position so world-space input is honored regardless of any
+	# transform offset on _map_root.
+	telepipe.global_position = world_pos
+	telepipe.activated.connect(_travel_to_city_via_telepipe)
+
+
+## StartWarp interaction (the small cyan gate in the section's spawn room).
+## Returns the player to the city warp room — full session end, NOT a
+## telepipe-style suspend. Any active telepipe is canceled by the
+## SessionManager.return_to_city() hook because the player is leaving the
+## field entirely; coming back via the city teleporter starts a fresh
+## session and a new spawn-room StartWarp.
+func _on_start_warp_interacted(_player: Node3D) -> void:
+	if _transitioning:
+		return
+	_transitioning = true
+	print("[ValleyField] Player triggered StartWarp → return to city (suspended)")
+	# Per spec, only title return / quest accept / quest end may reset
+	# field state. StartWarp is a backtrack escape hatch from the spawn
+	# room — it must preserve cleared rooms, opened gates, picked-up items,
+	# and any active telepipe so the player can resume by walking back from
+	# the warp pad. So: same suspend-session flow as the telepipe travel
+	# handler (return_to_city would clear _section_cell_states + cancel the
+	# telepipe via the SessionManager hook).
+	_save_cell_state()
+	SessionManager.save_section_state(
+		SessionManager.get_current_section(),
+		_cell_states, _keys_collected, _gates_opened, _visited_cells
+	)
+	SessionManager.suspend_session()
+	SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
+
+
+## Field → city via player-dropped telepipe. Saves section state so coming
+## back via the city teleporter restores cleared rooms (#103 fix), suspends
+## the session so resume_session() can later restore quest progress, then
+## transitions to city_counter where the city-side Telepipe will spawn.
+func _travel_to_city_via_telepipe() -> void:
+	print("[ValleyField] Player travelling to city via telepipe")
+	# CRITICAL: persist the current cell's state into _cell_states BEFORE
+	# section-level save, otherwise the room the player just cleared (and is
+	# standing in) gets a fresh enemy spawn on re-entry. _cell_states is only
+	# updated on cell transitions; an in-place save needs an explicit flush.
+	_save_cell_state()
+	# State preservation — the same dicts that section transitions save.
+	var section_idx: int = SessionManager.get_current_section()
+	print("[TelepipeDEBUG] saving section_idx=%d, current_cell.pos=%s, _cell_states keys=%s" % [
+		section_idx, str(_current_cell.get("pos", "")), str(_cell_states.keys())])
+	SessionManager.save_section_state(
+		section_idx, _cell_states, _keys_collected, _gates_opened, _visited_cells
+	)
+	# Verify it round-tripped through SessionManager
+	var verify: Dictionary = SessionManager.get_section_state(section_idx)
+	print("[TelepipeDEBUG] post-save get_section_state keys=%s, cell_states keys=%s" % [
+		str(verify.keys()),
+		str(verify.get("cell_states", {}).keys())])
+	# Suspend rather than return_to_city() — resume_session() restores quest
+	# objectives + companions when the player comes back via the city telepipe.
+	SessionManager.suspend_session()
+	# city_area_base._spawn_player reads CityState.get_spawn_key(), not the
+	# SceneManager transition_data dict — set the variant key on CityState so
+	# city_counter's "telepipe-arrival" SPAWN_VARIANT actually fires.
+	CityState.set_spawn_key("telepipe-arrival")
+	# Telepipe stays active in TelepipeManager. The city scene's _ready hook
+	# checks is_active() and spawns the city-side Telepipe at (0,0).
+	SceneManager.goto_scene("res://scenes/3d/city/city_counter.tscn")
 
 
 func _spawn_quest_item(pos: Vector3, item_id: String, item_label: String, dlg: Array = [], actions: Array = [], rem_dlg: Array = []) -> void:
@@ -2040,6 +2192,8 @@ func _spawn_cell_objects() -> void:
 	var cell_pos: String = str(_current_cell.get("pos", ""))
 	var saved: Dictionary = _cell_states.get(cell_pos, {})
 	var objects: Array = _current_cell.get("objects", [])
+	print("[TelepipeDEBUG] _spawn_cell_objects cell_pos=%s, saved keys=%s, _cell_states all keys=%s" % [
+		cell_pos, str(saved.keys()), str(_cell_states.keys())])
 
 	# Reset room tracking arrays
 	_room_messages.clear()

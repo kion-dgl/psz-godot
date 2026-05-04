@@ -216,6 +216,12 @@ func use_item(item_id: String) -> bool:
 	if item_id.begins_with("disk_"):
 		return _use_disk(item_id)
 
+	# Telepipe — drops a portable city-warp at the player's current position.
+	# Field-only; no effect in city / on title screen. Doesn't auto-travel; the
+	# player still has to walk into the spawned Telepipe and press accept.
+	if item_id == "telepipe":
+		return _use_telepipe()
+
 	var effect: Dictionary = CONSUMABLE_EFFECTS.get(item_id, {})
 	if effect.is_empty():
 		# Not a known consumable — try legacy path for other usable items
@@ -247,6 +253,43 @@ func use_item(item_id: String) -> bool:
 
 	remove_item(item_id, 1)
 	print("[Inventory] Used %s: +%d %s" % [item_id, _last_use_amount, _last_use_type.to_upper()])
+	return true
+
+
+## Drop a telepipe at the player's current world position. Field-only; no
+## effect in the city or on the title screen. Doesn't transport the player —
+## it spawns the cyan Telepipe element where the player is standing, and the
+## player has to step into it and press accept to actually warp.
+##
+## The TelepipeManager handles the once-active rule (dropping a new telepipe
+## while one is already active automatically cancels the old one) so this
+## function just needs to find the field controller and let it spawn.
+func _use_telepipe() -> bool:
+	if SessionManager.get_location() != "field":
+		_last_use_type = "telepipe_fail"
+		_last_use_amount = 0
+		print("[Inventory] Telepipe rejected: not in a field (location=%s)"
+			% SessionManager.get_location())
+		return false
+	var field_ctrl = get_tree().get_first_node_in_group("field_controller")
+	if field_ctrl == null or not field_ctrl.has_method("spawn_player_telepipe"):
+		# Field scenes register themselves in the "field_controller" group on
+		# _ready. If we can't find one, refuse rather than consume the item.
+		_last_use_type = "telepipe_fail"
+		_last_use_amount = 0
+		print("[Inventory] Telepipe rejected: no field controller in scene")
+		return false
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		_last_use_type = "telepipe_fail"
+		_last_use_amount = 0
+		print("[Inventory] Telepipe rejected: no player in scene")
+		return false
+	field_ctrl.spawn_player_telepipe(player.global_position)
+	remove_item("telepipe", 1)
+	_last_use_type = "telepipe"
+	_last_use_amount = 1
+	print("[Inventory] Used telepipe at %s" % player.global_position)
 	return true
 
 

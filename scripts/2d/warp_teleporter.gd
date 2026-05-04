@@ -61,11 +61,21 @@ var _visible_areas: Array = []
 var _bg: ColorRect
 var _panel: Control
 
+# Section-selector mode: shown when a suspended field session exists, so
+# the player can pick which sub-area (Valley A / E / B etc) to drop back
+# into. Replaces the area list with section labels derived from each
+# section's first cell.stage_id. _visible_areas entries in this mode
+# carry an extra "section_idx" field; _warp_to_field branches on the
+# mode to call resume_session + a section-aware goto instead of the
+# normal enter_field path.
+var _section_select_mode: bool = false
+
 
 func _ready() -> void:
 	var data: Dictionary = SceneManager.get_transition_data()
 	_quest_mode = data.get("quest_mode", false)
 	_quest_area_id = str(data.get("area_id", ""))
+	_section_select_mode = data.get("section_select", false)
 
 	_build_visible_areas()
 
@@ -90,7 +100,9 @@ func _ready() -> void:
 
 func _build_visible_areas() -> void:
 	_visible_areas.clear()
-	if _quest_mode and not _quest_area_id.is_empty():
+	if _section_select_mode:
+		_build_section_options()
+	elif _quest_mode and not _quest_area_id.is_empty():
 		for area in AREAS:
 			if str(area["id"]) == _quest_area_id:
 				_visible_areas.append(area)
@@ -99,6 +111,62 @@ func _build_visible_areas() -> void:
 		for area in AREAS:
 			if _is_area_unlocked(str(area["id"])):
 				_visible_areas.append(area)
+
+
+## Build the section-picker entries from the SUSPENDED session.
+## Reads visited section indices from SessionManager and labels each one
+## by deriving the sub-area letter (a/b/c/d/e) from the first cell's
+## stage_id. e.g. s01a_sa1 → "Valley A", s01e_ia1 → "Valley E".
+##
+## Falls back gracefully when stage_id doesn't fit the pattern (just
+## says "Section N+1") so unusual quests still produce a usable list.
+func _build_section_options() -> void:
+	var sections: Array = SessionManager.get_suspended_field_sections()
+	var area_id: String = SessionManager.get_suspended_area_id()
+	# AREA_CONFIG lives in grid_generator with the canonical display name.
+	var area_name: String = ""
+	for area in AREAS:
+		if str(area["id"]) == area_id:
+			area_name = str(area["name"])
+			break
+	if area_name.is_empty():
+		area_name = "Field"
+	for section_idx in SessionManager.get_visited_section_indices():
+		if section_idx >= sections.size():
+			continue
+		var section: Dictionary = sections[section_idx]
+		var cells: Array = section.get("cells", [])
+		var first_stage_id: String = ""
+		if cells.size() > 0:
+			first_stage_id = str(cells[0].get("stage_id", ""))
+		var label: String = derive_section_label(area_name, first_stage_id, section_idx)
+		_visible_areas.append({
+			"id": "section_%d" % section_idx,
+			"name": label,
+			"section_idx": section_idx,
+		})
+
+
+## Pure helper — picks the friendly label for a single section in the
+## section-selector list. Pulled out as a static so the test runner can
+## exercise the stage_id parsing without instantiating the scene.
+##
+## Stage IDs look like `s<area_num><sub_letter>_<room_code>` — e.g.
+## `s01a_sa1` → sub "a", `s01e_ia1` → sub "e". Char index 3 is the sub-
+## area letter when the prefix is exactly 3 chars (s + 2-digit area).
+##
+## Falls back to `<area_name> — Section <N+1>` when stage_id doesn't fit
+## the pattern (empty, too short, doesn't start with `s`, or non-alpha
+## sub-letter), so an unusual quest still renders a usable list entry.
+static func derive_section_label(area_name: String, first_stage_id: String,
+		section_idx: int) -> String:
+	var fallback: String = "%s — Section %d" % [area_name, section_idx + 1]
+	if first_stage_id.length() < 4 or first_stage_id[0] != "s":
+		return fallback
+	var sub_letter: String = first_stage_id.substr(3, 1).to_upper()
+	if sub_letter.length() != 1 or sub_letter < "A" or sub_letter > "Z":
+		return fallback
+	return "%s %s" % [area_name, sub_letter]
 
 
 func _is_area_unlocked(area_id: String) -> bool:
@@ -147,29 +215,96 @@ func _warp_to_field() -> void:
 	var area: Dictionary = _visible_areas[_selected_area]
 	var area_id: String = str(area["id"])
 
+	# Section-selector path: pick which sub-area of the suspended session
+	# to drop back into. resume_session restores the session, then
+	# get_section_state hydrates the cell_states / keys / gates for the
+	# chosen section so cleared rooms stay cleared. Player always lands
+	# at the section's own start_pos — they walk from there to wherever
+	# their telepipe is, or to the next gate, etc.
+	if _section_select_mode:
+		var section_idx: int = int(area.get("section_idx", 0))
+		var sections: Array = SessionManager.get_suspended_field_sections()
+		if section_idx >= sections.size():
+			return
+		var section: Dictionary = sections[section_idx]
+		# Move the suspended session's current_section pointer to the
+		# selected one BEFORE resume_session, so the field controller's
+		# get_current_section() returns what the player picked.
+		SessionManager._suspended_session["current_section"] = section_idx
+		SessionManager.resume_session()
+		var section_state: Dictionary = SessionManager.get_section_state(section_idx)
+		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+			"current_cell_pos": str(section.get("start_pos", "")),
+			"spawn_edge": "",
+			"keys_collected": section_state.get("keys_collected", {}),
+			"gates_opened": section_state.get("gates_opened", {}),
+			"visited_cells": section_state.get("visited_cells", {}),
+			"cell_states": section_state.get("cell_states", {}),
+		})
+		return
+
 	if _quest_mode:
 		SessionManager.start_accepted_quest()
 		_enter_3d_field()
+		return
+
+	# Telepipe resume: if the player has a suspended session AND picked the
+	# same area where their telepipe is dropped, resume that session and
+	# restore the saved cell state instead of starting a fresh expedition.
+	# This is what makes "drop telepipe → city → city teleporter → same
+	# area" preserve cleared rooms (issue #103). The telepipe stays active
+	# and gets re-spawned in its original cell by the field controller.
+	print("[TelepipeDEBUG] warp_to_field area=%s tp_active=%s suspended=%s" % [
+		area_id, str(TelepipeManager.is_active()), str(SessionManager.has_suspended_session())])
+	if TelepipeManager.is_active():
+		var tp_state: Dictionary = TelepipeManager.get_state()
+		print("[TelepipeDEBUG]   tp_state area=%s section=%d cell=%s" % [
+			str(tp_state.get("area_id", "?")),
+			int(tp_state.get("section_idx", -1)),
+			str(tp_state.get("cell_pos", "?"))])
+		if tp_state.get("area_id", "") == area_id and SessionManager.has_suspended_session():
+			print("[TelepipeDEBUG]   RESUMING suspended session")
+			SessionManager.resume_session()
+			# Resume the cell state for the telepipe's section so the room
+			# the player drops back into has the same cleared/looted state.
+			var section_idx: int = int(tp_state.get("section_idx", 0))
+			var section_state: Dictionary = SessionManager.get_section_state(section_idx)
+			print("[TelepipeDEBUG]   restoring section %d, cell_states keys=%s, target=%s" % [
+				section_idx, str(section_state.get("cell_states", {}).keys()), str(tp_state.get("cell_pos", "0,0"))])
+			SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+				"current_cell_pos": str(tp_state.get("cell_pos", "0,0")),
+				"spawn_edge": "",
+				"keys_collected": section_state.get("keys_collected", {}),
+				"gates_opened": section_state.get("gates_opened", {}),
+				"visited_cells": section_state.get("visited_cells", {}),
+				"cell_states": section_state.get("cell_states", {}),
+			})
+			return
+		# Different area — the telepipe (and the suspended session it points
+		# at) is being abandoned. Cancel before enter_field clears section
+		# states; otherwise the manager would be holding a stale pointer.
+		print("[TelepipeDEBUG]   area mismatch or no suspended session, cancelling")
+		TelepipeManager.cancel("area_changed")
+
+	SessionManager.enter_field(area_id, "normal")
+
+	# Try hand-authored field quest first, fall back to procedural generation
+	var quest := QuestLoader.pick_field_quest(area_id)
+	var sections: Array
+	if not quest.is_empty() and quest.has("sections"):
+		sections = quest["sections"]
 	else:
-		SessionManager.enter_field(area_id, "normal")
+		var gen := GridGenerator.new()
+		var field: Dictionary = gen.generate_field("normal", area_id)
+		sections = field["sections"]
 
-		# Try hand-authored field quest first, fall back to procedural generation
-		var quest := QuestLoader.pick_field_quest(area_id)
-		var sections: Array
-		if not quest.is_empty() and quest.has("sections"):
-			sections = quest["sections"]
-		else:
-			var gen := GridGenerator.new()
-			var field: Dictionary = gen.generate_field("normal", area_id)
-			sections = field["sections"]
-
-		SessionManager.set_field_sections(sections)
-		var first_section: Dictionary = sections[0]
-		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-			"current_cell_pos": str(first_section["start_pos"]),
-			"spawn_edge": "",
-			"keys_collected": {},
-		})
+	SessionManager.set_field_sections(sections)
+	var first_section: Dictionary = sections[0]
+	SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+		"current_cell_pos": str(first_section["start_pos"]),
+		"spawn_edge": "",
+		"keys_collected": {},
+	})
 
 
 func _enter_3d_field() -> void:

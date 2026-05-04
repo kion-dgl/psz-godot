@@ -22,8 +22,22 @@ func _ready() -> void:
 
 	MusicManager.play_location_music("title")
 	prompt_label.text = "Press Start"
+	# Local-build marker: CI sets the "ci" custom_feature flag in
+	# export_presets.cfg before exporting. Local Godot exports leave it
+	# empty, so OS.has_feature("ci") only returns true on official CI
+	# builds. Anything Kion sideloads from his dev box gets a "-local"
+	# suffix on the title screen so it's obvious which build is running.
+	# The trailing number (when > 0) comes from BuildInfo.LOCAL_BUILD,
+	# which scripts/tools/local_build_apk.sh increments on every export.
+	# Lets the user confirm "did the new APK actually install?" by checking
+	# whether the counter went up since they last looked.
 	var app_version: String = ProjectSettings.get_setting("application/config/version", "0.0.0")
-	version_label.text = "PSZ Godot v%s" % app_version
+	var build_suffix := ""
+	if not OS.has_feature("ci"):
+		build_suffix = "-local"
+		if BuildInfo.LOCAL_BUILD > 0:
+			build_suffix += str(BuildInfo.LOCAL_BUILD)
+	version_label.text = "PSZ Godot v%s%s" % [app_version, build_suffix]
 
 	# Add text shadows for readability over the background image
 	var prompt_settings := LabelSettings.new()
