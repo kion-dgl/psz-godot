@@ -131,11 +131,21 @@ func _on_city_telepipe_activated() -> void:
 	# companions, and section state come back with the player.
 	if SessionManager.has_suspended_session():
 		SessionManager.resume_session()
+	# CRITICAL: override current_section to the telepipe's section_idx.
+	# Without this, if the player suspended from a DIFFERENT section than
+	# where the telepipe was placed (e.g. dropped telepipe in area B,
+	# walked back to area A, then used StartWarp from area A), the resumed
+	# session has current_section pointing at the suspend location (area
+	# A = section 0), not the telepipe location (area B = section 2). The
+	# field controller would then load section 0's cell_pos = wrong area's
+	# stage, even though the telepipe stored cell coords for area B.
+	var telepipe_section_idx: int = int(snapshot.get("section_idx", 0))
+	SessionManager.set_current_section(telepipe_section_idx)
 	# Pass the saved position so the field controller can spawn the player
 	# exactly where they dropped the telepipe (rather than the section's
 	# normal entry portal). Section state was saved by _travel_to_city_via_telepipe;
 	# we hand it back through SceneManager's transition_data dict.
-	var section_state: Dictionary = SessionManager.get_section_state(int(snapshot.get("section_idx", 0)))
+	var section_state: Dictionary = SessionManager.get_section_state(telepipe_section_idx)
 	print("[TelepipeDEBUG] city→field section_idx=%d, section_state keys=%s, cell_states keys=%s, target_cell_pos=%s" % [
 		int(snapshot.get("section_idx", 0)),
 		str(section_state.keys()),
