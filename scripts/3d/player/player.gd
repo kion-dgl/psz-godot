@@ -203,8 +203,19 @@ const RACAST_CLASSES := ["racast", "racaseal"]
 # Dodge tracking
 var dodge_direction: float = 0.0
 var dodge_timer: float = 0.0
+# Per-dodge cache of the active animation's length and the timestamp the
+# move phase ends (= length × DODGE_MOVE_FRACTION). Recomputed at every
+# _start_dodge so each weapon's own _esc_f duration is respected.
+var dodge_anim_duration: float = 0.0
+var dodge_move_end: float = 0.0
 const DODGE_DURATION: float = 0.8
-const DODGE_SPEED: float = 5.0
+const DODGE_SPEED: float = 7.0
+# Fraction of the dodge animation during which we apply velocity. The
+# remaining (1 - fraction) is the recovery — the character lands in a
+# crouch and stands up. Sliding through that recovery looked wrong, so
+# we cut velocity at this boundary while staying in DODGING so the
+# animation finishes naturally.
+const DODGE_MOVE_FRACTION: float = 0.7
 
 # Interaction system
 var interaction_area: Area3D
@@ -1044,6 +1055,16 @@ func _start_dodge() -> void:
 	# Store facing direction for dodge movement
 	dodge_direction = player_rotation
 	dodge_timer = 0.0
+	# Look up the active weapon's _esc_f length so the move phase scales
+	# to the actual clip (saber is 0.667s, others vary). Fall back to
+	# DODGE_DURATION if the animation isn't loaded for some reason —
+	# better to dodge a short distance than not at all.
+	var anim_name := _anim_prefix + "_esc_f"
+	if animation_player and animation_player.has_animation(anim_name):
+		dodge_anim_duration = animation_player.get_animation(anim_name).length
+	else:
+		dodge_anim_duration = DODGE_DURATION
+	dodge_move_end = dodge_anim_duration * DODGE_MOVE_FRACTION
 	transition_to(PlayerState.DODGING)
 
 
@@ -1054,6 +1075,17 @@ func _handle_dodge(delta: float) -> void:
 		velocity.x = 0
 		velocity.z = 0
 		transition_to(PlayerState.IDLE)
+		return
+
+	# Recovery phase (last 1 - DODGE_MOVE_FRACTION of the clip): the
+	# character lands in a crouch and stands up. Stay in DODGING so the
+	# animation keeps playing, but stop applying velocity — sliding
+	# through the crouch+rise while no foot motion is visible looked
+	# bad. animation_finished will transition us to IDLE when the clip
+	# actually completes.
+	if dodge_timer >= dodge_move_end:
+		velocity.x = 0
+		velocity.z = 0
 		return
 
 	# Move in the direction player was facing when dodge started
