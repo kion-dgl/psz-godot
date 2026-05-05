@@ -203,8 +203,19 @@ const RACAST_CLASSES := ["racast", "racaseal"]
 # Dodge tracking
 var dodge_direction: float = 0.0
 var dodge_timer: float = 0.0
+# Per-dodge cache of the active animation's length and the timestamp the
+# move phase ends (= length × DODGE_MOVE_FRACTION). Recomputed at every
+# _start_dodge so each weapon's own _esc_f duration is respected.
+var dodge_anim_duration: float = 0.0
+var dodge_move_end: float = 0.0
 const DODGE_DURATION: float = 0.8
-const DODGE_SPEED: float = 5.0
+const DODGE_SPEED: float = 7.0
+# Fraction of the dodge animation during which we apply velocity. The
+# remaining (1 - fraction) is the recovery — the character lands in a
+# crouch and stands up. Sliding through that recovery looked wrong, so
+# we cut velocity at this boundary while staying in DODGING so the
+# animation finishes naturally.
+const DODGE_MOVE_FRACTION: float = 0.7
 
 # Interaction system
 var interaction_area: Area3D
@@ -359,6 +370,11 @@ func _load_weapon_animations() -> void:
 					break
 		if should_loop:
 			new_anim.loop_mode = Animation.LOOP_LINEAR
+
+		# Strip baked-in root translation from dodge clips — see
+		# _strip_root_translation_track for rationale.
+		if anim_name.ends_with("_esc_f"):
+			_strip_root_translation_track(new_anim, skeleton.name)
 
 		lib.add_animation(anim_name, new_anim)
 
@@ -1039,6 +1055,16 @@ func _start_dodge() -> void:
 	# Store facing direction for dodge movement
 	dodge_direction = player_rotation
 	dodge_timer = 0.0
+	# Look up the active weapon's _esc_f length so the move phase scales
+	# to the actual clip (saber is 0.667s, others vary). Fall back to
+	# DODGE_DURATION if the animation isn't loaded for some reason —
+	# better to dodge a short distance than not at all.
+	var anim_name := _anim_prefix + "_esc_f"
+	if animation_player and animation_player.has_animation(anim_name):
+		dodge_anim_duration = animation_player.get_animation(anim_name).length
+	else:
+		dodge_anim_duration = DODGE_DURATION
+	dodge_move_end = dodge_anim_duration * DODGE_MOVE_FRACTION
 	transition_to(PlayerState.DODGING)
 
 
@@ -1046,7 +1072,20 @@ func _handle_dodge(delta: float) -> void:
 	dodge_timer += delta
 
 	if dodge_timer >= DODGE_DURATION:
+		velocity.x = 0
+		velocity.z = 0
 		transition_to(PlayerState.IDLE)
+		return
+
+	# Recovery phase (last 1 - DODGE_MOVE_FRACTION of the clip): the
+	# character lands in a crouch and stands up. Stay in DODGING so the
+	# animation keeps playing, but stop applying velocity — sliding
+	# through the crouch+rise while no foot motion is visible looked
+	# bad. animation_finished will transition us to IDLE when the clip
+	# actually completes.
+	if dodge_timer >= dodge_move_end:
+		velocity.x = 0
+		velocity.z = 0
 		return
 
 	# Move in the direction player was facing when dodge started
@@ -1059,6 +1098,27 @@ func _handle_dodge(delta: float) -> void:
 	else:
 		velocity.x = 0
 		velocity.z = 0
+
+
+# The PSO dodge animations (e.g. pmsa_esc_f) have ~4m of root-bone Z
+# translation baked in that does NOT return to zero by the final frame
+# (z≈4.36 at end of pmsa_esc_f). The game already drives the CharacterBody3D
+# forward via gameplay velocity (DODGE_SPEED × DODGE_DURATION = ~4m), so the
+# animation root motion compounded with that. Worse, the wait animation has
+# no root translation track, so when the AnimationPlayer transitions from
+# _esc_f → _wait the root bone snapped from z=4.36 back to rest pose at 0,
+# producing a large visible slide at the end of the roll. Stripping the
+# 000_Root translation track at load time leaves the rest of the animation
+# (limb poses, hip drop, body curl) intact, while letting velocity be the
+# sole source of horizontal motion.
+func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> void:
+	var target_path := "%s:000_Root" % skeleton_name
+	for i in range(anim.get_track_count() - 1, -1, -1):
+		if anim.track_get_type(i) != Animation.TYPE_POSITION_3D:
+			continue
+		if String(anim.track_get_path(i)) == target_path:
+			anim.remove_track(i)
+			return
 
 
 func _start_attack() -> void:
@@ -1889,6 +1949,11 @@ func transition_to(new_state: PlayerState) -> void:
 
 	match new_state:
 		PlayerState.IDLE:
+			# Zero horizontal velocity so dodge/attack carry-over doesn't
+			# slide the character into the wait pose. Y is preserved so
+			# gravity / falling continues to read correctly.
+			velocity.x = 0
+			velocity.z = 0
 			play_animation(_anim_prefix + "_wait", true)
 		PlayerState.WALKING:
 			play_animation(_walk_anim, true)

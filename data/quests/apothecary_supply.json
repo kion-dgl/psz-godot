@@ -694,11 +694,11 @@
               "dialog": [
                 {
                   "speaker": "Fern",
-                  "text": "Sol Atomizers are the backup for parties without a Force who can cast Resta."
+                  "text": "Sol Atomizers cure most status effects. Poison, paralysis, confusion."
                 },
                 {
                   "speaker": "Fern",
-                  "text": "They're always in demand."
+                  "text": "Without them, a single sting can be fatal."
                 }
               ],
               "remaining_dialog": [
@@ -1165,11 +1165,11 @@
               "dialog": [
                 {
                   "speaker": "Fern",
-                  "text": "Star Atomizers cure most status effects. Poison, paralysis, confusion."
+                  "text": "Star Atomizers heal the whole party — the backup for groups without a Force who can cast Resta."
                 },
                 {
                   "speaker": "Fern",
-                  "text": "Without them, a single sting can be fatal."
+                  "text": "They're always in demand."
                 }
               ],
               "remaining_dialog": [
