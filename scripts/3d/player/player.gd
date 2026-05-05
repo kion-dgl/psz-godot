@@ -360,6 +360,11 @@ func _load_weapon_animations() -> void:
 		if should_loop:
 			new_anim.loop_mode = Animation.LOOP_LINEAR
 
+		# Strip baked-in root translation from dodge clips — see
+		# _strip_root_translation_track for rationale.
+		if anim_name.ends_with("_esc_f"):
+			_strip_root_translation_track(new_anim, skeleton.name)
+
 		lib.add_animation(anim_name, new_anim)
 
 	# Also load shared PSO locomotion from the scene-baked Animations node
@@ -1046,6 +1051,8 @@ func _handle_dodge(delta: float) -> void:
 	dodge_timer += delta
 
 	if dodge_timer >= DODGE_DURATION:
+		velocity.x = 0
+		velocity.z = 0
 		transition_to(PlayerState.IDLE)
 		return
 
@@ -1059,6 +1066,27 @@ func _handle_dodge(delta: float) -> void:
 	else:
 		velocity.x = 0
 		velocity.z = 0
+
+
+# The PSO dodge animations (e.g. pmsa_esc_f) have ~4m of root-bone Z
+# translation baked in that does NOT return to zero by the final frame
+# (z≈4.36 at end of pmsa_esc_f). The game already drives the CharacterBody3D
+# forward via gameplay velocity (DODGE_SPEED × DODGE_DURATION = ~4m), so the
+# animation root motion compounded with that. Worse, the wait animation has
+# no root translation track, so when the AnimationPlayer transitions from
+# _esc_f → _wait the root bone snapped from z=4.36 back to rest pose at 0,
+# producing a large visible slide at the end of the roll. Stripping the
+# 000_Root translation track at load time leaves the rest of the animation
+# (limb poses, hip drop, body curl) intact, while letting velocity be the
+# sole source of horizontal motion.
+func _strip_root_translation_track(anim: Animation, skeleton_name: String) -> void:
+	var target_path := "%s:000_Root" % skeleton_name
+	for i in range(anim.get_track_count() - 1, -1, -1):
+		if anim.track_get_type(i) != Animation.TYPE_POSITION_3D:
+			continue
+		if String(anim.track_get_path(i)) == target_path:
+			anim.remove_track(i)
+			return
 
 
 func _start_attack() -> void:
@@ -1889,6 +1917,11 @@ func transition_to(new_state: PlayerState) -> void:
 
 	match new_state:
 		PlayerState.IDLE:
+			# Zero horizontal velocity so dodge/attack carry-over doesn't
+			# slide the character into the wait pose. Y is preserved so
+			# gravity / falling continues to read correctly.
+			velocity.x = 0
+			velocity.z = 0
 			play_animation(_anim_prefix + "_wait", true)
 		PlayerState.WALKING:
 			play_animation(_walk_anim, true)

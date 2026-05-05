@@ -22,6 +22,7 @@ const ControlsDiagram = lazy(() => import('./controls/ControlsDiagram'));
 const SfxLabeler = lazy(() => import('./sfx-labeler/SfxLabeler'));
 const PhotoMode = lazy(() => import('./photo-mode/PhotoMode'));
 const TitleScreen = lazy(() => import('./title-screen/TitleScreen'));
+const DodgeDebug = lazy(() => import('./dodge-debug/DodgeDebug'));
 
 function NavBar() {
   const location = useLocation();
@@ -159,6 +160,12 @@ function NavBar() {
       }}>
         Title
       </Link>
+      <Link to="/dodge-debug" style={{
+        color: isActive('/dodge-debug') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Dodge
+      </Link>
     </nav>
   );
 }
@@ -191,6 +198,7 @@ export default function App() {
             <Route path="/sfx-labeler" element={<SfxLabeler />} />
             <Route path="/photo-mode" element={<PhotoMode />} />
             <Route path="/title-screen" element={<TitleScreen />} />
+            <Route path="/dodge-debug" element={<DodgeDebug />} />
           </Routes>
         </Suspense>
       </div>
