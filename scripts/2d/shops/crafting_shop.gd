@@ -52,6 +52,7 @@ var _photon_index: int = 0
 var _pending_recipe_index: int = -1
 var _showing_result: bool = false
 var _result_popup: PanelContainer
+var _active_modal: Control = null
 
 var _mode_bar_parent: Control
 var _tab_row: HBoxContainer
@@ -184,6 +185,9 @@ func _add_craft_entry(recipe: RecipeBoardData, is_default: bool, uses: int = 0) 
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Confirm modal for learn/craft owns input while open.
+	if is_instance_valid(_active_modal):
+		return
 	if _showing_result:
 		if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
 			SfxManager.play("res://assets/sfx/ui/menu_select.wav")
@@ -218,7 +222,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _mode == Mode.CRAFT:
 			_craft_selected()
 		else:
-			_learn_selected()
+			_open_learn_modal()
 		get_viewport().set_input_as_handled()
 
 
@@ -241,8 +245,50 @@ func _handle_photon_input(event: InputEvent) -> void:
 		_update_selection(old_index, _photon_index)
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		_confirm_craft_with_photon()
+		_open_craft_modal()
 		get_viewport().set_input_as_handled()
+
+
+func _open_learn_modal() -> void:
+	if _board_items.is_empty() or _selected_index >= _board_items.size():
+		return
+	var board_info: Dictionary = _board_items[_selected_index]
+	var modal := ConfirmDialog.new()
+	modal.ask("Learn %s?" % str(board_info.get("name", "this board")))
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		_learn_selected()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = modal
+	add_child(modal)
+
+
+func _open_craft_modal() -> void:
+	if _pending_recipe_index < 0 or _pending_recipe_index >= _craft_recipes.size():
+		return
+	var photon_id: String = PHOTON_IDS[_photon_index]
+	if not Inventory.has_item(photon_id):
+		hint_label.text = "You don't have %s!" % PHOTON_OPTIONS[_photon_index]
+		return
+	var entry: Dictionary = _craft_recipes[_pending_recipe_index]
+	var recipe: RecipeBoardData = entry["recipe"]
+	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
+	var weapon_name: String = weapon.name if weapon else recipe.output_weapon_id
+
+	var modal := ConfirmDialog.new()
+	modal.ask("Craft %s using %s?\n(%d M)" % [weapon_name, PHOTON_OPTIONS[_photon_index], recipe.craft_cost])
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		_confirm_craft_with_photon()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = modal
+	add_child(modal)
 
 
 func _learn_selected() -> void:
@@ -739,6 +785,9 @@ var _nav: NavRepeat = null
 
 
 func _process(delta: float) -> void:
+	# Modal owns input + nav while open.
+	if is_instance_valid(_active_modal):
+		return
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
