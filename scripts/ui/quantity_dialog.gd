@@ -126,7 +126,13 @@ func _refresh_qty_text() -> void:
 		_qty_label.text = "%d / %d" % [_qty, _max_qty]
 	if _total_label == null:
 		return
-	_total_label.text = "Total: %d M" % (_unit_cost * _qty)
+	# Hide the total line entirely when there's no currency cost (e.g.
+	# storage transfers — qty matters but there's no meseta to spend).
+	if _unit_cost <= 0:
+		_total_label.visible = false
+	else:
+		_total_label.visible = true
+		_total_label.text = "Total: %d M" % (_unit_cost * _qty)
 
 
 func _emit_confirmed() -> void:
