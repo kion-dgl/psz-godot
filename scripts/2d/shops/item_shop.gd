@@ -10,7 +10,11 @@ const MATERIAL_CATEGORIES := ["DEBUG Materials", "DEBUG Photons", "DEBUG Boards"
 
 var _tab: int = Tab.ITEMS
 var _selected_index: int = 0
-var _confirming: bool = false
+# Modal currently on screen (ConfirmDialog or QuantityDialog). While
+# valid, _unhandled_input and _process bail so the modal's own _input
+# fully owns navigation/accept/cancel and NavRepeat doesn't keep
+# scrolling the underlying list.
+var _active_modal: Control = null
 
 # Items tab data (consumables only)
 var _shop_items: Array = []
@@ -151,23 +155,16 @@ func _update_hint() -> void:
 		hint_label.text = "Left/Right: Category  Up/Down: Select  Enter: Buy  Esc: Leave"
 
 
-func _cancel_confirm() -> void:
-	_confirming = false
-	_update_hint()
-	_refresh_display()
-
-
 func _unhandled_input(event: InputEvent) -> void:
+	# Modal owns input while open.
+	if is_instance_valid(_active_modal):
+		return
 	if event.is_action_pressed("ui_cancel"):
 		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-		if _confirming:
-			_cancel_confirm()
-		else:
-			SceneManager.pop_scene()
+		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
 		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		_confirming = false
 		_tab = wrapi(_tab + (1 if event.is_action_pressed("ui_right") else -1), 0, TAB_COUNT)
 		_selected_index = 0
 		if _tab == Tab.SELL:
@@ -177,7 +174,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
 		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		_confirming = false
 		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
 		_selected_index = wrapi(_selected_index + dir, 0, maxi(_get_current_list().size(), 1))
 		_update_hint()
@@ -185,11 +181,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-		if _confirming:
-			_confirming = false
-			_on_select()
-		else:
-			_ask_confirm()
+		_open_confirm_modal()
 		get_viewport().set_input_as_handled()
 
 
@@ -202,42 +194,100 @@ func _get_current_list() -> Array:
 	return _shop_items
 
 
-func _ask_confirm() -> void:
+func _open_confirm_modal() -> void:
 	var list := _get_current_list()
 	if list.is_empty() or _selected_index >= list.size():
 		return
 	var item: Dictionary = list[_selected_index]
+
+	# DISKS and SELL: simple yes/no, qty=1.
+	if _tab == Tab.DISKS:
+		_open_disk_confirm(item)
+		return
 	if _tab == Tab.SELL:
-		var sell_price: int = int(item.get("sell_price", 0))
-		hint_label.text = "Sell %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), sell_price]
-	elif _tab == Tab.ITEMS or _tab == Tab.MATERIALS:
-		var cost: int = int(item.get("cost", 0))
-		hint_label.text = "Buy %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("item", "???")), cost]
-	else:
-		var cost: int = int(item.get("cost", 0))
-		hint_label.text = "Buy %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), cost]
-	_confirming = true
-
-
-func _on_select() -> void:
-	if _tab == Tab.ITEMS or _tab == Tab.MATERIALS:
-		_buy_item()
-	elif _tab == Tab.DISKS:
-		_buy_disk()
-	else:
-		_sell_selected()
-
-
-func _buy_item() -> void:
-	var list := _get_current_list()
-	if list.is_empty() or _selected_index >= list.size():
+		_open_sell_confirm(item)
 		return
 
-	var item := list[_selected_index] as Dictionary
-	var item_name: String = str(item.get("item", ""))
+	# ITEMS / MATERIALS: bulk-buy aware. Compute the maximum qty the
+	# player can both afford and fit, route to QuantityDialog if > 1.
+	_open_item_buy(item)
+
+
+func _open_item_buy(item: Dictionary) -> void:
+	var item_name: String = str(item.get("item", "???"))
 	var cost: int = int(item.get("cost", 0))
-	if ShopManager.buy_item("item_shop", item_name):
-		hint_label.text = "Bought %s for %d meseta!" % [item_name, cost]
+	var item_id: String = item_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
+
+	var max_stack: int = Inventory.get_max_stack(item_id)
+	var stack_room: int = Inventory.get_stack_room(item_id)
+	var meseta_cap: int = (_get_meseta() / cost) if cost > 0 else max_stack
+	var max_qty: int = mini(mini(max_stack, stack_room), meseta_cap)
+
+	if max_qty <= 0:
+		# Either the player can't afford one or the stack is full. Mirror
+		# the old "Not enough meseta!" / "Inventory full!" hint.
+		if meseta_cap <= 0:
+			hint_label.text = "Not enough meseta!"
+		else:
+			hint_label.text = "Stack full!"
+		return
+
+	var modal := QuantityDialog.new()
+	modal.set_item(item_name, cost, max_qty)
+	modal.ask("Buy %s?" % item_name)
+	modal.confirmed_qty.connect(func(qty: int) -> void:
+		_active_modal = null
+		_buy_item(item_name, cost, qty)
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+		_update_hint()
+	)
+	_active_modal = modal
+	add_child(modal)
+
+
+func _open_disk_confirm(item: Dictionary) -> void:
+	var disk_name: String = str(item.get("name", "???"))
+	var cost: int = int(item.get("cost", 0))
+	var modal := ConfirmDialog.new()
+	modal.ask("Buy %s for %d M?" % [disk_name, cost])
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		_buy_disk()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+		_update_hint()
+	)
+	_active_modal = modal
+	add_child(modal)
+
+
+func _open_sell_confirm(item: Dictionary) -> void:
+	var name_str: String = str(item.get("name", "???"))
+	var sell_price: int = int(item.get("sell_price", 0))
+	var modal := ConfirmDialog.new()
+	modal.ask("Sell %s for %d M?" % [name_str, sell_price])
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		_sell_selected()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+		_update_hint()
+	)
+	_active_modal = modal
+	add_child(modal)
+
+
+func _buy_item(item_name: String, unit_cost: int, qty: int) -> void:
+	if ShopManager.buy_item("item_shop", item_name, qty):
+		var total: int = unit_cost * qty
+		if qty == 1:
+			hint_label.text = "Bought %s for %d meseta!" % [item_name, total]
+		else:
+			hint_label.text = "Bought %d× %s for %d meseta!" % [qty, item_name, total]
 	else:
 		hint_label.text = "Not enough meseta!"
 	_refresh_display()
@@ -518,6 +568,9 @@ var _nav: NavRepeat = null
 
 
 func _process(delta: float) -> void:
+	# Modal owns input + nav while open.
+	if is_instance_valid(_active_modal):
+		return
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
