@@ -16,6 +16,11 @@ var _storage_items: Array = []
 
 var _mode_bar: HBoxContainer
 var _portrait: Control
+var _active_modal: Control = null
+
+# Per-keystroke meseta transfer amount. Keeping the original 100M default
+# but exposing it as a constant so future tuning is one place.
+const MESETA_TRANSFER_AMOUNT := 100
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
@@ -100,10 +105,15 @@ func _load_items() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Modal owns input while open.
+	if is_instance_valid(_active_modal):
+		return
 	if event.is_action_pressed("ui_cancel"):
 		SceneManager.pop_scene({"storage_closed": true})
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+	elif event.is_action_pressed("palette_swap"):
+		# LB / Shift toggles between Items and Meseta tabs (matches the
+		# fieldMenu "Page left" convention used elsewhere in the game).
 		_tab = Tab.MESETA if _tab == Tab.ITEMS else Tab.ITEMS
 		_selected_index = 0
 		_meseta_action = 0
@@ -116,8 +126,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_items_input(event: InputEvent) -> void:
-	if event.is_action_pressed("palette_swap"):
-		# Switch between inventory and storage panels
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		# Left/Right switches between the inventory panel (left) and storage
+		# panel (right) — matching the visual layout. Previously this toggled
+		# tabs, which trapped items in storage because there was no obvious
+		# way to focus the storage panel and pull items back.
 		_selected_side = 1 - _selected_side
 		_selected_index = clampi(_selected_index, 0, maxi(_get_current_list_size() - 1, 0))
 		_refresh_display()
@@ -133,7 +146,7 @@ func _handle_items_input(event: InputEvent) -> void:
 		_refresh_display()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		_move_item()
+		_open_move_modal()
 		get_viewport().set_input_as_handled()
 
 
@@ -142,9 +155,128 @@ func _handle_meseta_input(event: InputEvent) -> void:
 		_meseta_action = 1 - _meseta_action
 		_refresh_display()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		_do_meseta_transfer()
+	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+		# Meseta tab has no panels — Left/Right mirrors palette_swap as a way
+		# back to the Items tab so users who don't know about LB aren't stuck.
+		_tab = Tab.ITEMS
+		_selected_index = 0
+		_refresh_display()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_accept"):
+		_open_meseta_modal()
+		get_viewport().set_input_as_handled()
+
+
+# ── Modals ─────────────────────────────────────────────────────────────────
+
+func _open_meseta_modal() -> void:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return
+	var prompt: String
+	var available: int
+	if _meseta_action == 0:
+		# Deposit
+		available = int(character.get("meseta", 0))
+		if available <= 0:
+			hint_label.text = "No meseta to deposit!"
+			return
+		prompt = "Deposit %d M?" % MESETA_TRANSFER_AMOUNT
+	else:
+		# Withdraw
+		available = int(GameState.stored_meseta)
+		if available <= 0:
+			hint_label.text = "No meseta in storage!"
+			return
+		prompt = "Withdraw %d M?" % MESETA_TRANSFER_AMOUNT
+
+	var modal := ConfirmDialog.new()
+	modal.ask(prompt)
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		_do_meseta_transfer()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = modal
+	add_child(modal)
+
+
+func _open_move_modal() -> void:
+	# Figure out which list and which item; bail early if there's nothing to
+	# move so the modal can't be a dead-end.
+	var list: Array = _inventory_items if _selected_side == 0 else _storage_items
+	if list.is_empty() or _selected_index >= list.size():
+		return
+	var item: Dictionary = list[_selected_index]
+	var item_id: String = str(item.get("id", ""))
+	var item_name: String = str(item.get("name", item_id))
+	var available_qty: int = int(item.get("quantity", 1))
+
+	# Block storing currently-equipped gear. Matches the same rule the
+	# shop's sell flow enforces (item_shop.gd:_sell_selected) — equipped
+	# items can't leave the inventory until the player unequips them
+	# first. Auto-unequipping was the alternative, but silently mutating
+	# equipment from a storage screen is surprising; an explicit "Unequip
+	# first!" hint matches the rest of the game's UX.
+	if _selected_side == 0 and _is_equipped(item_id):
+		hint_label.text = "Unequip first!"
+		return
+
+	# How many we can actually move:
+	# - Deposit (inv → storage): cap at qty in inventory; storage has no
+	#   max_stack so anything we have fits.
+	# - Withdraw (storage → inv): cap at qty in storage AND
+	#   Inventory.get_stack_room (max_stack - current count, or free slots
+	#   for per-slot items).
+	var max_qty: int
+	if _selected_side == 0:
+		max_qty = available_qty
+	else:
+		var room: int = Inventory.get_stack_room(item_id)
+		max_qty = mini(available_qty, room)
+		if max_qty <= 0:
+			# Can't add even one — typically because the inventory stack is
+			# already at max_stack, or all 40 slots are full for per-slot
+			# items.
+			if Inventory._is_per_slot(item_id):
+				hint_label.text = "Inventory full!"
+			else:
+				hint_label.text = "Stack full!"
+			return
+
+	var verb: String = "Store" if _selected_side == 0 else "Withdraw"
+
+	# Per-slot items (weapons, armor, units, mags, disks) always move 1 at a
+	# time; use the simpler ConfirmDialog.
+	if Inventory._is_per_slot(item_id) or max_qty <= 1:
+		var modal := ConfirmDialog.new()
+		modal.ask("%s %s?" % [verb, item_name])
+		modal.confirmed.connect(func() -> void:
+			_active_modal = null
+			_do_move(1)
+		)
+		modal.cancelled.connect(func() -> void:
+			_active_modal = null
+		)
+		_active_modal = modal
+		add_child(modal)
+	else:
+		# Stackable consumable / material: let the player pick how many.
+		var qty_modal := QuantityDialog.new()
+		# unit_cost = 0 hides the "Total: X M" line in the dialog.
+		qty_modal.set_item(item_name, 0, max_qty)
+		qty_modal.ask("%s %s?" % [verb, item_name])
+		qty_modal.confirmed_qty.connect(func(qty: int) -> void:
+			_active_modal = null
+			_do_move(qty)
+		)
+		qty_modal.cancelled.connect(func() -> void:
+			_active_modal = null
+		)
+		_active_modal = qty_modal
+		add_child(qty_modal)
 
 
 func _do_meseta_transfer() -> void:
@@ -183,40 +315,58 @@ func _get_current_list_size() -> int:
 		return _storage_items.size()
 
 
-func _move_item() -> void:
+## Move `qty` of the selected item between inventory and storage. For
+## per-slot items, qty must be 1 (each instance is its own slot); for
+## stackable items qty is whatever the QuantityDialog returned.
+func _do_move(qty: int) -> void:
+	if qty <= 0:
+		return
 	if _selected_side == 0:
 		# Move from inventory to storage
 		if _inventory_items.is_empty() or _selected_index >= _inventory_items.size():
 			return
 		var item: Dictionary = _inventory_items[_selected_index]
 		var item_id: String = str(item.get("id", ""))
+		var item_name: String = str(item.get("name", item_id))
+		# Per-slot items: each instance has a unique id, so always move 1.
+		var move_qty: int = 1 if Inventory._is_per_slot(item_id) else qty
 		var found := false
 		for s_item in GameState.shared_storage:
 			if str(s_item.get("id", "")) == item_id and not Inventory._is_per_slot(item_id):
-				s_item["quantity"] = int(s_item.get("quantity", 0)) + 1
+				s_item["quantity"] = int(s_item.get("quantity", 0)) + move_qty
 				found = true
 				break
 		if not found:
-			GameState.shared_storage.append({"id": item_id, "name": item.get("name", item_id), "quantity": 1})
-		Inventory.remove_item(item_id, 1)
-		hint_label.text = "Stored %s." % item.get("name", item_id)
+			GameState.shared_storage.append({"id": item_id, "name": item_name, "quantity": move_qty})
+		Inventory.remove_item(item_id, move_qty)
+		if move_qty > 1:
+			hint_label.text = "Stored %d× %s." % [move_qty, item_name]
+		else:
+			hint_label.text = "Stored %s." % item_name
 	else:
 		# Move from storage to inventory
 		if _storage_items.is_empty() or _selected_index >= _storage_items.size():
 			return
 		var item: Dictionary = _storage_items[_selected_index]
 		var item_id: String = str(item.get("id", ""))
-		if not Inventory.can_add_item(item_id):
+		var item_name: String = str(item.get("name", item_id))
+		var move_qty: int = 1 if Inventory._is_per_slot(item_id) else qty
+		# Per-slot can_add_item is per copy; for stackable Inventory.add_item
+		# silently clamps to max_stack — we already capped via stack_room.
+		if Inventory._is_per_slot(item_id) and not Inventory.can_add_item(item_id):
 			hint_label.text = "Inventory full!"
 			return
-		Inventory.add_item(item_id, 1)
+		Inventory.add_item(item_id, move_qty)
 		for s_item in GameState.shared_storage:
 			if str(s_item.get("id", "")) == item_id:
-				s_item["quantity"] = int(s_item.get("quantity", 0)) - 1
+				s_item["quantity"] = int(s_item.get("quantity", 0)) - move_qty
 				if int(s_item["quantity"]) <= 0:
 					GameState.shared_storage.erase(s_item)
 				break
-		hint_label.text = "Withdrew %s." % item.get("name", item_id)
+		if move_qty > 1:
+			hint_label.text = "Withdrew %d× %s." % [move_qty, item_name]
+		else:
+			hint_label.text = "Withdrew %s." % item_name
 
 	_load_items()
 	_selected_index = clampi(_selected_index, 0, maxi(_get_current_list_size() - 1, 0))
@@ -230,9 +380,9 @@ func _refresh_display() -> void:
 	_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
 
 	if _tab == Tab.ITEMS:
-		hint_label.text = "Left/Right: Switch Tab  TAB: Switch Panel  Up/Down: Select  Enter: Move  Esc: Back"
+		hint_label.text = "Left/Right: Switch Panel  LB: Switch Tab  Up/Down: Select  Enter: Move  Esc: Back"
 	else:
-		hint_label.text = "Left/Right: Switch Tab  Up/Down: Select  Enter: Transfer 100M  Esc: Back"
+		hint_label.text = "Left/Right: Back to Items  LB: Switch Tab  Up/Down: Select  Enter: Transfer 100M  Esc: Back"
 
 	_refresh_items_panel(inventory_panel, _inventory_items, "INVENTORY (%d/40)" % Inventory.get_total_slots(), 0)
 	_refresh_items_panel(storage_panel, _storage_items, "STORAGE (%d)" % _storage_items.size(), 1)
@@ -333,9 +483,15 @@ func _refresh_items_panel(panel: PanelContainer, items: Array, header_text: Stri
 			var display_name := item_name + equip_tag + suffix
 			var right_text := "x%d" % qty if qty > 1 else ""
 
-			# Determine text color based on equippability
+			# Determine text color based on equippability and equipped-lock state.
+			# Equipped items are locked from being moved into storage (see
+			# _do_move) and shown muted to make the locked state legible —
+			# matches the convention in shops/item_shop.gd:_refresh_display.
 			var text_color := Color.TRANSPARENT
-			if is_unresolved:
+			var is_locked_equipped: bool = item_id in equipped_ids
+			if is_locked_equipped:
+				text_color = PszStyle.TEXT_MUTED
+			elif is_unresolved:
 				text_color = PszStyle.TEXT_DANGER
 			elif weapon and not class_type_race.is_empty():
 				if not weapon.can_be_used_by(class_type_race):
@@ -391,6 +547,9 @@ var _nav: NavRepeat = null
 
 
 func _process(delta: float) -> void:
+	# Modal owns input + nav while open.
+	if is_instance_valid(_active_modal):
+		return
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
@@ -401,3 +560,20 @@ func _on_nav_repeat(action: String) -> void:
 	ev.action = action
 	ev.pressed = true
 	_unhandled_input(ev)
+
+
+# ── Equipped-item lock ────────────────────────────────────────────────────────
+# Returns true if the active character has item_id in any equipment slot.
+# Used both by _open_move_modal() (block storing equipped gear) and by the row
+# renderer (grey out + tag with [E]). Same rule as item_shop's sell flow.
+func _is_equipped(item_id: String) -> bool:
+	if item_id.is_empty():
+		return false
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return false
+	var equip: Dictionary = character.get("equipment", {})
+	for slot_key in equip.keys():
+		if str(equip.get(slot_key, "")) == item_id:
+			return true
+	return false

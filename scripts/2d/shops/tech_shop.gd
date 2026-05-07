@@ -3,6 +3,7 @@ extends Control
 
 var _items: Array = []
 var _selected_index: int = 0
+var _active_modal: Control = null
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var list_panel: PanelContainer = $Panel/VBox/HBox/ListPanel
@@ -24,6 +25,8 @@ func _generate_inventory() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(_active_modal):
+		return
 	if event.is_action_pressed("ui_cancel"):
 		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
 		SceneManager.pop_scene()
@@ -36,8 +39,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-		_buy_selected()
+		_open_confirm_modal()
 		get_viewport().set_input_as_handled()
+
+
+func _open_confirm_modal() -> void:
+	if _items.is_empty() or _selected_index >= _items.size():
+		return
+	var item: Dictionary = _items[_selected_index]
+	var disk_name: String = str(item.get("name", "???"))
+	var cost: int = int(item.get("cost", 0))
+	var modal := ConfirmDialog.new()
+	modal.ask("Buy %s for %d M?" % [disk_name, cost])
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		_buy_selected()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = modal
+	add_child(modal)
 
 
 func _buy_selected() -> void:

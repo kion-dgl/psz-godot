@@ -71,6 +71,11 @@ var _menu_mode := false
 const MENU_SCENES := {
 	"res://scenes/2d/character_select.tscn": true,
 	"res://scenes/2d/character_create.tscn": true,
+	# Onboarding controller picker — shown only on first launch (when no
+	# input_config.json exists). Without the dpad the touch-only player can
+	# see the controller cards but has no way to move the cursor between
+	# them, since the joystick doesn't dispatch ui_left/right at this layer.
+	"res://scenes/2d/input_select.tscn": true,
 }
 
 func _ready() -> void:

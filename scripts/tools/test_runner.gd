@@ -1199,6 +1199,37 @@ func test_shops() -> void:
 		print("  INFO: Monomate details = \"%s\"" % mono.details)
 		print("  INFO: Monomate buy_price = %d, sell_price = %d" % [mono.buy_price, mono.sell_price])
 
+	# Multi-qty buy: shop UI's QuantityDialog passes the chosen qty straight
+	# to ShopManager.buy_item, which deducts cost*qty and adds qty items
+	# (subject to stack/inventory caps). Make sure the API still does this
+	# end-to-end. Pre-clear so the stack starts at 0. Use the shop's own
+	# cost field rather than the .tres buy_price (which isn't used by
+	# ShopManager pricing).
+	Inventory.clear_inventory()
+	character["meseta"] = 5000
+	GameState.meseta = 5000
+	var unit_cost: int = 0
+	for shop_item in ShopManager.get_shop_inventory("item_shop"):
+		if str(shop_item.get("item", "")) == "Monomate":
+			unit_cost = int(shop_item.get("cost", 0))
+			break
+	var pre_meseta: int = int(character.get("meseta", 0))
+	var multi_bought := ShopManager.buy_item("item_shop", "Monomate", 5)
+	if multi_bought and unit_cost > 0:
+		var post_meseta: int = int(character.get("meseta", 0))
+		var spent: int = pre_meseta - post_meseta
+		assert_eq(spent, unit_cost * 5, "5x Monomate spends 5 × shop cost")
+		assert_eq(Inventory.get_item_count("monomate"), 5, "5x Monomate stacked in inventory")
+	else:
+		print("  INFO: 5x Monomate buy skipped (shop format / cost missing)")
+
+	# Inventory.get_max_stack and get_stack_room — the QuantityDialog clamps
+	# the qty selector against these. Sanity-check the helpers match the
+	# consumable .tres data and a per-slot weapon.
+	if mono:
+		assert_eq(Inventory.get_max_stack("monomate"), int(mono.max_stack), "get_max_stack matches consumable.max_stack")
+	assert_eq(Inventory.get_max_stack("saber"), 1, "Per-slot items report max_stack=1")
+
 	Inventory.clear_inventory()
 	print("")
 

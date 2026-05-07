@@ -9,6 +9,7 @@ var _selecting_difficulty: bool = false
 var _selected_difficulty: int = 0
 
 var _portrait: Control
+var _active_modal: Control = null
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
@@ -144,6 +145,9 @@ func _load_entries() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Modal owns input while open.
+	if is_instance_valid(_active_modal):
+		return
 	if event.is_action_pressed("ui_cancel"):
 		if _selecting_difficulty:
 			_selecting_difficulty = false
@@ -167,24 +171,100 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if _selecting_difficulty:
-			_accept_entry()
+			# Difficulty already chosen — confirm before locking in the quest.
+			_open_accept_modal()
 		elif not _entries.is_empty() and _selected_index < _entries.size():
 			var entry_type: String = str(_entries[_selected_index]["type"])
 			if entry_type == "report":
-				_report_quest()
+				_open_report_modal()
 				return
 			elif entry_type == "cancel":
-				SessionManager.cancel_accepted_quest()
-				hint_label.text = "Quest cancelled."
-				_selected_index = 0
-				_load_entries()
-				_refresh_display()
+				_open_cancel_modal()
 				return
 			else:
 				_selecting_difficulty = true
 				_selected_difficulty = 0
 		_refresh_display()
 		get_viewport().set_input_as_handled()
+
+
+func _open_accept_modal() -> void:
+	if _entries.is_empty() or _selected_index >= _entries.size():
+		return
+	var entry: Dictionary = _entries[_selected_index]
+	if entry.get("type", "") != "quest":
+		_accept_entry()
+		return
+	# Pre-flight: don't open a confirm if we'd just bounce off "complete
+	# your current quest first" or "Quest locked!".
+	if not entry.get("available", true):
+		hint_label.text = "Quest locked!"
+		_selecting_difficulty = false
+		_refresh_display()
+		return
+	if _has_active_quest():
+		hint_label.text = "Complete your current quest first."
+		_selecting_difficulty = false
+		_refresh_display()
+		return
+	var diff_name: String = DIFFICULTIES[_selected_difficulty]
+	var modal := ConfirmDialog.new()
+	modal.ask("Accept %s on %s?" % [str(entry.get("name", "this quest")), diff_name])
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		_accept_entry()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = modal
+	add_child(modal)
+
+
+func _open_report_modal() -> void:
+	if _entries.is_empty() or _selected_index >= _entries.size():
+		return
+	var entry: Dictionary = _entries[_selected_index]
+	# The report entry's name is "Report: <quest name>". Drop the prefix
+	# for a cleaner prompt.
+	var name_str: String = str(entry.get("name", "this quest"))
+	if name_str.begins_with("Report: "):
+		name_str = name_str.substr("Report: ".length())
+	var modal := ConfirmDialog.new()
+	modal.ask("Report %s now?" % name_str)
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		_report_quest()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = modal
+	add_child(modal)
+
+
+func _open_cancel_modal() -> void:
+	if _entries.is_empty() or _selected_index >= _entries.size():
+		return
+	var entry: Dictionary = _entries[_selected_index]
+	var name_str: String = str(entry.get("name", "this quest"))
+	if name_str.begins_with("Cancel Quest: "):
+		name_str = name_str.substr("Cancel Quest: ".length())
+	var modal := ConfirmDialog.new()
+	modal.ask("Cancel %s? Progress will be lost." % name_str)
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		SessionManager.cancel_accepted_quest()
+		hint_label.text = "Quest cancelled."
+		_selected_index = 0
+		_load_entries()
+		_refresh_display()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = modal
+	add_child(modal)
 
 
 func _accept_entry() -> void:
@@ -341,6 +421,9 @@ var _nav: NavRepeat = null
 
 
 func _process(delta: float) -> void:
+	# Modal owns input + nav while open.
+	if is_instance_valid(_active_modal):
+		return
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)

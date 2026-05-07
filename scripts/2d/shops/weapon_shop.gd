@@ -8,7 +8,8 @@ const TAB_COUNT := 4
 
 var _tab: int = Tab.WEAPONS
 var _selected_index: int = 0
-var _confirming: bool = false
+# Active modal (ConfirmDialog). Skip _unhandled_input + nav while open.
+var _active_modal: Control = null
 
 var _weapons: Array = []
 var _armors: Array = []
@@ -285,37 +286,46 @@ func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	return {"can_equip": true, "reason": ""}
 
 
-func _cancel_confirm() -> void:
-	_confirming = false
-	_update_hint()
-	_refresh_display()
-
-
-func _ask_confirm() -> void:
+func _open_confirm_modal() -> void:
 	var list := _get_current_list()
 	if list.is_empty() or _selected_index >= list.size():
 		return
 	var item: Dictionary = list[_selected_index]
+	var prompt: String
+	var on_yes: Callable
 	if _tab == Tab.SELL:
 		var sell_price: int = int(item.get("sell_price", 0))
-		hint_label.text = "Sell %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), sell_price]
+		prompt = "Sell %s for %d M?" % [str(item.get("name", "???")), sell_price]
+		on_yes = _sell_selected
 	else:
 		var cost: int = int(item.get("cost", 0))
-		hint_label.text = "Buy %s for %d M? [Enter] Yes  [Esc] No" % [str(item.get("name", "???")), cost]
-	_confirming = true
+		prompt = "Buy %s for %d M?" % [str(item.get("name", "???")), cost]
+		on_yes = _buy_selected
+
+	var modal := ConfirmDialog.new()
+	modal.ask(prompt)
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		on_yes.call()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+		_update_hint()
+	)
+	_active_modal = modal
+	add_child(modal)
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Modal owns input while open.
+	if is_instance_valid(_active_modal):
+		return
 	if event.is_action_pressed("ui_cancel"):
 		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-		if _confirming:
-			_cancel_confirm()
-		else:
-			SceneManager.pop_scene()
+		SceneManager.pop_scene()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
 		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		_confirming = false
 		_tab = wrapi(_tab + (1 if event.is_action_pressed("ui_right") else -1), 0, TAB_COUNT)
 		_selected_index = 0
 		if _tab == Tab.SELL:
@@ -325,7 +335,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
 		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		_confirming = false
 		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
 		var old_index: int = _selected_index
 		_selected_index = wrapi(_selected_index + dir, 0, maxi(_get_current_list().size(), 1))
@@ -334,14 +343,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-		if _confirming:
-			_confirming = false
-			if _tab == Tab.SELL:
-				_sell_selected()
-			else:
-				_buy_selected()
-		else:
-			_ask_confirm()
+		_open_confirm_modal()
 		get_viewport().set_input_as_handled()
 
 
@@ -629,6 +631,9 @@ var _nav: NavRepeat = null
 
 
 func _process(delta: float) -> void:
+	# Modal owns input + nav while open.
+	if is_instance_valid(_active_modal):
+		return
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)

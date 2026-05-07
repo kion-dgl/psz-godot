@@ -152,6 +152,32 @@ func get_items_by_type(type: int) -> Array:
 	return result
 
 
+## Maximum stack size for an item id. Per-slot items always return 1.
+## Used by the shop UI's quantity picker to clamp the qty selector.
+func get_max_stack(item_id: String) -> int:
+	if _is_per_slot(item_id):
+		return 1
+	return int(_lookup_item(item_id).max_stack)
+
+
+## How many more of this item the player can pick up right now: clamped by
+## the existing stack's max_stack for stackables (max_stack - current count),
+## or by free slot count for per-slot items. Used by the shop UI to cap a
+## bulk-buy at "what would actually fit" rather than letting the user select
+## a quantity that Inventory.add_item will silently clamp.
+func get_stack_room(item_id: String) -> int:
+	if _is_per_slot(item_id):
+		if capacity <= 0:
+			return 999
+		return maxi(0, capacity - get_total_slots())
+	var max_stack: int = get_max_stack(item_id)
+	var current: int = int(_items.get(item_id, 0))
+	# A stackable item that's not yet in inventory needs a free slot too.
+	if current == 0 and capacity > 0 and get_total_slots() >= capacity:
+		return 0
+	return maxi(0, max_stack - current)
+
+
 ## Check if inventory has room for an item
 func can_add_item(item_id: String) -> bool:
 	if _is_per_slot(item_id):
