@@ -13,6 +13,16 @@
 # Small UI sprites (menu panels, icons) committed directly — too small to be
 # worth the R2 round-trip and painful to iterate on through the asset pack.
 !/assets/ui/
+# Original assets we author in-house (e.g. Blender-built room geometry) are
+# committed directly so contributors don't need the pack to load these scenes.
+# Each parent dir must be re-included before the leaf negation works.
+!/assets/stages/
+/assets/stages/*
+!/assets/stages/city_e/
+/assets/stages/city_e/*
+!/assets/stages/city_e/s00e_office/
+/assets/stages/city_e/s00e_office/*
+!/assets/stages/city_e/s00e_office/lndmd/
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
 /web/public/assets/psobb_sfx/
 

@@ -6,28 +6,32 @@ extends "res://scripts/3d/city/city_area_base.gd"
 # Update these if the office geometry changes.
 # Principal always stands at PRINCIPAL_POSITION.
 # pos_1 and pos_2 are for quest client NPCs.
-const PRINCIPAL_POSITION := { "position": Vector3(0.000, 0.000, -6.100), "rotation": 0.000 }
+# Coords match the v0.28 in-house GLB at scale 1.0:
+#   round chamber centered at origin (radius 16),
+#   desk on platform at +Y_blender → Godot Z ≈ -9,
+#   hallway extends out the front along Godot +Z to z ≈ +28.
+const PRINCIPAL_POSITION := { "position": Vector3(0.000, 0.400, -9.500), "rotation": 0.000 }
 const NPC_POSITIONS := {
-	"pos_1": { "position": Vector3(-2.800, 0.000, -2.400), "rotation": 0.000 },
-	"pos_2": { "position": Vector3(-3.900, 0.000, -1.500), "rotation": -0.401 },
+	"pos_1": { "position": Vector3(-4.000, 0.000, -3.000), "rotation": 0.000 },
+	"pos_2": { "position": Vector3(-5.000, 0.000, -2.000), "rotation": -0.401 },
 }
 
 const NPC_SCALE := 0.090
-const ROOM_SCALE := 0.160
+const ROOM_SCALE := 1.000
 
-const DOOR_TRIGGER_POSITION := Vector3(0.000, 1.000, 10.900)
-const DOOR_TRIGGER_SIZE := Vector3(8.100, 2.000, 1.200)
+const DOOR_TRIGGER_POSITION := Vector3(0.000, 1.000, 27.000)
+const DOOR_TRIGGER_SIZE := Vector3(7.000, 2.500, 1.500)
 
-const DEFAULT_SPAWN := Vector3(0.000, 0.000, 8.700)
+const DEFAULT_SPAWN := Vector3(0.000, 0.000, 25.000)
 const DEFAULT_ROT := 3.142
 
 const SPAWN_VARIANTS := {
 	"counter-office": {
-		"position": Vector3(0.000, 0.000, 8.700),
+		"position": Vector3(0.000, 0.000, 25.000),
 		"rotation": 3.142,
 	},
 	"intro": {
-		"position": Vector3(0.000, 0.000, -2.000),
+		"position": Vector3(0.000, 0.400, -7.000),
 		"rotation": 3.142,
 	},
 }
@@ -87,7 +91,7 @@ var _active_bubble_sprite: Sprite3D = null
 func _ready() -> void:
 	# Apply texture fixes from global config
 	_fix_city_materials()
-	_add_interior_lights([Vector3(0, 4, 0), Vector3(0, 4, 6)])
+	_add_interior_lights([Vector3(0, 6, 0), Vector3(0, 6, 18)])
 
 	# Capture spawn key before _spawn_player consumes it
 	var spawn_key := CityState.get_spawn_key()
@@ -106,8 +110,8 @@ func _ready() -> void:
 	# Camera
 	_setup_camera(player)
 
-	# Floor collision
-	_add_floor_collision(Vector3(0, 0, 0), Vector3(20, 0.2, 30))
+	# Floor collision (covers round chamber + hallway)
+	_add_floor_collision(Vector3(0, 0, 6), Vector3(40, 0.2, 60))
 
 	# Principal NPC at fixed position
 	_principal_npc = _add_npc(
