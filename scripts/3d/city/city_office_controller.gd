@@ -17,7 +17,6 @@ const NPC_POSITIONS := {
 }
 
 const NPC_SCALE := 0.090
-const ROOM_SCALE := 1.000
 
 const DOOR_TRIGGER_POSITION := Vector3(0.000, 1.000, 27.000)
 const DOOR_TRIGGER_SIZE := Vector3(7.000, 2.500, 1.500)
@@ -215,9 +214,11 @@ func _setup_briefing() -> void:
 			_briefing_npcs.append(capsule_npc)
 
 	# Build speech bubbles for Principal + office NPCs
-	# Principal bubble at fixed world position (model is scaled 0.09)
+	# Principal bubble sits ~1.4m above the feet, regardless of how high
+	# the platform raises them — keep it relative so geometry tweaks don't
+	# desync the bubble.
 	var principal_pos := PRINCIPAL_POSITION["position"]
-	_build_npc_bubble(Vector3(principal_pos.x, 1.4, principal_pos.z), "Principal")
+	_build_npc_bubble(Vector3(principal_pos.x, principal_pos.y + 1.4, principal_pos.z), "Principal")
 	for i in office_npcs.size():
 		if i < _briefing_npcs.size():
 			var npc_name: String = str(office_npcs[i].get("npc_name", ""))
