@@ -8,12 +8,12 @@ extends "res://scripts/3d/city/city_area_base.gd"
 # pos_1 and pos_2 are for quest client NPCs.
 # Coords match the v0.28 in-house GLB at scale 1.0:
 #   round chamber centered at origin (radius 16),
-#   desk on platform at +Y_blender → Godot Z ≈ -9,
+#   platform top at y=0.4, principal stands behind desk at chair (z≈-9.7),
 #   hallway extends out the front along Godot +Z to z ≈ +28.
-const PRINCIPAL_POSITION := { "position": Vector3(0.000, 0.400, -9.500), "rotation": 0.000 }
+const PRINCIPAL_POSITION := { "position": Vector3(0.000, 0.400, -9.700), "rotation": 0.000 }
 const NPC_POSITIONS := {
-	"pos_1": { "position": Vector3(-4.000, 0.000, -3.000), "rotation": 0.000 },
-	"pos_2": { "position": Vector3(-5.000, 0.000, -2.000), "rotation": -0.401 },
+	"pos_1": { "position": Vector3(-3.000, 0.000, -3.000), "rotation": 0.000 },
+	"pos_2": { "position": Vector3(-4.000, 0.000, -2.000), "rotation": -0.401 },
 }
 
 const NPC_SCALE := 0.090
@@ -22,16 +22,18 @@ const ROOM_SCALE := 1.000
 const DOOR_TRIGGER_POSITION := Vector3(0.000, 1.000, 27.000)
 const DOOR_TRIGGER_SIZE := Vector3(7.000, 2.500, 1.500)
 
-const DEFAULT_SPAWN := Vector3(0.000, 0.000, 25.000)
+# Spawn inside the round chamber so the room is visible immediately
+# (spawning in the hallway puts the chamber wall in front of the camera).
+const DEFAULT_SPAWN := Vector3(0.000, 0.000, 8.000)
 const DEFAULT_ROT := 3.142
 
 const SPAWN_VARIANTS := {
 	"counter-office": {
-		"position": Vector3(0.000, 0.000, 25.000),
+		"position": Vector3(0.000, 0.000, 8.000),
 		"rotation": 3.142,
 	},
 	"intro": {
-		"position": Vector3(0.000, 0.400, -7.000),
+		"position": Vector3(0.000, 0.000, -3.000),
 		"rotation": 3.142,
 	},
 }

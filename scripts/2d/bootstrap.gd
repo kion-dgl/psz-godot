@@ -106,7 +106,10 @@ func _run() -> void:
 			return
 		_progress.visible = false
 
-	if not ProjectSettings.load_resource_pack(cache_path):
+	# replace_files=false so in-tree resources win over the pack. We commit
+	# in-house authored assets (e.g. the principal's office GLB) directly,
+	# and they need to override the same path inside the bundled pack.
+	if not ProjectSettings.load_resource_pack(cache_path, false):
 		_fatal("Failed to mount assets pack.")
 		return
 	print("[bootstrap] mounted %s" % cache_path)
