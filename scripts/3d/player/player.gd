@@ -320,7 +320,7 @@ func _load_weapon_animations() -> void:
 
 	var gender_key := "w" if _is_female else "m"
 
-	# In city, always use default unarmed animations
+	# In city, always use default unarmed animations (saber-prefix; visual choice)
 	var anim_glb := DEFAULT_ANIM_GLB_W if _is_female else DEFAULT_ANIM_GLB_M
 	_anim_prefix = DEFAULT_ANIM_PREFIX_W if _is_female else DEFAULT_ANIM_PREFIX_M
 
@@ -330,6 +330,13 @@ func _load_weapon_animations() -> void:
 			var data: Dictionary = WEAPON_ANIM_DATA[weapon_data.weapon_type]
 			anim_glb = str(data.get("glb_" + gender_key, anim_glb))
 			_anim_prefix = str(data.get("prefix_" + gender_key, _anim_prefix))
+		else:
+			# No weapon equipped in field: use truly barehanded animations
+			# (common_m/w.glb, pmbn/pwbn = "bare hands" prefix). Falling back
+			# to the city default (saber) here meant unarmed players still
+			# played saber attack animations and swing sounds with empty hands.
+			anim_glb = "res://assets/player/animations/common_w.glb" if _is_female else "res://assets/player/animations/common_m.glb"
+			_anim_prefix = "pwbn" if _is_female else "pmbn"
 
 	print("[Player] Loading animations: glb=%s, prefix=%s, female=%s" % [anim_glb, _anim_prefix, _is_female])
 
@@ -406,6 +413,14 @@ func _load_weapon_animations() -> void:
 		_walk_anim = "pmsa_walk"
 		_run_anim = "pmsa_run_pso"
 		_sprint_anim = _anim_prefix + "_run"
+		# Sprint fallback (mirrors female logic above): some prefix sets don't
+		# ship a `<prefix>_run` (e.g. pmbn/unarmed reuses pmsa_run from
+		# common_m.glb). Fall back to any pm*_run that's actually in the lib.
+		if not lib.has_animation(_sprint_anim):
+			for anim_name in lib.get_animation_list():
+				if anim_name.begins_with("pm") and anim_name.ends_with("_run") and not anim_name.ends_with("_run_pso"):
+					_sprint_anim = anim_name
+					break
 	print("[Player] Walk=%s, Run=%s, Sprint=%s" % [_walk_anim, _run_anim, _sprint_anim])
 
 	# Replace existing library
