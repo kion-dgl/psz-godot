@@ -62,6 +62,7 @@ var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
 var _rstick_held: bool = false  # Prevents right stick repeat until released
+var _active_modal: Control = null  # Yes/No confirmation overlay for state-change actions
 
 # ── Directional scroll repeat (PSO GC timing) ──────────────────────────────────
 # Match PSO's menu scroll: hold 6/30f (~0.2s) before auto-scroll, then 1/30f
@@ -167,10 +168,39 @@ func _dispatch_ui_action(action: String) -> void:
 	## Input.parse_input_event would mark the action as globally pressed without
 	## a matching release, so Input.is_action_pressed() would return true forever
 	## and _tick_nav_repeat would keep dispatching after the player let go.
+	# Modal owns input — don't fire menu-scroll synthetic events while a
+	# confirm dialog is open, otherwise list cursor moves under the modal.
+	if is_instance_valid(_active_modal):
+		return
 	var ev := InputEventAction.new()
 	ev.action = action
 	ev.pressed = true
 	_unhandled_input(ev)
+
+
+## Open a Yes/No ConfirmDialog overlay for state-changing actions (equip,
+## feed mag, use item). On Yes the callback runs; on No or cancel the
+## modal just closes. Adds the modal as a child of `_canvas` so it
+## renders on top of the menu's _draw output.
+##
+## Without this confirmation step, accept-button presses would commit the
+## action immediately with only a small inline visual change, which
+## playtesters consistently missed (dashgl's 2026-05-07 feedback). The
+## modal makes the commit point unmissable.
+func _open_confirm(prompt: String, on_confirmed: Callable) -> void:
+	var modal := ConfirmDialog.new()
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		on_confirmed.call()
+		_canvas.queue_redraw()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+		_canvas.queue_redraw()
+	)
+	_active_modal = modal
+	_canvas.add_child(modal)
+	modal.ask(prompt)
 
 
 func open() -> void:
@@ -226,6 +256,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed("pause") and SceneManager._overlay_stack.is_empty() and _is_gameplay_scene():
 			open()
 			get_viewport().set_input_as_handled()
+		return
+
+	# Modal owns input. ConfirmDialog uses _input (priority) and calls
+	# set_input_as_handled, so events should be swallowed before they
+	# reach _unhandled_input — but the synthetic events from
+	# _tick_nav_repeat skip _input entirely, so we still need this gate.
+	if is_instance_valid(_active_modal):
 		return
 
 	# ── Menu is open — consume ALL input except movement ──
@@ -399,12 +436,39 @@ func _input_equip_pick(event: InputEvent) -> bool:
 		_equip_item_idx = wrapi(_equip_item_idx + 1, 0, candidates.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
-		_do_equip()
+		_confirm_and_equip()
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.EQUIP
 		return true
 	return false
+
+
+## Build the prompt + open a Yes/No confirmation, then run the equip on
+## confirm. No-op if the selection is invalid (mirrors _do_equip's bail
+## paths so we don't open a dialog for an action that wouldn't run).
+func _confirm_and_equip() -> void:
+	var slots := _get_equip_slots()
+	if _equip_slot_idx >= slots.size():
+		return
+	var candidates := _get_equip_candidates(_equip_slot_idx)
+	if _equip_item_idx >= candidates.size():
+		return
+	var item: Dictionary = candidates[_equip_item_idx]
+	var item_id: String = str(item.get("id", ""))
+	var item_name: String = str(item.get("name", item_id))
+	var slot_label: String = str(slots[_equip_slot_idx].get("label", ""))
+
+	var prompt: String
+	if item_id == "__unequip__":
+		prompt = "Unequip %s?" % slot_label.to_lower()
+	elif item.get("equipped", false):
+		# Already equipped — _do_equip is a no-op, no need for a modal.
+		_do_equip()
+		return
+	else:
+		prompt = "Equip %s?" % item_name
+	_open_confirm(prompt, _do_equip)
 
 
 func _do_equip() -> void:
@@ -660,26 +724,9 @@ func _sub_accept() -> void:
 				if item.get("usable", false):
 					var item_id_to_use: String = str(item.get("id", ""))
 					var item_name: String = str(item.get("name", ""))
-					var ok := Inventory.use_item(item_id_to_use)
-					if ok:
-						var info: Dictionary = Inventory.get_last_use_info()
-						var t: String = str(info.get("type", ""))
-						match t:
-							"hp": _action_message = "Restored %d HP" % int(info.get("amount", 0))
-							"pp": _action_message = "Restored %d PP" % int(info.get("amount", 0))
-							"tech": _action_message = "Learned %s!" % item_name
-							"telepipe": _action_message = "Telepipe placed — step into it to warp"
-							_: _action_message = "Used %s" % item_name
-					else:
-						# Telepipe fails specifically when the player tries to
-						# use one outside a field (e.g. opened the start menu
-						# while in city). Give a clearer hint rather than the
-						# generic "Couldn't use Telepipe".
-						var fail_info: Dictionary = Inventory.get_last_use_info()
-						if str(fail_info.get("type", "")) == "telepipe_fail":
-							_action_message = "Telepipe only works in the field"
-						else:
-							_action_message = "Couldn't use %s" % item_name
+					_open_confirm("Use %s?" % item_name, func() -> void:
+						_execute_use_item(item_id_to_use, item_name)
+					)
 		Mode.EQUIP:
 			var slots := _get_equip_slots()
 			_equip_slot_idx = _sub_idx
@@ -701,7 +748,48 @@ func _sub_accept() -> void:
 			_sub_idx = 0
 			_mode = Mode.MAG_FEED
 		Mode.MAG_FEED:
-			_do_feed_mag()
+			_confirm_and_feed_mag()
+
+
+## Run the actual Inventory.use_item() call after the player confirms via
+## the modal in _sub_accept Mode.ITEMS. Sets _action_message so the menu
+## redraws with the result line.
+func _execute_use_item(item_id: String, item_name: String) -> void:
+	var ok := Inventory.use_item(item_id)
+	if ok:
+		var info: Dictionary = Inventory.get_last_use_info()
+		var t: String = str(info.get("type", ""))
+		match t:
+			"hp": _action_message = "Restored %d HP" % int(info.get("amount", 0))
+			"pp": _action_message = "Restored %d PP" % int(info.get("amount", 0))
+			"tech": _action_message = "Learned %s!" % item_name
+			"telepipe": _action_message = "Telepipe placed — step into it to warp"
+			_: _action_message = "Used %s" % item_name
+	else:
+		# Telepipe fails specifically when the player tries to use one
+		# outside a field (e.g. opened the start menu while in city).
+		# Give a clearer hint rather than the generic "Couldn't use".
+		var fail_info: Dictionary = Inventory.get_last_use_info()
+		if str(fail_info.get("type", "")) == "telepipe_fail":
+			_action_message = "Telepipe only works in the field"
+		else:
+			_action_message = "Couldn't use %s" % item_name
+
+
+## Build the prompt + open a Yes/No confirmation, then feed the mag on
+## confirm. No-op if the selection is invalid.
+func _confirm_and_feed_mag() -> void:
+	var feed := _get_feed_items()
+	if _sub_idx >= feed.size():
+		return
+	var mags := _get_mags()
+	if _mag_idx >= mags.size():
+		return
+	var item: Dictionary = feed[_sub_idx]
+	var mag: Dictionary = mags[_mag_idx]
+	var item_name: String = str(item.get("name", item.get("id", "")))
+	var mag_name: String = str(mag.get("name", mag.get("id", "Mag")))
+	_open_confirm("Feed %s to %s?" % [item_name, mag_name], _do_feed_mag)
 
 
 func _do_feed_mag() -> void:
