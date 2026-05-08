@@ -23,6 +23,10 @@
 !/assets/stages/city_e/s00e_office/
 /assets/stages/city_e/s00e_office/*
 !/assets/stages/city_e/s00e_office/lndmd/
+# Market dir is mostly pack-only PSO textures, but our authored assets are in-house.
+!/assets/stages/city_e/market/
+/assets/stages/city_e/market/*
+!/assets/stages/city_e/market/canyon_panorama*
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
 /web/public/assets/psobb_sfx/
 

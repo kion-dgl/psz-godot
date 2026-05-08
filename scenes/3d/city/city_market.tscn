@@ -1,13 +1,12 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/3d/city/city_market_controller.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa1/lndmd/s00e_sa1_m.glb" id="2_glb"]
+[ext_resource type="Texture2D" path="res://assets/stages/city_e/market/canyon_panorama.png" id="3_panorama"]
 
-[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
-sky_top_color = Color(0.4, 0.5, 0.7, 1)
-sky_horizon_color = Color(0.6, 0.7, 0.8, 1)
-ground_bottom_color = Color(0.2, 0.2, 0.2, 1)
-ground_horizon_color = Color(0.4, 0.45, 0.5, 1)
+[sub_resource type="PanoramaSkyMaterial" id="sky_mat"]
+panorama = ExtResource("3_panorama")
+filter = true
 
 [sub_resource type="Sky" id="sky"]
 sky_material = SubResource("sky_mat")
@@ -16,8 +15,8 @@ sky_material = SubResource("sky_mat")
 background_mode = 2
 sky = SubResource("sky")
 ambient_light_source = 3
-ambient_light_color = Color(0.9, 0.88, 0.82, 1)
-ambient_light_energy = 1.5
+ambient_light_color = Color(0.95, 0.85, 0.7, 1)
+ambient_light_energy = 1.6
 
 [node name="CityMarket" type="Node3D"]
 script = ExtResource("1_script")
