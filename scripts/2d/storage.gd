@@ -276,7 +276,9 @@ func _open_move_modal() -> void:
 		# Stackable consumable / material: let the player pick how many.
 		var qty_modal := QuantityDialog.new()
 		# unit_cost = 0 hides the "Total: X M" line in the dialog.
-		qty_modal.set_item(item_name, 0, max_qty)
+		# Pass verb so the confirm-step prompt reads "Store 7× Monomate?"
+		# instead of defaulting to "Buy".
+		qty_modal.set_item(item_name, 0, max_qty, verb)
 		qty_modal.ask("%s %s?" % [verb, item_name])
 		qty_modal.confirmed_qty.connect(func(qty: int) -> void:
 			_active_modal = null
