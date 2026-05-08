@@ -115,14 +115,15 @@ func _open_confirm_modal() -> void:
 
 	# Pre-flight checks so the modal isn't a dead-end. Mirrors the bail
 	# paths in _exchange_selected so the user never sees a confirm for an
-	# action that can't go through.
+	# action that can't go through. Opens an info modal so the failure
+	# is unmissable rather than a silent hint_label update.
 	var pd_count: int = Inventory.get_item_count("photon_drop")
 	if pd_count < cost:
-		hint_label.text = "Not enough Photon Drops! Need %d" % cost
+		_open_info_modal("Not enough Photon Drops! Need %d" % cost)
 		return
 	var item_id: String = item["id"]
 	if not item_id.begins_with("debug_mag") and not Inventory.can_add_item(item_id):
-		hint_label.text = "Inventory full!"
+		_open_info_modal("Inventory full!")
 		return
 
 	var prompt: String
@@ -143,6 +144,19 @@ func _open_confirm_modal() -> void:
 	)
 	_active_modal = modal
 	add_child(modal)
+
+
+## Open a single-button info modal for blocking error states (not enough
+## photon drops, inventory full, etc.) so the failure is unmissable.
+func _open_info_modal(msg: String) -> void:
+	hint_label.text = msg
+	var info_modal := ConfirmDialog.new()
+	info_modal.confirmed.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = info_modal
+	add_child(info_modal)
+	info_modal.info(msg)
 
 
 func _exchange_selected() -> void:

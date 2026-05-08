@@ -31,6 +31,7 @@ var _yes_button: Button
 var _no_button: Button
 var _prompt_label: Label
 var _focused_idx: int = 0  # 0 = Yes, 1 = No
+var _info_mode: bool = false  # Single-button dismiss; ui_accept/ui_cancel both dismiss
 
 
 func _init() -> void:
@@ -101,8 +102,30 @@ func ask(prompt: String) -> ConfirmDialog:
 	return self
 
 
+## Info-only mode: single OK button, ui_accept and ui_cancel both dismiss.
+## Use for unmissable error/state messages (e.g. "Inventory full!") where
+## the player has no real choice — only acknowledgment. The `confirmed`
+## signal fires on dismiss so callers can clean up active-modal state the
+## same way as the two-button path.
+func info(prompt: String, button_text: String = "OK") -> ConfirmDialog:
+	_prompt_label.text = prompt
+	_info_mode = true
+	_no_button.visible = false
+	_yes_button.text = button_text
+	_focused_idx = 0
+	_refresh_focus()
+	return self
+
+
 func _input(event: InputEvent) -> void:
 	if not visible:
+		return
+	if _info_mode:
+		# Single-button: any accept/cancel dismisses with `confirmed`.
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
+			SfxManager.play("res://assets/sfx/ui/menu_select.wav")
+			_emit_confirmed()
+			get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
 		_focused_idx = 1 - _focused_idx

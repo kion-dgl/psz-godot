@@ -62,6 +62,7 @@ var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
 var _rstick_held: bool = false  # Prevents right stick repeat until released
+var _active_modal: Control = null  # Yes/No confirmation overlay for state-change actions
 
 # ── Directional scroll repeat (PSO GC timing) ──────────────────────────────────
 # Match PSO's menu scroll: hold 6/30f (~0.2s) before auto-scroll, then 1/30f
@@ -95,8 +96,8 @@ func _can_use_techs() -> bool:
 	if class_data and class_data.race == "Cast":
 		return false
 	return true
-const SYSTEM_LABELS := ["Save", "Return to Title", "Options"]
-const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Adjust game settings."]
+const SYSTEM_LABELS := ["Save", "Return to Title", "Sort Inventory", "Options"]
+const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Re-arrange items by category.", "Adjust game settings."]
 ## Equipment slots are built dynamically based on equipped armor's max_slots
 const TYPE_ICONS := {"weapon": "W", "armor": "A", "shield": "S", "unit": "U", "tool": "T", "tech": "M", "material": "R", "mag": "G"}
 const TYPE_COLORS := {
@@ -167,10 +168,39 @@ func _dispatch_ui_action(action: String) -> void:
 	## Input.parse_input_event would mark the action as globally pressed without
 	## a matching release, so Input.is_action_pressed() would return true forever
 	## and _tick_nav_repeat would keep dispatching after the player let go.
+	# Modal owns input — don't fire menu-scroll synthetic events while a
+	# confirm dialog is open, otherwise list cursor moves under the modal.
+	if is_instance_valid(_active_modal):
+		return
 	var ev := InputEventAction.new()
 	ev.action = action
 	ev.pressed = true
 	_unhandled_input(ev)
+
+
+## Open a Yes/No ConfirmDialog overlay for state-changing actions (equip,
+## feed mag, use item). On Yes the callback runs; on No or cancel the
+## modal just closes. Adds the modal as a child of `_canvas` so it
+## renders on top of the menu's _draw output.
+##
+## Without this confirmation step, accept-button presses would commit the
+## action immediately with only a small inline visual change, which
+## playtesters consistently missed (dashgl's 2026-05-07 feedback). The
+## modal makes the commit point unmissable.
+func _open_confirm(prompt: String, on_confirmed: Callable) -> void:
+	var modal := ConfirmDialog.new()
+	modal.confirmed.connect(func() -> void:
+		_active_modal = null
+		on_confirmed.call()
+		_canvas.queue_redraw()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+		_canvas.queue_redraw()
+	)
+	_active_modal = modal
+	_canvas.add_child(modal)
+	modal.ask(prompt)
 
 
 func open() -> void:
@@ -226,6 +256,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed("pause") and SceneManager._overlay_stack.is_empty() and _is_gameplay_scene():
 			open()
 			get_viewport().set_input_as_handled()
+		return
+
+	# Modal owns input. ConfirmDialog uses _input (priority) and calls
+	# set_input_as_handled, so events should be swallowed before they
+	# reach _unhandled_input — but the synthetic events from
+	# _tick_nav_repeat skip _input entirely, so we still need this gate.
+	if is_instance_valid(_active_modal):
 		return
 
 	# ── Menu is open — consume ALL input except movement ──
@@ -399,12 +436,39 @@ func _input_equip_pick(event: InputEvent) -> bool:
 		_equip_item_idx = wrapi(_equip_item_idx + 1, 0, candidates.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
-		_do_equip()
+		_confirm_and_equip()
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.EQUIP
 		return true
 	return false
+
+
+## Build the prompt + open a Yes/No confirmation, then run the equip on
+## confirm. No-op if the selection is invalid (mirrors _do_equip's bail
+## paths so we don't open a dialog for an action that wouldn't run).
+func _confirm_and_equip() -> void:
+	var slots := _get_equip_slots()
+	if _equip_slot_idx >= slots.size():
+		return
+	var candidates := _get_equip_candidates(_equip_slot_idx)
+	if _equip_item_idx >= candidates.size():
+		return
+	var item: Dictionary = candidates[_equip_item_idx]
+	var item_id: String = str(item.get("id", ""))
+	var item_name: String = str(item.get("name", item_id))
+	var slot_label: String = str(slots[_equip_slot_idx].get("label", ""))
+
+	var prompt: String
+	if item_id == "__unequip__":
+		prompt = "Unequip %s?" % slot_label.to_lower()
+	elif item.get("equipped", false):
+		# Already equipped — _do_equip is a no-op, no need for a modal.
+		_do_equip()
+		return
+	else:
+		prompt = "Equip %s?" % item_name
+	_open_confirm(prompt, _do_equip)
 
 
 func _do_equip() -> void:
@@ -519,6 +583,10 @@ func _input_system(event: InputEvent) -> bool:
 				close()
 				SceneManager.goto_scene("res://scenes/2d/title.tscn")
 			2:
+				Inventory.sort_in_place()
+				_action_message = "Inventory sorted."
+				SfxManager.play("res://assets/sfx/ui/menu_select.wav")
+			3:
 				_mode = Mode.OPTIONS
 				_options_idx = 0
 		return true
@@ -561,7 +629,7 @@ func _input_options(event: InputEvent) -> bool:
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.SYSTEM
-		_sub_idx = 2
+		_sub_idx = 3
 		return true
 	return false
 
@@ -595,6 +663,7 @@ func _get_options_list() -> Array:
 		"Controller: %s" % InputConfig.get_label(),
 		"On-Screen Controls: %s" % mc_state,
 		"Camera Rotation: %s" % ("Inverted" if InputConfig.invert_camera_x else "Direct"),
+		"Auto-Sort Inventory: %s" % (on if Inventory.is_auto_sort() else off),
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
@@ -615,16 +684,17 @@ func _toggle_option(idx: int) -> void:
 			if mc and mc.has_method("toggle"):
 				mc.toggle()
 		4: InputConfig.toggle_invert_camera_x()
-		5: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
-		6: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		7: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		8: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		9:
+		5: Inventory.set_auto_sort(not Inventory.is_auto_sort())
+		6: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
+		7: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		8: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		9: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		10:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		10:
-			DebugConfig.profile_frames = not DebugConfig.profile_frames
 		11:
+			DebugConfig.profile_frames = not DebugConfig.profile_frames
+		12:
 			DebugConfig.show_player_position = not DebugConfig.show_player_position
 
 
@@ -660,26 +730,9 @@ func _sub_accept() -> void:
 				if item.get("usable", false):
 					var item_id_to_use: String = str(item.get("id", ""))
 					var item_name: String = str(item.get("name", ""))
-					var ok := Inventory.use_item(item_id_to_use)
-					if ok:
-						var info: Dictionary = Inventory.get_last_use_info()
-						var t: String = str(info.get("type", ""))
-						match t:
-							"hp": _action_message = "Restored %d HP" % int(info.get("amount", 0))
-							"pp": _action_message = "Restored %d PP" % int(info.get("amount", 0))
-							"tech": _action_message = "Learned %s!" % item_name
-							"telepipe": _action_message = "Telepipe placed — step into it to warp"
-							_: _action_message = "Used %s" % item_name
-					else:
-						# Telepipe fails specifically when the player tries to
-						# use one outside a field (e.g. opened the start menu
-						# while in city). Give a clearer hint rather than the
-						# generic "Couldn't use Telepipe".
-						var fail_info: Dictionary = Inventory.get_last_use_info()
-						if str(fail_info.get("type", "")) == "telepipe_fail":
-							_action_message = "Telepipe only works in the field"
-						else:
-							_action_message = "Couldn't use %s" % item_name
+					_open_confirm("Use %s?" % item_name, func() -> void:
+						_execute_use_item(item_id_to_use, item_name)
+					)
 		Mode.EQUIP:
 			var slots := _get_equip_slots()
 			_equip_slot_idx = _sub_idx
@@ -701,7 +754,48 @@ func _sub_accept() -> void:
 			_sub_idx = 0
 			_mode = Mode.MAG_FEED
 		Mode.MAG_FEED:
-			_do_feed_mag()
+			_confirm_and_feed_mag()
+
+
+## Run the actual Inventory.use_item() call after the player confirms via
+## the modal in _sub_accept Mode.ITEMS. Sets _action_message so the menu
+## redraws with the result line.
+func _execute_use_item(item_id: String, item_name: String) -> void:
+	var ok := Inventory.use_item(item_id)
+	if ok:
+		var info: Dictionary = Inventory.get_last_use_info()
+		var t: String = str(info.get("type", ""))
+		match t:
+			"hp": _action_message = "Restored %d HP" % int(info.get("amount", 0))
+			"pp": _action_message = "Restored %d PP" % int(info.get("amount", 0))
+			"tech": _action_message = "Learned %s!" % item_name
+			"telepipe": _action_message = "Telepipe placed — step into it to warp"
+			_: _action_message = "Used %s" % item_name
+	else:
+		# Telepipe fails specifically when the player tries to use one
+		# outside a field (e.g. opened the start menu while in city).
+		# Give a clearer hint rather than the generic "Couldn't use".
+		var fail_info: Dictionary = Inventory.get_last_use_info()
+		if str(fail_info.get("type", "")) == "telepipe_fail":
+			_action_message = "Telepipe only works in the field"
+		else:
+			_action_message = "Couldn't use %s" % item_name
+
+
+## Build the prompt + open a Yes/No confirmation, then feed the mag on
+## confirm. No-op if the selection is invalid.
+func _confirm_and_feed_mag() -> void:
+	var feed := _get_feed_items()
+	if _sub_idx >= feed.size():
+		return
+	var mags := _get_mags()
+	if _mag_idx >= mags.size():
+		return
+	var item: Dictionary = feed[_sub_idx]
+	var mag: Dictionary = mags[_mag_idx]
+	var item_name: String = str(item.get("name", item.get("id", "")))
+	var mag_name: String = str(mag.get("name", mag.get("id", "Mag")))
+	_open_confirm("Feed %s to %s?" % [item_name, mag_name], _do_feed_mag)
 
 
 func _do_feed_mag() -> void:
@@ -731,7 +825,7 @@ func _go_back() -> void:
 		Mode.EQUIP_PICK: _mode = Mode.EQUIP
 		Mode.PALETTE_PICK: _mode = Mode.PALETTE
 		Mode.MAG_FEED: _mode = Mode.MAGS
-		Mode.OPTIONS: _mode = Mode.SYSTEM; _sub_idx = 2
+		Mode.OPTIONS: _mode = Mode.SYSTEM; _sub_idx = 3
 		_: _mode = Mode.MAIN
 
 
@@ -741,34 +835,11 @@ func _get_character() -> Dictionary:
 	return ch if ch else {}
 
 
-const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable", "Material", "Modifier", "Key Item", "Other"]
-
 func _get_inventory() -> Array:
-	## Returns inventory sorted by category (matching inventory_screen.gd)
+	## Returns inventory in storage order (pickup-by-default, sorted if
+	## the player has Auto-Sort on or hit System → Sort Inventory).
+	## Inventory.sort_in_place() handles the actual ordering.
 	var items := Inventory.get_all_items()
-	items.sort_custom(func(a, b):
-		var id_a: String = str(a.get("id", ""))
-		var id_b: String = str(b.get("id", ""))
-		var ca: int = CATEGORY_ORDER.find(_get_item_category(id_a))
-		var cb: int = CATEGORY_ORDER.find(_get_item_category(id_b))
-		if ca == -1: ca = 99
-		if cb == -1: cb = 99
-		if ca != cb:
-			return ca < cb
-		if ca == 0:  # Weapon — sub-sort by type then rarity
-			var wa = WeaponRegistry.get_weapon(id_a)
-			var wb = WeaponRegistry.get_weapon(id_b)
-			if wa and wb:
-				if int(wa.weapon_type) != int(wb.weapon_type):
-					return int(wa.weapon_type) < int(wb.weapon_type)
-				return int(wa.rarity) < int(wb.rarity)
-		if ca == 1:  # Armor — sub-sort by rarity
-			var aa = ArmorRegistry.get_armor(id_a)
-			var ab_armor = ArmorRegistry.get_armor(id_b)
-			if aa and ab_armor:
-				return int(aa.rarity) < int(ab_armor.rarity)
-		return str(a.get("name", "")) < str(b.get("name", ""))
-	)
 	# Add category and equipped flags
 	var ch := _get_character()
 	var equipped_ids: Array = []

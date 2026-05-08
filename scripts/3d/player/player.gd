@@ -258,7 +258,7 @@ func _ready() -> void:
 	print("[Player] _ready: in_city=%s, skeleton=%s" % [in_city, skeleton != null])
 	if not in_city:
 		_setup_weapon()
-	_setup_mag()
+		_setup_mag()
 
 	# Initialize animation player if we have one
 	if animation_player:
@@ -446,6 +446,8 @@ func refresh_weapon() -> void:
 
 ## Call this after mag equipment changes to update the 3D mag orb.
 func refresh_mag() -> void:
+	if _is_in_city():
+		return
 	_clear_mag()
 	_setup_mag()
 
@@ -928,23 +930,28 @@ func _unhandled_input(event: InputEvent) -> void:
 	if GameState.is_gameplay_blocked():
 		return
 
-	# Palette swap
-	if event.is_action_pressed("palette_swap"):
-		ActionPalette.swap_page()
-		_tech_targeting_dirty = true
+	# Combat input gate — palette HUD is hidden in city via field_hud, but the
+	# input bindings still fire without an explicit gate, so action_1/2/3
+	# would play attack anims and spawn projectiles in town with a weapon
+	# equipped. Interact stays available for NPC conversations.
+	if not _is_in_city():
+		# Palette swap
+		if event.is_action_pressed("palette_swap"):
+			ActionPalette.swap_page()
+			_tech_targeting_dirty = true
 
-	# Action palette inputs — dispatch through ActionPalette
-	if event.is_action_pressed("action_1"):
-		_execute_palette_action(0)
-	if event.is_action_pressed("action_2"):
-		_execute_palette_action(1)
-	if event.is_action_pressed("action_3"):
-		_execute_palette_action(2)
+		# Action palette inputs — dispatch through ActionPalette
+		if event.is_action_pressed("action_1"):
+			_execute_palette_action(0)
+		if event.is_action_pressed("action_2"):
+			_execute_palette_action(1)
+		if event.is_action_pressed("action_3"):
+			_execute_palette_action(2)
 
-	# Dodge has its own dedicated button (L1 on controller) — no longer on palette
-	if event.is_action_pressed("dodge"):
-		if current_state != PlayerState.DAMAGED and current_state != PlayerState.DOWN:
-			_start_dodge()
+		# Dodge has its own dedicated button (L1 on controller) — no longer on palette
+		if event.is_action_pressed("dodge"):
+			if current_state != PlayerState.DAMAGED and current_state != PlayerState.DOWN:
+				_start_dodge()
 
 	# Handle interact input
 	if event.is_action_pressed("interact"):
