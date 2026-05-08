@@ -96,8 +96,8 @@ func _can_use_techs() -> bool:
 	if class_data and class_data.race == "Cast":
 		return false
 	return true
-const SYSTEM_LABELS := ["Save", "Return to Title", "Options"]
-const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Adjust game settings."]
+const SYSTEM_LABELS := ["Save", "Return to Title", "Sort Inventory", "Options"]
+const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Re-arrange items by category.", "Adjust game settings."]
 ## Equipment slots are built dynamically based on equipped armor's max_slots
 const TYPE_ICONS := {"weapon": "W", "armor": "A", "shield": "S", "unit": "U", "tool": "T", "tech": "M", "material": "R", "mag": "G"}
 const TYPE_COLORS := {
@@ -583,6 +583,10 @@ func _input_system(event: InputEvent) -> bool:
 				close()
 				SceneManager.goto_scene("res://scenes/2d/title.tscn")
 			2:
+				Inventory.sort_in_place()
+				_action_message = "Inventory sorted."
+				SfxManager.play("res://assets/sfx/ui/menu_select.wav")
+			3:
 				_mode = Mode.OPTIONS
 				_options_idx = 0
 		return true
@@ -625,7 +629,7 @@ func _input_options(event: InputEvent) -> bool:
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.SYSTEM
-		_sub_idx = 2
+		_sub_idx = 3
 		return true
 	return false
 
@@ -659,6 +663,7 @@ func _get_options_list() -> Array:
 		"Controller: %s" % InputConfig.get_label(),
 		"On-Screen Controls: %s" % mc_state,
 		"Camera Rotation: %s" % ("Inverted" if InputConfig.invert_camera_x else "Direct"),
+		"Auto-Sort Inventory: %s" % (on if Inventory.is_auto_sort() else off),
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
 		"Hitboxes: %s" % (on if DebugConfig.show_hitboxes else off),
@@ -679,16 +684,17 @@ func _toggle_option(idx: int) -> void:
 			if mc and mc.has_method("toggle"):
 				mc.toggle()
 		4: InputConfig.toggle_invert_camera_x()
-		5: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
-		6: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		7: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		8: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		9:
+		5: Inventory.set_auto_sort(not Inventory.is_auto_sort())
+		6: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
+		7: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		8: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		9: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		10:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		10:
-			DebugConfig.profile_frames = not DebugConfig.profile_frames
 		11:
+			DebugConfig.profile_frames = not DebugConfig.profile_frames
+		12:
 			DebugConfig.show_player_position = not DebugConfig.show_player_position
 
 
@@ -819,7 +825,7 @@ func _go_back() -> void:
 		Mode.EQUIP_PICK: _mode = Mode.EQUIP
 		Mode.PALETTE_PICK: _mode = Mode.PALETTE
 		Mode.MAG_FEED: _mode = Mode.MAGS
-		Mode.OPTIONS: _mode = Mode.SYSTEM; _sub_idx = 2
+		Mode.OPTIONS: _mode = Mode.SYSTEM; _sub_idx = 3
 		_: _mode = Mode.MAIN
 
 
@@ -829,34 +835,11 @@ func _get_character() -> Dictionary:
 	return ch if ch else {}
 
 
-const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable", "Material", "Modifier", "Key Item", "Other"]
-
 func _get_inventory() -> Array:
-	## Returns inventory sorted by category (matching inventory_screen.gd)
+	## Returns inventory in storage order (pickup-by-default, sorted if
+	## the player has Auto-Sort on or hit System → Sort Inventory).
+	## Inventory.sort_in_place() handles the actual ordering.
 	var items := Inventory.get_all_items()
-	items.sort_custom(func(a, b):
-		var id_a: String = str(a.get("id", ""))
-		var id_b: String = str(b.get("id", ""))
-		var ca: int = CATEGORY_ORDER.find(_get_item_category(id_a))
-		var cb: int = CATEGORY_ORDER.find(_get_item_category(id_b))
-		if ca == -1: ca = 99
-		if cb == -1: cb = 99
-		if ca != cb:
-			return ca < cb
-		if ca == 0:  # Weapon — sub-sort by type then rarity
-			var wa = WeaponRegistry.get_weapon(id_a)
-			var wb = WeaponRegistry.get_weapon(id_b)
-			if wa and wb:
-				if int(wa.weapon_type) != int(wb.weapon_type):
-					return int(wa.weapon_type) < int(wb.weapon_type)
-				return int(wa.rarity) < int(wb.rarity)
-		if ca == 1:  # Armor — sub-sort by rarity
-			var aa = ArmorRegistry.get_armor(id_a)
-			var ab_armor = ArmorRegistry.get_armor(id_b)
-			if aa and ab_armor:
-				return int(aa.rarity) < int(ab_armor.rarity)
-		return str(a.get("name", "")) < str(b.get("name", ""))
-	)
 	# Add category and equipped flags
 	var ch := _get_character()
 	var equipped_ids: Array = []

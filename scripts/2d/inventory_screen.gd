@@ -42,31 +42,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _refresh_items() -> void:
+	# Inventory iteration order is the source of truth — pickup order by
+	# default, or sorted if the player has Auto-Sort Inventory on (or
+	# triggered Sort manually from the start menu).
 	_items = Inventory.get_all_items()
-	# Sort by category, then within Weapon by weapon_type + rarity, else alphabetical
-	_items.sort_custom(func(a, b):
-		var id_a: String = str(a.get("id", ""))
-		var id_b: String = str(b.get("id", ""))
-		var ca: int = CATEGORY_ORDER.find(_get_item_category(id_a))
-		var cb: int = CATEGORY_ORDER.find(_get_item_category(id_b))
-		if ca != cb:
-			return ca < cb
-		# Within Weapon category, sort by weapon type then rarity ascending
-		if ca == 0:  # Weapon
-			var wa = WeaponRegistry.get_weapon(id_a)
-			var wb = WeaponRegistry.get_weapon(id_b)
-			if wa and wb:
-				if int(wa.weapon_type) != int(wb.weapon_type):
-					return int(wa.weapon_type) < int(wb.weapon_type)
-				return int(wa.rarity) < int(wb.rarity)
-		# Within Armor category, sort by rarity ascending
-		if ca == 1:  # Armor
-			var aa = ArmorRegistry.get_armor(id_a)
-			var ab = ArmorRegistry.get_armor(id_b)
-			if aa and ab:
-				return int(aa.rarity) < int(ab.rarity)
-		return str(a.get("name", "")) < str(b.get("name", ""))
-	)
 
 
 func _use_selected() -> void:

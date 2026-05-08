@@ -11,8 +11,6 @@ extends Control
 ## opens the move/transfer modal. Meseta tabs have a single transfer
 ## action — accept opens a QuantityDialog so the player picks how much.
 
-const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable", "Material", "Modifier", "Key Item", "Other"]
-
 enum Tab { DEPOSIT_ITEMS, WITHDRAW_ITEMS, DEPOSIT_MESETA, WITHDRAW_MESETA }
 
 const TAB_NAMES := ["Deposit Items", "Withdraw Items", "Deposit Meseta", "Withdraw Meseta"]
@@ -94,22 +92,11 @@ func _setup_portrait() -> void:
 
 
 func _load_items() -> void:
+	# Inventory iteration order is the source of truth — pickup order by
+	# default, or category-sorted if the player has flipped Auto-Sort on.
+	# Storage shows the same way for consistency.
 	_inventory_items = Inventory.get_all_items()
-	_inventory_items.sort_custom(func(a, b):
-		var ca: int = CATEGORY_ORDER.find(_get_item_category(a.get("id", "")))
-		var cb: int = CATEGORY_ORDER.find(_get_item_category(b.get("id", "")))
-		if ca != cb:
-			return ca < cb
-		return str(a.get("name", "")) < str(b.get("name", ""))
-	)
 	_storage_items = GameState.shared_storage.duplicate(true)
-	_storage_items.sort_custom(func(a, b):
-		var ca: int = CATEGORY_ORDER.find(_get_item_category(a.get("id", "")))
-		var cb: int = CATEGORY_ORDER.find(_get_item_category(b.get("id", "")))
-		if ca != cb:
-			return ca < cb
-		return str(a.get("name", "")) < str(b.get("name", ""))
-	)
 
 
 # ── Input ──────────────────────────────────────────────────────────────────
@@ -481,17 +468,11 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 				equipped_ids.append(eid)
 
 	var pills_ref: Array = []
-	var current_category := ""
 	for i in range(items.size()):
 		var item: Dictionary = items[i]
 		var item_id: String = str(item.get("id", "???"))
 		var norm_id: String = item_id.replace("-", "_").replace("/", "_")
 		var is_unresolved: bool = (item_id != norm_id)
-
-		var cat: String = _get_item_category(item_id)
-		if cat != current_category:
-			current_category = cat
-			vbox.add_child(PszStyle.create_section_header(cat))
 
 		var weapon = WeaponRegistry.get_weapon(item_id)
 		if weapon == null and is_unresolved:
@@ -552,32 +533,6 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 		var scroll := vbox.get_parent() as ScrollContainer
 		if scroll != null:
 			scroll.ensure_control_visible.call_deferred(pills_ref[_selected_index])
-
-
-func _get_item_category(item_id: String) -> String:
-	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
-	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
-		return "Weapon"
-	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
-		return "Armor"
-	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
-		return "Unit"
-	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
-		return "Mag"
-	if item_id.begins_with("disk_"):
-		return "Disk"
-	if ConsumableRegistry.get_consumable(item_id) or ConsumableRegistry.get_consumable(norm_id):
-		return "Consumable"
-	if CombatManager.MATERIAL_STAT_MAP.has(item_id) or MaterialRegistry.get_material(item_id):
-		return "Material"
-	if ModifierRegistry.get_modifier(item_id) or ModifierRegistry.get_modifier(norm_id):
-		return "Modifier"
-	var item_data = ItemRegistry.get_item(item_id)
-	if item_data == null:
-		item_data = ItemRegistry.get_item(norm_id)
-	if item_data:
-		return "Key Item"
-	return "Other"
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────

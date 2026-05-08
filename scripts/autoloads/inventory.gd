@@ -2,10 +2,27 @@ extends Node
 ## Player inventory system that stores ItemData references.
 ## Tracks item quantities and provides add/remove functionality.
 
+## Item ordering: `_items` is a Dictionary which preserves insertion
+## order in Godot 4, so by default items appear in pickup order. Players
+## who prefer organized inventories can either:
+##
+##   - Hit "Sort Inventory" in the start menu (one-shot sort_in_place).
+##   - Flip "Auto-Sort Inventory" in Options — every add_item then
+##     re-sorts in place so newly-picked-up items file into their
+##     category instead of appending at the end.
+##
+## Auto-sort is OFF by default for a PSO-authentic feel; it's stored
+## per-character in `character.auto_sort_inventory`.
+
+## Category sort order — used by sort_in_place() and by display layers
+## that group items into sections. Centralized here so storage, start
+## menu, etc. share one canonical order.
+const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable", "Material", "Modifier", "Key Item", "Other"]
+
 ## Maximum number of unique items (0 = unlimited)
 @export var capacity: int = 40
 
-## Dictionary of item_id -> quantity
+## Dictionary of item_id -> quantity (insertion order = pickup order)
 var _items: Dictionary = {}
 
 ## Separate key storage (field-scoped, doesn't count toward capacity)
@@ -43,7 +60,86 @@ func add_weapon(base_id: String) -> String:
 	var info = _lookup_item(inst_id)
 	item_added.emit(inst_id, 1, 1)
 	print("[Inventory] Added 1x ", info.name, " (", inst_id, ")")
+	_maybe_auto_sort()
 	return inst_id
+
+
+## Returns true if the active character has auto-sort enabled. Default
+## false (PSO-authentic).
+func is_auto_sort() -> bool:
+	var ch = CharacterManager.get_active_character()
+	if ch == null:
+		return false
+	return bool(ch.get("auto_sort_inventory", false))
+
+
+## Toggle auto-sort for the active character. Persists with the character
+## save (CharacterManager serializes the whole dict). When flipped on,
+## the inventory is sorted immediately so the player sees the effect.
+func set_auto_sort(value: bool) -> void:
+	var ch = CharacterManager.get_active_character()
+	if ch == null:
+		return
+	ch["auto_sort_inventory"] = value
+	if value:
+		sort_in_place()
+
+
+func _maybe_auto_sort() -> void:
+	if is_auto_sort():
+		sort_in_place()
+
+
+## Re-arrange `_items` so iteration order is category-then-name. Mutates
+## the Dictionary in place by rebuilding it in sorted order — Godot 4's
+## Dictionary preserves insertion order, so the canonical "rebuild" trick
+## is to copy out, sort, then re-insert.
+func sort_in_place() -> void:
+	var ids: Array = _items.keys()
+	ids.sort_custom(func(a, b):
+		var ca: int = CATEGORY_ORDER.find(get_item_category(a))
+		var cb: int = CATEGORY_ORDER.find(get_item_category(b))
+		if ca == -1: ca = 99
+		if cb == -1: cb = 99
+		if ca != cb:
+			return ca < cb
+		var na: String = str(_lookup_item(a).name)
+		var nb: String = str(_lookup_item(b).name)
+		return na < nb
+	)
+	var rebuilt: Dictionary = {}
+	for id in ids:
+		rebuilt[id] = _items[id]
+	_items = rebuilt
+
+
+## Canonical category for an item id. Centralized here so all display
+## layers (storage, start menu, inventory_screen) agree on what's a
+## Weapon vs Armor vs Mag etc.
+func get_item_category(item_id: String) -> String:
+	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
+	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
+		return "Weapon"
+	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
+		return "Armor"
+	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
+		return "Unit"
+	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
+		return "Mag"
+	if item_id.begins_with("disk_"):
+		return "Disk"
+	if ConsumableRegistry.get_consumable(item_id) or ConsumableRegistry.get_consumable(norm_id):
+		return "Consumable"
+	if CombatManager.MATERIAL_STAT_MAP.has(item_id) or MaterialRegistry.get_material(item_id):
+		return "Material"
+	if ModifierRegistry.get_modifier(item_id) or ModifierRegistry.get_modifier(norm_id):
+		return "Modifier"
+	var item_data = ItemRegistry.get_item(item_id)
+	if item_data == null:
+		item_data = ItemRegistry.get_item(norm_id)
+	if item_data:
+		return "Key Item"
+	return "Other"
 
 
 ## Add an item to inventory by ID
@@ -72,6 +168,7 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 			_items[inst_id] = 1
 		print("[Inventory] Added ", max_add, "x ", item_name)
 		item_added.emit(item_id, max_add, max_add)
+		_maybe_auto_sort()
 		return true
 	else:
 		# Stackable items: 1 stack = 1 slot, limited by max_stack
@@ -91,6 +188,7 @@ func add_item(item_id: String, quantity: int = 1) -> bool:
 		var new_total: int = int(_items[item_id])
 		item_added.emit(item_id, max_add, new_total)
 		print("[Inventory] Added ", max_add, "x ", item_name, " (total: ", new_total, ")")
+		_maybe_auto_sort()
 		return true
 
 
