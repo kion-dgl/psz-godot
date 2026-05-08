@@ -3904,6 +3904,7 @@ assets/stages/city_a/s00a_nr6/lndmd/s06_0_ryuka01.png
 assets/stages/city_a/s00a_nr6/lndmd/s06_1_rlamp01.png
 assets/stages/city_a/s00a_nr6/lndmd/s06_1_rwea1.png
 assets/stages/city_e/dairon_city.zip
+assets/stages/city_e/market/canyon_panorama.png
 assets/stages/city_e/market/s00_0_cent5.png
 assets/stages/city_e/market/s00_0_floor05.png
 assets/stages/city_e/market/s00_0_gr1.png
@@ -3929,6 +3930,7 @@ assets/stages/city_e/market/s00_1_wood01.png
 assets/stages/city_e/market/s00_2_wave01.png
 assets/stages/city_e/market/s00_2_wave02.png
 assets/stages/city_e/market/s00e_sa1_m.glb
+assets/stages/city_e/market/wall_extension.glb
 assets/stages/city_e/s00e_office/lndmd/s00e_office_m_0.png
 assets/stages/city_e/s00e_office/lndmd/s00e_office_m_10.png
 assets/stages/city_e/s00e_office/lndmd/s00e_office_m_11.png
