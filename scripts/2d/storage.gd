@@ -203,6 +203,20 @@ func _open_meseta_modal() -> void:
 	add_child(modal)
 
 
+## Open a single-button info modal for blocking error states (inventory
+## full, equipped item, etc.) so the failure is unmissable rather than a
+## silent hint_label update.
+func _open_info_modal(msg: String) -> void:
+	hint_label.text = msg
+	var info_modal := ConfirmDialog.new()
+	info_modal.confirmed.connect(func() -> void:
+		_active_modal = null
+	)
+	_active_modal = info_modal
+	add_child(info_modal)
+	info_modal.info(msg)
+
+
 func _open_move_modal() -> void:
 	# Figure out which list and which item; bail early if there's nothing to
 	# move so the modal can't be a dead-end.
@@ -221,7 +235,7 @@ func _open_move_modal() -> void:
 	# equipment from a storage screen is surprising; an explicit "Unequip
 	# first!" hint matches the rest of the game's UX.
 	if _selected_side == 0 and _is_equipped(item_id):
-		hint_label.text = "Unequip first!"
+		_open_info_modal("Unequip first!")
 		return
 
 	# How many we can actually move:
@@ -237,13 +251,9 @@ func _open_move_modal() -> void:
 		var room: int = Inventory.get_stack_room(item_id)
 		max_qty = mini(available_qty, room)
 		if max_qty <= 0:
-			# Can't add even one — typically because the inventory stack is
-			# already at max_stack, or all 40 slots are full for per-slot
-			# items.
-			if Inventory._is_per_slot(item_id):
-				hint_label.text = "Inventory full!"
-			else:
-				hint_label.text = "Stack full!"
+			# Can't add even one — inventory stack is at max_stack, or
+			# all 40 slots are full for per-slot items.
+			_open_info_modal("Inventory full!")
 			return
 
 	var verb: String = "Store" if _selected_side == 0 else "Withdraw"

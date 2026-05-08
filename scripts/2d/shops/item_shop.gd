@@ -224,12 +224,20 @@ func _open_item_buy(item: Dictionary) -> void:
 	var max_qty: int = mini(mini(max_stack, stack_room), meseta_cap)
 
 	if max_qty <= 0:
-		# Either the player can't afford one or the stack is full. Mirror
-		# the old "Not enough meseta!" / "Inventory full!" hint.
-		if meseta_cap <= 0:
-			hint_label.text = "Not enough meseta!"
-		else:
-			hint_label.text = "Stack full!"
+		# Player can't afford even one or the stack is at max. Open an
+		# info modal so the failure is unmissable — previously this was
+		# a silent hint_label update with no modal, which felt like the
+		# buy button was broken (psobb/dashgl playtest 2026-05-07).
+		var msg: String = "Not enough meseta!" if meseta_cap <= 0 else "Inventory full!"
+		hint_label.text = msg
+		var info_modal := ConfirmDialog.new()
+		info_modal.confirmed.connect(func() -> void:
+			_active_modal = null
+			_update_hint()
+		)
+		_active_modal = info_modal
+		add_child(info_modal)
+		info_modal.info(msg)
 		return
 
 	var modal := QuantityDialog.new()

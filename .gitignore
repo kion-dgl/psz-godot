@@ -3,6 +3,10 @@
 /android/
 /build/
 
+# Local dev-only files (never part of the build)
+/.mcp.json
+/blender/
+
 # Game assets live on Cloudflare R2 (see assets_manifest.json for the pack
 # URL and scripts/tools/fetch_assets_dev.sh to populate locally). Kenney CC0
 # packs are vendored in-tree as exceptions so contributors don't need to
