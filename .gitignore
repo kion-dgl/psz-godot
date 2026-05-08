@@ -27,6 +27,7 @@
 !/assets/stages/city_e/market/
 /assets/stages/city_e/market/*
 !/assets/stages/city_e/market/canyon_panorama*
+!/assets/stages/city_e/market/wall_extension*
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
 /web/public/assets/psobb_sfx/
 
