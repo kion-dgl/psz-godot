@@ -1377,7 +1377,7 @@ function CharacterSelect() {
           the full width, the right side has a higher bottom edge, with
           a knee around x=520 dropping to a lower-left wing. */}
       <div style={{
-        position: 'absolute', top: 72, left: 0, width: '100%', height: 84,
+        position: 'absolute', top: 52, left: 0, width: '100%', height: 84,
         background: '#FBBA18',
         clipPath: 'polygon(0 0, 100% 0, 100% 58%, 49% 58%, 44% 100%, 0 100%)',
         boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
@@ -1391,6 +1391,12 @@ function CharacterSelect() {
           CHARACTER SELECT
         </div>
       </div>
+
+      {/* White divider line — 10px below the banner's bottom (y=136), 3px tall. */}
+      <div style={{
+        position: 'absolute', top: 146, left: 0, width: '100%', height: 3,
+        background: '#ffffff',
+      }} />
 
       {/* Character list (left) */}
       <div style={{ position: 'absolute', top: 180, left: 200, width: 400, height: 450 }}>
