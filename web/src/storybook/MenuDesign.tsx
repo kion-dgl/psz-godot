@@ -1353,9 +1353,11 @@ function CharacterSelect() {
 
   const nextLabel = slot.kind === 'filled' ? 'Start' : 'Create';
 
-  // 720p frame so the mock matches the game's native viewport (project.godot
-  // viewport_width=1280, viewport_height=720). Background image is Rozalin's
-  // reference from issue #168 — sourced from web/public/menu-design/.
+  // 720p frame so the mock matches the game's native viewport
+  // (project.godot viewport_width=1280, viewport_height=720). Background
+  // image is Rozalin's reference from issue #168. Panels are
+  // absolute-positioned to match skeleton/character_select.html which
+  // was authored against the same layout reference.
   const BG_URL = `${import.meta.env.BASE_URL}menu-design/character_select_bg.png`;
 
   return (
@@ -1367,29 +1369,28 @@ function CharacterSelect() {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       boxSizing: 'border-box',
-      padding: '24px 32px',
-      display: 'flex', flexDirection: 'column', gap: '16px',
       overflow: 'hidden',
       fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
     }}>
-      {/* Banner — full width */}
-      <Panel title="Character Select">
-        <div style={{
-          fontSize: '12px', color: C.textLight, padding: '4px 8px',
-        }}>
-          Pick a character to start, or an empty slot to create a new one.
-        </div>
-      </Panel>
-
-      <div style={{ display: 'flex', gap: '12px' }}>
-        {/* Character list (left) — 20 slots, list scrolls. Real
-            implementation needs selection-keep-in-view + ▲/▼ "more"
-            cues like the Options menu in 0.29.x. */}
-        <Panel title="Characters" width={360} hint="↑/↓ to choose · A to confirm · B to cancel">
-          <div style={{ fontSize: '11px', color: C.textLight, padding: '0 4px 6px' }}>
-            {SLOTS.filter((s) => s.kind === 'filled').length}/{SLOTS.length} characters
+      {/* Banner — top strip, full width */}
+      <div style={{
+        position: 'absolute', top: 50, left: 0, width: '100%', height: 80,
+        display: 'flex', alignItems: 'center',
+      }}>
+        <Panel title="Character Select">
+          <div style={{ fontSize: 12, color: C.textLight, padding: '4px 8px' }}>
+            Pick a character to start, or an empty slot to create a new one.
           </div>
-          <div style={{ maxHeight: 400, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        </Panel>
+      </div>
+
+      {/* Character list (left) */}
+      <div style={{ position: 'absolute', top: 180, left: 200, width: 400, height: 450 }}>
+        <Panel title={`Characters (${SLOTS.filter((s) => s.kind === 'filled').length}/${SLOTS.length})`} hint="↑/↓ choose · A confirm · B cancel">
+          <div style={{
+            maxHeight: 380, overflowY: 'auto',
+            display: 'flex', flexDirection: 'column',
+          }}>
             {SLOTS.map((s, i) => {
               if (s.kind === 'empty') {
                 return (
@@ -1414,61 +1415,65 @@ function CharacterSelect() {
             })}
           </div>
         </Panel>
+      </div>
 
-        {/* Right column: preview + description + next */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: 420 }}>
-          <Panel title="Preview">
-            <div style={{
-              height: 280,
-              background: 'linear-gradient(180deg, #c8e0f0 0%, #6090b8 100%)',
-              border: '1px solid rgba(150,180,210,0.5)',
-              borderRadius: 4,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: C.textLight, fontSize: 13, fontStyle: 'italic',
-              position: 'relative', overflow: 'hidden',
-            }}>
-              {slot.kind === 'filled' ? (
-                <>
-                  <div style={{
-                    position: 'absolute', top: 8, left: 10,
-                    fontSize: 14, fontWeight: 700, color: C.textWhite,
-                    textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
-                  }}>
-                    {slot.name}
-                  </div>
-                  <div style={{ opacity: 0.7 }}>[ 3D model — turntable idle ]</div>
-                </>
-              ) : (
-                <div style={{ opacity: 0.6 }}>[ empty slot — silhouette ]</div>
-              )}
-            </div>
-          </Panel>
-
-          <Panel title="Description">
-            <div style={{
-              background: C.itemBg, borderRadius: 4,
-              padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)',
-              fontSize: 13, color: C.text, lineHeight: 1.5, minHeight: 56,
-            }}>
-              {slot.kind === 'filled'
-                ? CLASS_FLAVOR[slot.klass] ?? 'Class flavor text TBD.'
-                : 'No character in this slot yet — confirm to create one.'}
-            </div>
-          </Panel>
-
+      {/* Model preview (right, top) */}
+      <div style={{ position: 'absolute', top: 180, left: 680, width: 400, height: 320 }}>
+        <Panel title="Preview">
           <div style={{
-            alignSelf: 'flex-end',
-            padding: '12px 24px',
-            background: C.selectedGradient, color: C.textOnSelected,
-            fontWeight: 700, fontSize: 16,
+            height: 240,
+            background: 'linear-gradient(180deg, #c8e0f0 0%, #6090b8 100%)',
+            border: '1px solid rgba(150,180,210,0.5)',
             borderRadius: 4,
-            border: '1px solid rgba(0,0,0,0.2)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-            minWidth: 160, textAlign: 'center', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: C.textLight, fontSize: 13, fontStyle: 'italic',
+            position: 'relative', overflow: 'hidden',
           }}>
-            {nextLabel} ▶
+            {slot.kind === 'filled' ? (
+              <>
+                <div style={{
+                  position: 'absolute', top: 8, left: 10,
+                  fontSize: 14, fontWeight: 700, color: C.textWhite,
+                  textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
+                }}>
+                  {slot.name}
+                </div>
+                <div style={{ opacity: 0.7 }}>[ 3D model — turntable idle ]</div>
+              </>
+            ) : (
+              <div style={{ opacity: 0.6 }}>[ empty slot — silhouette ]</div>
+            )}
           </div>
-        </div>
+        </Panel>
+      </div>
+
+      {/* Description (right, below preview) */}
+      <div style={{ position: 'absolute', top: 520, left: 670, width: 430, height: 90 }}>
+        <Panel title="Description">
+          <div style={{
+            background: C.itemBg, borderRadius: 4,
+            padding: '8px 12px', border: '1px solid rgba(150,180,210,0.4)',
+            fontSize: 12, color: C.text, lineHeight: 1.4,
+          }}>
+            {slot.kind === 'filled'
+              ? CLASS_FLAVOR[slot.klass] ?? 'Class flavor text TBD.'
+              : 'No character in this slot yet — confirm to create one.'}
+          </div>
+        </Panel>
+      </div>
+
+      {/* Next button (bottom-right corner) */}
+      <div style={{
+        position: 'absolute', bottom: 20, right: 20, width: 240, height: 60,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: C.selectedGradient, color: C.textOnSelected,
+        fontWeight: 700, fontSize: 18,
+        borderRadius: 6,
+        border: '1px solid rgba(0,0,0,0.25)',
+        boxShadow: '0 3px 8px rgba(0,0,0,0.3)',
+        cursor: 'pointer',
+      }}>
+        {nextLabel} ▶
       </div>
     </div>
   );
