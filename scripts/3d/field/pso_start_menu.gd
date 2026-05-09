@@ -42,7 +42,7 @@ const FONT_SIZE_XS := 11
 const FONT_SIZE_LG := 17
 
 # ── State ───────────────────────────────────────────────────────────────────────
-enum Mode { MAIN, ITEMS, ITEMS_SWAP, EQUIP, EQUIP_PICK, TECHS, PALETTE, PALETTE_PICK, MAGS, MAG_FEED, QUEST, SYSTEM, OPTIONS }
+enum Mode { MAIN, ITEMS, ITEMS_MOVE, EQUIP, EQUIP_PICK, TECHS, PALETTE, PALETTE_PICK, MAGS, MAG_FEED, QUEST, SYSTEM, OPTIONS }
 
 var _mode: Mode = Mode.MAIN
 var _menu_idx: int = 0
@@ -57,8 +57,8 @@ var _mag_feed_idx: int = 0
 var _options_idx: int = 0
 var _item_scroll: float = 0.0  # Pixel scroll offset for items list
 var _action_message: String = ""  # One-shot message after Items use, cleared on navigation
-var _swap_from_idx: int = -1  # Origin row when in Mode.ITEMS_SWAP (Manual sort)
-var _swap_from_id: String = ""  # Origin item id, used to relocate cursor after swap
+var _move_from_idx: int = -1  # Origin row when in Mode.ITEMS_MOVE (Manual sort)
+var _move_from_id: String = ""  # Origin item id, used to relocate cursor after move
 
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
@@ -266,8 +266,8 @@ func _open_item_menu(item: Dictionary) -> void:
 
 
 ## Sort sub-modal (one-shot): Auto rebuilds in canonical order,
-## Manual enters Mode.ITEMS_SWAP so the player picks a destination row
-## and the selected item swaps positions with it.
+## Manual enters Mode.ITEMS_MOVE so the player picks a destination row
+## and the selected item moves there (items shift around it).
 func _open_sort_menu() -> void:
 	var choices: Array = [
 		{"label": "Auto", "enabled": true},
@@ -280,60 +280,60 @@ func _open_sort_menu() -> void:
 				_action_message = "Inventory sorted."
 				SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 			1:
-				_enter_swap_mode()
+				_enter_move_mode()
 	)
 
 
-func _enter_swap_mode() -> void:
+func _enter_move_mode() -> void:
 	var inv := _get_inventory()
 	if _sub_idx >= inv.size():
 		return
-	_swap_from_idx = _sub_idx
-	_swap_from_id = str(inv[_sub_idx].get("id", ""))
-	_mode = Mode.ITEMS_SWAP
-	_action_message = "Pick a row — Accept swaps, Cancel exits."
+	_move_from_idx = _sub_idx
+	_move_from_id = str(inv[_sub_idx].get("id", ""))
+	_mode = Mode.ITEMS_MOVE
+	_action_message = "Pick a position — Accept moves here, Cancel exits."
 
 
-func _exit_swap_mode() -> void:
-	_swap_from_idx = -1
-	_swap_from_id = ""
+func _exit_move_mode() -> void:
+	_move_from_idx = -1
+	_move_from_id = ""
 	_mode = Mode.ITEMS
 
 
-func _do_swap() -> void:
+func _do_move() -> void:
 	var inv := _get_inventory()
-	if _sub_idx >= inv.size() or _sub_idx == _swap_from_idx:
-		_exit_swap_mode()
+	if _sub_idx >= inv.size() or _move_from_id.is_empty():
+		_exit_move_mode()
 		return
-	var dest_id: String = str(inv[_sub_idx].get("id", ""))
-	if dest_id.is_empty() or _swap_from_id.is_empty():
-		_exit_swap_mode()
+	if _sub_idx == _move_from_idx:
+		# Same row — treat as cancel.
+		_exit_move_mode()
 		return
-	Inventory.swap_items(_swap_from_id, dest_id)
-	# After swap, the selected item now lives at _sub_idx (the destination
-	# row), which is also where the cursor already is — so no further
-	# cursor adjustment needed.
-	_action_message = "Swapped."
-	_exit_swap_mode()
+	Inventory.move_item(_move_from_id, _sub_idx)
+	# Cursor follows the moved item — after move the moved row is at
+	# _sub_idx (Inventory.move_item lands the moved id at exactly the
+	# target visual index), so no cursor adjustment needed.
+	_action_message = "Moved."
+	_exit_move_mode()
 
 
-func _input_items_swap(event: InputEvent) -> bool:
+func _input_items_move(event: InputEvent) -> bool:
 	var count: int = _get_inventory().size()
 	if event.is_action_pressed("ui_up", false) and count > 0:
 		_sub_idx = wrapi(_sub_idx - 1, 0, count)
-		# Recompute swap origin index in case the list changed under us.
-		_swap_from_idx = _find_idx_for_id(_swap_from_id)
+		# Recompute move origin index in case the list changed under us.
+		_move_from_idx = _find_idx_for_id(_move_from_id)
 		return true
 	elif event.is_action_pressed("ui_down", false) and count > 0:
 		_sub_idx = wrapi(_sub_idx + 1, 0, count)
-		_swap_from_idx = _find_idx_for_id(_swap_from_id)
+		_move_from_idx = _find_idx_for_id(_move_from_id)
 		return true
 	elif event.is_action_pressed("ui_accept"):
-		_do_swap()
+		_do_move()
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_action_message = ""
-		_exit_swap_mode()
+		_exit_move_mode()
 		return true
 	return false
 
@@ -581,8 +581,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			handled = _input_main(event)
 		Mode.ITEMS:
 			handled = _input_list(event, _get_inventory().size())
-		Mode.ITEMS_SWAP:
-			handled = _input_items_swap(event)
+		Mode.ITEMS_MOVE:
+			handled = _input_items_move(event)
 		Mode.EQUIP:
 			handled = _input_list(event, _get_equip_slots().size())
 		Mode.EQUIP_PICK:
@@ -1028,7 +1028,7 @@ func _go_back() -> void:
 		Mode.PALETTE_PICK: _mode = Mode.PALETTE
 		Mode.MAG_FEED: _mode = Mode.MAGS
 		Mode.OPTIONS: _mode = Mode.SYSTEM; _sub_idx = 2
-		Mode.ITEMS_SWAP: _exit_swap_mode()
+		Mode.ITEMS_MOVE: _exit_move_mode()
 		_: _mode = Mode.MAIN
 
 
@@ -1041,8 +1041,8 @@ func _get_character() -> Dictionary:
 func _get_inventory() -> Array:
 	## Returns inventory in storage order (pickup-by-default, re-ordered
 	## by Auto-Sort Inventory option, by Sort → Auto in the item modal,
-	## or by Sort → Manual swaps). Inventory.sort_in_place() and
-	## Inventory.swap_items() handle the actual ordering.
+	## or by Sort → Manual moves). Inventory.sort_in_place() and
+	## Inventory.move_item() handle the actual ordering.
 	var items := Inventory.get_all_items()
 	# Add category and equipped flags
 	var ch := _get_character()
@@ -1541,7 +1541,7 @@ func _draw_items(c: Control, font: Font) -> void:
 
 	# Origin row index when the player is mid-Manual-sort, so we can paint
 	# it distinctively (cool blue) — distinct from the orange selection tint.
-	var swap_idx: int = _swap_from_idx if _mode == Mode.ITEMS_SWAP else -1
+	var move_idx: int = _move_from_idx if _mode == Mode.ITEMS_MOVE else -1
 
 	# Draw pass
 	var draw_y: float = py + 20.0 - _item_scroll
@@ -1551,21 +1551,21 @@ func _draw_items(c: Control, font: Font) -> void:
 			continue
 		var item: Dictionary = inv[i]
 		var is_sel: bool = i == _sub_idx
-		var is_swap_origin: bool = i == swap_idx
+		var is_move_origin: bool = i == move_idx
 
 		if is_sel:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), C_SELECT)
-		elif is_swap_origin:
+		elif is_move_origin:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(0.34, 0.55, 0.85))
 		else:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(1, 1, 1, 0.85))
-		var col: Color = C_SELECT_TEXT if (is_sel or is_swap_origin) else C_TEXT
+		var col: Color = C_SELECT_TEXT if (is_sel or is_move_origin) else C_TEXT
 
 		# Per-item type icon (replaces the dark-blue category banner)
 		var type_key: String = _category_to_type(str(item.get("category", "Other")))
 		var icon_letter: String = str(TYPE_ICONS.get(type_key, "?"))
 		var icon_color: Color = TYPE_COLORS.get(type_key, Color.GRAY)
-		if is_sel or is_swap_origin:
+		if is_sel or is_move_origin:
 			icon_color = Color(1, 1, 1, 0.4)
 		c.draw_rect(Rect2(px + 6, draw_y + 2, 16, 16), icon_color)
 		c.draw_string(font, Vector2(px + 9, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
@@ -1614,8 +1614,8 @@ func _draw_items(c: Control, font: Font) -> void:
 				if TechniqueManager.TECHNIQUES.has(tech_id):
 					tech_name = str(TechniqueManager.TECHNIQUES[tech_id].get("name", tech_name))
 				desc += "\nTeaches %s Lv.%s" % [tech_name, tech_lvl]
-		if _mode == Mode.ITEMS_SWAP:
-			desc += "\n[Enter] Swap  [Esc] Cancel"
+		if _mode == Mode.ITEMS_MOVE:
+			desc += "\n[Enter] Move here  [Esc] Cancel"
 		else:
 			desc += "\n[Enter] Open"
 	if not _action_message.is_empty():
@@ -2047,26 +2047,41 @@ func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> v
 	var pw: float = 300.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
+	# Visible-row count derived from panel size and 22px row height. Scroll
+	# the window to keep the selected row in view — same pattern as
+	# _draw_techs and _draw_palette_picker.
+	const ROW_H: int = 22
+	var visible_rows: int = int(floor((ph - 8) / ROW_H))
+	var scroll_offset: int = maxi(0, selected - (visible_rows - 1))
+	var max_scroll: int = maxi(0, items.size() - visible_rows)
+	scroll_offset = mini(scroll_offset, max_scroll)
 	for i in range(items.size()):
-		var iy: float = py + 4 + i * 22
-		if iy > py + ph - 4:
+		var draw_i: int = i - scroll_offset
+		if draw_i < 0:
+			continue
+		var iy: float = py + 4 + draw_i * ROW_H
+		if iy > py + ph - ROW_H + 2:
 			break
 		if i == selected:
 			c.draw_rect(Rect2(px + 2, iy, pw - 4, 20), C_SELECT)
 		var col: Color = C_SELECT_TEXT if i == selected else C_TEXT
 		var item_name: String = str(items[i].get("name", ""))
 		var item_type: String = str(items[i].get("type", ""))
-		# Type icon
-		var icon_letter: String = TYPE_ICONS.get(item_type, "?")
+		var icon_letter: String = str(TYPE_ICONS.get(item_type, "?"))
 		var icon_color: Color = TYPE_COLORS.get(item_type, Color.GRAY) if i != selected else Color(1, 1, 1, 0.4)
 		c.draw_rect(Rect2(px + 6, iy + 2, 16, 16), icon_color)
 		c.draw_string(font, Vector2(px + 9, iy + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
-		# Count
 		var qty: int = int(items[i].get("quantity", 0))
 		var qty_str: String = "x%d" % qty if qty > 1 else ""
 		c.draw_string(font, Vector2(px + 28, iy + 15), item_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
 		if not qty_str.is_empty():
 			c.draw_string(font, Vector2(px + pw - 40, iy + 15), qty_str, HORIZONTAL_ALIGNMENT_RIGHT, -1, FONT_SIZE_XS, Color(col, 0.7))
+	# Scroll cue: "▲ more" / "▼ more" hints in the corners when content
+	# extends past the visible window.
+	if scroll_offset > 0:
+		c.draw_string(font, Vector2(px + pw - 60, py + 14), "▲ more", HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
+	if scroll_offset + visible_rows < items.size():
+		c.draw_string(font, Vector2(px + pw - 60, py + ph - 8), "▼ more", HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
 
 
 func _draw_bottom_desc(c: Control, font: Font, text: String) -> void:

@@ -92,28 +92,38 @@ func _maybe_auto_sort() -> void:
 		sort_in_place()
 
 
-## Swap two items' positions in the inventory order. Used by the start
-## menu's Manual sort (Inventory item modal → Sort → Manual): the player
-## picks a destination row and the originally selected item swaps with
-## it. One-shot — does not persist any per-character ordering hint, the
-## new positions just live in the Dictionary's insertion order until
-## something else re-orders.
+## Move an item to a specific position in the inventory order. Used by
+## the start menu's Manual sort (Inventory item modal → Sort → Manual):
+## the player picks a destination row and the originally selected item
+## moves there, with everything else shifting around it. One-shot — does
+## not persist any per-character ordering hint, the new positions just
+## live in the Dictionary's insertion order until something else
+## re-orders.
 ##
-## Both id_a and id_b must already be present; otherwise this is a no-op.
-## Rebuilds the Dictionary in place using the same trick as
-## sort_in_place() so the order change shows up in get_all_items().
-func swap_items(id_a: String, id_b: String) -> void:
-	if id_a == id_b:
-		return
-	if not _items.has(id_a) or not _items.has(id_b):
+## target_idx is the visual destination in the *current* item list — i.e.
+## what the player's cursor was on when they pressed Accept. Out-of-range
+## targets are clamped. Rebuilds the Dictionary in place using the same
+## trick as sort_in_place() so the order change shows up in
+## get_all_items().
+func move_item(item_id: String, target_idx: int) -> void:
+	if not _items.has(item_id):
 		return
 	var ids: Array = _items.keys()
-	var ia: int = ids.find(id_a)
-	var ib: int = ids.find(id_b)
-	if ia < 0 or ib < 0:
+	var current_idx: int = ids.find(item_id)
+	if current_idx < 0:
 		return
-	ids[ia] = id_b
-	ids[ib] = id_a
+	# Clamp target to valid visual range first (0..size-1), then remove
+	# the moved id and reinsert at the same numeric index. Because the
+	# array shrank by one, that lands the moved item at the visual
+	# position the player pointed at — items shift around it as expected.
+	var clamped: int = clampi(target_idx, 0, ids.size() - 1)
+	if clamped == current_idx:
+		return
+	ids.remove_at(current_idx)
+	# After remove the array is one shorter; clamped is still within
+	# valid insert range (0..ids.size()).
+	clamped = clampi(clamped, 0, ids.size())
+	ids.insert(clamped, item_id)
 	var rebuilt: Dictionary = {}
 	for id in ids:
 		rebuilt[id] = _items[id]
