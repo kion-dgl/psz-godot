@@ -1392,9 +1392,9 @@ function CharacterSelect() {
         </div>
       </div>
 
-      {/* White divider line — 10px below the banner's bottom (y=106), 3px tall. */}
+      {/* White divider line — 25px below the banner's bottom (y=106), 3px tall. */}
       <div style={{
-        position: 'absolute', top: 116, left: 0, width: '100%', height: 3,
+        position: 'absolute', top: 131, left: 0, width: '100%', height: 3,
         background: '#ffffff',
       }} />
 
