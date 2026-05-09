@@ -1,7 +1,9 @@
 extends Node3D
 ## Third-person orbit camera controller.
 ## Left/Right arrows or mouse drag orbit horizontally at fixed radius.
-## Home re-centers behind player.
+## Right stick Y tilts the camera up/down (added 2026-05-08 for parity
+## with most modern third-person controllers).
+## Home re-centers behind player and resets pitch.
 ## Player movement is camera-relative (handled in player.gd via get_viewport().get_camera_3d()).
 
 # Camera settings
@@ -9,6 +11,11 @@ extends Node3D
 @export var height: float = 3.0
 @export var rotation_speed: float = 0.05
 @export var mouse_sensitivity: float = 0.005
+## Min/max pitch as offset from the default look angle (which is set by
+## `height` + `distance`). Clamping a touch under ±90° avoids gimbal-lock
+## flips when looking straight up/down at the player.
+@export var min_pitch_offset: float = -PI * 0.35
+@export var max_pitch_offset: float = PI * 0.35
 
 # Target to follow
 @export var target_path: NodePath
@@ -16,6 +23,9 @@ var target: Node3D
 
 # Camera rotation state (horizontal orbit angle)
 var camera_rotation: float = 0.0
+# Pitch *offset* from the default look angle (atan2(height, distance)).
+# Positive tilts the camera up (more sky), negative tilts down (more ground).
+var camera_pitch: float = 0.0
 
 # Mouse drag state
 var _mouse_dragging := false
@@ -46,6 +56,10 @@ func _process(_delta: float) -> void:
 			camera_rotation -= rotation_speed * dir
 		if Input.is_action_pressed("camera_right"):
 			camera_rotation += rotation_speed * dir
+		if Input.is_action_pressed("camera_up"):
+			camera_pitch = clamp(camera_pitch + rotation_speed, min_pitch_offset, max_pitch_offset)
+		if Input.is_action_pressed("camera_down"):
+			camera_pitch = clamp(camera_pitch - rotation_speed, min_pitch_offset, max_pitch_offset)
 		if Input.is_action_just_pressed("camera_lock"):
 			_center_behind_player()
 
@@ -75,11 +89,21 @@ func _update_camera_position() -> void:
 	var target_pos := target.global_position
 	var look_at_pos := Vector3(target_pos.x, target_pos.y + 1.0, target_pos.z)
 
-	# Fixed-radius orbit: camera always exactly 'distance' away horizontally, 'height' above
+	# Sphere-orbit: derive a single radius + base pitch from the
+	# exported `distance`/`height` so pitch=0 reproduces the original
+	# fixed-circle behavior, then user `camera_pitch` rotates around the
+	# horizontal axis. Final pitch is clamped under ±90° so the camera
+	# never flips through the look target.
+	var radius: float = sqrt(distance * distance + height * height)
+	var base_pitch: float = atan2(height, distance)
+	var pitch: float = clamp(base_pitch + camera_pitch, -PI * 0.45, PI * 0.45)
+	var horiz: float = cos(pitch) * radius
+	var vert: float = sin(pitch) * radius
+
 	var cam_pos := Vector3(
-		target_pos.x + sin(camera_rotation) * distance,
-		target_pos.y + height,
-		target_pos.z + cos(camera_rotation) * distance,
+		target_pos.x + sin(camera_rotation) * horiz,
+		target_pos.y + vert,
+		target_pos.z + cos(camera_rotation) * horiz,
 	)
 
 	camera.global_position = cam_pos
@@ -94,6 +118,8 @@ func _center_behind_player() -> void:
 	# Camera at player_rot + PI is on the opposite side, looking at the player's back.
 	var player_rot: float = target.get("player_rotation") if target.get("player_rotation") != null else 0.0
 	camera_rotation = player_rot + PI
+	# Recenter pitch too — same intent as horizontal: snap to default.
+	camera_pitch = 0.0
 
 
 func set_target(new_target: Node3D) -> void:
