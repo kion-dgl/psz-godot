@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ce5njhl4rsui5"
-path="res://.godot/imported/weapon_shop_cart_AccMetallic - 512px-AccRoughness - 512px.png-00b64c746cee54d4c2bc31f519aa2a48.ctex"
+path.s3tc="res://.godot/imported/weapon_shop_cart_AccMetallic - 512px-AccRoughness - 512px.png-00b64c746cee54d4c2bc31f519aa2a48.s3tc.ctex"
+path.etc2="res://.godot/imported/weapon_shop_cart_AccMetallic - 512px-AccRoughness - 512px.png-00b64c746cee54d4c2bc31f519aa2a48.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "6ac41322ffc3da26b061dbcb1d8fe2a1"
@@ -14,11 +16,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/stages/city_e/market/weapon_shop/weapon_shop_cart_AccMetallic - 512px-AccRoughness - 512px.png"
-dest_files=["res://.godot/imported/weapon_shop_cart_AccMetallic - 512px-AccRoughness - 512px.png-00b64c746cee54d4c2bc31f519aa2a48.ctex"]
+dest_files=["res://.godot/imported/weapon_shop_cart_AccMetallic - 512px-AccRoughness - 512px.png-00b64c746cee54d4c2bc31f519aa2a48.s3tc.ctex", "res://.godot/imported/weapon_shop_cart_AccMetallic - 512px-AccRoughness - 512px.png-00b64c746cee54d4c2bc31f519aa2a48.etc2.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +42,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

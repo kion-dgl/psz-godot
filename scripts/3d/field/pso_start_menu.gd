@@ -113,32 +113,32 @@ const TYPE_COLORS := {
 ## ids that should display a specific icon (consumables, telepipe,
 ## scape doll). Disks are handled separately via the disk_ id prefix.
 const ITEM_ICON_PATHS := {
-	"monomate": "res://assets/hud/pso2/icon_monomate.png",
-	"dimate": "res://assets/hud/pso2/icon_dimate.png",
-	"trimate": "res://assets/hud/pso2/icon_trimate.png",
-	"telepipe": "res://assets/hud/pso2/icon_telepipe.png",
-	"scape_doll": "res://assets/hud/pso2/icon_scape_doll.png",
-	"sol_atomizer": "res://assets/hud/pso2/icon_sol_atomizer.png",
-	"moon_atomizer": "res://assets/hud/pso2/icon_moon_atomizer.png",
-	"star_atomizer": "res://assets/hud/pso2/icon_star_atomizer.png",
-	"cosmo_atomizer": "res://assets/hud/pso2/icon_cosmo_atomizer.png",
-	"shifta_drink": "res://assets/hud/pso2/icon_shifta_drink.png",
-	"deband_drink": "res://assets/hud/pso2/icon_deband_drink.png",
-	"half_doll": "res://assets/hud/pso2/icon_half_doll.png",
-	"challenge_doll": "res://assets/hud/pso2/icon_challenge_doll.png",
+	"monomate": "res://assets/ui/pso2/icon_monomate.png",
+	"dimate": "res://assets/ui/pso2/icon_dimate.png",
+	"trimate": "res://assets/ui/pso2/icon_trimate.png",
+	"telepipe": "res://assets/ui/pso2/icon_telepipe.png",
+	"scape_doll": "res://assets/ui/pso2/icon_scape_doll.png",
+	"sol_atomizer": "res://assets/ui/pso2/icon_sol_atomizer.png",
+	"moon_atomizer": "res://assets/ui/pso2/icon_moon_atomizer.png",
+	"star_atomizer": "res://assets/ui/pso2/icon_star_atomizer.png",
+	"cosmo_atomizer": "res://assets/ui/pso2/icon_cosmo_atomizer.png",
+	"shifta_drink": "res://assets/ui/pso2/icon_shifta_drink.png",
+	"deband_drink": "res://assets/ui/pso2/icon_deband_drink.png",
+	"half_doll": "res://assets/ui/pso2/icon_half_doll.png",
+	"challenge_doll": "res://assets/ui/pso2/icon_challenge_doll.png",
 }
 
 ## Category → fallback icon when the per-item map doesn't have an entry.
 const CATEGORY_ICON_PATHS := {
-	"Disk": "res://assets/hud/pso2/icon_disk.png",
-	"Mag": "res://assets/hud/pso2/icon_mag.png",
-	"Material": "res://assets/hud/pso2/icon_material.png",
-	"Modifier": "res://assets/hud/pso2/icon_material.png",
-	"Consumable": "res://assets/hud/pso2/icon_tool.png",
-	"Armor": "res://assets/hud/pso2/icon_material.png",
-	"Unit": "res://assets/hud/pso2/icon_material.png",
-	"Key Item": "res://assets/hud/pso2/icon_tool.png",
-	"Other": "res://assets/hud/pso2/icon_tool.png",
+	"Disk": "res://assets/ui/pso2/icon_disk.png",
+	"Mag": "res://assets/ui/pso2/icon_mag.png",
+	"Material": "res://assets/ui/pso2/icon_material.png",
+	"Modifier": "res://assets/ui/pso2/icon_material.png",
+	"Consumable": "res://assets/ui/pso2/icon_tool.png",
+	"Armor": "res://assets/ui/pso2/icon_material.png",
+	"Unit": "res://assets/ui/pso2/icon_material.png",
+	"Key Item": "res://assets/ui/pso2/icon_tool.png",
+	"Other": "res://assets/ui/pso2/icon_tool.png",
 }
 
 ## WeaponData.WeaponType enum int → PSO2 weapon-type icon. PSZ's roster
@@ -146,22 +146,22 @@ const CATEGORY_ICON_PATHS := {
 ## rather than exact. SHIELD has no PSO2 weapon equivalent (NGS treats
 ## shield as armor) and falls back to icon_tool.
 const WEAPON_TYPE_ICON_PATHS := {
-	0: "res://assets/hud/pso2/icon_sword.png",            # SABER
-	1: "res://assets/hud/pso2/icon_sword.png",            # SWORD
-	2: "res://assets/hud/pso2/icon_twin_daggers.png",     # DAGGERS
-	3: "res://assets/hud/pso2/icon_knuckles.png",         # CLAW
-	4: "res://assets/hud/pso2/icon_double_saber.png",     # DOUBLE_SABER
-	5: "res://assets/hud/pso2/icon_partizan.png",         # SPEAR
-	6: "res://assets/hud/pso2/icon_dual_blades.png",      # SLICER
-	7: "res://assets/hud/pso2/icon_gunslash.png",         # GUN_BLADE
-	8: "res://assets/hud/pso2/icon_tool.png",             # SHIELD (no PSO2 match)
-	9: "res://assets/hud/pso2/icon_assault_rifle.png",    # HANDGUN (no PSO2 match — closest)
-	10: "res://assets/hud/pso2/icon_twin_machineguns.png",# MECH_GUN
-	11: "res://assets/hud/pso2/icon_assault_rifle.png",   # RIFLE
-	12: "res://assets/hud/pso2/icon_launcher.png",        # BAZOOKA
-	13: "res://assets/hud/pso2/icon_launcher.png",        # LASER_CANNON (no PSO2 match — closest)
-	14: "res://assets/hud/pso2/icon_rod.png",             # ROD
-	15: "res://assets/hud/pso2/icon_wand.png",            # WAND
+	0: "res://assets/ui/pso2/icon_sword.png",            # SABER
+	1: "res://assets/ui/pso2/icon_sword.png",            # SWORD
+	2: "res://assets/ui/pso2/icon_twin_daggers.png",     # DAGGERS
+	3: "res://assets/ui/pso2/icon_knuckles.png",         # CLAW
+	4: "res://assets/ui/pso2/icon_double_saber.png",     # DOUBLE_SABER
+	5: "res://assets/ui/pso2/icon_partizan.png",         # SPEAR
+	6: "res://assets/ui/pso2/icon_dual_blades.png",      # SLICER
+	7: "res://assets/ui/pso2/icon_gunslash.png",         # GUN_BLADE
+	8: "res://assets/ui/pso2/icon_tool.png",             # SHIELD (no PSO2 match)
+	9: "res://assets/ui/pso2/icon_assault_rifle.png",    # HANDGUN (no PSO2 match — closest)
+	10: "res://assets/ui/pso2/icon_twin_machineguns.png",# MECH_GUN
+	11: "res://assets/ui/pso2/icon_assault_rifle.png",   # RIFLE
+	12: "res://assets/ui/pso2/icon_launcher.png",        # BAZOOKA
+	13: "res://assets/ui/pso2/icon_launcher.png",        # LASER_CANNON (no PSO2 match — closest)
+	14: "res://assets/ui/pso2/icon_rod.png",             # ROD
+	15: "res://assets/ui/pso2/icon_wand.png",            # WAND
 }
 
 var _type_icon_cache: Dictionary = {}  # path → Texture2D, populated lazily
@@ -1136,7 +1136,7 @@ func _get_item_icon(item_id: String, category: String) -> Texture2D:
 		return _load_icon(str(ITEM_ICON_PATHS[base_id]))
 	# 2) Disks share a single icon
 	if base_id.begins_with("disk_"):
-		return _load_icon("res://assets/hud/pso2/icon_disk.png")
+		return _load_icon("res://assets/ui/pso2/icon_disk.png")
 	# 3) Weapons: look up the weapon's type and use the per-type icon
 	if category == "Weapon":
 		var weapon = WeaponRegistry.get_weapon(base_id)
@@ -2175,7 +2175,7 @@ func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> v
 		var icon_rect := Rect2(px + 6, iy + 2, 16, 16)
 		var tex: Texture2D = null
 		match item_type:
-			"mag": tex = _load_icon("res://assets/hud/pso2/icon_mag.png")
+			"mag": tex = _load_icon("res://assets/ui/pso2/icon_mag.png")
 		if tex:
 			c.draw_texture_rect(tex, icon_rect, false)
 		else:

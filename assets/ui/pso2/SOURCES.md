@@ -89,7 +89,7 @@ content can reuse them without renaming.
 
 Filename matches the weapon registry type key (`sword`, `partizan`,
 `wired_lance`, etc.), so the start menu can do
-`load("res://assets/hud/pso2/icon_%s.png" % weapon.weapon_type)`.
+`load("res://assets/ui/pso2/icon_%s.png" % weapon.weapon_type)`.
 
 | File                       | Wiki                       |
 |----------------------------|----------------------------|
