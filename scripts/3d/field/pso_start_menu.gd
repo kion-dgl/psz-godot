@@ -1376,7 +1376,7 @@ func _draw_menu() -> void:
 
 	match _mode:
 		Mode.MAIN: _draw_main(c, font)
-		Mode.ITEMS: _draw_items(c, font)
+		Mode.ITEMS, Mode.ITEMS_MOVE: _draw_items(c, font)
 		Mode.EQUIP, Mode.EQUIP_PICK: _draw_equip(c, font)
 		Mode.TECHS: _draw_techs(c, font)
 		Mode.PALETTE, Mode.PALETTE_PICK: _draw_palette(c, font)
