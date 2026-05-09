@@ -3,6 +3,44 @@
 Project-specific conventions enforced by CI. Anything else lives in code or
 git history.
 
+## Always work on a branch + open a PR — never push direct to `main`
+
+Even when the change looks trivial, even when "commit and merge" sounds
+like authorization to fast-forward straight onto `main`. Don't.
+
+`main` is protected by the **"Merge to Main"** ruleset — it requires:
+
+- A pull request (so the diff shows up for review)
+- A Copilot code review (auto-runs on PR open / push to PR)
+- Plus the standard CI: `verify-assets`, `check-asset-refs`,
+  `version-check`, the Godot test runner
+
+Admin-tier accounts have `bypass_mode: pull_request` — meaning they
+can self-merge once the rule's met, but **the PR + Copilot review step
+is not skippable**. Do not look for a way around it; it is load-bearing.
+
+Merging the PR also kicks off **release CD** (APK signing, Arweave
+publish if assets changed, etc.). Pushing to `main` directly skips
+both the review *and* the release pipeline — the build never ships
+to anyone.
+
+Workflow when the user asks to land changes:
+
+1. Create a feature branch (`feature/<short-name>` is the convention).
+2. Commit and push the branch.
+3. `gh pr create` — write a real summary that explains *why*, not just
+   *what*. The summary is the thing the human reviewer reads first.
+4. Wait for Copilot's automatic review and address its comments.
+5. Either the user merges (typical), or — if they explicitly authorize
+   "merge it for me" *after* Copilot has signed off — `gh pr merge`.
+   Even then, default to merge-commit (or rebase if the user prefers
+   linear history); never force-push to merge.
+
+If the user's exact words are "commit and merge", interpret it as
+"commit and open the PR for me" unless they've also said something
+like "skip the PR" or "force-push, I'll deal with it." When in doubt,
+ask — opening a PR is cheap, undoing a direct-merge is expensive.
+
 ## Asset pack publishing
 
 The game ships its bulk assets (~250 MB of stages, music, NPCs, weapons,
