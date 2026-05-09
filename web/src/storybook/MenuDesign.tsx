@@ -1300,10 +1300,29 @@ function CharacterSelect() {
     | { kind: 'filled'; name: string; klass: string; level: number; playtimeMin: number }
     | { kind: 'empty' };
 
+  // 20-slot floor per playtest feedback — players want room for
+  // multiple class/build experiments. About 14 filled + 6 empty so the
+  // mock shows both filled and create-new states with the list scrolling.
   const SLOTS: Slot[] = [
-    { kind: 'filled', name: 'Sara',     klass: 'HUmar',     level: 42, playtimeMin: 38 * 60 + 12 },
-    { kind: 'filled', name: 'Reika',    klass: 'FOnewearl', level: 28, playtimeMin: 12 * 60 + 47 },
-    { kind: 'filled', name: 'Kiln',     klass: 'RAcast',    level: 17, playtimeMin: 4 * 60 + 5 },
+    { kind: 'filled', name: 'Sara',    klass: 'HUmar',     level: 42, playtimeMin: 38 * 60 + 12 },
+    { kind: 'filled', name: 'Reika',   klass: 'FOnewearl', level: 28, playtimeMin: 12 * 60 + 47 },
+    { kind: 'filled', name: 'Kiln',    klass: 'RAcast',    level: 17, playtimeMin: 4 * 60 + 5 },
+    { kind: 'filled', name: 'Mira',    klass: 'HUnewearl', level: 31, playtimeMin: 18 * 60 + 30 },
+    { kind: 'filled', name: 'Vanta',   klass: 'HUcast',    level: 22, playtimeMin: 7 * 60 + 14 },
+    { kind: 'filled', name: 'Iola',    klass: 'HUcaseal',  level: 9,  playtimeMin: 1 * 60 + 22 },
+    { kind: 'filled', name: 'Kale',    klass: 'RAmar',     level: 50, playtimeMin: 60 * 60 + 0 },
+    { kind: 'filled', name: 'Reine',   klass: 'RAmarl',    level: 14, playtimeMin: 3 * 60 + 8 },
+    { kind: 'filled', name: 'Echo',    klass: 'RAcaseal',  level: 38, playtimeMin: 25 * 60 + 41 },
+    { kind: 'filled', name: 'Pell',    klass: 'FOmar',     level: 20, playtimeMin: 6 * 60 + 55 },
+    { kind: 'filled', name: 'Fenn',    klass: 'FOmarl',    level: 16, playtimeMin: 4 * 60 + 17 },
+    { kind: 'filled', name: 'Vexi',    klass: 'FOnewm',    level: 11, playtimeMin: 2 * 60 + 33 },
+    { kind: 'filled', name: 'Quill',   klass: 'HUmar',     level: 7,  playtimeMin: 48 },
+    { kind: 'filled', name: 'Pyx',     klass: 'FOnewearl', level: 3,  playtimeMin: 19 },
+    { kind: 'empty' },
+    { kind: 'empty' },
+    { kind: 'empty' },
+    { kind: 'empty' },
+    { kind: 'empty' },
     { kind: 'empty' },
   ];
 
@@ -1319,8 +1338,17 @@ function CharacterSelect() {
   // Class flavor — defer real copy to design pass; this is mock placeholder.
   const CLASS_FLAVOR: Record<string, string> = {
     HUmar:     'Balanced human Hunter. Strong ATP, decent EVP, no techs.',
-    FOnewearl: 'Newman Force. Highest tech multiplier in the game; fragile.',
+    HUnewearl: 'Newman Hunter. Trades raw ATP for higher EVP and basic techs.',
+    HUcast:    'Cast Hunter. Highest HP and ATP, immune to status, no techs.',
+    HUcaseal:  'Female Cast Hunter. ATA-leaning Cast variant, no techs.',
+    RAmar:     'Human Ranger. Solid all-rounder with mid-tier techs.',
+    RAmarl:    'Female human Ranger. Higher MST than RAmar, basic support techs.',
     RAcast:    'Cast Ranger. Trap specialist, immune to status, no techs.',
+    RAcaseal:  'Female Cast Ranger. ATA-leaning, traps, no techs.',
+    FOmar:     'Male Force. Balanced caster, ATP+ over FOnewearl.',
+    FOmarl:    'Female human Force. Highest ATA caster.',
+    FOnewm:    'Male Newman Force. Stronger tech multipliers than human Forces.',
+    FOnewearl: 'Newman Force. Highest tech multiplier in the game; fragile.',
   };
 
   const nextLabel = slot.kind === 'filled' ? 'Start' : 'Create';
@@ -1337,30 +1365,37 @@ function CharacterSelect() {
       </Panel>
 
       <div style={{ display: 'flex', gap: '12px' }}>
-        {/* Character list (left) */}
+        {/* Character list (left) — 20 slots, list scrolls. Real
+            implementation needs selection-keep-in-view + ▲/▼ "more"
+            cues like the Options menu in 0.29.x. */}
         <Panel title="Characters" width={360} hint="↑/↓ to choose · A to confirm · B to cancel">
-          {SLOTS.map((s, i) => {
-            if (s.kind === 'empty') {
+          <div style={{ fontSize: '11px', color: C.textLight, padding: '0 4px 6px' }}>
+            {SLOTS.filter((s) => s.kind === 'filled').length}/{SLOTS.length} characters
+          </div>
+          <div style={{ maxHeight: 400, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            {SLOTS.map((s, i) => {
+              if (s.kind === 'empty') {
+                return (
+                  <PillRow
+                    key={i}
+                    label="(Empty Slot)"
+                    rightText=""
+                    selected={sel === i}
+                    onClick={() => setSel(i)}
+                  />
+                );
+              }
               return (
                 <PillRow
                   key={i}
-                  label="(Empty Slot)"
-                  rightText=""
+                  label={`${s.name}  ·  ${s.klass}  ·  Lv.${s.level}`}
+                  rightText={fmtPlaytime(s.playtimeMin)}
                   selected={sel === i}
                   onClick={() => setSel(i)}
                 />
               );
-            }
-            return (
-              <PillRow
-                key={i}
-                label={`${s.name}  ·  ${s.klass}  ·  Lv.${s.level}`}
-                rightText={fmtPlaytime(s.playtimeMin)}
-                selected={sel === i}
-                onClick={() => setSel(i)}
-              />
-            );
-          })}
+            })}
+          </div>
         </Panel>
 
         {/* Right column: preview + description + next */}

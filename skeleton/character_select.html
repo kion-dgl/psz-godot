@@ -170,12 +170,20 @@
         <li><code>model_id</code> — feeds the preview pane (loaded lazily on selection change)</li>
       </ul>
 
+      <h3>Slot count</h3>
+      <ul>
+        <li>Going with <strong>20+ slots</strong> — playtest feedback: 4 wasn't enough room to try different class/build combinations. PSO PC V2 had 4, PSZ originally cards ×4; we're breaking from that here.</li>
+        <li>List has to scroll cleanly — selection-keep-in-view + scroll cue (▲/▼ "more") like the Options menu in #208.</li>
+        <li>Empty slots stay individually selectable (each becomes a "Create" entry on confirm).</li>
+      </ul>
+
       <h3>Open questions</h3>
       <ul>
-        <li>How many character slots? PSO PC V2 had 4. PSZ currently uses 4 cards. Stay at 4 for now.</li>
+        <li>Hard cap or soft? 20 is a floor; consider 30 or "until we hit a UX issue".</li>
         <li>Is the banner skinned (PSO panel-with-diagonal-cut) or plain bar?</li>
         <li>Description text — class flavor text vs. raw stat dump? Probably class flavor + level.</li>
         <li>Preview rotation speed / lighting model — defer to /web mock.</li>
+        <li>Sort order — by last-played? Creation order? Manual reorder (cf. inventory move-to-position from 0.29.x)?</li>
       </ul>
 
       <h3>Out of scope (per #168)</h3>
