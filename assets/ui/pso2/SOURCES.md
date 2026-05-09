@@ -54,11 +54,13 @@ star feels too large.
 Generic fallbacks for inventory rows that don't have a more specific
 icon (weapons get their type-icon instead — see Weapons section below).
 
-| File              | Wiki              |
-|-------------------|-------------------|
-| icon_material.png | UIMaterial.png    |
-| icon_tool.png     | ToolSmall.png     |
-| icon_mag.png      | MagDevice.png     |
+| File                | Wiki              |
+|---------------------|-------------------|
+| icon_material.png   | UIMaterial.png    |
+| icon_tool.png       | ToolSmall.png     |
+| icon_mag.png        | MagDevice.png     |
+| icon_costume.png    | UIItemCostume.png |
+| icon_photon_art.png | UIPhotonArt.png   |
 
 ## Consumables
 
