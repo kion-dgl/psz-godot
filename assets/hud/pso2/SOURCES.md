@@ -60,6 +60,31 @@ icon (weapons get their type-icon instead — see Weapons section below).
 | icon_tool.png     | ToolSmall.png     |
 | icon_mag.png      | MagDevice.png     |
 
+## Consumables
+
+Per-item icons sourced from
+<https://pso2.arks-visiphone.com/wiki/Consumables_(PSO2)>. Filenames
+match PSZ's inventory item id where the item exists in both games
+(monomate / dimate / trimate / telepipe / scape_doll). PSO2-only items
+(atomizers, dolls, drinks) are kept under their PSO2 name so future
+content can reuse them without renaming.
+
+| File                      | Wiki                  |
+|---------------------------|-----------------------|
+| icon_monomate.png         | MonomateIcon.png      |
+| icon_dimate.png           | DimateIcon.png        |
+| icon_trimate.png          | TrimateIcon.png       |
+| icon_sol_atomizer.png     | SolAtomizerIcon.png   |
+| icon_moon_atomizer.png    | MoonAtomizerIcon.png  |
+| icon_star_atomizer.png    | StarAtomizerIcon.png  |
+| icon_cosmo_atomizer.png   | CosmoAtomizerIcon.png |
+| icon_shifta_drink.png     | ShiftarideIcon.png    |
+| icon_deband_drink.png     | DebanrideIcon.png     |
+| icon_telepipe.png         | TelepipeIcon.png      |
+| icon_half_doll.png        | HalfdollIcon.png      |
+| icon_scape_doll.png       | ScapedollIcon.png     |
+| icon_challenge_doll.png   | ChallengedollIcon.png |
+
 ## Weapons
 
 Filename matches the weapon registry type key (`sword`, `partizan`,

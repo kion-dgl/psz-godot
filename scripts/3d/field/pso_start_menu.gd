@@ -109,6 +109,63 @@ const TYPE_COLORS := {
 	"material": Color(0.67, 0.53, 0.2), "mag": Color(0.8, 0.53, 0.27),
 }
 
+## Per-item-id → icon path. Hit before category fallback. Add PSZ-side
+## ids that should display a specific icon (consumables, telepipe,
+## scape doll). Disks are handled separately via the disk_ id prefix.
+const ITEM_ICON_PATHS := {
+	"monomate": "res://assets/hud/pso2/icon_monomate.png",
+	"dimate": "res://assets/hud/pso2/icon_dimate.png",
+	"trimate": "res://assets/hud/pso2/icon_trimate.png",
+	"telepipe": "res://assets/hud/pso2/icon_telepipe.png",
+	"scape_doll": "res://assets/hud/pso2/icon_scape_doll.png",
+	"sol_atomizer": "res://assets/hud/pso2/icon_sol_atomizer.png",
+	"moon_atomizer": "res://assets/hud/pso2/icon_moon_atomizer.png",
+	"star_atomizer": "res://assets/hud/pso2/icon_star_atomizer.png",
+	"cosmo_atomizer": "res://assets/hud/pso2/icon_cosmo_atomizer.png",
+	"shifta_drink": "res://assets/hud/pso2/icon_shifta_drink.png",
+	"deband_drink": "res://assets/hud/pso2/icon_deband_drink.png",
+	"half_doll": "res://assets/hud/pso2/icon_half_doll.png",
+	"challenge_doll": "res://assets/hud/pso2/icon_challenge_doll.png",
+}
+
+## Category → fallback icon when the per-item map doesn't have an entry.
+const CATEGORY_ICON_PATHS := {
+	"Disk": "res://assets/hud/pso2/icon_disk.png",
+	"Mag": "res://assets/hud/pso2/icon_mag.png",
+	"Material": "res://assets/hud/pso2/icon_material.png",
+	"Modifier": "res://assets/hud/pso2/icon_material.png",
+	"Consumable": "res://assets/hud/pso2/icon_tool.png",
+	"Armor": "res://assets/hud/pso2/icon_material.png",
+	"Unit": "res://assets/hud/pso2/icon_material.png",
+	"Key Item": "res://assets/hud/pso2/icon_tool.png",
+	"Other": "res://assets/hud/pso2/icon_tool.png",
+}
+
+## WeaponData.WeaponType enum int → PSO2 weapon-type icon. PSZ's roster
+## (PSO1) doesn't 1:1 with PSO2's, so a few are visual-closest matches
+## rather than exact. SHIELD has no PSO2 weapon equivalent (NGS treats
+## shield as armor) and falls back to icon_tool.
+const WEAPON_TYPE_ICON_PATHS := {
+	0: "res://assets/hud/pso2/icon_sword.png",            # SABER
+	1: "res://assets/hud/pso2/icon_sword.png",            # SWORD
+	2: "res://assets/hud/pso2/icon_twin_daggers.png",     # DAGGERS
+	3: "res://assets/hud/pso2/icon_knuckles.png",         # CLAW
+	4: "res://assets/hud/pso2/icon_double_saber.png",     # DOUBLE_SABER
+	5: "res://assets/hud/pso2/icon_partizan.png",         # SPEAR
+	6: "res://assets/hud/pso2/icon_dual_blades.png",      # SLICER
+	7: "res://assets/hud/pso2/icon_gunslash.png",         # GUN_BLADE
+	8: "res://assets/hud/pso2/icon_tool.png",             # SHIELD (no PSO2 match)
+	9: "res://assets/hud/pso2/icon_assault_rifle.png",    # HANDGUN (no PSO2 match — closest)
+	10: "res://assets/hud/pso2/icon_twin_machineguns.png",# MECH_GUN
+	11: "res://assets/hud/pso2/icon_assault_rifle.png",   # RIFLE
+	12: "res://assets/hud/pso2/icon_launcher.png",        # BAZOOKA
+	13: "res://assets/hud/pso2/icon_launcher.png",        # LASER_CANNON (no PSO2 match — closest)
+	14: "res://assets/hud/pso2/icon_rod.png",             # ROD
+	15: "res://assets/hud/pso2/icon_wand.png",            # WAND
+}
+
+var _type_icon_cache: Dictionary = {}  # path → Texture2D, populated lazily
+
 
 func _ready() -> void:
 	layer = 150
@@ -1068,6 +1125,43 @@ func _get_inventory() -> Array:
 	return items
 
 
+## Resolve the texture for a given inventory row's icon. Priority:
+## per-item id → disk-prefix → weapon weapon_type → category fallback.
+## Returns null if nothing matches; callers fall back to the colored
+## letter block.
+func _get_item_icon(item_id: String, category: String) -> Texture2D:
+	# 1) Per-item id (consumables, telepipe, scape doll, etc.)
+	var base_id: String = Inventory.get_base_id(item_id)
+	if ITEM_ICON_PATHS.has(base_id):
+		return _load_icon(str(ITEM_ICON_PATHS[base_id]))
+	# 2) Disks share a single icon
+	if base_id.begins_with("disk_"):
+		return _load_icon("res://assets/hud/pso2/icon_disk.png")
+	# 3) Weapons: look up the weapon's type and use the per-type icon
+	if category == "Weapon":
+		var weapon = WeaponRegistry.get_weapon(base_id)
+		if weapon == null:
+			var norm: String = base_id.replace("-", "_").replace("/", "_")
+			weapon = WeaponRegistry.get_weapon(norm)
+		if weapon and WEAPON_TYPE_ICON_PATHS.has(int(weapon.weapon_type)):
+			return _load_icon(str(WEAPON_TYPE_ICON_PATHS[int(weapon.weapon_type)]))
+	# 4) Category fallback
+	if CATEGORY_ICON_PATHS.has(category):
+		return _load_icon(str(CATEGORY_ICON_PATHS[category]))
+	return null
+
+
+func _load_icon(path: String) -> Texture2D:
+	if _type_icon_cache.has(path):
+		return _type_icon_cache[path]
+	if not ResourceLoader.exists(path):
+		_type_icon_cache[path] = null
+		return null
+	var tex: Texture2D = load(path) as Texture2D
+	_type_icon_cache[path] = tex
+	return tex
+
+
 ## Map an inventory category ("Weapon", "Armor", ...) to one of the
 ## TYPE_* keys used by the small per-row icon (16x16 colored block +
 ## letter). Centralized here so _draw_items and _draw_bottom_list agree
@@ -1561,14 +1655,21 @@ func _draw_items(c: Control, font: Font) -> void:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(1, 1, 1, 0.85))
 		var col: Color = C_SELECT_TEXT if (is_sel or is_move_origin) else C_TEXT
 
-		# Per-item type icon (replaces the dark-blue category banner)
-		var type_key: String = _category_to_type(str(item.get("category", "Other")))
-		var icon_letter: String = str(TYPE_ICONS.get(type_key, "?"))
-		var icon_color: Color = TYPE_COLORS.get(type_key, Color.GRAY)
-		if is_sel or is_move_origin:
-			icon_color = Color(1, 1, 1, 0.4)
-		c.draw_rect(Rect2(px + 6, draw_y + 2, 16, 16), icon_color)
-		c.draw_string(font, Vector2(px + 9, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+		# Per-item icon (PNG when known, fallback to colored letter block).
+		var icon_rect := Rect2(px + 6, draw_y + 2, 16, 16)
+		var item_id: String = str(item.get("id", ""))
+		var category: String = str(item.get("category", "Other"))
+		var tex: Texture2D = _get_item_icon(item_id, category)
+		if tex:
+			c.draw_texture_rect(tex, icon_rect, false)
+		else:
+			var type_key: String = _category_to_type(category)
+			var icon_letter: String = str(TYPE_ICONS.get(type_key, "?"))
+			var icon_color: Color = TYPE_COLORS.get(type_key, Color.GRAY)
+			if is_sel or is_move_origin:
+				icon_color = Color(1, 1, 1, 0.4)
+			c.draw_rect(icon_rect, icon_color)
+			c.draw_string(font, Vector2(px + 9, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 
 		# Item name (with [E] prefix for equipped — the type icon's slot
 		# is now occupied by the type indicator, so the equipped pill
@@ -2067,10 +2168,21 @@ func _draw_bottom_list(c: Control, font: Font, items: Array, selected: int) -> v
 		var col: Color = C_SELECT_TEXT if i == selected else C_TEXT
 		var item_name: String = str(items[i].get("name", ""))
 		var item_type: String = str(items[i].get("type", ""))
-		var icon_letter: String = str(TYPE_ICONS.get(item_type, "?"))
-		var icon_color: Color = TYPE_COLORS.get(item_type, Color.GRAY) if i != selected else Color(1, 1, 1, 0.4)
-		c.draw_rect(Rect2(px + 6, iy + 2, 16, 16), icon_color)
-		c.draw_string(font, Vector2(px + 9, iy + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+		# Type icon: PNG for the few types we have art for, otherwise the
+		# colored letter block (System/Options menu rows pass type="tool"
+		# even though they aren't items, so we don't try to look those up
+		# as inventory items).
+		var icon_rect := Rect2(px + 6, iy + 2, 16, 16)
+		var tex: Texture2D = null
+		match item_type:
+			"mag": tex = _load_icon("res://assets/hud/pso2/icon_mag.png")
+		if tex:
+			c.draw_texture_rect(tex, icon_rect, false)
+		else:
+			var icon_letter: String = str(TYPE_ICONS.get(item_type, "?"))
+			var icon_color: Color = TYPE_COLORS.get(item_type, Color.GRAY) if i != selected else Color(1, 1, 1, 0.4)
+			c.draw_rect(icon_rect, icon_color)
+			c.draw_string(font, Vector2(px + 9, iy + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 		var qty: int = int(items[i].get("quantity", 0))
 		var qty_str: String = "x%d" % qty if qty > 1 else ""
 		c.draw_string(font, Vector2(px + 28, iy + 15), item_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
