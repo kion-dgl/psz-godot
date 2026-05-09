@@ -4,6 +4,13 @@ extends "res://scripts/3d/city/city_area_base.gd"
 const DEFAULT_SPAWN := Vector3(0.98, 2, 62.79)
 const DEFAULT_ROT := PI
 
+## In-house replacement for the original weapon-shop cart. The market
+## GLB referenced by city_market.tscn has been pre-edited (via the
+## /market-editor download workflow) to remove the old cart geometry,
+## leaving an empty spot for this model. Transform was dialed in inside
+## the same web tool's Place mode and pasted here verbatim.
+const WEAPON_SHOP_CART_SCENE := preload("res://assets/stages/city_e/market/weapon_shop/weapon_shop_cart.glb")
+
 const SPAWN_VARIANTS := {
 	"counter-exit": {
 		"position": Vector3(0.98, 2, 18.84),
@@ -19,6 +26,10 @@ const SPAWN_VARIANTS := {
 func _ready() -> void:
 	# s00e_sa1 uses baked textures from psz-asset-viewer — no runtime fixes needed
 	_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
+
+	# Drop in the replacement weapon-shop cart over the empty spot
+	# the no-cart GLB left behind.
+	_add_weapon_shop_cart()
 
 	# Heal on city entry
 	_heal_character()
@@ -72,3 +83,14 @@ func _ready() -> void:
 
 func _get_area_name() -> String:
 	return "market"
+
+
+func _add_weapon_shop_cart() -> void:
+	var cart: Node3D = WEAPON_SHOP_CART_SCENE.instantiate()
+	cart.transform = Transform3D(
+		Vector3(2.0545, 0.0, -2.0467),
+		Vector3(0.0, 2.9, 0.0),
+		Vector3(2.0467, 0.0, 2.0545),
+		Vector3(-9.0751, 0.0, 20.1794)
+	)
+	add_child(cart)
