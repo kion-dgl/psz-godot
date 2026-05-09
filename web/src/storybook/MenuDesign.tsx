@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { assetUrl } from '../utils/assets';
+import { CLASS_TO_PC_PREFIX } from '../character-creator/data/constants';
 
 // PSZ color palette — pale icy blue with white items, black text
 const C = {
@@ -1291,6 +1295,107 @@ function FieldWarpMenu() {
 
 // --- Main Page ---
 
+/** Inline Three.js viewer that loads the player model for a given class
+ * id (lowercased: humar / fonewearl / etc). Uses the same pattern as
+ * character-creator/CharacterPreview but strips down to "load + slow
+ * auto-rotate" since this is just for the menu mock. */
+function CharacterModelPreview({ classId }: { classId: string | null }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<{
+    scene: THREE.Scene; camera: THREE.PerspectiveCamera;
+    renderer: THREE.WebGLRenderer; modelGroup: THREE.Group;
+    raf: number;
+  } | null>(null);
+
+  // Init scene once.
+  useEffect(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    const w = c.clientWidth, h = c.clientHeight;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
+    camera.position.set(0, 1.2, 2.6);
+    camera.lookAt(0, 0.9, 0);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0);
+    c.appendChild(renderer.domElement);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+    dir.position.set(3, 5, 4);
+    scene.add(dir);
+    const modelGroup = new THREE.Group();
+    scene.add(modelGroup);
+    const clock = new THREE.Clock();
+    const animate = () => {
+      const dt = clock.getDelta();
+      modelGroup.rotation.y += dt * 0.4; // slow turntable
+      renderer.render(scene, camera);
+      sceneRef.current!.raf = requestAnimationFrame(animate);
+    };
+    sceneRef.current = { scene, camera, renderer, modelGroup, raf: 0 };
+    sceneRef.current.raf = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(sceneRef.current!.raf);
+      renderer.dispose();
+      c.removeChild(renderer.domElement);
+      sceneRef.current = null;
+    };
+  }, []);
+
+  // Swap model when classId changes.
+  useEffect(() => {
+    const sd = sceneRef.current;
+    if (!sd) return;
+    // Clear current model
+    while (sd.modelGroup.children.length > 0) {
+      const child = sd.modelGroup.children[0];
+      sd.modelGroup.remove(child);
+      child.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.geometry) m.geometry.dispose();
+        if (m.material) {
+          const mats = Array.isArray(m.material) ? m.material : [m.material];
+          mats.forEach((mat) => mat.dispose());
+        }
+      });
+    }
+    if (!classId) return;
+    const prefix = CLASS_TO_PC_PREFIX[classId];
+    if (!prefix) return;
+    const variation = `${prefix}0`;
+    const url = assetUrl(`assets/player/${variation}/${variation}_000.glb`);
+    new GLTFLoader().load(
+      url,
+      (gltf) => {
+        gltf.scene.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) {
+            m.castShadow = true; m.receiveShadow = true;
+          }
+        });
+        sd.modelGroup.add(gltf.scene);
+      },
+      undefined,
+      (err) => { console.warn('[CharacterModelPreview] load failed', url, err); },
+    );
+  }, [classId]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: '100%', height: '100%',
+        background: 'linear-gradient(180deg, #c8e0f0 0%, #6090b8 100%)',
+        borderRadius: 4,
+        border: '1px solid rgba(150,180,210,0.5)',
+      }}
+    />
+  );
+}
+
+
 function CharacterSelect() {
   // Issue #168 — PSO PC V2 list-style character select.
   // Layout follows the skeleton blockout in skeleton/character_select.html.
@@ -1380,7 +1485,17 @@ function CharacterSelect() {
         position: 'absolute', top: 22, left: 0, width: '100%', height: 84,
         background: '#FBBA18',
         clipPath: 'polygon(0 0, 100% 0, 100% 58%, 49% 58%, 44% 100%, 0 100%)',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
+        // border on a clip-path doesn't follow the clipped edge — stack
+        // four 1px drop-shadows in cardinal directions to fake a 1px
+        // outline that hugs the polygon, plus the original drop-shadow
+        // for depth.
+        filter: [
+          'drop-shadow(1px 0 0 #1a1a2a)',
+          'drop-shadow(-1px 0 0 #1a1a2a)',
+          'drop-shadow(0 1px 0 #1a1a2a)',
+          'drop-shadow(0 -1px 0 #1a1a2a)',
+          'drop-shadow(0 2px 4px rgba(0,0,0,0.35))',
+        ].join(' '),
         display: 'flex', alignItems: 'flex-start',
       }}>
         <div style={{
@@ -1437,28 +1552,30 @@ function CharacterSelect() {
           info card overlaps the preview. */}
       <div style={{ position: 'absolute', top: 180, left: 680, width: 400, height: 430, zIndex: 1 }}>
         <Panel title="Preview">
-          <div style={{
-            height: 360,
-            background: 'linear-gradient(180deg, #c8e0f0 0%, #6090b8 100%)',
-            border: '1px solid rgba(150,180,210,0.5)',
-            borderRadius: 4,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: C.textLight, fontSize: 13, fontStyle: 'italic',
-            position: 'relative', overflow: 'hidden',
-          }}>
-            {slot.kind === 'filled' ? (
-              <>
-                <div style={{
-                  position: 'absolute', top: 8, left: 10,
-                  fontSize: 14, fontWeight: 700, color: C.textWhite,
-                  textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
-                }}>
-                  {slot.name}
-                </div>
-                <div style={{ opacity: 0.7 }}>[ 3D model — turntable idle ]</div>
-              </>
-            ) : (
-              <div style={{ opacity: 0.6 }}>[ empty slot — silhouette ]</div>
+          <div style={{ position: 'relative', height: 360 }}>
+            {/* Character name overlay sits on top of the canvas. */}
+            {slot.kind === 'filled' && (
+              <div style={{
+                position: 'absolute', top: 8, left: 10, zIndex: 1,
+                fontSize: 14, fontWeight: 700, color: C.textWhite,
+                textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
+                pointerEvents: 'none',
+              }}>
+                {slot.name}
+              </div>
+            )}
+            <CharacterModelPreview
+              classId={slot.kind === 'filled' ? slot.klass.toLowerCase() : null}
+            />
+            {slot.kind === 'empty' && (
+              <div style={{
+                position: 'absolute', inset: 0, display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                color: C.textLight, fontSize: 13, fontStyle: 'italic',
+                opacity: 0.7, pointerEvents: 'none',
+              }}>
+                [ empty slot ]
+              </div>
             )}
           </div>
         </Panel>
