@@ -1353,8 +1353,25 @@ function CharacterSelect() {
 
   const nextLabel = slot.kind === 'filled' ? 'Start' : 'Create';
 
+  // 720p frame so the mock matches the game's native viewport (project.godot
+  // viewport_width=1280, viewport_height=720). Background image is Rozalin's
+  // reference from issue #168 — sourced from web/public/menu-design/.
+  const BG_URL = `${import.meta.env.BASE_URL}menu-design/character_select_bg.png`;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: 920 }}>
+    <div style={{
+      width: 1280, height: 720,
+      position: 'relative',
+      border: '1px solid #000',
+      backgroundImage: `url('${BG_URL}')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      boxSizing: 'border-box',
+      padding: '24px 32px',
+      display: 'flex', flexDirection: 'column', gap: '16px',
+      overflow: 'hidden',
+      fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    }}>
       {/* Banner — full width */}
       <Panel title="Character Select">
         <div style={{
