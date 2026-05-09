@@ -482,20 +482,9 @@ func _refresh_display() -> void:
 					last_type_name = type_name
 					vbox.add_child(PszStyle.create_section_header(type_name))
 
-			# Rarity stars
-			var stars := ""
-			if cat == "weapon":
-				var w = WeaponRegistry.get_weapon(item_id)
-				if w:
-					stars = " " + w.get_rarity_string()
-			elif cat == "armor":
-				var a = ArmorRegistry.get_armor(item_id)
-				if a:
-					stars = " " + a.get_rarity_string()
-			elif cat == "unit":
-				var u = UnitRegistry.get_unit(item_id)
-				if u:
-					stars = " " + u.get_rarity_string() if u.has_method("get_rarity_string") else " " + "*".repeat(int(u.rarity))
+			# Rarity stars are only shown in the detail panel (top right) —
+			# inline stars cluttered long item names without adding info
+			# the player couldn't get from selecting the row.
 
 			var held: int = int(Inventory._items.get(item_id, 0))
 			var held_str := " x%d" % held if held > 1 else ""
@@ -520,7 +509,7 @@ func _refresh_display() -> void:
 			var buy_icons: Array = [buy_icon] if buy_icon else []
 			var pill := PszStyle.create_pill_with_icons(
 				buy_icons,
-				str(item.get("name", "???")) + stars + held_str + restriction_tag,
+				str(item.get("name", "???")) + held_str + restriction_tag,
 				i == _selected_index, "%d M" % cost, text_color)
 			vbox.add_child(pill)
 			_pill_nodes[i] = pill
