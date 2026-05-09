@@ -456,7 +456,25 @@ func _refresh_display() -> void:
 			var qty_str := " x%d" % qty if qty > 1 else ""
 			var equip_tag: String = " [E]" if item.get("equipped", false) else ""
 			var text_color := PszStyle.TEXT_MUTED if item.get("equipped", false) else Color.TRANSPARENT
-			var pill := PszStyle.create_pill(
+			var sell_id: String = str(item.get("id", ""))
+			var sell_icons: Array = []
+			var sell_icon: Texture2D = InventoryIcons.for_item(sell_id)
+			if sell_icon:
+				sell_icons.append(sell_icon)
+			var sell_rarity: int = 0
+			var sell_w = WeaponRegistry.get_weapon(sell_id)
+			if sell_w:
+				sell_rarity = int(sell_w.rarity)
+			else:
+				var sell_a = ArmorRegistry.get_armor(sell_id)
+				if sell_a and "rarity" in sell_a:
+					sell_rarity = int(sell_a.rarity)
+			if sell_rarity > 0:
+				var sell_rarity_icon: Texture2D = InventoryIcons.for_rarity(sell_rarity)
+				if sell_rarity_icon:
+					sell_icons.append(sell_rarity_icon)
+			var pill := PszStyle.create_pill_with_icons(
+				sell_icons,
 				str(item.get("name", "???")) + equip_tag + qty_str,
 				i == _selected_index, "%d M" % sell_price, text_color)
 			vbox.add_child(pill)
@@ -512,7 +530,29 @@ func _refresh_display() -> void:
 				if reason == "class":
 					restriction_tag = " [Class]"
 
-			var pill := PszStyle.create_pill(
+			var buy_icons: Array = []
+			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
+			if buy_icon:
+				buy_icons.append(buy_icon)
+			var buy_rarity: int = 0
+			if cat == "weapon":
+				var bw = WeaponRegistry.get_weapon(item_id)
+				if bw:
+					buy_rarity = int(bw.rarity)
+			elif cat == "armor":
+				var ba = ArmorRegistry.get_armor(item_id)
+				if ba and "rarity" in ba:
+					buy_rarity = int(ba.rarity)
+			elif cat == "unit":
+				var bu = UnitRegistry.get_unit(item_id)
+				if bu and "rarity" in bu:
+					buy_rarity = int(bu.rarity)
+			if buy_rarity > 0:
+				var buy_rarity_icon: Texture2D = InventoryIcons.for_rarity(buy_rarity)
+				if buy_rarity_icon:
+					buy_icons.append(buy_rarity_icon)
+			var pill := PszStyle.create_pill_with_icons(
+				buy_icons,
 				str(item.get("name", "???")) + stars + held_str + restriction_tag,
 				i == _selected_index, "%d M" % cost, text_color)
 			vbox.add_child(pill)

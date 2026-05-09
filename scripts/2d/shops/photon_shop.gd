@@ -270,7 +270,10 @@ func _refresh_display() -> void:
 		var held: int = Inventory.get_item_count(item["id"])
 		var held_str: String = " (x%d)" % held if held > 0 else ""
 
-		var pill := PszStyle.create_pill(
+		var item_icon: Texture2D = InventoryIcons.for_item(str(item["id"]))
+		var icons: Array = [item_icon] if item_icon else []
+		var pill := PszStyle.create_pill_with_icons(
+			icons,
 			"%s%s" % [item["name"], held_str],
 			i == _selected_index, "%d PD" % cost, text_color)
 		vbox.add_child(pill)

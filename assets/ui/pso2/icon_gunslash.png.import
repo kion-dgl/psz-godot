@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://brahxq4m0er88"
-path="res://.godot/imported/icon_gunslash.png-793746f8fc5e06af5b872afd9e3950a5.ctex"
+path="res://.godot/imported/icon_gunslash.png-6cc10197e85b5e8282426a4862d6285d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_gunslash.png"
-dest_files=["res://.godot/imported/icon_gunslash.png-793746f8fc5e06af5b872afd9e3950a5.ctex"]
+source_file="res://assets/ui/pso2/icon_gunslash.png"
+dest_files=["res://.godot/imported/icon_gunslash.png-6cc10197e85b5e8282426a4862d6285d.ctex"]
 
 [params]
 

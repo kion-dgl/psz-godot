@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bjh7ocoipdkw1"
-path="res://.godot/imported/icon_half_doll.png-7f4668acdc7c17d33f15c929869934bc.ctex"
+path="res://.godot/imported/icon_half_doll.png-886b78131030e2538574c4e6b9577dbd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_half_doll.png"
-dest_files=["res://.godot/imported/icon_half_doll.png-7f4668acdc7c17d33f15c929869934bc.ctex"]
+source_file="res://assets/ui/pso2/icon_half_doll.png"
+dest_files=["res://.godot/imported/icon_half_doll.png-886b78131030e2538574c4e6b9577dbd.ctex"]
 
 [params]
 

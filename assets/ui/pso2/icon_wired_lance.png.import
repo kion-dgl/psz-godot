@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://8lc72oj6uedh"
-path="res://.godot/imported/icon_wired_lance.png-61329c8435f804f61109f5307022373d.ctex"
+path="res://.godot/imported/icon_wired_lance.png-87c70a994723d8815332af5c09e00f30.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_wired_lance.png"
-dest_files=["res://.godot/imported/icon_wired_lance.png-61329c8435f804f61109f5307022373d.ctex"]
+source_file="res://assets/ui/pso2/icon_wired_lance.png"
+dest_files=["res://.godot/imported/icon_wired_lance.png-87c70a994723d8815332af5c09e00f30.ctex"]
 
 [params]
 

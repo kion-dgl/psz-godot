@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dhteisrvawsh1"
-path="res://.godot/imported/icon_rarity_gold.png-c423b1ab8e72b64f95435d5c592daba4.ctex"
+path="res://.godot/imported/icon_rarity_gold.png-bc5cc7c5d2daaf78ba832503d9c8e49e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_rarity_gold.png"
-dest_files=["res://.godot/imported/icon_rarity_gold.png-c423b1ab8e72b64f95435d5c592daba4.ctex"]
+source_file="res://assets/ui/pso2/icon_rarity_gold.png"
+dest_files=["res://.godot/imported/icon_rarity_gold.png-bc5cc7c5d2daaf78ba832503d9c8e49e.ctex"]
 
 [params]
 

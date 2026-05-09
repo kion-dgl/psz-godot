@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bwpe2325be3r4"
-path="res://.godot/imported/icon_deband_drink.png-3cb3f73a58d02ee3cf62bd3756a3ebd4.ctex"
+path="res://.godot/imported/icon_deband_drink.png-a536e2768f4dca7825f3169c670ca04b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_deband_drink.png"
-dest_files=["res://.godot/imported/icon_deband_drink.png-3cb3f73a58d02ee3cf62bd3756a3ebd4.ctex"]
+source_file="res://assets/ui/pso2/icon_deband_drink.png"
+dest_files=["res://.godot/imported/icon_deband_drink.png-a536e2768f4dca7825f3169c670ca04b.ctex"]
 
 [params]
 

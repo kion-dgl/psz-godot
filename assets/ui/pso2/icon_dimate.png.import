@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bkgd0rjgeeils"
-path="res://.godot/imported/icon_dimate.png-6eb3ab98f83389c67659c7a289e627fd.ctex"
+path="res://.godot/imported/icon_dimate.png-3fe2deff726ec30145fcbdba1d49c855.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_dimate.png"
-dest_files=["res://.godot/imported/icon_dimate.png-6eb3ab98f83389c67659c7a289e627fd.ctex"]
+source_file="res://assets/ui/pso2/icon_dimate.png"
+dest_files=["res://.godot/imported/icon_dimate.png-3fe2deff726ec30145fcbdba1d49c855.ctex"]
 
 [params]
 

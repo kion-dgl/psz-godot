@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://df5831ev4uqoj"
-path="res://.godot/imported/icon_rod.png-f5d9b8c6eda80a3e5b2523f44e304650.ctex"
+path="res://.godot/imported/icon_rod.png-d9441fc93ec7b9b25debac9efbbc5be1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_rod.png"
-dest_files=["res://.godot/imported/icon_rod.png-f5d9b8c6eda80a3e5b2523f44e304650.ctex"]
+source_file="res://assets/ui/pso2/icon_rod.png"
+dest_files=["res://.godot/imported/icon_rod.png-d9441fc93ec7b9b25debac9efbbc5be1.ctex"]
 
 [params]
 

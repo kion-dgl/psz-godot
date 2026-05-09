@@ -397,7 +397,11 @@ func _refresh_display() -> void:
 			var qty_str := " x%d" % qty if qty > 1 else ""
 			var equip_tag: String = " [E]" if item.get("equipped", false) else ""
 			var text_color := PszStyle.TEXT_MUTED if item.get("equipped", false) else Color.TRANSPARENT
-			var pill := PszStyle.create_pill(
+			var sell_id: String = str(item.get("id", ""))
+			var sell_icon: Texture2D = InventoryIcons.for_item(sell_id)
+			var sell_icons: Array = [sell_icon] if sell_icon else []
+			var pill := PszStyle.create_pill_with_icons(
+				sell_icons,
 				str(item.get("name", "???")) + equip_tag + qty_str,
 				i == _selected_index, "%d M" % sell_price, text_color)
 			vbox.add_child(pill)
@@ -410,7 +414,10 @@ func _refresh_display() -> void:
 			var item_id: String = shop_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
 			var held: int = Inventory.get_item_count(item_id)
 			var held_str: String = " (%d)" % held if held > 0 else ""
-			var pill := PszStyle.create_pill(
+			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
+			var buy_icons: Array = [buy_icon] if buy_icon else []
+			var pill := PszStyle.create_pill_with_icons(
+				buy_icons,
 				shop_name + held_str,
 				i == _selected_index, "%d M" % int(item.get("cost", 0)))
 			vbox.add_child(pill)
@@ -452,7 +459,10 @@ func _refresh_display() -> void:
 			if too_low_level:
 				status_tag += " [Req.%d]" % required_level
 
-			var pill := PszStyle.create_pill(
+			var disk_icon: Texture2D = InventoryIcons.for_item("disk_%s_1" % technique_id, "Disk")
+			var disk_icons: Array = [disk_icon] if disk_icon else []
+			var pill := PszStyle.create_pill_with_icons(
+				disk_icons,
 				disk_name + status_tag,
 				i == _selected_index, "%d M" % cost, text_color)
 			vbox.add_child(pill)

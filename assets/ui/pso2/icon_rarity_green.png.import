@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://wf0e1qqntwyj"
-path="res://.godot/imported/icon_rarity_green.png-ff0f391998c4d74567248cc4c95fbc95.ctex"
+path="res://.godot/imported/icon_rarity_green.png-fabab5a6956d8dd33b30fdce00e17593.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_rarity_green.png"
-dest_files=["res://.godot/imported/icon_rarity_green.png-ff0f391998c4d74567248cc4c95fbc95.ctex"]
+source_file="res://assets/ui/pso2/icon_rarity_green.png"
+dest_files=["res://.godot/imported/icon_rarity_green.png-fabab5a6956d8dd33b30fdce00e17593.ctex"]
 
 [params]
 

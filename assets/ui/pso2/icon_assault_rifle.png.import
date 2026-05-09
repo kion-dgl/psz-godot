@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cc3a0owjbyeyb"
-path="res://.godot/imported/icon_assault_rifle.png-cd9313ff313427e700268f710e293c78.ctex"
+path="res://.godot/imported/icon_assault_rifle.png-27f512e1602ada2d2d6493b577224624.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_assault_rifle.png"
-dest_files=["res://.godot/imported/icon_assault_rifle.png-cd9313ff313427e700268f710e293c78.ctex"]
+source_file="res://assets/ui/pso2/icon_assault_rifle.png"
+dest_files=["res://.godot/imported/icon_assault_rifle.png-27f512e1602ada2d2d6493b577224624.ctex"]
 
 [params]
 

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c3cqrnvpsdss6"
-path="res://.godot/imported/icon_double_saber.png-f20c6e6ac6e29c045198ae2726a65801.ctex"
+path="res://.godot/imported/icon_double_saber.png-691c5ce1c6aa6a862f356ff3e872d4ab.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/hud/pso2/icon_double_saber.png"
-dest_files=["res://.godot/imported/icon_double_saber.png-f20c6e6ac6e29c045198ae2726a65801.ctex"]
+source_file="res://assets/ui/pso2/icon_double_saber.png"
+dest_files=["res://.godot/imported/icon_double_saber.png-691c5ce1c6aa6a862f356ff3e872d4ab.ctex"]
 
 [params]
 

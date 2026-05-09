@@ -525,7 +525,23 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 				text_color = PszStyle.TEXT_WARNING
 
 		var is_selected: bool = i == _selected_index
-		var pill := PszStyle.create_pill(display_name, is_selected, right_text, text_color)
+		var icons: Array = []
+		var item_icon: Texture2D = InventoryIcons.for_item(item_id)
+		if item_icon:
+			icons.append(item_icon)
+		# For weapons/armor with a known rarity, append the rarity-tier
+		# star so storage rows show the same metadata band the weapon
+		# shop does.
+		var rarity: int = 0
+		if weapon:
+			rarity = int(weapon.rarity)
+		elif armor_data and "rarity" in armor_data:
+			rarity = int(armor_data.rarity)
+		if rarity > 0:
+			var rarity_icon: Texture2D = InventoryIcons.for_rarity(rarity)
+			if rarity_icon:
+				icons.append(rarity_icon)
+		var pill := PszStyle.create_pill_with_icons(icons, display_name, is_selected, right_text, text_color)
 		vbox.add_child(pill)
 		pills_ref.append(pill)
 

@@ -152,10 +152,30 @@ static func section_header_style() -> StyleBoxFlat:
 
 
 static func create_pill(left_text: String, selected: bool, right_text: String = "", text_color := Color.TRANSPARENT) -> PanelContainer:
+	return create_pill_with_icons([], left_text, selected, right_text, text_color)
+
+
+## Same as create_pill but with an optional row of icons in front of
+## the label. Pass an empty array to get the plain create_pill output.
+## Each icon renders as a 16×16 TextureRect; nulls in the array are
+## skipped so callers can pass [type_icon, rarity_icon] without
+## branching on missing assets.
+static func create_pill_with_icons(icons: Array, left_text: String, selected: bool, right_text: String = "", text_color := Color.TRANSPARENT) -> PanelContainer:
 	var pill := PanelContainer.new()
 	pill.add_theme_stylebox_override("panel", pill_style(selected))
 	pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	for icon in icons:
+		if icon == null:
+			continue
+		var rect := TextureRect.new()
+		rect.texture = icon
+		rect.custom_minimum_size = Vector2(16, 16)
+		rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		hbox.add_child(rect)
 	var label := Label.new()
 	label.text = left_text
 	var color: Color = text_color if text_color.a > 0.0 else TEXT
