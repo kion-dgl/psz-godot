@@ -17,6 +17,12 @@
 # Small UI sprites (menu panels, icons) committed directly — too small to be
 # worth the R2 round-trip and painful to iterate on through the asset pack.
 !/assets/ui/
+# Wiki-sourced inventory type icons (meseta / disk / rarity / weapons).
+# Each is ~1 KB; checking them in keeps them off the asset pack and lets PRs
+# touch them inline. See assets/hud/pso2/SOURCES.md for attribution.
+!/assets/hud/
+/assets/hud/*
+!/assets/hud/pso2/
 # Original assets we author in-house (e.g. Blender-built room geometry) are
 # committed directly so contributors don't need the pack to load these scenes.
 # Each parent dir must be re-included before the leaf negation works.
