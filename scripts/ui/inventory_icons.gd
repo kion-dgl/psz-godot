@@ -31,13 +31,13 @@ const ITEM_ICON_PATHS := {
 }
 
 const CATEGORY_ICON_PATHS := {
-	"Disk": "res://assets/ui/pso2/icon_disk.png",
+	"Disk": "res://assets/ui/pso2/icon_photon_art.png",
 	"Mag": "res://assets/ui/pso2/icon_mag.png",
 	"Material": "res://assets/ui/pso2/icon_material.png",
 	"Modifier": "res://assets/ui/pso2/icon_material.png",
 	"Consumable": "res://assets/ui/pso2/icon_tool.png",
-	"Armor": "res://assets/ui/pso2/icon_material.png",
-	"Unit": "res://assets/ui/pso2/icon_material.png",
+	"Armor": "res://assets/ui/pso2/icon_costume.png",
+	"Unit": "res://assets/ui/pso2/icon_costume.png",
 	"Key Item": "res://assets/ui/pso2/icon_tool.png",
 	"Other": "res://assets/ui/pso2/icon_tool.png",
 }
@@ -91,7 +91,7 @@ static func for_item(item_id: String, category: String = "") -> Texture2D:
 	if ITEM_ICON_PATHS.has(base_id):
 		return _load(str(ITEM_ICON_PATHS[base_id]))
 	if base_id.begins_with("disk_"):
-		return _load("res://assets/ui/pso2/icon_disk.png")
+		return _load("res://assets/ui/pso2/icon_photon_art.png")
 	# Weapon: per-type icon
 	if category == "Weapon" or _is_weapon(base_id):
 		var weapon = WeaponRegistry.get_weapon(base_id)
@@ -104,7 +104,11 @@ static func for_item(item_id: String, category: String = "") -> Texture2D:
 	# didn't pass a category).
 	if category == "Mag" or MagManager.is_mag(base_id):
 		return _load("res://assets/ui/pso2/icon_mag.png")
-	# Category fallback
+	# Resolve category from the inventory autoload when caller didn't
+	# pass one — this lets shop/storage screens call `for_item(id)`
+	# without re-implementing the registry walk.
+	if category.is_empty() and not base_id.is_empty():
+		category = Inventory.get_item_category(base_id)
 	if not category.is_empty() and CATEGORY_ICON_PATHS.has(category):
 		return _load(str(CATEGORY_ICON_PATHS[category]))
 	return null
