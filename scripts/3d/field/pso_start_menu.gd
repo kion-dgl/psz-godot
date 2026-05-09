@@ -175,13 +175,10 @@ func _ready() -> void:
 	for action in NAV_ACTIONS:
 		_nav_hold[action] = 0.0
 		_nav_next[action] = 0.0
-	# Pre-cache all action icons
-	for action in ActionPalette.ALL_ACTIONS:
-		var aid: String = str(action.get("id", ""))
-		var icon: Texture2D = ActionPalette.get_action_icon(aid)
-		if icon:
-			_icon_cache[aid] = icon
-	print("[PsoStartMenu] Ready — layer %d, cached %d icons" % [layer, _icon_cache.size()])
+	# Action-palette icons load lazily via _get_action_icon — they live in
+	# the R2 asset pack which mounts after this autoload _ready runs, so a
+	# pre-cache pass here would just store nulls.
+	print("[PsoStartMenu] Ready — layer %d" % layer)
 
 	_canvas = Control.new()
 	_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1162,6 +1159,23 @@ func _load_icon(path: String) -> Texture2D:
 	return tex
 
 
+## Lazy lookup for action-palette icons (Foie / Barta / attack /
+## monomate / etc.). These live in the R2 asset pack, which mounts
+## after this autoloads _ready runs — so pre-caching at startup yields
+## an empty cache. We retry on every miss until the icon resolves, then
+## cache the non-null result; nulls are NOT cached so a later mount of
+## the pack starts working without restart.
+func _get_action_icon(action_id: String) -> Texture2D:
+	if action_id.is_empty():
+		return null
+	if _icon_cache.has(action_id):
+		return _icon_cache[action_id]
+	var icon: Texture2D = ActionPalette.get_action_icon(action_id)
+	if icon:
+		_icon_cache[action_id] = icon
+	return icon
+
+
 ## Map an inventory category ("Weapon", "Armor", ...) to one of the
 ## TYPE_* keys used by the small per-row icon (16x16 colored block +
 ## letter). Centralized here so _draw_items and _draw_bottom_list agree
@@ -1852,7 +1866,7 @@ func _draw_techs(c: Control, font: Font) -> void:
 			col = C_TEXT
 
 		# Tech icon
-		var icon: Texture2D = _icon_cache.get(str(tech.get("id", "")), null) as Texture2D
+		var icon: Texture2D = _get_action_icon(str(tech.get("id", "")))
 		if icon:
 			if not learned:
 				c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 20, 20), false, Color(0.4, 0.4, 0.4))
@@ -1924,7 +1938,7 @@ func _draw_palette(c: Control, font: Font) -> void:
 			c.draw_string(font, Vector2(px + 13, draw_y + 17), slot_keys[slot_i] if slot_i < 3 else "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
 
 			# Action icon
-			var icon: Texture2D = _icon_cache.get(action_id, null) as Texture2D
+			var icon: Texture2D = _get_action_icon(action_id)
 			if icon:
 				c.draw_texture_rect(icon, Rect2(px + 32, draw_y + 2, 20, 20), false)
 
@@ -1978,7 +1992,7 @@ func _draw_palette_picker(c: Control, font: Font) -> void:
 		else:
 			col = C_TEXT
 		# Action icon
-		var icon: Texture2D = _icon_cache.get(action_id, null) as Texture2D
+		var icon: Texture2D = _get_action_icon(action_id)
 		if icon:
 			c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 18, 18), false)
 		c.draw_string(font, Vector2(px + 28, iy + 15), action_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, col)
