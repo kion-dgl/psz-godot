@@ -1372,16 +1372,24 @@ function CharacterSelect() {
       overflow: 'hidden',
       fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
     }}>
-      {/* Banner — top strip, full width */}
+      {/* Banner — custom polygon shape derived from the layout reference
+          (character_select_layout.png). 5-vertex polygon: flat top across
+          the full width, the right side has a higher bottom edge, with
+          a knee around x=520 dropping to a lower-left wing. */}
       <div style={{
-        position: 'absolute', top: 50, left: 0, width: '100%', height: 80,
-        display: 'flex', alignItems: 'center',
+        position: 'absolute', top: 72, left: 0, width: '100%', height: 84,
+        background: '#FBBA18',
+        clipPath: 'polygon(0 0, 100% 0, 100% 58%, 49% 58%, 44% 100%, 0 100%)',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.25)',
+        display: 'flex', alignItems: 'flex-start',
       }}>
-        <Panel title="Character Select">
-          <div style={{ fontSize: 12, color: C.textLight, padding: '4px 8px' }}>
-            Pick a character to start, or an empty slot to create a new one.
-          </div>
-        </Panel>
+        <div style={{
+          padding: '12px 36px', fontSize: 28, fontWeight: 800, fontStyle: 'italic',
+          color: '#1a1a2a', letterSpacing: '1px',
+          textShadow: '1px 1px 0 rgba(255,255,255,0.35)',
+        }}>
+          CHARACTER SELECT
+        </div>
       </div>
 
       {/* Character list (left) */}
@@ -1417,11 +1425,14 @@ function CharacterSelect() {
         </Panel>
       </div>
 
-      {/* Model preview (right, top) */}
-      <div style={{ position: 'absolute', top: 180, left: 680, width: 400, height: 320 }}>
+      {/* Model preview (right). Extends down to the same bottom edge as
+          the description (y=610) so the description sits on top of the
+          preview's lower portion — matches Rozalin's layout where the
+          info card overlaps the preview. */}
+      <div style={{ position: 'absolute', top: 180, left: 680, width: 400, height: 430, zIndex: 1 }}>
         <Panel title="Preview">
           <div style={{
-            height: 240,
+            height: 360,
             background: 'linear-gradient(180deg, #c8e0f0 0%, #6090b8 100%)',
             border: '1px solid rgba(150,180,210,0.5)',
             borderRadius: 4,
@@ -1447,8 +1458,9 @@ function CharacterSelect() {
         </Panel>
       </div>
 
-      {/* Description (right, below preview) */}
-      <div style={{ position: 'absolute', top: 520, left: 670, width: 430, height: 90 }}>
+      {/* Description (overlapping the bottom of the preview) — z-index
+          above the preview panel so it floats on top. */}
+      <div style={{ position: 'absolute', top: 520, left: 670, width: 430, height: 90, zIndex: 2 }}>
         <Panel title="Description">
           <div style={{
             background: C.itemBg, borderRadius: 4,
