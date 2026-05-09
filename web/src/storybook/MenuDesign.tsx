@@ -1313,9 +1313,9 @@ function CharacterModelPreview({ classId }: { classId: string | null }) {
     if (!c) return;
     const w = c.clientWidth, h = c.clientHeight;
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 100);
-    camera.position.set(0, 1.2, 2.6);
-    camera.lookAt(0, 0.9, 0);
+    const camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
+    camera.position.set(0, 1.1, 3.4);
+    camera.lookAt(0, 1.0, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -1327,10 +1327,7 @@ function CharacterModelPreview({ classId }: { classId: string | null }) {
     scene.add(dir);
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
-    const clock = new THREE.Clock();
     const animate = () => {
-      const dt = clock.getDelta();
-      modelGroup.rotation.y += dt * 0.4; // slow turntable
       renderer.render(scene, camera);
       sceneRef.current!.raf = requestAnimationFrame(animate);
     };
@@ -1366,6 +1363,7 @@ function CharacterModelPreview({ classId }: { classId: string | null }) {
     if (!prefix) return;
     const variation = `${prefix}0`;
     const url = assetUrl(`assets/player/${variation}/${variation}_000.glb`);
+    const textureUrl = assetUrl(`assets/player/${variation}/textures/${variation}_000.png`);
     new GLTFLoader().load(
       url,
       (gltf) => {
@@ -1374,6 +1372,20 @@ function CharacterModelPreview({ classId }: { classId: string | null }) {
           if (m.isMesh) {
             m.castShadow = true; m.receiveShadow = true;
           }
+        });
+        new THREE.TextureLoader().load(textureUrl, (texture) => {
+          texture.magFilter = THREE.NearestFilter;
+          texture.minFilter = THREE.NearestFilter;
+          texture.flipY = false;
+          texture.colorSpace = THREE.SRGBColorSpace;
+          gltf.scene.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (m.isMesh && m.material) {
+              const mat = m.material as THREE.MeshBasicMaterial;
+              mat.map = texture;
+              mat.needsUpdate = true;
+            }
+          });
         });
         sd.modelGroup.add(gltf.scene);
       },
@@ -1553,17 +1565,6 @@ function CharacterSelect() {
           info card overlaps the preview. */}
       <div style={{ position: 'absolute', top: 180, left: 680, width: 400, height: 430, zIndex: 1 }}>
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          {/* Character name overlay sits on top of the canvas. */}
-          {slot.kind === 'filled' && (
-            <div style={{
-              position: 'absolute', top: 8, left: 10, zIndex: 1,
-              fontSize: 14, fontWeight: 700, color: C.textWhite,
-              textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
-              pointerEvents: 'none',
-            }}>
-              {slot.name}
-            </div>
-          )}
           <CharacterModelPreview
             classId={slot.kind === 'filled' ? slot.klass.toLowerCase() : null}
           />
@@ -1584,8 +1585,11 @@ function CharacterSelect() {
           above the preview panel so it floats on top. */}
       <div style={{ position: 'absolute', top: 520, left: 670, width: 430, height: 90, zIndex: 2 }}>
         <div style={{
-          background: C.itemBg, borderRadius: 4,
-          padding: '12px 16px', border: '1px solid rgba(150,180,210,0.4)',
+          background: C.bgLight,
+          backgroundImage: SCANLINES,
+          borderRadius: 4,
+          padding: '12px 16px',
+          border: '1px solid rgba(60,100,140,0.5)',
           fontSize: 13, color: C.text, lineHeight: 1.45,
           boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
         }}>
