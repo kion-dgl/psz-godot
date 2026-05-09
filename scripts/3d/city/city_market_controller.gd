@@ -44,12 +44,16 @@ func _ready() -> void:
 	_add_floor_collision(Vector3(0, 0, 40), Vector3(50, 0.2, 70))
 
 	# NPCs
+	# Test: VRM swap for the item-shop NPC. .vrm files are GLB under the
+	# hood, renamed to .glb so Godot's GLTF importer picks it up. PSO
+	# idle-anim ("pso_f_sh_stand") doesn't apply since VRM ships its own
+	# rig — pass empty string so the model just stands in its bind pose.
 	_add_npc(
 		"ShopNPC", Vector3(-10.34, 0, 27.67), 1.4207,
-		"res://assets/npcs/np_003_00_0/np_003_00_0.glb",
+		"res://assets/ui/item_shop_vrm/item_shop.glb",
 		"Shop",
 		"res://scenes/2d/shops/item_shop.tscn",
-		"pso_f_sh_stand"
+		""
 	)
 	_add_npc(
 		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), 0.7835,
