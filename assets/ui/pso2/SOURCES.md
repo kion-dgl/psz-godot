@@ -60,6 +60,7 @@ icon (weapons get their type-icon instead — see Weapons section below).
 | icon_tool.png       | ToolSmall.png     |
 | icon_mag.png        | MagDevice.png     |
 | icon_costume.png    | UIItemCostume.png |
+| icon_unit.png       | UIUnitSubIcon.png |
 | icon_photon_art.png | UIPhotonArt.png   |
 
 ## Consumables

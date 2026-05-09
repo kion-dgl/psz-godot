@@ -37,7 +37,7 @@ const CATEGORY_ICON_PATHS := {
 	"Modifier": "res://assets/ui/pso2/icon_material.png",
 	"Consumable": "res://assets/ui/pso2/icon_tool.png",
 	"Armor": "res://assets/ui/pso2/icon_costume.png",
-	"Unit": "res://assets/ui/pso2/icon_costume.png",
+	"Unit": "res://assets/ui/pso2/icon_unit.png",
 	"Key Item": "res://assets/ui/pso2/icon_tool.png",
 	"Other": "res://assets/ui/pso2/icon_tool.png",
 }
