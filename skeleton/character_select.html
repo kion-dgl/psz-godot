@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280, initial-scale=1">
+<title>Character Select — blockout</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background: #2a2a2a;
+    padding: 24px 0;
+    color: #ccc;
+  }
+  .stack { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+
+  .frame {
+    width: 1280px;
+    height: 720px;
+    background: #ffffff;
+    border: 1px solid #000000;
+    box-sizing: border-box;
+    position: relative;
+    color: #333;
+  }
+
+  /* Each box gets a tiny caption + the box's own role label inside it. */
+  .box {
+    border: 1px dashed #555;
+    box-sizing: border-box;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.02);
+  }
+  .box .caption {
+    font-size: 11px;
+    color: #888;
+    padding: 4px 8px;
+    border-bottom: 1px dashed #ddd;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .box .body {
+    flex: 1;
+    padding: 8px;
+    font-size: 12px;
+    color: #555;
+    overflow: hidden;
+  }
+
+  .banner   { top: 50px;  left: 0;     width: 100%; height: 80px; }
+  .list     { top: 180px; left: 200px; width: 400px; height: 450px; }
+  .preview  { top: 180px; left: 680px; width: 400px; height: 450px; }
+  .description { top: 520px; left: 670px; width: 430px; height: 90px; }
+  .next     { bottom: 10px; right: 20px; width: 240px; height: 70px; }
+
+  /* Notes block — companion to the frame, sits underneath. */
+  .notes {
+    width: 1280px;
+    background: #1c1c1c;
+    border: 1px solid #444;
+    color: #ccc;
+    padding: 16px 24px;
+    font-size: 13px;
+    line-height: 1.55;
+    box-sizing: border-box;
+  }
+  .notes h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #88aaff;
+    margin: 0 0 8px;
+  }
+  .notes h3 { font-size: 13px; color: #f0a020; margin: 14px 0 4px; }
+  .notes ul { margin: 4px 0 0 16px; padding: 0; }
+  .notes li { margin-bottom: 3px; }
+  .notes pre {
+    background: #0e0e0e;
+    border: 1px solid #333;
+    color: #99ccff;
+    padding: 10px 12px;
+    margin: 6px 0 0;
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .notes code { color: #f0a020; }
+</style>
+</head>
+<body>
+  <div class="stack">
+
+    <div class="frame">
+      <div class="box banner">
+        <div class="caption">Banner</div>
+        <div class="body">Screen title — "CHARACTER SELECT". Static.</div>
+      </div>
+
+      <div class="box list">
+        <div class="caption">Character List</div>
+        <div class="body">
+          Vertical list of saved characters. One row per slot.<br>
+          Row content: <code>name · class · Lv.N · playtime</code>.<br><br>
+          D-pad ↑/↓ moves selection. Wrap at ends.<br>
+          Empty slots render as "(Empty Slot)" pills, also selectable.
+        </div>
+      </div>
+
+      <div class="box preview">
+        <div class="caption">Model Preview</div>
+        <div class="body">
+          3D model of the highlighted character.<br>
+          Idle anim, slow turntable rotation.<br>
+          Empty slot → silhouette / placeholder.
+        </div>
+      </div>
+
+      <div class="box description">
+        <div class="caption">Description</div>
+        <div class="body">
+          Class summary + key stat callouts (e.g.
+          "FOmar — male Force, balanced caster, ATP+ over FOnewearl").
+        </div>
+      </div>
+
+      <div class="box next">
+        <div class="caption">Next</div>
+        <div class="body">Action button — proceed with the highlighted character (or open Create flow on empty slot).</div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h2>Behavior</h2>
+
+      <h3>Input flow</h3>
+      <pre>
+[D-pad ↑/↓] ── moves selection in the Character List
+                │
+                ▼
+       (single selection state)
+                │
+                ├──▶ updates Model Preview (loads the character's model + idle)
+                ├──▶ updates Description (class summary text)
+                └──▶ updates Next label
+                       ├─ filled slot → "Start"
+                       └─ empty slot  → "Create"
+
+[A / Accept]  ── on filled slot: confirm → enter game with that character
+                ── on empty slot: confirm → enter character-create flow
+
+[B / Cancel]  ── back to title screen
+[Y / extra]   ── (TBD) delete-character flow, separate concern (issue #168 out-of-scope)
+      </pre>
+
+      <h3>Data shape per row</h3>
+      <ul>
+        <li><code>name</code> — display string, max ~12 chars</li>
+        <li><code>class</code> — short label (HUmar, RAcast, etc.)</li>
+        <li><code>level</code> — integer</li>
+        <li><code>playtime</code> — formatted "HHh MMm" or "MMm" if &lt;1h</li>
+        <li><code>model_id</code> — feeds the preview pane (loaded lazily on selection change)</li>
+      </ul>
+
+      <h3>Open questions</h3>
+      <ul>
+        <li>How many character slots? PSO PC V2 had 4. PSZ currently uses 4 cards. Stay at 4 for now.</li>
+        <li>Is the banner skinned (PSO panel-with-diagonal-cut) or plain bar?</li>
+        <li>Description text — class flavor text vs. raw stat dump? Probably class flavor + level.</li>
+        <li>Preview rotation speed / lighting model — defer to /web mock.</li>
+      </ul>
+
+      <h3>Out of scope (per #168)</h3>
+      <ul>
+        <li>Race/class-specific UI tints</li>
+        <li>Character deletion flow</li>
+      </ul>
+    </div>
+
+  </div>
+</body>
+</html>

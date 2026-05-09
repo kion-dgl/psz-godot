@@ -1291,6 +1291,137 @@ function FieldWarpMenu() {
 
 // --- Main Page ---
 
+function CharacterSelect() {
+  // Issue #168 — PSO PC V2 list-style character select.
+  // Layout follows the skeleton blockout in skeleton/character_select.html.
+  // Banner across the top, list on the left, model preview on the right
+  // with description + Next stacked underneath the preview.
+  type Slot =
+    | { kind: 'filled'; name: string; klass: string; level: number; playtimeMin: number }
+    | { kind: 'empty' };
+
+  const SLOTS: Slot[] = [
+    { kind: 'filled', name: 'Sara',     klass: 'HUmar',     level: 42, playtimeMin: 38 * 60 + 12 },
+    { kind: 'filled', name: 'Reika',    klass: 'FOnewearl', level: 28, playtimeMin: 12 * 60 + 47 },
+    { kind: 'filled', name: 'Kiln',     klass: 'RAcast',    level: 17, playtimeMin: 4 * 60 + 5 },
+    { kind: 'empty' },
+  ];
+
+  const [sel, setSel] = useState(0);
+  const slot = SLOTS[sel];
+
+  function fmtPlaytime(min: number): string {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
+  }
+
+  // Class flavor — defer real copy to design pass; this is mock placeholder.
+  const CLASS_FLAVOR: Record<string, string> = {
+    HUmar:     'Balanced human Hunter. Strong ATP, decent EVP, no techs.',
+    FOnewearl: 'Newman Force. Highest tech multiplier in the game; fragile.',
+    RAcast:    'Cast Ranger. Trap specialist, immune to status, no techs.',
+  };
+
+  const nextLabel = slot.kind === 'filled' ? 'Start' : 'Create';
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: 920 }}>
+      {/* Banner — full width */}
+      <Panel title="Character Select">
+        <div style={{
+          fontSize: '12px', color: C.textLight, padding: '4px 8px',
+        }}>
+          Pick a character to start, or an empty slot to create a new one.
+        </div>
+      </Panel>
+
+      <div style={{ display: 'flex', gap: '12px' }}>
+        {/* Character list (left) */}
+        <Panel title="Characters" width={360} hint="↑/↓ to choose · A to confirm · B to cancel">
+          {SLOTS.map((s, i) => {
+            if (s.kind === 'empty') {
+              return (
+                <PillRow
+                  key={i}
+                  label="(Empty Slot)"
+                  rightText=""
+                  selected={sel === i}
+                  onClick={() => setSel(i)}
+                />
+              );
+            }
+            return (
+              <PillRow
+                key={i}
+                label={`${s.name}  ·  ${s.klass}  ·  Lv.${s.level}`}
+                rightText={fmtPlaytime(s.playtimeMin)}
+                selected={sel === i}
+                onClick={() => setSel(i)}
+              />
+            );
+          })}
+        </Panel>
+
+        {/* Right column: preview + description + next */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: 420 }}>
+          <Panel title="Preview">
+            <div style={{
+              height: 280,
+              background: 'linear-gradient(180deg, #c8e0f0 0%, #6090b8 100%)',
+              border: '1px solid rgba(150,180,210,0.5)',
+              borderRadius: 4,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: C.textLight, fontSize: 13, fontStyle: 'italic',
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {slot.kind === 'filled' ? (
+                <>
+                  <div style={{
+                    position: 'absolute', top: 8, left: 10,
+                    fontSize: 14, fontWeight: 700, color: C.textWhite,
+                    textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
+                  }}>
+                    {slot.name}
+                  </div>
+                  <div style={{ opacity: 0.7 }}>[ 3D model — turntable idle ]</div>
+                </>
+              ) : (
+                <div style={{ opacity: 0.6 }}>[ empty slot — silhouette ]</div>
+              )}
+            </div>
+          </Panel>
+
+          <Panel title="Description">
+            <div style={{
+              background: C.itemBg, borderRadius: 4,
+              padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)',
+              fontSize: 13, color: C.text, lineHeight: 1.5, minHeight: 56,
+            }}>
+              {slot.kind === 'filled'
+                ? CLASS_FLAVOR[slot.klass] ?? 'Class flavor text TBD.'
+                : 'No character in this slot yet — confirm to create one.'}
+            </div>
+          </Panel>
+
+          <div style={{
+            alignSelf: 'flex-end',
+            padding: '12px 24px',
+            background: C.selectedGradient, color: C.textOnSelected,
+            fontWeight: 700, fontSize: 16,
+            borderRadius: 4,
+            border: '1px solid rgba(0,0,0,0.2)',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+            minWidth: 160, textAlign: 'center', cursor: 'pointer',
+          }}>
+            {nextLabel} ▶
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const MENU_DEMOS = [
   { id: 'hud-full', label: 'HUD (Full)', component: HudFull },
   { id: 'hud-hp', label: 'HUD: HP/PP', component: HudHpPp },
@@ -1308,6 +1439,7 @@ const MENU_DEMOS = [
   { id: 'quest', label: 'Quest Counter', component: QuestCounter },
   { id: 'status', label: 'Status', component: StatusScreen },
   { id: 'field-warp', label: 'Field Warp', component: FieldWarpMenu },
+  { id: 'character-select', label: 'Character Select', component: CharacterSelect },
 ];
 
 export default function MenuDesign() {
