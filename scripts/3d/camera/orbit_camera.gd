@@ -56,10 +56,14 @@ func _process(_delta: float) -> void:
 			camera_rotation -= rotation_speed * dir
 		if Input.is_action_pressed("camera_right"):
 			camera_rotation += rotation_speed * dir
-		if Input.is_action_pressed("camera_up"):
-			camera_pitch = clamp(camera_pitch + rotation_speed, min_pitch_offset, max_pitch_offset)
-		if Input.is_action_pressed("camera_down"):
-			camera_pitch = clamp(camera_pitch - rotation_speed, min_pitch_offset, max_pitch_offset)
+		# Y-axis tilt is opt-in — gated on InputConfig.enable_camera_y so
+		# the right-stick Y resting noise doesn't accidentally pitch the
+		# camera for players who haven't opted in.
+		if InputConfig.enable_camera_y:
+			if Input.is_action_pressed("camera_up"):
+				camera_pitch = clamp(camera_pitch + rotation_speed, min_pitch_offset, max_pitch_offset)
+			if Input.is_action_pressed("camera_down"):
+				camera_pitch = clamp(camera_pitch - rotation_speed, min_pitch_offset, max_pitch_offset)
 		if Input.is_action_just_pressed("camera_lock"):
 			_center_behind_player()
 
