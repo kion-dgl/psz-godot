@@ -32,7 +32,10 @@ function loadActions(): ActionEntry[] {
         a.kind === 'face' &&
         a.mark &&
         typeof a.mark.meshName === 'string' &&
-        typeof a.mark.faceIndex === 'number'
+        typeof a.mark.faceIndex === 'number' &&
+        isVec3(a.mark.v0) &&
+        isVec3(a.mark.v1) &&
+        isVec3(a.mark.v2)
       ) {
         out.push({ kind: 'face', mark: a.mark as FaceMark });
       }
@@ -45,7 +48,15 @@ function loadActions(): ActionEntry[] {
 
 function loadMode(): Mode {
   const v = localStorage.getItem(MODE_KEY);
-  return v === 'face' || v === 'place' ? v : 'place';
+  return v === 'mesh' || v === 'face' || v === 'place' ? v : 'place';
+}
+
+function isVec3(v: unknown): v is [number, number, number] {
+  return (
+    Array.isArray(v) &&
+    v.length === 3 &&
+    v.every((n) => typeof n === 'number' && Number.isFinite(n))
+  );
 }
 
 function loadTransformMode(): TransformMode {

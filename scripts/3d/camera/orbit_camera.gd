@@ -96,11 +96,15 @@ func _update_camera_position() -> void:
 	# Sphere-orbit: derive a single radius + base pitch from the
 	# exported `distance`/`height` so pitch=0 reproduces the original
 	# fixed-circle behavior, then user `camera_pitch` rotates around the
-	# horizontal axis. Final pitch is clamped under ±90° so the camera
-	# never flips through the look target.
+	# horizontal axis. Final pitch is clamped to the exported offsets,
+	# additionally bounded under ±~88° as a safety net so the camera can
+	# never flip through the look target even with user-edited offsets.
+	const _SAFETY_PITCH: float = PI * 0.49
 	var radius: float = sqrt(distance * distance + height * height)
 	var base_pitch: float = atan2(height, distance)
-	var pitch: float = clamp(base_pitch + camera_pitch, -PI * 0.45, PI * 0.45)
+	var min_pitch: float = max(base_pitch + min_pitch_offset, -_SAFETY_PITCH)
+	var max_pitch: float = min(base_pitch + max_pitch_offset, _SAFETY_PITCH)
+	var pitch: float = clamp(base_pitch + camera_pitch, min_pitch, max_pitch)
 	var horiz: float = cos(pitch) * radius
 	var vert: float = sin(pitch) * radius
 

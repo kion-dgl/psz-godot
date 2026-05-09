@@ -17,14 +17,6 @@ interface MarketModelProps {
   onSceneReady?: (scene: THREE.Object3D) => void;
 }
 
-function readFaceIndices(geom: THREE.BufferGeometry, faceIndex: number): [number, number, number] {
-  const idx = geom.index;
-  if (idx) {
-    return [idx.getX(faceIndex * 3), idx.getX(faceIndex * 3 + 1), idx.getX(faceIndex * 3 + 2)];
-  }
-  return [faceIndex * 3, faceIndex * 3 + 1, faceIndex * 3 + 2];
-}
-
 function vec3FromAttr(
   attr: THREE.BufferAttribute | THREE.InterleavedBufferAttribute,
   i: number,
@@ -155,10 +147,12 @@ interface PlaceableCartProps {
  *  (e.g. numeric input edits in the side panel) are applied via
  *  useEffect below. */
 function PlaceableCart({ transform, transformMode, onChange }: PlaceableCartProps) {
+  // useGLTF caches by path, so this returns the same scene every mount —
+  // fine here because PlaceableCart is only rendered in 'place' mode and
+  // there's no second consumer. If we ever needed two simultaneous carts
+  // we'd want SkeletonUtils.clone() (the model has no skinned meshes
+  // currently, but plain `scene.clone(true)` is the static-mesh form).
   const { scene } = useGLTF(assetUrl(CART_PATH));
-  // The same GLB is rendered every mount — cloning so toggling modes
-  // doesn't share group state with a hidden-but-mounted copy.
-  const cartScene = scene;
   const [groupNode, setGroupNode] = useState<THREE.Group | null>(null);
 
   // Set the initial transform once the group mounts.
@@ -169,10 +163,11 @@ function PlaceableCart({ transform, transformMode, onChange }: PlaceableCartProp
     groupNode.scale.set(transform.scale[0], transform.scale[1], transform.scale[2]);
   }, [groupNode]);
 
-  // External numeric edits (typed in the side panel) — push to the group.
-  // Skip during gizmo drag to avoid feedback loops.
-  const externallyDriven = useRef(false);
-  externallyDriven.current = true;
+  // External numeric edits (typed in the side panel) push to the group
+  // when they diverge from the live transform. The threshold guard
+  // prevents a feedback loop when this effect runs after onObjectChange
+  // sync'd state — re-setting the same value would still fire
+  // TransformControls' "objectChange" event in three-stdlib.
   useEffect(() => {
     if (!groupNode) return;
     if (
@@ -210,7 +205,7 @@ function PlaceableCart({ transform, transformMode, onChange }: PlaceableCartProp
   return (
     <>
       <group ref={setGroupNode}>
-        <primitive object={cartScene} />
+        <primitive object={scene} />
       </group>
       {groupNode && (
         <TransformControls
