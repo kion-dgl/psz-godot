@@ -1387,9 +1387,6 @@ function CharacterModelPreview({ classId }: { classId: string | null }) {
       ref={containerRef}
       style={{
         width: '100%', height: '100%',
-        background: 'linear-gradient(180deg, #c8e0f0 0%, #6090b8 100%)',
-        borderRadius: 4,
-        border: '1px solid rgba(150,180,210,0.5)',
       }}
     />
   );
@@ -1486,15 +1483,19 @@ function CharacterSelect() {
         background: '#FBBA18',
         clipPath: 'polygon(0 0, 100% 0, 100% 58%, 49% 58%, 44% 100%, 0 100%)',
         // border on a clip-path doesn't follow the clipped edge — stack
-        // four 1px drop-shadows in cardinal directions to fake a 1px
-        // outline that hugs the polygon, plus the original drop-shadow
-        // for depth.
+        // drop-shadows in cardinal + diagonal directions to fake a ~2px
+        // outline that hugs the polygon, plus a softer drop-shadow for
+        // depth.
         filter: [
-          'drop-shadow(1px 0 0 #1a1a2a)',
-          'drop-shadow(-1px 0 0 #1a1a2a)',
-          'drop-shadow(0 1px 0 #1a1a2a)',
-          'drop-shadow(0 -1px 0 #1a1a2a)',
-          'drop-shadow(0 2px 4px rgba(0,0,0,0.35))',
+          'drop-shadow(2px 0 0 #1a1a2a)',
+          'drop-shadow(-2px 0 0 #1a1a2a)',
+          'drop-shadow(0 2px 0 #1a1a2a)',
+          'drop-shadow(0 -2px 0 #1a1a2a)',
+          'drop-shadow(1px 1px 0 #1a1a2a)',
+          'drop-shadow(-1px 1px 0 #1a1a2a)',
+          'drop-shadow(1px -1px 0 #1a1a2a)',
+          'drop-shadow(-1px -1px 0 #1a1a2a)',
+          'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
         ].join(' '),
         display: 'flex', alignItems: 'flex-start',
       }}>
@@ -1551,50 +1552,47 @@ function CharacterSelect() {
           preview's lower portion — matches Rozalin's layout where the
           info card overlaps the preview. */}
       <div style={{ position: 'absolute', top: 180, left: 680, width: 400, height: 430, zIndex: 1 }}>
-        <Panel title="Preview">
-          <div style={{ position: 'relative', height: 360 }}>
-            {/* Character name overlay sits on top of the canvas. */}
-            {slot.kind === 'filled' && (
-              <div style={{
-                position: 'absolute', top: 8, left: 10, zIndex: 1,
-                fontSize: 14, fontWeight: 700, color: C.textWhite,
-                textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
-                pointerEvents: 'none',
-              }}>
-                {slot.name}
-              </div>
-            )}
-            <CharacterModelPreview
-              classId={slot.kind === 'filled' ? slot.klass.toLowerCase() : null}
-            />
-            {slot.kind === 'empty' && (
-              <div style={{
-                position: 'absolute', inset: 0, display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                color: C.textLight, fontSize: 13, fontStyle: 'italic',
-                opacity: 0.7, pointerEvents: 'none',
-              }}>
-                [ empty slot ]
-              </div>
-            )}
-          </div>
-        </Panel>
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          {/* Character name overlay sits on top of the canvas. */}
+          {slot.kind === 'filled' && (
+            <div style={{
+              position: 'absolute', top: 8, left: 10, zIndex: 1,
+              fontSize: 14, fontWeight: 700, color: C.textWhite,
+              textShadow: '1px 1px 0 rgba(0,0,0,0.5)',
+              pointerEvents: 'none',
+            }}>
+              {slot.name}
+            </div>
+          )}
+          <CharacterModelPreview
+            classId={slot.kind === 'filled' ? slot.klass.toLowerCase() : null}
+          />
+          {slot.kind === 'empty' && (
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              color: C.textLight, fontSize: 13, fontStyle: 'italic',
+              opacity: 0.7, pointerEvents: 'none',
+            }}>
+              [ empty slot ]
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Description (overlapping the bottom of the preview) — z-index
           above the preview panel so it floats on top. */}
       <div style={{ position: 'absolute', top: 520, left: 670, width: 430, height: 90, zIndex: 2 }}>
-        <Panel title="Description">
-          <div style={{
-            background: C.itemBg, borderRadius: 4,
-            padding: '8px 12px', border: '1px solid rgba(150,180,210,0.4)',
-            fontSize: 12, color: C.text, lineHeight: 1.4,
-          }}>
-            {slot.kind === 'filled'
-              ? CLASS_FLAVOR[slot.klass] ?? 'Class flavor text TBD.'
-              : 'No character in this slot yet — confirm to create one.'}
-          </div>
-        </Panel>
+        <div style={{
+          background: C.itemBg, borderRadius: 4,
+          padding: '12px 16px', border: '1px solid rgba(150,180,210,0.4)',
+          fontSize: 13, color: C.text, lineHeight: 1.45,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+        }}>
+          {slot.kind === 'filled'
+            ? CLASS_FLAVOR[slot.klass] ?? 'Class flavor text TBD.'
+            : 'No character in this slot yet — confirm to create one.'}
+        </div>
       </div>
 
       {/* Next button (bottom-right corner) */}
