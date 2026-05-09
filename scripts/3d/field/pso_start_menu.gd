@@ -663,6 +663,7 @@ func _get_options_list() -> Array:
 		"Controller: %s" % InputConfig.get_label(),
 		"On-Screen Controls: %s" % mc_state,
 		"Camera Rotation: %s" % ("Inverted" if InputConfig.invert_camera_x else "Direct"),
+		"Camera Y-Axis: %s" % (on if InputConfig.enable_camera_y else off),
 		"Auto-Sort Inventory: %s" % (on if Inventory.is_auto_sort() else off),
 		"Floor Collision: %s" % (on if DebugConfig.show_floor_collision else off),
 		"Gate Dots: %s" % (on if DebugConfig.show_gate_dots else off),
@@ -684,17 +685,18 @@ func _toggle_option(idx: int) -> void:
 			if mc and mc.has_method("toggle"):
 				mc.toggle()
 		4: InputConfig.toggle_invert_camera_x()
-		5: Inventory.set_auto_sort(not Inventory.is_auto_sort())
-		6: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
-		7: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
-		8: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
-		9: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
-		10:
+		5: InputConfig.toggle_enable_camera_y()
+		6: Inventory.set_auto_sort(not Inventory.is_auto_sort())
+		7: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
+		8: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
+		9: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
+		10: DebugConfig.show_combo_timing = not DebugConfig.show_combo_timing
+		11:
 			DebugConfig.show_time_room = not DebugConfig.show_time_room
 			TimeManager.show_hud(DebugConfig.show_time_room)
-		11:
-			DebugConfig.profile_frames = not DebugConfig.profile_frames
 		12:
+			DebugConfig.profile_frames = not DebugConfig.profile_frames
+		13:
 			DebugConfig.show_player_position = not DebugConfig.show_player_position
 
 

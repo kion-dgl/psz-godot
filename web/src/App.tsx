@@ -11,6 +11,7 @@ const PlayerAnimationStorybook = lazy(() => import('./storybook/PlayerAnimationS
 const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
 const SvgCheck = lazy(() => import('./svg-check/SvgCheck'));
 const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
+const MarketEditor = lazy(() => import('./market-editor/MarketEditor'));
 const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
 const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
@@ -100,6 +101,12 @@ function NavBar() {
       }}>
         Office
       </Link>
+      <Link to="/market-editor" style={{
+        color: isActive('/market-editor') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        Market
+      </Link>
       <Link to="/menu-design" style={{
         color: isActive('/menu-design') ? '#fff' : '#888',
         textDecoration: 'none',
@@ -188,6 +195,7 @@ export default function App() {
             <Route path="/stage-editor" element={<StageEditor />} />
             <Route path="/svg-check" element={<SvgCheck />} />
             <Route path="/office-editor" element={<OfficeEditor />} />
+            <Route path="/market-editor" element={<MarketEditor />} />
             <Route path="/menu-design" element={<MenuDesign />} />
             <Route path="/settings" element={<SettingsMockup />} />
             <Route path="/retarget" element={<RetargetViewer />} />

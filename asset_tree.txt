@@ -3930,7 +3930,9 @@ assets/stages/city_e/market/s00_1_wood01.png
 assets/stages/city_e/market/s00_2_wave01.png
 assets/stages/city_e/market/s00_2_wave02.png
 assets/stages/city_e/market/s00e_sa1_m.glb
+assets/stages/city_e/market/s00e_sa1_m_no_cart.glb
 assets/stages/city_e/market/wall_extension.glb
+assets/stages/city_e/market/weapon_shop/weapon_shop_cart.glb
 assets/stages/city_e/s00e_office/lndmd/s00e_office_m_0.png
 assets/stages/city_e/s00e_office/lndmd/s00e_office_m_10.png
 assets/stages/city_e/s00e_office/lndmd/s00e_office_m_11.png

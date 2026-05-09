@@ -49,6 +49,11 @@ const FACE_INDICES: Dictionary = {
 
 var current_scheme: String = "keyboard"
 var invert_camera_x: bool = false
+## Right-stick Y axis tilts the orbit camera up/down. Off by default
+## until enough playtesters opt in — the third-person camera was
+## fixed-pitch from launch and this is opt-in for the same reason
+## invert_camera_x is opt-in.
+var enable_camera_y: bool = false
 
 
 func _ready() -> void:
@@ -58,6 +63,11 @@ func _ready() -> void:
 
 func toggle_invert_camera_x() -> void:
 	invert_camera_x = not invert_camera_x
+	_save()
+
+
+func toggle_enable_camera_y() -> void:
+	enable_camera_y = not enable_camera_y
 	_save()
 
 
@@ -143,6 +153,7 @@ func _save() -> void:
 				data = parsed
 	data["scheme"] = current_scheme
 	data["invert_camera_x"] = invert_camera_x
+	data["enable_camera_y"] = enable_camera_y
 	var out_file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if out_file:
 		out_file.store_string(JSON.stringify(data))
@@ -203,6 +214,9 @@ func _load() -> void:
 
 	if parsed.has("invert_camera_x"):
 		invert_camera_x = bool(parsed["invert_camera_x"])
+
+	if parsed.has("enable_camera_y"):
+		enable_camera_y = bool(parsed["enable_camera_y"])
 
 	# Extended format: preset + keyboard remaps
 	if parsed.has("preset") and parsed.has("keyboard"):

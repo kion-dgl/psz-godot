@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/3d/city/city_market_controller.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa1/lndmd/s00e_sa1_m.glb" id="2_glb"]
+[ext_resource type="PackedScene" path="res://assets/stages/city_e/market/s00e_sa1_m_no_cart.glb" id="2_glb"]
 [ext_resource type="Texture2D" path="res://assets/stages/city_e/market/canyon_panorama.png" id="3_panorama"]
 [ext_resource type="PackedScene" path="res://assets/stages/city_e/market/wall_extension.glb" id="4_wallext"]
 
