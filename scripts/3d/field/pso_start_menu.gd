@@ -42,7 +42,7 @@ const FONT_SIZE_XS := 11
 const FONT_SIZE_LG := 17
 
 # ── State ───────────────────────────────────────────────────────────────────────
-enum Mode { MAIN, ITEMS, EQUIP, EQUIP_PICK, TECHS, PALETTE, PALETTE_PICK, MAGS, MAG_FEED, QUEST, SYSTEM, OPTIONS }
+enum Mode { MAIN, ITEMS, ITEMS_SWAP, EQUIP, EQUIP_PICK, TECHS, PALETTE, PALETTE_PICK, MAGS, MAG_FEED, QUEST, SYSTEM, OPTIONS }
 
 var _mode: Mode = Mode.MAIN
 var _menu_idx: int = 0
@@ -57,6 +57,8 @@ var _mag_feed_idx: int = 0
 var _options_idx: int = 0
 var _item_scroll: float = 0.0  # Pixel scroll offset for items list
 var _action_message: String = ""  # One-shot message after Items use, cleared on navigation
+var _swap_from_idx: int = -1  # Origin row when in Mode.ITEMS_SWAP (Manual sort)
+var _swap_from_id: String = ""  # Origin item id, used to relocate cursor after swap
 
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
@@ -96,8 +98,8 @@ func _can_use_techs() -> bool:
 	if class_data and class_data.race == "Cast":
 		return false
 	return true
-const SYSTEM_LABELS := ["Save", "Return to Title", "Sort Inventory", "Options"]
-const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Re-arrange items by category.", "Adjust game settings."]
+const SYSTEM_LABELS := ["Save", "Return to Title", "Options"]
+const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Adjust game settings."]
 ## Equipment slots are built dynamically based on equipped armor's max_slots
 const TYPE_ICONS := {"weapon": "W", "armor": "A", "shield": "S", "unit": "U", "tool": "T", "tech": "M", "material": "R", "mag": "G"}
 const TYPE_COLORS := {
@@ -201,6 +203,255 @@ func _open_confirm(prompt: String, on_confirmed: Callable) -> void:
 	_active_modal = modal
 	_canvas.add_child(modal)
 	modal.ask(prompt)
+
+
+## Open a multi-button ChoiceDialog. The callback receives the chosen
+## index (into the original `choices` array). On cancel the modal just
+## closes. Used for the unified inventory item menu (Equip / Use / Drop
+## / Sort) and its Sort sub-menu (Auto / Manual).
+func _open_choice(prompt: String, choices: Array, on_chosen: Callable) -> void:
+	var modal := ChoiceDialog.new()
+	modal.chosen.connect(func(idx: int) -> void:
+		_active_modal = null
+		on_chosen.call(idx)
+		_canvas.queue_redraw()
+	)
+	modal.cancelled.connect(func() -> void:
+		_active_modal = null
+		_canvas.queue_redraw()
+	)
+	_active_modal = modal
+	_canvas.add_child(modal)
+	modal.ask(prompt, choices)
+
+
+## Inventory item modal: show Equip/Unequip, Use, Drop, Sort filtered by
+## what applies to this item. Replaces #208's per-action Yes/No flow —
+## the modal action button IS the commit point. Disabled options render
+## greyed in PSO style (e.g. "Drop" is greyed for equipped gear).
+func _open_item_menu(item: Dictionary) -> void:
+	var item_id: String = str(item.get("id", ""))
+	var item_name: String = str(item.get("name", item_id))
+	var category: String = str(item.get("category", "Other"))
+	var equipped: bool = bool(item.get("equipped", false))
+	var usable: bool = bool(item.get("usable", false))
+	var equippable: bool = category in ["Weapon", "Armor", "Unit", "Mag"]
+
+	var choices: Array = []
+	var actions: Array = []
+	if equippable:
+		if equipped:
+			choices.append({"label": "Unequip", "enabled": true})
+			actions.append("unequip")
+		else:
+			choices.append({"label": "Equip", "enabled": _can_equip_from_inventory(item)})
+			actions.append("equip")
+	elif usable:
+		choices.append({"label": "Use", "enabled": true})
+		actions.append("use")
+	choices.append({"label": "Drop", "enabled": not equipped})
+	actions.append("drop")
+	choices.append({"label": "Sort", "enabled": Inventory._items.size() > 1})
+	actions.append("sort")
+
+	_open_choice(item_name, choices, func(idx: int) -> void:
+		var action: String = str(actions[idx]) if idx < actions.size() else ""
+		match action:
+			"equip": _equip_from_inventory(item)
+			"unequip": _unequip_from_inventory(item)
+			"use": _execute_use_item(item_id, item_name)
+			"drop": _drop_inventory_item(item)
+			"sort": _open_sort_menu()
+	)
+
+
+## Sort sub-modal (one-shot): Auto rebuilds in canonical order,
+## Manual enters Mode.ITEMS_SWAP so the player picks a destination row
+## and the selected item swaps positions with it.
+func _open_sort_menu() -> void:
+	var choices: Array = [
+		{"label": "Auto", "enabled": true},
+		{"label": "Manual", "enabled": Inventory._items.size() > 1},
+	]
+	_open_choice("Sort Items", choices, func(idx: int) -> void:
+		match idx:
+			0:
+				Inventory.sort_in_place()
+				_action_message = "Inventory sorted."
+				SfxManager.play("res://assets/sfx/ui/menu_select.wav")
+			1:
+				_enter_swap_mode()
+	)
+
+
+func _enter_swap_mode() -> void:
+	var inv := _get_inventory()
+	if _sub_idx >= inv.size():
+		return
+	_swap_from_idx = _sub_idx
+	_swap_from_id = str(inv[_sub_idx].get("id", ""))
+	_mode = Mode.ITEMS_SWAP
+	_action_message = "Pick a row — Accept swaps, Cancel exits."
+
+
+func _exit_swap_mode() -> void:
+	_swap_from_idx = -1
+	_swap_from_id = ""
+	_mode = Mode.ITEMS
+
+
+func _do_swap() -> void:
+	var inv := _get_inventory()
+	if _sub_idx >= inv.size() or _sub_idx == _swap_from_idx:
+		_exit_swap_mode()
+		return
+	var dest_id: String = str(inv[_sub_idx].get("id", ""))
+	if dest_id.is_empty() or _swap_from_id.is_empty():
+		_exit_swap_mode()
+		return
+	Inventory.swap_items(_swap_from_id, dest_id)
+	# After swap, the selected item now lives at _sub_idx (the destination
+	# row), which is also where the cursor already is — so no further
+	# cursor adjustment needed.
+	_action_message = "Swapped."
+	_exit_swap_mode()
+
+
+func _input_items_swap(event: InputEvent) -> bool:
+	var count: int = _get_inventory().size()
+	if event.is_action_pressed("ui_up", false) and count > 0:
+		_sub_idx = wrapi(_sub_idx - 1, 0, count)
+		# Recompute swap origin index in case the list changed under us.
+		_swap_from_idx = _find_idx_for_id(_swap_from_id)
+		return true
+	elif event.is_action_pressed("ui_down", false) and count > 0:
+		_sub_idx = wrapi(_sub_idx + 1, 0, count)
+		_swap_from_idx = _find_idx_for_id(_swap_from_id)
+		return true
+	elif event.is_action_pressed("ui_accept"):
+		_do_swap()
+		return true
+	elif event.is_action_pressed("ui_cancel"):
+		_action_message = ""
+		_exit_swap_mode()
+		return true
+	return false
+
+
+func _find_idx_for_id(item_id: String) -> int:
+	if item_id.is_empty():
+		return -1
+	var inv := _get_inventory()
+	for i in range(inv.size()):
+		if str(inv[i].get("id", "")) == item_id:
+			return i
+	return -1
+
+
+## Equip the selected inventory item into its natural slot. Mirrors
+## _do_equip's body but takes the slot key from the item's category
+## instead of from the EQUIP_PICK indices, so it can be invoked from
+## the inventory item modal without the player walking through the
+## Equip submenu.
+func _equip_from_inventory(item: Dictionary) -> void:
+	var slot_key := _slot_key_for_inventory_item(item)
+	if slot_key.is_empty():
+		_action_message = "No slot available."
+		return
+	var ch := _get_character()
+	if ch.is_empty():
+		return
+	var equip: Dictionary = ch.get("equipment", {})
+	var item_id: String = str(item.get("id", ""))
+	equip[slot_key] = item_id
+	if slot_key == "frame":
+		var armor = ArmorRegistry.get_armor(item_id)
+		var new_max: int = armor.max_slots if armor else 0
+		for i in range(4):
+			if i >= new_max:
+				equip["unit%d" % (i + 1)] = ""
+	ch["equipment"] = equip
+	var player_node = get_tree().get_first_node_in_group("player")
+	if slot_key == "weapon" and player_node and player_node.has_method("refresh_weapon"):
+		player_node.refresh_weapon()
+	if slot_key == "mag" and player_node and player_node.has_method("refresh_mag"):
+		player_node.refresh_mag()
+	_action_message = "Equipped %s." % str(item.get("name", item_id))
+
+
+func _unequip_from_inventory(item: Dictionary) -> void:
+	var ch := _get_character()
+	if ch.is_empty():
+		return
+	var equip: Dictionary = ch.get("equipment", {})
+	var item_id: String = str(item.get("id", ""))
+	var slot_key := ""
+	for key in equip:
+		if str(equip[key]) == item_id:
+			slot_key = str(key)
+			break
+	if slot_key.is_empty():
+		return
+	equip[slot_key] = ""
+	if slot_key == "frame":
+		for i in range(4):
+			equip["unit%d" % (i + 1)] = ""
+	ch["equipment"] = equip
+	var player_node = get_tree().get_first_node_in_group("player")
+	if slot_key == "weapon" and player_node and player_node.has_method("refresh_weapon"):
+		player_node.refresh_weapon()
+	if slot_key == "mag" and player_node and player_node.has_method("refresh_mag"):
+		player_node.refresh_mag()
+	_action_message = "Unequipped %s." % str(item.get("name", item_id))
+
+
+func _drop_inventory_item(item: Dictionary) -> void:
+	var item_id: String = str(item.get("id", ""))
+	if item_id.is_empty():
+		return
+	var item_name: String = str(item.get("name", item_id))
+	Inventory.remove_item(item_id, 1)
+	_action_message = "Dropped %s." % item_name
+	var inv_size: int = _get_inventory().size()
+	if _sub_idx >= inv_size:
+		_sub_idx = maxi(inv_size - 1, 0)
+
+
+func _can_equip_from_inventory(item: Dictionary) -> bool:
+	return not _slot_key_for_inventory_item(item).is_empty()
+
+
+## Pick the slot key this inventory item would equip into. Empty string
+## means "no available slot for this item right now" (e.g. no free Unit
+## slot, or a class can't equip this weapon type).
+func _slot_key_for_inventory_item(item: Dictionary) -> String:
+	var ch := _get_character()
+	if ch.is_empty():
+		return ""
+	var equip: Dictionary = ch.get("equipment", {})
+	var category: String = str(item.get("category", ""))
+	match category:
+		"Weapon":
+			var item_id: String = str(item.get("id", ""))
+			var base_id: String = Inventory.get_base_id(item_id)
+			var weapon = WeaponRegistry.get_weapon(base_id)
+			if weapon == null:
+				return ""
+			var class_data = ClassRegistry.get_class_data(str(ch.get("class_id", "")))
+			if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type):
+				return ""
+			return "weapon"
+		"Armor":
+			return "frame"
+		"Unit":
+			for i in range(4):
+				var key := "unit%d" % (i + 1)
+				if str(equip.get(key, "")).is_empty():
+					return key
+			return ""
+		"Mag":
+			return "mag"
+	return ""
 
 
 func open() -> void:
@@ -330,6 +581,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			handled = _input_main(event)
 		Mode.ITEMS:
 			handled = _input_list(event, _get_inventory().size())
+		Mode.ITEMS_SWAP:
+			handled = _input_items_swap(event)
 		Mode.EQUIP:
 			handled = _input_list(event, _get_equip_slots().size())
 		Mode.EQUIP_PICK:
@@ -436,39 +689,12 @@ func _input_equip_pick(event: InputEvent) -> bool:
 		_equip_item_idx = wrapi(_equip_item_idx + 1, 0, candidates.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
-		_confirm_and_equip()
+		_do_equip()
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.EQUIP
 		return true
 	return false
-
-
-## Build the prompt + open a Yes/No confirmation, then run the equip on
-## confirm. No-op if the selection is invalid (mirrors _do_equip's bail
-## paths so we don't open a dialog for an action that wouldn't run).
-func _confirm_and_equip() -> void:
-	var slots := _get_equip_slots()
-	if _equip_slot_idx >= slots.size():
-		return
-	var candidates := _get_equip_candidates(_equip_slot_idx)
-	if _equip_item_idx >= candidates.size():
-		return
-	var item: Dictionary = candidates[_equip_item_idx]
-	var item_id: String = str(item.get("id", ""))
-	var item_name: String = str(item.get("name", item_id))
-	var slot_label: String = str(slots[_equip_slot_idx].get("label", ""))
-
-	var prompt: String
-	if item_id == "__unequip__":
-		prompt = "Unequip %s?" % slot_label.to_lower()
-	elif item.get("equipped", false):
-		# Already equipped — _do_equip is a no-op, no need for a modal.
-		_do_equip()
-		return
-	else:
-		prompt = "Equip %s?" % item_name
-	_open_confirm(prompt, _do_equip)
 
 
 func _do_equip() -> void:
@@ -583,10 +809,6 @@ func _input_system(event: InputEvent) -> bool:
 				close()
 				SceneManager.goto_scene("res://scenes/2d/title.tscn")
 			2:
-				Inventory.sort_in_place()
-				_action_message = "Inventory sorted."
-				SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-			3:
 				_mode = Mode.OPTIONS
 				_options_idx = 0
 		return true
@@ -629,7 +851,7 @@ func _input_options(event: InputEvent) -> bool:
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.SYSTEM
-		_sub_idx = 3
+		_sub_idx = 2
 		return true
 	return false
 
@@ -728,13 +950,7 @@ func _sub_accept() -> void:
 		Mode.ITEMS:
 			var inv := _get_inventory()
 			if _sub_idx < inv.size():
-				var item: Dictionary = inv[_sub_idx]
-				if item.get("usable", false):
-					var item_id_to_use: String = str(item.get("id", ""))
-					var item_name: String = str(item.get("name", ""))
-					_open_confirm("Use %s?" % item_name, func() -> void:
-						_execute_use_item(item_id_to_use, item_name)
-					)
+				_open_item_menu(inv[_sub_idx])
 		Mode.EQUIP:
 			var slots := _get_equip_slots()
 			_equip_slot_idx = _sub_idx
@@ -756,7 +972,7 @@ func _sub_accept() -> void:
 			_sub_idx = 0
 			_mode = Mode.MAG_FEED
 		Mode.MAG_FEED:
-			_confirm_and_feed_mag()
+			_do_feed_mag()
 
 
 ## Run the actual Inventory.use_item() call after the player confirms via
@@ -782,22 +998,6 @@ func _execute_use_item(item_id: String, item_name: String) -> void:
 			_action_message = "Telepipe only works in the field"
 		else:
 			_action_message = "Couldn't use %s" % item_name
-
-
-## Build the prompt + open a Yes/No confirmation, then feed the mag on
-## confirm. No-op if the selection is invalid.
-func _confirm_and_feed_mag() -> void:
-	var feed := _get_feed_items()
-	if _sub_idx >= feed.size():
-		return
-	var mags := _get_mags()
-	if _mag_idx >= mags.size():
-		return
-	var item: Dictionary = feed[_sub_idx]
-	var mag: Dictionary = mags[_mag_idx]
-	var item_name: String = str(item.get("name", item.get("id", "")))
-	var mag_name: String = str(mag.get("name", mag.get("id", "Mag")))
-	_open_confirm("Feed %s to %s?" % [item_name, mag_name], _do_feed_mag)
 
 
 func _do_feed_mag() -> void:
@@ -827,7 +1027,8 @@ func _go_back() -> void:
 		Mode.EQUIP_PICK: _mode = Mode.EQUIP
 		Mode.PALETTE_PICK: _mode = Mode.PALETTE
 		Mode.MAG_FEED: _mode = Mode.MAGS
-		Mode.OPTIONS: _mode = Mode.SYSTEM; _sub_idx = 3
+		Mode.OPTIONS: _mode = Mode.SYSTEM; _sub_idx = 2
+		Mode.ITEMS_SWAP: _exit_swap_mode()
 		_: _mode = Mode.MAIN
 
 
@@ -838,9 +1039,10 @@ func _get_character() -> Dictionary:
 
 
 func _get_inventory() -> Array:
-	## Returns inventory in storage order (pickup-by-default, sorted if
-	## the player has Auto-Sort on or hit System → Sort Inventory).
-	## Inventory.sort_in_place() handles the actual ordering.
+	## Returns inventory in storage order (pickup-by-default, re-ordered
+	## by Auto-Sort Inventory option, by Sort → Auto in the item modal,
+	## or by Sort → Manual swaps). Inventory.sort_in_place() and
+	## Inventory.swap_items() handle the actual ordering.
 	var items := Inventory.get_all_items()
 	# Add category and equipped flags
 	var ch := _get_character()
@@ -864,6 +1066,24 @@ func _get_inventory() -> Array:
 			or item_id == "telepipe"
 		)
 	return items
+
+
+## Map an inventory category ("Weapon", "Armor", ...) to one of the
+## TYPE_* keys used by the small per-row icon (16x16 colored block +
+## letter). Centralized here so _draw_items and _draw_bottom_list agree
+## on what icon shows for each category.
+func _category_to_type(category: String) -> String:
+	match category:
+		"Weapon": return "weapon"
+		"Armor": return "armor"
+		"Unit": return "unit"
+		"Mag": return "mag"
+		"Disk": return "tech"
+		"Consumable": return "tool"
+		"Material": return "material"
+		"Modifier": return "material"
+		"Key Item": return "tool"
+	return "tool"
 
 
 func _get_item_category(item_id: String) -> String:
@@ -1293,7 +1513,6 @@ func _draw_items(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Items")
 	var inv := _get_inventory()
 
-	# Draw item list with category headers
 	var px: float = 5.0
 	var py: float = VIEWPORT_H - 305.0
 	var pw: float = 300.0
@@ -1303,19 +1522,14 @@ func _draw_items(c: Control, font: Font) -> void:
 	# Slot count header
 	c.draw_string(font, Vector2(px + 10, py + 14), "%d/40 slots" % Inventory.get_total_slots(), HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
 
-	# Two-pass: first compute Y position for each item, then scroll to keep selected visible
-	var content_y: float = 20.0  # Start offset within panel
-	var item_positions: Array = []  # Y offset for each inventory item
-	var current_cat := ""
-	for i in range(inv.size()):
-		var cat: String = str(inv[i].get("category", "Other"))
-		if cat != current_cat:
-			current_cat = cat
-			content_y += 20  # Category header height
+	# Two-pass scroll calc: each row is one fixed-height entry now that
+	# category banners are gone. Type is shown via the per-row icon instead.
+	var content_y: float = 20.0
+	var item_positions: Array = []
+	for _i in range(inv.size()):
 		item_positions.append(content_y)
-		content_y += 22  # Item row height
+		content_y += 22
 
-	# Scroll to keep selected item in view
 	var view_h: float = ph - 6
 	if _sub_idx >= 0 and _sub_idx < item_positions.size():
 		var sel_y: float = item_positions[_sub_idx]
@@ -1325,42 +1539,44 @@ func _draw_items(c: Control, font: Font) -> void:
 			_item_scroll = int(sel_y + 22 - view_h)
 	_item_scroll = maxf(_item_scroll, 0.0)
 
+	# Origin row index when the player is mid-Manual-sort, so we can paint
+	# it distinctively (cool blue) — distinct from the orange selection tint.
+	var swap_idx: int = _swap_from_idx if _mode == Mode.ITEMS_SWAP else -1
+
 	# Draw pass
 	var draw_y: float = py + 20.0 - _item_scroll
-	current_cat = ""
 	for i in range(inv.size()):
-		var item: Dictionary = inv[i]
-		var cat: String = str(item.get("category", "Other"))
-
-		# Category header
-		if cat != current_cat:
-			current_cat = cat
-			if draw_y + 18 > py and draw_y < py + ph:
-				c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 18), Color(0.12, 0.16, 0.28))
-				c.draw_string(font, Vector2(px + 8, draw_y + 13), cat, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
-			draw_y += 20
-
 		if draw_y + 22 < py or draw_y > py + ph:
 			draw_y += 22
 			continue
-
+		var item: Dictionary = inv[i]
 		var is_sel: bool = i == _sub_idx
-		# White row background, yellow/orange for selected
+		var is_swap_origin: bool = i == swap_idx
+
 		if is_sel:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), C_SELECT)
+		elif is_swap_origin:
+			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(0.34, 0.55, 0.85))
 		else:
 			c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 20), Color(1, 1, 1, 0.85))
-		var col: Color = C_SELECT_TEXT if is_sel else C_TEXT
+		var col: Color = C_SELECT_TEXT if (is_sel or is_swap_origin) else C_TEXT
 
-		# Equipped badge — colored pill
-		if item.get("equipped", false):
-			var badge_color: Color = Color(0.2, 0.5, 0.9) if not is_sel else Color(1, 1, 1, 0.3)
-			c.draw_rect(Rect2(px + 4, draw_y + 4, 14, 12), badge_color)
-			c.draw_string(font, Vector2(px + 6, draw_y + 14), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
+		# Per-item type icon (replaces the dark-blue category banner)
+		var type_key: String = _category_to_type(str(item.get("category", "Other")))
+		var icon_letter: String = str(TYPE_ICONS.get(type_key, "?"))
+		var icon_color: Color = TYPE_COLORS.get(type_key, Color.GRAY)
+		if is_sel or is_swap_origin:
+			icon_color = Color(1, 1, 1, 0.4)
+		c.draw_rect(Rect2(px + 6, draw_y + 2, 16, 16), icon_color)
+		c.draw_string(font, Vector2(px + 9, draw_y + 15), icon_letter, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color.WHITE)
 
-		# Item name
+		# Item name (with [E] prefix for equipped — the type icon's slot
+		# is now occupied by the type indicator, so the equipped pill
+		# moves into the name string).
 		var item_name: String = str(item.get("name", ""))
-		c.draw_string(font, Vector2(px + 20, draw_y + 14), item_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
+		if item.get("equipped", false):
+			item_name = "[E] " + item_name
+		c.draw_string(font, Vector2(px + 28, draw_y + 14), item_name, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
 
 		# Quantity
 		var qty: int = int(item.get("quantity", 1))
@@ -1398,8 +1614,10 @@ func _draw_items(c: Control, font: Font) -> void:
 				if TechniqueManager.TECHNIQUES.has(tech_id):
 					tech_name = str(TechniqueManager.TECHNIQUES[tech_id].get("name", tech_name))
 				desc += "\nTeaches %s Lv.%s" % [tech_name, tech_lvl]
-		if item.get("usable", false):
-			desc += "\n[Enter] Use"
+		if _mode == Mode.ITEMS_SWAP:
+			desc += "\n[Enter] Swap  [Esc] Cancel"
+		else:
+			desc += "\n[Enter] Open"
 	if not _action_message.is_empty():
 		desc += "\n\n" + _action_message
 	_draw_bottom_desc(c, font, desc)

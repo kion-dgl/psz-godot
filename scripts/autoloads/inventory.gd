@@ -6,7 +6,9 @@ extends Node
 ## order in Godot 4, so by default items appear in pickup order. Players
 ## who prefer organized inventories can either:
 ##
-##   - Hit "Sort Inventory" in the start menu (one-shot sort_in_place).
+##   - Open the start menu's inventory item modal → Sort → Auto for a
+##     one-shot sort_in_place. Manual triggers a swap-mode pick to
+##     re-order two rows by hand.
 ##   - Flip "Auto-Sort Inventory" in Options — every add_item then
 ##     re-sorts in place so newly-picked-up items file into their
 ##     category instead of appending at the end.
@@ -88,6 +90,34 @@ func set_auto_sort(value: bool) -> void:
 func _maybe_auto_sort() -> void:
 	if is_auto_sort():
 		sort_in_place()
+
+
+## Swap two items' positions in the inventory order. Used by the start
+## menu's Manual sort (Inventory item modal → Sort → Manual): the player
+## picks a destination row and the originally selected item swaps with
+## it. One-shot — does not persist any per-character ordering hint, the
+## new positions just live in the Dictionary's insertion order until
+## something else re-orders.
+##
+## Both id_a and id_b must already be present; otherwise this is a no-op.
+## Rebuilds the Dictionary in place using the same trick as
+## sort_in_place() so the order change shows up in get_all_items().
+func swap_items(id_a: String, id_b: String) -> void:
+	if id_a == id_b:
+		return
+	if not _items.has(id_a) or not _items.has(id_b):
+		return
+	var ids: Array = _items.keys()
+	var ia: int = ids.find(id_a)
+	var ib: int = ids.find(id_b)
+	if ia < 0 or ib < 0:
+		return
+	ids[ia] = id_b
+	ids[ib] = id_a
+	var rebuilt: Dictionary = {}
+	for id in ids:
+		rebuilt[id] = _items[id]
+	_items = rebuilt
 
 
 ## Re-arrange `_items` so iteration order is category-then-name. Mutates
