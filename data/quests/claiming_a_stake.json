@@ -1,6 +1,7 @@
 {
   "version": 1,
   "last_updated": "2026-04-05",
+  "disabled": true,
   "id": "claiming_a_stake",
   "name": "Claiming a Stake",
   "description": "Clear out hostile creatures from a mining site in Gurhacia Valley.",
@@ -191,5 +192,5 @@
       "end_pos": "0,3"
     }
   ],
-  "parent_quest": "search_and_rescue"
+  "parent_quest": "deep_ore_extraction"
 }

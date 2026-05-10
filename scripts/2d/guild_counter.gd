@@ -13,26 +13,6 @@ var _active_modal: Control = null
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
-## Quest numbering (matches Alpha/Beta chain)
-const QUEST_ORDER := {
-	"search_and_rescue": 1,
-	"the_paru_pact": 2,
-	"apothecary_supply": 3,
-	"static_in_the_snow": 4,
-	"deep_ore_extraction": 5,
-	"messages_from_the_past": 6,
-	"investigate_tower": 7,
-	"heretic": 8,
-	"control_system": 9,
-	"the_broken_seal": 15,
-	"dark_castle": 16,
-	"native_research": 12,
-	"seek_my_mentor": 13,
-	"claiming_a_stake": 14,
-	"poisoned_water": 10,
-	"finding_ogi": 11,
-}
-
 const AREA_DISPLAY := {
 	"gurhacia": "Valley",
 	"rioh": "Snowfield",
@@ -116,7 +96,7 @@ func _load_entries() -> void:
 		})
 		return
 
-	# Load numbered quests
+	# Load all enabled quests; ordering is computed by _tree_sort_entries.
 	var quest_ids := QuestLoader.list_quests()
 	for qid in quest_ids:
 		if qid == "hello_quest" or qid == "manifest":
@@ -124,11 +104,10 @@ func _load_entries() -> void:
 		var quest := QuestLoader.load_quest(qid)
 		if quest.is_empty():
 			continue
+		if quest.get("disabled", false):
+			continue
 		var area_id: String = quest.get("area_id", "gurhacia")
 		var display_name: String = quest.get("name", qid)
-		var quest_number: int = QUEST_ORDER.get(qid, 0)
-		if quest_number > 0:
-			display_name = "%d. %s" % [quest_number, display_name]
 
 		## Compute availability from parent_quest dependency
 		var available: bool = true
@@ -161,13 +140,46 @@ func _load_entries() -> void:
 			"is_main": false,
 			"requires": [],
 			"rewards": {},
-			"_sort_order": quest_number,
+			"_parent_id": parent_id,
 			"available": available,
 			"parent_name": parent_name,
 		})
-	_entries.sort_custom(func(a, b):
-		return a.get("_sort_order", 99) < b.get("_sort_order", 99)
-	)
+	_entries = _tree_sort_entries(_entries)
+
+
+## Order quest entries by parent_quest tree (DFS), preserving manifest order
+## at each level. Non-quest entries (report/cancel) are kept at the front in
+## their original order. Orphans (parent not loaded) are treated as roots.
+func _tree_sort_entries(entries: Array) -> Array:
+	var by_id := {}
+	var quest_entries: Array = []
+	var passthrough: Array = []
+	for e in entries:
+		if e.get("type", "") != "quest":
+			passthrough.append(e)
+			continue
+		quest_entries.append(e)
+		by_id[e.get("quest_id", "")] = true
+	var children_of := {"": []}
+	for e in quest_entries:
+		var pid: String = e.get("_parent_id", "")
+		var key: String = pid if by_id.has(pid) else ""
+		if not children_of.has(key):
+			children_of[key] = []
+		children_of[key].append(e)
+	var result: Array = passthrough.duplicate()
+	var stack: Array = []
+	var roots: Array = children_of.get("", [])
+	for i in range(roots.size() - 1, -1, -1):
+		stack.append(roots[i])
+	while not stack.is_empty():
+		var node: Dictionary = stack.pop_back()
+		result.append(node)
+		var qid: String = node.get("quest_id", "")
+		var kids: Array = children_of.get(qid, [])
+		for i in range(kids.size() - 1, -1, -1):
+			stack.append(kids[i])
+	return result
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -1,6 +1,7 @@
 {
   "version": 1,
   "last_updated": "2026-03-20",
+  "disabled": true,
   "id": "native_research",
   "name": "Native Research",
   "description": "Requested by: Dr. Carlo. Escort a researcher through the valley, wetlands, and snowfield to conduct a wildlife survey across all three biomes.",
