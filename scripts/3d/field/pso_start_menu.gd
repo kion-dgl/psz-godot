@@ -275,6 +275,14 @@ func _open_sort_menu() -> void:
 		match idx:
 			0:
 				Inventory.sort_in_place()
+				# Persist immediately. Without this, sort_in_place mutates only
+				# the runtime Inventory._items dict — set_active_slot syncs that
+				# back into the character record on slot-change (so returning
+				# to title and re-selecting preserves the order), but the JSON
+				# on disk doesn't get rewritten until a separate save event
+				# fires, and a hard reboot in between loses the new order.
+				# Reported by Rozalin 2026-05-09.
+				SaveManager.save_game()
 				_action_message = "Inventory sorted."
 				SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 			1:
@@ -311,6 +319,9 @@ func _do_move() -> void:
 	# Cursor follows the moved item — after move the moved row is at
 	# _sub_idx (Inventory.move_item lands the moved id at exactly the
 	# target visual index), so no cursor adjustment needed.
+	# Persist for the same reason as the auto-sort branch above —
+	# otherwise a hard reboot loses the new ordering.
+	SaveManager.save_game()
 	_action_message = "Moved."
 	_exit_move_mode()
 
