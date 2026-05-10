@@ -40,16 +40,19 @@
   ],
   "sections": [
     {
-      "area_id": "arca",
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "4,0",
       "cells": [
         {
           "pos": "0,0",
-          "stage_id": "s06a_na1",
-          "connections": {
-            "south": "0,1"
-          },
-          "default": "default",
+          "stage_id": "s06a_sa1",
           "rotation": 0,
+          "connections": {
+            "east": "1,0"
+          },
+          "portals": {},
           "is_start": true,
           "is_end": false,
           "is_branch": false,
@@ -59,40 +62,19 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
           "path_order": 0,
-          "portals": {
-            "default": "default"
-          },
-          "warp_edge": ""
+          "objects": []
         },
         {
-          "pos": "0,1",
-          "stage_id": "s06a_sa1",
-          "connections": {
-            "north": "0,0",
-            "south": "0,2"
-          },
-          "objects": [
-            {
-              "type": "enemy",
-              "enemy_id": "mother",
-              "position": [
-                3,
-                0,
-                3
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "mother_gun",
-              "position": [
-                -4,
-                0,
-                -2
-              ]
-            }
-          ],
+          "pos": "1,0",
+          "stage_id": "s06a_ib1",
           "rotation": 0,
+          "connections": {
+            "west": "0,0",
+            "east": "2,0"
+          },
+          "portals": {},
           "is_start": false,
           "is_end": false,
           "is_branch": false,
@@ -102,40 +84,62 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
           "path_order": 0,
-          "portals": {
-            "default": "default"
-          },
-          "warp_edge": ""
+          "objects": []
         },
         {
-          "pos": "0,2",
-          "stage_id": "s06z_na1",
-          "connections": {
-            "north": "0,1"
-          },
-          "warp_edge": "south",
-          "objects": [
-            {
-              "type": "enemy",
-              "enemy_id": "mother_sword",
-              "position": [
-                3,
-                0,
-                0
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "mother_tech",
-              "position": [
-                -3,
-                0,
-                0
-              ]
-            }
-          ],
+          "pos": "2,0",
+          "stage_id": "s06a_lb1",
           "rotation": 0,
+          "connections": {
+            "west": "1,0",
+            "east": "3,0"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "3,0",
+          "stage_id": "s06a_ic1",
+          "rotation": 0,
+          "connections": {
+            "west": "2,0",
+            "east": "4,0"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "4,0",
+          "stage_id": "s06a_ga1",
+          "rotation": 0,
+          "connections": {
+            "west": "3,0"
+          },
+          "portals": {},
           "is_start": false,
           "is_end": true,
           "is_branch": false,
@@ -145,16 +149,38 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
           "path_order": 0,
-          "portals": {
-            "default": "default"
-          }
+          "objects": []
         }
-      ],
+      ]
+    },
+    {
       "type": "grid",
-      "area": "a",
+      "area": "z",
       "start_pos": "0,0",
-      "end_pos": "0,2"
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s06z_na1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {},
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        }
+      ]
     }
   ],
   "parent_quest": "investigate_tower"

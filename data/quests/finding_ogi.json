@@ -28,16 +28,19 @@
   ],
   "sections": [
     {
-      "area_id": "rioh",
+      "type": "grid",
+      "area": "a",
+      "start_pos": "0,0",
+      "end_pos": "3,1",
       "cells": [
         {
           "pos": "0,0",
-          "stage_id": "s03a_na1",
-          "connections": {
-            "south": "0,1"
-          },
-          "default": "default",
+          "stage_id": "s03a_sa1",
           "rotation": 0,
+          "connections": {
+            "east": "1,0"
+          },
+          "portals": {},
           "is_start": true,
           "is_end": false,
           "is_branch": false,
@@ -47,49 +50,19 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
           "path_order": 0,
-          "portals": {
-            "default": "default"
-          },
-          "warp_edge": ""
+          "objects": []
         },
         {
-          "pos": "0,1",
-          "stage_id": "s03a_sa1",
-          "connections": {
-            "north": "0,0",
-            "south": "0,2"
-          },
-          "objects": [
-            {
-              "type": "enemy",
-              "enemy_id": "deer",
-              "position": [
-                4,
-                0,
-                3
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "deer",
-              "position": [
-                -2,
-                0,
-                -4
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "wolf",
-              "position": [
-                0,
-                0,
-                6
-              ]
-            }
-          ],
+          "pos": "1,0",
+          "stage_id": "s03a_ib1",
           "rotation": 0,
+          "connections": {
+            "west": "0,0",
+            "east": "2,0"
+          },
+          "portals": {},
           "is_start": false,
           "is_end": false,
           "is_branch": false,
@@ -99,49 +72,19 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
           "path_order": 0,
-          "portals": {
-            "default": "default"
-          },
-          "warp_edge": ""
+          "objects": []
         },
         {
-          "pos": "0,2",
-          "stage_id": "s03a_sa1",
-          "connections": {
-            "north": "0,1",
-            "south": "0,3"
-          },
-          "objects": [
-            {
-              "type": "enemy",
-              "enemy_id": "wolf",
-              "position": [
-                5,
-                0,
-                0
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "wolf",
-              "position": [
-                -3,
-                0,
-                2
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "seal",
-              "position": [
-                0,
-                0,
-                -5
-              ]
-            }
-          ],
+          "pos": "2,0",
+          "stage_id": "s03a_lb1",
           "rotation": 0,
+          "connections": {
+            "west": "1,0",
+            "east": "3,0"
+          },
+          "portals": {},
           "is_start": false,
           "is_end": false,
           "is_branch": false,
@@ -151,49 +94,40 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
           "path_order": 0,
-          "portals": {
-            "default": "default"
-          },
-          "warp_edge": ""
+          "objects": []
         },
         {
-          "pos": "0,3",
-          "stage_id": "s03z_na1",
-          "connections": {
-            "north": "0,2"
-          },
-          "warp_edge": "south",
-          "objects": [
-            {
-              "type": "enemy",
-              "enemy_id": "hyena",
-              "position": [
-                3,
-                0,
-                3
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "hyena",
-              "position": [
-                -3,
-                0,
-                -3
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "hyena_rare",
-              "position": [
-                0,
-                0,
-                0
-              ]
-            }
-          ],
+          "pos": "3,0",
+          "stage_id": "s03a_ic1",
           "rotation": 0,
+          "connections": {
+            "west": "2,0",
+            "south": "3,1"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "3,1",
+          "stage_id": "s03a_ga1",
+          "rotation": 0,
+          "connections": {
+            "north": "3,0"
+          },
+          "portals": {},
           "is_start": false,
           "is_end": true,
           "is_branch": false,
@@ -203,16 +137,286 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
+          "warp_edge": "",
           "path_order": 0,
-          "portals": {
-            "default": "default"
-          }
+          "objects": []
         }
-      ],
+      ]
+    },
+    {
       "type": "grid",
-      "area": "a",
+      "area": "e",
       "start_pos": "0,0",
-      "end_pos": "0,3"
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s03e_ia1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {},
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "start_pos": "0,0",
+      "end_pos": "-1,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s03b_sa1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,-1",
+            "east": "1,0",
+            "south": "0,1",
+            "west": "-1,0"
+          },
+          "portals": {},
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "0,-1",
+          "stage_id": "s03b_ib1",
+          "rotation": 0,
+          "connections": {
+            "south": "0,0",
+            "north": "0,-2"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "0,-2",
+          "stage_id": "s03b_lb1",
+          "rotation": 0,
+          "connections": {
+            "south": "0,-1",
+            "north": "0,-3"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "0,-3",
+          "stage_id": "s03b_na1",
+          "rotation": 0,
+          "connections": {
+            "south": "0,-2"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "north",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s03b_ib2",
+          "rotation": 0,
+          "connections": {
+            "west": "0,0",
+            "east": "2,0"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "2,0",
+          "stage_id": "s03b_lb3",
+          "rotation": 0,
+          "connections": {
+            "west": "1,0",
+            "east": "3,0"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "3,0",
+          "stage_id": "s03b_nb2",
+          "rotation": 0,
+          "connections": {
+            "west": "2,0"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "east",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s03b_ic1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,0",
+            "south": "0,2"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s03b_lc1",
+          "rotation": 0,
+          "connections": {
+            "north": "0,1",
+            "south": "0,3"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s03b_nc2",
+          "rotation": 0,
+          "connections": {
+            "north": "0,2"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 0,
+          "objects": []
+        },
+        {
+          "pos": "-1,0",
+          "stage_id": "s03b_ga1",
+          "rotation": 0,
+          "connections": {
+            "east": "0,0"
+          },
+          "portals": {},
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0,
+          "objects": []
+        }
+      ]
     }
   ],
   "parent_quest": "static_in_the_snow"
