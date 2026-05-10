@@ -5,19 +5,37 @@
   "name": "Control System",
   "description": "Crumbling infrastructure + Mother Trinity boss.",
   "area_id": "arca",
-  "office_npcs": [],
+  "office_npcs": [
+    {
+      "npc_id": "ana",
+      "npc_name": "Ana",
+      "office_position": "pos_1"
+    }
+  ],
   "briefing_dialog": [
     {
       "speaker": "Ana",
-      "text": "I'm Ana, from the Research Division. I need to speak with you—privately."
+      "text": "Forgive me. I followed your hunters back here because I had to see if it was true."
     },
     {
       "speaker": "Ana",
-      "text": "You've seen the Automated Systems in the Plant. I've been monitoring the network. Mother Trinity is still operational. But she's not in control—she's being held."
+      "text": "You have CASTs. Machines that think. We have not had anything like them on Arca for centuries."
     },
     {
       "speaker": "Ana",
-      "text": "If you're going deeper, you need Ogi. And you need to understand the Heretics. Without both, you'll die in there—just like the last team."
+      "text": "Mother Trinity has been silent for hundreds of years. Our tradition says her voice failed when the neutrino furnace failed — and we have not had a mind capable of repairing the furnace in living memory."
+    },
+    {
+      "speaker": "Ana",
+      "text": "Your CAST — the one called Ogi — could. If he is willing."
+    },
+    {
+      "speaker": "Ana",
+      "text": "If we can wake her, she may be able to help undo what was done. The Great Blank — what was lost during it — may not be lost forever."
+    },
+    {
+      "speaker": "Ana",
+      "text": "Take Ogi. Take me. Let us try."
     }
   ],
   "sections": [
@@ -140,5 +158,8 @@
     }
   ],
   "parent_quest": "heretic",
-  "required_quests": ["finding_ogi", "heretic"]
+  "required_quests": [
+    "finding_ogi",
+    "heretic"
+  ]
 }

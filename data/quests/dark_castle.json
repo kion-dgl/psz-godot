@@ -5,19 +5,37 @@
   "name": "Dark Castle",
   "description": "Falz boss, Lassic's ethereal castle remains.",
   "area_id": "dark",
-  "office_npcs": [],
+  "office_npcs": [
+    {
+      "npc_id": "dr_carlo",
+      "npc_name": "Dr. Carlo",
+      "office_position": "pos_1"
+    }
+  ],
   "briefing_dialog": [
     {
       "speaker": "Principal",
-      "text": "Something is wrong with Kai. He's changed since Makara."
+      "text": "Kai is missing."
     },
     {
       "speaker": "Principal",
-      "text": "The energy readings from this place... they're not from Mother Trinity. This is something older."
+      "text": "He left for Makara six hours after the seal in the inner chamber broke. Took two team members and a comm channel. The team came back. He didn't."
     },
     {
       "speaker": "Principal",
-      "text": "Dark Falz. The ancient evil that predates even the Great Blank. And it has Kai."
+      "text": "We're not assuming anything yet. He could be alive. He could have lost his bearings inside the structure that's now open. He could have followed something in."
+    },
+    {
+      "speaker": "Dr. Carlo",
+      "text": "The ruins are still there. So is whatever was sealed. If he went deeper, he went into something we don't have a name for."
+    },
+    {
+      "speaker": "Principal",
+      "text": "Find him. Bring him back if you can."
+    },
+    {
+      "speaker": "Principal",
+      "text": "And if you can't... bring back the truth."
     }
   ],
   "sections": [

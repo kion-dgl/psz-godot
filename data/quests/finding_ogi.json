@@ -5,19 +5,25 @@
   "name": "Finding Ogi",
   "description": "A veteran CAST hunter has gone missing in the Rioh Snowfield. Find him and recover his body parts.",
   "area_id": "rioh",
-  "office_npcs": [],
+  "office_npcs": [
+    {
+      "npc_id": "ren",
+      "npc_name": "Ren",
+      "office_position": "pos_1"
+    }
+  ],
   "briefing_dialog": [
     {
-      "speaker": "Principal",
-      "text": "We've lost contact with Ogi, a veteran CAST hunter who was surveying the snowfield."
+      "speaker": "Ren",
+      "text": "We've lost contact with Ogi. He's a CAST, deployed to the Rioh snowfield three days ago."
     },
     {
-      "speaker": "Principal",
-      "text": "His transponder is still active but fragmented \u2014 multiple signals across the region."
+      "speaker": "Ren",
+      "text": "His patrol channel went dark mid-route. No distress, no last transmission. Just silence."
     },
     {
-      "speaker": "Principal",
-      "text": "It's possible his body was... disassembled. Find him and bring back whatever you can."
+      "speaker": "Ren",
+      "text": "We don't know what happened. Find out. Bring back what you can."
     }
   ],
   "sections": [

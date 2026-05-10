@@ -6,5 +6,43 @@
   "description": "Climb the Eternal Tower and conduct a blade survey.",
   "area_id": "tower",
   "parent_quest": "messages_from_the_past",
-  "sections": []
+  "sections": [],
+  "office_npcs": [
+    {
+      "npc_id": "mira",
+      "npc_name": "Mira",
+      "office_position": "pos_1"
+    },
+    {
+      "npc_id": "elio",
+      "npc_name": "Elio",
+      "office_position": "pos_2"
+    }
+  ],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "We've had eyes on the Paru ruins for months. Last week, a structure appeared at the edges that wasn't there before."
+    },
+    {
+      "speaker": "Mira",
+      "text": "It's a tower. Tall — past our cloud-line readings. And it's active. Every band we monitor is pinging off it."
+    },
+    {
+      "speaker": "Elio",
+      "text": "We've been watching it light up sector by sector. Whatever it is, it's coming online."
+    },
+    {
+      "speaker": "Mira",
+      "text": "We need someone to climb it. Document what you find. Recover any logs or terminals you can reach."
+    },
+    {
+      "speaker": "Elio",
+      "text": "I'm coming with you. Mira's notes, my eyes."
+    },
+    {
+      "speaker": "Principal",
+      "text": "Be careful. We don't know what's at the top."
+    }
+  ]
 }

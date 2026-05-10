@@ -5,19 +5,37 @@
   "name": "Heretic",
   "description": "Newman guards + Reve heretic boss.",
   "area_id": "arca",
-  "office_npcs": [],
+  "office_npcs": [
+    {
+      "npc_id": "sarisa",
+      "npc_name": "Sarisa",
+      "office_position": "pos_1"
+    }
+  ],
   "briefing_dialog": [
     {
       "speaker": "Principal",
-      "text": "This is it. The Celestial Pillar has brought you to the Moon \u2014 to Arca."
+      "text": "The data we recovered from the tower included activation codes for a teleporter — one we didn't know existed. It links to a place called Arca."
+    },
+    {
+      "speaker": "Sarisa",
+      "text": "I know Arca. I came from there."
     },
     {
       "speaker": "Principal",
-      "text": "Mother Trinity's outer base is heavily guarded by automated defense systems."
+      "text": "Sarisa volunteered the moment we said the name."
+    },
+    {
+      "speaker": "Sarisa",
+      "text": "If we're going, I'm going with you. There are things on Arca only I'll recognize — and things you'll need me to recognize."
+    },
+    {
+      "speaker": "Sarisa",
+      "text": "Don't ask me what to expect. I haven't been home in a long time."
     },
     {
       "speaker": "Principal",
-      "text": "Fight through the facility. We need to reach the inner plant."
+      "text": "Investigate the facility. Report what you find. And listen to her."
     }
   ],
   "sections": [

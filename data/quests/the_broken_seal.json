@@ -5,19 +5,37 @@
   "name": "The Broken Seal",
   "description": "Makara ruins seal puzzle, door to Dark Shrine.",
   "area_id": "makara",
-  "office_npcs": [],
+  "office_npcs": [
+    {
+      "npc_id": "dr_carlo",
+      "npc_name": "Dr. Carlo",
+      "office_position": "pos_1"
+    }
+  ],
   "briefing_dialog": [
     {
-      "speaker": "Principal",
-      "text": "This is urgent. Kai entered the Makara Ruins two days ago to investigate an anomaly."
+      "speaker": "Dr. Carlo",
+      "text": "Surveyors found something at Makara two days ago. A structure. Ruins, technically, but..."
+    },
+    {
+      "speaker": "Dr. Carlo",
+      "text": "Our dating estimates put the construction at least a thousand years before the Great Blank. Possibly more."
+    },
+    {
+      "speaker": "Dr. Carlo",
+      "text": "There shouldn't be anything that old still standing. There certainly shouldn't be anything that old still intact."
+    },
+    {
+      "speaker": "Dr. Carlo",
+      "text": "Hunters who've approached the perimeter report hearing voices. Not animal calls — words. None of them speak the language."
+    },
+    {
+      "speaker": "Dr. Carlo",
+      "text": "The surveyors also identified crystal formations in the deeper galleries. I want to document them. I'll need someone capable to escort me in."
     },
     {
       "speaker": "Principal",
-      "text": "His last transmission was garbled \u2014 something about a pillar of light and hostiles everywhere."
-    },
-    {
-      "speaker": "Principal",
-      "text": "We can't lose him. Get in there, find Kai, and bring him home."
+      "text": "Dr. Carlo will be with you. Keep him alive. Let him do his work."
     }
   ],
   "sections": [
