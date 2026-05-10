@@ -281,6 +281,8 @@ export interface QuestMetadata {
   objectives?: QuestObjective[];
   /** Parent quest that must be completed to unlock this one */
   parentQuest?: string;
+  /** Hard quest requirements (all must be completed to accept) */
+  requiredQuests?: string[];
 }
 
 export interface CompanionInfo {
