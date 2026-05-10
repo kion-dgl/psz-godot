@@ -2,7 +2,7 @@ extends Node
 ## CharacterManager — manages character slots, creation, deletion, and experience.
 ## Ported from psz-sketch/src/api/character.ts
 
-const MAX_SLOTS := 4
+const MAX_SLOTS := 20
 const MAX_LEVEL := 100
 const STARTING_MESETA := 500
 
@@ -11,13 +11,15 @@ signal character_deleted(slot: int)
 signal active_character_changed(slot: int)
 signal level_up(new_level: int)
 
-## 4 character slots, each is a Dictionary or null
-var _characters: Array = [null, null, null, null]
+## Character slots, each entry is a Dictionary or null. Sized to MAX_SLOTS.
+var _characters: Array = []
 var _active_slot: int = -1
 
 
 func _ready() -> void:
-	pass
+	_characters.resize(MAX_SLOTS)
+	for i in range(MAX_SLOTS):
+		_characters[i] = null
 
 
 ## Create a new character in the given slot

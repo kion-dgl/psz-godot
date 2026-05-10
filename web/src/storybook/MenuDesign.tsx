@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { assetUrl } from '../utils/assets';
+import { CLASS_TO_PC_PREFIX } from '../character-creator/data/constants';
 
 // PSZ color palette — pale icy blue with white items, black text
 const C = {
@@ -1291,6 +1295,327 @@ function FieldWarpMenu() {
 
 // --- Main Page ---
 
+/** Inline Three.js viewer that loads the player model for a given class
+ * id (lowercased: humar / fonewearl / etc). Uses the same pattern as
+ * character-creator/CharacterPreview but strips down to "load + slow
+ * auto-rotate" since this is just for the menu mock. */
+function CharacterModelPreview({ classId }: { classId: string | null }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<{
+    scene: THREE.Scene; camera: THREE.PerspectiveCamera;
+    renderer: THREE.WebGLRenderer; modelGroup: THREE.Group;
+    raf: number;
+  } | null>(null);
+
+  // Init scene once.
+  useEffect(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    const w = c.clientWidth, h = c.clientHeight;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
+    camera.position.set(0, 1.1, 3.4);
+    camera.lookAt(0, 1.0, 0);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(w, h);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setClearColor(0x000000, 0);
+    c.appendChild(renderer.domElement);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+    const dir = new THREE.DirectionalLight(0xffffff, 0.7);
+    dir.position.set(3, 5, 4);
+    scene.add(dir);
+    const modelGroup = new THREE.Group();
+    scene.add(modelGroup);
+    const animate = () => {
+      renderer.render(scene, camera);
+      sceneRef.current!.raf = requestAnimationFrame(animate);
+    };
+    sceneRef.current = { scene, camera, renderer, modelGroup, raf: 0 };
+    sceneRef.current.raf = requestAnimationFrame(animate);
+    return () => {
+      cancelAnimationFrame(sceneRef.current!.raf);
+      renderer.dispose();
+      c.removeChild(renderer.domElement);
+      sceneRef.current = null;
+    };
+  }, []);
+
+  // Swap model when classId changes.
+  useEffect(() => {
+    const sd = sceneRef.current;
+    if (!sd) return;
+    // Clear current model
+    while (sd.modelGroup.children.length > 0) {
+      const child = sd.modelGroup.children[0];
+      sd.modelGroup.remove(child);
+      child.traverse((o) => {
+        const m = o as THREE.Mesh;
+        if (m.geometry) m.geometry.dispose();
+        if (m.material) {
+          const mats = Array.isArray(m.material) ? m.material : [m.material];
+          mats.forEach((mat) => mat.dispose());
+        }
+      });
+    }
+    if (!classId) return;
+    const prefix = CLASS_TO_PC_PREFIX[classId];
+    if (!prefix) return;
+    const variation = `${prefix}0`;
+    const url = assetUrl(`assets/player/${variation}/${variation}_000.glb`);
+    const textureUrl = assetUrl(`assets/player/${variation}/textures/${variation}_000.png`);
+    new GLTFLoader().load(
+      url,
+      (gltf) => {
+        gltf.scene.traverse((o) => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) {
+            m.castShadow = true; m.receiveShadow = true;
+          }
+        });
+        new THREE.TextureLoader().load(textureUrl, (texture) => {
+          texture.magFilter = THREE.NearestFilter;
+          texture.minFilter = THREE.NearestFilter;
+          texture.flipY = false;
+          texture.colorSpace = THREE.SRGBColorSpace;
+          gltf.scene.traverse((o) => {
+            const m = o as THREE.Mesh;
+            if (m.isMesh && m.material) {
+              const mat = m.material as THREE.MeshBasicMaterial;
+              mat.map = texture;
+              mat.needsUpdate = true;
+            }
+          });
+        });
+        sd.modelGroup.add(gltf.scene);
+      },
+      undefined,
+      (err) => { console.warn('[CharacterModelPreview] load failed', url, err); },
+    );
+  }, [classId]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: '100%', height: '100%',
+      }}
+    />
+  );
+}
+
+
+function CharacterSelect() {
+  // Issue #168 — PSO PC V2 list-style character select.
+  // Layout follows the skeleton blockout in skeleton/character_select.html.
+  // Banner across the top, list on the left, model preview on the right
+  // with description + Next stacked underneath the preview.
+  type Slot =
+    | { kind: 'filled'; name: string; klass: string; level: number; playtimeMin: number }
+    | { kind: 'empty' };
+
+  // 20-slot floor per playtest feedback — players want room for
+  // multiple class/build experiments. About 14 filled + 6 empty so the
+  // mock shows both filled and create-new states with the list scrolling.
+  const SLOTS: Slot[] = [
+    { kind: 'filled', name: 'Sara',    klass: 'HUmar',     level: 42, playtimeMin: 38 * 60 + 12 },
+    { kind: 'filled', name: 'Reika',   klass: 'FOnewearl', level: 28, playtimeMin: 12 * 60 + 47 },
+    { kind: 'filled', name: 'Kiln',    klass: 'RAcast',    level: 17, playtimeMin: 4 * 60 + 5 },
+    { kind: 'filled', name: 'Mira',    klass: 'HUnewearl', level: 31, playtimeMin: 18 * 60 + 30 },
+    { kind: 'filled', name: 'Vanta',   klass: 'HUcast',    level: 22, playtimeMin: 7 * 60 + 14 },
+    { kind: 'filled', name: 'Iola',    klass: 'HUcaseal',  level: 9,  playtimeMin: 1 * 60 + 22 },
+    { kind: 'filled', name: 'Kale',    klass: 'RAmar',     level: 50, playtimeMin: 60 * 60 + 0 },
+    { kind: 'filled', name: 'Reine',   klass: 'RAmarl',    level: 14, playtimeMin: 3 * 60 + 8 },
+    { kind: 'filled', name: 'Echo',    klass: 'RAcaseal',  level: 38, playtimeMin: 25 * 60 + 41 },
+    { kind: 'filled', name: 'Pell',    klass: 'FOmar',     level: 20, playtimeMin: 6 * 60 + 55 },
+    { kind: 'filled', name: 'Fenn',    klass: 'FOmarl',    level: 16, playtimeMin: 4 * 60 + 17 },
+    { kind: 'filled', name: 'Vexi',    klass: 'FOnewm',    level: 11, playtimeMin: 2 * 60 + 33 },
+    { kind: 'filled', name: 'Quill',   klass: 'HUmar',     level: 7,  playtimeMin: 48 },
+    { kind: 'filled', name: 'Pyx',     klass: 'FOnewearl', level: 3,  playtimeMin: 19 },
+    { kind: 'empty' },
+    { kind: 'empty' },
+    { kind: 'empty' },
+    { kind: 'empty' },
+    { kind: 'empty' },
+    { kind: 'empty' },
+  ];
+
+  const [sel, setSel] = useState(0);
+  const slot = SLOTS[sel];
+
+  function fmtPlaytime(min: number): string {
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
+  }
+
+  // Class flavor — defer real copy to design pass; this is mock placeholder.
+  const CLASS_FLAVOR: Record<string, string> = {
+    HUmar:     'Balanced human Hunter. Strong ATP, decent EVP, no techs.',
+    HUnewearl: 'Newman Hunter. Trades raw ATP for higher EVP and basic techs.',
+    HUcast:    'Cast Hunter. Highest HP and ATP, immune to status, no techs.',
+    HUcaseal:  'Female Cast Hunter. ATA-leaning Cast variant, no techs.',
+    RAmar:     'Human Ranger. Solid all-rounder with mid-tier techs.',
+    RAmarl:    'Female human Ranger. Higher MST than RAmar, basic support techs.',
+    RAcast:    'Cast Ranger. Trap specialist, immune to status, no techs.',
+    RAcaseal:  'Female Cast Ranger. ATA-leaning, traps, no techs.',
+    FOmar:     'Male Force. Balanced caster, ATP+ over FOnewearl.',
+    FOmarl:    'Female human Force. Highest ATA caster.',
+    FOnewm:    'Male Newman Force. Stronger tech multipliers than human Forces.',
+    FOnewearl: 'Newman Force. Highest tech multiplier in the game; fragile.',
+  };
+
+  const nextLabel = slot.kind === 'filled' ? 'Start' : 'Create';
+
+  // 720p frame so the mock matches the game's native viewport
+  // (project.godot viewport_width=1280, viewport_height=720). Background
+  // image is Rozalin's reference from issue #168. Panels are
+  // absolute-positioned to match skeleton/character_select.html which
+  // was authored against the same layout reference.
+  const BG_URL = `${import.meta.env.BASE_URL}menu-design/character_select_bg.png`;
+
+  return (
+    <div style={{
+      width: 1280, height: 720,
+      position: 'relative',
+      border: '1px solid #000',
+      backgroundImage: `url('${BG_URL}')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      boxSizing: 'border-box',
+      overflow: 'hidden',
+      fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    }}>
+      {/* Banner — custom polygon shape derived from the layout reference
+          (character_select_layout.png). 5-vertex polygon: flat top across
+          the full width, the right side has a higher bottom edge, with
+          a knee around x=520 dropping to a lower-left wing. */}
+      <div style={{
+        position: 'absolute', top: 22, left: 0, width: '100%', height: 84,
+        background: '#FBBA18',
+        clipPath: 'polygon(0 0, 100% 0, 100% 58%, 49% 58%, 44% 100%, 0 100%)',
+        // border on a clip-path doesn't follow the clipped edge — stack
+        // drop-shadows in cardinal + diagonal directions to fake a ~2px
+        // outline that hugs the polygon, plus a softer drop-shadow for
+        // depth.
+        filter: [
+          'drop-shadow(2px 0 0 #1a1a2a)',
+          'drop-shadow(-2px 0 0 #1a1a2a)',
+          'drop-shadow(0 2px 0 #1a1a2a)',
+          'drop-shadow(0 -2px 0 #1a1a2a)',
+          'drop-shadow(1px 1px 0 #1a1a2a)',
+          'drop-shadow(-1px 1px 0 #1a1a2a)',
+          'drop-shadow(1px -1px 0 #1a1a2a)',
+          'drop-shadow(-1px -1px 0 #1a1a2a)',
+          'drop-shadow(0 4px 6px rgba(0,0,0,0.4))',
+        ].join(' '),
+        display: 'flex', alignItems: 'flex-start',
+      }}>
+        <div style={{
+          padding: '12px 36px', fontSize: 28, fontWeight: 800, fontStyle: 'italic',
+          color: '#1a1a2a', letterSpacing: '1px',
+          textShadow: '1px 1px 0 rgba(255,255,255,0.35)',
+        }}>
+          CHARACTER SELECT
+        </div>
+      </div>
+
+      {/* White divider line — 25px below the banner's bottom (y=106), 3px tall. */}
+      <div style={{
+        position: 'absolute', top: 131, left: 0, width: '100%', height: 3,
+        background: '#ffffff',
+      }} />
+
+      {/* Character list (left) */}
+      <div style={{ position: 'absolute', top: 180, left: 200, width: 400, height: 450 }}>
+        <Panel title={`Characters (${SLOTS.filter((s) => s.kind === 'filled').length}/${SLOTS.length})`} hint="↑/↓ choose · A confirm · B cancel">
+          <div style={{
+            maxHeight: 380, overflowY: 'auto',
+            display: 'flex', flexDirection: 'column',
+          }}>
+            {SLOTS.map((s, i) => {
+              if (s.kind === 'empty') {
+                return (
+                  <PillRow
+                    key={i}
+                    label="(Empty Slot)"
+                    rightText=""
+                    selected={sel === i}
+                    onClick={() => setSel(i)}
+                  />
+                );
+              }
+              return (
+                <PillRow
+                  key={i}
+                  label={`${s.name}  ·  ${s.klass}  ·  Lv.${s.level}`}
+                  rightText={fmtPlaytime(s.playtimeMin)}
+                  selected={sel === i}
+                  onClick={() => setSel(i)}
+                />
+              );
+            })}
+          </div>
+        </Panel>
+      </div>
+
+      {/* Model preview (right). Extends down to the same bottom edge as
+          the description (y=610) so the description sits on top of the
+          preview's lower portion — matches Rozalin's layout where the
+          info card overlaps the preview. */}
+      <div style={{ position: 'absolute', top: 180, left: 680, width: 400, height: 430, zIndex: 1 }}>
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <CharacterModelPreview
+            classId={slot.kind === 'filled' ? slot.klass.toLowerCase() : null}
+          />
+          {slot.kind === 'empty' && (
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              color: C.textLight, fontSize: 13, fontStyle: 'italic',
+              opacity: 0.7, pointerEvents: 'none',
+            }}>
+              [ empty slot ]
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Description (overlapping the bottom of the preview) — z-index
+          above the preview panel so it floats on top. */}
+      <div style={{ position: 'absolute', top: 520, left: 670, width: 430, height: 90, zIndex: 2 }}>
+        <div style={{
+          background: C.bgLight,
+          backgroundImage: SCANLINES,
+          borderRadius: 4,
+          padding: '12px 16px',
+          border: '1px solid rgba(60,100,140,0.5)',
+          fontSize: 13, color: C.text, lineHeight: 1.45,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+        }}>
+          {slot.kind === 'filled'
+            ? CLASS_FLAVOR[slot.klass] ?? 'Class flavor text TBD.'
+            : 'No character in this slot yet — confirm to create one.'}
+        </div>
+      </div>
+
+      {/* Next button (bottom-right corner) */}
+      <div style={{
+        position: 'absolute', bottom: 20, right: 20, width: 240, height: 60,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: C.selectedGradient, color: C.textOnSelected,
+        fontWeight: 700, fontSize: 18,
+        borderRadius: 6,
+        border: '1px solid rgba(0,0,0,0.25)',
+        boxShadow: '0 3px 8px rgba(0,0,0,0.3)',
+        cursor: 'pointer',
+      }}>
+        {nextLabel} ▶
+      </div>
+    </div>
+  );
+}
+
 const MENU_DEMOS = [
   { id: 'hud-full', label: 'HUD (Full)', component: HudFull },
   { id: 'hud-hp', label: 'HUD: HP/PP', component: HudHpPp },
@@ -1308,6 +1633,7 @@ const MENU_DEMOS = [
   { id: 'quest', label: 'Quest Counter', component: QuestCounter },
   { id: 'status', label: 'Status', component: StatusScreen },
   { id: 'field-warp', label: 'Field Warp', component: FieldWarpMenu },
+  { id: 'character-select', label: 'Character Select', component: CharacterSelect },
 ];
 
 export default function MenuDesign() {
