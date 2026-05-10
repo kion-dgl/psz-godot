@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "last_updated": "2026-05-10",
+  "id": "investigate_tower",
+  "name": "Investigate Tower",
+  "description": "Climb the Eternal Tower and conduct a blade survey.",
+  "area_id": "tower",
+  "parent_quest": "messages_from_the_past",
+  "sections": []
+}

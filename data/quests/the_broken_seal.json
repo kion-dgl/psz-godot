@@ -1,9 +1,9 @@
 {
   "version": 1,
   "last_updated": "2026-04-05",
-  "id": "rescue_at_makara",
-  "name": "Rescue at Makara",
-  "description": "Kai went into the Makara Ruins alone and hasn't returned. Find him before it's too late.",
+  "id": "the_broken_seal",
+  "name": "The Broken Seal",
+  "description": "Makara ruins seal puzzle, door to Dark Shrine.",
   "area_id": "makara",
   "office_npcs": [],
   "briefing_dialog": [
@@ -190,5 +190,6 @@
       "start_pos": "0,0",
       "end_pos": "0,3"
     }
-  ]
+  ],
+  "parent_quest": "control_system"
 }

@@ -1,23 +1,23 @@
 {
   "version": 1,
   "last_updated": "2026-04-05",
-  "id": "arca_plant_a",
-  "name": "Arca Plant A",
-  "description": "Infiltrate the Moon base's outer facilities. Break through Mother Trinity's automated defenses.",
+  "id": "control_system",
+  "name": "Control System",
+  "description": "Crumbling infrastructure + Mother Trinity boss.",
   "area_id": "arca",
   "office_npcs": [],
   "briefing_dialog": [
     {
-      "speaker": "Principal",
-      "text": "This is it. The Celestial Pillar has brought you to the Moon \u2014 to Arca."
+      "speaker": "Ana",
+      "text": "I'm Ana, from the Research Division. I need to speak with you—privately."
     },
     {
-      "speaker": "Principal",
-      "text": "Mother Trinity's outer base is heavily guarded by automated defense systems."
+      "speaker": "Ana",
+      "text": "You've seen the Automated Systems in the Plant. I've been monitoring the network. Mother Trinity is still operational. But she's not in control—she's being held."
     },
     {
-      "speaker": "Principal",
-      "text": "Fight through the facility. We need to reach the inner plant."
+      "speaker": "Ana",
+      "text": "If you're going deeper, you need Ogi. And you need to understand the Heretics. Without both, you'll die in there—just like the last team."
     }
   ],
   "sections": [
@@ -26,7 +26,7 @@
       "cells": [
         {
           "pos": "0,0",
-          "stage_id": "s06a_na1",
+          "stage_id": "s06b_na1",
           "connections": {
             "south": "0,1"
           },
@@ -49,7 +49,7 @@
         },
         {
           "pos": "0,1",
-          "stage_id": "s06a_sa1",
+          "stage_id": "s06b_sa1",
           "connections": {
             "north": "0,0",
             "south": "0,2"
@@ -57,20 +57,29 @@
           "objects": [
             {
               "type": "enemy",
-              "enemy_id": "mother",
+              "enemy_id": "mother_sword",
               "position": [
-                3,
+                4,
                 0,
-                3
+                2
               ]
             },
             {
               "type": "enemy",
               "enemy_id": "mother_gun",
               "position": [
-                -4,
+                -3,
                 0,
-                -2
+                -3
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "mother_tech",
+              "position": [
+                0,
+                0,
+                5
               ]
             }
           ],
@@ -100,18 +109,9 @@
           "objects": [
             {
               "type": "enemy",
-              "enemy_id": "mother_sword",
+              "enemy_id": "boss_mother",
               "position": [
-                3,
                 0,
-                0
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "mother_tech",
-              "position": [
-                -3,
                 0,
                 0
               ]
@@ -138,5 +138,7 @@
       "start_pos": "0,0",
       "end_pos": "0,2"
     }
-  ]
+  ],
+  "parent_quest": "heretic",
+  "required_quests": ["finding_ogi", "heretic"]
 }

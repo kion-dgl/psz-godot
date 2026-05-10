@@ -1,23 +1,23 @@
 {
   "version": 1,
   "last_updated": "2026-04-05",
-  "id": "arca_plant_b",
-  "name": "Arca Plant B",
-  "description": "Penetrate the decaying industrial sector of the Moon base. Mother Trinity awaits.",
+  "id": "heretic",
+  "name": "Heretic",
+  "description": "Newman guards + Reve heretic boss.",
   "area_id": "arca",
   "office_npcs": [],
   "briefing_dialog": [
     {
       "speaker": "Principal",
-      "text": "You've broken through the outer defenses. The inner plant is falling apart."
+      "text": "This is it. The Celestial Pillar has brought you to the Moon \u2014 to Arca."
     },
     {
       "speaker": "Principal",
-      "text": "Two hundred years of neglect. But Mother Trinity is still operational somewhere inside."
+      "text": "Mother Trinity's outer base is heavily guarded by automated defense systems."
     },
     {
       "speaker": "Principal",
-      "text": "End this. For everyone who was lost in the Great Blank."
+      "text": "Fight through the facility. We need to reach the inner plant."
     }
   ],
   "sections": [
@@ -26,7 +26,7 @@
       "cells": [
         {
           "pos": "0,0",
-          "stage_id": "s06b_na1",
+          "stage_id": "s06a_na1",
           "connections": {
             "south": "0,1"
           },
@@ -49,7 +49,7 @@
         },
         {
           "pos": "0,1",
-          "stage_id": "s06b_sa1",
+          "stage_id": "s06a_sa1",
           "connections": {
             "north": "0,0",
             "south": "0,2"
@@ -57,29 +57,20 @@
           "objects": [
             {
               "type": "enemy",
-              "enemy_id": "mother_sword",
+              "enemy_id": "mother",
               "position": [
-                4,
+                3,
                 0,
-                2
+                3
               ]
             },
             {
               "type": "enemy",
               "enemy_id": "mother_gun",
               "position": [
-                -3,
+                -4,
                 0,
-                -3
-              ]
-            },
-            {
-              "type": "enemy",
-              "enemy_id": "mother_tech",
-              "position": [
-                0,
-                0,
-                5
+                -2
               ]
             }
           ],
@@ -109,9 +100,18 @@
           "objects": [
             {
               "type": "enemy",
-              "enemy_id": "boss_mother",
+              "enemy_id": "mother_sword",
               "position": [
+                3,
                 0,
+                0
+              ]
+            },
+            {
+              "type": "enemy",
+              "enemy_id": "mother_tech",
+              "position": [
+                -3,
                 0,
                 0
               ]
@@ -138,5 +138,6 @@
       "start_pos": "0,0",
       "end_pos": "0,2"
     }
-  ]
+  ],
+  "parent_quest": "investigate_tower"
 }

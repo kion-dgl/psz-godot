@@ -1,10 +1,10 @@
 {
   "version": 1,
   "last_updated": "2026-04-05",
-  "id": "dark_shrine",
-  "name": "Dark Shrine",
-  "description": "Enter the domain of Dark Falz. Confront what Kai has become.",
-  "area_id": "dark_shrine",
+  "id": "dark_castle",
+  "name": "Dark Castle",
+  "description": "Falz boss, Lassic's ethereal castle remains.",
+  "area_id": "dark",
   "office_npcs": [],
   "briefing_dialog": [
     {
@@ -22,7 +22,7 @@
   ],
   "sections": [
     {
-      "area_id": "dark_shrine",
+      "area_id": "dark",
       "cells": [
         {
           "pos": "0,0",
@@ -129,5 +129,6 @@
       "start_pos": "0,0",
       "end_pos": "0,2"
     }
-  ]
+  ],
+  "parent_quest": "control_system"
 }

@@ -190,5 +190,6 @@
       "start_pos": "0,0",
       "end_pos": "0,3"
     }
-  ]
+  ],
+  "parent_quest": "search_and_rescue"
 }

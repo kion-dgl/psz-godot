@@ -208,5 +208,6 @@
       "start_pos": "0,0",
       "end_pos": "0,3"
     }
-  ]
+  ],
+  "parent_quest": "static_in_the_snow"
 }

@@ -1165,7 +1165,7 @@
               "dialog": [
                 {
                   "speaker": "Fern",
-                  "text": "Star Atomizers heal the whole party — the backup for groups without a Force who can cast Resta."
+                  "text": "Star Atomizers heal the whole party \u2014 the backup for groups without a Force who can cast Resta."
                 },
                 {
                   "speaker": "Fern",
@@ -1335,5 +1335,6 @@
       "label": "Sol Leaf",
       "target": 1
     }
-  ]
+  ],
+  "parent_quest": "search_and_rescue"
 }

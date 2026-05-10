@@ -13,7 +13,7 @@ var _active_modal: Control = null
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
-## Quest numbering (matches GitHub issue order)
+## Quest numbering (matches Alpha/Beta chain)
 const QUEST_ORDER := {
 	"search_and_rescue": 1,
 	"the_paru_pact": 2,
@@ -21,18 +21,18 @@ const QUEST_ORDER := {
 	"static_in_the_snow": 4,
 	"deep_ore_extraction": 5,
 	"messages_from_the_past": 6,
-	"native_research": 7,
-	"seek_my_mentor": 8,
-	"claiming_a_stake": 9,
+	"investigate_tower": 7,
+	"heretic": 8,
+	"control_system": 9,
+	"the_broken_seal": 15,
+	"dark_castle": 16,
+	"native_research": 12,
+	"seek_my_mentor": 13,
+	"claiming_a_stake": 14,
 	"poisoned_water": 10,
 	"finding_ogi": 11,
-	"rescue_at_makara": 12,
-	"arca_plant_a": 13,
-	"arca_plant_b": 14,
-	"dark_shrine": 15,
 }
 
-## area_id → display area name
 const AREA_DISPLAY := {
 	"gurhacia": "Valley",
 	"rioh": "Snowfield",
@@ -40,7 +40,10 @@ const AREA_DISPLAY := {
 	"paru": "Forgotten City",
 	"makara": "Ruins",
 	"arca": "Moon Facility",
+	"eternal_tower": "Eternal Tower",
+	"tower": "Eternal Tower",
 	"dark": "Dark Shrine",
+	"dark_shrine": "Dark Shrine",
 }
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
@@ -126,6 +129,28 @@ func _load_entries() -> void:
 		var quest_number: int = QUEST_ORDER.get(qid, 0)
 		if quest_number > 0:
 			display_name = "%d. %s" % [quest_number, display_name]
+
+		## Compute availability from parent_quest dependency
+		var available: bool = true
+		var parent_id: String = quest.get("parent_quest", "")
+		var parent_name: String = ""
+		if not parent_id.is_empty():
+			available = GameState.is_mission_completed(parent_id)
+			var parent_quest: Dictionary = QuestLoader.load_quest(parent_id)
+			parent_name = parent_quest.get("name", parent_id)
+
+		## Also enforce hard-lock required_quests
+		var required_quests: Array = quest.get("required_quests", [])
+		for req_id in required_quests:
+			if not GameState.is_mission_completed(req_id):
+				available = false
+				var req_quest: Dictionary = QuestLoader.load_quest(req_id)
+				var req_name: String = req_quest.get("name", req_id)
+				if not parent_name.is_empty():
+					parent_name += ", \"%s\"" % req_name
+				else:
+					parent_name = "\"%s\"" % req_name
+
 		_entries.append({
 			"type": "quest",
 			"id": qid,
@@ -137,7 +162,8 @@ func _load_entries() -> void:
 			"requires": [],
 			"rewards": {},
 			"_sort_order": quest_number,
-			"available": true,
+			"available": available,
+			"parent_name": parent_name,
 		})
 	_entries.sort_custom(func(a, b):
 		return a.get("_sort_order", 99) < b.get("_sort_order", 99)
@@ -408,6 +434,12 @@ func _refresh_detail() -> void:
 
 	vbox.add_child(PszStyle.detail_label("Type: Quest", PszStyle.TEXT_QUEST))
 	var desc: String = str(entry.get("description", ""))
+	if not entry.get("available", true):
+		var parent_name: String = str(entry.get("parent_name", ""))
+		if not parent_name.is_empty():
+			if not desc.is_empty():
+				desc += "\n\n"
+			desc += "[LOCKED] Complete \"%s\" to unlock." % parent_name
 	if not desc.is_empty():
 		var desc_label := PszStyle.detail_label(desc)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

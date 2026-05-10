@@ -279,6 +279,8 @@ export interface QuestMetadata {
   reportTo?: ReportDestination;
   /** Quest item collection objectives */
   objectives?: QuestObjective[];
+  /** Parent quest that must be completed to unlock this one */
+  parentQuest?: string;
 }
 
 export interface CompanionInfo {
@@ -295,6 +297,7 @@ export const AVAILABLE_COMPANIONS: CompanionInfo[] = [
   { id: 'fern', name: 'Fern' },
   { id: 'dr_carlo', name: 'Dr. Carlo' },
   { id: 'mira', name: 'Mira' },
+  { id: 'ana', name: 'Ana' },
 ];
 
 // ============================================================================

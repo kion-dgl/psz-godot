@@ -2003,5 +2003,6 @@
       "speaker": "Principal",
       "text": "Keep Dr. Carlo safe across all three areas. Good luck out there."
     }
-  ]
+  ],
+  "parent_quest": "apothecary_supply"
 }

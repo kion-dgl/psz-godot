@@ -138,5 +138,6 @@
       "start_pos": "0,0",
       "end_pos": "0,2"
     }
-  ]
+  ],
+  "parent_quest": "apothecary_supply"
 }

@@ -1884,5 +1884,6 @@
       "label": "Mag Fragments",
       "target": 4
     }
-  ]
+  ],
+  "parent_quest": "search_and_rescue"
 }
