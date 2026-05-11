@@ -137,7 +137,8 @@
           "path_order": 3
         }
       ],
-      "entry_direction": "south"
+      "entry_direction": "south",
+      "exit_direction": "east"
     },
     {
       "type": "grid",
@@ -153,8 +154,8 @@
             "north": "2,1"
           },
           "portals": {
-            "north": "portal_1778468499249_ux4vfzuugg8",
-            "south": "portal_1778468499249_u58ntgkfwc1"
+            "north": "portal_1770827734449_wjdwceasu",
+            "south": "portal_1770827724954_ic3jmmsf3"
           },
           "is_start": true,
           "is_end": false,
@@ -173,12 +174,12 @@
           "stage_id": "s082_sa1",
           "rotation": 0,
           "connections": {
-            "south": "3,1",
-            "north": "1,1"
+            "north": "1,1",
+            "south": "3,1"
           },
           "portals": {
-            "south": "portal_1778468499249_3fzoyu1y7us",
-            "north": "portal_1778468499249_l94ysc29w2j"
+            "north": "portal_1770828691311_akrtedh1p",
+            "south": "portal_1770828705876_iijy2pmln"
           },
           "is_start": false,
           "is_end": false,
@@ -197,12 +198,12 @@
           "stage_id": "s082_ib1",
           "rotation": 0,
           "connections": {
-            "north": "0,1",
-            "south": "2,1"
+            "south": "2,1",
+            "north": "0,1"
           },
           "portals": {
-            "north": "portal_1778468499249_xm0wazwa84y",
-            "south": "portal_1778468499249_yokkj99cko2"
+            "south": "portal_1770828728909_8fsl3z9i0",
+            "north": "portal_1770828739034_4f34zr2wh"
           },
           "is_start": false,
           "is_end": false,
@@ -224,8 +225,8 @@
             "south": "1,1"
           },
           "portals": {
-            "south": "portal_1778468499249_nkv0sa8cro6",
-            "east": "portal_1778468499249_rq3ctcf39ok"
+            "south": "portal_1771832653528_a3gpebzhh",
+            "east": "portal_1770828775161_td02w97xb"
           },
           "is_start": false,
           "is_end": true,
@@ -240,7 +241,8 @@
           "path_order": 3
         }
       ],
-      "entry_direction": "south"
+      "entry_direction": "south",
+      "exit_direction": "east"
     },
     {
       "type": "grid",
@@ -256,8 +258,8 @@
             "north": "2,1"
           },
           "portals": {
-            "north": "portal_1778468499249_yu5ham86ayq",
-            "south": "portal_1778468499249_xkaodg5vhf9"
+            "north": "portal_1770829971303_7wmybrbi7",
+            "south": "portal_1770829976583_gum67m2td"
           },
           "is_start": true,
           "is_end": false,
@@ -276,12 +278,12 @@
           "stage_id": "s083_sa1",
           "rotation": 0,
           "connections": {
-            "south": "3,1",
-            "north": "1,1"
+            "north": "1,1",
+            "south": "3,1"
           },
           "portals": {
-            "south": "portal_1778468499249_v8ik53jq252",
-            "north": "portal_1778468499249_zaqdmmfzw0x"
+            "north": "portal_1770830000027_ust9kewi9",
+            "south": "portal_1770830009456_97y797n42"
           },
           "is_start": false,
           "is_end": false,
@@ -300,12 +302,12 @@
           "stage_id": "s083_ib1",
           "rotation": 0,
           "connections": {
-            "north": "0,1",
-            "south": "2,1"
+            "south": "2,1",
+            "north": "0,1"
           },
           "portals": {
-            "north": "portal_1778468499249_zmdd0rrala2",
-            "south": "portal_1778468499250_f1am1w8m2zv"
+            "south": "portal_1770831768041_q5tzvnmh1",
+            "north": "portal_1770831776431_xvaapvgyq"
           },
           "is_start": false,
           "is_end": false,
@@ -327,8 +329,8 @@
             "south": "1,1"
           },
           "portals": {
-            "south": "portal_1778468499250_f1km3j5g4bt",
-            "east": "portal_1778468499250_7m4cwr5yqjh"
+            "south": "portal_1771832669691_3bwgkiasq",
+            "east": "portal_1770831801256_8883w0uua"
           },
           "is_start": false,
           "is_end": true,
@@ -343,7 +345,8 @@
           "path_order": 3
         }
       ],
-      "entry_direction": "south"
+      "entry_direction": "south",
+      "exit_direction": "east"
     },
     {
       "type": "grid",
@@ -359,8 +362,8 @@
             "north": "2,1"
           },
           "portals": {
-            "north": "portal_1778468499250_o6p8qxcxxfy",
-            "south": "portal_1778468499250_5y3eyr9dhn3"
+            "north": "portal_1770831812934_if82uu3h5",
+            "south": "portal_1770831817789_qzb3bhgeh"
           },
           "is_start": true,
           "is_end": false,
@@ -383,8 +386,8 @@
             "north": "1,1"
           },
           "portals": {
-            "south": "portal_1778468499250_qpb84hl0p75",
-            "north": "portal_1778468499250_dfet0eism4o"
+            "south": "portal_1770831833801_pt9q3q9nc",
+            "north": "portal_1770831839502_yq64lei8a"
           },
           "is_start": false,
           "is_end": false,
@@ -407,8 +410,8 @@
             "south": "2,1"
           },
           "portals": {
-            "north": "portal_1778468499250_w300dlf1p5l",
-            "south": "portal_1778468499250_bnnrrpxnhxg"
+            "north": "portal_1770831851192_qjrufpjne",
+            "south": "portal_1770831859091_24ncmy2zu"
           },
           "is_start": false,
           "is_end": false,
@@ -430,8 +433,8 @@
             "south": "1,1"
           },
           "portals": {
-            "south": "portal_1778468499250_vf64j20dh8e",
-            "east": "portal_1778468499250_0qryano3adp"
+            "south": "portal_1771832684170_0e21jjg0r",
+            "east": "portal_1770831873769_g96l250ai"
           },
           "is_start": false,
           "is_end": true,
@@ -446,7 +449,8 @@
           "path_order": 3
         }
       ],
-      "entry_direction": "south"
+      "entry_direction": "south",
+      "exit_direction": "east"
     },
     {
       "type": "grid",
@@ -462,8 +466,8 @@
             "north": "2,1"
           },
           "portals": {
-            "north": "portal_1778468499250_2ih4zmhwbrc",
-            "south": "portal_1778468499250_q7j9eou8sax"
+            "north": "portal_1770831901113_u870ejn6d",
+            "south": "portal_1770831893628_j69rq7400"
           },
           "is_start": true,
           "is_end": false,
@@ -486,8 +490,8 @@
             "north": "1,1"
           },
           "portals": {
-            "south": "portal_1778468499250_y563tchb3kh",
-            "north": "portal_1778468499250_b0p6gd40v2p"
+            "south": "portal_1770831914882_jivrvow40",
+            "north": "portal_1770831923043_8s1hp816g"
           },
           "is_start": false,
           "is_end": false,
@@ -510,8 +514,8 @@
             "south": "2,1"
           },
           "portals": {
-            "north": "portal_1778468499250_utgajmwkrgz",
-            "south": "portal_1778468499250_9w85e6n4kg4"
+            "north": "portal_1770831935275_fphi4yy4o",
+            "south": "portal_1770831940390_fcz4hxtvx"
           },
           "is_start": false,
           "is_end": false,
@@ -533,8 +537,8 @@
             "south": "1,1"
           },
           "portals": {
-            "south": "portal_1778468499250_iigbpnwcprz",
-            "east": "portal_1778468499250_o463b8l8vbd"
+            "south": "portal_1771832698737_ybob6n1m1",
+            "east": "portal_1770831964901_r3gm4jzdr"
           },
           "is_start": false,
           "is_end": true,
@@ -549,7 +553,8 @@
           "path_order": 3
         }
       ],
-      "entry_direction": "south"
+      "entry_direction": "south",
+      "exit_direction": "east"
     },
     {
       "type": "grid",
@@ -565,8 +570,8 @@
             "north": "2,1"
           },
           "portals": {
-            "north": "portal_1778468499250_fc5bg536t71",
-            "south": "portal_1778468499250_qfr4c7sex8z"
+            "north": "portal_1770831983658_0vyib5v7z",
+            "south": "portal_1770831975439_p6hwtkrkq"
           },
           "is_start": true,
           "is_end": false,
@@ -589,8 +594,8 @@
             "north": "1,1"
           },
           "portals": {
-            "south": "portal_1778468499250_nnsd8vyljup",
-            "north": "portal_1778468499250_9pr67vc6t24"
+            "south": "portal_1770831997592_rarjwg6bd",
+            "north": "portal_1770832002985_xprd9swvw"
           },
           "is_start": false,
           "is_end": false,
@@ -613,8 +618,8 @@
             "south": "2,1"
           },
           "portals": {
-            "north": "portal_1778468499250_bj4vl5fj1d5",
-            "south": "portal_1778468499250_8dgkvxff3hz"
+            "north": "portal_1770832017872_vhxu5xe8d",
+            "south": "portal_1770832024136_u9tn6io3z"
           },
           "is_start": false,
           "is_end": false,
@@ -636,8 +641,8 @@
             "south": "1,1"
           },
           "portals": {
-            "south": "portal_1778468499250_zamijvx64bl",
-            "east": "portal_1778468499250_6bbmym7awwg"
+            "south": "portal_1771832716373_6z9hkydpr",
+            "east": "portal_1770832034269_aolxetdjn"
           },
           "is_start": false,
           "is_end": true,
@@ -652,21 +657,52 @@
           "path_order": 3
         }
       ],
-      "entry_direction": "south"
+      "entry_direction": "south",
+      "exit_direction": "east"
     },
     {
-      "type": "grid",
-      "area": "7",
-      "start_pos": "1,1",
-      "end_pos": "1,1",
+      "type": "transition",
+      "area": "e",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
       "cells": [
         {
-          "pos": "1,1",
-          "stage_id": "s087_na1",
-          "rotation": 180,
+          "pos": "0,0",
+          "stage_id": "s08e_ib1",
+          "rotation": 0,
           "connections": {},
           "portals": {
-            "north": "portal_1778468499250_vu8sdpp9odg",
+            "south": "portal_1770832079493_7chrvjll3",
+            "north": "portal_1770832086032_z0e1cpd28"
+          },
+          "is_start": true,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "south",
+          "path_order": 0
+        }
+      ],
+      "entry_direction": "south",
+      "exit_direction": "north"
+    },
+    {
+      "type": "boss",
+      "area": "7",
+      "start_pos": "0,0",
+      "end_pos": "0,0",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stage_id": "s087_na1",
+          "rotation": 0,
+          "connections": {},
+          "portals": {
             "default": "default"
           },
           "is_start": true,
@@ -678,11 +714,11 @@
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "north",
+          "warp_edge": "",
           "path_order": 0
         }
       ],
-      "exit_direction": "north"
+      "entry_direction": "south"
     }
   ],
   "office_npcs": [
@@ -704,7 +740,7 @@
     },
     {
       "speaker": "Mira",
-      "text": "It's a tower. Tall \u2014 past our cloud-line readings. And it's active. Every band we monitor is pinging off it."
+      "text": "It's a tower. Tall — past our cloud-line readings. And it's active. Every band we monitor is pinging off it."
     },
     {
       "speaker": "Elio",

@@ -325,13 +325,13 @@ export interface EditorAreaConfig {
 }
 
 export const EDITOR_AREAS: EditorAreaConfig[] = [
-  { key: 'valley', name: 'Gurhacia Valley', prefix: 's01', variants: ['a', 'b'], available: true },
-  { key: 'wetlands', name: 'Ozette Wetlands', prefix: 's02', variants: ['a', 'b'], available: true },
-  { key: 'snowfield', name: 'Rioh Snowfield', prefix: 's03', variants: ['a', 'b'], available: true },
-  { key: 'makara', name: 'Makara Ruins', prefix: 's04', variants: ['a', 'b'], available: true },
-  { key: 'paru', name: 'Oblivion City Paru', prefix: 's05', variants: ['a', 'b'], available: true },
-  { key: 'arca', name: 'Arca Plant', prefix: 's06', variants: ['a', 'b'], available: false },
-  { key: 'shrine', name: 'Dark Shrine', prefix: 's07', variants: ['a', 'b'], available: false },
+  { key: 'valley', name: 'Gurhacia Valley', prefix: 's01', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'wetlands', name: 'Ozette Wetlands', prefix: 's02', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'snowfield', name: 'Rioh Snowfield', prefix: 's03', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'makara', name: 'Makara Ruins', prefix: 's04', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'paru', name: 'Oblivion City Paru', prefix: 's05', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'arca', name: 'Arca Plant', prefix: 's06', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'shrine', name: 'Dark Shrine', prefix: 's07', variants: ['a', 'b', 'e', 'z'], available: true },
   { key: 'tower', name: 'Eternal Tower', prefix: 's08', variants: ['0', '1', '2', '3', '4', '5', '6', '7', 'e'], available: true },
 ];
 
