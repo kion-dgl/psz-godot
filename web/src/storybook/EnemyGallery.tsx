@@ -285,7 +285,7 @@ export default function EnemyGallery() {
             <directionalLight position={[5, 5, 5]} intensity={1} />
             <directionalLight position={[-5, -5, -5]} intensity={0.3} />
             {selectedEnemy && (
-              <ErrorBoundary>
+              <ErrorBoundary fallback={null}>
                 <Suspense fallback={<LoadingSpinner />}>
                   <EnemyModel key={selectedEnemy} enemyId={selectedEnemy}
                     animationSourcePath={animationSourcePath}
