@@ -678,5 +678,37 @@
       "speaker": "Ren",
       "text": "We don't know what happened. Find out. Bring back what you can."
     }
+  ],
+  "objectives": [
+    {
+      "item_id": "ogi_head",
+      "label": "Ogi's Head",
+      "target": 1
+    },
+    {
+      "item_id": "ogi_body",
+      "label": "Ogi's Body",
+      "target": 1
+    },
+    {
+      "item_id": "ogi_right_arm",
+      "label": "Ogi's Right Arm",
+      "target": 1
+    },
+    {
+      "item_id": "ogi_left_arm",
+      "label": "Ogi's Left Arm",
+      "target": 1
+    },
+    {
+      "item_id": "ogi_right_leg",
+      "label": "Ogi's Right Leg",
+      "target": 1
+    },
+    {
+      "item_id": "ogi_left_leg",
+      "label": "Ogi's Left Leg",
+      "target": 1
+    }
   ]
 }

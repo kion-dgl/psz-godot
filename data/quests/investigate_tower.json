@@ -740,7 +740,7 @@
     },
     {
       "speaker": "Mira",
-      "text": "It's a tower. Tall — past our cloud-line readings. And it's active. Every band we monitor is pinging off it."
+      "text": "It's a tower. Tall \u2014 past our cloud-line readings. And it's active. Every band we monitor is pinging off it."
     },
     {
       "speaker": "Elio",
@@ -757,6 +757,13 @@
     {
       "speaker": "Principal",
       "text": "Be careful. We don't know what's at the top."
+    }
+  ],
+  "objectives": [
+    {
+      "item_id": "tower_boss",
+      "label": "Defeat Tower Boss",
+      "target": 1
     }
   ]
 }

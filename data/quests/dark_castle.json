@@ -642,5 +642,12 @@
       "speaker": "Principal",
       "text": "And if you can't... bring back the truth."
     }
+  ],
+  "objectives": [
+    {
+      "item_id": "dark_falz",
+      "label": "Defeat Dark Falz",
+      "target": 1
+    }
   ]
 }
