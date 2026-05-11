@@ -370,5 +370,8 @@
       "label": "Defeat Chaos Mobius",
       "target": 1
     }
+  ],
+  "companions": [
+    "sarisa"
   ]
 }

@@ -612,8 +612,8 @@
   ],
   "office_npcs": [
     {
-      "npc_id": "dr_carlo",
-      "npc_name": "Dr. Carlo",
+      "npc_id": "principal",
+      "npc_name": "Principal",
       "office_position": "pos_1"
     }
   ],
@@ -649,5 +649,6 @@
       "label": "Defeat Dark Falz",
       "target": 1
     }
-  ]
+  ],
+  "companions": []
 }

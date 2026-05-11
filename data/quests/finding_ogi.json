@@ -710,5 +710,8 @@
       "label": "Ogi's Left Leg",
       "target": 1
     }
+  ],
+  "companions": [
+    "ren"
   ]
 }

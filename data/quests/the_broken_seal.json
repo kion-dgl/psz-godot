@@ -704,7 +704,7 @@
     },
     {
       "speaker": "Dr. Carlo",
-      "text": "Hunters who've approached the perimeter report hearing voices. Not animal calls — words. None of them speak the language."
+      "text": "Hunters who've approached the perimeter report hearing voices. Not animal calls \u2014 words. None of them speak the language."
     },
     {
       "speaker": "Dr. Carlo",
@@ -714,5 +714,8 @@
       "speaker": "Principal",
       "text": "Dr. Carlo will be with you. Keep him alive. Let him do his work."
     }
+  ],
+  "companions": [
+    "dr_carlo"
   ]
 }

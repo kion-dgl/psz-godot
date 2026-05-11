@@ -765,5 +765,8 @@
       "label": "Defeat Tower Boss",
       "target": 1
     }
+  ],
+  "companions": [
+    "elio"
   ]
 }
