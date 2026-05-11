@@ -332,6 +332,7 @@ export const EDITOR_AREAS: EditorAreaConfig[] = [
   { key: 'paru', name: 'Oblivion City Paru', prefix: 's05', variants: ['a', 'b'], available: true },
   { key: 'arca', name: 'Arca Plant', prefix: 's06', variants: ['a', 'b'], available: false },
   { key: 'shrine', name: 'Dark Shrine', prefix: 's07', variants: ['a', 'b'], available: false },
+  { key: 'tower', name: 'Eternal Tower', prefix: 's08', variants: ['0', '1', '2', '3', '4', '5', '6', '7', 'e'], available: true },
 ];
 
 // ============================================================================
