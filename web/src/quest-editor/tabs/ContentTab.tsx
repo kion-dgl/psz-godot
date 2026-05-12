@@ -972,6 +972,8 @@ function CellContentInspector({
   onClearKeyDropPosition,
   placingObject,
   onSetPlacingObject,
+  placingEnemyWave,
+  onSetPlacingEnemyWave,
   selectedObjectId,
   onSelectObject,
   onDeleteObject,
@@ -990,6 +992,8 @@ function CellContentInspector({
   onClearKeyDropPosition: () => void;
   placingObject: CellObjectType | null;
   onSetPlacingObject: (type: CellObjectType | null) => void;
+  placingEnemyWave: number;
+  onSetPlacingEnemyWave: (w: number) => void;
   selectedObjectId: string | null;
   onSelectObject: (id: string | null) => void;
   onDeleteObject: (id: string) => void;
@@ -1280,6 +1284,25 @@ function CellContentInspector({
         {placingObject && (
           <div style={{ fontSize: '11px', color: CELL_OBJECT_COLORS[placingObject], marginBottom: '8px' }}>
             Click in 3D view to place {CELL_OBJECT_LABELS[placingObject]}
+          </div>
+        )}
+
+        {/* Wave selector — applies to enemies placed while this mode is active */}
+        {placingObject === 'enemy' && (
+          <div style={{ marginBottom: '8px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', color: '#888' }}>Place at wave:</span>
+            {[1, 2, 3].map(w => (
+              <button
+                key={w}
+                onClick={() => onSetPlacingEnemyWave(w)}
+                style={{
+                  ...btnStyle, padding: '3px 10px', fontSize: '10px',
+                  background: placingEnemyWave === w ? '#cc4444' : '#333',
+                }}
+              >
+                {w}
+              </button>
+            ))}
           </div>
         )}
 
@@ -2019,6 +2042,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
   const [placingKeyDrop, setPlacingKeyDrop] = useState(false);
   const [placingObject, setPlacingObject] = useState<CellObjectType | null>(null);
   const [placingRotation, setPlacingRotation] = useState(0);
+  const [placingEnemyWave, setPlacingEnemyWave] = useState<number>(1);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
   const [repositioningObjectId, setRepositioningObjectId] = useState<string | null>(null);
 
@@ -2136,7 +2160,10 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
         position: pos,
       };
       if ((placingObject === 'fence' || placingObject === 'wall') && placingRotation) newObj.rotation = placingRotation;
-      if (placingObject === 'enemy') newObj.enemy_id = 'lizard';
+      if (placingObject === 'enemy') {
+        newObj.enemy_id = 'lizard';
+        if (placingEnemyWave !== 1) newObj.wave = placingEnemyWave;
+      }
       if (placingObject === 'message') newObj.text = '';
       if (placingObject === 'story_prop') newObj.prop_path = '';
       if (placingObject === 'dialog_trigger') { newObj.trigger_id = ''; newObj.trigger_condition = 'enter'; newObj.dialog = []; newObj.actions = []; }
@@ -2154,7 +2181,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
         },
       };
     });
-  }, [selectedCell, placingObject, placingRotation, onUpdateProject]);
+  }, [selectedCell, placingObject, placingRotation, placingEnemyWave, onUpdateProject]);
 
   const handleDeleteObject = useCallback((objId: string) => {
     if (!selectedCell) return;
@@ -2455,6 +2482,8 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
             onClearKeyDropPosition={handleClearKeyDropPosition}
             placingObject={placingObject}
             onSetPlacingObject={handleSetPlacingObject}
+            placingEnemyWave={placingEnemyWave}
+            onSetPlacingEnemyWave={setPlacingEnemyWave}
             selectedObjectId={selectedObjectId}
             onSelectObject={setSelectedObjectId}
             onDeleteObject={handleDeleteObject}
