@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-12",
+  "last_updated": "2026-05-13",
   "id": "heretic",
   "name": "Heretic",
   "description": "Newman guards + Reve heretic boss.",
@@ -30,6 +30,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -56,6 +57,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -137,6 +139,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -220,10 +223,13 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "key_gate_directions": [
+            "east"
+          ],
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 3,
           "objects": [
@@ -303,10 +309,16 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_gate_directions": [],
+          "key_drop": "2,2",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 4,
+          "key_drop_position": [
+            -0.5,
+            1,
+            0.1
+          ],
           "objects": [
             {
               "type": "enemy",
@@ -386,6 +398,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -479,6 +492,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -572,6 +586,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -653,8 +668,9 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "south",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -748,10 +764,13 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "key_gate_directions": [
+            "east"
+          ],
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 9,
           "objects": [
@@ -831,10 +850,16 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_gate_directions": [],
+          "key_drop": "4,3",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 10,
+          "key_drop_position": [
+            0.2,
+            1,
+            -2.7
+          ],
           "objects": [
             {
               "type": "enemy",
@@ -923,6 +948,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "east",
@@ -1011,6 +1037,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1033,7 +1060,7 @@
   "briefing_dialog": [
     {
       "speaker": "Principal",
-      "text": "The data we recovered from the tower included activation codes for a teleporter \u2014 one we didn't know existed. It links to a place called Arca."
+      "text": "The data we recovered from the tower included activation codes for a teleporter — one we didn't know existed. It links to a place called Arca."
     },
     {
       "speaker": "Sarisa",
@@ -1045,7 +1072,7 @@
     },
     {
       "speaker": "Sarisa",
-      "text": "If we're going, I'm going with you. There are things on Arca only I'll recognize \u2014 and things you'll need me to recognize."
+      "text": "If we're going, I'm going with you. There are things on Arca only I'll recognize — and things you'll need me to recognize."
     },
     {
       "speaker": "Sarisa",
