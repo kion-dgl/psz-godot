@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-12",
+  "last_updated": "2026-05-13",
   "id": "investigate_tower",
   "name": "Investigate Tower",
   "description": "Climb the Eternal Tower and conduct a blade survey.",
@@ -1741,7 +1741,18 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "blade_mother"
+            }
+          ]
         }
       ],
       "entry_direction": "south"
@@ -1787,8 +1798,8 @@
   ],
   "objectives": [
     {
-      "item_id": "tower_boss",
-      "label": "Defeat Tower Boss",
+      "item_id": "blade_mother",
+      "label": "Defeat Blade Mother",
       "target": 1
     }
   ],
