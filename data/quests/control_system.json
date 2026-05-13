@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-12",
+  "last_updated": "2026-05-13",
   "id": "control_system",
   "name": "Control System",
   "description": "Crumbling infrastructure + Mother Trinity boss.",
@@ -28,6 +28,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "south",
@@ -61,6 +62,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -85,10 +87,13 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
+          "is_key_gate": true,
+          "key_gate_direction": "north",
+          "key_gate_directions": [
+            "north"
+          ],
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 1,
           "objects": [
@@ -198,10 +203,16 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_gate_directions": [],
+          "key_drop": "3,2",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 2,
+          "key_drop_position": [
+            -11.8,
+            1,
+            -5.7
+          ],
           "objects": [
             {
               "type": "enemy",
@@ -302,6 +313,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -383,6 +395,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -445,6 +458,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -558,6 +572,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -648,12 +663,20 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
+          "is_key_gate": true,
+          "key_gate_direction": "north",
+          "key_gate_directions": [
+            "north"
+          ],
+          "key_drop": "1,4",
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 7,
+          "key_drop_position": [
+            13.2,
+            1,
+            0.6
+          ],
           "objects": [
             {
               "type": "enemy",
@@ -733,6 +756,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -846,6 +870,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -967,8 +992,9 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "west",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1100,6 +1126,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "north",
@@ -1219,10 +1246,22 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "humilias"
+            }
+          ]
         }
       ],
       "entry_direction": "south"
