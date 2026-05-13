@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-11",
+  "last_updated": "2026-05-12",
   "id": "the_broken_seal",
   "name": "The Broken Seal",
   "description": "Makara ruins seal puzzle, door to Dark Shrine.",
@@ -59,7 +59,76 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -15.8,
+                0,
+                14
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.3,
+                0,
+                14.1
+              ],
+              "enemy_id": "zerreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.8,
+                0,
+                7.7
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.8,
+                0,
+                -13.6
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                17,
+                0,
+                -13.6
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.6,
+                0,
+                -7.1
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                15.7,
+                0,
+                -1.6
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "3,1",
@@ -83,7 +152,96 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                11.8,
+                0,
+                -5.2
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.6,
+                0,
+                -3.4
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.2,
+                0,
+                3.2
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -14.5,
+                0,
+                5.6
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13,
+                0,
+                11.8
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                11.1
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.3,
+                0,
+                -13.7
+              ],
+              "enemy_id": "eulada",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.7,
+                0,
+                -11.8
+              ],
+              "enemy_id": "zerreo",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -13.2
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 3
+            }
+          ]
         },
         {
           "pos": "3,3",
@@ -105,7 +263,66 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5,
+                0,
+                4.4
+              ],
+              "enemy_id": "zerreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.2,
+                0,
+                -3.5
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.4,
+                0,
+                5.4
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1,
+                0,
+                3.3
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.3,
+                0,
+                -0.6
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.9,
+                0,
+                3.4
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -122,14 +339,43 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "1,1",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -9.5,
+                0,
+                -8.2
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.1,
+                0,
+                -8.5
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.7,
+                0,
+                -10.3
+              ],
+              "enemy_id": "eulidveil"
+            }
+          ]
         },
         {
           "pos": "1,1",
@@ -153,9 +399,77 @@
           "is_key_gate": true,
           "key_gate_direction": "north",
           "key_drop": "",
-          "required_keys": 1,
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.7,
+                0,
+                3
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.2,
+                0,
+                8.9
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.3,
+                0,
+                0.4
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6,
+                0,
+                5.3
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.4,
+                0,
+                8.3
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.8,
+                0,
+                1.4
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.9,
+                0,
+                -1.8
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "1,0",
@@ -179,7 +493,85 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -7.2,
+                0,
+                -6.2
+              ],
+              "enemy_id": "derreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.7,
+                0,
+                -7.9
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.6,
+                0,
+                -0.4
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.6,
+                0,
+                -1.8
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.3,
+                0,
+                7.9
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.4,
+                0,
+                4.7
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.9,
+                0,
+                -1.6
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.6,
+                0,
+                -6.6
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "0,1",
@@ -201,7 +593,86 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6.2,
+                0,
+                6.8
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.9,
+                0,
+                7.7
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.9,
+                0,
+                3.8
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.8,
+                0,
+                -0.6
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.5,
+                0,
+                -2.5
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.4,
+                0,
+                3.2
+              ],
+              "enemy_id": "eulada",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                -7.9
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                -7.8
+              ],
+              "enemy_id": "eulada",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "2,0",
@@ -225,7 +696,76 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 8
+          "path_order": 8,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -8.5,
+                0,
+                -3.5
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.5,
+                0,
+                -10
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.9,
+                0,
+                -3.9
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.4,
+                0,
+                2.7
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.4,
+                0,
+                6.5
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.2,
+                0,
+                -0.9
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.8,
+                0,
+                2.6
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "3,0",
@@ -249,7 +789,85 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 9
+          "path_order": 9,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -13.6,
+                0,
+                -7.8
+              ],
+              "enemy_id": "zerreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11,
+                0,
+                -11.7
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.4,
+                0,
+                -1.2
+              ],
+              "enemy_id": "zerreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.7,
+                0,
+                3.5
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5,
+                0,
+                13.5
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12,
+                0,
+                12.9
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.2,
+                0,
+                8.9
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.2,
+                0,
+                -13.7
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "4,0",
@@ -273,7 +891,96 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 10
+          "path_order": 10,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -13.3,
+                0,
+                -2
+              ],
+              "enemy_id": "zerreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -13.4,
+                0,
+                -9.4
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.3,
+                0,
+                -13.4
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12.2,
+                0,
+                -11.2
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14,
+                0,
+                -3.7
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.8,
+                0,
+                2.3
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.5,
+                0,
+                9
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.2,
+                0,
+                14.4
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.5,
+                0,
+                9.6
+              ],
+              "enemy_id": "eulada",
+              "wave": 3
+            }
+          ]
         },
         {
           "pos": "4,1",
@@ -296,7 +1003,85 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "south",
-          "path_order": 11
+          "path_order": 11,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                1.4,
+                0,
+                -9.5
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.6,
+                0,
+                -10.4
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.1,
+                0,
+                -4.9
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.2,
+                0,
+                -6.2
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.2,
+                0,
+                1.3
+              ],
+              "enemy_id": "eulada",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.6,
+                0,
+                1.6
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.7,
+                0,
+                7.2
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.9,
+                0,
+                6.9
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            }
+          ]
         }
       ],
       "exit_direction": "south"
@@ -326,7 +1111,66 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "north",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.6,
+                0,
+                5.3
+              ],
+              "enemy_id": "zerreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.4,
+                0,
+                0
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.6,
+                0,
+                5.1
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.9,
+                0,
+                -1.8
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.6,
+                0,
+                -2.9
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.9,
+                0,
+                0.7
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            }
+          ]
         }
       ],
       "entry_direction": "south",
@@ -359,7 +1203,76 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6,
+                0,
+                -4.9
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.9,
+                0,
+                -6.5
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.2,
+                0,
+                -1.7
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.5,
+                0,
+                0.6
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4,
+                0,
+                5.8
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.8,
+                0,
+                5.7
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.3,
+                0,
+                0.9
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "3,2",
@@ -385,7 +1298,96 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 1
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3.3,
+                0,
+                -2.3
+              ],
+              "enemy_id": "derreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.4,
+                0,
+                -2
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.3,
+                0,
+                1.3
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.2,
+                0,
+                -7.9
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.3,
+                0,
+                -1.5
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.3,
+                0,
+                2.8
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.4,
+                0,
+                -8.2
+              ],
+              "enemy_id": "zerreo",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7.2,
+                0,
+                -2.7
+              ],
+              "enemy_id": "phobos",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.9,
+                0,
+                4.6
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 3
+            }
+          ]
         },
         {
           "pos": "3,1",
@@ -407,7 +1409,66 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 2
+          "path_order": 2,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -6.4,
+                0,
+                0.5
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.5,
+                0,
+                5.3
+              ],
+              "enemy_id": "derreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.8,
+                0,
+                4.3
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.3,
+                0,
+                0
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.6,
+                0,
+                8.5
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.7,
+                0,
+                9.1
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "3,3",
@@ -433,7 +1494,76 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 3
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.8,
+                0,
+                -0.1
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.5,
+                0,
+                0.1
+              ],
+              "enemy_id": "derreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.1,
+                0,
+                7.5
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.6,
+                0,
+                -5.3
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.5,
+                0,
+                5.3
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.1,
+                0,
+                4.6
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4,
+                0,
+                -5.2
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "4,3",
@@ -457,7 +1587,106 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 4
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                5.9
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                12.2
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.1,
+                0,
+                8.4
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.7,
+                0,
+                5.1
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.4,
+                0,
+                5.4
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.4,
+                0,
+                12.4
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.4,
+                0,
+                11.2
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.5,
+                0,
+                -12.2
+              ],
+              "enemy_id": "eulada",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.3,
+                0,
+                -6.8
+              ],
+              "enemy_id": "derreo",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.8,
+                0,
+                -1.2
+              ],
+              "enemy_id": "eulada",
+              "wave": 3
+            }
+          ]
         },
         {
           "pos": "2,3",
@@ -472,14 +1701,63 @@
           "is_start": false,
           "is_end": false,
           "is_branch": false,
-          "has_key": true,
-          "key_for_cell": "1,4",
+          "has_key": false,
+          "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 5
+          "path_order": 5,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -2.7,
+                0,
+                9.8
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.7,
+                0,
+                4.1
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.4,
+                0,
+                8.4
+              ],
+              "enemy_id": "eulid"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.8,
+                0,
+                -11.7
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.9,
+                0,
+                -12.9
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "4,4",
@@ -503,7 +1781,106 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 6
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.1,
+                0,
+                -8.5
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.8,
+                0,
+                -10.5
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                -7
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.9,
+                0,
+                -2.7
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.4,
+                0,
+                3.1
+              ],
+              "enemy_id": "eulada",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.8,
+                0,
+                3.2
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.9,
+                0,
+                -4.2
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.4,
+                0,
+                7.7
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.4,
+                0,
+                7.7
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.4,
+                0,
+                7.9
+              ],
+              "enemy_id": "phobos",
+              "wave": 3
+            }
+          ]
         },
         {
           "pos": "3,4",
@@ -527,7 +1904,76 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 7
+          "path_order": 7,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.1,
+                0,
+                3.6
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.7,
+                0,
+                3.2
+              ],
+              "enemy_id": "derreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.3,
+                0,
+                -4.2
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.5,
+                0,
+                -4
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.4,
+                0,
+                1.4
+              ],
+              "enemy_id": "eulada",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.4,
+                0,
+                -4.7
+              ],
+              "enemy_id": "eulada",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                8.2
+              ],
+              "enemy_id": "eulada",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "2,4",
@@ -551,7 +1997,96 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 8
+          "path_order": 8,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -18,
+                0,
+                2.7
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -15.6,
+                0,
+                -1.8
+              ],
+              "enemy_id": "derreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.3,
+                0,
+                2.9
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                -7.8
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.3,
+                0,
+                -7.8
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.6,
+                0,
+                -14.2
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.8,
+                0,
+                13.5
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.4,
+                0,
+                9.2
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.5,
+                0,
+                10.8
+              ],
+              "enemy_id": "eulada",
+              "wave": 3
+            }
+          ]
         },
         {
           "pos": "1,4",
@@ -573,9 +2108,88 @@
           "is_key_gate": true,
           "key_gate_direction": "north",
           "key_drop": "",
-          "required_keys": 1,
+          "required_keys": 0,
           "warp_edge": "",
-          "path_order": 9
+          "path_order": 9,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3.5,
+                0,
+                10.2
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                3.8,
+                0,
+                10.6
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.3,
+                0,
+                10.1
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.6,
+                0,
+                -9.4
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.8,
+                0,
+                -10.1
+              ],
+              "enemy_id": "zerreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -7.6,
+                0,
+                -12.2
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.5,
+                0,
+                -12.6
+              ],
+              "enemy_id": "eulada",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.6,
+                0,
+                -11.9
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 3
+            }
+          ]
         },
         {
           "pos": "0,4",
@@ -599,7 +2213,76 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 10
+          "path_order": 10,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -8,
+                0,
+                -12
+              ],
+              "enemy_id": "derreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.8,
+                0,
+                -5.9
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.1,
+                0,
+                -8.9
+              ],
+              "enemy_id": "zaphobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12,
+                0,
+                -12.9
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                13.7,
+                0,
+                -9.9
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9,
+                0,
+                -6.3
+              ],
+              "enemy_id": "euladaveil",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11,
+                0,
+                10.8
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            }
+          ]
         },
         {
           "pos": "0,3",
@@ -623,7 +2306,96 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 11
+          "path_order": 11,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.3,
+                0,
+                -12
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.2,
+                0,
+                -10.5
+              ],
+              "enemy_id": "derreo"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.5,
+                0,
+                -6.8
+              ],
+              "enemy_id": "eulidveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -21.5,
+                0,
+                -4.8
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -20.9,
+                0,
+                0.2
+              ],
+              "enemy_id": "eulid",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -20.7,
+                0,
+                4.9
+              ],
+              "enemy_id": "derreo",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                20.6,
+                0,
+                -3.4
+              ],
+              "enemy_id": "eulid",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                20.5,
+                0,
+                1.3
+              ],
+              "enemy_id": "eulada",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                21.5,
+                0,
+                4.8
+              ],
+              "enemy_id": "zerreo",
+              "wave": 3
+            }
+          ]
         },
         {
           "pos": "0,2",
@@ -646,11 +2418,110 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "north",
-          "path_order": 12
+          "path_order": 12,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                1.6,
+                0,
+                11.2
+              ],
+              "enemy_id": "eulada"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.3,
+                0,
+                18.7
+              ],
+              "enemy_id": "euladaveil"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                7,
+                0,
+                14.7
+              ],
+              "enemy_id": "phobos"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -17.1,
+                0,
+                15.3
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                16.8,
+                0,
+                -9.7
+              ],
+              "enemy_id": "phobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.1,
+                0,
+                -13.5
+              ],
+              "enemy_id": "zaphobos",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -8.1,
+                0,
+                -12.9
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.6,
+                0,
+                -13.9
+              ],
+              "enemy_id": "derreo",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.4,
+                0,
+                -7.2
+              ],
+              "enemy_id": "eulidveil",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.5,
+                0,
+                -7.8
+              ],
+              "enemy_id": "derreo",
+              "wave": 3
+            }
+          ]
         }
       ],
-      "exit_direction": "north",
-      "entry_direction": "south"
+      "entry_direction": "south",
+      "exit_direction": "north"
     },
     {
       "type": "boss",
@@ -681,6 +2552,9 @@
       ],
       "entry_direction": "south"
     }
+  ],
+  "companions": [
+    "dr_carlo"
   ],
   "office_npcs": [
     {
@@ -714,8 +2588,5 @@
       "speaker": "Principal",
       "text": "Dr. Carlo will be with you. Keep him alive. Let him do his work."
     }
-  ],
-  "companions": [
-    "dr_carlo"
   ]
 }
