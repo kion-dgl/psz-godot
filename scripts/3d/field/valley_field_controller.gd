@@ -98,6 +98,7 @@ var _needs_telepipe: bool = false      # End cell without warp_edge — spawn te
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _deferred_quest_complete_telepipe: Dictionary = {} # Telepipe deferred until SessionManager.quest_completed fires
+var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condition=room_clear, deferred until room clear
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
 
@@ -1588,30 +1589,39 @@ func _create_key_pickup(key_for_cell: String) -> void:
 		key_for_cell, key_pos, key_item_id])
 
 
+func _compute_drop_position() -> Vector3:
+	# Use authored key_drop_position when present; otherwise fall back to the
+	# centroid of the cell's non-default portals (same heuristic as the key
+	# drop). Shared between key drops and quest_complete telepipe spawns so
+	# both land at the same spot.
+	var authored_pos: Array = _current_cell.get("key_drop_position", [])
+	if authored_pos.size() == 3:
+		return Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
+	var portal_positions: Array[Vector3] = []
+	for dir in _portal_data:
+		if dir != "default":
+			portal_positions.append(_portal_data[dir]["spawn_pos"])
+	if portal_positions.size() >= 2:
+		var sum := Vector3.ZERO
+		for pp in portal_positions:
+			sum += pp
+		var avg := sum / float(portal_positions.size())
+		avg.y = 0.5
+		return avg
+	if portal_positions.size() == 1:
+		var single := portal_positions[0]
+		single.y = 0.5
+		return single
+	return Vector3(0, 0.5, 0)
+
+
 func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
 	var key_item_id := "key_%s" % target_cell.replace(",", "_")
 	var key := KeyPickupScript.new()
 	key.key_id = key_item_id
 	key.name = "KeyDrop_%s" % target_cell
 
-	# Place key at authored position from quest editor, or fall back to room center
-	var key_pos := Vector3.ZERO
-	var authored_pos: Array = _current_cell.get("key_drop_position", [])
-	if authored_pos.size() == 3:
-		key_pos = Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
-	else:
-		var portal_positions: Array[Vector3] = []
-		for dir in _portal_data:
-			if dir != "default":
-				portal_positions.append(_portal_data[dir]["spawn_pos"])
-		if portal_positions.size() >= 2:
-			var sum := Vector3.ZERO
-			for p in portal_positions:
-				sum += p
-			key_pos = sum / float(portal_positions.size())
-		elif portal_positions.size() == 1:
-			key_pos = portal_positions[0]
-		key_pos.y = 0.5
+	var key_pos := _compute_drop_position()
 
 	_map_root.add_child(key)
 	key.position = key_pos
@@ -2222,6 +2232,7 @@ func _spawn_cell_objects() -> void:
 	_room_walls.clear()
 	_deferred_telepipe = {}
 	_deferred_quest_complete_telepipe = {}
+	_deferred_room_clear_items.clear()
 
 	if objects.is_empty() and saved.is_empty():
 		return
@@ -2346,7 +2357,15 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var qi_dlg: Array = obj.get("dialog", [])
 				var qi_act: Array = obj.get("actions", [])
 				var qi_rem: Array = obj.get("remaining_dialog", [])
-				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+				var qi_spawn: String = str(obj.get("spawn_condition", ""))
+				if qi_spawn == "room_clear":
+					# Defer until enemies are cleared (e.g. the hildegao ate it).
+					_deferred_room_clear_items.append({
+						"pos": pos, "id": qi_id, "label": qi_label,
+						"dialog": qi_dlg, "actions": qi_act, "remaining_dialog": qi_rem,
+					})
+				else:
+					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap":
 				_spawn_needle_trap(pos)
 			"bear_trap":
@@ -2464,13 +2483,32 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 					var qi_dlg: Array = []
 					var qi_act: Array = []
 					var qi_rem: Array = []
+					var qi_spawn: String = ""
 					for orig_obj in _current_cell.get("objects", []):
 						if str(orig_obj.get("type", "")) == "quest_item" and str(orig_obj.get("item_id", "")) == qi_id:
 							qi_dlg = orig_obj.get("dialog", [])
 							qi_act = orig_obj.get("actions", [])
 							qi_rem = orig_obj.get("remaining_dialog", [])
+							qi_spawn = str(orig_obj.get("spawn_condition", ""))
 							break
-					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+					if qi_spawn == "room_clear":
+						# Room was previously cleared if no enemy is alive in the
+						# saved state — spawn the item now so re-entry works.
+						# Otherwise defer for this run's room-clear pass.
+						var room_was_cleared := true
+						for s_obj in obj_states:
+							if str(s_obj.get("type", "")) == "enemy" and str(s_obj.get("state", "")) == "alive":
+								room_was_cleared = false
+								break
+						if room_was_cleared:
+							_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+						else:
+							_deferred_room_clear_items.append({
+								"pos": pos, "id": qi_id, "label": qi_label,
+								"dialog": qi_dlg, "actions": qi_act, "remaining_dialog": qi_rem,
+							})
+					else:
+						_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap":
 				_spawn_needle_trap(pos)
 			"bear_trap":
@@ -2520,11 +2558,16 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				if str(obj.get("type", "")) == "enemy" and str(obj.get("state", "")) == "alive":
 					has_alive = true
 					break
-			# Skip the key drop when the quest is already done — a quest_complete
-			# telepipe on this cell will spawn instead, and the player doesn't
-			# need another key for a door they'll never have to unlock.
-			if not has_alive and not SessionManager.are_objectives_complete():
-				_drop_key_on_clear(key_drop_target, drop_tracking_key)
+			# When the room was previously cleared, decide what to spawn:
+			# - quest complete → telepipe at the drop position (player returns
+			#   to a cleared room after finishing elsewhere; still want them to
+			#   be able to leave from here);
+			# - quest not complete and key not yet collected → drop the key.
+			if not has_alive:
+				if SessionManager.are_objectives_complete():
+					_spawn_telepipe(_compute_drop_position())
+				else:
+					_drop_key_on_clear(key_drop_target, drop_tracking_key)
 
 
 ## Temp state for enemy alive tracking during save (reset per save call)
@@ -3326,13 +3369,16 @@ func _check_room_clear() -> void:
 				node.monitoring = true
 	_warp_edge_locked.clear()
 
-	# Drop key on room clear if configured. Skip when the quest is already
-	# complete — a quest_complete telepipe in this cell will spawn instead.
+	# Drop key on room clear if configured. If the quest just completed,
+	# spawn a telepipe at the same drop position instead — the player has
+	# no more locked doors to open, so dropping another key would be waste.
 	var key_drop_target: String = str(_current_cell.get("key_drop", ""))
 	var current_pos: String = str(_current_cell.get("pos", ""))
-	if not key_drop_target.is_empty() and not SessionManager.are_objectives_complete():
+	if not key_drop_target.is_empty():
 		var drop_tracking_key := current_pos + ">" + key_drop_target
-		if not _keys_collected.has(drop_tracking_key):
+		if SessionManager.are_objectives_complete():
+			_spawn_telepipe(_compute_drop_position())
+		elif not _keys_collected.has(drop_tracking_key):
 			_drop_key_on_clear(key_drop_target, drop_tracking_key)
 
 	# Activate locked messages on room clear (scroll animation turns on)

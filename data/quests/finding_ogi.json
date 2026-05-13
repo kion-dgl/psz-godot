@@ -1811,7 +1811,8 @@
                 8
               ],
               "item_id": "ogi_right_leg",
-              "item_label": "Cast Right Leg"
+              "item_label": "Cast Right Leg",
+              "spawn_condition": "room_clear"
             },
             {
               "type": "enemy",
@@ -1839,15 +1840,6 @@
                 14
               ],
               "enemy_id": "reyhound"
-            },
-            {
-              "type": "telepipe",
-              "position": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "spawn_condition": "quest_complete"
             }
           ]
         },
@@ -2080,7 +2072,8 @@
                 -6
               ],
               "item_id": "ogi_left_arm",
-              "item_label": "Cast Left Arm"
+              "item_label": "Cast Left Arm",
+              "spawn_condition": "room_clear"
             },
             {
               "type": "enemy",
@@ -2108,15 +2101,6 @@
                 2.1
               ],
               "enemy_id": "hildeghana"
-            },
-            {
-              "type": "telepipe",
-              "position": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "spawn_condition": "quest_complete"
             }
           ]
         },
@@ -2151,7 +2135,8 @@
                 -4.1
               ],
               "item_id": "ogi_left_leg",
-              "item_label": "Cast Left Foot"
+              "item_label": "Cast Left Foot",
+              "spawn_condition": "room_clear"
             },
             {
               "type": "enemy",
@@ -2179,16 +2164,12 @@
                 3.7
               ],
               "enemy_id": "reyhound"
-            },
-            {
-              "type": "telepipe",
-              "position": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "spawn_condition": "quest_complete"
             }
+          ],
+          "key_drop_position": [
+            3,
+            1,
+            -2.5
           ]
         }
       ],
