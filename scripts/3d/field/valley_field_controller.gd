@@ -2520,7 +2520,10 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				if str(obj.get("type", "")) == "enemy" and str(obj.get("state", "")) == "alive":
 					has_alive = true
 					break
-			if not has_alive:
+			# Skip the key drop when the quest is already done — a quest_complete
+			# telepipe on this cell will spawn instead, and the player doesn't
+			# need another key for a door they'll never have to unlock.
+			if not has_alive and not SessionManager.are_objectives_complete():
 				_drop_key_on_clear(key_drop_target, drop_tracking_key)
 
 
@@ -3323,10 +3326,11 @@ func _check_room_clear() -> void:
 				node.monitoring = true
 	_warp_edge_locked.clear()
 
-	# Drop key on room clear if configured
+	# Drop key on room clear if configured. Skip when the quest is already
+	# complete — a quest_complete telepipe in this cell will spawn instead.
 	var key_drop_target: String = str(_current_cell.get("key_drop", ""))
 	var current_pos: String = str(_current_cell.get("pos", ""))
-	if not key_drop_target.is_empty():
+	if not key_drop_target.is_empty() and not SessionManager.are_objectives_complete():
 		var drop_tracking_key := current_pos + ">" + key_drop_target
 		if not _keys_collected.has(drop_tracking_key):
 			_drop_key_on_clear(key_drop_target, drop_tracking_key)

@@ -30,6 +30,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -56,6 +57,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -137,6 +139,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -263,6 +266,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -365,6 +369,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -478,6 +483,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -636,6 +642,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -729,10 +736,11 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
+          "is_key_gate": true,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
-          "required_keys": 0,
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 7,
           "objects": [
@@ -842,10 +850,16 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_gate_directions": [],
+          "key_drop": "0,2",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 8,
+          "key_drop_position": [
+            1.8,
+            1,
+            -4.3
+          ],
           "objects": [
             {
               "type": "quest_item",
@@ -898,6 +912,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -990,6 +1005,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "west",
@@ -1020,6 +1036,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "south",
@@ -1092,6 +1109,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1118,10 +1136,15 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": false,
-          "key_gate_direction": "",
-          "key_drop": "",
-          "required_keys": 0,
+          "is_key_gate": true,
+          "key_gate_direction": "north",
+          "key_gate_directions": [
+            "north",
+            "west",
+            "east"
+          ],
+          "key_drop": "3,2",
+          "required_keys": 2,
           "warp_edge": "",
           "path_order": 1,
           "objects": [
@@ -1203,6 +1226,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1286,6 +1310,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1399,6 +1424,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1491,6 +1517,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1594,6 +1621,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1677,6 +1705,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1768,7 +1797,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_gate_directions": [],
+          "key_drop": "3,2",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 8,
@@ -1809,6 +1839,15 @@
                 14
               ],
               "enemy_id": "reyhound"
+            },
+            {
+              "type": "telepipe",
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "spawn_condition": "quest_complete"
             }
           ]
         },
@@ -1831,6 +1870,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1914,6 +1954,7 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
+          "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -2025,7 +2066,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_gate_directions": [],
+          "key_drop": "3,2",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 11,
@@ -2066,6 +2108,15 @@
                 2.1
               ],
               "enemy_id": "hildeghana"
+            },
+            {
+              "type": "telepipe",
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "spawn_condition": "quest_complete"
             }
           ]
         },
@@ -2086,7 +2137,8 @@
           "key_for_cell": "",
           "is_key_gate": false,
           "key_gate_direction": "",
-          "key_drop": "",
+          "key_gate_directions": [],
+          "key_drop": "3,2",
           "required_keys": 0,
           "warp_edge": "",
           "path_order": 12,
@@ -2127,6 +2179,15 @@
                 3.7
               ],
               "enemy_id": "reyhound"
+            },
+            {
+              "type": "telepipe",
+              "position": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "spawn_condition": "quest_complete"
             }
           ]
         }
