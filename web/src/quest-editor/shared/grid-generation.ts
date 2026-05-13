@@ -601,7 +601,7 @@ function tryGenerateGrid(
       cells[pos] = {
         stageName: cell.stageName,
         rotation: cell.rotation || undefined,
-        lockedGate: cell.isKeyGate && cell.keyGateDirection ? cell.keyGateDirection as Direction : undefined,
+        lockedGates: cell.isKeyGate && cell.keyGateDirection ? [cell.keyGateDirection as Direction] : undefined,
         manual: false,
       };
     }

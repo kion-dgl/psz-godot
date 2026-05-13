@@ -20,7 +20,7 @@ interface CellInspectorProps {
   onToggleKey: (pos: string, gatePos?: string) => void;
   onToggleKeyDrop: (pos: string, gatePos?: string) => void;
   onToggleKeyGate: (pos: string) => void;
-  onSetLockedGate: (pos: string, dir: Direction | undefined) => void;
+  onToggleLockedGate: (pos: string, dir: Direction) => void;
   onClearCell: (pos: string) => void;
   onChangeStage: (pos: string) => void;
   onSwapStart: (pos: string) => void;
@@ -37,8 +37,8 @@ function gateLabel(pos: string, project: QuestProject): string {
   const cell = project.cells[pos];
   if (!cell) return pos;
   const suffix = getStageSuffix(cell.stageName);
-  const dir = cell.lockedGate ? ` ${cell.lockedGate}` : '';
-  return `${pos} (${suffix}${dir})`;
+  const dirs = (cell.lockedGates && cell.lockedGates.length > 0) ? ' ' + cell.lockedGates.join('+') : '';
+  return `${pos} (${suffix}${dirs})`;
 }
 
 const labelStyle: React.CSSProperties = {
@@ -62,7 +62,7 @@ export default function CellInspector({
   onToggleKey,
   onToggleKeyDrop,
   onToggleKeyGate,
-  onSetLockedGate,
+  onToggleLockedGate,
   onClearCell,
   onChangeStage,
   onSwapStart,
@@ -194,14 +194,14 @@ export default function CellInspector({
         }}>
           {(['north', 'west', 'east', 'south'] as Direction[]).map(dir => {
             const hasGate = gates.has(dir);
-            const isLocked = cell.lockedGate === dir;
+            const isLocked = (cell.lockedGates ?? []).includes(dir);
             const bg = isLocked ? '#ff66ff' : hasGate ? '#88ff88' : '#333';
             const clickable = isKeyGate && hasGate;
             const gridArea = dir === 'north' ? '1/2' : dir === 'west' ? '2/1' : dir === 'east' ? '2/3' : '3/2';
             return (
               <div
                 key={dir}
-                onClick={clickable ? () => onSetLockedGate(selectedCell, isLocked ? undefined : dir) : undefined}
+                onClick={clickable ? () => onToggleLockedGate(selectedCell, dir) : undefined}
                 style={{
                   gridArea,
                   background: bg,
@@ -390,7 +390,7 @@ export default function CellInspector({
                 <span style={{ fontSize: '9px', color: '#666' }}>click to copy</span>
               </div>
               <div style={{ fontSize: '11px', color: '#cc88ff', marginTop: '2px' }}>
-                Locked: {cell.lockedGate ? `${cell.lockedGate} gate` : 'click a gate above to lock'}
+                Locked: {(cell.lockedGates && cell.lockedGates.length > 0) ? `${cell.lockedGates.join(' + ')} gate${cell.lockedGates.length > 1 ? 's' : ''}` : 'click a gate above to lock'}
               </div>
               <div style={{ fontSize: '11px', color: '#cc88ff', marginTop: '2px' }}>
                 Key at: {project.keyLinks[selectedCell]

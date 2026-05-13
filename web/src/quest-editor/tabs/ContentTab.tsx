@@ -1090,7 +1090,7 @@ function CellContentInspector({
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
           {(['north', 'south', 'east', 'west'] as Direction[]).map(dir => {
             const hasGate = gates.has(dir);
-            const isLocked = cell.lockedGate === dir;
+            const isLocked = (cell.lockedGates ?? []).includes(dir);
             return (
               <div key={dir} style={{
                 padding: '3px 8px',
@@ -1237,7 +1237,7 @@ function CellContentInspector({
         <div style={sectionStyle}>
           <div style={labelStyle}>Key-Gate</div>
           <div style={{ fontSize: '12px', color: '#cc88ff' }}>
-            Locked gate: {cell.lockedGate || 'not set'}
+            Locked gate{(cell.lockedGates && cell.lockedGates.length > 1) ? 's' : ''}: {(cell.lockedGates && cell.lockedGates.length > 0) ? cell.lockedGates.join(' + ') : 'not set'}
           </div>
           <div style={{ fontSize: '12px', color: '#cc88ff', marginTop: '2px' }}>
             Key at: {project.keyLinks[selectedCell] || 'unlinked'}
@@ -2294,7 +2294,7 @@ export default function ContentTab({ project, onUpdateProject }: ContentTabProps
                     key={i}
                     gate={gate}
                     worldEdge={worldEdge}
-                    isLocked={cell.lockedGate === worldEdge}
+                    isLocked={(cell.lockedGates ?? []).includes(worldEdge)}
                   />
                 );
               })}

@@ -89,12 +89,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
+func _get_locked_gates(cell: Dictionary) -> Array:
+	var arr: Variant = cell.get("key_gate_directions", null)
+	if arr is Array and arr.size() > 0:
+		var out: Array = []
+		for d in arr:
+			var ds := str(d)
+			if not ds.is_empty():
+				out.append(ds)
+		return out
+	var single: String = str(cell.get("key_gate_direction", ""))
+	if single.is_empty():
+		return []
+	return [single]
+
+
 func _try_move(cell: Dictionary, connections: Dictionary, direction: String) -> void:
 	if not connections.has(direction):
 		return
 	# Check key-gate lock
 	if cell.get("is_key_gate", false) \
-			and str(cell.get("key_gate_direction", "")) == direction \
+			and direction in _get_locked_gates(cell) \
 			and not _keys_collected.has(_current_pos):
 		hint_label.text = "This gate is locked! Find the key first."
 		return
@@ -380,8 +395,11 @@ func _refresh_info() -> void:
 			gate_label.text = "Gate: UNLOCKED"
 			gate_label.add_theme_color_override("font_color", ThemeColors.HEADER)
 		else:
-			var locked_dir: String = str(cell.get("key_gate_direction", ""))
-			gate_label.text = "Gate: LOCKED (%s)" % locked_dir.to_upper()
+			var locked_dirs: Array = _get_locked_gates(cell)
+			var locked_label: String = ""
+			for d in locked_dirs:
+				locked_label += "+" + str(d).to_upper() if not locked_label.is_empty() else str(d).to_upper()
+			gate_label.text = "Gate: LOCKED (%s)" % locked_label
 			gate_label.add_theme_color_override("font_color", ThemeColors.DANGER)
 		vbox.add_child(gate_label)
 
@@ -415,7 +433,7 @@ func _refresh_info() -> void:
 			var dir_label := Label.new()
 			var locked := ""
 			if cell.get("is_key_gate", false) \
-					and str(cell.get("key_gate_direction", "")) == edge \
+					and edge in _get_locked_gates(cell) \
 					and not _keys_collected.has(_current_pos):
 				locked = " [LOCKED]"
 			dir_label.text = "  %s -> %s%s" % [edge.capitalize(), target_stage, locked]

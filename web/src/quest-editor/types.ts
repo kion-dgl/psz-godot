@@ -171,8 +171,8 @@ export interface EditorGridCell {
   stageName: string;
   /** Rotation in degrees (0, 90, 180, 270). Only used for single-gate stages. */
   rotation?: number;
-  /** Which gate direction is key-locked on this cell */
-  lockedGate?: Direction;
+  /** Which gate directions are key-locked on this cell. Empty/undefined = no lock. */
+  lockedGates?: Direction[];
   /** Whether this cell was manually placed (vs generated) */
   manual: boolean;
   /** Optional designer notes */

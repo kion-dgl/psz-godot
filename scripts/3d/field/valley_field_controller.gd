@@ -416,12 +416,12 @@ func _ready() -> void:
 	# Create gate triggers for each connection (entry edge gets delayed activation)
 	# Key-gate direction trigger starts disabled — enabled when gate opens
 	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
-	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
+	var key_gate_dirs: Array = _get_locked_gates(_current_cell)
 	for dir in connections:
 		if not _portal_data.has(dir):
 			continue
 		var is_entry: bool = (dir == spawn_edge)
-		var is_locked_gate: bool = is_key_gate and dir == key_gate_dir and not _gates_opened.has(str(_current_cell.get("pos", "")))
+		var is_locked_gate: bool = is_key_gate and dir in key_gate_dirs and not _gates_opened.has(str(_current_cell.get("pos", "")))
 		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
 	# (warp_edge exit is handled by area warp auto-generation in _spawn_field_elements)
@@ -506,11 +506,13 @@ func _ready() -> void:
 					_grid_minimap.set_gate_state(cur_pos, dir, "locked")
 	# Key-gate starts locked unless previously opened
 	var is_key_gate_cell: bool = _current_cell.get("is_key_gate", false)
-	var kg_dir: String = str(_current_cell.get("key_gate_direction", ""))
-	if is_key_gate_cell and not kg_dir.is_empty() and not _gates_opened.has(cur_pos):
-		_room_minimap.set_gate_locked(kg_dir, true)
-		if _grid_minimap:
-			_grid_minimap.set_gate_state(cur_pos, kg_dir, "locked")
+	var kg_dirs: Array = _get_locked_gates(_current_cell)
+	if is_key_gate_cell and kg_dirs.size() > 0 and not _gates_opened.has(cur_pos):
+		for kg_dir_s in kg_dirs:
+			var kg_dir: String = str(kg_dir_s)
+			_room_minimap.set_gate_locked(kg_dir, true)
+			if _grid_minimap:
+				_grid_minimap.set_gate_state(cur_pos, kg_dir, "locked")
 
 	# Lock warp_edge on minimap if objectives are pending
 	var warp_e: String = str(_current_cell.get("warp_edge", ""))
@@ -584,6 +586,22 @@ func _find_cell(cells: Array, pos: String) -> Dictionary:
 			return cell
 	return {}
 
+
+
+func _get_locked_gates(cell: Dictionary) -> Array:
+	# Editor writes both fields: prefer the array, fall back to the singular.
+	var arr: Variant = cell.get("key_gate_directions", null)
+	if arr is Array and arr.size() > 0:
+		var out: Array = []
+		for d in arr:
+			var ds := str(d)
+			if not ds.is_empty():
+				out.append(ds)
+		return out
+	var single: String = str(cell.get("key_gate_direction", ""))
+	if single.is_empty():
+		return []
+	return [single]
 
 
 func _find_child_by_name(node: Node, child_name: String) -> Node:
@@ -1696,7 +1714,7 @@ func _spawn_field_elements() -> void:
 	var connections: Dictionary = _current_cell.get("connections", {})
 	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
 	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
-	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
+	var key_gate_dirs: Array = _get_locked_gates(_current_cell)
 
 	# StartWarp on is_start cells at the entry portal (only first section).
 	# Spec: pressing E on this warp returns the player to the city teleporter
@@ -1895,7 +1913,7 @@ func _spawn_field_elements() -> void:
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
 
 		# Key-gate — use KeyGate element (o0c_gatet.glb) with collision from GLB gate_box
-		if is_key_gate and dir == key_gate_dir:
+		if is_key_gate and dir in key_gate_dirs:
 			var key_for_cell: String = str(_current_cell.get("pos", ""))
 			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
 			var gate_rot: Vector3 = _portal_data[dir].get("gate_rot", Vector3.ZERO)

@@ -277,11 +277,11 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
     onUpdateProject(prev => {
       const newLinks = { ...prev.keyLinks };
       if (pos in newLinks) {
-        // Remove key-gate and clear lockedGate
+        // Remove key-gate and clear lockedGates
         delete newLinks[pos];
         const newCells = { ...prev.cells };
         if (newCells[pos]) {
-          newCells[pos] = { ...newCells[pos], lockedGate: undefined };
+          newCells[pos] = { ...newCells[pos], lockedGates: undefined };
         }
         return { ...prev, cells: newCells, keyLinks: newLinks };
       } else {
@@ -291,15 +291,23 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
     });
   }, [onUpdateProject]);
 
-  // Set which gate direction is locked on a key-gate cell
-  const handleSetLockedGate = useCallback((pos: string, dir: Direction | undefined) => {
-    onUpdateProject(prev => ({
-      ...prev,
-      cells: {
-        ...prev.cells,
-        [pos]: { ...prev.cells[pos], lockedGate: dir },
-      },
-    }));
+  // Toggle a single gate direction in the cell's locked-gates set
+  const handleToggleLockedGate = useCallback((pos: string, dir: Direction) => {
+    onUpdateProject(prev => {
+      const cell = prev.cells[pos];
+      if (!cell) return prev;
+      const current = cell.lockedGates ?? [];
+      const next = current.includes(dir)
+        ? current.filter(d => d !== dir)
+        : [...current, dir];
+      return {
+        ...prev,
+        cells: {
+          ...prev.cells,
+          [pos]: { ...cell, lockedGates: next.length > 0 ? next : undefined },
+        },
+      };
+    });
   }, [onUpdateProject]);
 
   // Clear a cell
@@ -557,7 +565,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
               onToggleKey={handleToggleKey}
               onToggleKeyDrop={handleToggleKeyDrop}
               onToggleKeyGate={handleToggleKeyGate}
-              onSetLockedGate={handleSetLockedGate}
+              onToggleLockedGate={handleToggleLockedGate}
               onClearCell={handleClearCell}
               onChangeStage={handleChangeStage}
               onSwapStart={handleSwapStart}
@@ -589,7 +597,7 @@ export default function LayoutTab({ project, onUpdateProject, sectionType, entry
               onToggleKey={handleToggleKey}
               onToggleKeyDrop={handleToggleKeyDrop}
               onToggleKeyGate={handleToggleKeyGate}
-              onSetLockedGate={handleSetLockedGate}
+              onToggleLockedGate={handleToggleLockedGate}
               onClearCell={handleClearCell}
               onChangeStage={handleChangeStage}
               onSwapStart={handleSwapStart}
