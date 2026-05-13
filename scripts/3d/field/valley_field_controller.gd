@@ -2564,7 +2564,8 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 			#   be able to leave from here);
 			# - quest not complete and key not yet collected → drop the key.
 			if not has_alive:
-				if SessionManager.are_objectives_complete():
+				var has_objs := SessionManager.get_quest_objectives().size() > 0
+				if has_objs and SessionManager.are_objectives_complete():
 					_spawn_telepipe(_compute_drop_position())
 				else:
 					_drop_key_on_clear(key_drop_target, drop_tracking_key)
@@ -3376,7 +3377,8 @@ func _check_room_clear() -> void:
 	var current_pos: String = str(_current_cell.get("pos", ""))
 	if not key_drop_target.is_empty():
 		var drop_tracking_key := current_pos + ">" + key_drop_target
-		if SessionManager.are_objectives_complete():
+		var has_objs := SessionManager.get_quest_objectives().size() > 0
+		if has_objs and SessionManager.are_objectives_complete():
 			_spawn_telepipe(_compute_drop_position())
 		elif not _keys_collected.has(drop_tracking_key):
 			_drop_key_on_clear(key_drop_target, drop_tracking_key)
