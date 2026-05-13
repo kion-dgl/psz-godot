@@ -1041,7 +1041,18 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "chaos_mobius"
+            }
+          ]
         }
       ],
       "entry_direction": "west"
@@ -1060,7 +1071,7 @@
   "briefing_dialog": [
     {
       "speaker": "Principal",
-      "text": "The data we recovered from the tower included activation codes for a teleporter — one we didn't know existed. It links to a place called Arca."
+      "text": "The data we recovered from the tower included activation codes for a teleporter \u2014 one we didn't know existed. It links to a place called Arca."
     },
     {
       "speaker": "Sarisa",
@@ -1072,7 +1083,7 @@
     },
     {
       "speaker": "Sarisa",
-      "text": "If we're going, I'm going with you. There are things on Arca only I'll recognize — and things you'll need me to recognize."
+      "text": "If we're going, I'm going with you. There are things on Arca only I'll recognize \u2014 and things you'll need me to recognize."
     },
     {
       "speaker": "Sarisa",
