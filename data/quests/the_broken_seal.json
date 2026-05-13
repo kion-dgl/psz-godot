@@ -68,7 +68,7 @@
                 0,
                 14
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -77,7 +77,7 @@
                 0,
                 14.1
               ],
-              "enemy_id": "zerreo"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -86,7 +86,7 @@
                 0,
                 7.7
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -95,7 +95,7 @@
                 0,
                 -13.6
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -105,7 +105,7 @@
                 0,
                 -13.6
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -115,7 +115,7 @@
                 0,
                 -7.1
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -125,7 +125,7 @@
                 0,
                 -1.6
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "bullbatt",
               "wave": 2
             }
           ]
@@ -161,7 +161,7 @@
                 0,
                 -5.2
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -170,7 +170,7 @@
                 0,
                 -3.4
               ],
-              "enemy_id": "eulada"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -179,7 +179,7 @@
                 0,
                 3.2
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -188,7 +188,7 @@
                 0,
                 5.6
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -198,7 +198,7 @@
                 0,
                 11.8
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -208,7 +208,7 @@
                 0,
                 11.1
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -218,7 +218,7 @@
                 0,
                 -13.7
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "kapantha",
               "wave": 3
             },
             {
@@ -228,7 +228,7 @@
                 0,
                 -11.8
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "batt",
               "wave": 3
             },
             {
@@ -238,7 +238,7 @@
                 0,
                 -13.2
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "kapantha",
               "wave": 3
             }
           ]
@@ -272,7 +272,7 @@
                 0,
                 4.4
               ],
-              "enemy_id": "zerreo"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -281,7 +281,7 @@
                 0,
                 -3.5
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -290,7 +290,7 @@
                 0,
                 5.4
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -299,7 +299,7 @@
                 0,
                 3.3
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -309,7 +309,7 @@
                 0,
                 -0.6
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -319,7 +319,7 @@
                 0,
                 3.4
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "kapantha",
               "wave": 2
             }
           ]
@@ -355,7 +355,7 @@
                 0,
                 -8.2
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -364,7 +364,7 @@
                 0,
                 -8.5
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -373,7 +373,7 @@
                 0,
                 -10.3
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "rumole"
             }
           ]
         },
@@ -410,7 +410,7 @@
                 0,
                 3
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -419,7 +419,7 @@
                 0,
                 8.9
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -428,7 +428,7 @@
                 0,
                 0.4
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -437,7 +437,7 @@
                 0,
                 5.3
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -446,7 +446,7 @@
                 0,
                 8.3
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -456,7 +456,7 @@
                 0,
                 1.4
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -466,7 +466,7 @@
                 0,
                 -1.8
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "batt",
               "wave": 2
             }
           ]
@@ -502,7 +502,7 @@
                 0,
                 -6.2
               ],
-              "enemy_id": "derreo"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -511,7 +511,7 @@
                 0,
                 -7.9
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -520,7 +520,7 @@
                 0,
                 -0.4
               ],
-              "enemy_id": "eulada"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -529,7 +529,7 @@
                 0,
                 -1.8
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -538,7 +538,7 @@
                 0,
                 7.9
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -548,7 +548,7 @@
                 0,
                 4.7
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -558,7 +558,7 @@
                 0,
                 -1.6
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -568,7 +568,7 @@
                 0,
                 -6.6
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "rohjade",
               "wave": 2
             }
           ]
@@ -602,7 +602,7 @@
                 0,
                 6.8
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -611,7 +611,7 @@
                 0,
                 7.7
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -620,7 +620,7 @@
                 0,
                 3.8
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -629,7 +629,7 @@
                 0,
                 -0.6
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -639,7 +639,7 @@
                 0,
                 -2.5
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -649,7 +649,7 @@
                 0,
                 3.2
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -659,7 +659,7 @@
                 0,
                 -7.9
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -669,7 +669,7 @@
                 0,
                 -7.8
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rumole",
               "wave": 2
             }
           ]
@@ -705,7 +705,7 @@
                 0,
                 -3.5
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -714,7 +714,7 @@
                 0,
                 -10
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -723,7 +723,7 @@
                 0,
                 -3.9
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -732,7 +732,7 @@
                 0,
                 2.7
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -742,7 +742,7 @@
                 0,
                 6.5
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -752,7 +752,7 @@
                 0,
                 -0.9
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -762,7 +762,7 @@
                 0,
                 2.6
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "rohjade",
               "wave": 2
             }
           ]
@@ -798,7 +798,7 @@
                 0,
                 -7.8
               ],
-              "enemy_id": "zerreo"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -807,7 +807,7 @@
                 0,
                 -11.7
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -816,7 +816,7 @@
                 0,
                 -1.2
               ],
-              "enemy_id": "zerreo"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -825,7 +825,7 @@
                 0,
                 3.5
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -834,7 +834,7 @@
                 0,
                 13.5
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -844,7 +844,7 @@
                 0,
                 12.9
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -854,7 +854,7 @@
                 0,
                 8.9
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -864,7 +864,7 @@
                 0,
                 -13.7
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "kapantha",
               "wave": 2
             }
           ]
@@ -900,7 +900,7 @@
                 0,
                 -2
               ],
-              "enemy_id": "zerreo"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -909,7 +909,7 @@
                 0,
                 -9.4
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -918,7 +918,7 @@
                 0,
                 -13.4
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -927,7 +927,7 @@
                 0,
                 -11.2
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -937,7 +937,7 @@
                 0,
                 -3.7
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -947,7 +947,7 @@
                 0,
                 2.3
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -957,7 +957,7 @@
                 0,
                 9
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "kapantha",
               "wave": 3
             },
             {
@@ -967,7 +967,7 @@
                 0,
                 14.4
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "rohjade",
               "wave": 3
             },
             {
@@ -977,7 +977,7 @@
                 0,
                 9.6
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rohjade",
               "wave": 3
             }
           ]
@@ -1012,7 +1012,7 @@
                 0,
                 -9.5
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -1021,7 +1021,7 @@
                 0,
                 -10.4
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -1030,7 +1030,7 @@
                 0,
                 -4.9
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -1039,7 +1039,7 @@
                 0,
                 -6.2
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1048,7 +1048,7 @@
                 0,
                 1.3
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -1058,7 +1058,7 @@
                 0,
                 1.6
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -1068,7 +1068,7 @@
                 0,
                 7.2
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -1078,7 +1078,7 @@
                 0,
                 6.9
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "batt",
               "wave": 2
             }
           ]
@@ -1120,7 +1120,7 @@
                 0,
                 5.3
               ],
-              "enemy_id": "zerreo"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1129,7 +1129,7 @@
                 0,
                 0
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -1138,7 +1138,7 @@
                 0,
                 5.1
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1147,7 +1147,7 @@
                 0,
                 -1.8
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -1157,7 +1157,7 @@
                 0,
                 -2.9
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -1167,7 +1167,7 @@
                 0,
                 0.7
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "batt",
               "wave": 2
             }
           ]
@@ -1212,7 +1212,7 @@
                 0,
                 -4.9
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1221,7 +1221,7 @@
                 0,
                 -6.5
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -1230,7 +1230,7 @@
                 0,
                 -1.7
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -1239,7 +1239,7 @@
                 0,
                 0.6
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -1249,7 +1249,7 @@
                 0,
                 5.8
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -1259,7 +1259,7 @@
                 0,
                 5.7
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -1269,7 +1269,7 @@
                 0,
                 0.9
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "batt",
               "wave": 2
             }
           ]
@@ -1307,7 +1307,7 @@
                 0,
                 -2.3
               ],
-              "enemy_id": "derreo"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -1316,7 +1316,7 @@
                 0,
                 -2
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -1325,7 +1325,7 @@
                 0,
                 1.3
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -1334,7 +1334,7 @@
                 0,
                 -7.9
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -1344,7 +1344,7 @@
                 0,
                 -1.5
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -1354,7 +1354,7 @@
                 0,
                 2.8
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -1364,7 +1364,7 @@
                 0,
                 -8.2
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "kapantha",
               "wave": 3
             },
             {
@@ -1374,7 +1374,7 @@
                 0,
                 -2.7
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "rumole",
               "wave": 3
             },
             {
@@ -1384,7 +1384,7 @@
                 0,
                 4.6
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "batt",
               "wave": 3
             }
           ]
@@ -1418,7 +1418,7 @@
                 0,
                 0.5
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1427,7 +1427,7 @@
                 0,
                 5.3
               ],
-              "enemy_id": "derreo"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -1436,7 +1436,7 @@
                 0,
                 4.3
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -1445,7 +1445,7 @@
                 0,
                 0
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -1455,7 +1455,7 @@
                 0,
                 8.5
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -1465,7 +1465,7 @@
                 0,
                 9.1
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "rohjade",
               "wave": 2
             }
           ]
@@ -1503,7 +1503,7 @@
                 0,
                 -0.1
               ],
-              "enemy_id": "eulada"
+              "enemy_id": "rumole"
             },
             {
               "type": "enemy",
@@ -1512,7 +1512,7 @@
                 0,
                 0.1
               ],
-              "enemy_id": "derreo"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1521,7 +1521,7 @@
                 0,
                 7.5
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -1530,7 +1530,7 @@
                 0,
                 -5.3
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -1540,7 +1540,7 @@
                 0,
                 5.3
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -1550,7 +1550,7 @@
                 0,
                 4.6
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -1560,7 +1560,7 @@
                 0,
                 -5.2
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "bullbatt",
               "wave": 2
             }
           ]
@@ -1596,7 +1596,7 @@
                 0,
                 5.9
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -1605,7 +1605,7 @@
                 0,
                 12.2
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -1614,7 +1614,7 @@
                 0,
                 8.4
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1623,7 +1623,7 @@
                 0,
                 5.1
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -1633,7 +1633,7 @@
                 0,
                 5.4
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -1643,7 +1643,7 @@
                 0,
                 12.4
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -1653,7 +1653,7 @@
                 0,
                 11.2
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -1663,7 +1663,7 @@
                 0,
                 -12.2
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "batt",
               "wave": 3
             },
             {
@@ -1673,7 +1673,7 @@
                 0,
                 -6.8
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "bullbatt",
               "wave": 3
             },
             {
@@ -1683,7 +1683,7 @@
                 0,
                 -1.2
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rumole",
               "wave": 3
             }
           ]
@@ -1717,7 +1717,7 @@
                 0,
                 9.8
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1726,7 +1726,7 @@
                 0,
                 4.1
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1735,7 +1735,7 @@
                 0,
                 8.4
               ],
-              "enemy_id": "eulid"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -1744,7 +1744,7 @@
                 0,
                 -11.7
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -1754,7 +1754,7 @@
                 0,
                 -12.9
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "rohjade",
               "wave": 2
             }
           ]
@@ -1790,7 +1790,7 @@
                 0,
                 -8.5
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1799,7 +1799,7 @@
                 0,
                 -10.5
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -1808,7 +1808,7 @@
                 0,
                 -7
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -1817,7 +1817,7 @@
                 0,
                 -2.7
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -1827,7 +1827,7 @@
                 0,
                 3.1
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -1837,7 +1837,7 @@
                 0,
                 3.2
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -1847,7 +1847,7 @@
                 0,
                 -4.2
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -1857,7 +1857,7 @@
                 0,
                 7.7
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "kapantha",
               "wave": 3
             },
             {
@@ -1867,7 +1867,7 @@
                 0,
                 7.7
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "kapantha",
               "wave": 3
             },
             {
@@ -1877,7 +1877,7 @@
                 0,
                 7.9
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "rohjade",
               "wave": 3
             }
           ]
@@ -1913,7 +1913,7 @@
                 0,
                 3.6
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "rohjade"
             },
             {
               "type": "enemy",
@@ -1922,7 +1922,7 @@
                 0,
                 3.2
               ],
-              "enemy_id": "derreo"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -1931,7 +1931,7 @@
                 0,
                 -4.2
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -1940,7 +1940,7 @@
                 0,
                 -4
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -1950,7 +1950,7 @@
                 0,
                 1.4
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -1960,7 +1960,7 @@
                 0,
                 -4.7
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -1970,7 +1970,7 @@
                 0,
                 8.2
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rohjade",
               "wave": 2
             }
           ]
@@ -2006,7 +2006,7 @@
                 0,
                 2.7
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -2015,7 +2015,7 @@
                 0,
                 -1.8
               ],
-              "enemy_id": "derreo"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -2024,7 +2024,7 @@
                 0,
                 2.9
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -2033,7 +2033,7 @@
                 0,
                 -7.8
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -2043,7 +2043,7 @@
                 0,
                 -7.8
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -2053,7 +2053,7 @@
                 0,
                 -14.2
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "kapantha",
               "wave": 2
             },
             {
@@ -2063,7 +2063,7 @@
                 0,
                 13.5
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "kapantha",
               "wave": 3
             },
             {
@@ -2073,7 +2073,7 @@
                 0,
                 9.2
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "bullbatt",
               "wave": 3
             },
             {
@@ -2083,7 +2083,7 @@
                 0,
                 10.8
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rumole",
               "wave": 3
             }
           ]
@@ -2119,7 +2119,7 @@
                 0,
                 10.2
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -2128,7 +2128,7 @@
                 0,
                 10.6
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -2137,7 +2137,7 @@
                 0,
                 10.1
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -2146,7 +2146,7 @@
                 0,
                 -9.4
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -2156,7 +2156,7 @@
                 0,
                 -10.1
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -2166,7 +2166,7 @@
                 0,
                 -12.2
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -2176,7 +2176,7 @@
                 0,
                 -12.6
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "kapantha",
               "wave": 3
             },
             {
@@ -2186,7 +2186,7 @@
                 0,
                 -11.9
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "batt",
               "wave": 3
             }
           ]
@@ -2222,7 +2222,7 @@
                 0,
                 -12
               ],
-              "enemy_id": "derreo"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -2231,7 +2231,7 @@
                 0,
                 -5.9
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "bullbatt"
             },
             {
               "type": "enemy",
@@ -2240,7 +2240,7 @@
                 0,
                 -8.9
               ],
-              "enemy_id": "zaphobos"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -2249,7 +2249,7 @@
                 0,
                 -12.9
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -2259,7 +2259,7 @@
                 0,
                 -9.9
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "rohjade",
               "wave": 2
             },
             {
@@ -2269,7 +2269,7 @@
                 0,
                 -6.3
               ],
-              "enemy_id": "euladaveil",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -2279,7 +2279,7 @@
                 0,
                 10.8
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "rumole",
               "wave": 2
             }
           ]
@@ -2315,7 +2315,7 @@
                 0,
                 -12
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -2324,7 +2324,7 @@
                 0,
                 -10.5
               ],
-              "enemy_id": "derreo"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -2333,7 +2333,7 @@
                 0,
                 -6.8
               ],
-              "enemy_id": "eulidveil"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -2342,7 +2342,7 @@
                 0,
                 -4.8
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -2352,7 +2352,7 @@
                 0,
                 0.2
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -2362,7 +2362,7 @@
                 0,
                 4.9
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -2372,7 +2372,7 @@
                 0,
                 -3.4
               ],
-              "enemy_id": "eulid",
+              "enemy_id": "bullbatt",
               "wave": 3
             },
             {
@@ -2382,7 +2382,7 @@
                 0,
                 1.3
               ],
-              "enemy_id": "eulada",
+              "enemy_id": "rohjade",
               "wave": 3
             },
             {
@@ -2392,7 +2392,7 @@
                 0,
                 4.8
               ],
-              "enemy_id": "zerreo",
+              "enemy_id": "bullbatt",
               "wave": 3
             }
           ]
@@ -2427,7 +2427,7 @@
                 0,
                 11.2
               ],
-              "enemy_id": "eulada"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -2436,7 +2436,7 @@
                 0,
                 18.7
               ],
-              "enemy_id": "euladaveil"
+              "enemy_id": "batt"
             },
             {
               "type": "enemy",
@@ -2445,7 +2445,7 @@
                 0,
                 14.7
               ],
-              "enemy_id": "phobos"
+              "enemy_id": "kapantha"
             },
             {
               "type": "enemy",
@@ -2454,7 +2454,7 @@
                 0,
                 15.3
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "bullbatt",
               "wave": 2
             },
             {
@@ -2464,7 +2464,7 @@
                 0,
                 -9.7
               ],
-              "enemy_id": "phobos",
+              "enemy_id": "batt",
               "wave": 2
             },
             {
@@ -2474,7 +2474,7 @@
                 0,
                 -13.5
               ],
-              "enemy_id": "zaphobos",
+              "enemy_id": "rumole",
               "wave": 2
             },
             {
@@ -2484,7 +2484,7 @@
                 0,
                 -12.9
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "bullbatt",
               "wave": 3
             },
             {
@@ -2494,7 +2494,7 @@
                 0,
                 -13.9
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "batt",
               "wave": 3
             },
             {
@@ -2504,7 +2504,7 @@
                 0,
                 -7.2
               ],
-              "enemy_id": "eulidveil",
+              "enemy_id": "kapantha",
               "wave": 3
             },
             {
@@ -2514,7 +2514,7 @@
                 0,
                 -7.8
               ],
-              "enemy_id": "derreo",
+              "enemy_id": "bullbatt",
               "wave": 3
             }
           ]
