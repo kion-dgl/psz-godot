@@ -1205,6 +1205,11 @@
               "enemy_id": "stagg",
               "wave": 2
             }
+          ],
+          "key_drop_position": [
+            -3.4,
+            1,
+            8.2
           ]
         },
         {
@@ -1841,6 +1846,11 @@
               ],
               "enemy_id": "reyhound"
             }
+          ],
+          "key_drop_position": [
+            -5.4,
+            1,
+            8.5
           ]
         },
         {
@@ -2102,6 +2112,11 @@
               ],
               "enemy_id": "hildeghana"
             }
+          ],
+          "key_drop_position": [
+            2.7,
+            1,
+            1.8
           ]
         },
         {
