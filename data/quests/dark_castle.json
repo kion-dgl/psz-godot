@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-12",
+  "last_updated": "2026-05-13",
   "id": "dark_castle",
   "name": "Dark Castle",
   "description": "Falz boss, Lassic's ethereal castle remains.",
@@ -948,8 +948,8 @@
           "is_branch": false,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "east",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1061,7 +1061,8 @@
               "enemy_id": "zaphobos",
               "wave": 3
             }
-          ]
+          ],
+          "key_gate_directions": []
         },
         {
           "pos": "4,1",
@@ -1583,8 +1584,8 @@
           "is_branch": true,
           "has_key": false,
           "key_for_cell": "",
-          "is_key_gate": true,
-          "key_gate_direction": "east",
+          "is_key_gate": false,
+          "key_gate_direction": "",
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
@@ -1677,7 +1678,8 @@
               "enemy_id": "zerreo",
               "wave": 3
             }
-          ]
+          ],
+          "key_gate_directions": []
         },
         {
           "pos": "3,3",
