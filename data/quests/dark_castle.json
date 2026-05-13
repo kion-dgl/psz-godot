@@ -2100,7 +2100,18 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "enemy_id": "dark_falz"
+            }
+          ]
         }
       ],
       "entry_direction": "west"
