@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-12",
+  "last_updated": "2026-05-13",
   "id": "finding_ogi",
   "name": "Finding Ogi",
   "description": "A veteran CAST hunter has gone missing in the Rioh Snowfield. Find him and recover his body parts.",
@@ -244,6 +244,28 @@
                 0,
                 -14.8
               ]
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "finding_ogi_a_3_1_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "His head. ...Don't say anything. Just take it."
+                }
+              ],
+              "actions": []
             }
           ]
         },
@@ -1204,6 +1226,28 @@
               ],
               "enemy_id": "stagg",
               "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "finding_ogi_b_3_2_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Ren",
+                  "text": "Three locks, same pattern. They wanted us to find him in pieces."
+                }
+              ],
+              "actions": []
             }
           ],
           "key_drop_position": [

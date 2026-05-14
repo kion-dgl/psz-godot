@@ -927,6 +927,28 @@
               ],
               "enemy_id": "finjer_r",
               "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "heretic_a_4_2_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Sarisa",
+                  "text": "These aren't ordinary guards. They're protecting something deeper."
+                }
+              ],
+              "actions": []
             }
           ]
         },
@@ -1051,6 +1073,28 @@
                 0
               ],
               "enemy_id": "chaos_mobius"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "heretic_z_0_0_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Sarisa",
+                  "text": "Chaos Mobius. The Reve heretics built it. ...And we broke their work."
+                }
+              ],
+              "actions": []
             }
           ]
         }

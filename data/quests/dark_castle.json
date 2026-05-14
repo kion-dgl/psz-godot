@@ -2110,6 +2110,28 @@
                 0
               ],
               "enemy_id": "dark_falz"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "dark_castle_z_0_0_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Principal",
+                  "text": "Dark Falz is down. Come home, hunter."
+                }
+              ],
+              "actions": []
             }
           ]
         }

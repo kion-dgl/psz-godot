@@ -32,7 +32,31 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "south",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "control_system_e_0_0_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Ogi",
+                  "text": "First time out since you found me. ...I'll keep up."
+                }
+              ],
+              "actions": []
+            }
+          ]
         }
       ],
       "entry_direction": "south",
@@ -1260,6 +1284,28 @@
                 0
               ],
               "enemy_id": "humilias"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "control_system_z_0_0_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Ogi",
+                  "text": "Humilias. Carrying all of them. Now it's down."
+                }
+              ],
+              "actions": []
             }
           ]
         }

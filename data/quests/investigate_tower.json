@@ -31,7 +31,31 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "north",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "investigate_tower_0_1_1_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "Inside the tower. Mira would lose her mind to see this."
+                }
+              ],
+              "actions": []
+            }
+          ]
         }
       ],
       "exit_direction": "north"
@@ -1751,6 +1775,28 @@
                 0
               ],
               "enemy_id": "blade_mother"
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger_id": "investigate_tower_7_0_0_clear",
+              "trigger_condition": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Elio",
+                  "text": "It's down. ...What was that thing even made of?"
+                }
+              ],
+              "actions": []
             }
           ]
         }
