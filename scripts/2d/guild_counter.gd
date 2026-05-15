@@ -96,7 +96,9 @@ func _load_entries() -> void:
 		})
 		return
 
-	# Load all enabled quests; ordering is computed by _tree_sort_entries.
+	# Load every quest. Visibility rule (per user spec): all quests show in the
+	# list; locked or beta-disabled ones are marked unavailable with a "needs"
+	# annotation instead of being hidden.
 	var quest_ids := QuestLoader.list_quests()
 	for qid in quest_ids:
 		if qid == "hello_quest" or qid == "manifest":
@@ -104,38 +106,47 @@ func _load_entries() -> void:
 		var quest := QuestLoader.load_quest(qid)
 		if quest.is_empty():
 			continue
-		if quest.get("disabled", false):
-			continue
-		var area_id: String = quest.get("area_id", "gurhacia")
-		var display_name: String = quest.get("name", qid)
+		var area_id: String = str(quest.get("area_id", "gurhacia"))
+		var display_name: String = str(quest.get("name", qid))
 
-		## Compute availability from parent_quest dependency
+		## Beta/in-progress flag — show but hard-lock
+		var is_beta: bool = bool(quest.get("disabled", false))
+
+		## Compute availability from parent_quest dependency. Wrap raw value
+		## in str() because a JSON `null` lands here as the Variant null, and
+		## a typed `String` assignment would error.
 		var available: bool = true
-		var parent_id: String = quest.get("parent_quest", "")
+		var parent_raw: Variant = quest.get("parent_quest", "")
+		var parent_id: String = str(parent_raw) if parent_raw != null else ""
 		var parent_name: String = ""
 		if not parent_id.is_empty():
 			available = GameState.is_mission_completed(parent_id)
 			var parent_quest: Dictionary = QuestLoader.load_quest(parent_id)
-			parent_name = parent_quest.get("name", parent_id)
+			parent_name = str(parent_quest.get("name", parent_id))
 
 		## Also enforce hard-lock required_quests
 		var required_quests: Array = quest.get("required_quests", [])
 		for req_id in required_quests:
-			if not GameState.is_mission_completed(req_id):
+			if not GameState.is_mission_completed(str(req_id)):
 				available = false
-				var req_quest: Dictionary = QuestLoader.load_quest(req_id)
-				var req_name: String = req_quest.get("name", req_id)
+				var req_quest: Dictionary = QuestLoader.load_quest(str(req_id))
+				var req_name: String = str(req_quest.get("name", req_id))
 				if not parent_name.is_empty():
 					parent_name += ", \"%s\"" % req_name
 				else:
 					parent_name = "\"%s\"" % req_name
+
+		# Beta/in-progress overrides availability and replaces the parent note.
+		if is_beta:
+			available = false
+			parent_name = "in-progress build"
 
 		_entries.append({
 			"type": "quest",
 			"id": qid,
 			"quest_id": qid,
 			"name": display_name,
-			"description": quest.get("description", ""),
+			"description": str(quest.get("description", "")),
 			"area": AREA_DISPLAY.get(area_id, area_id),
 			"is_main": false,
 			"requires": [],
@@ -395,7 +406,8 @@ func _refresh_display() -> void:
 				elif completed:
 					status_tag = " [CLEAR]"
 				elif not unlocked:
-					status_tag = " [LOCKED]"
+					var pn: String = str(entry.get("parent_name", ""))
+					status_tag = " [NEEDS: %s]" % pn if not pn.is_empty() else " [LOCKED]"
 
 				# Determine text color
 				var text_color := Color.TRANSPARENT
