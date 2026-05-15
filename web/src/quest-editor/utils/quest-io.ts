@@ -312,9 +312,10 @@ async function exportSectionCells(
       key_gate_direction: keyGateDirection,
       key_gate_directions: keyGateDirections,
       key_drop: sectionKeyDropLinks[pos] || '',
-      required_keys: pos in sectionKeyLinks
-        ? (sectionKeyLinks[pos] ? 1 : 0) + Object.values(sectionKeyDropLinks).filter(g => g === pos).length
-        : 0,
+      // 1 key per KeyGate is the design default — each locked door consumes one
+      // key, regardless of how many drops target this cell. The previous formula
+      // counted drops, inflating required_keys to 4 on multi-door hubs like xb2.
+      required_keys: pos in sectionKeyLinks ? 1 : 0,
       warp_edge: warpEdge,
       path_order: pathOrder.get(pos) ?? -1,
     };

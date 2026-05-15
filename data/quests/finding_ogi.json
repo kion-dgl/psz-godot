@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-13",
+  "last_updated": "2026-05-14",
   "id": "finding_ogi",
   "name": "Finding Ogi",
   "description": "A veteran CAST hunter has gone missing in the Rioh Snowfield. Find him and recover his body parts.",
@@ -1166,7 +1166,7 @@
             "east"
           ],
           "key_drop": "3,2",
-          "required_keys": 2,
+          "required_keys": 1,
           "warp_edge": "",
           "path_order": 1,
           "objects": [
