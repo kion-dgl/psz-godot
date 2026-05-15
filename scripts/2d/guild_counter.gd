@@ -155,41 +155,38 @@ func _load_entries() -> void:
 			"available": available,
 			"parent_name": parent_name,
 		})
-	_entries = _tree_sort_entries(_entries)
+	_entries = _manifest_sort_entries(_entries)
 
 
-## Order quest entries by parent_quest tree (DFS), preserving manifest order
-## at each level. Non-quest entries (report/cancel) are kept at the front in
-## their original order. Orphans (parent not loaded) are treated as roots.
-func _tree_sort_entries(entries: Array) -> Array:
-	var by_id := {}
-	var quest_entries: Array = []
+## Order quest entries by manifest.json position — the manifest is the
+## canonical progression order (search_and_rescue → ... → dark_castle).
+## Non-quest entries (report/cancel) stay at the front in their original
+## order. Quests missing from the manifest are appended at the end.
+func _manifest_sort_entries(entries: Array) -> Array:
+	var manifest_order := {}
+	var fa := FileAccess.open("res://data/quests/manifest.json", FileAccess.READ)
+	if fa:
+		var j := JSON.new()
+		if j.parse(fa.get_as_text()) == OK and j.data is Array:
+			var arr: Array = j.data
+			for i in range(arr.size()):
+				manifest_order[str(arr[i])] = i
 	var passthrough: Array = []
+	var quest_entries: Array = []
 	for e in entries:
 		if e.get("type", "") != "quest":
 			passthrough.append(e)
-			continue
-		quest_entries.append(e)
-		by_id[e.get("quest_id", "")] = true
-	var children_of := {"": []}
-	for e in quest_entries:
-		var pid: String = e.get("_parent_id", "")
-		var key: String = pid if by_id.has(pid) else ""
-		if not children_of.has(key):
-			children_of[key] = []
-		children_of[key].append(e)
+		else:
+			quest_entries.append(e)
+	# Stable sort by manifest position; missing entries go to the end.
+	var unknown_index := manifest_order.size()
+	quest_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ai: int = int(manifest_order.get(str(a.get("quest_id", "")), unknown_index))
+		var bi: int = int(manifest_order.get(str(b.get("quest_id", "")), unknown_index))
+		return ai < bi
+	)
 	var result: Array = passthrough.duplicate()
-	var stack: Array = []
-	var roots: Array = children_of.get("", [])
-	for i in range(roots.size() - 1, -1, -1):
-		stack.append(roots[i])
-	while not stack.is_empty():
-		var node: Dictionary = stack.pop_back()
-		result.append(node)
-		var qid: String = node.get("quest_id", "")
-		var kids: Array = children_of.get(qid, [])
-		for i in range(kids.size() - 1, -1, -1):
-			stack.append(kids[i])
+	result.append_array(quest_entries)
 	return result
 
 
@@ -406,8 +403,7 @@ func _refresh_display() -> void:
 				elif completed:
 					status_tag = " [CLEAR]"
 				elif not unlocked:
-					var pn: String = str(entry.get("parent_name", ""))
-					status_tag = " [NEEDS: %s]" % pn if not pn.is_empty() else " [LOCKED]"
+					status_tag = " [LOCKED]"
 
 				# Determine text color
 				var text_color := Color.TRANSPARENT
