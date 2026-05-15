@@ -3390,6 +3390,13 @@ func _check_room_clear() -> void:
 			if msg._prompt_label and msg._player_nearby:
 				msg._prompt_label.visible = true
 
+	# Spawn quest_items that were deferred via spawn_condition=room_clear
+	# (e.g. the body parts the hildegao "carried"). They were queued at
+	# cell-enter time and only materialise once the room is clear.
+	for di in _deferred_room_clear_items:
+		_spawn_quest_item(di["pos"], di["id"], di["label"], di["dialog"], di["actions"], di["remaining_dialog"])
+	_deferred_room_clear_items.clear()
+
 	# Fire room_clear dialog triggers
 	for rc_trigger in _room_triggers:
 		if is_instance_valid(rc_trigger) and rc_trigger.trigger_condition == "room_clear" and rc_trigger.element_state == "ready":
