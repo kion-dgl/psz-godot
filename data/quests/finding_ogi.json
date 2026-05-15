@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-14",
+  "last_updated": "2026-05-15",
   "id": "finding_ogi",
   "name": "Finding Ogi",
   "description": "A veteran CAST hunter has gone missing in the Rioh Snowfield. Find him and recover his body parts.",
@@ -262,7 +262,7 @@
               "dialog": [
                 {
                   "speaker": "Ren",
-                  "text": "His head. ...Don't say anything. Just take it."
+                  "text": "Wait\u2014 is that his head over there?"
                 }
               ],
               "actions": []
@@ -1244,7 +1244,7 @@
               "dialog": [
                 {
                   "speaker": "Ren",
-                  "text": "Three locks, same pattern. They wanted us to find him in pieces."
+                  "text": "Which way to go from here?"
                 }
               ],
               "actions": []
