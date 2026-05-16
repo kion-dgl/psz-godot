@@ -22,7 +22,8 @@ import ParticleOverlay, { type ParticleEffect } from './ParticleOverlay';
 function extractFloorTriangles(
   scene: THREE.Object3D,
   yTolerance: number,
-  triangleStates: Record<string, boolean>
+  triangleStates: Record<string, boolean>,
+  showAllUpward: boolean = false
 ): FloorTriangle[] {
   const triangles: FloorTriangle[] = [];
   let triangleId = 0;
@@ -52,28 +53,44 @@ function extractFloorTriangles(
       v1.applyMatrix4(mesh.matrixWorld);
       v2.applyMatrix4(mesh.matrixWorld);
 
-      if (
+      const isNearFloor =
         Math.abs(v0.y) < yTolerance &&
         Math.abs(v1.y) < yTolerance &&
-        Math.abs(v2.y) < yTolerance
-      ) {
-        const id = `tri_${triangleId++}`;
-        const edge1 = new THREE.Vector3().subVectors(v1, v0);
-        const edge2 = new THREE.Vector3().subVectors(v2, v0);
-        const area = new THREE.Vector3().crossVectors(edge1, edge2).length() / 2;
+        Math.abs(v2.y) < yTolerance;
 
-        // Check if included (default true, false only if explicitly excluded)
-        const included = triangleStates[id] !== false;
-
-        triangles.push({
-          id,
-          vertices: [v0.clone(), v1.clone(), v2.clone()],
-          meshName: mesh.name,
-          textureName,
-          included,
-          area,
-        });
+      // In the default extraction we only emit near-floor triangles (matches
+      // historic behaviour). When the user enables "show all upward-facing",
+      // we also emit angled stair/ramp surfaces with a normal pointing mostly
+      // up so they can be clicked into the floor mesh manually. Walls are
+      // skipped via the |normal.y| > 0.3 check.
+      if (!isNearFloor && !showAllUpward) return;
+      if (!isNearFloor) {
+        const e1 = new THREE.Vector3().subVectors(v1, v0);
+        const e2 = new THREE.Vector3().subVectors(v2, v0);
+        const n = new THREE.Vector3().crossVectors(e1, e2).normalize();
+        if (Math.abs(n.y) <= 0.3) return;
       }
+
+      const id = `tri_${triangleId++}`;
+      const edge1 = new THREE.Vector3().subVectors(v1, v0);
+      const edge2 = new THREE.Vector3().subVectors(v2, v0);
+      const area = new THREE.Vector3().crossVectors(edge1, edge2).length() / 2;
+
+      // Default include rule: near-floor triangles are in by default, all
+      // others (the angled ones surfaced by showAllUpward) start excluded
+      // until the user clicks them. An explicit triangleStates entry wins
+      // either way.
+      const saved = triangleStates[id];
+      const included = saved === undefined ? isNearFloor : saved;
+
+      triangles.push({
+        id,
+        vertices: [v0.clone(), v1.clone(), v2.clone()],
+        meshName: mesh.name,
+        textureName,
+        included,
+        area,
+      });
     };
 
     if (index) {
@@ -135,6 +152,11 @@ export default function UnifiedStageEditor() {
   const [repositionEffectId, setRepositionEffectId] = useState<string | null>(null);
   const [indoor, setIndoor] = useState(false);
 
+  // Floor extraction: show all upward-facing surfaces (stairs, ramps) so they
+  // can be clicked into the floor collision mesh. Default off to keep the
+  // viewport uncluttered for stages that don't need it.
+  const [showAllUpwardFloor, setShowAllUpwardFloor] = useState(false);
+
   const lighting = useMemo(() => computeLighting(indoor ? 10.0 : timeOfDay), [indoor, timeOfDay]);
 
   // Animated textures state
@@ -176,9 +198,10 @@ export default function UnifiedStageEditor() {
     return extractFloorTriangles(
       stageScene,
       config.floorCollision.yTolerance,
-      config.floorCollision.triangles
+      config.floorCollision.triangles,
+      showAllUpwardFloor
     );
-  }, [stageScene, config?.floorCollision.yTolerance, config?.floorCollision.triangles]);
+  }, [stageScene, config?.floorCollision.yTolerance, config?.floorCollision.triangles, showAllUpwardFloor]);
 
   // Get only included triangles for the overlay
   const includedTriangles = useMemo(() => {
@@ -354,6 +377,8 @@ export default function UnifiedStageEditor() {
             config={config}
             updateConfig={updateConfig}
             stageScene={stageScene}
+            showAllUpward={showAllUpwardFloor}
+            setShowAllUpward={setShowAllUpwardFloor}
           />
         );
       case 'portals':
