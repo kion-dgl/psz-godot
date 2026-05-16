@@ -12,6 +12,7 @@ const AREAS := [
 	{"id": "makara", "name": "Ruins"},
 	{"id": "arca", "name": "Moon Facility"},
 	{"id": "dark", "name": "Dark Shrine"},
+	{"id": "tower", "name": "Eternal Tower"},
 ]
 
 ## Story mission that must be completed to unlock each warp area.
@@ -22,6 +23,7 @@ const AREA_UNLOCK_MISSIONS := {
 	"makara": "fallen_flowers",
 	"arca": "ana_s_request",
 	"dark": "mother_s_memory",
+	"tower": "the_eternal",
 }
 
 ## Display area name → area_id mapping (for quest-based unlock checks).
@@ -33,6 +35,7 @@ const AREA_NAME_TO_ID := {
 	"Ruins": "makara",
 	"Moon Facility": "arca",
 	"Dark Shrine": "dark",
+	"Eternal Tower": "tower",
 }
 
 # PSZ palette (matches field_pause_menu.gd)
