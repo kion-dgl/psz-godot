@@ -474,16 +474,22 @@ export default function UnifiedStageEditor() {
     }
   };
 
-  // Handle triangle click to toggle inclusion
+  // Handle triangle click to toggle inclusion. Flips the *currently rendered*
+  // state, not just the saved one — important for above-floor surfaces whose
+  // saved state may be undefined while the rendered state is "excluded" via
+  // the default rule (isNearFloor=false → excluded). The previous version
+  // only checked the saved state, so the very first click on an above-floor
+  // triangle wrote `false` (the existing default) and the user saw nothing
+  // change.
   const handleTriangleClick = useCallback(
-    (triangleId: string) => {
+    (triangleId: string, currentIncluded: boolean) => {
       updateConfig((prev) => ({
         ...prev,
         floorCollision: {
           ...prev.floorCollision,
           triangles: {
             ...prev.floorCollision.triangles,
-            [triangleId]: prev.floorCollision.triangles[triangleId] === false ? true : false,
+            [triangleId]: !currentIncluded,
           },
         },
       }));

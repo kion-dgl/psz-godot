@@ -6,7 +6,7 @@ import type { FloorTriangle } from './types';
 interface FloorOverlayProps {
   triangles: FloorTriangle[];
   yOffset?: number;
-  onTriangleClick?: (triangleId: string) => void;
+  onTriangleClick?: (triangleId: string, currentIncluded: boolean) => void;
   interactive?: boolean;
 }
 
@@ -60,7 +60,7 @@ export default function FloorOverlay({
       // Each triangle is one face, so faceIndex directly maps to triangle index
       if (faceIndex >= 0 && faceIndex < triangles.length) {
         const triangle = triangles[faceIndex];
-        onTriangleClick(triangle.id);
+        onTriangleClick(triangle.id, triangle.included);
       }
     },
     [triangles, onTriangleClick, interactive]
