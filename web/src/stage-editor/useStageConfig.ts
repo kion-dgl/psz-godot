@@ -104,6 +104,7 @@ export interface UseStageConfigReturn {
   canRedo: boolean;
   saveNow: () => void;
   resetToDefault: () => void;
+  reloadFromDisk: () => Promise<void>;
 }
 
 export function useStageConfig(mapId: string): UseStageConfigReturn {
@@ -229,6 +230,36 @@ export function useStageConfig(mapId: string): UseStageConfigReturn {
     setConfig(defaultConfig);
   }, [mapId, setConfig]);
 
+  // Discard local edits for this stage and re-fetch its committed config
+  // from data/stage_configs/unified-stage-configs.json. Other stages' local
+  // edits are kept. Useful when the source JSON has been updated outside the
+  // editor (e.g. a code-side fix) and the cached localStorage entry is
+  // stale.
+  const reloadFromDisk = useCallback(async () => {
+    try {
+      const resp = await fetch(assetUrl('data/stage_configs/unified-stage-configs.json'));
+      if (!resp.ok) {
+        console.warn('reloadFromDisk: fetch failed', resp.status);
+        return;
+      }
+      const committed = await resp.json() as Record<string, UnifiedStageConfig>;
+      const all = loadAllConfigs();
+      if (committed[mapId]) {
+        all[mapId] = committed[mapId];
+      } else {
+        delete all[mapId];
+      }
+      saveAllConfigs(all);
+      const next = all[mapId] || createDefaultConfig(mapId);
+      setConfigState(next);
+      setUndoStack([]);
+      setRedoStack([]);
+      setIsDirty(false);
+    } catch (e) {
+      console.error('reloadFromDisk error:', e);
+    }
+  }, [mapId]);
+
   return {
     config,
     updateConfig,
@@ -239,6 +270,7 @@ export function useStageConfig(mapId: string): UseStageConfigReturn {
     canRedo: redoStack.length > 0,
     saveNow,
     resetToDefault,
+    reloadFromDisk,
   };
 }
 

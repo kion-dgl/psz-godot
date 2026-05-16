@@ -196,7 +196,7 @@ export default function UnifiedStageEditor() {
   }, [allMaps, currentMapIndex]);
 
   // Get config for current map
-  const { config, updateConfig, undo, redo, canUndo, canRedo } = useStageConfig(selectedMapId);
+  const { config, updateConfig, undo, redo, canUndo, canRedo, reloadFromDisk } = useStageConfig(selectedMapId);
 
   // Handle scene ready callback
   const handleSceneReady = useCallback((scene: THREE.Group) => {
@@ -657,6 +657,25 @@ export default function UnifiedStageEditor() {
             title="Redo (Ctrl+Y)"
           >
             Redo
+          </button>
+
+          <button
+            onClick={() => {
+              if (confirm(`Discard local edits for ${selectedMapId} and reload from committed JSON?`)) {
+                reloadFromDisk();
+              }
+            }}
+            style={{
+              padding: '6px 12px',
+              background: '#665',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+            title="Refetch this stage's config from data/stage_configs/unified-stage-configs.json, discarding local edits."
+          >
+            Reload from Disk
           </button>
 
           <div style={{ width: '1px', height: '20px', background: '#444', margin: '0 4px' }} />
