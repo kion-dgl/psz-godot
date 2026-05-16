@@ -87,7 +87,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.0,
+                0,
+                9.6
+              ],
+              "enemy_id": "kapantha"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.0,
+                0,
+                9.8
+              ],
+              "enemy_id": "finjer_g"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.1,
+                0,
+                10.1
+              ],
+              "enemy_id": "arkzein"
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -357,7 +386,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.0,
+                0,
+                9.6
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.0,
+                0,
+                9.8
+              ],
+              "enemy_id": "finjer_g"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.1,
+                0,
+                10.1
+              ],
+              "enemy_id": "korse"
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -637,7 +695,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.0,
+                0,
+                9.6
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.0,
+                0,
+                9.8
+              ],
+              "enemy_id": "finjer_b"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.1,
+                0,
+                10.1
+              ],
+              "enemy_id": "helion"
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -907,7 +994,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.0,
+                0,
+                9.6
+              ],
+              "enemy_id": "finjer_b"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.0,
+                0,
+                9.8
+              ],
+              "enemy_id": "akorse"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.1,
+                0,
+                10.1
+              ],
+              "enemy_id": "grimble"
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -1187,7 +1303,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.0,
+                0,
+                9.6
+              ],
+              "enemy_id": "helion"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.0,
+                0,
+                9.8
+              ],
+              "enemy_id": "arkzein"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.1,
+                0,
+                10.1
+              ],
+              "enemy_id": "pomarr"
+            }
+          ]
         },
         {
           "pos": "2,1",
@@ -1457,7 +1602,36 @@
           "key_drop": "",
           "required_keys": 0,
           "warp_edge": "",
-          "path_order": 0
+          "path_order": 0,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.0,
+                0,
+                9.6
+              ],
+              "enemy_id": "grimble"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.0,
+                0,
+                9.8
+              ],
+              "enemy_id": "ghowl"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.1,
+                0,
+                10.1
+              ],
+              "enemy_id": "ghowl"
+            }
+          ]
         },
         {
           "pos": "2,1",
