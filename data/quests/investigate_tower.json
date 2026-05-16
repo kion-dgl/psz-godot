@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-13",
+  "last_updated": "2026-05-16",
   "id": "investigate_tower",
   "name": "Investigate Tower",
   "description": "Climb the Eternal Tower and conduct a blade survey.",
@@ -92,7 +92,7 @@
         {
           "pos": "2,1",
           "stage_id": "s081_sa1",
-          "rotation": 0,
+          "rotation": 180,
           "connections": {
             "south": "3,1",
             "north": "1,1"
@@ -362,7 +362,7 @@
         {
           "pos": "2,1",
           "stage_id": "s082_sa1",
-          "rotation": 0,
+          "rotation": 180,
           "connections": {
             "north": "1,1",
             "south": "3,1"
@@ -642,7 +642,7 @@
         {
           "pos": "2,1",
           "stage_id": "s083_sa1",
-          "rotation": 0,
+          "rotation": 180,
           "connections": {
             "north": "1,1",
             "south": "3,1"
@@ -912,7 +912,7 @@
         {
           "pos": "2,1",
           "stage_id": "s084_sa1",
-          "rotation": 0,
+          "rotation": 180,
           "connections": {
             "south": "3,1",
             "north": "1,1"
@@ -1192,7 +1192,7 @@
         {
           "pos": "2,1",
           "stage_id": "s085_sa1",
-          "rotation": 0,
+          "rotation": 180,
           "connections": {
             "south": "3,1",
             "north": "1,1"
@@ -1462,7 +1462,7 @@
         {
           "pos": "2,1",
           "stage_id": "s086_sa1",
-          "rotation": 0,
+          "rotation": 180,
           "connections": {
             "south": "3,1",
             "north": "1,1"
