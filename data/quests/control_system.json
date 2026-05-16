@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-13",
+  "last_updated": "2026-05-16",
   "id": "control_system",
   "name": "Control System",
   "description": "Crumbling infrastructure + Mother Trinity boss.",
@@ -31,7 +31,7 @@
           "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 0,
-          "warp_edge": "south",
+          "warp_edge": "north",
           "path_order": 0,
           "objects": [
             {
