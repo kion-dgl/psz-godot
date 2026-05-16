@@ -142,7 +142,18 @@ func _ready() -> void:
 	_moonlight.visible = false
 	add_child(_moonlight)
 
-	TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+	# Indoor stages take a one-shot daylight apply and then opt out of the
+	# per-frame _process update — interior lighting shouldn't track the
+	# day/night cycle. Save and restore current_hour so the world clock
+	# isn't affected.
+	var initial_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
+	if _is_indoor_stage(initial_stage_id):
+		var saved_hour: float = TimeManager.current_hour
+		TimeManager.current_hour = 10.0
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+		TimeManager.current_hour = saved_hour
+	else:
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 
 	var data: Dictionary = SceneManager.get_transition_data()
 	var current_cell_pos: String = str(data.get("current_cell_pos", ""))
@@ -582,7 +593,9 @@ func _unlock_objective_exits() -> void:
 func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_lighting")
 	if _world_env and _sky_material and _dir_light:
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+		var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
+		if not _is_indoor_stage(cur_stage_id):
+			TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
 	FrameProfiler.mark("field_minimap")
@@ -727,12 +740,20 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 
 const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1"]
 
+func _is_indoor_stage(stage_id: String) -> bool:
+	if stage_id in INDOOR_STAGES:
+		return true
+	# All Eternal Tower stages (s08*) are interior — fixed lighting, no weather.
+	if stage_id.begins_with("s08"):
+		return true
+	return false
+
 func _spawn_weather() -> void:
 	var weather: String = str(SessionManager.get_session().get("weather", ""))
 	if weather.is_empty():
 		return
 	var stage_id: String = str(_current_cell.get("stage_id", ""))
-	if stage_id in INDOOR_STAGES:
+	if _is_indoor_stage(stage_id):
 		print("[ValleyField] Weather: skipping %s (indoor stage %s)" % [weather, stage_id])
 		return
 	if weather == "snow":
