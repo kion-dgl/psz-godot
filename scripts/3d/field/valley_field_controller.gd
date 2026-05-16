@@ -422,7 +422,7 @@ func _ready() -> void:
 		if not _portal_data.has(dir):
 			continue
 		var is_entry: bool = (dir == spawn_edge)
-		var is_locked_gate: bool = is_key_gate and dir in key_gate_dirs and not _gates_opened.has(str(_current_cell.get("pos", "")))
+		var is_locked_gate: bool = is_key_gate and dir in key_gate_dirs and not _gates_opened.has("%s:%s" % [str(_current_cell.get("pos", "")), dir])
 		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
 	# (warp_edge exit is handled by area warp auto-generation in _spawn_field_elements)
@@ -505,12 +505,14 @@ func _ready() -> void:
 				_room_minimap.set_gate_locked(dir, true)
 				if _grid_minimap:
 					_grid_minimap.set_gate_state(cur_pos, dir, "locked")
-	# Key-gate starts locked unless previously opened
+	# Key-gate per-direction locked state — each direction tracks independently.
 	var is_key_gate_cell: bool = _current_cell.get("is_key_gate", false)
 	var kg_dirs: Array = _get_locked_gates(_current_cell)
-	if is_key_gate_cell and kg_dirs.size() > 0 and not _gates_opened.has(cur_pos):
+	if is_key_gate_cell:
 		for kg_dir_s in kg_dirs:
 			var kg_dir: String = str(kg_dir_s)
+			if _gates_opened.has("%s:%s" % [cur_pos, kg_dir]):
+				continue
 			_room_minimap.set_gate_locked(kg_dir, true)
 			if _grid_minimap:
 				_grid_minimap.set_gate_state(cur_pos, kg_dir, "locked")
@@ -551,6 +553,15 @@ func _on_quest_completed() -> void:
 		print("[ValleyField] Spawning quest_complete-deferred telepipe at %s" % tp_pos)
 		_spawn_telepipe(tp_pos)
 		_deferred_quest_complete_telepipe = {}
+		return
+	# No explicit telepipe object. If the current cell has key_drop authored,
+	# re-enter _check_room_clear so its objectives-complete branch spawns the
+	# telepipe at key_drop_position. Covers the case where the final quest_item
+	# is picked up *after* room_clear already ran (e.g. hildegao "ate" body
+	# part in finding_ogi's section B terminals). _check_room_clear early-returns
+	# if enemies remain and its other side-effects are idempotent.
+	if not str(_current_cell.get("key_drop", "")).is_empty():
+		_check_room_clear()
 
 
 func _unlock_objective_exits() -> void:
@@ -1954,8 +1965,11 @@ func _spawn_field_elements() -> void:
 			kg._setup_laser_material()
 			kg._apply_state()
 			_fix_gate_depth(kg)
-			# Only auto-open if gate was previously opened by player (re-entry)
-			if _gates_opened.has(key_for_cell):
+			# Only auto-open if THIS direction was previously opened by the player.
+			# The compound (cell:dir) key is what bug fix per-direction tracking needs —
+			# previously the per-cell flag opened all locked doors on a multi-gate hub
+			# after the player unlocked any one of them.
+			if _gates_opened.has("%s:%s" % [key_for_cell, str(dir)]):
 				kg.open()
 			# Enable the locked gate trigger when the key gate opens
 			var gate_trigger_name := "GateTrigger_%s" % dir
@@ -1963,7 +1977,7 @@ func _spawn_field_elements() -> void:
 			var gate_dir_for_minimap: String = str(dir)
 			kg.state_changed.connect(func(_old: String, new_state: String) -> void:
 				if new_state == "open":
-					_gates_opened[cell_pos_for_gate] = true
+					_gates_opened["%s:%s" % [cell_pos_for_gate, gate_dir_for_minimap]] = true
 					var trigger := _find_child_by_name(self, gate_trigger_name) as Area3D
 					if trigger:
 						trigger.monitoring = true
