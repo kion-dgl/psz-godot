@@ -26,7 +26,15 @@ function extractFloorTriangles(
   showAllUpward: boolean = false
 ): FloorTriangle[] {
   const triangles: FloorTriangle[] = [];
-  let triangleId = 0;
+  // Two separate ID namespaces so old saved states (which only knew about
+  // near-floor triangles) keep mapping to the same physical faces:
+  //   tri_N — Nth near-floor triangle in iteration order (existing scheme)
+  //   up_N  — Nth above-floor non-wall (upward-facing) triangle
+  // Both counters increment in iteration order regardless of whether the
+  // triangle is emitted to the output, so the id is stable across the
+  // showAllUpward toggle.
+  let nearFloorId = 0;
+  let upwardId = 0;
 
   scene.traverse((object) => {
     if (!(object as THREE.Mesh).isMesh) return;
@@ -58,30 +66,33 @@ function extractFloorTriangles(
         Math.abs(v1.y) < yTolerance &&
         Math.abs(v2.y) < yTolerance;
 
-      // In the default extraction we only emit near-floor triangles (matches
-      // historic behaviour). When the user enables "show all upward-facing",
-      // we also emit angled stair/ramp surfaces with a normal pointing mostly
-      // up so they can be clicked into the floor mesh manually. Walls are
-      // skipped via the |normal.y| > 0.3 check.
-      if (!isNearFloor && !showAllUpward) return;
-      if (!isNearFloor) {
-        const e1 = new THREE.Vector3().subVectors(v1, v0);
-        const e2 = new THREE.Vector3().subVectors(v2, v0);
-        const n = new THREE.Vector3().crossVectors(e1, e2).normalize();
-        if (Math.abs(n.y) <= 0.3) return;
-      }
-
-      const id = `tri_${triangleId++}`;
       const edge1 = new THREE.Vector3().subVectors(v1, v0);
       const edge2 = new THREE.Vector3().subVectors(v2, v0);
       const area = new THREE.Vector3().crossVectors(edge1, edge2).length() / 2;
 
-      // Default include rule: near-floor triangles are in by default, all
-      // others (the angled ones surfaced by showAllUpward) start excluded
-      // until the user clicks them. An explicit triangleStates entry wins
-      // either way.
-      const saved = triangleStates[id];
-      const included = saved === undefined ? isNearFloor : saved;
+      let id: string;
+      let included: boolean;
+
+      if (isNearFloor) {
+        // Near-floor branch: keep the historic `tri_N` numbering and default
+        // to included unless explicitly excluded.
+        id = `tri_${nearFloorId++}`;
+        const saved = triangleStates[id];
+        included = saved === undefined ? true : saved;
+      } else {
+        // Above-floor branch: skip walls via normal direction, then assign
+        // a stable `up_N` id for every upward-facing face. Whether the face
+        // is emitted depends on the toggle and the saved state.
+        const n = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
+        if (Math.abs(n.y) <= 0.3) return;
+        id = `up_${upwardId++}`;
+        const saved = triangleStates[id];
+        included = saved === undefined ? false : saved;
+        // - showAllUpward on  → emit so the user can click it
+        // - showAllUpward off → emit only if the user has opted it in, so
+        //   stair selections persist after the toggle is turned back off
+        if (!showAllUpward && !included) return;
+      }
 
       triangles.push({
         id,
