@@ -743,8 +743,10 @@ const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc
 func _is_indoor_stage(stage_id: String) -> bool:
 	if stage_id in INDOOR_STAGES:
 		return true
-	# All Eternal Tower stages (s08*) are interior — fixed lighting, no weather.
-	if stage_id.begins_with("s08"):
+	# Interior areas covered by prefix:
+	# - s06* Arca Plant (a sealed plant/factory interior)
+	# - s08* Eternal Tower
+	if stage_id.begins_with("s06") or stage_id.begins_with("s08"):
 		return true
 	return false
 
