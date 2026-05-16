@@ -746,7 +746,12 @@ func _is_indoor_stage(stage_id: String) -> bool:
 	# Interior areas covered by prefix:
 	# - s06* Arca Plant (a sealed plant/factory interior)
 	# - s08* Eternal Tower
+	# - s04* Makara Ruins, minus the two open-air stages:
+	#     s04a_sa1 (entry plaza, outdoors)
+	#     s04e_ia1 (section-E transition, outdoors)
 	if stage_id.begins_with("s06") or stage_id.begins_with("s08"):
+		return true
+	if stage_id.begins_with("s04") and stage_id != "s04a_sa1" and stage_id != "s04e_ia1":
 		return true
 	return false
 
