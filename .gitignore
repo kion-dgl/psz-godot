@@ -27,6 +27,17 @@
 !/assets/stages/city_e/s00e_office/
 /assets/stages/city_e/s00e_office/*
 !/assets/stages/city_e/s00e_office/lndmd/
+# Floor meshes are authored in-house (Blender export) for collision tweaks.
+# Whitelist *-floor.glb under every stage so they can ship with the binary
+# instead of going through the Arweave asset-pack roundtrip. The .glb.import
+# companion ships alongside so Godot doesn't re-import on first launch. The
+# texture/etc. content inside lndmd stays excluded — only floor meshes.
+!/assets/stages/*/
+!/assets/stages/*/*/
+!/assets/stages/*/*/lndmd/
+/assets/stages/*/*/lndmd/*
+!/assets/stages/*/*/lndmd/*-floor.glb
+!/assets/stages/*/*/lndmd/*-floor.glb.import
 # Market dir is mostly pack-only PSO textures, but our authored assets are in-house.
 !/assets/stages/city_e/market/
 /assets/stages/city_e/market/*
