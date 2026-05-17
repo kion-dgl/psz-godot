@@ -171,8 +171,8 @@ export interface EditorGridCell {
   stageName: string;
   /** Rotation in degrees (0, 90, 180, 270). Only used for single-gate stages. */
   rotation?: number;
-  /** Which gate direction is key-locked on this cell */
-  lockedGate?: Direction;
+  /** Which gate directions are key-locked on this cell. Empty/undefined = no lock. */
+  lockedGates?: Direction[];
   /** Whether this cell was manually placed (vs generated) */
   manual: boolean;
   /** Optional designer notes */
@@ -279,6 +279,10 @@ export interface QuestMetadata {
   reportTo?: ReportDestination;
   /** Quest item collection objectives */
   objectives?: QuestObjective[];
+  /** Parent quest that must be completed to unlock this one */
+  parentQuest?: string;
+  /** Hard quest requirements (all must be completed to accept) */
+  requiredQuests?: string[];
 }
 
 export interface CompanionInfo {
@@ -295,6 +299,7 @@ export const AVAILABLE_COMPANIONS: CompanionInfo[] = [
   { id: 'fern', name: 'Fern' },
   { id: 'dr_carlo', name: 'Dr. Carlo' },
   { id: 'mira', name: 'Mira' },
+  { id: 'ana', name: 'Ana' },
 ];
 
 // ============================================================================
@@ -320,13 +325,14 @@ export interface EditorAreaConfig {
 }
 
 export const EDITOR_AREAS: EditorAreaConfig[] = [
-  { key: 'valley', name: 'Gurhacia Valley', prefix: 's01', variants: ['a', 'b'], available: true },
-  { key: 'wetlands', name: 'Ozette Wetlands', prefix: 's02', variants: ['a', 'b'], available: true },
-  { key: 'snowfield', name: 'Rioh Snowfield', prefix: 's03', variants: ['a', 'b'], available: true },
-  { key: 'makara', name: 'Makara Ruins', prefix: 's04', variants: ['a', 'b'], available: true },
-  { key: 'paru', name: 'Oblivion City Paru', prefix: 's05', variants: ['a', 'b'], available: true },
-  { key: 'arca', name: 'Arca Plant', prefix: 's06', variants: ['a', 'b'], available: false },
-  { key: 'shrine', name: 'Dark Shrine', prefix: 's07', variants: ['a', 'b'], available: false },
+  { key: 'valley', name: 'Gurhacia Valley', prefix: 's01', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'wetlands', name: 'Ozette Wetlands', prefix: 's02', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'snowfield', name: 'Rioh Snowfield', prefix: 's03', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'makara', name: 'Makara Ruins', prefix: 's04', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'paru', name: 'Oblivion City Paru', prefix: 's05', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'arca', name: 'Arca Plant', prefix: 's06', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'shrine', name: 'Dark Shrine', prefix: 's07', variants: ['a', 'b', 'e', 'z'], available: true },
+  { key: 'tower', name: 'Eternal Tower', prefix: 's08', variants: ['0', '1', '2', '3', '4', '5', '6', '7', 'e'], available: true },
 ];
 
 // ============================================================================

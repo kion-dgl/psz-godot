@@ -6,6 +6,8 @@ interface FloorCollisionTabProps {
   config: UnifiedStageConfig;
   updateConfig: (updater: (prev: UnifiedStageConfig) => UnifiedStageConfig) => void;
   stageScene: THREE.Group | null;
+  showAllUpward: boolean;
+  setShowAllUpward: (v: boolean) => void;
 }
 
 // Extract floor triangles from scene
@@ -100,6 +102,8 @@ export default function FloorCollisionTab({
   config,
   updateConfig,
   stageScene,
+  showAllUpward,
+  setShowAllUpward,
 }: FloorCollisionTabProps) {
   const [yTolerance, setYTolerance] = useState(config.floorCollision.yTolerance);
   const [meshFilter, setMeshFilter] = useState('');
@@ -203,6 +207,31 @@ export default function FloorCollisionTab({
           style={{ width: '100%' }}
         />
       </div>
+
+      {/* Show all upward-facing surfaces toggle */}
+      <label
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px 12px',
+          background: showAllUpward ? '#2a4a2a' : '#1a1a2e',
+          borderRadius: '4px',
+          border: `1px solid ${showAllUpward ? '#4a8a4a' : '#333'}`,
+          cursor: 'pointer',
+          fontSize: '12px',
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={showAllUpward}
+          onChange={(e) => setShowAllUpward(e.target.checked)}
+        />
+        <span>Show all upward-facing surfaces</span>
+        <span style={{ color: '#888', fontSize: '10px' }}>
+          (stairs, ramps — click to include)
+        </span>
+      </label>
 
       {/* Mesh filter */}
       <div>

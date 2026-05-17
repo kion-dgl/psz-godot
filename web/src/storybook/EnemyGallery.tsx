@@ -7,7 +7,7 @@ import { ErrorBoundary } from '../utils/ErrorBoundary';
 import {
   ENEMY_CATEGORIES,
   ALL_ENEMY_IDS,
-  getEnemyCategory,
+  getEnemyCategories,
   getEnemyGlbPath,
   getEnemyDisplayName,
   getEnemyElement,
@@ -195,8 +195,9 @@ export default function EnemyGallery() {
     const grouped: Record<string, string[]> = {};
     for (const cat of ENEMY_CATEGORIES) grouped[cat.id] = [];
     for (const id of ALL_ENEMY_IDS) {
-      const cat = getEnemyCategory(id);
-      if (cat) grouped[cat.id].push(id);
+      for (const cat of getEnemyCategories(id)) {
+        grouped[cat.id].push(id);
+      }
     }
     return grouped;
   }, []);
@@ -285,7 +286,7 @@ export default function EnemyGallery() {
             <directionalLight position={[5, 5, 5]} intensity={1} />
             <directionalLight position={[-5, -5, -5]} intensity={0.3} />
             {selectedEnemy && (
-              <ErrorBoundary>
+              <ErrorBoundary fallback={null}>
                 <Suspense fallback={<LoadingSpinner />}>
                   <EnemyModel key={selectedEnemy} enemyId={selectedEnemy}
                     animationSourcePath={animationSourcePath}

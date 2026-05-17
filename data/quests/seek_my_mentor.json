@@ -1,6 +1,7 @@
 {
   "version": 1,
   "last_updated": "2026-03-20",
+  "disabled": true,
   "id": "seek_my_mentor",
   "name": "Seek My Mentor",
   "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Vash, who went missing three days ago and hasn't come back.",
@@ -1339,5 +1340,6 @@
       "speaker": "Principal",
       "text": "Find Vash and bring him home. Be careful in there."
     }
-  ]
+  ],
+  "parent_quest": "control_system"
 }

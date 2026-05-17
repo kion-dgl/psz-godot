@@ -22,10 +22,19 @@ import ParticleOverlay, { type ParticleEffect } from './ParticleOverlay';
 function extractFloorTriangles(
   scene: THREE.Object3D,
   yTolerance: number,
-  triangleStates: Record<string, boolean>
+  triangleStates: Record<string, boolean>,
+  showAllUpward: boolean = false
 ): FloorTriangle[] {
   const triangles: FloorTriangle[] = [];
-  let triangleId = 0;
+  // Two separate ID namespaces so old saved states (which only knew about
+  // near-floor triangles) keep mapping to the same physical faces:
+  //   tri_N — Nth near-floor triangle in iteration order (existing scheme)
+  //   up_N  — Nth above-floor non-wall (upward-facing) triangle
+  // Both counters increment in iteration order regardless of whether the
+  // triangle is emitted to the output, so the id is stable across the
+  // showAllUpward toggle.
+  let nearFloorId = 0;
+  let upwardId = 0;
 
   scene.traverse((object) => {
     if (!(object as THREE.Mesh).isMesh) return;
@@ -52,28 +61,47 @@ function extractFloorTriangles(
       v1.applyMatrix4(mesh.matrixWorld);
       v2.applyMatrix4(mesh.matrixWorld);
 
-      if (
+      const isNearFloor =
         Math.abs(v0.y) < yTolerance &&
         Math.abs(v1.y) < yTolerance &&
-        Math.abs(v2.y) < yTolerance
-      ) {
-        const id = `tri_${triangleId++}`;
-        const edge1 = new THREE.Vector3().subVectors(v1, v0);
-        const edge2 = new THREE.Vector3().subVectors(v2, v0);
-        const area = new THREE.Vector3().crossVectors(edge1, edge2).length() / 2;
+        Math.abs(v2.y) < yTolerance;
 
-        // Check if included (default true, false only if explicitly excluded)
-        const included = triangleStates[id] !== false;
+      const edge1 = new THREE.Vector3().subVectors(v1, v0);
+      const edge2 = new THREE.Vector3().subVectors(v2, v0);
+      const area = new THREE.Vector3().crossVectors(edge1, edge2).length() / 2;
 
-        triangles.push({
-          id,
-          vertices: [v0.clone(), v1.clone(), v2.clone()],
-          meshName: mesh.name,
-          textureName,
-          included,
-          area,
-        });
+      let id: string;
+      let included: boolean;
+
+      if (isNearFloor) {
+        // Near-floor branch: keep the historic `tri_N` numbering and default
+        // to included unless explicitly excluded.
+        id = `tri_${nearFloorId++}`;
+        const saved = triangleStates[id];
+        included = saved === undefined ? true : saved;
+      } else {
+        // Above-floor branch: skip walls via normal direction, then assign
+        // a stable `up_N` id for every upward-facing face. Whether the face
+        // is emitted depends on the toggle and the saved state.
+        const n = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
+        if (Math.abs(n.y) <= 0.3) return;
+        id = `up_${upwardId++}`;
+        const saved = triangleStates[id];
+        included = saved === undefined ? false : saved;
+        // - showAllUpward on  → emit so the user can click it
+        // - showAllUpward off → emit only if the user has opted it in, so
+        //   stair selections persist after the toggle is turned back off
+        if (!showAllUpward && !included) return;
       }
+
+      triangles.push({
+        id,
+        vertices: [v0.clone(), v1.clone(), v2.clone()],
+        meshName: mesh.name,
+        textureName,
+        included,
+        area,
+      });
     };
 
     if (index) {
@@ -135,6 +163,11 @@ export default function UnifiedStageEditor() {
   const [repositionEffectId, setRepositionEffectId] = useState<string | null>(null);
   const [indoor, setIndoor] = useState(false);
 
+  // Floor extraction: show all upward-facing surfaces (stairs, ramps) so they
+  // can be clicked into the floor collision mesh. Default off to keep the
+  // viewport uncluttered for stages that don't need it.
+  const [showAllUpwardFloor, setShowAllUpwardFloor] = useState(false);
+
   const lighting = useMemo(() => computeLighting(indoor ? 10.0 : timeOfDay), [indoor, timeOfDay]);
 
   // Animated textures state
@@ -163,7 +196,7 @@ export default function UnifiedStageEditor() {
   }, [allMaps, currentMapIndex]);
 
   // Get config for current map
-  const { config, updateConfig, undo, redo, canUndo, canRedo } = useStageConfig(selectedMapId);
+  const { config, updateConfig, undo, redo, canUndo, canRedo, reloadFromDisk } = useStageConfig(selectedMapId);
 
   // Handle scene ready callback
   const handleSceneReady = useCallback((scene: THREE.Group) => {
@@ -176,9 +209,10 @@ export default function UnifiedStageEditor() {
     return extractFloorTriangles(
       stageScene,
       config.floorCollision.yTolerance,
-      config.floorCollision.triangles
+      config.floorCollision.triangles,
+      showAllUpwardFloor
     );
-  }, [stageScene, config?.floorCollision.yTolerance, config?.floorCollision.triangles]);
+  }, [stageScene, config?.floorCollision.yTolerance, config?.floorCollision.triangles, showAllUpwardFloor]);
 
   // Get only included triangles for the overlay
   const includedTriangles = useMemo(() => {
@@ -354,6 +388,8 @@ export default function UnifiedStageEditor() {
             config={config}
             updateConfig={updateConfig}
             stageScene={stageScene}
+            showAllUpward={showAllUpwardFloor}
+            setShowAllUpward={setShowAllUpwardFloor}
           />
         );
       case 'portals':
@@ -449,16 +485,22 @@ export default function UnifiedStageEditor() {
     }
   };
 
-  // Handle triangle click to toggle inclusion
+  // Handle triangle click to toggle inclusion. Flips the *currently rendered*
+  // state, not just the saved one — important for above-floor surfaces whose
+  // saved state may be undefined while the rendered state is "excluded" via
+  // the default rule (isNearFloor=false → excluded). The previous version
+  // only checked the saved state, so the very first click on an above-floor
+  // triangle wrote `false` (the existing default) and the user saw nothing
+  // change.
   const handleTriangleClick = useCallback(
-    (triangleId: string) => {
+    (triangleId: string, currentIncluded: boolean) => {
       updateConfig((prev) => ({
         ...prev,
         floorCollision: {
           ...prev.floorCollision,
           triangles: {
             ...prev.floorCollision.triangles,
-            [triangleId]: prev.floorCollision.triangles[triangleId] === false ? true : false,
+            [triangleId]: !currentIncluded,
           },
         },
       }));
@@ -615,6 +657,25 @@ export default function UnifiedStageEditor() {
             title="Redo (Ctrl+Y)"
           >
             Redo
+          </button>
+
+          <button
+            onClick={() => {
+              if (confirm(`Discard local edits for ${selectedMapId} and reload from committed JSON?`)) {
+                reloadFromDisk();
+              }
+            }}
+            style={{
+              padding: '6px 12px',
+              background: '#665',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+            title="Refetch this stage's config from data/stage_configs/unified-stage-configs.json, discarding local edits."
+          >
+            Reload from Disk
           </button>
 
           <div style={{ width: '1px', height: '20px', background: '#444', margin: '0 4px' }} />

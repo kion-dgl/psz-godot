@@ -13,26 +13,6 @@ var _active_modal: Control = null
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
-## Quest numbering (matches GitHub issue order)
-const QUEST_ORDER := {
-	"search_and_rescue": 1,
-	"the_paru_pact": 2,
-	"apothecary_supply": 3,
-	"static_in_the_snow": 4,
-	"deep_ore_extraction": 5,
-	"messages_from_the_past": 6,
-	"native_research": 7,
-	"seek_my_mentor": 8,
-	"claiming_a_stake": 9,
-	"poisoned_water": 10,
-	"finding_ogi": 11,
-	"rescue_at_makara": 12,
-	"arca_plant_a": 13,
-	"arca_plant_b": 14,
-	"dark_shrine": 15,
-}
-
-## area_id → display area name
 const AREA_DISPLAY := {
 	"gurhacia": "Valley",
 	"rioh": "Snowfield",
@@ -40,7 +20,10 @@ const AREA_DISPLAY := {
 	"paru": "Forgotten City",
 	"makara": "Ruins",
 	"arca": "Moon Facility",
+	"eternal_tower": "Eternal Tower",
+	"tower": "Eternal Tower",
 	"dark": "Dark Shrine",
+	"dark_shrine": "Dark Shrine",
 }
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
@@ -113,7 +96,9 @@ func _load_entries() -> void:
 		})
 		return
 
-	# Load numbered quests
+	# Load every quest. Visibility rule (per user spec): all quests show in the
+	# list; locked or beta-disabled ones are marked unavailable with a "needs"
+	# annotation instead of being hidden.
 	var quest_ids := QuestLoader.list_quests()
 	for qid in quest_ids:
 		if qid == "hello_quest" or qid == "manifest":
@@ -121,27 +106,88 @@ func _load_entries() -> void:
 		var quest := QuestLoader.load_quest(qid)
 		if quest.is_empty():
 			continue
-		var area_id: String = quest.get("area_id", "gurhacia")
-		var display_name: String = quest.get("name", qid)
-		var quest_number: int = QUEST_ORDER.get(qid, 0)
-		if quest_number > 0:
-			display_name = "%d. %s" % [quest_number, display_name]
+		var area_id: String = str(quest.get("area_id", "gurhacia"))
+		var display_name: String = str(quest.get("name", qid))
+
+		## Beta/in-progress flag — show but hard-lock
+		var is_beta: bool = bool(quest.get("disabled", false))
+
+		## Compute availability from parent_quest dependency. Wrap raw value
+		## in str() because a JSON `null` lands here as the Variant null, and
+		## a typed `String` assignment would error.
+		var available: bool = true
+		var parent_raw: Variant = quest.get("parent_quest", "")
+		var parent_id: String = str(parent_raw) if parent_raw != null else ""
+		var parent_name: String = ""
+		if not parent_id.is_empty():
+			available = GameState.is_mission_completed(parent_id)
+			var parent_quest: Dictionary = QuestLoader.load_quest(parent_id)
+			parent_name = str(parent_quest.get("name", parent_id))
+
+		## Also enforce hard-lock required_quests
+		var required_quests: Array = quest.get("required_quests", [])
+		for req_id in required_quests:
+			if not GameState.is_mission_completed(str(req_id)):
+				available = false
+				var req_quest: Dictionary = QuestLoader.load_quest(str(req_id))
+				var req_name: String = str(req_quest.get("name", req_id))
+				if not parent_name.is_empty():
+					parent_name += ", \"%s\"" % req_name
+				else:
+					parent_name = "\"%s\"" % req_name
+
+		# Beta/in-progress overrides availability and replaces the parent note.
+		if is_beta:
+			available = false
+			parent_name = "in-progress build"
+
 		_entries.append({
 			"type": "quest",
 			"id": qid,
 			"quest_id": qid,
 			"name": display_name,
-			"description": quest.get("description", ""),
+			"description": str(quest.get("description", "")),
 			"area": AREA_DISPLAY.get(area_id, area_id),
 			"is_main": false,
 			"requires": [],
 			"rewards": {},
-			"_sort_order": quest_number,
-			"available": true,
+			"_parent_id": parent_id,
+			"available": available,
+			"parent_name": parent_name,
 		})
-	_entries.sort_custom(func(a, b):
-		return a.get("_sort_order", 99) < b.get("_sort_order", 99)
+	_entries = _manifest_sort_entries(_entries)
+
+
+## Order quest entries by manifest.json position — the manifest is the
+## canonical progression order (search_and_rescue → ... → dark_castle).
+## Non-quest entries (report/cancel) stay at the front in their original
+## order. Quests missing from the manifest are appended at the end.
+func _manifest_sort_entries(entries: Array) -> Array:
+	var manifest_order := {}
+	var fa := FileAccess.open("res://data/quests/manifest.json", FileAccess.READ)
+	if fa:
+		var j := JSON.new()
+		if j.parse(fa.get_as_text()) == OK and j.data is Array:
+			var arr: Array = j.data
+			for i in range(arr.size()):
+				manifest_order[str(arr[i])] = i
+	var passthrough: Array = []
+	var quest_entries: Array = []
+	for e in entries:
+		if e.get("type", "") != "quest":
+			passthrough.append(e)
+		else:
+			quest_entries.append(e)
+	# Stable sort by manifest position; missing entries go to the end.
+	var unknown_index := manifest_order.size()
+	quest_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ai: int = int(manifest_order.get(str(a.get("quest_id", "")), unknown_index))
+		var bi: int = int(manifest_order.get(str(b.get("quest_id", "")), unknown_index))
+		return ai < bi
 	)
+	var result: Array = passthrough.duplicate()
+	result.append_array(quest_entries)
+	return result
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -408,6 +454,12 @@ func _refresh_detail() -> void:
 
 	vbox.add_child(PszStyle.detail_label("Type: Quest", PszStyle.TEXT_QUEST))
 	var desc: String = str(entry.get("description", ""))
+	if not entry.get("available", true):
+		var parent_name: String = str(entry.get("parent_name", ""))
+		if not parent_name.is_empty():
+			if not desc.is_empty():
+				desc += "\n\n"
+			desc += "[LOCKED] Complete \"%s\" to unlock." % parent_name
 	if not desc.is_empty():
 		var desc_label := PszStyle.detail_label(desc)
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

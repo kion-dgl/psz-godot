@@ -1935,7 +1935,7 @@
     },
     {
       "speaker": "Dorn",
-      "text": "The known veins are tapped out. We’ve been stretching the last of the Carlian for weeks, but there’s nothing left worth smelting."
+      "text": "The known veins are tapped out. We\u2019ve been stretching the last of the Carlian for weeks, but there\u2019s nothing left worth smelting."
     },
     {
       "speaker": "Dorn",
@@ -1943,7 +1943,7 @@
     },
     {
       "speaker": "Dorn",
-      "text": "I’ve been going over the old geological surveys. The deeper caves in the valley have never been properly prospected. Every team that’s gone out has been driven back."
+      "text": "I\u2019ve been going over the old geological surveys. The deeper caves in the valley have never been properly prospected. Every team that\u2019s gone out has been driven back."
     },
     {
       "speaker": "Dorn",
@@ -1951,7 +1951,7 @@
     },
     {
       "speaker": "Principal",
-      "text": "No ore means no equipment. Get down there and find out what we’re working with."
+      "text": "No ore means no equipment. Get down there and find out what we\u2019re working with."
     }
   ],
   "objectives": [
@@ -1975,5 +1975,6 @@
       "label": "Dianaline",
       "target": 1
     }
-  ]
+  ],
+  "parent_quest": "apothecary_supply"
 }

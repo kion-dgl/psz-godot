@@ -98,6 +98,7 @@ var _needs_telepipe: bool = false      # End cell without warp_edge — spawn te
 var _companion: CharacterBody3D = null  # CompanionNpc following the player
 var _deferred_telepipe: Dictionary = {} # Telepipe data deferred until room_clear
 var _deferred_quest_complete_telepipe: Dictionary = {} # Telepipe deferred until SessionManager.quest_completed fires
+var _deferred_room_clear_items: Array = [] # quest_item objects with spawn_condition=room_clear, deferred until room clear
 var _objective_locked_exits: Array = [] # Exit triggers locked until quest objectives complete
 var _weather_node: GPUParticles3D = null # Weather effect (snow, rain) attached to player
 
@@ -141,7 +142,18 @@ func _ready() -> void:
 	_moonlight.visible = false
 	add_child(_moonlight)
 
-	TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+	# Indoor stages take a one-shot daylight apply and then opt out of the
+	# per-frame _process update — interior lighting shouldn't track the
+	# day/night cycle. Save and restore current_hour so the world clock
+	# isn't affected.
+	var initial_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
+	if _is_indoor_stage(initial_stage_id):
+		var saved_hour: float = TimeManager.current_hour
+		TimeManager.current_hour = 10.0
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+		TimeManager.current_hour = saved_hour
+	else:
+		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 
 	var data: Dictionary = SceneManager.get_transition_data()
 	var current_cell_pos: String = str(data.get("current_cell_pos", ""))
@@ -416,12 +428,12 @@ func _ready() -> void:
 	# Create gate triggers for each connection (entry edge gets delayed activation)
 	# Key-gate direction trigger starts disabled — enabled when gate opens
 	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
-	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
+	var key_gate_dirs: Array = _get_locked_gates(_current_cell)
 	for dir in connections:
 		if not _portal_data.has(dir):
 			continue
 		var is_entry: bool = (dir == spawn_edge)
-		var is_locked_gate: bool = is_key_gate and dir == key_gate_dir and not _gates_opened.has(str(_current_cell.get("pos", "")))
+		var is_locked_gate: bool = is_key_gate and dir in key_gate_dirs and not _gates_opened.has("%s:%s" % [str(_current_cell.get("pos", "")), dir])
 		_create_gate_trigger(dir, str(connections[dir]), _portal_data[dir], is_entry, is_locked_gate)
 
 	# (warp_edge exit is handled by area warp auto-generation in _spawn_field_elements)
@@ -504,13 +516,17 @@ func _ready() -> void:
 				_room_minimap.set_gate_locked(dir, true)
 				if _grid_minimap:
 					_grid_minimap.set_gate_state(cur_pos, dir, "locked")
-	# Key-gate starts locked unless previously opened
+	# Key-gate per-direction locked state — each direction tracks independently.
 	var is_key_gate_cell: bool = _current_cell.get("is_key_gate", false)
-	var kg_dir: String = str(_current_cell.get("key_gate_direction", ""))
-	if is_key_gate_cell and not kg_dir.is_empty() and not _gates_opened.has(cur_pos):
-		_room_minimap.set_gate_locked(kg_dir, true)
-		if _grid_minimap:
-			_grid_minimap.set_gate_state(cur_pos, kg_dir, "locked")
+	var kg_dirs: Array = _get_locked_gates(_current_cell)
+	if is_key_gate_cell:
+		for kg_dir_s in kg_dirs:
+			var kg_dir: String = str(kg_dir_s)
+			if _gates_opened.has("%s:%s" % [cur_pos, kg_dir]):
+				continue
+			_room_minimap.set_gate_locked(kg_dir, true)
+			if _grid_minimap:
+				_grid_minimap.set_gate_state(cur_pos, kg_dir, "locked")
 
 	# Lock warp_edge on minimap if objectives are pending
 	var warp_e: String = str(_current_cell.get("warp_edge", ""))
@@ -548,6 +564,15 @@ func _on_quest_completed() -> void:
 		print("[ValleyField] Spawning quest_complete-deferred telepipe at %s" % tp_pos)
 		_spawn_telepipe(tp_pos)
 		_deferred_quest_complete_telepipe = {}
+		return
+	# No explicit telepipe object. If the current cell has key_drop authored,
+	# re-enter _check_room_clear so its objectives-complete branch spawns the
+	# telepipe at key_drop_position. Covers the case where the final quest_item
+	# is picked up *after* room_clear already ran (e.g. hildegao "ate" body
+	# part in finding_ogi's section B terminals). _check_room_clear early-returns
+	# if enemies remain and its other side-effects are idempotent.
+	if not str(_current_cell.get("key_drop", "")).is_empty():
+		_check_room_clear()
 
 
 func _unlock_objective_exits() -> void:
@@ -568,7 +593,9 @@ func _unlock_objective_exits() -> void:
 func _process(_delta: float) -> void:
 	FrameProfiler.mark("field_lighting")
 	if _world_env and _sky_material and _dir_light:
-		TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
+		var cur_stage_id: String = str(_current_cell.get("stage_id", "")) if not _current_cell.is_empty() else ""
+		if not _is_indoor_stage(cur_stage_id):
+			TimeManager.apply_to_scene(_world_env.environment, _sky_material, _dir_light, _moonlight)
 	if _blob_shadow and player:
 		_blob_shadow.global_position = Vector3(player.global_position.x, 0.05, player.global_position.z)
 	FrameProfiler.mark("field_minimap")
@@ -584,6 +611,22 @@ func _find_cell(cells: Array, pos: String) -> Dictionary:
 			return cell
 	return {}
 
+
+
+func _get_locked_gates(cell: Dictionary) -> Array:
+	# Editor writes both fields: prefer the array, fall back to the singular.
+	var arr: Variant = cell.get("key_gate_directions", null)
+	if arr is Array and arr.size() > 0:
+		var out: Array = []
+		for d in arr:
+			var ds := str(d)
+			if not ds.is_empty():
+				out.append(ds)
+		return out
+	var single: String = str(cell.get("key_gate_direction", ""))
+	if single.is_empty():
+		return []
+	return [single]
 
 
 func _find_child_by_name(node: Node, child_name: String) -> Node:
@@ -697,12 +740,27 @@ func _spawn_player(pos: Vector3, rot: float) -> void:
 
 const INDOOR_STAGES := ["s03b_lc2", "s03b_nb2", "s03b_ic1", "s03b_tc3", "s03b_lc1", "s03b_sa1"]
 
+func _is_indoor_stage(stage_id: String) -> bool:
+	if stage_id in INDOOR_STAGES:
+		return true
+	# Interior areas covered by prefix:
+	# - s06* Arca Plant (a sealed plant/factory interior)
+	# - s08* Eternal Tower
+	# - s04* Makara Ruins, minus the two open-air stages:
+	#     s04a_sa1 (entry plaza, outdoors)
+	#     s04e_ia1 (section-E transition, outdoors)
+	if stage_id.begins_with("s06") or stage_id.begins_with("s08"):
+		return true
+	if stage_id.begins_with("s04") and stage_id != "s04a_sa1" and stage_id != "s04e_ia1":
+		return true
+	return false
+
 func _spawn_weather() -> void:
 	var weather: String = str(SessionManager.get_session().get("weather", ""))
 	if weather.is_empty():
 		return
 	var stage_id: String = str(_current_cell.get("stage_id", ""))
-	if stage_id in INDOOR_STAGES:
+	if _is_indoor_stage(stage_id):
 		print("[ValleyField] Weather: skipping %s (indoor stage %s)" % [weather, stage_id])
 		return
 	if weather == "snow":
@@ -1169,11 +1227,15 @@ func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictio
 	var pos_arr: Array = portal.get("position", [0, 0, 0])
 	var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 
-	# Use the config direction for gate rotation and outward vector
+	# Use the config direction for gate rotation and outward vector. Add the
+	# authored rotationOffset (in degrees) so angled gates like the s07e_ia1
+	# south portal render the same direction here as in the stage editor.
 	var config_dir: String = str(portal.get("direction", "north"))
 	var base_rot: float = DIRECTION_ROTATIONS.get(config_dir, 0.0)
-	var gate_rot := Vector3(0.0, base_rot, 0.0)
-	var outward := Vector2(-sin(base_rot), -cos(base_rot))
+	var offset_deg: float = float(portal.get("rotationOffset", 0))
+	var rotation: float = base_rot + deg_to_rad(offset_deg)
+	var gate_rot := Vector3(0.0, rotation, 0.0)
+	var outward := Vector2(-sin(rotation), -cos(rotation))
 
 	var spawn_pos := Vector3(gate_pos.x + outward.x * 3.0, 1.0, gate_pos.z + outward.y * 3.0)
 	var trigger_pos := Vector3(gate_pos.x + outward.x * 7.0, 0.0, gate_pos.z + outward.y * 7.0)
@@ -1184,6 +1246,7 @@ func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictio
 		"trigger_pos": trigger_pos,
 		"gate_rot": gate_rot,
 		"compass_label": game_dir.substr(0, 1).to_upper(),
+		"id": str(portal.get("id", "")),
 	}
 
 
@@ -1225,6 +1288,7 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 			"trigger_pos": trigger_pos,
 			"gate_pos": gate_pos,
 			"gate_rot": gate_rot,
+			"id": str(portal.get("id", "")),
 		}
 		print("[ValleyField]   portal: config dir='%s' gate=%s spawn=%s trigger=%s" % [
 			dir, gate_pos, spawn_pos, trigger_pos])
@@ -1410,7 +1474,7 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback, delayed and not locked, locked)
 
 	# DEBUG: Add floating direction label at gate position
-	_add_gate_label(direction, _portal["gate_pos"] if _portal.has("gate_pos") else _portal["trigger_pos"], target_cell_pos)
+	_add_gate_label(direction, _portal["gate_pos"] if _portal.has("gate_pos") else _portal["trigger_pos"], target_cell_pos, str(_portal.get("id", "")))
 
 
 func _create_exit_trigger(_direction: String, _portal: Dictionary) -> void:
@@ -1485,12 +1549,20 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 
 ## DEBUG: Add a floating 3D text label at gate position showing compass label + target cell.
 ## Also adds colored sphere markers for gate (yellow), spawn (green), and trigger (red).
-func _add_gate_label(direction: String, pos: Vector3, target_cell: String) -> void:
+func _add_gate_label(direction: String, pos: Vector3, target_cell: String, portal_id: String = "") -> void:
 	var label := Label3D.new()
 	label.name = "GateLabel_%s" % direction
-	# Show grid direction (matches minimap labels)
+	# Show grid direction (matches minimap labels) plus a suffix of the
+	# portal id so the player can grep the unified-stage-config for the
+	# exact gate. The id format is portal_<13digit-ts>_<11char-rand>; the
+	# trailing random suffix is unique inside a stage, so taking the last
+	# 6 chars is enough to disambiguate.
 	var compass: String = direction.substr(0, 1).to_upper()
-	label.text = "%s\n→ %s" % [compass, target_cell]
+	var id_suffix: String = portal_id.right(6) if not portal_id.is_empty() else ""
+	if id_suffix.is_empty():
+		label.text = "%s\n→ %s" % [compass, target_cell]
+	else:
+		label.text = "%s (%s)\n→ %s" % [compass, id_suffix, target_cell]
 	label.font_size = 48
 	label.pixel_size = 0.01
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -1570,30 +1642,39 @@ func _create_key_pickup(key_for_cell: String) -> void:
 		key_for_cell, key_pos, key_item_id])
 
 
+func _compute_drop_position() -> Vector3:
+	# Use authored key_drop_position when present; otherwise fall back to the
+	# centroid of the cell's non-default portals (same heuristic as the key
+	# drop). Shared between key drops and quest_complete telepipe spawns so
+	# both land at the same spot.
+	var authored_pos: Array = _current_cell.get("key_drop_position", [])
+	if authored_pos.size() == 3:
+		return Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
+	var portal_positions: Array[Vector3] = []
+	for dir in _portal_data:
+		if dir != "default":
+			portal_positions.append(_portal_data[dir]["spawn_pos"])
+	if portal_positions.size() >= 2:
+		var sum := Vector3.ZERO
+		for pp in portal_positions:
+			sum += pp
+		var avg := sum / float(portal_positions.size())
+		avg.y = 0.5
+		return avg
+	if portal_positions.size() == 1:
+		var single := portal_positions[0]
+		single.y = 0.5
+		return single
+	return Vector3(0, 0.5, 0)
+
+
 func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
 	var key_item_id := "key_%s" % target_cell.replace(",", "_")
 	var key := KeyPickupScript.new()
 	key.key_id = key_item_id
 	key.name = "KeyDrop_%s" % target_cell
 
-	# Place key at authored position from quest editor, or fall back to room center
-	var key_pos := Vector3.ZERO
-	var authored_pos: Array = _current_cell.get("key_drop_position", [])
-	if authored_pos.size() == 3:
-		key_pos = Vector3(float(authored_pos[0]), float(authored_pos[1]), float(authored_pos[2]))
-	else:
-		var portal_positions: Array[Vector3] = []
-		for dir in _portal_data:
-			if dir != "default":
-				portal_positions.append(_portal_data[dir]["spawn_pos"])
-		if portal_positions.size() >= 2:
-			var sum := Vector3.ZERO
-			for p in portal_positions:
-				sum += p
-			key_pos = sum / float(portal_positions.size())
-		elif portal_positions.size() == 1:
-			key_pos = portal_positions[0]
-		key_pos.y = 0.5
+	var key_pos := _compute_drop_position()
 
 	_map_root.add_child(key)
 	key.position = key_pos
@@ -1696,7 +1777,7 @@ func _spawn_field_elements() -> void:
 	var connections: Dictionary = _current_cell.get("connections", {})
 	var warp_edge: String = str(_current_cell.get("warp_edge", ""))
 	var is_key_gate: bool = _current_cell.get("is_key_gate", false)
-	var key_gate_dir: String = str(_current_cell.get("key_gate_direction", ""))
+	var key_gate_dirs: Array = _get_locked_gates(_current_cell)
 
 	# StartWarp on is_start cells at the entry portal (only first section).
 	# Spec: pressing E on this warp returns the player to the city teleporter
@@ -1739,6 +1820,13 @@ func _spawn_field_elements() -> void:
 	var exit_dir: String = str(current_section_data.get("exit_direction", ""))
 	var room_has_enemies: bool = _cell_has_enemies(_current_cell)
 
+	# entry_direction is only meaningful at the section's start cell — that's
+	# where the player materialises. At any other cell (including the end cell
+	# where warp_edge lives), the same direction might collide with a
+	# warp_edge or exit_dir and mis-classify the portal as a backward entry.
+	# Restricting is_entry to the start cell prevents that collision.
+	var is_start_cell: bool = bool(_current_cell.get("is_start", false))
+
 	for portal_dir in _portal_data:
 		if portal_dir == "default":
 			continue
@@ -1749,7 +1837,7 @@ func _spawn_field_elements() -> void:
 		var target_section := 0
 		var target_cell := ""
 		var target_position := Vector3.ZERO
-		var is_entry: bool = (portal_dir == entry_dir)
+		var is_entry: bool = is_start_cell and (portal_dir == entry_dir)
 		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir) and not is_entry
 
 		var is_final_exit: bool = false
@@ -1895,7 +1983,7 @@ func _spawn_field_elements() -> void:
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
 
 		# Key-gate — use KeyGate element (o0c_gatet.glb) with collision from GLB gate_box
-		if is_key_gate and dir == key_gate_dir:
+		if is_key_gate and dir in key_gate_dirs:
 			var key_for_cell: String = str(_current_cell.get("pos", ""))
 			var key_item_id := "key_%s" % key_for_cell.replace(",", "_")
 			var gate_rot: Vector3 = _portal_data[dir].get("gate_rot", Vector3.ZERO)
@@ -1926,8 +2014,11 @@ func _spawn_field_elements() -> void:
 			kg._setup_laser_material()
 			kg._apply_state()
 			_fix_gate_depth(kg)
-			# Only auto-open if gate was previously opened by player (re-entry)
-			if _gates_opened.has(key_for_cell):
+			# Only auto-open if THIS direction was previously opened by the player.
+			# The compound (cell:dir) key is what bug fix per-direction tracking needs —
+			# previously the per-cell flag opened all locked doors on a multi-gate hub
+			# after the player unlocked any one of them.
+			if _gates_opened.has("%s:%s" % [key_for_cell, str(dir)]):
 				kg.open()
 			# Enable the locked gate trigger when the key gate opens
 			var gate_trigger_name := "GateTrigger_%s" % dir
@@ -1935,7 +2026,7 @@ func _spawn_field_elements() -> void:
 			var gate_dir_for_minimap: String = str(dir)
 			kg.state_changed.connect(func(_old: String, new_state: String) -> void:
 				if new_state == "open":
-					_gates_opened[cell_pos_for_gate] = true
+					_gates_opened["%s:%s" % [cell_pos_for_gate, gate_dir_for_minimap]] = true
 					var trigger := _find_child_by_name(self, gate_trigger_name) as Area3D
 					if trigger:
 						trigger.monitoring = true
@@ -2204,6 +2295,7 @@ func _spawn_cell_objects() -> void:
 	_room_walls.clear()
 	_deferred_telepipe = {}
 	_deferred_quest_complete_telepipe = {}
+	_deferred_room_clear_items.clear()
 
 	if objects.is_empty() and saved.is_empty():
 		return
@@ -2328,7 +2420,15 @@ func _spawn_fresh_cell_objects(objects: Array) -> void:
 				var qi_dlg: Array = obj.get("dialog", [])
 				var qi_act: Array = obj.get("actions", [])
 				var qi_rem: Array = obj.get("remaining_dialog", [])
-				_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+				var qi_spawn: String = str(obj.get("spawn_condition", ""))
+				if qi_spawn == "room_clear":
+					# Defer until enemies are cleared (e.g. the hildegao ate it).
+					_deferred_room_clear_items.append({
+						"pos": pos, "id": qi_id, "label": qi_label,
+						"dialog": qi_dlg, "actions": qi_act, "remaining_dialog": qi_rem,
+					})
+				else:
+					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap":
 				_spawn_needle_trap(pos)
 			"bear_trap":
@@ -2446,13 +2546,32 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 					var qi_dlg: Array = []
 					var qi_act: Array = []
 					var qi_rem: Array = []
+					var qi_spawn: String = ""
 					for orig_obj in _current_cell.get("objects", []):
 						if str(orig_obj.get("type", "")) == "quest_item" and str(orig_obj.get("item_id", "")) == qi_id:
 							qi_dlg = orig_obj.get("dialog", [])
 							qi_act = orig_obj.get("actions", [])
 							qi_rem = orig_obj.get("remaining_dialog", [])
+							qi_spawn = str(orig_obj.get("spawn_condition", ""))
 							break
-					_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+					if qi_spawn == "room_clear":
+						# Room was previously cleared if no enemy is alive in the
+						# saved state — spawn the item now so re-entry works.
+						# Otherwise defer for this run's room-clear pass.
+						var room_was_cleared := true
+						for s_obj in obj_states:
+							if str(s_obj.get("type", "")) == "enemy" and str(s_obj.get("state", "")) == "alive":
+								room_was_cleared = false
+								break
+						if room_was_cleared:
+							_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
+						else:
+							_deferred_room_clear_items.append({
+								"pos": pos, "id": qi_id, "label": qi_label,
+								"dialog": qi_dlg, "actions": qi_act, "remaining_dialog": qi_rem,
+							})
+					else:
+						_spawn_quest_item(pos, qi_id, qi_label, qi_dlg, qi_act, qi_rem)
 			"needle_trap":
 				_spawn_needle_trap(pos)
 			"bear_trap":
@@ -2502,8 +2621,17 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				if str(obj.get("type", "")) == "enemy" and str(obj.get("state", "")) == "alive":
 					has_alive = true
 					break
+			# When the room was previously cleared, decide what to spawn:
+			# - quest complete → telepipe at the drop position (player returns
+			#   to a cleared room after finishing elsewhere; still want them to
+			#   be able to leave from here);
+			# - quest not complete and key not yet collected → drop the key.
 			if not has_alive:
-				_drop_key_on_clear(key_drop_target, drop_tracking_key)
+				var has_objs := SessionManager.get_quest_objectives().size() > 0
+				if has_objs and SessionManager.are_objectives_complete():
+					_spawn_telepipe(_compute_drop_position())
+				else:
+					_drop_key_on_clear(key_drop_target, drop_tracking_key)
 
 
 ## Temp state for enemy alive tracking during save (reset per save call)
@@ -3305,12 +3433,17 @@ func _check_room_clear() -> void:
 				node.monitoring = true
 	_warp_edge_locked.clear()
 
-	# Drop key on room clear if configured
+	# Drop key on room clear if configured. If the quest just completed,
+	# spawn a telepipe at the same drop position instead — the player has
+	# no more locked doors to open, so dropping another key would be waste.
 	var key_drop_target: String = str(_current_cell.get("key_drop", ""))
 	var current_pos: String = str(_current_cell.get("pos", ""))
 	if not key_drop_target.is_empty():
 		var drop_tracking_key := current_pos + ">" + key_drop_target
-		if not _keys_collected.has(drop_tracking_key):
+		var has_objs := SessionManager.get_quest_objectives().size() > 0
+		if has_objs and SessionManager.are_objectives_complete():
+			_spawn_telepipe(_compute_drop_position())
+		elif not _keys_collected.has(drop_tracking_key):
 			_drop_key_on_clear(key_drop_target, drop_tracking_key)
 
 	# Activate locked messages on room clear (scroll animation turns on)
@@ -3319,6 +3452,13 @@ func _check_room_clear() -> void:
 			msg.set_state("available")
 			if msg._prompt_label and msg._player_nearby:
 				msg._prompt_label.visible = true
+
+	# Spawn quest_items that were deferred via spawn_condition=room_clear
+	# (e.g. the body parts the hildegao "carried"). They were queued at
+	# cell-enter time and only materialise once the room is clear.
+	for di in _deferred_room_clear_items:
+		_spawn_quest_item(di["pos"], di["id"], di["label"], di["dialog"], di["actions"], di["remaining_dialog"])
+	_deferred_room_clear_items.clear()
 
 	# Fire room_clear dialog triggers
 	for rc_trigger in _room_triggers:

@@ -4,7 +4,7 @@
  * Milestone 1: Grid Layout Editor
  */
 
-import { useState, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useCallback, useMemo, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import type { QuestProject, QuestSection, SectionType, Direction } from './types';
@@ -154,6 +154,25 @@ export default function QuestEditor() {
     };
   }, [project, activeSection, hasMultipleSections]);
 
+  // Auto-correct variant when it isn't valid for the current area (e.g. a draft
+  // saved with variant='a' before its area was switched to Eternal Tower).
+  useEffect(() => {
+    const area = EDITOR_AREAS.find(a => a.key === sectionProject.areaKey);
+    if (!area || area.variants.length === 0) return;
+    if (area.variants.includes(sectionProject.variant)) return;
+    const fixed = area.variants[0];
+    if (hasMultipleSections) {
+      updateProject(prev => {
+        const newSections = [...prev.sections!];
+        newSections[sectionIdx] = { ...newSections[sectionIdx], variant: fixed };
+        return { ...prev, sections: newSections };
+      });
+    } else {
+      updateProject(prev => ({ ...prev, variant: fixed }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sectionProject.areaKey, sectionProject.variant, hasMultipleSections, sectionIdx]);
+
   // Route updates to the correct section
   const updateSectionProject = useCallback((updater: (prev: QuestProject) => QuestProject) => {
     if (!hasMultipleSections) {
@@ -234,6 +253,8 @@ export default function QuestEditor() {
   }, [updateProject]);
 
   const handleAreaChange = useCallback((areaKey: string) => {
+    const newVariants = EDITOR_AREAS.find(a => a.key === areaKey)?.variants ?? [];
+    const pickVariant = (cur: string) => newVariants.includes(cur) ? cur : (newVariants[0] ?? cur);
     if (hasMultipleSections) {
       // Multi-section: update only the active section's area and clear its cells
       updateProject(prev => {
@@ -241,6 +262,7 @@ export default function QuestEditor() {
         newSections[sectionIdx] = {
           ...newSections[sectionIdx],
           areaKey,
+          variant: pickVariant(newSections[sectionIdx].variant),
           cells: {},
           startPos: null,
           endPos: null,
@@ -254,6 +276,7 @@ export default function QuestEditor() {
       updateProject(prev => ({
         ...prev,
         areaKey,
+        variant: pickVariant(prev.variant),
         cells: {},
         startPos: null,
         endPos: null,

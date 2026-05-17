@@ -2442,5 +2442,6 @@
       "speaker": "Principal",
       "text": "Head to the snowfield and locate the expedition camp. Bring the team home safely."
     }
-  ]
+  ],
+  "parent_quest": "the_paru_pact"
 }

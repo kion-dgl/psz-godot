@@ -256,10 +256,11 @@ async function exportSectionCells(
       }
     }
 
-    let keyGateDirection = '';
-    if (pos in sectionKeyLinks && cell.lockedGate) {
-      keyGateDirection = cell.lockedGate;
+    let keyGateDirections: Direction[] = [];
+    if (pos in sectionKeyLinks && cell.lockedGates && cell.lockedGates.length > 0) {
+      keyGateDirections = [...cell.lockedGates];
     }
+    const keyGateDirection = keyGateDirections[0] ?? '';
 
     // v1 portal format: store portal_id strings, positions computed at runtime
     const portals: Record<string, string> = {};
@@ -309,10 +310,12 @@ async function exportSectionCells(
       key_for_cell: Object.entries(sectionKeyLinks).find(([_, v]) => v === pos)?.[0] || '',
       is_key_gate: pos in sectionKeyLinks,
       key_gate_direction: keyGateDirection,
+      key_gate_directions: keyGateDirections,
       key_drop: sectionKeyDropLinks[pos] || '',
-      required_keys: pos in sectionKeyLinks
-        ? (sectionKeyLinks[pos] ? 1 : 0) + Object.values(sectionKeyDropLinks).filter(g => g === pos).length
-        : 0,
+      // 1 key per KeyGate is the design default — each locked door consumes one
+      // key, regardless of how many drops target this cell. The previous formula
+      // counted drops, inflating required_keys to 4 on multi-door hubs like xb2.
+      required_keys: pos in sectionKeyLinks ? 1 : 0,
       warp_edge: warpEdge,
       path_order: pathOrder.get(pos) ?? -1,
     };
@@ -560,7 +563,11 @@ export function importGodotSection(section: any): QuestSection {
     const editorCell: EditorGridCell = {
       stageName: cell.stage_id,
       rotation: cell.rotation || undefined,
-      lockedGate: cell.key_gate_direction || undefined,
+      lockedGates: (Array.isArray(cell.key_gate_directions) && cell.key_gate_directions.length > 0
+        ? cell.key_gate_directions as Direction[]
+        : cell.key_gate_direction
+          ? [cell.key_gate_direction as Direction]
+          : undefined),
       manual: true,
     };
     if (cell.key_position && Array.isArray(cell.key_position)) {

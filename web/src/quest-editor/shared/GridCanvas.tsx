@@ -43,7 +43,7 @@ function getGateColor(
 
   // Key-locked gate?
   const isKeyGate = Object.keys(project.keyLinks).includes(pos);
-  if (isKeyGate && cell.lockedGate === direction) {
+  if (isKeyGate && (cell.lockedGates ?? []).includes(direction)) {
     return '#ff66ff';
   }
 
