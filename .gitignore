@@ -57,6 +57,12 @@
 /assets/npcs/*
 !/assets/npcs/item_shop/
 !/assets/npcs/item_shop/*
+# Playwright-mcp scratch directory — populated by browser_take_screenshot
+# and browser_snapshot calls during debug sessions. Not project content.
+.playwright-mcp/
+# Aborted browser-download fragments (occasionally land at the project
+# root from xdg-portal flows). Always safe to ignore + delete.
+.xdp-Unconfirmed*
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
 /web/public/assets/psobb_sfx/
 
