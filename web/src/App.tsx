@@ -15,6 +15,7 @@ const MarketEditor = lazy(() => import('./market-editor/MarketEditor'));
 const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
 const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 const RetargetTunerVrm = lazy(() => import('./retarget/RetargetTunerVrm'));
+const MixamoLoader = lazy(() => import('./retarget/MixamoLoader'));
 const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
 const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
 const SettingsMockup = lazy(() => import('./settings/SettingsMockup'));
@@ -138,6 +139,12 @@ function NavBar() {
       }}>
         VRM Tuner
       </Link>
+      <Link to="/vrm-mixamo" style={{
+        color: isActive('/vrm-mixamo') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        VRM × Mixamo
+      </Link>
       <Link to="/character-creator" style={{
         color: isActive('/character-creator') ? '#fff' : '#888',
         textDecoration: 'none',
@@ -208,6 +215,7 @@ export default function App() {
             <Route path="/retarget" element={<RetargetViewer />} />
             <Route path="/retarget-tuner" element={<RetargetTuner />} />
             <Route path="/retarget-tuner-vrm" element={<RetargetTunerVrm />} />
+            <Route path="/vrm-mixamo" element={<MixamoLoader />} />
             <Route path="/character-creator" element={<CharacterCreator />} />
             <Route path="/start-menu" element={<StartMenu />} />
             <Route path="/controls" element={<ControlsDiagram />} />
