@@ -529,7 +529,6 @@ export default function RetargetTuner() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.01, 100);
-    camera.position.set(0, 1, 3);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     renderer.setClearColor(0x0a0a1a);
@@ -543,7 +542,10 @@ export default function RetargetTuner() {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.target.set(0, 0.8, 0);
+    // Aim at the midpoint between VRM (x=-1) and PSO (x=1.5). Pull
+    // the camera back further so both characters fit in frame.
+    controls.target.set(0.25, 1.0, 0);
+    camera.position.set(0.25, 1.3, 4.5);
 
     sceneRef.current = {
       scene, camera, renderer, controls,
@@ -570,11 +572,13 @@ export default function RetargetTuner() {
     // Load VRM target (embedded textures; no side-load override).
     loader.load(VRM_MODEL_PATH, (gltf) => {
       const model = gltf.scene;
-      // Co-located with PSO at origin so per-bone world positions are
-      // directly comparable. Both skeletons render in place; mesh
-      // overlap is acceptable for calibration since the SkeletonHelper
-      // lines are the primary reference.
-      model.position.x = 0;
+      // Side-by-side layout: VRM on the left, PSO reference on the
+      // right. Co-location (both at x=0) was useful for measuring
+      // bone-position errors during calibration, but with the
+      // retargeting now matching motion 1:1 (see __measureMotion in
+      // the tuner), comparison is more readable as two normal-opacity
+      // characters next to each other.
+      model.position.x = -1.0;
       scene.add(model);
       sceneRef.current!.pszModel = model;
       const helper = new THREE.SkeletonHelper(model);
@@ -588,23 +592,13 @@ export default function RetargetTuner() {
       model.updateMatrixWorld(true);
       sceneRef.current!.pszRest = captureRestPose(model);
 
-      // Load PSO model as reference, overlaid at origin so bone
-      // positions match up for direction-matching calibration.
+      // Load PSO reference. Full opacity now that we're side-by-side.
+      // The Snap/Restore diagnostic still works with this layout —
+      // Snap moves VRM bone positions onto PSO bones in world space,
+      // so visually the VRM will jump to overlap PSO if you click it.
       loader.load(PSO_MODEL_PATH, (psoGltf) => {
         const psoModel = psoGltf.scene;
-        psoModel.position.x = 0;
-        // Drop PSO mesh opacity so the VRM stays visually foregrounded
-        // during calibration — skeleton lines still draw at full color.
-        psoModel.traverse((c) => {
-          if ((c as THREE.Mesh).isMesh) {
-            const mesh = c as THREE.Mesh;
-            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-            for (const m of mats) {
-              (m as THREE.Material).transparent = true;
-              (m as THREE.Material).opacity = 0.35;
-            }
-          }
-        });
+        psoModel.position.x = 1.5;
         scene.add(psoModel);
 
         // Scale BEFORE resetting — animated pose gives reliable bounding box
