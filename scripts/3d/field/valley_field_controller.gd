@@ -1242,6 +1242,7 @@ func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictio
 		"trigger_pos": trigger_pos,
 		"gate_rot": gate_rot,
 		"compass_label": game_dir.substr(0, 1).to_upper(),
+		"id": str(portal.get("id", "")),
 	}
 
 
@@ -1283,6 +1284,7 @@ func _build_portal_data_from_config(config: Dictionary) -> Dictionary:
 			"trigger_pos": trigger_pos,
 			"gate_pos": gate_pos,
 			"gate_rot": gate_rot,
+			"id": str(portal.get("id", "")),
 		}
 		print("[ValleyField]   portal: config dir='%s' gate=%s spawn=%s trigger=%s" % [
 			dir, gate_pos, spawn_pos, trigger_pos])
@@ -1468,7 +1470,7 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 	_create_fallback_trigger("GateTrigger_%s" % direction, _portal["trigger_pos"], callback, delayed and not locked, locked)
 
 	# DEBUG: Add floating direction label at gate position
-	_add_gate_label(direction, _portal["gate_pos"] if _portal.has("gate_pos") else _portal["trigger_pos"], target_cell_pos)
+	_add_gate_label(direction, _portal["gate_pos"] if _portal.has("gate_pos") else _portal["trigger_pos"], target_cell_pos, str(_portal.get("id", "")))
 
 
 func _create_exit_trigger(_direction: String, _portal: Dictionary) -> void:
@@ -1543,12 +1545,20 @@ func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Call
 
 ## DEBUG: Add a floating 3D text label at gate position showing compass label + target cell.
 ## Also adds colored sphere markers for gate (yellow), spawn (green), and trigger (red).
-func _add_gate_label(direction: String, pos: Vector3, target_cell: String) -> void:
+func _add_gate_label(direction: String, pos: Vector3, target_cell: String, portal_id: String = "") -> void:
 	var label := Label3D.new()
 	label.name = "GateLabel_%s" % direction
-	# Show grid direction (matches minimap labels)
+	# Show grid direction (matches minimap labels) plus a suffix of the
+	# portal id so the player can grep the unified-stage-config for the
+	# exact gate. The id format is portal_<13digit-ts>_<11char-rand>; the
+	# trailing random suffix is unique inside a stage, so taking the last
+	# 6 chars is enough to disambiguate.
 	var compass: String = direction.substr(0, 1).to_upper()
-	label.text = "%s\n→ %s" % [compass, target_cell]
+	var id_suffix: String = portal_id.right(6) if not portal_id.is_empty() else ""
+	if id_suffix.is_empty():
+		label.text = "%s\n→ %s" % [compass, target_cell]
+	else:
+		label.text = "%s (%s)\n→ %s" % [compass, id_suffix, target_cell]
 	label.font_size = 48
 	label.pixel_size = 0.01
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
