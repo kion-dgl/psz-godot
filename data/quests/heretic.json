@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-13",
+  "last_updated": "2026-05-16",
   "id": "heretic",
   "name": "Heretic",
   "description": "Newman guards + Reve heretic boss.",
@@ -79,7 +79,7 @@
                 0,
                 2.1
               ],
-              "enemy_id": "arkzein"
+              "enemy_id": "phobos"
             },
             {
               "type": "enemy",
@@ -88,7 +88,7 @@
                 0,
                 -9.5
               ],
-              "enemy_id": "korse"
+              "enemy_id": "arkzein"
             },
             {
               "type": "enemy",
@@ -107,7 +107,7 @@
                 0,
                 -9.7
               ],
-              "enemy_id": "finjer_r",
+              "enemy_id": "phobos",
               "wave": 2
             },
             {
@@ -117,7 +117,7 @@
                 0,
                 -3.4
               ],
-              "enemy_id": "akorse",
+              "enemy_id": "korse",
               "wave": 2
             }
           ]
@@ -152,7 +152,7 @@
                 0,
                 2.3
               ],
-              "enemy_id": "korse"
+              "enemy_id": "finjer_r"
             },
             {
               "type": "enemy",
@@ -161,7 +161,7 @@
                 0,
                 -2.7
               ],
-              "enemy_id": "korse"
+              "enemy_id": "akorse"
             },
             {
               "type": "enemy",
@@ -170,7 +170,7 @@
                 0,
                 -10.4
               ],
-              "enemy_id": "finjer_b"
+              "enemy_id": "korse"
             },
             {
               "type": "enemy",
@@ -179,7 +179,7 @@
                 0,
                 -11
               ],
-              "enemy_id": "finjer_b",
+              "enemy_id": "korse",
               "wave": 2
             },
             {
@@ -189,7 +189,7 @@
                 0,
                 -2.8
               ],
-              "enemy_id": "korse",
+              "enemy_id": "finjer_b",
               "wave": 2
             },
             {
@@ -199,7 +199,7 @@
                 0,
                 3.7
               ],
-              "enemy_id": "finjer_r",
+              "enemy_id": "finjer_b",
               "wave": 2
             }
           ]
@@ -240,7 +240,7 @@
                 0,
                 -13
               ],
-              "enemy_id": "finjer_g"
+              "enemy_id": "korse"
             },
             {
               "type": "enemy",
@@ -249,7 +249,7 @@
                 0,
                 -7.4
               ],
-              "enemy_id": "akorse"
+              "enemy_id": "finjer_r"
             },
             {
               "type": "enemy",
@@ -258,7 +258,7 @@
                 0,
                 -2
               ],
-              "enemy_id": "akorse"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -267,7 +267,7 @@
                 0,
                 5.8
               ],
-              "enemy_id": "finjer_r",
+              "enemy_id": "akorse",
               "wave": 2
             },
             {
@@ -277,7 +277,7 @@
                 0,
                 11.1
               ],
-              "enemy_id": "finjer_r",
+              "enemy_id": "akorse",
               "wave": 2
             },
             {
@@ -287,7 +287,7 @@
                 0,
                 14.6
               ],
-              "enemy_id": "finjer_g",
+              "enemy_id": "finjer_r",
               "wave": 2
             }
           ]
@@ -327,7 +327,7 @@
                 0,
                 10
               ],
-              "enemy_id": "akorse"
+              "enemy_id": "finjer_r"
             },
             {
               "type": "enemy",
@@ -336,7 +336,7 @@
                 0,
                 7
               ],
-              "enemy_id": "finjer_b"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -345,7 +345,7 @@
                 0,
                 10.1
               ],
-              "enemy_id": "finjer_r"
+              "enemy_id": "akorse"
             },
             {
               "type": "enemy",
@@ -354,7 +354,7 @@
                 0,
                 -13.2
               ],
-              "enemy_id": "finjer_g",
+              "enemy_id": "finjer_b",
               "wave": 2
             },
             {
@@ -364,7 +364,7 @@
                 0,
                 -12.8
               ],
-              "enemy_id": "akorse",
+              "enemy_id": "phobos",
               "wave": 2
             },
             {
@@ -374,7 +374,7 @@
                 0,
                 -13.6
               ],
-              "enemy_id": "finjer_g",
+              "enemy_id": "finjer_r",
               "wave": 2
             }
           ]
@@ -411,7 +411,7 @@
                 0,
                 -10.5
               ],
-              "enemy_id": "finjer_r"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -420,7 +420,7 @@
                 0,
                 -4.4
               ],
-              "enemy_id": "finjer_b"
+              "enemy_id": "akorse"
             },
             {
               "type": "enemy",
@@ -429,7 +429,7 @@
                 0,
                 -4.4
               ],
-              "enemy_id": "akorse"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -448,7 +448,7 @@
                 0,
                 -0.4
               ],
-              "enemy_id": "korse",
+              "enemy_id": "finjer_b",
               "wave": 2
             },
             {
@@ -458,7 +458,7 @@
                 0,
                 9.4
               ],
-              "enemy_id": "finjer_b",
+              "enemy_id": "akorse",
               "wave": 2
             },
             {
@@ -514,7 +514,7 @@
                 0,
                 -2.3
               ],
-              "enemy_id": "korse"
+              "enemy_id": "phobos"
             },
             {
               "type": "enemy",
@@ -532,7 +532,7 @@
                 0,
                 7.8
               ],
-              "enemy_id": "arkzein",
+              "enemy_id": "finjer_r",
               "wave": 2
             },
             {
@@ -542,7 +542,7 @@
                 0,
                 7
               ],
-              "enemy_id": "finjer_r",
+              "enemy_id": "phobos",
               "wave": 2
             },
             {
@@ -562,7 +562,7 @@
                 0,
                 12.6
               ],
-              "enemy_id": "arkzein",
+              "enemy_id": "korse",
               "wave": 2
             }
           ]
@@ -599,7 +599,7 @@
                 0,
                 -10.3
               ],
-              "enemy_id": "finjer_r"
+              "enemy_id": "finjer_b"
             },
             {
               "type": "enemy",
@@ -617,7 +617,7 @@
                 0,
                 3.8
               ],
-              "enemy_id": "finjer_g"
+              "enemy_id": "phobos"
             },
             {
               "type": "enemy",
@@ -626,7 +626,7 @@
                 0,
                 11.4
               ],
-              "enemy_id": "finjer_g",
+              "enemy_id": "phobos",
               "wave": 2
             },
             {
@@ -636,7 +636,7 @@
                 0,
                 12
               ],
-              "enemy_id": "arkzein",
+              "enemy_id": "finjer_r",
               "wave": 2
             },
             {
@@ -646,7 +646,7 @@
                 0,
                 13
               ],
-              "enemy_id": "akorse",
+              "enemy_id": "korse",
               "wave": 2
             }
           ]
@@ -683,7 +683,7 @@
                 0,
                 -12.3
               ],
-              "enemy_id": "finjer_g"
+              "enemy_id": "arkzein"
             },
             {
               "type": "enemy",
@@ -692,7 +692,7 @@
                 0,
                 -8.7
               ],
-              "enemy_id": "finjer_b"
+              "enemy_id": "phobos"
             },
             {
               "type": "enemy",
@@ -710,7 +710,7 @@
                 0,
                 4.9
               ],
-              "enemy_id": "finjer_g",
+              "enemy_id": "arkzein",
               "wave": 2
             },
             {
@@ -720,7 +720,7 @@
                 0,
                 5.1
               ],
-              "enemy_id": "korse",
+              "enemy_id": "finjer_g",
               "wave": 2
             },
             {
@@ -730,7 +730,7 @@
                 0,
                 11.1
               ],
-              "enemy_id": "arkzein",
+              "enemy_id": "finjer_g",
               "wave": 2
             },
             {
@@ -740,7 +740,7 @@
                 0,
                 10.3
               ],
-              "enemy_id": "finjer_g",
+              "enemy_id": "arkzein",
               "wave": 2
             }
           ]
@@ -781,7 +781,7 @@
                 0,
                 -2.1
               ],
-              "enemy_id": "finjer_r"
+              "enemy_id": "akorse"
             },
             {
               "type": "enemy",
@@ -790,7 +790,7 @@
                 0,
                 -0.6
               ],
-              "enemy_id": "korse"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -799,7 +799,7 @@
                 0,
                 2.6
               ],
-              "enemy_id": "korse"
+              "enemy_id": "finjer_b"
             },
             {
               "type": "enemy",
@@ -808,7 +808,7 @@
                 0,
                 -20.9
               ],
-              "enemy_id": "finjer_g",
+              "enemy_id": "finjer_r",
               "wave": 2
             },
             {
@@ -818,7 +818,7 @@
                 0,
                 -19.4
               ],
-              "enemy_id": "korse",
+              "enemy_id": "phobos",
               "wave": 2
             },
             {
@@ -828,7 +828,7 @@
                 0,
                 -16.9
               ],
-              "enemy_id": "finjer_r",
+              "enemy_id": "finjer_g",
               "wave": 2
             }
           ]
@@ -868,7 +868,7 @@
                 0,
                 7.4
               ],
-              "enemy_id": "finjer_g"
+              "enemy_id": "korse"
             },
             {
               "type": "enemy",
@@ -877,7 +877,7 @@
                 0,
                 3.4
               ],
-              "enemy_id": "akorse"
+              "enemy_id": "arkzein"
             },
             {
               "type": "enemy",
@@ -886,7 +886,7 @@
                 0,
                 6.7
               ],
-              "enemy_id": "korse"
+              "enemy_id": "finjer_g"
             },
             {
               "type": "enemy",
@@ -895,7 +895,7 @@
                 0,
                 -5.9
               ],
-              "enemy_id": "akorse",
+              "enemy_id": "finjer_r",
               "wave": 2
             },
             {
@@ -925,7 +925,7 @@
                 0,
                 -6
               ],
-              "enemy_id": "finjer_r",
+              "enemy_id": "finjer_g",
               "wave": 2
             },
             {
@@ -983,7 +983,7 @@
                 0,
                 -2.4
               ],
-              "enemy_id": "finjer_b"
+              "enemy_id": "korse"
             },
             {
               "type": "enemy",
@@ -992,7 +992,7 @@
                 0,
                 1.9
               ],
-              "enemy_id": "arkzein"
+              "enemy_id": "phobos"
             },
             {
               "type": "enemy",
@@ -1001,7 +1001,7 @@
                 0,
                 5
               ],
-              "enemy_id": "finjer_r"
+              "enemy_id": "phobos"
             },
             {
               "type": "enemy",
@@ -1010,7 +1010,7 @@
                 0,
                 -3.1
               ],
-              "enemy_id": "finjer_g",
+              "enemy_id": "finjer_r",
               "wave": 2
             },
             {
@@ -1020,7 +1020,7 @@
                 0,
                 1.9
               ],
-              "enemy_id": "korse",
+              "enemy_id": "finjer_g",
               "wave": 2
             },
             {
@@ -1030,7 +1030,7 @@
                 0,
                 5.1
               ],
-              "enemy_id": "finjer_b",
+              "enemy_id": "phobos",
               "wave": 2
             }
           ]
