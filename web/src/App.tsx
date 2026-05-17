@@ -14,6 +14,7 @@ const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
 const MarketEditor = lazy(() => import('./market-editor/MarketEditor'));
 const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
 const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
+const RetargetTunerVrm = lazy(() => import('./retarget/RetargetTunerVrm'));
 const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
 const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
 const SettingsMockup = lazy(() => import('./settings/SettingsMockup'));
@@ -131,6 +132,12 @@ function NavBar() {
       }}>
         Tuner
       </Link>
+      <Link to="/retarget-tuner-vrm" style={{
+        color: isActive('/retarget-tuner-vrm') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        VRM Tuner
+      </Link>
       <Link to="/character-creator" style={{
         color: isActive('/character-creator') ? '#fff' : '#888',
         textDecoration: 'none',
@@ -200,6 +207,7 @@ export default function App() {
             <Route path="/settings" element={<SettingsMockup />} />
             <Route path="/retarget" element={<RetargetViewer />} />
             <Route path="/retarget-tuner" element={<RetargetTuner />} />
+            <Route path="/retarget-tuner-vrm" element={<RetargetTunerVrm />} />
             <Route path="/character-creator" element={<CharacterCreator />} />
             <Route path="/start-menu" element={<StartMenu />} />
             <Route path="/controls" element={<ControlsDiagram />} />
