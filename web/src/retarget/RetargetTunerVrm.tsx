@@ -281,6 +281,107 @@ export default function RetargetTuner() {
       return bones;
     };
 
+    // Motion correlation: for each frame t > 0, compare the world
+    // *delta* of each bone (rotation change since t-1) on VRM vs PSO.
+    // If the deltas match, the animations are visually aligned even
+    // when absolute orientations differ (e.g. baked R Upper Arm Z+180
+    // offset makes the arm twist correctly but bakes a 180° absolute
+    // rotation difference — the motion-delta sees through that).
+    w.__measureMotion = (testOffsets: OffsetMap, animName: string, nFrames = 20) => {
+      const s = sceneRef.current;
+      if (!s || !s.pszModel || !s.psoModel || !s.pszMixer || !s.psoMixer) return null;
+      const clip = s.psoAnimations.find((a) => a.name === animName);
+      if (!clip) return null;
+      if (s.currentAction) {
+        s.currentAction.stop();
+        s.pszMixer.uncacheAction(s.currentAction.getClip());
+      }
+      if (s.currentPsoAction) {
+        s.currentPsoAction.stop();
+        s.psoMixer.uncacheAction(s.currentPsoAction.getClip());
+      }
+      resetToBindPose(s.pszModel);
+      const retargeted = buildRetargetedClip(
+        clip, s.psoRest, s.pszRest, BONE_MAPPINGS_VRM, s.psoScale,
+        undefined, undefined, testOffsets,
+      );
+      if (!retargeted) return null;
+      const action = s.pszMixer.clipAction(retargeted);
+      action.play();
+      const psoAction = s.psoMixer.clipAction(clip);
+      psoAction.play();
+      s.currentAction = action;
+      s.currentPsoAction = psoAction;
+      const findBone = (root: THREE.Object3D, name: string): THREE.Bone | null => {
+        let f: THREE.Bone | null = null;
+        root.traverse((c) => { if (!f && (c as THREE.Bone).isBone && c.name === name) f = c as THREE.Bone; });
+        return f;
+      };
+      // First pass: capture per-frame world quats for every mapped bone
+      const vrmFrames: Record<string, THREE.Quaternion[]> = {};
+      const psoFrames: Record<string, THREE.Quaternion[]> = {};
+      for (const [, vrmName] of Object.entries(BONE_MAPPINGS_VRM)) vrmFrames[vrmName] = [];
+      for (const [psoName] of Object.entries(BONE_MAPPINGS_VRM)) psoFrames[psoName] = [];
+      for (let i = 0; i < nFrames; i++) {
+        const t = (i / Math.max(1, nFrames - 1)) * clip.duration;
+        s.pszMixer.setTime(t);
+        s.psoMixer.setTime(t);
+        s.pszModel.updateMatrixWorld(true);
+        s.psoModel.updateMatrixWorld(true);
+        for (const [psoBoneName, vrmBoneName] of Object.entries(BONE_MAPPINGS_VRM)) {
+          const vBone = findBone(s.pszModel, vrmBoneName);
+          const pBone = findBone(s.psoModel, psoBoneName);
+          if (!vBone || !pBone) continue;
+          const vq = new THREE.Quaternion(); const pq = new THREE.Quaternion();
+          vBone.getWorldQuaternion(vq);
+          pBone.getWorldQuaternion(pq);
+          vrmFrames[vrmBoneName].push(vq);
+          psoFrames[psoBoneName].push(pq);
+        }
+      }
+      // For each bone compute the sum-of-squared-differences between
+      // frame-to-frame angular deltas on VRM vs PSO. A perfect motion
+      // match has zero. Total over bones and frames is the motion
+      // correlation error.
+      const rad2deg = 180 / Math.PI;
+      const perBoneMotionDeg: Record<string, number> = {};
+      let totalDeltaErr = 0;
+      let totalRangeDeg = 0;
+      for (const [psoBoneName, vrmBoneName] of Object.entries(BONE_MAPPINGS_VRM)) {
+        const vrm = vrmFrames[vrmBoneName];
+        const pso = psoFrames[psoBoneName];
+        if (!vrm || vrm.length < 2 || !pso || pso.length < 2) continue;
+        let sumErr = 0;
+        let psoRange = 0;
+        for (let i = 1; i < vrm.length; i++) {
+          // Delta = relative quat from i-1 to i; angle is the change.
+          const vDelta = vrm[i - 1].clone().invert().multiply(vrm[i]);
+          const pDelta = pso[i - 1].clone().invert().multiply(pso[i]);
+          // Difference of motion magnitudes: how much they each moved
+          // and in what direction. Use angle as a scalar; sign-aware
+          // diff via axis comparison would be more nuanced.
+          const vAng = 2 * Math.acos(Math.min(1, Math.abs(vDelta.w)));
+          const pAng = 2 * Math.acos(Math.min(1, Math.abs(pDelta.w)));
+          sumErr += Math.abs(vAng - pAng);
+          psoRange += pAng;
+        }
+        perBoneMotionDeg[vrmBoneName] = sumErr * rad2deg;
+        totalDeltaErr += sumErr;
+        totalRangeDeg += psoRange * rad2deg;
+      }
+      return {
+        animName,
+        nFrames,
+        // Sum of |Δ_vrm - Δ_pso| in degrees across all bones and frames
+        motionErrDeg: totalDeltaErr * rad2deg,
+        // For context: total PSO motion magnitude (how much PSO actually moved)
+        psoMotionRangeDeg: totalRangeDeg,
+        // Normalised: motion error as fraction of PSO motion
+        normalisedErr: totalRangeDeg > 0 ? (totalDeltaErr * rad2deg) / totalRangeDeg : 0,
+        perBoneMotionDeg,
+      };
+    };
+
     // Direct probe of how a specific PSO bone's world position changes
     // across a clip after setTime — used to confirm the mixer is
     // actually advancing.
@@ -350,17 +451,19 @@ export default function RetargetTuner() {
       };
       // Combined metric: position L2 distance + rotation angular
       // distance (weighted). Position alone is under-constrained for
-      // rotation (twist around bone axis can leave child position
-      // unchanged), so the optimizer would find "right place wrong
-      // twist" minima with weird visual results. Rotation distance
-      // pins the bone's full orientation, not just its head location.
-      // Weight 0.5 puts a 90° rotation error roughly on par with a
-      // 0.78m position error — high enough to dominate when rotation
-      // is way off, low enough that small rotation noise doesn't
-      // override real position drift.
-      const ROT_WEIGHT = 0.5; // radians → metres equivalence
+      // rotation; rotation pins the bone's full orientation. Weight 0.5
+      // puts a 90° rotation error roughly on par with a 0.78m position
+      // error. We track both components separately so callers can pick
+      // what matters — position alone (visual placement) vs combined
+      // (twist-aware optimization).
+      const ROT_WEIGHT = 0.5;
       let total = 0;
+      let totalPos = 0;
+      let totalRotRad = 0;
       const perBone: Record<string, number> = {};
+      const perBonePos: Record<string, number> = {};
+      const perBoneRotDeg: Record<string, number> = {};
+      const rad2deg = 180 / Math.PI;
       for (let i = 0; i < nFrames; i++) {
         const t = (i / Math.max(1, nFrames - 1)) * clip.duration;
         s.pszMixer.setTime(t);
@@ -380,14 +483,29 @@ export default function RetargetTuner() {
           const pq = new THREE.Quaternion();
           vrmBone.getWorldQuaternion(vq);
           psoBone.getWorldQuaternion(pq);
-          const rotErr = vq.angleTo(pq) * ROT_WEIGHT;
-          const d = posErr + rotErr;
+          const rotRad = vq.angleTo(pq);
+          const d = posErr + rotRad * ROT_WEIGHT;
           total += d;
+          totalPos += posErr;
+          totalRotRad += rotRad;
           perBone[vrmBoneName] = (perBone[vrmBoneName] || 0) + d;
+          perBonePos[vrmBoneName] = (perBonePos[vrmBoneName] || 0) + posErr;
+          perBoneRotDeg[vrmBoneName] = (perBoneRotDeg[vrmBoneName] || 0) + rotRad * rad2deg;
         }
       }
-      for (const k in perBone) perBone[k] /= nFrames;
-      return { total: total / nFrames, perBone };
+      for (const k in perBone) {
+        perBone[k] /= nFrames;
+        perBonePos[k] /= nFrames;
+        perBoneRotDeg[k] /= nFrames;
+      }
+      return {
+        total: total / nFrames,
+        perBone,
+        positionTotal: totalPos / nFrames,
+        positionPerBone: perBonePos,
+        rotationTotalDeg: (totalRotRad * rad2deg) / nFrames,
+        rotationPerBoneDeg: perBoneRotDeg,
+      };
     };
   });
 
