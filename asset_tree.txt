@@ -462,6 +462,7 @@ assets/player/animations/handgun_w.glb
 assets/player/animations/machinegun_m.glb
 assets/player/animations/machinegun_w.glb
 assets/player/animations/npc_idles.glb
+assets/player/animations/npc_idles_vrm.glb
 assets/player/animations/rod_m.glb
 assets/player/animations/rod_w.glb
 assets/player/animations/saber_m.glb

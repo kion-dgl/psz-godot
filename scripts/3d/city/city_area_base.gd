@@ -70,7 +70,7 @@ func _setup_camera(target: Node3D) -> Node3D:
 	return orbit_camera
 
 
-func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, display_name: String, target_scene: String, npc_idle_anim: String = "", hat_path: String = "") -> CityNPC:
+func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, display_name: String, target_scene: String, npc_idle_anim: String = "", hat_path: String = "", interact_anim: String = "") -> CityNPC:
 	var npc := CityNPC.new()
 	npc.name = npc_name
 	npc.npc_model_path = model_path
@@ -79,6 +79,7 @@ func _add_npc(npc_name: String, pos: Vector3, rot: float, model_path: String, di
 	npc.npc_rotation_y = rot
 	npc.idle_anim = npc_idle_anim
 	npc.hat_model_path = hat_path
+	npc.interact_anim = interact_anim
 	npc.position = pos
 	add_child(npc)
 	_npcs.append(npc)

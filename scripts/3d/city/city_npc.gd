@@ -3,9 +3,15 @@ class_name CityNPC
 ## Interactive NPC for the 3D city hub. Loads a GLB model and opens
 ## a 2D shop/menu overlay on interaction.
 
-## Animation sources to search for idle anims (tried in order)
+## Animation sources to search for idle anims (tried in order).
+## npc_idles_vrm.glb contains the same PSO anims as npc_idles.glb but
+## with their tracks retargeted to the VRM J_Bip_* bone convention
+## (built by web/scripts/bake-retarget-vrm.mjs). Clip names in that
+## file are suffixed _vrm to avoid colliding with the PSZ versions —
+## VRM NPCs request "pso_f_sh_stand_vrm" instead of "pso_f_sh_stand".
 const NPC_ANIM_SOURCES := [
 	"res://assets/player/animations/npc_idles.glb",
+	"res://assets/player/animations/npc_idles_vrm.glb",
 	"res://assets/player/animations/saver_m.glb",
 	"res://assets/player/animations/saver_w.glb",
 ]
@@ -15,6 +21,10 @@ const NPC_ANIM_SOURCES := [
 @export var target_scene_path: String = ""
 @export var npc_rotation_y: float = 0.0
 @export var idle_anim: String = ""  # Animation name from npc_idles.glb
+## Animation played once on player interaction (greeting / bow style),
+## then the NPC returns to idle_anim. Looked up from NPC_ANIM_SOURCES
+## the same way as idle_anim.
+@export var interact_anim: String = ""
 @export var hat_model_path: String = ""  # Optional GLB attached to head bone
 @export var hat_bone_name: String = "090_Head"
 
@@ -215,6 +225,13 @@ func _on_interact(_player: Node3D) -> void:
 	if target_scene_path.is_empty():
 		return
 	SfxManager.play("res://assets/sfx/ui/menu_open.wav")
+	# Play the interaction-response animation if configured. Fires
+	# concurrently with the scene push so the greet/bow plays in the
+	# background as the shop UI transitions in — the player sees it on
+	# the way out, and when they exit the shop the NPC has already
+	# returned to idle.
+	if not interact_anim.is_empty():
+		play_oneshot(interact_anim)
 	# Save position so we return to same spot
 	var area_controller := get_parent()
 	if area_controller and area_controller.has_method("_save_player_state"):

@@ -51,7 +51,11 @@ func _ready() -> void:
 		"res://assets/npcs/item_shop/item_shop.glb",
 		"Shop",
 		"res://scenes/2d/shops/item_shop.tscn",
-		"pso_f_sh_stand"
+		# VRM-targeted retargeted idle. See web/scripts/bake-retarget-vrm.mjs
+		# and assets/player/animations/npc_idles_vrm.glb.
+		"pso_f_sh_stand_vrm",
+		"",                          # no hat
+		"pso_f_emote_bow_vrm",       # greet/bow on player interact
 	)
 	_add_npc(
 		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), 0.7835,
