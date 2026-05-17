@@ -1227,11 +1227,15 @@ func _compute_portal_from_config(portal: Dictionary, game_dir: String) -> Dictio
 	var pos_arr: Array = portal.get("position", [0, 0, 0])
 	var gate_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 
-	# Use the config direction for gate rotation and outward vector
+	# Use the config direction for gate rotation and outward vector. Add the
+	# authored rotationOffset (in degrees) so angled gates like the s07e_ia1
+	# south portal render the same direction here as in the stage editor.
 	var config_dir: String = str(portal.get("direction", "north"))
 	var base_rot: float = DIRECTION_ROTATIONS.get(config_dir, 0.0)
-	var gate_rot := Vector3(0.0, base_rot, 0.0)
-	var outward := Vector2(-sin(base_rot), -cos(base_rot))
+	var offset_deg: float = float(portal.get("rotationOffset", 0))
+	var rotation: float = base_rot + deg_to_rad(offset_deg)
+	var gate_rot := Vector3(0.0, rotation, 0.0)
+	var outward := Vector2(-sin(rotation), -cos(rotation))
 
 	var spawn_pos := Vector3(gate_pos.x + outward.x * 3.0, 1.0, gate_pos.z + outward.y * 3.0)
 	var trigger_pos := Vector3(gate_pos.x + outward.x * 7.0, 0.0, gate_pos.z + outward.y * 7.0)
@@ -1816,6 +1820,13 @@ func _spawn_field_elements() -> void:
 	var exit_dir: String = str(current_section_data.get("exit_direction", ""))
 	var room_has_enemies: bool = _cell_has_enemies(_current_cell)
 
+	# entry_direction is only meaningful at the section's start cell — that's
+	# where the player materialises. At any other cell (including the end cell
+	# where warp_edge lives), the same direction might collide with a
+	# warp_edge or exit_dir and mis-classify the portal as a backward entry.
+	# Restricting is_entry to the start cell prevents that collision.
+	var is_start_cell: bool = bool(_current_cell.get("is_start", false))
+
 	for portal_dir in _portal_data:
 		if portal_dir == "default":
 			continue
@@ -1826,7 +1837,7 @@ func _spawn_field_elements() -> void:
 		var target_section := 0
 		var target_cell := ""
 		var target_position := Vector3.ZERO
-		var is_entry: bool = (portal_dir == entry_dir)
+		var is_entry: bool = is_start_cell and (portal_dir == entry_dir)
 		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir) and not is_entry
 
 		var is_final_exit: bool = false

@@ -90,8 +90,8 @@ const ENEMY_METADATA: Record<string, EnemyMetadata> = {
   lower_black: { displayName: 'Eulidveil', element: 'Dark', location: 'Dark Shrine' },
   leg: { displayName: 'Derreo', element: 'Dark', location: 'Dark Shrine' },
   leg_black: { displayName: 'Zerreo', element: 'Dark', location: 'Dark Shrine' },
-  tank: { displayName: 'Phobos', element: 'Dark', location: 'Arca Plant / Dark Shrine' },
-  tank_rare: { displayName: 'Phobos Dyna', element: 'Dark', location: 'Arca Plant / Dark Shrine', isRare: true },
+  tank: { displayName: 'Phobos', element: 'Dark', location: 'Arca Plant' },
+  tank_rare: { displayName: 'Phobos Dyna', element: 'Dark', location: 'Arca Plant', isRare: true },
   swordman_b: { displayName: 'Zaphobos', element: 'Dark', location: 'Dark Shrine' },
   swordman_rare_b: { displayName: 'Zaphobos Dyna', element: 'Dark', location: 'Dark Shrine', isRare: true },
   mother: { displayName: 'Mother Trinity', element: 'Dark', location: 'Dark Shrine' },
@@ -129,7 +129,7 @@ const ENEMY_CATEGORY_MAP: Record<string, string | string[]> = {
   armadillo: 'makara', armadillo_rare: 'makara',
   shooter: 'arca', shooter_leader: 'arca', swordman: 'arca', swordman_rare: 'arca',
   board: 'arca', board_blue: 'arca', board_green: 'arca',
-  tank: ['arca', 'dark'], tank_rare: ['arca', 'dark'],  // Phobos line
+  tank: 'arca', tank_rare: 'arca',  // Phobos line — arca-only now
   circle: 'dark', circle_black: 'dark', lower: 'dark', lower_black: 'dark',
   leg: 'dark', leg_black: 'dark',
   swordman_b: 'dark', swordman_rare_b: 'dark', mother: 'dark',
