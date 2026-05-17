@@ -82,9 +82,7 @@ function loadTransformFromKey(key: string, fallback: CartTransform): CartTransfo
     if (!saved) return fallback;
     const parsed = JSON.parse(saved);
     if (
-      Array.isArray(parsed.pos) && parsed.pos.length === 3 &&
-      Array.isArray(parsed.rot) && parsed.rot.length === 3 &&
-      Array.isArray(parsed.scale) && parsed.scale.length === 3
+      isVec3(parsed.pos) && isVec3(parsed.rot) && isVec3(parsed.scale)
     ) {
       return parsed as CartTransform;
     }
