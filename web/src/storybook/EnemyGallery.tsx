@@ -7,7 +7,7 @@ import { ErrorBoundary } from '../utils/ErrorBoundary';
 import {
   ENEMY_CATEGORIES,
   ALL_ENEMY_IDS,
-  getEnemyCategory,
+  getEnemyCategories,
   getEnemyGlbPath,
   getEnemyDisplayName,
   getEnemyElement,
@@ -195,8 +195,9 @@ export default function EnemyGallery() {
     const grouped: Record<string, string[]> = {};
     for (const cat of ENEMY_CATEGORIES) grouped[cat.id] = [];
     for (const id of ALL_ENEMY_IDS) {
-      const cat = getEnemyCategory(id);
-      if (cat) grouped[cat.id].push(id);
+      for (const cat of getEnemyCategories(id)) {
+        grouped[cat.id].push(id);
+      }
     }
     return grouped;
   }, []);

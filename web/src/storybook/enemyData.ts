@@ -90,8 +90,8 @@ const ENEMY_METADATA: Record<string, EnemyMetadata> = {
   lower_black: { displayName: 'Eulidveil', element: 'Dark', location: 'Dark Shrine' },
   leg: { displayName: 'Derreo', element: 'Dark', location: 'Dark Shrine' },
   leg_black: { displayName: 'Zerreo', element: 'Dark', location: 'Dark Shrine' },
-  tank: { displayName: 'Phobos', element: 'Dark', location: 'Dark Shrine' },
-  tank_rare: { displayName: 'Phobos Dyna', element: 'Dark', location: 'Dark Shrine', isRare: true },
+  tank: { displayName: 'Phobos', element: 'Dark', location: 'Arca Plant / Dark Shrine' },
+  tank_rare: { displayName: 'Phobos Dyna', element: 'Dark', location: 'Arca Plant / Dark Shrine', isRare: true },
   swordman_b: { displayName: 'Zaphobos', element: 'Dark', location: 'Dark Shrine' },
   swordman_rare_b: { displayName: 'Zaphobos Dyna', element: 'Dark', location: 'Dark Shrine', isRare: true },
   mother: { displayName: 'Mother Trinity', element: 'Dark', location: 'Dark Shrine' },
@@ -112,7 +112,10 @@ const ENEMY_METADATA: Record<string, EnemyMetadata> = {
   boss_robot: { displayName: 'Chaos Mobius', element: 'Machine', location: 'Moon Facility' },
 };
 
-const ENEMY_CATEGORY_MAP: Record<string, string> = {
+// Enemies appear under every category listed here. Most have a single
+// category; the Phobos line (tank/tank_rare) lives in both Arca Plant and
+// Dark Shrine per the .tres locations, so it's listed in both.
+const ENEMY_CATEGORY_MAP: Record<string, string | string[]> = {
   snake: 'gurhacia', snake_rare: 'gurhacia', lizard: 'gurhacia',
   hyena: 'gurhacia', hyena_rare: 'gurhacia', vulture: 'gurhacia',
   lion: 'gurhacia', lion_rare: 'gurhacia',
@@ -126,8 +129,9 @@ const ENEMY_CATEGORY_MAP: Record<string, string> = {
   armadillo: 'makara', armadillo_rare: 'makara',
   shooter: 'arca', shooter_leader: 'arca', swordman: 'arca', swordman_rare: 'arca',
   board: 'arca', board_blue: 'arca', board_green: 'arca',
+  tank: ['arca', 'dark'], tank_rare: ['arca', 'dark'],  // Phobos line
   circle: 'dark', circle_black: 'dark', lower: 'dark', lower_black: 'dark',
-  leg: 'dark', leg_black: 'dark', tank: 'dark', tank_rare: 'dark',
+  leg: 'dark', leg_black: 'dark',
   swordman_b: 'dark', swordman_rare_b: 'dark', mother: 'dark',
   mother_gun: 'dark', mother_sword: 'dark', mother_tech: 'dark',
   booma: 'rare', jigobooma: 'rare', rappy: 'rare', rappy_blue: 'rare', rappy_red: 'rare',
@@ -173,9 +177,21 @@ export function getEnemyGlbPath(enemyId: string): string {
   return assetUrl(`/assets/enemies/${enemyId}/${enemyId}.glb`);
 }
 
+export function getEnemyCategories(enemyId: string): EnemyCategory[] {
+  const raw = ENEMY_CATEGORY_MAP[enemyId];
+  if (raw === undefined) return [];
+  const ids = Array.isArray(raw) ? raw : [raw];
+  const cats: EnemyCategory[] = [];
+  for (const id of ids) {
+    const cat = ENEMY_CATEGORIES.find(c => c.id === id);
+    if (cat) cats.push(cat);
+  }
+  return cats;
+}
+
 export function getEnemyCategory(enemyId: string): EnemyCategory | null {
-  const categoryId = ENEMY_CATEGORY_MAP[enemyId];
-  return ENEMY_CATEGORIES.find(cat => cat.id === categoryId) || null;
+  // Back-compat: first category. New code should use getEnemyCategories.
+  return getEnemyCategories(enemyId)[0] ?? null;
 }
 
 export function getEnemyDisplayName(enemyId: string): string {
