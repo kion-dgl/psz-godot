@@ -1158,7 +1158,7 @@
         {
           "pos": "0,0",
           "stage_id": "s07e_ia1",
-          "rotation": 90,
+          "rotation": 0,
           "connections": {},
           "portals": {
             "north": "portal_1770821589048_o6qh7mpcn",
