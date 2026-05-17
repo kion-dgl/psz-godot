@@ -93,7 +93,11 @@ const ANIMS = [
 
 const PSO_PATH = path.join(REPO_ROOT, 'data/retarget/Humar_body.glb');
 const VRM_PATH = path.join(REPO_ROOT, 'assets/npcs/item_shop/item_shop.glb');
-const OUT_PATH = path.join(REPO_ROOT, 'assets/player/animations/npc_idles_vrm.glb');
+// Ships in-tree with the item_shop NPC's other assets — assets/player/*
+// is excluded from the APK by export_presets.cfg (those ship via the
+// Arweave asset pack), so putting the VRM anim library there would
+// strip it from the binary and the in-game NPC would T-pose at load.
+const OUT_PATH = path.join(REPO_ROOT, 'assets/npcs/item_shop/npc_idles_vrm.glb');
 
 // ── three.js retargeting math (mirrors web/src/retarget/retarget-utils.ts) ──
 

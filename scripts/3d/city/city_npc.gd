@@ -9,9 +9,15 @@ class_name CityNPC
 ## (built by web/scripts/bake-retarget-vrm.mjs). Clip names in that
 ## file are suffixed _vrm to avoid colliding with the PSZ versions —
 ## VRM NPCs request "pso_f_sh_stand_vrm" instead of "pso_f_sh_stand".
+##
+## Note the VRM library lives under assets/npcs/item_shop/, not
+## assets/player/animations/, because the export preset's
+## exclude_filter ships `assets/player/*` via the Arweave asset pack
+## rather than bundling them into the APK. Our small VRM library
+## ships in-tree with the item_shop NPC's other assets.
 const NPC_ANIM_SOURCES := [
 	"res://assets/player/animations/npc_idles.glb",
-	"res://assets/player/animations/npc_idles_vrm.glb",
+	"res://assets/npcs/item_shop/npc_idles_vrm.glb",
 	"res://assets/player/animations/saver_m.glb",
 	"res://assets/player/animations/saver_w.glb",
 ]

@@ -57,14 +57,6 @@
 /assets/npcs/*
 !/assets/npcs/item_shop/
 !/assets/npcs/item_shop/*
-# In-house VRM-targeted retargeted animations (baked from PSO via
-# web/scripts/bake-retarget-vrm.mjs). The PSZ versions live in the
-# asset pack but the VRM version is small and used only by the
-# item-shop NPC, so it ships in-tree.
-!/assets/player/
-!/assets/player/animations/
-/assets/player/animations/*
-!/assets/player/animations/npc_idles_vrm.glb
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
 /web/public/assets/psobb_sfx/
 
