@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "last_updated": "2026-05-13",
+  "last_updated": "2026-05-16",
   "id": "dark_castle",
   "name": "Dark Castle",
   "description": "Falz boss, Lassic's ethereal castle remains.",
@@ -2073,7 +2073,7 @@
           "path_order": 9
         }
       ],
-      "entry_direction": "south",
+      "entry_direction": "east",
       "exit_direction": "east"
     },
     {
