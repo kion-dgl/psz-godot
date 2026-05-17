@@ -55,9 +55,21 @@ interface ExportTabProps {
 }
 
 // Extract floor triangles from scene
-function extractFloorTriangles(scene: THREE.Object3D, yTolerance: number): FloorTriangle[] {
+function extractFloorTriangles(
+  scene: THREE.Object3D,
+  yTolerance: number,
+  triangleStates: Record<string, boolean> = {},
+): FloorTriangle[] {
+  // Mirrors the logic in UnifiedStageEditor.tsx so that what the user sees
+  // in the Floor Collision tab is the same set that gets exported. Two
+  // namespaced id counters keep saved selections stable:
+  //   tri_N — Nth near-floor triangle in iteration order
+  //   up_N  — Nth above-floor non-wall triangle in iteration order
+  // Both increment per triangle examined, regardless of whether the face
+  // ends up in the output, so the id stays bound to the same physical face.
   const triangles: FloorTriangle[] = [];
-  let triangleId = 0;
+  let nearFloorId = 0;
+  let upwardId = 0;
 
   scene.traverse((object) => {
     if (!(object as THREE.Mesh).isMesh) return;
@@ -84,24 +96,38 @@ function extractFloorTriangles(scene: THREE.Object3D, yTolerance: number): Floor
       v1.applyMatrix4(mesh.matrixWorld);
       v2.applyMatrix4(mesh.matrixWorld);
 
-      if (
+      const isNearFloor =
         Math.abs(v0.y) < yTolerance &&
         Math.abs(v1.y) < yTolerance &&
-        Math.abs(v2.y) < yTolerance
-      ) {
-        const edge1 = new THREE.Vector3().subVectors(v1, v0);
-        const edge2 = new THREE.Vector3().subVectors(v2, v0);
-        const area = new THREE.Vector3().crossVectors(edge1, edge2).length() / 2;
+        Math.abs(v2.y) < yTolerance;
 
-        triangles.push({
-          id: `tri_${triangleId++}`,
-          vertices: [v0.clone(), v1.clone(), v2.clone()],
-          meshName: mesh.name,
-          textureName,
-          included: true,
-          area,
-        });
+      const edge1 = new THREE.Vector3().subVectors(v1, v0);
+      const edge2 = new THREE.Vector3().subVectors(v2, v0);
+      const area = new THREE.Vector3().crossVectors(edge1, edge2).length() / 2;
+
+      let id: string;
+      let included: boolean;
+
+      if (isNearFloor) {
+        id = `tri_${nearFloorId++}`;
+        const saved = triangleStates[id];
+        included = saved === undefined ? true : saved;
+      } else {
+        const n = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
+        if (Math.abs(n.y) <= 0.3) return;
+        id = `up_${upwardId++}`;
+        const saved = triangleStates[id];
+        included = saved === undefined ? false : saved;
       }
+
+      triangles.push({
+        id,
+        vertices: [v0.clone(), v1.clone(), v2.clone()],
+        meshName: mesh.name,
+        textureName,
+        included,
+        area,
+      });
     };
 
     if (index) {
@@ -517,9 +543,13 @@ async function buildExportScene(
 
   exportScene.add(visualMesh);
 
-  // Extract floor triangles
-  const extracted = extractFloorTriangles(scene, stageConfig.floorCollision.yTolerance);
-  const floorTriangles = extracted.filter((tri) => stageConfig.floorCollision.triangles[tri.id] !== false);
+  // Extract floor triangles (near-floor + manually-included above-floor),
+  // then keep only the rendered-included ones for the exported floor mesh.
+  const floorTriangles = extractFloorTriangles(
+    scene,
+    stageConfig.floorCollision.yTolerance,
+    stageConfig.floorCollision.triangles,
+  ).filter((tri) => tri.included);
 
   // Add collision floor mesh
   if (options.includeCollision && floorTriangles.length > 0) {
@@ -638,12 +668,15 @@ export default function ExportTab({ config, stageScene, mapId }: ExportTabProps)
   const [isExportingAll, setIsExportingAll] = useState(false);
   const [exportAllProgress, setExportAllProgress] = useState<{ current: number; total: number; mapId: string } | null>(null);
 
-  // Extract floor triangles
+  // Extract floor triangles — both near-floor and manually-included above-
+  // floor — then keep only the green/included ones for the export.
   const floorTriangles = useMemo(() => {
     if (!stageScene) return [];
-    const extracted = extractFloorTriangles(stageScene, config.floorCollision.yTolerance);
-    // Apply include/exclude from config
-    return extracted.filter((tri) => config.floorCollision.triangles[tri.id] !== false);
+    return extractFloorTriangles(
+      stageScene,
+      config.floorCollision.yTolerance,
+      config.floorCollision.triangles,
+    ).filter((tri) => tri.included);
   }, [stageScene, config.floorCollision]);
 
   // Generate SVG preview
