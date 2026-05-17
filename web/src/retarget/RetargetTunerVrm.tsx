@@ -97,6 +97,8 @@ type OffsetMap = Record<string, BoneOffset>;
 // local minima that look visually wrong, so prefer the auto-cal
 // values unless you're verifying with screenshots after each step.
 const BAKED_OPTIMAL_OFFSETS: Record<string, BoneOffset> = {
+  // Hips / upper-chest / legs from Auto Calibrate's geometric direction
+  // matching at rest.
   Root: { x: -0.2, y: 0, z: 0 },
   J_Bip_C_Hips: { x: -13.5, y: 0.2, z: -1 },
   J_Bip_C_UpperChest: { x: 14.7, y: 0, z: -0.4 },
@@ -104,6 +106,19 @@ const BAKED_OPTIMAL_OFFSETS: Record<string, BoneOffset> = {
   J_Bip_L_LowerLeg: { x: 1.4, y: 0.1, z: 4.6 },
   J_Bip_R_UpperLeg: { x: -5.3, y: 0.2, z: -4.5 },
   J_Bip_R_LowerLeg: { x: 1.4, y: -0.1, z: -4.5 },
+  // Manual arm fixes after visual review of several PSO animations:
+  //   L Forearm   X +90  → thumb forward (the VRM rig anatomically wants
+  //                       a forearm twist that the auto-calibrator's
+  //                       direction-only match doesn't supply)
+  //   R Upper Arm Z +180 → fixes alignment of the entire right arm. PSO
+  //                       has asymmetric L vs R chains (bone_026/027/028
+  //                       on left but bone_038/039/040/041 on right with
+  //                       different intermediate rotations) so the right
+  //                       side needs a half-turn that the left doesn't.
+  //   R Forearm   X -90  → thumb forward, mirror of L forearm twist
+  J_Bip_L_LowerArm: { x: 90, y: 0, z: 0 },
+  J_Bip_R_UpperArm: { x: 0, y: 0, z: 180 },
+  J_Bip_R_LowerArm: { x: -90, y: 0, z: 0 },
 };
 
 function defaultOffsets(): OffsetMap {
