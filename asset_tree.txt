@@ -345,6 +345,7 @@ assets/npcs/fern/fern.png
 assets/npcs/grind-portrait.jpeg
 assets/npcs/guild-portrait.jpeg
 assets/npcs/item-portrait.jpeg
+assets/npcs/item_shop/item_shop.glb
 assets/npcs/kai/pc_a01_000.glb
 assets/npcs/kai/pc_a01_000.png
 assets/npcs/mira/mira.glb
@@ -3905,6 +3906,7 @@ assets/stages/city_a/s00a_nr6/lndmd/s06_1_rlamp01.png
 assets/stages/city_a/s00a_nr6/lndmd/s06_1_rwea1.png
 assets/stages/city_e/dairon_city.zip
 assets/stages/city_e/market/canyon_panorama.png
+assets/stages/city_e/market/item_shop/item_cart.glb
 assets/stages/city_e/market/s00_0_cent5.png
 assets/stages/city_e/market/s00_0_floor05.png
 assets/stages/city_e/market/s00_0_gr1.png

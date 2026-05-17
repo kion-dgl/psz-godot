@@ -2,19 +2,19 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ntmm8h0b6a7h"
-path="res://.godot/imported/s00e_sa1_m_no_cart_8.png-6716d21fba6f6f518bd2e5e7f679eb9d.ctex"
+uid="uid://dtoeuhlvhsjq5"
+path="res://.godot/imported/item_cart_flower.jpg-c6fa4687f686d2352e122ed8d98000c4.ctex"
 metadata={
 "vram_texture": false
 }
 generator_parameters={
-"md5": "0fc534873b62fcadd5ab690fc0b9c0dc"
+"md5": "b859760ba82b00b7dd476d1626d5c8a3"
 }
 
 [deps]
 
-source_file="res://assets/stages/city_e/market/s00e_sa1_m_no_cart_8.png"
-dest_files=["res://.godot/imported/s00e_sa1_m_no_cart_8.png-6716d21fba6f6f518bd2e5e7f679eb9d.ctex"]
+source_file="res://assets/stages/city_e/market/item_shop/item_cart_flower.jpg"
+dest_files=["res://.godot/imported/item_cart_flower.jpg-c6fa4687f686d2352e122ed8d98000c4.ctex"]
 
 [params]
 

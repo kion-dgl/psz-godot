@@ -49,6 +49,14 @@
 # In-house replacements for the pack-shipped shop carts.
 !/assets/stages/city_e/market/weapon_shop/
 !/assets/stages/city_e/market/weapon_shop/*
+!/assets/stages/city_e/market/item_shop/
+!/assets/stages/city_e/market/item_shop/*
+# In-house NPCs converted from third-party assets (VRMs, etc.) live alongside
+# the pack-shipped np_*** characters; whitelist them per-folder.
+!/assets/npcs/
+/assets/npcs/*
+!/assets/npcs/item_shop/
+!/assets/npcs/item_shop/*
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
 /web/public/assets/psobb_sfx/
 

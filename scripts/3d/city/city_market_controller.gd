@@ -10,6 +10,7 @@ const DEFAULT_ROT := PI
 ## leaving an empty spot for this model. Transform was dialed in inside
 ## the same web tool's Place mode and pasted here verbatim.
 const WEAPON_SHOP_CART_SCENE := preload("res://assets/stages/city_e/market/weapon_shop/weapon_shop_cart.glb")
+const ITEM_SHOP_CART_SCENE := preload("res://assets/stages/city_e/market/item_shop/item_cart.glb")
 
 const SPAWN_VARIANTS := {
 	"counter-exit": {
@@ -30,6 +31,7 @@ func _ready() -> void:
 	# Drop in the replacement weapon-shop cart over the empty spot
 	# the no-cart GLB left behind.
 	_add_weapon_shop_cart()
+	_add_item_shop_cart()
 
 	# Heal on city entry
 	_heal_character()
@@ -46,7 +48,7 @@ func _ready() -> void:
 	# NPCs
 	_add_npc(
 		"ShopNPC", Vector3(-10.34, 0, 27.67), 1.4207,
-		"res://assets/npcs/np_003_00_0/np_003_00_0.glb",
+		"res://assets/npcs/item_shop/item_shop.glb",
 		"Shop",
 		"res://scenes/2d/shops/item_shop.tscn",
 		"pso_f_sh_stand"
@@ -92,5 +94,16 @@ func _add_weapon_shop_cart() -> void:
 		Vector3(0.0, 2.9, 0.0),
 		Vector3(2.0467, 0.0, 2.0545),
 		Vector3(-9.0751, 0.0, 20.1794)
+	)
+	add_child(cart)
+
+
+func _add_item_shop_cart() -> void:
+	var cart: Node3D = ITEM_SHOP_CART_SCENE.instantiate()
+	cart.transform = Transform3D(
+		Vector3(-0.0798, 0.0, -2.2987),
+		Vector3(0.0, 2.3, 0.0),
+		Vector3(2.2987, 0.0, -0.0798),
+		Vector3(-14.5643, 0.0, 27.5287)
 	)
 	add_child(cart)
