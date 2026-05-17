@@ -100,7 +100,10 @@ const BAKED_OPTIMAL_OFFSETS: Record<string, BoneOffset> = {
   // Hips / upper-chest / legs from Auto Calibrate's geometric direction
   // matching at rest.
   Root: { x: -0.2, y: 0, z: 0 },
-  J_Bip_C_Hips: { x: -13.5, y: 0.2, z: -1 },
+  // Hip X zeroed — auto-cal's -13.5° was geometrically correct at rest
+  // but stacks badly during animation and tilts the character ~20°
+  // backward. See bake-retarget-vrm.mjs for the full reasoning.
+  J_Bip_C_Hips: { x: 0, y: 0, z: 0 },
   J_Bip_C_UpperChest: { x: 14.7, y: 0, z: -0.4 },
   J_Bip_L_UpperLeg: { x: -5.3, y: -0.2, z: 4.6 },
   J_Bip_L_LowerLeg: { x: 1.4, y: 0.1, z: 4.6 },

@@ -53,9 +53,15 @@ func _ready() -> void:
 		"res://scenes/2d/shops/item_shop.tscn",
 		# VRM-targeted retargeted idle. See web/scripts/bake-retarget-vrm.mjs
 		# and assets/player/animations/npc_idles_vrm.glb.
-		"pso_f_sh_stand_vrm",
+		# Idle: Blender-authored breathing motion (item_shop_anims.glb).
+		# Geometric, looks natural; doesn't rely on PSO retargeting.
+		"vrm_idle",
 		"",                          # no hat
-		"pso_f_emote_bow_vrm",       # greet/bow on player interact
+		# Interact response: pixiv VRoid's official "Greeting" animation
+		# from VRMA_02 (vrma_anims.glb). Free for commercial use with
+		# the credit line "Animation credits to pixiv Inc.'s VRoid
+		# Project" — add to the credits screen when we have one.
+		"vrma_greeting",
 	)
 	_add_npc(
 		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), 0.7835,

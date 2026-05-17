@@ -66,7 +66,14 @@ const BONE_MAPPINGS_VRM = {
 // R forearm X-90.
 const BAKED_OFFSETS = {
   Root: { x: -0.2, y: 0, z: 0 },
-  J_Bip_C_Hips: { x: -13.5, y: 0.2, z: -1 },
+  // Hip X offset was -13.5° from Auto Calibrate's direction match. In
+  // the rest pose the math is technically correct (PSO hip direction
+  // is slightly different from VRM hip direction by ~13°) but during
+  // animation it stacks with PSO's own hip rotation and the cumulative
+  // effect is a ~20° backward lean of the whole upper body. Zero it
+  // here — the visual cost of a tiny rest-pose hip-direction mismatch
+  // is way less than the cost of a leaning character.
+  J_Bip_C_Hips: { x: 0, y: 0, z: 0 },
   J_Bip_C_UpperChest: { x: 14.7, y: 0, z: -0.4 },
   J_Bip_L_UpperLeg: { x: -5.3, y: -0.2, z: 4.6 },
   J_Bip_L_LowerLeg: { x: 1.4, y: 0.1, z: 4.6 },
@@ -82,13 +89,13 @@ const BAKED_OFFSETS = {
 // (greeting, browse, leave) for richer interaction.
 // All clip names are suffixed _vrm so they don't collide with the
 // PSZ-targeted versions of the same animations in npc_idles.glb.
-// CityNPC searches NPC_ANIM_SOURCES by name; if a VRM clip shared the
-// PSZ name, PSZ NPCs would get a clip that targets J_Bip_* bones they
-// don't have (and vice-versa). The _vrm suffix keeps the two parallel
-// libraries cleanly separated.
+// Indices cross-referenced against data/retarget/pso_animation_map.json.
 const ANIMS = [
   { index: 279, name: 'pso_f_sh_stand_vrm' },     // female shop NPC idle
-  { index: 278, name: 'pso_f_emote_bow_vrm' },    // greet/bow — for interaction response
+  { index: 276, name: 'pso_f_sh_wait_vrm' },      // alt idle (more relaxed)
+  { index: 429, name: 'pso_f_emote_bow_vrm' },    // bow — for interaction response
+  { index: 431, name: 'pso_f_emote_curtsy_vrm' }, // alt bow style
+  { index: 428, name: 'pso_f_emote_wave_vrm' },   // alt: wave on greet
 ];
 
 const PSO_PATH = path.join(REPO_ROOT, 'data/retarget/Humar_body.glb');
