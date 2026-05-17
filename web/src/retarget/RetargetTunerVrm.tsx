@@ -86,15 +86,25 @@ interface BoneOffset {
 
 type OffsetMap = Record<string, BoneOffset>;
 
-// No baked offsets by default. The position-based optimizer can find
-// configurations that minimize bone-position error but produce visually
-// distorted poses (e.g. body bent backward), since the metric ignores
-// orientation. Workflow: user clicks Auto Calibrate to seed sensible
-// direction-matched offsets, then Optimize if they want to refine —
-// reviewing the visual result before committing. A future improvement
-// could add a rotation-error metric to the optimizer that better
-// correlates with visual quality.
-const BAKED_OPTIMAL_OFFSETS: Record<string, BoneOffset> = {};
+// Defaults seeded from Auto Calibrate (direction matching from rest
+// pose). Geometrically meaningful — each value is the local rotation
+// that aligns the VRM bone's (head→child) direction with the PSO
+// equivalent at rest. Combined with the arm-correction in
+// buildRetargetedClip (which independently aligns arm rest world
+// quats), this gives a visually-correct retargeting without any
+// manual tuning. The Optimize button explores around these for
+// numerical refinement, but the position+rotation metric still finds
+// local minima that look visually wrong, so prefer the auto-cal
+// values unless you're verifying with screenshots after each step.
+const BAKED_OPTIMAL_OFFSETS: Record<string, BoneOffset> = {
+  Root: { x: -0.2, y: 0, z: 0 },
+  J_Bip_C_Hips: { x: -13.5, y: 0.2, z: -1 },
+  J_Bip_C_UpperChest: { x: 14.7, y: 0, z: -0.4 },
+  J_Bip_L_UpperLeg: { x: -5.3, y: -0.2, z: 4.6 },
+  J_Bip_L_LowerLeg: { x: 1.4, y: 0.1, z: 4.6 },
+  J_Bip_R_UpperLeg: { x: -5.3, y: 0.2, z: -4.5 },
+  J_Bip_R_LowerLeg: { x: 1.4, y: -0.1, z: -4.5 },
+};
 
 function defaultOffsets(): OffsetMap {
   const m: OffsetMap = {};
@@ -323,6 +333,17 @@ export default function RetargetTuner() {
         root.traverse((c) => { if (!f && (c as THREE.Bone).isBone && c.name === name) f = c as THREE.Bone; });
         return f;
       };
+      // Combined metric: position L2 distance + rotation angular
+      // distance (weighted). Position alone is under-constrained for
+      // rotation (twist around bone axis can leave child position
+      // unchanged), so the optimizer would find "right place wrong
+      // twist" minima with weird visual results. Rotation distance
+      // pins the bone's full orientation, not just its head location.
+      // Weight 0.5 puts a 90° rotation error roughly on par with a
+      // 0.78m position error — high enough to dominate when rotation
+      // is way off, low enough that small rotation noise doesn't
+      // override real position drift.
+      const ROT_WEIGHT = 0.5; // radians → metres equivalence
       let total = 0;
       const perBone: Record<string, number> = {};
       for (let i = 0; i < nFrames; i++) {
@@ -339,7 +360,13 @@ export default function RetargetTuner() {
           const pp = new THREE.Vector3();
           vrmBone.getWorldPosition(vp);
           psoBone.getWorldPosition(pp);
-          const d = vp.distanceTo(pp);
+          const posErr = vp.distanceTo(pp);
+          const vq = new THREE.Quaternion();
+          const pq = new THREE.Quaternion();
+          vrmBone.getWorldQuaternion(vq);
+          psoBone.getWorldQuaternion(pq);
+          const rotErr = vq.angleTo(pq) * ROT_WEIGHT;
+          const d = posErr + rotErr;
           total += d;
           perBone[vrmBoneName] = (perBone[vrmBoneName] || 0) + d;
         }
