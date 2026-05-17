@@ -14,6 +14,11 @@ export type Mode = 'mesh' | 'face' | 'place';
 
 export type TransformMode = 'translate' | 'rotate' | 'scale';
 
+/** Which cart the placement gizmo is currently attached to. Both carts
+ *  render in 'place' mode; only the selected one shows the
+ *  TransformControls helper so drags affect exactly one cart at a time. */
+export type CartId = 'weapon' | 'item';
+
 /** Cart placement state. Stored as plain euler XYZ + uniform-axis arrays
  *  so it round-trips cleanly through localStorage and is easy to feed
  *  back into a three.js Object3D's transform on next mount. */
@@ -28,6 +33,14 @@ export const DEFAULT_CART_TRANSFORM: CartTransform = {
   // Anchor near the WeaponShopNPC position from city_market_controller.gd
   // so the cart starts visible and roughly where the original geometry is.
   pos: [-6.78, 0, 21.81],
+  rot: [0, 0.7835, 0],
+  scale: [1, 1, 1],
+};
+
+export const DEFAULT_ITEM_CART_TRANSFORM: CartTransform = {
+  // Offset a couple metres in +X from the weapon cart so the item cart
+  // spawns visible and not stacked on top — user moves it from there.
+  pos: [-3, 0, 21.81],
   rot: [0, 0.7835, 0],
   scale: [1, 1, 1],
 };

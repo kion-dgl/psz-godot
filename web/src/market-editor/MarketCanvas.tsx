@@ -3,10 +3,11 @@ import { OrbitControls, TransformControls, useGLTF } from '@react-three/drei';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { assetUrl } from '../utils/assets';
-import type { CartTransform, FaceMark, Mode, TransformMode } from './types';
+import type { CartId, CartTransform, FaceMark, Mode, TransformMode } from './types';
 
 const MARKET_PATH = 'assets/stages/city_e/s00e_sa1/lndmd/s00e_sa1_m.glb';
 const CART_PATH = 'assets/stages/city_e/market/weapon_shop/weapon_shop_cart.glb';
+const ITEM_CART_PATH = 'assets/stages/city_e/market/item_shop/item_cart.glb';
 
 interface MarketModelProps {
   mode: Mode;
@@ -135,24 +136,25 @@ function MarketModel({ mode, markedMeshes, markedFaces, onMeshPick, onFacePick, 
 }
 
 interface PlaceableCartProps {
+  path: string;
   transform: CartTransform;
   transformMode: TransformMode;
   onChange: (t: CartTransform) => void;
+  /** Only the selected cart shows the TransformControls gizmo so drags
+   *  hit exactly one cart at a time, even when both render. */
+  selected: boolean;
 }
 
-/** Loads the new shopping-cart GLB and attaches a transform gizmo. The
+/** Loads a cart GLB and attaches a transform gizmo when selected. The
  *  group ref drives the Object3D position/rot/scale, so the gizmo
  *  manipulates them directly and we read them back in onObjectChange.
  *  Initialized once from `transform` on mount; subsequent prop changes
  *  (e.g. numeric input edits in the side panel) are applied via
- *  useEffect below. */
-function PlaceableCart({ transform, transformMode, onChange }: PlaceableCartProps) {
-  // useGLTF caches by path, so this returns the same scene every mount —
-  // fine here because PlaceableCart is only rendered in 'place' mode and
-  // there's no second consumer. If we ever needed two simultaneous carts
-  // we'd want SkeletonUtils.clone() (the model has no skinned meshes
-  // currently, but plain `scene.clone(true)` is the static-mesh form).
-  const { scene } = useGLTF(assetUrl(CART_PATH));
+ *  useEffect below. Two PlaceableCart instances render in 'place'
+ *  mode (weapon + item) using distinct `path`s — useGLTF caches by
+ *  path so each instance loads its own scene. */
+function PlaceableCart({ path, transform, transformMode, onChange, selected }: PlaceableCartProps) {
+  const { scene } = useGLTF(assetUrl(path));
   const [groupNode, setGroupNode] = useState<THREE.Group | null>(null);
 
   // Set the initial transform once the group mounts.
@@ -207,7 +209,7 @@ function PlaceableCart({ transform, transformMode, onChange }: PlaceableCartProp
       <group ref={setGroupNode}>
         <primitive object={scene} />
       </group>
-      {groupNode && (
+      {selected && groupNode && (
         <TransformControls
           object={groupNode}
           mode={transformMode}
@@ -225,8 +227,11 @@ interface MarketCanvasProps {
   onMeshPick: (name: string) => void;
   onFacePick: (mark: FaceMark) => void;
   cartTransform: CartTransform;
+  itemCartTransform: CartTransform;
+  selectedCart: CartId;
   transformMode: TransformMode;
   onCartChange: (t: CartTransform) => void;
+  onItemCartChange: (t: CartTransform) => void;
   onSceneReady?: (scene: THREE.Object3D) => void;
 }
 
@@ -237,8 +242,11 @@ export default function MarketCanvas({
   onMeshPick,
   onFacePick,
   cartTransform,
+  itemCartTransform,
+  selectedCart,
   transformMode,
   onCartChange,
+  onItemCartChange,
   onSceneReady,
 }: MarketCanvasProps) {
   return (
@@ -258,11 +266,22 @@ export default function MarketCanvas({
           onSceneReady={onSceneReady}
         />
         {mode === 'place' && (
-          <PlaceableCart
-            transform={cartTransform}
-            transformMode={transformMode}
-            onChange={onCartChange}
-          />
+          <>
+            <PlaceableCart
+              path={CART_PATH}
+              transform={cartTransform}
+              transformMode={transformMode}
+              onChange={onCartChange}
+              selected={selectedCart === 'weapon'}
+            />
+            <PlaceableCart
+              path={ITEM_CART_PATH}
+              transform={itemCartTransform}
+              transformMode={transformMode}
+              onChange={onItemCartChange}
+              selected={selectedCart === 'item'}
+            />
+          </>
         )}
       </Suspense>
       <gridHelper args={[40, 40, 0x444466, 0x2a2a44]} />
@@ -274,3 +293,4 @@ export default function MarketCanvas({
 
 useGLTF.preload(assetUrl(MARKET_PATH));
 useGLTF.preload(assetUrl(CART_PATH));
+useGLTF.preload(assetUrl(ITEM_CART_PATH));
