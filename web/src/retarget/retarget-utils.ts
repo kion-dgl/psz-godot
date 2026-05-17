@@ -22,6 +22,34 @@ export const BONE_MAPPINGS: Record<string, string> = {
   bone_014: '130_RLeg02',
 };
 
+// VRM target. Same PSO source bones, but routed at VRM humanoid bone names
+// (J_Bip_* convention). Seeded by lining up each PSO→PSZ body-part choice
+// against its VRM equivalent: spine routes to J_Bip_C_Spine (closest hip
+// anchor; J_Bip_C_Chest / UpperChest will likely need a separate split if
+// PSO spine motion is too localized). The retarget math in
+// buildRetargetedClip is skeleton-agnostic, but the arm-correction block
+// inside it is keyed off PSZ bone names so it no-ops for VRM targets —
+// the offset sliders fill that role for VRM rest-pose alignment.
+export const BONE_MAPPINGS_VRM: Record<string, string> = {
+  bone_000: 'Root',
+  bone_002: 'J_Bip_C_Hips',
+  // PSO has a single Spine; VRM stacks Spine → Chest → UpperChest. Empirical
+  // frame-error logging on the first calibration pointed at Spine yielding
+  // ~0.42m lower-arm error; trying Chest (mid-vertebra) first, since arms
+  // hang from UpperChest in VRM and Chest is closer to where PSO's spine
+  // bone sits geometrically.
+  bone_024: 'J_Bip_C_UpperChest',
+  bone_028: 'J_Bip_L_UpperArm',
+  bone_029: 'J_Bip_L_LowerArm',
+  bone_041: 'J_Bip_R_UpperArm',
+  bone_042: 'J_Bip_R_LowerArm',
+  bone_056: 'J_Bip_C_Head',
+  bone_004: 'J_Bip_L_UpperLeg',
+  bone_005: 'J_Bip_L_LowerLeg',
+  bone_013: 'J_Bip_R_UpperLeg',
+  bone_014: 'J_Bip_R_LowerLeg',
+};
+
 export interface RestPoseData {
   localQuats: Record<string, THREE.Quaternion>;
   worldQuats: Record<string, THREE.Quaternion>;
@@ -89,20 +117,22 @@ export function buildRetargetedClip(
     worldQuats: { ...pszRest.worldQuats },
     parentMap: pszRest.parentMap,
   };
-  // Correct arm rest poses so PSZ bone world orientations match PSO's.
-  // Upper arms first (parents), then forearms (children depend on corrected parents).
-  const armCorrectionBones: [string, string][] = [
-    ['bone_028', '030_LArm01'],   // left upper arm
-    ['bone_041', '060_RArm01'],   // right upper arm
-    ['bone_029', '040_LArm02'],   // left forearm
-    ['bone_042', '070_RArm02'],   // right forearm
-  ];
-  for (const [psoBone, pszBone] of armCorrectionBones) {
-    if (!(psoBone in boneMap) || boneMap[psoBone] !== pszBone) continue;
-    const pszParent = adjustedPszRest.parentMap[pszBone];
-    const pszParentWorld = pszParent ? getWorldRestQuat(pszParent, adjustedPszRest) : new THREE.Quaternion();
+  // Correct arm rest poses so target bone world orientations match PSO's.
+  // Upper arms first (parents), then forearms (children depend on corrected
+  // parents). The list is keyed by PSO bone name — the target bone name
+  // comes from `boneMap`, so this works for any target skeleton (PSZ
+  // named bones, VRM J_Bip_*, etc.) that has these arm bones mapped.
+  // Without this correction, PSO's arms-down rest pose composes with a
+  // T-pose target's arms-out rest pose and the arms end up sticking out
+  // horizontally during animation playback.
+  const armPsoBones = ['bone_028', 'bone_041', 'bone_029', 'bone_042'];
+  for (const psoBone of armPsoBones) {
+    const targetBone = boneMap[psoBone];
+    if (!targetBone) continue;
+    const targetParent = adjustedPszRest.parentMap[targetBone];
+    const targetParentWorld = targetParent ? getWorldRestQuat(targetParent, adjustedPszRest) : new THREE.Quaternion();
     const psoArmWorld = getWorldRestQuat(psoBone, psoRest);
-    adjustedPszRest.localQuats[pszBone] = pszParentWorld.clone().invert().multiply(psoArmWorld);
+    adjustedPszRest.localQuats[targetBone] = targetParentWorld.clone().invert().multiply(psoArmWorld);
   }
 
   // Apply user bone offsets AFTER arm correction so they don't get overwritten
