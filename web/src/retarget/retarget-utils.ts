@@ -33,12 +33,18 @@ export const BONE_MAPPINGS: Record<string, string> = {
 export const BONE_MAPPINGS_VRM: Record<string, string> = {
   bone_000: 'Root',
   bone_002: 'J_Bip_C_Hips',
-  // PSO has a single Spine; VRM stacks Spine → Chest → UpperChest. Empirical
-  // frame-error logging on the first calibration pointed at Spine yielding
-  // ~0.42m lower-arm error; trying Chest (mid-vertebra) first, since arms
-  // hang from UpperChest in VRM and Chest is closer to where PSO's spine
-  // bone sits geometrically.
-  bone_024: 'J_Bip_C_UpperChest',
+  // PSO has a 2-bone spine: bone_024 (static — zero animation in every
+  // clip we sampled) and bone_025 (carries 17-21° upper-body sway in
+  // walk/run/run animations). They're co-located in world space; only
+  // their rest rotations differ. VRM has a 3-bone spine: Spine →
+  // Chest → UpperChest. Map bone_024 → Chest for chain rest alignment
+  // and bone_025 → UpperChest so the actual animated sway retargets
+  // onto VRM. Without bone_025 mapped, arms get no swing during
+  // locomotion because PSO's arm bones (bone_028 et al) are
+  // themselves static — the swing propagates entirely through the
+  // spine chain.
+  bone_024: 'J_Bip_C_Chest',
+  bone_025: 'J_Bip_C_UpperChest',
   bone_028: 'J_Bip_L_UpperArm',
   bone_029: 'J_Bip_L_LowerArm',
   bone_041: 'J_Bip_R_UpperArm',

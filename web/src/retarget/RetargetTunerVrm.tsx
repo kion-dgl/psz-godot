@@ -25,6 +25,7 @@ const ANIMATION_MAP_PATH = assetUrl('/data/retarget/pso_animation_map.json');
 const TUNABLE_BONES = [
   { pszBone: 'Root', label: 'Root' },
   { pszBone: 'J_Bip_C_Hips', label: 'Hip' },
+  { pszBone: 'J_Bip_C_Chest', label: 'Chest' },
   { pszBone: 'J_Bip_C_UpperChest', label: 'UpperChest' },
   { pszBone: 'J_Bip_C_Head', label: 'Head' },
   { pszBone: 'J_Bip_L_UpperArm', label: 'L Upper Arm' },
@@ -49,6 +50,7 @@ const TUNABLE_BONES = [
 const VRM_DIRECTION_CHILD: Record<string, string> = {
   'Root': 'J_Bip_C_Hips',
   'J_Bip_C_Hips': 'J_Bip_C_Spine',
+  'J_Bip_C_Chest': 'J_Bip_C_UpperChest',
   'J_Bip_C_UpperChest': 'J_Bip_C_Neck',
   'J_Bip_L_UpperArm': 'J_Bip_L_LowerArm',
   'J_Bip_L_LowerArm': 'J_Bip_L_Hand',
@@ -63,9 +65,9 @@ const VRM_DIRECTION_CHILD: Record<string, string> = {
 const PSO_DIRECTION_CHILD: Record<string, string> = {
   bone_000: 'bone_002',    // Root → Hip
   bone_002: 'bone_024',    // Hip → Spine
-  bone_024: 'bone_056',    // Spine → Head (approximation; PSO may have
-                           // intermediate vertebrae but the Hip→Spine→Head
-                           // chain is the dominant direction.)
+  bone_024: 'bone_025',    // Chest → UpperChest (co-located in PSO)
+  bone_025: 'bone_056',    // UpperChest → Head (skips through neck since
+                           // PSO bone_055/Neck not in mapping)
   bone_028: 'bone_029',    // L upper arm → L forearm
   bone_029: 'bone_030',    // L forearm → L wrist (WRIST_BONES entry)
   bone_041: 'bone_042',    // R upper arm → R forearm
@@ -84,9 +86,21 @@ interface BoneOffset {
 
 type OffsetMap = Record<string, BoneOffset>;
 
+// No baked offsets by default. The position-based optimizer can find
+// configurations that minimize bone-position error but produce visually
+// distorted poses (e.g. body bent backward), since the metric ignores
+// orientation. Workflow: user clicks Auto Calibrate to seed sensible
+// direction-matched offsets, then Optimize if they want to refine —
+// reviewing the visual result before committing. A future improvement
+// could add a rotation-error metric to the optimizer that better
+// correlates with visual quality.
+const BAKED_OPTIMAL_OFFSETS: Record<string, BoneOffset> = {};
+
 function defaultOffsets(): OffsetMap {
   const m: OffsetMap = {};
-  for (const b of TUNABLE_BONES) m[b.pszBone] = { x: 0, y: 0, z: 0 };
+  for (const b of TUNABLE_BONES) {
+    m[b.pszBone] = BAKED_OPTIMAL_OFFSETS[b.pszBone] ? { ...BAKED_OPTIMAL_OFFSETS[b.pszBone] } : { x: 0, y: 0, z: 0 };
+  }
   return m;
 }
 
@@ -113,7 +127,18 @@ export default function RetargetTuner() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<SceneState | null>(null);
 
-  const [offsets, setOffsets] = useState<OffsetMap>(defaultOffsets);
+  const [offsets, setOffsets] = useState<OffsetMap>(() => {
+    // Restore previously-saved offsets from localStorage if present so
+    // the user doesn't lose hard-won optimization runs on reload.
+    try {
+      const raw = localStorage.getItem('vrm-tuner-offsets-v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return parsed as OffsetMap;
+      }
+    } catch { /* ignore */ }
+    return defaultOffsets();
+  });
   const [psoAnimNames, setPsoAnimNames] = useState<string[]>([]);
   const [selectedAnim, setSelectedAnim] = useState<string | null>(null);
   const [animNameMap, setAnimNameMap] = useState<Record<string, string>>({});
@@ -130,6 +155,199 @@ export default function RetargetTuner() {
       .then((data: { mappings: Record<string, string> }) => setAnimNameMap(data.mappings || {}))
       .catch(() => {});
   }, []);
+
+  // Persist offsets to localStorage on every change so reloads restore
+  // the optimization state — important for long-running brute-force
+  // searches that take 30+ seconds to find a good configuration.
+  useEffect(() => {
+    try {
+      localStorage.setItem('vrm-tuner-offsets-v1', JSON.stringify(offsets));
+    } catch { /* quota exceeded — ignore */ }
+  }, [offsets]);
+
+  // Expose state setters + an in-place measurement helper to window so
+  // headless / playwright-driven optimizers can run offset grid
+  // searches without going through DOM events. Re-exposed on each
+  // render so consumers always see the latest closure.
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    w.__setOffsets = setOffsets;
+    w.__getOffsets = () => offsets;
+    w.__getSelectedAnim = () => selectedAnim;
+    w.__setSelectedAnim = setSelectedAnim;
+    // In-place measurement: takes an offsets map + anim name, applies
+    // them via a synchronous clip rebuild + mixer step, returns total
+    // per-frame error WITHOUT going through React state. Much faster
+    // than dispatching slider events for grid search.
+    // Anim track inspector: list bones with quaternion tracks in a clip,
+    // plus a sample of their values, so we can see which PSO
+    // intermediate bones actually animate vs sit static at rest.
+    // Probe arbitrary bone world positions — useful for figuring out
+    // which VRM bone is geometrically closest to a given PSO bone.
+    w.__probeBones = (vrmNames: string[], psoNames: string[]) => {
+      const s = sceneRef.current;
+      if (!s || !s.pszModel || !s.psoModel) return null;
+      resetToBindPose(s.pszModel);
+      resetToBindPose(s.psoModel);
+      s.pszModel.updateMatrixWorld(true);
+      s.psoModel.updateMatrixWorld(true);
+      const find = (root: THREE.Object3D, name: string): THREE.Bone | null => {
+        let f: THREE.Bone | null = null;
+        root.traverse((c) => { if (!f && (c as THREE.Bone).isBone && c.name === name) f = c as THREE.Bone; });
+        return f;
+      };
+      const out: Record<string, [number, number, number]> = {};
+      for (const n of vrmNames) {
+        const b = find(s.pszModel, n);
+        if (b) {
+          const v = new THREE.Vector3();
+          b.getWorldPosition(v);
+          out[`vrm:${n}`] = [v.x, v.y, v.z];
+        }
+      }
+      for (const n of psoNames) {
+        const b = find(s.psoModel, n);
+        if (b) {
+          const v = new THREE.Vector3();
+          b.getWorldPosition(v);
+          out[`pso:${n}`] = [v.x, v.y, v.z];
+        }
+      }
+      return out;
+    };
+
+    w.__inspectAnim = (animName: string) => {
+      const s = sceneRef.current;
+      if (!s) return null;
+      const clip = s.psoAnimations.find((a) => a.name === animName);
+      if (!clip) return null;
+      const bones: Array<{ bone: string; trackTypes: string[]; quatRange?: number }> = [];
+      const byBone: Record<string, { types: Set<string>; quatRange: number }> = {};
+      for (const tr of clip.tracks) {
+        const dotIdx = tr.name.lastIndexOf('.');
+        const boneName = tr.name.substring(0, dotIdx);
+        const prop = tr.name.substring(dotIdx + 1);
+        if (!byBone[boneName]) byBone[boneName] = { types: new Set(), quatRange: 0 };
+        byBone[boneName].types.add(prop);
+        if (prop === 'quaternion') {
+          // Estimate animation magnitude — max angle traversed from t=0
+          const vals = tr.values;
+          if (vals.length >= 8) {
+            const q0 = new THREE.Quaternion(vals[0], vals[1], vals[2], vals[3]);
+            let maxAng = 0;
+            for (let i = 4; i < vals.length; i += 4) {
+              const qi = new THREE.Quaternion(vals[i], vals[i + 1], vals[i + 2], vals[i + 3]);
+              const a = q0.angleTo(qi);
+              if (a > maxAng) maxAng = a;
+            }
+            byBone[boneName].quatRange = maxAng;
+          }
+        }
+      }
+      for (const [b, info] of Object.entries(byBone)) {
+        bones.push({
+          bone: b,
+          trackTypes: Array.from(info.types),
+          quatRange: Math.round(info.quatRange * 180 / Math.PI * 10) / 10,
+        });
+      }
+      bones.sort((a, b) => parseInt(a.bone.replace('bone_', '')) - parseInt(b.bone.replace('bone_', '')));
+      return bones;
+    };
+
+    // Direct probe of how a specific PSO bone's world position changes
+    // across a clip after setTime — used to confirm the mixer is
+    // actually advancing.
+    w.__debugPsoMotion = (animName: string, psoBoneName: string) => {
+      const s = sceneRef.current;
+      if (!s || !s.psoModel || !s.psoMixer) return null;
+      const clip = s.psoAnimations.find((a) => a.name === animName);
+      if (!clip) return { error: 'no clip' };
+      const find = (root: THREE.Object3D, name: string): THREE.Bone | null => {
+        let f: THREE.Bone | null = null;
+        root.traverse((c) => { if (!f && (c as THREE.Bone).isBone && c.name === name) f = c as THREE.Bone; });
+        return f;
+      };
+      const bone = find(s.psoModel, psoBoneName);
+      if (!bone) return { error: 'no bone' };
+      // Stop existing PSO action
+      if (s.currentPsoAction) {
+        s.currentPsoAction.stop();
+        s.psoMixer.uncacheAction(s.currentPsoAction.getClip());
+      }
+      const action = s.psoMixer.clipAction(clip);
+      action.play();
+      s.currentPsoAction = action;
+      const samples: Array<{ t: number; pos: number[] }> = [];
+      for (let i = 0; i < 5; i++) {
+        const t = (i / 4) * clip.duration;
+        s.psoMixer.setTime(t);
+        s.psoModel!.updateMatrixWorld(true);
+        const p = new THREE.Vector3();
+        bone.getWorldPosition(p);
+        samples.push({ t: Math.round(t * 100) / 100, pos: [p.x, p.y, p.z].map((n) => Math.round(n * 1000) / 1000) });
+      }
+      return { animName, psoBoneName, duration: clip.duration, samples };
+    };
+
+    w.__measureOffsets = (testOffsets: OffsetMap, animName: string, nFrames = 5) => {
+      const s = sceneRef.current;
+      if (!s || !s.pszModel || !s.psoModel || !s.pszMixer || !s.psoMixer) return null;
+      const clip = s.psoAnimations.find((a) => a.name === animName);
+      if (!clip) return null;
+      // Stop current actions
+      if (s.currentAction) {
+        s.currentAction.stop();
+        s.pszMixer.uncacheAction(s.currentAction.getClip());
+      }
+      if (s.currentPsoAction) {
+        s.currentPsoAction.stop();
+        s.psoMixer.uncacheAction(s.currentPsoAction.getClip());
+      }
+      resetToBindPose(s.pszModel);
+      const retargeted = buildRetargetedClip(
+        clip, s.psoRest, s.pszRest, BONE_MAPPINGS_VRM, s.psoScale,
+        undefined, undefined, testOffsets,
+      );
+      if (!retargeted) return null;
+      const action = s.pszMixer.clipAction(retargeted);
+      action.play();
+      const psoAction = s.psoMixer.clipAction(clip);
+      psoAction.play();
+      s.currentAction = action;
+      s.currentPsoAction = psoAction;
+
+      const findBone = (root: THREE.Object3D, name: string): THREE.Bone | null => {
+        let f: THREE.Bone | null = null;
+        root.traverse((c) => { if (!f && (c as THREE.Bone).isBone && c.name === name) f = c as THREE.Bone; });
+        return f;
+      };
+      let total = 0;
+      const perBone: Record<string, number> = {};
+      for (let i = 0; i < nFrames; i++) {
+        const t = (i / Math.max(1, nFrames - 1)) * clip.duration;
+        s.pszMixer.setTime(t);
+        s.psoMixer.setTime(t);
+        s.pszModel.updateMatrixWorld(true);
+        s.psoModel.updateMatrixWorld(true);
+        for (const [psoBoneName, vrmBoneName] of Object.entries(BONE_MAPPINGS_VRM)) {
+          const vrmBone = findBone(s.pszModel, vrmBoneName);
+          const psoBone = findBone(s.psoModel, psoBoneName);
+          if (!vrmBone || !psoBone) continue;
+          const vp = new THREE.Vector3();
+          const pp = new THREE.Vector3();
+          vrmBone.getWorldPosition(vp);
+          psoBone.getWorldPosition(pp);
+          const d = vp.distanceTo(pp);
+          total += d;
+          perBone[vrmBoneName] = (perBone[vrmBoneName] || 0) + d;
+        }
+      }
+      for (const k in perBone) perBone[k] /= nFrames;
+      return { total: total / nFrames, perBone };
+    };
+  });
 
   // Filter animations
   const filteredAnims = useMemo(() => {
@@ -442,7 +660,16 @@ export default function RetargetTuner() {
     const next: OffsetMap = defaultOffsets();
     const debug: Array<{ vrm: string; pso: string; vrmDir: number[]; psoDir: number[]; offset: number[] }> = [];
 
+    // buildRetargetedClip applies its own arm-rest correction for these
+    // PSO bones, mapping their VRM equivalents' world rest orientation
+    // onto PSO's. Computing direction-match offsets on top of that
+    // double-rotates the arms ~90° beyond where they should be. Skip
+    // them here and let the arm-correction path do the work — frame
+    // error testing confirms this gives the lowest residuals.
+    const ARM_CORRECTED_PSO = new Set(['bone_028', 'bone_029', 'bone_041', 'bone_042']);
+
     for (const [psoBoneName, vrmBoneName] of Object.entries(BONE_MAPPINGS_VRM)) {
+      if (ARM_CORRECTED_PSO.has(psoBoneName)) continue;
       const vrmChildName = VRM_DIRECTION_CHILD[vrmBoneName];
       const psoChildName = PSO_DIRECTION_CHILD[psoBoneName];
       if (!vrmChildName || !psoChildName) continue;
@@ -498,7 +725,250 @@ export default function RetargetTuner() {
     (window as any).__autoCalDebug = debug;
     // eslint-disable-next-line no-console
     console.table(debug);
+
+    // Also dump the rest-pose WORLD POSITIONS of every mapped bone on
+    // both rigs, plus per-side rest distance. Lets us see whether
+    // residual position error is anchor-mismatch (e.g. VRM right
+    // shoulder sitting noticeably away from PSO right shoulder even at
+    // rest) vs accumulated rotation drift down a chain.
+    const restProbe: Array<{
+      vrm: string; pso: string;
+      vrmPos: number[]; psoPos: number[];
+      restDist: number;
+    }> = [];
+    for (const [psoBoneName, vrmBoneName] of Object.entries(BONE_MAPPINGS_VRM)) {
+      const vrmBone = findBone(s.pszModel, vrmBoneName);
+      const psoBone = findBone(s.psoModel, psoBoneName);
+      if (!vrmBone || !psoBone) continue;
+      const vp = new THREE.Vector3();
+      const pp = new THREE.Vector3();
+      vrmBone.getWorldPosition(vp);
+      psoBone.getWorldPosition(pp);
+      restProbe.push({
+        vrm: vrmBoneName,
+        pso: psoBoneName,
+        vrmPos: [vp.x, vp.y, vp.z].map((n) => Math.round(n * 10000) / 10000),
+        psoPos: [pp.x, pp.y, pp.z].map((n) => Math.round(n * 10000) / 10000),
+        restDist: Math.round(vp.distanceTo(pp) * 10000) / 10000,
+      });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__restProbe = restProbe;
+    // eslint-disable-next-line no-console
+    console.table(restProbe);
+
     setOffsets(next);
+  }, []);
+
+  // Brute-force coordinate-descent optimizer. Sweeps every tunable bone
+  // × axis combination, picks the value that minimizes mean per-frame
+  // bone-position error averaged across a few training animations.
+  // Runs entirely off __measureOffsets (no React re-renders inside the
+  // loop) so a full sweep takes a few seconds. Best to run AFTER Snap +
+  // Auto Calibrate so we start from a reasonable seed.
+  const [optimizing, setOptimizing] = useState(false);
+  const [optimizeStatus, setOptimizeStatus] = useState('');
+  const runOptimizer = useCallback(async () => {
+    const s = sceneRef.current;
+    if (!s || !s.pszModel || !s.psoModel) return;
+    setOptimizing(true);
+    setOptimizeStatus('warming up…');
+    // Yield to React so the UI re-renders before the long sync loop.
+    await new Promise((f) => setTimeout(f, 50));
+
+    // Diverse training set covering different motion types.
+    const trainAnims = [
+      'plymotiondata_000', 'plymotiondata_002', 'plymotiondata_003',
+      'plymotiondata_022', 'plymotiondata_019',
+    ].filter((a) => s.psoAnimations.some((c) => c.name === a));
+    if (trainAnims.length === 0) {
+      setOptimizing(false);
+      setOptimizeStatus('no PSO animations loaded');
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const measureOffsets = (window as any).__measureOffsets as (o: OffsetMap, a: string, n?: number) => { total: number } | null;
+    const multiMeasure = (o: OffsetMap) => {
+      let total = 0;
+      let count = 0;
+      for (const a of trainAnims) {
+        const r = measureOffsets(o, a, 5);
+        if (r) { total += r.total; count++; }
+      }
+      return count > 0 ? total / count : Infinity;
+    };
+
+    const tunableBones = TUNABLE_BONES.map((t) => t.pszBone);
+    const axes: Array<'x' | 'y' | 'z'> = ['x', 'y', 'z'];
+    let best: OffsetMap = JSON.parse(JSON.stringify(offsets));
+    let bestErr = multiMeasure(best);
+    const initialErr = bestErr;
+
+    const coarseValues = [-90, -75, -60, -45, -30, -15, 0, 15, 30, 45, 60, 75, 90];
+    for (let round = 0; round < 2; round++) {
+      for (const bone of tunableBones) {
+        for (const axis of axes) {
+          for (const v of coarseValues) {
+            const test = JSON.parse(JSON.stringify(best));
+            test[bone] = { ...test[bone], [axis]: v };
+            const t = multiMeasure(test);
+            if (t < bestErr) { bestErr = t; best = test; }
+          }
+          setOptimizeStatus(`round ${round + 1}/2 · ${bone}.${axis} · best ${bestErr.toFixed(3)}m`);
+          await new Promise((f) => setTimeout(f, 0));
+        }
+      }
+    }
+    // Fine pass
+    for (const bone of tunableBones) {
+      for (const axis of axes) {
+        const cur = best[bone][axis];
+        for (let d = -5; d <= 5; d++) {
+          const v = Math.round((cur + d) * 10) / 10;
+          const test = JSON.parse(JSON.stringify(best));
+          test[bone] = { ...test[bone], [axis]: v };
+          const t = multiMeasure(test);
+          if (t < bestErr) { bestErr = t; best = test; }
+        }
+        setOptimizeStatus(`fine · ${bone}.${axis} · best ${bestErr.toFixed(3)}m`);
+        await new Promise((f) => setTimeout(f, 0));
+      }
+    }
+
+    setOffsets(best);
+    setOptimizing(false);
+    setOptimizeStatus(`done · ${initialErr.toFixed(3)} → ${bestErr.toFixed(3)} (-${Math.round((1 - bestErr / initialErr) * 100)}%)`);
+  }, [offsets]);
+
+  // Diagnostic: snap VRM bone positions onto PSO bone positions in the
+  // rest pose. The skinned mesh deforms because vertex weights stay tied
+  // to the original bone positions, but the skeleton helper now shows
+  // VRM bones exactly where PSO's are — useful for isolating rotation
+  // error from skeletal-proportion noise. Stores the original local
+  // positions on the sceneRef so a Restore step can undo it.
+  const snapToPso = useCallback(() => {
+    const s = sceneRef.current;
+    if (!s || !s.pszModel || !s.psoModel) return;
+    setSelectedAnim(null);
+    resetToBindPose(s.pszModel);
+    resetToBindPose(s.psoModel);
+    s.pszModel.updateMatrixWorld(true);
+    s.psoModel.updateMatrixWorld(true);
+
+    const findBone = (root: THREE.Object3D, name: string): THREE.Bone | null => {
+      let f: THREE.Bone | null = null;
+      root.traverse((c) => {
+        if (f) return;
+        if ((c as THREE.Bone).isBone && c.name === name) f = c as THREE.Bone;
+      });
+      return f;
+    };
+
+    // Cache originals so Restore can revert. Keyed by bone name.
+    const orig: Record<string, [number, number, number]> = {};
+    // Process in top-down order so each bone's parent matrixWorld is
+    // already at its final value before we read it.
+    const order = [
+      'Root',
+      'J_Bip_C_Hips',
+      'J_Bip_C_Chest',
+      'J_Bip_C_UpperChest',
+      'J_Bip_C_Head',
+      'J_Bip_L_UpperArm', 'J_Bip_L_LowerArm',
+      'J_Bip_R_UpperArm', 'J_Bip_R_LowerArm',
+      'J_Bip_L_UpperLeg', 'J_Bip_L_LowerLeg',
+      'J_Bip_R_UpperLeg', 'J_Bip_R_LowerLeg',
+    ];
+    // Reverse-lookup PSO bone name from VRM bone name via the mapping.
+    const vrmToPso: Record<string, string> = {};
+    for (const [pso, vrm] of Object.entries(BONE_MAPPINGS_VRM)) vrmToPso[vrm] = pso;
+
+    // VRM intermediates the PSO skeleton doesn't have (PSO collapses
+    // these into the chest/upper-arm/head). For a clean diagnostic
+    // skeleton render we snap each intermediate onto its mapped
+    // descendant's target PSO position — making the intermediate
+    // effectively zero-length so the chain draws as a single segment
+    // from mapped ancestor to mapped descendant.
+    const INTERMEDIATE_TO_TARGET: Record<string, string> = {
+      // Spine is now Chest's parent in our mapping (Chest = bone_024,
+      // UpperChest = bone_025). Snap Spine onto bone_024's position so
+      // there's no kink between Hips and Chest.
+      'J_Bip_C_Spine': 'bone_024',
+      'J_Bip_L_Shoulder': 'bone_028',
+      'J_Bip_R_Shoulder': 'bone_041',
+      'J_Bip_C_Neck': 'bone_056',
+    };
+
+    const snapOne = (vrmName: string, psoName: string) => {
+      const vrmBone = findBone(s.pszModel!, vrmName);
+      const psoBone = findBone(s.psoModel!, psoName);
+      if (!vrmBone || !psoBone || !vrmBone.parent) return;
+      orig[vrmName] = [vrmBone.position.x, vrmBone.position.y, vrmBone.position.z];
+      const psoWorld = new THREE.Vector3();
+      psoBone.getWorldPosition(psoWorld);
+      const parentWorldInverse = new THREE.Matrix4().copy(vrmBone.parent.matrixWorld).invert();
+      const localPos = psoWorld.clone().applyMatrix4(parentWorldInverse);
+      vrmBone.position.copy(localPos);
+      vrmBone.updateMatrixWorld(true);
+    };
+
+    // Walk mapped + intermediate bones in top-down order. Whenever we
+    // reach a mapped bone, also snap any intermediate that should
+    // collapse onto it.
+    for (const vrmName of order) {
+      const psoName = vrmToPso[vrmName];
+      if (!psoName) continue;
+      // First: snap any intermediate that collapses onto THIS bone's
+      // PSO target. Must happen BEFORE we move the mapped bone so the
+      // intermediate's parent chain is still in its updated state.
+      // Actually order doesn't matter for the intermediate→mapped
+      // collapse since we're snapping both to the same world position;
+      // they share parent state at that moment.
+      for (const [interName, interTarget] of Object.entries(INTERMEDIATE_TO_TARGET)) {
+        if (interTarget !== psoName) continue;
+        snapOne(interName, interTarget);
+      }
+      snapOne(vrmName, psoName);
+    }
+    s.pszModel.updateMatrixWorld(true);
+
+    // Re-derive each skeleton's boneInverses from the snapped matrices
+    // so that resetToBindPose / skeleton.pose() restore TO the snapped
+    // state, not the original VRM bind pose. Without this, picking any
+    // animation would revert the snap on its first frame.
+    s.pszModel.traverse((c) => {
+      const sm = c as THREE.SkinnedMesh;
+      if (sm.isSkinnedMesh && sm.skeleton) sm.skeleton.calculateInverses();
+    });
+
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__snapOriginals = orig;
+    // eslint-disable-next-line no-console
+    console.log('[snap-to-pso] cached originals for', Object.keys(orig).length, 'bones');
+  }, []);
+
+  const restorePositions = useCallback(() => {
+    const s = sceneRef.current;
+    if (!s || !s.pszModel) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const orig = (window as unknown as { __snapOriginals?: Record<string, [number, number, number]> }).__snapOriginals;
+    if (!orig) {
+      // eslint-disable-next-line no-console
+      console.warn('[restore-positions] nothing to restore');
+      return;
+    }
+    s.pszModel.traverse((c) => {
+      if (!(c as THREE.Bone).isBone) return;
+      const o = orig[c.name];
+      if (o) c.position.set(o[0], o[1], o[2]);
+    });
+    s.pszModel.updateMatrixWorld(true);
+    s.pszModel.traverse((c) => {
+      const sm = c as THREE.SkinnedMesh;
+      if (sm.isSkinnedMesh && sm.skeleton) sm.skeleton.calculateInverses();
+    });
   }, []);
 
   // Frame-by-frame bone-position error logger. Steps the currently
@@ -626,6 +1096,20 @@ export default function RetargetTuner() {
               Auto Calibrate
             </button>
             <button
+              onClick={runOptimizer}
+              disabled={!loaded || optimizing}
+              title="Brute-force grid-search optimizer over offset space, multi-animation objective"
+              style={{
+                padding: '2px 8px', fontSize: '10px',
+                background: optimizing ? '#5a4a2a' : loaded ? '#3a4a2a' : '#1a1a2e',
+                border: '1px solid #ffcc44', borderRadius: '3px',
+                color: optimizing ? '#ffaa44' : loaded ? '#ffff88' : '#555',
+                cursor: (loaded && !optimizing) ? 'pointer' : 'default',
+              }}
+            >
+              {optimizing ? '…' : 'Optimize'}
+            </button>
+            <button
               onClick={logFrameErrors}
               disabled={!loaded || !selectedAnim}
               title="Sample 10 frames of the selected animation and log per-bone position error to console"
@@ -638,6 +1122,34 @@ export default function RetargetTuner() {
               }}
             >
               Log Errors
+            </button>
+            <button
+              onClick={snapToPso}
+              disabled={!loaded}
+              title="Diagnostic: move VRM bone positions onto PSO bone positions (mesh deforms). Use Restore to revert."
+              style={{
+                padding: '2px 8px', fontSize: '10px',
+                background: loaded ? '#3a2a3a' : '#1a1a2e',
+                border: '1px solid #aa44aa', borderRadius: '3px',
+                color: loaded ? '#ff88ff' : '#555',
+                cursor: loaded ? 'pointer' : 'default',
+              }}
+            >
+              Snap
+            </button>
+            <button
+              onClick={restorePositions}
+              disabled={!loaded}
+              title="Restore VRM bone positions to their original rest"
+              style={{
+                padding: '2px 8px', fontSize: '10px',
+                background: loaded ? '#2a2a2a' : '#1a1a2e',
+                border: '1px solid #666', borderRadius: '3px',
+                color: loaded ? '#aaa' : '#555',
+                cursor: loaded ? 'pointer' : 'default',
+              }}
+            >
+              Restore
             </button>
             {hasAnyOffset && (
               <button
@@ -663,6 +1175,16 @@ export default function RetargetTuner() {
             </button>
           </div>
         </div>
+
+        {optimizeStatus && (
+          <div style={{
+            padding: '4px 10px', fontSize: '10px', color: '#ffcc88',
+            background: '#2a2a3a', borderBottom: '1px solid #2a2a4a',
+            fontFamily: 'monospace', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            {optimizeStatus}
+          </div>
+        )}
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
           {TUNABLE_BONES.map(({ pszBone, label }) => {
