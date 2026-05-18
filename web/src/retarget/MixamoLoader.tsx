@@ -161,8 +161,9 @@ export default function MixamoLoader() {
     };
 
     const clock = new THREE.Clock();
+    let rafId = 0;
     const animate = () => {
-      requestAnimationFrame(animate);
+      rafId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (sceneRef.current?.mixer) sceneRef.current.mixer.update(delta);
       controls.update();
@@ -197,7 +198,11 @@ export default function MixamoLoader() {
     };
     window.addEventListener('resize', handleResize);
     return () => {
+      // Stop the rAF loop so the closure doesn't keep ticking on a
+      // disposed renderer after route change.
+      cancelAnimationFrame(rafId);
       window.removeEventListener('resize', handleResize);
+      controls.dispose();
       renderer.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };

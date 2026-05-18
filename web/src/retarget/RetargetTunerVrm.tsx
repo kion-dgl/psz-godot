@@ -158,14 +158,25 @@ export default function RetargetTuner() {
   const [offsets, setOffsets] = useState<OffsetMap>(() => {
     // Restore previously-saved offsets from localStorage if present so
     // the user doesn't lose hard-won optimization runs on reload.
+    // Always merge into a fresh defaultOffsets(): if TUNABLE_BONES has
+    // gained a new entry since the saved state (e.g. we added
+    // J_Bip_C_Chest in this branch), the stored map won't have a key
+    // for it and the render loop's `offsets[bone].x` access would
+    // throw. The merge keeps user-tuned values where they exist and
+    // falls back to defaults for any missing slot.
+    const base = defaultOffsets();
     try {
       const raw = localStorage.getItem('vrm-tuner-offsets-v1');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') return parsed as OffsetMap;
+        if (parsed && typeof parsed === 'object') {
+          for (const [k, v] of Object.entries(parsed as Record<string, BoneOffset>)) {
+            if (k in base && v && typeof v.x === 'number') base[k] = v;
+          }
+        }
       }
     } catch { /* ignore */ }
-    return defaultOffsets();
+    return base;
   });
   const [psoAnimNames, setPsoAnimNames] = useState<string[]>([]);
   const [selectedAnim, setSelectedAnim] = useState<string | null>(null);
@@ -560,8 +571,9 @@ export default function RetargetTuner() {
     };
 
     const clock = new THREE.Clock();
+    let rafId = 0;
     const animate = () => {
-      requestAnimationFrame(animate);
+      rafId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (sceneRef.current?.pszMixer) sceneRef.current.pszMixer.update(delta);
       if (sceneRef.current?.psoMixer) sceneRef.current.psoMixer.update(delta);
@@ -652,9 +664,29 @@ export default function RetargetTuner() {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      // Stop the rAF loop so it doesn't keep ticking after unmount
+      // (the closure captures sceneRef/renderer and would otherwise
+      // call renderer.render on a disposed renderer indefinitely).
+      cancelAnimationFrame(rafId);
       window.removeEventListener('resize', handleResize);
+      // Tear down OrbitControls listeners
+      controls.dispose();
       renderer.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+      // Drop the debug helpers off window so they don't keep alive a
+      // stale sceneRef + setters from the previous mount on route
+      // changes.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any;
+      delete w.__setOffsets;
+      delete w.__getOffsets;
+      delete w.__getSelectedAnim;
+      delete w.__setSelectedAnim;
+      delete w.__measureOffsets;
+      delete w.__probeBones;
+      delete w.__inspectAnim;
+      delete w.__measureMotion;
+      delete w.__debugPsoMotion;
     };
   }, []);
 
