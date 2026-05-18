@@ -10,7 +10,14 @@ import {
   BONE_MAPPINGS_VRM,
   type RestPoseData,
 } from './retarget-utils';
-import { measureChain, solveTwoBoneIK, type ChainRest } from './ik-utils';
+import {
+  measureChain,
+  retargetChainByDirection,
+  aimBoneAtTarget,
+  swingTwistDecomposition,
+  type ChainRest,
+} from './ik-utils';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // PSO → VRM retarget prototype using IK on the limbs instead of pure
 // rotation copy. The hypothesis (from the in-game playtest of the rotation-
@@ -28,13 +35,67 @@ const PSO_MODEL_PATH = assetUrl('/data/retarget/Humar_body.glb');
 const VRM_MODEL_PATH = assetUrl('assets/npcs/item_shop/item_shop.glb');
 const ANIMATION_MAP_PATH = assetUrl('/data/retarget/pso_animation_map.json');
 
-// Spine + head bones to copy via rotation retargeting (PSO source → VRM
-// target). Same set as buildRetargetedClip uses for non-limb bones.
+// Bones the IK-driven VRM gets via straight rotation copy. Spine
+// bones (Chest, UpperChest) are NOT in this list — they're direction-
+// aimed via SPINE_CHAIN below. Validated to 0.00000191° max per-bone
+// error vs. ~7° via rotation-copy alone (web/scripts/validate-pso-
+// vrm-ik.mjs across all 572 PSO clips, 60 samples each). bone_000
+// (root) needed for damage/knockdown clips so the VRM lays flat when
+// PSO does. Hands/feet copy for finger + foot pose (chain leaves).
 const ROTATION_COPY_BONES: Array<[string, string]> = [
+  ['bone_000', 'Root'],
+  ['bone_002', 'J_Bip_C_Hips'],
+  ['bone_056', 'J_Bip_C_Head'],
+  ['bone_030', 'J_Bip_L_Hand'],
+  ['bone_043', 'J_Bip_R_Hand'],
+  ['bone_006', 'J_Bip_L_Foot'],
+  ['bone_015', 'J_Bip_R_Foot'],
+];
+
+// Direction-aim spine chain. VRoid VRMs have intermediate bones
+// (J_Bip_C_Spine between Hips/Chest, J_Bip_C_Neck between UpperChest/
+// Head) that PSO doesn't have — PSO is Hips → Chest → UpperChest →
+// Head with no intermediates. We walk every VRM-hierarchy edge and
+// aim each in the matching PSO direction; the unmapped intermediate
+// VRM bones get the same PSO direction as their neighbor.
+const SPINE_CHAIN: Array<[string, string, string, string]> = [
+  // [psoParent, psoChild, vrmParent, vrmChild]
+  ['bone_002', 'bone_024', 'J_Bip_C_Hips',       'J_Bip_C_Spine'],
+  ['bone_002', 'bone_024', 'J_Bip_C_Spine',      'J_Bip_C_Chest'],
+  ['bone_024', 'bone_025', 'J_Bip_C_Chest',      'J_Bip_C_UpperChest'],
+  ['bone_025', 'bone_056', 'J_Bip_C_UpperChest', 'J_Bip_C_Neck'],
+  ['bone_025', 'bone_056', 'J_Bip_C_Neck',       'J_Bip_C_Head'],
+];
+
+interface ResolvedSpineStep {
+  psoParent: THREE.Bone;
+  psoChild: THREE.Bone;
+  vrmParent: THREE.Bone;
+  restLen: number;
+  childRestLocal: THREE.Vector3;
+}
+
+// Full PSO→VRM bone map. The "ghost VRM" overlay uses this list to
+// drive every mapped bone via rotation-copy — same skeleton/proportions
+// as the live IK-driven VRM, so the cyan ghost visualizes the pure
+// rotation-copy retarget alongside the IK one for side-by-side compare.
+const ROTATION_COPY_BONES_GHOST: Array<[string, string]> = [
   ['bone_002', 'J_Bip_C_Hips'],
   ['bone_024', 'J_Bip_C_Chest'],
   ['bone_025', 'J_Bip_C_UpperChest'],
   ['bone_056', 'J_Bip_C_Head'],
+  ['bone_028', 'J_Bip_L_UpperArm'],
+  ['bone_029', 'J_Bip_L_LowerArm'],
+  ['bone_030', 'J_Bip_L_Hand'],
+  ['bone_041', 'J_Bip_R_UpperArm'],
+  ['bone_042', 'J_Bip_R_LowerArm'],
+  ['bone_043', 'J_Bip_R_Hand'],
+  ['bone_004', 'J_Bip_L_UpperLeg'],
+  ['bone_005', 'J_Bip_L_LowerLeg'],
+  ['bone_006', 'J_Bip_L_Foot'],
+  ['bone_013', 'J_Bip_R_UpperLeg'],
+  ['bone_014', 'J_Bip_R_LowerLeg'],
+  ['bone_015', 'J_Bip_R_Foot'],
 ];
 
 // Limb chains: PSO 3-bone chain (origin/middle/end) + VRM 3-bone chain.
@@ -103,12 +164,21 @@ interface ResolvedChain {
   vrmUpper: THREE.Bone;
   vrmLower: THREE.Bone;
   psoUpper: THREE.Bone;          // chain origin on the source rig
+  psoLower: THREE.Bone;          // source forearm / shin — drives the twist blend
   psoEnd: THREE.Bone;            // end effector whose offset drives the IK target
   rest: ChainRest;
   // Per-chain length ratio. PSO Humar is in ~cm-ish units, VRM in
   // meters — without this ratio the offset (PSO_end - PSO_origin)
   // overshoots VRM's reach by ~10× and the chain stays locked-out.
   scale: number;
+  // Precomputed rotation-copy prefix/suffix for the lower bone. After
+  // IK aims the bone, we recompute what pure rotation-copy would have
+  // produced, then swap the IK quat's twist component for the rotation-
+  // copy quat's twist component (around the bone's longitudinal axis).
+  // That keeps the IK's aim (elbow points at wrist) but recovers the
+  // source animation's roll (forearm pronation for palm-up vs palm-down).
+  lowerRotCopyPrefix: THREE.Quaternion;
+  lowerRotCopySuffix: THREE.Quaternion;
 }
 
 interface ResolvedRotationCopy {
@@ -158,9 +228,18 @@ export default function PsoIkVrmViewer() {
     vrmRest: RestPoseData | null;
     chains: ResolvedChain[];
     rotCopies: ResolvedRotationCopy[];
+    spineSteps: ResolvedSpineStep[];
     clips: THREE.AnimationClip[];
     action: THREE.AnimationAction | null;
     psoHelper: THREE.SkeletonHelper | null;
+    /** A clone of the VRM rig used purely as a visualization overlay.
+     *  Its mesh is hidden; the cyan SkeletonHelper renders the rotation-
+     *  copy version of the same animation. Same proportions as the live
+     *  VRM (it IS the same model), so it "fits exactly" on the IK rig
+     *  for side-by-side compare. */
+    ghostModel: THREE.Object3D | null;
+    ghostRootBone: THREE.Bone | null;
+    ghostRotCopies: ResolvedRotationCopy[];
     /** Root bones + rest positions on both rigs. The PSO clip drives
      *  bone_000.position (knockback hops in damage anims, locomotion
      *  in walk/run); we mirror the world-space delta onto the VRM root
@@ -175,7 +254,8 @@ export default function PsoIkVrmViewer() {
     psoDisplayScale: number;
   }>({
     psoModel: null, vrmModel: null, psoMixer: null, psoRest: null, vrmRest: null,
-    chains: [], rotCopies: [], clips: [], action: null, psoHelper: null,
+    chains: [], rotCopies: [], spineSteps: [], clips: [], action: null, psoHelper: null,
+    ghostModel: null, ghostRootBone: null, ghostRotCopies: [],
     psoRootBone: null, psoRootRest: new THREE.Vector3(),
     vrmRootBone: null, vrmRootRest: new THREE.Vector3(),
     psoDisplayScale: 1,
@@ -274,9 +354,6 @@ export default function PsoIkVrmViewer() {
             continue;
           }
           const rest = measureChain(vrmUpper, vrmLower, vrmEnd);
-          // PSO chain rest length in world units (after any model scale
-          // applied to the PSO model — currently identity, so this is
-          // raw GLB units).
           const psoUpperW = new THREE.Vector3();
           const psoLowerW = new THREE.Vector3();
           const psoEndW = new THREE.Vector3();
@@ -287,7 +364,22 @@ export default function PsoIkVrmViewer() {
           const vrmTotal = rest.upperLength + rest.lowerLength;
           const scale = psoTotal > 1e-6 ? vrmTotal / psoTotal : 1.0;
           console.log(`[PsoIkVrm] ${spec.label}: pso=${psoTotal.toFixed(3)} vrm=${vrmTotal.toFixed(3)} scale=${scale.toFixed(4)}`);
-          chains.push({ spec, vrmUpper, vrmLower, psoUpper, psoEnd, rest, scale });
+
+          // Precompute F-correction prefix/suffix for the lower bone
+          // (same math as retarget-utils.buildRetargetedClip's arm
+          // correction). At runtime: rcQuat = prefix * psoLocal * suffix.
+          const psoLowerLocalRest = psoRest.localQuats[spec.psoLower] || new THREE.Quaternion();
+          const vrmLowerLocalRest = vrmRest.localQuats[spec.vrmLower] || new THREE.Quaternion();
+          const psoLowerWorldRest = getWorldRestQuat(spec.psoLower, psoRest);
+          const vrmLowerWorldRest = getWorldRestQuat(spec.vrmLower, vrmRest);
+          const F = vrmLowerWorldRest.clone().invert().multiply(psoLowerWorldRest);
+          const lowerRotCopyPrefix = vrmLowerLocalRest.clone().multiply(F).multiply(psoLowerLocalRest.clone().invert());
+          const lowerRotCopySuffix = F.clone().invert();
+
+          chains.push({
+            spec, vrmUpper, vrmLower, psoUpper, psoLower, psoEnd, rest, scale,
+            lowerRotCopyPrefix, lowerRotCopySuffix,
+          });
         }
 
         // Resolve rotation-copy bones (spine/head) — precompute the
@@ -325,13 +417,52 @@ export default function PsoIkVrmViewer() {
         sortable.sort((a, b) => a.sortKey - b.sortKey);
         const names = sortable.map((s) => s.name);
 
-        // Optional: a thin skeleton helper for the PSO source so the
-        // user can see exactly what the IK is targeting.
-        const helper = new THREE.SkeletonHelper(psoModel);
+        // Ghost VRM: a SkeletonUtils-cloned copy of the live VRM with
+        // its mesh hidden. Driven by full PSO→VRM rotation-copy from
+        // BONE_MAPPINGS_VRM (plus hands+feet) so it visualizes the
+        // rotation-copy retarget at *exactly* VRM proportions —
+        // unlike the raw PSO skeleton helper, which inherits PSO's
+        // anatomy and can't visually "fit" the VRM no matter how we
+        // scale it. The cyan SkeletonHelper drawn on top of it lets
+        // the user A/B IK vs rotation-copy frame by frame.
+        // SkeletonUtils.clone takes an Object3D and returns an
+        // Object3D (TS types lie a bit — it works on Group too, which
+        // is what loadAsync gives us). Cast through unknown to silence.
+        const ghostModel = cloneSkinned(vrmModel as unknown as THREE.SkinnedMesh) as THREE.Object3D;
+        ghostModel.traverse((c) => {
+          if ((c as THREE.SkinnedMesh).isSkinnedMesh) {
+            (c as THREE.SkinnedMesh).visible = false;
+          }
+        });
+        scene.add(ghostModel);
+        const helper = new THREE.SkeletonHelper(ghostModel);
         (helper.material as THREE.LineBasicMaterial).color.set(0x00ffff);
         (helper.material as THREE.LineBasicMaterial).linewidth = 2;
         helper.renderOrder = 999;
         scene.add(helper);
+
+        // Precompute rotation-copy prefix/suffix for every bone in the
+        // ghost set. Reuses captured VRM rest pose since the ghost is
+        // the same model (proportions and rest identical).
+        const ghostRotCopies: ResolvedRotationCopy[] = [];
+        for (const [psoBone, vrmBoneName] of ROTATION_COPY_BONES_GHOST) {
+          const ghostBone = findBone(ghostModel, vrmBoneName);
+          if (!ghostBone) continue;
+          const psoLocalRest = psoRest.localQuats[psoBone] || new THREE.Quaternion();
+          const vrmLocalRest = vrmRest.localQuats[vrmBoneName] || new THREE.Quaternion();
+          const psoWorldRest = getWorldRestQuat(psoBone, psoRest);
+          const vrmWorldRest = getWorldRestQuat(vrmBoneName, vrmRest);
+          const F = vrmWorldRest.clone().invert().multiply(psoWorldRest);
+          const psoLocalRestInv = psoLocalRest.clone().invert();
+          const prefix = vrmLocalRest.clone().multiply(F).multiply(psoLocalRestInv.clone());
+          const suffix = F.clone().invert();
+          ghostRotCopies.push({ psoBone, vrmBone: ghostBone, prefix, suffix, psoLocalRestInv });
+        }
+        const ghostRootBone = findBone(ghostModel, 'Root');
+        // Offset the ghost slightly forward so it doesn't z-fight with
+        // the IK-driven VRM. Small enough to still feel "overlapping",
+        // far enough to separate the skeleton lines visually.
+        ghostModel.position.x += 0.001;
 
         const psoRootBone = findBone(psoModel, 'bone_000');
         const psoRootRest = psoRootBone ? psoRootBone.position.clone() : new THREE.Vector3();
@@ -342,9 +473,30 @@ export default function PsoIkVrmViewer() {
         const vrmRootRest = vrmRootBone ? vrmRootBone.position.clone() : new THREE.Vector3();
         if (!vrmRootBone) console.warn('[PsoIkVrm] No "Root" bone on VRM — root translation will be skipped.');
 
+        // Resolve spine direction-aim chain + measure VRM rest segment
+        // lengths. Each step aims one VRM bone so its child lands in
+        // PSO's parent→child world direction.
+        const spineSteps: ResolvedSpineStep[] = [];
+        for (const [psoP, psoC, vrmP, vrmC] of SPINE_CHAIN) {
+          const psoParent = findBone(psoModel, psoP);
+          const psoChild = findBone(psoModel, psoC);
+          const vrmParent = findBone(vrmModel, vrmP);
+          const vrmChild = findBone(vrmModel, vrmC);
+          if (!psoParent || !psoChild || !vrmParent || !vrmChild) {
+            console.warn(`[PsoIkVrm] missing bone in spine step ${vrmP}→${vrmC}`);
+            continue;
+          }
+          const vPw = new THREE.Vector3(); vrmParent.getWorldPosition(vPw);
+          const vCw = new THREE.Vector3(); vrmChild.getWorldPosition(vCw);
+          const restLen = vPw.distanceTo(vCw);
+          const childRestLocal = vrmChild.position.clone().normalize();
+          spineSteps.push({ psoParent, psoChild, vrmParent, restLen, childRestLocal });
+        }
+
         stateRef.current = {
           psoModel, vrmModel, psoMixer, psoRest, vrmRest,
-          chains, rotCopies, clips: psoGltf.animations, action: null, psoHelper: helper,
+          chains, rotCopies, spineSteps, clips: psoGltf.animations, action: null, psoHelper: helper,
+          ghostModel, ghostRootBone, ghostRotCopies,
           psoRootBone, psoRootRest,
           vrmRootBone, vrmRootRest,
           psoDisplayScale,
@@ -371,23 +523,46 @@ export default function PsoIkVrmViewer() {
       const s = stateRef.current;
       if (s.psoMixer && s.vrmModel && s.psoRest && s.vrmRest) {
         s.psoMixer.update(dt);
-        // Mirror the PSO root's position delta onto the VRM root so
-        // knockback hops (Y in damage clips) and translation (Z in
-        // walk/run) come along. PSO bone-local position is in raw GLB
-        // units; multiply by the display scale we applied to psoModel
-        // so the delta lands in VRM-world units.
-        if (s.psoRootBone && s.vrmRootBone) {
+        // Mirror the PSO root's position delta onto both the IK VRM
+        // and the ghost VRM so knockback hops (Y in damage clips) and
+        // translation (Z in walk/run) come along. PSO bone-local
+        // position is in raw GLB units; multiply by the display scale
+        // we applied to psoModel so the delta lands in VRM-world units.
+        if (s.psoRootBone) {
           const dx = (s.psoRootBone.position.x - s.psoRootRest.x) * s.psoDisplayScale;
           const dy = (s.psoRootBone.position.y - s.psoRootRest.y) * s.psoDisplayScale;
           const dz = (s.psoRootBone.position.z - s.psoRootRest.z) * s.psoDisplayScale;
-          s.vrmRootBone.position.set(
-            s.vrmRootRest.x + dx,
-            s.vrmRootRest.y + dy,
-            s.vrmRootRest.z + dz,
-          );
+          if (s.vrmRootBone) {
+            s.vrmRootBone.position.set(
+              s.vrmRootRest.x + dx,
+              s.vrmRootRest.y + dy,
+              s.vrmRootRest.z + dz,
+            );
+          }
+          if (s.ghostRootBone) {
+            // Ghost shares the same rest position as the live VRM
+            // (it's a clone), so reuse vrmRootRest.
+            s.ghostRootBone.position.set(
+              s.vrmRootRest.x + dx,
+              s.vrmRootRest.y + dy,
+              s.vrmRootRest.z + dz,
+            );
+          }
         }
         // PSO has been posed by the mixer; matrices auto-update via mixer.
         s.psoModel?.updateMatrixWorld(true);
+
+        // Drive the ghost VRM via full rotation-copy. This is the
+        // baseline retarget — no IK — visualized at VRM proportions.
+        for (const rc of s.ghostRotCopies) {
+          const psoBoneObj = findBoneCached(s.psoModel!, rc.psoBone);
+          if (!psoBoneObj) continue;
+          rc.vrmBone.quaternion
+            .copy(rc.prefix)
+            .multiply(psoBoneObj.quaternion)
+            .multiply(rc.suffix);
+        }
+        s.ghostModel?.updateMatrixWorld(true);
 
         // Rotation-copy bones (spine/head). Read PSO local quat, apply
         // prefix * pso * suffix → write VRM local quat.
@@ -402,29 +577,53 @@ export default function PsoIkVrmViewer() {
         }
         s.vrmModel.updateMatrixWorld(true);
 
-        // Limb IK. The PSO source is much larger than the VRM (different
-        // GLB unit conventions), so we can't use PSO end-effector world
-        // positions directly. Instead, take the *offset* from the PSO
-        // chain origin (shoulder/hip) to the PSO end (hand/foot), scale
-        // it by the VRM/PSO length ratio, and add to the VRM chain
-        // origin. That preserves the gesture (direction + relative
-        // reach) without inheriting PSO's absolute scale.
-        const psoOriginW = new THREE.Vector3();
-        const psoEndW = new THREE.Vector3();
-        const vrmShoulderW = new THREE.Vector3();
+        // Direction-aim spine chain. Replaces rotation-copy on
+        // Chest/UpperChest, which leaves a ~7° rest-pose residual.
+        // Walks every VRM-hierarchy edge top-down so each step sees
+        // its parent's already-aimed matrix.
+        const tmpP = new THREE.Vector3(), tmpC = new THREE.Vector3(), tmpV = new THREE.Vector3();
+        for (const step of s.spineSteps) {
+          step.psoParent.getWorldPosition(tmpP);
+          step.psoChild.getWorldPosition(tmpC);
+          const psoDir = tmpC.sub(tmpP);
+          if (psoDir.lengthSq() < 1e-12) continue;
+          psoDir.normalize();
+          step.vrmParent.getWorldPosition(tmpV);
+          const target = psoDir.multiplyScalar(step.restLen).add(tmpV);
+          aimBoneAtTarget(step.vrmParent, target, step.childRestLocal);
+        }
+        s.vrmModel.updateMatrixWorld(true);
+
+        // Direction-driven limb retarget. Aims each VRM bone in PSO's
+        // world-space direction; the analytic-IK-with-fixed-pole code
+        // is gone (it forced elbows to one side regardless of where
+        // PSO had them). Per-bone aim error validated to <0.000002°
+        // across all 572 PSO clips × 60 samples × 11 bones.
         for (const chain of s.chains) {
-          chain.psoUpper.getWorldPosition(psoOriginW);
-          chain.psoEnd.getWorldPosition(psoEndW);
-          chain.vrmUpper.getWorldPosition(vrmShoulderW);
-          const targetWorld = new THREE.Vector3()
-            .subVectors(psoEndW, psoOriginW)
-            .multiplyScalar(chain.scale)
-            .add(vrmShoulderW);
-          const poleWorld = vrmShoulderW.clone().add(chain.spec.poleOffset);
-          solveTwoBoneIK(chain.vrmUpper, chain.vrmLower, targetWorld, poleWorld, chain.rest);
+          retargetChainByDirection(
+            chain.vrmUpper, chain.vrmLower,
+            chain.psoUpper, chain.psoLower, chain.psoEnd,
+            chain.rest.upperLength, chain.rest.lowerLength,
+            chain.rest.upperChildRestLocal, chain.rest.lowerChildRestLocal,
+          );
+
+          // Hybrid twist: setFromUnitVectors gives shortest-path
+          // rotation, which leaves the bone's twist around its own
+          // axis undefined. Restore PSO's twist (palm pronation /
+          // foot pitch) from a rotation-copy F-corrected quat.
+          const rcQuat = chain.lowerRotCopyPrefix.clone()
+            .multiply(chain.psoLower.quaternion)
+            .multiply(chain.lowerRotCopySuffix);
+          const axis = chain.rest.lowerChildRestLocal;
+          const { twist: rcTwist } = swingTwistDecomposition(rcQuat, axis);
+          const { swing: ikSwing } = swingTwistDecomposition(chain.vrmLower.quaternion, axis);
+          chain.vrmLower.quaternion.copy(ikSwing).multiply(rcTwist);
+          chain.vrmLower.updateMatrixWorld(true);
         }
       }
       if (stateRef.current.psoHelper) {
+        // The "psoHelper" name is historical — the helper is now on the
+        // ghost VRM, not the PSO source. Same toggle still gates it.
         stateRef.current.psoHelper.visible = showPsoSkel;
       }
       controls.update();
@@ -511,7 +710,7 @@ export default function PsoIkVrmViewer() {
             checked={showPsoSkel}
             onChange={(e) => setShowPsoSkel(e.target.checked)}
           />
-          show PSO skeleton (cyan)
+          show rotation-copy ghost (cyan)
         </label>
         <span style={{ marginLeft: 'auto', color: '#888' }}>{status}</span>
       </div>

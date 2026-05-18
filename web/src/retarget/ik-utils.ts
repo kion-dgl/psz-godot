@@ -134,3 +134,102 @@ export function solveTwoBoneIK(
   lowerBone.quaternion.setFromUnitVectors(lowerChildRestLocal, lowerLocalDir);
   lowerBone.updateMatrixWorld(true);
 }
+
+/** Rotate `bone` so its local "child rest direction" points at
+ *  `targetWorld` in world space. childRestLocal is the unit vector
+ *  in the bone's own local frame that points toward its child at
+ *  rest (typically `child.position.clone().normalize()`). Uses
+ *  setFromUnitVectors, which gives shortest-path rotation — twist
+ *  around the bone axis is unspecified and must be corrected
+ *  separately if needed (see swingTwistDecomposition + a rotation-
+ *  copy blend). */
+export function aimBoneAtTarget(
+  bone: THREE.Bone,
+  targetWorld: THREE.Vector3,
+  childRestLocal: THREE.Vector3,
+): void {
+  if (!bone.parent) return;
+  bone.parent.updateMatrixWorld(true);
+  const parentInv = new THREE.Matrix4().copy(bone.parent.matrixWorld).invert();
+  const targetInParent = targetWorld.clone().applyMatrix4(parentInv);
+  const localDir = targetInParent.sub(bone.position).normalize();
+  bone.quaternion.setFromUnitVectors(childRestLocal, localDir);
+  bone.updateMatrixWorld(true);
+}
+
+/** Direction-driven 2-bone chain retarget. Aims each VRM bone so its
+ *  child lands at VRM-rest-length away in PSO's parent→child
+ *  direction (world space). Replaces analytic-IK-with-fixed-pole:
+ *  the elbow/knee goes exactly where PSO has it, not where the pole
+ *  bias guesses. Validated to <0.000002° per-bone aim error across
+ *  all 572 PSO clips at 60 samples/clip (web/scripts/validate-pso-
+ *  vrm-ik.mjs). Twist around the bone axis still needs a separate
+ *  rotation-copy blend — this only fixes swing. */
+export function retargetChainByDirection(
+  vrmUpper: THREE.Bone,
+  vrmLower: THREE.Bone,
+  psoUpper: THREE.Object3D,
+  psoLower: THREE.Object3D,
+  psoEnd: THREE.Object3D,
+  vrmUpperLen: number,
+  vrmLowerLen: number,
+  upperChildRestLocal: THREE.Vector3,
+  lowerChildRestLocal: THREE.Vector3,
+): void {
+  const pU = new THREE.Vector3(); psoUpper.getWorldPosition(pU);
+  const pL = new THREE.Vector3(); psoLower.getWorldPosition(pL);
+  const pE = new THREE.Vector3(); psoEnd.getWorldPosition(pE);
+
+  // Aim upper bone at where elbow should land: VRM-upper-length away
+  // from VRM shoulder, in PSO's shoulder→elbow direction (world).
+  const upperDir = new THREE.Vector3().subVectors(pL, pU);
+  if (upperDir.lengthSq() < 1e-12) return;
+  upperDir.normalize();
+  const vSw = new THREE.Vector3(); vrmUpper.getWorldPosition(vSw);
+  const elbowTarget = upperDir.multiplyScalar(vrmUpperLen).add(vSw);
+  aimBoneAtTarget(vrmUpper, elbowTarget, upperChildRestLocal);
+
+  // After upper rotates, lower's world position has shifted. Re-read,
+  // then aim lower at the hand target (VRM-lower-length from elbow,
+  // in PSO's elbow→hand direction).
+  vrmLower.updateMatrixWorld(true);
+  const vEw = new THREE.Vector3(); vrmLower.getWorldPosition(vEw);
+  const lowerDir = new THREE.Vector3().subVectors(pE, pL);
+  if (lowerDir.lengthSq() < 1e-12) return;
+  lowerDir.normalize();
+  const handTarget = lowerDir.multiplyScalar(vrmLowerLen).add(vEw);
+  aimBoneAtTarget(vrmLower, handTarget, lowerChildRestLocal);
+}
+
+/** Swing-twist decomposition. Splits a quaternion into the rotation
+ *  around `axis` (twist — e.g. forearm roll for palm-up vs palm-down)
+ *  and everything else (swing — bone bend / aim). Used by the hybrid
+ *  retargeter: IK gives us the right swing (elbow points toward
+ *  wrist), but its twist is whatever setFromUnitVectors happened to
+ *  pick. We restore the source animation's twist by extracting it
+ *  from the rotation-copy result and re-attaching to the IK swing.
+ *
+ *  `axis` must be a unit vector in the bone's local frame, pointing
+ *  along the bone's length (toward its child in rest pose). */
+export function swingTwistDecomposition(
+  q: THREE.Quaternion,
+  axis: THREE.Vector3,
+): { swing: THREE.Quaternion; twist: THREE.Quaternion } {
+  // Project q's vector part onto axis → twist's vector part.
+  const dot = q.x * axis.x + q.y * axis.y + q.z * axis.z;
+  const px = axis.x * dot;
+  const py = axis.y * dot;
+  const pz = axis.z * dot;
+  let twist = new THREE.Quaternion(px, py, pz, q.w);
+  const lenSq = twist.x * twist.x + twist.y * twist.y + twist.z * twist.z + twist.w * twist.w;
+  if (lenSq < 1e-12) {
+    // q is a pure swing (180° around an axis perp to `axis`). Twist = identity.
+    twist = new THREE.Quaternion();
+  } else {
+    twist.normalize();
+  }
+  // swing = q * inv(twist)
+  const swing = q.clone().multiply(twist.clone().invert());
+  return { swing, twist };
+}
+
