@@ -57,11 +57,11 @@ func _ready() -> void:
 		# Geometric, looks natural; doesn't rely on PSO retargeting.
 		"vrm_idle",
 		"",                          # no hat
-		# Interact response: pixiv VRoid's official "Greeting" animation
-		# from VRMA_02 (vrma_anims.glb). Free for commercial use with
-		# the credit line "Animation credits to pixiv Inc.'s VRoid
-		# Project" — add to the credits screen when we have one.
-		"vrma_greeting",
+		# Interact response: Blender-authored 3s bow (vrm_bow). Was
+		# vrma_greeting before but that's a 7.27s bend+stand+wave —
+		# too long for a quick interaction beat; the player walks into
+		# the shop UI a couple seconds in and never sees the wave.
+		"vrm_bow",
 	)
 	_add_npc(
 		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), 0.7835,

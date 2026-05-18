@@ -100,12 +100,51 @@ def make_action(name, end_frame, set_extrapolation='CONSTANT'):
     return a
 
 
+# ── Pose helper: arms-down rest ─────────────────────────────────────
+# VRM bind pose is T-pose with arms horizontal. Every keyframe in our
+# anims has to explicitly set the arms or they snap back to horizontal
+# (since the AnimationPlayer overrides bone-local rotations on each
+# frame, including bones with no animation data — those bones get the
+# original Blender rest values, which is T-pose).
+#
+# The rotations below bring J_Bip_L/R_UpperArm and the forearms into a
+# natural arms-down stance, matching what feels right visually for the
+# item-shop NPC. Found empirically by tweaking values in Blender then
+# checking the in-game render.
+#
+# Local Euler angles per bone (XYZ order). VRoid bones use local Y as
+# the bone-length axis, so swinging an arm down from T-pose to a
+# natural standing pose is a Z-axis rotation. Mirror across L/R.
+# Forearms are kept near rest — X=±90 was a guess that looked like an
+# elbow fold; with the upper arm fully vertical (Z=-80°) the forearm
+# naturally hangs at the side without any twist.
+#   L Upper Arm: Z -80°    (vertical, slight outward away from torso)
+#   R Upper Arm: Z +80°    (mirror)
+#   L/R Lower Arm: rest    (no rotation needed)
+ARMS_DOWN = {
+    'J_Bip_L_UpperArm': (0, 0, -80),
+    'J_Bip_R_UpperArm': (0, 0, 80),
+}
+
+
+def key_arms_down(frame):
+    for bone, (x, y, z) in ARMS_DOWN.items():
+        key_euler(bone, frame, x_deg=x, y_deg=y, z_deg=z)
+
+
 # ── Animation 1: vrm_idle ──────────────────────────────────────────
 # 2-second breathing motion (48 frames at 24 fps). Chest rotates
-# slightly forward on inhale, back on exhale. Small head bob.
+# slightly forward on inhale, back on exhale. Arms held down at the
+# sides for the whole loop so the NPC reads as a relaxed shopkeep
+# rather than a T-posed mannequin.
 print("[author-vrm] authoring vrm_idle")
 reset_pose()
 make_action('vrm_idle', 48)
+# Arms down for every keyframe (frames 1, 12, 24, 36, 48). Without
+# repeating these, Blender would interpolate back to T-pose between
+# keyframes for un-keyed bones.
+for f in (1, 12, 24, 36, 48):
+    key_arms_down(f)
 # Inhale (frame 1 → 12): chest opens, head slightly up
 key_euler('J_Bip_C_Chest', 1, x_deg=0)
 key_euler('J_Bip_C_UpperChest', 1, x_deg=0)
@@ -133,25 +172,31 @@ print("[author-vrm] authoring vrm_bow")
 # Build a NEW action so vrm_idle's keyframes don't bleed in.
 reset_pose()
 make_action('vrm_bow', 72)
+# Arms down throughout the bow (same reason as in vrm_idle — un-keyed
+# bones snap to T-pose).
+for f in (1, 24, 48, 72):
+    key_arms_down(f)
 # Rest at frame 1
 key_euler('J_Bip_C_Hips', 1, x_deg=0)
 key_euler('J_Bip_C_Spine', 1, x_deg=0)
 key_euler('J_Bip_C_Chest', 1, x_deg=0)
 key_euler('J_Bip_C_UpperChest', 1, x_deg=0)
 key_euler('J_Bip_C_Head', 1, x_deg=0)
-# Bow down by frame 24 (1 sec). Distribute the forward tilt across
-# the spine chain so it reads as a bend, not a hip pivot.
-key_euler('J_Bip_C_Hips', 24, x_deg=-5)
-key_euler('J_Bip_C_Spine', 24, x_deg=-15)
-key_euler('J_Bip_C_Chest', 24, x_deg=-15)
-key_euler('J_Bip_C_UpperChest', 24, x_deg=-10)
-key_euler('J_Bip_C_Head', 24, x_deg=-15)  # head leads the bow
+# Bow forward by frame 24 (1 sec). Positive X on VRoid spine bones
+# tilts forward; negative tilts backward. Distribute the bend across
+# the spine chain so it reads as a bow, not a hip pivot. Head ducks
+# along with the chest.
+key_euler('J_Bip_C_Hips', 24, x_deg=5)
+key_euler('J_Bip_C_Spine', 24, x_deg=15)
+key_euler('J_Bip_C_Chest', 24, x_deg=15)
+key_euler('J_Bip_C_UpperChest', 24, x_deg=10)
+key_euler('J_Bip_C_Head', 24, x_deg=15)
 # Hold the bow (24 → 48)
-key_euler('J_Bip_C_Hips', 48, x_deg=-5)
-key_euler('J_Bip_C_Spine', 48, x_deg=-15)
-key_euler('J_Bip_C_Chest', 48, x_deg=-15)
-key_euler('J_Bip_C_UpperChest', 48, x_deg=-10)
-key_euler('J_Bip_C_Head', 48, x_deg=-15)
+key_euler('J_Bip_C_Hips', 48, x_deg=5)
+key_euler('J_Bip_C_Spine', 48, x_deg=15)
+key_euler('J_Bip_C_Chest', 48, x_deg=15)
+key_euler('J_Bip_C_UpperChest', 48, x_deg=10)
+key_euler('J_Bip_C_Head', 48, x_deg=15)
 # Return to rest by frame 72 (3s total)
 key_euler('J_Bip_C_Hips', 72, x_deg=0)
 key_euler('J_Bip_C_Spine', 72, x_deg=0)

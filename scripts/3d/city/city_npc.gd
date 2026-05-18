@@ -152,10 +152,14 @@ func play_oneshot(anim_name: String) -> void:
 		var lib: AnimationLibrary = _anim_player.get_animation_library("")
 		lib.add_animation(anim_name, anim)
 	_anim_player.play(anim_name)
-	_anim_player.animation_finished.connect(func(_finished_name: StringName) -> void:
-		if not idle_anim.is_empty() and _anim_player.has_animation(idle_anim):
-			_anim_player.play(idle_anim)
-	, CONNECT_ONE_SHOT)
+	# Queue the idle to resume after the one-shot finishes. Using
+	# AP.queue() rather than animation_finished signal because the
+	# signal-based approach was leaving the NPC frozen at the last
+	# frame of the one-shot — likely a signal-timing issue when the
+	# one-shot completed during a scene transition. queue() is the
+	# documented Godot pattern for sequencing animations.
+	if not idle_anim.is_empty() and _anim_player.has_animation(idle_anim):
+		_anim_player.queue(idle_anim)
 	print("[CityNPC] One-shot: %s on %s" % [anim_name, npc_display_name])
 
 
