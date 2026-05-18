@@ -3,9 +3,23 @@ class_name CityNPC
 ## Interactive NPC for the 3D city hub. Loads a GLB model and opens
 ## a 2D shop/menu overlay on interaction.
 
-## Animation sources to search for idle anims (tried in order)
+## Animation sources to search for idle anims (tried in order).
+## npc_idles_vrm.glb contains the same PSO anims as npc_idles.glb but
+## with their tracks retargeted to the VRM J_Bip_* bone convention
+## (built by web/scripts/bake-retarget-vrm.mjs). Clip names in that
+## file are suffixed _vrm to avoid colliding with the PSZ versions —
+## VRM NPCs request "pso_f_sh_stand_vrm" instead of "pso_f_sh_stand".
+##
+## Note the VRM library lives under assets/npcs/item_shop/, not
+## assets/player/animations/, because the export preset's
+## exclude_filter ships `assets/player/*` via the Arweave asset pack
+## rather than bundling them into the APK. Our small VRM library
+## ships in-tree with the item_shop NPC's other assets.
 const NPC_ANIM_SOURCES := [
 	"res://assets/player/animations/npc_idles.glb",
+	"res://assets/npcs/item_shop/npc_idles_vrm.glb",         # PSO retargeted onto VRM
+	"res://assets/npcs/item_shop/item_shop_anims.glb",       # in-house Blender-authored (vrm_idle, vrm_bow)
+	"res://assets/npcs/item_shop/vrma_anims.glb",            # pixiv VRoid VRMA pack (vrma_greeting etc.)
 	"res://assets/player/animations/saver_m.glb",
 	"res://assets/player/animations/saver_w.glb",
 ]
@@ -15,6 +29,10 @@ const NPC_ANIM_SOURCES := [
 @export var target_scene_path: String = ""
 @export var npc_rotation_y: float = 0.0
 @export var idle_anim: String = ""  # Animation name from npc_idles.glb
+## Animation played once on player interaction (greeting / bow style),
+## then the NPC returns to idle_anim. Looked up from NPC_ANIM_SOURCES
+## the same way as idle_anim.
+@export var interact_anim: String = ""
 @export var hat_model_path: String = ""  # Optional GLB attached to head bone
 @export var hat_bone_name: String = "090_Head"
 
@@ -134,10 +152,14 @@ func play_oneshot(anim_name: String) -> void:
 		var lib: AnimationLibrary = _anim_player.get_animation_library("")
 		lib.add_animation(anim_name, anim)
 	_anim_player.play(anim_name)
-	_anim_player.animation_finished.connect(func(_finished_name: StringName) -> void:
-		if not idle_anim.is_empty() and _anim_player.has_animation(idle_anim):
-			_anim_player.play(idle_anim)
-	, CONNECT_ONE_SHOT)
+	# Queue the idle to resume after the one-shot finishes. Using
+	# AP.queue() rather than animation_finished signal because the
+	# signal-based approach was leaving the NPC frozen at the last
+	# frame of the one-shot — likely a signal-timing issue when the
+	# one-shot completed during a scene transition. queue() is the
+	# documented Godot pattern for sequencing animations.
+	if not idle_anim.is_empty() and _anim_player.has_animation(idle_anim):
+		_anim_player.queue(idle_anim)
 	print("[CityNPC] One-shot: %s on %s" % [anim_name, npc_display_name])
 
 
@@ -215,6 +237,13 @@ func _on_interact(_player: Node3D) -> void:
 	if target_scene_path.is_empty():
 		return
 	SfxManager.play("res://assets/sfx/ui/menu_open.wav")
+	# Play the interaction-response animation if configured. Fires
+	# concurrently with the scene push so the greet/bow plays in the
+	# background as the shop UI transitions in — the player sees it on
+	# the way out, and when they exit the shop the NPC has already
+	# returned to idle.
+	if not interact_anim.is_empty():
+		play_oneshot(interact_anim)
 	# Save position so we return to same spot
 	var area_controller := get_parent()
 	if area_controller and area_controller.has_method("_save_player_state"):

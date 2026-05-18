@@ -51,7 +51,17 @@ func _ready() -> void:
 		"res://assets/npcs/item_shop/item_shop.glb",
 		"Shop",
 		"res://scenes/2d/shops/item_shop.tscn",
-		"pso_f_sh_stand"
+		# VRM-targeted retargeted idle. See web/scripts/bake-retarget-vrm.mjs
+		# and assets/player/animations/npc_idles_vrm.glb.
+		# Idle: Blender-authored breathing motion (item_shop_anims.glb).
+		# Geometric, looks natural; doesn't rely on PSO retargeting.
+		"vrm_idle",
+		"",                          # no hat
+		# Interact response: Blender-authored 3s bow (vrm_bow). Was
+		# vrma_greeting before but that's a 7.27s bend+stand+wave —
+		# too long for a quick interaction beat; the player walks into
+		# the shop UI a couple seconds in and never sees the wave.
+		"vrm_bow",
 	)
 	_add_npc(
 		"WeaponShopNPC", Vector3(-6.78, 0, 21.81), 0.7835,

@@ -345,7 +345,10 @@ assets/npcs/fern/fern.png
 assets/npcs/grind-portrait.jpeg
 assets/npcs/guild-portrait.jpeg
 assets/npcs/item-portrait.jpeg
+assets/npcs/item_shop/item_shop_anims.glb
 assets/npcs/item_shop/item_shop.glb
+assets/npcs/item_shop/npc_idles_vrm.glb
+assets/npcs/item_shop/vrma_anims.glb
 assets/npcs/kai/pc_a01_000.glb
 assets/npcs/kai/pc_a01_000.png
 assets/npcs/mira/mira.glb

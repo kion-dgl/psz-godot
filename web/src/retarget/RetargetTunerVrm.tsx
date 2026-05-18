@@ -100,7 +100,10 @@ const BAKED_OPTIMAL_OFFSETS: Record<string, BoneOffset> = {
   // Hips / upper-chest / legs from Auto Calibrate's geometric direction
   // matching at rest.
   Root: { x: -0.2, y: 0, z: 0 },
-  J_Bip_C_Hips: { x: -13.5, y: 0.2, z: -1 },
+  // Hip X zeroed — auto-cal's -13.5° was geometrically correct at rest
+  // but stacks badly during animation and tilts the character ~20°
+  // backward. See bake-retarget-vrm.mjs for the full reasoning.
+  J_Bip_C_Hips: { x: 0, y: 0, z: 0 },
   J_Bip_C_UpperChest: { x: 14.7, y: 0, z: -0.4 },
   J_Bip_L_UpperLeg: { x: -5.3, y: -0.2, z: 4.6 },
   J_Bip_L_LowerLeg: { x: 1.4, y: 0.1, z: 4.6 },
@@ -155,14 +158,25 @@ export default function RetargetTuner() {
   const [offsets, setOffsets] = useState<OffsetMap>(() => {
     // Restore previously-saved offsets from localStorage if present so
     // the user doesn't lose hard-won optimization runs on reload.
+    // Always merge into a fresh defaultOffsets(): if TUNABLE_BONES has
+    // gained a new entry since the saved state (e.g. we added
+    // J_Bip_C_Chest in this branch), the stored map won't have a key
+    // for it and the render loop's `offsets[bone].x` access would
+    // throw. The merge keeps user-tuned values where they exist and
+    // falls back to defaults for any missing slot.
+    const base = defaultOffsets();
     try {
       const raw = localStorage.getItem('vrm-tuner-offsets-v1');
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') return parsed as OffsetMap;
+        if (parsed && typeof parsed === 'object') {
+          for (const [k, v] of Object.entries(parsed as Record<string, BoneOffset>)) {
+            if (k in base && v && typeof v.x === 'number') base[k] = v;
+          }
+        }
       }
     } catch { /* ignore */ }
-    return defaultOffsets();
+    return base;
   });
   const [psoAnimNames, setPsoAnimNames] = useState<string[]>([]);
   const [selectedAnim, setSelectedAnim] = useState<string | null>(null);
@@ -529,7 +543,6 @@ export default function RetargetTuner() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(50, width / height, 0.01, 100);
-    camera.position.set(0, 1, 3);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     renderer.setClearColor(0x0a0a1a);
@@ -543,7 +556,10 @@ export default function RetargetTuner() {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.target.set(0, 0.8, 0);
+    // Aim at the midpoint between VRM (x=-1) and PSO (x=1.5). Pull
+    // the camera back further so both characters fit in frame.
+    controls.target.set(0.25, 1.0, 0);
+    camera.position.set(0.25, 1.3, 4.5);
 
     sceneRef.current = {
       scene, camera, renderer, controls,
@@ -555,8 +571,9 @@ export default function RetargetTuner() {
     };
 
     const clock = new THREE.Clock();
+    let rafId = 0;
     const animate = () => {
-      requestAnimationFrame(animate);
+      rafId = requestAnimationFrame(animate);
       const delta = clock.getDelta();
       if (sceneRef.current?.pszMixer) sceneRef.current.pszMixer.update(delta);
       if (sceneRef.current?.psoMixer) sceneRef.current.psoMixer.update(delta);
@@ -570,11 +587,13 @@ export default function RetargetTuner() {
     // Load VRM target (embedded textures; no side-load override).
     loader.load(VRM_MODEL_PATH, (gltf) => {
       const model = gltf.scene;
-      // Co-located with PSO at origin so per-bone world positions are
-      // directly comparable. Both skeletons render in place; mesh
-      // overlap is acceptable for calibration since the SkeletonHelper
-      // lines are the primary reference.
-      model.position.x = 0;
+      // Side-by-side layout: VRM on the left, PSO reference on the
+      // right. Co-location (both at x=0) was useful for measuring
+      // bone-position errors during calibration, but with the
+      // retargeting now matching motion 1:1 (see __measureMotion in
+      // the tuner), comparison is more readable as two normal-opacity
+      // characters next to each other.
+      model.position.x = -1.0;
       scene.add(model);
       sceneRef.current!.pszModel = model;
       const helper = new THREE.SkeletonHelper(model);
@@ -588,23 +607,13 @@ export default function RetargetTuner() {
       model.updateMatrixWorld(true);
       sceneRef.current!.pszRest = captureRestPose(model);
 
-      // Load PSO model as reference, overlaid at origin so bone
-      // positions match up for direction-matching calibration.
+      // Load PSO reference. Full opacity now that we're side-by-side.
+      // The Snap/Restore diagnostic still works with this layout —
+      // Snap moves VRM bone positions onto PSO bones in world space,
+      // so visually the VRM will jump to overlap PSO if you click it.
       loader.load(PSO_MODEL_PATH, (psoGltf) => {
         const psoModel = psoGltf.scene;
-        psoModel.position.x = 0;
-        // Drop PSO mesh opacity so the VRM stays visually foregrounded
-        // during calibration — skeleton lines still draw at full color.
-        psoModel.traverse((c) => {
-          if ((c as THREE.Mesh).isMesh) {
-            const mesh = c as THREE.Mesh;
-            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-            for (const m of mats) {
-              (m as THREE.Material).transparent = true;
-              (m as THREE.Material).opacity = 0.35;
-            }
-          }
-        });
+        psoModel.position.x = 1.5;
         scene.add(psoModel);
 
         // Scale BEFORE resetting — animated pose gives reliable bounding box
@@ -655,9 +664,29 @@ export default function RetargetTuner() {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      // Stop the rAF loop so it doesn't keep ticking after unmount
+      // (the closure captures sceneRef/renderer and would otherwise
+      // call renderer.render on a disposed renderer indefinitely).
+      cancelAnimationFrame(rafId);
       window.removeEventListener('resize', handleResize);
+      // Tear down OrbitControls listeners
+      controls.dispose();
       renderer.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+      // Drop the debug helpers off window so they don't keep alive a
+      // stale sceneRef + setters from the previous mount on route
+      // changes.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any;
+      delete w.__setOffsets;
+      delete w.__getOffsets;
+      delete w.__getSelectedAnim;
+      delete w.__setSelectedAnim;
+      delete w.__measureOffsets;
+      delete w.__probeBones;
+      delete w.__inspectAnim;
+      delete w.__measureMotion;
+      delete w.__debugPsoMotion;
     };
   }, []);
 
