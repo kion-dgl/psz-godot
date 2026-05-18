@@ -102,15 +102,52 @@ references and verifies each path exists in `asset_tree.txt`
 file but didn't republish" case where the source references a path
 that's not actually in the pack.
 
-## Why three layers (pack range-probe + sidecar + asset_tree)
+### `r2-mirror-check`
+
+`scripts/tools/check_r2_mirror.sh` runs on every PR. It diffs `assets/*`
+and `web/public/assets/psobb_sfx/*` between the PR base and head, then
+HEAD-probes each added/modified path against the R2 public URL
+(`pub-8bb0622759a042aa9dbd9cb4bd1f21e6.r2.dev`). Any 404 fails the job.
+
+Excludes (kept in sync with `scripts/publish/sync_tree.ts`):
+
+- `assets/kenney_input-prompts/`, `assets/kenney_nature-pack/` — vendored
+  in-repo, never on R2
+- `assets/npcs/cowgirl/` — pack-only license
+- `*.import`, `*.uid` — Godot bookkeeping, not asset content
+
+Covers the R2/web side. The Arweave/pack side is `verify-assets`.
+
+## Asset pipeline split: Arweave .pck vs R2 raw mirror
+
+The repo ships assets through **two** separate distribution channels.
+A PR that adds asset files must update both, or one of the CI checks
+will catch it:
+
+| Channel | Consumer | Updated by | Verified by |
+|---|---|---|---|
+| Arweave `.pck` | Godot game (desktop / mobile / web export) | `cd scripts/publish && npm run upload-pack` — commits `assets_manifest.json` + `asset_tree.txt` | `verify-assets` + `check-asset-refs` |
+| R2 raw mirror | Vite web tools (quest editor, storybook, retarget viewers) — fetch individual files via `VITE_ASSETS_BASE` | `cd scripts/publish && npm run sync-tree` — uploads to R2, **no commit** | `r2-mirror-check` |
+
+**If your PR adds files under `assets/` or `web/public/assets/psobb_sfx/`:**
+
+1. Run `cd scripts/publish && npm run sync-tree` (uploads to R2 — no commit needed).
+2. If the Godot game needs the new files in the pack: also run `npm run upload-pack`, commit `assets_manifest.json` and `asset_tree.txt`.
+3. Push the PR. `r2-mirror-check` probes the new R2 paths; `verify-assets` probes the pack.
+
+R2 credentials live in `.env`: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+`R2_S3_ENDPOINT`, `CLOUDFLARE_R2_BUCKET`, `CLOUDFLARE_R2_PUBLIC_URL`.
+
+## Why these layers (pack range-probe + sidecar + asset_tree + r2-mirror)
 
 | Mistake | Caught by |
 |---|---|
-| Dev added a new asset file, forgot to publish | `check-asset-refs` (path missing from `asset_tree.txt`) |
-| Dev published, but Arweave upload silently failed | `verify-assets` reachability probe (pack URL 404s) |
-| Dev edited an existing asset, forgot to publish (path-stable change) | `verify-assets` sidecar check (sidecar's pack.sha256 ≠ what's in-repo, OR sidecar missing entirely on a fresh sha) |
+| Dev added a new asset file, forgot to republish the pack | `check-asset-refs` (path missing from `asset_tree.txt`) |
+| Dev published the pack, but Arweave upload silently failed | `verify-assets` reachability probe (pack URL 404s) |
+| Dev edited an existing asset, forgot to republish (path-stable change) | `verify-assets` sidecar check (sidecar's pack.sha256 ≠ what's in-repo, OR sidecar missing entirely on a fresh sha) |
 | Dev rolled back the manifest after publish | `verify-assets` sidecar check (versions diverge) |
 | Dev manually edited `assets_manifest.json` to lie about sha | `verify-assets` sidecar check (sidecar disagrees) |
+| Dev added a new asset, forgot to run `sync-tree` for the R2 mirror | `r2-mirror-check` (R2 URL 404s for the new path) |
 
 The full sha256 re-stream on every PR was previously the integrity
 check, but Arweave's gateway can't reliably serve the full 264 MB

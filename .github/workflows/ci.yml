@@ -114,6 +114,25 @@ jobs:
       - name: Verify pack reachable + sidecar matches manifest
         run: python3 scripts/tools/verify_assets_manifest.py
 
+  r2-mirror-check:
+    # Fails closed when a PR adds asset files under assets/ or
+    # web/public/assets/psobb_sfx/ that aren't yet on R2 (the web build's CDN).
+    # Forcing function for `scripts/publish/sync_tree.ts`. Pack/Arweave side is
+    # covered by verify-assets; this is the R2/web side.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Probe added/modified asset paths against R2
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash scripts/tools/check_r2_mirror.sh
+
   web:
     runs-on: ubuntu-latest
     timeout-minutes: 5
