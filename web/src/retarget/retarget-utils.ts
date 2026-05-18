@@ -56,6 +56,45 @@ export const BONE_MAPPINGS_VRM: Record<string, string> = {
   bone_014: 'J_Bip_R_LowerLeg',
 };
 
+/** Reverse direction: VRM source → PSZ target. Bone map is inverted
+ *  from BONE_MAPPINGS_VRM and routed at the actual PSZ player skeleton
+ *  bone names (which the PSO Humar → PSZ retargeted clips already
+ *  target, so PSZ characters can play VRM/VRMA animations through the
+ *  same downstream pipeline that handles npc_idles.glb).
+ *
+ *  Unlike PSO→VRM where intermediate spine bones matter (PSO has 2,
+ *  VRM has 3), this direction is simpler: VRM has more bones than PSZ
+ *  needs, so we just pick the most-animated VRM bone per body part.
+ *  UpperChest is the one that carries upper-body sway (per the
+ *  empirical exploration in #220/#221) so it routes to PSZ Spine.
+ */
+export const BONE_MAPPINGS_VRM_TO_PSZ: Record<string, string> = {
+  Root: '000_Root',
+  J_Bip_C_Hips: '010_Hip',
+  J_Bip_C_UpperChest: '020_Spine',
+  J_Bip_C_Head: '090_Head',
+  J_Bip_L_UpperArm: '030_LArm01',
+  J_Bip_L_LowerArm: '040_LArm02',
+  J_Bip_R_UpperArm: '060_RArm01',
+  J_Bip_R_LowerArm: '070_RArm02',
+  J_Bip_L_UpperLeg: '100_LLeg01',
+  J_Bip_L_LowerLeg: '110_LLeg02',
+  J_Bip_R_UpperLeg: '120_RLeg01',
+  J_Bip_R_LowerLeg: '130_RLeg02',
+};
+
+/** Direction config for the VRM→PSZ retarget — arm bones and root bone
+ *  come from the VRM source (J_Bip_* convention, root commonly named
+ *  "Root" in VRoid-authored rigs). Pass this as the `direction`
+ *  parameter to buildRetargetedClip. */
+export const VRM_TO_PSZ_DIRECTION = {
+  armSourceBones: [
+    'J_Bip_L_UpperArm', 'J_Bip_R_UpperArm',
+    'J_Bip_L_LowerArm', 'J_Bip_R_LowerArm',
+  ],
+  rootSourceBone: 'Root',
+};
+
 export interface RestPoseData {
   localQuats: Record<string, THREE.Quaternion>;
   worldQuats: Record<string, THREE.Quaternion>;
@@ -105,6 +144,19 @@ export function resetToBindPose(model: THREE.Object3D): void {
 
 // wristTargets: maps PSO wrist bone name → target Object3D name in PSZ scene
 // e.g. { bone_030: '_wristL', bone_043: '_wristR' }
+/** Direction-specific knobs that used to be hardcoded for PSO-as-source.
+ *  Pass these explicitly when the source skeleton isn't PSO Humar — e.g.
+ *  for VRM → PSZ retargeting, supply the VRM arm bones and root bone. */
+export interface RetargetDirection {
+  /** Source bones whose world-rest orientation should be baked into the
+   *  target's adjusted local rest. Forearms must follow upper arms in
+   *  the list (children depend on corrected parents). */
+  armSourceBones?: string[];
+  /** Source root bone that needs its position track retargeted into the
+   *  target rig's coordinate frame. */
+  rootSourceBone?: string;
+}
+
 export function buildRetargetedClip(
   clip: THREE.AnimationClip,
   psoRest: RestPoseData,
@@ -114,6 +166,7 @@ export function buildRetargetedClip(
   outputName?: string,
   wristTargets?: Record<string, string>,
   boneOffsets?: Record<string, { x: number; y: number; z: number }>,
+  direction?: RetargetDirection,
 ): THREE.AnimationClip | null {
   if (Object.keys(boneMap).length === 0) return null;
 
@@ -123,16 +176,16 @@ export function buildRetargetedClip(
     worldQuats: { ...pszRest.worldQuats },
     parentMap: pszRest.parentMap,
   };
-  // Correct arm rest poses so target bone world orientations match PSO's.
-  // Upper arms first (parents), then forearms (children depend on corrected
-  // parents). The list is keyed by PSO bone name — the target bone name
-  // comes from `boneMap`, so this works for any target skeleton (PSZ
-  // named bones, VRM J_Bip_*, etc.) that has these arm bones mapped.
-  // Without this correction, PSO's arms-down rest pose composes with a
-  // T-pose target's arms-out rest pose and the arms end up sticking out
-  // horizontally during animation playback.
-  const armPsoBones = ['bone_028', 'bone_041', 'bone_029', 'bone_042'];
-  for (const psoBone of armPsoBones) {
+  // Correct arm rest poses so target bone world orientations match the
+  // source's. Upper arms first (parents), then forearms (children depend
+  // on corrected parents). The list is keyed by SOURCE bone name — the
+  // target bone name comes from `boneMap`, so this works for any
+  // source/target pair where the source's arm bones are identified.
+  // Default = PSO Humar arm bones (original PSO→PSZ/VRM direction);
+  // VRM→PSZ direction passes the VRM J_Bip_* arm bones instead.
+  const armSourceBones = direction?.armSourceBones
+    ?? ['bone_028', 'bone_041', 'bone_029', 'bone_042'];
+  for (const psoBone of armSourceBones) {
     const targetBone = boneMap[psoBone];
     if (!targetBone) continue;
     const targetParent = adjustedPszRest.parentMap[targetBone];
@@ -195,7 +248,7 @@ export function buildRetargetedClip(
         Array.from(track.times),
         Array.from(dstValues),
       ));
-    } else if (prop === '.position' && boneName === 'bone_000') {
+    } else if (prop === '.position' && boneName === (direction?.rootSourceBone ?? 'bone_000')) {
       // Rotate root position to match retargeted root orientation.
       // Without this, root rotation retargeting changes facing direction
       // but position still moves in the original direction → shuffling.

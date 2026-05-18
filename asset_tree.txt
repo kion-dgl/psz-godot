@@ -1,3 +1,4 @@
+assets/animations/vrma_psz.glb
 assets/enemies/armadillo/armadillo.glb
 assets/enemies/armadillo/b_035.png
 assets/enemies/armadillo_rare/armadillo_rare.glb
