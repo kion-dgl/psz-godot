@@ -56,6 +56,45 @@ export const BONE_MAPPINGS_VRM: Record<string, string> = {
   bone_014: 'J_Bip_R_LowerLeg',
 };
 
+/** Reverse direction: VRM source → PSZ target. Bone map is inverted
+ *  from BONE_MAPPINGS_VRM and routed at the actual PSZ player skeleton
+ *  bone names (which the PSO Humar → PSZ retargeted clips already
+ *  target, so PSZ characters can play VRM/VRMA animations through the
+ *  same downstream pipeline that handles npc_idles.glb).
+ *
+ *  Unlike PSO→VRM where intermediate spine bones matter (PSO has 2,
+ *  VRM has 3), this direction is simpler: VRM has more bones than PSZ
+ *  needs, so we just pick the most-animated VRM bone per body part.
+ *  UpperChest is the one that carries upper-body sway (per the
+ *  empirical exploration in #220/#221) so it routes to PSZ Spine.
+ */
+export const BONE_MAPPINGS_VRM_TO_PSZ: Record<string, string> = {
+  Root: '000_Root',
+  J_Bip_C_Hips: '010_Hip',
+  J_Bip_C_UpperChest: '020_Spine',
+  J_Bip_C_Head: '090_Head',
+  J_Bip_L_UpperArm: '030_LArm01',
+  J_Bip_L_LowerArm: '040_LArm02',
+  J_Bip_R_UpperArm: '060_RArm01',
+  J_Bip_R_LowerArm: '070_RArm02',
+  J_Bip_L_UpperLeg: '100_LLeg01',
+  J_Bip_L_LowerLeg: '110_LLeg02',
+  J_Bip_R_UpperLeg: '120_RLeg01',
+  J_Bip_R_LowerLeg: '130_RLeg02',
+};
+
+/** Direction config for the VRM→PSZ retarget — arm bones and root bone
+ *  come from the VRM source (J_Bip_* convention, root commonly named
+ *  "Root" in VRoid-authored rigs). Pass this as the `direction`
+ *  parameter to buildRetargetedClip. */
+export const VRM_TO_PSZ_DIRECTION = {
+  armSourceBones: [
+    'J_Bip_L_UpperArm', 'J_Bip_R_UpperArm',
+    'J_Bip_L_LowerArm', 'J_Bip_R_LowerArm',
+  ],
+  rootSourceBone: 'Root',
+};
+
 export interface RestPoseData {
   localQuats: Record<string, THREE.Quaternion>;
   worldQuats: Record<string, THREE.Quaternion>;
@@ -105,52 +144,66 @@ export function resetToBindPose(model: THREE.Object3D): void {
 
 // wristTargets: maps PSO wrist bone name → target Object3D name in PSZ scene
 // e.g. { bone_030: '_wristL', bone_043: '_wristR' }
+/** Direction-specific knobs that used to be hardcoded for PSO-as-source.
+ *  Pass these explicitly when the source skeleton isn't PSO Humar — e.g.
+ *  for VRM → PSZ retargeting, supply the VRM arm bones and root bone. */
+export interface RetargetDirection {
+  /** Source bones whose world-rest orientation should be baked into the
+   *  target's adjusted local rest. Forearms must follow upper arms in
+   *  the list (children depend on corrected parents). */
+  armSourceBones?: string[];
+  /** Source root bone that needs its position track retargeted into the
+   *  target rig's coordinate frame. */
+  rootSourceBone?: string;
+}
+
 export function buildRetargetedClip(
   clip: THREE.AnimationClip,
-  psoRest: RestPoseData,
-  pszRest: RestPoseData,
+  sourceRest: RestPoseData,
+  targetRest: RestPoseData,
   boneMap: Record<string, string>,
   posScale: number,
   outputName?: string,
   wristTargets?: Record<string, string>,
   boneOffsets?: Record<string, { x: number; y: number; z: number }>,
+  direction?: RetargetDirection,
 ): THREE.AnimationClip | null {
   if (Object.keys(boneMap).length === 0) return null;
 
-  // Create a modified copy of PSZ rest data with arm bones adjusted
-  const adjustedPszRest: RestPoseData = {
-    localQuats: { ...pszRest.localQuats },
-    worldQuats: { ...pszRest.worldQuats },
-    parentMap: pszRest.parentMap,
+  // Create a modified copy of target rest data with arm bones adjusted.
+  const adjustedTargetRest: RestPoseData = {
+    localQuats: { ...targetRest.localQuats },
+    worldQuats: { ...targetRest.worldQuats },
+    parentMap: targetRest.parentMap,
   };
-  // Correct arm rest poses so target bone world orientations match PSO's.
-  // Upper arms first (parents), then forearms (children depend on corrected
-  // parents). The list is keyed by PSO bone name — the target bone name
-  // comes from `boneMap`, so this works for any target skeleton (PSZ
-  // named bones, VRM J_Bip_*, etc.) that has these arm bones mapped.
-  // Without this correction, PSO's arms-down rest pose composes with a
-  // T-pose target's arms-out rest pose and the arms end up sticking out
-  // horizontally during animation playback.
-  const armPsoBones = ['bone_028', 'bone_041', 'bone_029', 'bone_042'];
-  for (const psoBone of armPsoBones) {
-    const targetBone = boneMap[psoBone];
+  // Correct arm rest poses so target bone world orientations match the
+  // source's. Upper arms first (parents), then forearms (children depend
+  // on corrected parents). The list is keyed by SOURCE bone name — the
+  // target bone name comes from `boneMap`, so this works for any
+  // source/target pair where the source's arm bones are identified.
+  // Default = PSO Humar arm bones (original PSO→PSZ/VRM direction);
+  // VRM→PSZ direction passes the VRM J_Bip_* arm bones instead.
+  const armSourceBones = direction?.armSourceBones
+    ?? ['bone_028', 'bone_041', 'bone_029', 'bone_042'];
+  for (const srcBone of armSourceBones) {
+    const targetBone = boneMap[srcBone];
     if (!targetBone) continue;
-    const targetParent = adjustedPszRest.parentMap[targetBone];
-    const targetParentWorld = targetParent ? getWorldRestQuat(targetParent, adjustedPszRest) : new THREE.Quaternion();
-    const psoArmWorld = getWorldRestQuat(psoBone, psoRest);
-    adjustedPszRest.localQuats[targetBone] = targetParentWorld.clone().invert().multiply(psoArmWorld);
+    const targetParent = adjustedTargetRest.parentMap[targetBone];
+    const targetParentWorld = targetParent ? getWorldRestQuat(targetParent, adjustedTargetRest) : new THREE.Quaternion();
+    const srcArmWorld = getWorldRestQuat(srcBone, sourceRest);
+    adjustedTargetRest.localQuats[targetBone] = targetParentWorld.clone().invert().multiply(srcArmWorld);
   }
 
-  // Apply user bone offsets AFTER arm correction so they don't get overwritten
+  // Apply user bone offsets AFTER arm correction so they don't get overwritten.
   if (boneOffsets) {
     const deg2rad = Math.PI / 180;
     for (const [boneName, offset] of Object.entries(boneOffsets)) {
       if (offset.x === 0 && offset.y === 0 && offset.z === 0) continue;
-      const base = adjustedPszRest.localQuats[boneName];
+      const base = adjustedTargetRest.localQuats[boneName];
       if (!base) continue;
       const euler = new THREE.Euler(offset.x * deg2rad, offset.y * deg2rad, offset.z * deg2rad, 'XYZ');
       const offsetQuat = new THREE.Quaternion().setFromEuler(euler);
-      adjustedPszRest.localQuats[boneName] = base.clone().multiply(offsetQuat);
+      adjustedTargetRest.localQuats[boneName] = base.clone().multiply(offsetQuat);
     }
   }
 
@@ -163,45 +216,45 @@ export function buildRetargetedClip(
     const boneName = track.name.substring(0, dotIdx);
     const prop = track.name.substring(dotIdx);
 
-    const pszBoneName = boneMap[boneName];
-    if (!pszBoneName) continue;
+    const targetBoneName = boneMap[boneName];
+    if (!targetBoneName) continue;
 
     if (prop === '.quaternion') {
-      const psoLocalRest = psoRest.localQuats[boneName] || identity;
-      const pszLocalRest = adjustedPszRest.localQuats[pszBoneName] || identity;
-      const psoWorldRest = getWorldRestQuat(boneName, psoRest);
-      const pszWorldRest = getWorldRestQuat(pszBoneName, adjustedPszRest);
+      const srcLocalRest = sourceRest.localQuats[boneName] || identity;
+      const targetLocalRest = adjustedTargetRest.localQuats[targetBoneName] || identity;
+      const srcWorldRest = getWorldRestQuat(boneName, sourceRest);
+      const targetWorldRest = getWorldRestQuat(targetBoneName, adjustedTargetRest);
 
-      const F = pszWorldRest.clone().invert().multiply(psoWorldRest);
+      const F = targetWorldRest.clone().invert().multiply(srcWorldRest);
       const Finv = F.clone().invert();
-      const prefix = pszLocalRest.clone().multiply(F).multiply(psoLocalRest.clone().invert());
+      const prefix = targetLocalRest.clone().multiply(F).multiply(srcLocalRest.clone().invert());
       const suffix = Finv;
 
       const srcValues = track.values;
       const dstValues = new Float32Array(srcValues.length);
-      const psoLocalAnim = new THREE.Quaternion();
+      const srcLocalAnim = new THREE.Quaternion();
 
       for (let i = 0; i < srcValues.length; i += 4) {
-        psoLocalAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
-        const pszLocalResult = prefix.clone().multiply(psoLocalAnim).multiply(suffix);
-        dstValues[i] = pszLocalResult.x;
-        dstValues[i + 1] = pszLocalResult.y;
-        dstValues[i + 2] = pszLocalResult.z;
-        dstValues[i + 3] = pszLocalResult.w;
+        srcLocalAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
+        const targetLocalResult = prefix.clone().multiply(srcLocalAnim).multiply(suffix);
+        dstValues[i] = targetLocalResult.x;
+        dstValues[i + 1] = targetLocalResult.y;
+        dstValues[i + 2] = targetLocalResult.z;
+        dstValues[i + 3] = targetLocalResult.w;
       }
 
       tracks.push(new THREE.QuaternionKeyframeTrack(
-        pszBoneName + '.quaternion',
+        targetBoneName + '.quaternion',
         Array.from(track.times),
         Array.from(dstValues),
       ));
-    } else if (prop === '.position' && boneName === 'bone_000') {
+    } else if (prop === '.position' && boneName === (direction?.rootSourceBone ?? 'bone_000')) {
       // Rotate root position to match retargeted root orientation.
       // Without this, root rotation retargeting changes facing direction
       // but position still moves in the original direction → shuffling.
-      const psoWorldRest = getWorldRestQuat(boneName, psoRest);
-      const pszWorldRest = getWorldRestQuat(pszBoneName, adjustedPszRest);
-      const F = pszWorldRest.clone().invert().multiply(psoWorldRest);
+      const srcWorldRest = getWorldRestQuat(boneName, sourceRest);
+      const targetWorldRest = getWorldRestQuat(targetBoneName, adjustedTargetRest);
+      const F = targetWorldRest.clone().invert().multiply(srcWorldRest);
       const posRotation = F.clone().invert(); // same 'suffix' applied to root rotation
 
       const srcValues = track.values;
@@ -215,14 +268,19 @@ export function buildRetargetedClip(
         dstValues[i + 2] = pos.z * posScale;
       }
       tracks.push(new THREE.VectorKeyframeTrack(
-        pszBoneName + '.position',
+        targetBoneName + '.position',
         Array.from(track.times),
         Array.from(dstValues),
       ));
     }
   }
-  // Build wrist tracks: PSO wrist bones (identity rest) → weapon wrapper nodes
+  // Build wrist tracks: PSO wrist bones (identity rest) → weapon wrapper nodes.
+  // This branch remains PSO-specific (WRIST_BONES is a PSO concept), so the
+  // source/target arg names below are aliased to their PSO/PSZ-meaningful
+  // identities for clarity.
   if (wristTargets) {
+    const psoRest = sourceRest;
+    const pszRest = adjustedTargetRest;
     for (const [psoWristBone, targetName] of Object.entries(wristTargets)) {
       const wristInfo = WRIST_BONES[psoWristBone];
       if (!wristInfo) continue;
@@ -231,9 +289,9 @@ export function buildRetargetedClip(
       if (!wristTrack) continue;
 
       // F = inv(pszForearmWorldRest) * psoForearmWorldRest
-      // Same F used for the forearm retargeting — wrist is a child with identity rest
+      // Same F used for the forearm retargeting — wrist is a child with identity rest.
       const psoForearmWorld = getWorldRestQuat(wristInfo.forearmPso, psoRest);
-      const pszForearmWorld = getWorldRestQuat(wristInfo.forearmPsz, adjustedPszRest);
+      const pszForearmWorld = getWorldRestQuat(wristInfo.forearmPsz, pszRest);
       const F = pszForearmWorld.clone().invert().multiply(psoForearmWorld);
       const Finv = F.clone().invert();
 

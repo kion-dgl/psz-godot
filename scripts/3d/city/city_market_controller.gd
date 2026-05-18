@@ -68,7 +68,14 @@ func _ready() -> void:
 		"res://assets/npcs/np_002_00_0/np_002_00_0.glb",
 		"Weapon Shop",
 		"res://scenes/2d/shops/weapon_shop.tscn",
-		"pso_ro_stand"
+		# Reverse-retarget test: this clip was authored as a VRMA (pixiv
+		# VRoid Project "Show Full Body" pose) then run through
+		# bake-vrma-to-psz.mjs to produce PSZ-targeted bone tracks.
+		# Proves the VRM source → PSZ target pipeline works on a PSZ-
+		# rigged NPC. If it looks right in-game, switch back to
+		# "pso_ro_stand" and this stays as a working sample for the
+		# player-character pipeline.
+		"vrma_show_full_body_psz"
 	)
 	_add_npc(
 		"GrindShopNPC", Vector3(6.25, 0, 23.45), -0.7533,

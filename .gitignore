@@ -57,6 +57,12 @@
 /assets/npcs/*
 !/assets/npcs/item_shop/
 !/assets/npcs/item_shop/*
+# Reverse-retargeted VRMA animations targeting the PSZ player/NPC
+# skeleton. Output of web/scripts/bake-vrma-to-psz.mjs. Lives outside
+# assets/player/* (which is asset-pack-only and gets stripped from
+# the APK) so it ships in-tree with the binary.
+!/assets/animations/
+!/assets/animations/*
 # Playwright-mcp scratch directory — populated by browser_take_screenshot
 # and browser_snapshot calls during debug sessions. Not project content.
 .playwright-mcp/

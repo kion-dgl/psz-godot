@@ -16,6 +16,8 @@ const RetargetViewer = lazy(() => import('./retarget/RetargetViewer'));
 const RetargetTuner = lazy(() => import('./retarget/RetargetTuner'));
 const RetargetTunerVrm = lazy(() => import('./retarget/RetargetTunerVrm'));
 const MixamoLoader = lazy(() => import('./retarget/MixamoLoader'));
+const BakedVrmaPszViewer = lazy(() => import('./retarget/BakedVrmaPszViewer'));
+const PsoIkVrmViewer = lazy(() => import('./retarget/PsoIkVrmViewer'));
 const BasicWeaponPreview = lazy(() => import('./storybook/BasicWeaponPreview'));
 const MenuDesign = lazy(() => import('./storybook/MenuDesign'));
 const SettingsMockup = lazy(() => import('./settings/SettingsMockup'));
@@ -145,6 +147,18 @@ function NavBar() {
       }}>
         VRM × Mixamo
       </Link>
+      <Link to="/vrma-to-psz" style={{
+        color: isActive('/vrma-to-psz') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        VRMA → PSZ
+      </Link>
+      <Link to="/pso-ik-vrm" style={{
+        color: isActive('/pso-ik-vrm') ? '#fff' : '#888',
+        textDecoration: 'none',
+      }}>
+        PSO → VRM (IK)
+      </Link>
       <Link to="/character-creator" style={{
         color: isActive('/character-creator') ? '#fff' : '#888',
         textDecoration: 'none',
@@ -216,6 +230,8 @@ export default function App() {
             <Route path="/retarget-tuner" element={<RetargetTuner />} />
             <Route path="/retarget-tuner-vrm" element={<RetargetTunerVrm />} />
             <Route path="/vrm-mixamo" element={<MixamoLoader />} />
+            <Route path="/vrma-to-psz" element={<BakedVrmaPszViewer />} />
+            <Route path="/pso-ik-vrm" element={<PsoIkVrmViewer />} />
             <Route path="/character-creator" element={<CharacterCreator />} />
             <Route path="/start-menu" element={<StartMenu />} />
             <Route path="/controls" element={<ControlsDiagram />} />
