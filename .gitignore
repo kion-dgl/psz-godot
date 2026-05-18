@@ -111,3 +111,7 @@ web/public/assets/objects
 web/public/assets/stages
 web/public/assets/player
 .claude/
+
+# Local-only quarantine for orphan / superseded files. Moved here instead of
+# `rm`-ing so they can be inspected before permanent deletion. Never tracked.
+/archive/

@@ -41,6 +41,20 @@ If the user's exact words are "commit and merge", interpret it as
 like "skip the PR" or "force-push, I'll deal with it." When in doubt,
 ask — opening a PR is cheap, undoing a direct-merge is expensive.
 
+## Orphan / superseded files → `/archive/`, not `rm`
+
+When working files turn up that look orphaned (untracked, no references
+in source or scene files, never in git history), don't `git clean` or
+`rm` them. Move them to `/archive/<original/path>` instead. The
+`archive/` directory is gitignored, so the move quarantines the files
+without losing them, and they're easy to inspect or restore if the
+"unused" call was wrong.
+
+Use the original repo-relative path inside `archive/` so the
+relationship to where the files came from is obvious — e.g.
+`assets/npcs/item_shop/orphan.png` becomes
+`archive/assets/npcs/item_shop/orphan.png`.
+
 ## Asset pack publishing
 
 The game ships its bulk assets (~250 MB of stages, music, NPCs, weapons,
