@@ -1,17 +1,25 @@
-// Validate the PSO→VRM IK retarget pipeline against the PSO source
+// Validate the PSO→VRM retarget pipeline against the PSO source
 // across a sample of clips. For each clip, samples N frames and at
-// each frame measures the per-joint world-position error between the
-// retargeted VRM and a "PSO scaled to VRM proportions" reference.
-//
-// Reference is constructed per joint by anchoring at VRM hips and
-// adding the PSO joint's offset-from-hips, globally scaled by the
-// VRM/PSO body-height ratio. Error is normalized to VRM body height
-// so the threshold is interpretable as "% of body size."
+// each frame measures the per-segment **aim-direction divergence**
+// between PSO's parent→child world vector and the retargeted VRM's
+// equivalent. Error is in degrees and is invariant to rest pose and
+// proportions — only pose similarity counts. Threshold is the
+// per-segment angle (default 5°) that constitutes a "fail".
 //
 // Usage:
 //   cd web && node scripts/validate-pso-vrm-ik.mjs --limit 10
-//   cd web && node scripts/validate-pso-vrm-ik.mjs --limit 50 --threshold 0.05
-//   cd web && node scripts/validate-pso-vrm-ik.mjs --limit all
+//   cd web && node scripts/validate-pso-vrm-ik.mjs --limit 50 --threshold 5
+//   cd web && node scripts/validate-pso-vrm-ik.mjs --limit all --samples 60
+//   cd web && node scripts/validate-pso-vrm-ik.mjs --limit all --constraints
+//
+// Flags:
+//   --constraints   apply the anti-hyperextension joint constraint.
+//                   When on, the retarget intentionally diverges from
+//                   PSO for poses that bend the wrong way, so the
+//                   per-segment angle metric will report large errors
+//                   on those frames by design. Use the constraint-
+//                   firing counts in the summary to gauge frequency.
+//   --no-twist      skip the swing-twist blend on lower bones (debug).
 //
 // Output:
 //   - console: PASS/FAIL summary per clip, ranked by max error
@@ -65,6 +73,7 @@ const LIMIT = (() => {
 const SAMPLES = parseInt(arg('--samples', '20'), 10);
 const THRESHOLD = parseFloat(arg('--threshold', '5'));   // degrees
 const DISABLE_TWIST = argv.includes('--no-twist');
+const CONSTRAINTS = argv.includes('--constraints');
 
 // === Bone mappings ===
 const BONE_MAP_VRM = {
@@ -121,20 +130,58 @@ const SPINE_CHAIN = [
   ['bone_025', 'bone_056', 'J_Bip_C_Neck',       'J_Bip_C_Head'],
 ];
 
+// bendSign: +1 = joint bends toward body-forward (arms — forearm
+//   comes forward to touch chest), -1 = bends away (legs — calf
+//   goes back toward butt). bodyForward is hardcoded +Z (VRoid faces
+//   +Z in three.js).
 const LIMB_CHAINS = [
   { label: 'L arm', psoUpper: 'bone_028', psoLower: 'bone_029', psoEnd: 'bone_030',
     vrmUpper: 'J_Bip_L_UpperArm', vrmLower: 'J_Bip_L_LowerArm', vrmEnd: 'J_Bip_L_Hand',
-    poleOffset: new THREE.Vector3(0, -1, -0.6) },
+    poleOffset: new THREE.Vector3(0, -1, -0.6), bendSign: 1 },
   { label: 'R arm', psoUpper: 'bone_041', psoLower: 'bone_042', psoEnd: 'bone_043',
     vrmUpper: 'J_Bip_R_UpperArm', vrmLower: 'J_Bip_R_LowerArm', vrmEnd: 'J_Bip_R_Hand',
-    poleOffset: new THREE.Vector3(0, -1, -0.6) },
+    poleOffset: new THREE.Vector3(0, -1, -0.6), bendSign: 1 },
   { label: 'L leg', psoUpper: 'bone_004', psoLower: 'bone_005', psoEnd: 'bone_006',
     vrmUpper: 'J_Bip_L_UpperLeg', vrmLower: 'J_Bip_L_LowerLeg', vrmEnd: 'J_Bip_L_Foot',
-    poleOffset: new THREE.Vector3(0, 0, 1) },
+    poleOffset: new THREE.Vector3(0, 0, 1), bendSign: -1 },
   { label: 'R leg', psoUpper: 'bone_013', psoLower: 'bone_014', psoEnd: 'bone_015',
     vrmUpper: 'J_Bip_R_UpperLeg', vrmLower: 'J_Bip_R_LowerLeg', vrmEnd: 'J_Bip_R_Foot',
-    poleOffset: new THREE.Vector3(0, 0, 1) },
+    poleOffset: new THREE.Vector3(0, 0, 1), bendSign: -1 },
 ];
+
+const BODY_FORWARD = new THREE.Vector3(0, 0, 1);
+
+// Minimum bend (in radians) before the constraint considers a joint
+// for correction. Below this, the joint is essentially straight and
+// the cross-product direction is dominated by float noise — don't
+// fire. ~15° = 0.26 rad means we only correct visibly-bent joints.
+const MIN_BEND_RAD = 0.26;
+
+function enforceNaturalBend(vrmUpper, vrmLower, vrmEnd, lowerChildRestLocal, vrmLowerLen, bendSign) {
+  const upperW = new THREE.Vector3(); vrmUpper.getWorldPosition(upperW);
+  const lowerW = new THREE.Vector3(); vrmLower.getWorldPosition(lowerW);
+  const endW = new THREE.Vector3(); vrmEnd.getWorldPosition(endW);
+  const upperDir = lowerW.clone().sub(upperW);
+  if (upperDir.lengthSq() < 1e-12) return false;
+  upperDir.normalize();
+  const lowerDir = endW.clone().sub(lowerW);
+  if (lowerDir.lengthSq() < 1e-12) return false;
+  lowerDir.normalize();
+  // Skip near-straight joints — the bend direction is meaningless
+  // when the bones are colinear.
+  const bendAngle = Math.acos(Math.max(-1, Math.min(1, upperDir.dot(lowerDir))));
+  if (bendAngle < MIN_BEND_RAD) return false;
+  const bendDir = BODY_FORWARD.clone().multiplyScalar(bendSign);
+  const naturalAxis = new THREE.Vector3().crossVectors(upperDir, bendDir);
+  if (naturalAxis.lengthSq() < 1e-6) return false;
+  naturalAxis.normalize();
+  const actualAxis = new THREE.Vector3().crossVectors(upperDir, lowerDir);
+  if (actualAxis.dot(naturalAxis) >= 0) return false;
+  const reflected = lowerDir.clone().sub(naturalAxis.multiplyScalar(2 * lowerDir.dot(naturalAxis)));
+  const newTarget = reflected.multiplyScalar(vrmLowerLen).add(lowerW);
+  aimBoneAtTarget(vrmLower, newTarget, lowerChildRestLocal);
+  return true;
+}
 
 // === Rest pose + retarget math (mirrors ik-utils.ts / retarget-utils.ts) ===
 
@@ -413,6 +460,9 @@ async function main() {
   psoModel.traverse((o) => { if (o.isBone) psoBoneCache.set(o.name, o); });
 
   // === Per-frame retarget (mirrors PsoIkVrmViewer per-frame loop) ===
+  // The current-clip constraint-fire counter. Reset per clip; mutated
+  // inside runRetarget when --constraints is on.
+  let currentConstraintFires = {};
   function runRetarget() {
     // Root position mirror (full XYZ delta).
     if (psoRootBone && vrmRootBone) {
@@ -444,7 +494,8 @@ async function main() {
       aimBoneAtTarget(s.vrmParent, target, s.childRestLocal);
     }
     vrmModel.updateMatrixWorld(true);
-    // Limb retarget (direction-driven) + hybrid twist.
+    // Limb retarget (direction-driven) + hybrid twist + optional
+    // anti-hyperextension constraint.
     for (const chain of chains) {
       retargetChainByDirection(
         chain.vrmUpper, chain.vrmLower,
@@ -461,6 +512,19 @@ async function main() {
         const { swing: ikSwing } = swingTwistDecomposition(chain.vrmLower.quaternion, axis);
         chain.vrmLower.quaternion.copy(ikSwing).multiply(rcTwist);
         chain.vrmLower.updateMatrixWorld(true);
+      }
+      if (CONSTRAINTS) {
+        if (!chain._vrmEndBone) chain._vrmEndBone = findBone(vrmModel, chain.spec.vrmEnd);
+        if (chain._vrmEndBone) {
+          const fired = enforceNaturalBend(
+            chain.vrmUpper, chain.vrmLower, chain._vrmEndBone,
+            chain.rest.lowerChildRestLocal, chain.rest.lowerLength,
+            chain.spec.bendSign,
+          );
+          if (fired) {
+            currentConstraintFires[chain.spec.label] = (currentConstraintFires[chain.spec.label] ?? 0) + 1;
+          }
+        }
       }
     }
     vrmModel.updateMatrixWorld(true);
@@ -548,6 +612,7 @@ async function main() {
     const perJointMax = {};
     const perJointMean = {};
     const perJointCount = {};
+    currentConstraintFires = {};
     let overallMax = 0;
     let overallSum = 0;
     let overallCount = 0;
@@ -578,6 +643,7 @@ async function main() {
 
     const meanErr = overallCount > 0 ? overallSum / overallCount : 0;
     const passed = overallMax < THRESHOLD;
+    const constraintFireTotal = Object.values(currentConstraintFires).reduce((s, v) => s + v, 0);
     report.clips.push({
       name: clip.name,
       friendly,
@@ -588,6 +654,8 @@ async function main() {
       worst_frame: worstFrame,
       per_joint_max: perJointMax,
       per_joint_mean: perJointMean,
+      constraint_fires: { ...currentConstraintFires },
+      constraint_fires_total: constraintFireTotal,
       passed,
     });
   }
@@ -619,6 +687,37 @@ async function main() {
   console.log(`  pass:    ${passed}/${report.clips.length}  (${(passed / report.clips.length * 100).toFixed(1)}%)`);
   console.log(`  fail:    ${failed}/${report.clips.length}`);
   console.log(`  threshold: ${THRESHOLD}° per-bone aim direction divergence`);
+
+  if (CONSTRAINTS) {
+    // Aggregate constraint firings across all clips and report.
+    const allFires = {};
+    let clipsWithFires = 0;
+    let totalFires = 0;
+    let totalFrames = 0;
+    for (const c of report.clips) {
+      totalFrames += SAMPLES;
+      if (c.constraint_fires_total > 0) clipsWithFires++;
+      totalFires += c.constraint_fires_total;
+      for (const [joint, n] of Object.entries(c.constraint_fires)) {
+        allFires[joint] = (allFires[joint] ?? 0) + n;
+      }
+    }
+    const totalCheckedFrames = totalFrames * chains.length;
+    console.log();
+    console.log(`=== constraint firings (--constraints enabled) ===`);
+    console.log(`  ${clipsWithFires}/${report.clips.length} clips had at least one hyperextension corrected`);
+    console.log(`  ${totalFires} total firings across ${totalCheckedFrames} joint-checks (${(totalFires / totalCheckedFrames * 100).toFixed(2)}%)`);
+    for (const [joint, n] of Object.entries(allFires).sort((a, b) => b[1] - a[1])) {
+      console.log(`    ${joint.padEnd(10)} ${n}`);
+    }
+    console.log();
+    console.log(`top 10 clips by constraint firings:`);
+    const byFires = [...report.clips].sort((a, b) => b.constraint_fires_total - a.constraint_fires_total).slice(0, 10);
+    for (const c of byFires) {
+      if (c.constraint_fires_total === 0) break;
+      console.log(`  ${c.constraint_fires_total.toString().padStart(3)} ${c.friendly}`);
+    }
+  }
 
   fs.writeFileSync(REPORT_OUT, JSON.stringify(report, null, 2));
   console.log(`\n[validate] report: ${REPORT_OUT}`);

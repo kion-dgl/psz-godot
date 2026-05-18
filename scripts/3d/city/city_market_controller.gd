@@ -69,11 +69,12 @@ func _ready() -> void:
 		"Weapon Shop",
 		"res://scenes/2d/shops/weapon_shop.tscn",
 		# Reverse-retarget test: this clip was authored as a VRMA (pixiv
-		# VRoid Project "Greeting") then run through bake-vrma-to-psz.mjs
-		# to produce PSZ-targeted bone tracks. Proves the VRM source →
-		# PSZ target pipeline works on a PSZ-rigged NPC. If it looks
-		# right in-game, switch back to "pso_ro_stand" and this stays
-		# as a working sample for the player-character pipeline.
+		# VRoid Project "Show Full Body" pose) then run through
+		# bake-vrma-to-psz.mjs to produce PSZ-targeted bone tracks.
+		# Proves the VRM source → PSZ target pipeline works on a PSZ-
+		# rigged NPC. If it looks right in-game, switch back to
+		# "pso_ro_stand" and this stays as a working sample for the
+		# player-character pipeline.
 		"vrma_show_full_body_psz"
 	)
 	_add_npc(

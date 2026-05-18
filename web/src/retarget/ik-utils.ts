@@ -201,6 +201,72 @@ export function retargetChainByDirection(
   aimBoneAtTarget(vrmLower, handTarget, lowerChildRestLocal);
 }
 
+/** Joint constraint for hinge joints (elbow, knee). The direction-
+ *  driven retarget reproduces PSO's bone directions exactly — but
+ *  PSO source data occasionally has anatomically impossible poses
+ *  (elbow hyperextended past straight, knee bent forward instead of
+ *  back). This snaps the lower bone back to a natural bend when
+ *  that happens, leaving the bend magnitude intact but flipping the
+ *  bend direction so it goes the way the joint actually works.
+ *
+ *  `bodyForward` is the world-space direction the character faces
+ *  (typically +Z for VRoid VRMs). `bendSign` is +1 for joints that
+ *  bend toward body-forward (arms — forearm comes forward to touch
+ *  the chest), -1 for joints that bend away (legs — calf goes back
+ *  toward the butt).
+ *
+ *  Returns true if the constraint actually fired (useful for
+ *  counting how often the source is anatomically weird). */
+export interface HingeJointConstraint {
+  bodyForward: THREE.Vector3;
+  bendSign: number;
+}
+
+export function enforceNaturalBend(
+  vrmUpper: THREE.Bone,
+  vrmLower: THREE.Bone,
+  vrmLowerEndChild: THREE.Object3D,
+  lowerChildRestLocal: THREE.Vector3,
+  vrmLowerLen: number,
+  constraint: HingeJointConstraint,
+): boolean {
+  const upperW = new THREE.Vector3(); vrmUpper.getWorldPosition(upperW);
+  const lowerW = new THREE.Vector3(); vrmLower.getWorldPosition(lowerW);
+  const endW = new THREE.Vector3(); vrmLowerEndChild.getWorldPosition(endW);
+
+  const upperDir = lowerW.clone().sub(upperW);
+  if (upperDir.lengthSq() < 1e-12) return false;
+  upperDir.normalize();
+  const lowerDir = endW.clone().sub(lowerW);
+  if (lowerDir.lengthSq() < 1e-12) return false;
+  lowerDir.normalize();
+
+  // Natural bend axis = cross(upper, bendDir). For arms (bendSign=+1)
+  // this picks the axis the elbow naturally hinges around as the
+  // forearm comes forward; for legs (bendSign=-1) the axis the knee
+  // hinges around as the calf goes back.
+  const bendDir = constraint.bodyForward.clone().multiplyScalar(constraint.bendSign);
+  const naturalBendAxis = new THREE.Vector3().crossVectors(upperDir, bendDir);
+  if (naturalBendAxis.lengthSq() < 1e-6) return false;
+  naturalBendAxis.normalize();
+
+  // Actual bend axis = cross(upper, lower). If it points in the
+  // OPPOSITE direction from the natural axis, the joint is bending
+  // the wrong way (hyperextension).
+  const actualBendAxis = new THREE.Vector3().crossVectors(upperDir, lowerDir);
+  if (actualBendAxis.dot(naturalBendAxis) >= 0) return false;
+
+  // Reflect lower direction across the plane spanned by upperDir and
+  // bendDir. naturalBendAxis is the plane's normal, so the reflection
+  // is `lower - 2 * (lower · n) * n`.
+  const reflected = lowerDir.clone().sub(
+    naturalBendAxis.multiplyScalar(2 * lowerDir.dot(naturalBendAxis)),
+  );
+  const newTarget = reflected.multiplyScalar(vrmLowerLen).add(lowerW);
+  aimBoneAtTarget(vrmLower, newTarget, lowerChildRestLocal);
+  return true;
+}
+
 /** Swing-twist decomposition. Splits a quaternion into the rotation
  *  around `axis` (twist — e.g. forearm roll for palm-up vs palm-down)
  *  and everything else (swing — bone bend / aim). Used by the hybrid

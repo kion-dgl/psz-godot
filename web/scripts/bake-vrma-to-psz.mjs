@@ -9,11 +9,13 @@
 //
 // Usage: cd web && node scripts/bake-vrma-to-psz.mjs
 //
-// Output: assets/animations/vrma_psz.glb with five PSZ-targeted clips
-//   vrma_show_full_body_psz, vrma_greeting_psz, vrma_peace_sign_psz,
-//   vrma_shoot_psz, vrma_show_full_body_psz. (Three of the seven
-//   VRMA files don't have animation tracks that survive three.js's
-//   GLTFExporter export step — same limitation as bake-retarget-vrm.mjs.)
+// Output: assets/animations/vrma_psz.glb with PSZ-targeted clips
+//   built from up to seven pixiv VRMA inputs (VRMA_01..07). The actual
+//   clip count depends on which inputs survive the three.js
+//   GLTFLoader/Exporter round-trip; current run produces four
+//   (greeting, peace_sign, shoot, show_full_body — VRMA_05/06/07
+//   lose their animation tracks during export, same limitation as
+//   bake-retarget-vrm.mjs).
 //
 // Pixiv VRMA attribution required when shipped: "Animation credits to
 // pixiv Inc.'s VRoid Project" (assets/npcs/item_shop/vrma/LICENSE.txt).

@@ -159,8 +159,8 @@ export interface RetargetDirection {
 
 export function buildRetargetedClip(
   clip: THREE.AnimationClip,
-  psoRest: RestPoseData,
-  pszRest: RestPoseData,
+  sourceRest: RestPoseData,
+  targetRest: RestPoseData,
   boneMap: Record<string, string>,
   posScale: number,
   outputName?: string,
@@ -170,11 +170,11 @@ export function buildRetargetedClip(
 ): THREE.AnimationClip | null {
   if (Object.keys(boneMap).length === 0) return null;
 
-  // Create a modified copy of PSZ rest data with arm bones adjusted
-  const adjustedPszRest: RestPoseData = {
-    localQuats: { ...pszRest.localQuats },
-    worldQuats: { ...pszRest.worldQuats },
-    parentMap: pszRest.parentMap,
+  // Create a modified copy of target rest data with arm bones adjusted.
+  const adjustedTargetRest: RestPoseData = {
+    localQuats: { ...targetRest.localQuats },
+    worldQuats: { ...targetRest.worldQuats },
+    parentMap: targetRest.parentMap,
   };
   // Correct arm rest poses so target bone world orientations match the
   // source's. Upper arms first (parents), then forearms (children depend
@@ -185,25 +185,25 @@ export function buildRetargetedClip(
   // VRM→PSZ direction passes the VRM J_Bip_* arm bones instead.
   const armSourceBones = direction?.armSourceBones
     ?? ['bone_028', 'bone_041', 'bone_029', 'bone_042'];
-  for (const psoBone of armSourceBones) {
-    const targetBone = boneMap[psoBone];
+  for (const srcBone of armSourceBones) {
+    const targetBone = boneMap[srcBone];
     if (!targetBone) continue;
-    const targetParent = adjustedPszRest.parentMap[targetBone];
-    const targetParentWorld = targetParent ? getWorldRestQuat(targetParent, adjustedPszRest) : new THREE.Quaternion();
-    const psoArmWorld = getWorldRestQuat(psoBone, psoRest);
-    adjustedPszRest.localQuats[targetBone] = targetParentWorld.clone().invert().multiply(psoArmWorld);
+    const targetParent = adjustedTargetRest.parentMap[targetBone];
+    const targetParentWorld = targetParent ? getWorldRestQuat(targetParent, adjustedTargetRest) : new THREE.Quaternion();
+    const srcArmWorld = getWorldRestQuat(srcBone, sourceRest);
+    adjustedTargetRest.localQuats[targetBone] = targetParentWorld.clone().invert().multiply(srcArmWorld);
   }
 
-  // Apply user bone offsets AFTER arm correction so they don't get overwritten
+  // Apply user bone offsets AFTER arm correction so they don't get overwritten.
   if (boneOffsets) {
     const deg2rad = Math.PI / 180;
     for (const [boneName, offset] of Object.entries(boneOffsets)) {
       if (offset.x === 0 && offset.y === 0 && offset.z === 0) continue;
-      const base = adjustedPszRest.localQuats[boneName];
+      const base = adjustedTargetRest.localQuats[boneName];
       if (!base) continue;
       const euler = new THREE.Euler(offset.x * deg2rad, offset.y * deg2rad, offset.z * deg2rad, 'XYZ');
       const offsetQuat = new THREE.Quaternion().setFromEuler(euler);
-      adjustedPszRest.localQuats[boneName] = base.clone().multiply(offsetQuat);
+      adjustedTargetRest.localQuats[boneName] = base.clone().multiply(offsetQuat);
     }
   }
 
@@ -216,35 +216,35 @@ export function buildRetargetedClip(
     const boneName = track.name.substring(0, dotIdx);
     const prop = track.name.substring(dotIdx);
 
-    const pszBoneName = boneMap[boneName];
-    if (!pszBoneName) continue;
+    const targetBoneName = boneMap[boneName];
+    if (!targetBoneName) continue;
 
     if (prop === '.quaternion') {
-      const psoLocalRest = psoRest.localQuats[boneName] || identity;
-      const pszLocalRest = adjustedPszRest.localQuats[pszBoneName] || identity;
-      const psoWorldRest = getWorldRestQuat(boneName, psoRest);
-      const pszWorldRest = getWorldRestQuat(pszBoneName, adjustedPszRest);
+      const srcLocalRest = sourceRest.localQuats[boneName] || identity;
+      const targetLocalRest = adjustedTargetRest.localQuats[targetBoneName] || identity;
+      const srcWorldRest = getWorldRestQuat(boneName, sourceRest);
+      const targetWorldRest = getWorldRestQuat(targetBoneName, adjustedTargetRest);
 
-      const F = pszWorldRest.clone().invert().multiply(psoWorldRest);
+      const F = targetWorldRest.clone().invert().multiply(srcWorldRest);
       const Finv = F.clone().invert();
-      const prefix = pszLocalRest.clone().multiply(F).multiply(psoLocalRest.clone().invert());
+      const prefix = targetLocalRest.clone().multiply(F).multiply(srcLocalRest.clone().invert());
       const suffix = Finv;
 
       const srcValues = track.values;
       const dstValues = new Float32Array(srcValues.length);
-      const psoLocalAnim = new THREE.Quaternion();
+      const srcLocalAnim = new THREE.Quaternion();
 
       for (let i = 0; i < srcValues.length; i += 4) {
-        psoLocalAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
-        const pszLocalResult = prefix.clone().multiply(psoLocalAnim).multiply(suffix);
-        dstValues[i] = pszLocalResult.x;
-        dstValues[i + 1] = pszLocalResult.y;
-        dstValues[i + 2] = pszLocalResult.z;
-        dstValues[i + 3] = pszLocalResult.w;
+        srcLocalAnim.set(srcValues[i], srcValues[i + 1], srcValues[i + 2], srcValues[i + 3]);
+        const targetLocalResult = prefix.clone().multiply(srcLocalAnim).multiply(suffix);
+        dstValues[i] = targetLocalResult.x;
+        dstValues[i + 1] = targetLocalResult.y;
+        dstValues[i + 2] = targetLocalResult.z;
+        dstValues[i + 3] = targetLocalResult.w;
       }
 
       tracks.push(new THREE.QuaternionKeyframeTrack(
-        pszBoneName + '.quaternion',
+        targetBoneName + '.quaternion',
         Array.from(track.times),
         Array.from(dstValues),
       ));
@@ -252,9 +252,9 @@ export function buildRetargetedClip(
       // Rotate root position to match retargeted root orientation.
       // Without this, root rotation retargeting changes facing direction
       // but position still moves in the original direction → shuffling.
-      const psoWorldRest = getWorldRestQuat(boneName, psoRest);
-      const pszWorldRest = getWorldRestQuat(pszBoneName, adjustedPszRest);
-      const F = pszWorldRest.clone().invert().multiply(psoWorldRest);
+      const srcWorldRest = getWorldRestQuat(boneName, sourceRest);
+      const targetWorldRest = getWorldRestQuat(targetBoneName, adjustedTargetRest);
+      const F = targetWorldRest.clone().invert().multiply(srcWorldRest);
       const posRotation = F.clone().invert(); // same 'suffix' applied to root rotation
 
       const srcValues = track.values;
@@ -268,14 +268,19 @@ export function buildRetargetedClip(
         dstValues[i + 2] = pos.z * posScale;
       }
       tracks.push(new THREE.VectorKeyframeTrack(
-        pszBoneName + '.position',
+        targetBoneName + '.position',
         Array.from(track.times),
         Array.from(dstValues),
       ));
     }
   }
-  // Build wrist tracks: PSO wrist bones (identity rest) → weapon wrapper nodes
+  // Build wrist tracks: PSO wrist bones (identity rest) → weapon wrapper nodes.
+  // This branch remains PSO-specific (WRIST_BONES is a PSO concept), so the
+  // source/target arg names below are aliased to their PSO/PSZ-meaningful
+  // identities for clarity.
   if (wristTargets) {
+    const psoRest = sourceRest;
+    const pszRest = adjustedTargetRest;
     for (const [psoWristBone, targetName] of Object.entries(wristTargets)) {
       const wristInfo = WRIST_BONES[psoWristBone];
       if (!wristInfo) continue;
@@ -284,9 +289,9 @@ export function buildRetargetedClip(
       if (!wristTrack) continue;
 
       // F = inv(pszForearmWorldRest) * psoForearmWorldRest
-      // Same F used for the forearm retargeting — wrist is a child with identity rest
+      // Same F used for the forearm retargeting — wrist is a child with identity rest.
       const psoForearmWorld = getWorldRestQuat(wristInfo.forearmPso, psoRest);
-      const pszForearmWorld = getWorldRestQuat(wristInfo.forearmPsz, adjustedPszRest);
+      const pszForearmWorld = getWorldRestQuat(wristInfo.forearmPsz, pszRest);
       const F = pszForearmWorld.clone().invert().multiply(psoForearmWorld);
       const Finv = F.clone().invert();
 

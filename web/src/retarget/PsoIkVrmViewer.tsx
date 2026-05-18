@@ -7,13 +7,13 @@ import {
   captureRestPose,
   getWorldRestQuat,
   resetToBindPose,
-  BONE_MAPPINGS_VRM,
   type RestPoseData,
 } from './retarget-utils';
 import {
   measureChain,
   retargetChainByDirection,
   aimBoneAtTarget,
+  enforceNaturalBend,
   swingTwistDecomposition,
   type ChainRest,
 } from './ik-utils';
@@ -114,10 +114,13 @@ interface LimbChainSpec {
   vrmUpper: string;
   vrmLower: string;
   vrmEnd: string;
-  // Pole hint in world space, relative to upper-bone (shoulder/hip)
-  // origin. Down-and-forward for arms (elbow points that way), forward
-  // for legs (knees lead).
+  // Pole hint kept for back-compat — the direction-driven retarget
+  // doesn't actually use it; the bone goes wherever PSO has it.
   poleOffset: THREE.Vector3;
+  // For the optional anti-hyperextension constraint: +1 if the joint
+  // bends toward body-forward (arms — forearm comes forward toward
+  // chest); -1 if away (legs — calf goes backward toward butt).
+  bendSign: number;
 }
 
 const LIMB_CHAINS: LimbChainSpec[] = [
@@ -125,29 +128,31 @@ const LIMB_CHAINS: LimbChainSpec[] = [
     label: 'L arm',
     psoUpper: 'bone_028', psoLower: 'bone_029', psoEnd: 'bone_030',
     vrmUpper: 'J_Bip_L_UpperArm', vrmLower: 'J_Bip_L_LowerArm', vrmEnd: 'J_Bip_L_Hand',
-    poleOffset: new THREE.Vector3(0, -1, -0.6),
+    poleOffset: new THREE.Vector3(0, -1, -0.6), bendSign: 1,
   },
   {
     label: 'R arm',
     psoUpper: 'bone_041', psoLower: 'bone_042', psoEnd: 'bone_043',
     vrmUpper: 'J_Bip_R_UpperArm', vrmLower: 'J_Bip_R_LowerArm', vrmEnd: 'J_Bip_R_Hand',
-    poleOffset: new THREE.Vector3(0, -1, -0.6),
+    poleOffset: new THREE.Vector3(0, -1, -0.6), bendSign: 1,
   },
   {
     label: 'L leg',
     psoUpper: 'bone_004', psoLower: 'bone_005', psoEnd: 'bone_006',
     vrmUpper: 'J_Bip_L_UpperLeg', vrmLower: 'J_Bip_L_LowerLeg', vrmEnd: 'J_Bip_L_Foot',
-    // Knees lead forward when walking/squatting. VRoid VRMs face +Z in
-    // three.js's default coordinate frame, so pole is forward (+Z).
-    poleOffset: new THREE.Vector3(0, 0, 1),
+    poleOffset: new THREE.Vector3(0, 0, 1), bendSign: -1,
   },
   {
     label: 'R leg',
     psoUpper: 'bone_013', psoLower: 'bone_014', psoEnd: 'bone_015',
     vrmUpper: 'J_Bip_R_UpperLeg', vrmLower: 'J_Bip_R_LowerLeg', vrmEnd: 'J_Bip_R_Foot',
-    poleOffset: new THREE.Vector3(0, 0, 1),
+    poleOffset: new THREE.Vector3(0, 0, 1), bendSign: -1,
   },
 ];
+
+// Anti-hyperextension constraint config. World-space body-forward
+// direction for VRoid VRMs is +Z.
+const BODY_FORWARD_WORLD = new THREE.Vector3(0, 0, 1);
 
 function findBone(root: THREE.Object3D, name: string): THREE.Bone | null {
   let found: THREE.Bone | null = null;
@@ -163,6 +168,7 @@ interface ResolvedChain {
   spec: LimbChainSpec;
   vrmUpper: THREE.Bone;
   vrmLower: THREE.Bone;
+  vrmEnd: THREE.Bone;            // VRM hand/foot — drives the hyperextension check
   psoUpper: THREE.Bone;          // chain origin on the source rig
   psoLower: THREE.Bone;          // source forearm / shin — drives the twist blend
   psoEnd: THREE.Bone;            // end effector whose offset drives the IK target
@@ -219,6 +225,9 @@ export default function PsoIkVrmViewer() {
   const [selectedClip, setSelectedClip] = useState<string>('');
   const [status, setStatus] = useState<string>('Loading…');
   const [showPsoSkel, setShowPsoSkel] = useState(true);
+  const [enforceConstraints, setEnforceConstraints] = useState(false);
+  const enforceConstraintsRef = useRef(false);
+  useEffect(() => { enforceConstraintsRef.current = enforceConstraints; }, [enforceConstraints]);
 
   const stateRef = useRef<{
     psoModel: THREE.Object3D | null;
@@ -377,7 +386,7 @@ export default function PsoIkVrmViewer() {
           const lowerRotCopySuffix = F.clone().invert();
 
           chains.push({
-            spec, vrmUpper, vrmLower, psoUpper, psoLower, psoEnd, rest, scale,
+            spec, vrmUpper, vrmLower, vrmEnd, psoUpper, psoLower, psoEnd, rest, scale,
             lowerRotCopyPrefix, lowerRotCopySuffix,
           });
         }
@@ -518,6 +527,11 @@ export default function PsoIkVrmViewer() {
     })();
 
     const clock = new THREE.Clock();
+    // Per-frame scratch Vector3s. Hoisted out of the tick() closure to
+    // avoid per-frame allocation (GC churn during playback).
+    const tmpP = new THREE.Vector3();
+    const tmpC = new THREE.Vector3();
+    const tmpV = new THREE.Vector3();
     const tick = () => {
       const dt = clock.getDelta();
       const s = stateRef.current;
@@ -580,8 +594,8 @@ export default function PsoIkVrmViewer() {
         // Direction-aim spine chain. Replaces rotation-copy on
         // Chest/UpperChest, which leaves a ~7° rest-pose residual.
         // Walks every VRM-hierarchy edge top-down so each step sees
-        // its parent's already-aimed matrix.
-        const tmpP = new THREE.Vector3(), tmpC = new THREE.Vector3(), tmpV = new THREE.Vector3();
+        // its parent's already-aimed matrix. Vectors are hoisted to
+        // tick()'s outer scope to avoid per-frame allocation.
         for (const step of s.spineSteps) {
           step.psoParent.getWorldPosition(tmpP);
           step.psoChild.getWorldPosition(tmpC);
@@ -619,6 +633,17 @@ export default function PsoIkVrmViewer() {
           const { swing: ikSwing } = swingTwistDecomposition(chain.vrmLower.quaternion, axis);
           chain.vrmLower.quaternion.copy(ikSwing).multiply(rcTwist);
           chain.vrmLower.updateMatrixWorld(true);
+
+          // Anti-hyperextension constraint (off by default). When PSO's
+          // pose has the elbow/knee bending the wrong way, reflect the
+          // lower bone across the natural-bend plane. Toggle in UI.
+          if (enforceConstraintsRef.current) {
+            enforceNaturalBend(
+              chain.vrmUpper, chain.vrmLower, chain.vrmEnd,
+              chain.rest.lowerChildRestLocal, chain.rest.lowerLength,
+              { bodyForward: BODY_FORWARD_WORLD, bendSign: chain.spec.bendSign },
+            );
+          }
         }
       }
       if (stateRef.current.psoHelper) {
@@ -712,6 +737,14 @@ export default function PsoIkVrmViewer() {
           />
           show rotation-copy ghost (cyan)
         </label>
+        <label style={{ marginLeft: 12, display: 'flex', alignItems: 'center', gap: 4, color: '#fa0' }}>
+          <input
+            type="checkbox"
+            checked={enforceConstraints}
+            onChange={(e) => setEnforceConstraints(e.target.checked)}
+          />
+          anti-hyperextension constraint
+        </label>
         <span style={{ marginLeft: 'auto', color: '#888' }}>{status}</span>
       </div>
       <div style={{
@@ -759,7 +792,3 @@ function findBoneCached(root: THREE.Object3D, name: string): THREE.Bone | null {
   return map.get(name) ?? null;
 }
 
-// Silence "unused" lint for now — BONE_MAPPINGS_VRM is re-exported via
-// the same module the IK viewer imports from, but we don't reference it
-// here directly. Touching it keeps tree-shaking honest.
-void BONE_MAPPINGS_VRM;
