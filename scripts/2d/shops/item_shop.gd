@@ -48,6 +48,7 @@ func _ready() -> void:
 	_generate_disk_inventory()
 	_generate_sell_list()
 	_refresh_display()
+	ShopPreviewSprite.attach(self, "res://assets/images/item-shop.png")
 
 
 func _setup_portrait() -> void:

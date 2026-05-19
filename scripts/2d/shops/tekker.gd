@@ -40,6 +40,7 @@ func _ready() -> void:
 	hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"
 	_build_lists()
 	_refresh_display()
+	ShopPreviewSprite.attach(self, "res://assets/images/custom-shop.png")
 
 
 func _setup_portrait() -> void:
