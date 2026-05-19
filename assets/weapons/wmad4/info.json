@@ -1,0 +1,11 @@
+{
+  "id": "wmad4",
+  "name": "wmad4_1_1",
+  "textureCount": 4,
+  "animationCount": 8,
+  "variants": [
+    "wmad4_1_1",
+    "wmad4_2_1",
+    "wmad4_4_1"
+  ]
+}

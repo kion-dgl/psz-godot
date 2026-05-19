@@ -63,6 +63,18 @@
 # the APK) so it ships in-tree with the binary.
 !/assets/animations/
 !/assets/animations/*
+# PSZ weapon catalog (w<class><tier><num>/ — wbac01, wbah01, …) brought
+# in-tree from the former psz-sketch sibling checkout so the /storybook/
+# weapons gallery works on a fresh clone and the weapons ship in the
+# Godot .pck. Un-ignore parent first (per git negation rules), then
+# narrowly re-ignore everything in there, then negate the PSZ dirs.
+# Glob is case-sensitive: the older PSO catalog (basic/, saber/,
+# Slicer*) keeps the lowercase-w-prefix rule from matching, so those
+# stay R2-only as before.
+!/assets/weapons/
+/assets/weapons/*
+!/assets/weapons/w*/
+!/assets/weapons/w*/**
 # Playwright-mcp scratch directory — populated by browser_take_screenshot
 # and browser_snapshot calls during debug sessions. Not project content.
 .playwright-mcp/

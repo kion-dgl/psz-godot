@@ -1,0 +1,14 @@
+{
+  "id": "wwar02",
+  "name": "wwar02_1_o",
+  "textureCount": 4,
+  "animationCount": 0,
+  "variants": [
+    "wwar02_1_o",
+    "wwar02_2_o",
+    "wwar02_3_o",
+    "wwar02_4_o",
+    "wwar02_5_o",
+    "wwar02_6_o"
+  ]
+}

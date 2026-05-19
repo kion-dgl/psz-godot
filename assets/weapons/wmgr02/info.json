@@ -1,0 +1,10 @@
+{
+  "id": "wmgr02",
+  "name": "wmgr02_1_l",
+  "textureCount": 1,
+  "animationCount": 0,
+  "variants": [
+    "wmgr02_1_l",
+    "wmgr02_1_r"
+  ]
+}

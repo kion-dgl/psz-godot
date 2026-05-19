@@ -1,0 +1,10 @@
+{
+  "id": "wlcc01",
+  "name": "wlcc01_1_b",
+  "textureCount": 2,
+  "animationCount": 0,
+  "variants": [
+    "wlcc01_1_b",
+    "wlcc01_3_b"
+  ]
+}

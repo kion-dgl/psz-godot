@@ -31,7 +31,10 @@ SCAN_SUFFIXES = {".gd", ".tscn", ".tres", ".cs"}
 
 # Directories that never ship in the asset pack (referenced paths here are OK).
 # assets/ui/ holds small UI sprites committed directly to the repo.
-IN_REPO_PREFIXES = ("assets/kenney_", "assets/ui/")
+# assets/animations/ holds reverse-retargeted VRMA clips that ride with the
+# binary instead of the pack (see the matching gitignore comment) — output
+# of web/scripts/bake-vrma-to-psz.mjs.
+IN_REPO_PREFIXES = ("assets/kenney_", "assets/ui/", "assets/animations/")
 
 
 def load_ignore() -> set[str]:

@@ -55,15 +55,10 @@ const RESTRICTED_REL_PREFIXES: string[] = [
 const SYNC_ROOTS: Array<{ localDir: string; r2Prefix: string }> = [
   { localDir: resolve(REPO_ROOT, "assets"), r2Prefix: "assets/" },
   { localDir: resolve(REPO_ROOT, "web/public/assets/psobb_sfx"), r2Prefix: "assets/psobb_sfx/" },
-  // PSZ weapon catalog (info.json + GLBs + PNGs) pulled in from a sibling
-  // checkout of kion-dgl/psz-sketch. ~11 MB total. Powers the /storybook/weapons
-  // page and the animation-storybook weapon-switch models. Maintainers need to
-  // `git clone kion-dgl/psz-sketch` alongside this repo for the sync to include
-  // them; otherwise this entry is skipped at run time.
-  {
-    localDir: resolve(REPO_ROOT, "../psz-sketch/public/weapons"),
-    r2Prefix: "assets/weapons/",
-  },
+  // The PSZ weapon catalog (wbac01/, wbah01/, …) used to be sourced from a
+  // sibling kion-dgl/psz-sketch checkout. It now lives in-tree under
+  // assets/weapons/w*/ (see .gitignore), so it's picked up by the first root
+  // above and ships in the Godot .pck — no sibling clone required.
 ];
 
 interface CliArgs {

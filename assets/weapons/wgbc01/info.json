@@ -1,0 +1,10 @@
+{
+  "id": "wgbc01",
+  "name": "wgbc01_1_o",
+  "textureCount": 2,
+  "animationCount": 0,
+  "variants": [
+    "wgbc01_1_o",
+    "wgbc01_3_o"
+  ]
+}

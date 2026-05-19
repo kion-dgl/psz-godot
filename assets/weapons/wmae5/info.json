@@ -1,0 +1,10 @@
+{
+  "id": "wmae5",
+  "name": "wmae5_5_1",
+  "textureCount": 8,
+  "animationCount": 16,
+  "variants": [
+    "wmae5_5_1",
+    "wmae5_8_1"
+  ]
+}
