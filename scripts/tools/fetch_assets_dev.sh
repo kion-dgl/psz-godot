@@ -63,16 +63,9 @@ dest_for_key() {
   local key="$1"
   case "$key" in
     assets/psobb_sfx/*) echo "web/public/assets/psobb_sfx/${key#assets/psobb_sfx/}" ;;
-    # PSZ weapons live in the sibling psz-sketch checkout; on CI and most
-    # dev boxes the sibling isn't present, so skip silently via the
-    # __SKIP__ sentinel (download_one returns 0, not a failure).
-    assets/weapons/*)
-      if [ -d "../psz-sketch/public/weapons" ]; then
-        echo "../psz-sketch/public/weapons/${key#assets/weapons/}"
-      else
-        echo "__SKIP__"
-      fi
-      ;;
+    # PSZ weapons used to live in the sibling psz-sketch checkout. They're
+    # now in-tree under assets/weapons/w*/, so they fall through the
+    # generic assets/* mapping below — no sibling-clone special case.
     assets/*) echo "assets/${key#assets/}" ;;
     *) echo "" ;;
   esac

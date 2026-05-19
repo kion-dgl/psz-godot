@@ -1,0 +1,12 @@
+{
+  "id": "wdah01",
+  "name": "wdah01_1_l",
+  "textureCount": 2,
+  "animationCount": 0,
+  "variants": [
+    "wdah01_1_l",
+    "wdah01_1_r",
+    "wdah01_3_l",
+    "wdah01_3_r"
+  ]
+}

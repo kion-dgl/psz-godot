@@ -1,0 +1,10 @@
+{
+  "id": "wrfn01",
+  "name": "wrfn01_1_b",
+  "textureCount": 2,
+  "animationCount": 0,
+  "variants": [
+    "wrfn01_1_b",
+    "wrfn01_3_b"
+  ]
+}

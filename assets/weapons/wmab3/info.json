@@ -1,0 +1,10 @@
+{
+  "id": "wmab3",
+  "name": "wmab3_1_1",
+  "textureCount": 2,
+  "animationCount": 4,
+  "variants": [
+    "wmab3_1_1",
+    "wmab3_2_1"
+  ]
+}

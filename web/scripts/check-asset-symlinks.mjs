@@ -28,6 +28,11 @@ const REQUIRED = {
   objects: '../../../assets/objects',
   player: '../../../assets/player',
   stages: '../../../assets/stages',
+  // PSZ weapon catalog (wbac01, wbah01, …) — formerly sourced from a
+  // sibling psz-sketch checkout; now in-tree. Symlink lets the storybook
+  // gallery (assetUrl-routed to /assets/weapons/...) resolve without
+  // hitting the R2 CDN in dev.
+  weapons: '../../../assets/weapons',
 };
 
 let created = 0;

@@ -1,0 +1,11 @@
+{
+  "id": "wmac4",
+  "name": "wmac4_1_1",
+  "textureCount": 3,
+  "animationCount": 6,
+  "variants": [
+    "wmac4_1_1",
+    "wmac4_2_1",
+    "wmac4_3_1"
+  ]
+}
