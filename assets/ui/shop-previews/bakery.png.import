@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0kf1lkeroqn2"
-path="res://.godot/imported/custom-shop.png-bd9082943ad29092edf28d9de0e3c8fc.ctex"
+uid="uid://dvs7n5afkafih"
+path="res://.godot/imported/bakery.png-b4c849697b9837a2c010d5721fe751a0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/images/custom-shop.png"
-dest_files=["res://.godot/imported/custom-shop.png-bd9082943ad29092edf28d9de0e3c8fc.ctex"]
+source_file="res://assets/ui/shop-previews/bakery.png"
+dest_files=["res://.godot/imported/bakery.png-b4c849697b9837a2c010d5721fe751a0.ctex"]
 
 [params]
 

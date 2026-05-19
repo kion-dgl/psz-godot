@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dlfjd3uonxmd"
-path="res://.godot/imported/weapon-shop.png-31767b8bcb968eeebb046a83e6a584ab.ctex"
+uid="uid://py1am67kpxo1"
+path="res://.godot/imported/quest-counter.png-50a898d448a9288e73d73d1d4376bfed.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/images/weapon-shop.png"
-dest_files=["res://.godot/imported/weapon-shop.png-31767b8bcb968eeebb046a83e6a584ab.ctex"]
+source_file="res://assets/ui/shop-previews/quest-counter.png"
+dest_files=["res://.godot/imported/quest-counter.png-50a898d448a9288e73d73d1d4376bfed.ctex"]
 
 [params]
 

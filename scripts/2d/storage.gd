@@ -42,7 +42,7 @@ func _ready() -> void:
 	_setup_portrait()
 	_load_items()
 	_refresh_display()
-	ShopPreviewSprite.attach(self, "res://assets/images/storage-counter.png")
+	ShopPreviewSprite.attach(self, "res://assets/ui/shop-previews/storage-counter.png")
 
 
 func _setup_portrait() -> void:

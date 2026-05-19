@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bs54lqvnco1x3"
-path="res://.godot/imported/photon-collector.png-64bbf701bc2e664166d4c8a3dfc012f4.ctex"
+uid="uid://c8huvy6juqs8s"
+path="res://.godot/imported/storage-counter.png-f997f4dea4134ea25df9541bb79f39ae.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/images/photon-collector.png"
-dest_files=["res://.godot/imported/photon-collector.png-64bbf701bc2e664166d4c8a3dfc012f4.ctex"]
+source_file="res://assets/ui/shop-previews/storage-counter.png"
+dest_files=["res://.godot/imported/storage-counter.png-f997f4dea4134ea25df9541bb79f39ae.ctex"]
 
 [params]
 

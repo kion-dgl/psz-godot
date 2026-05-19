@@ -41,7 +41,7 @@ func _ready() -> void:
 	hint_label.text = "Up/Down: Select  Enter: Accept  Esc: Leave"
 	_load_entries()
 	_refresh_display()
-	ShopPreviewSprite.attach(self, "res://assets/images/quest-counter.png")
+	ShopPreviewSprite.attach(self, "res://assets/ui/shop-previews/quest-counter.png")
 	# Show quest status hints
 	if SessionManager.has_completed_quest():
 		var cq: Dictionary = SessionManager.get_completed_quest()

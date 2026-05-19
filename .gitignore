@@ -17,34 +17,10 @@
 # Small UI sprites (menu panels, icons) committed directly — too small to be
 # worth the R2 round-trip and painful to iterate on through the asset pack.
 !/assets/ui/
-# Shop preview sprites shown in the bottom-right of each shop's interior UI
-# (item-shop, weapon-shop, synth-shop, photon-collector, custom-shop,
-# quest-counter, storage-counter, plus bakery and pizza placeholders for
-# future shops). ~35 KB each — committed directly for the same reasons as
-# /assets/ui/. Un-ignore parent first (per git negation rules), then
-# narrowly re-ignore the directory, then whitelist these 9 specific PNGs
-# + their .import sidecars. The rest of /assets/images/ (character
-# portraits, splash, logo) stays R2-only.
-!/assets/images/
-/assets/images/*
-!/assets/images/bakery.png
-!/assets/images/bakery.png.import
-!/assets/images/custom-shop.png
-!/assets/images/custom-shop.png.import
-!/assets/images/item-shop.png
-!/assets/images/item-shop.png.import
-!/assets/images/photon-collector.png
-!/assets/images/photon-collector.png.import
-!/assets/images/pizza.png
-!/assets/images/pizza.png.import
-!/assets/images/quest-counter.png
-!/assets/images/quest-counter.png.import
-!/assets/images/storage-counter.png
-!/assets/images/storage-counter.png.import
-!/assets/images/synth-shop.png
-!/assets/images/synth-shop.png.import
-!/assets/images/weapon-shop.png
-!/assets/images/weapon-shop.png.import
+# Shop preview sprites moved under assets/ui/shop-previews/ so they ship
+# with the binary instead of the asset pack — see the .gd helper at
+# scripts/2d/components/shop_preview_sprite.gd. The /assets/ui/ rule above
+# already un-ignores them recursively; no extra whitelist needed here.
 # Original assets we author in-house (e.g. Blender-built room geometry) are
 # committed directly so contributors don't need the pack to load these scenes.
 # Each parent dir must be re-included before the leaf negation works.

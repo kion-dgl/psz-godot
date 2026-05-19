@@ -41,7 +41,7 @@ func _ready() -> void:
 	_setup_portrait()
 	hint_label.text = "Up/Down: Select  Enter: Exchange  Esc: Leave"
 	_refresh_display()
-	ShopPreviewSprite.attach(self, "res://assets/images/photon-collector.png")
+	ShopPreviewSprite.attach(self, "res://assets/ui/shop-previews/photon-collector.png")
 
 
 func _setup_portrait() -> void:

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b8wnc56016j43"
-path="res://.godot/imported/pizza.png-96c777258cd5a39ead320ca5c3c862cc.ctex"
+uid="uid://bs54lqvnco1x3"
+path="res://.godot/imported/photon-collector.png-faa9b413dc630add445a71df7d8ce229.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/images/pizza.png"
-dest_files=["res://.godot/imported/pizza.png-96c777258cd5a39ead320ca5c3c862cc.ctex"]
+source_file="res://assets/ui/shop-previews/photon-collector.png"
+dest_files=["res://.godot/imported/photon-collector.png-faa9b413dc630add445a71df7d8ce229.ctex"]
 
 [params]
 
