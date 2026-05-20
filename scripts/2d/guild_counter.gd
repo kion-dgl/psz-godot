@@ -41,19 +41,18 @@ func _ready() -> void:
 	hint_label.text = "Up/Down: Select  Enter: Accept  Esc: Leave"
 	_load_entries()
 	_refresh_display()
-	ShopPreviewSprite.attach(self, "res://assets/ui/shop-previews/quest-counter.png")
+	ShopPreviewSprite.attach(self, SHOP_PREVIEW_PATH)
 	# Show quest status hints
 	if SessionManager.has_completed_quest():
 		var cq: Dictionary = SessionManager.get_completed_quest()
 		hint_label.text = "Quest \"%s\" complete! Press ENTER to report." % str(cq.get("name", ""))
 
 
+const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/quest-counter.png"
+
+
 func _setup_portrait() -> void:
-	var data := SceneManager.get_transition_data()
-	var model_path: String = data.get("npc_model_path", "")
-	if model_path.is_empty():
-		return
-	_portrait = PszStyle.setup_shop_portrait($Panel, list_panel, detail_panel, model_path)
+	_portrait = PszStyle.setup_shop_portrait($Panel, list_panel, detail_panel, SHOP_PREVIEW_PATH)
 
 
 func _has_active_quest() -> bool:

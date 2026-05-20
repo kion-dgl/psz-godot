@@ -1,6 +1,8 @@
 extends Control
 ## Synthesis Shop — craft weapons from materials, learn rare boards.
 
+const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/synth-shop.png"
+
 enum Mode { CRAFT, BOARDS }
 
 const TAB_NAMES := ["Craft", "Boards"]
@@ -77,14 +79,10 @@ func _ready() -> void:
 	hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"
 	_build_lists()
 	_refresh_display()
-	ShopPreviewSprite.attach(self, "res://assets/ui/shop-previews/synth-shop.png")
+	ShopPreviewSprite.attach(self, SHOP_PREVIEW_PATH)
 
 
 func _setup_portrait() -> void:
-	var data := SceneManager.get_transition_data()
-	var model_path: String = data.get("npc_model_path", "")
-	if model_path.is_empty():
-		return
 	var panel: PanelContainer = $Panel
 	panel.offset_left = 0
 	panel.offset_top = 0
@@ -112,14 +110,11 @@ func _setup_portrait() -> void:
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	right.size_flags_stretch_ratio = 2.0
 	right.add_theme_constant_override("separation", 0)
+	# Right column intentionally empty — shop preview is added separately
+	# as an absolute overlay (see ShopPreviewSprite.attach below).
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	spacer.size_flags_stretch_ratio = 1.0
 	right.add_child(spacer)
-	_portrait = PszStyle.create_npc_portrait(model_path)
-	_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_portrait.size_flags_stretch_ratio = 1.0
-	right.add_child(_portrait)
 	outer.add_child(right)
 	panel.add_child(outer)
 

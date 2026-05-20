@@ -48,15 +48,14 @@ func _ready() -> void:
 	_generate_disk_inventory()
 	_generate_sell_list()
 	_refresh_display()
-	ShopPreviewSprite.attach(self, "res://assets/ui/shop-previews/item-shop.png")
+	ShopPreviewSprite.attach(self, SHOP_PREVIEW_PATH)
+
+
+const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/item-shop.png"
 
 
 func _setup_portrait() -> void:
-	var data := SceneManager.get_transition_data()
-	var model_path: String = data.get("npc_model_path", "")
-	if model_path.is_empty():
-		return
-	_portrait = PszStyle.setup_shop_portrait($Panel, shop_panel, detail_panel, model_path)
+	_portrait = PszStyle.setup_shop_portrait($Panel, shop_panel, detail_panel, SHOP_PREVIEW_PATH)
 
 
 func _load_shop_items() -> void:
