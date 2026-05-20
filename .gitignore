@@ -17,6 +17,10 @@
 # Small UI sprites (menu panels, icons) committed directly — too small to be
 # worth the R2 round-trip and painful to iterate on through the asset pack.
 !/assets/ui/
+# Shop preview sprites moved under assets/ui/shop-previews/ so they ship
+# with the binary instead of the asset pack — see the .gd helper at
+# scripts/2d/components/shop_preview_sprite.gd. The /assets/ui/ rule above
+# already un-ignores them recursively; no extra whitelist needed here.
 # Original assets we author in-house (e.g. Blender-built room geometry) are
 # committed directly so contributors don't need the pack to load these scenes.
 # Each parent dir must be re-included before the leaf negation works.

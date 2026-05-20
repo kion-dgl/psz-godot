@@ -1,6 +1,8 @@
 extends Control
 ## Tekker — grind weapons and identify unknown weapons.
 
+const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/custom-shop.png"
+
 enum Mode { GRIND, IDENTIFY }
 
 const TAB_NAMES := ["Grind", "Identify"]
@@ -40,13 +42,10 @@ func _ready() -> void:
 	hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"
 	_build_lists()
 	_refresh_display()
+	ShopPreviewSprite.attach(self, SHOP_PREVIEW_PATH)
 
 
 func _setup_portrait() -> void:
-	var data := SceneManager.get_transition_data()
-	var model_path: String = data.get("npc_model_path", "")
-	if model_path.is_empty():
-		return
 	# Make panel fullscreen
 	var panel: PanelContainer = $Panel
 	panel.offset_left = 0
@@ -78,16 +77,14 @@ func _setup_portrait() -> void:
 	right.size_flags_stretch_ratio = 2.0
 	right.add_theme_constant_override("separation", 0)
 	# Grinder info panel (above portrait)
+	# Right column: grinder info takes the full vertical space; the shop
+	# preview is added separately as an absolute overlay (see
+	# ShopPreviewSprite.attach below).
 	_grinder_info = VBoxContainer.new()
 	_grinder_info.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_grinder_info.size_flags_stretch_ratio = 1.0
 	_grinder_info.add_theme_constant_override("separation", 4)
 	right.add_child(_grinder_info)
 
-	_portrait = PszStyle.create_npc_portrait(model_path)
-	_portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_portrait.size_flags_stretch_ratio = 1.0
-	right.add_child(_portrait)
 	outer.add_child(right)
 	panel.add_child(outer)
 

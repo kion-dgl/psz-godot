@@ -292,28 +292,63 @@ static func create_bar(label_text: String, ratio: float, value_text: String, fil
 	return pill
 
 
-## Create a flush NPC portrait with margin and rounded corners.
-## Returns a MarginContainer wrapping the TextureRect.
-static func create_npc_portrait(model_path: String) -> Control:
+## Create a flush portrait/preview image with margin and rounded corners.
+## Pass either an NPC model GLB path (the function will look for
+## portrait.{jpeg,jpg,png} in the same dir) OR a direct path to an image
+## (.png/.jpg/.webp). Returns a MarginContainer; inside, an
+## AspectRatioContainer keeps the preview aspect-correct and pinned to
+## the bottom of its slot (so the preview hugs the bottom-right of the
+## screen with small margins instead of stretching to fill).
+static func create_npc_portrait(image_path: String) -> Control:
 	var margin := MarginContainer.new()
 	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_right", 12)
+	margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_right", 8)
 	margin.add_theme_constant_override("margin_top", 8)
 	margin.add_theme_constant_override("margin_bottom", 8)
 
+	# Direct image (preferred) — if the path ends in an image ext and
+	# exists, load it as-is. Otherwise fall back to the legacy NPC-GLB
+	# convention of looking up portrait.{ext} next to the model.
+	var tex: Texture2D = null
+	var img_exts := [".png", ".jpg", ".jpeg", ".webp"]
+	var is_direct := false
+	for ext in img_exts:
+		if image_path.to_lower().ends_with(ext):
+			is_direct = true
+			break
+	if is_direct and ResourceLoader.exists(image_path):
+		tex = load(image_path)
+	else:
+		var base_dir := image_path.get_base_dir()
+		for ext in [".jpeg", ".jpg", ".png"]:
+			var path: String = base_dir + "/portrait" + ext
+			if ResourceLoader.exists(path):
+				tex = load(path)
+				break
+
+	# AspectRatioContainer enforces the image's natural aspect ratio and
+	# pins its child to the bottom of the available vertical space.
+	# (Set ratio from texture dimensions; falls back to 1.0 if unset.)
+	var aspect_box := AspectRatioContainer.new()
+	aspect_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	aspect_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	aspect_box.alignment_horizontal = AspectRatioContainer.ALIGNMENT_CENTER
+	aspect_box.alignment_vertical = AspectRatioContainer.ALIGNMENT_END
+	if tex:
+		var sz := tex.get_size()
+		if sz.y > 0:
+			aspect_box.ratio = float(sz.x) / float(sz.y)
+
 	var tex_rect := TextureRect.new()
+	tex_rect.texture = tex
 	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	# Outer AspectRatioContainer is doing the aspect work; inside, just
+	# scale to fill the aspect-box's rect.
 	tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
 	tex_rect.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	tex_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
-
-	var base_dir := model_path.get_base_dir()
-	for ext in [".jpeg", ".jpg", ".png"]:
-		var path: String = base_dir + "/portrait" + ext
-		if ResourceLoader.exists(path):
-			tex_rect.texture = load(path)
-			break
 
 	# Rounded corners via shader
 	var shader := Shader.new()
@@ -340,12 +375,16 @@ void fragment() {
 	mat.shader = shader
 	tex_rect.material = mat
 
-	margin.add_child(tex_rect)
+	aspect_box.add_child(tex_rect)
+	margin.add_child(aspect_box)
 	return margin
 
 
-## Restructure a shop with list+detail panels into fullscreen layout with portrait.
-## Left 3/5: title, tabs, list, hints. Right 2/5: detail on top, 4:3 portrait flush at bottom.
+## Restructure a shop with list+detail panels into fullscreen layout.
+## Left 3/5: title, tabs, list, hints. Right 2/5: detail panel (full height).
+## The shop preview image is added separately by ShopPreviewSprite — this
+## function no longer adds an NPC portrait. The `model_path` param is kept
+## for API back-compat but unused.
 static func setup_shop_portrait(
 		panel: PanelContainer, menu_panel: PanelContainer,
 		detail_ref: PanelContainer, model_path: String) -> Control:
@@ -388,19 +427,15 @@ static func setup_shop_portrait(
 	detail_margin.add_theme_constant_override("margin_right", 8)
 	detail_margin.add_theme_constant_override("margin_bottom", 8)
 	detail_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_margin.size_flags_stretch_ratio = 1.0
 	detail_ref.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	detail_margin.add_child(detail_ref)
 	right.add_child(detail_margin)
 
-	var portrait := create_npc_portrait(model_path)
-	portrait.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	portrait.size_flags_stretch_ratio = 1.0
-	right.add_child(portrait)
-
 	outer.add_child(right)
 	panel.add_child(outer)
-	return portrait
+	# `model_path` is intentionally unused — see header comment.
+	# Returning a no-op MarginContainer to preserve the existing API.
+	return MarginContainer.new()
 
 
 static func detail_label(text: String, color := TEXT) -> Label:
