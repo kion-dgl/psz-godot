@@ -19,7 +19,9 @@ const C_DARK_MUTED := Color(0.227, 0.290, 0.353)          # #3a4a5a muted text
 const C_WHITE := Color(1.0, 1.0, 1.0)                     # white text
 const C_GREEN_ARROW := Color(0.20, 0.55, 0.25)            # appearance arrows
 # Type accents — vivid PSO primaries so the slat stripes read at a glance.
-const C_TYPE_HUNTER := Color(0.98, 0.10, 0.10)            # red
+# Hunter has zero green channel + a slight blue pull to compensate for the
+# Retroid's warm-leaning panel, otherwise the stripe reads coral/orange.
+const C_TYPE_HUNTER := Color(1.00, 0.00, 0.18)            # red
 const C_TYPE_RANGER := Color(0.12, 0.60, 0.18)            # green
 const C_TYPE_FORCE := Color(0.25, 0.40, 1.00)             # blue
 const C_PANEL_BORDER := Color(0.478, 0.627, 0.753, 0.5)   # #7aa0c0 subtle
@@ -628,13 +630,13 @@ func _show_appearance() -> void:
 	_title_label.text = "CUSTOMIZE APPEARANCE"
 	_hint_label.text = "Up/Down: Row    Left/Right: Change    Tab+L/R: Rotate    Confirm: Next    Cancel: Back"
 
-	# Hide the 2D bg so the 3D preview's WorldEnvironment shows through (its
-	# background_color is also C_BG — pale icy blue — so the visual result is
-	# identical). Keep the scanlines overlay visible so the 3D preview reads
-	# with the same PSZ DS texture as the class-select step.
+	# Hide the 2D bg + shader scanlines so the 3D preview's bg plane (which
+	# uses character_select_bg.png — sky-blue with baked-in scanlines and
+	# sparkles, from web/public/menu-design/) reads cleanly without doubling
+	# up the scanline pattern.
 	_bg_rect.visible = false
 	if _scanlines_overlay:
-		_scanlines_overlay.visible = true
+		_scanlines_overlay.visible = false
 
 	if not _preview_active:
 		_build_preview_scene()
@@ -1043,7 +1045,8 @@ func _process(delta: float) -> void:
 
 
 func _build_preview_scene() -> void:
-	# PSZ light blue background
+	# PSZ light blue fallback (only visible at the edges if the bg plane
+	# doesn't fully cover the camera frustum).
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = C_BG
@@ -1053,6 +1056,24 @@ func _build_preview_scene() -> void:
 
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
+
+	# Backdrop plane — uses the same character-select bg PNG as the menu-design
+	# reference at web/public/menu-design/character_select_bg.png. Positioned
+	# far behind the camera focus so the character model renders in front of
+	# it; the plane is large enough to fill the camera's 28° FOV at this
+	# distance. Unshaded so the lighting setup doesn't tint the bg.
+	var bg_mesh := MeshInstance3D.new()
+	var bg_plane := PlaneMesh.new()
+	bg_plane.size = Vector2(18.0, 10.125)  # 16:9, oversized so edges aren't visible
+	bg_plane.orientation = PlaneMesh.FACE_Z
+	bg_mesh.mesh = bg_plane
+	var bg_mat := StandardMaterial3D.new()
+	bg_mat.albedo_texture = load("res://assets/ui/menu-design/character_select_bg.png") as Texture2D
+	bg_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bg_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	bg_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	bg_mesh.material_override = bg_mat
+	bg_mesh.position = Vector3(0, 0.5, -7.0)
 
 	# Camera pulled back so full body fits, offset left
 	var camera := Camera3D.new()
@@ -1102,7 +1123,7 @@ func _build_preview_scene() -> void:
 	particles.visibility_aabb = AABB(Vector3(-4, -2, -2), Vector3(8, 5, 4))
 	particles.position = Vector3(0, 1.0, 0)
 
-	_preview_nodes = [world_env, camera, light, fill, _preview_pivot, particles]
+	_preview_nodes = [world_env, bg_mesh, camera, light, fill, _preview_pivot, particles]
 	for node in _preview_nodes:
 		add_child(node)
 
