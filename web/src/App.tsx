@@ -1,5 +1,5 @@
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import Landing from './pages/Landing';
 
 const QuestHome = lazy(() => import('./quest-editor/QuestHome'));
@@ -28,179 +28,177 @@ const SfxLabeler = lazy(() => import('./sfx-labeler/SfxLabeler'));
 const PhotoMode = lazy(() => import('./photo-mode/PhotoMode'));
 const TitleScreen = lazy(() => import('./title-screen/TitleScreen'));
 const DodgeDebug = lazy(() => import('./dodge-debug/DodgeDebug'));
+const AssetLoader = lazy(() => import('./asset-loader/AssetLoader'));
 
-function NavBar() {
+type NavLink = { to: string; label: string };
+type NavGroup = { label: string; links: NavLink[] };
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'Quest',
+    links: [{ to: '/quest-editor', label: 'Quest Editor' }],
+  },
+  {
+    label: 'Storybook',
+    links: [
+      { to: '/storybook', label: 'Elements' },
+      { to: '/storybook/enemies', label: 'Enemies' },
+      { to: '/storybook/weapons', label: 'Weapons' },
+      { to: '/storybook/basic-weapons', label: 'PSO Weapons' },
+      { to: '/storybook/player-animations', label: 'Animations' },
+    ],
+  },
+  {
+    label: 'Editors',
+    links: [
+      { to: '/stage-editor', label: 'Stage Editor' },
+      { to: '/svg-check', label: 'SVG Check' },
+      { to: '/office-editor', label: 'Office' },
+      { to: '/market-editor', label: 'Market' },
+    ],
+  },
+  {
+    label: 'UI',
+    links: [
+      { to: '/menu-design', label: 'Menus' },
+      { to: '/settings', label: 'Settings' },
+      { to: '/start-menu', label: 'Start Menu' },
+      { to: '/title-screen', label: 'Title' },
+      { to: '/asset-loader', label: 'Loader' },
+      { to: '/controls', label: 'Controls' },
+      { to: '/character-creator', label: 'Character' },
+    ],
+  },
+  {
+    label: 'Retarget',
+    links: [
+      { to: '/retarget', label: 'Retarget' },
+      { to: '/retarget-tuner', label: 'Tuner' },
+      { to: '/retarget-tuner-vrm', label: 'VRM Tuner' },
+      { to: '/vrm-mixamo', label: 'VRM × Mixamo' },
+      { to: '/vrma-to-psz', label: 'VRMA → PSZ' },
+      { to: '/pso-ik-vrm', label: 'PSO → VRM (IK)' },
+    ],
+  },
+  {
+    label: 'Tools',
+    links: [
+      { to: '/sfx-labeler', label: 'SFX' },
+      { to: '/photo-mode', label: 'Photo' },
+      { to: '/dodge-debug', label: 'Dodge' },
+    ],
+  },
+];
+
+function NavDropdown({ group }: { group: NavGroup }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+
+  const isActive = group.links.some(
+    (l) => location.pathname === l.to || location.pathname.startsWith(l.to + '/'),
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
 
   return (
-    <nav style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 16,
-      padding: '8px 16px',
-      background: '#12122a',
-      borderBottom: '1px solid #2a2a4a',
-      fontSize: 13,
-    }}>
-      <Link to="/" style={{
-        color: '#88aaff',
-        textDecoration: 'none',
-        fontWeight: 600,
-        fontSize: 14,
-      }}>
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: isActive ? '#fff' : '#888',
+          cursor: 'pointer',
+          padding: 0,
+          fontSize: 13,
+          fontFamily: 'inherit',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+        }}
+      >
+        {group.label}
+        <span style={{ fontSize: 9, opacity: 0.7 }}>▾</span>
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 6px)',
+            left: 0,
+            background: '#12122a',
+            border: '1px solid #2a2a4a',
+            borderRadius: 4,
+            padding: 4,
+            minWidth: 170,
+            zIndex: 100,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            boxShadow: '0 6px 18px rgba(0,0,0,0.45)',
+          }}
+        >
+          {group.links.map((l) => {
+            const active = location.pathname === l.to || location.pathname.startsWith(l.to + '/');
+            return (
+              <Link
+                key={l.to}
+                to={l.to}
+                onClick={() => setOpen(false)}
+                style={{
+                  color: active ? '#fff' : '#aaa',
+                  textDecoration: 'none',
+                  padding: '5px 10px',
+                  fontSize: 13,
+                  borderRadius: 2,
+                  background: active ? '#1f1f3f' : 'transparent',
+                }}
+              >
+                {l.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NavBar() {
+  return (
+    <nav
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 18,
+        padding: '8px 16px',
+        background: '#12122a',
+        borderBottom: '1px solid #2a2a4a',
+        fontSize: 13,
+      }}
+    >
+      <Link
+        to="/"
+        style={{
+          color: '#88aaff',
+          textDecoration: 'none',
+          fontWeight: 600,
+          fontSize: 14,
+        }}
+      >
         PSZ
       </Link>
-      <Link to="/quest-editor" style={{
-        color: isActive('/quest-editor') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Quest Editor
-      </Link>
-      <Link to="/storybook" style={{
-        color: isActive('/storybook') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Elements
-      </Link>
-      <Link to="/storybook/enemies" style={{
-        color: isActive('/storybook/enemies') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Enemies
-      </Link>
-      <Link to="/storybook/weapons" style={{
-        color: isActive('/storybook/weapons') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Weapons
-      </Link>
-      <Link to="/storybook/basic-weapons" style={{
-        color: isActive('/storybook/basic-weapons') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        PSO Weapons
-      </Link>
-      <Link to="/storybook/player-animations" style={{
-        color: isActive('/storybook/player-animations') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Animations
-      </Link>
-      <Link to="/stage-editor" style={{
-        color: isActive('/stage-editor') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Stage Editor
-      </Link>
-      <Link to="/svg-check" style={{
-        color: isActive('/svg-check') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        SVG Check
-      </Link>
-      <Link to="/office-editor" style={{
-        color: isActive('/office-editor') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Office
-      </Link>
-      <Link to="/market-editor" style={{
-        color: isActive('/market-editor') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Market
-      </Link>
-      <Link to="/menu-design" style={{
-        color: isActive('/menu-design') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Menus
-      </Link>
-      <Link to="/settings" style={{
-        color: isActive('/settings') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Settings
-      </Link>
-      <Link to="/retarget" style={{
-        color: isActive('/retarget') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Retarget
-      </Link>
-      <Link to="/retarget-tuner" style={{
-        color: isActive('/retarget-tuner') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Tuner
-      </Link>
-      <Link to="/retarget-tuner-vrm" style={{
-        color: isActive('/retarget-tuner-vrm') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        VRM Tuner
-      </Link>
-      <Link to="/vrm-mixamo" style={{
-        color: isActive('/vrm-mixamo') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        VRM × Mixamo
-      </Link>
-      <Link to="/vrma-to-psz" style={{
-        color: isActive('/vrma-to-psz') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        VRMA → PSZ
-      </Link>
-      <Link to="/pso-ik-vrm" style={{
-        color: isActive('/pso-ik-vrm') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        PSO → VRM (IK)
-      </Link>
-      <Link to="/character-creator" style={{
-        color: isActive('/character-creator') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Character
-      </Link>
-      <Link to="/start-menu" style={{
-        color: isActive('/start-menu') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Start Menu
-      </Link>
-      <Link to="/controls" style={{
-        color: isActive('/controls') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Controls
-      </Link>
-      <Link to="/sfx-labeler" style={{
-        color: isActive('/sfx-labeler') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        SFX
-      </Link>
-      <Link to="/photo-mode" style={{
-        color: isActive('/photo-mode') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Photo
-      </Link>
-      <Link to="/title-screen" style={{
-        color: isActive('/title-screen') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Title
-      </Link>
-      <Link to="/dodge-debug" style={{
-        color: isActive('/dodge-debug') ? '#fff' : '#888',
-        textDecoration: 'none',
-      }}>
-        Dodge
-      </Link>
+      {NAV_GROUPS.map((g) => (
+        <NavDropdown key={g.label} group={g} />
+      ))}
     </nav>
   );
 }
@@ -238,6 +236,7 @@ export default function App() {
             <Route path="/sfx-labeler" element={<SfxLabeler />} />
             <Route path="/photo-mode" element={<PhotoMode />} />
             <Route path="/title-screen" element={<TitleScreen />} />
+            <Route path="/asset-loader" element={<AssetLoader />} />
             <Route path="/dodge-debug" element={<DodgeDebug />} />
           </Routes>
         </Suspense>
