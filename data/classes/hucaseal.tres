@@ -9,6 +9,7 @@ name = "HUcaseal"
 race = "Cast"
 gender = "Female"
 type = "Hunter"
+tagline = "Precise android striker"
 bonuses = PackedStringArray("Natural HP recovery (+1% every 5 seconds; +5% at rest)", "Immune to poison status attribute", "Can see and destroy traps")
 material_limit = 80
 innate_weapon_type = 3

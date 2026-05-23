@@ -9,6 +9,7 @@ name = "HUmar"
 race = "Human"
 gender = "Male"
 type = "Hunter"
+tagline = "Balanced melee all-rounder"
 bonuses = PackedStringArray()
 material_limit = 100
 innate_weapon_type = 0

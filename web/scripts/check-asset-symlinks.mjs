@@ -24,6 +24,9 @@ const PUBLIC_ASSETS = join(WEB_ROOT, 'public', 'assets');
 // name → relative target (from web/public/assets/)
 const REQUIRED = {
   enemies: '../../../assets/enemies',
+  // Class portrait PNGs (humar.png, ramar.png, …) used by the character
+  // creator + the character-select variants. In-tree under /assets/images.
+  images: '../../../assets/images',
   npcs: '../../../assets/npcs',
   objects: '../../../assets/objects',
   player: '../../../assets/player',

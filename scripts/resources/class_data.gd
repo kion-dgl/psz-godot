@@ -6,6 +6,9 @@ class_name ClassData extends Resource
 @export var race: String = ""   # Human, Newman, Cast
 @export var gender: String = "" # Male, Female
 @export var type: String = ""   # Hunter, Ranger, Force
+## Short playstyle descriptor used by the class-select UI in place of stat
+## numbers — keeps focus on the character's role rather than the RPG values.
+@export var tagline: String = ""
 @export var bonuses: PackedStringArray = []
 @export var material_limit: int = 100
 

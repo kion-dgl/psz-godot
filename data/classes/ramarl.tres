@@ -9,6 +9,7 @@ name = "RAmarl"
 race = "Human"
 gender = "Female"
 type = "Ranger"
+tagline = "Quick-draw sharpshooter"
 bonuses = PackedStringArray()
 material_limit = 100
 innate_weapon_type = 9

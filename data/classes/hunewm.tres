@@ -9,6 +9,7 @@ name = "HUnewm"
 race = "Newman"
 gender = "Male"
 type = "Hunter"
+tagline = "Spell-wielding hunter"
 bonuses = PackedStringArray("Natural PP recovery (+1% every 5 seconds; +5% at rest)")
 material_limit = 80
 innate_weapon_type = 4

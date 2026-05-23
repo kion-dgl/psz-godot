@@ -9,6 +9,7 @@ name = "RAmar"
 race = "Human"
 gender = "Male"
 type = "Ranger"
+tagline = "Steady marksman"
 bonuses = PackedStringArray()
 material_limit = 100
 innate_weapon_type = 11

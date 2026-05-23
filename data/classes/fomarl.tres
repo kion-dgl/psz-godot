@@ -9,6 +9,7 @@ name = "FOmarl"
 race = "Human"
 gender = "Female"
 type = "Force"
+tagline = "Healer and party support"
 bonuses = PackedStringArray("75% damage reduction from technique attacks", "25% boost to Grants and 30% boost to Resta")
 material_limit = 100
 innate_weapon_type = 15
