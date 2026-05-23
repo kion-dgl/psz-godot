@@ -19,8 +19,8 @@ const C_DARK_MUTED := Color(0.227, 0.290, 0.353)          # #3a4a5a muted text
 const C_WHITE := Color(1.0, 1.0, 1.0)                     # white text
 const C_GREEN_ARROW := Color(0.20, 0.55, 0.25)            # appearance arrows
 # Type accents — vivid PSO primaries so the slat stripes read at a glance.
-const C_TYPE_HUNTER := Color(0.95, 0.20, 0.20)            # red
-const C_TYPE_RANGER := Color(0.20, 0.85, 0.25)            # green
+const C_TYPE_HUNTER := Color(0.98, 0.10, 0.10)            # red
+const C_TYPE_RANGER := Color(0.12, 0.60, 0.18)            # green
 const C_TYPE_FORCE := Color(0.25, 0.40, 1.00)             # blue
 const C_PANEL_BORDER := Color(0.478, 0.627, 0.753, 0.5)   # #7aa0c0 subtle
 
@@ -628,10 +628,13 @@ func _show_appearance() -> void:
 	_title_label.text = "CUSTOMIZE APPEARANCE"
 	_hint_label.text = "Up/Down: Row    Left/Right: Change    Tab+L/R: Rotate    Confirm: Next    Cancel: Back"
 
-	# Hide background + PSZ chrome overlays so 3D preview shows through
+	# Hide the 2D bg so the 3D preview's WorldEnvironment shows through (its
+	# background_color is also C_BG — pale icy blue — so the visual result is
+	# identical). Keep the scanlines overlay visible so the 3D preview reads
+	# with the same PSZ DS texture as the class-select step.
 	_bg_rect.visible = false
 	if _scanlines_overlay:
-		_scanlines_overlay.visible = false
+		_scanlines_overlay.visible = true
 
 	if not _preview_active:
 		_build_preview_scene()
