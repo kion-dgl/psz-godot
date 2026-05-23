@@ -18,10 +18,10 @@ const C_DARK := Color(0.102, 0.102, 0.165)                # #1a1a2a dark text
 const C_DARK_MUTED := Color(0.227, 0.290, 0.353)          # #3a4a5a muted text
 const C_WHITE := Color(1.0, 1.0, 1.0)                     # white text
 const C_GREEN_ARROW := Color(0.20, 0.55, 0.25)            # appearance arrows
-# Type accents (PSZ palette: gold / silver-slate / navy)
-const C_TYPE_HUNTER := Color(0.941, 0.627, 0.125)         # #f0a020 gold
-const C_TYPE_RANGER := Color(0.478, 0.627, 0.753)         # #7aa0c0 separator
-const C_TYPE_FORCE := Color(0.165, 0.205, 0.282)          # #2a3448 navy
+# Type accents — vivid PSO primaries so the slat stripes read at a glance.
+const C_TYPE_HUNTER := Color(0.95, 0.20, 0.20)            # red
+const C_TYPE_RANGER := Color(0.20, 0.85, 0.25)            # green
+const C_TYPE_FORCE := Color(0.25, 0.40, 1.00)             # blue
 const C_PANEL_BORDER := Color(0.478, 0.627, 0.753, 0.5)   # #7aa0c0 subtle
 
 # ── State ───────────────────────────────────────────────────────
@@ -61,6 +61,16 @@ var _title_label: Label
 var _content_area: Control
 var _hint_bar: PanelContainer
 var _hint_label: Label
+
+# Slat caching for the class-select step. We build the 14 slats once on
+# entry to the step and animate stretch_ratio / overlay alpha when the
+# selection changes, instead of rebuilding the tree on every keypress.
+const SLAT_RATIO_SELECTED := 5.0
+const SLAT_RATIO_UNSELECTED := 1.0
+const SLAT_ANIM_DURATION := 0.32
+var _slats: Array = []                       # Control nodes in display order
+var _slat_data: Array = []                   # Dictionary per slat: refs + orig_index
+var _selection_tween: Tween = null
 
 # Cached class art textures
 var _class_art_cache: Dictionary = {}
@@ -295,16 +305,21 @@ func _unhandled_input(event: InputEvent) -> void:
 func _handle_class_select_input(event: InputEvent) -> void:
 	# Slats are arranged horizontally so left/right is the primary axis;
 	# up/down still works as a secondary path so keyboard users with a
-	# vertical mental model aren't stuck.
+	# vertical mental model aren't stuck. Selection stops at the first /
+	# last class (no wrap), so the leftmost / rightmost feel like edges.
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
-		_selected_class_index = wrapi(_selected_class_index - 1, 0, _class_list.size())
-		_sync_type_from_class()
-		_update_class_select()
+		var prev := _selected_class_index
+		_selected_class_index = max(0, _selected_class_index - 1)
+		if _selected_class_index != prev:
+			_sync_type_from_class()
+			_update_class_select()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
-		_selected_class_index = wrapi(_selected_class_index + 1, 0, _class_list.size())
-		_sync_type_from_class()
-		_update_class_select()
+		var prev := _selected_class_index
+		_selected_class_index = min(_class_list.size() - 1, _selected_class_index + 1)
+		if _selected_class_index != prev:
+			_sync_type_from_class()
+			_update_class_select()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		_selected_class_id = _class_list[_selected_class_index].id
@@ -402,44 +417,86 @@ func _show_class_select() -> void:
 		_scanlines_overlay.visible = true
 	if _accent_bar:
 		_accent_bar.visible = true
+	# Force a fresh slat build on (re-)entering the step; any cached refs
+	# may be pointing at queue_free'd nodes from a previous visit.
+	if _selection_tween != null:
+		_selection_tween.kill()
+		_selection_tween = null
+	_slats.clear()
+	_slat_data.clear()
 	_sync_type_from_class()
 	_update_class_select()
 
 
 func _update_class_select() -> void:
-	# Horizontal slats: 14 columns in a row, sorted Hunter → Ranger → Force.
-	# Selected slat expands (stretch_ratio 5 vs 1) and reveals an info overlay
-	# at the bottom with the class name, race/gender/type, and the tagline
-	# from class_data.gd. Ported from the web mock at /character-select
-	# (web/src/character-select/SlatsView.tsx, "Slats · PSZ theme" variant).
+	# Horizontal slats: 14 columns sorted Hunter → Ranger → Force. The slats
+	# themselves persist across navigation; only the selection state animates.
+	# Ported from web/src/character-select/SlatsView.tsx (slats-PSZ palette).
+	if _slats.is_empty():
+		await _build_class_select_slats()
+	_animate_to_selection(true)
+
+
+func _build_class_select_slats() -> void:
 	_clear_content()
 	await get_tree().process_frame
 
-	# Sort by type, preserving original index so input handler still works.
-	var sorted_entries: Array = []  # [{cls, orig_index}]
+	# Sort by type, preserving original index so the input handler can keep
+	# operating on _class_list indices.
+	var sorted_entries: Array = []
 	for type_name in ["Hunter", "Ranger", "Force"]:
 		for i in range(_class_list.size()):
 			var c = _class_list[i]
 			if c.type == type_name:
 				sorted_entries.append({"cls": c, "orig_index": i})
 
-	# Row of slats fills the content area.
 	var hbox := HBoxContainer.new()
 	hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	hbox.add_theme_constant_override("separation", 0)
 	_content_area.add_child(hbox)
 
+	_slats.clear()
+	_slat_data.clear()
+
 	for entry in sorted_entries:
-		var slat: Control = _make_slat(entry["cls"], entry["orig_index"] == _selected_class_index)
-		hbox.add_child(slat)
+		var d := _make_slat_pack(entry["cls"], entry["orig_index"])
+		hbox.add_child(d["slat"])
+		_slats.append(d["slat"])
+		_slat_data.append(d)
+
+	# Apply the initial selection state instantly (no animation) so the
+	# selected slat is already expanded on first paint.
+	_animate_to_selection(false)
 
 
-func _make_slat(cls, is_selected: bool) -> Control:
+func _animate_to_selection(animated: bool) -> void:
+	if _selection_tween != null and _selection_tween.is_running():
+		_selection_tween.kill()
+	_selection_tween = create_tween().set_parallel(true)
+	_selection_tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	var dur: float = SLAT_ANIM_DURATION if animated else 0.0
+
+	for d in _slat_data:
+		var is_selected: bool = (d["orig_index"] == _selected_class_index)
+		var target_ratio: float = SLAT_RATIO_SELECTED if is_selected else SLAT_RATIO_UNSELECTED
+		var overlay_alpha: float = 1.0 if is_selected else 0.0
+		var v_name_alpha: float = 0.0 if is_selected else 1.0
+		var portrait_alpha: float = 1.0 if is_selected else 0.55
+		# Stripes show/hide instantly — fading them would muddy the type colour.
+		d["stripe_top"].visible = is_selected
+		d["stripe_bot"].visible = is_selected
+		_selection_tween.tween_property(d["slat"], "size_flags_stretch_ratio", target_ratio, dur)
+		_selection_tween.tween_property(d["overlay"], "modulate:a", overlay_alpha, dur)
+		_selection_tween.tween_property(d["v_name"], "modulate:a", v_name_alpha, dur * 0.6)
+		_selection_tween.tween_property(d["portrait"], "modulate:a", portrait_alpha, dur * 0.6)
+
+
+func _make_slat_pack(cls, orig_index: int) -> Dictionary:
 	var type_color: Color = _get_type_color(cls.type)
 
 	var slat := Control.new()
 	slat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slat.size_flags_stretch_ratio = 5.0 if is_selected else 1.0
+	slat.size_flags_stretch_ratio = SLAT_RATIO_UNSELECTED
 	slat.clip_contents = true
 
 	# Portrait fills the slat
@@ -450,114 +507,118 @@ func _make_slat(cls, is_selected: bool) -> Control:
 	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if _class_art_cache.has(cls.id):
 		portrait.texture = _class_art_cache[cls.id]
-	if not is_selected:
-		# Desaturate + dim unselected so the chosen class pops
-		portrait.modulate = Color(0.85, 0.88, 0.94, 0.55)
 	slat.add_child(portrait)
 
-	# Type-coloured top + bottom stripes when selected
-	if is_selected:
-		var stripe_top := ColorRect.new()
-		stripe_top.color = type_color
-		stripe_top.anchor_right = 1.0
-		stripe_top.offset_bottom = 4
-		stripe_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		slat.add_child(stripe_top)
+	# Type-coloured top + bottom stripes — shown only when this slat is
+	# the selected one. Visibility is toggled by _animate_to_selection().
+	var stripe_top := ColorRect.new()
+	stripe_top.color = type_color
+	stripe_top.anchor_right = 1.0
+	stripe_top.offset_bottom = 4
+	stripe_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stripe_top.visible = false
+	slat.add_child(stripe_top)
 
-		var stripe_bot := ColorRect.new()
-		stripe_bot.color = type_color
-		stripe_bot.anchor_top = 1.0
-		stripe_bot.anchor_right = 1.0
-		stripe_bot.anchor_bottom = 1.0
-		stripe_bot.offset_top = -4
-		stripe_bot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		slat.add_child(stripe_bot)
+	var stripe_bot := ColorRect.new()
+	stripe_bot.color = type_color
+	stripe_bot.anchor_top = 1.0
+	stripe_bot.anchor_right = 1.0
+	stripe_bot.anchor_bottom = 1.0
+	stripe_bot.offset_top = -4
+	stripe_bot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stripe_bot.visible = false
+	slat.add_child(stripe_bot)
 
-	if is_selected:
-		# Info overlay anchored to the bottom of the slat. Solid dark navy
-		# (StyleBoxFlat doesn't gradient cleanly, so we settle for a 92%
-		# opaque navy panel — matches the panelGradient in the web variant).
-		var overlay := Panel.new()
-		overlay.anchor_top = 1.0
-		overlay.anchor_right = 1.0
-		overlay.anchor_bottom = 1.0
-		overlay.offset_top = -180
-		overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var overlay_style := StyleBoxFlat.new()
-		overlay_style.bg_color = Color(0.118, 0.157, 0.220, 0.92)  # #1e2838
-		overlay_style.content_margin_left = 18
-		overlay_style.content_margin_right = 18
-		overlay_style.content_margin_top = 14
-		overlay_style.content_margin_bottom = 14
-		overlay.add_theme_stylebox_override("panel", overlay_style)
-		slat.add_child(overlay)
+	# Vertical class name — visible while unselected, faded out when selected.
+	# Each glyph on its own line so we sidestep rotated-Label pivot maths.
+	var v_name := Label.new()
+	var v_text := ""
+	for ch in cls.name:
+		v_text += ch + "\n"
+	v_name.text = v_text.strip_edges()
+	v_name.add_theme_font_size_override("font_size", 13)
+	v_name.add_theme_color_override("font_color", C_WHITE)
+	v_name.add_theme_constant_override("outline_size", 4)
+	v_name.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	v_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v_name.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	v_name.offset_top = 10
+	v_name.offset_bottom = 240
+	v_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slat.add_child(v_name)
 
-		var info_vbox := VBoxContainer.new()
-		info_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-		info_vbox.add_theme_constant_override("separation", 4)
-		overlay.add_child(info_vbox)
+	# Info overlay — always built and populated for this slat's class; alpha
+	# is animated to 1.0 when selected, 0.0 otherwise.
+	var overlay := Panel.new()
+	overlay.anchor_top = 1.0
+	overlay.anchor_right = 1.0
+	overlay.anchor_bottom = 1.0
+	overlay.offset_top = -180
+	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.modulate.a = 0.0
+	var overlay_style := StyleBoxFlat.new()
+	overlay_style.bg_color = Color(0.118, 0.157, 0.220, 0.92)
+	overlay_style.content_margin_left = 18
+	overlay_style.content_margin_right = 18
+	overlay_style.content_margin_top = 14
+	overlay_style.content_margin_bottom = 14
+	overlay.add_theme_stylebox_override("panel", overlay_style)
+	slat.add_child(overlay)
 
-		var name_lbl := Label.new()
-		name_lbl.text = cls.name
-		name_lbl.add_theme_font_size_override("font_size", 28)
-		name_lbl.add_theme_color_override("font_color", C_WHITE)
-		name_lbl.add_theme_constant_override("outline_size", 4)
-		name_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.55))
-		info_vbox.add_child(name_lbl)
+	var info_vbox := VBoxContainer.new()
+	info_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	info_vbox.add_theme_constant_override("separation", 4)
+	overlay.add_child(info_vbox)
 
-		var desc_lbl := Label.new()
-		desc_lbl.text = "%s · %s · %s" % [cls.race, cls.gender, cls.type.to_upper()]
-		desc_lbl.add_theme_font_size_override("font_size", 11)
-		desc_lbl.add_theme_color_override("font_color", type_color)
-		info_vbox.add_child(desc_lbl)
+	var name_lbl := Label.new()
+	name_lbl.text = cls.name
+	name_lbl.add_theme_font_size_override("font_size", 28)
+	name_lbl.add_theme_color_override("font_color", C_WHITE)
+	name_lbl.add_theme_constant_override("outline_size", 4)
+	name_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.55))
+	info_vbox.add_child(name_lbl)
 
-		# Tagline replaces stat numbers — character role, not RPG values
-		var tagline_row := HBoxContainer.new()
-		tagline_row.add_theme_constant_override("separation", 8)
-		info_vbox.add_child(tagline_row)
+	var desc_lbl := Label.new()
+	desc_lbl.text = "%s · %s · %s" % [cls.race, cls.gender, cls.type.to_upper()]
+	desc_lbl.add_theme_font_size_override("font_size", 11)
+	desc_lbl.add_theme_color_override("font_color", type_color)
+	info_vbox.add_child(desc_lbl)
 
-		var bar := ColorRect.new()
-		bar.color = type_color
-		bar.custom_minimum_size = Vector2(3, 22)
-		tagline_row.add_child(bar)
+	var tagline_row := HBoxContainer.new()
+	tagline_row.add_theme_constant_override("separation", 8)
+	info_vbox.add_child(tagline_row)
 
-		var tagline_lbl := Label.new()
-		var tagline_text: String = cls.tagline if cls.tagline != "" else cls.get_description()
-		tagline_lbl.text = tagline_text
-		tagline_lbl.add_theme_font_size_override("font_size", 14)
-		tagline_lbl.add_theme_color_override("font_color", Color(0.85, 0.89, 0.94))
-		tagline_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		tagline_row.add_child(tagline_lbl)
+	var bar := ColorRect.new()
+	bar.color = type_color
+	bar.custom_minimum_size = Vector2(3, 22)
+	tagline_row.add_child(bar)
 
-		# Bonuses pill (if any)
-		if cls.bonuses.size() > 0:
-			var bonuses_lbl := Label.new()
-			var bonus_text := PackedStringArray(cls.bonuses).join(" · ")
-			bonuses_lbl.text = bonus_text
-			bonuses_lbl.add_theme_font_size_override("font_size", 10)
-			bonuses_lbl.add_theme_color_override("font_color", type_color)
-			bonuses_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			info_vbox.add_child(bonuses_lbl)
-	else:
-		# Vertical class name — each glyph stacked on its own row so we don't
-		# have to fight with rotated-Label pivot maths.
-		var v_name := Label.new()
-		var v_text := ""
-		for ch in cls.name:
-			v_text += ch + "\n"
-		v_name.text = v_text.strip_edges()
-		v_name.add_theme_font_size_override("font_size", 13)
-		v_name.add_theme_color_override("font_color", C_WHITE)
-		v_name.add_theme_constant_override("outline_size", 4)
-		v_name.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-		v_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		v_name.set_anchors_preset(Control.PRESET_TOP_WIDE)
-		v_name.offset_top = 10
-		v_name.offset_bottom = 240  # tall enough for ~10 chars at fs=13
-		v_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		slat.add_child(v_name)
+	var tagline_lbl := Label.new()
+	var tagline_text: String = cls.tagline if cls.tagline != "" else cls.get_description()
+	tagline_lbl.text = tagline_text
+	tagline_lbl.add_theme_font_size_override("font_size", 14)
+	tagline_lbl.add_theme_color_override("font_color", Color(0.85, 0.89, 0.94))
+	tagline_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	tagline_row.add_child(tagline_lbl)
 
-	return slat
+	if cls.bonuses.size() > 0:
+		var bonuses_lbl := Label.new()
+		var bonus_text: String = " · ".join(cls.bonuses)
+		bonuses_lbl.text = bonus_text
+		bonuses_lbl.add_theme_font_size_override("font_size", 10)
+		bonuses_lbl.add_theme_color_override("font_color", type_color)
+		bonuses_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		info_vbox.add_child(bonuses_lbl)
+
+	return {
+		"slat": slat,
+		"portrait": portrait,
+		"stripe_top": stripe_top,
+		"stripe_bot": stripe_bot,
+		"v_name": v_name,
+		"overlay": overlay,
+		"orig_index": orig_index,
+	}
 
 
 # ── Step 2: APPEARANCE ──────────────────────────────────────────
