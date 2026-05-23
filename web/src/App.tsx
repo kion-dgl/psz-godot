@@ -111,6 +111,7 @@ function NavDropdown({ group }: { group: NavGroup }) {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button
+        type="button"
         onClick={() => setOpen((o) => !o)}
         style={{
           background: 'none',

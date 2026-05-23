@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/2d/bootstrap.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/2d/bootstrap_sparkle_field.gd" id="2"]

@@ -149,7 +149,11 @@ export default function AssetLoader() {
   useEffect(() => {
     if (phase !== 'loading') return;
     let cancelled = false;
-    let timer = 0;
+    let tickTimer = 0;
+    let doneTimer = 0;
+    // Guard prevents React's batched updater (and strict-mode double-invoke)
+    // from scheduling the "done" transition more than once per loading run.
+    let doneScheduled = false;
     const tick = () => {
       if (cancelled) return;
       const s = speedRef.current;
@@ -157,17 +161,19 @@ export default function AssetLoader() {
       const delay = s === 'slow' ? 80 : s === 'fast' ? 25 : 50;
       setProgress((p) => {
         const next = Math.min(100, p + inc * (Math.random() * 1.5 + 0.5));
-        if (next >= 100 && phase === 'loading') {
-          window.setTimeout(() => setPhase('done'), 700);
+        if (next >= 100 && !doneScheduled) {
+          doneScheduled = true;
+          doneTimer = window.setTimeout(() => setPhase('done'), 700);
         }
         return next;
       });
-      timer = window.setTimeout(tick, delay);
+      tickTimer = window.setTimeout(tick, delay);
     };
     tick();
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
+      window.clearTimeout(tickTimer);
+      window.clearTimeout(doneTimer);
     };
   }, [phase]);
 

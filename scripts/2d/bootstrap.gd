@@ -35,7 +35,7 @@ const HTTP_RETRY_DELAYS := [5.0, 15.0, 30.0, 60.0]  # seconds between attempts
 # fires. Matches the React mockup at /asset-loader.
 const CONNECTING_HOLD_SEC := 1.2
 
-enum Phase { CONNECTING, LOADING, DONE }
+enum Phase { CONNECTING, LOADING, DONE, ERROR }
 
 @onready var _client_line: Label = $Banner/RightCol/ClientLine
 @onready var _status: Label = $LoaderColumn/StatusBlock/Status
@@ -397,6 +397,12 @@ func _goto_title() -> void:
 
 
 func _fatal(msg: String) -> void:
+	# Phase ERROR freezes the _process speed-update loop and signals to any
+	# future check (e.g. retry button) that the load failed. Hiding the cloud
+	# icon stops its pulse animation; the footer dot keeps pulsing as a "still
+	# alive, just stuck" indicator.
+	_phase = Phase.ERROR
+	_cloud_icon.visible = false
 	_status.text = "ERROR"
 	_status_jp.text = ""
 	_file_ticker.text = msg
