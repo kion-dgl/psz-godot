@@ -73,6 +73,10 @@ const SLAT_ANIM_DURATION := 0.32
 var _slats: Array = []                       # Control nodes in display order
 var _slat_data: Array = []                   # Dictionary per slat: refs + orig_index
 var _selection_tween: Tween = null
+# Re-entry guard. _build_class_select_slats() awaits a frame, and the input
+# handler can fire again during that await — without this we'd kick off
+# overlapping builds that each call _clear_content() + add children.
+var _slats_building: bool = false
 
 # Cached class art textures
 var _class_art_cache: Dictionary = {}
@@ -426,6 +430,7 @@ func _show_class_select() -> void:
 		_selection_tween = null
 	_slats.clear()
 	_slat_data.clear()
+	_slats_building = false
 	_sync_type_from_class()
 	_update_class_select()
 
@@ -434,8 +439,16 @@ func _update_class_select() -> void:
 	# Horizontal slats: 14 columns sorted Hunter → Ranger → Force. The slats
 	# themselves persist across navigation; only the selection state animates.
 	# Ported from web/src/character-select/SlatsView.tsx (slats-PSZ palette).
+	if _slats_building:
+		# An initial build is in flight; it'll re-read _selected_class_index
+		# when it finishes via its trailing _animate_to_selection(false), so
+		# the latest input wins. Don't kick off a parallel build.
+		return
 	if _slats.is_empty():
+		_slats_building = true
 		await _build_class_select_slats()
+		_slats_building = false
+		return  # build already applied initial state
 	_animate_to_selection(true)
 
 
