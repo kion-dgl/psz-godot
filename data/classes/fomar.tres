@@ -9,6 +9,7 @@ name = "FOmar"
 race = "Human"
 gender = "Male"
 type = "Force"
+tagline = "Offensive elemental caster"
 bonuses = PackedStringArray("75% damage reduction from technique attacks", "20% boost to Foie, Barta, Zonde, Rafoie, Rabarta, and Razonde")
 material_limit = 100
 innate_weapon_type = 14

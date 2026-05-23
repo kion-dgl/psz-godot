@@ -9,6 +9,7 @@ name = "HUnewearl"
 race = "Newman"
 gender = "Female"
 type = "Hunter"
+tagline = "Mystic close-quarters fighter"
 bonuses = PackedStringArray("Natural PP recovery (+1% every 5 seconds; +5% at rest)")
 material_limit = 80
 innate_weapon_type = 6

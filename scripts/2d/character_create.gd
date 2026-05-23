@@ -6,20 +6,23 @@ extends Node3D
 enum Step { CLASS_SELECT, APPEARANCE, NAME_ENTRY, CONFIRM }
 
 # ── PSZ Theme Colors ────────────────────────────────────────────
-const C_BG := Color(0.66, 0.78, 0.88)                     # light blue background
-const C_TITLE_TOP := Color(0.78, 0.80, 0.84)              # metallic bar top
-const C_TITLE_BOT := Color(0.55, 0.58, 0.62)              # metallic bar bottom
+# Sourced from web/src/storybook/MenuDesign.tsx + slats-PSZ palette.
+const C_BG := Color(0.659, 0.800, 0.910)                  # #a8cce8 pale icy blue
+const C_TITLE_TOP := Color(0.165, 0.205, 0.282)           # #2a3448 bgDark (navy)
+const C_TITLE_BOT := Color(0.118, 0.157, 0.220)           # #1e2838 bgDarker
 const C_CREAM := Color(0.88, 0.90, 0.94)                  # list item bg
 const C_CREAM_HOVER := Color(0.92, 0.94, 0.97)            # hovered list item
-const C_ORANGE := Color(0.94, 0.66, 0.18)                 # selected highlight
-const C_DARK := Color(0.15, 0.20, 0.25)                   # dark text
-const C_DARK_MUTED := Color(0.30, 0.35, 0.42)             # muted text
+const C_ORANGE := Color(0.941, 0.627, 0.125)              # #f0a020 selectedGradient
+const C_GOLD_TITLE := Color(0.973, 0.784, 0.251)          # #f8c840 italic title
+const C_DARK := Color(0.102, 0.102, 0.165)                # #1a1a2a dark text
+const C_DARK_MUTED := Color(0.227, 0.290, 0.353)          # #3a4a5a muted text
 const C_WHITE := Color(1.0, 1.0, 1.0)                     # white text
 const C_GREEN_ARROW := Color(0.20, 0.55, 0.25)            # appearance arrows
-const C_TYPE_HUNTER := Color(0.9, 0.35, 0.35)             # red sidebar
-const C_TYPE_RANGER := Color(0.3, 0.75, 0.35)             # green sidebar
-const C_TYPE_FORCE := Color(0.35, 0.5, 0.9)               # blue sidebar
-const C_PANEL_BORDER := Color(0.50, 0.55, 0.62, 0.6)      # subtle border
+# Type accents (PSZ palette: gold / silver-slate / navy)
+const C_TYPE_HUNTER := Color(0.941, 0.627, 0.125)         # #f0a020 gold
+const C_TYPE_RANGER := Color(0.478, 0.627, 0.753)         # #7aa0c0 separator
+const C_TYPE_FORCE := Color(0.165, 0.205, 0.282)          # #2a3448 navy
+const C_PANEL_BORDER := Color(0.478, 0.627, 0.753, 0.5)   # #7aa0c0 subtle
 
 # ── State ───────────────────────────────────────────────────────
 var _step: int = Step.CLASS_SELECT
@@ -51,6 +54,8 @@ var _preview_active := false
 var _canvas_layer: CanvasLayer
 var _root_control: Control
 var _bg_rect: ColorRect
+var _scanlines_overlay: ColorRect           # PSZ scanline texture
+var _accent_bar: ColorRect                  # yellow top accent stripe
 var _title_bar: PanelContainer
 var _title_label: Label
 var _content_area: Control
@@ -147,11 +152,29 @@ func _build_ui() -> void:
 	_root_control.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_canvas_layer.add_child(_root_control)
 
-	# Background
+	# Background — pale icy blue (#a8cce8)
 	_bg_rect = ColorRect.new()
 	_bg_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_bg_rect.color = C_BG
+	_bg_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root_control.add_child(_bg_rect)
+
+	# Scanlines overlay — 4px repeating pattern matching MenuDesign.tsx SCANLINES.
+	# Embedded inline shader so this scene doesn't need an external resource.
+	_scanlines_overlay = ColorRect.new()
+	_scanlines_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_scanlines_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var scanline_shader := Shader.new()
+	scanline_shader.code = "shader_type canvas_item;\n" + \
+		"void fragment() {\n" + \
+		"    float band = mod(FRAGCOORD.y, 4.0);\n" + \
+		"    if (band < 2.0) { COLOR = vec4(0.0, 0.0, 0.0, 0.0); }\n" + \
+		"    else { COLOR = vec4(0.471, 0.627, 0.784, 0.10); }\n" + \
+		"}\n"
+	var scanline_mat := ShaderMaterial.new()
+	scanline_mat.shader = scanline_shader
+	_scanlines_overlay.material = scanline_mat
+	_root_control.add_child(_scanlines_overlay)
 
 	# Main vertical layout
 	var margin := MarginContainer.new()
@@ -168,22 +191,33 @@ func _build_ui() -> void:
 	vbox.add_theme_constant_override("separation", 0)
 	margin.add_child(vbox)
 
-	# Title bar — metallic gradient
+	# Yellow top accent bar (#f8c840 → #f0a020). Approximated as solid C_ORANGE
+	# since StyleBoxFlat doesn't do gradients; the bottom shadow line gives it
+	# a hint of depth.
+	_accent_bar = ColorRect.new()
+	_accent_bar.color = C_ORANGE
+	_accent_bar.custom_minimum_size = Vector2(0, 12)
+	vbox.add_child(_accent_bar)
+
+	# Title bar — dark navy with gold-tinted bottom shadow
 	_title_bar = PanelContainer.new()
 	_title_bar.custom_minimum_size = Vector2(0, 48)
 	var title_style := StyleBoxFlat.new()
-	title_style.bg_color = C_TITLE_BOT
+	title_style.bg_color = C_TITLE_TOP
 	title_style.content_margin_left = 20
 	title_style.content_margin_right = 20
-	title_style.border_width_bottom = 2
-	title_style.border_color = Color(0.40, 0.44, 0.50, 0.8)
+	title_style.border_width_top = 1
+	title_style.border_width_bottom = 1
+	title_style.border_color = Color(0.785, 0.502, 0.063, 0.55)   # #c88010 darker gold trim
 	_title_bar.add_theme_stylebox_override("panel", title_style)
 	vbox.add_child(_title_bar)
 
 	_title_label = Label.new()
 	_title_label.text = "CHARACTER CREATION"
 	_title_label.add_theme_font_size_override("font_size", 20)
-	_title_label.add_theme_color_override("font_color", C_WHITE)
+	_title_label.add_theme_color_override("font_color", C_GOLD_TITLE)
+	_title_label.add_theme_constant_override("outline_size", 4)
+	_title_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.55))
 	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_title_bar.add_child(_title_label)
@@ -194,21 +228,21 @@ func _build_ui() -> void:
 	_content_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(_content_area)
 
-	# Hint bar at the bottom
+	# Hint bar at the bottom — white-translucent hint strip (PSZ MenuDesign hintBg)
 	_hint_bar = PanelContainer.new()
-	_hint_bar.custom_minimum_size = Vector2(0, 36)
+	_hint_bar.custom_minimum_size = Vector2(0, 32)
 	var hint_style := StyleBoxFlat.new()
-	hint_style.bg_color = Color(0.50, 0.55, 0.62, 0.85)
+	hint_style.bg_color = Color(1.0, 1.0, 1.0, 0.65)
 	hint_style.content_margin_left = 20
 	hint_style.content_margin_right = 20
-	hint_style.border_width_top = 1
-	hint_style.border_color = Color(0.40, 0.44, 0.50, 0.6)
+	hint_style.border_width_top = 2
+	hint_style.border_color = C_ORANGE
 	_hint_bar.add_theme_stylebox_override("panel", hint_style)
 	vbox.add_child(_hint_bar)
 
 	_hint_label = Label.new()
-	_hint_label.add_theme_font_size_override("font_size", 14)
-	_hint_label.add_theme_color_override("font_color", C_WHITE)
+	_hint_label.add_theme_font_size_override("font_size", 13)
+	_hint_label.add_theme_color_override("font_color", C_DARK_MUTED)
 	_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_hint_bar.add_child(_hint_label)
@@ -259,12 +293,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _handle_class_select_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_up"):
+	# Slats are arranged horizontally so left/right is the primary axis;
+	# up/down still works as a secondary path so keyboard users with a
+	# vertical mental model aren't stuck.
+	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
 		_selected_class_index = wrapi(_selected_class_index - 1, 0, _class_list.size())
 		_sync_type_from_class()
 		_update_class_select()
 		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_down"):
+	elif event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
 		_selected_class_index = wrapi(_selected_class_index + 1, 0, _class_list.size())
 		_sync_type_from_class()
 		_update_class_select()
@@ -358,211 +395,169 @@ func _sync_type_from_class() -> void:
 func _show_class_select() -> void:
 	_step = Step.CLASS_SELECT
 	_title_label.text = "SELECT CLASS"
-	_hint_label.text = "Up/Down: Select    Confirm: Choose    Cancel: Back"
+	_hint_label.text = "◀  ▶  NAVIGATE          A · CONFIRM          ESC · BACK"
+	# Restore PSZ chrome (in case we came back from APPEARANCE which hid the bg)
+	_bg_rect.visible = true
+	if _scanlines_overlay:
+		_scanlines_overlay.visible = true
+	if _accent_bar:
+		_accent_bar.visible = true
 	_sync_type_from_class()
 	_update_class_select()
 
 
 func _update_class_select() -> void:
+	# Horizontal slats: 14 columns in a row, sorted Hunter → Ranger → Force.
+	# Selected slat expands (stretch_ratio 5 vs 1) and reveals an info overlay
+	# at the bottom with the class name, race/gender/type, and the tagline
+	# from class_data.gd. Ported from the web mock at /character-select
+	# (web/src/character-select/SlatsView.tsx, "Slats · PSZ theme" variant).
 	_clear_content()
-
-	# We need to wait a frame for _content_area to have its size
 	await get_tree().process_frame
-	var area_size: Vector2 = _content_area.size
 
-	# Main horizontal split: left sidebar (~280px) | right panel (rest)
-	var left_width: float = 280.0
-	var padding: float = 12.0
+	# Sort by type, preserving original index so input handler still works.
+	var sorted_entries: Array = []  # [{cls, orig_index}]
+	for type_name in ["Hunter", "Ranger", "Force"]:
+		for i in range(_class_list.size()):
+			var c = _class_list[i]
+			if c.type == type_name:
+				sorted_entries.append({"cls": c, "orig_index": i})
 
-	# ── Left Panel: Type sidebar with class rows ──
-	var left_panel := Panel.new()
-	left_panel.position = Vector2(padding, padding)
-	left_panel.size = Vector2(left_width, area_size.y - padding * 2)
-	left_panel.add_theme_stylebox_override("panel",
-		_make_bordered_stylebox(Color(0.82, 0.84, 0.88, 0.95), C_PANEL_BORDER, 1, 8, 0))
-	_content_area.add_child(left_panel)
+	# Row of slats fills the content area.
+	var hbox := HBoxContainer.new()
+	hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hbox.add_theme_constant_override("separation", 0)
+	_content_area.add_child(hbox)
 
-	# Build sidebar rows — proportional height based on class count
-	var y_offset: float = 0.0
-	var total_classes := _class_list.size()  # 14
-	var separator_total: float = (_type_groups.size() - 1) * 2.0
-	var available_height: float = area_size.y - padding * 2 - separator_total
+	for entry in sorted_entries:
+		var slat: Control = _make_slat(entry["cls"], entry["orig_index"] == _selected_class_index)
+		hbox.add_child(slat)
 
-	for gi in range(_type_groups.size()):
-		var group: Dictionary = _type_groups[gi]
-		var group_classes: Array = group["classes"]
-		var type_color: Color = group["color"]
-		var type_name: String = group["type"]
-		var group_height: float = (float(group_classes.size()) / float(total_classes)) * available_height
 
-		# Type color stripe on the left
-		var stripe := ColorRect.new()
-		stripe.position = Vector2(0, y_offset)
-		stripe.size = Vector2(8, group_height)
-		stripe.color = type_color
-		left_panel.add_child(stripe)
+func _make_slat(cls, is_selected: bool) -> Control:
+	var type_color: Color = _get_type_color(cls.type)
 
-		# No separate type label — the stripe color indicates the type
+	var slat := Control.new()
+	slat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slat.size_flags_stretch_ratio = 5.0 if is_selected else 1.0
+	slat.clip_contents = true
 
-		# Class rows within this type
-		var row_h: float = group_height / float(group_classes.size())
-		for ci in range(group_classes.size()):
-			var entry: Dictionary = group_classes[ci]
-			var cls_data = entry["data"]
-			var cls_index: int = entry["index"]
-			var is_selected := (cls_index == _selected_class_index)
+	# Portrait fills the slat
+	var portrait := TextureRect.new()
+	portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+	portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if _class_art_cache.has(cls.id):
+		portrait.texture = _class_art_cache[cls.id]
+	if not is_selected:
+		# Desaturate + dim unselected so the chosen class pops
+		portrait.modulate = Color(0.85, 0.88, 0.94, 0.55)
+	slat.add_child(portrait)
 
-			var row_y: float = y_offset + ci * row_h
+	# Type-coloured top + bottom stripes when selected
+	if is_selected:
+		var stripe_top := ColorRect.new()
+		stripe_top.color = type_color
+		stripe_top.anchor_right = 1.0
+		stripe_top.offset_bottom = 4
+		stripe_top.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slat.add_child(stripe_top)
 
-			# Row background
-			var row_bg := ColorRect.new()
-			row_bg.position = Vector2(8, row_y)
-			row_bg.size = Vector2(left_width - 8, row_h)
-			if is_selected:
-				row_bg.color = C_ORANGE
-			elif ci % 2 == 0:
-				row_bg.color = C_CREAM
-			else:
-				row_bg.color = C_CREAM_HOVER
-			left_panel.add_child(row_bg)
+		var stripe_bot := ColorRect.new()
+		stripe_bot.color = type_color
+		stripe_bot.anchor_top = 1.0
+		stripe_bot.anchor_right = 1.0
+		stripe_bot.anchor_bottom = 1.0
+		stripe_bot.offset_top = -4
+		stripe_bot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slat.add_child(stripe_bot)
 
-			# Class name (no thumbnail)
-			var name_lbl := Label.new()
-			name_lbl.text = cls_data.name
-			name_lbl.add_theme_font_size_override("font_size", 15)
-			if is_selected:
-				name_lbl.add_theme_color_override("font_color", C_WHITE)
-			else:
-				name_lbl.add_theme_color_override("font_color", C_DARK)
-			name_lbl.position = Vector2(16, row_y + (row_h - 20) * 0.5)
-			name_lbl.size = Vector2(left_width - 30, 20)
-			left_panel.add_child(name_lbl)
+	if is_selected:
+		# Info overlay anchored to the bottom of the slat. Solid dark navy
+		# (StyleBoxFlat doesn't gradient cleanly, so we settle for a 92%
+		# opaque navy panel — matches the panelGradient in the web variant).
+		var overlay := Panel.new()
+		overlay.anchor_top = 1.0
+		overlay.anchor_right = 1.0
+		overlay.anchor_bottom = 1.0
+		overlay.offset_top = -180
+		overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var overlay_style := StyleBoxFlat.new()
+		overlay_style.bg_color = Color(0.118, 0.157, 0.220, 0.92)  # #1e2838
+		overlay_style.content_margin_left = 18
+		overlay_style.content_margin_right = 18
+		overlay_style.content_margin_top = 14
+		overlay_style.content_margin_bottom = 14
+		overlay.add_theme_stylebox_override("panel", overlay_style)
+		slat.add_child(overlay)
 
-		y_offset += group_height
+		var info_vbox := VBoxContainer.new()
+		info_vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+		info_vbox.add_theme_constant_override("separation", 4)
+		overlay.add_child(info_vbox)
 
-		# Separator between type groups (except last)
-		if gi < _type_groups.size() - 1:
-			var sep := ColorRect.new()
-			sep.position = Vector2(0, y_offset)
-			sep.size = Vector2(left_width, 2)
-			sep.color = C_PANEL_BORDER
-			left_panel.add_child(sep)
-			y_offset += 2
+		var name_lbl := Label.new()
+		name_lbl.text = cls.name
+		name_lbl.add_theme_font_size_override("font_size", 28)
+		name_lbl.add_theme_color_override("font_color", C_WHITE)
+		name_lbl.add_theme_constant_override("outline_size", 4)
+		name_lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.55))
+		info_vbox.add_child(name_lbl)
 
-	# ── Right Panel: Class art gallery + info ──
-	var right_x: float = left_width + padding * 2
-	var right_width: float = area_size.x - right_x - padding
-	var right_height: float = area_size.y - padding * 2
+		var desc_lbl := Label.new()
+		desc_lbl.text = "%s · %s · %s" % [cls.race, cls.gender, cls.type.to_upper()]
+		desc_lbl.add_theme_font_size_override("font_size", 11)
+		desc_lbl.add_theme_color_override("font_color", type_color)
+		info_vbox.add_child(desc_lbl)
 
-	var right_panel := Panel.new()
-	right_panel.position = Vector2(right_x, padding)
-	right_panel.size = Vector2(right_width, right_height)
-	right_panel.add_theme_stylebox_override("panel",
-		_make_bordered_stylebox(Color(0.75, 0.80, 0.86, 0.6), C_PANEL_BORDER, 1, 8, 0))
-	_content_area.add_child(right_panel)
+		# Tagline replaces stat numbers — character role, not RPG values
+		var tagline_row := HBoxContainer.new()
+		tagline_row.add_theme_constant_override("separation", 8)
+		info_vbox.add_child(tagline_row)
 
-	# Show classes in the selected type group as art images spread horizontally
-	var current_group: Dictionary = _type_groups[_hovered_type_index]
-	var group_classes: Array = current_group["classes"]
+		var bar := ColorRect.new()
+		bar.color = type_color
+		bar.custom_minimum_size = Vector2(3, 22)
+		tagline_row.add_child(bar)
 
-	# Art gallery area (upper portion of right panel)
-	var gallery_height: float = right_height - 100.0
-	var art_max_height: float = gallery_height - 20.0
-	var art_width: float = 140.0
-	var count: int = group_classes.size()
-	# Spread based on class count — fewer classes get more space
-	var spread: float = 110.0 if count <= 4 else 80.0
-	var center_x: float = right_width * 0.5 - 40.0  # shift left to keep on screen
+		var tagline_lbl := Label.new()
+		var tagline_text: String = cls.tagline if cls.tagline != "" else cls.get_description()
+		tagline_lbl.text = tagline_text
+		tagline_lbl.add_theme_font_size_override("font_size", 14)
+		tagline_lbl.add_theme_color_override("font_color", Color(0.85, 0.89, 0.94))
+		tagline_lbl.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		tagline_row.add_child(tagline_lbl)
 
-	# Per-class nudge offsets
-	var NUDGE := {
-		"humar": -200.0,
-		"humarl": -120.0,
-		"hunewm": -50.0,
-		"hunewearl": -80.0,
-		"hucast": 20.0,
-		"hucaseal": 10.0,
-		"ramar": -120.0,
-		"ramarl": -80.0,
-		"racast": -60.0,
-		"racaseal": 80.0,
-		"fonewearl": 30.0,
-	}
+		# Bonuses pill (if any)
+		if cls.bonuses.size() > 0:
+			var bonuses_lbl := Label.new()
+			var bonus_text := PackedStringArray(cls.bonuses).join(" · ")
+			bonuses_lbl.text = bonus_text
+			bonuses_lbl.add_theme_font_size_override("font_size", 10)
+			bonuses_lbl.add_theme_color_override("font_color", type_color)
+			bonuses_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			info_vbox.add_child(bonuses_lbl)
+	else:
+		# Vertical class name — each glyph stacked on its own row so we don't
+		# have to fight with rotated-Label pivot maths.
+		var v_name := Label.new()
+		var v_text := ""
+		for ch in cls.name:
+			v_text += ch + "\n"
+		v_name.text = v_text.strip_edges()
+		v_name.add_theme_font_size_override("font_size", 13)
+		v_name.add_theme_color_override("font_color", C_WHITE)
+		v_name.add_theme_constant_override("outline_size", 4)
+		v_name.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		v_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		v_name.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		v_name.offset_top = 10
+		v_name.offset_bottom = 240  # tall enough for ~10 chars at fs=13
+		v_name.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slat.add_child(v_name)
 
-	for ci in range(count):
-		var entry: Dictionary = group_classes[ci]
-		var cls_data = entry["data"]
-		var cls_index: int = entry["index"]
-		var is_selected := (cls_index == _selected_class_index)
-
-		if _class_art_cache.has(cls_data.id):
-			var offset_x: float = (ci - (count - 1) / 2.0) * spread
-			offset_x += NUDGE.get(cls_data.id, 0.0)
-
-			var art := TextureRect.new()
-			art.texture = _class_art_cache[cls_data.id]
-			art.position = Vector2(center_x + offset_x - art_width * 0.5, 10.0)
-			art.size = Vector2(art_width, art_max_height)
-			art.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-			art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-
-			if is_selected:
-				art.modulate = Color(1.0, 1.0, 1.0, 1.0)
-			else:
-				art.modulate = Color(0.6, 0.6, 0.6, 0.45)
-
-			right_panel.add_child(art)
-
-			# Selected indicator — orange underline
-			if is_selected:
-				var underline := ColorRect.new()
-				underline.position = Vector2(center_x + offset_x - art_width * 0.5, art_max_height + 12.0)
-				underline.size = Vector2(art_width, 3)
-				underline.color = C_ORANGE
-				right_panel.add_child(underline)
-
-	# ── Info box at bottom of right panel ──
-	var info_y: float = gallery_height
-	var info_panel := Panel.new()
-	info_panel.position = Vector2(10, info_y)
-	info_panel.size = Vector2(right_width - 20, 90)
-	info_panel.add_theme_stylebox_override("panel",
-		_make_bordered_stylebox(Color(0.85, 0.87, 0.92, 0.95), C_PANEL_BORDER, 1, 6, 12))
-	right_panel.add_child(info_panel)
-
-	var cls = _class_list[_selected_class_index]
-
-	# Class name (large)
-	var cls_name := Label.new()
-	cls_name.text = cls.name
-	cls_name.add_theme_font_size_override("font_size", 22)
-	cls_name.add_theme_color_override("font_color", _get_type_color(cls.type))
-	cls_name.position = Vector2(12, 4)
-	cls_name.size = Vector2(right_width - 44, 28)
-	info_panel.add_child(cls_name)
-
-	# Race / Gender / Type
-	var cls_desc := Label.new()
-	cls_desc.text = "%s %s  -  %s" % [cls.race, cls.gender, cls.type]
-	cls_desc.add_theme_font_size_override("font_size", 14)
-	cls_desc.add_theme_color_override("font_color", C_DARK_MUTED)
-	cls_desc.position = Vector2(12, 34)
-	cls_desc.size = Vector2(right_width - 44, 18)
-	info_panel.add_child(cls_desc)
-
-	# Stats preview (compact one-line)
-	var stats: Dictionary = cls.get_stats_at_level(1)
-	var stat_text := "HP:%d  PP:%d  ATK:%d  DEF:%d  ACC:%d  EVA:%d  TEC:%d" % [
-		stats.get("hp", 0), stats.get("pp", 0), stats.get("attack", 0),
-		stats.get("defense", 0), stats.get("accuracy", 0), stats.get("evasion", 0),
-		stats.get("technique", 0)]
-	var stat_lbl := Label.new()
-	stat_lbl.text = stat_text
-	stat_lbl.add_theme_font_size_override("font_size", 12)
-	stat_lbl.add_theme_color_override("font_color", C_DARK_MUTED)
-	stat_lbl.position = Vector2(12, 56)
-	stat_lbl.size = Vector2(right_width - 44, 16)
-	info_panel.add_child(stat_lbl)
+	return slat
 
 
 # ── Step 2: APPEARANCE ──────────────────────────────────────────
@@ -572,8 +567,10 @@ func _show_appearance() -> void:
 	_title_label.text = "CUSTOMIZE APPEARANCE"
 	_hint_label.text = "Up/Down: Row    Left/Right: Change    Tab+L/R: Rotate    Confirm: Next    Cancel: Back"
 
-	# Hide background so 3D preview shows through
+	# Hide background + PSZ chrome overlays so 3D preview shows through
 	_bg_rect.visible = false
+	if _scanlines_overlay:
+		_scanlines_overlay.visible = false
 
 	if not _preview_active:
 		_build_preview_scene()

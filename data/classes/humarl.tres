@@ -9,6 +9,7 @@ name = "HUmarl"
 race = "Human"
 gender = "Female"
 type = "Hunter"
+tagline = "Quick-strike duelist"
 bonuses = PackedStringArray()
 material_limit = 100
 innate_weapon_type = 2
