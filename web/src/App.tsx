@@ -29,6 +29,7 @@ const PhotoMode = lazy(() => import('./photo-mode/PhotoMode'));
 const TitleScreen = lazy(() => import('./title-screen/TitleScreen'));
 const DodgeDebug = lazy(() => import('./dodge-debug/DodgeDebug'));
 const AssetLoader = lazy(() => import('./asset-loader/AssetLoader'));
+const CharacterSelect = lazy(() => import('./character-select/CharacterSelect'));
 
 type NavLink = { to: string; label: string };
 type NavGroup = { label: string; links: NavLink[] };
@@ -67,6 +68,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/asset-loader', label: 'Loader' },
       { to: '/controls', label: 'Controls' },
       { to: '/character-creator', label: 'Character' },
+      { to: '/character-select', label: 'Char Select' },
     ],
   },
   {
@@ -238,6 +240,7 @@ export default function App() {
             <Route path="/photo-mode" element={<PhotoMode />} />
             <Route path="/title-screen" element={<TitleScreen />} />
             <Route path="/asset-loader" element={<AssetLoader />} />
+            <Route path="/character-select" element={<CharacterSelect />} />
             <Route path="/dodge-debug" element={<DodgeDebug />} />
           </Routes>
         </Suspense>
