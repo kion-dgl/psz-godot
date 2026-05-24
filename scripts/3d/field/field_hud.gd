@@ -8,7 +8,7 @@ const MARGIN := 12.0
 var _stats_panel: Control
 var _quest_log: Control
 var _action_palette: Control
-var _quick_weapon: Control
+var _quick_menu: Control
 var _debug_info: Control
 var _fps_label: Label
 var _log_visible: bool = false
@@ -41,8 +41,8 @@ func _ready() -> void:
 	_action_palette = _ActionPalette.new()
 	add_child(_action_palette)
 
-	_quick_weapon = _QuickWeaponMenu.new()
-	add_child(_quick_weapon)
+	_quick_menu = _QuickMenu.new()
+	add_child(_quick_menu)
 
 	GameState.hp_changed.connect(_on_stats_changed)
 	GameState.max_hp_changed.connect(_on_stats_changed)
@@ -647,6 +647,9 @@ class _ActionPalette extends Control:
 		else:
 			_swap_texture = null
 
+	## Consumable action IDs that map to inventory items with counts.
+	const CONSUMABLE_IDS := ["monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid"]
+
 	func _update_slot_icons() -> void:
 		var slots: Array = ActionPalette.get_current_slots()
 		for i in range(3):
@@ -655,8 +658,19 @@ class _ActionPalette extends Control:
 			if i < _slot_icons.size():
 				_slot_icons[i].texture = icon
 				_slot_icons[i].visible = icon != null
+				# Grey out consumable icons when count is 0
+				if action_id in CONSUMABLE_IDS:
+					var qty: int = Inventory.get_item_count(action_id)
+					_slot_icons[i].modulate = Color(0.3, 0.3, 0.3) if qty <= 0 else Color.WHITE
+				else:
+					_slot_icons[i].modulate = Color.WHITE
 
 	func _on_palette_changed(_arg = null) -> void:
+		_update_slot_icons()
+		queue_redraw()
+
+	func _process(_delta: float) -> void:
+		# Live-update item counts (consumed mid-combat, picked up, etc.)
 		_update_slot_icons()
 		queue_redraw()
 
@@ -706,34 +720,55 @@ class _ActionPalette extends Control:
 				draw_string(font, Vector2(px + (PILL_W - lbl_w) * 0.5, py + PILL_H * 0.5 + 4),
 					lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, Color.WHITE)
 
+			# Item count badge for consumable slots (#189)
+			if action_id in CONSUMABLE_IDS:
+				var qty: int = Inventory.get_item_count(action_id)
+				var badge_text := "x%d" % qty
+				var badge_color: Color = Color(0.9, 0.9, 0.9) if qty > 0 else Color(0.5, 0.3, 0.3)
+				var badge_w: float = font.get_string_size(badge_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7).x
+				# Bottom-right corner of the pill
+				draw_string(font, Vector2(px + PILL_W - badge_w - 2, py + PILL_H - 2),
+					badge_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, badge_color)
 
-# ── Quick Weapon Menu (bottom-left, toggled with quick_weapon input) ─────────
 
-class _QuickWeaponMenu extends Control:
-	## Small scrollable weapon select overlay. Shows equipped weapon + equippable
-	## weapons from inventory. 5 visible lines, scroll with up/down, accept to
-	## equip, cancel to close.
 
-	const MENU_W := 180.0
+# ── Quick Menu (bottom-left, 3-page: Weapon / Item / Tech) ───────────────────
+
+class _QuickMenu extends Control:
+	## PSO-style quick menu with three pages — Weapon, Item, Technique.
+	## Toggle with quick_weapon input; cycle pages with palette_swap (R1/Tab).
+	## Accept selects (equip weapon, use item, cast tech). Cancel closes.
+	## Remembers last-open page for the session.
+
+	enum Page { WEAPON, ITEM, TECH }
+	const PAGE_LABELS := ["Weapon", "Item", "Technique"]
+
+	const MENU_W := 200.0
 	const ROW_H := 22.0
 	const VISIBLE_ROWS := 5
-	const MENU_H: float = ROW_H * VISIBLE_ROWS + 8.0  # 5 rows + padding
+	const HEADER_H := 24.0
+	const MENU_H: float = HEADER_H + ROW_H * VISIBLE_ROWS + 8.0
 	const BG_COLOR := Color(0.05, 0.05, 0.1, 0.85)
 	const BORDER_COLOR := Color(0.3, 0.5, 0.3, 0.6)
+	const HEADER_BG := Color(0.10, 0.18, 0.35, 0.9)
 	const SELECTED_BG := Color(0.15, 0.3, 0.15, 0.8)
 	const EQUIPPED_COLOR := Color(0.3, 0.8, 0.3)
 	const TEXT_COLOR := Color(0.85, 0.85, 0.85)
 	const TEXT_DIM := Color(0.5, 0.5, 0.5)
+	const EMPTY_COLOR := Color(0.4, 0.4, 0.5)
+	const HEADER_TEXT_COL := Color(1.0, 1.0, 1.0, 0.95)
+	const TAB_INACTIVE := Color(0.5, 0.5, 0.6, 0.7)
+	const PP_COLOR := Color(0.4, 0.6, 1.0)
 
 	var _is_open: bool = false
+	var _current_page: int = Page.WEAPON  # persists across open/close
 	var _selected_index: int = 0
 	var _scroll_offset: int = 0
-	var _weapon_list: Array = []  # [{id, name, equipped}]
+	var _list: Array = []  # [{id, name, equipped?, quantity?, pp_cost?}]
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
 		visible = false
-		# Bottom-left positioning
 		anchor_left = 0.0
 		anchor_right = 0.0
 		anchor_top = 1.0
@@ -746,17 +781,17 @@ class _QuickWeaponMenu extends Control:
 		size = Vector2(MENU_W, MENU_H)
 
 	func _unhandled_input(event: InputEvent) -> void:
-		# Mouse wheel opens menu and navigates (works when closed or open)
+		# Mouse wheel opens menu and navigates
 		if event is InputEventMouseButton:
-			var mb: InputEventMouseButton = event as InputEventMouseButton
+			var mb := event as InputEventMouseButton
 			if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 				if not _is_open:
 					_open()
-				if _weapon_list.size() > 0:
+				if _list.size() > 0:
 					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-						_selected_index = wrapi(_selected_index - 1, 0, _weapon_list.size())
+						_selected_index = wrapi(_selected_index - 1, 0, _list.size())
 					else:
-						_selected_index = wrapi(_selected_index + 1, 0, _weapon_list.size())
+						_selected_index = wrapi(_selected_index + 1, 0, _list.size())
 					_update_scroll()
 					queue_redraw()
 				get_viewport().set_input_as_handled()
@@ -773,43 +808,65 @@ class _QuickWeaponMenu extends Control:
 		if not _is_open:
 			return
 
+		# Page cycle: palette_swap (R1) flips Weapon -> Item -> Tech -> Weapon
+		if event.is_action_pressed("palette_swap"):
+			_current_page = wrapi(_current_page + 1, 0, 3)
+			_rebuild_list()
+			SfxManager.play("res://assets/sfx/ui/menu_move.wav")
+			get_viewport().set_input_as_handled()
+			return
+
 		if event.is_action_pressed("ui_up"):
-			_selected_index = wrapi(_selected_index - 1, 0, _weapon_list.size())
+			if _list.size() > 0:
+				_selected_index = wrapi(_selected_index - 1, 0, _list.size())
+				SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 			_update_scroll()
 			queue_redraw()
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("ui_down"):
-			_selected_index = wrapi(_selected_index + 1, 0, _weapon_list.size())
+			if _list.size() > 0:
+				_selected_index = wrapi(_selected_index + 1, 0, _list.size())
+				SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 			_update_scroll()
 			queue_redraw()
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("ui_accept"):
-			_equip_selected()
+			_activate_selected()
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("ui_cancel"):
 			_close()
 			get_viewport().set_input_as_handled()
 
+	# ── Open / Close ──
+
 	func _open() -> void:
-		_build_weapon_list()
-		if _weapon_list.is_empty():
-			return
+		_rebuild_list()
 		_is_open = true
 		visible = true
-		# Pre-select currently equipped weapon
-		for i in range(_weapon_list.size()):
-			if _weapon_list[i].equipped:
-				_selected_index = i
-				break
-		_update_scroll()
+		SfxManager.play("res://assets/sfx/ui/menu_open.wav")
 		queue_redraw()
 
 	func _close() -> void:
 		_is_open = false
 		visible = false
+		SfxManager.play("res://assets/sfx/ui/menu_close.wav")
+
+	# ── List builders ──
+
+	func _rebuild_list() -> void:
+		_list.clear()
+		_selected_index = 0
+		_scroll_offset = 0
+		match _current_page:
+			Page.WEAPON:
+				_build_weapon_list()
+			Page.ITEM:
+				_build_item_list()
+			Page.TECH:
+				_build_tech_list()
+		queue_redraw()
 
 	func _build_weapon_list() -> void:
-		_weapon_list.clear()
 		var character = CharacterManager.get_active_character()
 		if character == null:
 			return
@@ -817,7 +874,6 @@ class _QuickWeaponMenu extends Control:
 		var class_data = ClassRegistry.get_class_data(class_id)
 		var equipped_id: String = str(character.get("equipment", {}).get("weapon", ""))
 
-		# Gather all weapons from inventory that this class can equip
 		for item_info in Inventory.get_all_items():
 			var item_id: String = str(item_info.get("id", ""))
 			var base_id: String = Inventory.get_base_id(item_id)
@@ -827,45 +883,122 @@ class _QuickWeaponMenu extends Control:
 			if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type):
 				continue
 			var is_equipped: bool = item_id == equipped_id
-			_weapon_list.append({"id": item_id, "name": str(item_info.get("name", base_id)), "equipped": is_equipped})
+			_list.append({"id": item_id, "name": str(item_info.get("name", base_id)), "equipped": is_equipped})
 
 		# Sort: equipped first, then alphabetical
-		_weapon_list.sort_custom(func(a, b):
+		_list.sort_custom(func(a, b):
 			if a.equipped != b.equipped:
-				return a.equipped  # equipped comes first
+				return a.equipped
+			return str(a.name) < str(b.name)
+		)
+		# Pre-select equipped weapon
+		for i in range(_list.size()):
+			if _list[i].get("equipped", false):
+				_selected_index = i
+				break
+
+	func _build_item_list() -> void:
+		# Show consumable items only (monomate, dimate, etc.)
+		for item_info in Inventory.get_all_items():
+			var item_id: String = str(item_info.get("id", ""))
+			var base_id: String = Inventory.get_base_id(item_id)
+			# Include consumables and telepipes
+			if Inventory.CONSUMABLE_EFFECTS.has(base_id) or base_id == "telepipe":
+				var qty: int = int(item_info.get("quantity", 1))
+				_list.append({"id": item_id, "name": str(item_info.get("name", base_id)), "quantity": qty})
+
+		_list.sort_custom(func(a, b):
 			return str(a.name) < str(b.name)
 		)
 
+	func _build_tech_list() -> void:
+		var character = CharacterManager.get_active_character()
+		if character == null:
+			return
+		var techniques: Dictionary = character.get("techniques", {})
+		for tech_id in techniques:
+			var level: int = int(techniques[tech_id])
+			if level <= 0:
+				continue
+			var tech: Dictionary = TechniqueManager.TECHNIQUES.get(tech_id, {})
+			if tech.is_empty():
+				continue
+			var pp_cost: int = int(tech.get("pp", 0))
+			_list.append({"id": tech_id, "name": "%s Lv.%d" % [tech["name"], level], "pp_cost": pp_cost})
+
+		_list.sort_custom(func(a, b):
+			return str(a.name) < str(b.name)
+		)
+
+	# ── Scroll ──
+
 	func _update_scroll() -> void:
-		# Keep selected item visible in the scroll window
 		if _selected_index < _scroll_offset:
 			_scroll_offset = _selected_index
 		elif _selected_index >= _scroll_offset + VISIBLE_ROWS:
 			_scroll_offset = _selected_index - VISIBLE_ROWS + 1
-		_scroll_offset = clampi(_scroll_offset, 0, maxi(0, _weapon_list.size() - VISIBLE_ROWS))
+		_scroll_offset = clampi(_scroll_offset, 0, maxi(0, _list.size() - VISIBLE_ROWS))
 
-	func _equip_selected() -> void:
-		if _selected_index < 0 or _selected_index >= _weapon_list.size():
+	# ── Activate (accept) ──
+
+	func _activate_selected() -> void:
+		if _selected_index < 0 or _selected_index >= _list.size():
 			return
-		var weapon_entry: Dictionary = _weapon_list[_selected_index]
-		if weapon_entry.equipped:
+		var entry: Dictionary = _list[_selected_index]
+
+		match _current_page:
+			Page.WEAPON:
+				_equip_weapon(entry)
+			Page.ITEM:
+				_use_item(entry)
+			Page.TECH:
+				_cast_tech(entry)
+
+	func _equip_weapon(entry: Dictionary) -> void:
+		if entry.get("equipped", false):
 			_close()
 			return
-
-		# Equip the weapon
 		var character = CharacterManager.get_active_character()
 		if character == null:
 			return
 		var equipment: Dictionary = character.get("equipment", {})
-		equipment["weapon"] = weapon_entry.id
-		print("[QuickWeapon] Equipped: %s" % weapon_entry.name)
+		equipment["weapon"] = entry.id
+		print("[QuickMenu] Equipped: %s" % entry.name)
+		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
 
-		# Refresh player model
 		var players: Array = get_tree().get_nodes_in_group("player")
 		if players.size() > 0 and players[0].has_method("refresh_weapon"):
 			players[0].refresh_weapon()
-
 		_close()
+
+	func _use_item(entry: Dictionary) -> void:
+		var base_id: String = Inventory.get_base_id(str(entry.id))
+		if not Inventory.has_item(str(entry.id)):
+			SfxManager.play("res://assets/sfx/ui/menu_invalid.wav")
+			return
+
+		# Route to player for consumable use (so heal numbers spawn, etc.)
+		var players: Array = get_tree().get_nodes_in_group("player")
+		if players.size() > 0 and players[0].has_method("use_consumable_from_menu"):
+			players[0].use_consumable_from_menu(base_id)
+		else:
+			Inventory.use_item(str(entry.id))
+		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
+
+		# Refresh list (quantity changed); stay on same page
+		var prev_idx := _selected_index
+		_rebuild_list()
+		_selected_index = mini(prev_idx, maxi(0, _list.size() - 1))
+		_update_scroll()
+
+	func _cast_tech(entry: Dictionary) -> void:
+		var players: Array = get_tree().get_nodes_in_group("player")
+		if players.size() > 0 and players[0].has_method("cast_technique_from_menu"):
+			players[0].cast_technique_from_menu(str(entry.id))
+		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
+		_close()
+
+	# ── Drawing ──
 
 	func _draw() -> void:
 		if not _is_open:
@@ -876,32 +1009,78 @@ class _QuickWeaponMenu extends Control:
 		draw_rect(Rect2(Vector2.ZERO, size), BG_COLOR)
 		draw_rect(Rect2(Vector2.ZERO, size), BORDER_COLOR, false, 1.0)
 
+		# Header bar with page tabs
+		draw_rect(Rect2(0, 0, MENU_W, HEADER_H), HEADER_BG)
+		var tab_w: float = MENU_W / 3.0
+		for i in range(3):
+			var tx: float = tab_w * i
+			var tab_color: Color = HEADER_TEXT_COL if i == _current_page else TAB_INACTIVE
+			var label_text: String = PAGE_LABELS[i]
+			var lbl_w: float = font.get_string_size(label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+			draw_string(font, Vector2(tx + (tab_w - lbl_w) * 0.5, HEADER_H - 7),
+				label_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, tab_color)
+			# Active tab underline
+			if i == _current_page:
+				draw_line(Vector2(tx + 4, HEADER_H - 1), Vector2(tx + tab_w - 4, HEADER_H - 1),
+					EQUIPPED_COLOR, 2.0)
+
+		# Empty list message
+		if _list.is_empty():
+			var empty_text: String = "No %ss available" % PAGE_LABELS[_current_page].to_lower()
+			var ew: float = font.get_string_size(empty_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+			draw_string(font, Vector2((MENU_W - ew) * 0.5, HEADER_H + MENU_H * 0.3),
+				empty_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, EMPTY_COLOR)
+			return
+
 		# Draw visible rows
-		var y := 4.0
-		var end_idx: int = mini(_scroll_offset + VISIBLE_ROWS, _weapon_list.size())
+		var y: float = HEADER_H + 4.0
+		var end_idx: int = mini(_scroll_offset + VISIBLE_ROWS, _list.size())
 		for i in range(_scroll_offset, end_idx):
-			var entry: Dictionary = _weapon_list[i]
+			var entry: Dictionary = _list[i]
 			var row_rect := Rect2(2, y, MENU_W - 4, ROW_H)
 
-			# Highlight selected
 			if i == _selected_index:
 				draw_rect(row_rect, SELECTED_BG)
 
-			# Equipped marker
 			var label: String = str(entry.name)
 			var color: Color = TEXT_COLOR
-			if entry.equipped:
-				label = "> " + label
-				color = EQUIPPED_COLOR
+			var right_text: String = ""
+			var right_color: Color = TEXT_DIM
+
+			match _current_page:
+				Page.WEAPON:
+					if entry.get("equipped", false):
+						label = "> " + label
+						color = EQUIPPED_COLOR
+				Page.ITEM:
+					var qty: int = int(entry.get("quantity", 0))
+					right_text = "x%d" % qty
+					if qty <= 0:
+						color = TEXT_DIM
+				Page.TECH:
+					var pp: int = int(entry.get("pp_cost", 0))
+					right_text = "%dPP" % pp
+					right_color = PP_COLOR
+					# Dim if not enough PP
+					if GameState.mp < pp:
+						color = TEXT_DIM
+						right_color = TEXT_DIM
 
 			draw_string(font, Vector2(8, y + ROW_H - 6), label,
-				HORIZONTAL_ALIGNMENT_LEFT, MENU_W - 16, 12, color)
+				HORIZONTAL_ALIGNMENT_LEFT, MENU_W - 50, 12, color)
+
+			# Right-aligned info (quantity or PP cost)
+			if not right_text.is_empty():
+				var rw: float = font.get_string_size(right_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
+				draw_string(font, Vector2(MENU_W - rw - 8, y + ROW_H - 6),
+					right_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, right_color)
+
 			y += ROW_H
 
 		# Scroll indicators
 		if _scroll_offset > 0:
-			draw_string(font, Vector2(MENU_W - 16, 14), "\u25b2",
+			draw_string(font, Vector2(MENU_W - 16, HEADER_H + 14), "▲",
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, TEXT_DIM)
-		if end_idx < _weapon_list.size():
-			draw_string(font, Vector2(MENU_W - 16, MENU_H - 4), "\u25bc",
+		if end_idx < _list.size():
+			draw_string(font, Vector2(MENU_W - 16, MENU_H - 4), "▼",
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 10, TEXT_DIM)

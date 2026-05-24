@@ -2440,3 +2440,15 @@ func _try_interact() -> void:
 
 func get_nearest_interactable() -> Node3D:
 	return nearest_interactable
+
+
+## Public bridge: let the quick menu use a consumable through the normal path
+## (animation, heal number, inventory decrement).
+func use_consumable_from_menu(item_id: String) -> void:
+	_use_consumable(item_id)
+
+
+## Public bridge: let the quick menu cast a technique through the normal path
+## (PP check, animation, projectile/effect spawn).
+func cast_technique_from_menu(technique_id: String) -> void:
+	_cast_technique(technique_id)
