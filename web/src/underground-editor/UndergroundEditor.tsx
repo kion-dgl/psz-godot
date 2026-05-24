@@ -1,8 +1,9 @@
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, type ThreeEvent } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Grid } from '@react-three/drei';
 import { assetUrl } from '../utils/assets';
+import { copyText } from '../utils/clipboard';
 
 // s00e_sa4 = the underground / sewer scene. The base stage only models what's
 // visible from one camera angle, so the surrounding "void" needs to be filled
@@ -129,8 +130,8 @@ function PlacedMesh({
   return (
     <group
       ref={setGroupNode}
-      onClick={(e: THREE.Event) => {
-        (e as unknown as { stopPropagation: () => void }).stopPropagation();
+      onClick={(e: ThreeEvent<MouseEvent>) => {
+        e.stopPropagation();
         onClick();
       }}
     >
@@ -173,6 +174,12 @@ function bakeSkinnedMeshes(root: THREE.Object3D): void {
     }
     positions.needsUpdate = true;
     bakedGeom.computeVertexNormals();
+    // BufferGeometry.clone() carries over the source's boundingBox /
+    // boundingSphere, which were sized to the un-baked rest-pose vertices.
+    // Without recomputing, frustum culling can mis-cull the now-relocated
+    // mesh and pop pieces in/out of view as the camera moves.
+    bakedGeom.computeBoundingBox();
+    bakedGeom.computeBoundingSphere();
     bakedGeom.deleteAttribute('skinIndex');
     bakedGeom.deleteAttribute('skinWeight');
 
@@ -286,7 +293,7 @@ export default function UndergroundEditor() {
   }, []);
 
   const [copied, setCopied] = useState(false);
-  const copyJSON = useCallback(async () => {
+  const copyJSON = useCallback(() => {
     const payload = placed.map((p) => ({
       file: p.file,
       pos: p.pos.map((n) => +n.toFixed(3)),
@@ -295,44 +302,12 @@ export default function UndergroundEditor() {
     }));
     const text = JSON.stringify(payload, null, 2);
 
-    // navigator.clipboard.writeText requires a secure context (HTTPS or
-    // localhost). The dev server is served over plain HTTP via the
-    // Tailscale IP so we hit the fallback below in practice; the modern
-    // API is still tried first for when this gets opened on localhost.
-    let ok = false;
-    if (navigator.clipboard?.writeText) {
-      try {
-        await navigator.clipboard.writeText(text);
-        ok = true;
-      } catch {
-        // Falls through to the textarea fallback below.
-      }
-    }
-    if (!ok) {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.opacity = '0';
-      ta.style.top = '0';
-      ta.style.left = '0';
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      try {
-        ok = document.execCommand('copy');
-      } catch {
-        ok = false;
-      }
-      document.body.removeChild(ta);
-    }
-    if (ok) {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
-    } else {
-      // Last-ditch: log it so the dev can grab from the console.
-      console.log(text);
-      window.alert('Clipboard blocked — JSON dumped to console.');
-    }
+    // Shared helper handles secure-context vs. textarea-fallback. The dev
+    // server is served over plain HTTP via the Tailscale IP, so the
+    // textarea path is what actually runs in practice.
+    copyText(text);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
   }, [placed]);
 
   const clearAll = useCallback(() => {
