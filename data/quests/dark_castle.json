@@ -2131,7 +2131,7 @@
                   "text": "Dark Falz is down. Come home, hunter."
                 }
               ],
-              "actions": []
+              "actions": ["play_credits"]
             }
           ]
         }
