@@ -205,6 +205,9 @@ func clear() -> void:
 	face_mapping = (FACE_INDICES_DEFAULT["xbox"] as Dictionary).duplicate()
 	accept_position = "south"
 	cancel_position = "east"
+	_recompute_scheme()
+	_apply_button_mapping()
+	scheme_changed.emit(current_scheme)
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 
@@ -329,13 +332,14 @@ func _load() -> void:
 		_recompute_scheme()
 	# Legacy format: only the "scheme" name was written. Infer positional
 	# fields from FACE_INDICES_DEFAULT so the player doesn't get re-prompted
-	# on upgrade. Trigger a save so the file is rewritten in the new shape.
-	elif parsed.has("scheme"):
+	# on upgrade. Defer the save so the rest of the JSON (camera prefs,
+	# preset keyboard remaps) still gets applied to the in-memory config —
+	# the previous early-return here dropped them on every upgrade.
+	var needs_migration_save: bool = false
+	if not (parsed.has("device") and parsed.has("face_mapping")) and parsed.has("scheme"):
 		var s: String = str(parsed["scheme"])
-		if s in SCHEMES:
-			if _apply_scheme_no_save(s):
-				_save()
-			return
+		if s in SCHEMES and _apply_scheme_no_save(s):
+			needs_migration_save = true
 
 	if parsed.has("invert_camera_x"):
 		invert_camera_x = bool(parsed["invert_camera_x"])
@@ -349,6 +353,11 @@ func _load() -> void:
 		print("[InputConfig] Loading preset: %s" % preset)
 		var kb: Dictionary = parsed.get("keyboard", {})
 		_apply_keyboard_config(kb)
+
+	# If we migrated a legacy "scheme"-only config above, persist the new
+	# positional shape now that we've also folded in camera prefs / preset.
+	if needs_migration_save:
+		_save()
 
 
 ## Map of web key names to Godot physical keycodes
