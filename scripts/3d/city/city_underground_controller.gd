@@ -55,8 +55,52 @@ func _ready() -> void:
 		"Exit to City"
 	)
 
+	# Strip the per-GLB +X layout offset baked into each de_roll_le piece
+	# (20-unit grid: fe_obj002_mizu = +300, fe_obj006_grid2 = +200, etc.)
+	# and switch their materials to the mirror-wrap shader so tiling textures
+	# don't clamp at the edges. Three.js' bakeSkinnedMeshes() in the editor
+	# collapses the offset; Godot's GLB import preserves it.
+	_setup_de_roll_le_pieces()
+
 	# Wire up player references
 	_connect_player_to_interactables()
+
+
+func _setup_de_roll_le_pieces() -> void:
+	for child in get_children():
+		if not (child is Node3D):
+			continue
+		if not String(child.name).begins_with("DeRollLe_"):
+			continue
+		_zero_inner_offset(child as Node3D)
+		_apply_mirror_wrap_recursive(child)
+
+
+func _zero_inner_offset(piece: Node3D) -> void:
+	for inner in piece.get_children():
+		if inner is Node3D:
+			(inner as Node3D).transform = Transform3D.IDENTITY
+			return
+
+
+func _apply_mirror_wrap_recursive(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mi := node as MeshInstance3D
+		if mi.mesh:
+			for i in range(mi.mesh.get_surface_count()):
+				var mat := mi.get_active_material(i)
+				if mat is StandardMaterial3D:
+					var std := mat as StandardMaterial3D
+					var sm := ShaderMaterial.new()
+					sm.shader = TEXTURE_FIX_SHADER
+					if std.albedo_texture:
+						sm.set_shader_parameter("albedo_texture", std.albedo_texture)
+					sm.set_shader_parameter("albedo_color", std.albedo_color)
+					sm.set_shader_parameter("wrap_s", 1) # mirror
+					sm.set_shader_parameter("wrap_t", 1) # mirror
+					mi.set_surface_override_material(i, sm)
+	for c in node.get_children():
+		_apply_mirror_wrap_recursive(c)
 
 
 func _get_area_name() -> String:

@@ -1,7 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/3d/city/city_underground_controller.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa4/lndmd/s00e_sa4_m.glb" id="2_glb"]
+[ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj002_mizu.nj.glb" id="3_dr_mizu"]
+[ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2.nj.glb" id="4_dr_grid"]
+[ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj001_complex3.nj.glb" id="5_dr_complex"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.15, 0.15, 0.25, 1)
@@ -15,9 +18,15 @@ sky_material = SubResource("sky_mat")
 [sub_resource type="Environment" id="env"]
 background_mode = 2
 sky = SubResource("sky")
-ambient_light_source = 3
-ambient_light_color = Color(0.7, 0.75, 0.85, 1)
-ambient_light_energy = 1.3
+ambient_light_source = 2
+ambient_light_color = Color(0.32, 0.35, 0.42, 1)
+ambient_light_energy = 1.0
+fog_enabled = true
+fog_mode = 0
+fog_light_color = Color(0.18, 0.2, 0.25, 1)
+fog_light_energy = 1.0
+fog_density = 0.025
+fog_sun_scatter = 0.0
 
 [node name="CityUnderground" type="Node3D"]
 script = ExtResource("1_script")
@@ -25,9 +34,23 @@ script = ExtResource("1_script")
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("env")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15, 0)
-light_energy = 0.3
+[node name="CaveLight_Center" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -3)
+light_color = Color(1, 0.88, 0.7, 1)
+light_energy = 1.2
+omni_range = 18.0
 shadow_enabled = false
 
 [node name="Underground" parent="." instance=ExtResource("2_glb")]
+
+[node name="DeRollLe_Mizu002" parent="." instance=ExtResource("3_dr_mizu")]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 2, 0)
+
+[node name="DeRollLe_Grid006_L" parent="." instance=ExtResource("4_dr_grid")]
+transform = Transform3D(0, 0, 0.1, 0, 0.1, 0, -0.1, 0, 0, -31, 0, 12)
+
+[node name="DeRollLe_Complex001" parent="." instance=ExtResource("5_dr_complex")]
+transform = Transform3D(0, 0, -0.08, 0, 0.08, 0, 0.08, 0, 0, 0, 0, 16)
+
+[node name="DeRollLe_Grid006_R" parent="." instance=ExtResource("4_dr_grid")]
+transform = Transform3D(0, 0, 0.1, 0, 0.1, 0, -0.1, 0, 0, 33, 0, 12)

@@ -34,7 +34,15 @@ SCAN_SUFFIXES = {".gd", ".tscn", ".tres", ".cs"}
 # assets/animations/ holds reverse-retargeted VRMA clips that ride with the
 # binary instead of the pack (see the matching gitignore comment) — output
 # of web/scripts/bake-vrma-to-psz.mjs.
-IN_REPO_PREFIXES = ("assets/kenney_", "assets/ui/", "assets/animations/")
+# assets/stages/city_e/s00e_sa4/ ships in the binary (export_presets.cfg no
+# longer excludes it) so the underground sewer scene can load lndmd + the
+# de_roll_le cave pieces without depending on a pack republish.
+IN_REPO_PREFIXES = (
+    "assets/kenney_",
+    "assets/ui/",
+    "assets/animations/",
+    "assets/stages/city_e/s00e_sa4/",
+)
 
 
 def load_ignore() -> set[str]:
