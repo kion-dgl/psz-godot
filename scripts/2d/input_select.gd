@@ -10,9 +10,9 @@ extends Control
 ##   2. MAP_FACE × 4 — press the south, east, west, north face buttons
 ##      in turn; capture each button index. Duplicates re-prompt.
 ##   3. PICK_ACCEPT — choose which face button is accept: left / bottom
-##      / right (west / south / east). cancel falls naturally on the
-##      remaining south-or-east face.
-##   4. Save + go back to title (or pop overlay if launched from in-game).
+##      / right (west / south / east).
+##   4. PICK_CANCEL — choose cancel from the remaining two faces.
+##   5. Save + go back to title (or pop overlay if launched from in-game).
 ##
 ## We deliberately don't ask "Xbox / Switch / PlayStation" — the player's
 ## actual presses give us the button indices directly, and accept-position
@@ -29,6 +29,7 @@ enum Step {
 	MAP_WEST,
 	MAP_NORTH,
 	PICK_ACCEPT,
+	PICK_CANCEL,
 	DONE,
 }
 
@@ -77,6 +78,10 @@ var _selected: int = 0
 var _controller_type: String = ""
 var _face: Dictionary = {}     # "south"|"east"|"west"|"north" → button_index
 var _accept_position: String = "south"
+var _cancel_position: String = "east"
+# Built fresh per PICK_CANCEL show by filtering ACCEPT_OPTIONS down to the
+# faces the player didn't pick as accept.
+var _cancel_options_view: Array = []
 
 var _title: Label
 var _prompt: Label
@@ -207,6 +212,28 @@ func _show_accept_pick() -> void:
 	_build_cards(ACCEPT_OPTIONS)
 
 
+func _show_cancel_pick() -> void:
+	_step = Step.PICK_CANCEL
+	_title.text = "Cancel Button"
+	_prompt.text = "Which button cancels / closes menus?"
+	_hint.text = "Left/Right to choose, press any face button to confirm"
+	# Filter to the faces the player didn't pick as accept. Two cards left.
+	_cancel_options_view.clear()
+	for opt in ACCEPT_OPTIONS:
+		if str(opt["id"]) != _accept_position:
+			_cancel_options_view.append(opt)
+	# Default to the option that the legacy "south if accept != south else
+	# east" rule would have picked, so the common case lands on the typical
+	# Xbox / JP cancel position with zero extra presses.
+	var default_cancel: String = "south" if _accept_position != "south" else "east"
+	_selected = 0
+	for i in _cancel_options_view.size():
+		if str(_cancel_options_view[i]["id"]) == default_cancel:
+			_selected = i
+			break
+	_build_cards(_cancel_options_view)
+
+
 # ── Card UI for PICK_TYPE / PICK_ACCEPT ───────────────────────────────
 
 func _clear_cards() -> void:
@@ -308,6 +335,8 @@ func _input(event: InputEvent) -> void:
 			_on_face_map_event(event)
 		Step.PICK_ACCEPT:
 			_on_pick_card_event(event, ACCEPT_OPTIONS, Callable(self, "_on_accept_confirmed"))
+		Step.PICK_CANCEL:
+			_on_pick_card_event(event, _cancel_options_view, Callable(self, "_on_cancel_confirmed"))
 		Step.DONE:
 			pass
 
@@ -390,6 +419,11 @@ func _on_accept_confirmed(option: Dictionary) -> void:
 		"east": "switch",
 		"west": "playstation",
 	}.get(_accept_position, "xbox")
+	_show_cancel_pick()
+
+
+func _on_cancel_confirmed(option: Dictionary) -> void:
+	_cancel_position = str(option["id"])
 	_save_and_finish()
 
 
@@ -403,7 +437,7 @@ func _current_map_position() -> String:
 
 
 func _save_and_finish() -> void:
-	InputConfig.set_controller_config(_controller_type, _face, _accept_position)
+	InputConfig.set_controller_config(_controller_type, _face, _accept_position, _cancel_position)
 	_finish()
 
 

@@ -68,8 +68,13 @@ var controller_type: String = "xbox"
 ## FACE_INDICES_DEFAULT for legacy configs).
 var face_mapping: Dictionary = {"south": 0, "east": 1, "west": 2, "north": 3}
 
-## "south" | "east" — Xbox=south, Switch=east, PlayStation=user-pick.
+## "west" | "south" | "east" — chosen by the player in PICK_ACCEPT.
 var accept_position: String = "south"
+
+## "west" | "south" | "east" — chosen by the player in PICK_CANCEL from
+## whichever two faces are NOT accept. Falls back to the legacy "south
+## unless accept is south else east" rule for migrated / unset configs.
+var cancel_position: String = "east"
 
 ## Derived: legacy scheme name. Updated whenever device/type/accept_position
 ## change. Treat as read-only externally — write via set_controller_config /
@@ -152,6 +157,8 @@ func _apply_scheme_no_save(scheme: String) -> bool:
 				controller_type = "playstation"
 				accept_position = "east"
 		face_mapping = (FACE_INDICES_DEFAULT[controller_type] as Dictionary).duplicate()
+		# Legacy schemes never split cancel out; pick the conventional one.
+		cancel_position = "south" if accept_position != "south" else "east"
 	_recompute_scheme()
 	_apply_button_mapping()
 	return true
@@ -160,12 +167,19 @@ func _apply_scheme_no_save(scheme: String) -> bool:
 ## New entry point used by the multi-step input_select onboarding.
 ## type: "xbox" | "switch" | "playstation"
 ## face: { south: int, east: int, west: int, north: int }
-## accept: "south" | "east"
-func set_controller_config(type: String, face: Dictionary, accept: String) -> void:
+## accept: "west" | "south" | "east"
+## cancel: "west" | "south" | "east" — must differ from accept
+func set_controller_config(type: String, face: Dictionary, accept: String, cancel: String = "") -> void:
 	device = "controller"
 	controller_type = type
 	face_mapping = face.duplicate()
 	accept_position = accept
+	# Default cancel falls on south unless that's already accept, else east.
+	# Same rule the migration path uses so older saves and skipping the
+	# PICK_CANCEL step both land on the same conventional mapping.
+	if cancel == "" or cancel == accept:
+		cancel = "south" if accept != "south" else "east"
+	cancel_position = cancel
 	_recompute_scheme()
 	_apply_button_mapping()
 	scheme_changed.emit(current_scheme)
@@ -190,6 +204,7 @@ func clear() -> void:
 	controller_type = "xbox"
 	face_mapping = (FACE_INDICES_DEFAULT["xbox"] as Dictionary).duplicate()
 	accept_position = "south"
+	cancel_position = "east"
 	if FileAccess.file_exists(SAVE_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 
@@ -241,15 +256,11 @@ func _apply_button_mapping() -> void:
 	_set_joypad_button(PALETTE_3_ACTIONS, _face("east"))
 	_set_joypad_button(QUICK_WEAPON_ACTIONS, _face("north"))
 
-	# Accept = whichever face the player picked during onboarding (west /
-	# south / east). Cancel sits on south unless that's already accept, in
-	# which case it falls back to east — we always reserve one of those
-	# two conventional cancel positions even when accept is on the unusual
-	# west face.
-	var accept_face: String = accept_position
-	var cancel_face: String = "south" if accept_face != "south" else "east"
-	_set_joypad_button(ACCEPT_ACTIONS, _face(accept_face))
-	_set_joypad_button(CANCEL_ACTIONS, _face(cancel_face))
+	# Accept and cancel = whichever faces the player picked during onboarding
+	# (each one of west / south / east). PICK_CANCEL filters the cards down
+	# to the two faces that weren't picked as accept so they can't collide.
+	_set_joypad_button(ACCEPT_ACTIONS, _face(accept_position))
+	_set_joypad_button(CANCEL_ACTIONS, _face(cancel_position))
 
 
 func _set_joypad_button(actions: Array, button_index: int) -> void:
@@ -283,6 +294,7 @@ func _save() -> void:
 	data["controller_type"] = controller_type
 	data["face_mapping"] = face_mapping
 	data["accept_position"] = accept_position
+	data["cancel_position"] = cancel_position
 	data["scheme"] = current_scheme
 	data["invert_camera_x"] = invert_camera_x
 	data["enable_camera_y"] = enable_camera_y
@@ -309,6 +321,11 @@ func _load() -> void:
 		if fm is Dictionary:
 			face_mapping = (fm as Dictionary).duplicate()
 		accept_position = str(parsed.get("accept_position", "south"))
+		# cancel_position is new in this build — older positional configs
+		# don't have it. Fall back to the legacy "south unless accept is
+		# south else east" rule so upgrading saves don't surprise the player.
+		var default_cancel := "south" if accept_position != "south" else "east"
+		cancel_position = str(parsed.get("cancel_position", default_cancel))
 		_recompute_scheme()
 	# Legacy format: only the "scheme" name was written. Infer positional
 	# fields from FACE_INDICES_DEFAULT so the player doesn't get re-prompted
