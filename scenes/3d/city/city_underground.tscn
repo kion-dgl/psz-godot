@@ -1,7 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/3d/city/city_underground_controller.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa4/lndmd/s00e_sa4_m.glb" id="2_glb"]
+[ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj002_mizu.nj.glb" id="3_dr_mizu"]
+[ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj006_grid2.nj.glb" id="4_dr_grid"]
+[ext_resource type="PackedScene" path="res://assets/stages/city_e/s00e_sa4/de_roll_le/fe_obj001_complex3.nj.glb" id="5_dr_complex"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.15, 0.15, 0.25, 1)
@@ -31,3 +34,15 @@ light_energy = 0.3
 shadow_enabled = false
 
 [node name="Underground" parent="." instance=ExtResource("2_glb")]
+
+[node name="DeRollLe_Mizu002" parent="." instance=ExtResource("3_dr_mizu")]
+transform = Transform3D(0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.25, 0, 2, 0)
+
+[node name="DeRollLe_Grid006_L" parent="." instance=ExtResource("4_dr_grid")]
+transform = Transform3D(0, 0, 0.1, 0, 0.1, 0, -0.1, 0, 0, -31, 0, 12)
+
+[node name="DeRollLe_Complex001" parent="." instance=ExtResource("5_dr_complex")]
+transform = Transform3D(0, 0, -0.08, 0, 0.08, 0, 0.08, 0, 0, 0, 0, 16)
+
+[node name="DeRollLe_Grid006_R" parent="." instance=ExtResource("4_dr_grid")]
+transform = Transform3D(0, 0, 0.1, 0, 0.1, 0, -0.1, 0, 0, 43, 0, 12)
