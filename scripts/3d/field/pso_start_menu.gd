@@ -842,18 +842,13 @@ func _input_options(event: InputEvent) -> bool:
 		elif _options_idx == 1:
 			_adjust_sfx_volume(-0.1)
 			return true
-		elif _options_idx == 2:
-			InputConfig.cycle(-1)
-			return true
+		# (Controls: Reconfigure at idx 2 is action-only — Left/Right is a no-op.)
 	elif event.is_action_pressed("ui_right", false):
 		if _options_idx == 0:
 			_adjust_music_volume(0.1)
 			return true
 		elif _options_idx == 1:
 			_adjust_sfx_volume(0.1)
-			return true
-		elif _options_idx == 2:
-			InputConfig.cycle(1)
 			return true
 	elif event.is_action_pressed("ui_accept"):
 		_toggle_option(_options_idx)
@@ -891,7 +886,7 @@ func _get_options_list() -> Array:
 	return [
 		"Music Volume: %d%%" % music_pct,
 		"SFX Volume: %d%%" % sfx_pct,
-		"Controller: %s" % InputConfig.get_label(),
+		"Controls: Reconfigure",
 		"On-Screen Controls: %s" % mc_state,
 		"Camera Rotation: %s" % ("Inverted" if InputConfig.invert_camera_x else "Direct"),
 		"Camera Y-Axis: %s" % (on if InputConfig.enable_camera_y else off),
@@ -910,7 +905,17 @@ func _toggle_option(idx: int) -> void:
 	match idx:
 		0: _adjust_music_volume(0.1)
 		1: _adjust_sfx_volume(0.1)
-		2: InputConfig.cycle(1)
+		2:
+			# "Reconfigure Controls" — close the start menu (this is an
+			# autoload CanvasLayer at layer 150, so change_scene_to_file
+			# wouldn't take it down), nuke the saved config, and push
+			# input_select as an overlay via SceneManager so the gameplay
+			# scene underneath is preserved. input_select._finish() pops
+			# the overlay when done and the player lands back where they
+			# were instead of getting dumped to the title.
+			close()
+			InputConfig.clear()
+			SceneManager.push_scene("res://scenes/2d/input_select.tscn")
 		3:
 			var mc := get_node_or_null("/root/MobileControls")
 			if mc and mc.has_method("toggle"):

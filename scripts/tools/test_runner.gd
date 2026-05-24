@@ -3189,11 +3189,11 @@ func test_input_config() -> void:
 		"ds_cross":  {"ui_accept": 0, "ui_cancel": 1, "interact": 0},
 		"ds_circle": {"ui_accept": 1, "ui_cancel": 0, "interact": 1},
 	}
-	# Manipulate the scheme in-memory only — going through set_scheme() would
-	# churn the user's on-disk input_config.json during local test runs.
+	# Use _apply_scheme_no_save — same internal path as set_scheme but
+	# skips the disk write, so a local test run doesn't clobber the dev's
+	# on-disk input_config.json.
 	for scheme in expected:
-		InputConfig.current_scheme = scheme
-		InputConfig._apply_button_mapping()
+		InputConfig._apply_scheme_no_save(scheme)
 		var exp_buttons: Dictionary = expected[scheme]
 		for action in exp_buttons:
 			var btn: int = _get_joypad_button(action)
@@ -3210,15 +3210,13 @@ func test_input_config() -> void:
 		"ds_circle": {"action_1": 2, "action_2": 0, "action_3": 1, "quick_weapon": 3},
 	}
 	for palette_scheme in palette_expected:
-		InputConfig.current_scheme = palette_scheme
-		InputConfig._apply_button_mapping()
+		InputConfig._apply_scheme_no_save(palette_scheme)
 		var exp: Dictionary = palette_expected[palette_scheme]
 		for action in exp:
 			assert_eq(_get_joypad_button(action), exp[action], "%s: %s on button %d" % [palette_scheme, action, exp[action]])
 
 	# Restore original for any tests that run after.
-	InputConfig.current_scheme = original_scheme
-	InputConfig._apply_button_mapping()
+	InputConfig._apply_scheme_no_save(original_scheme)
 
 
 func _get_joypad_button(action: String) -> int:
