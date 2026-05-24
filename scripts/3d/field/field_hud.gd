@@ -13,6 +13,10 @@ var _debug_info: Control
 var _fps_label: Label
 var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
+# Tracks the keep_stats arg we last applied so we can detect transitions
+# within the "is hidden" state — e.g. start menu open (keep_stats=true) →
+# pushed scene overlay (keep_stats=false) needs to re-hide the stats panel.
+var _last_keep_stats: bool = false
 
 # Cached character info (static for session)
 var _char_name: String = ""
@@ -84,10 +88,21 @@ func _process(_delta: float) -> void:
 	var has_scene_overlay: bool = not SceneManager._overlay_stack.is_empty()
 	var start_menu_open: bool = PsoStartMenu.is_open()
 	var has_overlay: bool = has_scene_overlay or start_menu_open
-	if has_overlay and not _hidden_for_overlay:
-		_hidden_for_overlay = true
-		hide_for_menu(start_menu_open and not has_scene_overlay)
-	elif not has_overlay and _hidden_for_overlay:
+	# keep_stats: HP/PP stays visible only when the start menu is the lone
+	# overlay (so the player can see their health while toggling options).
+	# Once a scene overlay is pushed (e.g. Reconfigure Controls), hide
+	# everything so the modal isn't drawn on top of stats.
+	var target_keep_stats: bool = start_menu_open and not has_scene_overlay
+	if has_overlay:
+		# Re-apply hide_for_menu both on first-hide AND when keep_stats
+		# changes mid-overlay (start-menu-only → start-menu + scene overlay,
+		# or close start menu while scene overlay pushes), otherwise the
+		# stats panel sticks at its earlier visibility.
+		if not _hidden_for_overlay or _last_keep_stats != target_keep_stats:
+			_hidden_for_overlay = true
+			_last_keep_stats = target_keep_stats
+			hide_for_menu(target_keep_stats)
+	elif _hidden_for_overlay:
 		_hidden_for_overlay = false
 		restore_after_menu()
 
