@@ -9,6 +9,7 @@ class_name DialogTrigger
 ##   "item_pickup"     — fires when a quest item is collected in the same room
 ##
 ## actions[] runs after dialog finishes:
+##   "play_credits"        — complete quest + transition to credits roll
 ##   "complete_quest"      — SessionManager.complete_quest()
 ##   "telepipe"            — return to city
 ##   "dismiss_companion"   — companion stops following and idles in place
@@ -197,6 +198,13 @@ func _execute_actions() -> void:
 	var objectives_met := SessionManager.are_objectives_complete()
 	for action in actions:
 		match str(action):
+			"play_credits":
+				print("[DialogTrigger] Action: play_credits → credits scene")
+				# Complete quest first so save state is correct
+				if objectives_met:
+					SessionManager.complete_quest()
+				SceneManager.goto_scene("res://scenes/2d/credits.tscn")
+				return  # Don't process further actions
 			"complete_quest":
 				if not objectives_met:
 					continue

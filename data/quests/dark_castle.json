@@ -2125,13 +2125,8 @@
               ],
               "trigger_id": "dark_castle_z_0_0_clear",
               "trigger_condition": "room_clear",
-              "dialog": [
-                {
-                  "speaker": "Principal",
-                  "text": "Dark Falz is down. Come home, hunter."
-                }
-              ],
-              "actions": []
+              "dialog": [],
+              "actions": ["play_credits"]
             }
           ]
         }
