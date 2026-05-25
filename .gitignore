@@ -87,6 +87,12 @@
 .xdp-Unconfirmed*
 # Raw PSOBB SFX pool used by the web labeler; also on R2.
 /web/public/assets/psobb_sfx/
+# Scratch drop zone — repo-root staging for reference assets (PSO source PNGs,
+# mockups, etc.) that are intended to be MOVED into the proper subtree under
+# assets/ or web/, not used in-place from the root. Gitignored so the LLM
+# doesn't reach in and reference these paths directly; if you see a file you
+# need here, relocate it first.
+/ref/
 
 # Web app
 web/node_modules/
