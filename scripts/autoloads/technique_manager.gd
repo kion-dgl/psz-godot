@@ -48,9 +48,30 @@ const RARE_LEVEL_BONUS := 3
 const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
 const SHOP_MID_TECHS := ["gifoie", "gibarta", "gizonde", "reverser"]
 
+## Base technique → charged variant (hold-to-charge).
+## Support techs map to themselves — charge may boost potency later.
+const CHARGE_MAP := {
+	"foie": "rafoie",
+	"barta": "rabarta",
+	"zonde": "razonde",
+	"grants": "grants",
+	"megid": "megid",
+	"resta": "resta",
+	"anti": "anti",
+	"reverser": "reverser",
+	"shifta": "shifta",
+	"deband": "deband",
+	"jellen": "jellen",
+	"zalure": "zalure",
+}
+
 
 func _ready() -> void:
 	pass
+
+
+func get_charged_technique(base_id: String) -> String:
+	return CHARGE_MAP.get(base_id, base_id)
 
 
 ## Get required player level to use a disk of a given level

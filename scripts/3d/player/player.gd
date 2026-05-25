@@ -161,6 +161,16 @@ var _charge_color: Color = Color.WHITE
 var _glow_light: OmniLight3D  # Lantern glow, toggled by time of day
 var _cached_materials: Array = []  # Array of StandardMaterial3D for charge/glow effects
 
+# Technique charge (hold-to-charge)
+var _charging_slot: int = -1
+var _charging_tech_id: String = ""
+var _tech_charge_timer: float = 0.0
+var _tech_charge_ready: bool = false
+const TECH_CHARGE_THRESHOLD := 0.6
+signal tech_charge_started(slot: int)
+signal tech_charge_ready(slot: int)
+signal tech_charge_released(slot: int)
+
 # Footstep SFX
 var _footstep_timer: float = 0.0
 const FOOTSTEP_WALK_INTERVAL := 0.55
@@ -894,6 +904,15 @@ func _physics_process(delta: float) -> void:
 		var darkness: float = TimeManager.get_darkness_factor()
 		_glow_light.light_energy = 1.2 * darkness
 
+	# Technique charge timer
+	if _charging_slot >= 0:
+		_tech_charge_timer += delta
+		if not _tech_charge_ready and _tech_charge_timer >= TECH_CHARGE_THRESHOLD:
+			_tech_charge_ready = true
+			tech_charge_ready.emit(_charging_slot)
+			_current_attack_element = str(TechniqueManager.TECHNIQUES.get(_charging_tech_id, {}).get("element", ""))
+			_start_charge_visual()
+
 	# Update combat targeting reticles (every 3rd frame to reduce CPU)
 	FrameProfiler.mark("player_targeting")
 	if not _is_in_city() and Engine.get_physics_frames() % 3 == 0:
@@ -940,13 +959,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			ActionPalette.swap_page()
 			_tech_targeting_dirty = true
 
-		# Action palette inputs — dispatch through ActionPalette
-		if event.is_action_pressed("action_1"):
-			_execute_palette_action(0)
-		if event.is_action_pressed("action_2"):
-			_execute_palette_action(1)
-		if event.is_action_pressed("action_3"):
-			_execute_palette_action(2)
+		# Action palette inputs — press starts charge for techniques, release casts
+		for slot_idx in range(3):
+			var action_name: String = "action_%d" % (slot_idx + 1)
+			if event.is_action_pressed(action_name):
+				_on_palette_pressed(slot_idx)
+			elif event.is_action_released(action_name):
+				_on_palette_released(slot_idx)
 
 		# Dodge has its own dedicated button (L1 on controller) — no longer on palette
 		if event.is_action_pressed("dodge"):
@@ -1163,8 +1182,39 @@ func _start_attack() -> void:
 	_play_attack_animation(combo_state)
 
 
+func _on_palette_pressed(slot: int) -> void:
+	if current_state == PlayerState.DAMAGED or current_state == PlayerState.DOWN:
+		return
+	var action_id: String = ActionPalette.get_action_for_slot(slot)
+	if TechniqueManager.TECHNIQUES.has(action_id):
+		_charging_slot = slot
+		_charging_tech_id = action_id
+		_tech_charge_timer = 0.0
+		_tech_charge_ready = false
+		tech_charge_started.emit(slot)
+	else:
+		_execute_palette_action(slot)
+
+
+func _on_palette_released(slot: int) -> void:
+	if _charging_slot != slot:
+		return
+	var tech_id: String = _charging_tech_id
+	var charged: bool = _tech_charge_ready
+	_charging_slot = -1
+	_charging_tech_id = ""
+	_tech_charge_timer = 0.0
+	_tech_charge_ready = false
+	_end_charge_visual()
+	tech_charge_released.emit(slot)
+	if charged:
+		var charged_id: String = TechniqueManager.get_charged_technique(tech_id)
+		_cast_technique(charged_id)
+	else:
+		_cast_technique(tech_id)
+
+
 func _execute_palette_action(slot: int) -> void:
-	# Block actions during hit reactions and knockdown
 	if current_state == PlayerState.DAMAGED or current_state == PlayerState.DOWN:
 		return
 	var action_id: String = ActionPalette.get_action_for_slot(slot)
@@ -1173,7 +1223,8 @@ func _execute_palette_action(slot: int) -> void:
 			_start_attack()
 		"strong_attack":
 			_start_strong_attack()
-		"monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid":
+		"monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid", \
+		"sol_atomizer", "star_atomizer", "moon_atomizer", "telepipe":
 			_use_consumable(action_id)
 		"kill_all":
 			_debug_kill_all()

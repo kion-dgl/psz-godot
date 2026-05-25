@@ -5,38 +5,60 @@ extends Node
 signal page_changed(new_page: int)
 signal config_changed()
 
-const ICON_BASE := "res://assets/hud/"
+const ICON_BASE := "res://assets/hud/psz/"
 
 const ALL_ACTIONS: Array = [
 	{"id": "attack", "label": "Attack", "short": "Atk", "category": "combat", "icon": "attack.png"},
 	{"id": "strong_attack", "label": "Strong Attack", "short": "S.Atk", "category": "combat", "icon": "strong_attack.png"},
+	{"id": "dodge", "label": "Dodge", "short": "Dodge", "category": "combat", "icon": "dodge.png"},
 	{"id": "monomate", "label": "Monomate", "short": "Mono", "category": "recovery", "icon": "monomate.png"},
 	{"id": "dimate", "label": "Dimate", "short": "Di", "category": "recovery", "icon": "dimate.png"},
 	{"id": "trimate", "label": "Trimate", "short": "Tri", "category": "recovery", "icon": "trimate.png"},
 	{"id": "monofluid", "label": "Monofluid", "short": "M.Flu", "category": "recovery", "icon": "monofluid.png"},
-	{"id": "difluid", "label": "Difluid", "short": "D.Flu", "category": "recovery", "icon": "monofluid.png"},
+	{"id": "difluid", "label": "Difluid", "short": "D.Flu", "category": "recovery", "icon": "difluid.png"},
 	{"id": "trifluid", "label": "Trifluid", "short": "T.Flu", "category": "recovery", "icon": "trifluid.png"},
-	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug", "icon": "icon.png"},
-	# Techniques — offensive
-	{"id": "foie", "label": "Foie", "short": "Foie", "category": "technique", "icon": "Foie.png"},
-	{"id": "gifoie", "label": "Gifoie", "short": "Gifoie", "category": "technique", "icon": "Gifoie.png"},
-	{"id": "rafoie", "label": "Rafoie", "short": "Rafoie", "category": "technique", "icon": "Rafoie.png"},
-	{"id": "barta", "label": "Barta", "short": "Barta", "category": "technique", "icon": "Barta.png"},
-	{"id": "gibarta", "label": "Gibarta", "short": "Gibarta", "category": "technique", "icon": "Gibarta.png"},
-	{"id": "rabarta", "label": "Rabarta", "short": "Rabarta", "category": "technique", "icon": "Rabarta.png"},
-	{"id": "zonde", "label": "Zonde", "short": "Zonde", "category": "technique", "icon": "Zonde.png"},
-	{"id": "gizonde", "label": "Gizonde", "short": "Gizonde", "category": "technique", "icon": "Gizonde.png"},
-	{"id": "razonde", "label": "Razonde", "short": "Razonde", "category": "technique", "icon": "Razonde.png"},
-	{"id": "grants", "label": "Grants", "short": "Grants", "category": "technique", "icon": "Grants.png"},
-	{"id": "megid", "label": "Megid", "short": "Megid", "category": "technique", "icon": "Megid.png"},
+	{"id": "sol_atomizer", "label": "Sol Atomizer", "short": "Sol", "category": "recovery", "icon": "sol_atomizer.png"},
+	{"id": "star_atomizer", "label": "Star Atomizer", "short": "Star", "category": "recovery", "icon": "star_atomizer.png"},
+	{"id": "moon_atomizer", "label": "Moon Atomizer", "short": "Moon", "category": "recovery", "icon": "moon_atomizer.png"},
+	{"id": "telepipe", "label": "Telepipe", "short": "Pipe", "category": "recovery", "icon": "telepipe.png"},
+	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug", "icon": "attack.png"},
+	# Techniques — base only; charged variants accessed via hold-to-charge
+	{"id": "foie", "label": "Foie", "short": "Foie", "category": "technique", "icon": "foie.png"},
+	{"id": "barta", "label": "Barta", "short": "Barta", "category": "technique", "icon": "barta.png"},
+	{"id": "zonde", "label": "Zonde", "short": "Zonde", "category": "technique", "icon": "zonde.png"},
+	{"id": "grants", "label": "Grants", "short": "Grants", "category": "technique", "icon": "grants.png"},
+	{"id": "megid", "label": "Megid", "short": "Megid", "category": "technique", "icon": "megid.png"},
 	# Techniques — support
-	{"id": "resta", "label": "Resta", "short": "Resta", "category": "technique", "icon": "Resta.png"},
-	{"id": "anti", "label": "Anti", "short": "Anti", "category": "technique", "icon": "Anti.png"},
-	{"id": "reverser", "label": "Reverser", "short": "Reverser", "category": "technique", "icon": "Reverser.png"},
-	{"id": "shifta", "label": "Shifta", "short": "Shifta", "category": "technique", "icon": "Shifta.png"},
-	{"id": "deband", "label": "Deband", "short": "Deband", "category": "technique", "icon": "Deband.png"},
-	{"id": "jellen", "label": "Jellen", "short": "Jellen", "category": "technique", "icon": "Jellen.png"},
-	{"id": "zalure", "label": "Zalure", "short": "Zalure", "category": "technique", "icon": "Zalure.png"},
+	{"id": "resta", "label": "Resta", "short": "Resta", "category": "technique", "icon": "resta.png"},
+	{"id": "anti", "label": "Anti", "short": "Anti", "category": "technique", "icon": "anti.png"},
+	{"id": "reverser", "label": "Reverser", "short": "Reverser", "category": "technique", "icon": "resta.png"},
+	{"id": "shifta", "label": "Shifta", "short": "Shifta", "category": "technique", "icon": "shifta.png"},
+	{"id": "deband", "label": "Deband", "short": "Deband", "category": "technique", "icon": "deband.png"},
+	{"id": "jellen", "label": "Jellen", "short": "Jellen", "category": "technique", "icon": "jellen.png"},
+	{"id": "zalure", "label": "Zalure", "short": "Zalure", "category": "technique", "icon": "zalure.png"},
+]
+
+const CHARGE_ICONS := {
+	"attack": "charged_photon_art.png",
+	"strong_attack": "charged_photon_art.png",
+	"foie": "charged_foie.png",
+	"barta": "charged_barta.png",
+	"zonde": "charged_zonde.png",
+	"grants": "charged_grants.png",
+	"megid": "charged_megid.png",
+	"resta": "charged_resta.png",
+	"anti": "charged_anti.png",
+	"shifta": "charged_shifta.png",
+	"deband": "charged_deband.png",
+	"jellen": "charged_jellen.png",
+	"zalure": "charged_zalure.png",
+}
+
+const CONSUMABLE_IDS := [
+	"monomate", "dimate", "trimate",
+	"monofluid", "difluid", "trifluid",
+	"sol_atomizer", "star_atomizer", "moon_atomizer",
+	"telepipe",
 ]
 
 const DEFAULT_PAGES: Array = [
@@ -102,6 +124,20 @@ func get_action_icon(action_id: String) -> Texture2D:
 	if not _icon_debug_done:
 		print("[ActionPalette] get_action_icon('%s'): NOT FOUND %s" % [action_id, path])
 	return null
+
+
+func get_charge_icon(action_id: String) -> Texture2D:
+	var icon_file: String = CHARGE_ICONS.get(action_id, "")
+	if icon_file.is_empty():
+		return null
+	var path: String = ICON_BASE + icon_file
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
+
+
+func is_consumable(action_id: String) -> bool:
+	return action_id in CONSUMABLE_IDS
 
 
 func load_from_character(character: Dictionary) -> void:
