@@ -647,9 +647,6 @@ class _ActionPalette extends Control:
 		else:
 			_swap_texture = null
 
-	## Consumable action IDs that map to inventory items with counts (#189).
-	const CONSUMABLE_IDS := ["monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid"]
-
 	func _update_slot_icons() -> void:
 		var slots: Array = ActionPalette.get_current_slots()
 		for i in range(3):
@@ -658,19 +655,8 @@ class _ActionPalette extends Control:
 			if i < _slot_icons.size():
 				_slot_icons[i].texture = icon
 				_slot_icons[i].visible = icon != null
-				# Grey out consumable icons when count is 0 (#189)
-				if action_id in CONSUMABLE_IDS:
-					var qty: int = Inventory.get_item_count(action_id)
-					_slot_icons[i].modulate = Color(0.3, 0.3, 0.3) if qty <= 0 else Color.WHITE
-				else:
-					_slot_icons[i].modulate = Color.WHITE
 
 	func _on_palette_changed(_arg = null) -> void:
-		_update_slot_icons()
-		queue_redraw()
-
-	func _process(_delta: float) -> void:
-		# Live-update item count badges (consumed mid-combat, picked up, etc.)
 		_update_slot_icons()
 		queue_redraw()
 
@@ -719,15 +705,6 @@ class _ActionPalette extends Control:
 				var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL).x
 				draw_string(font, Vector2(px + (PILL_W - lbl_w) * 0.5, py + PILL_H * 0.5 + 4),
 					lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, Color.WHITE)
-
-			# Item count badge for consumable slots (#189)
-			if action_id in CONSUMABLE_IDS:
-				var qty: int = Inventory.get_item_count(action_id)
-				var badge_text := "x%d" % qty
-				var badge_color: Color = Color(0.9, 0.9, 0.9) if qty > 0 else Color(0.5, 0.3, 0.3)
-				var badge_w: float = font.get_string_size(badge_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7).x
-				draw_string(font, Vector2(px + PILL_W - badge_w - 2, py + PILL_H - 2),
-					badge_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 7, badge_color)
 
 
 # ── Quick Weapon Menu (bottom-left, toggled with quick_weapon input) ─────────
