@@ -26,12 +26,12 @@ const TECHNIQUES := {
 ## Area-based technique pools for disk drops
 const AREA_TECHNIQUE_POOLS := {
 	"gurhacia": ["foie", "barta", "zonde", "resta"],
-	"rioh":     ["barta", "gibarta", "deband", "anti"],
-	"ozette":   ["zonde", "gizonde", "jellen", "shifta"],
-	"paru":     ["foie", "gifoie", "shifta", "zalure"],
-	"makara":   ["rafoie", "rabarta", "razonde", "reverser"],
+	"rioh":     ["barta", "deband", "anti", "jellen"],
+	"ozette":   ["zonde", "jellen", "shifta", "zalure"],
+	"paru":     ["foie", "shifta", "zalure", "grants"],
+	"makara":   ["foie", "barta", "zonde", "megid"],
 	"arca":     ["zonde", "barta", "anti", "zalure"],
-	"dark":     ["megid", "grants", "reverser", "resta"],
+	"dark":     ["megid", "grants", "resta", "deband"],
 }
 
 ## Disk level ranges by difficulty
@@ -45,8 +45,8 @@ const BOSS_LEVEL_BONUS := 5
 const RARE_LEVEL_BONUS := 3
 
 ## Techniques available in the shop (exclude advanced tier — field drops only)
-const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
-const SHOP_MID_TECHS := ["gifoie", "gibarta", "gizonde", "reverser"]
+const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "grants", "megid", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
+const SHOP_MID_TECHS: Array = []
 
 ## Base technique → charged variant (hold-to-charge).
 ## Support techs map to themselves — charge may boost potency later.
@@ -89,8 +89,8 @@ func generate_shop_inventory(char_level: int) -> Array:
 	var items: Array = []
 	var seen: Dictionary = {}
 
-	# Always stock Lv.1 of every technique
-	for tech_id in TECHNIQUES:
+	# Always stock Lv.1 of every base technique
+	for tech_id in SHOP_BASIC_TECHS:
 		var tech: Dictionary = TECHNIQUES[tech_id]
 		items.append({
 			"technique_id": tech_id,
@@ -104,15 +104,8 @@ func generate_shop_inventory(char_level: int) -> Array:
 	var attempts := 0
 	while items.size() < 30 and attempts < 60:
 		attempts += 1
-		var is_mid: bool = randf() < 0.3 and max_mid_level >= 1
-		var tech_id: String
-		var max_lv: int
-		if is_mid:
-			tech_id = SHOP_MID_TECHS[randi() % SHOP_MID_TECHS.size()]
-			max_lv = max_mid_level
-		else:
-			tech_id = SHOP_BASIC_TECHS[randi() % SHOP_BASIC_TECHS.size()]
-			max_lv = max_basic_level
+		var tech_id: String = SHOP_BASIC_TECHS[randi() % SHOP_BASIC_TECHS.size()]
+		var max_lv: int = max_basic_level
 
 		var level: int = randi_range(2, max_lv)
 		var key: String = "%s:%d" % [tech_id, level]
@@ -129,8 +122,10 @@ func generate_shop_inventory(char_level: int) -> Array:
 		})
 
 	items.sort_custom(func(a, b):
-		if a["technique_id"] != b["technique_id"]:
-			return str(a["technique_id"]) < str(b["technique_id"])
+		var ai: int = SHOP_BASIC_TECHS.find(str(a["technique_id"]))
+		var bi: int = SHOP_BASIC_TECHS.find(str(b["technique_id"]))
+		if ai != bi:
+			return ai < bi
 		return int(a["level"]) < int(b["level"])
 	)
 	return items

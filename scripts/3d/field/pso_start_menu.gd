@@ -797,6 +797,9 @@ const _PAL_PICKER_ROWS: Array = [
 	{"ids": ["jellen", "zalure"]},
 ]
 
+const _PAL_LEFT_COL_SIZE: int = 5   # rows 0-4: combat + recovery
+const _PAL_RIGHT_COL_SIZE: int = 5  # rows 5-9: techniques
+
 func _pal_flat_to_row_col(flat_idx: int) -> Vector2i:
 	var fi := 0
 	for ri in range(_PAL_PICKER_ROWS.size()):
@@ -817,25 +820,40 @@ func _pal_row_col_to_flat(row: int, col: int) -> int:
 func _input_palette_pick(event: InputEvent) -> bool:
 	var actions := _get_palette_actions()
 	var rc := _pal_flat_to_row_col(_sub_idx)
+	var in_left: bool = rc.x < _PAL_LEFT_COL_SIZE
+	var col_start: int = 0 if in_left else _PAL_LEFT_COL_SIZE
+	var col_size: int = _PAL_LEFT_COL_SIZE if in_left else _PAL_RIGHT_COL_SIZE
+
 	if event.is_action_pressed("ui_up", false):
-		var new_row: int = wrapi(rc.x - 1, 0, _PAL_PICKER_ROWS.size())
+		var local_row: int = rc.x - col_start
+		var new_local: int = wrapi(local_row - 1, 0, col_size)
+		var new_row: int = col_start + new_local
 		var new_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[new_row].ids.size()) - 1)
 		_sub_idx = _pal_row_col_to_flat(new_row, new_col)
 		return true
 	elif event.is_action_pressed("ui_down", false):
-		var new_row: int = wrapi(rc.x + 1, 0, _PAL_PICKER_ROWS.size())
+		var local_row: int = rc.x - col_start
+		var new_local: int = wrapi(local_row + 1, 0, col_size)
+		var new_row: int = col_start + new_local
 		var new_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[new_row].ids.size()) - 1)
 		_sub_idx = _pal_row_col_to_flat(new_row, new_col)
 		return true
-	elif event.is_action_pressed("ui_left", false):
-		var row_ids: Array = _PAL_PICKER_ROWS[rc.x].ids
-		var new_col: int = wrapi(rc.y - 1, 0, row_ids.size())
-		_sub_idx = _pal_row_col_to_flat(rc.x, new_col)
-		return true
 	elif event.is_action_pressed("ui_right", false):
 		var row_ids: Array = _PAL_PICKER_ROWS[rc.x].ids
-		var new_col: int = wrapi(rc.y + 1, 0, row_ids.size())
-		_sub_idx = _pal_row_col_to_flat(rc.x, new_col)
+		if rc.y < row_ids.size() - 1:
+			_sub_idx = _pal_row_col_to_flat(rc.x, rc.y + 1)
+		elif in_left:
+			var target_row: int = clampi(rc.x - col_start, 0, _PAL_RIGHT_COL_SIZE - 1) + _PAL_LEFT_COL_SIZE
+			var target_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[target_row].ids.size()) - 1)
+			_sub_idx = _pal_row_col_to_flat(target_row, 0)
+		return true
+	elif event.is_action_pressed("ui_left", false):
+		if rc.y > 0:
+			_sub_idx = _pal_row_col_to_flat(rc.x, rc.y - 1)
+		elif not in_left:
+			var target_row: int = clampi(rc.x - _PAL_LEFT_COL_SIZE, 0, _PAL_LEFT_COL_SIZE - 1)
+			var target_ids: Array = _PAL_PICKER_ROWS[target_row].ids
+			_sub_idx = _pal_row_col_to_flat(target_row, target_ids.size() - 1)
 		return true
 	elif event.is_action_pressed("ui_accept"):
 		if _sub_idx < actions.size():
