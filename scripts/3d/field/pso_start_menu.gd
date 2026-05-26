@@ -1890,6 +1890,7 @@ func _draw_palette(c: Control, font: Font) -> void:
 	var lw: float = 210.0
 	var lh: float = 300.0
 	_draw_inner_panel(c, Rect2(lx, ly, lw, lh))
+	_draw_scanlines(c, Rect2(lx, ly, lw, lh))
 
 	# Page tabs
 	var tab_y: float = ly + 6
@@ -1919,7 +1920,7 @@ func _draw_palette(c: Control, font: Font) -> void:
 		if si == _pal_slot_idx:
 			c.draw_rect(Rect2(center.x - 16, center.y - 16, 32, 32), Color(0.3, 0.8, 0.3, 0.8), false, 2.0)
 
-	# Slot list under preview
+	# Slot list under preview (no icons — they're in the HUD preview)
 	var slot_y: float = hud_y + 67.0 * hud_scale + 8
 	for si in range(3):
 		var action_id: String = str(page[si])
@@ -1931,58 +1932,68 @@ func _draw_palette(c: Control, font: Font) -> void:
 		if is_sel:
 			c.draw_rect(Rect2(lx + 4, row_y, lw - 8, 24), C_SELECT)
 
-		var icon: Texture2D = _get_action_icon(action_id)
-		if icon:
-			c.draw_texture_rect(icon, Rect2(lx + 10, row_y + 2, 20, 20), false)
-		c.draw_string(font, Vector2(lx + 34, row_y + 17), "Slot %d" % (si + 1),
+		c.draw_string(font, Vector2(lx + 12, row_y + 17), "Slot %d" % (si + 1),
 			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED if not is_sel else Color(1.0, 1.0, 1.0, 0.7))
-		c.draw_string(font, Vector2(lx + 80, row_y + 17), label,
+		c.draw_string(font, Vector2(lx + 68, row_y + 17), label,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_SELECT_TEXT if is_sel else C_TEXT)
 
-	# Right side: picker grid (always visible) or description
-	if _mode == Mode.PALETTE_PICK:
-		_draw_palette_picker(c, font)
-	else:
-		_draw_palette_picker_passive(c, font)
+	# Middle: Combat + Recovery
+	var mx: float = 220.0
+	var my: float = VIEWPORT_H - 305.0
+	var mw: float = 200.0
+	var mh: float = 300.0
+	_draw_inner_panel(c, Rect2(mx, my, mw, mh))
+	_draw_scanlines(c, Rect2(mx, my, mw, mh))
 
+	# Right: Techniques
+	var rx: float = 424.0
+	var ry: float = VIEWPORT_H - 305.0
+	var rw: float = 200.0
+	var rh: float = 300.0
+	_draw_inner_panel(c, Rect2(rx, ry, rw, rh))
+	_draw_scanlines(c, Rect2(rx, ry, rw, rh))
 
-func _draw_palette_picker_passive(c: Control, font: Font) -> void:
-	var px: float = 220.0
-	var py: float = VIEWPORT_H - 305.0
-	var pw: float = 300.0
-	var ph: float = 300.0
-	_draw_inner_panel(c, Rect2(px, py, pw, ph))
-
-	var page: Array = ActionPalette.pages[_pal_page_idx]
+	var sel_flat: int = _sub_idx if _mode == Mode.PALETTE_PICK else -1
 	var current_id: String = str(page[_pal_slot_idx])
-	_draw_palette_grid(c, font, px, py, pw, ph, current_id, -1)
+	_draw_palette_grid_split(c, font, mx, my, mw, rx, ry, rw, mh, current_id, sel_flat)
 
 
-func _draw_palette_picker(c: Control, font: Font) -> void:
-	var px: float = 220.0
-	var py: float = VIEWPORT_H - 305.0
-	var pw: float = 300.0
-	var ph: float = 300.0
-	_draw_inner_panel(c, Rect2(px, py, pw, ph))
+const _PAL_COMBAT_RECOVERY_ROWS: Array = [
+	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge"]},
+	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
+	{"ids": ["monofluid", "difluid", "trifluid"]},
+	{"ids": ["sol_atomizer", "star_atomizer", "moon_atomizer"]},
+	{"ids": ["telepipe"]},
+]
 
-	var page: Array = ActionPalette.pages[_pal_page_idx]
-	var current_id: String = str(page[_pal_slot_idx])
-	_draw_palette_grid(c, font, px, py, pw, ph, current_id, _sub_idx)
+const _PAL_TECHNIQUE_ROWS: Array = [
+	{"label": "Technique", "ids": ["foie", "barta", "zonde"]},
+	{"ids": ["grants", "megid"]},
+	{"ids": ["resta", "anti"]},
+	{"ids": ["shifta", "deband"]},
+	{"ids": ["jellen", "zalure"]},
+]
 
 
-func _draw_palette_grid(c: Control, font: Font, px: float, py: float, pw: float, _ph: float, current_id: String, selected_flat: int) -> void:
-	var cell_w: float = 90.0
+func _draw_palette_grid_split(c: Control, font: Font, mx: float, my: float, mw: float, rx: float, ry: float, rw: float, ph: float, current_id: String, selected_flat: int) -> void:
+	var flat_idx: int = 0
+	flat_idx = _draw_palette_column(c, font, mx, my, mw, ph, _PAL_COMBAT_RECOVERY_ROWS, current_id, selected_flat, flat_idx)
+	_draw_palette_column(c, font, rx, ry, rw, ph, _PAL_TECHNIQUE_ROWS, current_id, selected_flat, flat_idx)
+
+
+func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: float, _ph: float, rows: Array, current_id: String, selected_flat: int, start_flat: int) -> int:
 	var cell_h: float = 24.0
 	var draw_y: float = py + 4
-	var flat_idx: int = 0
+	var flat_idx: int = start_flat
 
-	for row_def in _PAL_PICKER_ROWS:
+	for row_def in rows:
 		if row_def.has("label"):
 			c.draw_string(font, Vector2(px + 8, draw_y + 13), str(row_def.label),
 				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
 			draw_y += 18
 
 		var row_ids: Array = row_def.ids
+		var cell_w: float = (pw - 12.0) / 3.0
 		for ci in range(row_ids.size()):
 			var action_id: String = row_ids[ci]
 			var data: Dictionary = ActionPalette.get_action_data(action_id)
@@ -1992,12 +2003,12 @@ func _draw_palette_grid(c: Control, font: Font, px: float, py: float, pw: float,
 			var available: bool = _is_palette_action_available(action_id)
 
 			var cx: float = px + 6 + ci * cell_w
+
 			if is_sel:
 				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), C_SELECT)
 			elif is_current:
 				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), Color(0.15, 0.3, 0.15, 0.6))
 
-			# Icon with dark bg
 			c.draw_rect(Rect2(cx + 2, draw_y + 2, 20, 20), Color(0.05, 0.05, 0.1, 0.9))
 			var icon: Texture2D = _get_action_icon(action_id)
 			if icon:
@@ -2019,6 +2030,8 @@ func _draw_palette_grid(c: Control, font: Font, px: float, py: float, pw: float,
 			flat_idx += 1
 
 		draw_y += cell_h + 2
+
+	return flat_idx
 
 
 func _draw_mags(c: Control, font: Font) -> void:
