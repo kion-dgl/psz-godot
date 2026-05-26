@@ -112,12 +112,57 @@ const MAGS: InvItem[] = [
   { name: 'Varuna Lv5', type: 'mag', description: 'DEF 3 / POW 1 / DEX 1 / MIND 0' },
 ];
 
-const PALETTE_ACTIONS = [
-  'Attack', 'Strong Attack', 'Dodge Roll',
-  'Monomate', 'Dimate', 'Trimate', 'Monofluid',
-  'Foie', 'Barta', 'Zonde', 'Resta', 'Shifta', 'Deband',
-  'Telepipe',
+const PSZ_ICON_BASE = import.meta.env.BASE_URL + 'assets/ui/psz-palette/';
+
+interface PaletteAction {
+  id: string;
+  label: string;
+  icon: string;
+  category: 'combat' | 'recovery' | 'technique';
+}
+
+const PALETTE_ACTIONS: PaletteAction[] = [
+  { id: 'attack', label: 'Attack', icon: 'attack.png', category: 'combat' },
+  { id: 'strong_attack', label: 'Strong Attack', icon: 'strong_attack.png', category: 'combat' },
+  { id: 'dodge', label: 'Dodge', icon: 'dodge.png', category: 'combat' },
+  { id: 'monomate', label: 'Monomate', icon: 'monomate.png', category: 'recovery' },
+  { id: 'dimate', label: 'Dimate', icon: 'dimate.png', category: 'recovery' },
+  { id: 'trimate', label: 'Trimate', icon: 'trimate.png', category: 'recovery' },
+  { id: 'monofluid', label: 'Monofluid', icon: 'monofluid.png', category: 'recovery' },
+  { id: 'difluid', label: 'Difluid', icon: 'difluid.png', category: 'recovery' },
+  { id: 'trifluid', label: 'Trifluid', icon: 'trifluid.png', category: 'recovery' },
+  { id: 'sol_atomizer', label: 'Sol Atomizer', icon: 'sol_atomizer.png', category: 'recovery' },
+  { id: 'moon_atomizer', label: 'Moon Atomizer', icon: 'moon_atomizer.png', category: 'recovery' },
+  { id: 'telepipe', label: 'Telepipe', icon: 'telepipe.png', category: 'recovery' },
+  { id: 'foie', label: 'Foie', icon: 'foie.png', category: 'technique' },
+  { id: 'barta', label: 'Barta', icon: 'barta.png', category: 'technique' },
+  { id: 'zonde', label: 'Zonde', icon: 'zonde.png', category: 'technique' },
+  { id: 'grants', label: 'Grants', icon: 'grants.png', category: 'technique' },
+  { id: 'megid', label: 'Megid', icon: 'megid.png', category: 'technique' },
+  { id: 'resta', label: 'Resta', icon: 'resta.png', category: 'technique' },
+  { id: 'anti', label: 'Anti', icon: 'anti.png', category: 'technique' },
+  { id: 'shifta', label: 'Shifta', icon: 'shifta.png', category: 'technique' },
+  { id: 'deband', label: 'Deband', icon: 'deband.png', category: 'technique' },
+  { id: 'jellen', label: 'Jellen', icon: 'jellen.png', category: 'technique' },
+  { id: 'zalure', label: 'Zalure', icon: 'zalure.png', category: 'technique' },
 ];
+
+function PszIcon({ actionId, size = 20, selected = false }: { actionId: string; size?: number; selected?: boolean }) {
+  const action = PALETTE_ACTIONS.find((a) => a.id === actionId);
+  if (!action) return <div style={{ width: size, height: size }} />;
+  const imgSize = Math.round(size * 1.7);
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: 4, flexShrink: 0, overflow: 'hidden',
+      background: selected ? 'rgba(40,80,40,0.9)' : 'rgba(5,5,15,0.9)',
+      border: `1px solid ${selected ? 'rgba(80,180,80,0.5)' : 'rgba(60,60,80,0.4)'}`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <img src={PSZ_ICON_BASE + action.icon} alt={action.label}
+        style={{ width: imgSize, height: imgSize, imageRendering: 'pixelated' }} />
+    </div>
+  );
+}
 
 const QUEST_INFO = { name: 'The Paru Pact', objective: 'Investigate the energy signatures deep in the Paru ruins.', client: 'Elio', area: 'Makara Ruins' };
 const SYSTEM_ITEMS = [
@@ -304,6 +349,10 @@ function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking,
   onAssign: (action: string) => void;
 }) {
   const page = pages[pageIdx];
+  const currentAction = PALETTE_ACTIONS.find((a) => a.id === page[slotIdx]);
+  const categories = ['combat', 'recovery', 'technique'] as const;
+  const catLabels = { combat: 'Combat', recovery: 'Recovery', technique: 'Technique' };
+
   return (
     <>
       <LeftCol label="Palette">
@@ -317,37 +366,71 @@ function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking,
           ))}
         </div>
       </LeftCol>
-      <BottomPanels
-        listWidth={320}
-        descWidth={190}
-        desc={`Slot ${slotIdx + 1}: ${page[slotIdx]}\n\n[Enter] Change`}
-        list={page.map((action, i) => (
-          <div key={i} onClick={() => { setSlotIdx(i); setPicking(true); }} style={{
-            padding: '6px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-            background: i === slotIdx ? C.selectBg : 'transparent', color: i === slotIdx ? C.selectText : C.textDark,
-            fontSize: 14, fontFamily: 'monospace', fontWeight: i === slotIdx ? 700 : 400,
-          }}>
-            <span style={{ width: 24, height: 20, borderRadius: 4, background: 'rgba(40,60,80,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{['X', 'A', 'B'][i]}</span>
-            <span>{action}</span>
+
+      {/* Slot list with icons */}
+      <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 220, height: 300 }}>
+        <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>
+          {page.map((actionId, i) => {
+            const action = PALETTE_ACTIONS.find((a) => a.id === actionId);
+            const sel = i === slotIdx;
+            return (
+              <div key={i} onClick={() => { setSlotIdx(i); setPicking(true); }} style={{
+                padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+                background: sel ? C.selectBg : 'transparent', color: sel ? C.selectText : C.textDark,
+                fontSize: 14, fontFamily: 'monospace', fontWeight: sel ? 700 : 400,
+              }}>
+                <PszIcon actionId={actionId} size={22} selected={sel} />
+                <span>{action?.label ?? actionId}</span>
+              </div>
+            );
+          })}
+        </InnerPanel>
+      </div>
+
+      {/* Action picker — icon grid */}
+      <div style={{ position: 'absolute', zIndex: 3, left: 230, bottom: 5, width: 290, height: 300 }}>
+        <InnerPanel style={{ padding: '6px', height: '100%', overflowY: 'auto' }}>
+          <div style={{ padding: '2px 6px 6px', fontSize: 11, fontFamily: 'monospace', color: C.textMuted }}>
+            {picking ? `Assign to Slot ${slotIdx + 1}` : `Slot ${slotIdx + 1}: ${currentAction?.label ?? ''}`}
           </div>
-        ))}
-      />
-      {/* Action picker replaces description panel */}
-      {picking && (
-        <div style={{ position: 'absolute', zIndex: 3, left: 330, bottom: 5, width: 190, height: 300 }}>
-          <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>
-            <div style={{ padding: '4px 10px', fontSize: 11, fontFamily: 'monospace', color: C.textMuted }}>Assign to Slot {slotIdx + 1}:</div>
-            {PALETTE_ACTIONS.map((a) => (
-              <div key={a} onClick={() => onAssign(a)} style={{
-                padding: '4px 14px', cursor: 'pointer', fontSize: 13, fontFamily: 'monospace',
-                background: page[slotIdx] === a ? C.selectBg : 'transparent',
-                color: page[slotIdx] === a ? C.selectText : C.textDark,
-                fontWeight: page[slotIdx] === a ? 700 : 400,
-              }}>{a}</div>
-            ))}
-          </InnerPanel>
-        </div>
-      )}
+          {categories.map((cat) => {
+            const actions = PALETTE_ACTIONS.filter((a) => a.category === cat);
+            return (
+              <div key={cat}>
+                <div style={{
+                  fontSize: 10, color: 'rgba(100,150,220,0.8)', padding: '4px 6px 2px',
+                  fontFamily: 'monospace', borderBottom: '1px solid rgba(100,140,190,0.15)',
+                  marginBottom: 3,
+                }}>{catLabels[cat]}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3, marginBottom: 6 }}>
+                  {actions.map((action) => {
+                    const isCurrent = action.id === page[slotIdx];
+                    return (
+                      <div
+                        key={action.id}
+                        onClick={() => { if (picking) onAssign(action.id); }}
+                        style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                          padding: 3, borderRadius: 4,
+                          cursor: picking ? 'pointer' : 'default',
+                          background: isCurrent ? 'rgba(50,100,50,0.5)' : 'transparent',
+                          border: isCurrent ? '1px solid rgba(80,180,80,0.6)' : '1px solid transparent',
+                        }}
+                      >
+                        <PszIcon actionId={action.id} size={24} />
+                        <span style={{
+                          fontSize: 8, fontFamily: 'monospace', textAlign: 'center',
+                          color: isCurrent ? '#4dcc4d' : C.textMuted, lineHeight: 1.1,
+                        }}>{action.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </InnerPanel>
+      </div>
     </>
   );
 }
@@ -462,7 +545,7 @@ export default function StartMenu() {
   const [equipItemIdx, setEquipItemIdx] = useState(0);
 
   // Palette state
-  const [palettes, setPalettes] = useState(() => [['Attack', 'Strong Attack', 'Monomate'], ['Foie', 'Resta', 'Dodge Roll'], ['Attack', 'Dimate', 'Telepipe']]);
+  const [palettes, setPalettes] = useState(() => [['attack', 'strong_attack', 'monomate'], ['foie', 'resta', 'dodge'], ['attack', 'dimate', 'telepipe']]);
   const [palPageIdx, setPalPageIdx] = useState(0);
   const [palSlotIdx, setPalSlotIdx] = useState(0);
   const [palPicking, setPalPicking] = useState(false);
@@ -510,7 +593,7 @@ export default function StartMenu() {
         if (k === 'ArrowUp') setSubIdx(p => (p - 1 + PALETTE_ACTIONS.length) % PALETTE_ACTIONS.length);
         else if (k === 'ArrowDown') setSubIdx(p => (p + 1) % PALETTE_ACTIONS.length);
         else if (k === 'Enter') {
-          setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = PALETTE_ACTIONS[subIdx]; return np; }));
+          setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = PALETTE_ACTIONS[subIdx].id; return np; }));
           setPalPicking(false);
         } else return;
       } else {

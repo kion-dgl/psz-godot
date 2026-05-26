@@ -560,7 +560,7 @@ class _ActionPalette extends Control:
 	const FONT_SIZE_SMALL := 8
 	const FONT_SIZE_COUNT := 7
 	const LABEL_LIGHT := Color(0.23, 0.29, 0.35)
-	const GREY_OUT := Color(0.4, 0.4, 0.4, 0.6)
+	const GREY_OUT := Color(1.0, 1.0, 1.0, 0.5)
 
 	# BG image is 128x67; rendered at 2x scale for readability
 	const BG_SCALE := 2.0
@@ -574,7 +574,7 @@ class _ActionPalette extends Control:
 		Vector2(58.0, 41.0),
 		Vector2(90.0, 27.0),
 	]
-	const ICON_SIZE := 18.0  # Fits inside 21px tall octagon interior
+	const ICON_SIZE := 38.0  # Content is ~56% of 32x32 image; 38px shows ~21px visible
 
 	var _bg_textures: Array = [null, null]  # [page1, page2/R variant]
 	var _bg_texture: Texture2D = null
