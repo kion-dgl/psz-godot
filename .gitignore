@@ -17,6 +17,10 @@
 # Small UI sprites (menu panels, icons) committed directly — too small to be
 # worth the R2 round-trip and painful to iterate on through the asset pack.
 !/assets/ui/
+# PSZ-native palette icons — small pixel art, shipped in APK directly.
+!/assets/hud/
+/assets/hud/*
+!/assets/hud/psz/
 # Shop preview sprites moved under assets/ui/shop-previews/ so they ship
 # with the binary instead of the asset pack — see the .gd helper at
 # scripts/2d/components/shop_preview_sprite.gd. The /assets/ui/ rule above
