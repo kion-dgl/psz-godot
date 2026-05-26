@@ -74,7 +74,7 @@ func _connect_player_charge_signals() -> void:
 		return
 	var player = players[0]
 	if player.has_signal("tech_charge_started"):
-		player.tech_charge_started.connect(func(slot: int): _action_palette.set_charging_slot(slot))
+		player.tech_charge_started.connect(func(_slot: int): pass)
 		player.tech_charge_ready.connect(func(slot: int): _action_palette.set_charging_slot(slot))
 		player.tech_charge_released.connect(func(_slot: int): _action_palette.set_charging_slot(-1))
 

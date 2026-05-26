@@ -359,11 +359,12 @@ const PICKER_ROWS: { label?: string; ids: string[] }[] = [
   { ids: ['jellen', 'zalure'] },
 ];
 
-function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking, setPicking, onAssign }: {
+function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking, setPicking, onAssign, subIdx }: {
   pages: string[][]; pageIdx: number; setPageIdx: (i: number) => void;
   slotIdx: number; setSlotIdx: (i: number) => void;
   picking: boolean; setPicking: (b: boolean) => void;
   onAssign: (action: string) => void;
+  subIdx: number;
 }) {
   const page = pages[pageIdx];
 
@@ -410,49 +411,52 @@ function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking,
         </InnerPanel>
       </LeftCol>
 
-      {/* Action picker */}
-      <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 510, height: 300 }}>
-        <InnerPanel style={{ padding: '8px 12px', height: '100%', overflowY: 'auto' }}>
-          {PICKER_ROWS.map((row, ri) => (
-            <div key={ri}>
-              {row.label && (
-                <div style={{
-                  fontSize: 12, color: C.textLight, padding: '6px 2px 4px',
-                  fontFamily: 'monospace', fontWeight: 600,
-                  borderBottom: `1px solid ${C.panelBorder}`,
-                  marginBottom: 4, marginTop: ri > 0 ? 4 : 0,
-                }}>{row.label}</div>
-              )}
-              <div style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
-                {row.ids.map((id) => {
-                  const action = PALETTE_ACTIONS.find((a) => a.id === id);
-                  if (!action) return null;
-                  const isCurrent = id === page[slotIdx];
-                  return (
-                    <div
-                      key={id}
-                      onClick={() => onAssign(id)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '5px 8px', borderRadius: 4, cursor: 'pointer',
-                        width: 160,
-                        background: isCurrent ? C.selectBg : 'transparent',
-                        color: isCurrent ? C.selectText : C.textDark,
-                        fontWeight: isCurrent ? 700 : 400,
-                        fontSize: 13, fontFamily: 'monospace',
-                        border: isCurrent ? '1px solid rgba(224,136,32,0.5)' : '1px solid transparent',
-                      }}
-                    >
-                      <PszIcon actionId={id} size={26} selected={isCurrent} />
-                      <span>{action.label}</span>
-                    </div>
-                  );
-                })}
+      {/* Action picker — only visible when a slot is selected for reassignment */}
+      {picking && (
+        <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 510, height: 300 }}>
+          <InnerPanel style={{ padding: '8px 12px', height: '100%', overflowY: 'auto' }}>
+            {PICKER_ROWS.map((row, ri) => (
+              <div key={ri}>
+                {row.label && (
+                  <div style={{
+                    fontSize: 12, color: C.textLight, padding: '6px 2px 4px',
+                    fontFamily: 'monospace', fontWeight: 600,
+                    borderBottom: `1px solid ${C.panelBorder}`,
+                    marginBottom: 4, marginTop: ri > 0 ? 4 : 0,
+                  }}>{row.label}</div>
+                )}
+                <div style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
+                  {row.ids.map((id) => {
+                    const action = PALETTE_ACTIONS.find((a) => a.id === id);
+                    if (!action) return null;
+                    const isCurrent = id === page[slotIdx];
+                    const isKbSelected = PALETTE_ACTIONS[subIdx]?.id === id;
+                    return (
+                      <div
+                        key={id}
+                        onClick={() => onAssign(id)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '5px 8px', borderRadius: 4, cursor: 'pointer',
+                          width: 160,
+                          background: isKbSelected ? C.selectBg : isCurrent ? 'rgba(224,136,32,0.15)' : 'transparent',
+                          color: isKbSelected ? C.selectText : isCurrent ? C.textLight : C.textDark,
+                          fontWeight: isKbSelected || isCurrent ? 700 : 400,
+                          fontSize: 13, fontFamily: 'monospace',
+                          border: isKbSelected ? '1px solid rgba(224,136,32,0.5)' : isCurrent ? '1px solid rgba(224,136,32,0.3)' : '1px solid transparent',
+                        }}
+                      >
+                        <PszIcon actionId={id} size={26} selected={isKbSelected || isCurrent} />
+                        <span>{action.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </InnerPanel>
-      </div>
+            ))}
+          </InnerPanel>
+        </div>
+      )}
     </>
   );
 }
@@ -684,7 +688,7 @@ export default function StartMenu() {
         {mode === 'items' && <ItemsView idx={subIdx} setIdx={setSubIdx} />}
         {mode === 'equip' && <EquipView slotIdx={equipSlotIdx} setSlotIdx={setEquipSlotIdx} picking={equipPicking} itemIdx={equipItemIdx} setItemIdx={setEquipItemIdx} onPick={() => { setEquipPicking(true); setEquipItemIdx(0); }} onEquip={() => setEquipPicking(false)} onBack={() => setEquipPicking(false)} />}
         {mode === 'techs' && <TechsView idx={subIdx} setIdx={setSubIdx} />}
-        {mode === 'palette' && <PaletteView pages={palettes} pageIdx={palPageIdx} setPageIdx={setPalPageIdx} slotIdx={palSlotIdx} setSlotIdx={setPalSlotIdx} picking={palPicking} setPicking={setPalPicking} onAssign={(a) => { setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = a; return np; })); setPalPicking(false); }} />}
+        {mode === 'palette' && <PaletteView pages={palettes} pageIdx={palPageIdx} setPageIdx={setPalPageIdx} slotIdx={palSlotIdx} setSlotIdx={setPalSlotIdx} picking={palPicking} setPicking={setPalPicking} subIdx={subIdx} onAssign={(a) => { setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = a; return np; })); setPalPicking(false); }} />}
         {mode === 'mags' && <MagsView magIdx={magIdx} setMagIdx={setMagIdx} feedIdx={magFeedIdx} setFeedIdx={setMagFeedIdx} feeding={magFeeding} />}
         {mode === 'quest' && <QuestView />}
         {mode === 'system' && <SystemView idx={subIdx} setIdx={setSubIdx} />}

@@ -367,6 +367,9 @@ const CONSUMABLE_EFFECTS := {
 	"monofluid": {"type": "pp", "percent": 0.30},
 	"difluid": {"type": "pp", "percent": 0.60},
 	"trifluid": {"type": "pp", "percent": 1.00},
+	"sol_atomizer": {"type": "hp", "percent": 1.00},
+	"moon_atomizer": {"type": "hp", "percent": 1.00},
+	"star_atomizer": {"type": "hp", "percent": 1.00},
 }
 
 

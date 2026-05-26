@@ -845,7 +845,7 @@ func _input_palette_pick(event: InputEvent) -> bool:
 		elif in_left:
 			var target_row: int = clampi(rc.x - col_start, 0, _PAL_RIGHT_COL_SIZE - 1) + _PAL_LEFT_COL_SIZE
 			var target_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[target_row].ids.size()) - 1)
-			_sub_idx = _pal_row_col_to_flat(target_row, 0)
+			_sub_idx = _pal_row_col_to_flat(target_row, target_col)
 		return true
 	elif event.is_action_pressed("ui_left", false):
 		if rc.y > 0:

@@ -1223,6 +1223,8 @@ func _execute_palette_action(slot: int) -> void:
 			_start_attack()
 		"strong_attack":
 			_start_strong_attack()
+		"dodge":
+			_start_dodge()
 		"monomate", "dimate", "trimate", "monofluid", "difluid", "trifluid", \
 		"sol_atomizer", "star_atomizer", "moon_atomizer", "telepipe":
 			_use_consumable(action_id)
