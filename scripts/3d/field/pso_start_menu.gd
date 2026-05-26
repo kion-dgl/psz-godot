@@ -756,21 +756,27 @@ func _do_equip() -> void:
 
 
 func _input_palette(event: InputEvent) -> bool:
-	var total_slots: int = ActionPalette.pages.size() * 3
-	var flat_idx: int = _pal_page_idx * 3 + _pal_slot_idx
 	if event.is_action_pressed("ui_up", false):
-		flat_idx = wrapi(flat_idx - 1, 0, total_slots)
-		_pal_page_idx = flat_idx / 3
-		_pal_slot_idx = flat_idx % 3
+		_pal_slot_idx = wrapi(_pal_slot_idx - 1, 0, 3)
 		return true
 	elif event.is_action_pressed("ui_down", false):
-		flat_idx = wrapi(flat_idx + 1, 0, total_slots)
-		_pal_page_idx = flat_idx / 3
-		_pal_slot_idx = flat_idx % 3
+		_pal_slot_idx = wrapi(_pal_slot_idx + 1, 0, 3)
+		return true
+	elif event.is_action_pressed("ui_left", false):
+		_pal_page_idx = wrapi(_pal_page_idx - 1, 0, ActionPalette.pages.size())
+		return true
+	elif event.is_action_pressed("ui_right", false):
+		_pal_page_idx = wrapi(_pal_page_idx + 1, 0, ActionPalette.pages.size())
 		return true
 	elif event.is_action_pressed("ui_accept"):
 		_mode = Mode.PALETTE_PICK
 		_sub_idx = 0
+		var current_id: String = str(ActionPalette.pages[_pal_page_idx][_pal_slot_idx])
+		var actions := _get_palette_actions()
+		for i in range(actions.size()):
+			if str(actions[i].get("id", "")) == current_id:
+				_sub_idx = i
+				break
 		return true
 	elif event.is_action_pressed("ui_cancel"):
 		_mode = Mode.MAIN
@@ -778,13 +784,58 @@ func _input_palette(event: InputEvent) -> bool:
 	return false
 
 
+const _PAL_PICKER_ROWS: Array = [
+	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge"]},
+	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
+	{"ids": ["monofluid", "difluid", "trifluid"]},
+	{"ids": ["sol_atomizer", "star_atomizer", "moon_atomizer"]},
+	{"ids": ["telepipe"]},
+	{"label": "Technique", "ids": ["foie", "barta", "zonde"]},
+	{"ids": ["grants", "megid"]},
+	{"ids": ["resta", "anti"]},
+	{"ids": ["shifta", "deband"]},
+	{"ids": ["jellen", "zalure"]},
+]
+
+func _pal_flat_to_row_col(flat_idx: int) -> Vector2i:
+	var fi := 0
+	for ri in range(_PAL_PICKER_ROWS.size()):
+		var row_ids: Array = _PAL_PICKER_ROWS[ri].ids
+		for ci in range(row_ids.size()):
+			if fi == flat_idx:
+				return Vector2i(ri, ci)
+			fi += 1
+	return Vector2i(0, 0)
+
+func _pal_row_col_to_flat(row: int, col: int) -> int:
+	var fi := 0
+	for ri in range(row):
+		fi += int(_PAL_PICKER_ROWS[ri].ids.size())
+	fi += col
+	return fi
+
 func _input_palette_pick(event: InputEvent) -> bool:
 	var actions := _get_palette_actions()
-	if event.is_action_pressed("ui_up", false) and actions.size() > 0:
-		_sub_idx = wrapi(_sub_idx - 1, 0, actions.size())
+	var rc := _pal_flat_to_row_col(_sub_idx)
+	if event.is_action_pressed("ui_up", false):
+		var new_row: int = wrapi(rc.x - 1, 0, _PAL_PICKER_ROWS.size())
+		var new_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[new_row].ids.size()) - 1)
+		_sub_idx = _pal_row_col_to_flat(new_row, new_col)
 		return true
-	elif event.is_action_pressed("ui_down", false) and actions.size() > 0:
-		_sub_idx = wrapi(_sub_idx + 1, 0, actions.size())
+	elif event.is_action_pressed("ui_down", false):
+		var new_row: int = wrapi(rc.x + 1, 0, _PAL_PICKER_ROWS.size())
+		var new_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[new_row].ids.size()) - 1)
+		_sub_idx = _pal_row_col_to_flat(new_row, new_col)
+		return true
+	elif event.is_action_pressed("ui_left", false):
+		var row_ids: Array = _PAL_PICKER_ROWS[rc.x].ids
+		var new_col: int = wrapi(rc.y - 1, 0, row_ids.size())
+		_sub_idx = _pal_row_col_to_flat(rc.x, new_col)
+		return true
+	elif event.is_action_pressed("ui_right", false):
+		var row_ids: Array = _PAL_PICKER_ROWS[rc.x].ids
+		var new_col: int = wrapi(rc.y + 1, 0, row_ids.size())
+		_sub_idx = _pal_row_col_to_flat(rc.x, new_col)
 		return true
 	elif event.is_action_pressed("ui_accept"):
 		if _sub_idx < actions.size():
@@ -1833,102 +1884,141 @@ func _draw_techs(c: Control, font: Font) -> void:
 func _draw_palette(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Palette")
 
-	# Draw all pages inline in the bottom-left list
-	var px: float = 5.0
+	# Left side: page tabs + HUD preview + slot list
+	var lx: float = 5.0
+	var ly: float = VIEWPORT_H - 305.0
+	var lw: float = 210.0
+	var lh: float = 300.0
+	_draw_inner_panel(c, Rect2(lx, ly, lw, lh))
+
+	# Page tabs
+	var tab_y: float = ly + 6
+	for pi in range(ActionPalette.pages.size()):
+		var tab_x: float = lx + 8 + pi * 60
+		var is_active: bool = pi == _pal_page_idx
+		if is_active:
+			c.draw_rect(Rect2(tab_x, tab_y, 54, 20), C_SELECT)
+		c.draw_string(font, Vector2(tab_x + 8, tab_y + 15), "P%d" % (pi + 1),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_SELECT_TEXT if is_active else C_TEXT_MUTED)
+
+	# HUD preview with palette_bg
+	var hud_y: float = tab_y + 28
+	var hud_scale: float = 1.5
+	var bg_path: String = "res://assets/ui/psz-palette/palette_bg%s.png" % ("_r" if _pal_page_idx == 1 else "")
+	if ResourceLoader.exists(bg_path):
+		var bg_tex: Texture2D = load(bg_path)
+		c.draw_texture_rect(bg_tex, Rect2(lx + 8, hud_y, 128.0 * hud_scale, 67.0 * hud_scale), false)
+
+	var slot_centers := [Vector2(26.0, 27.0), Vector2(58.0, 41.0), Vector2(90.0, 27.0)]
+	var page: Array = ActionPalette.pages[_pal_page_idx]
+	for si in range(3):
+		var center: Vector2 = slot_centers[si] * hud_scale + Vector2(lx + 8, hud_y)
+		var icon: Texture2D = _get_action_icon(page[si])
+		if icon:
+			c.draw_texture_rect(icon, Rect2(center.x - 14, center.y - 14, 28, 28), false)
+		if si == _pal_slot_idx:
+			c.draw_rect(Rect2(center.x - 16, center.y - 16, 32, 32), Color(0.3, 0.8, 0.3, 0.8), false, 2.0)
+
+	# Slot list under preview
+	var slot_y: float = hud_y + 67.0 * hud_scale + 8
+	for si in range(3):
+		var action_id: String = str(page[si])
+		var data: Dictionary = ActionPalette.get_action_data(action_id)
+		var label: String = str(data.get("label", action_id))
+		var is_sel: bool = si == _pal_slot_idx
+		var row_y: float = slot_y + si * 26
+
+		if is_sel:
+			c.draw_rect(Rect2(lx + 4, row_y, lw - 8, 24), C_SELECT)
+
+		var icon: Texture2D = _get_action_icon(action_id)
+		if icon:
+			c.draw_texture_rect(icon, Rect2(lx + 10, row_y + 2, 20, 20), false)
+		c.draw_string(font, Vector2(lx + 34, row_y + 17), "Slot %d" % (si + 1),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED if not is_sel else Color(1.0, 1.0, 1.0, 0.7))
+		c.draw_string(font, Vector2(lx + 80, row_y + 17), label,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_SELECT_TEXT if is_sel else C_TEXT)
+
+	# Right side: picker grid (always visible) or description
+	if _mode == Mode.PALETTE_PICK:
+		_draw_palette_picker(c, font)
+	else:
+		_draw_palette_picker_passive(c, font)
+
+
+func _draw_palette_picker_passive(c: Control, font: Font) -> void:
+	var px: float = 220.0
 	var py: float = VIEWPORT_H - 305.0
 	var pw: float = 300.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
 
-	var slot_keys := ["X", "A", "B"]
-	var draw_y: float = py + 4
-	var flat_idx: int = 0  # Global index across all pages for selection tracking
-	var selected_flat: int = _pal_page_idx * 3 + _pal_slot_idx
-
-	for page_i in range(ActionPalette.pages.size()):
-		# Page header
-		c.draw_string(font, Vector2(px + 10, draw_y + 14), "Page %d" % [page_i + 1], HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED)
-		draw_y += 18
-
-		var page: Array = ActionPalette.pages[page_i]
-		for slot_i in range(page.size()):
-			if draw_y > py + ph - 4:
-				break
-			var action_id: String = str(page[slot_i])
-			var action_data: Dictionary = ActionPalette.get_action_data(action_id)
-			var label: String = str(action_data.get("label", action_id))
-			var is_sel: bool = flat_idx == selected_flat
-
-			if is_sel:
-				c.draw_rect(Rect2(px + 2, draw_y, pw - 4, 24), C_SELECT)
-			var col: Color = C_SELECT_TEXT if is_sel else C_TEXT
-
-			# Slot key badge
-			c.draw_rect(Rect2(px + 8, draw_y + 3, 20, 18), Color(0.16, 0.24, 0.31, 0.7))
-			c.draw_string(font, Vector2(px + 13, draw_y + 17), slot_keys[slot_i] if slot_i < 3 else "?", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
-
-			# Action icon
-			var icon: Texture2D = _get_action_icon(action_id)
-			if icon:
-				c.draw_texture_rect(icon, Rect2(px + 32, draw_y + 2, 20, 20), false)
-
-			# Action name
-			c.draw_string(font, Vector2(px + 56, draw_y + 17), label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, col)
-
-			draw_y += 26
-			flat_idx += 1
-
-		draw_y += 4  # Gap between pages
-
-	# Description / picker
-	if _mode == Mode.PALETTE_PICK:
-		_draw_palette_picker(c, font)
-	else:
-		var page: Array = ActionPalette.pages[_pal_page_idx] if _pal_page_idx < ActionPalette.pages.size() else []
-		var current_id: String = str(page[_pal_slot_idx]) if _pal_slot_idx < page.size() else ""
-		var current_data: Dictionary = ActionPalette.get_action_data(current_id)
-		var current_label: String = str(current_data.get("label", current_id))
-		_draw_bottom_desc(c, font, "Page %d Slot %d:\n%s\n\n[Enter] Change\n[Left/Right] Page" % [_pal_page_idx + 1, _pal_slot_idx + 1, current_label])
+	var page: Array = ActionPalette.pages[_pal_page_idx]
+	var current_id: String = str(page[_pal_slot_idx])
+	_draw_palette_grid(c, font, px, py, pw, ph, current_id, -1)
 
 
 func _draw_palette_picker(c: Control, font: Font) -> void:
-	var actions := _get_palette_actions()
-	var page: Array = ActionPalette.pages[_pal_page_idx] if _pal_page_idx < ActionPalette.pages.size() else []
-	var current_id: String = str(page[_pal_slot_idx]) if _pal_slot_idx < page.size() else ""
-	var px: float = 310.0
+	var px: float = 220.0
 	var py: float = VIEWPORT_H - 305.0
-	var pw: float = 200.0
+	var pw: float = 300.0
 	var ph: float = 300.0
 	_draw_inner_panel(c, Rect2(px, py, pw, ph))
-	var scroll_offset: int = maxi(0, _sub_idx - 12)  # Simple scroll for long lists
-	for i in range(actions.size()):
-		var draw_i: int = i - scroll_offset
-		if draw_i < 0:
-			continue
-		var iy: float = py + 4 + draw_i * 22
-		if iy > py + ph - 4:
-			break
-		var action: Dictionary = actions[i]
-		var action_id: String = str(action.get("id", ""))
-		var action_label: String = str(action.get("label", action_id))
-		var available: bool = _is_palette_action_available(action_id)
-		if i == _sub_idx:
-			c.draw_rect(Rect2(px + 2, iy, pw - 4, 20), C_SELECT)
-		var col: Color
-		if i == _sub_idx:
-			col = C_SELECT_TEXT
-		elif not available:
-			col = Color(0.5, 0.5, 0.5)
-		else:
-			col = C_TEXT
-		# Action icon
-		var icon: Texture2D = _get_action_icon(action_id)
-		if icon:
-			c.draw_texture_rect(icon, Rect2(px + 6, iy + 1, 18, 18), false)
-		c.draw_string(font, Vector2(px + 28, iy + 15), action_label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, col)
-		# Checkmark for currently assigned action
-		if action_id == current_id:
-			c.draw_string(font, Vector2(px + pw - 20, iy + 15), "\u2713", HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, Color(0.3, 0.8, 0.3) if i != _sub_idx else C_SELECT_TEXT)
+
+	var page: Array = ActionPalette.pages[_pal_page_idx]
+	var current_id: String = str(page[_pal_slot_idx])
+	_draw_palette_grid(c, font, px, py, pw, ph, current_id, _sub_idx)
+
+
+func _draw_palette_grid(c: Control, font: Font, px: float, py: float, pw: float, _ph: float, current_id: String, selected_flat: int) -> void:
+	var cell_w: float = 90.0
+	var cell_h: float = 24.0
+	var draw_y: float = py + 4
+	var flat_idx: int = 0
+
+	for row_def in _PAL_PICKER_ROWS:
+		if row_def.has("label"):
+			c.draw_string(font, Vector2(px + 8, draw_y + 13), str(row_def.label),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
+			draw_y += 18
+
+		var row_ids: Array = row_def.ids
+		for ci in range(row_ids.size()):
+			var action_id: String = row_ids[ci]
+			var data: Dictionary = ActionPalette.get_action_data(action_id)
+			var label: String = str(data.get("label", action_id))
+			var is_current: bool = action_id == current_id
+			var is_sel: bool = flat_idx == selected_flat
+			var available: bool = _is_palette_action_available(action_id)
+
+			var cx: float = px + 6 + ci * cell_w
+			if is_sel:
+				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), C_SELECT)
+			elif is_current:
+				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), Color(0.15, 0.3, 0.15, 0.6))
+
+			# Icon with dark bg
+			c.draw_rect(Rect2(cx + 2, draw_y + 2, 20, 20), Color(0.05, 0.05, 0.1, 0.9))
+			var icon: Texture2D = _get_action_icon(action_id)
+			if icon:
+				var icon_mod: Color = Color(0.4, 0.4, 0.4) if not available else Color.WHITE
+				c.draw_texture_rect(icon, Rect2(cx + 2, draw_y + 2, 20, 20), false, icon_mod)
+
+			var col: Color
+			if is_sel:
+				col = C_SELECT_TEXT
+			elif is_current:
+				col = Color(0.3, 0.8, 0.3)
+			elif not available:
+				col = Color(0.5, 0.5, 0.5)
+			else:
+				col = C_TEXT
+			c.draw_string(font, Vector2(cx + 24, draw_y + 16), label,
+				HORIZONTAL_ALIGNMENT_LEFT, cell_w - 28, FONT_SIZE_XS, col)
+
+			flat_idx += 1
+
+		draw_y += cell_h + 2
 
 
 func _draw_mags(c: Control, font: Font) -> void:
