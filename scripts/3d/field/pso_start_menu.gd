@@ -1921,8 +1921,9 @@ func _draw_palette(c: Control, font: Font) -> void:
 		if si == _pal_slot_idx:
 			c.draw_rect(Rect2(center.x - 18, center.y - 18, 36, 36), Color(0.3, 0.8, 0.3, 0.8), false, 2.0)
 
-	# Slot list under preview
+	# Slot list under preview (highlight only when browsing slots, not when picking)
 	var slot_y: float = hud_y + 67.0 * hud_scale + 10
+	var show_slot_cursor: bool = _mode == Mode.PALETTE
 	for si in range(3):
 		var action_id: String = str(page[si])
 		var data: Dictionary = ActionPalette.get_action_data(action_id)
@@ -1930,25 +1931,24 @@ func _draw_palette(c: Control, font: Font) -> void:
 		var is_sel: bool = si == _pal_slot_idx
 		var row_y: float = slot_y + si * 30
 
-		if is_sel:
+		if is_sel and show_slot_cursor:
 			c.draw_rect(Rect2(lx + 4, row_y, lw - 8, 28), C_SELECT)
 
+		var slot_col: Color = C_SELECT_TEXT if (is_sel and show_slot_cursor) else C_TEXT_MUTED
+		var label_col: Color = C_SELECT_TEXT if (is_sel and show_slot_cursor) else C_TEXT
 		c.draw_string(font, Vector2(lx + 12, row_y + 20), "Slot %d" % (si + 1),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT_MUTED if not is_sel else Color(1.0, 1.0, 1.0, 0.7))
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, slot_col)
 		c.draw_string(font, Vector2(lx + 78, row_y + 20), label,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, C_SELECT_TEXT if is_sel else C_TEXT)
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, label_col)
 
-	# Middle: Combat + Recovery
+	# Actions panel (single rect for both columns)
 	var mx: float = 240.0
 	var mw: float = 280.0
-	_draw_inner_panel(c, Rect2(mx, base_y, mw, panel_h))
-	_draw_scanlines(c, Rect2(mx, base_y, mw, panel_h))
-
-	# Right: Techniques
 	var rx: float = 524.0
 	var rw: float = 280.0
-	_draw_inner_panel(c, Rect2(rx, base_y, rw, panel_h))
-	_draw_scanlines(c, Rect2(rx, base_y, rw, panel_h))
+	var total_w: float = (rx + rw) - mx
+	_draw_inner_panel(c, Rect2(mx, base_y, total_w, panel_h))
+	_draw_scanlines(c, Rect2(mx, base_y, total_w, panel_h))
 
 	var sel_flat: int = _sub_idx if _mode == Mode.PALETTE_PICK else -1
 	var current_id: String = str(page[_pal_slot_idx])

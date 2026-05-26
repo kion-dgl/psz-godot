@@ -21,7 +21,7 @@ const ALL_ACTIONS: Array = [
 	{"id": "star_atomizer", "label": "Star Atomizer", "short": "Star", "category": "recovery", "icon": "star_atomizer.png"},
 	{"id": "moon_atomizer", "label": "Moon Atomizer", "short": "Moon", "category": "recovery", "icon": "moon_atomizer.png"},
 	{"id": "telepipe", "label": "Telepipe", "short": "Pipe", "category": "recovery", "icon": "telepipe.png"},
-	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug", "icon": "attack.png"},
+	{"id": "kill_all", "label": "Kill All", "short": "Kill", "category": "debug", "icon": "del_all.png"},
 	# Techniques — base only; charged variants accessed via hold-to-charge
 	{"id": "foie", "label": "Foie", "short": "Foie", "category": "technique", "icon": "foie.png"},
 	{"id": "barta", "label": "Barta", "short": "Barta", "category": "technique", "icon": "barta.png"},
