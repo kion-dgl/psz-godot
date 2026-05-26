@@ -2010,6 +2010,14 @@ func _update_charge_visual(delta: float) -> void:
 
 
 func transition_to(new_state: PlayerState) -> void:
+	if _charging_slot >= 0 and new_state in [PlayerState.DAMAGED, PlayerState.DOWN]:
+		var slot := _charging_slot
+		_charging_slot = -1
+		_charging_tech_id = ""
+		_tech_charge_timer = 0.0
+		_tech_charge_ready = false
+		_end_charge_visual()
+		tech_charge_released.emit(slot)
 	var was_attacking: bool = current_state == PlayerState.ATTACKING
 	current_state = new_state
 	state_changed.emit(new_state)

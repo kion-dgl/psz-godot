@@ -553,10 +553,10 @@ class _QuestLogPanel extends Control:
 # ── Action Palette (bottom-right) ────────────────────────────────────────────
 
 class _ActionPalette extends Control:
-	## PSZ-style action palette: octagon HUD with 3 slots in a horizontal row.
-	## Uses palette_bg.png as the frame; icons sit inside each octagonal slot.
+	## PSZ-style action palette: octagon HUD with 3 slots in diamond layout.
+	## Tapping R swaps between palette_bg.png (page 1) and palette_bg_r.png (page 2).
 
-	const PALETTE_BG_PATH := "res://assets/ui/psz-palette/palette_bg.png"
+	const PALETTE_BG_BASE := "res://assets/ui/psz-palette/palette_bg"
 	const FONT_SIZE_SMALL := 8
 	const FONT_SIZE_COUNT := 7
 	const LABEL_LIGHT := Color(0.23, 0.29, 0.35)
@@ -567,17 +567,19 @@ class _ActionPalette extends Control:
 	const BG_W := 128.0
 	const BG_H := 67.0
 
-	# Slot icon centers within the 128x67 source image (measured from octagon positions)
+	# Slot centers measured from pixel analysis of the 128x67 source image.
+	# Slots 0 & 2 are raised (y=27), slot 1 is lower (y=41) — diamond layout.
 	const SLOT_CENTERS := [
-		Vector2(22.0, 37.0),
-		Vector2(56.0, 37.0),
-		Vector2(90.0, 37.0),
+		Vector2(26.0, 27.0),
+		Vector2(58.0, 41.0),
+		Vector2(90.0, 27.0),
 	]
-	const ICON_SIZE := 24.0  # Display size of icons within slots (source 32x32, trimmed)
+	const ICON_SIZE := 18.0  # Fits inside 21px tall octagon interior
 
+	var _bg_textures: Array = [null, null]  # [page1, page2/R variant]
 	var _bg_texture: Texture2D = null
-	var _slot_icons: Array = []  # TextureRect per slot
-	var _slot_counts: Array = []  # Label per slot
+	var _slot_icons: Array = []
+	var _slot_counts: Array = []
 	var _charging_slot: int = -1
 
 	func _ready() -> void:
@@ -598,8 +600,13 @@ class _ActionPalette extends Control:
 		offset_top = -total_h - MARGIN
 		offset_bottom = -MARGIN
 
-		if ResourceLoader.exists(PALETTE_BG_PATH):
-			_bg_texture = load(PALETTE_BG_PATH)
+		var path_1 := PALETTE_BG_BASE + ".png"
+		var path_r := PALETTE_BG_BASE + "_r.png"
+		if ResourceLoader.exists(path_1):
+			_bg_textures[0] = load(path_1)
+		if ResourceLoader.exists(path_r):
+			_bg_textures[1] = load(path_r)
+		_bg_texture = _bg_textures[0]
 
 		for i in range(3):
 			var center: Vector2 = SLOT_CENTERS[i] * BG_SCALE
@@ -674,6 +681,9 @@ class _ActionPalette extends Control:
 		queue_redraw()
 
 	func _on_palette_changed(_arg = null) -> void:
+		var page_idx: int = ActionPalette.current_page
+		var tex_idx: int = clampi(page_idx, 0, _bg_textures.size() - 1)
+		_bg_texture = _bg_textures[tex_idx] if _bg_textures[tex_idx] else _bg_textures[0]
 		_update_slot_icons()
 		queue_redraw()
 
@@ -685,16 +695,8 @@ class _ActionPalette extends Control:
 		if _bg_texture:
 			draw_texture_rect(_bg_texture, Rect2(Vector2.ZERO, size), false)
 
-		var font := ThemeDB.fallback_font
-		var page_idx: int = ActionPalette.current_page
-		var page_count: int = ActionPalette.pages.size()
-		var pn_text := "%d/%d" % [page_idx + 1, page_count]
-		var pn_x: float = BG_W * BG_SCALE - 24.0 * BG_SCALE
-		var pn_y: float = 10.0 * BG_SCALE
-		draw_string(font, Vector2(pn_x, pn_y), pn_text,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, int(FONT_SIZE_SMALL * BG_SCALE), LABEL_LIGHT)
-
 		var slots: Array = ActionPalette.get_current_slots()
+		var font := ThemeDB.fallback_font
 		for i in range(3):
 			if i < _slot_icons.size() and not _slot_icons[i].visible:
 				var action_id: String = slots[i] if i < slots.size() else ""

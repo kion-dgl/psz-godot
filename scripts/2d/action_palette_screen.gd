@@ -300,14 +300,25 @@ func _build_picker(parent: VBoxContainer) -> void:
 
 		var icon_tex: Texture2D = ActionPalette.get_action_icon(action.id)
 		if icon_tex:
+			var icon_bg := PanelContainer.new()
+			var icon_style := StyleBoxFlat.new()
+			icon_style.bg_color = Color(0.05, 0.05, 0.1, 0.9)
+			icon_style.set_corner_radius_all(4)
+			icon_style.content_margin_left = 2.0
+			icon_style.content_margin_right = 2.0
+			icon_style.content_margin_top = 2.0
+			icon_style.content_margin_bottom = 2.0
+			icon_bg.add_theme_stylebox_override("panel", icon_style)
 			var tex_rect := TextureRect.new()
 			tex_rect.texture = icon_tex
-			tex_rect.custom_minimum_size = Vector2(16, 16)
+			tex_rect.custom_minimum_size = Vector2(20, 20)
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+			tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			if not available:
 				tex_rect.modulate = Color(0.4, 0.4, 0.4)
-			hbox.add_child(tex_rect)
+			icon_bg.add_child(tex_rect)
+			hbox.add_child(icon_bg)
 
 		var label := Label.new()
 		label.text = action.short
@@ -339,10 +350,21 @@ func _prepend_icon(pill: PanelContainer, action_id: String) -> void:
 	var hbox: HBoxContainer = pill.get_child(0) as HBoxContainer
 	if not hbox:
 		return
+	var icon_bg := PanelContainer.new()
+	var icon_style := StyleBoxFlat.new()
+	icon_style.bg_color = Color(0.05, 0.05, 0.1, 0.9)
+	icon_style.set_corner_radius_all(4)
+	icon_style.content_margin_left = 2.0
+	icon_style.content_margin_right = 2.0
+	icon_style.content_margin_top = 2.0
+	icon_style.content_margin_bottom = 2.0
+	icon_bg.add_theme_stylebox_override("panel", icon_style)
 	var tex_rect := TextureRect.new()
 	tex_rect.texture = icon_tex
 	tex_rect.custom_minimum_size = Vector2(20, 20)
 	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-	hbox.add_child(tex_rect)
-	hbox.move_child(tex_rect, 0)
+	tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon_bg.add_child(tex_rect)
+	hbox.add_child(icon_bg)
+	hbox.move_child(icon_bg, 0)
