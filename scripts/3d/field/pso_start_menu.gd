@@ -1884,27 +1884,28 @@ func _draw_techs(c: Control, font: Font) -> void:
 func _draw_palette(c: Control, font: Font) -> void:
 	_draw_section_label(c, font, "Palette")
 
+	var base_y: float = VIEWPORT_H - BOTTOM_H + 8
+	var panel_h: float = BOTTOM_H - 16
+
 	# Left side: page tabs + HUD preview + slot list
 	var lx: float = 5.0
-	var ly: float = VIEWPORT_H - 305.0
-	var lw: float = 210.0
-	var lh: float = 300.0
-	_draw_inner_panel(c, Rect2(lx, ly, lw, lh))
-	_draw_scanlines(c, Rect2(lx, ly, lw, lh))
+	var lw: float = 230.0
+	_draw_inner_panel(c, Rect2(lx, base_y, lw, panel_h))
+	_draw_scanlines(c, Rect2(lx, base_y, lw, panel_h))
 
 	# Page tabs
-	var tab_y: float = ly + 6
+	var tab_y: float = base_y + 8
 	for pi in range(ActionPalette.pages.size()):
-		var tab_x: float = lx + 8 + pi * 60
+		var tab_x: float = lx + 10 + pi * 70
 		var is_active: bool = pi == _pal_page_idx
 		if is_active:
-			c.draw_rect(Rect2(tab_x, tab_y, 54, 20), C_SELECT)
-		c.draw_string(font, Vector2(tab_x + 8, tab_y + 15), "P%d" % (pi + 1),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_SELECT_TEXT if is_active else C_TEXT_MUTED)
+			c.draw_rect(Rect2(tab_x, tab_y, 60, 24), C_SELECT)
+		c.draw_string(font, Vector2(tab_x + 10, tab_y + 18), "Page %d" % (pi + 1),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_SELECT_TEXT if is_active else C_TEXT_MUTED)
 
 	# HUD preview with palette_bg
-	var hud_y: float = tab_y + 28
-	var hud_scale: float = 1.5
+	var hud_y: float = tab_y + 34
+	var hud_scale: float = 1.7
 	var bg_path: String = "res://assets/ui/psz-palette/palette_bg%s.png" % ("_r" if _pal_page_idx == 1 else "")
 	if ResourceLoader.exists(bg_path):
 		var bg_tex: Texture2D = load(bg_path)
@@ -1916,46 +1917,42 @@ func _draw_palette(c: Control, font: Font) -> void:
 		var center: Vector2 = slot_centers[si] * hud_scale + Vector2(lx + 8, hud_y)
 		var icon: Texture2D = _get_action_icon(page[si])
 		if icon:
-			c.draw_texture_rect(icon, Rect2(center.x - 14, center.y - 14, 28, 28), false)
+			c.draw_texture_rect(icon, Rect2(center.x - 16, center.y - 16, 32, 32), false)
 		if si == _pal_slot_idx:
-			c.draw_rect(Rect2(center.x - 16, center.y - 16, 32, 32), Color(0.3, 0.8, 0.3, 0.8), false, 2.0)
+			c.draw_rect(Rect2(center.x - 18, center.y - 18, 36, 36), Color(0.3, 0.8, 0.3, 0.8), false, 2.0)
 
-	# Slot list under preview (no icons — they're in the HUD preview)
-	var slot_y: float = hud_y + 67.0 * hud_scale + 8
+	# Slot list under preview
+	var slot_y: float = hud_y + 67.0 * hud_scale + 10
 	for si in range(3):
 		var action_id: String = str(page[si])
 		var data: Dictionary = ActionPalette.get_action_data(action_id)
 		var label: String = str(data.get("label", action_id))
 		var is_sel: bool = si == _pal_slot_idx
-		var row_y: float = slot_y + si * 26
+		var row_y: float = slot_y + si * 30
 
 		if is_sel:
-			c.draw_rect(Rect2(lx + 4, row_y, lw - 8, 24), C_SELECT)
+			c.draw_rect(Rect2(lx + 4, row_y, lw - 8, 28), C_SELECT)
 
-		c.draw_string(font, Vector2(lx + 12, row_y + 17), "Slot %d" % (si + 1),
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_MUTED if not is_sel else Color(1.0, 1.0, 1.0, 0.7))
-		c.draw_string(font, Vector2(lx + 68, row_y + 17), label,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_SELECT_TEXT if is_sel else C_TEXT)
+		c.draw_string(font, Vector2(lx + 12, row_y + 20), "Slot %d" % (si + 1),
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT_MUTED if not is_sel else Color(1.0, 1.0, 1.0, 0.7))
+		c.draw_string(font, Vector2(lx + 78, row_y + 20), label,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, C_SELECT_TEXT if is_sel else C_TEXT)
 
 	# Middle: Combat + Recovery
-	var mx: float = 220.0
-	var my: float = VIEWPORT_H - 305.0
-	var mw: float = 200.0
-	var mh: float = 300.0
-	_draw_inner_panel(c, Rect2(mx, my, mw, mh))
-	_draw_scanlines(c, Rect2(mx, my, mw, mh))
+	var mx: float = 240.0
+	var mw: float = 280.0
+	_draw_inner_panel(c, Rect2(mx, base_y, mw, panel_h))
+	_draw_scanlines(c, Rect2(mx, base_y, mw, panel_h))
 
 	# Right: Techniques
-	var rx: float = 424.0
-	var ry: float = VIEWPORT_H - 305.0
-	var rw: float = 200.0
-	var rh: float = 300.0
-	_draw_inner_panel(c, Rect2(rx, ry, rw, rh))
-	_draw_scanlines(c, Rect2(rx, ry, rw, rh))
+	var rx: float = 524.0
+	var rw: float = 280.0
+	_draw_inner_panel(c, Rect2(rx, base_y, rw, panel_h))
+	_draw_scanlines(c, Rect2(rx, base_y, rw, panel_h))
 
 	var sel_flat: int = _sub_idx if _mode == Mode.PALETTE_PICK else -1
 	var current_id: String = str(page[_pal_slot_idx])
-	_draw_palette_grid_split(c, font, mx, my, mw, rx, ry, rw, mh, current_id, sel_flat)
+	_draw_palette_grid_split(c, font, mx, base_y, mw, rx, base_y, rw, panel_h, current_id, sel_flat)
 
 
 const _PAL_COMBAT_RECOVERY_ROWS: Array = [
@@ -1982,15 +1979,16 @@ func _draw_palette_grid_split(c: Control, font: Font, mx: float, my: float, mw: 
 
 
 func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: float, _ph: float, rows: Array, current_id: String, selected_flat: int, start_flat: int) -> int:
-	var cell_h: float = 24.0
-	var draw_y: float = py + 4
+	var cell_h: float = 30.0
+	var icon_sz: float = 26.0
+	var draw_y: float = py + 6
 	var flat_idx: int = start_flat
 
 	for row_def in rows:
 		if row_def.has("label"):
-			c.draw_string(font, Vector2(px + 8, draw_y + 13), str(row_def.label),
-				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_XS, C_TEXT_LIGHT)
-			draw_y += 18
+			c.draw_string(font, Vector2(px + 10, draw_y + 16), str(row_def.label),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT_LIGHT)
+			draw_y += 22
 
 		var row_ids: Array = row_def.ids
 		var cell_w: float = (pw - 12.0) / 3.0
@@ -2009,11 +2007,12 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 			elif is_current:
 				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), Color(0.15, 0.3, 0.15, 0.6))
 
-			c.draw_rect(Rect2(cx + 2, draw_y + 2, 20, 20), Color(0.05, 0.05, 0.1, 0.9))
+			var icon_y: float = draw_y + (cell_h - icon_sz) * 0.5
+			c.draw_rect(Rect2(cx + 3, icon_y, icon_sz, icon_sz), Color(0.05, 0.05, 0.1, 0.9))
 			var icon: Texture2D = _get_action_icon(action_id)
 			if icon:
 				var icon_mod: Color = Color(0.4, 0.4, 0.4) if not available else Color.WHITE
-				c.draw_texture_rect(icon, Rect2(cx + 2, draw_y + 2, 20, 20), false, icon_mod)
+				c.draw_texture_rect(icon, Rect2(cx + 3, icon_y, icon_sz, icon_sz), false, icon_mod)
 
 			var col: Color
 			if is_sel:
@@ -2024,8 +2023,8 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 				col = Color(0.5, 0.5, 0.5)
 			else:
 				col = C_TEXT
-			c.draw_string(font, Vector2(cx + 24, draw_y + 16), label,
-				HORIZONTAL_ALIGNMENT_LEFT, cell_w - 28, FONT_SIZE_XS, col)
+			c.draw_string(font, Vector2(cx + icon_sz + 8, draw_y + 20), label,
+				HORIZONTAL_ALIGNMENT_LEFT, cell_w - icon_sz - 12, FONT_SIZE_SM, col)
 
 			flat_idx += 1
 
