@@ -31,8 +31,6 @@ const DodgeDebug = lazy(() => import('./dodge-debug/DodgeDebug'));
 const AssetLoader = lazy(() => import('./asset-loader/AssetLoader'));
 const CharacterSelect = lazy(() => import('./character-select/CharacterSelect'));
 const UndergroundEditor = lazy(() => import('./underground-editor/UndergroundEditor'));
-const QuickMenuMock = lazy(() => import('./quick-menu/QuickMenuMockup'));
-const CreditsMock = lazy(() => import('./credits/CreditsMockup'));
 const PaletteEditor = lazy(() => import('./palette-editor/PaletteEditorMockup'));
 
 type NavLink = { to: string; label: string };
@@ -74,9 +72,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/controls', label: 'Controls' },
       { to: '/character-creator', label: 'Character' },
       { to: '/character-select', label: 'Char Select' },
-      { to: '/quick-menu', label: 'Quick Menu' },
       { to: '/palette-editor', label: 'Palette Editor' },
-      { to: '/credits', label: 'Credits' },
     ],
   },
   {
@@ -251,9 +247,7 @@ export default function App() {
             <Route path="/character-select" element={<CharacterSelect />} />
             <Route path="/underground-editor" element={<UndergroundEditor />} />
             <Route path="/dodge-debug" element={<DodgeDebug />} />
-            <Route path="/quick-menu" element={<QuickMenuMock />} />
             <Route path="/palette-editor" element={<PaletteEditor />} />
-            <Route path="/credits" element={<CreditsMock />} />
           </Routes>
         </Suspense>
       </div>
