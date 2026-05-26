@@ -81,15 +81,9 @@ func get_disk_required_level(disk_level: int) -> int:
 	return disk_level * 2 - 5
 
 
-## Generate shop inventory: always includes Lv.1 disks for all techniques, plus random higher levels
-func generate_shop_inventory(char_level: int) -> Array:
-	var max_basic_level: int = clampi(ceili(float(char_level) * 0.6), 1, 15)
-	var max_mid_level: int = clampi(ceili(float(char_level) * 0.4), 1, 10)
-
+## Generate shop inventory: Lv.1 disk for each base technique, palette order.
+func generate_shop_inventory(_char_level: int) -> Array:
 	var items: Array = []
-	var seen: Dictionary = {}
-
-	# Always stock Lv.1 of every base technique
 	for tech_id in SHOP_BASIC_TECHS:
 		var tech: Dictionary = TECHNIQUES[tech_id]
 		items.append({
@@ -98,36 +92,6 @@ func generate_shop_inventory(char_level: int) -> Array:
 			"level": 1,
 			"cost": get_disk_price(tech_id, 1),
 		})
-		seen[tech_id + ":1"] = true
-
-	# Add random higher-level disks
-	var attempts := 0
-	while items.size() < 30 and attempts < 60:
-		attempts += 1
-		var tech_id: String = SHOP_BASIC_TECHS[randi() % SHOP_BASIC_TECHS.size()]
-		var max_lv: int = max_basic_level
-
-		var level: int = randi_range(2, max_lv)
-		var key: String = "%s:%d" % [tech_id, level]
-		if seen.has(key):
-			continue
-		seen[key] = true
-
-		var tech: Dictionary = TECHNIQUES[tech_id]
-		items.append({
-			"technique_id": tech_id,
-			"name": "Disk: %s Lv.%d" % [tech["name"], level],
-			"level": level,
-			"cost": get_disk_price(tech_id, level),
-		})
-
-	items.sort_custom(func(a, b):
-		var ai: int = SHOP_BASIC_TECHS.find(str(a["technique_id"]))
-		var bi: int = SHOP_BASIC_TECHS.find(str(b["technique_id"]))
-		if ai != bi:
-			return ai < bi
-		return int(a["level"]) < int(b["level"])
-	)
 	return items
 
 
