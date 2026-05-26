@@ -556,7 +556,7 @@ class _ActionPalette extends Control:
 	## PSZ-style action palette: octagon HUD with 3 slots in a horizontal row.
 	## Uses palette_bg.png as the frame; icons sit inside each octagonal slot.
 
-	const PALETTE_BG_PATH := "res://assets/hud/psz/palette_bg.png"
+	const PALETTE_BG_PATH := "res://assets/ui/psz-palette/palette_bg.png"
 	const FONT_SIZE_SMALL := 8
 	const FONT_SIZE_COUNT := 7
 	const LABEL_LIGHT := Color(0.23, 0.29, 0.35)

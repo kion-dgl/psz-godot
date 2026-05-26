@@ -5,7 +5,7 @@ extends Node
 signal page_changed(new_page: int)
 signal config_changed()
 
-const ICON_BASE := "res://assets/hud/psz/"
+const ICON_BASE := "res://assets/ui/psz-palette/"
 
 const ALL_ACTIONS: Array = [
 	{"id": "attack", "label": "Attack", "short": "Atk", "category": "combat", "icon": "attack.png"},
