@@ -789,7 +789,7 @@ const _PAL_PICKER_ROWS: Array = [
 	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
 	{"ids": ["monofluid", "difluid", "trifluid"]},
 	{"ids": ["sol_atomizer", "star_atomizer", "moon_atomizer"]},
-	{"ids": ["telepipe"]},
+	{"ids": ["telepipe", "kill_all"]},
 	{"label": "Technique", "ids": ["foie", "barta", "zonde"]},
 	{"ids": ["grants", "megid"]},
 	{"ids": ["resta", "anti"]},
@@ -1960,7 +1960,7 @@ const _PAL_COMBAT_RECOVERY_ROWS: Array = [
 	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
 	{"ids": ["monofluid", "difluid", "trifluid"]},
 	{"ids": ["sol_atomizer", "star_atomizer", "moon_atomizer"]},
-	{"ids": ["telepipe"]},
+	{"ids": ["telepipe", "kill_all"]},
 ]
 
 const _PAL_TECHNIQUE_ROWS: Array = [
@@ -1978,17 +1978,17 @@ func _draw_palette_grid_split(c: Control, font: Font, mx: float, my: float, mw: 
 	_draw_palette_column(c, font, rx, ry, rw, ph, _PAL_TECHNIQUE_ROWS, current_id, selected_flat, flat_idx)
 
 
-func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: float, _ph: float, rows: Array, current_id: String, selected_flat: int, start_flat: int) -> int:
-	var cell_h: float = 30.0
-	var icon_sz: float = 26.0
+func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: float, _ph: float, rows: Array, _current_id: String, selected_flat: int, start_flat: int) -> int:
+	var cell_h: float = 36.0
+	var icon_sz: float = 30.0
 	var draw_y: float = py + 6
 	var flat_idx: int = start_flat
 
 	for row_def in rows:
 		if row_def.has("label"):
-			c.draw_string(font, Vector2(px + 10, draw_y + 16), str(row_def.label),
-				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SM, C_TEXT_LIGHT)
-			draw_y += 22
+			c.draw_string(font, Vector2(px + 10, draw_y + 18), str(row_def.label),
+				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, C_TEXT_LIGHT)
+			draw_y += 26
 
 		var row_ids: Array = row_def.ids
 		var cell_w: float = (pw - 12.0) / 3.0
@@ -1996,7 +1996,6 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 			var action_id: String = row_ids[ci]
 			var data: Dictionary = ActionPalette.get_action_data(action_id)
 			var label: String = str(data.get("label", action_id))
-			var is_current: bool = action_id == current_id
 			var is_sel: bool = flat_idx == selected_flat
 			var available: bool = _is_palette_action_available(action_id)
 
@@ -2004,8 +2003,6 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 
 			if is_sel:
 				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), C_SELECT)
-			elif is_current:
-				c.draw_rect(Rect2(cx, draw_y, cell_w - 2, cell_h), Color(0.15, 0.3, 0.15, 0.6))
 
 			var icon_y: float = draw_y + (cell_h - icon_sz) * 0.5
 			c.draw_rect(Rect2(cx + 3, icon_y, icon_sz, icon_sz), Color(0.05, 0.05, 0.1, 0.9))
@@ -2017,14 +2014,12 @@ func _draw_palette_column(c: Control, font: Font, px: float, py: float, pw: floa
 			var col: Color
 			if is_sel:
 				col = C_SELECT_TEXT
-			elif is_current:
-				col = Color(0.3, 0.8, 0.3)
 			elif not available:
 				col = Color(0.5, 0.5, 0.5)
 			else:
 				col = C_TEXT
-			c.draw_string(font, Vector2(cx + icon_sz + 8, draw_y + 20), label,
-				HORIZONTAL_ALIGNMENT_LEFT, cell_w - icon_sz - 12, FONT_SIZE_SM, col)
+			c.draw_string(font, Vector2(cx + icon_sz + 8, draw_y + 23), label,
+				HORIZONTAL_ALIGNMENT_LEFT, cell_w - icon_sz - 12, FONT_SIZE, col)
 
 			flat_idx += 1
 
