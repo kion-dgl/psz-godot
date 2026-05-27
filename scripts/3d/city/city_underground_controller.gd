@@ -39,11 +39,9 @@ func _ready() -> void:
 	)
 	_add_npc(
 		"BlackjackDealerNPC", Vector3(-10.0, 0, 0.0), PI / 2.0,
-		"res://assets/npcs/cowgirl/blackjack.glb",
+		"res://assets/npcs/cowgirl/cowgirl.fbx",
 		"Blackjack",
-		"res://scenes/2d/blackjack/blackjack_table.tscn",
-		"pso_f_ro_stand",
-		"res://assets/npcs/cowgirl/blackjack_hat.glb"
+		"res://scenes/2d/blackjack/blackjack_table.tscn"
 	)
 
 	# Interactive exit trigger — back to market. Trigger volume centred at
