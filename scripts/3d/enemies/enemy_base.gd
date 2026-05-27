@@ -107,10 +107,22 @@ const FLOOR_CHECK_DISTANCE: float = 1.0  # How far ahead to check
 const FLOOR_CHECK_SIDE: float = 0.5  # Side offset for corner checks
 const FLOOR_RAY_LENGTH: float = 5.0  # How far down to raycast
 
+## Enemy SFX keyed by model_id → {damage, death, attack, idle}
+const ENEMY_SFX := {
+	"wolf": {
+		"damage": "res://assets/sfx/forest/forest_020.wav",
+		"death": "res://assets/sfx/forest/forest_021.wav",
+		"attack": "res://assets/sfx/forest/forest_023.wav",
+		"idle": "res://assets/sfx/forest/forest_018.wav",
+	},
+}
+
 ## Signals
 signal died(enemy: EnemyBase)
 signal damaged(enemy: EnemyBase, amount: int)
 
+
+var _sfx: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -120,6 +132,9 @@ func _ready() -> void:
 	_setup_hurtbox()
 	_setup_navigation()
 	_find_target()
+
+	if enemy_data:
+		_sfx = ENEMY_SFX.get(enemy_data.model_id, {})
 
 	# Randomize initial wander timer so enemies don't sync up
 	wander_timer = randf_range(0.0, WANDER_INTERVAL_MAX)
@@ -580,6 +595,7 @@ func _start_attack() -> void:
 
 	is_attacking = true
 	_play_animation("atk", true)  # Force play attack animation
+	_play_sfx("attack")
 
 	# Face the target
 	var dir_to_target := (target.global_position - global_position).normalized()
@@ -643,6 +659,7 @@ func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, 
 		velocity = Vector3.ZERO  # Stop movement during stagger
 
 		_play_animation("dmg", true)  # Force play damage animation
+		_play_sfx("damage")
 
 
 func _die() -> void:
@@ -655,6 +672,7 @@ func _die() -> void:
 
 	# Play death animation
 	_play_animation("ded", true)
+	_play_sfx("death")
 
 	# Drops are handled by the field controller via the died signal
 
@@ -814,6 +832,12 @@ func _on_animation_finished(anim_name: String) -> void:
 			# After threat animation, start chasing
 			if current_state == EnemyState.CHASING:
 				_play_animation("wlk")
+
+
+func _play_sfx(key: String) -> void:
+	var path: String = _sfx.get(key, "")
+	if not path.is_empty():
+		SfxManager.play_at(path, global_position)
 
 
 func _spawn_damage_number(text: String, color: Color = Color.WHITE) -> void:
