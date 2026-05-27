@@ -39,7 +39,7 @@ func _ready() -> void:
 	)
 	_add_npc(
 		"BlackjackDealerNPC", Vector3(-10.0, 0, 0.0), PI / 2.0,
-		"res://assets/npcs/cowgirl/cowgirl.fbx",
+		"res://assets/npcs/cowgirl/cowgirl_hybrid.glb",
 		"Blackjack",
 		"res://scenes/2d/blackjack/blackjack_table.tscn"
 	)
