@@ -74,6 +74,13 @@ func get_charged_technique(base_id: String) -> String:
 	return CHARGE_MAP.get(base_id, base_id)
 
 
+func get_base_technique(technique_id: String) -> String:
+	for base_id in CHARGE_MAP:
+		if CHARGE_MAP[base_id] == technique_id:
+			return base_id
+	return technique_id
+
+
 ## Get required player level to use a disk of a given level
 func get_disk_required_level(disk_level: int) -> int:
 	if disk_level <= 5:
@@ -184,7 +191,12 @@ func use_disk(character: Dictionary, disk: Dictionary) -> Dictionary:
 ## Get current technique level for a character (0 if not learned)
 func get_technique_level(character: Dictionary, technique_id: String) -> int:
 	var techniques: Dictionary = character.get("techniques", {})
-	return int(techniques.get(technique_id, 0))
+	var level: int = int(techniques.get(technique_id, 0))
+	if level <= 0:
+		var base_id: String = get_base_technique(technique_id)
+		if base_id != technique_id:
+			level = int(techniques.get(base_id, 0))
+	return level
 
 
 ## Generate a random disk based on difficulty, area, boss/rare flags
