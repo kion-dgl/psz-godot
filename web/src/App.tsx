@@ -31,6 +31,7 @@ const DodgeDebug = lazy(() => import('./dodge-debug/DodgeDebug'));
 const AssetLoader = lazy(() => import('./asset-loader/AssetLoader'));
 const CharacterSelect = lazy(() => import('./character-select/CharacterSelect'));
 const UndergroundEditor = lazy(() => import('./underground-editor/UndergroundEditor'));
+const PaletteEditor = lazy(() => import('./palette-editor/PaletteEditorMockup'));
 
 type NavLink = { to: string; label: string };
 type NavGroup = { label: string; links: NavLink[] };
@@ -71,6 +72,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: '/controls', label: 'Controls' },
       { to: '/character-creator', label: 'Character' },
       { to: '/character-select', label: 'Char Select' },
+      { to: '/palette-editor', label: 'Palette Editor' },
     ],
   },
   {
@@ -245,6 +247,7 @@ export default function App() {
             <Route path="/character-select" element={<CharacterSelect />} />
             <Route path="/underground-editor" element={<UndergroundEditor />} />
             <Route path="/dodge-debug" element={<DodgeDebug />} />
+            <Route path="/palette-editor" element={<PaletteEditor />} />
           </Routes>
         </Suspense>
       </div>

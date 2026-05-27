@@ -26,12 +26,12 @@ const TECHNIQUES := {
 ## Area-based technique pools for disk drops
 const AREA_TECHNIQUE_POOLS := {
 	"gurhacia": ["foie", "barta", "zonde", "resta"],
-	"rioh":     ["barta", "gibarta", "deband", "anti"],
-	"ozette":   ["zonde", "gizonde", "jellen", "shifta"],
-	"paru":     ["foie", "gifoie", "shifta", "zalure"],
-	"makara":   ["rafoie", "rabarta", "razonde", "reverser"],
+	"rioh":     ["barta", "deband", "anti", "jellen"],
+	"ozette":   ["zonde", "jellen", "shifta", "zalure"],
+	"paru":     ["foie", "shifta", "zalure", "grants"],
+	"makara":   ["foie", "barta", "zonde", "megid"],
 	"arca":     ["zonde", "barta", "anti", "zalure"],
-	"dark":     ["megid", "grants", "reverser", "resta"],
+	"dark":     ["megid", "grants", "resta", "deband"],
 }
 
 ## Disk level ranges by difficulty
@@ -45,12 +45,40 @@ const BOSS_LEVEL_BONUS := 5
 const RARE_LEVEL_BONUS := 3
 
 ## Techniques available in the shop (exclude advanced tier — field drops only)
-const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
-const SHOP_MID_TECHS := ["gifoie", "gibarta", "gizonde", "reverser"]
+const SHOP_BASIC_TECHS := ["foie", "barta", "zonde", "grants", "megid", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
+const SHOP_MID_TECHS: Array = []
+
+## Base technique → charged variant (hold-to-charge).
+## Support techs map to themselves — charge may boost potency later.
+const CHARGE_MAP := {
+	"foie": "rafoie",
+	"barta": "rabarta",
+	"zonde": "razonde",
+	"grants": "grants",
+	"megid": "megid",
+	"resta": "resta",
+	"anti": "anti",
+	"reverser": "reverser",
+	"shifta": "shifta",
+	"deband": "deband",
+	"jellen": "jellen",
+	"zalure": "zalure",
+}
 
 
 func _ready() -> void:
 	pass
+
+
+func get_charged_technique(base_id: String) -> String:
+	return CHARGE_MAP.get(base_id, base_id)
+
+
+func get_base_technique(technique_id: String) -> String:
+	for base_id in CHARGE_MAP:
+		if CHARGE_MAP[base_id] == technique_id:
+			return base_id
+	return technique_id
 
 
 ## Get required player level to use a disk of a given level
@@ -60,16 +88,10 @@ func get_disk_required_level(disk_level: int) -> int:
 	return disk_level * 2 - 5
 
 
-## Generate shop inventory: always includes Lv.1 disks for all techniques, plus random higher levels
-func generate_shop_inventory(char_level: int) -> Array:
-	var max_basic_level: int = clampi(ceili(float(char_level) * 0.6), 1, 15)
-	var max_mid_level: int = clampi(ceili(float(char_level) * 0.4), 1, 10)
-
+## Generate shop inventory: Lv.1 disk for each base technique, palette order.
+func generate_shop_inventory(_char_level: int) -> Array:
 	var items: Array = []
-	var seen: Dictionary = {}
-
-	# Always stock Lv.1 of every technique
-	for tech_id in TECHNIQUES:
+	for tech_id in SHOP_BASIC_TECHS:
 		var tech: Dictionary = TECHNIQUES[tech_id]
 		items.append({
 			"technique_id": tech_id,
@@ -77,41 +99,6 @@ func generate_shop_inventory(char_level: int) -> Array:
 			"level": 1,
 			"cost": get_disk_price(tech_id, 1),
 		})
-		seen[tech_id + ":1"] = true
-
-	# Add random higher-level disks
-	var attempts := 0
-	while items.size() < 30 and attempts < 60:
-		attempts += 1
-		var is_mid: bool = randf() < 0.3 and max_mid_level >= 1
-		var tech_id: String
-		var max_lv: int
-		if is_mid:
-			tech_id = SHOP_MID_TECHS[randi() % SHOP_MID_TECHS.size()]
-			max_lv = max_mid_level
-		else:
-			tech_id = SHOP_BASIC_TECHS[randi() % SHOP_BASIC_TECHS.size()]
-			max_lv = max_basic_level
-
-		var level: int = randi_range(2, max_lv)
-		var key: String = "%s:%d" % [tech_id, level]
-		if seen.has(key):
-			continue
-		seen[key] = true
-
-		var tech: Dictionary = TECHNIQUES[tech_id]
-		items.append({
-			"technique_id": tech_id,
-			"name": "Disk: %s Lv.%d" % [tech["name"], level],
-			"level": level,
-			"cost": get_disk_price(tech_id, level),
-		})
-
-	items.sort_custom(func(a, b):
-		if a["technique_id"] != b["technique_id"]:
-			return str(a["technique_id"]) < str(b["technique_id"])
-		return int(a["level"]) < int(b["level"])
-	)
 	return items
 
 
@@ -204,7 +191,12 @@ func use_disk(character: Dictionary, disk: Dictionary) -> Dictionary:
 ## Get current technique level for a character (0 if not learned)
 func get_technique_level(character: Dictionary, technique_id: String) -> int:
 	var techniques: Dictionary = character.get("techniques", {})
-	return int(techniques.get(technique_id, 0))
+	var level: int = int(techniques.get(technique_id, 0))
+	if level <= 0:
+		var base_id: String = get_base_technique(technique_id)
+		if base_id != technique_id:
+			level = int(techniques.get(base_id, 0))
+	return level
 
 
 ## Generate a random disk based on difficulty, area, boss/rare flags

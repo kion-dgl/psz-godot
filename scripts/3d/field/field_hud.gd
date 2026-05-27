@@ -44,6 +44,8 @@ func _ready() -> void:
 	_quick_weapon = _QuickWeaponMenu.new()
 	add_child(_quick_weapon)
 
+	_connect_player_charge_signals.call_deferred()
+
 	GameState.hp_changed.connect(_on_stats_changed)
 	GameState.max_hp_changed.connect(_on_stats_changed)
 	GameState.mp_changed.connect(_on_stats_changed)
@@ -64,6 +66,17 @@ func _ready() -> void:
 
 	# Quest log disabled for now
 	_log_visible = false
+
+
+func _connect_player_charge_signals() -> void:
+	var players: Array = get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		return
+	var player = players[0]
+	if player.has_signal("tech_charge_started"):
+		player.tech_charge_started.connect(func(_slot: int): pass)
+		player.tech_charge_ready.connect(func(slot: int): _action_palette.set_charging_slot(slot))
+		player.tech_charge_released.connect(func(_slot: int): _action_palette.set_charging_slot(-1))
 
 
 func _process(_delta: float) -> void:
@@ -540,51 +553,44 @@ class _QuestLogPanel extends Control:
 # ── Action Palette (bottom-right) ────────────────────────────────────────────
 
 class _ActionPalette extends Control:
-	## PSO-style action palette: reads from ActionPalette autoload.
-	## Swap centered above, slot 0 and 2 raised, slot 1 lower (diamond-ish layout).
+	## PSZ-style action palette: octagon HUD with 3 slots in diamond layout.
+	## Tapping R swaps between palette_bg.png (page 1) and palette_bg_r.png (page 2).
 
-	const PILL_BG := Color(0.08, 0.08, 0.12, 0.7)
-	const PILL_BORDER := Color(0.3, 0.5, 0.3, 0.5)
-	const LABEL_LIGHT := Color(0.23, 0.29, 0.35)
+	const PALETTE_BG_BASE := "res://assets/ui/psz-palette/palette_bg"
 	const FONT_SIZE_SMALL := 8
+	const FONT_SIZE_COUNT := 7
+	const LABEL_LIGHT := Color(0.23, 0.29, 0.35)
+	const GREY_OUT := Color(1.0, 1.0, 1.0, 0.5)
 
-	# Layout constants — square pills for icons
-	const PILL_W := 36.0
-	const PILL_H := 36.0
-	const SWAP_W := 40.0
-	const SWAP_H := 18.0
-	const GAP := 4.0
-	const RAISED := 10.0  # Outer slots raised above center
+	# BG image is 128x67; rendered at 2x scale for readability
+	const BG_SCALE := 2.0
+	const BG_W := 128.0
+	const BG_H := 67.0
 
-	const KENNEY_BASE := "res://assets/kenney_input-prompts/"
+	# Slot centers measured from pixel analysis of the 128x67 source image.
+	# Slots 0 & 2 are raised (y=27), slot 1 is lower (y=41) — diamond layout.
+	const SLOT_CENTERS := [
+		Vector2(26.0, 27.0),
+		Vector2(58.0, 41.0),
+		Vector2(90.0, 27.0),
+	]
+	const ICON_SIZE := 38.0  # Content is ~56% of 32x32 image; 38px shows ~21px visible
 
-	## Swap button icon per scheme
-	const SWAP_ICONS := {
-		"keyboard":  "Keyboard & Mouse/Default/keyboard_i.png",
-		"xinput":    "Xbox Series/Default/xbox_rb.png",
-		"switch":    "Nintendo Switch/Default/switch_button_r.png",
-		"ds_cross":  "PlayStation Series/Default/playstation_trigger_r1.png",
-		"ds_circle": "PlayStation Series/Default/playstation_trigger_r1.png",
-	}
-	const SWAP_KEY_FALLBACK := {
-		"keyboard": "I", "xinput": "RB", "switch": "R", "ds_cross": "R1", "ds_circle": "R1",
-	}
-
-	var _bg_pill: StyleBoxFlat
-	var _bg_swap: StyleBoxFlat
-	var _swap_texture: Texture2D = null
-	var _slot_icons: Array = []  # TextureRect nodes for action icons
+	var _bg_textures: Array = [null, null]  # [page1, page2/R variant]
+	var _bg_texture: Texture2D = null
+	var _slot_icons: Array = []
+	var _slot_counts: Array = []
+	var _charging_slot: int = -1
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-		# Total size: 3 pills + 2 gaps wide, swap pill + gap + tallest pill high
-		var total_w: float = PILL_W * 3 + GAP * 2
-		var total_h: float = SWAP_H + 2.0 + PILL_H + RAISED
+		var total_w: float = BG_W * BG_SCALE
+		var total_h: float = BG_H * BG_SCALE
 		custom_minimum_size = Vector2(total_w, total_h)
 		size = Vector2(total_w, total_h)
 
-		# Anchor bottom-right
 		anchor_left = 1.0
 		anchor_right = 1.0
 		anchor_top = 1.0
@@ -594,117 +600,112 @@ class _ActionPalette extends Control:
 		offset_top = -total_h - MARGIN
 		offset_bottom = -MARGIN
 
-		# Use nearest filtering so pixel art icons don't blur to white
-		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var path_1 := PALETTE_BG_BASE + ".png"
+		var path_r := PALETTE_BG_BASE + "_r.png"
+		if ResourceLoader.exists(path_1):
+			_bg_textures[0] = load(path_1)
+		if ResourceLoader.exists(path_r):
+			_bg_textures[1] = load(path_r)
+		_bg_texture = _bg_textures[0]
 
-		# Pill style
-		_bg_pill = StyleBoxFlat.new()
-		_bg_pill.bg_color = PILL_BG
-		_bg_pill.border_color = PILL_BORDER
-		_bg_pill.set_border_width_all(1)
-		_bg_pill.set_corner_radius_all(8)
-
-		# Swap pill style (smaller)
-		_bg_swap = StyleBoxFlat.new()
-		_bg_swap.bg_color = PILL_BG
-		_bg_swap.border_color = PILL_BORDER
-		_bg_swap.set_border_width_all(1)
-		_bg_swap.set_corner_radius_all(8)
-
-		# Load icons for current control scheme
-		_load_scheme_icons()
-
-		# Create TextureRect nodes for action slot icons
-		var row_y: float = SWAP_H + 2.0
 		for i in range(3):
+			var center: Vector2 = SLOT_CENTERS[i] * BG_SCALE
+			var icon_display := ICON_SIZE * BG_SCALE
+
 			var tex_rect := TextureRect.new()
 			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			tex_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 			tex_rect.mouse_filter = MOUSE_FILTER_IGNORE
-			var px: float = i * (PILL_W + GAP)
-			var py: float = row_y + RAISED if i == 1 else row_y
-			tex_rect.position = Vector2(px, py)
-			tex_rect.size = Vector2(PILL_W, PILL_H)
+			tex_rect.position = Vector2(center.x - icon_display * 0.5, center.y - icon_display * 0.5)
+			tex_rect.size = Vector2(icon_display, icon_display)
 			add_child(tex_rect)
 			_slot_icons.append(tex_rect)
+
+			var count_label := Label.new()
+			count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			count_label.add_theme_font_size_override("font_size", int(FONT_SIZE_COUNT * BG_SCALE))
+			count_label.add_theme_color_override("font_color", Color.WHITE)
+			count_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+			count_label.add_theme_constant_override("shadow_offset_x", 1)
+			count_label.add_theme_constant_override("shadow_offset_y", 1)
+			count_label.position = Vector2(center.x - icon_display * 0.5, center.y + icon_display * 0.25)
+			count_label.size = Vector2(icon_display, 16.0 * BG_SCALE)
+			count_label.mouse_filter = MOUSE_FILTER_IGNORE
+			count_label.visible = false
+			add_child(count_label)
+			_slot_counts.append(count_label)
+
 		_update_slot_icons()
 
-		# Connect to ActionPalette signals for live updates
 		ActionPalette.page_changed.connect(_on_palette_changed)
 		ActionPalette.config_changed.connect(_on_palette_changed)
-		if InputConfig.has_signal("scheme_changed"):
-			InputConfig.scheme_changed.connect(_on_scheme_changed)
-
-	func _on_scheme_changed(_scheme = null) -> void:
-		_load_scheme_icons()
-		queue_redraw()
-
-	func _load_scheme_icons() -> void:
-		var scheme: String = InputConfig.current_scheme
-		var swap_path: String = KENNEY_BASE + SWAP_ICONS.get(scheme, SWAP_ICONS["keyboard"])
-		if ResourceLoader.exists(swap_path):
-			_swap_texture = load(swap_path)
-		else:
-			_swap_texture = null
+		Inventory.item_added.connect(_on_inventory_changed)
+		Inventory.item_removed.connect(_on_inventory_changed)
 
 	func _update_slot_icons() -> void:
 		var slots: Array = ActionPalette.get_current_slots()
 		for i in range(3):
 			var action_id: String = slots[i] if i < slots.size() else ""
-			var icon: Texture2D = ActionPalette.get_action_icon(action_id)
+			var icon: Texture2D
+			if i == _charging_slot:
+				icon = ActionPalette.get_charge_icon(action_id)
+				if icon == null:
+					icon = ActionPalette.get_action_icon(action_id)
+			else:
+				icon = ActionPalette.get_action_icon(action_id)
 			if i < _slot_icons.size():
 				_slot_icons[i].texture = icon
 				_slot_icons[i].visible = icon != null
 
+			_update_slot_count(i, action_id)
+
+	func _update_slot_count(slot: int, action_id: String) -> void:
+		if slot >= _slot_counts.size():
+			return
+		var label: Label = _slot_counts[slot]
+		if ActionPalette.is_consumable(action_id):
+			var count: int = Inventory.get_item_count(action_id)
+			label.text = "x%d" % count
+			label.visible = true
+			if count <= 0:
+				_slot_icons[slot].modulate = GREY_OUT
+			else:
+				_slot_icons[slot].modulate = Color.WHITE
+		else:
+			label.visible = false
+			_slot_icons[slot].modulate = Color.WHITE
+
+	func set_charging_slot(slot: int) -> void:
+		_charging_slot = slot
+		_update_slot_icons()
+		queue_redraw()
+
 	func _on_palette_changed(_arg = null) -> void:
+		var page_idx: int = ActionPalette.current_page
+		var tex_idx: int = clampi(page_idx, 0, _bg_textures.size() - 1)
+		_bg_texture = _bg_textures[tex_idx] if _bg_textures[tex_idx] else _bg_textures[0]
+		_update_slot_icons()
+		queue_redraw()
+
+	func _on_inventory_changed(_arg1 = null, _arg2 = null, _arg3 = null) -> void:
 		_update_slot_icons()
 		queue_redraw()
 
 	func _draw() -> void:
-		var font := ThemeDB.fallback_font
-		var total_w: float = size.x
+		if _bg_texture:
+			draw_texture_rect(_bg_texture, Rect2(Vector2.ZERO, size), false)
 
-		var page_idx: int = ActionPalette.current_page
-		var page_count: int = ActionPalette.pages.size()
 		var slots: Array = ActionPalette.get_current_slots()
-
-		# Swap badge — centered above slots
-		var swap_x: float = (total_w - SWAP_W) * 0.5
-		var swap_y: float = 0.0
-		draw_style_box(_bg_swap, Rect2(swap_x, swap_y, SWAP_W, SWAP_H))
-
-		# Swap button icon or text fallback
-		if _swap_texture:
-			var icon_size := 14.0
-			draw_texture_rect(_swap_texture, Rect2(swap_x + 4, swap_y + 2, icon_size, icon_size), false)
-		else:
-			var scheme: String = InputConfig.current_scheme
-			var swap_key: String = SWAP_KEY_FALLBACK.get(scheme, "R")
-			draw_string(font, Vector2(swap_x + 6, swap_y + 14), swap_key,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, Color.WHITE)
-
-		# Palette number
-		var pn_text := "%d/%d" % [page_idx + 1, page_count]
-		draw_string(font, Vector2(swap_x + 26, swap_y + 14), pn_text,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, LABEL_LIGHT)
-
-		# 3 action slots — outer raised, center lower (diamond)
-		var row_y: float = SWAP_H + 2.0
+		var font := ThemeDB.fallback_font
 		for i in range(3):
-			var action_id: String = slots[i] if i < slots.size() else ""
-
-			var px: float = i * (PILL_W + GAP)
-			var py: float = row_y + RAISED if i == 1 else row_y
-
-			# Icons are handled by TextureRect children (_slot_icons)
-			# Only draw text fallback if no icon
 			if i < _slot_icons.size() and not _slot_icons[i].visible:
-				draw_style_box(_bg_pill, Rect2(px, py, PILL_W, PILL_H))
+				var action_id: String = slots[i] if i < slots.size() else ""
 				var data: Dictionary = ActionPalette.get_action_data(action_id)
 				var lbl: String = data.get("short", action_id)
-				var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL).x
-				draw_string(font, Vector2(px + (PILL_W - lbl_w) * 0.5, py + PILL_H * 0.5 + 4),
-					lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE_SMALL, Color.WHITE)
+				var center: Vector2 = SLOT_CENTERS[i] * BG_SCALE
+				var lbl_w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, int(FONT_SIZE_SMALL * BG_SCALE)).x
+				draw_string(font, Vector2(center.x - lbl_w * 0.5, center.y + 4.0),
+					lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, int(FONT_SIZE_SMALL * BG_SCALE), Color.WHITE)
 
 
 # ── Quick Weapon Menu (bottom-left, toggled with quick_weapon input) ─────────

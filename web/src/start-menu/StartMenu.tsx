@@ -112,12 +112,61 @@ const MAGS: InvItem[] = [
   { name: 'Varuna Lv5', type: 'mag', description: 'DEF 3 / POW 1 / DEX 1 / MIND 0' },
 ];
 
-const PALETTE_ACTIONS = [
-  'Attack', 'Strong Attack', 'Dodge Roll',
-  'Monomate', 'Dimate', 'Trimate', 'Monofluid',
-  'Foie', 'Barta', 'Zonde', 'Resta', 'Shifta', 'Deband',
-  'Telepipe',
+const PSZ_ICON_BASE = import.meta.env.BASE_URL + 'assets/ui/psz-palette/';
+
+interface PaletteAction {
+  id: string;
+  label: string;
+  icon: string;
+  category: 'combat' | 'recovery' | 'technique';
+}
+
+const PALETTE_ACTIONS: PaletteAction[] = [
+  { id: 'attack', label: 'Attack', icon: 'attack.png', category: 'combat' },
+  { id: 'strong_attack', label: 'Strong Atk', icon: 'strong_attack.png', category: 'combat' },
+  { id: 'dodge', label: 'Dodge', icon: 'dodge.png', category: 'combat' },
+  { id: 'monomate', label: 'Monomate', icon: 'monomate.png', category: 'recovery' },
+  { id: 'dimate', label: 'Dimate', icon: 'dimate.png', category: 'recovery' },
+  { id: 'trimate', label: 'Trimate', icon: 'trimate.png', category: 'recovery' },
+  { id: 'monofluid', label: 'Monofluid', icon: 'monofluid.png', category: 'recovery' },
+  { id: 'difluid', label: 'Difluid', icon: 'difluid.png', category: 'recovery' },
+  { id: 'trifluid', label: 'Trifluid', icon: 'trifluid.png', category: 'recovery' },
+  { id: 'sol_atomizer', label: 'Sol Atom.', icon: 'sol_atomizer.png', category: 'recovery' },
+  { id: 'star_atomizer', label: 'Star Atom.', icon: 'star_atomizer.png', category: 'recovery' },
+  { id: 'moon_atomizer', label: 'Moon Atom.', icon: 'moon_atomizer.png', category: 'recovery' },
+  { id: 'telepipe', label: 'Telepipe', icon: 'telepipe.png', category: 'recovery' },
+  { id: 'foie', label: 'Foie', icon: 'foie.png', category: 'technique' },
+  { id: 'barta', label: 'Barta', icon: 'barta.png', category: 'technique' },
+  { id: 'zonde', label: 'Zonde', icon: 'zonde.png', category: 'technique' },
+  { id: 'grants', label: 'Grants', icon: 'grants.png', category: 'technique' },
+  { id: 'megid', label: 'Megid', icon: 'megid.png', category: 'technique' },
+  { id: 'resta', label: 'Resta', icon: 'resta.png', category: 'technique' },
+  { id: 'anti', label: 'Anti', icon: 'anti.png', category: 'technique' },
+  { id: 'shifta', label: 'Shifta', icon: 'shifta.png', category: 'technique' },
+  { id: 'deband', label: 'Deband', icon: 'deband.png', category: 'technique' },
+  { id: 'jellen', label: 'Jellen', icon: 'jellen.png', category: 'technique' },
+  { id: 'zalure', label: 'Zalure', icon: 'zalure.png', category: 'technique' },
 ];
+
+function PszIcon({ actionId, size = 20, selected = false, noBg = false }: { actionId: string; size?: number; selected?: boolean; noBg?: boolean }) {
+  const action = PALETTE_ACTIONS.find((a) => a.id === actionId);
+  if (!action) return <div style={{ width: size, height: size }} />;
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: 4, flexShrink: 0,
+      background: noBg ? 'transparent' : selected ? 'rgba(40,80,40,0.9)' : 'rgba(5,5,15,0.9)',
+      border: `1px solid ${selected ? 'rgba(80,180,80,0.5)' : 'rgba(60,60,80,0.4)'}`,
+      position: 'relative',
+    }}>
+      <img src={PSZ_ICON_BASE + action.icon} alt={action.label}
+        style={{
+          position: 'absolute',
+          width: Math.round(size * 1.4), height: Math.round(size * 1.4),
+          imageRendering: 'pixelated',
+        }} />
+    </div>
+  );
+}
 
 const QUEST_INFO = { name: 'The Paru Pact', objective: 'Investigate the energy signatures deep in the Paru ruins.', client: 'Elio', area: 'Makara Ruins' };
 const SYSTEM_ITEMS = [
@@ -297,13 +346,28 @@ function TechsView({ idx, setIdx }: { idx: number; setIdx: (i: number) => void }
   );
 }
 
-function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking, setPicking, onAssign }: {
+const PICKER_ROWS: { label?: string; ids: string[] }[] = [
+  { label: 'Combat', ids: ['attack', 'strong_attack', 'dodge'] },
+  { label: 'Recovery', ids: ['monomate', 'dimate', 'trimate'] },
+  { ids: ['monofluid', 'difluid', 'trifluid'] },
+  { ids: ['sol_atomizer', 'star_atomizer', 'moon_atomizer'] },
+  { ids: ['telepipe'] },
+  { label: 'Technique', ids: ['foie', 'barta', 'zonde'] },
+  { ids: ['grants', 'megid'] },
+  { ids: ['resta', 'anti'] },
+  { ids: ['shifta', 'deband'] },
+  { ids: ['jellen', 'zalure'] },
+];
+
+function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking, setPicking, onAssign, subIdx }: {
   pages: string[][]; pageIdx: number; setPageIdx: (i: number) => void;
   slotIdx: number; setSlotIdx: (i: number) => void;
   picking: boolean; setPicking: (b: boolean) => void;
   onAssign: (action: string) => void;
+  subIdx: number;
 }) {
   const page = pages[pageIdx];
+
   return (
     <>
       <LeftCol label="Palette">
@@ -316,34 +380,79 @@ function PaletteView({ pages, pageIdx, setPageIdx, slotIdx, setSlotIdx, picking,
             }}>P{i + 1}</div>
           ))}
         </div>
-      </LeftCol>
-      <BottomPanels
-        listWidth={320}
-        descWidth={190}
-        desc={`Slot ${slotIdx + 1}: ${page[slotIdx]}\n\n[Enter] Change`}
-        list={page.map((action, i) => (
-          <div key={i} onClick={() => { setSlotIdx(i); setPicking(true); }} style={{
-            padding: '6px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-            background: i === slotIdx ? C.selectBg : 'transparent', color: i === slotIdx ? C.selectText : C.textDark,
-            fontSize: 14, fontFamily: 'monospace', fontWeight: i === slotIdx ? 700 : 400,
-          }}>
-            <span style={{ width: 24, height: 20, borderRadius: 4, background: 'rgba(40,60,80,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#fff', flexShrink: 0 }}>{['X', 'A', 'B'][i]}</span>
-            <span>{action}</span>
+        {/* HUD preview */}
+        <InnerPanel style={{ padding: 8 }}>
+          <div style={{ position: 'relative', width: 192, margin: '0 auto' }}>
+            <img
+              src={PSZ_ICON_BASE + (pageIdx === 0 ? 'palette_bg.png' : 'palette_bg_r.png')}
+              alt="palette"
+              style={{ width: 192, imageRendering: 'pixelated', display: 'block' }}
+            />
+            {[0, 1, 2].map((i) => {
+              const centers = [
+                { x: 39, y: 40 },
+                { x: 87, y: 62 },
+                { x: 135, y: 40 },
+              ];
+              const c = centers[i];
+              const isSel = i === slotIdx;
+              return (
+                <div key={i} onClick={() => { setSlotIdx(i); setPicking(true); }} style={{
+                  position: 'absolute', left: c.x - 17, top: c.y - 17,
+                  width: 34, height: 34, cursor: 'pointer',
+                  borderRadius: 4,
+                  boxShadow: isSel ? '0 0 0 2px #4dcc4d' : 'none',
+                }}>
+                  <PszIcon actionId={page[i]} size={34} selected={isSel} noBg />
+                </div>
+              );
+            })}
           </div>
-        ))}
-      />
-      {/* Action picker replaces description panel */}
+        </InnerPanel>
+      </LeftCol>
+
+      {/* Action picker — only visible when a slot is selected for reassignment */}
       {picking && (
-        <div style={{ position: 'absolute', zIndex: 3, left: 330, bottom: 5, width: 190, height: 300 }}>
-          <InnerPanel style={{ padding: '4px 0', height: '100%', overflowY: 'auto' }}>
-            <div style={{ padding: '4px 10px', fontSize: 11, fontFamily: 'monospace', color: C.textMuted }}>Assign to Slot {slotIdx + 1}:</div>
-            {PALETTE_ACTIONS.map((a) => (
-              <div key={a} onClick={() => onAssign(a)} style={{
-                padding: '4px 14px', cursor: 'pointer', fontSize: 13, fontFamily: 'monospace',
-                background: page[slotIdx] === a ? C.selectBg : 'transparent',
-                color: page[slotIdx] === a ? C.selectText : C.textDark,
-                fontWeight: page[slotIdx] === a ? 700 : 400,
-              }}>{a}</div>
+        <div style={{ position: 'absolute', zIndex: 2, left: 5, bottom: 5, width: 510, height: 300 }}>
+          <InnerPanel style={{ padding: '8px 12px', height: '100%', overflowY: 'auto' }}>
+            {PICKER_ROWS.map((row, ri) => (
+              <div key={ri}>
+                {row.label && (
+                  <div style={{
+                    fontSize: 12, color: C.textLight, padding: '6px 2px 4px',
+                    fontFamily: 'monospace', fontWeight: 600,
+                    borderBottom: `1px solid ${C.panelBorder}`,
+                    marginBottom: 4, marginTop: ri > 0 ? 4 : 0,
+                  }}>{row.label}</div>
+                )}
+                <div style={{ display: 'flex', gap: 4, marginBottom: 2 }}>
+                  {row.ids.map((id) => {
+                    const action = PALETTE_ACTIONS.find((a) => a.id === id);
+                    if (!action) return null;
+                    const isCurrent = id === page[slotIdx];
+                    const isKbSelected = PALETTE_ACTIONS[subIdx]?.id === id;
+                    return (
+                      <div
+                        key={id}
+                        onClick={() => onAssign(id)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 8,
+                          padding: '5px 8px', borderRadius: 4, cursor: 'pointer',
+                          width: 160,
+                          background: isKbSelected ? C.selectBg : isCurrent ? 'rgba(224,136,32,0.15)' : 'transparent',
+                          color: isKbSelected ? C.selectText : isCurrent ? C.textLight : C.textDark,
+                          fontWeight: isKbSelected || isCurrent ? 700 : 400,
+                          fontSize: 13, fontFamily: 'monospace',
+                          border: isKbSelected ? '1px solid rgba(224,136,32,0.5)' : isCurrent ? '1px solid rgba(224,136,32,0.3)' : '1px solid transparent',
+                        }}
+                      >
+                        <PszIcon actionId={id} size={26} selected={isKbSelected || isCurrent} />
+                        <span>{action.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ))}
           </InnerPanel>
         </div>
@@ -462,7 +571,7 @@ export default function StartMenu() {
   const [equipItemIdx, setEquipItemIdx] = useState(0);
 
   // Palette state
-  const [palettes, setPalettes] = useState(() => [['Attack', 'Strong Attack', 'Monomate'], ['Foie', 'Resta', 'Dodge Roll'], ['Attack', 'Dimate', 'Telepipe']]);
+  const [palettes, setPalettes] = useState(() => [['attack', 'strong_attack', 'monomate'], ['attack', 'foie', 'dimate']]);
   const [palPageIdx, setPalPageIdx] = useState(0);
   const [palSlotIdx, setPalSlotIdx] = useState(0);
   const [palPicking, setPalPicking] = useState(false);
@@ -510,7 +619,7 @@ export default function StartMenu() {
         if (k === 'ArrowUp') setSubIdx(p => (p - 1 + PALETTE_ACTIONS.length) % PALETTE_ACTIONS.length);
         else if (k === 'ArrowDown') setSubIdx(p => (p + 1) % PALETTE_ACTIONS.length);
         else if (k === 'Enter') {
-          setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = PALETTE_ACTIONS[subIdx]; return np; }));
+          setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = PALETTE_ACTIONS[subIdx].id; return np; }));
           setPalPicking(false);
         } else return;
       } else {
@@ -579,7 +688,7 @@ export default function StartMenu() {
         {mode === 'items' && <ItemsView idx={subIdx} setIdx={setSubIdx} />}
         {mode === 'equip' && <EquipView slotIdx={equipSlotIdx} setSlotIdx={setEquipSlotIdx} picking={equipPicking} itemIdx={equipItemIdx} setItemIdx={setEquipItemIdx} onPick={() => { setEquipPicking(true); setEquipItemIdx(0); }} onEquip={() => setEquipPicking(false)} onBack={() => setEquipPicking(false)} />}
         {mode === 'techs' && <TechsView idx={subIdx} setIdx={setSubIdx} />}
-        {mode === 'palette' && <PaletteView pages={palettes} pageIdx={palPageIdx} setPageIdx={setPalPageIdx} slotIdx={palSlotIdx} setSlotIdx={setPalSlotIdx} picking={palPicking} setPicking={setPalPicking} onAssign={(a) => { setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = a; return np; })); setPalPicking(false); }} />}
+        {mode === 'palette' && <PaletteView pages={palettes} pageIdx={palPageIdx} setPageIdx={setPalPageIdx} slotIdx={palSlotIdx} setSlotIdx={setPalSlotIdx} picking={palPicking} setPicking={setPalPicking} subIdx={subIdx} onAssign={(a) => { setPalettes(prev => prev.map((pg, pi) => { if (pi !== palPageIdx) return pg; const np = [...pg]; np[palSlotIdx] = a; return np; })); setPalPicking(false); }} />}
         {mode === 'mags' && <MagsView magIdx={magIdx} setMagIdx={setMagIdx} feedIdx={magFeedIdx} setFeedIdx={setMagFeedIdx} feeding={magFeeding} />}
         {mode === 'quest' && <QuestView />}
         {mode === 'system' && <SystemView idx={subIdx} setIdx={setSubIdx} />}
