@@ -1,32 +1,32 @@
 ---
 import Definition from '../../layouts/Definition.astro';
 import Mermaid from '../../components/Mermaid.astro';
-import CharacterSelect from '../../components/screens/CharacterSelect';
+import CharSelectScreen from '../../components/screens/CharSelectScreen';
 ---
 
 <Definition title="Character Select" section="Journey">
-  <CharacterSelect slot="preview" client:only="react" />
+  <CharSelectScreen slot="preview" client:only="react" />
 
   <h2>Purpose</h2>
-  <p>Choose a class to play. 14 classes across 3 races (Human, Newman, Cast) and 3 types (Hunter, Ranger, Force).</p>
+  <p>Choose an existing character to play or select an empty slot to create a new one. PSO PC V2 list-style layout with 3D model preview.</p>
 
   <h2>Layout</h2>
-  <p>PSZ slats theme — vertical strips per class, grouped by type (Hunter → Ranger → Force). Clicking a slat expands it to show the character art, name, tagline, and traits. Unselected slats show a vertical label.</p>
+  <p>Gold banner across the top. Character list on the left (scrollable, 20 slots). 3D model preview on the right with class description below. Start/Create button bottom-right.</p>
 
-  <h2>Behavior</h2>
-  <p>Left/right navigates between classes. Confirm (A / Enter) selects and proceeds to <a href="/journey/create-character">Create Character</a>. Cancel (B / Esc) returns to the <a href="/journey/title">Title Screen</a>.</p>
+  <h2>Slots</h2>
+  <p>20-slot floor. Filled slots show name, class, level, and playtime. Empty slots show "(Empty Slot)" — selecting one routes to <a href="/journey/create-character">Create Character</a>.</p>
 
   <Mermaid chart={`flowchart TD
-    A[Character Select] -->|Confirm| B[Create Character]
-    A -->|Cancel| C[Title Screen]
-    A -->|Continue existing| D[City]
+    A[Character Select] -->|Filled slot + Confirm| B[City]
+    A -->|Empty slot + Confirm| C[Create Character]
+    A -->|Cancel| D[Title Screen]
   `} />
 
-  <h2>Theme</h2>
-  <p>Uses the PSZ palette: sky-blue gradient background, dark navy header/info panels, steel-blue borders, gold confirm button and type accent. Scanline overlay for DS texture feel.</p>
+  <h2>3D Preview</h2>
+  <p>Loads the selected class's GLB model with pixel-filtered texture from R2. Camera at y=1.1 z=3.4 looking at torso height. Empty slots show a placeholder message.</p>
 
   <h2>Previous</h2>
   <p><a href="/journey/title">← Title Screen</a></p>
   <h2>Next</h2>
-  <p><a href="/journey/create-character">Create Character →</a></p>
+  <p><a href="/journey/create-character">Create Character →</a> or <a href="/journey/city">City →</a></p>
 </Definition>
