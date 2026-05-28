@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { createNoise2D, createNoise3D } from 'simplex-noise';
@@ -41,8 +41,11 @@ function findSkeletonRootBone(root: THREE.Object3D): THREE.Bone | null {
   return skel.bones.find((b) => !b.parent || !(b.parent as THREE.Bone).isBone) ?? null;
 }
 
+const VERSION = '0.30.18';
+
 export default function TitleScreen() {
   const hostRef = useRef<HTMLDivElement>(null);
+  const [blink, setBlink] = useState(true);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -458,10 +461,67 @@ export default function TitleScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    const id = setInterval(() => setBlink((b) => !b), 600);
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <div
-      ref={hostRef}
-      style={{ width: CANVAS_W, height: CANVAS_H, background: '#000' }}
-    />
+    <div style={{ position: 'relative', width: CANVAS_W, height: CANVAS_H, background: '#000' }}>
+      <div ref={hostRef} style={{ position: 'absolute', inset: 0 }} />
+      {/* Logo */}
+      <img
+        src="/logo.png"
+        alt="PSZ Logo"
+        style={{
+          position: 'absolute',
+          top: 22,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 504,
+          height: 'auto',
+          imageRendering: 'auto',
+          pointerEvents: 'none',
+          filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.6))',
+        }}
+      />
+      {/* Press Start + Version */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 40,
+          left: 0,
+          right: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 12,
+          pointerEvents: 'none',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 20,
+            fontFamily: 'system-ui, sans-serif',
+            fontWeight: 600,
+            color: blink ? '#ffcc00' : '#e6edf3',
+            textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+            letterSpacing: '0.1em',
+          }}
+        >
+          Press Start
+        </div>
+        <div
+          style={{
+            fontSize: 11,
+            fontFamily: 'monospace',
+            color: 'rgba(180,180,180,0.7)',
+            textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+          }}
+        >
+          PSZ Godot v{VERSION}
+        </div>
+      </div>
+    </div>
   );
 }
