@@ -1,0 +1,27 @@
+---
+import Definition from '../../../layouts/Definition.astro';
+import StagePreview from '../../../components/screens/StagePreview';
+---
+
+<Definition title="Teleport" section="Journey">
+  <StagePreview
+    client:only="react"
+    slot="preview"
+    glb="assets/stages/city_e/s00e_sa3/lndmd/s00e_sa3_m.glb"
+    spawn={[0.08, 2, 15.26]}
+    cameraOffset={[0, 10, 16]}
+  />
+
+  <h2>Context</h2>
+  <p>Warp pad room. After accepting a quest at the guild counter, the player walks here to teleport to the field.</p>
+
+  <h2>Interactions</h2>
+  <ul>
+    <li><strong>Warp Pad</strong> — teleports to the quest's field area. Only active when a quest is accepted.</li>
+  </ul>
+
+  <h2>Exits</h2>
+  <ul>
+    <li>Back → <a href="/journey/city/counter">Guild Counter</a></li>
+  </ul>
+</Definition>

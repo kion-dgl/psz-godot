@@ -1,0 +1,40 @@
+---
+import Definition from '../../../layouts/Definition.astro';
+import Mermaid from '../../../components/Mermaid.astro';
+import StagePreview from '../../../components/screens/StagePreview';
+---
+
+<Definition title="Principal's Office" section="Journey">
+  <StagePreview
+    client:only="react"
+    slot="preview"
+    glb="assets/stages/city_e/s00e_office/lndmd/s00e_office_m.glb"
+    spawn={[0, 0, 8]}
+    cameraOffset={[0, 8, 14]}
+  />
+
+  <h2>Context</h2>
+  <p>First city area new characters see. After character creation, the player spawns here with the "intro" key. The principal briefs the player on their role as a Hunter.</p>
+
+  <h2>NPCs</h2>
+  <ul>
+    <li><strong>Principal</strong> — quest briefings, story progression</li>
+    <li><strong>Quest client NPCs</strong> — appear based on active quest (Kai, Sarisa, Dorn, Dr. Carlo, etc.)</li>
+  </ul>
+
+  <h2>Exits</h2>
+  <ul>
+    <li>Door → <a href="/journey/city/counter">Guild Counter</a></li>
+  </ul>
+
+  <Mermaid chart={`flowchart LR
+    A[Character Customize] -->|intro spawn| B[Principal's Office]
+    B --> C[Guild Counter]
+  `} />
+
+  <h2>Spawn variants</h2>
+  <p>Default: <code>(0, 0, 8)</code> facing south. "counter-office" variant spawns near the door from the guild counter.</p>
+
+  <h2>Previous</h2>
+  <p><a href="/journey/character-customize">← Character Customize</a></p>
+</Definition>

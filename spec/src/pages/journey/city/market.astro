@@ -1,0 +1,40 @@
+---
+import Definition from '../../../layouts/Definition.astro';
+import Mermaid from '../../../components/Mermaid.astro';
+import StagePreview from '../../../components/screens/StagePreview';
+---
+
+<Definition title="Market" section="Journey">
+  <StagePreview
+    client:only="react"
+    slot="preview"
+    glb="assets/stages/city_e/market/s00e_sa1_m_no_cart.glb"
+    spawn={[0.98, 2, 62.79]}
+    cameraOffset={[0, 10, 18]}
+  />
+
+  <h2>Context</h2>
+  <p>Central hub of the city. Existing characters spawn here on login. Connects to all other city areas.</p>
+
+  <h2>NPCs</h2>
+  <ul>
+    <li><strong>Weapon Shop</strong> — buy/sell weapons</li>
+    <li><strong>Item Shop</strong> — consumables, technique disks (VRM-animated NPC)</li>
+    <li><strong>Tekker</strong> — identify rare weapons</li>
+  </ul>
+
+  <h2>Exits</h2>
+  <ul>
+    <li>North → <a href="/journey/city/counter">Guild Counter</a></li>
+    <li>Stairs down → <a href="/journey/city/underground">Underground</a></li>
+  </ul>
+
+  <Mermaid chart={`flowchart LR
+    A[Character Select] -->|existing char| B[Market]
+    B --> C[Guild Counter]
+    B --> D[Underground]
+  `} />
+
+  <h2>Spawn variants</h2>
+  <p>Default: <code>(0.98, 2, 62.79)</code>. Variants: "counter-exit", "underground-exit".</p>
+</Definition>
