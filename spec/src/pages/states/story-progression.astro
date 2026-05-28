@@ -70,6 +70,7 @@ const lifeChart = `stateDiagram-v2
   <h2>Unlocking free fields</h2>
   <p>Clearing an area in a quest <strong>MUST</strong> unlock that area's location for Free Roam — the location is added to the Free-Roam teleporter (see <a href="/states/quest-vs-field">Quest vs Field</a>). For example, clearing Paru during <strong>The Paru Pact</strong> unlocks the <strong>Paru</strong> field.</p>
   <p>This rule is intentionally quest-agnostic: quests <strong>MAY</strong> be added, removed, or re-routed, and any quest that clears a not-yet-unlocked location unlocks it the same way. Unlocked locations are progression and <strong>MUST</strong> persist — unlike the within-field run-state, they are <strong>NOT</strong> cleared when a quest is accepted or reset afterward.</p>
+  <p>An idempotent upsert is the natural fit: clearing an area calls <code>unlock(area)</code>, which adds the location if absent and is a no-op if it's already unlocked. No per-quest bookkeeping is needed — the set of unlocked locations simply grows.</p>
 
   <h2>Guild counter status tags</h2>
   <table>
