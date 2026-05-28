@@ -4,13 +4,14 @@ import Navbar from '../components/Navbar.astro';
 
 interface Props {
   title: string;
+  section?: string;
 }
-const { title } = Astro.props;
+const { title, section = 'States' } = Astro.props;
 ---
 
 <Base title={title}>
   <div class="shell">
-    <Navbar current="States" />
+    <Navbar current={section} />
     <main>
       <h1>{title}</h1>
       <slot />
