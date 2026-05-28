@@ -7,10 +7,15 @@ import ItemShop from '../../components/screens/shops/ItemShop';
   <ItemShop slot="preview" client:only="react" />
 
   <h2>Purpose</h2>
-  <p>Buy consumables and technique disks from a VRM-animated NPC.</p>
+  <p>Buy consumables and technique disks, or sell unwanted items. The NPC plays a VRM idle animation while the menu is open.</p>
 
-  <h2>Behavior</h2>
-  <p>Displays a list of consumable items and low-level technique disks for purchase. The NPC plays a VRM idle animation while the shop menu is open.</p>
+  <h2>Tabs</h2>
+  <ul>
+    <li><strong>Items</strong> — mates, fluids, atomizers, telepipe</li>
+    <li><strong>Disks</strong> — Lv.1 technique disks (higher levels drop in the field). Use a disk from inventory to learn the technique.</li>
+    <li><strong>Sell</strong> — sell items for half their buy price</li>
+  </ul>
+  <p>A debug-only Materials tab exists in dev builds (grinders, photons, boards).</p>
 
   <h2>Location</h2>
   <p>Market area, accessed by interacting with the Item Shop NPC.</p>

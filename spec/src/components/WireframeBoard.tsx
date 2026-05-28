@@ -40,25 +40,24 @@ const NODES: Node[] = [
   { id: 'customize', x: 1240, y: 40,  title: 'Customize',        href: '/journey/character-customize', thumb: 'panel-preview' },
 
   // City area
-  { id: 'office',     x: 1340, y: 240, title: "Principal's Office", href: '/journey/city/office',     thumb: 'city', group: 'city' },
-  { id: 'counter',    x: 1140, y: 320, title: 'Guild Counter',       href: '/journey/city/counter',    thumb: 'city', group: 'city' },
-  { id: 'teleport',   x: 1140, y: 480, title: 'Teleport',            href: '/journey/city/teleport',   thumb: 'city', group: 'city' },
-  { id: 'market',     x: 940,  y: 320, title: 'Market',              href: '/journey/city/market',     thumb: 'city', group: 'city' },
-  { id: 'underground',x: 940,  y: 480, title: 'Underground',         href: '/journey/city/underground',thumb: 'city', group: 'city' },
+  { id: 'office',     x: 1180, y: 260, title: "Principal's Office", href: '/journey/city/office',     thumb: 'city', group: 'city' },
+  { id: 'counter',    x: 1180, y: 420, title: 'Guild Counter',       href: '/journey/city/counter',    thumb: 'city', group: 'city' },
+  { id: 'teleport',   x: 1400, y: 420, title: 'Teleport',            href: '/journey/city/teleport',   thumb: 'city', group: 'city' },
+  { id: 'market',     x: 960,  y: 420, title: 'Market',              href: '/journey/city/market',     thumb: 'city', group: 'city' },
+  { id: 'underground',x: 960,  y: 580, title: 'Underground',         href: '/journey/city/underground',thumb: 'city', group: 'city' },
 
-  // Shops (Market area)
-  { id: 'weapon-shop',  x: 660, y: 320, title: 'Weapon Shop',  href: '/shop/weapon-shop', thumb: 'shop', group: 'market-shops' },
-  { id: 'item-shop',    x: 660, y: 460, title: 'Item Shop',    href: '/shop/item-shop',   thumb: 'shop', group: 'market-shops' },
-  { id: 'tech-shop',    x: 460, y: 320, title: 'Tech Shop',    href: '/shop/tech-shop',   thumb: 'shop', group: 'market-shops' },
-  { id: 'tekker',       x: 460, y: 460, title: 'Tekker',       href: '/shop/tekker',      thumb: 'shop', group: 'market-shops' },
+  // Shops (Market area) — left of the city cluster
+  { id: 'weapon-shop',  x: 700, y: 360, title: 'Weapon Shop',  href: '/shop/weapon-shop', thumb: 'shop', group: 'market-shops' },
+  { id: 'item-shop',    x: 700, y: 500, title: 'Item Shop',    href: '/shop/item-shop',   thumb: 'shop', group: 'market-shops' },
+  { id: 'tekker',       x: 480, y: 430, title: 'Tekker',       href: '/shop/tekker',      thumb: 'shop', group: 'market-shops' },
 
-  // Shops (Counter area)
-  { id: 'quest-counter',x: 1340, y: 320, title: 'Quest Counter',href: '/shop/quest-counter',thumb: 'shop', group: 'counter-shops' },
-  { id: 'storage',      x: 1340, y: 460, title: 'Storage',      href: '/shop/storage',     thumb: 'shop', group: 'counter-shops' },
+  // Shops (Counter area) — right of the city cluster
+  { id: 'quest-counter',x: 1640, y: 360, title: 'Quest Counter',href: '/shop/quest-counter',thumb: 'shop', group: 'counter-shops' },
+  { id: 'storage',      x: 1640, y: 500, title: 'Storage',      href: '/shop/storage',     thumb: 'shop', group: 'counter-shops' },
 
-  // Shops (Underground area)
-  { id: 'crafting',     x: 660, y: 600, title: 'Synthesis Shop',href: '/shop/crafting-shop',thumb: 'shop', group: 'underground-shops' },
-  { id: 'photon',       x: 460, y: 600, title: 'Photon Collector',href: '/shop/photon-shop',thumb: 'shop', group: 'underground-shops' },
+  // Shops (Underground area) — below underground
+  { id: 'crafting',     x: 960, y: 740, title: 'Synthesis Shop',href: '/shop/crafting-shop',thumb: 'shop', group: 'underground-shops' },
+  { id: 'photon',       x: 740, y: 740, title: 'Photon Collector',href: '/shop/photon-shop',thumb: 'shop', group: 'underground-shops' },
 ];
 
 const EDGES: Edge[] = [
@@ -82,7 +81,6 @@ const EDGES: Edge[] = [
   // Shop entries
   { from: 'market', to: 'weapon-shop', dashed: true },
   { from: 'market', to: 'item-shop', dashed: true },
-  { from: 'market', to: 'tech-shop', dashed: true },
   { from: 'market', to: 'tekker', dashed: true },
   { from: 'counter', to: 'quest-counter', dashed: true },
   { from: 'counter', to: 'storage', dashed: true },
@@ -91,10 +89,10 @@ const EDGES: Edge[] = [
 ];
 
 const GROUPS: Group[] = [
-  { id: 'city',              x: 920,  y: 220, w: 480, h: 360, label: 'City' },
-  { id: 'market-shops',      x: 440,  y: 300, w: 380, h: 240, label: 'Market Shops' },
-  { id: 'counter-shops',     x: 1320, y: 300, w: 180, h: 240, label: 'Counter Shops' },
-  { id: 'underground-shops', x: 440,  y: 580, w: 380, h: 100, label: 'Underground Shops' },
+  { id: 'city',              x: 920,  y: 240, w: 660, h: 440, label: 'City' },
+  { id: 'market-shops',      x: 460,  y: 340, w: 400, h: 320, label: 'Market Shops' },
+  { id: 'counter-shops',     x: 1620, y: 340, w: 200, h: 300, label: 'Counter Shops' },
+  { id: 'underground-shops', x: 720,  y: 720, w: 420, h: 120, label: 'Underground Shops' },
 ];
 
 function Thumb({ kind }: { kind: ThumbKind }) {
@@ -227,17 +225,26 @@ function arrowPath(from: { x: number; y: number }, to: { x: number; y: number })
 
 export default function WireframeBoard() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.55);
   const [dragging, setDragging] = useState(false);
   const startRef = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Center on the journey row initially
+    // Fit the whole board: it spans roughly x:40..1840, y:40..840.
+    // Pick a scale that fits the container width, then center.
     const el = containerRef.current;
-    if (el) {
-      setPan({ x: 20, y: 20 });
-    }
+    if (!el) return;
+    const cw = el.clientWidth;
+    const ch = el.clientHeight;
+    const boardW = 1860;
+    const boardH = 880;
+    const s = Math.min(cw / boardW, ch / boardH, 1);
+    setScale(s);
+    setPan({
+      x: (cw - boardW * s) / 2,
+      y: (ch - boardH * s) / 2 + 10,
+    });
   }, []);
 
   const onMouseDown = (e: React.MouseEvent) => {
@@ -315,7 +322,7 @@ export default function WireframeBoard() {
         ))}
 
         {/* Arrows */}
-        <svg style={{ position: 'absolute', left: 0, top: 0, width: 1600, height: 800, pointerEvents: 'none', overflow: 'visible' }}>
+        <svg style={{ position: 'absolute', left: 0, top: 0, width: 2000, height: 900, pointerEvents: 'none', overflow: 'visible' }}>
           <defs>
             <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <path d="M0,0 L0,6 L9,3 z" fill="#58a6ff" />
