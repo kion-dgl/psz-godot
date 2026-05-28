@@ -48,14 +48,14 @@ const STAGES: StageDef[] = [
   { id: 'snowfield', label: 'Snowfield', areas: ABEZ },
   { id: 'ruins',     label: 'Ruins',     areas: ABEZ },
   { id: 'paru',      label: 'Paru',      areas: ABEZ },
-  { id: 'arca',      label: 'Arca',      areas: ABEZ },
-  { id: 'shrine',    label: 'Shrine',    areas: ABEZ },
   { id: 'tower',     label: 'Eternal Tower', areas: [
     { key: 'entrance',   label: 'Entrance' },
     { key: 'floors',     label: 'Floors' },
     { key: 'transition', label: 'Transition' },
     { key: 'boss',       label: 'Boss' },
   ] },
+  { id: 'arca',      label: 'Arca',      areas: ABEZ },
+  { id: 'shrine',    label: 'Shrine',    areas: ABEZ },
 ];
 const COLUMN_HEADERS = ['Area A', 'Area E · transition', 'Area B', 'Area Z · boss'];
 const STAGE_X0 = 1720;
