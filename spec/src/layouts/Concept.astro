@@ -37,6 +37,7 @@ const { title } = Astro.props;
   main :global(h2),
   main :global(p),
   main :global(ul),
+  main :global(ol),
   main :global(table) {
     max-width: 820px;
   }
@@ -60,14 +61,15 @@ const { title } = Astro.props;
     margin-bottom: 12px;
     color: #c9d1d9;
   }
-  main :global(ul) {
+  main :global(ul),
+  main :global(ol) {
     font-size: 14px;
     line-height: 1.65;
     margin-bottom: 12px;
     padding-left: 20px;
     color: #c9d1d9;
   }
-  main :global(li) { margin-bottom: 4px; }
+  main :global(li) { margin-bottom: 6px; }
   main :global(code) {
     font-size: 12.5px;
     background: #161b22;
