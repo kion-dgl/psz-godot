@@ -1,0 +1,35 @@
+---
+import Definition from '../layouts/Definition.astro';
+import Mermaid from '../components/Mermaid.astro';
+import StartMenu from '../components/screens/StartMenu';
+---
+
+<Definition title="Start Menu" section="Journey">
+  <div slot="preview" style="width:960px;height:540px;overflow:hidden;">
+    <div style="width:1280px;height:720px;transform:scale(0.75);transform-origin:top left;">
+      <StartMenu client:only="react" />
+    </div>
+  </div>
+
+  <h2>Purpose</h2>
+  <p>In-game menu opened during gameplay (city or field). Manage equipment, techniques, action palette, mags, and view quest/status. One option, "Return to Title", exits to the title screen.</p>
+
+  <h2>Sections</h2>
+  <ul>
+    <li><strong>Equip</strong> — weapon, frame, units</li>
+    <li><strong>Techniques</strong> — learned techs and PP costs</li>
+    <li><strong>Palette</strong> — assign actions to the 3-slot action palette (per page)</li>
+    <li><strong>Mags</strong> — view and feed the mag</li>
+    <li><strong>Quest</strong> — active quest info</li>
+    <li><strong>Status</strong> — character stats, level, meseta</li>
+  </ul>
+
+  <h2>Return to Title</h2>
+  <p>Selecting "Return to Title" saves the game, drops the active field session, and routes back to the <a href="/journey/title">Title Screen</a>. The end credits use this same save-and-return path, with one twist: the final quest is marked complete and cleared as the credits begin, so it shows as cleared at the guild counter without a report — see <a href="/states/story-progression">Story Progression</a>.</p>
+
+  <Mermaid chart={`flowchart LR
+    A[Gameplay] -->|open menu| B[Start Menu]
+    B -->|Return to Title| C[Title Screen]
+    B -->|close| A
+  `} />
+</Definition>

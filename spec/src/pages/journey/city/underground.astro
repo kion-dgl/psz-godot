@@ -1,0 +1,29 @@
+---
+import Definition from '../../../layouts/Definition.astro';
+import StagePreview from '../../../components/screens/StagePreview';
+---
+
+<Definition title="Underground" section="Journey">
+  <StagePreview
+    client:only="react"
+    slot="preview"
+    glb="assets/stages/city_e/s00e_sa4/lndmd/s00e_sa4_m.glb"
+    spawn={[0.04, 0, -1]}
+    cameraOffset={[0, 8, 12]}
+  />
+
+  <h2>Context</h2>
+  <p>Sewer area beneath the market. Optional services and the blackjack minigame.</p>
+
+  <h2>NPCs</h2>
+  <ul>
+    <li><strong>Synthesis Shop</strong> — crafting</li>
+    <li><strong>Photon Collector</strong> — trade photon drops</li>
+    <li><strong>Blackjack Dealer</strong> — saloon blackjack (Booth cowgirl model)</li>
+  </ul>
+
+  <h2>Exits</h2>
+  <ul>
+    <li>Stairs up → <a href="/journey/city/market">Market</a></li>
+  </ul>
+</Definition>

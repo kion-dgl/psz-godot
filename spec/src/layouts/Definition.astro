@@ -1,0 +1,118 @@
+---
+import Base from './Base.astro';
+import Navbar from '../components/Navbar.astro';
+
+interface Props {
+  title: string;
+  section?: string;
+}
+const { title, section } = Astro.props;
+---
+
+<Base title={title}>
+  <div class="shell">
+    <Navbar current={section} />
+    <div class="content">
+      <div class="preview">
+        <div class="aspect">
+          <slot name="preview" />
+        </div>
+      </div>
+      <aside class="sidebar">
+        <h1>{title}</h1>
+        <slot />
+      </aside>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .content {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+  .preview {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #010409;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .aspect {
+    width: 960px;
+    height: 540px;
+    flex-shrink: 0;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .sidebar {
+    width: 360px;
+    flex-shrink: 0;
+    overflow-y: auto;
+    padding: 20px;
+    border-left: 1px solid #30363d;
+    background: #0d1117;
+  }
+  .sidebar h1 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #30363d;
+  }
+  .sidebar :global(h2) {
+    font-size: 14px;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .sidebar :global(p) {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    color: #c9d1d9;
+  }
+  .sidebar :global(ul) {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    padding-left: 18px;
+    color: #c9d1d9;
+  }
+  .sidebar :global(code) {
+    font-size: 12px;
+    background: #161b22;
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: #e6edf3;
+  }
+  .sidebar :global(table) {
+    width: 100%;
+    font-size: 12px;
+    border-collapse: collapse;
+    margin-bottom: 12px;
+  }
+  .sidebar :global(th),
+  .sidebar :global(td) {
+    padding: 6px 8px;
+    border: 1px solid #30363d;
+    text-align: left;
+  }
+  .sidebar :global(th) {
+    background: #161b22;
+    color: #8b949e;
+    font-weight: 600;
+  }
+</style>

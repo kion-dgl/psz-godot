@@ -1,0 +1,17 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Tekker from '../../components/screens/shops/Tekker';
+---
+
+<Definition title="Tekker" section="States">
+  <Tekker slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Grind weapons for an ATK bonus, or identify mysterious rare weapons. Two tabs: Grind, Identify.</p>
+
+  <h2>Behavior</h2>
+  <p>Grinding consumes a required grinder (mono/di/tri); rows are greyed out when that grinder is missing, and the detail panel previews the ATK/ACC change. Identifying a "???" weapon reveals its true stats and element.</p>
+
+  <h2>Location</h2>
+  <p>Market area, accessed by interacting with the Tekker NPC.</p>
+</Definition>

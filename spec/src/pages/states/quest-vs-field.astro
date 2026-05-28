@@ -1,0 +1,91 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> FreeRoam
+  FreeRoam --> OnQuest: accept quest — free-field state cleared
+  OnQuest --> FreeRoam: complete or cancel — fields reset
+
+  state FreeRoam {
+    [*] --> CityFree
+    CityFree --> FreeField: teleporter to an unlocked field
+    FreeField --> CityFree: return to city (progress retained)
+    CityFree: City
+    FreeField: Free Field
+  }
+
+  state OnQuest {
+    [*] --> CityQuest
+    CityQuest --> QuestField: teleporter to the quest area
+    QuestField --> CityQuest: telepipe / return
+    CityQuest: City
+    QuestField: Quest Field
+  }
+`;
+---
+
+<Concept title="Quest vs Field">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
+
+  <p>The player reaches the field in one of two ways, and the game is always in exactly one of two top-level modes: <strong>Free Roam</strong> or <strong>On Quest</strong>.</p>
+  <ul>
+    <li><strong>Free Roam</strong> — no quest is accepted. From the city teleporter the player MAY select any <em>unlocked</em> free field.</li>
+    <li><strong>On Quest</strong> — a quest has been accepted at the guild counter. The player travels to the quest's area from the teleporter.</li>
+  </ul>
+
+  <h2>Shared format</h2>
+  <p>Free fields and quests <strong>MUST</strong> use the identical quest JSON structure — an NPC companion, a mission name, principal text, and an ordered sequence of areas with their objectives, enemy placements, and object locations. A free field is <strong>NOT</strong> a quest; it merely reuses the quest format so both run through the same field machinery.</p>
+
+  <h2>Areas and warp points</h2>
+  <p>Each field is an ordered run: <strong>Area A → transition → Area B → boss</strong>. Players never see the letters — areas are surfaced as numbers, with a fixed mapping: <strong>A is always "1"</strong> and <strong>B is always "2"</strong> (the transition and boss are traversed within the run, not warp targets).</p>
+  <p>One rule governs both modes: <strong>the teleporter MUST list exactly the areas the player has reached in the current run as warp points.</strong> What differs is the set of areas in play:</p>
+  <ul>
+    <li><strong>Free Roam</strong> — every unlocked field, each starting at "1". Reaching Area B in a field <strong>MUST</strong> add that field's "2".</li>
+    <li><strong>On Quest</strong> — only the quest's authored sequence, which <strong>MAY</strong> span fields (e.g. <code>Valley 2 → Snowfield 1 → Wetlands 2</code>). The teleporter <strong>MUST</strong> start with only the quest's first area; each later area in the sequence <strong>MUST</strong> be added as the player reaches it.</li>
+  </ul>
+
+  <h2>Free Roam rules</h2>
+  <ul>
+    <li>While no quest is accepted, the player <strong>MUST</strong> have access to every field they have unlocked (Valley, Snowfield, …) at the areas they've reached.</li>
+    <li>Free-field run-state — defeated enemies, opened gates, collected drops, cleared cells, and reached warp points — <strong>MUST</strong> persist across field visits and city returns within the Free-Roam period. Travelling Valley → city → Wetlands → city and back <strong>MUST</strong> retain each field's state; it <strong>MUST NOT</strong> reset on moving between free fields.</li>
+  </ul>
+
+  <h2>On Quest rules</h2>
+  <ul>
+    <li>Accepting a quest <strong>MUST</strong> clear all retained free-field run-state (including reached warp points).</li>
+    <li>While on a quest, the teleporter <strong>MUST</strong> only offer the quest's content; free fields <strong>MUST NOT</strong> be selectable.</li>
+    <li>A quest <strong>MAY</strong> be completed or cancelled. On either, the game <strong>MUST</strong> return to Free Roam.</li>
+    <li>On returning to Free Roam, the free fields <strong>MUST</strong> be reset to their initial state — every enemy and object restored and every field back to area "1" — so the player starts from the beginning again.</li>
+  </ul>
+
+  <h2>Conformance scenario — Free Roam</h2>
+  <p>Given Free Roam with Valley, Snowfield, and Wetlands available and no areas yet reached this period:</p>
+  <ol>
+    <li>The teleporter lists <strong>Valley 1, Snowfield 1, Wetlands 1</strong>.</li>
+    <li>Warp to <strong>Valley 1</strong> (Area A).</li>
+    <li>Cross the transition into <strong>Valley B</strong>, then clear the boss.</li>
+    <li>Return to the city.</li>
+    <li>The teleporter now lists <strong>Valley 1, Valley 2, Snowfield 1, Wetlands 1</strong> — reaching Valley B added the Valley 2 warp point; Snowfield and Wetlands are unchanged.</li>
+    <li>Re-entering Valley 1 or 2 shows the cleared run-state (enemies stay defeated), because run-state is retained during Free Roam.</li>
+  </ol>
+
+  <h2>Conformance scenario — Quest</h2>
+  <p>Continuing from above, at the guild counter the player accepts a quest whose sequence is <code>Valley 2 → Snowfield 1 → Wetlands 2</code>:</p>
+  <ol>
+    <li>All retained free-field run-state (cleared enemies, the Valley 2 warp point) is cleared.</li>
+    <li>The teleporter lists only <strong>Valley 2</strong> — a quest always starts at its first area.</li>
+    <li>Warp to Valley 2 and play through.</li>
+    <li>Proceed to <strong>Snowfield 1</strong> (the next area in the sequence).</li>
+    <li>Proceed to and complete <strong>Wetlands 2</strong> (the final area).</li>
+    <li>Drop a telepipe and return to the city.</li>
+    <li>The teleporter now lists <strong>Valley 2, Snowfield 1, Wetlands 2</strong> — each quest area became a warp point as it was reached.</li>
+    <li>Report the quest at the guild counter → rewards granted, game returns to Free Roam.</li>
+    <li>The teleporter lists <strong>Valley 1, Snowfield 1, Wetlands 1</strong> again — every field reset to its initial state.</li>
+  </ol>
+
+  <h2>Why the distinction matters</h2>
+  <p>Because free fields and quests share the same format, the guild counter and session bookkeeping <strong>MUST</strong> key off the Free-Roam / On-Quest mode rather than the presence of a loaded quest structure. Treating a free field as a quest (e.g. offering "Cancel Quest" while the player is merely free-roaming) is out of spec and is the root of the telepipe / quest-counter stranding behavior — see <a href="/states/telepipe">Telepipe</a>.</p>
+</Concept>

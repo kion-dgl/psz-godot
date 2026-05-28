@@ -1,0 +1,46 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Mermaid from '../../components/Mermaid.astro';
+---
+
+<Definition title="Controls Setup" section="Journey">
+  <div slot="preview" style="width:960px;height:540px;background:#091a29;display:flex;align-items:center;justify-content:center;">
+    <div style="width:660px;background:rgba(18,25,38,0.95);border:1px solid rgba(255,230,120,0.6);border-radius:8px;padding:36px;text-align:center;font-family:system-ui,sans-serif;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+      <div style="font-size:24px;color:#f0eff4;margin-bottom:16px;font-weight:600;">Controls Setup</div>
+      <div style="font-size:16px;color:#d9dae0;margin-bottom:8px;">Press any key or controller button to begin</div>
+      <div style="font-size:12px;color:#a5a6b2;">Keyboard or controller will be auto-detected</div>
+    </div>
+  </div>
+
+  <h2>Condition</h2>
+  <p>Shown only when <code>user://input_config.json</code> does not exist. On subsequent launches, this step is skipped entirely. Delete the config file to re-trigger.</p>
+
+  <h2>Flow</h2>
+  <p>Multi-step onboarding between the download screen and title screen. Also reachable from Settings → "Reconfigure Controls" (pushed as overlay).</p>
+
+  <Mermaid chart={`flowchart TD
+    A[DETECT] -->|Keyboard press| F[Save keyboard defaults]
+    A -->|Joypad button/axis| B[MAP FACE x4]
+    B --> C[PICK ACCEPT]
+    C --> D[PICK CANCEL]
+    D --> E[Save config]
+    F --> G[Title Screen]
+    E --> G
+  `} />
+
+  <h2>Steps</h2>
+  <ul>
+    <li><strong>DETECT</strong> — wait for any input. Keyboard auto-saves defaults and skips ahead. Controller continues to face mapping.</li>
+    <li><strong>MAP_FACE ×4</strong> — press south, east, west, north face buttons in turn. Captures raw button indices. Duplicates are rejected with a re-prompt.</li>
+    <li><strong>PICK_ACCEPT</strong> — choose which face button is "accept" (left/bottom/right). Bottom is default (Xbox/PS). Right for Nintendo/PSZ JP.</li>
+    <li><strong>PICK_CANCEL</strong> — choose cancel from the two remaining faces.</li>
+  </ul>
+
+  <h2>Design</h2>
+  <p>880×540 modal panel, slides in from top (0.35s ease-out), slides back up on finish (0.22s ease-in). Dark navy background on first-run; overlay dim when accessed from settings.</p>
+
+  <h2>Previous</h2>
+  <p><a href="/journey/download">← Download Content</a></p>
+  <h2>Next</h2>
+  <p><a href="/journey/title">Title Screen →</a></p>
+</Definition>

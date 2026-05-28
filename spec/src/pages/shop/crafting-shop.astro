@@ -1,0 +1,17 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import CraftingShop from '../../components/screens/shops/CraftingShop';
+---
+
+<Definition title="Crafting Shop" section="States">
+  <CraftingShop slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Craft weapons and grinder boards from materials. Two tabs: Craft, Boards.</p>
+
+  <h2>Behavior</h2>
+  <p>Each recipe lists its rarity, required materials, and meseta cost. When crafting a weapon, the player picks a photon crystal (Im / El / Ban / Ray / Zon / Megi / Gra) to set the element and special-attack tier, which is rolled by rarity.</p>
+
+  <h2>Location</h2>
+  <p>Underground area, accessed by interacting with the Synthesis NPC.</p>
+</Definition>

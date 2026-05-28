@@ -1,0 +1,17 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Storage from '../../components/screens/shops/Storage';
+---
+
+<Definition title="Storage" section="States">
+  <Storage slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Move items and meseta between inventory and the bank. Four tabs: Deposit Items, Withdraw Items, Deposit Meseta, Withdraw Meseta.</p>
+
+  <h2>Behavior</h2>
+  <p>Storage holds up to 200 item slots shared across the account; inventory is capped at 40. Equipped items are greyed out with an "E" tag and cannot be deposited. The Meseta tabs transfer funds between the wallet and the bank. The right panel is the Storage Keeper NPC portrait rather than an item detail view.</p>
+
+  <h2>Location</h2>
+  <p>Guild Counter area, accessed by interacting with the storage terminal.</p>
+</Definition>

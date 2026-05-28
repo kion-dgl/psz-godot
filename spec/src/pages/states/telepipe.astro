@@ -1,0 +1,72 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> NoPipe
+  NoPipe --> Open: use a Telepipe item (one item consumed)
+  Open --> Open: use another item — previous pipe closes
+  Open --> NoPipe: return to field via the city-side pipe
+  Open --> NoPipe: quest accepted / quest ended / title return
+
+  NoPipe: No active pipe
+  Open: Pipe open (exactly one)
+`;
+---
+
+<Concept title="Telepipe">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>MAY</strong>, and <strong>REQUIRED</strong> below are used as in RFC 2119.</p>
+
+  <p>A telepipe is a portable shortcut between the field and the city. Distinguish two things: the <strong>Telepipe item</strong> (a stackable consumable in the inventory) and the <strong>placed telepipe</strong> (the open portal in the world).</p>
+
+  <h2>Items vs the placed pipe</h2>
+  <ul>
+    <li>The player <strong>MAY</strong> carry up to <strong>10</strong> Telepipe items.</li>
+    <li>Using a Telepipe item <strong>MUST</strong> consume exactly one item from the stack and open a placed telepipe.</li>
+    <li>At most one placed telepipe <strong>MUST</strong> exist at a time. Using another item while a pipe is open <strong>MUST</strong> close the previous pipe (the item is still consumed).</li>
+  </ul>
+
+  <h2>Round trip</h2>
+  <p>Opening a pipe consumes the item but does <strong>NOT</strong> immediately close the pipe. While the pipe is open the player <strong>MAY</strong> move between field and city repeatedly:</p>
+  <ul>
+    <li>Stepping into the field-side pipe travels to the city. The pipe <strong>MUST</strong> stay open.</li>
+    <li>Re-entering the field via the <strong>city teleporter</strong> <strong>MUST</strong> keep the pipe open and re-spawn the field-side pipe at its drop spot, so the player can ride it back again. This <strong>MAY</strong> repeat any number of times.</li>
+    <li>The placed pipe <strong>MUST</strong> close only when the player returns to the field by stepping into the <strong>city-side pipe</strong> — a one-shot return.</li>
+  </ul>
+
+  <h2>The placed pipe MUST close when</h2>
+  <ul>
+    <li>The player returns to the field through the city-side pipe (round trip complete).</li>
+    <li>A new Telepipe item is used (the new pipe replaces it).</li>
+    <li>A quest is <strong>accepted</strong>.</li>
+    <li>A quest <strong>ends</strong> (reported / completed or cancelled).</li>
+    <li>The player returns to the <strong>title screen</strong>.</li>
+  </ul>
+  <p>Switching free fields does <strong>NOT</strong> close the pipe. A pipe dropped in Valley 2 stays open and keeps routing back to Valley 2 even after the player starts Wetlands 1 — it persists for the whole Free-Roam period until one of the events above occurs.</p>
+
+  <h2>End-of-quest telepipe</h2>
+  <p>A quest <strong>MAY</strong> open a telepipe at its end as a quick ride back to the city. Because exactly one pipe may exist, this story pipe <strong>MUST</strong> close any pipe the player had already placed. The player <strong>MAY</strong> instead ignore it and use their own item; doing so closes the story pipe in turn. Whichever was opened most recently is the one that remains.</p>
+
+  <h2>Conformance scenario</h2>
+  <ol>
+    <li>Start the game and enter Free Roam.</li>
+    <li>In a field, drop a telepipe and ride it back to the city — the pipe stays open.</li>
+    <li>Switch to a different free field from the teleporter — the pipe is <strong>still open</strong> and still routes to its drop spot (a new free expedition does not close it).</li>
+    <li>Accept a quest at the guild counter → the telepipe is cleared (<em>quest accepted</em>).</li>
+    <li>Enter the quest and drop a telepipe in the first area.</li>
+    <li>Ride it back to the city — the pipe stays open.</li>
+    <li>Re-enter the quest from the teleporter — the pipe is still open; the field-side pipe re-spawns at the drop spot.</li>
+    <li>Ride the field-side pipe to the city again — still open (round-tripping is unlimited).</li>
+    <li>Return to the field via the <strong>city-side</strong> pipe → the round trip completes and the pipe closes.</li>
+    <li>Drop another telepipe.</li>
+    <li>Reach the quest's final objective. The quest auto-spawns an end-of-quest telepipe, which <strong>closes</strong> the pipe from step 10 (replaced).</li>
+    <li>Ride the end-of-quest telepipe back to the city.</li>
+    <li>Report the quest at the guild counter → the quest ends and the telepipe is cleared (<em>quest ended</em>).</li>
+  </ol>
+  <p>Edge case: returning to the <strong>title screen</strong> at any point clears the active telepipe.</p>
+
+  <h2>Persistence</h2>
+  <p>The placed pipe is in-memory only and <strong>MUST NOT</strong> survive any of the closing events above. Item counts persist with the inventory as normal.</p>
+</Concept>

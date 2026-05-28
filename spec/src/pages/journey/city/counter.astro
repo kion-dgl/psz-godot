@@ -1,0 +1,37 @@
+---
+import Definition from '../../../layouts/Definition.astro';
+import Mermaid from '../../../components/Mermaid.astro';
+import StagePreview from '../../../components/screens/StagePreview';
+---
+
+<Definition title="Guild Counter" section="Journey">
+  <StagePreview
+    client:only="react"
+    slot="preview"
+    glb="assets/stages/city_e/s00e_sa2/lndmd/s00e_sa2_m.glb"
+    spawn={[0.06, 2, 12.95]}
+    cameraOffset={[0, 10, 16]}
+  />
+
+  <h2>Context</h2>
+  <p>Quest management hub. Accept missions, report completions, cancel active quests. Also has the storage counter.</p>
+
+  <h2>NPCs</h2>
+  <ul>
+    <li><strong>Guild Counter NPC</strong> — accept/report/cancel quests</li>
+    <li><strong>Storage NPC</strong> — deposit/withdraw items</li>
+  </ul>
+
+  <h2>Exits</h2>
+  <ul>
+    <li>South → <a href="/journey/city/market">Market</a></li>
+    <li>East → <a href="/journey/city/teleport">Teleport</a></li>
+    <li>West → <a href="/journey/city/office">Principal's Office</a></li>
+  </ul>
+
+  <Mermaid chart={`flowchart LR
+    A[Office] --- B[Guild Counter]
+    B --- C[Market]
+    B --- D[Teleport]
+  `} />
+</Definition>
