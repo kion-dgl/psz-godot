@@ -15,7 +15,8 @@ type ThumbKind =
   | 'city'            // 3D area placeholder
   | 'shop'            // panel + detail
   | 'menu'            // in-game start/pause menu
-  | 'stage';          // field area placeholder
+  | 'stage'           // field area placeholder
+  | 'credits';        // scrolling end credits
 
 type Node = {
   id: string;
@@ -27,7 +28,7 @@ type Node = {
   group?: string;
 };
 
-type Edge = { from: string; to: string; label?: string; dashed?: boolean };
+type Edge = { from: string; to: string; label?: string; dashed?: boolean; customPath?: string };
 
 type Group = { id: string; x: number; y: number; w: number; h: number; label: string };
 
@@ -107,6 +108,9 @@ const NODES: Node[] = [
       group: 'field-stages',
     }))
   ),
+
+  // End credits — roll after the Dark Castle final boss (Shrine Z)
+  { id: 'credits', x: STAGE_X0 + 3 * STAGE_COL, y: STAGE_Y0 + STAGES.length * STAGE_ROW + 40, title: 'Credits', href: '/credits', thumb: 'credits' },
 ];
 
 const EDGES: Edge[] = [
@@ -153,6 +157,21 @@ const EDGES: Edge[] = [
       to: `field-${stage.id}-${stage.areas[i + 1].key}`,
     }))
   ),
+
+  // Dark Castle final boss (Shrine Z) → end credits
+  { from: 'field-shrine-z', to: 'credits', label: 'Dark Castle' },
+
+  // Credits loop back to the title: right, up, left, then down into the
+  // title's top edge. Hand-routed so it wraps around the whole board.
+  {
+    from: 'credits', to: 'title',
+    customPath: `M ${STAGE_X0 + 3 * STAGE_COL + CARD_W} ${STAGE_Y0 + STAGES.length * STAGE_ROW + 40 + CARD_H / 2} ` +
+      `L ${STAGE_X0 + 3 * STAGE_COL + CARD_W + 80} ${STAGE_Y0 + STAGES.length * STAGE_ROW + 40 + CARD_H / 2} ` +
+      `L ${STAGE_X0 + 3 * STAGE_COL + CARD_W + 80} -140 ` +
+      `L ${640 + CARD_W / 2} -140 ` +
+      `L ${640 + CARD_W / 2} 40`,
+    dashed: true,
+  },
 ];
 
 const GROUPS: Group[] = [
@@ -313,6 +332,16 @@ function Thumb({ kind }: { kind: ThumbKind }) {
           <circle cx={w * 0.5} cy={h * 0.7} r="3" fill="#44cc44" />
         </svg>
       );
+    case 'credits':
+      return (
+        <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: '100%' }}>
+          <rect x="0" y="0" width={w} height={h} fill="#000" />
+          {[0, 1, 2, 3, 4].map((i) => (
+            <rect key={i} x={w / 2 - (w * (0.5 - i * 0.05)) / 2} y={h * 0.2 + i * (h * 0.14)}
+              width={w * (0.5 - i * 0.05)} height="5" fill="#c9d1d9" opacity={0.85 - i * 0.12} rx="1" />
+          ))}
+        </svg>
+      );
   }
 }
 
@@ -343,8 +372,8 @@ export default function WireframeBoard() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const boardW = 2540;
-    const boardH = 1400;
+    const boardW = 2720;
+    const boardH = 1700;
     const fit = () => {
       const cw = el.clientWidth;
       const ch = el.clientHeight;
@@ -469,7 +498,7 @@ export default function WireframeBoard() {
             const from = NODES.find(n => n.id === e.from);
             const to = NODES.find(n => n.id === e.to);
             if (!from || !to) return null;
-            const d = arrowPath(from, to);
+            const d = e.customPath ?? arrowPath(from, to);
             const fx = from.x + CARD_W / 2;
             const fy = from.y + CARD_H / 2;
             const tx = to.x + CARD_W / 2;
