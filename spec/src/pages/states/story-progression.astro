@@ -3,29 +3,29 @@ import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
 const depChart = `flowchart TD
-  SR[Search and Rescue] --> AS[Apothecary's Supply]
-  AS --> SIS[Static in the Snow]
-  SIS --> TBS[The Broken Seal]
-  TBS --> MFP[Messages from the Past]
-  MFP --> CSY[Control System]
-  CSY --> IT[Investigate Tower]
-  IT --> DC[Dark Castle]
+  SR[Search and Rescue] --> PP[The Paru Pact]
+  PP --> AS[Apothecary's Supply]
+  AS --> FO[Finding Ogi]
+  FO --> IT[Investigate Tower]
+  IT --> HR[Heretic]
+  HR --> CSY[Control System]
+  CSY --> TBS[The Broken Seal]
+  TBS --> DC[Dark Castle]
   DC --> CR([Credits])
 
   AS --> DOE[Deep Ore Extraction]
   DOE --> CAS[Claiming a Stake]
   AS --> NR[Native Research]
   AS --> PW[Poisoned Water]
-  SIS --> FO[Finding Ogi]
+  FO --> SIS[Static in the Snow]
+  SIS --> MFP[Messages from the Past]
   TBS --> SMM[Seek My Mentor]
-  MFP --> PP[The Paru Pact]
-  CSY --> HR[Heretic]
 
   classDef story fill:#0d1117,stroke:#58a6ff,color:#e6edf3,stroke-width:2px
   classDef side fill:#0d1117,stroke:#f0a020,color:#f8c840,stroke-width:2px
   classDef done fill:#0d1117,stroke:#8b949e,color:#adbac7
-  class SR,AS,SIS,TBS,MFP,CSY,IT,DC story
-  class DOE,CAS,NR,PW,FO,SMM,PP,HR side
+  class SR,PP,AS,FO,IT,HR,CSY,TBS,DC story
+  class DOE,CAS,NR,PW,SIS,MFP,SMM side
   class CR done
 `;
 
