@@ -51,13 +51,12 @@ const NODES: Node[] = [
   { id: 'item-shop',    x: 700, y: 500, title: 'Item Shop',    href: '/shop/item-shop',   thumb: 'shop', group: 'market-shops' },
   { id: 'tekker',       x: 480, y: 430, title: 'Tekker',       href: '/shop/tekker',      thumb: 'shop', group: 'market-shops' },
 
-  // Shops (Counter area) — right of the city cluster
-  { id: 'quest-counter',x: 1640, y: 360, title: 'Quest Counter',href: '/shop/quest-counter',thumb: 'shop', group: 'counter-shops' },
-  { id: 'storage',      x: 1640, y: 500, title: 'Storage',      href: '/shop/storage',     thumb: 'shop', group: 'counter-shops' },
-
-  // Shops (Underground area) — below underground
-  { id: 'crafting',     x: 960, y: 740, title: 'Synthesis Shop',href: '/shop/crafting-shop',thumb: 'shop', group: 'underground-shops' },
-  { id: 'photon',       x: 740, y: 740, title: 'Photon Collector',href: '/shop/photon-shop',thumb: 'shop', group: 'underground-shops' },
+  // Bottom row — service counters lined up under the sewer:
+  // Photon Collector, Synthesis Shop, Item Storage, Quest Counter
+  { id: 'photon',       x: 700,  y: 760, title: 'Photon Collector', href: '/shop/photon-shop',   thumb: 'shop', group: 'underground-shops' },
+  { id: 'crafting',     x: 920,  y: 760, title: 'Synthesis Shop',   href: '/shop/crafting-shop', thumb: 'shop', group: 'underground-shops' },
+  { id: 'storage',      x: 1180, y: 760, title: 'Item Storage',     href: '/shop/storage',       thumb: 'shop', group: 'counter-shops' },
+  { id: 'quest-counter',x: 1400, y: 760, title: 'Quest Counter',    href: '/shop/quest-counter', thumb: 'shop', group: 'counter-shops' },
 ];
 
 const EDGES: Edge[] = [
@@ -91,8 +90,8 @@ const EDGES: Edge[] = [
 const GROUPS: Group[] = [
   { id: 'city',              x: 920,  y: 240, w: 660, h: 440, label: 'City' },
   { id: 'market-shops',      x: 460,  y: 340, w: 400, h: 320, label: 'Market Shops' },
-  { id: 'counter-shops',     x: 1620, y: 340, w: 200, h: 300, label: 'Counter Shops' },
-  { id: 'underground-shops', x: 720,  y: 720, w: 420, h: 120, label: 'Underground Shops' },
+  { id: 'underground-shops', x: 680,  y: 740, w: 400, h: 120, label: 'Underground Shops' },
+  { id: 'counter-shops',     x: 1160, y: 740, w: 400, h: 120, label: 'Counter Shops' },
 ];
 
 function Thumb({ kind }: { kind: ThumbKind }) {
@@ -231,20 +230,27 @@ export default function WireframeBoard() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Fit the whole board: it spans roughly x:40..1840, y:40..840.
-    // Pick a scale that fits the container width, then center.
     const el = containerRef.current;
     if (!el) return;
-    const cw = el.clientWidth;
-    const ch = el.clientHeight;
-    const boardW = 1860;
-    const boardH = 880;
-    const s = Math.min(cw / boardW, ch / boardH, 1);
-    setScale(s);
-    setPan({
-      x: (cw - boardW * s) / 2,
-      y: (ch - boardH * s) / 2 + 10,
-    });
+    const boardW = 1620;
+    const boardH = 920;
+    const fit = () => {
+      const cw = el.clientWidth;
+      const ch = el.clientHeight;
+      if (cw <= 0 || ch <= 0) return false;
+      const s = Math.min(cw / boardW, ch / boardH, 1);
+      setScale(s);
+      setPan({
+        x: (cw - boardW * s) / 2,
+        y: (ch - boardH * s) / 2 + 10,
+      });
+      return true;
+    };
+    // Retry on the next frame if the canvas hasn't been laid out yet
+    // (client:only islands can mount before flexbox resolves heights).
+    if (!fit()) {
+      requestAnimationFrame(() => { fit(); });
+    }
   }, []);
 
   const onMouseDown = (e: React.MouseEvent) => {
@@ -280,8 +286,9 @@ export default function WireframeBoard() {
       onMouseLeave={stop}
       onWheel={onWheel}
       style={{
-        position: 'absolute',
-        inset: 0,
+        position: 'relative',
+        width: '100%',
+        height: '100%',
         background: '#010409',
         backgroundImage: 'radial-gradient(circle, #1f2937 1px, transparent 1px)',
         backgroundSize: '24px 24px',
