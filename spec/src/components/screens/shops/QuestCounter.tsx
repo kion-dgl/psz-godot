@@ -1,41 +1,54 @@
 import { useState } from 'react';
-import { ShopFrame, Panel, PillRow, TabBar, Divider, C } from '../pszui';
+import { ShopFrame, Panel, PillRow, Divider, StatRow, ActionButton, C } from '../pszui';
 
-const QUESTS = [
-  { name: 'Valley Patrol', area: 'Gurhacia Valley', diff: 'Normal', rank: 'C', reward: 500, desc: 'Patrol the valley and eliminate hostile creatures.' },
-  { name: 'Swamp Sweep', area: 'Ozette Wetlands', diff: 'Normal', rank: 'C', reward: 600, desc: 'Clear out the creatures infesting the wetlands.' },
-  { name: 'Forest Recon', area: 'Rioh Snowfield', diff: 'Hard', rank: 'B', reward: 1200, desc: 'Investigate unusual activity in the snowfield.' },
-  { name: 'Desert Storm', area: 'Makara Desert', diff: 'Hard', rank: 'B', reward: 1500, desc: 'A sandstorm has stirred up the desert creatures.' },
-  { name: 'Tower Ascent', area: 'Eternal Tower', diff: 'S. Hard', rank: 'A', reward: 5000, desc: 'Climb the tower and reach the summit.' },
+type Quest = {
+  name: string; area: string; reward: string; desc: string;
+  tag?: { text: string; color: string }; muted?: boolean; lockedNote?: string;
+};
+const QUESTS: Quest[] = [
+  { name: 'Search and Rescue', area: 'Paru Village', reward: '500 M', desc: 'Locate the missing scouts in the outskirts and bring them home safely.' },
+  { name: 'Defend the Colony', area: 'Colony Gate', reward: '800 M', tag: { text: 'REPORT', color: '#e0a020' }, desc: 'You held the line — report back to the Guild Counter to claim your reward.' },
+  { name: 'Static in the Snow', area: 'Rioh Snowfield', reward: '1,200 M', desc: 'Investigate the source of the electromagnetic interference in the snowfield.' },
+  { name: 'Defeat the Scorpion King', area: 'Makara Desert', reward: '5,000 M', tag: { text: 'LOCKED', color: '#888' }, muted: true, desc: 'A massive creature has nested deep in the desert ruins.', lockedNote: '[LOCKED] Complete "The Paru Pact" to unlock.' },
+  { name: 'Valley Patrol', area: 'Gurhacia Valley', reward: '500 M', tag: { text: 'CLEAR', color: '#338844' }, desc: 'Patrol the valley and eliminate hostile creatures. Already cleared.' },
 ];
-const DIFFS = ['Normal', 'Hard', 'S. Hard'];
 
 export default function QuestCounter() {
-  const [mode, setMode] = useState(0);
   const [sel, setSel] = useState(0);
-  const filtered = QUESTS.filter(q => q.diff === DIFFS[mode]);
-  const q = filtered[sel];
+  const q = QUESTS[sel];
+
   return (
     <ShopFrame>
-      <Panel title="Quest Counter" width={420} hint="Select a quest to accept.">
-        <TabBar tabs={DIFFS} active={mode} onSelect={(i) => { setMode(i); setSel(0); }} />
-        {filtered.map((q, i) => (
-          <PillRow key={q.name} label={q.name} rightText={`[${q.rank}]`} selected={sel === i} onClick={() => setSel(i)} />
+      <Panel title="Guild Counter" width={420} hint="Up/Down: Select   Enter: Accept   Esc: Leave">
+        {QUESTS.map((quest, i) => (
+          <PillRow
+            key={quest.name}
+            label={quest.name}
+            tag={quest.tag}
+            muted={quest.muted}
+            selected={sel === i}
+            onClick={() => setSel(i)}
+          />
         ))}
+        <Divider />
+        <div style={{ fontSize: 11, color: C.textLight, padding: '2px 4px', lineHeight: 1.5 }}>
+          Difficulty (Normal / Hard / Super-Hard) is chosen in a sub-menu after selecting a quest.
+        </div>
       </Panel>
       <Panel title="Quest Info" width={280}>
         <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>{q?.name}</div>
-          <div style={{ fontSize: 11, color: C.textLight, marginBottom: 8 }}>{q?.area}</div>
-          <Divider />
-          <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5, marginBottom: 8 }}>{q?.desc}</div>
-          <Divider />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
-            {[['Difficulty', q?.diff], ['Rank', q?.rank], ['Reward', `${(q?.reward || 0).toLocaleString()} MST`]].map(([k, v]) => (
-              <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: C.textLight }}>{k}</span><span style={{ fontWeight: 700, color: C.text }}>{v}</span></div>
-            ))}
+          <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{q.name}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <StatRow label="Area" value={q.area} />
+            <StatRow label="Type" value="Quest" />
+            <StatRow label="Reward" value={q.reward} />
           </div>
-          <div style={{ marginTop: 10, padding: 7, fontSize: 13, fontWeight: 600, background: C.selectedGradient, border: '2px solid #d08010', borderRadius: 4, color: C.text, cursor: 'pointer', textAlign: 'center' }}>Accept Quest</div>
+          <Divider />
+          <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{q.desc}</div>
+          {q.lockedNote && (
+            <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5, marginTop: 8, fontWeight: 600 }}>{q.lockedNote}</div>
+          )}
+          <ActionButton label="Accept Quest" />
         </div>
       </Panel>
     </ShopFrame>

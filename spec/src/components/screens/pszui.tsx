@@ -45,20 +45,62 @@ export function Panel({ title, children, width, hint, style }: {
   );
 }
 
-export function PillRow({ label, selected, rightText, onClick }: {
-  label: string; selected?: boolean; rightText?: string; onClick?: () => void;
+export function PillRow({ label, selected, rightText, tag, muted, onClick }: {
+  label: string; selected?: boolean; rightText?: string;
+  tag?: { text: string; color: string }; muted?: boolean; onClick?: () => void;
 }) {
   return (
     <div onClick={onClick} style={{
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6,
       padding: '7px 14px', marginBottom: 3,
       background: selected ? C.selectedGradient : C.itemBg,
       borderRadius: 3, border: selected ? '2px solid #d08010' : '1px solid rgba(150,180,210,0.4)',
-      cursor: 'pointer', fontSize: 14, fontWeight: 600, color: C.text,
+      cursor: 'pointer', fontSize: 14, fontWeight: 600,
+      color: muted ? 'rgba(26,26,42,0.45)' : C.text,
+      opacity: muted ? 0.85 : 1,
     }}>
-      <span>{label}</span>
-      {rightText && <span style={{ fontSize: 12, color: C.textLight }}>{rightText}</span>}
+      <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+        {tag && (
+          <span style={{
+            fontSize: 9, fontWeight: 700, letterSpacing: '0.05em',
+            color: tag.color, border: `1px solid ${tag.color}`,
+            borderRadius: 3, padding: '0 4px', flexShrink: 0,
+          }}>{tag.text}</span>
+        )}
+      </span>
+      {rightText && <span style={{ fontSize: 12, color: muted ? 'rgba(26,26,42,0.4)' : C.textLight, flexShrink: 0 }}>{rightText}</span>}
     </div>
+  );
+}
+
+// Balance line shown at the bottom of a shop's left panel (Meseta, Photon Drops…)
+export function Balance({ label, value, color = '#886600' }: { label: string; value: string; color?: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: C.text, padding: '2px 4px' }}>
+      <span>{label}</span><span style={{ fontWeight: 700, color }}>{value}</span>
+    </div>
+  );
+}
+
+// Single labelled stat row used in detail panels.
+export function StatRow({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+      <span style={{ color: C.textLight }}>{label}</span>
+      <span style={{ fontWeight: 700, color: color ?? C.text }}>{value}</span>
+    </div>
+  );
+}
+
+// Orange CTA button used in detail panels (Identify, Grind, Accept, Exchange…).
+export function ActionButton({ label }: { label: string }) {
+  return (
+    <div style={{
+      marginTop: 10, padding: 7, fontSize: 13, fontWeight: 600,
+      background: C.selectedGradient, border: '2px solid #d08010',
+      borderRadius: 4, color: C.text, cursor: 'pointer', textAlign: 'center',
+    }}>{label}</div>
   );
 }
 

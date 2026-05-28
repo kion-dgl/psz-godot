@@ -1,52 +1,69 @@
 import { useState } from 'react';
-import { ShopFrame, Panel, PillRow, TabBar, Divider, C } from '../pszui';
+import { ShopFrame, Panel, PillRow, TabBar, C } from '../pszui';
 
-const STORED = [
-  { name: 'Brand', type: 'Saber', rarity: 'common' },
-  { name: 'Varista', type: 'Handgun', rarity: 'common' },
-  { name: 'Photon Drop', type: 'Material', rarity: 'common' },
-  { name: 'Grinder', type: 'Material', rarity: 'common' },
-  { name: 'Resist/Fire', type: 'Unit', rarity: 'common' },
-  { name: "DB's Saber", type: 'Saber', rarity: 'rare' },
-  { name: 'Mag Cell', type: 'Material', rarity: 'rare' },
+type StorageItem = { name: string; qty: string; equipped?: boolean };
+const INVENTORY: StorageItem[] = [
+  { name: 'Saber +3 ★★★★', qty: '1', equipped: true },
+  { name: 'Monomate', qty: 'x5' },
+  { name: 'Mag ★', qty: '1', equipped: true },
+  { name: 'Telepipe', qty: 'x3' },
 ];
-const INVENTORY = [
-  { name: 'Monomate', qty: 8 },
-  { name: 'Dimate', qty: 3 },
-  { name: 'Telepipe', qty: 4 },
-  { name: 'Saber', qty: 1 },
+const STORAGE: StorageItem[] = [
+  { name: 'Brand +2 ★★', qty: '1' },
+  { name: 'Spirit Robe', qty: '1' },
+  { name: 'Dimate', qty: 'x9' },
+  { name: 'Photon Drop', qty: 'x12' },
+  { name: 'Heat Resist Lv1', qty: '1' },
 ];
+
+const TABS = ['Deposit Items', 'Withdraw Items', 'Deposit Meseta', 'Withdraw Meseta'];
 
 export default function Storage() {
   const [tab, setTab] = useState(0);
   const [sel, setSel] = useState(0);
+  const isItems = tab < 2;
+  const itemsHint = 'Left/Right: Switch Tab   Up/Down: Select   Enter: Move   Esc: Back';
+  const mesetaHint = 'Left/Right: Switch Tab   Enter: Transfer   Esc: Back';
+  const list = tab === 0 ? INVENTORY : STORAGE;
+  const i = Math.min(sel, list.length - 1);
+
   return (
     <ShopFrame>
-      <Panel title="Storage" width={360} hint={tab === 0 ? 'Select item to withdraw.' : 'Select item to deposit.'}>
-        <TabBar tabs={['Withdraw', 'Deposit']} active={tab} onSelect={(i) => { setTab(i); setSel(0); }} />
-        <div style={{ fontSize: 11, color: C.textLight, padding: '0 4px', marginBottom: 6 }}>
-          {tab === 0 ? `${STORED.length}/200 stored` : `${INVENTORY.length}/40 items`}
-        </div>
-        {(tab === 0 ? STORED : INVENTORY).map((item, i) => (
-          <PillRow key={`${item.name}-${i}`} label={item.name} rightText={'type' in item ? (item as any).type : `x${(item as any).qty}`} selected={sel === i} onClick={() => setSel(i)} />
-        ))}
-      </Panel>
-      <Panel title="Detail" width={240}>
-        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
-          {tab === 0 ? (
-            <>
-              <div style={{ fontSize: 15, fontWeight: 700, color: STORED[sel]?.rarity === 'rare' ? C.rare : C.text, marginBottom: 4 }}>{STORED[sel]?.name}</div>
-              <div style={{ fontSize: 11, color: C.textLight, marginBottom: 8 }}>{STORED[sel]?.type}</div>
-            </>
-          ) : (
-            <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 4 }}>{INVENTORY[sel]?.name}</div>
-          )}
-          <Divider />
-          <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-            {[tab === 0 ? 'Withdraw' : 'Deposit', 'Cancel'].map((a) => (
-              <div key={a} style={{ flex: 1, padding: 7, fontSize: 13, fontWeight: 600, background: C.itemBg, border: '1px solid rgba(150,180,210,0.4)', borderRadius: 4, color: C.text, cursor: 'pointer', textAlign: 'center' }}>{a}</div>
+      <Panel title="Storage" width={360} hint={isItems ? itemsHint : mesetaHint}>
+        <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+        {isItems ? (
+          <>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, padding: '2px 4px 6px', letterSpacing: '0.08em' }}>
+              {tab === 0 ? 'INVENTORY (14/40)' : 'STORAGE (37/200)'}
+            </div>
+            {list.map((it, idx) => (
+              <PillRow
+                key={it.name}
+                label={it.name}
+                rightText={it.qty}
+                tag={it.equipped ? { text: 'E', color: '#888' } : undefined}
+                muted={it.equipped}
+                selected={i === idx}
+                onClick={() => setSel(idx)}
+              />
             ))}
-          </div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, padding: '2px 4px 6px', letterSpacing: '0.08em' }}>
+              WALLET: 50,000 M    BANK: 125,000 M
+            </div>
+            <PillRow label={tab === 2 ? 'Deposit Meseta…' : 'Withdraw Meseta…'} selected onClick={() => {}} />
+          </>
+        )}
+      </Panel>
+      <Panel title="Storage Keeper" width={240}>
+        <div style={{
+          height: '100%', minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(40,52,72,0.25)', borderRadius: 4, border: '1px solid rgba(150,180,210,0.4)',
+          fontSize: 16, fontWeight: 700, color: C.textLight, letterSpacing: '0.1em',
+        }}>
+          [ NPC ]
         </div>
       </Panel>
     </ShopFrame>

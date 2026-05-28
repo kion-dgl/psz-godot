@@ -7,10 +7,10 @@ import QuestCounter from '../../components/screens/shops/QuestCounter';
   <QuestCounter slot="preview" client:only="react" />
 
   <h2>Purpose</h2>
-  <p>Accept, report, and cancel quests. Difficulty tabs filter the available quest list.</p>
+  <p>The Guild Counter shows the quest progression list with per-quest status: REPORT (ready to turn in), LOCKED (prerequisite unmet), or CLEAR (already done).</p>
 
   <h2>Behavior</h2>
-  <p>Quests are organized by difficulty tier. Locked quests require completion of a parent quest before they become available. Reporting a completed quest grants rewards.</p>
+  <p>Selecting a quest shows its area, type, and reward. Locked quests stay greyed out until their parent quest is completed. Difficulty (Normal / Hard / Super-Hard) is chosen in a sub-menu after a quest is selected, not via top-level tabs.</p>
 
   <h2>Location</h2>
   <p>Guild Counter area, accessed by interacting with the Quest Counter NPC.</p>

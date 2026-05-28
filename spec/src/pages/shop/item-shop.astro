@@ -7,15 +7,16 @@ import ItemShop from '../../components/screens/shops/ItemShop';
   <ItemShop slot="preview" client:only="react" />
 
   <h2>Purpose</h2>
-  <p>Buy consumables and technique disks, or sell unwanted items. The NPC plays a VRM idle animation while the menu is open.</p>
+  <p>Buy consumables and technique disks, or sell unwanted items, all in meseta (M).</p>
 
   <h2>Tabs</h2>
   <ul>
-    <li><strong>Items</strong> — mates, fluids, atomizers, telepipe</li>
-    <li><strong>Disks</strong> — Lv.1 technique disks (higher levels drop in the field). Use a disk from inventory to learn the technique.</li>
+    <li><strong>Items</strong> — mates, telepipe, atomizers; support bulk-buy via a quantity selector</li>
+    <li><strong>Materials</strong> — debug-only (dev builds), e.g. Photon Drop, Grinder Base C</li>
+    <li><strong>Disks</strong> — Lv.1 technique disks, buy-1-only; use from inventory to learn</li>
     <li><strong>Sell</strong> — sell items for half their buy price</li>
   </ul>
-  <p>A debug-only Materials tab exists in dev builds (grinders, photons, boards).</p>
+  <p>A standalone Tech Shop also exists in-game for technique disks.</p>
 
   <h2>Location</h2>
   <p>Market area, accessed by interacting with the Item Shop NPC.</p>
