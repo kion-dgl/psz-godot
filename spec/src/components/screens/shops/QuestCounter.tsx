@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopFrame, Panel, PillRow, Divider, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, Divider, StatRow, ActionButton, C } from '../pszui';
 
 type Quest = {
   name: string; area: string; reward: string; desc: string;
@@ -18,24 +18,12 @@ export default function QuestCounter() {
   const q = QUESTS[sel];
 
   return (
-    <ShopFrame>
-      <Panel title="Guild Counter" width={420} hint="Up/Down: Select   Enter: Accept   Esc: Leave">
-        {QUESTS.map((quest, i) => (
-          <PillRow
-            key={quest.name}
-            label={quest.name}
-            tag={quest.tag}
-            muted={quest.muted}
-            selected={sel === i}
-            onClick={() => setSel(i)}
-          />
-        ))}
-        <Divider />
-        <div style={{ fontSize: 11, color: C.textLight, padding: '2px 4px', lineHeight: 1.5 }}>
-          Difficulty (Normal / Hard / Super-Hard) is chosen in a sub-menu after selecting a quest.
-        </div>
-      </Panel>
-      <Panel title="Quest Info" width={280}>
+    <ShopScreen
+      title="Guild Counter"
+      hint="Up/Down: Select   Enter: Accept   Esc: Leave"
+      portrait="quest-counter"
+      infoTitle="Quest Info"
+      info={
         <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{q.name}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -50,7 +38,22 @@ export default function QuestCounter() {
           )}
           <ActionButton label="Accept Quest" />
         </div>
-      </Panel>
-    </ShopFrame>
+      }
+    >
+      {QUESTS.map((quest, i) => (
+        <PillRow
+          key={quest.name}
+          label={quest.name}
+          tag={quest.tag}
+          muted={quest.muted}
+          selected={sel === i}
+          onClick={() => setSel(i)}
+        />
+      ))}
+      <Divider />
+      <div style={{ fontSize: 11, color: C.textLight, padding: '2px 4px', lineHeight: 1.5 }}>
+        Difficulty (Normal / Hard / Super-Hard) is chosen in a sub-menu after selecting a quest.
+      </div>
+    </ShopScreen>
   );
 }

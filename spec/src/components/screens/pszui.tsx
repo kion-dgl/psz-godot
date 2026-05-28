@@ -1,4 +1,5 @@
 import type { ReactNode, CSSProperties } from 'react';
+import { assetUrl } from '../../utils/assets';
 
 export const C = {
   bgLight: '#a8cce8',
@@ -133,6 +134,51 @@ export function ShopFrame({ children }: { children: ReactNode }) {
       padding: 24, boxSizing: 'border-box',
     }}>
       {children}
+    </div>
+  );
+}
+
+// Standard shop layout: list panel fills the left 75%, the right column
+// stacks the highlighted-item info (top) over the shop-keeper portrait
+// (bottom). Portrait images live at assets/ui/shop-previews/<portrait>.png
+// (256x256, served via the /cdn R2 proxy).
+export function ShopScreen({ title, hint, portrait, info, infoTitle = 'Detail', children }: {
+  title: string;
+  hint?: string;
+  portrait: string;
+  info: ReactNode;
+  infoTitle?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div style={{
+      width: 960, height: 540, background: C.bgLight, backgroundImage: SCANLINES,
+      display: 'flex', gap: 10, padding: 16, boxSizing: 'border-box',
+    }}>
+      {/* Left 60% — the shop list */}
+      <div style={{ flex: '0 0 60%', minWidth: 0, display: 'flex' }}>
+        <Panel title={title} hint={hint} style={{ width: '100%', height: '100%' }}>
+          <div style={{ height: '100%', overflowY: 'auto' }}>{children}</div>
+        </Panel>
+      </div>
+
+      {/* Right 25% — info (top) over portrait (bottom) */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
+          <Panel title={infoTitle} style={{ width: '100%', height: '100%' }}>
+            <div style={{ height: '100%', overflowY: 'auto' }}>{info}</div>
+          </Panel>
+        </div>
+        <img
+          src={assetUrl(`assets/ui/shop-previews/${portrait}.png`)}
+          alt="shop keeper"
+          style={{
+            width: '100%', aspectRatio: '1 / 1', objectFit: 'cover',
+            borderRadius: 4, border: '2px solid #2a3448', display: 'block',
+            imageRendering: 'pixelated', flexShrink: 0,
+          }}
+        />
+      </div>
     </div>
   );
 }

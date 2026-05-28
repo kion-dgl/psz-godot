@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopFrame, Panel, PillRow, TabBar, Divider, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C } from '../pszui';
 
 type Recipe = { name: string; type: string; rarity: string; mats: string; cost: number };
 const RECIPES: Recipe[] = [
@@ -23,30 +23,11 @@ export default function CraftingShop() {
   const i = Math.min(sel, list.length - 1);
 
   return (
-    <ShopFrame>
-      <Panel title="Synthesis Shop" width={400} hint="Left/Right: Switch Mode   Up/Down: Select   Enter: Confirm   Esc: Leave">
-        <TabBar tabs={['Craft', 'Boards']} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
-        {tab === 0
-          ? RECIPES.map((r, idx) => (
-              <PillRow
-                key={r.name}
-                label={`${r.name} ${r.rarity} (${r.mats})`}
-                rightText={`${r.cost.toLocaleString()} M`}
-                selected={i === idx}
-                onClick={() => setSel(idx)}
-              />
-            ))
-          : BOARDS.map((b, idx) => (
-              <PillRow
-                key={b.name}
-                label={`${b.name} ${b.rarity} [${b.yield}]`}
-                rightText={`${b.cost.toLocaleString()} M`}
-                selected={i === idx}
-                onClick={() => setSel(idx)}
-              />
-            ))}
-      </Panel>
-      <Panel title="Detail" width={280}>
+    <ShopScreen
+      title="Synthesis Shop"
+      hint="Left/Right: Switch Mode   Up/Down: Select   Enter: Confirm   Esc: Leave"
+      portrait="synth-shop"
+      info={
         <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
           {tab === 0 ? (() => {
             const r = RECIPES[i];
@@ -79,7 +60,28 @@ export default function CraftingShop() {
             );
           })()}
         </div>
-      </Panel>
-    </ShopFrame>
+      }
+    >
+      <TabBar tabs={['Craft', 'Boards']} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+      {tab === 0
+        ? RECIPES.map((r, idx) => (
+            <PillRow
+              key={r.name}
+              label={`${r.name} ${r.rarity} (${r.mats})`}
+              rightText={`${r.cost.toLocaleString()} M`}
+              selected={i === idx}
+              onClick={() => setSel(idx)}
+            />
+          ))
+        : BOARDS.map((b, idx) => (
+            <PillRow
+              key={b.name}
+              label={`${b.name} ${b.rarity} [${b.yield}]`}
+              rightText={`${b.cost.toLocaleString()} M`}
+              selected={i === idx}
+              onClick={() => setSel(idx)}
+            />
+          ))}
+    </ShopScreen>
   );
 }

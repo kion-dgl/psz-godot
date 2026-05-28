@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopFrame, Panel, PillRow, TabBar, Divider, Balance, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, Divider, Balance, StatRow, ActionButton, C } from '../pszui';
 
 type Weapon = {
   name: string; price: number; type: string; rarity: string;
@@ -43,16 +43,11 @@ export default function WeaponShop() {
   const i = Math.min(sel, list.length - 1);
 
   return (
-    <ShopFrame>
-      <Panel title="Weapon Shop" width={380} hint="Left/Right: Category   Up/Down: Select   Enter: Buy   Esc: Leave">
-        <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
-        {list.map((it, idx) => (
-          <PillRow key={it.name} label={it.name} rightText={`${it.price} M`} selected={i === idx} onClick={() => setSel(idx)} />
-        ))}
-        <Divider />
-        <Balance label="Your Meseta:" value="12,450" />
-      </Panel>
-      <Panel title="Detail" width={280}>
+    <ShopScreen
+      title="Weapon Shop"
+      hint="Left/Right: Category   Up/Down: Select   Enter: Buy   Esc: Leave"
+      portrait="weapon-shop"
+      info={
         <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
           {tab === 0 ? (() => {
             const w = WEAPONS[i];
@@ -119,7 +114,14 @@ export default function WeaponShop() {
             );
           })()}
         </div>
-      </Panel>
-    </ShopFrame>
+      }
+    >
+      <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+      {list.map((it, idx) => (
+        <PillRow key={it.name} label={it.name} rightText={`${it.price} M`} selected={i === idx} onClick={() => setSel(idx)} />
+      ))}
+      <Divider />
+      <Balance label="Your Meseta:" value="12,450" />
+    </ShopScreen>
   );
 }

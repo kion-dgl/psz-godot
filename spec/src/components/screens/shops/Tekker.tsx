@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopFrame, Panel, PillRow, TabBar, Divider, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C } from '../pszui';
 
 type Grind = {
   name: string; grind: number; max: number; grinder: string; cost: number;
@@ -32,31 +32,11 @@ export default function Tekker() {
   const i = Math.min(sel, list.length - 1);
 
   return (
-    <ShopFrame>
-      <Panel title="Tekker" width={380} hint="Left/Right: Switch Mode   Up/Down: Select   Enter: Confirm   Esc: Leave">
-        <TabBar tabs={['Grind', 'Identify']} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
-        {tab === 0
-          ? GRINDABLE.map((w, idx) => (
-              <PillRow
-                key={w.name}
-                label={`${w.name} +${w.grind}/${w.max} [${w.grinder}]`}
-                rightText={`${w.cost} M`}
-                muted={w.missing}
-                selected={i === idx}
-                onClick={() => setSel(idx)}
-              />
-            ))
-          : UNIDENTIFIED.map((w, idx) => (
-              <PillRow
-                key={w.name}
-                label={`${w.name} [${w.stars}]`}
-                rightText={`${w.cost.toLocaleString()} M`}
-                selected={i === idx}
-                onClick={() => setSel(idx)}
-              />
-            ))}
-      </Panel>
-      <Panel title="Detail" width={280}>
+    <ShopScreen
+      title="Tekker"
+      hint="Left/Right: Switch Mode   Up/Down: Select   Enter: Confirm   Esc: Leave"
+      portrait="custom-shop"
+      info={
         <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
           {tab === 0 ? (() => {
             const w = GRINDABLE[i];
@@ -88,7 +68,29 @@ export default function Tekker() {
             );
           })()}
         </div>
-      </Panel>
-    </ShopFrame>
+      }
+    >
+      <TabBar tabs={['Grind', 'Identify']} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+      {tab === 0
+        ? GRINDABLE.map((w, idx) => (
+            <PillRow
+              key={w.name}
+              label={`${w.name} +${w.grind}/${w.max} [${w.grinder}]`}
+              rightText={`${w.cost} M`}
+              muted={w.missing}
+              selected={i === idx}
+              onClick={() => setSel(idx)}
+            />
+          ))
+        : UNIDENTIFIED.map((w, idx) => (
+            <PillRow
+              key={w.name}
+              label={`${w.name} [${w.stars}]`}
+              rightText={`${w.cost.toLocaleString()} M`}
+              selected={i === idx}
+              onClick={() => setSel(idx)}
+            />
+          ))}
+    </ShopScreen>
   );
 }

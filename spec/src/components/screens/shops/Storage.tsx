@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopFrame, Panel, PillRow, TabBar, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, StatRow, C } from '../pszui';
 
 type StorageItem = { name: string; qty: string; equipped?: boolean };
 const INVENTORY: StorageItem[] = [
@@ -26,46 +26,57 @@ export default function Storage() {
   const mesetaHint = 'Left/Right: Switch Tab   Enter: Transfer   Esc: Back';
   const list = tab === 0 ? INVENTORY : STORAGE;
   const i = Math.min(sel, list.length - 1);
+  const item = list[i];
 
   return (
-    <ShopFrame>
-      <Panel title="Storage" width={360} hint={isItems ? itemsHint : mesetaHint}>
-        <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
-        {isItems ? (
-          <>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, padding: '2px 4px 6px', letterSpacing: '0.08em' }}>
-              {tab === 0 ? 'INVENTORY (14/40)' : 'STORAGE (37/200)'}
+    <ShopScreen
+      title="Storage"
+      hint={isItems ? itemsHint : mesetaHint}
+      portrait="storage-counter"
+      info={
+        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
+          {isItems ? (
+            <>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{item.name}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <StatRow label="Qty" value={item.qty} />
+                <StatRow label="Status" value={item.equipped ? 'Equipped — cannot deposit' : 'Storable'} />
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>
+              Transfer meseta between your wallet and the bank.
             </div>
-            {list.map((it, idx) => (
-              <PillRow
-                key={it.name}
-                label={it.name}
-                rightText={it.qty}
-                tag={it.equipped ? { text: 'E', color: '#888' } : undefined}
-                muted={it.equipped}
-                selected={i === idx}
-                onClick={() => setSel(idx)}
-              />
-            ))}
-          </>
-        ) : (
-          <>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, padding: '2px 4px 6px', letterSpacing: '0.08em' }}>
-              WALLET: 50,000 M    BANK: 125,000 M
-            </div>
-            <PillRow label={tab === 2 ? 'Deposit Meseta…' : 'Withdraw Meseta…'} selected onClick={() => {}} />
-          </>
-        )}
-      </Panel>
-      <Panel title="Storage Keeper" width={240}>
-        <div style={{
-          height: '100%', minHeight: 320, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(40,52,72,0.25)', borderRadius: 4, border: '1px solid rgba(150,180,210,0.4)',
-          fontSize: 16, fontWeight: 700, color: C.textLight, letterSpacing: '0.1em',
-        }}>
-          [ NPC ]
+          )}
         </div>
-      </Panel>
-    </ShopFrame>
+      }
+    >
+      <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+      {isItems ? (
+        <>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, padding: '2px 4px 6px', letterSpacing: '0.08em' }}>
+            {tab === 0 ? 'INVENTORY (14/40)' : 'STORAGE (37/200)'}
+          </div>
+          {list.map((it, idx) => (
+            <PillRow
+              key={it.name}
+              label={it.name}
+              rightText={it.qty}
+              tag={it.equipped ? { text: 'E', color: '#888' } : undefined}
+              muted={it.equipped}
+              selected={i === idx}
+              onClick={() => setSel(idx)}
+            />
+          ))}
+        </>
+      ) : (
+        <>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, padding: '2px 4px 6px', letterSpacing: '0.08em' }}>
+            WALLET: 50,000 M    BANK: 125,000 M
+          </div>
+          <PillRow label={tab === 2 ? 'Deposit Meseta…' : 'Withdraw Meseta…'} selected onClick={() => {}} />
+        </>
+      )}
+    </ShopScreen>
   );
 }
