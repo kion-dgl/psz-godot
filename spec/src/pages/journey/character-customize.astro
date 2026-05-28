@@ -1,0 +1,42 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import CharacterCustomize from '../../components/screens/CharacterCustomize';
+---
+
+<Definition title="Character Customize" section="Journey">
+  <CharacterCustomize slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Multi-step flow after class selection: customize appearance, enter a name, and confirm. Uses the PSZ theme throughout.</p>
+
+  <h2>Steps</h2>
+
+  <Mermaid chart={`flowchart TD
+    A[Appearance] -->|Confirm| B[Name Entry]
+    A -->|Cancel| C[Class Select]
+    B -->|Enter pressed| D[Create Character]
+    B -->|Cancel| A
+    D --> E[City · Office]
+  `} />
+
+  <h2>Appearance</h2>
+  <p>Left panel with 4 rows — labels adapt for Cast classes (Head Parts, Body Color A/B/C). Right side shows a live 3D preview in a SubViewport. Right analog stick rotates the model.</p>
+  <ul>
+    <li><strong>Head Type</strong> — variation_index (8 options)</li>
+    <li><strong>Hair Color</strong> — hair_color_index (12 colors)</li>
+    <li><strong>Costume Color</strong> — body_color_index (12 colors)</li>
+    <li><strong>Skin Tone</strong> — skin_tone_index (6 tones)</li>
+  </ul>
+
+  <h2>Name Entry</h2>
+  <p>Centered panel with a LineEdit, max 16 characters. Submitting with an empty name does nothing. On submit, character is created immediately (no separate confirm step in current build).</p>
+
+  <h2>After Creation</h2>
+  <p>Character is saved, active slot set, and the game transitions to the city office (<code>city_office.tscn</code>) with the "intro" spawn key.</p>
+
+  <h2>Previous</h2>
+  <p><a href="/journey/create-character">← Create Character (Class Select)</a></p>
+  <h2>Next</h2>
+  <p><a href="/journey/city">City →</a></p>
+</Definition>
