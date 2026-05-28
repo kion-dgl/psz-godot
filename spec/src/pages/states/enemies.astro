@@ -1,0 +1,17 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Enemies">
+  <p><em>Placeholder — not yet specified.</em></p>
+
+  <h2>Scope</h2>
+  <ul>
+    <li><strong>Roster</strong> — the <code>enemies.json</code> entries: model, element, locations, and rare / boss flags.</li>
+    <li><strong>Behavior state machine</strong> — the <code>EnemyState</code> enum: IDLE → CHASING → ATTACKING → LOAFING (then back to chasing), plus HURT and DEAD. Charging is the close-range run sub-mode <em>within</em> CHASING, not its own state; wandering belongs to IDLE and stuck-avoidance to CHASING.</li>
+    <li><strong>Status effects</strong> — the six timed effects (freeze, burn, stun, sleep, poison, slow): how elements proc them (chance scales with element level) and what each does, plus the instant <strong>devil</strong> effect that drops the target to ¼ HP.</li>
+    <li><strong>Per-model SFX</strong> — the model-keyed enemy sound map (damage / death / attack / idle).</li>
+  </ul>
+
+  <p><a href="/states">← States</a></p>
+</Concept>
