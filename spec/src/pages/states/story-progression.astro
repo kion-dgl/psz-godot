@@ -1,0 +1,49 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `flowchart TD
+  SR[Search and Rescue] --> PP[The Paru Pact]
+  SR --> AS[Apothecary's Supply]
+  AS --> DOE[Deep Ore Extraction]
+  AS --> NR[Native Research]
+  AS --> PW[Poisoned Water]
+  DOE --> CS[Claiming a Stake]
+  SIS[Static in the Snow] --> MFP[Messages from the Past]
+  CSY[Control System] --> SMM[Seek My Mentor]
+  DC[Dark Castle] --> CR([Credits])
+
+  classDef q fill:#161b22,stroke:#58a6ff,color:#e6edf3
+  classDef done fill:#0d1117,stroke:#f0a020,color:#f0a020
+  class SR,PP,AS,DOE,NR,PW,CS,SIS,MFP,CSY,SMM,DC q
+  class CR done
+`;
+---
+
+<Concept title="Story Progression">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>Quest availability is gated by completion flags. <code>GameState.completed_missions</code> is a flat array of finished quest IDs; <code>is_mission_completed(id)</code> is the single source of truth. A quest's <code>parent_quest</code> (and optional <code>required_quests</code>) in its JSON declares what must be done first.</p>
+
+  <h2>Ordering</h2>
+  <p><code>data/quests/manifest.json</code> is the canonical progression order — the guild counter sorts its list by manifest position so quests read top-to-bottom in story order, regardless of which are currently available.</p>
+
+  <h2>Guild counter status tags</h2>
+  <p>Each quest's row tag is derived per-frame from completion state:</p>
+  <table>
+    <tr><th>Tag</th><th>Condition</th></tr>
+    <tr><td><code>CLEAR</code></td><td><code>is_mission_completed(id)</code> is true</td></tr>
+    <tr><td><code>REPORT</code></td><td>quest objectives met this session, awaiting turn-in (<code>_completed_quest</code>)</td></tr>
+    <tr><td><code>LOCKED</code></td><td><code>parent_quest</code> / a <code>required_quests</code> entry isn't completed yet</td></tr>
+    <tr><td>(none)</td><td>available to accept now</td></tr>
+  </table>
+
+  <h2>Lock enforcement</h2>
+  <p>Locked quests still show in the list (muted, with the parent named: "[LOCKED] Complete \"X\" to unlock") rather than being hidden, so the player can see what's coming. Selecting one shows the prerequisite instead of the difficulty menu.</p>
+
+  <h2>Completion → rewards → credits</h2>
+  <p>Reporting a completed quest at the guild counter calls <code>complete_mission(id)</code> (adds to <code>completed_missions</code>) and grants rewards. The final quest, <strong>Dark Castle</strong> (the Dark Falz fight), rolls the end <a href="/start-menu">credits</a> on victory.</p>
+
+  <h2>Note</h2>
+  <p>The diagram shows the gated relationships that are wired today; several later-arc quests (Finding Ogi, Investigate Tower, Heretic, The Broken Seal) are in the manifest but not yet parent-gated, so they appear available out of strict story order during alpha.</p>
+</Concept>

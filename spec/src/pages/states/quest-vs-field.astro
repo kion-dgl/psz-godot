@@ -1,0 +1,43 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> City
+  City --> FieldFree: enter_field(area, difficulty)
+  City --> FieldQuest: enter_quest(quest_id, difficulty)
+  FieldFree --> City: return_to_city()
+  FieldQuest --> AwaitingReport: objectives met
+  FieldQuest --> City: abort / return_to_city()
+  AwaitingReport --> City: report at guild counter
+  City --> [*]: Return to Title
+
+  FieldFree: Field · Free Explore
+  FieldQuest: Field · Quest
+  AwaitingReport: Awaiting Report
+`;
+---
+
+<Concept title="Quest vs Field">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The game has three macro-states, all owned by the <code>SessionManager</code> autoload. The <code>_location</code> field is either <code>"city"</code> or <code>"field"</code>; the active <code>_session.type</code> distinguishes a free expedition from an authored quest.</p>
+
+  <h2>The three states</h2>
+  <table>
+    <tr><th>State</th><th>Entered by</th><th>Objectives</th><th>Layout</th><th>Exit</th></tr>
+    <tr><td><strong>City</strong></td><td>boot / <code>return_to_city()</code></td><td>—</td><td>hub areas (market, counter, …)</td><td>teleporter → field</td></tr>
+    <tr><td><strong>Field · Free Explore</strong></td><td><code>enter_field(area, diff)</code></td><td>none — just explore &amp; farm</td><td>procedural sections</td><td><code>return_to_city()</code></td></tr>
+    <tr><td><strong>Field · Quest</strong></td><td><code>enter_quest(quest_id, diff)</code></td><td>loaded from quest JSON into <code>_quest_objectives</code></td><td>hand-authored <code>sections</code></td><td>objectives met → Awaiting Report, or abort</td></tr>
+    <tr><td><strong>Awaiting Report</strong></td><td>quest objectives complete</td><td>fulfilled; <code>_completed_quest</code> set</td><td>back in city</td><td>report at guild counter → rewards</td></tr>
+  </table>
+
+  <h2>What carries across rooms</h2>
+  <p>Within a field session, state persists as the player moves between cells: <code>_section_cell_states</code> (cleared cells, collected keys, opened gates, visited cells), <code>_activated_links</code> (cross-room fence switches), and <code>_action_log</code>. All of it is wiped by <code>clear_section_states()</code>, which every <code>enter_*</code> call runs on entry.</p>
+
+  <h2>Key vs free distinction</h2>
+  <p>Both field types share the same room/cell machinery; the difference is authored content. A quest sets <code>set_field_sections(quest["sections"])</code> (fixed layout, companions, weather, objectives); a free expedition leaves sections procedural and has no objectives, so it can only be left by returning to the city.</p>
+
+  <h2>Entry side-effects</h2>
+  <p>Every <code>enter_field</code> / <code>enter_mission</code> / <code>enter_quest</code> calls <code>TelepipeManager.cancel(...)</code> first — a new expedition makes any in-flight telepipe unreachable. The same-area "return to where I dropped my telepipe" path goes through <code>resume_session()</code> instead and skips <code>enter_field</code> entirely. See <a href="/states/telepipe">Telepipe</a>.</p>
+</Concept>
