@@ -164,17 +164,17 @@ export function ShopScreen({ title, hint, portrait, info, infoTitle = 'Detail', 
         </Panel>
       </div>
 
-      {/* Right — info (fills) over portrait (bottom-aligned) */}
-      <div style={{ flex: '0 0 38%', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-          <Panel title={infoTitle} style={{ width: '100%', height: '100%' }}>
-            <div style={{ height: '100%', overflowY: 'auto' }}>{info}</div>
-          </Panel>
-        </div>
+      {/* Right — info sized to content at the top, portrait pushed to the
+          bottom (margin-top:auto eats the leftover space as the gap) */}
+      <div style={{ flex: '0 0 38%', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <Panel title={infoTitle} style={{ width: '100%' }}>
+          <div style={{ maxHeight: 240, overflowY: 'auto' }}>{info}</div>
+        </Panel>
         <img
           src={assetUrl(`assets/ui/shop-previews/${portrait}.png`)}
           alt="shop keeper"
           style={{
+            marginTop: 'auto',
             width: '100%', aspectRatio: '1 / 1', objectFit: 'cover',
             display: 'block', imageRendering: 'pixelated', flexShrink: 0,
           }}
