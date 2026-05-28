@@ -1,0 +1,16 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Quest Objectives">
+  <p><em>Placeholder — not yet specified.</em></p>
+
+  <h2>Scope</h2>
+  <ul>
+    <li>The objective schema in quest JSON (<code>item_id</code> / <code>label</code> / <code>target</code>) and how multiple objectives combine — every objective must reach its <code>target</code>.</li>
+    <li>Runtime tracking — per-objective counts keyed by <code>item_id</code> (incremented via <code>collect_quest_item</code>, whether the source is a collectible pickup or a defeated enemy that registers as that item), and the <code>quest_completed</code> signal that fires once all targets are met, flipping the quest to the Completed state.</li>
+    <li>How objectives gate the <strong>report</strong> action (see <a href="/states/story-progression">Story Progression</a>) and why free-roam fields carry none (see <a href="/states/quest-vs-field">Quest vs Field</a>).</li>
+  </ul>
+
+  <p><a href="/states">← States</a></p>
+</Concept>
