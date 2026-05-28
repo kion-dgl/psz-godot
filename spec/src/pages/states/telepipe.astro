@@ -4,44 +4,51 @@ import Mermaid from '../../components/Mermaid.astro';
 
 const chart = `stateDiagram-v2
   [*] --> Inactive
-  Inactive --> Placed: place() in field
-  Placed --> Placed: place() again — old one replaced
-  Placed --> Inactive: cancel(reason)
-  Placed --> Inactive: consume_return() — round trip done
+  Inactive --> Placed: use telepipe in field
+  Placed --> Placed: place a new one (old is replaced)
+  Placed --> Inactive: quest start / end, title return, area change
+  Placed --> Inactive: return to field via the city-side pipe
 
-  Inactive: Inactive (no pipe)
-  Placed: Placed (one active)
+  Inactive: Inactive — no pipe
+  Placed: Placed — one active pipe
 `;
 ---
 
 <Concept title="Telepipe">
   <div class="diagram"><Mermaid chart={chart} /></div>
 
-  <p>The <code>TelepipeManager</code> autoload tracks the player's single active telepipe. <strong>At most one telepipe ever exists</strong> — dropping a new one cancels the old. State is in-memory only: app close, title return, quest accept/complete, or any explicit cancel wipes it.</p>
+  <p>A telepipe is a portable shortcut between the field and the city. The <code>TelepipeManager</code> autoload tracks it, and the cardinal rule is: <strong>at most one telepipe exists at a time</strong> — placing a new one immediately closes the old.</p>
 
-  <h2>Lifecycle</h2>
+  <h2>Round trip — the key behavior</h2>
+  <p>Dropping a telepipe does <em>not</em> consume it. The player can bounce between field and city repeatedly while it stays open:</p>
   <ul>
-    <li><strong>Place</strong> — using a telepipe consumable in the field calls <code>place(area, section, cell, world_pos, scene)</code>. It cancels any prior pipe, spawns a Telepipe element at the player's position, and spawns a matching one at <code>(0,0)</code> in the guild counter.</li>
-    <li><strong>Field → City</strong> — stepping into the field-side pipe travels to the counter (session suspended, section state preserved). The pipe stays active; coming back via the teleporter still works.</li>
-    <li><strong>City → Field</strong> — stepping into the city-side pipe calls <code>consume_return()</code>, which returns the saved location and clears state. The field loads at the saved <code>world_pos</code>; the pipe is gone on both ends — a one-shot return.</li>
-    <li><strong>Resume same area</strong> — picking the same area from the city teleporter goes through <code>resume_session()</code>: the pipe stays active and the field re-spawns it at <code>world_pos</code>.</li>
-    <li><strong>Pick different area</strong> — <code>cancel("area_changed")</code>; the suspended session is replaced by a fresh expedition, so the pipe is no longer reachable.</li>
+    <li>Use a telepipe in the field → a pipe spawns where the player stands, and a matching one appears in the city. The pipe is now <strong>active</strong>.</li>
+    <li>Step into the field-side pipe → travel to the city. The pipe <strong>stays active</strong>.</li>
+    <li>Go back to the field via the <strong>city teleporter</strong> (same area) → the pipe is <strong>still active</strong>, ready to take the player back to the city again. This can repeat indefinitely.</li>
+    <li>The pipe only closes when the player returns to the field by stepping into the <strong>city-side pipe</strong> — that's the one-shot return that consumes it.</li>
   </ul>
+  <p>So "returning to the field" keeps the pipe alive if done through the teleporter, but consumes it if done through the city pipe itself.</p>
 
-  <h2>Cancellation reasons</h2>
+  <h2>Cleared automatically when</h2>
   <table>
-    <tr><th>Reason</th><th>Trigger</th></tr>
-    <tr><td><code>replaced</code></td><td>a new telepipe was placed, wiping the old</td></tr>
-    <tr><td><code>returned</code></td><td>player walked the city-side pipe — round trip complete</td></tr>
-    <tr><td><code>title_return</code></td><td>returned to the title screen</td></tr>
-    <tr><td><code>quest_accepted</code></td><td>picked up a new quest</td></tr>
-    <tr><td><code>quest_ended</code></td><td>quest completed or aborted</td></tr>
-    <tr><td><code>area_changed</code></td><td>picked a different field area from the city teleporter</td></tr>
+    <tr><th>Event</th><th>Reason</th></tr>
+    <tr><td>A new telepipe is placed</td><td><code>replaced</code></td></tr>
+    <tr><td>The player returns to the field via the city-side pipe (round trip done)</td><td><code>returned</code></td></tr>
+    <tr><td>A quest is <strong>started</strong> (accepted)</td><td><code>quest_accepted</code></td></tr>
+    <tr><td>A quest <strong>ends</strong> (completed or aborted)</td><td><code>quest_ended</code></td></tr>
+    <tr><td>The player returns to the <strong>title screen</strong></td><td><code>title_return</code></td></tr>
+    <tr><td>A fresh expedition starts in a <strong>different area</strong></td><td><code>area_changed</code></td></tr>
   </table>
 
+  <h2>End-of-quest telepipe</h2>
+  <p>A quest often spawns a telepipe at the end as a convenient ride back to the city. Because only one pipe can exist, this <strong>story telepipe replaces any pipe the player had already placed</strong>. Conversely, if the player ignores the story telepipe and drops their own, that new one closes the story telepipe in turn — whichever was placed most recently wins.</p>
+
+  <h2>Persistence</h2>
+  <p>State is in-memory only. There are no special cases for cutscenes or scripted beats — any of the events above wipe it, and an app close obviously does too.</p>
+
   <h2>API</h2>
-  <p><code>is_active()</code>, <code>get_state()</code>, <code>place(...)</code>, <code>cancel(reason)</code>, <code>consume_return()</code>, <code>matches_field(area, section, cell)</code>. Signals: <code>placed(state)</code>, <code>canceled(reason)</code>.</p>
+  <p><code>is_active()</code>, <code>get_state()</code>, <code>place(area, section, cell, world_pos, scene)</code>, <code>cancel(reason)</code>, <code>consume_return()</code>, <code>matches_field(area, section, cell)</code>. Signals: <code>placed(state)</code>, <code>canceled(reason)</code>.</p>
 
   <h2>Known issues (#239)</h2>
-  <p>Two telepipe bugs are open: a new telepipe should delete the old one (the one-active rule isn't holding in 0.30.17), and going free-field → telepipe → city then talking to the quest counter locks the player into "Cancel Quest", stranding them on whatever free field they were on.</p>
+  <p>Two bugs are open in 0.30.17: placing a new telepipe doesn't reliably close the old one (the one-active rule isn't holding), and going free-field → telepipe → city then talking to the quest counter locks the player into "Cancel Quest", stranding them on whatever free field they were on.</p>
 </Concept>

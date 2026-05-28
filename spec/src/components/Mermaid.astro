@@ -15,12 +15,14 @@ const id = `mermaid-${Math.random().toString(36).slice(2, 8)}`;
     startOnLoad: false,
     securityLevel: 'loose',
     theme: 'dark',
+    fontFamily: 'system-ui, sans-serif',
     themeVariables: {
       darkMode: true,
       background: '#161b22',
       primaryColor: '#1f6feb',
       primaryTextColor: '#e6edf3',
       lineColor: '#30363d',
+      fontSize: '18px',
     },
   });
 
@@ -35,10 +37,14 @@ const id = `mermaid-${Math.random().toString(36).slice(2, 8)}`;
 <style>
   .mermaid-container {
     margin: 12px 0;
-    overflow-x: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
+  /* Fill the available width so small diagrams scale up to a readable size. */
   .mermaid-container :global(svg) {
-    max-width: 100%;
+    width: 100%;
+    max-width: 760px;
     height: auto;
   }
 </style>
