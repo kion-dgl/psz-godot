@@ -8,21 +8,30 @@ import AssetLoader from '../../components/screens/AssetLoader';
   <AssetLoader slot="preview" client:only="react" />
 
   <h2>Purpose</h2>
-  <p>Downloads the asset pack on first launch or when the cached pack is stale. Shows a progress bar while fetching from Arweave.</p>
+  <p>Downloads the asset pack (~264 MB) on first launch or when the pack version changes. Shows a progress bar while fetching from Arweave gateways.</p>
 
-  <h2>Behavior</h2>
-  <p>Reads <code>assets_manifest.json</code> for the pack URL and expected sha256. Downloads the pack, verifies the hash, and writes it to the user data directory. On success, transitions to the <a href="/journey/title">Title Screen</a>.</p>
+  <h2>Verification</h2>
+  <p>The in-app <code>assets_manifest.json</code> (bundled at build time) is the source of truth. It carries the pack's <code>sha256</code>, <code>size</code>, and <code>urls</code>.</p>
+  <p>The cache path encodes the hash: <code>user://packs/assets-&lt;sha12&gt;.pck</code>. If a file at that path exists, bootstrap streams a full sha256 verification against the manifest hash. No separate metadata download is needed — the manifest is baked into the binary.</p>
 
   <Mermaid chart={`flowchart TD
-    A[Download Content] --> B[Fetch pack from Arweave]
-    B --> C[Verify sha256]
-    C -->|Match| D[Write to user://]
-    C -->|Mismatch| E[Retry / Error]
-    D --> F[Title Screen]
+    A[Bootstrap] --> B{Pack cached?}
+    B -->|File exists| C[Stream sha256 verify]
+    C -->|Match| G[Mount pack]
+    C -->|Mismatch| D[Delete stale, download]
+    B -->|No file| D[Download from Arweave]
+    D --> E[Write to user://packs/]
+    E --> F[Stream sha256 verify]
+    F -->|Match| G
+    F -->|Mismatch| H[Fatal: integrity check failed]
+    G --> I[Title Screen]
   `} />
 
+  <h2>Cache cleanup</h2>
+  <p>On launch, any <code>*.pck</code> under <code>user://packs/</code> that doesn't match the current sha is deleted. Only one pack version lives on disk at a time.</p>
+
   <h2>Error handling</h2>
-  <p>Network failures show a retry button. Hash mismatch re-downloads from scratch. The player is never left on a broken state — worst case they retry or the app falls back to a mirror URL.</p>
+  <p>The manifest lists multiple gateway URLs. Bootstrap tries each in order — if one fails, it falls through to the next. Total failure shows a fatal message. Hash mismatch after download is also fatal (no silent fallback).</p>
 
   <h2>Previous</h2>
   <p><a href="/journey/splash">← Splash Screen</a></p>
