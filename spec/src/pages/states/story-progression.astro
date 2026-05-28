@@ -3,21 +3,29 @@ import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
 const depChart = `flowchart TD
-  SR[Search and Rescue] --> PP[The Paru Pact]
-  SR --> AS[Apothecary's Supply]
-  AS --> DOE[Deep Ore Extraction]
-  AS --> NR[Native Research]
-  AS --> PW[Poisoned Water]
-  DOE --> CS[Claiming a Stake]
-  SR --> MORE[... required story chain ...]
-  MORE --> DC[Dark Castle]
+  SR[Search and Rescue] --> AS[Apothecary's Supply]
+  AS --> SIS[Static in the Snow]
+  SIS --> TBS[The Broken Seal]
+  TBS --> MFP[Messages from the Past]
+  MFP --> CSY[Control System]
+  CSY --> IT[Investigate Tower]
+  IT --> DC[Dark Castle]
   DC --> CR([Credits])
 
-  classDef story fill:#161b22,stroke:#58a6ff,color:#e6edf3
-  classDef side fill:#10151c,stroke:#6e7681,color:#adbac7
-  classDef done fill:#0d1117,stroke:#f0a020,color:#f0a020
-  class SR,MORE,DC story
-  class PP,AS,DOE,NR,PW,CS side
+  AS --> DOE[Deep Ore Extraction]
+  DOE --> CAS[Claiming a Stake]
+  AS --> NR[Native Research]
+  AS --> PW[Poisoned Water]
+  SIS --> FO[Finding Ogi]
+  TBS --> SMM[Seek My Mentor]
+  MFP --> PP[The Paru Pact]
+  CSY --> HR[Heretic]
+
+  classDef story fill:#0d1117,stroke:#58a6ff,color:#e6edf3,stroke-width:2px
+  classDef side fill:#0d1117,stroke:#f0a020,color:#f8c840,stroke-width:2px
+  classDef done fill:#0d1117,stroke:#8b949e,color:#adbac7
+  class SR,AS,SIS,TBS,MFP,CSY,IT,DC story
+  class DOE,CAS,NR,PW,FO,SMM,PP,HR side
   class CR done
 `;
 
@@ -36,14 +44,15 @@ const lifeChart = `stateDiagram-v2
 
 <Concept title="Story Progression">
   <div class="diagram"><Mermaid chart={depChart} /></div>
+  <p class="legend"><span><span class="swatch" style="border-color:#58a6ff"></span> Required story quest</span><span><span class="swatch" style="border-color:#f0a020"></span> Optional side quest</span></p>
 
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119. <em>Terminology:</em> the unit of content is a <strong>quest</strong>. Some code identifiers say "mission" (<code>completed_missions</code>, <code>is_mission_completed</code>, <code>complete_mission</code>) — read those as "quest".</p>
 
   <h2>Quest classification</h2>
   <ul>
     <li><strong>Search and Rescue</strong> is the first story quest and the root of the graph. Every other quest <strong>MUST</strong> declare a parent (<code>parent_quest</code>, plus optional <code>required_quests</code>), so the dependency graph is fully rooted at Search and Rescue — no other quest may be parentless.</li>
-    <li>The <strong>required story quests</strong> form the spine from Search and Rescue through <strong>Dark Castle</strong>, the final story quest. Each one <strong>MUST</strong> be completed to progress the story.</li>
-    <li>Every quest that is not on that required spine is an <strong>optional side quest</strong>. Side quests <strong>MAY</strong> be skipped and <strong>MUST NOT</strong> gate the required path.</li>
+    <li>The <strong>required story quests</strong> (blue) form the spine from Search and Rescue through <strong>Dark Castle</strong>, the final story quest. Required vs side is <em>derived</em> from the graph — a quest is required if it lies on the parent chain leading to Dark Castle; there is no separate flag.</li>
+    <li>Every quest not on that spine is an <strong>optional side quest</strong> (yellow). Side quests <strong>MAY</strong> be skipped and <strong>MUST NOT</strong> gate the required path.</li>
   </ul>
 
   <h2>Quest lifecycle</h2>
@@ -71,3 +80,9 @@ const lifeChart = `stateDiagram-v2
   <h2>Rewards &amp; credits</h2>
   <p>Reporting the final story quest, <strong>Dark Castle</strong> (the Dark Falz fight), rolls the end <a href="/start-menu">credits</a> on victory.</p>
 </Concept>
+
+<style is:global>
+  .legend { display: flex; gap: 18px; font-size: 13px; color: #c9d1d9; margin: 0 0 12px; }
+  .legend > span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 2px; border: 2px solid; box-sizing: border-box; }
+</style>
