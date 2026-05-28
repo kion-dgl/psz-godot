@@ -1,6 +1,85 @@
 ---
 import Base from '../layouts/Base.astro';
 import Navbar from '../components/Navbar.astro';
+import Mermaid from '../components/Mermaid.astro';
+
+const journeyChart = `flowchart TD
+  Splash[Splash Screen] --> Download[Download Content]
+  Download -->|first run| Controls[Controls Setup]
+  Download -->|subsequent| Title[Title Screen]
+  Controls --> Title
+  Title --> CharSelect[Character Select]
+  CharSelect -->|existing slot| Market[Market]
+  CharSelect -->|empty slot| Create[Create Character]
+  Create --> Customize[Customize Character]
+  Customize -->|intro spawn| Office[Principal's Office]
+
+  click Splash "/journey/splash"
+  click Download "/journey/download"
+  click Controls "/journey/controls"
+  click Title "/journey/title"
+  click CharSelect "/journey/character-select"
+  click Create "/journey/create-character"
+  click Customize "/journey/character-customize"
+  click Office "/journey/city/office"
+  click Market "/journey/city/market"
+
+  classDef screen fill:#161b22,stroke:#58a6ff,color:#e6edf3,stroke-width:2px
+  class Splash,Download,Controls,Title,CharSelect,Create,Customize,Office,Market screen
+`;
+
+const cityChart = `flowchart LR
+  Office[Principal's Office] <--> Counter[Guild Counter]
+  Counter <--> Market[Market]
+  Counter <--> Teleport[Teleport]
+  Market <--> Underground[Underground]
+  Teleport -.->|warp pad| Field([Field])
+
+  click Office "/journey/city/office"
+  click Counter "/journey/city/counter"
+  click Market "/journey/city/market"
+  click Teleport "/journey/city/teleport"
+  click Underground "/journey/city/underground"
+
+  classDef area fill:#161b22,stroke:#f0a020,color:#e6edf3,stroke-width:2px
+  classDef external fill:#0d1117,stroke:#8b949e,color:#8b949e,stroke-dasharray:5 5
+  class Office,Counter,Market,Teleport,Underground area
+  class Field external
+`;
+
+const shopsChart = `flowchart TB
+  subgraph MarketArea[Market]
+    direction LR
+    WeaponShop[Weapon Shop]
+    ItemShop[Item Shop]
+    TechShop[Tech Shop]
+    Tekker[Tekker]
+  end
+
+  subgraph CounterArea[Guild Counter]
+    direction LR
+    QuestCounter[Quest Counter]
+    Storage[Storage]
+  end
+
+  subgraph UndergroundArea[Underground]
+    direction LR
+    CraftingShop[Synthesis Shop]
+    PhotonShop[Photon Collector]
+  end
+
+  click WeaponShop "/shop/weapon-shop"
+  click ItemShop "/shop/item-shop"
+  click TechShop "/shop/tech-shop"
+  click Tekker "/shop/tekker"
+  click QuestCounter "/shop/quest-counter"
+  click Storage "/shop/storage"
+  click CraftingShop "/shop/crafting-shop"
+  click PhotonShop "/shop/photon-shop"
+
+  classDef shop fill:#161b22,stroke:#f8c840,color:#e6edf3,stroke-width:2px
+  class WeaponShop,ItemShop,TechShop,Tekker,QuestCounter,Storage,CraftingShop,PhotonShop shop
+`;
 ---
 
 <Base title="Overview">
@@ -10,52 +89,14 @@ import Navbar from '../components/Navbar.astro';
       <h1>PSZ Spec</h1>
       <p>Screen definitions, game mechanics, and state documentation for Phantasy Star Zero Godot.</p>
 
-      <div class="grid">
-        <a href="/journey/splash" class="card">
-          <h2>Journey</h2>
-          <p>User flow from splash screen through character creation to city.</p>
-        </a>
-        <a href="/shop/weapon-shop" class="card">
-          <h2>Shops</h2>
-          <p>Weapon shop, item shop, tekker, storage, quest counter, crafting, photon collector.</p>
-        </a>
-        <a href="/states" class="card">
-          <h2>States</h2>
-          <p>Game state definitions — title, city, quest, field — and expected behaviors.</p>
-        </a>
-      </div>
+      <h2>User Journey</h2>
+      <Mermaid chart={journeyChart} />
 
-      <h2>Journey</h2>
-      <ol class="journey">
-        <li><a href="/journey/splash">Splash Screen</a></li>
-        <li><a href="/journey/download">Download Content</a></li>
-        <li><a href="/journey/controls">Controls Setup</a> (first run)</li>
-        <li><a href="/journey/title">Title Screen</a></li>
-        <li><a href="/journey/character-select">Character Select</a></li>
-        <li><a href="/journey/create-character">Create Character</a></li>
-        <li><a href="/journey/character-customize">Customize Character</a></li>
-        <li>City
-          <ul>
-            <li><a href="/journey/city/office">Principal's Office</a> (new character entry)</li>
-            <li><a href="/journey/city/market">Market</a> (existing character entry)</li>
-            <li><a href="/journey/city/counter">Guild Counter</a></li>
-            <li><a href="/journey/city/teleport">Teleport</a></li>
-            <li><a href="/journey/city/underground">Underground</a></li>
-          </ul>
-        </li>
-      </ol>
+      <h2>City</h2>
+      <Mermaid chart={cityChart} />
 
       <h2>Shops</h2>
-      <ul class="shops">
-        <li><a href="/shop/weapon-shop">Weapon Shop</a> — buy/sell weapons, armor, units (Market)</li>
-        <li><a href="/shop/item-shop">Item Shop</a> — consumables and technique disks (Market)</li>
-        <li><a href="/shop/tech-shop">Tech Shop</a> — buy technique disks (Market)</li>
-        <li><a href="/shop/tekker">Tekker</a> — identify and grind weapons (Market)</li>
-        <li><a href="/shop/storage">Storage</a> — deposit/withdraw items (Guild Counter)</li>
-        <li><a href="/shop/quest-counter">Quest Counter</a> — accept, report, cancel quests (Guild Counter)</li>
-        <li><a href="/shop/crafting-shop">Crafting Shop</a> — synthesize weapons, apply photons (Underground)</li>
-        <li><a href="/shop/photon-shop">Photon Collector</a> — trade Photon Drops (Underground)</li>
-      </ul>
+      <Mermaid chart={shopsChart} />
     </main>
   </div>
 </Base>
@@ -70,33 +111,17 @@ import Navbar from '../components/Navbar.astro';
     flex: 1;
     overflow-y: auto;
     padding: 40px;
-    max-width: 720px;
+    max-width: 960px;
     margin: 0 auto;
   }
   h1 { font-size: 24px; margin-bottom: 8px; }
   main > p { color: #8b949e; margin-bottom: 32px; }
-  h2 { font-size: 16px; margin-bottom: 12px; margin-top: 32px; }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-  .card {
-    padding: 16px;
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    display: block;
-  }
-  .card:hover {
-    border-color: #58a6ff;
-    text-decoration: none;
-  }
-  .card h2 { font-size: 14px; margin: 0 0 4px; }
-  .card p { font-size: 12px; color: #8b949e; margin: 0; }
-  .journey, .shops {
-    font-size: 14px;
-    line-height: 2;
-    padding-left: 20px;
+  h2 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    margin-top: 32px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 </style>

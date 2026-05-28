@@ -13,6 +13,7 @@ const id = `mermaid-${Math.random().toString(36).slice(2, 8)}`;
 
   mermaid.initialize({
     startOnLoad: false,
+    securityLevel: 'loose',
     theme: 'dark',
     themeVariables: {
       darkMode: true,
