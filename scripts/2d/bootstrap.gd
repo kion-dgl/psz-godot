@@ -391,8 +391,10 @@ func _goto_title() -> void:
 	# (MH Rise / PSO2 order). Once the scheme is saved, later boots skip
 	# straight to the title. Delete user://input_config.json to re-onboard.
 	if not InputConfig.has_saved_config():
+		print("[bootstrap] routing to input_select (no saved input config)")
 		get_tree().change_scene_to_file("res://scenes/2d/input_select.tscn")
 	else:
+		print("[bootstrap] routing to title (saved input config present)")
 		get_tree().change_scene_to_file(TITLE_SCENE)
 
 
