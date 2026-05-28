@@ -150,35 +150,40 @@ export function ShopScreen({ title, hint, portrait, info, infoTitle = 'Detail', 
   infoTitle?: string;
   children: ReactNode;
 }) {
+  // Right column is a fixed width (~40%); the portrait is a square pinned to
+  // the frame's bottom-right corner (5px in), with the info panel filling the
+  // space above it.
+  const RIGHT_W = 344;
+  const PORTRAIT = RIGHT_W;
   return (
     <div style={{
+      position: 'relative',
       width: 960, height: 540, background: C.bgLight, backgroundImage: SCANLINES,
       display: 'flex', gap: 10, padding: 16, boxSizing: 'border-box',
     }}>
-      {/* Left 60% — the shop list */}
-      <div style={{ flex: '0 0 60%', minWidth: 0, display: 'flex' }}>
+      {/* Left — the shop list */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex' }}>
         <Panel title={title} hint={hint} style={{ width: '100%', height: '100%' }}>
           <div style={{ height: '100%', overflowY: 'auto' }}>{children}</div>
         </Panel>
       </div>
 
-      {/* Right 25% — info (top) over portrait (bottom) */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-          <Panel title={infoTitle} style={{ width: '100%', height: '100%' }}>
-            <div style={{ height: '100%', overflowY: 'auto' }}>{info}</div>
-          </Panel>
-        </div>
-        <img
-          src={assetUrl(`assets/ui/shop-previews/${portrait}.png`)}
-          alt="shop keeper"
-          style={{
-            width: '100%', aspectRatio: '1 / 1', objectFit: 'cover',
-            borderRadius: 4, border: '2px solid #2a3448', display: 'block',
-            imageRendering: 'pixelated', flexShrink: 0,
-          }}
-        />
+      {/* Right — info panel; portrait is pinned to the frame corner below it */}
+      <div style={{ flex: `0 0 ${RIGHT_W}px`, minWidth: 0, display: 'flex' }}>
+        <Panel title={infoTitle} style={{ width: '100%', height: `calc(100% - ${PORTRAIT + 6}px)` }}>
+          <div style={{ height: '100%', overflowY: 'auto' }}>{info}</div>
+        </Panel>
       </div>
+
+      <img
+        src={assetUrl(`assets/ui/shop-previews/${portrait}.png`)}
+        alt="shop keeper"
+        style={{
+          position: 'absolute', bottom: 5, right: 5,
+          width: PORTRAIT, height: PORTRAIT, objectFit: 'cover',
+          display: 'block', imageRendering: 'pixelated',
+        }}
+      />
     </div>
   );
 }
