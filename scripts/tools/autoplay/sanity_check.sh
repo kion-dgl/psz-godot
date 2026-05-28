@@ -90,6 +90,9 @@ check "autopilot finished cleanly"             "[sanity] DONE ok"
 
 echo
 if [ "$FAIL" -eq 0 ] && [ "$RC" -eq 0 ]; then
+	# Record the HEAD this passed for — the merge gate (scripts/tools/autoplay/
+	# merge_gate.sh) reads .sanity-pass to decide whether a merge may proceed.
+	git -C "$REPO" rev-parse HEAD > "$REPO/.sanity-pass" 2>/dev/null || true
 	echo "══ SANITY CHECK PASSED ($PASS checks, godot rc=$RC) ══"
 	exit 0
 else
