@@ -1,16 +1,91 @@
 ---
 import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const fsm = `stateDiagram-v2
+  [*] --> IDLE
+  IDLE --> CHASING: player within detection_range
+  CHASING --> ATTACKING: within attack_range & cooldown ready
+  ATTACKING --> LOAFING: attack animation ends
+  LOAFING --> CHASING: loaf timer expires
+  CHASING --> IDLE: target lost
+  CHASING --> HURT: takes a hit
+  ATTACKING --> HURT: takes a hit
+  HURT --> CHASING: stagger ends (0.3s)
+  CHASING --> DEAD: HP reaches 0
+  HURT --> DEAD: HP reaches 0
+  DEAD --> [*]
+
+  IDLE: IDLE — wander / wait
+  CHASING: CHASING — walk far, run (charge) close
+  ATTACKING: ATTACKING
+  LOAFING: LOAFING — semicircle retreat
+  HURT: HURT — 0.3s stagger
+  DEAD: DEAD — play death anim, free
+`;
 ---
 
 <Concept title="Enemies">
-  <p><em>Placeholder — not yet specified.</em></p>
+  <div class="diagram"><Mermaid chart={fsm} /></div>
 
-  <h2>Scope</h2>
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
+
+  <p>Every enemy is one node class — <code>EnemyBase</code> (a <code>CharacterBody3D</code>) — driven by an <code>EnemyData</code> resource. Stats, model, element, and spawn locations live in the data; the AI, animation, status, and SFX logic live in the shared base. New enemies <strong>SHOULD</strong> be a new <code>EnemyData</code> resource with no new script.</p>
+
+  <h2>Roster &amp; data</h2>
+  <p>The runtime roster is the set of <code>EnemyData</code> resources under <code>data/enemies/*.tres</code>, loaded at boot by <code>EnemyRegistry</code> and keyed by <code>id</code>. Each entry carries:</p>
+  <table>
+    <tr><th>Field</th><th>Meaning</th></tr>
+    <tr><td><code>id</code> / <code>name</code></td><td>lookup key and display name</td></tr>
+    <tr><td><code>element</code></td><td>Native / Beast / Machine / Dark — drives damage attribution</td></tr>
+    <tr><td><code>locations</code></td><td>area ids this enemy spawns in</td></tr>
+    <tr><td><code>is_rare</code> / <code>is_boss</code></td><td>roster flags</td></tr>
+    <tr><td><code>model_id</code> / <code>animation_model_id</code></td><td>GLB under <code>assets/enemies/&lt;id&gt;/</code>; rares <strong>MAY</strong> borrow a base model's animations</td></tr>
+    <tr><td>combat stats</td><td><code>hp_base</code>, <code>defense_base</code>, <code>evasion_base</code>, <code>move_speed</code>, <code>attack_range</code>, <code>detection_range</code>, <code>attack_cooldown</code>, <code>exp_reward</code>, <code>meseta_min/max</code></td></tr>
+  </table>
+
+  <h2>Spawning</h2>
+  <p>The canonical path is the field controller's <code>_spawn_enemy(enemy_id)</code>: it resolves the id through <code>EnemyRegistry</code>, instantiates <code>EnemyBase</code>, assigns <code>enemy_data</code>, and adds it to the map. The base then loads its own model, hurtbox, navigation, and target on <code>_ready</code>. Defeated enemies emit <code>died</code>; the field controller (not the enemy) owns drops.</p>
+
+  <h2>Behavior state machine</h2>
+  <p>The <code>EnemyState</code> enum has exactly six states. Charging is <em>not</em> a state — it's the close-range run sub-mode within <strong>CHASING</strong>.</p>
+  <table>
+    <tr><th>State</th><th>Behavior</th></tr>
+    <tr><td><strong>IDLE</strong></td><td>Wander (random heading, half speed, edge-aware) or pause. Promotes to CHASING when the target enters <code>detection_range</code>.</td></tr>
+    <tr><td><strong>CHASING</strong></td><td>Navigate toward the target. <em>Walk</em> beyond 2× attack range, <em>run/charge</em> inside it. Stuck-avoidance steers perpendicular when displacement stalls.</td></tr>
+    <tr><td><strong>ATTACKING</strong></td><td>Stop, face target, play attack, deal damage, start cooldown. Exits to LOAFING when the animation ends.</td></tr>
+    <tr><td><strong>LOAFING</strong></td><td>Back off along a curving semicircle for 2.5–4s, then return to CHASING.</td></tr>
+    <tr><td><strong>HURT</strong></td><td>0.3s stagger on any hit; cancels an in-progress attack; returns to CHASING.</td></tr>
+    <tr><td><strong>DEAD</strong></td><td>Play death animation, emit <code>died</code>, free after the animation.</td></tr>
+  </table>
+
+  <h2>Status effects &amp; elements</h2>
+  <p>A hit carrying an element <strong>MAY</strong> proc a status. Trigger chance is <code>10% + 10% × element_level</code>. The full status table (<code>CombatManager.STATUS_EFFECTS</code>):</p>
+  <table>
+    <tr><th>Status</th><th>Duration</th><th>Effect</th></tr>
+    <tr><td>freeze</td><td>2s</td><td>immobile, takes 1.5× damage, breaks on hit</td></tr>
+    <tr><td>sleep</td><td>2s</td><td>immobile, breaks on hit</td></tr>
+    <tr><td>stun</td><td>3s</td><td>phase 1 immobile (1s), phase 2 can move but can't attack</td></tr>
+    <tr><td>burn</td><td>3s</td><td>3% max-HP/sec DoT, −0.1 defense</td></tr>
+    <tr><td>poison</td><td>3s</td><td>5% max-HP/sec DoT</td></tr>
+    <tr><td>slow</td><td>3s</td><td>−0.3 evasion</td></tr>
+    <tr><td>paralysis</td><td>3s</td><td>50% action-skip chance</td></tr>
+  </table>
+  <p>Plus the instant <strong>devil</strong> effect (dark element): no timer — it drops the target to ¼ HP immediately. The same status <strong>MUST NOT</strong> stack on itself; the model tints to the most recent status's colour while any effect is active.</p>
+
+  <h2>Per-model SFX</h2>
+  <p><code>EnemyBase.ENEMY_SFX</code> is a map keyed by <code>model_id</code>, each entry naming a <code>damage</code> / <code>death</code> / <code>attack</code> / <code>idle</code> sound. On <code>_ready</code> the enemy picks up the entry for its model; a missing key resolves to silence for that enemy.</p>
+
+  <h2>Implementation notes &amp; consolidation targets</h2>
+  <p>Recorded so the spec doubles as a cleanup checklist for the beta (verify before acting):</p>
   <ul>
-    <li><strong>Roster</strong> — the <code>enemies.json</code> entries: model, element, locations, and rare / boss flags.</li>
-    <li><strong>Behavior state machine</strong> — the <code>EnemyState</code> enum: IDLE → CHASING → ATTACKING → LOAFING (then back to chasing), plus HURT and DEAD. Charging is the close-range run sub-mode <em>within</em> CHASING, not its own state; wandering belongs to IDLE and stuck-avoidance to CHASING.</li>
-    <li><strong>Status effects</strong> — the six timed effects (freeze, burn, stun, sleep, poison, slow): how elements proc them (chance scales with element level) and what each does, plus the instant <strong>devil</strong> effect that drops the target to ¼ HP.</li>
-    <li><strong>Per-model SFX</strong> — the model-keyed enemy sound map (damage / death / attack / idle).</li>
+    <li><strong>Two conflicting element→status maps.</strong> <code>ELEMENT_TO_STATUS</code> (live, used by <code>EnemyBase</code>) maps fire→burn, ice→freeze, lightning→stun, dark→devil, light→sleep — so <code>poison</code>, <code>slow</code>, and <code>paralysis</code> are defined in <code>STATUS_EFFECTS</code> but unreachable via element procs. <code>ELEMENT_STATUS</code> (a second, divergent map) appears unused. Pick one.</li>
+    <li><strong>Dead <code>BehaviorType</code> enum.</strong> <code>EnemyData.BehaviorType</code> (MELEE/RANGED/CHARGER/SWARM/TANK/BOSS) is exported but never read at runtime — every enemy uses the same melee-approach AI. Either implement per-type behavior or drop the enum.</li>
+    <li><strong>Duplicate spawn/combat paths.</strong> A 2D turn-based combat path (<code>scripts/2d/field.gd</code> + much of <code>CombatManager</code>'s turn-based surface + <code>EnemySpawner</code>'s wave/aggro logic) only runs as a "shouldn't happen" fallback. <code>scripts/3d/elements/enemy_spawn.gd</code> is a third damage/death implementation used only on a registry miss.</li>
+    <li><strong><code>poison_lily.gd</code></strong> reimplements its own state machine and a hand-rolled poison DoT instead of <code>CombatManager.apply_status_effect</code> — the one bespoke enemy, with a private copy of poison.</li>
+    <li><strong>SFX coverage.</strong> <code>ENEMY_SFX</code> currently defines only <code>wolf</code>; every other model is silent.</li>
+    <li><strong>Data drift.</strong> <code>data/enemies.json</code> (66 entries, authoring seed) vs <code>data/enemies/*.tres</code> (67, runtime) — counts differ; reconcile which is the source of truth.</li>
+    <li><code>EnemyBase.set_enemy_data()</code> has no non-test caller (the field controller assigns the field directly).</li>
   </ul>
 
   <p><a href="/states">← States</a></p>

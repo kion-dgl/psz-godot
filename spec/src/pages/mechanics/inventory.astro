@@ -3,15 +3,50 @@ import Concept from '../../layouts/Concept.astro';
 ---
 
 <Concept title="Inventory" section="Mechanics">
-  <p><em>Placeholder — not yet specified.</em></p>
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
 
-  <h2>Scope</h2>
+  <p>The <code>Inventory</code> autoload holds the active character's carried items as an ordered <code>item_id → quantity</code> map. Insertion order is pickup order; the player <strong>MAY</strong> re-sort by category (one-shot, or auto on every pickup). The bank (<code>GameState.shared_storage</code>) is shared across characters — see <a href="/shop/storage">Storage</a>.</p>
+
+  <h2>Slots &amp; capacity</h2>
   <ul>
-    <li>Stack limits per consumable (stackables default to a max of 10 — e.g. up to 10 telepipes).</li>
-    <li>Consumable effects — mates / fluids restore a percentage of max HP / PP (30 / 60 / 100% for mono / di / tri). Atomizers (sol / moon / star) currently restore full HP; their PSO revive / cure / party-heal roles are still to be specified.</li>
-    <li>Technique disks as learn-items — <code>disk_&lt;tech&gt;_&lt;level&gt;</code>, consumed from inventory to learn or upgrade a tech.</li>
-    <li>Capacity: the inventory cap (40 slots) vs the shared bank, which is presently uncapped (PSO's 200-item bank is the canonical target, to be decided), and how deposit / withdraw moves items between them — see <a href="/shop/storage">Storage</a>.</li>
-    <li>Equipped-item rules (equipped gear can't be deposited until unequipped).</li>
+    <li>The inventory holds <strong>40 slots</strong>. Adding past the cap <strong>MUST</strong> fail (and play the error cue), not silently drop the item.</li>
+    <li><strong>Stackable</strong> items (consumables, materials, modifiers) occupy <strong>one slot per stack</strong>, capped by the item's max stack.</li>
+    <li><strong>Per-slot</strong> items (weapons, armor, units, mags, technique disks) take <strong>one slot per copy</strong> and each get a unique instance id (e.g. <code>ein_blade#3</code>).</li>
+    <li>Equipped gear <strong>MUST NOT</strong> be deposited or sold until unequipped.</li>
+  </ul>
+
+  <h2>Stack limits</h2>
+  <p>Stackable max stack is data-defined (<code>data/consumables/*.tres</code> etc.); the default is <strong>10</strong>.</p>
+  <table>
+    <tr><th>Item</th><th>Max stack</th></tr>
+    <tr><td>mates / fluids, atomizers (sol, moon), telepipe</td><td>10</td></tr>
+    <tr><td>star atomizer</td><td>5</td></tr>
+    <tr><td>scape doll</td><td>1</td></tr>
+    <tr><td>photon drop, materials, modifiers, recipes</td><td>99</td></tr>
+  </table>
+
+  <h2>Consumable effects</h2>
+  <p>Using a consumable <strong>MUST</strong> consume exactly one and apply its effect. Healing items are no-ops (and <strong>MUST NOT</strong> be consumed) when the relevant gauge is already full.</p>
+  <table>
+    <tr><th>Item</th><th>Effect</th></tr>
+    <tr><td>monomate / dimate / trimate</td><td>restore 30% / 60% / 100% of max HP</td></tr>
+    <tr><td>monofluid / difluid / trifluid</td><td>restore 30% / 60% / 100% of max PP</td></tr>
+    <tr><td>sol / moon / star atomizer</td><td>restore full HP <em>(PSO revive / cure / party-heal roles are still to be specified)</em></td></tr>
+    <tr><td>technique disk <code>disk_&lt;tech&gt;_&lt;level&gt;</code></td><td>learn or upgrade a tech, then consume the disk on success</td></tr>
+    <tr><td>telepipe</td><td>field-only; drops a placed pipe at the player — see <a href="/states/telepipe">Telepipe</a></td></tr>
+  </table>
+
+  <h2>Bank / storage</h2>
+  <p>Deposit moves items from the 40-slot inventory into the shared bank; withdraw moves them back, clamped by stack room. The bank is presently <strong>uncapped</strong> (PSO's 200-item bank is the canonical target, to be decided). Full deposit/withdraw flow lives in <a href="/shop/storage">Storage</a>.</p>
+
+  <h2>Implementation notes &amp; consolidation targets</h2>
+  <p>Recorded so the spec doubles as a cleanup checklist for the beta (verify before acting):</p>
+  <ul>
+    <li><strong>No shared registry base.</strong> Item/Consumable/Weapon/Armor/Unit/Material/Modifier/Recipe registries are each a near-identical copy-pasted autoload (private dict + <code>_load_all</code> + <code>get/has/get_all</code>). They share only <code>resource_utils.gd</code>'s file lister — a <code>BaseRegistry</code> would collapse them. Shop UI scripts likewise share no base.</li>
+    <li><strong>Duplicated category logic.</strong> <code>inventory_screen.gd</code> carries a verbatim copy of <code>Inventory.get_item_category()</code> and re-declares <code>CATEGORY_ORDER</code>. <code>inventory_icons.gd</code> does it right (calls back into <code>Inventory</code>). The screen should too.</li>
+    <li><strong>Stack limits defined twice.</strong> Each item's max stack lives in its <code>.tres</code> <em>and</em> as a hardcoded fallback in <code>Inventory._lookup_item</code> — materials/modifiers/recipes hardcode 99 there regardless of data.</li>
+    <li><strong>Item-use effects split across three tables</strong> keyed by the same ids: <code>Inventory.CONSUMABLE_EFFECTS</code> (HP/PP), <code>MagManager.FEED_EFFECTS</code> (mag feed), <code>CombatManager.MATERIAL_STAT_MAP</code> (stat-up materials).</li>
+    <li>Dead getters in <code>ItemRegistry</code> (<code>reload_items</code>, <code>get_items_by_type</code>, <code>get_all_item_ids</code>) have no callers.</li>
   </ul>
 
   <p><a href="/mechanics">← Mechanics</a></p>

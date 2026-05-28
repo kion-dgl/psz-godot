@@ -1,15 +1,58 @@
 ---
 import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const flow = `flowchart TD
+  A[Accept quest] --> L[SessionManager loads objectives]
+  L --> C[collect_quest_item item_id]
+  C --> K{"all counts ≥ target?"}
+  K -- no --> C
+  K -- yes --> M[mark_quest_complete -> quest_completed]
+  M --> R[Report at guild counter]
+  R --> P[complete_mission -> persisted CLEAR]
+
+  classDef sig fill:#0d1117,stroke:#58a6ff,color:#e6edf3,stroke-width:2px
+  class M sig
+`;
 ---
 
 <Concept title="Quest Objectives">
-  <p><em>Placeholder — not yet specified.</em></p>
+  <div class="diagram"><Mermaid chart={flow} /></div>
 
-  <h2>Scope</h2>
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
+
+  <p>Objectives are the win condition of a quest. They are authored in the quest JSON and tracked at runtime by <code>SessionManager</code>; meeting them flips the quest to <em>Completed</em>, which is what unlocks the <strong>report</strong> action at the guild counter (see <a href="/states/story-progression">Story Progression</a>).</p>
+
+  <h2>Schema</h2>
+  <p>A quest's <code>objectives</code> is an array of objects, each with <code>item_id</code>, <code>label</code>, and <code>target</code>:</p>
+  <table>
+    <tr><th>Field</th><th>Meaning</th></tr>
+    <tr><td><code>item_id</code></td><td>the count key — what the player collects / clears</td></tr>
+    <tr><td><code>label</code></td><td>display text for the HUD / log</td></tr>
+    <tr><td><code>target</code></td><td>how many are needed (defaults to 1)</td></tr>
+  </table>
+  <p>A quest <strong>MAY</strong> declare multiple objectives; the quest is complete only when <strong>every</strong> objective's count reaches its <code>target</code>. Free-roam field quests carry no <code>objectives</code> key (see <a href="/states/quest-vs-field">Quest vs Field</a>) and therefore never enter the Completed state.</p>
+
+  <h2>Runtime tracking</h2>
+  <p>On accept, <code>SessionManager</code> loads the objective array and seeds a per-<code>item_id</code> count at zero. <code>collect_quest_item(item_id)</code> is the single increment path: it bumps the count, emits <code>quest_item_collected</code> (for the HUD), and — when <code>are_objectives_complete()</code> first returns true — calls <code>mark_quest_complete()</code>, which records the completion and emits the <code>quest_completed</code> signal.</p>
+  <p>Counts and objectives are part of the suspendable session state, so they survive a telepipe round-trip to the city and back.</p>
+
+  <h2>What ticks an objective</h2>
   <ul>
-    <li>The objective schema in quest JSON (<code>item_id</code> / <code>label</code> / <code>target</code>) and how multiple objectives combine — every objective must reach its <code>target</code>.</li>
-    <li>Runtime tracking — per-objective counts keyed by <code>item_id</code> (incremented via <code>collect_quest_item</code>, whether the source is a collectible pickup or a defeated enemy that registers as that item), and the <code>quest_completed</code> signal that fires once all targets are met, flipping the quest to the Completed state.</li>
-    <li>How objectives gate the <strong>report</strong> action (see <a href="/states/story-progression">Story Progression</a>) and why free-roam fields carry none (see <a href="/states/quest-vs-field">Quest vs Field</a>).</li>
+    <li><strong>Quest-item pickups</strong> — the gold collectible star. Walking over it (or closing its pickup dialog) calls <code>collect_quest_item</code> once. Collecting N stars = N increments.</li>
+    <li><strong>Message logs</strong> — a message pack authored with an <code>objective_item_id</code> ticks the count the first time it's read (guarded so re-reads don't double-count).</li>
+    <li><strong>Defeating enemies — indirectly.</strong> There is no direct kill→count hook. A quest item authored with a <code>room_clear</code> spawn condition is spawned only after the room is cleared; the player still <strong>MUST</strong> walk over the resulting pickup to register it.</li>
+  </ul>
+
+  <h2>From complete to cleared</h2>
+  <p><code>mark_quest_complete()</code> stashes the run summary and flips state to Completed (guild tag <code>REPORT</code>). Reporting at the guild counter calls <code>report_quest()</code> then <code>GameState.complete_mission(quest_id)</code>, which appends to the persisted <code>completed_missions</code> set (saved per character) — from then on <code>is_mission_completed(id)</code> is true and the counter shows <code>CLEAR</code>. Completion is <strong>not</strong> persisted until reported.</p>
+
+  <h2>Implementation notes &amp; consolidation targets</h2>
+  <p>Recorded so the spec doubles as a cleanup checklist for the beta (verify before acting):</p>
+  <ul>
+    <li><strong>Parallel legacy completion path.</strong> The 2D <code>field.gd</code> drives a separate mission/wave system (<code>MissionRegistry</code>, <code>enter_mission</code>/<code>next_wave</code>) that calls <code>GameState.complete_mission</code> directly and bypasses <code>_quest_objectives</code> entirely. It is reached only as a fallback; it's a strong dead/duplicate candidate.</li>
+    <li><strong>Two report sites.</strong> <code>guild_counter.gd</code> and <code>city_office_controller.gd</code> each implement their own <code>_report_quest</code> with the same <code>report_quest()</code> + <code>complete_mission()</code> shape — extract one shared routine.</li>
+    <li>The field HUD renders objectives as a scrolling <strong>action log</strong> ("Picked up X (n/target)"), not a persistent checklist — fine, but worth deciding deliberately.</li>
   </ul>
 
   <p><a href="/states">← States</a></p>
