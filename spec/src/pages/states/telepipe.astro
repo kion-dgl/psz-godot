@@ -3,52 +3,52 @@ import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
 const chart = `stateDiagram-v2
-  [*] --> Inactive
-  Inactive --> Placed: use telepipe in field
-  Placed --> Placed: place a new one (old is replaced)
-  Placed --> Inactive: quest start / end, title return, area change
-  Placed --> Inactive: return to field via the city-side pipe
+  [*] --> NoPipe
+  NoPipe --> Open: use a Telepipe item (one item consumed)
+  Open --> Open: use another item — previous pipe closes
+  Open --> NoPipe: return to field via the city-side pipe
+  Open --> NoPipe: quest accepted / quest ended / title return / area change
 
-  Inactive: Inactive — no pipe
-  Placed: Placed — one active pipe
+  NoPipe: No active pipe
+  Open: Pipe open (exactly one)
 `;
 ---
 
 <Concept title="Telepipe">
   <div class="diagram"><Mermaid chart={chart} /></div>
 
-  <p>A telepipe is a portable shortcut between the field and the city. The <code>TelepipeManager</code> autoload tracks it, and the cardinal rule is: <strong>at most one telepipe exists at a time</strong> — placing a new one immediately closes the old.</p>
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>MAY</strong>, and <strong>REQUIRED</strong> below are used as in RFC 2119.</p>
 
-  <h2>Round trip — the key behavior</h2>
-  <p>Dropping a telepipe does <em>not</em> consume it. The player can bounce between field and city repeatedly while it stays open:</p>
+  <p>A telepipe is a portable shortcut between the field and the city. Distinguish two things: the <strong>Telepipe item</strong> (a stackable consumable in the inventory) and the <strong>placed telepipe</strong> (the open portal in the world).</p>
+
+  <h2>Items vs the placed pipe</h2>
   <ul>
-    <li>Use a telepipe in the field → a pipe spawns where the player stands, and a matching one appears in the city. The pipe is now <strong>active</strong>.</li>
-    <li>Step into the field-side pipe → travel to the city. The pipe <strong>stays active</strong>.</li>
-    <li>Go back to the field via the <strong>city teleporter</strong> (same area) → the pipe is <strong>still active</strong>, ready to take the player back to the city again. This can repeat indefinitely.</li>
-    <li>The pipe only closes when the player returns to the field by stepping into the <strong>city-side pipe</strong> — that's the one-shot return that consumes it.</li>
+    <li>The player <strong>MAY</strong> carry up to <strong>10</strong> Telepipe items.</li>
+    <li>Using a Telepipe item <strong>MUST</strong> consume exactly one item from the stack and open a placed telepipe.</li>
+    <li>At most one placed telepipe <strong>MUST</strong> exist at a time. Using another item while a pipe is open <strong>MUST</strong> close the previous pipe (the item is still consumed).</li>
   </ul>
-  <p>So "returning to the field" keeps the pipe alive if done through the teleporter, but consumes it if done through the city pipe itself.</p>
 
-  <h2>Cleared automatically when</h2>
-  <table>
-    <tr><th>Event</th><th>Reason</th></tr>
-    <tr><td>A new telepipe is placed</td><td><code>replaced</code></td></tr>
-    <tr><td>The player returns to the field via the city-side pipe (round trip done)</td><td><code>returned</code></td></tr>
-    <tr><td>A quest is <strong>started</strong> (accepted)</td><td><code>quest_accepted</code></td></tr>
-    <tr><td>A quest <strong>ends</strong> (completed or aborted)</td><td><code>quest_ended</code></td></tr>
-    <tr><td>The player returns to the <strong>title screen</strong></td><td><code>title_return</code></td></tr>
-    <tr><td>A fresh expedition starts in a <strong>different area</strong></td><td><code>area_changed</code></td></tr>
-  </table>
+  <h2>Round trip</h2>
+  <p>Opening a pipe consumes the item but does <strong>NOT</strong> immediately close the pipe. While the pipe is open the player <strong>MAY</strong> move between field and city repeatedly:</p>
+  <ul>
+    <li>Stepping into the field-side pipe travels to the city. The pipe <strong>MUST</strong> stay open.</li>
+    <li>Returning to the same area via the <strong>city teleporter</strong> <strong>MUST</strong> keep the pipe open, so the player can ride it back to the city again. This <strong>MAY</strong> repeat any number of times.</li>
+    <li>The placed pipe <strong>MUST</strong> close only when the player returns to the field by stepping into the <strong>city-side pipe</strong> — a one-shot return.</li>
+  </ul>
+
+  <h2>The placed pipe MUST close when</h2>
+  <ul>
+    <li>The player returns to the field through the city-side pipe (round trip complete).</li>
+    <li>A new Telepipe item is used (the new pipe replaces it).</li>
+    <li>A quest is <strong>accepted</strong>.</li>
+    <li>A quest <strong>ends</strong> (completed or cancelled).</li>
+    <li>The player returns to the <strong>title screen</strong>.</li>
+    <li>A fresh expedition starts in a <strong>different area</strong>.</li>
+  </ul>
 
   <h2>End-of-quest telepipe</h2>
-  <p>A quest often spawns a telepipe at the end as a convenient ride back to the city. Because only one pipe can exist, this <strong>story telepipe replaces any pipe the player had already placed</strong>. Conversely, if the player ignores the story telepipe and drops their own, that new one closes the story telepipe in turn — whichever was placed most recently wins.</p>
+  <p>A quest <strong>MAY</strong> open a telepipe at its end as a quick ride back to the city. Because exactly one pipe may exist, this story pipe <strong>MUST</strong> close any pipe the player had already placed. The player <strong>MAY</strong> instead ignore it and use their own item; doing so closes the story pipe in turn. Whichever was opened most recently is the one that remains.</p>
 
   <h2>Persistence</h2>
-  <p>State is in-memory only. There are no special cases for cutscenes or scripted beats — any of the events above wipe it, and an app close obviously does too.</p>
-
-  <h2>API</h2>
-  <p><code>is_active()</code>, <code>get_state()</code>, <code>place(area, section, cell, world_pos, scene)</code>, <code>cancel(reason)</code>, <code>consume_return()</code>, <code>matches_field(area, section, cell)</code>. Signals: <code>placed(state)</code>, <code>canceled(reason)</code>.</p>
-
-  <h2>Known issues (#239)</h2>
-  <p>Two bugs are open in 0.30.17: placing a new telepipe doesn't reliably close the old one (the one-active rule isn't holding), and going free-field → telepipe → city then talking to the quest counter locks the player into "Cancel Quest", stranding them on whatever free field they were on.</p>
+  <p>The placed pipe is in-memory only and <strong>MUST NOT</strong> survive any of the closing events above. Item counts persist with the inventory as normal.</p>
 </Concept>

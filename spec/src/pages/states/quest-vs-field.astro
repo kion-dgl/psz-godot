@@ -3,41 +3,56 @@ import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
 const chart = `stateDiagram-v2
-  [*] --> City
-  City --> FieldFree: enter_field(area, difficulty)
-  City --> FieldQuest: enter_quest(quest_id, difficulty)
-  FieldFree --> City: return_to_city()
-  FieldQuest --> AwaitingReport: objectives met
-  FieldQuest --> City: abort / return_to_city()
-  AwaitingReport --> City: report at guild counter
-  City --> [*]: Return to Title
+  [*] --> FreeRoam
+  FreeRoam --> OnQuest: accept quest — free-field state cleared
+  OnQuest --> FreeRoam: complete or cancel — fields reset
 
-  FieldFree: Field · Free Explore
-  FieldQuest: Field · Quest
-  AwaitingReport: Awaiting Report
+  state FreeRoam {
+    [*] --> CityFree
+    CityFree --> FreeField: teleporter to an unlocked field
+    FreeField --> CityFree: return to city (progress retained)
+    CityFree: City
+    FreeField: Free Field
+  }
+
+  state OnQuest {
+    [*] --> CityQuest
+    CityQuest --> QuestField: teleporter to the quest area
+    QuestField --> CityQuest: telepipe / return
+    CityQuest: City
+    QuestField: Quest Field
+  }
 `;
 ---
 
 <Concept title="Quest vs Field">
   <div class="diagram"><Mermaid chart={chart} /></div>
 
-  <p>The game has three macro-states, all owned by the <code>SessionManager</code> autoload. The <code>_location</code> field is either <code>"city"</code> or <code>"field"</code>; the active <code>_session.type</code> distinguishes a free expedition from an authored quest.</p>
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
 
-  <h2>The three states</h2>
-  <table>
-    <tr><th>State</th><th>Entered by</th><th>Objectives</th><th>Layout</th><th>Exit</th></tr>
-    <tr><td><strong>City</strong></td><td>boot / <code>return_to_city()</code></td><td>—</td><td>hub areas (market, counter, …)</td><td>teleporter → field</td></tr>
-    <tr><td><strong>Field · Free Explore</strong></td><td><code>enter_field(area, diff)</code></td><td>none — just explore &amp; farm</td><td>procedural sections</td><td><code>return_to_city()</code></td></tr>
-    <tr><td><strong>Field · Quest</strong></td><td><code>enter_quest(quest_id, diff)</code></td><td>loaded from quest JSON into <code>_quest_objectives</code></td><td>hand-authored <code>sections</code></td><td>objectives met → Awaiting Report, or abort</td></tr>
-    <tr><td><strong>Awaiting Report</strong></td><td>quest objectives complete</td><td>fulfilled; <code>_completed_quest</code> set</td><td>back in city</td><td>report at guild counter → rewards</td></tr>
-  </table>
+  <p>The player reaches the field in one of two ways, and the game is always in exactly one of two top-level modes: <strong>Free Roam</strong> or <strong>On Quest</strong>.</p>
+  <ul>
+    <li><strong>Free Roam</strong> — no quest is accepted. From the city teleporter the player MAY select any <em>unlocked</em> free field.</li>
+    <li><strong>On Quest</strong> — a quest has been accepted at the guild counter. The player travels to the quest's area from the teleporter.</li>
+  </ul>
 
-  <h2>What carries across rooms</h2>
-  <p>Within a field session, state persists as the player moves between cells: <code>_section_cell_states</code> (cleared cells, collected keys, opened gates, visited cells), <code>_activated_links</code> (cross-room fence switches), and <code>_action_log</code>. All of it is wiped by <code>clear_section_states()</code>, which every <code>enter_*</code> call runs on entry.</p>
+  <h2>Shared format</h2>
+  <p>Free fields and quests <strong>MUST</strong> use the identical quest JSON structure — an NPC companion, a mission name, principal text, and an ordered sequence of areas with their objectives, enemy placements, and object locations. A free field is <strong>NOT</strong> a quest; it merely reuses the quest format so both run through the same field machinery.</p>
 
-  <h2>Key vs free distinction</h2>
-  <p>Both field types share the same room/cell machinery; the difference is authored content. A quest sets <code>set_field_sections(quest["sections"])</code> (fixed layout, companions, weather, objectives); a free expedition leaves sections procedural and has no objectives, so it can only be left by returning to the city.</p>
+  <h2>Free Roam rules</h2>
+  <ul>
+    <li>While no quest is accepted, the player <strong>MUST</strong> have access to every free field they have unlocked.</li>
+    <li>Free-field progress (defeated enemies, opened gates, collected drops, cleared cells) <strong>MUST</strong> persist across field visits and city returns within the Free-Roam period. Travelling Valley → city → Wetlands → city and back <strong>MUST</strong> retain the state of each field; it <strong>MUST NOT</strong> reset on moving between free fields.</li>
+  </ul>
 
-  <h2>Entry side-effects</h2>
-  <p>Every <code>enter_field</code> / <code>enter_mission</code> / <code>enter_quest</code> calls <code>TelepipeManager.cancel(...)</code> first — a new expedition makes any in-flight telepipe unreachable. The same-area "return to where I dropped my telepipe" path goes through <code>resume_session()</code> instead and skips <code>enter_field</code> entirely. See <a href="/states/telepipe">Telepipe</a>.</p>
+  <h2>On Quest rules</h2>
+  <ul>
+    <li>Accepting a quest <strong>MUST</strong> clear all retained free-field state.</li>
+    <li>While on a quest, the teleporter <strong>MUST</strong> only offer the quest's content; free fields <strong>MUST NOT</strong> be selectable.</li>
+    <li>A quest <strong>MAY</strong> be completed or cancelled. On either, the game <strong>MUST</strong> return to Free Roam.</li>
+    <li>On returning to Free Roam, the free fields <strong>MUST</strong> be reset to their initial state — every enemy and object restored, so the player starts each field from the beginning again.</li>
+  </ul>
+
+  <h2>Why the distinction matters</h2>
+  <p>Because free fields and quests share the same format, the guild counter and session bookkeeping <strong>MUST</strong> key off the Free-Roam / On-Quest mode rather than the presence of a loaded quest structure. Treating a free field as a quest (e.g. offering "Cancel Quest" while the player is merely free-roaming) is out of spec and is the root of the telepipe / quest-counter stranding behavior — see <a href="/states/telepipe">Telepipe</a>.</p>
 </Concept>
