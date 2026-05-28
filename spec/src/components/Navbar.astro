@@ -1,0 +1,49 @@
+---
+interface Props {
+  current?: string;
+}
+const { current } = Astro.props;
+
+const sections = [
+  { href: '/', label: 'Overview' },
+  { href: '/journey/splash', label: 'Journey' },
+  { href: '/mechanics', label: 'Mechanics' },
+  { href: '/states', label: 'States' },
+];
+---
+
+<nav>
+  <span class="brand">PSZ Spec</span>
+  <div class="links">
+    {sections.map(s => (
+      <a href={s.href} class:list={[{ active: current === s.label }]}>{s.label}</a>
+    ))}
+  </div>
+</nav>
+
+<style>
+  nav {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 20px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    flex-shrink: 0;
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 15px;
+    color: #e6edf3;
+    letter-spacing: 0.5px;
+  }
+  .links { display: flex; gap: 16px; }
+  .links a {
+    font-size: 13px;
+    color: #8b949e;
+    padding: 4px 0;
+  }
+  .links a:hover { color: #c9d1d9; text-decoration: none; }
+  .links a.active { color: #58a6ff; border-bottom: 2px solid #58a6ff; }
+</style>

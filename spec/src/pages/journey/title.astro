@@ -1,0 +1,30 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import TitleScreen from '../../components/screens/TitleScreen';
+---
+
+<Definition title="Title Screen" section="Journey">
+  <TitleScreen slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Main menu after assets are loaded. The player chooses to start the game or adjust settings.</p>
+
+  <h2>Behavior</h2>
+  <p>Displays the game logo with a "Press Start" prompt. Any button press transitions to the main menu overlay with options: New Game, Continue, Settings.</p>
+
+  <Mermaid chart={`flowchart TD
+    A[Title Screen] --> B[Press Start]
+    B --> C{Save exists?}
+    C -->|Yes| D[Continue / New Game / Settings]
+    C -->|No| E[New Game / Settings]
+    D -->|Continue| F[Character Select]
+    D -->|New Game| G[Create Character]
+    E -->|New Game| G
+  `} />
+
+  <h2>Previous</h2>
+  <p><a href="/journey/download">← Download Content</a></p>
+  <h2>Next</h2>
+  <p><a href="/journey/character-select">Character Select →</a></p>
+</Definition>

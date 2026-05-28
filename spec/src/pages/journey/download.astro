@@ -1,0 +1,31 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import AssetLoader from '../../components/screens/AssetLoader';
+---
+
+<Definition title="Download Content" section="Journey">
+  <AssetLoader slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Downloads the asset pack on first launch or when the cached pack is stale. Shows a progress bar while fetching from Arweave.</p>
+
+  <h2>Behavior</h2>
+  <p>Reads <code>assets_manifest.json</code> for the pack URL and expected sha256. Downloads the pack, verifies the hash, and writes it to the user data directory. On success, transitions to the <a href="/journey/title">Title Screen</a>.</p>
+
+  <Mermaid chart={`flowchart TD
+    A[Download Content] --> B[Fetch pack from Arweave]
+    B --> C[Verify sha256]
+    C -->|Match| D[Write to user://]
+    C -->|Mismatch| E[Retry / Error]
+    D --> F[Title Screen]
+  `} />
+
+  <h2>Error handling</h2>
+  <p>Network failures show a retry button. Hash mismatch re-downloads from scratch. The player is never left on a broken state — worst case they retry or the app falls back to a mirror URL.</p>
+
+  <h2>Previous</h2>
+  <p><a href="/journey/splash">← Splash Screen</a></p>
+  <h2>Next</h2>
+  <p><a href="/journey/title">Title Screen →</a></p>
+</Definition>

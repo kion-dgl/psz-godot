@@ -1,0 +1,43 @@
+---
+interface Props {
+  chart: string;
+}
+const { chart } = Astro.props;
+const id = `mermaid-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<div class="mermaid-container" id={id} data-chart={chart}></div>
+
+<script>
+  import mermaid from 'mermaid';
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: 'dark',
+    themeVariables: {
+      darkMode: true,
+      background: '#161b22',
+      primaryColor: '#1f6feb',
+      primaryTextColor: '#e6edf3',
+      lineColor: '#30363d',
+    },
+  });
+
+  document.querySelectorAll<HTMLElement>('.mermaid-container').forEach(async (el) => {
+    const chart = el.dataset.chart;
+    if (!chart) return;
+    const { svg } = await mermaid.render(el.id + '-svg', chart);
+    el.innerHTML = svg;
+  });
+</script>
+
+<style>
+  .mermaid-container {
+    margin: 12px 0;
+    overflow-x: auto;
+  }
+  .mermaid-container :global(svg) {
+    max-width: 100%;
+    height: auto;
+  }
+</style>

@@ -1,0 +1,80 @@
+---
+import Base from '../layouts/Base.astro';
+import Navbar from '../components/Navbar.astro';
+---
+
+<Base title="Overview">
+  <div class="shell">
+    <Navbar current="Overview" />
+    <main>
+      <h1>PSZ Spec</h1>
+      <p>Screen definitions, game mechanics, and state documentation for Phantasy Star Zero Godot.</p>
+
+      <div class="grid">
+        <a href="/journey/splash" class="card">
+          <h2>Journey</h2>
+          <p>User flow from splash screen through character creation to city.</p>
+        </a>
+        <a href="/mechanics" class="card">
+          <h2>Mechanics</h2>
+          <p>Dodge roll, combo timings, charge thresholds, damage formulas.</p>
+        </a>
+        <a href="/states" class="card">
+          <h2>States</h2>
+          <p>Game state definitions — title, city, quest, field — and expected behaviors.</p>
+        </a>
+      </div>
+
+      <h2>Journey</h2>
+      <ol class="journey">
+        <li><a href="/journey/splash">Splash Screen</a></li>
+        <li><a href="/journey/download">Download Content</a></li>
+        <li><a href="/journey/title">Title Screen</a></li>
+        <li><a href="/journey/character-select">Character Select</a></li>
+        <li><a href="/journey/create-character">Create Character</a></li>
+        <li><a href="/journey/city">City</a></li>
+      </ol>
+    </main>
+  </div>
+</Base>
+
+<style>
+  .shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  main > p { color: #8b949e; margin-bottom: 32px; }
+  h2 { font-size: 16px; margin-bottom: 12px; margin-top: 32px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .card {
+    padding: 16px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    display: block;
+  }
+  .card:hover {
+    border-color: #58a6ff;
+    text-decoration: none;
+  }
+  .card h2 { font-size: 14px; margin: 0 0 4px; }
+  .card p { font-size: 12px; color: #8b949e; margin: 0; }
+  .journey {
+    font-size: 14px;
+    line-height: 2;
+    padding-left: 20px;
+  }
+</style>

@@ -1,0 +1,27 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Mermaid from '../../components/Mermaid.astro';
+---
+
+<Definition title="Splash Screen" section="Journey">
+  <img slot="preview" src="/splash_screen.png" alt="PSZ Splash Screen" style="width:960px;height:540px;object-fit:contain;background:#000;" />
+
+  <h2>Purpose</h2>
+  <p>First screen the player sees on launch. Displays the game logo while the engine initializes and checks for a cached asset pack.</p>
+
+  <h2>Behavior</h2>
+  <p>If an asset pack is cached and valid, transitions directly to the <a href="/journey/title">Title Screen</a>. If no pack is found or the hash doesn't match, transitions to <a href="/journey/download">Download Content</a>.</p>
+
+  <Mermaid chart={`flowchart TD
+    A[App Launch] --> B[Splash Screen]
+    B --> C{Pack cached?}
+    C -->|Yes, hash valid| D[Title Screen]
+    C -->|No or stale| E[Download Content]
+  `} />
+
+  <h2>Duration</h2>
+  <p>Minimum 1.5s display time to avoid a flash. If the pack check completes faster, hold the splash until the minimum elapses.</p>
+
+  <h2>Next</h2>
+  <p><a href="/journey/download">Download Content →</a></p>
+</Definition>
