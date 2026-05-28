@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { AUTOPILOT_STEPS } from '../autopilot';
 
 const CARD_W = 160;
 const CARD_H = 100;
@@ -173,6 +174,19 @@ const EDGES: Edge[] = [
     dashed: true,
   },
 ];
+
+// Autopilot coverage — single source of truth is src/autopilot.ts. An edge is
+// "covered" (drawn green) when it's a consecutive step transition between two
+// 'done' steps, so edges turn green here automatically as steps are marked done.
+const NODE_HREF: Record<string, string> = Object.fromEntries(NODES.map((n) => [n.id, n.href]));
+const AP_PAIRS = new Set<string>();
+for (let i = 0; i < AUTOPILOT_STEPS.length - 1; i++) {
+  const a = AUTOPILOT_STEPS[i];
+  const b = AUTOPILOT_STEPS[i + 1];
+  if (a.status === 'done' && b.status === 'done') AP_PAIRS.add(`${a.href}=>${b.href}`);
+}
+const SPLASH_DONE = AUTOPILOT_STEPS[0]?.status === 'done';
+const edgeCovered = (e: Edge) => AP_PAIRS.has(`${NODE_HREF[e.from] ?? ''}=>${NODE_HREF[e.to] ?? ''}`);
 
 const GROUPS: Group[] = [
   { id: 'city',              x: 920,  y: 240, w: 660, h: 440, label: 'City' },
@@ -493,12 +507,22 @@ export default function WireframeBoard() {
             <marker id="arrowhead-dim" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <path d="M0,0 L0,6 L9,3 z" fill="#8b949e" />
             </marker>
+            <marker id="arrowhead-green" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="#3fb950" />
+            </marker>
           </defs>
+          {/* Autopilot entry point: Start ◯ → Splash */}
+          <g>
+            <circle cx={-30} cy={90} r={22} fill="#0d1117" stroke={SPLASH_DONE ? '#3fb950' : '#8b949e'} strokeWidth={2} />
+            <text x={-30} y={94} fill="#c9d1d9" fontSize="11" textAnchor="middle" fontFamily="system-ui, sans-serif">Start</text>
+            <path d="M -6 90 L 32 90" fill="none" stroke={SPLASH_DONE ? '#3fb950' : '#58a6ff'} strokeWidth={2.5} markerEnd={`url(#${SPLASH_DONE ? 'arrowhead-green' : 'arrowhead'})`} />
+          </g>
           {EDGES.map((e, i) => {
             const from = NODES.find(n => n.id === e.from);
             const to = NODES.find(n => n.id === e.to);
             if (!from || !to) return null;
             const d = e.customPath ?? arrowPath(from, to);
+            const covered = edgeCovered(e);
             const fx = from.x + CARD_W / 2;
             const fy = from.y + CARD_H / 2;
             const tx = to.x + CARD_W / 2;
@@ -510,11 +534,11 @@ export default function WireframeBoard() {
                 <path
                   d={d}
                   fill="none"
-                  stroke={e.dashed ? '#8b949e' : '#58a6ff'}
-                  strokeWidth="1.5"
-                  strokeDasharray={e.dashed ? '4 4' : undefined}
-                  markerEnd={`url(#${e.dashed ? 'arrowhead-dim' : 'arrowhead'})`}
-                  opacity={e.dashed ? 0.5 : 0.8}
+                  stroke={covered ? '#3fb950' : e.dashed ? '#8b949e' : '#58a6ff'}
+                  strokeWidth={covered ? 2.5 : 1.5}
+                  strokeDasharray={e.dashed && !covered ? '4 4' : undefined}
+                  markerEnd={`url(#${covered ? 'arrowhead-green' : e.dashed ? 'arrowhead-dim' : 'arrowhead'})`}
+                  opacity={covered ? 1 : e.dashed ? 0.5 : 0.8}
                 />
                 {e.label && (
                   <text x={mx} y={my - 4} fill="#8b949e" fontSize="9" textAnchor="middle" style={{ paintOrder: 'stroke', stroke: '#010409', strokeWidth: 3 }}>
