@@ -25,7 +25,7 @@ import StartMenu from '../components/screens/StartMenu';
   </ul>
 
   <h2>Return to Title</h2>
-  <p>Selecting "Return to Title" wipes session state and routes back to the <a href="/journey/title">Title Screen</a>.</p>
+  <p>Selecting "Return to Title" saves the game, drops the active field session, and routes back to the <a href="/journey/title">Title Screen</a>. The end credits use this same save-and-return path, with one twist: the final quest is marked complete and cleared as the credits begin, so it shows as cleared at the guild counter without a report — see <a href="/states/story-progression">Story Progression</a>.</p>
 
   <Mermaid chart={`flowchart LR
     A[Gameplay] -->|open menu| B[Start Menu]

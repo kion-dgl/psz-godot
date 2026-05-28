@@ -65,6 +65,7 @@ const lifeChart = `stateDiagram-v2
     <li><strong>Report</strong> — turning the quest in at the guild counter <strong>MUST</strong> persist it (<code>complete_mission</code> → <code>completed_missions</code>), grant rewards, and return to Free Roam.</li>
     <li>Completion is not saved until reported: returning to the <strong>title</strong> while completed-but-unreported <strong>MUST NOT</strong> mark the quest done — it will not show as cleared at the guild counter.</li>
   </ul>
+  <p><strong>Return to Title</strong> (from the start menu) saves the game and returns to the title screen, dropping the active field session. The end <a href="/start-menu">credits</a> are the one exception to "not saved until reported": when the credits begin — after Dark Falz falls in <strong>Dark Castle</strong> — the game triggers that quest's complete <em>and</em> clear, then saves and returns to title exactly like Return to Title. Dark Castle therefore shows as <code>CLEAR</code> at the guild counter without ever being formally reported.</p>
 
   <h2>Unlocking free fields</h2>
   <p>Clearing an area in a quest <strong>MUST</strong> unlock that area's location for Free Roam — the location is added to the Free-Roam teleporter (see <a href="/states/quest-vs-field">Quest vs Field</a>). For example, clearing Paru during <strong>The Paru Pact</strong> unlocks the <strong>Paru</strong> field.</p>
