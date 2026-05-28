@@ -168,7 +168,7 @@ export function ShopScreen({ title, hint, portrait, info, infoTitle = 'Detail', 
           space-between distributes the leftover height as the gap. */}
       <div style={{ flex: '0 0 38%', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <Panel title={infoTitle} style={{ width: '100%' }}>
-          <div style={{ maxHeight: 200, overflowY: 'auto' }}>{info}</div>
+          <div style={{ maxHeight: 160, overflowY: 'auto' }}>{info}</div>
         </Panel>
         <img
           src={assetUrl(`assets/ui/shop-previews/${portrait}.png`)}
