@@ -7,20 +7,23 @@ import Mermaid from '../../components/Mermaid.astro';
   <img slot="preview" src="/splash_screen.png" alt="PSZ Splash Screen" style="width:960px;height:540px;object-fit:contain;background:#000;" />
 
   <h2>Purpose</h2>
-  <p>First screen the player sees on launch. Displays the game logo while the engine initializes and checks for a cached asset pack.</p>
+  <p>Godot's native boot splash. Displays the game logo on a black background while the engine initializes. This is rendered by the engine before any GDScript runs.</p>
 
   <h2>Behavior</h2>
-  <p>If an asset pack is cached and valid, transitions directly to the <a href="/journey/title">Title Screen</a>. If no pack is found or the hash doesn't match, transitions to <a href="/journey/download">Download Content</a>.</p>
+  <p>Shown automatically by Godot on launch. Once the engine finishes initialization, it loads the main scene (<code>bootstrap.tscn</code>) which takes over with the <a href="/journey/download">Download Content</a> screen. The player always sees this transition — there is no skip path.</p>
 
   <Mermaid chart={`flowchart TD
-    A[App Launch] --> B[Splash Screen]
-    B --> C{Pack cached?}
-    C -->|Yes, hash valid| D[Title Screen]
-    C -->|No or stale| E[Download Content]
+    A[App Launch] --> B[Engine Boot Splash]
+    B --> C[bootstrap.tscn loads]
+    C --> D[Download Content screen]
   `} />
 
-  <h2>Duration</h2>
-  <p>Minimum 1.5s display time to avoid a flash. If the pack check completes faster, hold the splash until the minimum elapses.</p>
+  <h2>Configuration</h2>
+  <p>Set in <code>project.godot</code>:</p>
+  <ul>
+    <li><code>boot_splash/image</code> = <code>res://splash_screen.png</code></li>
+    <li><code>boot_splash/bg_color</code> = black</li>
+  </ul>
 
   <h2>Next</h2>
   <p><a href="/journey/download">Download Content →</a></p>
