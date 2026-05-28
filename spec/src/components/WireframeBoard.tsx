@@ -13,7 +13,9 @@ type ThumbKind =
   | 'slats'           // horizontal slats
   | 'panel-preview'   // customize: panel left, preview right
   | 'city'            // 3D area placeholder
-  | 'shop';           // panel + detail
+  | 'shop'            // panel + detail
+  | 'menu'            // in-game start/pause menu
+  | 'stage';          // field area placeholder
 
 type Node = {
   id: string;
@@ -29,15 +31,50 @@ type Edge = { from: string; to: string; label?: string; dashed?: boolean };
 
 type Group = { id: string; x: number; y: number; w: number; h: number; label: string };
 
+type Header = { x: number; y: number; label: string };
+
+// Field stages. Most share the A → E (transition) → B → Z (boss) structure;
+// Eternal Tower is the odd one out — entrance, floors, transition, boss.
+type StageDef = { id: string; label: string; areas: { key: string; label: string }[] };
+const ABEZ = [
+  { key: 'a', label: 'A' },
+  { key: 'e', label: 'E' },
+  { key: 'b', label: 'B' },
+  { key: 'z', label: 'Z' },
+];
+const STAGES: StageDef[] = [
+  { id: 'valley',    label: 'Valley',    areas: ABEZ },
+  { id: 'wetlands',  label: 'Wetlands',  areas: ABEZ },
+  { id: 'snowfield', label: 'Snowfield', areas: ABEZ },
+  { id: 'ruins',     label: 'Ruins',     areas: ABEZ },
+  { id: 'paru',      label: 'Paru',      areas: ABEZ },
+  { id: 'arca',      label: 'Arca',      areas: ABEZ },
+  { id: 'shrine',    label: 'Shrine',    areas: ABEZ },
+  { id: 'tower',     label: 'Eternal Tower', areas: [
+    { key: 'entrance',   label: 'Entrance' },
+    { key: 'floors',     label: 'Floors' },
+    { key: 'transition', label: 'Transition' },
+    { key: 'boss',       label: 'Boss' },
+  ] },
+];
+const COLUMN_HEADERS = ['Area A', 'Area E · transition', 'Area B', 'Area Z · boss'];
+const STAGE_X0 = 1720;
+const STAGE_Y0 = 280;
+const STAGE_COL = 200;
+const STAGE_ROW = 135;
+
 const NODES: Node[] = [
-  // Journey row
+  // Journey row (Controls Setup raised 50px so the Download→Title skip line is clear)
   { id: 'splash',    x: 40,   y: 40,  title: 'Splash',           href: '/journey/splash',           thumb: 'splash' },
   { id: 'download',  x: 240,  y: 40,  title: 'Download',         href: '/journey/download',         thumb: 'loader' },
-  { id: 'controls',  x: 440,  y: 40,  title: 'Controls Setup',   href: '/journey/controls',         thumb: 'modal' },
+  { id: 'controls',  x: 440,  y: -10, title: 'Controls Setup',   href: '/journey/controls',         thumb: 'modal' },
   { id: 'title',     x: 640,  y: 40,  title: 'Title Screen',     href: '/journey/title',            thumb: 'title' },
   { id: 'charsel',   x: 840,  y: 40,  title: 'Character Select', href: '/journey/character-select', thumb: 'list-preview' },
   { id: 'create',    x: 1040, y: 40,  title: 'Create Character', href: '/journey/create-character', thumb: 'slats' },
   { id: 'customize', x: 1240, y: 40,  title: 'Customize',        href: '/journey/character-customize', thumb: 'panel-preview' },
+
+  // In-game start menu — "Return to Title" routes back to the title screen
+  { id: 'start-menu', x: 640, y: 240, title: 'Start Menu', href: '/start-menu', thumb: 'menu' },
 
   // City area
   { id: 'office',     x: 1180, y: 260, title: "Principal's Office", href: '/journey/city/office',     thumb: 'city', group: 'city' },
@@ -57,6 +94,19 @@ const NODES: Node[] = [
   { id: 'crafting',     x: 920,  y: 760, title: 'Synthesis Shop',   href: '/shop/crafting-shop', thumb: 'shop', group: 'underground-shops' },
   { id: 'storage',      x: 1180, y: 760, title: 'Item Storage',     href: '/shop/storage',       thumb: 'shop', group: 'counter-shops' },
   { id: 'quest-counter',x: 1400, y: 760, title: 'Quest Counter',    href: '/shop/quest-counter', thumb: 'shop', group: 'counter-shops' },
+
+  // Field stages — grid right of Teleport: 4 columns per stage row
+  ...STAGES.flatMap((stage, row) =>
+    stage.areas.map((area, col) => ({
+      id: `field-${stage.id}-${area.key}`,
+      x: STAGE_X0 + col * STAGE_COL,
+      y: STAGE_Y0 + row * STAGE_ROW,
+      title: `${stage.label} · ${area.label}`,
+      href: `/journey/field/${stage.id}/${area.key}`,
+      thumb: 'stage' as ThumbKind,
+      group: 'field-stages',
+    }))
+  ),
 ];
 
 const EDGES: Edge[] = [
@@ -85,6 +135,24 @@ const EDGES: Edge[] = [
   { from: 'counter', to: 'storage', dashed: true },
   { from: 'underground', to: 'crafting', dashed: true },
   { from: 'underground', to: 'photon', dashed: true },
+
+  // In-game start menu returns to title
+  { from: 'start-menu', to: 'title', label: 'Return to Title', dashed: true },
+
+  // Teleport warps to the first area of each stage
+  ...STAGES.map((stage) => ({
+    from: 'teleport',
+    to: `field-${stage.id}-${stage.areas[0].key}`,
+    dashed: true,
+  })),
+
+  // Intra-stage progression: column 0 → 1 → 2 → 3
+  ...STAGES.flatMap((stage) =>
+    stage.areas.slice(0, -1).map((area, i) => ({
+      from: `field-${stage.id}-${area.key}`,
+      to: `field-${stage.id}-${stage.areas[i + 1].key}`,
+    }))
+  ),
 ];
 
 const GROUPS: Group[] = [
@@ -92,7 +160,22 @@ const GROUPS: Group[] = [
   { id: 'market-shops',      x: 460,  y: 340, w: 400, h: 320, label: 'Market Shops' },
   { id: 'underground-shops', x: 680,  y: 740, w: 400, h: 120, label: 'Underground Shops' },
   { id: 'counter-shops',     x: 1160, y: 740, w: 400, h: 120, label: 'Counter Shops' },
+  {
+    id: 'field-stages',
+    x: STAGE_X0 - 20,
+    y: STAGE_Y0 - 60,
+    w: STAGE_COL * 4 + CARD_W - STAGE_COL + 40,
+    h: STAGE_ROW * STAGES.length + 60,
+    label: 'Field Stages',
+  },
 ];
+
+// Column headers above the field-stages grid.
+const STAGE_HEADERS: Header[] = COLUMN_HEADERS.map((label, col) => ({
+  x: STAGE_X0 + col * STAGE_COL,
+  y: STAGE_Y0 - 36,
+  label,
+}));
 
 function Thumb({ kind }: { kind: ThumbKind }) {
   const w = CARD_W - 8, h = CARD_H - 8;
@@ -202,6 +285,34 @@ function Thumb({ kind }: { kind: ThumbKind }) {
           <rect x={w * 0.68} y="32" width={w * 0.24} height="4" fill="#1a1a2a" opacity="0.3" />
         </svg>
       );
+    case 'menu':
+      return (
+        <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: '100%' }}>
+          <rect x="0" y="0" width={w} height={h} fill="#0d1117" />
+          <rect x={w * 0.18} y={h * 0.12} width={w * 0.64} height={h * 0.76} fill="#161b22" stroke="#30363d" rx="3" />
+          {[0, 1, 2, 3].map((i) => (
+            <rect key={i} x={w * 0.24} y={h * 0.22 + i * (h * 0.16)} width={w * 0.52} height={h * 0.1}
+              fill={i === 3 ? '#f0a020' : '#21262d'} rx="1" />
+          ))}
+        </svg>
+      );
+    case 'stage':
+      return (
+        <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', height: '100%' }}>
+          <defs>
+            <linearGradient id="stageSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#243b55" />
+              <stop offset="100%" stopColor="#101820" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width={w} height={h} fill="url(#stageSky)" />
+          <path d={`M 0 ${h * 0.62} L ${w * 0.4} ${h * 0.5} L ${w * 0.7} ${h * 0.66} L ${w} ${h * 0.55} L ${w} ${h} L 0 ${h} Z`} fill="#3a4a3a" />
+          <path d={`M 0 ${h * 0.78} L ${w} ${h * 0.72} L ${w} ${h} L 0 ${h} Z`} fill="#2a3a2a" />
+          <circle cx={w * 0.35} cy={h * 0.84} r="2.5" fill="#cc4444" />
+          <circle cx={w * 0.6} cy={h * 0.8} r="2.5" fill="#cc4444" />
+          <circle cx={w * 0.5} cy={h * 0.7} r="3" fill="#44cc44" />
+        </svg>
+      );
   }
 }
 
@@ -232,8 +343,8 @@ export default function WireframeBoard() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const boardW = 1620;
-    const boardH = 920;
+    const boardW = 2540;
+    const boardH = 1400;
     const fit = () => {
       const cw = el.clientWidth;
       const ch = el.clientHeight;
@@ -328,8 +439,24 @@ export default function WireframeBoard() {
           </div>
         ))}
 
+        {/* Field-stage column headers */}
+        {STAGE_HEADERS.map((hd, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            left: hd.x,
+            top: hd.y,
+            width: CARD_W,
+            textAlign: 'center',
+            fontSize: 11,
+            fontWeight: 700,
+            color: '#8b949e',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+          }}>{hd.label}</div>
+        ))}
+
         {/* Arrows */}
-        <svg style={{ position: 'absolute', left: 0, top: 0, width: 2000, height: 900, pointerEvents: 'none', overflow: 'visible' }}>
+        <svg style={{ position: 'absolute', left: 0, top: 0, width: 2800, height: 1500, pointerEvents: 'none', overflow: 'visible' }}>
           <defs>
             <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <path d="M0,0 L0,6 L9,3 z" fill="#58a6ff" />
