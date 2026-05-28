@@ -84,9 +84,9 @@ const NODES: Node[] = [
   { id: 'underground',x: 960,  y: 580, title: 'Underground',         href: '/journey/city/underground',thumb: 'city', group: 'city' },
 
   // Shops (Market area) — left of the city cluster
-  { id: 'weapon-shop',  x: 700, y: 440, title: 'Weapon Shop',  href: '/shop/weapon-shop', thumb: 'shop', group: 'market-shops' },
-  { id: 'item-shop',    x: 700, y: 580, title: 'Item Shop',    href: '/shop/item-shop',   thumb: 'shop', group: 'market-shops' },
-  { id: 'tekker',       x: 480, y: 510, title: 'Tekker',       href: '/shop/tekker',      thumb: 'shop', group: 'market-shops' },
+  { id: 'weapon-shop',  x: 700, y: 400, title: 'Weapon Shop',  href: '/shop/weapon-shop', thumb: 'shop', group: 'market-shops' },
+  { id: 'item-shop',    x: 700, y: 540, title: 'Item Shop',    href: '/shop/item-shop',   thumb: 'shop', group: 'market-shops' },
+  { id: 'tekker',       x: 480, y: 470, title: 'Tekker',       href: '/shop/tekker',      thumb: 'shop', group: 'market-shops' },
 
   // Bottom row — service counters lined up under the sewer:
   // Photon Collector, Synthesis Shop, Item Storage, Quest Counter
@@ -157,7 +157,7 @@ const EDGES: Edge[] = [
 
 const GROUPS: Group[] = [
   { id: 'city',              x: 920,  y: 240, w: 660, h: 440, label: 'City' },
-  { id: 'market-shops',      x: 460,  y: 420, w: 400, h: 320, label: 'Market Shops' },
+  { id: 'market-shops',      x: 460,  y: 380, w: 400, h: 320, label: 'Market Shops' },
   { id: 'underground-shops', x: 680,  y: 740, w: 400, h: 120, label: 'Underground Shops' },
   { id: 'counter-shops',     x: 1160, y: 740, w: 400, h: 120, label: 'Counter Shops' },
   {
