@@ -1,0 +1,32 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import CharacterSelect from '../../components/screens/CharacterSelect';
+---
+
+<Definition title="Character Select" section="Journey">
+  <CharacterSelect slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Choose a class to play. 14 classes across 3 races (Human, Newman, Cast) and 3 types (Hunter, Ranger, Force).</p>
+
+  <h2>Layout</h2>
+  <p>PSZ slats theme — vertical strips per class, grouped by type (Hunter → Ranger → Force). Clicking a slat expands it to show the character art, name, tagline, and traits. Unselected slats show a vertical label.</p>
+
+  <h2>Behavior</h2>
+  <p>Left/right navigates between classes. Confirm (A / Enter) selects and proceeds to <a href="/journey/create-character">Create Character</a>. Cancel (B / Esc) returns to the <a href="/journey/title">Title Screen</a>.</p>
+
+  <Mermaid chart={`flowchart TD
+    A[Character Select] -->|Confirm| B[Create Character]
+    A -->|Cancel| C[Title Screen]
+    A -->|Continue existing| D[City]
+  `} />
+
+  <h2>Theme</h2>
+  <p>Uses the PSZ palette: sky-blue gradient background, dark navy header/info panels, steel-blue borders, gold confirm button and type accent. Scanline overlay for DS texture feel.</p>
+
+  <h2>Previous</h2>
+  <p><a href="/journey/title">← Title Screen</a></p>
+  <h2>Next</h2>
+  <p><a href="/journey/create-character">Create Character →</a></p>
+</Definition>
