@@ -174,8 +174,7 @@ export function ShopScreen({ title, hint, portrait, info, infoTitle = 'Detail', 
           src={assetUrl(`assets/ui/shop-previews/${portrait}.png`)}
           alt="shop keeper"
           style={{
-            alignSelf: 'flex-end',
-            width: 232, height: 232, objectFit: 'cover',
+            width: '100%', aspectRatio: '1 / 1', objectFit: 'cover',
             display: 'block', imageRendering: 'pixelated', flexShrink: 0,
           }}
         />
