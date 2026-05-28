@@ -41,10 +41,9 @@ const id = `mermaid-${Math.random().toString(36).slice(2, 8)}`;
     display: flex;
     justify-content: center;
   }
-  /* Fill the available width so small diagrams scale up to a readable size. */
+  /* Fill the available width so the diagram scales with the container. */
   .mermaid-container :global(svg) {
     width: 100%;
-    max-width: 760px;
     height: auto;
   }
 </style>
