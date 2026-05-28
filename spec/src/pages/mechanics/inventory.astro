@@ -39,15 +39,5 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Bank / storage</h2>
   <p>Deposit moves items from the 40-slot inventory into the shared bank; withdraw moves them back, clamped by stack room. The bank is presently <strong>uncapped</strong> (PSO's 200-item bank is the canonical target, to be decided). Full deposit/withdraw flow lives in <a href="/shop/storage">Storage</a>.</p>
 
-  <h2>Implementation notes &amp; consolidation targets</h2>
-  <p>Recorded so the spec doubles as a cleanup checklist for the beta (verify before acting):</p>
-  <ul>
-    <li><strong>No shared registry base.</strong> Item/Consumable/Weapon/Armor/Unit/Material/Modifier/Recipe registries are each a near-identical copy-pasted autoload (private dict + <code>_load_all</code> + <code>get/has/get_all</code>). They share only <code>resource_utils.gd</code>'s file lister — a <code>BaseRegistry</code> would collapse them. Shop UI scripts likewise share no base.</li>
-    <li><strong>Duplicated category logic.</strong> <code>inventory_screen.gd</code> carries a verbatim copy of <code>Inventory.get_item_category()</code> and re-declares <code>CATEGORY_ORDER</code>. <code>inventory_icons.gd</code> does it right (calls back into <code>Inventory</code>). The screen should too.</li>
-    <li><strong>Stack limits defined twice.</strong> Each item's max stack lives in its <code>.tres</code> <em>and</em> as a hardcoded fallback in <code>Inventory._lookup_item</code> — materials/modifiers/recipes hardcode 99 there regardless of data.</li>
-    <li><strong>Item-use effects split across three tables</strong> keyed by the same ids: <code>Inventory.CONSUMABLE_EFFECTS</code> (HP/PP), <code>MagManager.FEED_EFFECTS</code> (mag feed), <code>CombatManager.MATERIAL_STAT_MAP</code> (stat-up materials).</li>
-    <li>Dead getters in <code>ItemRegistry</code> (<code>reload_items</code>, <code>get_items_by_type</code>, <code>get_all_item_ids</code>) have no callers.</li>
-  </ul>
-
   <p><a href="/mechanics">← Mechanics</a></p>
 </Concept>

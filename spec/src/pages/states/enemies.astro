@@ -76,17 +76,5 @@ const fsm = `stateDiagram-v2
   <h2>Per-model SFX</h2>
   <p><code>EnemyBase.ENEMY_SFX</code> is a map keyed by <code>model_id</code>, each entry naming a <code>damage</code> / <code>death</code> / <code>attack</code> / <code>idle</code> sound. On <code>_ready</code> the enemy picks up the entry for its model; a missing key resolves to silence for that enemy.</p>
 
-  <h2>Implementation notes &amp; consolidation targets</h2>
-  <p>Recorded so the spec doubles as a cleanup checklist for the beta (verify before acting):</p>
-  <ul>
-    <li><strong>Two conflicting element→status maps.</strong> <code>ELEMENT_TO_STATUS</code> (live, used by <code>EnemyBase</code>) maps fire→burn, ice→freeze, lightning→stun, dark→devil, light→sleep — so <code>poison</code>, <code>slow</code>, and <code>paralysis</code> are defined in <code>STATUS_EFFECTS</code> but unreachable via element procs. <code>ELEMENT_STATUS</code> (a second, divergent map) appears unused. Pick one.</li>
-    <li><strong>Dead <code>BehaviorType</code> enum.</strong> <code>EnemyData.BehaviorType</code> (MELEE/RANGED/CHARGER/SWARM/TANK/BOSS) is exported but never read at runtime — every enemy uses the same melee-approach AI. Either implement per-type behavior or drop the enum.</li>
-    <li><strong>Duplicate spawn/combat paths.</strong> A 2D turn-based combat path (<code>scripts/2d/field.gd</code> + much of <code>CombatManager</code>'s turn-based surface + <code>EnemySpawner</code>'s wave/aggro logic) only runs as a "shouldn't happen" fallback. <code>scripts/3d/elements/enemy_spawn.gd</code> is a third damage/death implementation used only on a registry miss.</li>
-    <li><strong><code>poison_lily.gd</code></strong> reimplements its own state machine and a hand-rolled poison DoT instead of <code>CombatManager.apply_status_effect</code> — the one bespoke enemy, with a private copy of poison.</li>
-    <li><strong>SFX coverage.</strong> <code>ENEMY_SFX</code> currently defines only <code>wolf</code>; every other model is silent.</li>
-    <li><strong>Data drift.</strong> <code>data/enemies.json</code> (66 entries, authoring seed) vs <code>data/enemies/*.tres</code> (67, runtime) — counts differ; reconcile which is the source of truth.</li>
-    <li><code>EnemyBase.set_enemy_data()</code> has no non-test caller (the field controller assigns the field directly).</li>
-  </ul>
-
   <p><a href="/states">← States</a></p>
 </Concept>
