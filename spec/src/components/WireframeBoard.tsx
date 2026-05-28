@@ -67,7 +67,7 @@ const NODES: Node[] = [
   // Journey row (Controls Setup raised 50px so the Download→Title skip line is clear)
   { id: 'splash',    x: 40,   y: 40,  title: 'Splash',           href: '/journey/splash',           thumb: 'splash' },
   { id: 'download',  x: 240,  y: 40,  title: 'Download',         href: '/journey/download',         thumb: 'loader' },
-  { id: 'controls',  x: 440,  y: -10, title: 'Controls Setup',   href: '/journey/controls',         thumb: 'modal' },
+  { id: 'controls',  x: 440,  y: -30, title: 'Controls Setup',   href: '/journey/controls',         thumb: 'modal' },
   { id: 'title',     x: 640,  y: 40,  title: 'Title Screen',     href: '/journey/title',            thumb: 'title' },
   { id: 'charsel',   x: 840,  y: 40,  title: 'Character Select', href: '/journey/character-select', thumb: 'list-preview' },
   { id: 'create',    x: 1040, y: 40,  title: 'Create Character', href: '/journey/create-character', thumb: 'slats' },
