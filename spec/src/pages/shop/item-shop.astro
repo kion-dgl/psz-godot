@@ -1,0 +1,17 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import ItemShop from '../../components/screens/shops/ItemShop';
+---
+
+<Definition title="Item Shop" section="States">
+  <ItemShop slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Buy consumables and technique disks from a VRM-animated NPC.</p>
+
+  <h2>Behavior</h2>
+  <p>Displays a list of consumable items and low-level technique disks for purchase. The NPC plays a VRM idle animation while the shop menu is open.</p>
+
+  <h2>Location</h2>
+  <p>Market area, accessed by interacting with the Item Shop NPC.</p>
+</Definition>

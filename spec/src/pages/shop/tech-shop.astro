@@ -1,0 +1,17 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import TechShop from '../../components/screens/shops/TechShop';
+---
+
+<Definition title="Tech Shop" section="States">
+  <TechShop slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Buy technique disks that teach the player new techniques when consumed from inventory.</p>
+
+  <h2>Behavior</h2>
+  <p>Only Lv.1 technique disks are available in the shop; higher-level disks are field drops only. Disks are consumed from inventory to permanently learn the technique.</p>
+
+  <h2>Location</h2>
+  <p>Market area, accessed through the Item Shop NPC's technique menu.</p>
+</Definition>

@@ -1,0 +1,17 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import Storage from '../../components/screens/shops/Storage';
+---
+
+<Definition title="Storage" section="States">
+  <Storage slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Withdraw and deposit items between inventory and long-term storage.</p>
+
+  <h2>Behavior</h2>
+  <p>Storage holds up to 200 item slots shared across all characters on the account. Inventory is limited to 40 slots. Items can be moved freely between the two.</p>
+
+  <h2>Location</h2>
+  <p>Guild Counter area, accessed by interacting with the storage terminal.</p>
+</Definition>

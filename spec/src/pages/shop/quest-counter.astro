@@ -1,0 +1,17 @@
+---
+import Definition from '../../layouts/Definition.astro';
+import QuestCounter from '../../components/screens/shops/QuestCounter';
+---
+
+<Definition title="Quest Counter" section="States">
+  <QuestCounter slot="preview" client:only="react" />
+
+  <h2>Purpose</h2>
+  <p>Accept, report, and cancel quests. Difficulty tabs filter the available quest list.</p>
+
+  <h2>Behavior</h2>
+  <p>Quests are organized by difficulty tier. Locked quests require completion of a parent quest before they become available. Reporting a completed quest grants rewards.</p>
+
+  <h2>Location</h2>
+  <p>Guild Counter area, accessed by interacting with the Quest Counter NPC.</p>
+</Definition>
