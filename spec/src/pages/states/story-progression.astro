@@ -2,24 +2,25 @@
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
+// Side branches are declared before each spine continuation so dagre keeps
+// the required spine down the right and the optional side quests on the left.
 const depChart = `flowchart TD
   SR[Search and Rescue] --> PP[The Paru Pact]
   PP --> AS[Apothecary's Supply]
-  AS --> FO[Finding Ogi]
-  FO --> IT[Investigate Tower]
-  IT --> HR[Heretic]
-  HR --> CSY[Control System]
-  CSY --> TBS[The Broken Seal]
-  TBS --> DC[Dark Castle]
-  DC --> CR([Credits])
-
   AS --> DOE[Deep Ore Extraction]
   DOE --> CAS[Claiming a Stake]
   AS --> NR[Native Research]
   AS --> PW[Poisoned Water]
+  AS --> FO[Finding Ogi]
   FO --> SIS[Static in the Snow]
   SIS --> MFP[Messages from the Past]
+  FO --> IT[Investigate Tower]
+  IT --> HR[Heretic]
+  HR --> CSY[Control System]
+  CSY --> TBS[The Broken Seal]
   TBS --> SMM[Seek My Mentor]
+  TBS --> DC[Dark Castle]
+  DC --> CR([Credits])
 
   classDef story fill:#0d1117,stroke:#58a6ff,color:#e6edf3,stroke-width:2px
   classDef side fill:#0d1117,stroke:#f0a020,color:#f8c840,stroke-width:2px
