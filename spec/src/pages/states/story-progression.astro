@@ -2,48 +2,72 @@
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
 
-const chart = `flowchart TD
+const depChart = `flowchart TD
   SR[Search and Rescue] --> PP[The Paru Pact]
   SR --> AS[Apothecary's Supply]
   AS --> DOE[Deep Ore Extraction]
   AS --> NR[Native Research]
   AS --> PW[Poisoned Water]
   DOE --> CS[Claiming a Stake]
-  SIS[Static in the Snow] --> MFP[Messages from the Past]
-  CSY[Control System] --> SMM[Seek My Mentor]
-  DC[Dark Castle] --> CR([Credits])
+  SR --> MORE[... required story chain ...]
+  MORE --> DC[Dark Castle]
+  DC --> CR([Credits])
 
-  classDef q fill:#161b22,stroke:#58a6ff,color:#e6edf3
+  classDef story fill:#161b22,stroke:#58a6ff,color:#e6edf3
+  classDef side fill:#10151c,stroke:#6e7681,color:#adbac7
   classDef done fill:#0d1117,stroke:#f0a020,color:#f0a020
-  class SR,PP,AS,DOE,NR,PW,CS,SIS,MFP,CSY,SMM,DC q
+  class SR,MORE,DC story
+  class PP,AS,DOE,NR,PW,CS side
   class CR done
+`;
+
+const lifeChart = `stateDiagram-v2
+  [*] --> FreeRoam
+  FreeRoam --> InProgress: accept quest
+  InProgress --> FreeRoam: cancel (nothing recorded)
+  InProgress --> Completed: objectives met
+  Completed --> FreeRoam: report (saved as cleared)
+
+  FreeRoam: Free Roam
+  InProgress: Quest — in progress
+  Completed: Quest — completed, awaiting report
 `;
 ---
 
 <Concept title="Story Progression">
-  <div class="diagram"><Mermaid chart={chart} /></div>
+  <div class="diagram"><Mermaid chart={depChart} /></div>
 
-  <p>Quest availability is gated by completion flags. <code>GameState.completed_missions</code> is a flat array of finished quest IDs; <code>is_mission_completed(id)</code> is the single source of truth. A quest's <code>parent_quest</code> (and optional <code>required_quests</code>) in its JSON declares what must be done first.</p>
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119. <em>Terminology:</em> the unit of content is a <strong>quest</strong>. Some code identifiers say "mission" (<code>completed_missions</code>, <code>is_mission_completed</code>, <code>complete_mission</code>) — read those as "quest".</p>
 
-  <h2>Ordering</h2>
-  <p><code>data/quests/manifest.json</code> is the canonical progression order — the guild counter sorts its list by manifest position so quests read top-to-bottom in story order, regardless of which are currently available.</p>
+  <h2>Quest classification</h2>
+  <ul>
+    <li><strong>Search and Rescue</strong> is the first story quest and the root of the graph. Every other quest <strong>MUST</strong> declare a parent (<code>parent_quest</code>, plus optional <code>required_quests</code>), so the dependency graph is fully rooted at Search and Rescue — no other quest may be parentless.</li>
+    <li>The <strong>required story quests</strong> form the spine from Search and Rescue through <strong>Dark Castle</strong>, the final story quest. Each one <strong>MUST</strong> be completed to progress the story.</li>
+    <li>Every quest that is not on that required spine is an <strong>optional side quest</strong>. Side quests <strong>MAY</strong> be skipped and <strong>MUST NOT</strong> gate the required path.</li>
+  </ul>
+
+  <h2>Quest lifecycle</h2>
+  <div class="diagram"><Mermaid chart={lifeChart} /></div>
+  <p>While a quest is accepted the game is On Quest (see <a href="/states/quest-vs-field">Quest vs Field</a>). Exactly two actions return it to Free Roam — <strong>report</strong> or <strong>cancel</strong>:</p>
+  <ul>
+    <li><strong>In progress</strong> — objectives not yet met. The player <strong>MAY</strong> return to the guild counter and <strong>cancel</strong>; cancelling records nothing and returns to Free Roam.</li>
+    <li><strong>Completed</strong> — objectives met (e.g. the boss is down). The quest is still active; the player <strong>MUST</strong> now be able to <strong>report</strong> it and <strong>MUST NOT</strong> be able to cancel it.</li>
+    <li><strong>Report</strong> — turning the quest in at the guild counter <strong>MUST</strong> persist it (<code>complete_mission</code> → <code>completed_missions</code>), grant rewards, and return to Free Roam.</li>
+    <li>Completion is not saved until reported: returning to the <strong>title</strong> while completed-but-unreported <strong>MUST NOT</strong> mark the quest done — it will not show as cleared at the guild counter.</li>
+  </ul>
 
   <h2>Guild counter status tags</h2>
-  <p>Each quest's row tag is derived per-frame from completion state:</p>
   <table>
-    <tr><th>Tag</th><th>Condition</th></tr>
-    <tr><td><code>CLEAR</code></td><td><code>is_mission_completed(id)</code> is true</td></tr>
-    <tr><td><code>REPORT</code></td><td>quest objectives met this session, awaiting turn-in (<code>_completed_quest</code>)</td></tr>
-    <tr><td><code>LOCKED</code></td><td><code>parent_quest</code> / a <code>required_quests</code> entry isn't completed yet</td></tr>
-    <tr><td>(none)</td><td>available to accept now</td></tr>
+    <tr><th>Tag</th><th>Meaning</th></tr>
+    <tr><td>(none)</td><td>available to accept</td></tr>
+    <tr><td><code>LOCKED</code></td><td>a <code>parent_quest</code> / <code>required_quests</code> entry isn't completed yet</td></tr>
+    <tr><td><code>REPORT</code></td><td>completed this session, awaiting turn-in (the <em>Completed</em> state)</td></tr>
+    <tr><td><code>CLEAR</code></td><td>reported &amp; persisted — <code>is_mission_completed(id)</code> is true</td></tr>
   </table>
 
-  <h2>Lock enforcement</h2>
-  <p>Locked quests still show in the list (muted, with the parent named: "[LOCKED] Complete \"X\" to unlock") rather than being hidden, so the player can see what's coming. Selecting one shows the prerequisite instead of the difficulty menu.</p>
+  <h2>Ordering &amp; lock display</h2>
+  <p><code>data/quests/manifest.json</code> is the canonical progression order; the guild counter sorts by manifest position so quests read top-to-bottom in story order. Locked quests <strong>MUST</strong> still appear (muted, naming the prerequisite: "[LOCKED] Complete \"X\" to unlock") rather than being hidden, so the player can see what's ahead.</p>
 
-  <h2>Completion → rewards → credits</h2>
-  <p>Reporting a completed quest at the guild counter calls <code>complete_mission(id)</code> (adds to <code>completed_missions</code>) and grants rewards. The final quest, <strong>Dark Castle</strong> (the Dark Falz fight), rolls the end <a href="/start-menu">credits</a> on victory.</p>
-
-  <h2>Note</h2>
-  <p>The diagram shows the gated relationships that are wired today; several later-arc quests (Finding Ogi, Investigate Tower, Heretic, The Broken Seal) are in the manifest but not yet parent-gated, so they appear available out of strict story order during alpha.</p>
+  <h2>Rewards &amp; credits</h2>
+  <p>Reporting the final story quest, <strong>Dark Castle</strong> (the Dark Falz fight), rolls the end <a href="/start-menu">credits</a> on victory.</p>
 </Concept>
