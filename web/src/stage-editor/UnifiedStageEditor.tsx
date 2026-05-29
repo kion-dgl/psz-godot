@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import * as THREE from 'three';
 import type { EditorTab, FloorTriangle, GateDirection, PreviewModel, PortalData, ObstacleType, ObstacleData, WaypointData } from './types';
 import { useStageConfig } from './useStageConfig';
+import { getPortalRotation } from './types';
 import { getAreaFromMapId, getAllMapsForArea } from './constants';
 import StageSelector from './StageSelector';
 import StageCanvas from './StageCanvas';
@@ -412,22 +413,35 @@ export default function UnifiedStageEditor() {
     });
   }, [waypointPlacementMode, selectedWaypointId, updateConfig]);
 
-  // Seed waypoints from already-authored locations (gates + spawn).
+  // Seed the graph from already-authored locations: for each gate, a spawn node
+  // + a loading-trigger node behind it, joined by one edge. Spawns are the
+  // connectable network; a load point is a leaf that only links to the spawn it
+  // sits behind. Offsets match the gate markers (spawn 3 units out, trigger 7).
   const handleSeedFromGates = useCallback(() => {
     updateConfig((prev) => {
-      const existing = [...(prev.waypoints ?? [])];
+      const waypoints: WaypointData[] = [...(prev.waypoints ?? [])];
+      const edges = [...(prev.waypointEdges ?? [])];
       const near = (p: [number, number, number]) =>
-        existing.some((w) => Math.hypot(w.position[0] - p[0], w.position[2] - p[2]) < 2);
-      const add: WaypointData[] = [];
+        waypoints.some((w) => Math.hypot(w.position[0] - p[0], w.position[2] - p[2]) < 2);
+      const stamp = Date.now();
       prev.portals.forEach((portal, i) => {
-        if (!near(portal.position)) {
-          add.push({ id: `wp_gate_${i}_${Date.now()}`, position: portal.position, kind: 'gate', label: portal.label });
-        }
+        const rot = getPortalRotation(portal);
+        const sin = Math.sin(rot);
+        const cos = Math.cos(rot);
+        const [gx, , gz] = portal.position;
+        const spawnPos: [number, number, number] = [gx - sin * 3, 0, gz - cos * 3];
+        const loadPos: [number, number, number] = [gx - sin * 7, 0, gz - cos * 7];
+        if (near(spawnPos)) return;
+        const spawnId = `wp_spawn_${i}_${stamp}`;
+        const loadId = `wp_load_${i}_${stamp}`;
+        waypoints.push({ id: spawnId, position: spawnPos, kind: 'spawn', label: `spawn ${portal.label}` });
+        waypoints.push({ id: loadId, position: loadPos, kind: 'exit', label: `load ${portal.label}` });
+        edges.push([spawnId, loadId]);
       });
       if (prev.defaultSpawn && !near(prev.defaultSpawn.position)) {
-        add.push({ id: `wp_spawn_${Date.now()}`, position: prev.defaultSpawn.position, kind: 'spawn', label: 'spawn' });
+        waypoints.push({ id: `wp_spawn_default_${stamp}`, position: prev.defaultSpawn.position, kind: 'spawn', label: 'spawn (default)' });
       }
-      return { ...prev, waypoints: [...existing, ...add] };
+      return { ...prev, waypoints, waypointEdges: edges };
     });
   }, [updateConfig]);
 
@@ -436,7 +450,9 @@ export default function UnifiedStageEditor() {
   const handleAutoConnect = useCallback(() => {
     const tris = includedTriangles;
     updateConfig((prev) => {
-      const wps = prev.waypoints ?? [];
+      // Only connect the spawn network (+ generic points). Load/exit nodes stay
+      // leaves linked solely to the spawn they were seeded behind.
+      const wps = (prev.waypoints ?? []).filter((w) => w.kind !== 'exit' && w.kind !== 'gate');
       const keys = new Set((prev.waypointEdges ?? []).map(([a, b]) => [a, b].sort().join('|')));
       const MAX_DIST = 45;
       for (let i = 0; i < wps.length; i++) {
