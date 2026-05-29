@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import * as THREE from 'three';
-import type { EditorTab, FloorTriangle, GateDirection, PreviewModel, PortalData, ObstacleType, ObstacleData } from './types';
+import type { EditorTab, FloorTriangle, GateDirection, PreviewModel, PortalData, ObstacleType, ObstacleData, WaypointData } from './types';
 import { useStageConfig } from './useStageConfig';
 import { getAreaFromMapId, getAllMapsForArea } from './constants';
 import StageSelector from './StageSelector';
@@ -14,6 +14,8 @@ import PortalTab from './tabs/PortalTab';
 import TextureTab, { type AnimatedTextureInfo } from './tabs/TextureTab';
 import ObstacleTab, { type PlacementDimensions, DEFAULT_PLACEMENT_DIMENSIONS } from './tabs/ObstacleTab';
 import ExportTab from './tabs/ExportTab';
+import WaypointTab from './tabs/WaypointTab';
+import WaypointOverlay from './WaypointOverlay';
 import SvgTab from './tabs/SvgTab';
 import SceneTab, { computeLighting, PLACED_PRESETS } from './tabs/SceneTab';
 import ParticleOverlay, { type ParticleEffect } from './ParticleOverlay';
@@ -118,12 +120,42 @@ function extractFloorTriangles(
   return triangles;
 }
 
+// Point-in-triangle (XZ projection) — used to auto-derive waypoint edges by
+// checking the straight segment between two waypoints stays over floor.
+function pointInTriXZ(px: number, pz: number, t: FloorTriangle): boolean {
+  const [v0, v1, v2] = t.vertices;
+  const d = (v1.z - v2.z) * (v0.x - v2.x) + (v2.x - v1.x) * (v0.z - v2.z);
+  if (Math.abs(d) < 1e-9) return false;
+  const l1 = ((v1.z - v2.z) * (px - v2.x) + (v2.x - v1.x) * (pz - v2.z)) / d;
+  const l2 = ((v2.z - v0.z) * (px - v2.x) + (v0.x - v2.x) * (pz - v2.z)) / d;
+  const l3 = 1 - l1 - l2;
+  const eps = -0.02;
+  return l1 >= eps && l2 >= eps && l3 >= eps;
+}
+
+function segmentOverFloor(
+  a: [number, number, number],
+  b: [number, number, number],
+  tris: FloorTriangle[]
+): boolean {
+  if (tris.length === 0) return false;
+  const SAMPLES = 14;
+  for (let s = 1; s < SAMPLES; s++) {
+    const f = s / SAMPLES;
+    const px = a[0] + (b[0] - a[0]) * f;
+    const pz = a[2] + (b[2] - a[2]) * f;
+    if (!tris.some((t) => pointInTriXZ(px, pz, t))) return false;
+  }
+  return true;
+}
+
 const TABS: { id: EditorTab; label: string }[] = [
   { id: 'floor', label: 'Floor' },
   { id: 'portals', label: 'Portals' },
   { id: 'textures', label: 'Textures' },
   { id: 'obstacles', label: 'Obstacles' },
   { id: 'scene', label: 'Scene' },
+  { id: 'waypoints', label: 'Waypoints' },
   { id: 'svg', label: 'SVG' },
   { id: 'export', label: 'Export' },
 ];
@@ -162,6 +194,10 @@ export default function UnifiedStageEditor() {
   const [selectedEffectId, setSelectedEffectId] = useState<string | null>(null);
   const [repositionEffectId, setRepositionEffectId] = useState<string | null>(null);
   const [indoor, setIndoor] = useState(false);
+
+  // Waypoint tab state
+  const [waypointPlacementMode, setWaypointPlacementMode] = useState(false);
+  const [selectedWaypointId, setSelectedWaypointId] = useState<string | null>(null);
 
   // Floor extraction: show all upward-facing surfaces (stairs, ramps) so they
   // can be clicked into the floor collision mesh. Default off to keep the
@@ -346,6 +382,79 @@ export default function UnifiedStageEditor() {
     setSelectedObstacleId(id);
   }, []);
 
+  // ── Waypoints ──────────────────────────────────────────────────
+  // Drop a waypoint; placement mode stays on so several can be placed in a row.
+  const handlePlaceWaypoint = useCallback((position: [number, number, number]) => {
+    const id = `wp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    updateConfig((prev) => ({
+      ...prev,
+      waypoints: [...(prev.waypoints ?? []), { id, position, kind: 'point' as const }],
+    }));
+  }, [updateConfig]);
+
+  // Click a node to anchor it, then click others to connect/disconnect (the
+  // anchor stays selected so you can fan out several edges).
+  const handleWaypointClick = useCallback((id: string) => {
+    if (waypointPlacementMode) return;
+    if (selectedWaypointId === null) { setSelectedWaypointId(id); return; }
+    if (selectedWaypointId === id) { setSelectedWaypointId(null); return; }
+    const a = selectedWaypointId;
+    const b = id;
+    updateConfig((prev) => {
+      const e = prev.waypointEdges ?? [];
+      const exists = e.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+      return {
+        ...prev,
+        waypointEdges: exists
+          ? e.filter(([x, y]) => !((x === a && y === b) || (x === b && y === a)))
+          : [...e, [a, b] as [string, string]],
+      };
+    });
+  }, [waypointPlacementMode, selectedWaypointId, updateConfig]);
+
+  // Seed waypoints from already-authored locations (gates + spawn).
+  const handleSeedFromGates = useCallback(() => {
+    updateConfig((prev) => {
+      const existing = [...(prev.waypoints ?? [])];
+      const near = (p: [number, number, number]) =>
+        existing.some((w) => Math.hypot(w.position[0] - p[0], w.position[2] - p[2]) < 2);
+      const add: WaypointData[] = [];
+      prev.portals.forEach((portal, i) => {
+        if (!near(portal.position)) {
+          add.push({ id: `wp_gate_${i}_${Date.now()}`, position: portal.position, kind: 'gate', label: portal.label });
+        }
+      });
+      if (prev.defaultSpawn && !near(prev.defaultSpawn.position)) {
+        add.push({ id: `wp_spawn_${Date.now()}`, position: prev.defaultSpawn.position, kind: 'spawn', label: 'spawn' });
+      }
+      return { ...prev, waypoints: [...existing, ...add] };
+    });
+  }, [updateConfig]);
+
+  // Auto-connect any waypoint pair (within range) whose straight segment stays
+  // over included floor — the "walk straight A→B" invariant.
+  const handleAutoConnect = useCallback(() => {
+    const tris = includedTriangles;
+    updateConfig((prev) => {
+      const wps = prev.waypoints ?? [];
+      const keys = new Set((prev.waypointEdges ?? []).map(([a, b]) => [a, b].sort().join('|')));
+      const MAX_DIST = 45;
+      for (let i = 0; i < wps.length; i++) {
+        for (let j = i + 1; j < wps.length; j++) {
+          const a = wps[i];
+          const b = wps[j];
+          const d = Math.hypot(a.position[0] - b.position[0], a.position[2] - b.position[2]);
+          if (d > MAX_DIST) continue;
+          if (segmentOverFloor(a.position, b.position, tris)) {
+            keys.add([a.id, b.id].sort().join('|'));
+          }
+        }
+      }
+      const out: [string, string][] = Array.from(keys).map((k) => k.split('|') as [string, string]);
+      return { ...prev, waypointEdges: out };
+    });
+  }, [includedTriangles, updateConfig]);
+
   // Handle particle effect placement (new or reposition)
   const handlePlaceEffect = useCallback(
     (position: [number, number, number]) => {
@@ -463,6 +572,19 @@ export default function UnifiedStageEditor() {
             }}
           />
         );
+      case 'waypoints':
+        return (
+          <WaypointTab
+            config={config}
+            updateConfig={updateConfig}
+            placementMode={waypointPlacementMode}
+            setPlacementMode={setWaypointPlacementMode}
+            selectedId={selectedWaypointId}
+            setSelectedId={setSelectedWaypointId}
+            onSeedFromGates={handleSeedFromGates}
+            onAutoConnect={handleAutoConnect}
+          />
+        );
       case 'svg':
         return (
           <SvgTab
@@ -555,6 +677,41 @@ export default function UnifiedStageEditor() {
               placementDimensions={obstaclePlacementDimensions}
               onObstacleClick={handleObstacleClick}
               onPlaceObstacle={handlePlaceObstacle}
+            />
+          </>
+        );
+      case 'waypoints':
+        return (
+          <>
+            {/* Floor + read-only gates/triggers + obstacles as placement reference */}
+            <FloorOverlay triangles={includedTriangles} yOffset={0.05} />
+            <PortalOverlay
+              portals={config.portals}
+              selectedPortalId={null}
+              placementMode={false}
+              placementDirection={portalPlacementDirection}
+              placementRotationOffset={0}
+              previewModel={portalPreviewModel}
+              onPortalClick={() => {}}
+              onPlacePortal={() => {}}
+              defaultSpawn={config.defaultSpawn}
+            />
+            <ObstacleOverlay
+              obstacles={config.obstacles}
+              selectedObstacleId={null}
+              placementMode={false}
+              placementType={'box'}
+              placementDimensions={obstaclePlacementDimensions}
+              onObstacleClick={() => {}}
+              onPlaceObstacle={() => {}}
+            />
+            <WaypointOverlay
+              waypoints={config.waypoints ?? []}
+              edges={config.waypointEdges ?? []}
+              selectedId={selectedWaypointId}
+              placementMode={waypointPlacementMode}
+              onPlace={handlePlaceWaypoint}
+              onWaypointClick={handleWaypointClick}
             />
           </>
         );
