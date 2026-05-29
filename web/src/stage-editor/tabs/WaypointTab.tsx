@@ -1,6 +1,32 @@
 import { useState } from 'react';
 import type { UnifiedStageConfig } from '../types';
 
+// Clipboard write that also works over plain http on a LAN, where
+// navigator.clipboard is unavailable outside a secure context — falls back to
+// the legacy execCommand path.
+async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch { /* fall through to legacy */ }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 interface WaypointTabProps {
   config: UnifiedStageConfig;
   updateConfig: (updater: (prev: UnifiedStageConfig) => UnifiedStageConfig) => void;
@@ -55,13 +81,14 @@ export default function WaypointTab({
 
   const [copied, setCopied] = useState(false);
   const copyJson = async () => {
-    const graph = { mapId: config.mapId, waypoints, waypointEdges: edges };
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(graph, null, 2));
+    const json = JSON.stringify({ mapId: config.mapId, waypoints, waypointEdges: edges }, null, 2);
+    const ok = await copyToClipboard(json);
+    if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch (e) {
-      console.error('clipboard write failed', e);
+    } else {
+      // Last resort if even execCommand is blocked — show it for manual copy.
+      window.prompt('Copy the waypoint JSON:', json);
     }
   };
 
