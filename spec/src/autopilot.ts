@@ -46,8 +46,8 @@ export const AUTOPILOT_STEPS: AutopilotStep[] = [
     note: 'Autopilot reaches the create wizard (CLASS_SELECT → APPEARANCE → NAME_ENTRY → CONFIRM). Appearance/customize is a step inside this wizard, not a separate screen. Completing it through name entry into the city is the next step.',
   },
   {
-    n: 7, label: 'City', href: '/journey/city/counter', persona: 'new user', status: 'todo',
-    note: 'Planned: finish character creation (past name entry) and spawn into the city hub, then walk to the quest counter / teleporter.',
+    n: 7, label: 'City', href: '/journey/city/office', persona: 'new user', status: 'done',
+    note: 'Autopilot completes creation (names the character 石橋を叩いて渡る, submitted via the name field) and spawns into the city hub (Principal’s Office). Walking the 3D city to the quest counter / teleporter and into a field is the next frontier.',
   },
 ];
 

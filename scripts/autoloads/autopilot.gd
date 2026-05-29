@@ -24,6 +24,7 @@ const QUIT_GRACE := 0.4
 var _enabled := false
 var _last_scene := ""
 var _acted := {}
+var _cc_acted_step := -1   # character_create: last wizard step we acted on
 
 
 func _ready() -> void:
@@ -60,10 +61,11 @@ func _drive_scene(path: String) -> void:
 		print("[sanity] checkpoint: character_select")
 		_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))
 	elif path == CHAR_CREATE:
-		# Terminal for now: title → select → create is driven reliably. Completing
-		# the wizard (CLASS_SELECT → APPEARANCE → NAME_ENTRY → CONFIRM → city) needs
-		# name entry, which isn't a plain ui_accept — that's the next step.
-		print("[sanity] checkpoint: reached character_create")
+		print("[sanity] checkpoint: character_create")
+		_cc_acted_step = -1
+		_after(STEP_DELAY, _drive_char_create)
+	elif path.begins_with(CITY_PREFIX):
+		print("[sanity] checkpoint: reached city (%s)" % path)
 		print("[sanity] DONE ok")
 		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
 
@@ -91,6 +93,47 @@ func _press_action(action: String) -> void:
 	up.action = action
 	up.pressed = false
 	Input.parse_input_event(up)
+
+
+## Walk the character-create wizard by its actual _step (CLASS_SELECT=0,
+## APPEARANCE=1, NAME_ENTRY=2): accept the defaults, then set + submit the name,
+## which routes straight to the city (_on_name_submitted → _create_character).
+## Re-arms until the scene leaves character_create.
+func _drive_char_create() -> void:
+	var node := get_tree().current_scene
+	if node == null or node.scene_file_path != CHAR_CREATE:
+		return
+	var step: int = int(node.get("_step"))
+	if step != _cc_acted_step:
+		_cc_acted_step = step
+		match step:
+			0, 1:  # CLASS_SELECT, APPEARANCE — accept the default
+				_press_action("ui_accept")
+			2:     # NAME_ENTRY — type the name and submit
+				_enter_name(node)
+	_after(0.8, _drive_char_create)
+
+
+const CHAR_NAME := "石橋を叩いて渡る"
+
+func _enter_name(node: Node) -> void:
+	var le := _find_line_edit(node)
+	if le == null:
+		print("[sanity] WARN: no LineEdit found for name entry")
+		return
+	le.text = CHAR_NAME
+	print("[sanity] entering name: %s" % CHAR_NAME)
+	le.text_submitted.emit(CHAR_NAME)
+
+
+func _find_line_edit(n: Node) -> LineEdit:
+	if n is LineEdit:
+		return n
+	for c in n.get_children():
+		var found := _find_line_edit(c)
+		if found:
+			return found
+	return null
 
 
 func _after(seconds: float, cb: Callable) -> void:

@@ -87,7 +87,9 @@ check "first-run → controller-config screen"  "routing to input_select"
 check "autopilot drove controller config"     "[sanity] input_select: injecting keyboard"
 check "reached title"                          "[sanity] checkpoint: title"
 check "reached character select"               "[sanity] checkpoint: character_select"
-check "reached character create"               "[sanity] checkpoint: reached character_create"
+check "reached character create"               "[sanity] checkpoint: character_create"
+check "entered character name"                 "[sanity] entering name:"
+check "reached city"                           "[sanity] checkpoint: reached city"
 check "autopilot finished cleanly"             "[sanity] DONE ok"
 
 echo
