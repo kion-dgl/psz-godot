@@ -114,7 +114,7 @@ func _drive_char_create() -> void:
 	_after(0.8, _drive_char_create)
 
 
-const CHAR_NAME := "石橋を叩いて渡る"
+const CHAR_NAME := "humar"
 
 func _enter_name(node: Node) -> void:
 	var le := _find_line_edit(node)

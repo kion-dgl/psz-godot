@@ -47,7 +47,7 @@ export const AUTOPILOT_STEPS: AutopilotStep[] = [
   },
   {
     n: 7, label: 'City', href: '/journey/city/office', persona: 'new user', status: 'done',
-    note: 'Autopilot completes creation (names the character 石橋を叩いて渡る, submitted via the name field) and spawns into the city hub (Principal’s Office). Walking the 3D city to the quest counter / teleporter and into a field is the next frontier.',
+    note: 'Autopilot completes creation (names the character “humar”, submitted via the name field) and spawns into the city hub (Principal’s Office). Walking the 3D city to the quest counter / teleporter and into a field is the next frontier.',
   },
 ];
 
