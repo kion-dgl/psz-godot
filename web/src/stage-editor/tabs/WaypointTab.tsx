@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { UnifiedStageConfig } from '../types';
 
 interface WaypointTabProps {
@@ -52,6 +53,18 @@ export default function WaypointTab({
     setSelectedId(null);
   };
 
+  const [copied, setCopied] = useState(false);
+  const copyJson = async () => {
+    const graph = { mapId: config.mapId, waypoints, waypointEdges: edges };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(graph, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (e) {
+      console.error('clipboard write failed', e);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12, color: '#ddd', fontSize: 13 }}>
       <div style={{ fontSize: 12, color: '#9ad6ff', lineHeight: 1.5 }}>
@@ -68,6 +81,9 @@ export default function WaypointTab({
       </button>
       <button style={btn(false)} onClick={onAutoConnect}>
         Auto-connect (raycast floor)
+      </button>
+      <button style={btn(false)} onClick={copyJson}>
+        {copied ? '✓ Copied JSON' : 'Copy JSON'}
       </button>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888' }}>
