@@ -85,7 +85,9 @@ check "splash / bootstrap started"           "[bootstrap] psz-godot"
 check "assets mounted (download or cache)"    "[bootstrap] mounted"
 check "first-run → controller-config screen"  "routing to input_select"
 check "autopilot drove controller config"     "[sanity] input_select: injecting keyboard"
-check "reached title screen"                   "[sanity] checkpoint: reached title"
+check "reached title"                          "[sanity] checkpoint: title"
+check "reached character select"               "[sanity] checkpoint: character_select"
+check "reached character create"               "[sanity] checkpoint: reached character_create"
 check "autopilot finished cleanly"             "[sanity] DONE ok"
 
 echo

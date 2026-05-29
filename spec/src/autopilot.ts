@@ -35,23 +35,19 @@ export const AUTOPILOT_STEPS: AutopilotStep[] = [
   },
   {
     n: 4, label: 'Title Screen', href: '/journey/title', persona: 'new user', status: 'done',
-    note: 'Asserts the title screen is reached (terminal checkpoint for the current harness).',
+    note: 'Autopilot presses Start (ui_accept) to leave the title for character select.',
   },
   {
-    n: 5, label: 'Character Select', href: '/journey/character-select', persona: 'new user', status: 'todo',
-    note: 'Planned: drive past the title into the character-select screen.',
+    n: 5, label: 'Character Select', href: '/journey/character-select', persona: 'new user', status: 'done',
+    note: 'Autopilot accepts on the default slot to begin a new character.',
   },
   {
-    n: 6, label: 'Create Character', href: '/journey/create-character', persona: 'new user', status: 'todo',
-    note: 'Planned: choose "new character" and reach class select.',
+    n: 6, label: 'Create Character', href: '/journey/create-character', persona: 'new user', status: 'done',
+    note: 'Autopilot reaches the create wizard (CLASS_SELECT → APPEARANCE → NAME_ENTRY → CONFIRM). Appearance/customize is a step inside this wizard, not a separate screen. Completing it through name entry into the city is the next step.',
   },
   {
-    n: 7, label: 'Customize Character', href: '/journey/character-customize', persona: 'new user', status: 'todo',
-    note: 'Planned: run through appearance customization and confirm.',
-  },
-  {
-    n: 8, label: 'City', href: '/journey/city/counter', persona: 'new user', status: 'todo',
-    note: 'Planned: spawn into the city hub.',
+    n: 7, label: 'City', href: '/journey/city/counter', persona: 'new user', status: 'todo',
+    note: 'Planned: finish character creation (past name entry) and spawn into the city hub, then walk to the quest counter / teleporter.',
   },
 ];
 
