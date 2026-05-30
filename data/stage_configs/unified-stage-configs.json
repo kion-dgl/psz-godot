@@ -2002,7 +2002,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_s01b_ib2",
+        "position": [
+          7.56,
+          0,
+          19.79
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_s01b_ib2",
+        "position": [
+          7.56,
+          0,
+          23.79
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_s01b_ib2",
+        "position": [
+          11.135337483864868,
+          0,
+          -23.854252678760716
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_s01b_ib2",
+        "position": [
+          11.135337483864868,
+          0,
+          -27.854252678760716
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_center_s01b_ib2",
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "kind": "point",
+        "label": "center"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_s01b_ib2",
+        "wp_spawn_0_s01b_ib2"
+      ],
+      [
+        "wp_load_1_s01b_ib2",
+        "wp_spawn_1_s01b_ib2"
+      ],
+      [
+        "wp_center_s01b_ib2",
+        "wp_spawn_0_s01b_ib2"
+      ],
+      [
+        "wp_center_s01b_ib2",
+        "wp_spawn_1_s01b_ib2"
+      ]
+    ]
   },
   "s01b_ic1": {
     "floorCollision": {
@@ -2334,7 +2404,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_s01b_lb3",
+        "position": [
+          -16.963301489089137,
+          0,
+          -16.26778106634263
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_s01b_lb3",
+        "position": [
+          -16.963301489089137,
+          0,
+          -20.26778106634263
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_s01b_lb3",
+        "position": [
+          22.397458247515075,
+          0,
+          -17.11350826488573
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_s01b_lb3",
+        "position": [
+          26.397458247515075,
+          0,
+          -17.11350826488573
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_center_s01b_lb3",
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "kind": "point",
+        "label": "center"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_s01b_lb3",
+        "wp_spawn_0_s01b_lb3"
+      ],
+      [
+        "wp_load_1_s01b_lb3",
+        "wp_spawn_1_s01b_lb3"
+      ],
+      [
+        "wp_center_s01b_lb3",
+        "wp_spawn_0_s01b_lb3"
+      ],
+      [
+        "wp_center_s01b_lb3",
+        "wp_spawn_1_s01b_lb3"
+      ]
+    ]
   },
   "s01b_lc1": {
     "floorCollision": {
@@ -2482,7 +2622,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_s01b_lc2",
+        "position": [
+          9.995167924828028,
+          0,
+          -22.939213643537443
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_s01b_lc2",
+        "position": [
+          9.995167924828028,
+          0,
+          -26.939213643537443
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_s01b_lc2",
+        "position": [
+          13.91,
+          0,
+          15.52
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_s01b_lc2",
+        "position": [
+          17.91,
+          0,
+          15.52
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_center_s01b_lc2",
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "kind": "point",
+        "label": "center"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_s01b_lc2",
+        "wp_spawn_0_s01b_lc2"
+      ],
+      [
+        "wp_load_1_s01b_lc2",
+        "wp_spawn_1_s01b_lc2"
+      ],
+      [
+        "wp_center_s01b_lc2",
+        "wp_spawn_0_s01b_lc2"
+      ],
+      [
+        "wp_center_s01b_lc2",
+        "wp_spawn_1_s01b_lc2"
+      ]
+    ]
   },
   "s01b_na1": {
     "floorCollision": {
@@ -2520,7 +2730,49 @@
       "centerZ": 1.017578125,
       "svgSize": 400,
       "padding": 20
-    }
+    },
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_s01b_na1",
+        "position": [
+          9.67532122805838,
+          0,
+          2.04802685449685
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_0_s01b_na1",
+        "position": [
+          13.67532122805838,
+          0,
+          2.04802685449685
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_center_s01b_na1",
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "kind": "point",
+        "label": "center"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_s01b_na1",
+        "wp_spawn_0_s01b_na1"
+      ],
+      [
+        "wp_center_s01b_na1",
+        "wp_spawn_0_s01b_na1"
+      ]
+    ]
   },
   "s01b_nb2": {
     "floorCollision": {
@@ -2552,7 +2804,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_s01b_nb2",
+        "position": [
+          -11.034,
+          0,
+          23.289
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_s01b_nb2",
+        "position": [
+          -11.034,
+          0,
+          27.289
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_key_1_3_s01b_nb2",
+        "position": [
+          13.3,
+          0,
+          -16
+        ],
+        "kind": "point",
+        "label": "key 1,3"
+      },
+      {
+        "id": "wp_key_2_1_s01b_nb2",
+        "position": [
+          13.4,
+          0,
+          -15.5
+        ],
+        "kind": "point",
+        "label": "key 2,1"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_s01b_nb2",
+        "wp_spawn_0_s01b_nb2"
+      ],
+      [
+        "wp_key_1_3_s01b_nb2",
+        "wp_spawn_0_s01b_nb2"
+      ],
+      [
+        "wp_key_2_1_s01b_nb2",
+        "wp_spawn_0_s01b_nb2"
+      ]
+    ]
   },
   "s01b_nc2": {
     "floorCollision": {
@@ -2722,7 +3030,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_s01b_sa1",
+        "position": [
+          -4.906268227625629,
+          0,
+          -23.8166114972771
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_s01b_sa1",
+        "position": [
+          -4.906268227625629,
+          0,
+          -27.8166114972771
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_s01b_sa1",
+        "position": [
+          5.18696974805887,
+          0,
+          20.5489112992815
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_s01b_sa1",
+        "position": [
+          5.18696974805887,
+          0,
+          24.5489112992815
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_center_s01b_sa1",
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "kind": "point",
+        "label": "center"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_s01b_sa1",
+        "wp_spawn_0_s01b_sa1"
+      ],
+      [
+        "wp_load_1_s01b_sa1",
+        "wp_spawn_1_s01b_sa1"
+      ],
+      [
+        "wp_center_s01b_sa1",
+        "wp_spawn_0_s01b_sa1"
+      ],
+      [
+        "wp_center_s01b_sa1",
+        "wp_spawn_1_s01b_sa1"
+      ]
+    ]
   },
   "s01b_tb3": {
     "floorCollision": {
