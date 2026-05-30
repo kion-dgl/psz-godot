@@ -947,15 +947,14 @@ const FLOOR_PROBE_HEIGHT_DOWN := 5.0  # downward cast ends this low (well past t
 ## gives breathing room.
 const SAFE_SPAWN_PUSH := 4.0
 
-## Conservative "can the character walk this straight line?" check.
-##
-## These stages are L-shaped FLOORS in open space (each cell has its own
-## *-floor.glb mesh), not square rooms with walls — the thing that stops the
-## player walking diagonally from spawn to trigger is **walking off the
-## floor edge**, not hitting a vertical wall. So instead of one horizontal
-## raycast (which passes through empty space), we sample along the line and
-## cast DOWN at each sample. If any sample finds no floor below it, the path
-## leaves the walkable surface and we reject it.
+## Conservative "can the character walk this straight line?" check. Two
+## independent failure modes:
+##   1. Floor edge — the cells are L-shaped FLOORS in open space (each has its
+##      own *-floor.glb mesh); walking off the floor edge stops the player.
+##      Detected by sampling along the line and casting DOWN at each sample.
+##   2. Wall — there's a vertical wall mesh standing on the floor in the path.
+##      Detected by casting horizontally at chest height (Y+1.0) from end to
+##      end. The player + enemies are excluded so we only hit static geometry.
 func _raycast_walkable(from: Vector3, to: Vector3) -> bool:
 	var world := get_viewport().get_world_3d() if get_viewport() != null else null
 	if world == null:
@@ -967,10 +966,16 @@ func _raycast_walkable(from: Vector3, to: Vector3) -> bool:
 	var excludes: Array = []
 	if player != null and player is CollisionObject3D:
 		excludes = [player.get_rid()]
+	# Wall check — chest-height horizontal ray. Cheap, catches most walls.
+	var wall_from := Vector3(from.x, from.y + 1.0, from.z)
+	var wall_to := Vector3(to.x, to.y + 1.0, to.z)
+	var wq := PhysicsRayQueryParameters3D.create(wall_from, wall_to)
+	wq.exclude = excludes
+	if not space.intersect_ray(wq).is_empty():
+		return false  # Wall hit on the chest-height ray.
+	# Floor edge check — sample the line and cast DOWN at each sample.
 	var dist: float = from.distance_to(to)
 	var samples: int = max(int(ceil(dist / FLOOR_SAMPLE_STEP)), 2)
-	# Sample interior points (skip the endpoints since the spawn and target
-	# are already known-walkable positions placed by the controller).
 	for i in range(1, samples):
 		var t: float = float(i) / samples
 		var p: Vector3 = from.lerp(to, t)
