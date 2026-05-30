@@ -19,6 +19,8 @@ scripts/tools/fetch_assets_dev.sh
 
 The fetch script reads `assets_manifest.json`, downloads every file listed in `assets_tree.json` from the public R2 URL, verifies md5, and drops everything into `/assets/` and `/web/public/assets/psobb_sfx/`. Subsequent runs only re-download what's changed.
 
+The script runs unmodified on both macOS (BSD userland) and Linux (GNU) — it dispatches parallel downloads with `xargs -0` rather than `xargs -I`, so no GNU coreutils / `findutils` install is required on macOS. You do need `curl`, `jq`, and `md5sum` on `PATH` (on macOS, `md5sum` comes with `brew install coreutils`).
+
 Once `/assets/` is populated, open the project in the Godot editor and hit **F5**.
 
 ## Exporting a release build locally

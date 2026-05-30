@@ -75,6 +75,7 @@ export -f dest_for_key
 
 download_one() {
   local line="$1"
+  [[ -z "$line" ]] && return 0
   local key key_enc md5 size
   IFS=$'\t' read -r key key_enc md5 size <<< "$line"
   local dest
@@ -116,13 +117,21 @@ export BASE FORCE
 echo "→ downloading (parallel=$PARALLEL, skipping matching md5s)..."
 # Use xargs for parallel dispatch; `bash -c` wrapper so we can call the
 # exported function.
+#
+# NUL-delimited dispatch (`tr '\n' '\0' | xargs -0 -n 1`) instead of `-I {}`.
+# BSD xargs (macOS) caps the per-invocation command size when substituting
+# `-I {}`, and the long inline `bash -c` script plus a manifest line blew past
+# it ("command line cannot be assembled, too long"), so almost nothing
+# downloaded. `-0 -n 1` passes each line as a single argv entry (no template
+# substitution, no per-line size limit) and is supported identically by both
+# BSD and GNU xargs — no extra tooling required on macOS. The trailing `_`
+# becomes $0 for the wrapper so the manifest line is $1.
 FAIL_LOG=$(mktemp)
 trap 'rm -f "$TREE_FILE" "$WORK" "$FAIL_LOG"' EXIT
 
-< "$WORK" xargs -I {} -P "$PARALLEL" bash -c '
-  line="{}"
-  download_one "$line" || echo "$line" >> "'"$FAIL_LOG"'"
-'
+< "$WORK" tr '\n' '\0' | xargs -0 -P "$PARALLEL" -n 1 bash -c '
+  download_one "$1" || echo "$1" >> "'"$FAIL_LOG"'"
+' _
 
 FAILS=$(wc -l < "$FAIL_LOG" | tr -d ' ')
 if [[ "$FAILS" -ne 0 ]]; then
