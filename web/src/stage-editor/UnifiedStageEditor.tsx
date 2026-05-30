@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import * as THREE from 'three';
 import type { EditorTab, FloorTriangle, GateDirection, PreviewModel, PortalData, ObstacleType, ObstacleData, WaypointData } from './types';
 import { useStageConfig } from './useStageConfig';
@@ -163,44 +164,32 @@ const TABS: { id: EditorTab; label: string }[] = [
   { id: 'export', label: 'Export' },
 ];
 
-/**
- * URL params (?stage=...&quest=...&cell=...) let the autopilot deep-link
- * the human into the failing room. Parsed once on mount; written back to
- * the URL whenever stage/quest/cell change so reloads + share links work.
- */
-function readUrlParams(): { stage?: string; quest?: string; cell?: string } {
-  if (typeof window === 'undefined') return {};
-  const sp = new URLSearchParams(window.location.search);
-  return {
-    stage: sp.get('stage') ?? undefined,
-    quest: sp.get('quest') ?? undefined,
-    cell: sp.get('cell') ?? undefined,
-  };
-}
-
-function writeUrlParams(stage: string, quest: string | null, cell: string | null) {
-  if (typeof window === 'undefined') return;
-  const sp = new URLSearchParams(window.location.search);
-  sp.set('stage', stage);
-  if (quest) sp.set('quest', quest); else sp.delete('quest');
-  if (cell) sp.set('cell', cell); else sp.delete('cell');
-  const next = `${window.location.pathname}?${sp.toString()}${window.location.hash}`;
-  window.history.replaceState(null, '', next);
-}
-
-const INITIAL_URL = readUrlParams();
-
 export default function UnifiedStageEditor() {
-  const [activeTab, setActiveTab] = useState<EditorTab>(INITIAL_URL.quest ? 'waypoints' : 'floor');
-  const [selectedMapId, setSelectedMapId] = useState(INITIAL_URL.stage || 's01a_ga1');
-  const [selectedQuest, setSelectedQuest] = useState<string | null>(INITIAL_URL.quest ?? null);
-  const [highlightCell, setHighlightCell] = useState<string | null>(INITIAL_URL.cell ?? null);
+  // Deep-link via URL params: ?stage=...&quest=...&cell=... — the autopilot's
+  // FAIL line surfaces the failing stage + cell, and a URL with those
+  // pre-filled drops the human directly on the right room with quest object
+  // overlays visible. Uses react-router's useSearchParams so it works
+  // correctly under HashRouter (params live after the # route).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlStage = searchParams.get('stage') ?? undefined;
+  const urlQuest = searchParams.get('quest') ?? undefined;
+  const urlCell = searchParams.get('cell') ?? undefined;
+
+  const [activeTab, setActiveTab] = useState<EditorTab>(urlQuest ? 'waypoints' : 'floor');
+  const [selectedMapId, setSelectedMapId] = useState(urlStage || 's01a_ga1');
+  const [selectedQuest, setSelectedQuest] = useState<string | null>(urlQuest ?? null);
+  const [highlightCell, setHighlightCell] = useState<string | null>(urlCell ?? null);
   const questObjects = useQuestObjects(selectedQuest, selectedMapId);
 
-  // Keep URL in sync.
+  // Keep URL in sync with state. replace:true so we don't pollute history
+  // with one entry per character typed into the cell input.
   useEffect(() => {
-    writeUrlParams(selectedMapId, selectedQuest, highlightCell);
-  }, [selectedMapId, selectedQuest, highlightCell]);
+    const next = new URLSearchParams();
+    next.set('stage', selectedMapId);
+    if (selectedQuest) next.set('quest', selectedQuest);
+    if (highlightCell) next.set('cell', highlightCell);
+    setSearchParams(next, { replace: true });
+  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams]);
   const [stageScene, setStageScene] = useState<THREE.Group | null>(null);
   const [showStage, setShowStage] = useState(true);
 
