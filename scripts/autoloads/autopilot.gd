@@ -177,6 +177,49 @@ func _ready() -> void:
 	set_process(true)
 
 
+## Drive the post-quest report at the Principal NPC.
+## PRINCIPAL_POSITION lives at city_office_controller.gd:13 — Vector3(0, 0.4, -9.7).
+## Teleport just south of that (so the camera sees the dialog face-on), press
+## interact to fire _on_principal_interact → _report_quest, then spam
+## ui_accept to advance the 2-page report dialog. report_quest() clears the
+## completed-quest state (SessionManager.report_quest body, ~line 492), so
+## once has_completed_quest() goes false the report ran.
+const PRINCIPAL_INTERACT_POS := Vector3(0.0, 0.5, -8.5)
+const REPORT_POLL_MAX := 30  # 30 * 0.5 = 15s
+
+var _report_acted := false
+
+func _drive_office_report() -> void:
+	var node := get_tree().current_scene
+	if node == null or node.scene_file_path != CITY_OFFICE:
+		return
+	if _report_acted:
+		return
+	_report_acted = true
+	print("[sanity] teleport to Principal at (%.2f, %.2f, %.2f)" % [PRINCIPAL_INTERACT_POS.x, PRINCIPAL_INTERACT_POS.y, PRINCIPAL_INTERACT_POS.z])
+	_teleport_player(PRINCIPAL_INTERACT_POS)
+	_after(0.6, func() -> void:
+		print("[sanity] press interact (Principal)")
+		_press_action("interact"))
+	_after(1.5, func() -> void: _poll_report_complete(0))
+
+
+func _poll_report_complete(n: int) -> void:
+	if n > REPORT_POLL_MAX:
+		print("[sanity] WARN: report poll timeout — quitting anyway")
+		_save_and_quit()
+		return
+	# Advance any visible dialog page. Harmless if no dialog is open
+	# (in CUTSCENE the input is consumed; in IDLE it does nothing field-side).
+	if (n % 2) == 0:
+		_press_action("ui_accept")
+	if not SessionManager.has_completed_quest():
+		print("[sanity] checkpoint: quest reported (SessionManager cleared completed quest)")
+		_save_and_quit()
+		return
+	_after(0.5, func() -> void: _poll_report_complete(n + 1))
+
+
 ## Persist state via SaveManager + quit. Terminator shared by all phases.
 func _save_and_quit() -> void:
 	if SaveManager != null and SaveManager.has_method("save_game"):
@@ -227,12 +270,20 @@ func _process(_delta: float) -> void:
 
 
 func _drive_scene(path: String) -> void:
-	# Post-quest: returning to a city scene means the report flow ran. Don't
-	# re-drive the city handlers (they'd try to accept Search-and-Rescue again).
-	# Both phase=first-mission and phase=all stop here.
-	if path.begins_with("res://scenes/3d/city/") and SessionManager.has_completed_quest():
-		print("[sanity] checkpoint: quest report — back in city (%s)" % path)
-		_save_and_quit()
+	# Post-quest report flow: after the quest's complete_quest fires the
+	# player returns to a city scene with SessionManager.has_completed_quest()
+	# true. The actual report happens at the OFFICE (Principal interaction
+	# at city_office_controller.gd:457 _on_principal_interact → _report_quest).
+	# Drive: any-city → office → teleport to Principal + interact + advance
+	# dialog → SessionManager.report_quest() clears the completed quest →
+	# save + DONE.
+	if SessionManager.has_completed_quest() and path.begins_with("res://scenes/3d/city/"):
+		if path == CITY_OFFICE:
+			print("[sanity] checkpoint: in office for quest report")
+			_after(STEP_DELAY * 2.0, _drive_office_report)
+		else:
+			print("[sanity] checkpoint: quest report — back in city (%s) → goto office" % path)
+			_after(STEP_DELAY, func() -> void: SceneManager.goto_scene(CITY_OFFICE))
 		return
 
 	if path == INPUT_SELECT:
