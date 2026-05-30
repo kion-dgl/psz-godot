@@ -2827,6 +2827,36 @@
         "label": "load south"
       },
       {
+        "id": "wp_reach_a_s01b_nb2",
+        "position": [
+          -2.3,
+          0,
+          7.2
+        ],
+        "kind": "point",
+        "label": "reached"
+      },
+      {
+        "id": "wp_corner_b_s01b_nb2",
+        "position": [
+          5,
+          0,
+          -5
+        ],
+        "kind": "point",
+        "label": "mid-east"
+      },
+      {
+        "id": "wp_corner_c_s01b_nb2",
+        "position": [
+          10,
+          0,
+          -12
+        ],
+        "kind": "point",
+        "label": "near-key"
+      },
+      {
         "id": "wp_key_1_3_s01b_nb2",
         "position": [
           13.3,
@@ -2853,12 +2883,24 @@
         "wp_spawn_0_s01b_nb2"
       ],
       [
-        "wp_key_1_3_s01b_nb2",
+        "wp_reach_a_s01b_nb2",
         "wp_spawn_0_s01b_nb2"
       ],
       [
-        "wp_key_2_1_s01b_nb2",
-        "wp_spawn_0_s01b_nb2"
+        "wp_reach_a_s01b_nb2",
+        "wp_corner_b_s01b_nb2"
+      ],
+      [
+        "wp_corner_b_s01b_nb2",
+        "wp_corner_c_s01b_nb2"
+      ],
+      [
+        "wp_corner_c_s01b_nb2",
+        "wp_key_1_3_s01b_nb2"
+      ],
+      [
+        "wp_corner_c_s01b_nb2",
+        "wp_key_2_1_s01b_nb2"
       ]
     ]
   },
