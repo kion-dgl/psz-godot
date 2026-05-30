@@ -129,8 +129,12 @@ echo "→ downloading (parallel=$PARALLEL, skipping matching md5s)..."
 FAIL_LOG=$(mktemp)
 trap 'rm -f "$TREE_FILE" "$WORK" "$FAIL_LOG"' EXIT
 
+# `${1-}` not `$1`: the parent runs `set -u`, and on an empty manifest GNU
+# xargs still fires the command once with no argument, which would trip
+# nounset before download_one's empty-line guard runs. BSD xargs skips the
+# empty case, but `${1-}` keeps both paths safe.
 < "$WORK" tr '\n' '\0' | xargs -0 -P "$PARALLEL" -n 1 bash -c '
-  download_one "$1" || echo "$1" >> "'"$FAIL_LOG"'"
+  download_one "${1-}" || echo "${1-}" >> "'"$FAIL_LOG"'"
 ' _
 
 FAILS=$(wc -l < "$FAIL_LOG" | tr -d ' ')
