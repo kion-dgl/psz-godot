@@ -17,6 +17,8 @@ import ObstacleTab, { type PlacementDimensions, DEFAULT_PLACEMENT_DIMENSIONS } f
 import ExportTab from './tabs/ExportTab';
 import WaypointTab from './tabs/WaypointTab';
 import WaypointOverlay from './WaypointOverlay';
+import QuestObjectOverlay from './QuestObjectOverlay';
+import { useQuestObjects } from './useQuestObjects';
 import SvgTab from './tabs/SvgTab';
 import SceneTab, { computeLighting, PLACED_PRESETS } from './tabs/SceneTab';
 import ParticleOverlay, { type ParticleEffect } from './ParticleOverlay';
@@ -161,9 +163,44 @@ const TABS: { id: EditorTab; label: string }[] = [
   { id: 'export', label: 'Export' },
 ];
 
+/**
+ * URL params (?stage=...&quest=...&cell=...) let the autopilot deep-link
+ * the human into the failing room. Parsed once on mount; written back to
+ * the URL whenever stage/quest/cell change so reloads + share links work.
+ */
+function readUrlParams(): { stage?: string; quest?: string; cell?: string } {
+  if (typeof window === 'undefined') return {};
+  const sp = new URLSearchParams(window.location.search);
+  return {
+    stage: sp.get('stage') ?? undefined,
+    quest: sp.get('quest') ?? undefined,
+    cell: sp.get('cell') ?? undefined,
+  };
+}
+
+function writeUrlParams(stage: string, quest: string | null, cell: string | null) {
+  if (typeof window === 'undefined') return;
+  const sp = new URLSearchParams(window.location.search);
+  sp.set('stage', stage);
+  if (quest) sp.set('quest', quest); else sp.delete('quest');
+  if (cell) sp.set('cell', cell); else sp.delete('cell');
+  const next = `${window.location.pathname}?${sp.toString()}${window.location.hash}`;
+  window.history.replaceState(null, '', next);
+}
+
+const INITIAL_URL = readUrlParams();
+
 export default function UnifiedStageEditor() {
-  const [activeTab, setActiveTab] = useState<EditorTab>('floor');
-  const [selectedMapId, setSelectedMapId] = useState('s01a_ga1');
+  const [activeTab, setActiveTab] = useState<EditorTab>(INITIAL_URL.quest ? 'waypoints' : 'floor');
+  const [selectedMapId, setSelectedMapId] = useState(INITIAL_URL.stage || 's01a_ga1');
+  const [selectedQuest, setSelectedQuest] = useState<string | null>(INITIAL_URL.quest ?? null);
+  const [highlightCell, setHighlightCell] = useState<string | null>(INITIAL_URL.cell ?? null);
+  const questObjects = useQuestObjects(selectedQuest, selectedMapId);
+
+  // Keep URL in sync.
+  useEffect(() => {
+    writeUrlParams(selectedMapId, selectedQuest, highlightCell);
+  }, [selectedMapId, selectedQuest, highlightCell]);
   const [stageScene, setStageScene] = useState<THREE.Group | null>(null);
   const [showStage, setShowStage] = useState(true);
 
@@ -729,6 +766,7 @@ export default function UnifiedStageEditor() {
               onPlace={handlePlaceWaypoint}
               onWaypointClick={handleWaypointClick}
             />
+            <QuestObjectOverlay markers={questObjects} highlightCell={highlightCell} />
           </>
         );
       case 'svg':
@@ -762,6 +800,34 @@ export default function UnifiedStageEditor() {
             onAreaChange={() => {}} // Area is derived from mapId
             onMapChange={setSelectedMapId}
           />
+
+          {/* Quest context — overlays switches/fences/key drops/NPCs on the floor
+              so the user knows where to drop waypoints. URL param ?quest=...&cell=...
+              auto-fills these. */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginLeft: 6, paddingLeft: 10, borderLeft: '1px solid #444' }}>
+            <label style={{ fontSize: 12, color: '#9ad6ff' }}>Quest:</label>
+            <select
+              value={selectedQuest ?? ''}
+              onChange={(e) => setSelectedQuest(e.target.value || null)}
+              style={{ padding: '5px 6px', background: '#1a1a2e', color: '#e6edf3', border: '1px solid #444', borderRadius: 3, fontSize: 12 }}
+            >
+              <option value="">— none —</option>
+              <option value="search_and_rescue">Search and Rescue</option>
+            </select>
+            {questObjects.length > 0 && (
+              <input
+                type="text"
+                placeholder="cell e.g. 2,2"
+                value={highlightCell ?? ''}
+                onChange={(e) => setHighlightCell(e.target.value || null)}
+                style={{ width: 90, padding: '5px 6px', background: '#1a1a2e', color: '#e6edf3', border: '1px solid #444', borderRadius: 3, fontSize: 12, fontFamily: 'monospace' }}
+                title="Highlight a specific cell's objects (dims others)"
+              />
+            )}
+            {selectedQuest && (
+              <span style={{ fontSize: 11, color: '#7a8b94' }}>{questObjects.length} objs</span>
+            )}
+          </div>
 
           <button
             onClick={goToPrevMap}
