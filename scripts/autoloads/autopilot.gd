@@ -662,14 +662,39 @@ func _poll_quest_complete(n: int) -> void:
 # ── Action helpers ─────────────────────────────────────────────
 
 func _walk_then_interact(field: Node, target: Vector3, label: String, settle: float) -> void:
-	print("[sanity] walk to %s (%.2f, %.2f, %.2f)" % [label, target.x, target.y, target.z])
+	# Route via the authored / computed waypoint graph too, not just direct —
+	# key pickups, switches, and gates are inside the cell, and L-bend stages
+	# need the same multi-leg approach as exit walks.
+	var portal_data = field.get("_portal_data") if field else null
+	if typeof(portal_data) != TYPE_DICTIONARY:
+		portal_data = {}
+	var path: Array = _find_walk_path(field, portal_data, target)
+	if path.size() <= 1:
+		print("[sanity] walk to %s direct (%.2f, %.2f, %.2f)" % [label, target.x, target.y, target.z])
+	else:
+		var leg_str := ""
+		for p in path:
+			leg_str += " → (%.1f, %.1f)" % [p.x, p.z]
+		print("[sanity] walk to %s via %d waypoint(s):%s" % [label, path.size() - 1, leg_str])
+	_walk_path_then_interact(field, path, label, settle, 0)
+
+
+func _walk_path_then_interact(field: Node, path: Array, label: String, settle: float, leg: int) -> void:
+	if leg >= path.size():
+		return
+	var target: Vector3 = path[leg]
+	var is_last: bool = (leg == path.size() - 1)
 	_start_field_walk(target, func() -> void:
 		if not is_instance_valid(field) or field != get_tree().current_scene:
 			return
-		_after(0.4, func() -> void:
-			print("[sanity] interact %s" % label)
-			_press_action("interact")
-			_after(settle, func() -> void: _run_next_action(field))))
+		if is_last:
+			_after(0.4, func() -> void:
+				print("[sanity] interact %s" % label)
+				_press_action("interact")
+				_after(settle, func() -> void: _run_next_action(field)))
+		else:
+			print("[sanity] waypoint %d/%d reached — next leg" % [leg + 1, path.size() - 1])
+			_after(0.1, func() -> void: _walk_path_then_interact(field, path, label, settle, leg + 1)))
 
 
 func _walk_to_exit(field: Node, step: Dictionary) -> void:
