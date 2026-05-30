@@ -47,14 +47,24 @@ const QUIT_GRACE := 0.4
 const CHAR_NAME := "humar"
 
 # ── Field walk tuning ──────────────────────────────────────────
-const WALK_ARRIVE_DIST := 1.5   # XZ distance at which we say "arrived"
+## "Arrived" XZ distance for interactable walks (key, switch, gate) — has to
+## be tight or we won't be in the element's interact range when we press the
+## button.
+const WALK_ARRIVE_DIST_INTERACT := 1.5
+## "Arrived" XZ distance for exit-trigger walks. The trigger Area3D is 6m on
+## a side (valley_field_controller.gd:1524 `BoxShape3D.size = Vector3(6, 3, 6)`)
+## — half-size 3m around trigger_pos — and we need the player's collider to
+## actually be INSIDE the area for body_entered to fire. arrive_dist=1.5
+## means the player's center is 1.5m past trigger center: well past the
+## boundary, body_entered already fired, scene reload is queued.
+const WALK_ARRIVE_DIST_TRIGGER := 1.5
 const WALK_DIR_THRESHOLD := 0.3 # projection magnitude needed to hold a move action
-const KILL_ALL_SETTLE := 1.5    # per-wave settle (re-checked in a loop until enemies group is empty or KILL_ALL_MAX_WAVES caps it)
+const KILL_ALL_SETTLE := 0.9    # per-wave settle (re-checked in a loop until enemies group is empty or KILL_ALL_MAX_WAVES caps it)
 const POST_INTERACT_SETTLE := 0.9
 const POST_GATE_SETTLE := 1.5   # gate open animation + collision flip
 const QUEST_COMPLETE_POLL := 0.4
 const QUEST_COMPLETE_POLL_MAX := 60  # 60 * 0.4 = 24s
-const CELL_SETTLE_DELAY := STEP_DELAY * 3.0  # wait after a cell load before acting
+const CELL_SETTLE_DELAY := STEP_DELAY * 2.0  # wait after a cell load before acting
 
 # ── Quest walk script ──────────────────────────────────────────
 # Search-and-Rescue: 24 cell loads (gurhacia A → transition E → B). Some cells
@@ -119,13 +129,12 @@ var _warp_pad_interacted := false
 var _walking := false
 var _walk_target: Vector3 = Vector3.ZERO
 var _walk_on_arrive: Callable = Callable()
-## If set, fires instead of bare teleport when the watchdog trips. Used for
-## exit-trigger walks to invoke field._transition_to_cell directly.
-var _walk_on_watchdog: Callable = Callable()
+var _walk_arrive_dist: float = WALK_ARRIVE_DIST_INTERACT
 var _walk_started_at_ms: int = 0
 var _walk_diag_tick: int = 0
+var _failed: bool = false  # latched once _fail_with_reason fires; gates further actions
 const WALK_DIAG_INTERVAL := 30   # log position every N ticks (~0.5s @ 60fps)
-const WALK_WATCHDOG_MS := 15_000 # 15s; if we haven't arrived, fall back
+const WALK_WATCHDOG_MS := 15_000 # 15s; if we haven't arrived, FAIL the run
 
 # Quest walker progress.
 var _quest_step_idx: int = 0
@@ -628,14 +637,13 @@ func _do_wait_quest_complete(_field: Node) -> void:
 		if not SessionManager.has_completed_quest():
 			print("[sanity] dialog didn't fire complete_quest (objectives unmet from bypassed cells) — calling SessionManager.complete_quest() directly")
 			SessionManager.complete_quest())
-	# SessionManager.complete_quest() runs mark_quest_complete + return_to_city,
-	# but return_to_city only clears session state — the actual scene transition
-	# is normally driven by the telepipe spawn (dialog "telepipe" action) which
-	# we bypassed. Force the goto so _drive_scene sees the city return.
-	_after(6.4, func() -> void:
-		if SessionManager.has_completed_quest():
-			print("[sanity] forcing scene change to city_warp (no telepipe was spawned)")
-			SceneManager.goto_scene(CITY_WARP))
+	# NOTE: the natural completion path is the room_clear dialog firing its
+	# "telepipe" action, which spawns a Telepipe (scripts/3d/elements/telepipe.gd)
+	# the player walks into for the scene change to city_warp. Walking to the
+	# spawned telepipe is a follow-up — without it, _poll_quest_complete will
+	# time out and FAIL the run (per the "no warps" rule). For now the dialog's
+	# complete_quest action does flip has_completed_quest, so we at least see
+	# that checkpoint before the timeout.
 	_poll_quest_complete(0)
 
 
@@ -671,22 +679,18 @@ func _walk_to_exit(field: Node, step: Dictionary) -> void:
 		return
 	var portal_data = field.get("_portal_data")
 	if typeof(portal_data) != TYPE_DICTIONARY or not portal_data.has(exit_dir):
-		print("[sanity] WARN: cell missing %s portal — forcing transition" % exit_dir)
-		_force_advance_cell(field, step)
+		_fail_with_reason("cell missing '%s' portal (step %d/%d %s)" % [
+			exit_dir, _quest_step_idx + 1, QUEST_STEPS.size(), str(step.get("label", "?"))])
 		return
 	var trigger_pos: Vector3 = portal_data[exit_dir].get("trigger_pos", Vector3.ZERO)
-	# Advance the step counter now: whether the walk succeeds (body_entered
-	# fires, cell reloads with the next step) or the watchdog trips
-	# (_force_advance_cell will increment again — so guard against double
-	# increment by ONLY incrementing here, and have _force_advance_cell skip
-	# the increment).
+	# Advance the step counter so the next cell load picks up the next step;
+	# on stuck-walk failure we quit immediately so over-advance is moot.
 	_quest_step_idx += 1
 	# Build a walkable path through the cell's spawn waypoints. If straight-
 	# line raycast from the player to the trigger is clear, the path is just
 	# [trigger]; otherwise BFS tries via spawn points + center to find a
-	# clear multi-leg route. Watchdog still falls back to _transition_to_cell.
-	var captured_step := step
-	_walk_on_watchdog = func() -> void: _force_advance_cell(field, captured_step)
+	# clear multi-leg route. Watchdog → FAIL (no force-advance fallback —
+	# the autopilot is checking whether a real player could traverse this).
 	var path: Array = _find_walk_path(field, portal_data, trigger_pos)
 	if path.size() <= 1:
 		print("[sanity] walk to exit '%s' direct (%.2f, %.2f, %.2f)" % [exit_dir, trigger_pos.x, trigger_pos.y, trigger_pos.z])
@@ -699,13 +703,18 @@ func _walk_to_exit(field: Node, step: Dictionary) -> void:
 
 
 ## Walk a multi-leg path (Array of Vector3 world positions). On arrival at
-## the last point, that's it — let the trigger fire from the player crossing
-## the Area3D. On arrival at intermediate points, recurse to the next leg.
+## the last point, that's it — the controller's gate-trigger body_entered
+## fires when the player enters the trigger Area3D (a 6m box around
+## trigger_pos), which usually happens at the same time as our "arrived"
+## callback because we use WALK_ARRIVE_DIST_TRIGGER (3.5m) for the last leg.
+## Intermediate legs use the tighter WALK_ARRIVE_DIST_INTERACT so we land
+## squarely on each navigation waypoint.
 func _walk_path(field: Node, path: Array, exit_dir: String, leg: int) -> void:
 	if leg >= path.size():
 		return
 	var target: Vector3 = path[leg]
 	var is_last: bool = (leg == path.size() - 1)
+	var arrive: float = WALK_ARRIVE_DIST_TRIGGER if is_last else WALK_ARRIVE_DIST_INTERACT
 	_start_field_walk(target, func() -> void:
 		if not is_instance_valid(field) or field != get_tree().current_scene:
 			return
@@ -713,30 +722,42 @@ func _walk_path(field: Node, path: Array, exit_dir: String, leg: int) -> void:
 			print("[sanity] arrived at %s trigger (cell transition imminent)" % exit_dir)
 		else:
 			print("[sanity] waypoint %d/%d reached — next leg" % [leg + 1, path.size() - 1])
-			_after(0.1, func() -> void: _walk_path(field, path, exit_dir, leg + 1)))
+			_after(0.1, func() -> void: _walk_path(field, path, exit_dir, leg + 1)),
+		arrive)
 
 
-## Walking to an exit trigger but stuck on geometry (no waypoint nav yet) →
-## call into the field controller directly so the run can keep progressing.
-## For gate edges: `_transition_to_cell(target_pos, entry_edge)`. For warp
-## edges (section transitions): `_on_end_reached()`.
-func _force_advance_cell(field: Node, step: Dictionary) -> void:
-	if not is_instance_valid(field) or field != get_tree().current_scene:
+# ── Failure handling ───────────────────────────────────────────
+## The user-visible contract: any leg of the autopilot that can't be walked
+## ends the run as FAIL. The intent is to verify a real player could traverse
+## the level — masking that with teleports / direct-scene-transitions defeats
+## the test. Pair this with the printed cell/stage so the user can open the
+## offending stage in the waypoint editor and author a nav graph.
+##
+## Reports the current cell/stage from the field controller's _current_cell.
+func _fail_walk_stuck(pos: Vector3, dist: float) -> void:
+	var cell_pos := "?"
+	var stage_id := "?"
+	var cs := get_tree().current_scene
+	if cs != null:
+		var cur = cs.get("_current_cell")
+		if typeof(cur) == TYPE_DICTIONARY:
+			cell_pos = str(cur.get("pos", "?"))
+			stage_id = str(cur.get("stage_id", "?"))
+	var label := "?"
+	if _quest_step_idx > 0 and _quest_step_idx <= QUEST_STEPS.size():
+		label = str(QUEST_STEPS[_quest_step_idx - 1].get("label", "?"))
+	_fail_with_reason("walk stuck at dist=%.2f from (%.1f, %.1f, %.1f) in cell %s (stage %s, %s) — author waypoints for this stage" % [
+		dist, pos.x, pos.y, pos.z, cell_pos, stage_id, label])
+
+
+func _fail_with_reason(reason: String) -> void:
+	if _failed:
 		return
-	var target_pos: String = str(step.get("target", ""))
-	var entry_edge: String = str(step.get("entry", ""))
-	var exit_dir: String = str(step.get("exit", ""))
-	# Note: _quest_step_idx was already incremented in _walk_to_exit before
-	# kicking off this walk, so we don't increment again here.
-	if target_pos == "":
-		# Warp edge — section transition.
-		print("[sanity] force advance via _on_end_reached (warp '%s')" % exit_dir)
-		if field.has_method("_on_end_reached"):
-			field._on_end_reached()
-		return
-	print("[sanity] force advance via _transition_to_cell('%s', '%s')" % [target_pos, entry_edge])
-	if field.has_method("_transition_to_cell"):
-		field._transition_to_cell(target_pos, entry_edge)
+	_failed = true
+	print("[sanity] FAIL: %s" % reason)
+	# Quit with non-zero exit — the recording scripts mark this run as fail
+	# in its sidecar JSON, and the /autopilot table renders the red ✗.
+	_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 
 
 # ── Scene-tree finders for interactables ───────────────────────
@@ -775,9 +796,10 @@ func _find_key_gate(root: Node) -> Node:
 ## Drive the player toward an XZ position by holding camera-relative move_*
 ## actions. Bypasses no physics — same code path the human's keystrokes drive.
 
-func _start_field_walk(target: Vector3, on_arrive: Callable = Callable()) -> void:
+func _start_field_walk(target: Vector3, on_arrive: Callable = Callable(), arrive_dist: float = WALK_ARRIVE_DIST_INTERACT) -> void:
 	_walk_target = target
 	_walk_on_arrive = on_arrive
+	_walk_arrive_dist = arrive_dist
 	_walking = true
 	_walk_started_at_ms = Time.get_ticks_msec()
 	_walk_diag_tick = 0
@@ -787,7 +809,6 @@ func _start_field_walk(target: Vector3, on_arrive: Callable = Callable()) -> voi
 
 func _stop_field_walk() -> void:
 	_walking = false
-	_walk_on_watchdog = Callable()
 	for action in ["move_forward", "move_backward", "move_left", "move_right"]:
 		if Input.is_action_pressed(action):
 			Input.action_release(action)
@@ -813,27 +834,17 @@ func _tick_field_walk() -> void:
 		print("[sanity]  walk @ (%.1f,%.1f,%.1f) → (%.1f,%.1f,%.1f) dist=%.2f state=%s" % [
 			pos.x, pos.y, pos.z, _walk_target.x, _walk_target.y, _walk_target.z, dist, str(state)])
 
-	# Watchdog: if we've been trying for too long, fall back. For exit-trigger
-	# walks (no waypoint nav yet), _walk_on_watchdog calls into the field
-	# controller's _transition_to_cell / _on_end_reached directly. For
-	# interactable walks (gate/key/switch), no on_watchdog set → bare teleport,
-	# then the on_arrive callback still presses interact.
+	# Watchdog: stuck walks are a HARD FAIL — the point of the autopilot is to
+	# verify a real player could traverse this. If the walker can't reach the
+	# target, the stage either needs an authored waypoint graph or a real
+	# walkability fix in the level. Surface the offending cell + stage so it
+	# can be opened in the waypoint editor.
 	if Time.get_ticks_msec() - _walk_started_at_ms > WALK_WATCHDOG_MS:
-		var on_watchdog := _walk_on_watchdog
-		var on_arrive := _walk_on_arrive
 		_stop_field_walk()
-		if on_watchdog.is_valid():
-			print("[sanity] WARN: walk stuck at dist=%.2f → force-advance (no waypoints for this stage)" % dist)
-			on_watchdog.call()
-		else:
-			print("[sanity] WARN: walk stuck at dist=%.2f → teleport to (%.2f, %.2f, %.2f)" % [
-				dist, _walk_target.x, _walk_target.y, _walk_target.z])
-			_teleport_player(_walk_target)
-			if on_arrive.is_valid():
-				_after(0.3, on_arrive)
+		_fail_walk_stuck(pos, dist)
 		return
 
-	if dist < WALK_ARRIVE_DIST:
+	if dist < _walk_arrive_dist:
 		var cb := _walk_on_arrive
 		_stop_field_walk()
 		if cb.is_valid():
@@ -881,6 +892,12 @@ const RAY_MAX_LEGS := 4               # max waypoints in a path before giving up
 const FLOOR_SAMPLE_STEP := 1.5        # one floor-existence cast every Nm along the line
 const FLOOR_PROBE_HEIGHT_UP := 2.0    # downward cast starts this high above sample
 const FLOOR_PROBE_HEIGHT_DOWN := 5.0  # downward cast ends this low (well past the floor)
+## How far INTO the cell to push each spawn-derived waypoint, away from the
+## gate the spawn sits next to. The raw spawn_pos is in the tight corridor
+## right at the gate edge; landing there with arrive_dist=1.5m means the
+## player overshoots and runs into gate collision. Pushing 4m toward center
+## gives breathing room.
+const SAFE_SPAWN_PUSH := 4.0
 
 ## Conservative "can the character walk this straight line?" check.
 ##
@@ -919,37 +936,69 @@ func _raycast_walkable(from: Vector3, to: Vector3) -> bool:
 	return true
 
 
-## Build the candidate waypoint list for the current cell:
-##   • every portal_data[dir]["spawn_pos"] (one per connected direction +
-##     warp direction — these are the natural "in front of each gate"
-##     positions, deliberately placed by the controller to be walkable),
-##   • the cell center (Map node's origin in world space) as a fallback.
+## Build the candidate waypoint list for the current cell. Two kinds of
+## points get added:
+##   • the cell center (Map node's origin in world space), useful as the
+##     L-bend pivot,
+##   • a "safe" version of each portal_data[dir]["spawn_pos"], pushed
+##     SAFE_SPAWN_PUSH metres toward center. Without the push, the spawn
+##     waypoint sits in the tight corridor right at the gate; walks that
+##     end on it overshoot 1-2m past arrive_dist and the player wedges into
+##     the gate. With the push, the waypoint is in open cell space and the
+##     LAST leg (waypoint → trigger) crosses the gate from a clean angle.
 func _collect_cell_waypoints(field: Node, portal_data: Dictionary) -> Array:
 	var pts: Array = []
+	var center := Vector3.ZERO
+	var has_center := false
+	var map_root := field.get_node_or_null("Map")
+	if map_root != null and map_root is Node3D:
+		center = (map_root as Node3D).to_global(Vector3.ZERO)
+		has_center = true
+		pts.append(center)
 	for k in portal_data.keys():
 		if String(k) == "default":
 			continue
 		var pd: Dictionary = portal_data[k]
 		var sp = pd.get("spawn_pos", null)
-		if sp != null and sp is Vector3:
-			pts.append(sp)
-	# Cell center: Map node is the parent under which cell stages are added
-	# in valley_field_controller (see _map_root, named "Map" at line 213).
-	var map_root := field.get_node_or_null("Map")
-	if map_root != null and map_root is Node3D:
-		pts.append((map_root as Node3D).to_global(Vector3.ZERO))
+		if sp == null or not (sp is Vector3):
+			continue
+		var safe: Vector3 = sp
+		if has_center:
+			var to_center: Vector3 = center - sp
+			to_center.y = 0
+			var d: float = to_center.length()
+			if d > 0.1:
+				# Push toward center, but never PAST center.
+				safe = sp + to_center.normalized() * min(SAFE_SPAWN_PUSH, d - 0.5)
+		pts.append(safe)
 	return pts
 
 
 ## BFS through candidate waypoints to find a clear path from the player's
 ## current position to `target`. Returns Array[Vector3] ending in `target`;
 ## empty Array on hard miss. A path of size 1 means straight-line is clear.
+##
+## Priority order:
+##   1. Authored waypoints + edges from unified-stage-configs.json for the
+##      current cell's stage_id (placed in the waypoint editor by the user).
+##   2. Direct line of sight (floor-sample raycast).
+##   3. BFS over computed safe-spawn waypoints + center (fallback when
+##      nothing is authored for this stage).
 func _find_walk_path(field: Node, portal_data: Dictionary, target: Vector3) -> Array:
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
 		return [target]
 	var start: Vector3 = player.global_position
-	# Fast path: direct line of sight.
+	# (1) Authored waypoints win if the user dropped a graph for this stage.
+	var stage_id := ""
+	var cur = field.get("_current_cell") if field else null
+	if typeof(cur) == TYPE_DICTIONARY:
+		stage_id = str(cur.get("stage_id", ""))
+	if stage_id != "":
+		var authored: Array = _path_via_authored_waypoints(stage_id, start, target)
+		if not authored.is_empty():
+			return authored
+	# (2) Direct line of sight.
 	if _raycast_walkable(start, target):
 		return [target]
 	# Build candidate set, drop any that aren't reachable from start.
@@ -974,16 +1023,16 @@ func _find_walk_path(field: Node, portal_data: Dictionary, target: Vector3) -> A
 		parent[i] = -1
 	var found: int = -1
 	while not queue.is_empty():
-		var cur: int = queue.pop_front()
-		if _raycast_walkable(candidates[cur], target):
-			found = cur
+		var cur_idx: int = queue.pop_front()
+		if _raycast_walkable(candidates[cur_idx], target):
+			found = cur_idx
 			break
 		for j in range(n):
 			if visited.has(j):
 				continue
-			if _raycast_walkable(candidates[cur], candidates[j]):
+			if _raycast_walkable(candidates[cur_idx], candidates[j]):
 				visited[j] = true
-				parent[j] = cur
+				parent[j] = cur_idx
 				queue.append(j)
 	if found == -1:
 		return [target]  # No path found; fall back to direct + watchdog.
@@ -993,6 +1042,123 @@ func _find_walk_path(field: Node, portal_data: Dictionary, target: Vector3) -> A
 	while node != -1 and chain.size() < RAY_MAX_LEGS:
 		chain.append(candidates[node])
 		node = parent.get(node, -1)
+	chain.reverse()
+	chain.append(target)
+	return chain
+
+
+# ── Authored waypoints (from the waypoint editor) ──────────────
+## Stages can ship their own waypoint graph via the waypoint editor; the
+## graph is persisted into data/stage_configs/unified-stage-configs.json
+## under the stage's entry as `waypoints[]` (each `{id, position, kind?,
+## label?}`) and `waypointEdges[]` (each `[id, id]`). When present, the
+## autopilot prefers this hand-authored graph over its computed safe-spawn
+## fallback — the editor lets a human capture corridor corners and gate
+## offsets that geometry-sniffing can't reliably find.
+const STAGE_CONFIGS_PATH := "res://data/stage_configs/unified-stage-configs.json"
+## Loaded lazily on first cell entry; one-time cost amortised across the run.
+var _stage_configs_cache: Dictionary = {}
+var _stage_configs_loaded: bool = false
+
+
+func _stage_configs() -> Dictionary:
+	if _stage_configs_loaded:
+		return _stage_configs_cache
+	_stage_configs_loaded = true
+	var f := FileAccess.open(STAGE_CONFIGS_PATH, FileAccess.READ)
+	if f == null:
+		print("[sanity] WARN: couldn't open %s" % STAGE_CONFIGS_PATH)
+		return _stage_configs_cache
+	var data = JSON.parse_string(f.get_as_text())
+	f.close()
+	if typeof(data) == TYPE_DICTIONARY:
+		_stage_configs_cache = data
+	return _stage_configs_cache
+
+
+## Returns a multi-leg path through the authored waypoint graph for `stage_id`,
+## or [] if no authored graph exists (or no path can be found). The path ends
+## in `target` so the caller doesn't need to add it.
+func _path_via_authored_waypoints(stage_id: String, start: Vector3, target: Vector3) -> Array:
+	var configs := _stage_configs()
+	var stage = configs.get(stage_id, null)
+	if typeof(stage) != TYPE_DICTIONARY:
+		return []
+	var waypoints = stage.get("waypoints", [])
+	var edges = stage.get("waypointEdges", [])
+	if typeof(waypoints) != TYPE_ARRAY or waypoints.is_empty():
+		return []
+	# Build id → position map.
+	var pos_by_id := {}
+	for wp in waypoints:
+		if typeof(wp) != TYPE_DICTIONARY:
+			continue
+		var id := str(wp.get("id", ""))
+		var pos_arr = wp.get("position", null)
+		if id == "" or typeof(pos_arr) != TYPE_ARRAY or pos_arr.size() < 3:
+			continue
+		pos_by_id[id] = Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+	if pos_by_id.is_empty():
+		return []
+	# Build undirected adjacency from edge pairs.
+	var adj := {}
+	if typeof(edges) == TYPE_ARRAY:
+		for edge in edges:
+			if typeof(edge) != TYPE_ARRAY or edge.size() < 2:
+				continue
+			var a := str(edge[0])
+			var b := str(edge[1])
+			if not pos_by_id.has(a) or not pos_by_id.has(b):
+				continue
+			if not adj.has(a):
+				adj[a] = []
+			if not adj.has(b):
+				adj[b] = []
+			adj[a].append(b)
+			adj[b].append(a)
+	# Nearest waypoint to start (entry node) and to target (exit node), XZ only.
+	var nearest_start := ""
+	var nearest_target := ""
+	var best_start_d := INF
+	var best_target_d := INF
+	for id in pos_by_id:
+		var p: Vector3 = pos_by_id[id]
+		var ds := Vector2(p.x - start.x, p.z - start.z).length()
+		var dt := Vector2(p.x - target.x, p.z - target.z).length()
+		if ds < best_start_d:
+			best_start_d = ds
+			nearest_start = id
+		if dt < best_target_d:
+			best_target_d = dt
+			nearest_target = id
+	if nearest_start == "" or nearest_target == "":
+		return []
+	# BFS over the authored adjacency.
+	var visited := {}
+	var parent := {}
+	visited[nearest_start] = true
+	parent[nearest_start] = ""
+	var queue: Array = [nearest_start]
+	var found: bool = (nearest_start == nearest_target)
+	while not found and not queue.is_empty():
+		var cur: String = queue.pop_front()
+		for nb in adj.get(cur, []):
+			if visited.has(nb):
+				continue
+			visited[nb] = true
+			parent[nb] = cur
+			if nb == nearest_target:
+				found = true
+				break
+			queue.append(nb)
+	if not found:
+		return []
+	# Reconstruct chain start→…→target waypoints, then append the final target.
+	var chain: Array = []
+	var n: String = nearest_target
+	while n != "":
+		chain.append(pos_by_id[n])
+		n = str(parent.get(n, ""))
 	chain.reverse()
 	chain.append(target)
 	return chain

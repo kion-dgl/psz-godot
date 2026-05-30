@@ -72,16 +72,24 @@ echo "[record-first-mission] godot rc=$RC"
 [ -s "$AVI" ] || { echo "[record-first-mission] ERROR: no AVI frames produced" >&2; exit 1; }
 
 # 4) Determine pass/fail and write the sidecar JSON the /autopilot run-matrix
-# UI reads. Pass = clean exit AND the autopilot's terminator fired.
+# UI reads. Pass = clean exit AND the autopilot's terminator fired. The
+# autopilot fails the run on stuck walks with "[sanity] FAIL: ..." so capture
+# that line verbatim if present — it points the reader at the stage that
+# needs waypoint authoring.
 STATUS="fail"
 FAIL_REASON=""
+FAIL_LINE="$(grep -m1 '^\[sanity\] FAIL:' "$LOG" | sed 's/^\[sanity\] FAIL: //')"
 if [ "$RC" -eq 0 ] && grep -qF '[sanity] DONE ok' "$LOG"; then
 	STATUS="pass"
+elif [ -n "$FAIL_LINE" ]; then
+	FAIL_REASON="$FAIL_LINE"
 elif [ "$RC" -ne 0 ]; then
 	FAIL_REASON="godot exit $RC"
 else
 	FAIL_REASON="autopilot did not reach DONE checkpoint"
 fi
+# Escape the reason for JSON (double quotes + backslashes).
+FAIL_REASON_JSON="$(printf '%s' "$FAIL_REASON" | sed 's/\\/\\\\/g; s/"/\\"/g')"
 JSON="$OUTDIR/first_mission_$STAMP.json"
 cat > "$JSON" <<EOF
 {
@@ -90,7 +98,7 @@ cat > "$JSON" <<EOF
   "godot_exit": $RC,
   "captured_at": "$(date -u -d "@$START_TS" +%Y-%m-%dT%H:%M:%SZ)",
   "duration_sec": $((END_TS - START_TS)),
-  "fail_reason": "$FAIL_REASON",
+  "fail_reason": "$FAIL_REASON_JSON",
   "checkpoints": $(grep -cE '^\[sanity\] checkpoint:' "$LOG" || echo 0)
 }
 EOF
