@@ -1,12 +1,14 @@
 ---
 import Base from './Base.astro';
 import Navbar from '../components/Navbar.astro';
+import { stepForPath } from '../autopilot';
 
 interface Props {
   title: string;
   section?: string;
 }
 const { title, section } = Astro.props;
+const step = stepForPath(Astro.url.pathname);
 ---
 
 <Base title={title}>
@@ -20,6 +22,16 @@ const { title, section } = Astro.props;
       </div>
       <aside class="sidebar">
         <h1>{title}</h1>
+        {step && (
+          <a class={`ap-note ${step.status}`} href="/autopilot">
+            <span class="ap-row">
+              <span class="ap-badge">Autopilot · Step {step.n}</span>
+              <span class="ap-persona">{step.persona}</span>
+              <span class="ap-status">{step.status === 'done' ? '✓ covered' : 'planned'}</span>
+            </span>
+            <span class="ap-text">{step.note}</span>
+          </a>
+        )}
         <slot />
       </aside>
     </div>
@@ -115,4 +127,29 @@ const { title, section } = Astro.props;
     color: #8b949e;
     font-weight: 600;
   }
+  /* Per-page autopilot coverage note (driven by src/autopilot.ts). */
+  .ap-note {
+    display: block;
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border: 1px solid #30363d;
+    border-left: 3px solid #8b949e;
+    border-radius: 4px;
+    background: #161b22;
+  }
+  .ap-note:hover { text-decoration: none; border-color: #58a6ff; }
+  .ap-note.done { border-left-color: #3fb950; }
+  .ap-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .ap-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #e6edf3;
+    background: #21262d;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .ap-persona { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+  .ap-status { font-size: 11px; margin-left: auto; color: #8b949e; }
+  .ap-note.done .ap-status { color: #3fb950; font-weight: 600; }
+  .ap-text { font-size: 12px; line-height: 1.5; color: #c9d1d9; display: block; }
 </style>

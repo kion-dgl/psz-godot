@@ -1,0 +1,8 @@
+{
+  "name": "psz-godot-tools",
+  "private": true,
+  "description": "Repo-level dev/test entry points for PSZ Godot.",
+  "scripts": {
+    "sanity-check": "bash scripts/tools/autoplay/sanity_check.sh"
+  }
+}

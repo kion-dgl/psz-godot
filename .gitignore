@@ -132,7 +132,16 @@ web/public/assets/npcs
 web/public/assets/objects
 web/public/assets/stages
 web/public/assets/player
-.claude/
+.claude/*
+# Track the project hook config so the merge gate travels with the repo.
+!.claude/settings.json
+
+# Local-only marker written by `npm run sanity-check` on success (HEAD sha).
+.sanity-pass
+
+# Autopilot screen recordings — generated locally by record_run.sh, listed in
+# the /autopilot gallery. Never committed (large binaries).
+/spec/public/recordings/
 
 # Local-only quarantine for orphan / superseded files. Moved here instead of
 # `rm`-ing so they can be inspected before permanent deletion. Never tracked.

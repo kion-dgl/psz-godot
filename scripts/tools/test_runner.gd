@@ -52,6 +52,7 @@ func _ready() -> void:
 	test_wetlands_field()
 	test_tower_field()
 	test_quest_lifecycle()
+	test_quest_objectives()
 	test_input_config()
 	test_blackjack()
 	test_script_parse()
@@ -3161,6 +3162,75 @@ func test_quest_lifecycle() -> void:
 	SessionManager._accepted_quest.clear()
 	SessionManager._completed_quest.clear()
 	SessionManager._suspended_session.clear()
+	print("")
+
+
+## Spec: /states/quest-objectives — objectives are {item_id, label, target};
+## collect_quest_item increments per-item counts; the quest completes (and
+## quest_completed fires) only when EVERY objective reaches its target.
+func test_quest_objectives() -> void:
+	print("── Quest Objectives ──")
+
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+
+	# Find a quest that actually declares objectives.
+	var target_quest := ""
+	for qid in QuestLoader.list_quests():
+		var q: Dictionary = QuestLoader.load_quest(qid)
+		if not (q.get("objectives", []) as Array).is_empty():
+			target_quest = qid
+			break
+	if target_quest == "":
+		print("  INFO: no quest declares objectives, skipping")
+		print("")
+		return
+
+	var session: Dictionary = SessionManager.enter_quest(target_quest, "normal")
+	assert_true(not session.is_empty(), "enter_quest(%s) starts a session" % target_quest)
+
+	var objs: Array = SessionManager.get_quest_objectives()
+	assert_gt(objs.size(), 0, "quest exposes objectives")
+	# assert_gt records a FAIL but does not abort; bail before indexing objs[0]
+	# or computing last_idx so the failure is the only failure (instead of an
+	# index-out-of-bounds crashing the whole headless run).
+	if objs.is_empty():
+		return
+	assert_true(not str(objs[0].get("item_id", "")).is_empty(), "objective has an item_id")
+	assert_true(not SessionManager.are_objectives_complete(), "objectives start incomplete")
+	assert_true(not SessionManager.has_completed_quest(), "quest not complete at start")
+
+	# Count quest_completed emissions (Array so the lambda can mutate it).
+	var fired := [0]
+	var cb := func() -> void: fired[0] += 1
+	SessionManager.quest_completed.connect(cb)
+
+	# Collect every objective to its target, leaving the LAST objective one
+	# item short — proves completion is gated on ALL objectives, not any one.
+	var last_idx := objs.size() - 1
+	for i in range(objs.size()):
+		var item_id: String = str(objs[i].get("item_id", ""))
+		var tgt: int = int(objs[i].get("target", 1))
+		var n: int = (tgt - 1) if i == last_idx else tgt
+		for _t in range(n):
+			SessionManager.collect_quest_item(item_id)
+		if i < last_idx:
+			assert_eq(SessionManager.get_quest_item_count(item_id), tgt, "objective '%s' counts up to target %d" % [item_id, tgt])
+
+	assert_true(not SessionManager.are_objectives_complete(), "objectives incomplete while one is short")
+	assert_eq(fired[0], 0, "quest_completed not emitted before all objectives met")
+	assert_true(not SessionManager.has_completed_quest(), "quest not marked complete before final item")
+
+	# Collect the final missing item → quest should auto-complete now.
+	var last_id: String = str(objs[last_idx].get("item_id", ""))
+	SessionManager.collect_quest_item(last_id)
+	assert_true(SessionManager.are_objectives_complete(), "objectives complete after final item")
+	assert_eq(fired[0], 1, "quest_completed emitted exactly once when all objectives met")
+	assert_true(SessionManager.has_completed_quest(), "quest auto-marked complete when objectives met")
+
+	SessionManager.quest_completed.disconnect(cb)
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
 	print("")
 
 

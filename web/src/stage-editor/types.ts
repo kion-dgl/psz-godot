@@ -7,7 +7,7 @@ export type GateEdge = GateDirection; // Alias for compatibility
 export type GateType = 'Gate' | 'KeyGate' | 'AreaWarp'; // Still used for preview only
 export type PreviewModel = 'Gate' | 'AreaWarp';
 export type ObstacleType = 'box' | 'cylinder';
-export type EditorTab = 'floor' | 'portals' | 'textures' | 'obstacles' | 'scene' | 'svg' | 'export';
+export type EditorTab = 'floor' | 'portals' | 'textures' | 'obstacles' | 'scene' | 'waypoints' | 'svg' | 'export';
 
 // =============== Floor Collision ===============
 
@@ -88,6 +88,20 @@ export interface ObstacleData {
   label: string;
 }
 
+// =============== Navigation Waypoints ===============
+// A visibility graph the autopilot walks: nodes are floor positions, edges mean
+// "you can walk straight from A to B without snagging geometry". Locations of
+// interest (gates, spawn, NPCs, exits) are just waypoints tagged with a `kind`.
+
+export type WaypointKind = 'point' | 'gate' | 'spawn' | 'npc' | 'exit';
+
+export interface WaypointData {
+  id: string;
+  position: [number, number, number];
+  label?: string;
+  kind?: WaypointKind;
+}
+
 // =============== Unified Stage Config ===============
 
 export interface UnifiedStageConfig {
@@ -98,6 +112,8 @@ export interface UnifiedStageConfig {
   defaultSpawn?: SpawnPointData;
   textureFixes: TextureFix[];
   obstacles: ObstacleData[];
+  waypoints?: WaypointData[];
+  waypointEdges?: [string, string][]; // undirected edges by waypoint id
   svgSettings?: SvgSettings;
   lastModified: string;
   exportedAt?: string;
