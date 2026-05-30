@@ -603,12 +603,20 @@ func _do_pickup_key(field: Node) -> void:
 
 
 func _do_flip_switch(field: Node) -> void:
+	# Two switch types in valley field: InteractSwitch (player presses
+	# interact while in range) and StepSwitch (auto-collects when the player
+	# physically enters its area, no input needed — auto_collect=true on
+	# scripts/3d/elements/step_switch.gd). search_and_rescue uses StepSwitch
+	# at A 2,2 (cell config object type "step_switch"), so just walk onto it.
 	var sw := _find_interact_switch(field)
+	var auto_collect := false
 	if sw == null:
-		print("[sanity] WARN: flip_switch — no InteractSwitch in cell")
-		_run_next_action(field)
+		sw = _find_step_switch(field)
+		auto_collect = (sw != null)
+	if sw == null:
+		_fail_with_reason("flip_switch — no switch in cell (looked for InteractSwitch + StepSwitch)")
 		return
-	_walk_then_interact(field, sw.global_position, "switch", POST_INTERACT_SETTLE)
+	_walk_then_interact(field, sw.global_position, "switch", POST_INTERACT_SETTLE, auto_collect)
 
 
 func _do_open_gate(field: Node) -> void:
@@ -661,10 +669,11 @@ func _poll_quest_complete(n: int) -> void:
 
 # ── Action helpers ─────────────────────────────────────────────
 
-func _walk_then_interact(field: Node, target: Vector3, label: String, settle: float) -> void:
+func _walk_then_interact(field: Node, target: Vector3, label: String, settle: float, auto_collect: bool = false) -> void:
 	# Route via the authored / computed waypoint graph too, not just direct —
 	# key pickups, switches, and gates are inside the cell, and L-bend stages
-	# need the same multi-leg approach as exit walks.
+	# need the same multi-leg approach as exit walks. `auto_collect=true`
+	# skips the interact press on the last leg (StepSwitch / step-pickups).
 	var portal_data = field.get("_portal_data") if field else null
 	if typeof(portal_data) != TYPE_DICTIONARY:
 		portal_data = {}
@@ -676,10 +685,10 @@ func _walk_then_interact(field: Node, target: Vector3, label: String, settle: fl
 		for p in path:
 			leg_str += " → (%.1f, %.1f)" % [p.x, p.z]
 		print("[sanity] walk to %s via %d waypoint(s):%s" % [label, path.size() - 1, leg_str])
-	_walk_path_then_interact(field, path, label, settle, 0)
+	_walk_path_then_interact(field, path, label, settle, 0, auto_collect)
 
 
-func _walk_path_then_interact(field: Node, path: Array, label: String, settle: float, leg: int) -> void:
+func _walk_path_then_interact(field: Node, path: Array, label: String, settle: float, leg: int, auto_collect: bool) -> void:
 	if leg >= path.size():
 		return
 	var target: Vector3 = path[leg]
@@ -688,13 +697,17 @@ func _walk_path_then_interact(field: Node, path: Array, label: String, settle: f
 		if not is_instance_valid(field) or field != get_tree().current_scene:
 			return
 		if is_last:
-			_after(0.4, func() -> void:
-				print("[sanity] interact %s" % label)
-				_press_action("interact")
-				_after(settle, func() -> void: _run_next_action(field)))
+			if auto_collect:
+				print("[sanity] stepped on %s" % label)
+				_after(settle, func() -> void: _run_next_action(field))
+			else:
+				_after(0.4, func() -> void:
+					print("[sanity] interact %s" % label)
+					_press_action("interact")
+					_after(settle, func() -> void: _run_next_action(field)))
 		else:
 			print("[sanity] waypoint %d/%d reached — next leg" % [leg + 1, path.size() - 1])
-			_after(0.1, func() -> void: _walk_path_then_interact(field, path, label, settle, leg + 1)))
+			_after(0.1, func() -> void: _walk_path_then_interact(field, path, label, settle, leg + 1, auto_collect)))
 
 
 func _walk_to_exit(field: Node, step: Dictionary) -> void:
@@ -802,6 +815,16 @@ func _find_interact_switch(root: Node) -> Node:
 		return root
 	for c in root.get_children():
 		var found := _find_interact_switch(c)
+		if found != null:
+			return found
+	return null
+
+
+func _find_step_switch(root: Node) -> Node:
+	if root is StepSwitch:
+		return root
+	for c in root.get_children():
+		var found := _find_step_switch(c)
 		if found != null:
 			return found
 	return null
