@@ -13,9 +13,12 @@ extends Node
 ##     → counter → city_warp   → WarpPad.interact → warp_teleporter overlay → ui_accept
 ##     → valley_field (DONE)
 ##
-## Movement = teleport (player.global_position) + synthetic input actions; we
-## don't simulate analog walking. Prints `[sanity] …` checkpoints to stdout for
-## the orchestrator to assert on.
+## City movement = teleport (player.global_position) + synthetic input actions.
+## Field movement = camera-basis-aware walking via `Input.action_press` on the
+## move_* actions, so the autopilot exercises the same physics + collision the
+## player does (a level change that blocks a real player should also block the
+## autopilot). Prints `[sanity] …` checkpoints to stdout for the orchestrator
+## to assert on.
 
 # ── Scene paths ────────────────────────────────────────────────
 const INPUT_SELECT := "res://scenes/2d/input_select.tscn"
@@ -42,16 +45,27 @@ const POLL_INTERVAL := 0.7      # accept-spam / re-check interval inside dialogs
 const QUIT_GRACE := 0.4
 const CHAR_NAME := "humar"
 
+# ── Field walk tuning ──────────────────────────────────────────
+const WALK_ARRIVE_DIST := 1.5   # XZ distance at which we say "arrived"
+const WALK_DIR_THRESHOLD := 0.3 # projection magnitude needed to hold a move action
+
 # ── State ──────────────────────────────────────────────────────
 var _enabled := false
 var _last_scene := ""
 var _last_overlay := ""
+var _last_field_node_id: int = 0   # detects cell transitions (same path, new node)
+var _field_cells_visited: int = 0
 var _cc_acted_step := -1
 var _office_intro_advances := 0
 var _office_briefing_advances := 0
 var _counter_npc_interacted := false
 var _guild_accept_count := 0
 var _warp_pad_interacted := false
+
+# Field walking state — driven by _tick_field_walk in _process.
+var _walking := false
+var _walk_target: Vector3 = Vector3.ZERO
+var _walk_on_arrive: Callable = Callable()
 
 
 func _ready() -> void:
@@ -73,6 +87,18 @@ func _process(_delta: float) -> void:
 			print("[sanity] scene: %s" % path)
 			_drive_scene(path)
 
+		# Field-cell transition: SceneManager.goto_scene reloads
+		# valley_field.tscn with a fresh root node each cell, so the path is
+		# unchanged but the instance id changes. That's how we know a new cell
+		# loaded vs first-time entry.
+		if path == VALLEY_FIELD:
+			var nid := cs.get_instance_id()
+			if nid != _last_field_node_id:
+				_last_field_node_id = nid
+				_field_cells_visited += 1
+				print("[sanity] field cell #%d loaded" % _field_cells_visited)
+				_on_field_cell_loaded(cs)
+
 	# Overlay push (guild_counter / warp_teleporter) — current_scene stays the
 	# base scene because SceneManager.push_scene mounts on a CanvasLayer, so we
 	# poll _scene_stack to detect overlays opening.
@@ -84,6 +110,10 @@ func _process(_delta: float) -> void:
 		if overlay != "":
 			print("[sanity] overlay: %s" % overlay)
 			_drive_overlay(overlay)
+
+	# Field walk tick
+	if _walking:
+		_tick_field_walk()
 
 
 func _drive_scene(path: String) -> void:
@@ -114,9 +144,9 @@ func _drive_scene(path: String) -> void:
 		_warp_pad_interacted = false
 		_after(STEP_DELAY * 2.0, _drive_city_warp)
 	elif path == VALLEY_FIELD:
-		print("[sanity] checkpoint: valley_field reached")
-		print("[sanity] DONE ok")
-		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+		print("[sanity] checkpoint: valley_field entered")
+		# The per-cell loop is driven by _on_field_cell_loaded — fires on the
+		# same frame this scene-change does, so don't drive anything here.
 
 
 func _drive_overlay(path: String) -> void:
@@ -321,3 +351,108 @@ func _drive_city_warp() -> void:
 	print("[sanity] warp: teleport to central pad")
 	_teleport_player(WARP_PAD_POS)
 	_after(0.8, func() -> void: _press_action("interact"))
+
+
+# ── Field: per-cell driver ─────────────────────────────────────
+## Fires every time a valley_field cell loads (first entry AND each cell
+## transition, since SceneManager.goto_scene reloads the scene with a fresh
+## root node). `_field_cells_visited` is the 1-indexed cell number.
+##
+## Increment 1 scope: walk south from cell 0,2 (no enemies, no key gates) into
+## cell 1,2's gate trigger, then DONE on the second cell load.
+func _on_field_cell_loaded(field: Node) -> void:
+	_stop_field_walk()
+	if _field_cells_visited == 1:
+		# Cell 0,2 spawn → walk south to the gate trigger.
+		# Wait extra for the controller to finish _compute_portal_positions
+		# and for the companion spawn/intro dialog to settle.
+		_after(STEP_DELAY * 3.0, func() -> void: _drive_field_cell_initial(field))
+	elif _field_cells_visited == 2:
+		print("[sanity] checkpoint: field cell 2 reached (cross-gate walk worked)")
+		print("[sanity] DONE ok")
+		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+
+
+func _drive_field_cell_initial(field: Node) -> void:
+	# Field can be freed between scheduling + firing if a cell transition
+	# already happened — bail cleanly if so.
+	if not is_instance_valid(field) or field != get_tree().current_scene:
+		return
+	var portal_data = field.get("_portal_data")
+	if typeof(portal_data) != TYPE_DICTIONARY or not portal_data.has("south"):
+		print("[sanity] WARN: cell 0,2 missing south portal in _portal_data")
+		return
+	var trigger_pos: Vector3 = portal_data["south"].get("trigger_pos", Vector3.ZERO)
+	print("[sanity] field cell 1 (0,2): walk south → (%.2f, %.2f, %.2f)" % [trigger_pos.x, trigger_pos.y, trigger_pos.z])
+	_start_field_walk(trigger_pos, func() -> void:
+		# Often the cell transition fires (player crosses the Area3D, scene
+		# reloads, player freed) before we hit WALK_ARRIVE_DIST; this only
+		# logs if we *did* arrive without the trigger firing.
+		print("[sanity] field cell 1: arrived at south trigger position"))
+
+
+# ── Field walk primitive ───────────────────────────────────────
+## Drive the player toward an XZ position by holding camera-relative move_*
+## actions. Bypasses no physics — same code path the human's keystrokes drive.
+
+func _start_field_walk(target: Vector3, on_arrive: Callable = Callable()) -> void:
+	_walk_target = target
+	_walk_on_arrive = on_arrive
+	_walking = true
+
+
+func _stop_field_walk() -> void:
+	_walking = false
+	for action in ["move_forward", "move_backward", "move_left", "move_right"]:
+		if Input.is_action_pressed(action):
+			Input.action_release(action)
+
+
+func _tick_field_walk() -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		# Likely between cells — drop the held inputs so the next player spawn
+		# doesn't see stale state.
+		_stop_field_walk()
+		return
+
+	var pos: Vector3 = player.global_position
+	var dx: float = _walk_target.x - pos.x
+	var dz: float = _walk_target.z - pos.z
+	var dist: float = sqrt(dx * dx + dz * dz)
+
+	if dist < WALK_ARRIVE_DIST:
+		var cb := _walk_on_arrive
+		_stop_field_walk()
+		if cb.is_valid():
+			cb.call()
+		return
+
+	# Camera-relative basis — player's _handle_movement converts input actions
+	# to motion using the *active* camera's forward/right vectors.
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var cb := cam.global_transform.basis
+	var fwd_xz := Vector3(-cb.z.x, 0, -cb.z.z)
+	if fwd_xz.length_squared() < 0.0001:
+		return
+	fwd_xz = fwd_xz.normalized()
+	var right_xz := Vector3(cb.x.x, 0, cb.x.z).normalized()
+
+	var desired := Vector3(dx, 0, dz).normalized()
+	var fwd_mag := desired.dot(fwd_xz)
+	var right_mag := desired.dot(right_xz)
+
+	_drive_action("move_forward", fwd_mag > WALK_DIR_THRESHOLD)
+	_drive_action("move_backward", fwd_mag < -WALK_DIR_THRESHOLD)
+	_drive_action("move_right", right_mag > WALK_DIR_THRESHOLD)
+	_drive_action("move_left", right_mag < -WALK_DIR_THRESHOLD)
+
+
+func _drive_action(action: String, want_pressed: bool) -> void:
+	var is_p := Input.is_action_pressed(action)
+	if want_pressed and not is_p:
+		Input.action_press(action)
+	elif (not want_pressed) and is_p:
+		Input.action_release(action)

@@ -95,7 +95,10 @@ check "guild_counter opened"                   "[sanity] checkpoint: guild_count
 check "quest accepted"                         "[sanity] guild_counter: quest accepted"
 check "reached city_warp"                      "[sanity] checkpoint: city_warp"
 check "warp_teleporter opened"                 "[sanity] checkpoint: warp_teleporter"
-check "valley_field reached"                   "[sanity] checkpoint: valley_field reached"
+check "valley_field entered"                   "[sanity] checkpoint: valley_field entered"
+check "field cell 1 loaded"                    "[sanity] field cell #1 loaded"
+check "field walk started"                     "[sanity] field cell 1 (0,2): walk south"
+check "field cell 2 reached"                   "[sanity] checkpoint: field cell 2 reached"
 check "autopilot finished cleanly"             "[sanity] DONE ok"
 
 echo
