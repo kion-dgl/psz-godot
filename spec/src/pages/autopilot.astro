@@ -1,30 +1,10 @@
 ---
 import Concept from '../layouts/Concept.astro';
-import Mermaid from '../components/Mermaid.astro';
 import { AUTOPILOT_STEPS } from '../autopilot';
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Build the journey flow from the step data so it stays in sync. Green = the
-// autopilot already drives + asserts that step; gray = planned.
 const steps = AUTOPILOT_STEPS;
-const esc = (t: string) => t.replace(/"/g, '');
-const flow: string[] = ['flowchart TD'];
-flow.push(`  St((Start)) --> s${steps[0].n}["${steps[0].n} · ${esc(steps[0].label)}"]`);
-for (let i = 1; i < steps.length; i++) {
-  flow.push(`  s${steps[i - 1].n} --> s${steps[i].n}["${steps[i].n} · ${esc(steps[i].label)}"]`);
-}
-const doneIds = steps.filter((s) => s.status === 'done').map((s) => `s${s.n}`).join(',');
-const todoIds = steps.filter((s) => s.status === 'todo').map((s) => `s${s.n}`).join(',');
-flow.push('  classDef done fill:#0d1117,stroke:#3fb950,color:#e6edf3,stroke-width:2px');
-flow.push('  classDef todo fill:#0d1117,stroke:#8b949e,color:#8b949e,stroke-width:1px');
-if (doneIds) flow.push(`  class ${doneIds} done`);
-if (todoIds) flow.push(`  class ${todoIds} todo`);
-// Edge i (0-based) points INTO steps[i]; color it green when that step is done.
-const greenEdges = steps.map((s, i) => (s.status === 'done' ? i : -1)).filter((i) => i >= 0);
-if (greenEdges.length) flow.push(`  linkStyle ${greenEdges.join(',')} stroke:#3fb950,stroke-width:2px`);
-const chart = flow.join('\n');
-
 const doneCount = steps.filter((s) => s.status === 'done').length;
 
 // Recordings live in public/recordings/ (gitignored) — written by
@@ -136,13 +116,7 @@ const formatDuration = (sec?: number) =>
 ---
 
 <Concept title="Autopilot" section="Autopilot">
-  <p>The autopilot walks the game as an ordered playthrough, driven by synthetic input, and asserts each step from the logs. It runs on the dev box via <code>npm run sanity-check</code> (see <a href="/journey/splash">the user journey</a> for each screen). Green = the autopilot already covers it; gray = planned.</p>
-
-  <div class="diagram"><Mermaid chart={chart} /></div>
-  <p class="legend">
-    <span><span class="dot done"></span> covered by autopilot ({doneCount}/{steps.length})</span>
-    <span><span class="dot todo"></span> planned</span>
-  </p>
+  <p>The autopilot walks the game as an ordered playthrough, driven by synthetic input, and asserts each step from the logs. It runs on the dev box via <code>npm run sanity-check</code> (see <a href="/journey/splash">the user journey</a> for each screen). Covered: {doneCount}/{steps.length}.</p>
 
   <h2>Steps</h2>
   <table>
@@ -255,11 +229,6 @@ const formatDuration = (sec?: number) =>
 </script>
 
 <style>
-  .legend { display: flex; gap: 18px; font-size: 13px; color: #c9d1d9; margin: 0 0 12px; }
-  .legend > span { display: inline-flex; align-items: center; gap: 7px; }
-  .dot { width: 12px; height: 12px; border-radius: 50%; box-sizing: border-box; }
-  .dot.done { border: 2px solid #3fb950; }
-  .dot.todo { border: 2px solid #8b949e; }
   .badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
   .badge.done { color: #3fb950; background: #0d2818; }
   .badge.todo { color: #8b949e; background: #161b22; }
