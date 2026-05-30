@@ -47,7 +47,19 @@ export const AUTOPILOT_STEPS: AutopilotStep[] = [
   },
   {
     n: 7, label: 'City', href: '/journey/city/office', persona: 'new user', status: 'done',
-    note: 'Autopilot completes creation (names the character “humar”, submitted via the name field) and spawns into the city hub (Principal’s Office). Walking the 3D city to the quest counter / teleporter and into a field is the next frontier.',
+    note: 'Autopilot completes creation (names the character “humar”) and spawns into the city Office. Skips the intro dialog, teleports to the Office exit, then walks the Counter → Office (briefing) → Counter → Warp arc as described in the next steps.',
+  },
+  {
+    n: 8, label: 'Accept Quest', href: '/journey/city/counter', persona: 'new user', status: 'done',
+    note: 'Autopilot teleports onto the Guild Counter NPC, presses interact to open the guild_counter overlay, then 3× ui_accept to select Search and Rescue → difficulty → confirm. SessionManager.has_accepted_quest() flips true.',
+  },
+  {
+    n: 9, label: 'Quest Briefing', href: '/journey/city/office', persona: 'new user', status: 'done',
+    note: 'After accepting, autopilot teleports back to the Office trigger — the briefing dialog auto-fires. ui_accept spam advances the 7-page briefing; exits when SessionManager.get_accepted_quest().briefing_shown flips true.',
+  },
+  {
+    n: 10, label: 'Start Quest', href: '/journey/city/teleport', persona: 'new user', status: 'done',
+    note: 'Autopilot teleports to the central WarpTeleporter pad, presses interact to open the warp_teleporter UI, then ui_accept to start the quest. Scene changes to valley_field — sanity check is green.',
   },
 ];
 
