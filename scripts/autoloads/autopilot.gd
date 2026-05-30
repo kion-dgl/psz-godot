@@ -25,6 +25,7 @@ const INPUT_SELECT := "res://scenes/2d/input_select.tscn"
 const TITLE := "res://scenes/2d/title.tscn"
 const CHAR_SELECT := "res://scenes/2d/character_select.tscn"
 const CHAR_CREATE := "res://scenes/2d/character_create.tscn"
+const CITY_MARKET := "res://scenes/3d/city/city_market.tscn"
 const CITY_OFFICE := "res://scenes/3d/city/city_office.tscn"
 const CITY_COUNTER := "res://scenes/3d/city/city_counter.tscn"
 const CITY_WARP := "res://scenes/3d/city/city_warp.tscn"
@@ -130,14 +131,41 @@ const WALK_WATCHDOG_MS := 15_000 # 15s; if we haven't arrived, fall back
 var _quest_step_idx: int = 0
 var _step_action_idx: int = 0
 
+# ── Phase ──────────────────────────────────────────────────────
+## Each phase is a self-contained "launch godot → drive to checkpoint →
+## SaveManager.save_game() → quit" cycle, producing its own mp4. Picked via
+## PSZ_AUTOPILOT_PHASE env var (set by scripts/tools/autoplay/record_*.sh and
+## sanity_check.sh). `all` is the legacy full-run-from-boot behavior.
+enum Phase { ALL, BOOT, FIRST_MISSION }
+var _phase: int = Phase.ALL
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
 	if not _enabled:
 		set_process(false)
 		return
-	print("[sanity] autopilot enabled")
+	match OS.get_environment("PSZ_AUTOPILOT_PHASE"):
+		"boot":
+			_phase = Phase.BOOT
+			print("[sanity] autopilot enabled (phase=boot: ends after office intro + save)")
+		"first-mission":
+			_phase = Phase.FIRST_MISSION
+			print("[sanity] autopilot enabled (phase=first-mission: assumes saved character; ends after quest report + save)")
+		_:
+			_phase = Phase.ALL
+			print("[sanity] autopilot enabled (phase=all: full run from boot to quest report)")
 	set_process(true)
+
+
+## Persist state via SaveManager + quit. Terminator shared by all phases.
+func _save_and_quit() -> void:
+	if SaveManager != null and SaveManager.has_method("save_game"):
+		SaveManager.save_game()
+		print("[sanity] save_game()")
+	print("[sanity] DONE ok")
+	# Let the save write hit disk before exit.
+	_after(0.8, func() -> void: get_tree().quit(0))
 
 
 func _process(_delta: float) -> void:
@@ -182,10 +210,10 @@ func _process(_delta: float) -> void:
 func _drive_scene(path: String) -> void:
 	# Post-quest: returning to a city scene means the report flow ran. Don't
 	# re-drive the city handlers (they'd try to accept Search-and-Rescue again).
+	# Both phase=first-mission and phase=all stop here.
 	if path.begins_with("res://scenes/3d/city/") and SessionManager.has_completed_quest():
 		print("[sanity] checkpoint: quest report — back in city (%s)" % path)
-		print("[sanity] DONE ok")
-		_after(QUIT_GRACE, func() -> void: get_tree().quit(0))
+		_save_and_quit()
 		return
 
 	if path == INPUT_SELECT:
@@ -200,6 +228,14 @@ func _drive_scene(path: String) -> void:
 		print("[sanity] checkpoint: character_create")
 		_cc_acted_step = -1
 		_after(STEP_DELAY, _drive_char_create)
+	elif path == CITY_MARKET:
+		# character_select.gd:724 drops every loaded character into the market
+		# (the central plaza), not back into wherever they were saved. In
+		# phase=first-mission this is the natural entry point; in phase=all it
+		# never fires because boot creates a new character that spawns in
+		# city_office directly. Hop straight to the counter to accept the quest.
+		print("[sanity] checkpoint: city_market (load spawn) → goto counter")
+		_after(STEP_DELAY * 2.0, func() -> void: SceneManager.goto_scene(CITY_COUNTER))
 	elif path == CITY_OFFICE:
 		print("[sanity] checkpoint: city_office")
 		_office_intro_advances = 0
@@ -340,11 +376,17 @@ func _drive_city_office() -> void:
 
 
 func _drive_office_intro() -> void:
-	# 3 pages; spam ~5 accepts (with safety buffer), then teleport to exit.
+	# 3 pages; spam ~5 accepts (with safety buffer), then either save+quit
+	# (phase=boot's terminator) or teleport to exit (phase=first-mission /
+	# phase=all — keep going through the city flow).
 	if _office_intro_advances < 5:
 		_press_action("ui_accept")
 		_office_intro_advances += 1
 		_after(POLL_INTERVAL, _drive_city_office)
+		return
+	if _phase == Phase.BOOT:
+		print("[sanity] checkpoint: boot phase complete (character humar created, in office)")
+		_save_and_quit()
 	else:
 		print("[sanity] office intro complete → exit to counter")
 		_teleport_player(OFFICE_EXIT_POS)
