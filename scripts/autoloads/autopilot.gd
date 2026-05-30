@@ -1158,7 +1158,12 @@ func _path_via_authored_waypoints(stage_id: String, start: Vector3, target: Vect
 			nearest_target = id
 	if nearest_start == "" or nearest_target == "":
 		return []
-	# BFS over the authored adjacency.
+	# BFS over the authored adjacency, but expand each node's neighbours in
+	# order of distance-to-target. This breaks ties when multiple equal-hop
+	# paths exist (e.g. two corner waypoints between a spawn and the target),
+	# picking the corner the user intended — the one closer to the
+	# destination — instead of an arbitrary first-visited one.
+	var target_pos: Vector3 = pos_by_id[nearest_target]
 	var visited := {}
 	var parent := {}
 	visited[nearest_start] = true
@@ -1167,7 +1172,10 @@ func _path_via_authored_waypoints(stage_id: String, start: Vector3, target: Vect
 	var found: bool = (nearest_start == nearest_target)
 	while not found and not queue.is_empty():
 		var cur: String = queue.pop_front()
-		for nb in adj.get(cur, []):
+		var neighbours: Array = adj.get(cur, []).duplicate()
+		neighbours.sort_custom(func(a, b):
+			return pos_by_id[a].distance_squared_to(target_pos) < pos_by_id[b].distance_squared_to(target_pos))
+		for nb in neighbours:
 			if visited.has(nb):
 				continue
 			visited[nb] = true
@@ -1186,4 +1194,20 @@ func _path_via_authored_waypoints(stage_id: String, start: Vector3, target: Vect
 		n = str(parent.get(n, ""))
 	chain.reverse()
 	chain.append(target)
+	# Drop the last waypoint if it's "past" the target — that happens when
+	# the nearest authored waypoint to the target sits on the far side of an
+	# obstacle (e.g. a locked KeyGate where spawn_south is just past the
+	# gate the player is trying to walk up to). Detection: the vector from
+	# the previous waypoint to the last waypoint and the vector from the
+	# last waypoint to the target point in opposite directions (dot < 0).
+	if chain.size() >= 3:
+		var prev: Vector3 = chain[chain.size() - 3]
+		var last_wp: Vector3 = chain[chain.size() - 2]
+		var v_in: Vector3 = (last_wp - prev)
+		var v_out: Vector3 = (target - last_wp)
+		v_in.y = 0
+		v_out.y = 0
+		if v_in.length_squared() > 0.01 and v_out.length_squared() > 0.01:
+			if v_in.normalized().dot(v_out.normalized()) < -0.2:
+				chain.remove_at(chain.size() - 2)
 	return chain

@@ -962,6 +962,16 @@
           -12.825684335687953
         ],
         "kind": "point"
+      },
+      {
+        "id": "wp_autopilot_na1_east_detour",
+        "position": [
+          18,
+          0,
+          10
+        ],
+        "kind": "point",
+        "label": "east of wall (autopilot-inferred)"
       }
     ],
     "waypointEdges": [
@@ -971,11 +981,15 @@
       ],
       [
         "wp_1780166340699_ektjdy",
-        "wp_spawn_0_1780166332632"
+        "wp_1780166343199_sn07g4"
       ],
       [
-        "wp_1780166340699_ektjdy",
-        "wp_1780166343199_sn07g4"
+        "wp_autopilot_na1_east_detour",
+        "wp_1780166340699_ektjdy"
+      ],
+      [
+        "wp_autopilot_na1_east_detour",
+        "wp_spawn_0_1780166332632"
       ]
     ]
   },
