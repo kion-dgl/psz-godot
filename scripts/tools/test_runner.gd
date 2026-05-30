@@ -3191,6 +3191,11 @@ func test_quest_objectives() -> void:
 
 	var objs: Array = SessionManager.get_quest_objectives()
 	assert_gt(objs.size(), 0, "quest exposes objectives")
+	# assert_gt records a FAIL but does not abort; bail before indexing objs[0]
+	# or computing last_idx so the failure is the only failure (instead of an
+	# index-out-of-bounds crashing the whole headless run).
+	if objs.is_empty():
+		return
 	assert_true(not str(objs[0].get("item_id", "")).is_empty(), "objective has an item_id")
 	assert_true(not SessionManager.are_objectives_complete(), "objectives start incomplete")
 	assert_true(not SessionManager.has_completed_quest(), "quest not complete at start")

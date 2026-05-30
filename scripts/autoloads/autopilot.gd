@@ -132,13 +132,20 @@ func _drive_overlay(path: String) -> void:
 # ── Input + teleport helpers ───────────────────────────────────
 
 ## Controller-config screen accepts any key — press Enter to pick keyboard.
+## Send a paired down+up so later screens don't see Enter stuck held (the
+## first thing after this is the title's ui_accept handler).
 func _pick_keyboard() -> void:
 	print("[sanity] input_select: injecting keyboard keypress")
-	var ev := InputEventKey.new()
-	ev.physical_keycode = KEY_ENTER
-	ev.keycode = KEY_ENTER
-	ev.pressed = true
-	Input.parse_input_event(ev)
+	var down := InputEventKey.new()
+	down.physical_keycode = KEY_ENTER
+	down.keycode = KEY_ENTER
+	down.pressed = true
+	Input.parse_input_event(down)
+	var up := InputEventKey.new()
+	up.physical_keycode = KEY_ENTER
+	up.keycode = KEY_ENTER
+	up.pressed = false
+	Input.parse_input_event(up)
 
 
 ## Inject a logical action press — works for handlers using
