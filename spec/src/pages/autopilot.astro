@@ -28,18 +28,111 @@ const chart = flow.join('\n');
 const doneCount = steps.filter((s) => s.status === 'done').length;
 
 // Recordings live in public/recordings/ (gitignored) — written by
-// scripts/tools/autoplay/record_run.sh. Served by Astro at /recordings/.
-let recordings: string[] = [];
-try {
-  recordings = fs
-    .readdirSync(path.resolve('public/recordings'))
-    .filter((f) => f.endsWith('.mp4'))
-    .sort()
-    .reverse();
-} catch {
-  recordings = [];
+// scripts/tools/autoplay/record_boot.sh and record_first_mission.sh, each
+// producing <phase>_<timestamp>.mp4 + <phase>_<timestamp>.json (the sidecar
+// the run-matrix below reads for pass/fail). Served by Astro at /recordings/.
+type Phase = 'boot' | 'first-mission';
+type Status = 'pass' | 'fail' | 'unknown';
+interface Clip {
+  filename: string;
+  phase: Phase;
+  ts: string;       // YYYYMMDD-HHMMSS from the filename
+  tsDate: Date;     // parsed for grouping
+  status: Status;
+  durationSec?: number;
+  failReason?: string;
 }
-const prettyName = (f: string) => f.replace(/^sanity_run_?/, '').replace(/\.mp4$/, '') || f;
+interface Run {
+  num: number;
+  date: string;             // human-readable date of the run's boot clip
+  clips: Partial<Record<Phase, Clip>>;
+}
+
+// Order phases left-to-right in the table; add new entries as quests come
+// online. Future: { key: 'second-mission', label: 'Quest 2' } etc.
+const PHASES: Array<{ key: Phase; label: string }> = [
+  { key: 'boot', label: 'Onboarding' },
+  { key: 'first-mission', label: 'Search and Rescue' },
+];
+
+const PHASE_PREFIX: Record<Phase, string> = {
+  'boot': 'boot_',
+  'first-mission': 'first_mission_',
+};
+
+function parseTimestamp(ts: string): Date | null {
+  // 20260530-151541 → 2026-05-30T15:15:41Z (UTC; mtimes are UTC in our scripts)
+  const m = ts.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/);
+  if (!m) return null;
+  return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
+}
+
+let clips: Clip[] = [];
+const recordingsDir = path.resolve('public/recordings');
+try {
+  const files = fs.readdirSync(recordingsDir);
+  for (const f of files) {
+    if (!f.endsWith('.mp4')) continue;
+    let phase: Phase | null = null;
+    for (const p of Object.keys(PHASE_PREFIX) as Phase[]) {
+      if (f.startsWith(PHASE_PREFIX[p])) { phase = p; break; }
+    }
+    if (!phase) continue;  // skip legacy sanity_run_*.mp4
+    const ts = f.slice(PHASE_PREFIX[phase].length, -'.mp4'.length);
+    const tsDate = parseTimestamp(ts);
+    if (!tsDate) continue;
+    let status: Status = 'unknown';
+    let durationSec: number | undefined;
+    let failReason: string | undefined;
+    const sidecarPath = path.join(recordingsDir, f.replace(/\.mp4$/, '.json'));
+    try {
+      const sidecar = JSON.parse(fs.readFileSync(sidecarPath, 'utf8'));
+      if (sidecar.status === 'pass' || sidecar.status === 'fail') status = sidecar.status;
+      if (typeof sidecar.duration_sec === 'number') durationSec = sidecar.duration_sec;
+      if (typeof sidecar.fail_reason === 'string' && sidecar.fail_reason) failReason = sidecar.fail_reason;
+    } catch { /* no sidecar → status stays 'unknown' */ }
+    clips.push({ filename: f, phase, ts, tsDate, status, durationSec, failReason });
+  }
+} catch {
+  clips = [];
+}
+clips.sort((a, b) => b.tsDate.getTime() - a.tsDate.getTime());
+
+// Group into runs. A run is anchored by a boot clip; subsequent phase clips
+// attach to the most-recent preceding boot. Phase clips without a preceding
+// boot get their own ghost run (so they still surface).
+const runs: Run[] = [];
+const sortedAsc = [...clips].sort((a, b) => a.tsDate.getTime() - b.tsDate.getTime());
+let current: Run | null = null;
+let runNum = 0;
+for (const c of sortedAsc) {
+  if (c.phase === 'boot') {
+    runNum += 1;
+    current = { num: runNum, date: c.tsDate.toISOString().slice(0, 10), clips: {} };
+    current.clips.boot = c;
+    runs.push(current);
+  } else {
+    // Try to attach to the most-recent run that doesn't already have this phase.
+    let attached = false;
+    for (let i = runs.length - 1; i >= 0; i--) {
+      if (!runs[i].clips[c.phase]) {
+        runs[i].clips[c.phase] = c;
+        attached = true;
+        break;
+      }
+    }
+    if (!attached) {
+      runNum += 1;
+      const run: Run = { num: runNum, date: c.tsDate.toISOString().slice(0, 10), clips: {} };
+      run.clips[c.phase] = c;
+      runs.push(run);
+    }
+  }
+}
+runs.reverse();  // newest first
+
+const formatDuration = (sec?: number) =>
+  sec == null ? '' : (sec < 60 ? `${sec}s` : `${Math.floor(sec / 60)}m${(sec % 60).toString().padStart(2, '0')}s`);
 ---
 
 <Concept title="Autopilot" section="Autopilot">
@@ -66,22 +159,100 @@ const prettyName = (f: string) => f.replace(/^sanity_run_?/, '').replace(/\.mp4$
   </table>
 
   <h2>Recordings</h2>
-  {recordings.length === 0 ? (
+  {runs.length === 0 ? (
     <Fragment>
       <p>No recordings yet. Generate one on the dev box:</p>
-      <p><code>scripts/tools/autoplay/record_run.sh</code> — renders the autopilot run to <code>public/recordings/</code> (gitignored).</p>
+      <p><code>scripts/tools/autoplay/record_boot.sh</code> — onboarding (wipes save, makes character "humar", spawns in office, saves + quits).</p>
+      <p><code>scripts/tools/autoplay/record_first_mission.sh</code> — Search and Rescue (resumes the boot save, runs the quest end-to-end, saves + quits).</p>
     </Fragment>
   ) : (
-    <div class="recordings">
-      {recordings.map((f) => (
-        <figure>
-          <video controls preload="metadata" src={`/recordings/${f}`}></video>
-          <figcaption>{prettyName(f)}</figcaption>
-        </figure>
-      ))}
-    </div>
+    <table class="runs">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Date</th>
+          {PHASES.map((p) => <th>{p.label}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {runs.map((run) => (
+          <tr>
+            <td>#{run.num}</td>
+            <td>{run.date}</td>
+            {PHASES.map((p) => {
+              const c = run.clips[p.key];
+              if (!c) return <td class="empty">—</td>;
+              const icon = c.status === 'pass' ? '✓' : c.status === 'fail' ? '✗' : '?';
+              return (
+                <td class={`cell ${c.status}`}>
+                  <button
+                    type="button"
+                    class="open-clip"
+                    data-src={`/recordings/${c.filename}`}
+                    data-title={`Run #${run.num} · ${p.label} · ${c.ts}`}
+                    data-status={c.status}
+                    data-duration={formatDuration(c.durationSec)}
+                    data-reason={c.failReason ?? ''}
+                  >
+                    <span class={`status-icon ${c.status}`}>{icon}</span>
+                    <span class="status-label">{c.status}</span>
+                    {c.durationSec != null && <span class="duration">{formatDuration(c.durationSec)}</span>}
+                  </button>
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )}
+
+  <dialog id="clip-modal" class="clip-modal">
+    <header>
+      <span id="clip-modal-title"></span>
+      <button type="button" id="clip-modal-close" aria-label="Close">✕</button>
+    </header>
+    <video id="clip-modal-video" controls preload="metadata"></video>
+    <p id="clip-modal-meta" class="modal-meta"></p>
+  </dialog>
 </Concept>
+
+<script is:inline>
+  document.addEventListener('click', (ev) => {
+    const target = ev.target instanceof Element ? ev.target.closest('.open-clip') : null;
+    if (!target) return;
+    const src = target.getAttribute('data-src');
+    const title = target.getAttribute('data-title') ?? '';
+    const status = target.getAttribute('data-status') ?? '';
+    const duration = target.getAttribute('data-duration') ?? '';
+    const reason = target.getAttribute('data-reason') ?? '';
+    const modal = document.getElementById('clip-modal');
+    const video = document.getElementById('clip-modal-video');
+    document.getElementById('clip-modal-title').textContent = title;
+    const meta = [status, duration, reason].filter((s) => s).join(' · ');
+    document.getElementById('clip-modal-meta').textContent = meta;
+    video.src = src;
+    modal.showModal();
+  });
+  const closeBtn = document.getElementById('clip-modal-close');
+  closeBtn?.addEventListener('click', () => {
+    const modal = document.getElementById('clip-modal');
+    const video = document.getElementById('clip-modal-video');
+    video.pause();
+    video.src = '';
+    modal.close();
+  });
+  // Click on the backdrop to dismiss.
+  const modal = document.getElementById('clip-modal');
+  modal?.addEventListener('click', (ev) => {
+    if (ev.target === modal) {
+      const video = document.getElementById('clip-modal-video');
+      video.pause();
+      video.src = '';
+      modal.close();
+    }
+  });
+</script>
 
 <style>
   .legend { display: flex; gap: 18px; font-size: 13px; color: #c9d1d9; margin: 0 0 12px; }
@@ -92,8 +263,35 @@ const prettyName = (f: string) => f.replace(/^sanity_run_?/, '').replace(/\.mp4$
   .badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
   .badge.done { color: #3fb950; background: #0d2818; }
   .badge.todo { color: #8b949e; background: #161b22; }
-  .recordings { display: flex; flex-wrap: wrap; gap: 16px; }
-  .recordings figure { margin: 0; }
-  .recordings video { width: 480px; max-width: 100%; border: 1px solid #30363d; border-radius: 6px; background: #000; display: block; }
-  .recordings figcaption { font-size: 12px; color: #8b949e; margin-top: 6px; }
+  /* Runs table */
+  table.runs { border-collapse: collapse; width: 100%; margin: 12px 0; }
+  table.runs th, table.runs td { padding: 8px 12px; border-bottom: 1px solid #30363d; text-align: left; vertical-align: middle; }
+  table.runs th { font-size: 13px; color: #8b949e; font-weight: 600; }
+  table.runs td.empty { color: #484f58; font-style: italic; }
+  table.runs td.cell { padding: 4px 8px; }
+  button.open-clip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+    padding: 6px 10px; cursor: pointer; color: #c9d1d9;
+    font: inherit; font-size: 13px;
+  }
+  button.open-clip:hover { background: #1f2937; border-color: #58a6ff; color: #e6edf3; }
+  td.cell.pass button.open-clip { border-color: rgba(63, 185, 80, 0.4); }
+  td.cell.fail button.open-clip { border-color: rgba(248, 81, 73, 0.4); }
+  td.cell.unknown button.open-clip { border-color: rgba(139, 148, 158, 0.4); }
+  .status-icon { font-weight: 700; font-size: 14px; line-height: 1; }
+  .status-icon.pass { color: #3fb950; }
+  .status-icon.fail { color: #f85149; }
+  .status-icon.unknown { color: #8b949e; }
+  .status-label { font-size: 12px; color: #8b949e; }
+  .duration { font-size: 11px; color: #6e7681; font-variant-numeric: tabular-nums; }
+
+  /* Modal */
+  dialog.clip-modal { border: 1px solid #30363d; border-radius: 8px; padding: 0; background: #0d1117; color: #e6edf3; max-width: 90vw; max-height: 90vh; }
+  dialog.clip-modal::backdrop { background: rgba(0, 0, 0, 0.7); }
+  dialog.clip-modal header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #30363d; font-size: 13px; color: #c9d1d9; }
+  dialog.clip-modal #clip-modal-close { background: transparent; border: none; color: #8b949e; cursor: pointer; font-size: 16px; line-height: 1; padding: 4px 8px; }
+  dialog.clip-modal #clip-modal-close:hover { color: #e6edf3; }
+  dialog.clip-modal video { display: block; max-width: 100%; max-height: 70vh; background: #000; }
+  dialog.clip-modal .modal-meta { padding: 8px 14px; font-size: 12px; color: #8b949e; margin: 0; }
 </style>

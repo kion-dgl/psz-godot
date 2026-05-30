@@ -32,7 +32,11 @@ RES="${RES:-640x360}"
 TIMEOUT="${REC_TIMEOUT:-180}"
 
 MANIFEST_BAK="$(mktemp)"
-cleanup() { [ -f "$MANIFEST_BAK" ] && cp "$MANIFEST_BAK" "$MANIFEST" && rm -f "$MANIFEST_BAK"; }
+LOG="$(mktemp)"
+cleanup() {
+	[ -f "$MANIFEST_BAK" ] && cp "$MANIFEST_BAK" "$MANIFEST" && rm -f "$MANIFEST_BAK"
+	rm -f "$LOG"
+}
 trap cleanup EXIT
 
 [ -f "$PACK" ] || { echo "[record-boot] ERROR: $PACK not found" >&2; exit 1; }
@@ -53,21 +57,52 @@ cat > "$MANIFEST" <<JSON
 { "version": "sanity", "godot_version": "4.5", "pack": { "sha256": "$PACK_SHA", "size": $PACK_SIZE, "urls": ["file://LOCAL_DIST/assets.pck"] } }
 JSON
 
-# 3) Render under Xvfb.
+# 3) Render under Xvfb, capturing the autopilot's stdout for pass/fail.
 echo "[record-boot] rendering → $AVI (phase=boot, $RES @ ${FPS}fps, timeout=${TIMEOUT}s)"
+START_TS="$(date -u +%s)"
 PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_PHASE=boot LIBGL_ALWAYS_SOFTWARE=1 \
 	xvfb-run -a -s "-screen 0 ${RES}x24" \
 	timeout "$TIMEOUT" "$GODOT" --write-movie "$AVI" --fixed-fps "$FPS" \
-	--disable-vsync --audio-driver Dummy --path "$REPO"
+	--disable-vsync --audio-driver Dummy --path "$REPO" >"$LOG" 2>&1
 RC=$?
+END_TS="$(date -u +%s)"
 echo "[record-boot] godot rc=$RC"
 [ -s "$AVI" ] || { echo "[record-boot] ERROR: no AVI frames produced" >&2; exit 1; }
 
-# 4) Transcode AVI → mp4.
+# 4) Determine pass/fail and write the sidecar JSON the /autopilot run-matrix
+# UI reads. Pass = clean exit AND the autopilot's terminator fired.
+STATUS="fail"
+FAIL_REASON=""
+if [ "$RC" -eq 0 ] && grep -qF '[sanity] DONE ok' "$LOG"; then
+	STATUS="pass"
+elif [ "$RC" -ne 0 ]; then
+	FAIL_REASON="godot exit $RC"
+else
+	FAIL_REASON="autopilot did not reach DONE checkpoint"
+fi
+JSON="$OUTDIR/boot_$STAMP.json"
+cat > "$JSON" <<EOF
+{
+  "phase": "boot",
+  "status": "$STATUS",
+  "godot_exit": $RC,
+  "captured_at": "$(date -u -d "@$START_TS" +%Y-%m-%dT%H:%M:%SZ)",
+  "duration_sec": $((END_TS - START_TS)),
+  "fail_reason": "$FAIL_REASON",
+  "checkpoints": $(grep -cE '^\[sanity\] checkpoint:' "$LOG" || echo 0)
+}
+EOF
+
+# 5) Transcode AVI → mp4.
 echo "[record-boot] transcoding → $MP4"
 ffmpeg -y -loglevel error -i "$AVI" -c:v libx264 -pix_fmt yuv420p -crf 28 -movflags +faststart "$MP4" || {
 	echo "[record-boot] ffmpeg failed" >&2; exit 1; }
 rm -f "$AVI"
-ls -lh "$MP4"
-echo "[record-boot] done: $MP4"
-echo "[record-boot] save state preserved at $USERDIR/save_data.json (use record_first_mission.sh next)"
+ls -lh "$MP4" "$JSON"
+echo "[record-boot] $STATUS — $MP4"
+if [ "$STATUS" = "pass" ]; then
+	echo "[record-boot] save state preserved at $USERDIR/save_data.json (use record_first_mission.sh next)"
+else
+	echo "[record-boot] WARNING: $FAIL_REASON — last 10 [sanity] lines:" >&2
+	grep '^\[sanity\]' "$LOG" | tail -10 >&2
+fi
