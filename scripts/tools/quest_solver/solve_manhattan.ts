@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { loadStage3D, loadGlb3D, type Tri3D } from "./lib/floor.ts";
 import { buildNavGrid } from "./lib/grid.ts";
 import { applyToStageConfigManhattan, solveStageGraphManhattan } from "./lib/emit_manhattan.ts";
-import { cellsForStage, loadQuestPlan, stagePoints, stagesUsed } from "./lib/quest_walk.ts";
+import { cellsForStage, loadQuestPlan, stageFences, stagePoints, stagesUsed } from "./lib/quest_walk.ts";
 import type { Tri2D } from "./lib/floor.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -88,6 +88,7 @@ function main() {
 		const t0 = performance.now();
 		const cells = cellsForStage(plan, stageId).map((c) => c.cell);
 		const points = stagePoints(stageId, cfg, cells);
+		const fences = stageFences(cells);
 		const floorPath = `${ASSETS_STAGES}/${subfolder}/${stageId}/lndmd/${stageId}-floor.glb`;
 		let floor3d: Tri3D[] = [];
 		try {
@@ -117,7 +118,23 @@ function main() {
 		for (const a of attempts) {
 			if (a.tris.length === 0) continue;
 			grid = buildNavGrid(a.tris, { resolution, clearance });
-			graph = solveStageGraphManhattan(stageId, grid, points);
+			// Pre-switch variant: same triangles + fences stamped as
+			// closed-fence obstacles. Used for spawn→switch routing so the
+			// path goes AROUND the fence, not through it.
+			const preSwitchGrid = fences.length > 0
+				? buildNavGrid(a.tris, { resolution, clearance, fences })
+				: grid;
+			// Floor-coverage validation: sample every emitted edge against
+			// the SAME triangle set used for routing. Catches grid-walkable
+			// edges that still cross holes after clearance erosion (the
+			// grid cell was big enough to span a sub-cell gap). Validating
+			// against the routing set keeps the solver self-consistent;
+			// runtime collision differences (player falls through m-mesh
+			// surfaces) are caught by the autopilot run, not here.
+			graph = solveStageGraphManhattan(stageId, grid, points, {
+				preSwitchGrid,
+				floorTriangles: a.tris,
+			});
 			sourceTag = a.label;
 			trisUsed = a.tris.length;
 			if (graph.stats.pathsFailed === 0) break;

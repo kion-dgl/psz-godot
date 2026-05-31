@@ -16,9 +16,14 @@ export interface QuestObjectMarker {
   linkId?: string;
 }
 
-interface QuestCell {
+export interface QuestCell {
   pos: string;
   stageId: string;
+  rotation?: number;
+  pathOrder?: number;
+  connections?: Record<string, string>;
+  warpEdge?: string | null;
+  keyGate?: { direction: string; requiredKeys: number } | null;
   switches?: { position: [number, number, number]; linkId?: string }[];
   fences?: { position: [number, number, number]; linkId?: string }[];
   keyDrop?: { position?: [number, number, number]; targetCell?: string } | null;
@@ -110,4 +115,40 @@ export function useQuestObjects(questId: string | null, mapId: string): QuestObj
   }, [questId, mapId]);
 
   return markers;
+}
+
+/**
+ * Returns the raw quest cells that use `mapId`, plus the parent section
+ * (so the caller knows path-order context). Used by the cell playback sim
+ * to build the spawn → switch → exit sequence from the connection graph.
+ */
+export function useQuestCells(questId: string | null, mapId: string): QuestCell[] {
+  const [cells, setCells] = useState<QuestCell[]>([]);
+
+  useEffect(() => {
+    if (!questId) {
+      setCells([]);
+      return;
+    }
+    let cancelled = false;
+    loadQuestPlan(questId).then((plan) => {
+      if (cancelled) return;
+      if (!plan) {
+        setCells([]);
+        return;
+      }
+      const out: QuestCell[] = [];
+      for (const sect of plan.sections) {
+        for (const cell of sect.cells) {
+          if (cell.stageId === mapId) out.push(cell);
+        }
+      }
+      setCells(out);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [questId, mapId]);
+
+  return cells;
 }

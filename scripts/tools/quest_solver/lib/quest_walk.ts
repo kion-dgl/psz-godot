@@ -224,3 +224,27 @@ export function stagePoints(
 
 	return out;
 }
+
+/**
+ * Collect deduped fence positions across all cells using this stage. Used by
+ * the solver to mark fence cells as obstacles when routing the pre-switch leg
+ * (spawn → switch): the autopilot must reach the switch *before* the fence
+ * opens, so any path that cuts through the fence position is invalid.
+ *
+ * Post-switch legs (switch → exit) use a grid WITHOUT these obstacles so the
+ * autopilot can walk through the now-open fence.
+ */
+export function stageFences(cells: QuestCell[]): { x: number; z: number; linkId: string }[] {
+	const seen = new Map<string, true>();
+	const out: { x: number; z: number; linkId: string }[] = [];
+	for (const c of cells) {
+		for (const f of c.fences ?? []) {
+			const [x, , z] = f.position;
+			const k = `${Math.round(x * 2)}_${Math.round(z * 2)}`;
+			if (seen.has(k)) continue;
+			seen.set(k, true);
+			out.push({ x, z, linkId: f.linkId ?? "" });
+		}
+	}
+	return out;
+}

@@ -28,6 +28,13 @@ export interface BuildGridOpts {
 	walls?: Tri2D[];
 	/** Extra dilation specifically from wall-rasterized cells, in meters. */
 	wallClearance?: number;
+	/** Closed-fence positions. Each fence stamps a small square obstacle around
+	 *  its XZ center. Used for pre-switch routing: the player can't cross the
+	 *  fence before the switch is hit. Post-switch grids omit this option. */
+	fences?: { x: number; z: number }[];
+	/** Half-width of the fence-obstacle stamp (meters). Default 1.5m matches
+	 *  the in-game fence collider footprint. */
+	fenceHalfWidth?: number;
 }
 
 export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
@@ -101,6 +108,30 @@ export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
 			stampLine(w.x1, w.z1, w.x2, w.z2);
 			stampLine(w.x2, w.z2, w.x3, w.z3);
 			stampLine(w.x3, w.z3, w.x1, w.z1);
+		}
+	}
+
+	// Step 1b-2: stamp closed fences as small square obstacles. Each fence
+	// blocks an XZ square of side 2*fenceHalfWidth, then gets the same
+	// wallClearance dilation walls get. This makes pre-switch paths route
+	// around the fence rather than through it.
+	const fences = opts.fences ?? [];
+	const fenceHalf = opts.fenceHalfWidth ?? 1.5;
+	if (fences.length > 0) {
+		const fHalfCells = Math.max(1, Math.ceil(fenceHalf / resolution));
+		for (const f of fences) {
+			const c = Math.round((f.x - minX) / resolution);
+			const r = Math.round((f.z - minZ) / resolution);
+			const r0 = Math.max(0, r - fHalfCells);
+			const r1 = Math.min(rows - 1, r + fHalfCells);
+			const c0 = Math.max(0, c - fHalfCells);
+			const c1 = Math.min(cols - 1, c + fHalfCells);
+			for (let rr = r0; rr <= r1; rr++) {
+				for (let cc = c0; cc <= c1; cc++) {
+					raw[rr * cols + cc] = 0;
+					wallStamp[rr * cols + cc] = 1;
+				}
+			}
 		}
 	}
 

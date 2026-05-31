@@ -20,9 +20,14 @@ import WaypointTab from './tabs/WaypointTab';
 import WaypointOverlay from './WaypointOverlay';
 import ManhattanGridOverlay from './ManhattanGridOverlay';
 import CoordMarkerOverlay from './CoordMarkerOverlay';
+import CapsuleSimOverlay from './CapsuleSimOverlay';
+import type { Tri2D } from './manhattan/solver';
 import { useManhattanGrid } from './manhattan/useManhattanGrid';
 import QuestObjectOverlay from './QuestObjectOverlay';
-import { useQuestObjects } from './useQuestObjects';
+import { useQuestObjects, useQuestCells, type QuestCell } from './useQuestObjects';
+import { rotateDirection } from '../quest-editor/hooks/useStageConfigs';
+import type { Direction } from '../quest-editor/types';
+import type { SimLeg } from './CapsuleSimOverlay';
 import SvgTab from './tabs/SvgTab';
 import SceneTab, { computeLighting, PLACED_PRESETS } from './tabs/SceneTab';
 import ParticleOverlay, { type ParticleEffect } from './ParticleOverlay';
@@ -187,6 +192,7 @@ export default function UnifiedStageEditor() {
   const [selectedQuest, setSelectedQuest] = useState<string | null>(urlQuest ?? null);
   const [highlightCell, setHighlightCell] = useState<string | null>(urlCell ?? null);
   const questObjects = useQuestObjects(selectedQuest, selectedMapId);
+  const questCells = useQuestCells(selectedQuest, selectedMapId);
 
   // Keep URL in sync with state. replace:true so we don't pollute history
   // with one entry per character typed into the cell input. Preserve the
@@ -264,6 +270,21 @@ export default function UnifiedStageEditor() {
   const markerZNum = parseFloat(markerZ);
   const markerActive = !isNaN(markerXNum) && !isNaN(markerZNum);
 
+  // Capsule simulator state — useMemos defined below after `config` +
+  // `includedTriangles` are declared so the TDZ doesn't bite us.
+  const [simFromId, setSimFromId] = useState<string>('');
+  const [simToId, setSimToId] = useState<string>('');
+  const [simRestartKey, setSimRestartKey] = useState(0);
+  const [simResult, setSimResult] = useState<{ ok: boolean; failedAt?: { x: number; z: number }; legIndex?: number } | null>(null);
+  const [simSpeed, setSimSpeed] = useState(6);
+
+  // Multi-leg cell playback state. When activeCellPos is set, the sim runs
+  // the full per-cell autopilot sequence (spawn(entry) → switch → exit) and
+  // visualizes fence open/close state. Falsy → single-leg mode (the
+  // simFromId/simToId controls above).
+  const [activeCellPos, setActiveCellPos] = useState<string>('');
+  const [cellLegsCompleted, setCellLegsCompleted] = useState(0);
+
   // Floor extraction: show all upward-facing surfaces (stairs, ramps) so they
   // can be clicked into the floor collision mesh. Default off to keep the
   // viewport uncluttered for stages that don't need it.
@@ -330,6 +351,197 @@ export default function UnifiedStageEditor() {
   const includedTriangles = useMemo(() => {
     return floorTriangles.filter((t) => t.included);
   }, [floorTriangles]);
+
+  // Capsule simulator: BFS over the existing waypoint graph from
+  // `simFromId` to `simToId`, then animate a capsule along the resulting
+  // polyline + check floor at every step.
+  const simPath = useMemo<{ x: number; z: number }[]>(() => {
+    if (!config || !simFromId || !simToId) return [];
+    const waypoints = config.waypoints ?? [];
+    const edges = config.waypointEdges ?? [];
+    const byId: Record<string, [number, number, number]> = {};
+    for (const w of waypoints) byId[w.id] = w.position as [number, number, number];
+    if (!byId[simFromId] || !byId[simToId]) return [];
+    const adj: Record<string, string[]> = {};
+    for (const [a, b] of edges) {
+      (adj[a] ??= []).push(b);
+      (adj[b] ??= []).push(a);
+    }
+    const parent: Record<string, string> = { [simFromId]: '' };
+    const q = [simFromId];
+    let found = simFromId === simToId;
+    while (q.length && !found) {
+      const cur = q.shift()!;
+      if (cur === simToId) { found = true; break; }
+      for (const nb of adj[cur] ?? []) {
+        if (nb in parent) continue;
+        parent[nb] = cur;
+        if (nb === simToId) { found = true; break; }
+        q.push(nb);
+      }
+    }
+    if (!found) return [];
+    const chain: string[] = [];
+    let node: string = simToId;
+    while (node) { chain.push(node); node = parent[node]; }
+    chain.reverse();
+    return chain.map((id) => ({ x: byId[id][0], z: byId[id][2] }));
+  }, [config, simFromId, simToId]);
+
+  // Convert included floor triangles to the Tri2D shape the sim's
+  // point-in-triangle test wants.
+  const simFloor2d = useMemo<Tri2D[]>(() => {
+    return includedTriangles.map((t) => ({
+      x1: t.vertices[0].x, z1: t.vertices[0].z,
+      x2: t.vertices[1].x, z2: t.vertices[1].z,
+      x3: t.vertices[2].x, z3: t.vertices[2].z,
+    }));
+  }, [includedTriangles]);
+
+  // Resolve the active cell for the per-cell playback sim. If the user has
+  // picked a cell explicitly, use it; otherwise default to the first cell
+  // that uses this stage (the editor only shows stage IDs that the quest
+  // actually uses).
+  const activeCell = useMemo<QuestCell | null>(() => {
+    if (questCells.length === 0) return null;
+    if (activeCellPos) {
+      return questCells.find((c) => c.pos === activeCellPos) ?? questCells[0];
+    }
+    return questCells[0];
+  }, [questCells, activeCellPos]);
+
+  // Build the multi-leg playback for the active cell:
+  //   spawn(entry_dir) → switch_0 → ... → switch_N → load(exit_dir)
+  // Direction mapping: connection directions are in grid-space; portal
+  // labels are in room-local space. With a CW rotation R applied when the
+  // room is placed in the grid, grid_dir = rotateDirection(local_dir, R),
+  // so local_dir = rotateDirection(grid_dir, -R). We resolve each grid-dir
+  // connection to its local portal and pick the spawn/load waypoint there.
+  const cellSim = useMemo<{
+    legs: SimLeg[];
+    switchActivationLegIndex: number | undefined;
+    fenceMarkers: { x: number; z: number; halfWidth?: number }[];
+    description: string[];
+    error: string | null;
+  } | null>(() => {
+    if (!config || !activeCell) return null;
+    const waypoints = config.waypoints ?? [];
+    const edges = config.waypointEdges ?? [];
+    if (waypoints.length === 0) return null;
+    const wpById: Record<string, { x: number; z: number; kind?: string; label?: string }> = {};
+    for (const w of waypoints) {
+      wpById[w.id] = { x: w.position[0], z: w.position[2], kind: w.kind, label: w.label };
+    }
+    const adj: Record<string, string[]> = {};
+    for (const [a, b] of edges) {
+      (adj[a] ??= []).push(b);
+      (adj[b] ??= []).push(a);
+    }
+    const bfsPath = (from: string, to: string): { x: number; z: number }[] | null => {
+      if (!wpById[from] || !wpById[to]) return null;
+      if (from === to) return [wpById[from]];
+      const parent: Record<string, string | null> = { [from]: null };
+      const q = [from];
+      while (q.length) {
+        const cur = q.shift()!;
+        if (cur === to) break;
+        for (const nb of adj[cur] ?? []) {
+          if (nb in parent) continue;
+          parent[nb] = cur;
+          q.push(nb);
+        }
+      }
+      if (!(to in parent)) return null;
+      const ids: string[] = [];
+      let n: string | null = to;
+      while (n) { ids.push(n); n = parent[n]; }
+      ids.reverse();
+      return ids.map((id) => wpById[id]);
+    };
+    // Helper: find the spawn/load waypoint nearest a given local direction
+    // by matching its label suffix ("spawn north" etc.). Falls back to the
+    // first matching kind if no labels are present.
+    const findWaypoint = (kind: 'spawn' | 'exit', localDir: Direction): string | null => {
+      const wpsOfKind = waypoints.filter((w) => w.kind === kind);
+      const labelPrefix = kind === 'spawn' ? 'spawn ' : 'load ';
+      for (const w of wpsOfKind) {
+        if (w.label === `${labelPrefix}${localDir}`) return w.id;
+      }
+      return null;
+    };
+    const rotation = activeCell.rotation ?? 0;
+    const conns = activeCell.connections ?? {};
+    // Entry: the cell we came from. Use pathOrder to figure out — pathOrder=0
+    // is the start (no entry). For others, the previous-pathOrder cell. We
+    // don't have section context here, so use a heuristic: pick the connection
+    // direction NOT used as the exit.
+    const connDirs = Object.keys(conns) as Direction[];
+    let entryDirGrid: Direction | null = null;
+    let exitDirGrid: Direction | null = null;
+    // Heuristic: if cell has a keyGate.direction, that's the exit (gated by
+    // the switch). Otherwise pick last direction listed as exit, first as
+    // entry. Two-connection cells follow the pathOrder convention.
+    if (activeCell.keyGate?.direction) {
+      exitDirGrid = activeCell.keyGate.direction as Direction;
+      entryDirGrid = (connDirs.find((d) => d !== exitDirGrid) ?? null) as Direction | null;
+    } else if (connDirs.length >= 2) {
+      entryDirGrid = connDirs[0];
+      exitDirGrid = connDirs[1];
+    } else if (connDirs.length === 1) {
+      // Dead-end cell — same direction in and out.
+      entryDirGrid = connDirs[0];
+      exitDirGrid = connDirs[0];
+    }
+    const errors: string[] = [];
+    if (!entryDirGrid || !exitDirGrid) {
+      return {
+        legs: [], switchActivationLegIndex: undefined, fenceMarkers: [],
+        description: [], error: 'cell has no connections — nothing to play',
+      };
+    }
+    // Inverse rotation (room-local = rotate grid_dir by -R).
+    const entryDirLocal = rotateDirection(entryDirGrid, -rotation);
+    const exitDirLocal = rotateDirection(exitDirGrid, -rotation);
+    const entrySpawnId = findWaypoint('spawn', entryDirLocal);
+    const exitLoadId = findWaypoint('exit', exitDirLocal);
+    if (!entrySpawnId) errors.push(`no spawn waypoint for entry local-${entryDirLocal} (grid-${entryDirGrid})`);
+    if (!exitLoadId) errors.push(`no load waypoint for exit local-${exitDirLocal} (grid-${exitDirGrid})`);
+    const switchWps = waypoints.filter((w) => w.kind === 'switch');
+    // Order switches by pathOrder if linkIds match the cell's fence linkIds.
+    // For now we walk them in waypoint-array order (small N — usually 1).
+    const sequence: string[] = [];
+    if (entrySpawnId) sequence.push(entrySpawnId);
+    for (const sw of switchWps) sequence.push(sw.id);
+    if (exitLoadId) sequence.push(exitLoadId);
+    const legs: SimLeg[] = [];
+    const description: string[] = [];
+    for (let i = 0; i < sequence.length - 1; i++) {
+      const from = sequence[i];
+      const to = sequence[i + 1];
+      const p = bfsPath(from, to);
+      const fromLabel = wpById[from]?.label ?? from.slice(-4);
+      const toLabel = wpById[to]?.label ?? to.slice(-4);
+      if (!p || p.length < 2) {
+        errors.push(`no path: ${fromLabel} → ${toLabel}`);
+        continue;
+      }
+      legs.push({ path: p, label: `${fromLabel} → ${toLabel}` });
+      description.push(`${fromLabel} → ${toLabel}`);
+    }
+    // Switch activation = the leg that ENDS at the first switch waypoint.
+    const switchLegIdx = switchWps.length > 0 ? 0 : undefined;
+    // Fence markers (visualization). Pull positions from the cell's fences.
+    const fenceMarkers = (activeCell.fences ?? []).map((f) => ({
+      x: f.position[0], z: f.position[2], halfWidth: 1.5,
+    }));
+    return {
+      legs,
+      switchActivationLegIndex: switchLegIdx,
+      fenceMarkers,
+      description,
+      error: errors.length > 0 ? errors.join('; ') : null,
+    };
+  }, [config, activeCell]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -686,6 +898,35 @@ export default function UnifiedStageEditor() {
             setMarkerX={setMarkerX}
             markerZ={markerZ}
             setMarkerZ={setMarkerZ}
+            simFromId={simFromId}
+            setSimFromId={setSimFromId}
+            simToId={simToId}
+            setSimToId={setSimToId}
+            simSpeed={simSpeed}
+            setSimSpeed={setSimSpeed}
+            simResult={simResult}
+            onSimRun={() => { setSimResult(null); setSimRestartKey((n) => n + 1); }}
+            cellPlaybackAvailable={questCells.length > 0}
+            cellPlaybackCells={questCells.map((c) => c.pos)}
+            activeCellPos={activeCellPos}
+            setActiveCellPos={(pos) => {
+              setActiveCellPos(pos);
+              setSimResult(null);
+              setCellLegsCompleted(0);
+            }}
+            cellPlaybackDescription={cellSim?.description ?? []}
+            cellPlaybackError={cellSim?.error ?? null}
+            cellSwitchActivated={
+              cellSim?.switchActivationLegIndex !== undefined &&
+              cellLegsCompleted > cellSim.switchActivationLegIndex
+            }
+            cellLegsCompleted={cellLegsCompleted}
+            cellLegsTotal={cellSim?.legs.length ?? 0}
+            onPlayCell={() => {
+              setSimResult(null);
+              setCellLegsCompleted(0);
+              setSimRestartKey((n) => n + 1);
+            }}
             manhattanInfo={{
               loading: manhattan.loading,
               error: manhattan.error,
@@ -829,6 +1070,29 @@ export default function UnifiedStageEditor() {
               <ManhattanGridOverlay grid={manhattan.grid} path={manhattan.path} />
             )}
             {markerActive && <CoordMarkerOverlay x={markerXNum} z={markerZNum} />}
+            {/* Single-leg sim — only when cell playback is NOT the active mode. */}
+            {!activeCellPos && simPath.length >= 2 && (
+              <CapsuleSimOverlay
+                path={simPath}
+                floor={simFloor2d}
+                speed={simSpeed}
+                restartKey={simRestartKey}
+                onComplete={setSimResult}
+              />
+            )}
+            {/* Multi-leg cell playback — chained spawn → switch → exit. */}
+            {activeCellPos && cellSim && cellSim.legs.length > 0 && (
+              <CapsuleSimOverlay
+                legs={cellSim.legs}
+                switchActivationLegIndex={cellSim.switchActivationLegIndex}
+                fences={cellSim.fenceMarkers}
+                floor={simFloor2d}
+                speed={simSpeed}
+                restartKey={simRestartKey}
+                onComplete={setSimResult}
+                onLegComplete={(i) => setCellLegsCompleted(i + 1)}
+              />
+            )}
             {/* URL-supplied markers stay rendered alongside the editable one
                 so the user can see the original "go look here" pin and the
                 spot they're currently typing at the same time. */}
