@@ -1,0 +1,69 @@
+{
+  "stageId": "s05a_ic3",
+  "shape": "Cherry cluster (3 platforms joined by narrow stems)",
+  "description": "Three discrete platforms connected by narrow stem corridors — like a cluster of three cherries. The south platform (where spawn_south arrives) is joined to the west/north platform by a single narrow stem at the north-west corner; the west platform is joined to the east/south platform by a longer stem from its south-east corner. Each platform has corners wired as a clique so objectives anywhere on it can be reached from the entering anchor. The voids between platforms are NOT walkable.",
+  "portals": {
+    "south": "spawn_south at (17.41, 22.51) — south side of the south platform's NE corner",
+    "north": "spawn_north at (-20.03, -12.66) — south side of the west platform's SW corner"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",       "position": [17.41,  0,  22.51], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "north_gate",       "position": [-20.03, 0, -12.66], "description": "north portal (matches wp_spawn_1)" },
+
+    { "id": "south_plat_ne",    "position": [17.74,  0,  15.16], "description": "south platform, NE corner — joins south_gate (matches kjtq)" },
+    { "id": "south_plat_nw",    "position": [7.08,   0,  14.65], "description": "south platform, NW corner — stem to west platform's NE corner (matches sb5w)" },
+    { "id": "south_plat_sw",    "position": [7.11,   0,   4.83], "description": "south platform, SW corner (matches p0y6)" },
+    { "id": "south_plat_se",    "position": [18.25,  0,   4.87], "description": "south platform, SE corner (matches gzhu1)" },
+
+    { "id": "west_plat_ne",     "position": [-8.99,  0,  14.99], "description": "west platform, NE corner — stem from south platform's NW corner (matches mrpf)" },
+    { "id": "west_plat_nw",     "position": [-20.17, 0,  15.56], "description": "west platform, NW corner (matches 5uur)" },
+    { "id": "west_plat_sw",     "position": [-19.72, 0,  -5.54], "description": "west platform, SW corner — joins north_gate (matches q2sa)" },
+    { "id": "west_plat_se",     "position": [-10.65, 0,  -5.70], "description": "west platform, SE corner — stem to east platform (matches gyl1)" },
+
+    { "id": "east_stem_west",   "position": [-10.40, 0, -20.20], "description": "long stem connecting west platform's SE corner to east platform (matches xm8v)" },
+    { "id": "east_plat_sw",     "position": [6.85,   0, -19.68], "description": "east platform, SW corner — stem from west platform (matches x5bj)" },
+    { "id": "east_plat_se",     "position": [17.86,  0, -19.60], "description": "east platform, SE corner (matches wetxbw)" },
+    { "id": "east_plat_ne",     "position": [18.27,  0,  -9.22], "description": "east platform, NE corner (matches zjn4g9)" },
+    { "id": "east_plat_nw",     "position": [7.07,   0,  -9.08], "description": "east platform, NW corner (matches u58s52)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_plat_ne"],
+    ["south_plat_ne", "south_plat_nw"],
+    ["south_plat_ne", "south_plat_sw"],
+    ["south_plat_ne", "south_plat_se"],
+    ["south_plat_nw", "south_plat_sw"],
+    ["south_plat_nw", "south_plat_se"],
+    ["south_plat_sw", "south_plat_se"],
+
+    ["south_plat_nw", "west_plat_ne"],
+
+    ["west_plat_ne", "west_plat_nw"],
+    ["west_plat_ne", "west_plat_sw"],
+    ["west_plat_ne", "west_plat_se"],
+    ["west_plat_nw", "west_plat_sw"],
+    ["west_plat_nw", "west_plat_se"],
+    ["west_plat_sw", "west_plat_se"],
+
+    ["west_plat_sw", "north_gate"],
+
+    ["west_plat_se", "east_stem_west"],
+    ["east_stem_west", "east_plat_sw"],
+
+    ["east_plat_sw", "east_plat_se"],
+    ["east_plat_sw", "east_plat_ne"],
+    ["east_plat_sw", "east_plat_nw"],
+    ["east_plat_se", "east_plat_ne"],
+    ["east_plat_se", "east_plat_nw"],
+    ["east_plat_ne", "east_plat_nw"]
+  ],
+  "traversalNotes": [
+    "MULTI-PLATFORM TOPOLOGY: three discrete platforms (south, west, east) joined by narrow stems. Between platforms is void — STRICT-BACKBONE applies: do not emit cross-platform edges except via the explicit stems south_plat_nw ↔ west_plat_ne and west_plat_se ↔ east_stem_west ↔ east_plat_sw.",
+    "Direct south → north: spawn_south → south_plat_ne → south_plat_nw → west_plat_ne → west_plat_sw → spawn_north. Five hops, hopping the south-to-west stem.",
+    "Direct north → south: reverse of the above.",
+    "EAST PLATFORM is OFF the south-north route — only reached from the west platform via the longer stem. Reaching anything on the east platform requires: current_gate → backbone → west_plat_se (gyl1) → east_stem_west (xm8v) → east_plat_sw (x5bj) → east-platform corner → reverse.",
+    "PER-PLATFORM CLIQUE: each platform's four corners form a clique so the autopilot can reach any corner objective regardless of which corner it entered from. The dispatch rule is the same as I/arena stages but the dispatch hub is the entering-corner anchor, not a single center anchor.",
+    "FENCE / SWITCH HINT: the stems (south-west and west-east connections) are narrow and frequently gated. Expect fences on either stem and a switch on the originating platform (the one the autopilot must traverse first). Pre-switch routing: visit every corner of the originating platform looking for the switch before attempting the stem traversal.",
+    "Stages are never physically rotated — all positions here are stage-local mesh-space XZ."
+  ]
+}
