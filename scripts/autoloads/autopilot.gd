@@ -277,27 +277,64 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 		var section: Dictionary = sections[s_i]
 		var area: String = str(section.get("area", "?")).to_upper()
 		var cells: Array = section.get("cells", [])
-		# Sort cells by pathOrder so consecutive entries are connected.
+		# Sort by pathOrder so consecutive entries are the intended visit order.
 		cells = cells.duplicate()
 		cells.sort_custom(func(a, b): return int(a.get("pathOrder", 0)) < int(b.get("pathOrder", 0)))
+		# Build pos → cell map for BFS detour resolution + connection lookups.
+		var by_pos: Dictionary = {}
+		for c in cells:
+			by_pos[str(c.get("pos", ""))] = c
+		# Build the list of (cell, is_passthrough) entries. A "passthrough" is
+		# an intermediate cell inserted by the BFS detour — kill_all only,
+		# transit to the next cell. The originally-planned cells (sorted by
+		# pathOrder) are the "real" steps and carry their full action list.
+		var entries: Array = []
+		var visited_keys := {}  # pos → number of times visited (for unique labels)
+		var add_entry := func(cell: Dictionary, is_passthrough: bool) -> void:
+			entries.append({"cell": cell, "passthrough": is_passthrough})
 		for c_i in range(cells.size()):
 			var cell: Dictionary = cells[c_i]
+			if c_i > 0:
+				var prev_pos: String = str(cells[c_i - 1].get("pos", ""))
+				var cur_pos: String = str(cell.get("pos", ""))
+				# If the previous cell doesn't directly connect to this one,
+				# BFS through the section's connection graph and insert each
+				# intermediate cell as a passthrough step (kill_all + walk).
+				var prev_cell: Dictionary = cells[c_i - 1]
+				var prev_conns: Dictionary = prev_cell.get("connections", {})
+				var directly_connected := false
+				for dir in prev_conns.keys():
+					if str(prev_conns[dir]) == cur_pos:
+						directly_connected = true
+						break
+				if not directly_connected:
+					var detour: Array = _bfs_cell_path(prev_pos, cur_pos, by_pos)
+					for d_i in range(1, detour.size() - 1):
+						var passthrough_cell: Dictionary = by_pos.get(str(detour[d_i]), {})
+						if not passthrough_cell.is_empty():
+							add_entry.call(passthrough_cell, true)
+			add_entry.call(cell, false)
+		# Now walk `entries` to emit step dicts.
+		for e_i in range(entries.size()):
+			var entry: Dictionary = entries[e_i]
+			var cell: Dictionary = entry["cell"]
+			var is_passthrough: bool = entry["passthrough"]
 			var pos: String = str(cell.get("pos", "?"))
+			var visit_n: int = int(visited_keys.get(pos, 0)) + 1
+			visited_keys[pos] = visit_n
 			var is_last_section := (s_i == sections.size() - 1)
-			var is_last_cell_in_section := (c_i == cells.size() - 1)
-			var is_terminal := (is_last_section and is_last_cell_in_section)
+			var is_last_entry_in_section := (e_i == entries.size() - 1)
+			var is_terminal := (is_last_section and is_last_entry_in_section)
 			# Derive exit direction.
 			var exit_dir: String = ""
 			var target_pos: String = ""
 			var entry_dir: String = ""
 			var warp_edge: Variant = cell.get("warpEdge", null)
 			if warp_edge != null and str(warp_edge) != "":
-				# Section transition — exit through warp edge.
 				exit_dir = str(warp_edge)
 			elif not is_terminal:
-				# Walk to the next cell in pathOrder via shared connection.
-				var next_cell: Dictionary = cells[c_i + 1]
-				var next_pos: String = str(next_cell.get("pos", ""))
+				var next_entry: Dictionary = entries[e_i + 1]
+				var next_pos: String = str(next_entry["cell"].get("pos", ""))
 				var conns: Dictionary = cell.get("connections", {})
 				for dir in conns.keys():
 					if str(conns[dir]) == next_pos:
@@ -305,25 +342,29 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 						target_pos = next_pos
 						entry_dir = _opposite_direction(exit_dir)
 						break
-			# Compose action list.
-			var actions: Array = ["kill_all"]
-			var dialogs: Array = cell.get("dialogTriggers", [])
-			var has_null_dialog := false
-			for d in dialogs:
-				if d.get("condition", null) == null and d.get("actions", null) == null:
-					has_null_dialog = true
-					break
-			if has_null_dialog:
-				actions.append("dismiss_dialog")
-			if cell.get("keyDrop", null) != null:
-				actions.append("pickup_key")
-			if (cell.get("switches", []) as Array).size() > 0:
-				actions.append("flip_switch")
-			if cell.get("keyGate", null) != null:
-				actions.append("open_gate")
-			if is_terminal:
-				actions.append("wait_quest_complete")
-			var label := "%s %s" % [area, pos]
+			# Compose action list. Passthrough cells only kill_all + walk.
+			var actions: Array
+			if is_passthrough:
+				actions = ["kill_all"]
+			else:
+				actions = ["kill_all"]
+				var dialogs: Array = cell.get("dialogTriggers", [])
+				var has_null_dialog := false
+				for d in dialogs:
+					if d.get("condition", null) == null and d.get("actions", null) == null:
+						has_null_dialog = true
+						break
+				if has_null_dialog:
+					actions.append("dismiss_dialog")
+				if cell.get("keyDrop", null) != null:
+					actions.append("pickup_key")
+				if (cell.get("switches", []) as Array).size() > 0:
+					actions.append("flip_switch")
+				if cell.get("keyGate", null) != null:
+					actions.append("open_gate")
+				if is_terminal:
+					actions.append("wait_quest_complete")
+			var label := "%s %s%s" % [area, pos, " (passthrough)" if is_passthrough else (" (return)" if visit_n > 1 else "")]
 			steps.append({
 				"label": label,
 				"do": actions,
@@ -332,6 +373,38 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 				"entry": entry_dir,
 			})
 	return steps
+
+
+## BFS over the cell adjacency graph (from cell.connections) to find a
+## connected path from `start_pos` to `end_pos`. Returns the list of cell
+## positions including both endpoints, or [start, end] if no path exists.
+func _bfs_cell_path(start_pos: String, end_pos: String, by_pos: Dictionary) -> Array:
+	if start_pos == end_pos:
+		return [start_pos]
+	var parent: Dictionary = {start_pos: ""}
+	var queue: Array = [start_pos]
+	while not queue.is_empty():
+		var cur: String = queue.pop_front()
+		if cur == end_pos:
+			# Reconstruct path
+			var path_out: Array = []
+			var node := cur
+			while node != "":
+				path_out.push_front(node)
+				node = parent[node]
+			return path_out
+		var cur_cell: Dictionary = by_pos.get(cur, {})
+		var conns: Dictionary = cur_cell.get("connections", {})
+		for dir in conns.keys():
+			var next_pos: String = str(conns[dir])
+			if parent.has(next_pos):
+				continue
+			if not by_pos.has(next_pos):
+				continue # cell not in this section
+			parent[next_pos] = cur
+			queue.push_back(next_pos)
+	# No path — return the trivial pair so the caller doesn't error.
+	return [start_pos, end_pos]
 
 
 func _opposite_direction(d: String) -> String:
