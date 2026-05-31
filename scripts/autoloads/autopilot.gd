@@ -87,7 +87,7 @@ const CELL_SETTLE_DELAY := STEP_DELAY * 2.0  # wait after a cell load before act
 # need waypoint nav, which isn't authored yet — until it is, the fallback
 # keeps the run progressing and the log clearly marks which leg got stuck).
 # `target=""` signals a warp edge (section transition) → `_on_end_reached()`.
-const QUEST_STEPS: Array = [
+const SR_QUEST_STEPS: Array = [
 	# Section A — start at 0,2, exit east warp from 2,4
 	{"label": "A 0,2 start", "do": [], "exit": "south", "target": "1,2", "entry": "north"},
 	{"label": "A 1,2", "do": ["kill_all"], "exit": "west", "target": "1,1", "entry": "east"},
@@ -158,6 +158,13 @@ var _boot_returning_to_title: bool = false
 enum Phase { ALL, BOOT, FIRST_MISSION }
 var _phase: int = Phase.ALL
 
+# Active quest steps + manifest index for the quest the autopilot is driving.
+# Defaults to search_and_rescue (hardcoded steps); other quests load from
+# data/quest_plans/<id>.json via _build_steps_from_plan.
+var _quest_id: String = "search_and_rescue"
+var _quest_steps: Array = SR_QUEST_STEPS
+var _quest_manifest_index: int = 0  # used by guild_counter to scroll-down before accepting
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -174,7 +181,126 @@ func _ready() -> void:
 		_:
 			_phase = Phase.ALL
 			print("[sanity] autopilot enabled (phase=all: full run from boot to quest report)")
+	# Optionally override which quest to drive (defaults to search_and_rescue).
+	# Other quests load their step list from data/quest_plans/<id>.json.
+	var qenv: String = OS.get_environment("PSZ_AUTOPILOT_QUEST")
+	if qenv != "" and qenv != "search_and_rescue":
+		_quest_id = qenv
+		var generated := _build_steps_from_plan(qenv)
+		if generated.is_empty():
+			print("[sanity] FAIL: could not build steps from quest plan %s — falling back to search_and_rescue" % qenv)
+			_quest_id = "search_and_rescue"
+		else:
+			_quest_steps = generated
+			_quest_manifest_index = _manifest_index_for_quest(qenv)
+			print("[sanity] autopilot quest=%s (%d steps, manifest index %d)" % [_quest_id, _quest_steps.size(), _quest_manifest_index])
 	set_process(true)
+
+
+# ── Quest-step generator (for quests that aren't the hardcoded SR) ────────
+## Build a QUEST_STEPS-shaped array from a quest plan JSON. Sequential
+## traversal in pathOrder; no detour logic (assumes keys are collected before
+## the gate cell, which is true for paru_pact and most non-SR quests).
+##
+## Per cell actions: ["kill_all"] + ["pickup_key" if keyDrop] + ["flip_switch"
+## if any switches] + ["open_gate" if keyGate] + ["dismiss_dialog" if cell has
+## dialog triggers with null condition] + ["wait_quest_complete" on final].
+func _build_steps_from_plan(quest_id: String) -> Array:
+	var path := "res://data/quest_plans/%s.json" % quest_id
+	var fa := FileAccess.open(path, FileAccess.READ)
+	if fa == null:
+		return []
+	var parsed: Variant = JSON.parse_string(fa.get_as_text())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return []
+	var plan: Dictionary = parsed
+	var sections: Array = plan.get("sections", [])
+	var steps: Array = []
+	for s_i in range(sections.size()):
+		var section: Dictionary = sections[s_i]
+		var area: String = str(section.get("area", "?")).to_upper()
+		var cells: Array = section.get("cells", [])
+		# Sort cells by pathOrder so consecutive entries are connected.
+		cells = cells.duplicate()
+		cells.sort_custom(func(a, b): return int(a.get("pathOrder", 0)) < int(b.get("pathOrder", 0)))
+		for c_i in range(cells.size()):
+			var cell: Dictionary = cells[c_i]
+			var pos: String = str(cell.get("pos", "?"))
+			var is_last_section := (s_i == sections.size() - 1)
+			var is_last_cell_in_section := (c_i == cells.size() - 1)
+			var is_terminal := (is_last_section and is_last_cell_in_section)
+			# Derive exit direction.
+			var exit_dir: String = ""
+			var target_pos: String = ""
+			var entry_dir: String = ""
+			var warp_edge: Variant = cell.get("warpEdge", null)
+			if warp_edge != null and str(warp_edge) != "":
+				# Section transition — exit through warp edge.
+				exit_dir = str(warp_edge)
+			elif not is_terminal:
+				# Walk to the next cell in pathOrder via shared connection.
+				var next_cell: Dictionary = cells[c_i + 1]
+				var next_pos: String = str(next_cell.get("pos", ""))
+				var conns: Dictionary = cell.get("connections", {})
+				for dir in conns.keys():
+					if str(conns[dir]) == next_pos:
+						exit_dir = str(dir)
+						target_pos = next_pos
+						entry_dir = _opposite_direction(exit_dir)
+						break
+			# Compose action list.
+			var actions: Array = ["kill_all"]
+			var dialogs: Array = cell.get("dialogTriggers", [])
+			var has_null_dialog := false
+			for d in dialogs:
+				if d.get("condition", null) == null and d.get("actions", null) == null:
+					has_null_dialog = true
+					break
+			if has_null_dialog:
+				actions.append("dismiss_dialog")
+			if cell.get("keyDrop", null) != null:
+				actions.append("pickup_key")
+			if (cell.get("switches", []) as Array).size() > 0:
+				actions.append("flip_switch")
+			if cell.get("keyGate", null) != null:
+				actions.append("open_gate")
+			if is_terminal:
+				actions.append("wait_quest_complete")
+			var label := "%s %s" % [area, pos]
+			steps.append({
+				"label": label,
+				"do": actions,
+				"exit": exit_dir,
+				"target": target_pos,
+				"entry": entry_dir,
+			})
+	return steps
+
+
+func _opposite_direction(d: String) -> String:
+	match d:
+		"north": return "south"
+		"south": return "north"
+		"east":  return "west"
+		"west":  return "east"
+	return ""
+
+
+## Position of a quest in data/quests/manifest.json (0-based). Returns 0 if not
+## found. Used to scroll-down at the guild counter — entries are displayed in
+## manifest order after the passthrough "report / cancel" rows.
+func _manifest_index_for_quest(quest_id: String) -> int:
+	var fa := FileAccess.open("res://data/quests/manifest.json", FileAccess.READ)
+	if fa == null:
+		return 0
+	var parsed: Variant = JSON.parse_string(fa.get_as_text())
+	if typeof(parsed) != TYPE_ARRAY:
+		return 0
+	var arr: Array = parsed
+	for i in range(arr.size()):
+		if str(arr[i]) == quest_id:
+			return i
+	return 0
 
 
 ## Drive the post-quest report at the Principal NPC.
@@ -526,14 +652,31 @@ func _drive_city_counter() -> void:
 
 
 # ── Guild counter overlay ──────────────────────────────────────
-## Search and Rescue is the manifest-first quest, so it's pre-selected.
+## Manifest order positions quests below a couple of passthrough entries.
+## If PSZ_AUTOPILOT_QUEST selects something other than manifest-index 0
+## (search_and_rescue), press ui_down enough times to land on the target
+## entry before the ui_accept ×3 confirm-flow runs.
 ## ui_accept #1 → difficulty mode; #2 → confirm modal; #3 → confirms → pop.
+var _guild_scroll_done := false
 func _drive_guild_counter() -> void:
 	if SessionManager.has_accepted_quest():
 		print("[sanity] guild_counter: quest accepted")
 		# Wait for the overlay to pop, then re-drive counter (state-aware).
 		_after(2.0, _drive_city_counter)
 		return
+	# Scroll down to the right quest BEFORE the accept-spam starts. Each
+	# ui_down moves selection one step in the entry list. Manifest entries
+	# come after the passthroughs; the autopilot's selection cursor starts
+	# at index 0 (whatever's at the top), so we need _quest_manifest_index
+	# downs to reach the target. SR is index 0 → no scrolling.
+	if not _guild_scroll_done:
+		_guild_scroll_done = true
+		if _quest_manifest_index > 0:
+			print("[sanity] guild_counter: scrolling down %d to reach %s" % [_quest_manifest_index, _quest_id])
+			for i in range(_quest_manifest_index):
+				_after(0.15 * (i + 1), func() -> void: _press_action("ui_down"))
+			_after(0.15 * (_quest_manifest_index + 1) + 0.3, _drive_guild_counter)
+			return
 	if _guild_accept_count >= 6:
 		print("[sanity] WARN: guild accept limit reached")
 		return
@@ -562,16 +705,16 @@ func _drive_city_warp() -> void:
 ## transition — SceneManager.goto_scene reloads the scene with a fresh root
 ## node, so the instance id flips even though the path is unchanged).
 ##
-## Drives QUEST_STEPS[_quest_step_idx]'s action list, then walks to the exit
+## Drives _quest_steps[_quest_step_idx]'s action list, then walks to the exit
 ## portal. The next cell-load advances _quest_step_idx.
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
-	if _quest_step_idx >= QUEST_STEPS.size():
-		print("[sanity] WARN: extra cell load #%d after all %d steps" % [_field_cells_visited, QUEST_STEPS.size()])
+	if _quest_step_idx >= _quest_steps.size():
+		print("[sanity] WARN: extra cell load #%d after all %d steps" % [_field_cells_visited, _quest_steps.size()])
 		return
-	var step: Dictionary = QUEST_STEPS[_quest_step_idx]
+	var step: Dictionary = _quest_steps[_quest_step_idx]
 	print("[sanity] step %d/%d (%s): cell load #%d" % [
-		_quest_step_idx + 1, QUEST_STEPS.size(), step.get("label", "?"), _field_cells_visited])
+		_quest_step_idx + 1, _quest_steps.size(), step.get("label", "?"), _field_cells_visited])
 	_step_action_idx = 0
 	# Wait for controller _ready + spawn + camera settle, then start actions.
 	_after(CELL_SETTLE_DELAY, func() -> void: _run_next_action(field))
@@ -582,7 +725,7 @@ func _run_next_action(field: Node) -> void:
 	# resets state, so just no-op here.
 	if not is_instance_valid(field) or field != get_tree().current_scene:
 		return
-	var step: Dictionary = QUEST_STEPS[_quest_step_idx]
+	var step: Dictionary = _quest_steps[_quest_step_idx]
 	var actions: Array = step.get("do", [])
 	if _step_action_idx >= actions.size():
 		_walk_to_exit(field, step)
@@ -806,7 +949,7 @@ func _walk_to_exit(field: Node, step: Dictionary) -> void:
 	var portal_data = field.get("_portal_data")
 	if typeof(portal_data) != TYPE_DICTIONARY or not portal_data.has(exit_dir):
 		_fail_with_reason("cell missing '%s' portal (step %d/%d %s)" % [
-			exit_dir, _quest_step_idx + 1, QUEST_STEPS.size(), str(step.get("label", "?"))])
+			exit_dir, _quest_step_idx + 1, _quest_steps.size(), str(step.get("label", "?"))])
 		return
 	var trigger_pos: Vector3 = portal_data[exit_dir].get("trigger_pos", Vector3.ZERO)
 	# Advance the step counter so the next cell load picks up the next step;
@@ -870,8 +1013,8 @@ func _fail_walk_stuck(pos: Vector3, dist: float) -> void:
 			cell_pos = str(cur.get("pos", "?"))
 			stage_id = str(cur.get("stage_id", "?"))
 	var label := "?"
-	if _quest_step_idx > 0 and _quest_step_idx <= QUEST_STEPS.size():
-		label = str(QUEST_STEPS[_quest_step_idx - 1].get("label", "?"))
+	if _quest_step_idx > 0 and _quest_step_idx <= _quest_steps.size():
+		label = str(_quest_steps[_quest_step_idx - 1].get("label", "?"))
 	_fail_with_reason("walk stuck at dist=%.2f from (%.1f, %.1f, %.1f) in cell %s (stage %s, %s) — author waypoints for this stage" % [
 		dist, pos.x, pos.y, pos.z, cell_pos, stage_id, label])
 

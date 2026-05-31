@@ -118,33 +118,42 @@ function main() {
 			stageFail.push(stageId);
 			continue;
 		}
-		// Try floor.glb alone first (matches in-game collision). If it can't
-		// solve every required path, retry with _m.glb fallback merged in.
-		// Walls (extracted from _m.glb) are applied in either case — they
-		// kill diagonal shortcuts through wall geometry that the floor mesh
-		// alone wouldn't catch.
-		// wallClearance = 1m pushes the path away from walls so the autopilot's
-		// camera-relative drift has room to wander without immediately hitting
-		// geometry. Unlike floor `clearance`, this doesn't erode corridor edges.
-		const wallClearance = 1.0;
-		let grid = buildNavGrid(floorTris, { resolution, clearance, walls, wallClearance });
-		let graph = solveStageGraph(stageId, grid, points);
-		let usedFallback = false;
-		if (graph.stats.pathsFailed > 0) {
-			const mainTris = loadStageMainMesh(stageId, subfolder, ASSETS_STAGES);
-			const fused = [...floorTris, ...mainTris];
-			grid = buildNavGrid(fused, { resolution, clearance, walls, wallClearance });
+		// Strategy: try cumulatively more permissive grids until A* solves
+		// every required path. Each retry adds one source of nav data:
+		//   1. floor.glb alone, with walls + wallClearance
+		//   2. floor + _m.glb fallback, with walls + wallClearance
+		//   3. same as 2 but with reduced wallClearance
+		//   4. same as 2 with no walls at all (last resort)
+		// Most SR stages settle on (1) or (2); paru's open-style stages need (4)
+		// because their _m.glb decoration meshes have steep normals that my wall
+		// extractor flags as walls even though the player walks past them.
+		const wallClearance = 1.5;
+		const mainTris = loadStageMainMesh(stageId, subfolder, ASSETS_STAGES);
+		const fused = [...floorTris, ...mainTris];
+		const attempts: { label: string; tris: typeof floorTris; walls: typeof walls; wc: number }[] = [
+			{ label: "f  ",      tris: floorTris, walls, wc: wallClearance },
+			{ label: "f+m",      tris: fused,     walls, wc: wallClearance },
+			{ label: "f+m wc=0", tris: fused,     walls, wc: 0 },
+			{ label: "f+m -w",   tris: fused,     walls: [], wc: 0 },
+		];
+		let grid: ReturnType<typeof buildNavGrid> | null = null;
+		let graph: ReturnType<typeof solveStageGraph> | null = null;
+		let sourceTag = "f  ";
+		for (const a of attempts) {
+			grid = buildNavGrid(a.tris, { resolution, clearance, walls: a.walls, wallClearance: a.wc });
 			graph = solveStageGraph(stageId, grid, points);
-			usedFallback = true;
+			sourceTag = a.label;
+			if (graph.stats.pathsFailed === 0) break;
 		}
+		const usedFallback = sourceTag !== "f  ";
 
 		const elapsed = performance.now() - t0;
+		if (graph == null) graph = { stats: { stagePoints: 0, pathsAttempted: 0, pathsFailed: 0, pathsSolved: 0, uniqueWaypoints: 0, edges: 0 }, waypoints: [], waypointEdges: [] };
 		const reachStr = graph.stats.pathsFailed === 0
 			? `${graph.stats.pathsSolved}/${graph.stats.pathsAttempted} paths`
 			: `${graph.stats.pathsSolved}/${graph.stats.pathsAttempted} paths (${graph.stats.pathsFailed} FAILED)`;
 		const status = graph.stats.pathsFailed === 0 ? "✓" : "✗";
-		const sourceTag = usedFallback ? "f+m" : "f  ";
-		console.log(`${status} ${stageId.padEnd(12)} ${sourceTag} ${floorTris.length.toString().padStart(4)} tris  ${graph.stats.uniqueWaypoints.toString().padStart(3)} wpts  ${graph.stats.edges.toString().padStart(3)} edges  ${reachStr.padEnd(38)} ${elapsed.toFixed(0)}ms`);
+		console.log(`${status} ${stageId.padEnd(12)} ${sourceTag.padEnd(9)} ${floorTris.length.toString().padStart(4)} tris  ${graph.stats.uniqueWaypoints.toString().padStart(3)} wpts  ${graph.stats.edges.toString().padStart(3)} edges  ${reachStr.padEnd(38)} ${elapsed.toFixed(0)}ms`);
 
 		if (graph.stats.pathsFailed === 0) {
 			stageOk++;
