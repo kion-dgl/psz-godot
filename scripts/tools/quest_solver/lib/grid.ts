@@ -22,8 +22,12 @@ export interface BuildGridOpts {
 	/** Padding around AABB so the player has room near portals just outside the floor. */
 	padding?: number;
 	/** Wall obstacles. Cells whose centers fall inside any wall's XZ shadow are
-	 *  marked blocked, then clearance dilation applies on top. */
+	 *  marked blocked, then `wallClearance` dilates only from those wall cells
+	 *  (not from off-floor void) so the path stays a margin away from walls
+	 *  even though corridor edges retain full width. */
 	walls?: Tri2D[];
+	/** Extra dilation specifically from wall-rasterized cells, in meters. */
+	wallClearance?: number;
 }
 
 export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
@@ -66,10 +70,10 @@ export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
 	// slopes). Both pass: any cell within rasterRadius of a wall edge OR
 	// inside a wall's XZ shadow gets blocked.
 	const walls = opts.walls ?? [];
+	// Track which blocked cells came from walls (vs floor void) so we can
+	// dilate from walls only later.
+	const wallStamp = new Uint8Array(rows * cols);
 	if (walls.length > 0) {
-		// Each wall edge gets stamped onto cells it crosses. Use a half-cell
-		// radius around the line — small enough not to over-block in clean
-		// corridors, big enough to actually catch the line on the grid.
 		const stampHalfCells = 1;
 		const stampLine = (ax: number, az: number, bx: number, bz: number) => {
 			const dist = Math.hypot(bx - ax, bz - az);
@@ -86,7 +90,10 @@ export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
 				const c0 = Math.max(0, c - stampHalfCells);
 				const c1 = Math.min(cols - 1, c + stampHalfCells);
 				for (let rr = r0; rr <= r1; rr++) {
-					for (let cc = c0; cc <= c1; cc++) raw[rr * cols + cc] = 0;
+					for (let cc = c0; cc <= c1; cc++) {
+						raw[rr * cols + cc] = 0;
+						wallStamp[rr * cols + cc] = 1;
+					}
 				}
 			}
 		};
@@ -94,6 +101,27 @@ export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
 			stampLine(w.x1, w.z1, w.x2, w.z2);
 			stampLine(w.x2, w.z2, w.x3, w.z3);
 			stampLine(w.x3, w.z3, w.x1, w.z1);
+		}
+	}
+
+	// Step 1c: wall-only clearance dilation. Push the walkable region away
+	// from real walls (so the autopilot's diagonal-drift has buffer) without
+	// also eroding floor edges (which would close corridors that are narrow
+	// but actually traversable).
+	const wallClearance = opts.wallClearance ?? 0;
+	const kWall = Math.max(0, Math.ceil(wallClearance / resolution));
+	if (kWall > 0) {
+		for (let r = 0; r < rows; r++) {
+			for (let c = 0; c < cols; c++) {
+				if (wallStamp[r * cols + c] !== 1) continue;
+				const r0 = Math.max(0, r - kWall);
+				const r1 = Math.min(rows - 1, r + kWall);
+				const c0 = Math.max(0, c - kWall);
+				const c1 = Math.min(cols - 1, c + kWall);
+				for (let rr = r0; rr <= r1; rr++) {
+					for (let cc = c0; cc <= c1; cc++) raw[rr * cols + cc] = 0;
+				}
+			}
 		}
 	}
 

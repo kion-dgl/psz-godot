@@ -160,18 +160,16 @@ export function gridLineWalkable(g: NavGrid, r0: number, c0: number, r1: number,
  * walkable, drop everything in between, repeat.
  *
  * Capped at `maxLegCells` — the autopilot's camera-relative keyboard input
- * drifts ~20% off-axis per meter on diagonal walks, and the drift compounds
- * over long legs. Empirically, ~6m legs stay within the 1.5m arrive-distance
- * tolerance; longer legs (15m+) accumulate enough drift to miss waypoints
- * entirely. So even when line-of-sight allows a longer skip, we insert an
- * intermediate point.
+ * drifts ~20% off-axis per meter on diagonal walks. At a 6m leg, drift can
+ * reach 1.2m — enough to drift into a wall the leg's straight line cleared.
+ * 3m max keeps drift within ~0.6m, well under the 1.5m arrive radius.
  */
 export function decimatePath(
 	g: NavGrid,
 	cells: { r: number; c: number }[],
 	opts: { maxLegCells?: number } = {},
 ): { r: number; c: number }[] {
-	const maxLeg = opts.maxLegCells ?? Math.max(2, Math.floor(6.0 / g.resolution));
+	const maxLeg = opts.maxLegCells ?? Math.max(2, Math.floor(3.0 / g.resolution));
 	if (cells.length <= 2) return cells;
 	const out: { r: number; c: number }[] = [cells[0]];
 	let i = 0;

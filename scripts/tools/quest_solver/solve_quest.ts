@@ -123,13 +123,17 @@ function main() {
 		// Walls (extracted from _m.glb) are applied in either case — they
 		// kill diagonal shortcuts through wall geometry that the floor mesh
 		// alone wouldn't catch.
-		let grid = buildNavGrid(floorTris, { resolution, clearance, walls });
+		// wallClearance = 1m pushes the path away from walls so the autopilot's
+		// camera-relative drift has room to wander without immediately hitting
+		// geometry. Unlike floor `clearance`, this doesn't erode corridor edges.
+		const wallClearance = 1.0;
+		let grid = buildNavGrid(floorTris, { resolution, clearance, walls, wallClearance });
 		let graph = solveStageGraph(stageId, grid, points);
 		let usedFallback = false;
 		if (graph.stats.pathsFailed > 0) {
 			const mainTris = loadStageMainMesh(stageId, subfolder, ASSETS_STAGES);
 			const fused = [...floorTris, ...mainTris];
-			grid = buildNavGrid(fused, { resolution, clearance, walls });
+			grid = buildNavGrid(fused, { resolution, clearance, walls, wallClearance });
 			graph = solveStageGraph(stageId, grid, points);
 			usedFallback = true;
 		}
