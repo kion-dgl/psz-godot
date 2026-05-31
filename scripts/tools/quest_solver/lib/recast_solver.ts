@@ -95,6 +95,22 @@ export function solvePathRecast(
 	return result.path.map((p) => ({ x: p.x, y: p.y, z: p.z }));
 }
 
+/** True if (x, z) snaps to a polygon on the navmesh within `tolerance` meters.
+ *  Used to validate L-shape corners before substituting them for diagonal legs. */
+export function isPointOnNavMesh(
+	query: NavMeshQuery,
+	x: number,
+	z: number,
+	tolerance: number = 2.0,
+): boolean {
+	const halfExtents = { x: tolerance, y: 4, z: tolerance };
+	const result = query.findNearestPoly({ x, y: 0, z }, { halfExtents });
+	if (!result.success || result.nearestRef === 0) return false;
+	const dx = result.nearestPoint.x - x;
+	const dz = result.nearestPoint.z - z;
+	return Math.hypot(dx, dz) <= tolerance;
+}
+
 /** Project XZ-only triangles back to 3D at y=0 (compat with the existing
  *  floor.ts pipeline that flattens Y). */
 export function tri2dToTri3d(tris: Tri2D[]): Tri3D[] {

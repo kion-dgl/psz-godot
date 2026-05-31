@@ -1130,8 +1130,14 @@ func _tick_field_walk() -> void:
 			cb.call()
 		return
 
-	# Camera-relative basis — player's _handle_movement converts input actions
-	# to motion using the *active* camera's forward/right vectors.
+	# Snap the orbit camera so its forward vector points at the leg target.
+	# Without this, the autopilot has to drive diagonal inputs (forward+right)
+	# in camera-relative coordinates, and the player drifts ~20% off-axis per
+	# meter because input-to-world mapping isn't exact for diagonals. With the
+	# camera aligned, we only ever press "forward" and the player walks the
+	# exact straight line toward the target.
+	_align_camera_to_target(_walk_target)
+
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return
@@ -1150,6 +1156,38 @@ func _tick_field_walk() -> void:
 	_drive_action("move_backward", fwd_mag < -WALK_DIR_THRESHOLD)
 	_drive_action("move_right", right_mag > WALK_DIR_THRESHOLD)
 	_drive_action("move_left", right_mag < -WALK_DIR_THRESHOLD)
+
+
+## Rotate the third-person orbit camera so its forward vector points from the
+## player's current position toward `target` (XZ only). Keeps the autopilot's
+## "press forward" mapping equal to "walk toward target" — otherwise diagonal
+## inputs drift in camera-relative coords. Looks up the OrbitCamera by name
+## (scenes/3d/camera/orbit_camera.tscn instantiates as "OrbitCamera").
+func _align_camera_to_target(target: Vector3) -> void:
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	# Walk up the scene tree from the active camera to find the OrbitCamera root
+	# (which owns `camera_rotation`). The Camera3D itself is a child whose
+	# transform is overwritten by the orbit script every frame, so setting
+	# its rotation directly does nothing.
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var orbit: Node = cam
+	while orbit != null and not ("camera_rotation" in orbit):
+		orbit = orbit.get_parent()
+	if orbit == null:
+		return
+	var dx: float = target.x - player.global_position.x
+	var dz: float = target.z - player.global_position.z
+	if dx * dx + dz * dz < 0.01:
+		return
+	# OrbitCamera positions camera at target + (sin(rot)*horiz, _, cos(rot)*horiz)
+	# and looks back at target. So camera forward = (-sin(rot), 0, -cos(rot)).
+	# We want camera forward = (dx, 0, dz).normalized() →
+	#   sin(rot) = -dx, cos(rot) = -dz → rot = atan2(dx, dz) + PI.
+	orbit.set("camera_rotation", atan2(dx, dz) + PI)
 
 
 func _drive_action(action: String, want_pressed: bool) -> void:

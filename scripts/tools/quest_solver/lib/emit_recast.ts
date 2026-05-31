@@ -4,7 +4,7 @@
 // optimal, smoothed, agent-radius-aware paths.
 
 import type { NavMeshQuery } from "recast-navigation";
-import { solvePathRecast } from "./recast_solver.ts";
+import { solvePathRecast, isPointOnNavMesh } from "./recast_solver.ts";
 import type { StagePoint } from "./quest_walk.ts";
 
 export interface EmittedWaypoint {
@@ -34,8 +34,9 @@ export function solveStageGraphRecast(
 	stageId: string,
 	query: NavMeshQuery,
 	points: StagePoint[],
-	opts: { mergeDist?: number; maxLeg?: number } = {},
+	opts: { mergeDist?: number; maxLeg?: number; lShape?: boolean } = {},
 ): EmittedGraph {
+	const lShape = opts.lShape ?? false;
 	const mergeDist = opts.mergeDist ?? MERGE_DIST;
 	const maxLeg = opts.maxLeg ?? MAX_LEG;
 	const mergeDistSq = mergeDist * mergeDist;
@@ -66,15 +67,49 @@ export function solveStageGraphRecast(
 		return id;
 	};
 
-	// Re-split a recast-returned path so each leg is <= maxLeg meters.
-	// Recast returns a smooth path with sparse waypoints; the autopilot's
-	// camera drift wants short legs.
-	const splitLong = (path: { x: number; z: number }[]): { x: number; z: number }[] => {
+	// Convert each diagonal leg into an L-shape: walk axis-aligned first
+	// (longest axis), then the perpendicular axis. The autopilot's camera-
+	// relative input drifts on diagonals (forward + right press maps to
+	// camera basis, not world basis, and the resulting motion accumulates
+	// off-axis error). Cardinal walks have no drift. Then re-split each
+	// resulting leg to <= maxLeg meters.
+	//
+	// L-shape corners are only inserted when both corner candidates pass
+	// isPointOnNavMesh — otherwise we fall back to the diagonal (which
+	// recast guarantees is walkable).
+	const axisAlignAndSplit = (path: { x: number; z: number }[]): { x: number; z: number }[] => {
 		if (path.length < 2) return path;
-		const out: { x: number; z: number }[] = [path[0]];
+		const lShaped: { x: number; z: number }[] = [path[0]];
 		for (let i = 1; i < path.length; i++) {
-			const a = path[i - 1];
+			const a = lShaped[lShaped.length - 1];
 			const b = path[i];
+			const dx = Math.abs(b.x - a.x);
+			const dz = Math.abs(b.z - a.z);
+			if (!lShape || dx < 0.5 || dz < 0.5) {
+				lShaped.push(b);
+				continue;
+			}
+			// Try both L-corner candidates; pick one that's on the navmesh.
+			const cornerA = { x: b.x, z: a.z }; // x-first then z
+			const cornerB = { x: a.x, z: b.z }; // z-first then x
+			const aOk = isPointOnNavMesh(query, cornerA.x, cornerA.z, 1.0);
+			const bOk = isPointOnNavMesh(query, cornerB.x, cornerB.z, 1.0);
+			if (aOk && (!bOk || dx >= dz)) {
+				lShaped.push(cornerA);
+				lShaped.push(b);
+			} else if (bOk) {
+				lShaped.push(cornerB);
+				lShaped.push(b);
+			} else {
+				// Neither corner is walkable — keep the diagonal.
+				lShaped.push(b);
+			}
+		}
+		// Step 2: split long axis-aligned legs.
+		const out: { x: number; z: number }[] = [lShaped[0]];
+		for (let i = 1; i < lShaped.length; i++) {
+			const a = lShaped[i - 1];
+			const b = lShaped[i];
 			const dist = Math.hypot(b.x - a.x, b.z - a.z);
 			if (dist <= maxLeg) {
 				out.push(b);
@@ -105,7 +140,7 @@ export function solveStageGraphRecast(
 			return;
 		}
 		solved++;
-		const split = splitLong(path);
+		const split = axisAlignAndSplit(path);
 		const ids: string[] = [a.id];
 		for (let i = 1; i < split.length - 1; i++) {
 			ids.push(addOrMerge(split[i].x, split[i].z));
