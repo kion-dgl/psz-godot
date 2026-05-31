@@ -15307,7 +15307,7 @@
     "version": 1,
     "waypoints": [
       {
-        "id": "wp_spawn_0_s05a_tc3",
+        "id": "wp_spawn_0_1780270859908",
         "position": [
           -14.991880987778796,
           0,
@@ -15317,7 +15317,7 @@
         "label": "spawn south"
       },
       {
-        "id": "wp_load_0_s05a_tc3",
+        "id": "wp_load_0_1780270859908",
         "position": [
           -14.991880987778796,
           0,
@@ -15327,7 +15327,7 @@
         "label": "load south"
       },
       {
-        "id": "wp_spawn_1_s05a_tc3",
+        "id": "wp_spawn_1_1780270859908",
         "position": [
           22.85875192817336,
           0,
@@ -15337,17 +15337,17 @@
         "label": "spawn east"
       },
       {
-        "id": "wp_load_1_s05a_tc3",
+        "id": "wp_load_1_1780270859908",
         "position": [
           26.85875192817336,
           0,
-          -2.036951914317351
+          -2.0369519143173513
         ],
         "kind": "exit",
         "label": "load east"
       },
       {
-        "id": "wp_spawn_2_s05a_tc3",
+        "id": "wp_spawn_2_1780270859908",
         "position": [
           -22.850647090539344,
           0,
@@ -15357,7 +15357,7 @@
         "label": "spawn west"
       },
       {
-        "id": "wp_load_2_s05a_tc3",
+        "id": "wp_load_2_1780270859908",
         "position": [
           -26.850647090539344,
           0,
@@ -15367,473 +15367,100 @@
         "label": "load west"
       },
       {
-        "id": "wp_via_s05a_tc3",
+        "id": "wp_1780270868325_p7kn6i",
         "position": [
-          -4.994592050048261,
+          -11.720652862602341,
           0,
-          1.6002822635957934
-        ],
-        "kind": "via",
-        "label": "junction center (t_junction)"
-      },
-      {
-        "id": "wp_auto_0_s05a_tc3",
-        "position": [
-          -14.5,
-          0,
-          19
+          -15.238771864113396
         ],
         "kind": "point"
       },
       {
-        "id": "wp_auto_1_s05a_tc3",
+        "id": "wp_1780270870325_c217jr",
         "position": [
-          -14.5,
+          -11.525262014504362,
           0,
-          15.5
+          -1.3321446704996376
         ],
         "kind": "point"
       },
       {
-        "id": "wp_auto_2_s05a_tc3",
+        "id": "wp_1780270872090_i93oeu",
         "position": [
-          -12.5,
+          -12.308812660337185,
           0,
-          15.5
+          12.751851830934548
         ],
         "kind": "point"
       },
       {
-        "id": "wp_auto_3_s05a_tc3",
+        "id": "wp_1780270873390_ho8mcg",
         "position": [
-          -12.5,
+          2.7266249654652195,
           0,
-          14.5
+          14.027971227508715
         ],
         "kind": "point"
       },
       {
-        "id": "wp_auto_4_s05a_tc3",
+        "id": "wp_1780270875857_58pmly",
         "position": [
-          -9.5,
+          13.397529389550208,
           0,
-          14.5
+          -2.9455370054820804
         ],
         "kind": "point"
       },
       {
-        "id": "wp_auto_5_s05a_tc3",
+        "id": "wp_1780270877258_mjad8x",
         "position": [
-          -9.5,
+          15.150378095918029,
           0,
-          12.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_6_s05a_tc3",
-        "position": [
-          -6.5,
-          0,
-          12.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_7_s05a_tc3",
-        "position": [
-          -6.5,
-          0,
-          7
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_8_s05a_tc3",
-        "position": [
-          -6.5,
-          0,
-          1.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_9_s05a_tc3",
-        "position": [
-          -5.5,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_10_s05a_tc3",
-        "position": [
-          0.10000000000000053,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_11_s05a_tc3",
-        "position": [
-          5.700000000000001,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_12_s05a_tc3",
-        "position": [
-          11.3,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_13_s05a_tc3",
-        "position": [
-          16.900000000000002,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_14_s05a_tc3",
-        "position": [
-          -11.5,
-          0,
-          0.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_15_s05a_tc3",
-        "position": [
-          -11.5,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_16_s05a_tc3",
-        "position": [
-          -12.5,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_17_s05a_tc3",
-        "position": [
-          -12.5,
-          0,
-          -4.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_18_s05a_tc3",
-        "position": [
-          -13.5,
-          0,
-          -4.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_19_s05a_tc3",
-        "position": [
-          -13.5,
-          0,
-          -5.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_20_s05a_tc3",
-        "position": [
-          -15.5,
-          0,
-          -5.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_21_s05a_tc3",
-        "position": [
-          -15.5,
-          0,
-          -7.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_22_s05a_tc3",
-        "position": [
-          -16.5,
-          0,
-          -7.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_23_s05a_tc3",
-        "position": [
-          -16.5,
-          0,
-          -9.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_24_s05a_tc3",
-        "position": [
-          -17.5,
-          0,
-          -9.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_25_s05a_tc3",
-        "position": [
-          -17.5,
-          0,
-          -12.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_26_s05a_tc3",
-        "position": [
-          18,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_27_s05a_tc3",
-        "position": [
-          13.5,
-          0,
-          -2.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_28_s05a_tc3",
-        "position": [
-          13.5,
-          0,
-          -1.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_29_s05a_tc3",
-        "position": [
-          8.75,
-          0,
-          -1.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_30_s05a_tc3",
-        "position": [
-          4,
-          0,
-          -1.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_31_s05a_tc3",
-        "position": [
-          -0.75,
-          0,
-          -1.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_32_s05a_tc3",
-        "position": [
-          -5.5,
-          0,
-          -1.5
+          -18.40427310189734
         ],
         "kind": "point"
       }
     ],
     "waypointEdges": [
       [
-        "wp_load_0_s05a_tc3",
-        "wp_spawn_0_s05a_tc3"
+        "wp_load_0_1780270859908",
+        "wp_spawn_0_1780270859908"
       ],
       [
-        "wp_load_1_s05a_tc3",
-        "wp_spawn_1_s05a_tc3"
+        "wp_load_1_1780270859908",
+        "wp_spawn_1_1780270859908"
       ],
       [
-        "wp_load_2_s05a_tc3",
-        "wp_spawn_2_s05a_tc3"
+        "wp_load_2_1780270859908",
+        "wp_spawn_2_1780270859908"
       ],
       [
-        "wp_auto_0_s05a_tc3",
-        "wp_spawn_0_s05a_tc3"
+        "wp_1780270868325_p7kn6i",
+        "wp_spawn_2_1780270859908"
       ],
       [
-        "wp_auto_0_s05a_tc3",
-        "wp_auto_1_s05a_tc3"
+        "wp_1780270868325_p7kn6i",
+        "wp_1780270877258_mjad8x"
       ],
       [
-        "wp_auto_1_s05a_tc3",
-        "wp_auto_2_s05a_tc3"
+        "wp_1780270868325_p7kn6i",
+        "wp_1780270870325_c217jr"
       ],
       [
-        "wp_auto_2_s05a_tc3",
-        "wp_auto_3_s05a_tc3"
+        "wp_1780270872090_i93oeu",
+        "wp_spawn_0_1780270859908"
       ],
       [
-        "wp_auto_3_s05a_tc3",
-        "wp_auto_4_s05a_tc3"
+        "wp_1780270872090_i93oeu",
+        "wp_1780270873390_ho8mcg"
       ],
       [
-        "wp_auto_4_s05a_tc3",
-        "wp_auto_5_s05a_tc3"
+        "wp_1780270872090_i93oeu",
+        "wp_1780270870325_c217jr"
       ],
       [
-        "wp_auto_5_s05a_tc3",
-        "wp_auto_6_s05a_tc3"
-      ],
-      [
-        "wp_auto_6_s05a_tc3",
-        "wp_auto_7_s05a_tc3"
-      ],
-      [
-        "wp_auto_7_s05a_tc3",
-        "wp_auto_8_s05a_tc3"
-      ],
-      [
-        "wp_auto_8_s05a_tc3",
-        "wp_via_s05a_tc3"
-      ],
-      [
-        "wp_auto_9_s05a_tc3",
-        "wp_via_s05a_tc3"
-      ],
-      [
-        "wp_auto_10_s05a_tc3",
-        "wp_auto_9_s05a_tc3"
-      ],
-      [
-        "wp_auto_10_s05a_tc3",
-        "wp_auto_11_s05a_tc3"
-      ],
-      [
-        "wp_auto_11_s05a_tc3",
-        "wp_auto_12_s05a_tc3"
-      ],
-      [
-        "wp_auto_12_s05a_tc3",
-        "wp_auto_13_s05a_tc3"
-      ],
-      [
-        "wp_auto_13_s05a_tc3",
-        "wp_spawn_1_s05a_tc3"
-      ],
-      [
-        "wp_auto_14_s05a_tc3",
-        "wp_via_s05a_tc3"
-      ],
-      [
-        "wp_auto_14_s05a_tc3",
-        "wp_auto_15_s05a_tc3"
-      ],
-      [
-        "wp_auto_15_s05a_tc3",
-        "wp_auto_16_s05a_tc3"
-      ],
-      [
-        "wp_auto_16_s05a_tc3",
-        "wp_auto_17_s05a_tc3"
-      ],
-      [
-        "wp_auto_17_s05a_tc3",
-        "wp_auto_18_s05a_tc3"
-      ],
-      [
-        "wp_auto_18_s05a_tc3",
-        "wp_auto_19_s05a_tc3"
-      ],
-      [
-        "wp_auto_19_s05a_tc3",
-        "wp_auto_20_s05a_tc3"
-      ],
-      [
-        "wp_auto_20_s05a_tc3",
-        "wp_auto_21_s05a_tc3"
-      ],
-      [
-        "wp_auto_21_s05a_tc3",
-        "wp_auto_22_s05a_tc3"
-      ],
-      [
-        "wp_auto_22_s05a_tc3",
-        "wp_auto_23_s05a_tc3"
-      ],
-      [
-        "wp_auto_23_s05a_tc3",
-        "wp_auto_24_s05a_tc3"
-      ],
-      [
-        "wp_auto_24_s05a_tc3",
-        "wp_auto_25_s05a_tc3"
-      ],
-      [
-        "wp_auto_25_s05a_tc3",
-        "wp_spawn_2_s05a_tc3"
-      ],
-      [
-        "wp_auto_26_s05a_tc3",
-        "wp_spawn_1_s05a_tc3"
-      ],
-      [
-        "wp_auto_26_s05a_tc3",
-        "wp_auto_27_s05a_tc3"
-      ],
-      [
-        "wp_auto_27_s05a_tc3",
-        "wp_auto_28_s05a_tc3"
-      ],
-      [
-        "wp_auto_28_s05a_tc3",
-        "wp_auto_29_s05a_tc3"
-      ],
-      [
-        "wp_auto_29_s05a_tc3",
-        "wp_auto_30_s05a_tc3"
-      ],
-      [
-        "wp_auto_30_s05a_tc3",
-        "wp_auto_31_s05a_tc3"
-      ],
-      [
-        "wp_auto_31_s05a_tc3",
-        "wp_auto_32_s05a_tc3"
-      ],
-      [
-        "wp_auto_32_s05a_tc3",
-        "wp_via_s05a_tc3"
+        "wp_1780270870325_c217jr",
+        "wp_1780270875857_58pmly"
       ]
     ]
   },
