@@ -36,6 +36,16 @@ interface WaypointTabProps {
   setSelectedId: (id: string | null) => void;
   onSeedFromGates: () => void;
   onAutoConnect: () => void;
+  // Manhattan grid overlay controls — visualizes what the CLI solver
+  // (scripts/tools/quest_solver/solve_manhattan.ts) would produce, so the
+  // user can verify the grid + sample path without spinning up the autopilot.
+  showManhattan: boolean;
+  setShowManhattan: (v: boolean) => void;
+  manhattanResolution: number;
+  setManhattanResolution: (v: number) => void;
+  manhattanFuseVisual: boolean;
+  setManhattanFuseVisual: (v: boolean) => void;
+  manhattanInfo?: { loading: boolean; error: string | null; trisFiltered: number; gridSize: string | null; pathCorners: number | null; usedDiagonal: boolean };
 }
 
 const btn = (active: boolean): React.CSSProperties => ({
@@ -112,6 +122,57 @@ export default function WaypointTab({
       <button style={btn(false)} onClick={copyJson}>
         {copied ? '✓ Copied JSON' : 'Copy JSON'}
       </button>
+
+      {/* Manhattan grid solver visualizer */}
+      <div style={{ marginTop: 8, padding: '8px 10px', background: '#1c2538', borderRadius: 4 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <strong style={{ fontSize: 12, color: '#9ad6ff' }}>Manhattan grid overlay</strong>
+          <button
+            onClick={() => setShowManhattan(!showManhattan)}
+            style={{
+              padding: '3px 8px', fontSize: 11,
+              background: showManhattan ? '#22c55e' : '#3a3a55',
+              color: 'white', border: 'none', borderRadius: 3, cursor: 'pointer',
+            }}
+          >
+            {showManhattan ? 'on' : 'off'}
+          </button>
+        </div>
+        {showManhattan && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 11, color: '#bbb' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 70 }}>Resolution</span>
+              <input
+                type="range" min="0.25" max="1.5" step="0.05"
+                value={manhattanResolution}
+                onChange={(e) => setManhattanResolution(parseFloat(e.target.value))}
+                style={{ flex: 1 }}
+              />
+              <span style={{ width: 40, textAlign: 'right' }}>{manhattanResolution.toFixed(2)}m</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input type="checkbox" checked={manhattanFuseVisual} onChange={(e) => setManhattanFuseVisual(e.target.checked)} />
+              <span>fuse visual mesh (-m.glb)</span>
+            </label>
+            {manhattanInfo && (
+              <div style={{ marginTop: 4, fontSize: 10, color: '#888' }}>
+                {manhattanInfo.loading
+                  ? 'computing…'
+                  : manhattanInfo.error
+                    ? `error: ${manhattanInfo.error}`
+                    : (
+                      <>
+                        {manhattanInfo.trisFiltered} tris · grid {manhattanInfo.gridSize}
+                        {manhattanInfo.pathCorners != null && (
+                          <> · path: {manhattanInfo.pathCorners} corners{manhattanInfo.usedDiagonal ? ' (with diagonal fallback)' : ''}</>
+                        )}
+                      </>
+                    )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888' }}>
         <span>{waypoints.length} waypoints</span>

@@ -18,6 +18,8 @@ import ObstacleTab, { type PlacementDimensions, DEFAULT_PLACEMENT_DIMENSIONS } f
 import ExportTab from './tabs/ExportTab';
 import WaypointTab from './tabs/WaypointTab';
 import WaypointOverlay from './WaypointOverlay';
+import ManhattanGridOverlay from './ManhattanGridOverlay';
+import { useManhattanGrid } from './manhattan/useManhattanGrid';
 import QuestObjectOverlay from './QuestObjectOverlay';
 import { useQuestObjects } from './useQuestObjects';
 import SvgTab from './tabs/SvgTab';
@@ -225,6 +227,23 @@ export default function UnifiedStageEditor() {
   // Waypoint tab state
   const [waypointPlacementMode, setWaypointPlacementMode] = useState(false);
   const [selectedWaypointId, setSelectedWaypointId] = useState<string | null>(null);
+
+  // Manhattan grid overlay: visualizes what scripts/tools/quest_solver/
+  // solve_manhattan.ts would produce. Toggle from the waypoints tab.
+  const [showManhattanGrid, setShowManhattanGrid] = useState(false);
+  const [manhattanResolution, setManhattanResolution] = useState(0.5);
+  const [manhattanFuseVisual, setManhattanFuseVisual] = useState(false);
+  const [manhattanPathStart, setManhattanPathStart] = useState<{ x: number; z: number } | null>(null);
+  const [manhattanPathEnd, setManhattanPathEnd] = useState<{ x: number; z: number } | null>(null);
+  const manhattan = useManhattanGrid({
+    mapId,
+    enabled: showManhattanGrid && activeTab === 'waypoints',
+    floorCollisionTriangles: config?.floorCollision?.triangles,
+    pathStart: manhattanPathStart,
+    pathEnd: manhattanPathEnd,
+    resolution: manhattanResolution,
+    fuseVisualMesh: manhattanFuseVisual,
+  });
 
   // Floor extraction: show all upward-facing surfaces (stairs, ramps) so they
   // can be clicked into the floor collision mesh. Default off to keep the
@@ -625,6 +644,20 @@ export default function UnifiedStageEditor() {
             setSelectedId={setSelectedWaypointId}
             onSeedFromGates={handleSeedFromGates}
             onAutoConnect={handleAutoConnect}
+            showManhattan={showManhattanGrid}
+            setShowManhattan={setShowManhattanGrid}
+            manhattanResolution={manhattanResolution}
+            setManhattanResolution={setManhattanResolution}
+            manhattanFuseVisual={manhattanFuseVisual}
+            setManhattanFuseVisual={setManhattanFuseVisual}
+            manhattanInfo={{
+              loading: manhattan.loading,
+              error: manhattan.error,
+              trisFiltered: manhattan.trisFiltered,
+              gridSize: manhattan.grid ? `${manhattan.grid.rows}×${manhattan.grid.cols}` : null,
+              pathCorners: manhattan.path?.worldCorners.length ?? null,
+              usedDiagonal: manhattan.path?.usedDiagonal ?? false,
+            }}
           />
         );
       case 'svg':
@@ -756,6 +789,9 @@ export default function UnifiedStageEditor() {
               onWaypointClick={handleWaypointClick}
             />
             <QuestObjectOverlay markers={questObjects} highlightCell={highlightCell} />
+            {showManhattanGrid && manhattan.grid && (
+              <ManhattanGridOverlay grid={manhattan.grid} path={manhattan.path} />
+            )}
           </>
         );
       case 'svg':
