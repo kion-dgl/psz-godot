@@ -62,6 +62,10 @@ const btn = (active: boolean): React.CSSProperties => ({
 export default function WaypointTab({
   config, updateConfig, placementMode, setPlacementMode, selectedId, setSelectedId,
   onSeedFromGates, onAutoConnect,
+  showManhattan, setShowManhattan,
+  manhattanResolution, setManhattanResolution,
+  manhattanFuseVisual, setManhattanFuseVisual,
+  manhattanInfo,
 }: WaypointTabProps) {
   const waypoints = config.waypoints ?? [];
   const edges = config.waypointEdges ?? [];

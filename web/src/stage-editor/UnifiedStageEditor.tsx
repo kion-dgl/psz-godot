@@ -230,20 +230,12 @@ export default function UnifiedStageEditor() {
 
   // Manhattan grid overlay: visualizes what scripts/tools/quest_solver/
   // solve_manhattan.ts would produce. Toggle from the waypoints tab.
+  // The hook itself is called below, after `config` is initialized.
   const [showManhattanGrid, setShowManhattanGrid] = useState(false);
   const [manhattanResolution, setManhattanResolution] = useState(0.5);
   const [manhattanFuseVisual, setManhattanFuseVisual] = useState(false);
   const [manhattanPathStart, setManhattanPathStart] = useState<{ x: number; z: number } | null>(null);
   const [manhattanPathEnd, setManhattanPathEnd] = useState<{ x: number; z: number } | null>(null);
-  const manhattan = useManhattanGrid({
-    mapId,
-    enabled: showManhattanGrid && activeTab === 'waypoints',
-    floorCollisionTriangles: config?.floorCollision?.triangles,
-    pathStart: manhattanPathStart,
-    pathEnd: manhattanPathEnd,
-    resolution: manhattanResolution,
-    fuseVisualMesh: manhattanFuseVisual,
-  });
 
   // Floor extraction: show all upward-facing surfaces (stairs, ramps) so they
   // can be clicked into the floor collision mesh. Default off to keep the
@@ -279,6 +271,16 @@ export default function UnifiedStageEditor() {
 
   // Get config for current map
   const { config, updateConfig, undo, redo, canUndo, canRedo, reloadFromDisk } = useStageConfig(selectedMapId);
+
+  const manhattan = useManhattanGrid({
+    mapId: selectedMapId,
+    enabled: showManhattanGrid && activeTab === 'waypoints',
+    floorCollisionTriangles: config?.floorCollision?.triangles,
+    pathStart: manhattanPathStart,
+    pathEnd: manhattanPathEnd,
+    resolution: manhattanResolution,
+    fuseVisualMesh: manhattanFuseVisual,
+  });
 
   // Handle scene ready callback
   const handleSceneReady = useCallback((scene: THREE.Group) => {
