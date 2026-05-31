@@ -165,6 +165,14 @@ var _quest_id: String = "search_and_rescue"
 var _quest_steps: Array = SR_QUEST_STEPS
 var _quest_manifest_index: int = 0  # used by guild_counter to scroll-down before accepting
 
+# Floor-only debug mode: when PSZ_AUTOPILOT_FLOOR_ONLY=1, shrink the player
+# capsule to nearly a point so it doesn't collide with wall geometry or
+# decoration meshes. Lets us validate the SOLVER's floor pathfinding without
+# also having to solve wall avoidance. Floor collision (which is what keeps
+# the player on the ground via floor_snap) is unaffected — only horizontal
+# wall hits go away.
+var _floor_only := false
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -194,7 +202,56 @@ func _ready() -> void:
 			_quest_steps = generated
 			_quest_manifest_index = _manifest_index_for_quest(qenv)
 			print("[sanity] autopilot quest=%s (%d steps, manifest index %d)" % [_quest_id, _quest_steps.size(), _quest_manifest_index])
+	_floor_only = OS.has_environment("PSZ_AUTOPILOT_FLOOR_ONLY")
+	if _floor_only:
+		print("[sanity] autopilot floor-only mode: shrinking player capsule, walls won't block")
 	set_process(true)
+
+
+## Called every frame from _process — when floor-only mode is on, mark every
+## non-floor StaticBody3D in the current scene as non-blocking so the
+## player only collides with the floor mesh. The floor is the one named
+## "collision_floor" (created in valley_field_controller._create_collision_from_meshes).
+## Everything else (walls, decoration colliders, etc.) loses its collision_layer.
+# No-op stub — floor-only mode now intercepts the walk tick itself via
+# `_floor_only_walk_step` rather than mutating scene collision. See
+# `_tick_field_walk`.
+func _maybe_apply_floor_only_capsule() -> void:
+	pass
+
+
+## Floor-only walk substitute: each tick, take a small step toward the target
+## XZ, raycast straight down to find the floor, and snap the player there.
+## Bypasses all collision (walls, decorations, enemies) so the autopilot only
+## tests "is there continuous floor under the solver's path?". Fails if no
+## floor is found within MAX_FLOOR_DROP meters below the step position.
+const FLOOR_ONLY_STEP_PER_SEC := 6.0   # m/s — roughly running speed
+const FLOOR_ONLY_RAY_FROM_Y := 5.0
+const FLOOR_ONLY_RAY_LEN := 20.0       # search below the step's start Y
+func _floor_only_walk_step(player: Node, target: Vector3, delta_ms: int) -> bool:
+	var pos: Vector3 = player.global_position
+	var dx := target.x - pos.x
+	var dz := target.z - pos.z
+	var dist := sqrt(dx * dx + dz * dz)
+	if dist < 0.01:
+		return true
+	var step_m := FLOOR_ONLY_STEP_PER_SEC * (float(delta_ms) / 1000.0)
+	if step_m > dist:
+		step_m = dist
+	var nx := pos.x + (dx / dist) * step_m
+	var nz := pos.z + (dz / dist) * step_m
+	# Raycast down to find floor at the new XZ.
+	var space_state: PhysicsDirectSpaceState3D = player.get_world_3d().direct_space_state
+	var ray := PhysicsRayQueryParameters3D.create(
+		Vector3(nx, pos.y + FLOOR_ONLY_RAY_FROM_Y, nz),
+		Vector3(nx, pos.y + FLOOR_ONLY_RAY_FROM_Y - FLOOR_ONLY_RAY_LEN, nz),
+	)
+	ray.exclude = [player.get_rid()]
+	var hit: Dictionary = space_state.intersect_ray(ray)
+	if hit.is_empty():
+		return false # no floor → caller fails
+	player.global_position = Vector3(nx, hit.get("position").y + 0.05, nz)
+	return true
 
 
 # ── Quest-step generator (for quests that aren't the hardcoded SR) ────────
@@ -357,6 +414,9 @@ func _save_and_quit() -> void:
 
 
 func _process(_delta: float) -> void:
+	# Floor-only debug: shrink the active player's capsule whenever a new
+	# player node is spawned (cell loads instantiate a fresh player).
+	_maybe_apply_floor_only_capsule()
 	# Base scene change
 	var cs := get_tree().current_scene
 	if cs != null:
@@ -1093,6 +1153,7 @@ func _stop_field_walk() -> void:
 			Input.action_release(action)
 
 
+var _last_walk_tick_ms: int = 0
 func _tick_field_walk() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
@@ -1100,6 +1161,21 @@ func _tick_field_walk() -> void:
 		# doesn't see stale state.
 		_stop_field_walk()
 		return
+
+	# Floor-only mode: teleport-along-path with a downward floor raycast at
+	# each step. Skips the player's normal input/physics path so wall geometry
+	# and decoration colliders can't block us — purely tests "is there floor?"
+	if _floor_only:
+		var now_ms := Time.get_ticks_msec()
+		var dt := now_ms - _last_walk_tick_ms if _last_walk_tick_ms > 0 else 16
+		_last_walk_tick_ms = now_ms
+		if not _floor_only_walk_step(player, _walk_target, dt):
+			print("[sanity]  walk @ (%.1f,%.1f,%.1f) → (%.1f,%.1f,%.1f) NO FLOOR" % [
+				player.global_position.x, player.global_position.y, player.global_position.z,
+				_walk_target.x, _walk_target.y, _walk_target.z])
+			_stop_field_walk()
+			_fail_walk_stuck(player.global_position, 0.0)
+			return
 
 	var pos: Vector3 = player.global_position
 	var dx: float = _walk_target.x - pos.x
@@ -1128,6 +1204,11 @@ func _tick_field_walk() -> void:
 		_stop_field_walk()
 		if cb.is_valid():
 			cb.call()
+		return
+
+	# Floor-only mode already moved the player above — skip the camera/input
+	# driver below (it would just press keys at no-op physics).
+	if _floor_only:
 		return
 
 	# Snap the orbit camera so its forward vector points at the leg target.
