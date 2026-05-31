@@ -102,7 +102,11 @@ export function solveStageGraph(
 		for (let i = 0; i < ids.length - 1; i++) addEdge(ids[i], ids[i + 1]);
 	};
 
-	// spawn ↔ exit through this same portal (gate-into-load straight line)
+	// spawn ↔ exit through this same portal (gate-into-load straight line).
+	// This is the ONLY pair that connects load waypoints into the graph —
+	// load is a terminal for "exit the cell" walks, NOT an interior routing
+	// point. Routing post-objective back to spawn should use spawn↔objective
+	// (which we add below) and then the existing spawn↔exit edge to leave.
 	for (let i = 0; i < spawns.length; i++) {
 		for (let j = 0; j < exits.length; j++) {
 			if (spawns[i].label.replace("spawn ", "") === exits[j].label.replace("load ", "")) {
@@ -114,13 +118,10 @@ export function solveStageGraph(
 	for (let i = 0; i < spawns.length; i++) {
 		for (let j = i + 1; j < spawns.length; j++) trySolve(spawns[i], spawns[j]);
 	}
-	// spawn → objective
+	// spawn → objective (and back, same edges) — covers both the pre-objective
+	// walk in and the post-objective walk back to any spawn.
 	for (const s of spawns) {
 		for (const o of objectives) trySolve(s, o);
-	}
-	// objective → exit (for the post-objective walk out)
-	for (const o of objectives) {
-		for (const e of exits) trySolve(o, e);
 	}
 
 	return {
