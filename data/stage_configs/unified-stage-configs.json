@@ -2661,14 +2661,51 @@
         "label": "load east"
       },
       {
-        "id": "wp_bridge_mid_s01b_lc2",
+        "id": "wp_1780194342334_or6w0r",
         "position": [
-          11.95,
+          11.20888524040383,
           0,
-          -3.71
+          -12.629147479555506
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780194346294_e6ozoq",
+        "position": [
+          -16.0242141560329,
+          0,
+          -11.849799828469742
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780194350066_8r1xfp",
+        "position": [
+          -14.52454522160266,
+          0,
+          16.47140331484774
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_lc2_west_mid",
+        "position": [
+          -15.25,
+          0,
+          2.35
         ],
         "kind": "point",
-        "label": "bridge mid"
+        "label": "west mid"
+      },
+      {
+        "id": "wp_lc2_south_mid",
+        "position": [
+          -2.4,
+          0,
+          -12.2
+        ],
+        "kind": "point",
+        "label": "south mid"
       }
     ],
     "waypointEdges": [
@@ -2681,12 +2718,28 @@
         "wp_spawn_1_s01b_lc2"
       ],
       [
-        "wp_bridge_mid_s01b_lc2",
+        "wp_1780194342334_or6w0r",
         "wp_spawn_0_s01b_lc2"
       ],
       [
-        "wp_bridge_mid_s01b_lc2",
+        "wp_1780194350066_8r1xfp",
         "wp_spawn_1_s01b_lc2"
+      ],
+      [
+        "wp_1780194346294_e6ozoq",
+        "wp_lc2_south_mid"
+      ],
+      [
+        "wp_lc2_south_mid",
+        "wp_1780194342334_or6w0r"
+      ],
+      [
+        "wp_1780194346294_e6ozoq",
+        "wp_lc2_west_mid"
+      ],
+      [
+        "wp_lc2_west_mid",
+        "wp_1780194350066_8r1xfp"
       ]
     ]
   },
