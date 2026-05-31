@@ -1575,7 +1575,20 @@ func _path_via_authored_waypoints(stage_id: String, start: Vector3, target: Vect
 	var edges = stage.get("waypointEdges", [])
 	if typeof(waypoints) != TYPE_ARRAY or waypoints.is_empty():
 		return []
-	# Build id → position map.
+	# Waypoint positions in the stage config are STAGE-LOCAL — they're shared
+	# across every cell that loads this stage and don't know about the cell's
+	# rotation. The current cell's Map root applies that rotation, so use its
+	# global transform to convert each stage-local position to world. Without
+	# this, cells with non-zero rotation (e.g. paru pact A 3,4 rotation 180)
+	# would compare stage-local waypoints against the world-space player
+	# position and never find a "nearest" match.
+	var map_root: Node3D = null
+	var field := get_tree().current_scene
+	if field != null:
+		var m := field.get_node_or_null("Map")
+		if m != null and m is Node3D:
+			map_root = m as Node3D
+	# Build id → position map (converted to world).
 	var pos_by_id := {}
 	for wp in waypoints:
 		if typeof(wp) != TYPE_DICTIONARY:
@@ -1584,7 +1597,8 @@ func _path_via_authored_waypoints(stage_id: String, start: Vector3, target: Vect
 		var pos_arr = wp.get("position", null)
 		if id == "" or typeof(pos_arr) != TYPE_ARRAY or pos_arr.size() < 3:
 			continue
-		pos_by_id[id] = Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+		var local_pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
+		pos_by_id[id] = (map_root.to_global(local_pos)) if map_root != null else local_pos
 	if pos_by_id.is_empty():
 		return []
 	# Build undirected adjacency from edge pairs.
