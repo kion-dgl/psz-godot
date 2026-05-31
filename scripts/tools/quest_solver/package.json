@@ -1,0 +1,8 @@
+{
+  "name": "quest-solver",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "solve": "bun solve_quest.ts"
+  }
+}
