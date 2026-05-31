@@ -1,0 +1,39 @@
+{
+  "stageId": "s05a_ib2",
+  "shape": "Hourglass",
+  "description": "Hourglass-shaped two-portal arena. A narrow neck constricts the floor between two wider lobes (north and south). The straight-line path runs north-south through the neck. Detour anchors around the edges of each lobe let the autopilot investigate corner objectives without losing the neck route.",
+  "portals": {
+    "north": "spawn_north at (0.03, -23.47) — gate at the north (low-Z) end of the north lobe",
+    "south": "spawn_south at (-0.15, 23.44) — gate at the south (high-Z) end of the south lobe"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [0.03,   0, -23.47], "description": "north portal (matches wp_spawn_1)" },
+    { "id": "south_gate",  "position": [-0.15,  0,  23.44], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "south_lobe_mid",   "position": [0.05,  0,  14.16], "description": "south lobe staging (matches x2ua) — branches to south-lobe edges + into the neck" },
+    { "id": "neck_north",  "position": [2.43,   0,   6.01], "description": "north end of the neck transition (matches xq2i)" },
+    { "id": "neck_south",  "position": [3.02,   0,  -5.79], "description": "south end of the neck transition (matches 6ucp)" },
+    { "id": "north_lobe_mid","position": [0.48, 0, -15.18], "description": "north lobe staging (matches nshe) — branches to north-lobe edges + back through the neck" },
+    { "id": "south_lobe_west", "position": [-13.51, 0,  14.35], "description": "west corner of south lobe (matches 3txfth)" },
+    { "id": "south_lobe_east", "position": [10.29,  0,  16.59], "description": "east corner of south lobe (matches g8leij)" },
+    { "id": "north_lobe_east", "position": [12.99,  0, -14.17], "description": "east corner of north lobe (matches 33tzxg)" },
+    { "id": "north_lobe_west", "position": [-8.27,  0, -16.50], "description": "west corner of north lobe (matches s04c21)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_lobe_mid"],
+    ["south_lobe_mid", "south_lobe_west"],
+    ["south_lobe_mid", "south_lobe_east"],
+    ["south_lobe_mid", "neck_north"],
+    ["neck_north", "neck_south"],
+    ["neck_south", "north_lobe_mid"],
+    ["north_lobe_mid", "north_gate"],
+    ["north_lobe_mid", "north_lobe_west"],
+    ["north_lobe_mid", "north_lobe_east"]
+  ],
+  "traversalNotes": [
+    "Direct N↔S route: spawn_south → south_lobe_mid → neck_north → neck_south → north_lobe_mid → spawn_north (and reverse). Five hops, all axis-aligned-ish through the neck.",
+    "DISPATCH RULE: any objective in a corner of either lobe routes through the lobe's mid-staging anchor (south_lobe_mid or north_lobe_mid) — not directly from the spawn. e.g. south_lobe_west requires south_lobe_mid → south_lobe_west → south_lobe_mid → next leg.",
+    "The narrow NECK between neck_north and neck_south is the only connection between the lobes — the solver must NOT emit cross-lobe edges that bypass the neck, even if mesh validation passes (the visible width might be a sloped wall the autopilot would slip on).",
+    "Hourglass topology generalizes: any two-portal room with a constriction can use this anchor pattern (gate ↔ lobe_mid ↔ neck_lobe ↔ neck_other ↔ lobe_mid ↔ gate, plus lobe_mid → corner-detour branches)."
+  ]
+}

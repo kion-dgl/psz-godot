@@ -48,16 +48,14 @@ function WaypointMarker({
         <ringGeometry args={[0.9, 1.15, 24]} />
         <meshBasicMaterial color={color} transparent opacity={0.5} side={THREE.DoubleSide} />
       </mesh>
-      {(wp.label || wp.kind) && (
-        <Html position={[0, 1.4, 0]} center style={{ pointerEvents: 'none' }}>
-          <div style={{
-            background: 'rgba(0,0,0,0.8)', color, padding: '1px 5px', borderRadius: 3,
-            fontSize: 10, fontFamily: 'monospace', whiteSpace: 'nowrap', border: `1px solid ${color}`,
-          }}>
-            {wp.label || wp.kind}
-          </div>
-        </Html>
-      )}
+      <Html position={[0, 1.4, 0]} center style={{ pointerEvents: 'none' }}>
+        <div style={{
+          background: 'rgba(0,0,0,0.8)', color, padding: '1px 5px', borderRadius: 3,
+          fontSize: 10, fontFamily: 'monospace', whiteSpace: 'nowrap', border: `1px solid ${color}`,
+        }}>
+          {wp.label || `${wp.kind ?? 'point'}·${wp.id.slice(-4)}`}
+        </div>
+      </Html>
     </group>
   );
 }
