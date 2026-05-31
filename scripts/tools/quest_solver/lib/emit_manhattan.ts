@@ -30,7 +30,13 @@ export interface EmittedGraph {
 	};
 }
 
-const MERGE_DIST = 2.5;
+// MERGE_DIST collapses path corners onto existing waypoints if they're
+// closer than this. Keep it BELOW the grid resolution so we don't eat
+// real axis-aligned bend corners (e.g. an L-bend that lands 2m from a
+// spawn waypoint — losing the corner turns a Manhattan path into a
+// diagonal one, which the autopilot's camera-relative input can't walk
+// without drifting into walls).
+const MERGE_DIST = 0.9;
 const MAX_LEG = 6.0;
 
 export function solveStageGraphManhattan(

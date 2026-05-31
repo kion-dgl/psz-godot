@@ -81,7 +81,11 @@ export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
 	// dilate from walls only later.
 	const wallStamp = new Uint8Array(rows * cols);
 	if (walls.length > 0) {
-		const stampHalfCells = 1;
+		// 0 = stamp just the cell containing the wall edge sample point.
+		// 1 = 3x3 stamp (was the previous default — too aggressive in
+		// stages with lots of decorative steep triangles; combined with
+		// clearance-erosion it walled off entire corridors).
+		const stampHalfCells = 0;
 		const stampLine = (ax: number, az: number, bx: number, bz: number) => {
 			const dist = Math.hypot(bx - ax, bz - az);
 			if (dist < 1e-6) return;
