@@ -718,9 +718,35 @@ func _poll_quest_complete(n: int) -> void:
 	if SessionManager.has_completed_quest():
 		var done: Dictionary = SessionManager.get_completed_quest() if SessionManager.has_method("get_completed_quest") else {}
 		print("[sanity] checkpoint: quest_completed (%s)" % str(done))
-		# Don't quit here — _drive_scene handles the city-return DONE.
+		# Walk to the room_clear-spawned Telepipe and interact so the scene
+		# transitions to city_warp → _drive_scene's post-quest handler takes over.
+		_after(STEP_DELAY * 2.0, _drive_walk_to_telepipe)
 		return
 	_after(QUEST_COMPLETE_POLL, func() -> void: _poll_quest_complete(n + 1))
+
+
+func _drive_walk_to_telepipe() -> void:
+	var field := get_tree().current_scene
+	if field == null or field.scene_file_path != VALLEY_FIELD:
+		print("[sanity] WARN: not in valley_field for telepipe walk (path=%s)" % str(field.scene_file_path if field else "<null>"))
+		return
+	var telepipe := _find_telepipe(field)
+	if telepipe == null:
+		print("[sanity] WARN: no Telepipe in scene — quest finished but no warp out")
+		return
+	print("[sanity] walking to telepipe at (%.1f, %.1f, %.1f)" % [telepipe.global_position.x, telepipe.global_position.y, telepipe.global_position.z])
+	_walk_then_interact(field, telepipe.global_position, "telepipe", POST_INTERACT_SETTLE)
+
+
+func _find_telepipe(root: Node) -> Node3D:
+	for child in root.get_children():
+		if child.get_class() == "Node3D" or child is Node3D:
+			if "Telepipe" in child.name or (child.has_method("_on_interact") and child.get_script() and str(child.get_script().get_path()).ends_with("telepipe.gd")):
+				return child
+		var found := _find_telepipe(child)
+		if found != null:
+			return found
+	return null
 
 
 # ── Action helpers ─────────────────────────────────────────────
