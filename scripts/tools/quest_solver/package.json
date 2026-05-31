@@ -4,5 +4,8 @@
   "type": "module",
   "scripts": {
     "solve": "bun solve_quest.ts"
+  },
+  "dependencies": {
+    "recast-navigation": "^0.43.1"
   }
 }

@@ -6,6 +6,63 @@
 
 import { loadGlb } from "./glb.ts";
 
+/** 3D triangle (preserves Y) — used by the recast solver, which needs the
+ *  actual surface geometry to compute slopes and floor heights. */
+export interface Tri3D {
+	x1: number; y1: number; z1: number;
+	x2: number; y2: number; z2: number;
+	x3: number; y3: number; z3: number;
+}
+
+/** Load all triangles from a GLB as 3D triangles. Recast wants the actual
+ *  mesh, not Y-flattened. */
+export function loadGlb3D(path: string): Tri3D[] {
+	const prims = loadGlb(path);
+	const out: Tri3D[] = [];
+	for (const prim of prims) {
+		const { positions, indices } = prim;
+		const triCount = indices ? indices.length / 3 : positions.length / 9;
+		for (let i = 0; i < triCount; i++) {
+			const i0 = indices ? indices[i * 3 + 0] : i * 3 + 0;
+			const i1 = indices ? indices[i * 3 + 1] : i * 3 + 1;
+			const i2 = indices ? indices[i * 3 + 2] : i * 3 + 2;
+			out.push({
+				x1: positions[i0 * 3 + 0], y1: positions[i0 * 3 + 1], z1: positions[i0 * 3 + 2],
+				x2: positions[i1 * 3 + 0], y2: positions[i1 * 3 + 1], z2: positions[i1 * 3 + 2],
+				x3: positions[i2 * 3 + 0], y3: positions[i2 * 3 + 1], z3: positions[i2 * 3 + 2],
+			});
+		}
+	}
+	return out;
+}
+
+/** Load a stage's 3D triangles from both -floor.glb (if present, applies the
+ *  per-tri filter from floorCollision) and _m.glb (visual mesh; covers
+ *  surfaces the curated floor.glb doesn't). Recast classifies floors vs
+ *  walls itself based on triangle normals so we feed it everything. */
+export function loadStage3D(
+	stageId: string,
+	areaSubfolder: string,
+	stageConfigsRoot: string,
+	config: FloorCollisionConfig = {},
+): Tri3D[] {
+	const out: Tri3D[] = [];
+	const floorPath = `${stageConfigsRoot}/${areaSubfolder}/${stageId}/lndmd/${stageId}-floor.glb`;
+	const mainPath = `${stageConfigsRoot}/${areaSubfolder}/${stageId}/lndmd/${stageId}_m.glb`;
+	try {
+		const floorTris = loadGlb3D(floorPath);
+		const overrides = config.triangles ?? {};
+		for (let i = 0; i < floorTris.length; i++) {
+			if (overrides[`tri_${i}`] === false) continue;
+			out.push(floorTris[i]);
+		}
+	} catch (_e) {}
+	try {
+		out.push(...loadGlb3D(mainPath));
+	} catch (_e) {}
+	return out;
+}
+
 export interface Tri2D {
 	x1: number;
 	z1: number;
