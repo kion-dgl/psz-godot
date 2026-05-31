@@ -16,7 +16,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadStage3D } from "./lib/floor.ts";
+import { loadStage3D, loadGlb3D } from "./lib/floor.ts";
 import { ensureRecast, buildRecastNavMesh } from "./lib/recast_solver.ts";
 import { applyToStageConfigRecast, solveStageGraphRecast } from "./lib/emit_recast.ts";
 import { cellsForStage, loadQuestPlan, stagePoints, stagesUsed } from "./lib/quest_walk.ts";
@@ -96,36 +96,62 @@ async function main() {
 		}
 
 		const t0 = performance.now();
-		const tris = loadStage3D(stageId, subfolder, ASSETS_STAGES, cfg.floorCollision ?? {});
 		const cells = cellsForStage(plan, stageId).map((c) => c.cell);
 		const points = stagePoints(stageId, cfg, cells);
-		if (tris.length === 0) {
-			console.log(`✗ ${stageId}: no triangles (looked in ${subfolder}/${stageId}/lndmd/)`);
-			stageFail.push(stageId);
-			continue;
-		}
 
-		const built = buildRecastNavMesh(tris, {
+		// Two-pass: try -floor.glb (curated, in-game collision) first. Only
+		// fall back to fusing _m.glb (visual mesh, may include decoration with
+		// horizontal tops that recast misclassifies as floor) if floor-only
+		// fails to connect every required pair of points. Per-stage tag in
+		// the log shows which source was used: "f" = floor only, "f+m" =
+		// floor + visual mesh fallback.
+		const floorPath = `${ASSETS_STAGES}/${subfolder}/${stageId}/lndmd/${stageId}-floor.glb`;
+		let floorTris: any[] = [];
+		try {
+			const all = loadGlb3D(floorPath);
+			const overrides = cfg.floorCollision?.triangles ?? {};
+			for (let i = 0; i < all.length; i++) {
+				if (overrides[`tri_${i}`] === false) continue;
+				floorTris.push(all[i]);
+			}
+		} catch (_e) {}
+
+		const buildOpts = {
 			cellSize,
 			cellHeight: 0.2,
 			agentRadius,
 			agentHeight: 1.8,
 			agentMaxClimb: 0.5,
 			walkableSlopeAngle: 45,
-		});
-		if (!built) {
-			console.log(`✗ ${stageId}: navmesh build failed (${tris.length} tris)`);
-			stageFail.push(stageId);
-			continue;
-		}
+		};
 
-		const graph = solveStageGraphRecast(stageId, built.query, points);
+		let built = floorTris.length > 0 ? buildRecastNavMesh(floorTris, buildOpts) : null;
+		let graph = built ? solveStageGraphRecast(stageId, built.query, points) : null;
+		let usedSource = "f  ";
+		if (!built || !graph || graph.stats.pathsFailed > 0) {
+			if (built) { built.navMesh.destroy(); }
+			const fused = loadStage3D(stageId, subfolder, ASSETS_STAGES, cfg.floorCollision ?? {});
+			if (fused.length === 0) {
+				console.log(`✗ ${stageId}: no triangles (looked in ${subfolder}/${stageId}/lndmd/)`);
+				stageFail.push(stageId);
+				continue;
+			}
+			built = buildRecastNavMesh(fused, buildOpts);
+			if (!built) {
+				console.log(`✗ ${stageId}: navmesh build failed (${fused.length} tris)`);
+				stageFail.push(stageId);
+				continue;
+			}
+			graph = solveStageGraphRecast(stageId, built.query, points);
+			usedSource = "f+m";
+		}
+		const tris = floorTris;
 		const elapsed = performance.now() - t0;
 		const reachStr = graph.stats.pathsFailed === 0
 			? `${graph.stats.pathsSolved}/${graph.stats.pathsAttempted} paths`
 			: `${graph.stats.pathsSolved}/${graph.stats.pathsAttempted} paths (${graph.stats.pathsFailed} FAILED)`;
 		const status = graph.stats.pathsFailed === 0 ? "✓" : "✗";
-		console.log(`${status} ${stageId.padEnd(12)} ${tris.length.toString().padStart(5)} tris  ${graph.stats.uniqueWaypoints.toString().padStart(3)} wpts  ${graph.stats.edges.toString().padStart(3)} edges  ${reachStr.padEnd(38)} ${elapsed.toFixed(0)}ms`);
+		console.log(`${status} ${stageId.padEnd(12)} ${usedSource} ${tris.length.toString().padStart(5)} tris  ${graph.stats.uniqueWaypoints.toString().padStart(3)} wpts  ${graph.stats.edges.toString().padStart(3)} edges  ${reachStr.padEnd(38)} ${elapsed.toFixed(0)}ms`);
 
 		if (graph.stats.pathsFailed === 0) {
 			stageOk++;
