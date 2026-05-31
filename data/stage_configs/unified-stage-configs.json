@@ -14666,9 +14666,18 @@
     "version": 1,
     "waypoints": [
       {
-        "id": "wp_spawn_0_s05a_na1",
+        "id": "wp_1780261362238_p4kg6s",
         "position": [
-          0.18679951294885289,
+          0.04845827743083575,
+          0,
+          3.355373184083115
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_spawn_0_1780261363753",
+        "position": [
+          0.18679951294885253,
           0,
           21.91774682452428
         ],
@@ -14676,86 +14685,24 @@
         "label": "spawn south"
       },
       {
-        "id": "wp_load_0_s05a_na1",
+        "id": "wp_load_0_1780261363753",
         "position": [
-          0.18679951294885289,
+          0.18679951294885203,
           0,
           25.91774682452428
         ],
         "kind": "exit",
         "label": "load south"
-      },
-      {
-        "id": "wp_key_0_s05a_na1",
-        "position": [
-          0.9,
-          0,
-          1.7
-        ],
-        "kind": "key_drop",
-        "label": "key 1,3"
-      },
-      {
-        "id": "wp_auto_0_s05a_na1",
-        "position": [
-          0.107421875,
-          0,
-          17.4296875
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_1_s05a_na1",
-        "position": [
-          0.107421875,
-          0,
-          12.9296875
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_2_s05a_na1",
-        "position": [
-          1.107421875,
-          0,
-          12.9296875
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_3_s05a_na1",
-        "position": [
-          1.107421875,
-          0,
-          7.4296875
-        ],
-        "kind": "point"
       }
     ],
     "waypointEdges": [
       [
-        "wp_load_0_s05a_na1",
-        "wp_spawn_0_s05a_na1"
+        "wp_load_0_1780261363753",
+        "wp_spawn_0_1780261363753"
       ],
       [
-        "wp_auto_0_s05a_na1",
-        "wp_spawn_0_s05a_na1"
-      ],
-      [
-        "wp_auto_0_s05a_na1",
-        "wp_auto_1_s05a_na1"
-      ],
-      [
-        "wp_auto_1_s05a_na1",
-        "wp_auto_2_s05a_na1"
-      ],
-      [
-        "wp_auto_2_s05a_na1",
-        "wp_auto_3_s05a_na1"
-      ],
-      [
-        "wp_auto_3_s05a_na1",
-        "wp_key_0_s05a_na1"
+        "wp_1780261362238_p4kg6s",
+        "wp_spawn_0_1780261363753"
       ]
     ]
   },
