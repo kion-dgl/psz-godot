@@ -213,11 +213,34 @@ func _ready() -> void:
 ## player only collides with the floor mesh. The floor is the one named
 ## "collision_floor" (created in valley_field_controller._create_collision_from_meshes).
 ## Everything else (walls, decoration colliders, etc.) loses its collision_layer.
-# No-op stub — floor-only mode now intercepts the walk tick itself via
-# `_floor_only_walk_step` rather than mutating scene collision. See
-# `_tick_field_walk`.
+## Floor-only: between walks, pin the player at their last position so
+## enemies can't push them across the cell during the 5-wave kill_all loop.
+## We only pin between walks; during a walk, _floor_only_walk_step is
+## driving position directly anyway.
+var _floor_only_pin_pos: Vector3 = Vector3.ZERO
+var _floor_only_pin_active := false
+var _floor_only_pin_player_id: int = 0
 func _maybe_apply_floor_only_capsule() -> void:
-	pass
+	if not _floor_only:
+		return
+	var scene := get_tree().current_scene
+	if scene == null or scene.scene_file_path != VALLEY_FIELD:
+		return
+	var player := get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	# Player just changed (new cell load): re-record their spawn position as
+	# the pin point.
+	if player.get_instance_id() != _floor_only_pin_player_id:
+		_floor_only_pin_player_id = player.get_instance_id()
+		_floor_only_pin_pos = player.global_position
+		_floor_only_pin_active = true
+		return
+	# If we're not actively walking, hold position to prevent enemy pushback.
+	if not _walking and _floor_only_pin_active:
+		var p: Vector3 = player.global_position
+		if p.distance_to(_floor_only_pin_pos) > 0.2:
+			player.global_position = _floor_only_pin_pos
 
 
 ## Floor-only walk substitute: each tick, take a small step toward the target
@@ -1226,6 +1249,12 @@ func _start_field_walk(target: Vector3, on_arrive: Callable = Callable(), arrive
 
 func _stop_field_walk() -> void:
 	_walking = false
+	# Move the floor-only pin to wherever the player landed so the post-walk
+	# pin doesn't yank them back to a stale anchor.
+	if _floor_only:
+		var pl := get_tree().get_first_node_in_group("player")
+		if pl != null:
+			_floor_only_pin_pos = pl.global_position
 	for action in ["move_forward", "move_backward", "move_left", "move_right"]:
 		if Input.is_action_pressed(action):
 			Input.action_release(action)
