@@ -1,0 +1,36 @@
+{
+  "stageId": "s05a_nb2",
+  "shape": "Dead-end hourglass (single south gate)",
+  "description": "Two lobes connected by a narrow neck, with only one portal — the autopilot enters from the south, can explore either lobe + the neck, and ultimately leaves the same way. The south lobe holds the gate; the north lobe is a dead-end pocket with two corner detours of its own. Same hourglass geometry as ib2 but with the north gate removed.",
+  "portals": {
+    "south": "spawn_south at (-0.26, 23.49) — the only portal, on the south (high-Z) side of the south lobe"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",       "position": [-0.26,  0,  23.49], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "south_lobe_mid",   "position": [0.13,   0,  17.63], "description": "south lobe staging (matches mrpyze)" },
+    { "id": "south_lobe_west",  "position": [-10.58, 0,  14.55], "description": "west corner of south lobe (matches y79tea)" },
+    { "id": "south_lobe_east",  "position": [9.78,   0,  15.08], "description": "east corner of south lobe (matches yuwsce)" },
+    { "id": "neck_south",       "position": [2.83,   0,   6.31], "description": "south end of the neck (matches 8mrm6)" },
+    { "id": "neck_north",       "position": [3.01,   0,  -6.43], "description": "north end of the neck (matches ad0o7j)" },
+    { "id": "north_lobe_west",  "position": [-7.52,  0, -17.15], "description": "west corner of north lobe — dead-end detour (matches cmtz3s)" },
+    { "id": "north_lobe_east",  "position": [15.97,  0, -12.00], "description": "east corner of north lobe — dead-end detour (matches zokea9)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_lobe_mid"],
+    ["south_lobe_mid", "south_lobe_west"],
+    ["south_lobe_mid", "south_lobe_east"],
+    ["south_lobe_mid", "neck_south"],
+    ["neck_south", "neck_north"],
+    ["neck_north", "north_lobe_west"],
+    ["neck_north", "north_lobe_east"],
+    ["north_lobe_west", "north_lobe_east"]
+  ],
+  "traversalNotes": [
+    "Dead-end hourglass variant of ib2: same two-lobe-plus-neck geometry, but only the south lobe has a portal. The autopilot enters from spawn_south, does its in-cell work, and leaves through the same gate.",
+    "Furthest-corner traversal: spawn_south → south_lobe_mid → neck_south → neck_north → north_lobe_(west|east). Five hops to reach the north lobe; reverse to exit.",
+    "DISPATCH RULE: objectives in each lobe route via the lobe_mid (south) or via the neck_north pivot (north — there's no north_lobe_mid). Corner detours stay children of their lobe's pivot.",
+    "Neck is narrow and the inter-lobe void is not walkable — strict-backbone applies to the neck_south ↔ neck_north edge.",
+    "Same primitive as ib2 (hourglass) with one gate removed. Solver should treat as ib2 with a closed portal."
+  ]
+}
