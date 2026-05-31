@@ -1215,6 +1215,11 @@ func _start_field_walk(target: Vector3, on_arrive: Callable = Callable(), arrive
 	_walking = true
 	_walk_started_at_ms = Time.get_ticks_msec()
 	_walk_diag_tick = 0
+	# Refresh the floor-only player-identity guard: anchor to whichever player
+	# is current at walk-start so the next tick doesn't trigger a stale-cell
+	# bailout against the player we're DELIBERATELY walking.
+	var pl := get_tree().get_first_node_in_group("player")
+	_last_walk_player_id = pl.get_instance_id() if pl != null else 0
 	# Note: _walk_on_watchdog is set by the caller BEFORE this (for exit-trigger
 	# walks) or left as Callable() so the watchdog falls back to plain teleport.
 
@@ -1227,6 +1232,7 @@ func _stop_field_walk() -> void:
 
 
 var _last_walk_tick_ms: int = 0
+var _last_walk_player_id: int = 0
 func _tick_field_walk() -> void:
 	var player := get_tree().get_first_node_in_group("player")
 	if player == null:
@@ -1239,6 +1245,15 @@ func _tick_field_walk() -> void:
 	# each step. Skips the player's normal input/physics path so wall geometry
 	# and decoration colliders can't block us — purely tests "is there floor?"
 	if _floor_only:
+		# If the active player node changed since the last tick, a cell load
+		# just happened: the walk_target is stale (it was anchored to the old
+		# cell). Stop the walk; the autopilot's cell-load handler will start a
+		# fresh walk against the new cell's geometry.
+		if _last_walk_player_id != 0 and player.get_instance_id() != _last_walk_player_id:
+			_stop_field_walk()
+			_last_walk_player_id = 0
+			return
+		_last_walk_player_id = player.get_instance_id()
 		var now_ms := Time.get_ticks_msec()
 		var dt := now_ms - _last_walk_tick_ms if _last_walk_tick_ms > 0 else 16
 		_last_walk_tick_ms = now_ms
