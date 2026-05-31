@@ -43,6 +43,8 @@ interface WaypointTabProps {
   setShowManhattan: (v: boolean) => void;
   manhattanResolution: number;
   setManhattanResolution: (v: number) => void;
+  manhattanClearance: number;
+  setManhattanClearance: (v: number) => void;
   manhattanFuseVisual: boolean;
   setManhattanFuseVisual: (v: boolean) => void;
   manhattanInfo?: { loading: boolean; error: string | null; trisFiltered: number; gridSize: string | null; pathCorners: number | null; usedDiagonal: boolean };
@@ -64,6 +66,7 @@ export default function WaypointTab({
   onSeedFromGates, onAutoConnect,
   showManhattan, setShowManhattan,
   manhattanResolution, setManhattanResolution,
+  manhattanClearance, setManhattanClearance,
   manhattanFuseVisual, setManhattanFuseVisual,
   manhattanInfo,
 }: WaypointTabProps) {
@@ -153,6 +156,16 @@ export default function WaypointTab({
                 style={{ flex: 1 }}
               />
               <span style={{ width: 40, textAlign: 'right' }}>{manhattanResolution.toFixed(2)}m</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 70 }}>Clearance</span>
+              <input
+                type="range" min="0" max="2" step="0.1"
+                value={manhattanClearance}
+                onChange={(e) => setManhattanClearance(parseFloat(e.target.value))}
+                style={{ flex: 1 }}
+              />
+              <span style={{ width: 40, textAlign: 'right' }}>{manhattanClearance.toFixed(1)}m</span>
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <input type="checkbox" checked={manhattanFuseVisual} onChange={(e) => setManhattanFuseVisual(e.target.checked)} />

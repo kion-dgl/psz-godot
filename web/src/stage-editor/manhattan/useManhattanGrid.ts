@@ -33,6 +33,9 @@ interface Args {
   pathStart?: { x: number; z: number } | null;
   pathEnd?: { x: number; z: number } | null;
   resolution?: number;
+  /** Erode walkable cells within `clearance` meters of the floor edge —
+   *  prevents the path from clipping the player capsule on geometry seams. */
+  clearance?: number;
   /** Also fuse the visual mesh (-m.glb) into the floor triangles. Useful when
    *  -floor.glb has holes the player walks across in-game. */
   fuseVisualMesh?: boolean;
@@ -45,6 +48,7 @@ export function useManhattanGrid({
   pathStart,
   pathEnd,
   resolution = 0.5,
+  clearance = 0,
   fuseVisualMesh = false,
 }: Args): UseManhattanGridResult {
   const [state, setState] = useState<UseManhattanGridResult>({
@@ -80,7 +84,7 @@ export function useManhattanGrid({
         }
         const tris2d = tris3d.map(tri3dToTri2d);
         if (cancelled) return;
-        const grid = buildNavGrid(tris2d, { resolution });
+        const grid = buildNavGrid(tris2d, { resolution, clearance });
         const bounds = {
           minX: grid.minX,
           maxX: grid.minX + (grid.cols - 1) * grid.resolution,
@@ -121,6 +125,7 @@ export function useManhattanGrid({
     mapId,
     enabled,
     resolution,
+    clearance,
     fuseVisualMesh,
     JSON.stringify(floorCollisionTriangles ?? {}),
     pathStart?.x, pathStart?.z,

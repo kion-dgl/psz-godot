@@ -127,11 +127,19 @@ export function floorBounds(triangles: Tri2D[]): FloorBounds {
 export interface BuildGridOpts {
   resolution: number;
   padding?: number;
+  /** Erode the walkable region away from real walls (cells that border the
+   *  floor edge) by `clearance` meters. Matches the CLI grid.ts behaviour:
+   *  only dilate from non-walkable cells that have a walkable 4-neighbor
+   *  (the actual floor boundary), not from the off-floor void surrounding
+   *  the bounding box — otherwise a corridor right at the AABB edge would
+   *  get eroded into nothing. */
+  clearance?: number;
 }
 
 export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
   const { resolution } = opts;
   const padding = opts.padding ?? 1.0;
+  const clearance = opts.clearance ?? 0;
   if (triangles.length === 0) {
     return { walkable: new Uint8Array(0), rows: 0, cols: 0, minX: 0, minZ: 0, resolution };
   }
@@ -143,17 +151,52 @@ export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
   const cols = Math.ceil((maxX - minX) / resolution) + 1;
   const rows = Math.ceil((maxZ - minZ) / resolution) + 1;
 
-  const walkable = new Uint8Array(rows * cols);
+  // Pass 1: raw walkability — center-of-cell on a floor triangle.
+  const raw = new Uint8Array(rows * cols);
   for (let r = 0; r < rows; r++) {
     const wz = minZ + r * resolution;
     for (let c = 0; c < cols; c++) {
       const wx = minX + c * resolution;
       for (let i = 0; i < triangles.length; i++) {
         if (pointInTriangle(wx, wz, triangles[i])) {
-          walkable[r * cols + c] = 1;
+          raw[r * cols + c] = 1;
           break;
         }
       }
+    }
+  }
+
+  const k = Math.max(0, Math.ceil(clearance / resolution));
+  if (k === 0) {
+    return { walkable: raw, rows, cols, minX, minZ, resolution };
+  }
+
+  // Pass 2: find boundary cells (non-walkable, but adjacent to walkable).
+  // These are the actual floor edges. Dilate them KxK to push the walkable
+  // region inward by `clearance` meters.
+  const wallCells: number[] = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (raw[r * cols + c] === 1) continue;
+      let hasWalkable = false;
+      if (r > 0 && raw[(r - 1) * cols + c] === 1) hasWalkable = true;
+      else if (r < rows - 1 && raw[(r + 1) * cols + c] === 1) hasWalkable = true;
+      else if (c > 0 && raw[r * cols + (c - 1)] === 1) hasWalkable = true;
+      else if (c < cols - 1 && raw[r * cols + (c + 1)] === 1) hasWalkable = true;
+      if (hasWalkable) wallCells.push(r * cols + c);
+    }
+  }
+
+  const walkable = new Uint8Array(raw);
+  for (const wi of wallCells) {
+    const wr = Math.floor(wi / cols);
+    const wc = wi % cols;
+    const r0 = Math.max(0, wr - k);
+    const r1 = Math.min(rows - 1, wr + k);
+    const c0 = Math.max(0, wc - k);
+    const c1 = Math.min(cols - 1, wc + k);
+    for (let rr = r0; rr <= r1; rr++) {
+      for (let cc = c0; cc <= c1; cc++) walkable[rr * cols + cc] = 0;
     }
   }
   return { walkable, rows, cols, minX, minZ, resolution };

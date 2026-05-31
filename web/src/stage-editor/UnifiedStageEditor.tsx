@@ -233,6 +233,7 @@ export default function UnifiedStageEditor() {
   // The hook itself is called below, after `config` is initialized.
   const [showManhattanGrid, setShowManhattanGrid] = useState(false);
   const [manhattanResolution, setManhattanResolution] = useState(0.5);
+  const [manhattanClearance, setManhattanClearance] = useState(0.5);
   const [manhattanFuseVisual, setManhattanFuseVisual] = useState(false);
   const [manhattanPathStart, setManhattanPathStart] = useState<{ x: number; z: number } | null>(null);
   const [manhattanPathEnd, setManhattanPathEnd] = useState<{ x: number; z: number } | null>(null);
@@ -279,6 +280,7 @@ export default function UnifiedStageEditor() {
     pathStart: manhattanPathStart,
     pathEnd: manhattanPathEnd,
     resolution: manhattanResolution,
+    clearance: manhattanClearance,
     fuseVisualMesh: manhattanFuseVisual,
   });
 
@@ -650,6 +652,8 @@ export default function UnifiedStageEditor() {
             setShowManhattan={setShowManhattanGrid}
             manhattanResolution={manhattanResolution}
             setManhattanResolution={setManhattanResolution}
+            manhattanClearance={manhattanClearance}
+            setManhattanClearance={setManhattanClearance}
             manhattanFuseVisual={manhattanFuseVisual}
             setManhattanFuseVisual={setManhattanFuseVisual}
             manhattanInfo={{
