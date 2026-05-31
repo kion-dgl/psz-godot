@@ -21,6 +21,9 @@ export interface BuildGridOpts {
 	clearance: number;
 	/** Padding around AABB so the player has room near portals just outside the floor. */
 	padding?: number;
+	/** Wall obstacles. Cells whose centers fall inside any wall's XZ shadow are
+	 *  marked blocked, then clearance dilation applies on top. */
+	walls?: Tri2D[];
 }
 
 export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
@@ -52,6 +55,45 @@ export function buildNavGrid(triangles: Tri2D[], opts: BuildGridOpts): NavGrid {
 					break;
 				}
 			}
+		}
+	}
+
+	// Step 1b: punch walls back out. Walls extracted from the visual mesh's
+	// steep surfaces often project to *degenerate* XZ triangles (a vertical
+	// wall is a line in plan view), so a plain point-in-triangle test misses
+	// them. Instead, rasterize each wall's three edges as line segments and
+	// also test point-in-triangle for the non-degenerate case (ramps, steep
+	// slopes). Both pass: any cell within rasterRadius of a wall edge OR
+	// inside a wall's XZ shadow gets blocked.
+	const walls = opts.walls ?? [];
+	if (walls.length > 0) {
+		// Each wall edge gets stamped onto cells it crosses. Use a half-cell
+		// radius around the line — small enough not to over-block in clean
+		// corridors, big enough to actually catch the line on the grid.
+		const stampHalfCells = 1;
+		const stampLine = (ax: number, az: number, bx: number, bz: number) => {
+			const dist = Math.hypot(bx - ax, bz - az);
+			if (dist < 1e-6) return;
+			const steps = Math.ceil(dist / (resolution * 0.5)) + 1;
+			for (let s = 0; s <= steps; s++) {
+				const t = s / steps;
+				const x = ax + (bx - ax) * t;
+				const z = az + (bz - az) * t;
+				const c = Math.round((x - minX) / resolution);
+				const r = Math.round((z - minZ) / resolution);
+				const r0 = Math.max(0, r - stampHalfCells);
+				const r1 = Math.min(rows - 1, r + stampHalfCells);
+				const c0 = Math.max(0, c - stampHalfCells);
+				const c1 = Math.min(cols - 1, c + stampHalfCells);
+				for (let rr = r0; rr <= r1; rr++) {
+					for (let cc = c0; cc <= c1; cc++) raw[rr * cols + cc] = 0;
+				}
+			}
+		};
+		for (const w of walls) {
+			stampLine(w.x1, w.z1, w.x2, w.z2);
+			stampLine(w.x2, w.z2, w.x3, w.z3);
+			stampLine(w.x3, w.z3, w.x1, w.z1);
 		}
 	}
 

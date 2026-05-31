@@ -28,6 +28,7 @@ import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadStageFloor, loadStageMainMesh } from "./lib/floor.ts";
 import { buildNavGrid } from "./lib/grid.ts";
+import { loadStageWalls } from "./lib/walls.ts";
 import { applyToStageConfig, solveStageGraph } from "./lib/emit.ts";
 import { cellsForStage, loadQuestPlan, stagePoints, stagesUsed } from "./lib/quest_walk.ts";
 
@@ -64,7 +65,11 @@ function parseArgs() {
 	let apply = false;
 	let stageFilter: string | null = null;
 	let resolution = 0.5;
-	let clearance = 1.0;
+	// Default clearance is small because we already block the wall XZ shadows
+	// from the visual mesh. A larger clearance would also taint cells next to
+	// edges of the *floor* (anything not floor counts), which kills 1m-wide
+	// corridors that the player can actually fit through.
+	let clearance = 0.0;
 	for (let i = 1; i < args.length; i++) {
 		const a = args[i];
 		if (a === "--apply") apply = true;
@@ -105,6 +110,7 @@ function main() {
 
 		const t0 = performance.now();
 		const floorTris = loadStageFloor(stageId, subfolder, ASSETS_STAGES, cfg.floorCollision ?? {});
+		const walls = loadStageWalls(stageId, subfolder, ASSETS_STAGES);
 		const cells = cellsForStage(plan, stageId).map((c) => c.cell);
 		const points = stagePoints(stageId, cfg, cells);
 		if (floorTris.length === 0 && points.length === 0) {
@@ -114,13 +120,16 @@ function main() {
 		}
 		// Try floor.glb alone first (matches in-game collision). If it can't
 		// solve every required path, retry with _m.glb fallback merged in.
-		let grid = buildNavGrid(floorTris, { resolution, clearance });
+		// Walls (extracted from _m.glb) are applied in either case — they
+		// kill diagonal shortcuts through wall geometry that the floor mesh
+		// alone wouldn't catch.
+		let grid = buildNavGrid(floorTris, { resolution, clearance, walls });
 		let graph = solveStageGraph(stageId, grid, points);
 		let usedFallback = false;
 		if (graph.stats.pathsFailed > 0) {
 			const mainTris = loadStageMainMesh(stageId, subfolder, ASSETS_STAGES);
 			const fused = [...floorTris, ...mainTris];
-			grid = buildNavGrid(fused, { resolution, clearance });
+			grid = buildNavGrid(fused, { resolution, clearance, walls });
 			graph = solveStageGraph(stageId, grid, points);
 			usedFallback = true;
 		}
