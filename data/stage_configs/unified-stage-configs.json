@@ -2443,14 +2443,34 @@
         "label": "load east"
       },
       {
-        "id": "wp_center_s01b_lb3",
+        "id": "wp_corridor_mid_s01b_lb3",
         "position": [
+          2.7,
           0,
-          0,
-          0
+          -17.5
         ],
         "kind": "point",
-        "label": "center"
+        "label": "corridor mid"
+      },
+      {
+        "id": "wp_corridor_mid2_s01b_lb3",
+        "position": [
+          -7,
+          0,
+          -17.5
+        ],
+        "kind": "point",
+        "label": "corridor mid2"
+      },
+      {
+        "id": "wp_corridor_mid15_s01b_lb3",
+        "position": [
+          0.7,
+          0,
+          -18.3
+        ],
+        "kind": "point",
+        "label": "corridor sag"
       }
     ],
     "waypointEdges": [
@@ -2463,12 +2483,20 @@
         "wp_spawn_1_s01b_lb3"
       ],
       [
-        "wp_center_s01b_lb3",
-        "wp_spawn_0_s01b_lb3"
+        "wp_corridor_mid_s01b_lb3",
+        "wp_spawn_1_s01b_lb3"
       ],
       [
-        "wp_center_s01b_lb3",
-        "wp_spawn_1_s01b_lb3"
+        "wp_corridor_mid_s01b_lb3",
+        "wp_corridor_mid15_s01b_lb3"
+      ],
+      [
+        "wp_corridor_mid15_s01b_lb3",
+        "wp_corridor_mid2_s01b_lb3"
+      ],
+      [
+        "wp_corridor_mid2_s01b_lb3",
+        "wp_spawn_0_s01b_lb3"
       ]
     ]
   },
