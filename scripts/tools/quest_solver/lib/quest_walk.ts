@@ -89,10 +89,43 @@ const EXIT_OUTSET = 7.0;
 
 export interface StagePoint {
 	id: string;
-	kind: "spawn" | "exit" | "key_drop" | "switch" | "telepipe";
+	kind: "spawn" | "exit" | "key_drop" | "switch" | "telepipe" | "via";
 	x: number;
 	z: number;
 	label: string;
+}
+
+/**
+ * Infer a stage's room shape from its ID. Stage IDs use a convention like
+ * `s05a_tb3`, where the 4th character is the area variant (a/b) and the 5th-6th
+ * characters encode the room type:
+ *   • sa, ga         = dead-end (1 portal)
+ *   • na, nb, nc     = narrow (corridor / 2 portals straight)
+ *   • ia, ib, ic     = "I" shape (straight corridor)
+ *   • la, lb, lc     = L-bend
+ *   • ta, tb, tc, td = T-junction (3 portals)
+ *   • xa, xb         = X-junction (4 portals)
+ * The trailing digit is a variant number (1, 2, 3) — different stages of
+ * the same topology with different decoration. The shape hint drives the
+ * solver: T/X-stages get a forced "via" waypoint at the portal centroid so
+ * paths route through the junction instead of cutting diagonals across
+ * floor mesh joins.
+ */
+export type StageShape = "dead_end" | "straight" | "l_bend" | "t_junction" | "x_junction" | "unknown";
+
+export function inferStageShape(stageId: string): StageShape {
+	// Strip the prefix "sNNX_" (e.g., "s05a_") to get the room type.
+	const m = stageId.match(/^s\d+[a-z]_([a-z]+)\d+$/);
+	if (!m) return "unknown";
+	const type = m[1];
+	switch (type[0]) {
+		case "s": case "g": return "dead_end";
+		case "n": case "i": return "straight";
+		case "l": return "l_bend";
+		case "t": return "t_junction";
+		case "x": return "x_junction";
+		default: return "unknown";
+	}
 }
 
 /**
@@ -111,6 +144,8 @@ export function stagePoints(
 	// (trigger that fires the scene change is at +3m outward, spawn pos at
 	// -3m inward; the *exit* waypoint where the autopilot walks to leave is
 	// at +4m outward).
+	const gateXs: number[] = [];
+	const gateZs: number[] = [];
 	for (let i = 0; i < stageConfig.portals.length; i++) {
 		const p = stageConfig.portals[i];
 		const dir = p.direction;
@@ -126,6 +161,22 @@ export function stagePoints(
 		const exitZ = p.position[2] + o[1] * EXIT_OUTSET;
 		out.push({ id: `wp_spawn_${i}_${stageId}`, kind: "spawn", x: spawnX, z: spawnZ, label: `spawn ${dir}` });
 		out.push({ id: `wp_load_${i}_${stageId}`, kind: "exit", x: exitX, z: exitZ, label: `load ${dir}` });
+		gateXs.push(p.position[0]);
+		gateZs.push(p.position[2]);
+	}
+
+	// Topology hint: T- and X-junctions have a junction center where the
+	// corridors meet; routing every spawn→spawn path THROUGH this point
+	// avoids the diagonal "cut across the room floor" that often lands on
+	// floor-mesh joins or gaps. The portal-position centroid is a strong
+	// proxy for the geometric junction in these layouts. (For L-bends the
+	// centroid is the wrong point — it's on the diagonal between the two
+	// portals, not at the bend corner — so we skip them here.)
+	const shape = inferStageShape(stageId);
+	if ((shape === "t_junction" || shape === "x_junction") && gateXs.length >= 3) {
+		const cx = gateXs.reduce((a, b) => a + b, 0) / gateXs.length;
+		const cz = gateZs.reduce((a, b) => a + b, 0) / gateZs.length;
+		out.push({ id: `wp_via_${stageId}`, kind: "via", x: cx, z: cz, label: `junction center (${shape})` });
 	}
 
 	// Objective points across all cells that use this stage.

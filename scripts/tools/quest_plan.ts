@@ -149,9 +149,19 @@ function planCell(cell: QuestCell): CellPlan {
     keyGate: cell.is_key_gate
       ? { direction: cell.key_gate_direction ?? '', requiredKeys: cell.required_keys ?? 1 }
       : null,
+    // keyDrop covers two raw-format shapes:
+    //   • `cell.key_drop = "<target>"` (search_and_rescue): a key spawns
+    //     in this cell, target is the gate-locked cell. position is
+    //     `key_drop_position`.
+    //   • `cell.has_key = true` + `cell.key_for_cell = "<target>"`
+    //     (the_paru_pact and later): same idea, different field names.
+    //     position is `key_position`.
+    // Both flatten to `{ targetCell, position }`.
     keyDrop: cell.key_drop
       ? { targetCell: cell.key_drop, position: cell.key_drop_position ? asVec3(cell.key_drop_position) : null }
-      : null,
+      : cell.has_key
+        ? { targetCell: cell.key_for_cell ?? '', position: cell.key_position ? asVec3(cell.key_position) : null }
+        : null,
     switches,
     fences,
     npcs,

@@ -36,6 +36,154 @@ export function loadGlb3D(path: string): Tri3D[] {
 	return out;
 }
 
+/**
+ * Weld triangle vertices that lie within `tolerance` meters of each other.
+ *
+ * Why: some stages (e.g. `s05a_tb3`'s south-tube ↔ arena junction) have small
+ * gaps between adjacent triangles — sub-meter holes the player capsule can
+ * snag on. recast-navigation-js inherits those gaps as navmesh holes. Welding
+ * collapses near-coincident vertices to a single canonical position, sealing
+ * the cracks before they reach recast.
+ *
+ * Algorithm:
+ *   1. Spatial-hash every vertex into a `tolerance`-sized 3D grid.
+ *   2. Union-find: for each vertex, scan its own cell + the 26 neighbour cells
+ *      and merge into the same cluster if within `tolerance`. The 27-cell
+ *      probe avoids the cell-boundary aliasing you'd get from a naive
+ *      cell-bucket dedupe (two vertices 1cm apart but straddling a cell wall
+ *      would otherwise miss each other).
+ *   3. Average each cluster's vertices to get the canonical snapped position.
+ *   4. Rewrite the triangle list with snapped coordinates; triangle count is
+ *      preserved (we move vertices, never drop tris).
+ *
+ * O(N · k) where k is the average vertex density per 3³-cell neighbourhood
+ * (≈ small constant for a properly-chosen tolerance).
+ */
+export function weldTriangles(tris: Tri3D[], tolerance: number = 0.3): Tri3D[] {
+	if (tris.length === 0) return tris;
+
+	// Flatten every triangle's 3 vertices into a single array so we can refer
+	// to them by global index. verts[i] = [x, y, z] for vertex i.
+	const N = tris.length * 3;
+	const verts: Float64Array = new Float64Array(N * 3);
+	for (let t = 0; t < tris.length; t++) {
+		const tri = tris[t];
+		const base = t * 9;
+		verts[base + 0] = tri.x1; verts[base + 1] = tri.y1; verts[base + 2] = tri.z1;
+		verts[base + 3] = tri.x2; verts[base + 4] = tri.y2; verts[base + 5] = tri.z2;
+		verts[base + 6] = tri.x3; verts[base + 7] = tri.y3; verts[base + 8] = tri.z3;
+	}
+
+	// Spatial hash: cell-key → list of vertex indices in that cell.
+	const cellKey = (ix: number, iy: number, iz: number) => `${ix},${iy},${iz}`;
+	const cellOf = (x: number, y: number, z: number): [number, number, number] => [
+		Math.floor(x / tolerance),
+		Math.floor(y / tolerance),
+		Math.floor(z / tolerance),
+	];
+	const cells = new Map<string, number[]>();
+	for (let i = 0; i < N; i++) {
+		const [ix, iy, iz] = cellOf(verts[i * 3], verts[i * 3 + 1], verts[i * 3 + 2]);
+		const k = cellKey(ix, iy, iz);
+		let bucket = cells.get(k);
+		if (!bucket) { bucket = []; cells.set(k, bucket); }
+		bucket.push(i);
+	}
+
+	// Union-find over vertex indices.
+	const parent = new Int32Array(N);
+	for (let i = 0; i < N; i++) parent[i] = i;
+	const find = (i: number): number => {
+		let r = i;
+		while (parent[r] !== r) r = parent[r];
+		// Path-compress.
+		let cur = i;
+		while (parent[cur] !== r) { const next = parent[cur]; parent[cur] = r; cur = next; }
+		return r;
+	};
+	const union = (a: number, b: number) => {
+		const ra = find(a);
+		const rb = find(b);
+		if (ra !== rb) parent[ra] = rb;
+	};
+
+	const tolSq = tolerance * tolerance;
+
+	// For each vertex, probe its 3×3×3 neighbourhood and union with any vertex
+	// within tolerance. We only need to scan each cell-pair once: union is
+	// symmetric, so checking every vertex's own neighbourhood covers all pairs.
+	for (let i = 0; i < N; i++) {
+		const xi = verts[i * 3];
+		const yi = verts[i * 3 + 1];
+		const zi = verts[i * 3 + 2];
+		const [cx, cy, cz] = cellOf(xi, yi, zi);
+		for (let dx = -1; dx <= 1; dx++) {
+			for (let dy = -1; dy <= 1; dy++) {
+				for (let dz = -1; dz <= 1; dz++) {
+					const bucket = cells.get(cellKey(cx + dx, cy + dy, cz + dz));
+					if (!bucket) continue;
+					for (const j of bucket) {
+						if (j <= i) continue; // each unordered pair handled once
+						const dxv = verts[j * 3] - xi;
+						const dyv = verts[j * 3 + 1] - yi;
+						const dzv = verts[j * 3 + 2] - zi;
+						if (dxv * dxv + dyv * dyv + dzv * dzv <= tolSq) {
+							union(i, j);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Average each cluster's vertices to get the canonical position.
+	const sumX = new Map<number, number>();
+	const sumY = new Map<number, number>();
+	const sumZ = new Map<number, number>();
+	const count = new Map<number, number>();
+	for (let i = 0; i < N; i++) {
+		const r = find(i);
+		sumX.set(r, (sumX.get(r) ?? 0) + verts[i * 3]);
+		sumY.set(r, (sumY.get(r) ?? 0) + verts[i * 3 + 1]);
+		sumZ.set(r, (sumZ.get(r) ?? 0) + verts[i * 3 + 2]);
+		count.set(r, (count.get(r) ?? 0) + 1);
+	}
+	const canonX = new Map<number, number>();
+	const canonY = new Map<number, number>();
+	const canonZ = new Map<number, number>();
+	for (const [r, c] of count) {
+		canonX.set(r, (sumX.get(r) ?? 0) / c);
+		canonY.set(r, (sumY.get(r) ?? 0) / c);
+		canonZ.set(r, (sumZ.get(r) ?? 0) / c);
+	}
+
+	// Rewrite triangles using snapped vertices.
+	const out: Tri3D[] = new Array(tris.length);
+	for (let t = 0; t < tris.length; t++) {
+		const v0 = find(t * 3 + 0);
+		const v1 = find(t * 3 + 1);
+		const v2 = find(t * 3 + 2);
+		out[t] = {
+			x1: canonX.get(v0)!, y1: canonY.get(v0)!, z1: canonZ.get(v0)!,
+			x2: canonX.get(v1)!, y2: canonY.get(v1)!, z2: canonZ.get(v1)!,
+			x3: canonX.get(v2)!, y3: canonY.get(v2)!, z3: canonZ.get(v2)!,
+		};
+	}
+	return out;
+}
+
+/** Count how many distinct canonical vertices a triangle list contains. Used
+ *  by tests/diagnostics to measure the effect of `weldTriangles`. */
+export function countUniqueVertices(tris: Tri3D[]): number {
+	const seen = new Set<string>();
+	for (const t of tris) {
+		seen.add(`${t.x1},${t.y1},${t.z1}`);
+		seen.add(`${t.x2},${t.y2},${t.z2}`);
+		seen.add(`${t.x3},${t.y3},${t.z3}`);
+	}
+	return seen.size;
+}
+
 /** Load a stage's 3D triangles from both -floor.glb (if present, applies the
  *  per-tri filter from floorCollision) and _m.glb (visual mesh; covers
  *  surfaces the curated floor.glb doesn't). Recast classifies floors vs

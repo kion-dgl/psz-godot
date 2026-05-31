@@ -70,7 +70,14 @@
           },
           "warpEdge": null,
           "keyGate": null,
-          "keyDrop": null,
+          "keyDrop": {
+            "targetCell": "3,4",
+            "position": [
+              0.9,
+              1,
+              1.7
+            ]
+          },
           "switches": [],
           "fences": [],
           "npcs": [],

@@ -127,6 +127,7 @@ export function solveStageGraphRecast(
 	const spawns = points.filter((p) => p.kind === "spawn");
 	const exits = points.filter((p) => p.kind === "exit");
 	const objectives = points.filter((p) => p.kind === "key_drop" || p.kind === "switch" || p.kind === "telepipe");
+	const vias = points.filter((p) => p.kind === "via");
 
 	let attempted = 0;
 	let failed = 0;
@@ -157,11 +158,32 @@ export function solveStageGraphRecast(
 			}
 		}
 	}
+	// spawn → spawn: route via the junction center if one exists. Otherwise
+	// solve direct (covers L-bend, straight, dead-end, and unknown shapes).
 	for (let i = 0; i < spawns.length; i++) {
-		for (let j = i + 1; j < spawns.length; j++) trySolve(spawns[i], spawns[j]);
+		for (let j = i + 1; j < spawns.length; j++) {
+			if (vias.length > 0) {
+				for (const v of vias) {
+					trySolve(spawns[i], v);
+					trySolve(v, spawns[j]);
+				}
+			} else {
+				trySolve(spawns[i], spawns[j]);
+			}
+		}
 	}
+	// spawn → objective also routes via the junction if one is present.
 	for (const s of spawns) {
-		for (const o of objectives) trySolve(s, o);
+		for (const o of objectives) {
+			if (vias.length > 0) {
+				for (const v of vias) {
+					trySolve(s, v);
+					trySolve(v, o);
+				}
+			} else {
+				trySolve(s, o);
+			}
+		}
 	}
 
 	return {
