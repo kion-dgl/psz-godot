@@ -2045,14 +2045,14 @@
         "label": "load north"
       },
       {
-        "id": "wp_center_s01b_ib2",
+        "id": "wp_bridge_mid_s01b_ib2",
         "position": [
+          9.35,
           0,
-          0,
-          0
+          -2.03
         ],
         "kind": "point",
-        "label": "center"
+        "label": "bridge mid"
       }
     ],
     "waypointEdges": [
@@ -2065,11 +2065,11 @@
         "wp_spawn_1_s01b_ib2"
       ],
       [
-        "wp_center_s01b_ib2",
+        "wp_bridge_mid_s01b_ib2",
         "wp_spawn_0_s01b_ib2"
       ],
       [
-        "wp_center_s01b_ib2",
+        "wp_bridge_mid_s01b_ib2",
         "wp_spawn_1_s01b_ib2"
       ]
     ]
