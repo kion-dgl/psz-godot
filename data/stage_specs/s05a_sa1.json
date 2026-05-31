@@ -1,0 +1,21 @@
+{
+  "stageId": "s05a_sa1",
+  "shape": "Quest-start dead-end (single south gate + default spawn)",
+  "description": "Tiny dead-end room used as the quest-start cell. Has one normal portal (spawn_south) plus a 'default' spawn point a few meters north of the gate — that's where the player materializes on first entry (no incoming portal to spawn from). The autopilot ultimately leaves through load_south. The interior is essentially a single straight stub between the two spawn points.",
+  "portals": {
+    "south": "spawn_south at (0.05, 11.64) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",   "position": [0.05, 0,  11.64], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "quest_start",  "position": [0.39, 0,  -1.99], "description": "default spawn — player materializes here on quest start (matches wp_spawn_default)" }
+  ],
+  "anchorEdges": [
+    ["quest_start", "south_gate"]
+  ],
+  "traversalNotes": [
+    "Quest-start cell: when entered via the 'default' spawn (first cell of a new quest), the autopilot's start position is quest_start and it walks to south_gate to exit. When re-entered later through the south portal, it just exits the same way.",
+    "DISPATCH RULE: any in-cell objective routes through quest_start (the room is short enough that quest_start acts as the only useful interior dispatch hub).",
+    "Same primitive as na1 (single-gate dead-end) but with an extra 'default' spawn marker. Solver should treat as a dead-end with a quest-start tag."
+  ]
+}

@@ -15067,9 +15067,9 @@
     "version": 1,
     "waypoints": [
       {
-        "id": "wp_spawn_0_s05a_sa1",
+        "id": "wp_spawn_0_1780262526173",
         "position": [
-          0.05416666601469933,
+          0.05416666601469896,
           0,
           11.637722917085085
         ],
@@ -15077,20 +15077,34 @@
         "label": "spawn south"
       },
       {
-        "id": "wp_load_0_s05a_sa1",
+        "id": "wp_load_0_1780262526173",
         "position": [
-          0.05416666601469933,
+          0.05416666601469847,
           0,
           15.637722917085085
         ],
         "kind": "exit",
         "label": "load south"
+      },
+      {
+        "id": "wp_spawn_default_1780262526173",
+        "position": [
+          0.38627397075157255,
+          0,
+          -1.9853459370002113
+        ],
+        "kind": "spawn",
+        "label": "spawn (default)"
       }
     ],
     "waypointEdges": [
       [
-        "wp_load_0_s05a_sa1",
-        "wp_spawn_0_s05a_sa1"
+        "wp_load_0_1780262526173",
+        "wp_spawn_0_1780262526173"
+      ],
+      [
+        "wp_spawn_0_1780262526173",
+        "wp_spawn_default_1780262526173"
       ]
     ]
   },
