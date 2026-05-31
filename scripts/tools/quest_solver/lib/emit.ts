@@ -33,7 +33,11 @@ export interface EmittedGraph {
 	};
 }
 
-const MERGE_DIST = 1.5;
+// Larger than the autopilot's 1.5m arrive radius so waypoints from different
+// A* runs (e.g. spawn→spawn and spawn→objective) snap into shared nodes.
+// Without sharing, BFS detours through far spawn waypoints to bridge between
+// two nearby-but-not-merged interior nodes.
+const MERGE_DIST = 2.5;
 
 export function solveStageGraph(
 	stageId: string,
