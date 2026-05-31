@@ -2807,100 +2807,69 @@
     "version": 1,
     "waypoints": [
       {
-        "id": "wp_spawn_0_s01b_nb2",
+        "id": "wp_spawn_0_1780185474560",
         "position": [
-          -11.034,
+          -11.03372613663598,
           0,
-          23.289
+          23.288588211202875
         ],
         "kind": "spawn",
         "label": "spawn south"
       },
       {
-        "id": "wp_load_0_s01b_nb2",
+        "id": "wp_load_0_1780185474560",
         "position": [
-          -11.034,
+          -11.03372613663598,
           0,
-          27.289
+          27.288588211202875
         ],
         "kind": "exit",
         "label": "load south"
       },
       {
-        "id": "wp_reach_a_s01b_nb2",
+        "id": "wp_1780185483425_lnjc92",
         "position": [
-          -2.3,
+          -10.31341154410033,
           0,
-          7.2
+          -7.124066286475632
         ],
-        "kind": "point",
-        "label": "reached"
+        "kind": "point"
       },
       {
-        "id": "wp_corner_b_s01b_nb2",
+        "id": "wp_1780185485642_s2qtm9",
         "position": [
-          5,
+          2.611552704006573,
           0,
-          -5
+          -14.457891880090578
         ],
-        "kind": "point",
-        "label": "mid-east"
+        "kind": "point"
       },
       {
-        "id": "wp_corner_c_s01b_nb2",
+        "id": "wp_1780185498975_ovu5sa",
         "position": [
-          10,
+          13.762266410278974,
           0,
-          -12
+          -17.202887108506964
         ],
-        "kind": "point",
-        "label": "near-key"
-      },
-      {
-        "id": "wp_key_1_3_s01b_nb2",
-        "position": [
-          13.3,
-          0,
-          -16
-        ],
-        "kind": "point",
-        "label": "key 1,3"
-      },
-      {
-        "id": "wp_key_2_1_s01b_nb2",
-        "position": [
-          13.4,
-          0,
-          -15.5
-        ],
-        "kind": "point",
-        "label": "key 2,1"
+        "kind": "point"
       }
     ],
     "waypointEdges": [
       [
-        "wp_load_0_s01b_nb2",
-        "wp_spawn_0_s01b_nb2"
+        "wp_load_0_1780185474560",
+        "wp_spawn_0_1780185474560"
       ],
       [
-        "wp_reach_a_s01b_nb2",
-        "wp_spawn_0_s01b_nb2"
+        "wp_1780185483425_lnjc92",
+        "wp_spawn_0_1780185474560"
       ],
       [
-        "wp_reach_a_s01b_nb2",
-        "wp_corner_b_s01b_nb2"
+        "wp_1780185483425_lnjc92",
+        "wp_1780185485642_s2qtm9"
       ],
       [
-        "wp_corner_b_s01b_nb2",
-        "wp_corner_c_s01b_nb2"
-      ],
-      [
-        "wp_corner_c_s01b_nb2",
-        "wp_key_1_3_s01b_nb2"
-      ],
-      [
-        "wp_corner_c_s01b_nb2",
-        "wp_key_2_1_s01b_nb2"
+        "wp_1780185485642_s2qtm9",
+        "wp_1780185498975_ovu5sa"
       ]
     ]
   },
