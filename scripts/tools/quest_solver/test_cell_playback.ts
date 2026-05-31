@@ -182,8 +182,18 @@ function main() {
 				entryDirGrid = connDirs[0];
 				exitDirGrid = connDirs[0];
 			}
+			// Transition cell — single-room section bridge with no connections,
+			// just a warpEdge for the exit side. The player walks in from the
+			// opposite portal and out through the warpEdge.
+			if (!entryDirGrid && cell.warpEdge) {
+				const OPPOSITE: Record<Direction, Direction> = {
+					north: "south", south: "north", east: "west", west: "east",
+				};
+				exitDirGrid = cell.warpEdge as Direction;
+				entryDirGrid = OPPOSITE[exitDirGrid];
+			}
 			if (!entryDirGrid || !exitDirGrid) {
-				console.log(`✗ ${cell.pos} (${cell.stageId}): no connections`);
+				console.log(`✗ ${cell.pos} (${cell.stageId}): no connections / warpEdge`);
 				failedCells.push(cell.pos);
 				continue;
 			}
