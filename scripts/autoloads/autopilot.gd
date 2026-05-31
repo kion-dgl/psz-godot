@@ -1481,7 +1481,12 @@ func _find_walk_path(field: Node, portal_data: Dictionary, target: Vector3) -> A
 		if not authored.is_empty():
 			return authored
 	# (2) Direct line of sight as a fallback when nothing is authored.
-	if _raycast_walkable(start, target):
+	# In floor-only mode the LOS check's 1.5m floor-sample stride can step
+	# right over sub-meter holes (e.g. paru's T-junction voids), and the
+	# teleport walk then fails on the first cast inside the hole. Force the
+	# BFS path through known waypoints so the via-points keep the route off
+	# the bad geometry.
+	if not _floor_only and _raycast_walkable(start, target):
 		return [target]
 	# Build candidate set, drop any that aren't reachable from start.
 	var candidates: Array = _collect_cell_waypoints(field, portal_data)

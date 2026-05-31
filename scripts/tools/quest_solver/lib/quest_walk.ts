@@ -177,6 +177,14 @@ export function stagePoints(
 		const cx = gateXs.reduce((a, b) => a + b, 0) / gateXs.length;
 		const cz = gateZs.reduce((a, b) => a + b, 0) / gateZs.length;
 		out.push({ id: `wp_via_${stageId}`, kind: "via", x: cx, z: cz, label: `junction center (${shape})` });
+	} else if (shape === "l_bend" && gateXs.length === 2) {
+		// L-bend with two portals: the corner is one of (x1, z2) or (x2, z1)
+		// in stage-local coords. We emit BOTH candidates; the emit step
+		// validates each against the navmesh (isPointOnNavMesh) and the path
+		// finder picks the one that yields a valid route.
+		const ax = gateXs[0], az = gateZs[0], bx = gateXs[1], bz = gateZs[1];
+		out.push({ id: `wp_via_a_${stageId}`, kind: "via", x: ax, z: bz, label: `L-corner (x1,z2)` });
+		out.push({ id: `wp_via_b_${stageId}`, kind: "via", x: bx, z: az, label: `L-corner (x2,z1)` });
 	}
 
 	// Objective points across all cells that use this stage.
