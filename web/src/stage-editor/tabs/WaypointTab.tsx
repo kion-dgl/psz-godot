@@ -47,8 +47,19 @@ interface WaypointTabProps {
   setManhattanClearance: (v: number) => void;
   manhattanFuseVisual: boolean;
   setManhattanFuseVisual: (v: boolean) => void;
+  // Floor marker — magenta post the user pins by typing XZ. Also driven
+  // by the `?marker=x,z` URL param.
+  markerX: string;
+  setMarkerX: (v: string) => void;
+  markerZ: string;
+  setMarkerZ: (v: string) => void;
   manhattanInfo?: { loading: boolean; error: string | null; trisFiltered: number; gridSize: string | null; pathCorners: number | null; usedDiagonal: boolean };
 }
+
+const inputStyle: React.CSSProperties = {
+  flex: 1, background: '#1a1a2e', color: '#ddd', border: '1px solid #333',
+  borderRadius: 3, padding: '2px 4px', fontSize: 11, minWidth: 40,
+};
 
 const btn = (active: boolean): React.CSSProperties => ({
   padding: '8px 10px',
@@ -68,6 +79,7 @@ export default function WaypointTab({
   manhattanResolution, setManhattanResolution,
   manhattanClearance, setManhattanClearance,
   manhattanFuseVisual, setManhattanFuseVisual,
+  markerX, setMarkerX, markerZ, setMarkerZ,
   manhattanInfo,
 }: WaypointTabProps) {
   const waypoints = config.waypoints ?? [];
@@ -189,6 +201,27 @@ export default function WaypointTab({
             )}
           </div>
         )}
+      </div>
+
+      {/* Floor coord marker */}
+      <div style={{ padding: '8px 10px', background: '#1c2538', borderRadius: 4 }}>
+        <strong style={{ fontSize: 12, color: '#ec4899', display: 'block', marginBottom: 6 }}>Floor marker (magenta post)</strong>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 11, color: '#bbb' }}>
+          <span style={{ width: 14 }}>X</span>
+          <input
+            type="number" step="0.5" value={markerX} onChange={(e) => setMarkerX(e.target.value)}
+            placeholder="x" style={inputStyle}
+          />
+          <span style={{ width: 14 }}>Z</span>
+          <input
+            type="number" step="0.5" value={markerZ} onChange={(e) => setMarkerZ(e.target.value)}
+            placeholder="z" style={inputStyle}
+          />
+          <button onClick={() => { setMarkerX(''); setMarkerZ(''); }} style={{ ...btn(false), padding: '2px 8px', width: 'auto', fontSize: 11 }}>clear</button>
+        </div>
+        <div style={{ marginTop: 4, fontSize: 10, color: '#888' }}>
+          URL: <code>?marker=x,z</code> (or <code>x1,z1;x2,z2</code> for several)
+        </div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#888' }}>

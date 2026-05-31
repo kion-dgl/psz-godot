@@ -19,6 +19,7 @@ import ExportTab from './tabs/ExportTab';
 import WaypointTab from './tabs/WaypointTab';
 import WaypointOverlay from './WaypointOverlay';
 import ManhattanGridOverlay from './ManhattanGridOverlay';
+import CoordMarkerOverlay from './CoordMarkerOverlay';
 import { useManhattanGrid } from './manhattan/useManhattanGrid';
 import QuestObjectOverlay from './QuestObjectOverlay';
 import { useQuestObjects } from './useQuestObjects';
@@ -176,6 +177,10 @@ export default function UnifiedStageEditor() {
   const urlStage = searchParams.get('stage') ?? undefined;
   const urlQuest = searchParams.get('quest') ?? undefined;
   const urlCell = searchParams.get('cell') ?? undefined;
+  // `?marker=-18.6,-10` or `?marker=x,z;x,z;…` pins one or more magenta
+  // posts on the floor. Useful for "go look at where the autopilot got
+  // stuck" links. Multiple markers semicolon-separated.
+  const urlMarker = searchParams.get('marker') ?? undefined;
 
   const [activeTab, setActiveTab] = useState<EditorTab>(urlQuest ? 'waypoints' : 'floor');
   const [selectedMapId, setSelectedMapId] = useState(urlStage || 's01a_ga1');
@@ -184,14 +189,17 @@ export default function UnifiedStageEditor() {
   const questObjects = useQuestObjects(selectedQuest, selectedMapId);
 
   // Keep URL in sync with state. replace:true so we don't pollute history
-  // with one entry per character typed into the cell input.
+  // with one entry per character typed into the cell input. Preserve the
+  // `marker` param (it's set externally for "go look here" links and the
+  // editor itself doesn't write to it).
   useEffect(() => {
     const next = new URLSearchParams();
     next.set('stage', selectedMapId);
     if (selectedQuest) next.set('quest', selectedQuest);
     if (highlightCell) next.set('cell', highlightCell);
+    if (urlMarker) next.set('marker', urlMarker);
     setSearchParams(next, { replace: true });
-  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams]);
+  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams, urlMarker]);
   const [stageScene, setStageScene] = useState<THREE.Group | null>(null);
   const [showStage, setShowStage] = useState(true);
 
@@ -237,6 +245,24 @@ export default function UnifiedStageEditor() {
   const [manhattanFuseVisual, setManhattanFuseVisual] = useState(false);
   const [manhattanPathStart, setManhattanPathStart] = useState<{ x: number; z: number } | null>(null);
   const [manhattanPathEnd, setManhattanPathEnd] = useState<{ x: number; z: number } | null>(null);
+
+  // Coordinate markers — independent of the Manhattan overlay. Magenta
+  // posts on the floor at specified XZ. Initialized from `?marker=x,z`
+  // (or `?marker=x1,z1;x2,z2;…` for multiple) so the user can share /
+  // be sent links pointing at specific spots.
+  const initialUrlMarkers: { x: number; z: number }[] = urlMarker
+    ? urlMarker
+        .split(';')
+        .map((pair) => pair.split(',').map((s) => parseFloat(s.trim())))
+        .filter((p) => p.length === 2 && !isNaN(p[0]) && !isNaN(p[1]))
+        .map(([x, z]) => ({ x, z }))
+    : [];
+  const [markerX, setMarkerX] = useState<string>(initialUrlMarkers[0]?.x.toString() ?? '');
+  const [markerZ, setMarkerZ] = useState<string>(initialUrlMarkers[0]?.z.toString() ?? '');
+  const [urlMarkers] = useState(initialUrlMarkers); // all url-supplied markers (read-once)
+  const markerXNum = parseFloat(markerX);
+  const markerZNum = parseFloat(markerZ);
+  const markerActive = !isNaN(markerXNum) && !isNaN(markerZNum);
 
   // Floor extraction: show all upward-facing surfaces (stairs, ramps) so they
   // can be clicked into the floor collision mesh. Default off to keep the
@@ -656,6 +682,10 @@ export default function UnifiedStageEditor() {
             setManhattanClearance={setManhattanClearance}
             manhattanFuseVisual={manhattanFuseVisual}
             setManhattanFuseVisual={setManhattanFuseVisual}
+            markerX={markerX}
+            setMarkerX={setMarkerX}
+            markerZ={markerZ}
+            setMarkerZ={setMarkerZ}
             manhattanInfo={{
               loading: manhattan.loading,
               error: manhattan.error,
@@ -798,6 +828,15 @@ export default function UnifiedStageEditor() {
             {showManhattanGrid && manhattan.grid && (
               <ManhattanGridOverlay grid={manhattan.grid} path={manhattan.path} />
             )}
+            {markerActive && <CoordMarkerOverlay x={markerXNum} z={markerZNum} />}
+            {/* URL-supplied markers stay rendered alongside the editable one
+                so the user can see the original "go look here" pin and the
+                spot they're currently typing at the same time. */}
+            {urlMarkers
+              .filter((m, i) => !(i === 0 && markerActive && m.x === markerXNum && m.z === markerZNum))
+              .map((m, i) => (
+                <CoordMarkerOverlay key={`url-${i}`} x={m.x} z={m.z} />
+              ))}
           </>
         );
       case 'svg':
