@@ -1,0 +1,39 @@
+{
+  "stageId": "s05a_lc2",
+  "shape": "Sideways E (山)",
+  "description": "Shaped like the kanji 山 — a horizontal connecting bar at Z≈13 spans X ∈ [-19, 22], with three vertical arms running south (decreasing Z): the LEFT arm at X≈-18 leads to the switch at (-19.2, -18.6); the MIDDLE arm at X≈-2 leads to the south portal at (-1.89, -22.88); the RIGHT arm at X≈14 leads to a dead-end interior. The hollows between arms are visual mesh — the player cannot walk through them. To move between arms the autopilot MUST traverse the top connecting bar.",
+  "portals": {
+    "east": "spawn_east at (22.86, 13.0) — at the east end of the horizontal top bar",
+    "south_middle": "load_north (south portal) at (-1.89, -22.88) — at the south end of the middle vertical arm; fenced until switch_c is hit"
+  },
+  "objectives": {
+    "switch_c": {
+      "position": [-19.2, 0, -18.6],
+      "description": "South end of the LEFT vertical arm. Opens fence_c when hit."
+    },
+    "fence_c": {
+      "position": [-2.2, 0, 8],
+      "description": "Blocks the middle arm just north of where the player would walk to reach the south portal."
+    }
+  },
+  "anchors": [
+    { "id": "top_bar_west",  "position": [-18.06, 0, 12.99],  "description": "west end of the horizontal top bar; joins the LEFT vertical arm (matches wp_1780239557900_qkivh7)" },
+    { "id": "top_bar_middle","position": [-1.96,  0, 13.94],  "description": "middle of the top bar; joins the MIDDLE vertical arm (matches wp_1780239568133_gncmrp)" },
+    { "id": "top_bar_east",  "position": [13.37,  0, 13.34],  "description": "east end of the top bar before it meets spawn_east; joins the RIGHT vertical arm (matches wp_1780256565400_6t3jh4)" },
+    { "id": "left_arm_south","position": [-19.22, 0, -18.26], "description": "south end of LEFT arm, at switch_c (matches wp_1780239564449_wwz2vc)" },
+    { "id": "right_arm_south","position":[13.76,  0, -4.58],  "description": "south end of RIGHT arm — dead-end interior (matches wp_1780256562749_4vm6jv)" }
+  ],
+  "anchorEdges": [
+    ["top_bar_west", "top_bar_middle"],
+    ["top_bar_middle", "top_bar_east"],
+    ["top_bar_west", "left_arm_south"],
+    ["top_bar_east", "right_arm_south"]
+  ],
+  "traversalNotes": [
+    "Stages are never physically rotated. cell.rotation is a gate-label swap only — all positions here are stage-local mesh-space XZ.",
+    "山 shape: three vertical arms (LEFT, MIDDLE, RIGHT) running south from a horizontal connecting bar at Z≈13. To move between arms, traverse the top bar — the inter-arm hollows are visual mesh that's not walkable.",
+    "Switch route: spawn_east → top_bar_east → top_bar_middle → top_bar_west → left_arm_south (switch_c).",
+    "Post-switch route to south portal: left_arm_south → top_bar_west → top_bar_middle → middle_arm_south (= spawn_north area, through opened fence_c → load_north).",
+    "Fence_c at (-2.2, 8) blocks the middle arm — only relevant after the switch is hit, when the autopilot needs to walk south down the middle arm to load_north."
+  ]
+}

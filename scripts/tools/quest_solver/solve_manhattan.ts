@@ -12,7 +12,9 @@ import { loadStage3D, loadGlb3D, type Tri3D } from "./lib/floor.ts";
 import { buildNavGrid } from "./lib/grid.ts";
 import { applyToStageConfigManhattan, solveStageGraphManhattan } from "./lib/emit_manhattan.ts";
 import { cellsForStage, loadQuestPlan, stageFences, stagePoints, stagesUsed } from "./lib/quest_walk.ts";
-import { loadStageWalls } from "./lib/walls.ts";
+// Walls intentionally NOT used: the solver focuses on floor + fences.
+// When the autopilot gets caught on obstacle collisions, we disable
+// those colliders rather than route around them.
 import type { Tri2D } from "./lib/floor.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -103,11 +105,6 @@ function main() {
 
 		const floorOnly2d = floor3d.map(tri3dToTri2d);
 		const fused2d = loadStage3D(stageId, subfolder, ASSETS_STAGES, cfg.floorCollision ?? {}).map(tri3dToTri2d);
-		// Walls extracted from _m.glb (steep surfaces). Stamped as obstacles
-		// in the navgrid so paths can't cut through them, even when the
-		// fused floor mesh has horizontal sub-triangles that pass the
-		// floor-coverage check.
-		const stageWalls = loadStageWalls(stageId, subfolder, ASSETS_STAGES);
 
 		// Retry ladder: floor.glb only → fused with _m.glb. Manhattan paths
 		// need continuous floor; if -floor.glb is incomplete the fused mesh
@@ -127,14 +124,6 @@ function main() {
 			const preSwitchGrid = fences.length > 0
 				? buildNavGrid(a.tris, { resolution, clearance, fences })
 				: grid;
-			// Walls from _m.glb are extracted but NOT passed to the grid
-			// yet: at current clearance/stamp tuning they over-erode
-			// corridors and many cells become unsolvable. The autopilot
-			// can still get stuck in E/T-shape hollows where m-mesh
-			// decoration tops register as floor — that's the next tuning
-			// problem (probably needs wall filtering by triangle area or
-			// height-range, not just normal angle).
-			void stageWalls;
 			// Floor-coverage validation: sample every emitted edge against
 			// the SAME triangle set used for routing. Catches grid-walkable
 			// edges that still cross holes after clearance erosion (the
