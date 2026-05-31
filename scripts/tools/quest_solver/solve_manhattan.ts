@@ -34,21 +34,23 @@ function stageSubfolder(stageId: string, areaId: string): string {
 function parseArgs() {
 	const args = process.argv.slice(2);
 	if (args.length === 0 || args[0].startsWith("--")) {
-		console.error("usage: bun solve_manhattan.ts <quest_id> [--apply] [--stage <id>] [--resolution <m>]");
+		console.error("usage: bun solve_manhattan.ts <quest_id> [--apply] [--stage <id>] [--resolution <m>] [--clearance <m>]");
 		process.exit(1);
 	}
 	const questId = args[0];
 	let apply = false;
 	let stageFilter: string | null = null;
 	let resolution = 0.5;
+	let clearance = 0;
 	for (let i = 1; i < args.length; i++) {
 		const a = args[i];
 		if (a === "--apply") apply = true;
 		else if (a === "--stage") stageFilter = args[++i];
 		else if (a === "--resolution") resolution = parseFloat(args[++i]);
+		else if (a === "--clearance") clearance = parseFloat(args[++i]);
 		else { console.error(`unknown arg: ${a}`); process.exit(1); }
 	}
-	return { questId, apply, stageFilter, resolution };
+	return { questId, apply, stageFilter, resolution, clearance };
 }
 
 function tri3dToTri2d(t: Tri3D): Tri2D {
@@ -56,7 +58,7 @@ function tri3dToTri2d(t: Tri3D): Tri2D {
 }
 
 function main() {
-	const { questId, apply, stageFilter, resolution } = parseArgs();
+	const { questId, apply, stageFilter, resolution, clearance } = parseArgs();
 	const planPath = join(QUEST_PLANS, `${questId}.json`);
 	const plan = loadQuestPlan(planPath);
 	const stageConfigs = JSON.parse(readFileSync(STAGE_CFG_PATH, "utf8"));
@@ -68,7 +70,7 @@ function main() {
 	console.log(`Area:        ${plan.areaId}`);
 	console.log(`Stages:      ${stages.length}`);
 	console.log(`Engine:      manhattan-grid (4-conn A*, 8-conn fallback for Z-rooms)`);
-	console.log(`Resolution:  ${resolution}m`);
+	console.log(`Resolution:  ${resolution}m   Clearance: ${clearance}m`);
 	console.log();
 
 	let stageOk = 0;
@@ -114,7 +116,7 @@ function main() {
 		let trisUsed = 0;
 		for (const a of attempts) {
 			if (a.tris.length === 0) continue;
-			grid = buildNavGrid(a.tris, { resolution, clearance: 0 });
+			grid = buildNavGrid(a.tris, { resolution, clearance });
 			graph = solveStageGraphManhattan(stageId, grid, points);
 			sourceTag = a.label;
 			trisUsed = a.tris.length;
