@@ -14600,6 +14600,16 @@
           13.33986096174067
         ],
         "kind": "point"
+      },
+      {
+        "id": "wp_spine_mid_s05a_lc2",
+        "position": [
+          -19,
+          0,
+          0.0
+        ],
+        "kind": "point",
+        "label": "spine mid"
       }
     ],
     "waypointEdges": [
@@ -14621,10 +14631,6 @@
       ],
       [
         "wp_1780239557900_qkivh7",
-        "wp_1780239564449_wwz2vc"
-      ],
-      [
-        "wp_1780239557900_qkivh7",
         "wp_1780239568133_gncmrp"
       ],
       [
@@ -14638,6 +14644,14 @@
       [
         "wp_1780256562749_4vm6jv",
         "wp_1780256565400_6t3jh4"
+      ],
+      [
+        "wp_1780239557900_qkivh7",
+        "wp_spine_mid_s05a_lc2"
+      ],
+      [
+        "wp_spine_mid_s05a_lc2",
+        "wp_1780239564449_wwz2vc"
       ]
     ]
   },

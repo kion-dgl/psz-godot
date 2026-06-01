@@ -256,8 +256,14 @@ func _ready() -> void:
 	else:
 		_setup_map_collision(_map_root)
 
-	# Load obstacle collision (walls) from separate obstacles GLB
-	if ResourceLoader.exists(obstacles_path):
+	# Load obstacle collision (walls) from separate obstacles GLB.
+	# PSZ_AUTOPILOT_NO_OBSTACLES=1 skips this — used while iterating on the
+	# autopilot's waypoint graph so the autopilot doesn't wedge on obstacle
+	# colliders that the spec doesn't yet route around.
+	var skip_obstacles := OS.has_environment("PSZ_AUTOPILOT_NO_OBSTACLES")
+	if skip_obstacles:
+		print("[ValleyField] PSZ_AUTOPILOT_NO_OBSTACLES set — skipping obstacle collision for %s" % stage_id)
+	elif ResourceLoader.exists(obstacles_path):
 		var obs_scene := load(obstacles_path) as PackedScene
 		if obs_scene:
 			var obs_root := obs_scene.instantiate() as Node3D
@@ -2890,6 +2896,11 @@ func _save_cell_state() -> void:
 func _spawn_box(pos: Vector3, is_rare: bool, state: String = "intact", drop_type: String = "", drop_value: String = "") -> void:
 	if state == "destroyed":
 		return  # Don't spawn destroyed boxes
+	# PSZ_AUTOPILOT_NO_BOXES=1 skips box spawning entirely. Used while
+	# iterating on the autopilot's waypoint graph so the autopilot doesn't
+	# wedge against a box sitting on the authored backbone.
+	if OS.has_environment("PSZ_AUTOPILOT_NO_BOXES"):
+		return
 	var box := BoxScript.new()
 	box.is_rare = is_rare
 	box.drop_type = drop_type if not drop_type.is_empty() else "meseta"
