@@ -15,14 +15,20 @@ type Phase =
   | 'boot'
   | 'first-mission'
   | 'the-paru-pact'
-  | 'mayors-mission'
-  | 'waltz-of-rage'
-  | 'devilish-return'
-  | 'a-small-friend'
-  | 'fallen-flowers'
-  | 'anas-request'
-  | 'mothers-memory'
-  | 'the-eternal';
+  | 'apothecary-supply'
+  | 'native-research'
+  | 'poisoned-water'
+  | 'deep-ore-extraction'
+  | 'claiming-a-stake'
+  | 'finding-ogi'
+  | 'static-in-the-snow'
+  | 'messages-from-the-past'
+  | 'investigate-tower'
+  | 'heretic'
+  | 'control-system'
+  | 'the-broken-seal'
+  | 'seek-my-mentor'
+  | 'dark-castle';
 type Status = 'pass' | 'fail' | 'unknown';
 interface Clip {
   filename: string;
@@ -39,37 +45,48 @@ interface Run {
   clips: Partial<Record<Phase, Clip>>;
 }
 
-// Order phases left-to-right in the table — match the in-game progression.
-// boot → first-mission (Search and Rescue, Valley) → the-paru-pact (Paru)
-// → the 8 main story missions in their dependency-chain order
-// (mayor → waltz → devilish → small_friend → fallen → ana → mother → eternal).
-// Adding a new quest? Append a new entry here AND in PHASE_PREFIX.
+// Order phases left-to-right in the table — match the canonical story
+// progression in data/quests/manifest.json (also see /states/story-progression
+// for the dependency graph). Adding a new quest? Append a new entry here
+// AND in PHASE_PREFIX.
 const PHASES: Array<{ key: Phase; label: string }> = [
-  { key: 'boot',           label: 'Onboarding' },
-  { key: 'first-mission',  label: 'Search and Rescue' },
-  { key: 'the-paru-pact',  label: 'The Paru Pact' },
-  { key: 'mayors-mission', label: "Mayor's Mission" },
-  { key: 'waltz-of-rage',  label: 'Waltz of Rage' },
-  { key: 'devilish-return',label: 'Devilish Return' },
-  { key: 'a-small-friend', label: 'A Small Friend' },
-  { key: 'fallen-flowers', label: 'Fallen Flowers' },
-  { key: 'anas-request',   label: "Ana's Request" },
-  { key: 'mothers-memory', label: "Mother's Memory" },
-  { key: 'the-eternal',    label: 'The Eternal' },
+  { key: 'boot',                  label: 'Onboarding' },
+  { key: 'first-mission',         label: 'Search and Rescue' },
+  { key: 'the-paru-pact',         label: 'The Paru Pact' },
+  { key: 'apothecary-supply',     label: "Apothecary's Supply" },
+  { key: 'native-research',       label: 'Native Research' },
+  { key: 'poisoned-water',        label: 'Poisoned Water' },
+  { key: 'deep-ore-extraction',   label: 'Deep Ore Extraction' },
+  { key: 'claiming-a-stake',      label: 'Claiming a Stake' },
+  { key: 'finding-ogi',           label: 'Finding Ogi' },
+  { key: 'static-in-the-snow',    label: 'Static in the Snow' },
+  { key: 'messages-from-the-past',label: 'Messages from the Past' },
+  { key: 'investigate-tower',     label: 'Investigate Tower' },
+  { key: 'heretic',               label: 'Heretic' },
+  { key: 'control-system',        label: 'Control System' },
+  { key: 'the-broken-seal',       label: 'The Broken Seal' },
+  { key: 'seek-my-mentor',        label: 'Seek My Mentor' },
+  { key: 'dark-castle',           label: 'Dark Castle' },
 ];
 
 const PHASE_PREFIX: Record<Phase, string> = {
-  'boot':            'boot_',
-  'first-mission':   'first_mission_',
-  'the-paru-pact':   'the_paru_pact_',
-  'mayors-mission':  'mayors_mission_',
-  'waltz-of-rage':   'waltz_of_rage_',
-  'devilish-return': 'devilish_return_',
-  'a-small-friend':  'a_small_friend_',
-  'fallen-flowers':  'fallen_flowers_',
-  'anas-request':    'anas_request_',
-  'mothers-memory':  'mothers_memory_',
-  'the-eternal':     'the_eternal_',
+  'boot':                  'boot_',
+  'first-mission':         'first_mission_',
+  'the-paru-pact':         'the_paru_pact_',
+  'apothecary-supply':     'apothecary_supply_',
+  'native-research':       'native_research_',
+  'poisoned-water':        'poisoned_water_',
+  'deep-ore-extraction':   'deep_ore_extraction_',
+  'claiming-a-stake':      'claiming_a_stake_',
+  'finding-ogi':           'finding_ogi_',
+  'static-in-the-snow':    'static_in_the_snow_',
+  'messages-from-the-past':'messages_from_the_past_',
+  'investigate-tower':     'investigate_tower_',
+  'heretic':               'heretic_',
+  'control-system':        'control_system_',
+  'the-broken-seal':       'the_broken_seal_',
+  'seek-my-mentor':        'seek_my_mentor_',
+  'dark-castle':           'dark_castle_',
 };
 
 function parseTimestamp(ts: string): Date | null {
