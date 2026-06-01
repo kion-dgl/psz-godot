@@ -1,0 +1,39 @@
+{
+  "stageId": "s05e_ia1",
+  "shape": "Transition cell (single-room section bridge, two portals)",
+  "description": "Single-cell transition room used to bridge two grid sections of a quest. The autopilot enters via the spawn_south portal (from the prior section's grid) and exits via the spawn_north portal — the NORTH portal IS the section-warp to the next grid. Both portals are real geometry; what makes this cell special is the quest plan flags it `type: 'transition'` and sets `warpEdge: 'south'` (the entry side), meaning the section warp fires only when the autopilot walks OUT the opposite side.",
+  "portals": {
+    "south": "spawn_south at (-0.04, 21.31) — entry portal from the previous grid section",
+    "north": "spawn_north at (16.60, -21.80) — section warp to the NEXT grid (this is where the autopilot must walk to advance)"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-0.04,  0,  21.31], "description": "south portal (entry from previous section, matches wp_spawn_0)" },
+    { "id": "north_gate",  "position": [16.60,  0, -21.80], "description": "north portal (section warp out, matches wp_spawn_1)" },
+    { "id": "south_inner", "position": [0,      0,  15.17], "description": "south interior hub — connects everything (matches wbzscb)" },
+    { "id": "south_step",  "position": [0,      0,   5.24], "description": "south stepping stone (matches f0n55u)" },
+    { "id": "west_corner", "position": [-15.11, 0,  -4.06], "description": "west corner detour (matches gsrr3n)" },
+    { "id": "center",      "position": [-0.08,  0,  -5.16], "description": "room center (matches 1n0a8m)" },
+    { "id": "east_inner",  "position": [15.11,  0,  -5.66], "description": "east interior hub (matches a8wuh3)" },
+    { "id": "north_step",  "position": [16.58,  0, -13.46], "description": "north stepping stone, leads to north_gate (matches ohqd8n)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["south_inner", "south_step"],
+    ["south_inner", "west_corner"],
+    ["south_inner", "center"],
+    ["south_inner", "east_inner"],
+    ["south_inner", "north_step"],
+    ["west_corner", "center"],
+    ["west_corner", "east_inner"],
+    ["center", "east_inner"],
+    ["east_inner", "north_step"],
+    ["north_step", "north_gate"]
+  ],
+  "traversalNotes": [
+    "TRANSITION-CELL EXIT RULE: the autopilot's default behavior reads warpEdge from the quest plan and walks toward that side. For transition cells, warpEdge labels the ENTRY portal (the side the player came in from), so walking toward it just exits back to the previous section. The autopilot needs to walk to the OPPOSITE portal — the one that actually triggers the section warp.",
+    "Concretely: cell 0,0 (s05e_ia1) has warpEdge='south'. The autopilot should NOT walk to spawn_south to exit; it should walk to spawn_north (which is the actual section warp).",
+    "Once the autopilot's transition-cell handling is fixed (gates/warps mechanics spec), the route is south_gate → south_inner → north_step → north_gate.",
+    "Spec is hand-authored to preserve the explicit hub topology — solver should NOT regenerate this stage."
+  ]
+}
