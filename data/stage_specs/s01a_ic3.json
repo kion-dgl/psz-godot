@@ -1,0 +1,54 @@
+{
+  "stageId": "s01a_ic3",
+  "shape": "2-portal diagonal arena with NW perimeter loop + east clique",
+  "description": "Two-portal stage with a west-side north entry (Z≈-8) and a SE south entry. Direct N→S route runs lufu37 → c8pfbm → dcodjn → a5dnxi (4-anchor diagonal). A NW perimeter LOOP wraps around the upper-left: lufu37 → 70or0n → 33l4ep → 27d68q → cmlrpl → c8pfbm. The east side is a triangle clique (dcodjn + q07794 + a5dnxi) with a 2-hop SE dead-end chain (sbhbe0 → n3p8g2).",
+  "portals": {
+    "north": "spawn_north at (-19.07, -8.08) — gate on the west (low-X) column, north of midline",
+    "south": "spawn_south at (18.96, 23.09) — gate on the south (high-Z) side, east column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-19.07, 0,  -8.08], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [18.96,  0,  23.09], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-18.01, 0,  -0.39], "description": "north entry hub - west wall mid (matches lufu37)" },
+    { "id": "west_upper",  "position": [-18.56, 0,  12.99], "description": "west wall upper - NW loop step (matches 70or0n)" },
+    { "id": "nw_corner",   "position": [-20.32, 0,  21.25], "description": "NW corner (matches 33l4ep)" },
+    { "id": "n_arc",       "position": [-10.14, 0,  20.77], "description": "north arc center (matches 27d68q)" },
+    { "id": "n_arc_s",     "position": [-6.86,  0,  15.27], "description": "north arc - south step (matches cmlrpl)" },
+    { "id": "center",      "position": [-4.27,  0,   6.98], "description": "central west bridge - NW loop closer (matches c8pfbm)" },
+
+    { "id": "east_hub",    "position": [4.93,   0,   9.83], "description": "east-central hub - bridge to east clique (matches dcodjn)" },
+    { "id": "east_mid",    "position": [12.78,  0,   2.64], "description": "east clique mid (matches q07794)" },
+    { "id": "south_inner", "position": [18.79,  0,  14.93], "description": "south entry hub - east clique anchor (matches a5dnxi)" },
+
+    { "id": "se_pocket_a", "position": [9.29,   0,  -6.16], "description": "SE pocket midpoint (matches sbhbe0)" },
+    { "id": "se_pocket_b", "position": [11.57,  0, -17.54], "description": "SE pocket dead-end (matches n3p8g2)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+
+    ["north_inner", "center"],
+    ["north_inner", "west_upper"],
+    ["west_upper", "nw_corner"],
+    ["nw_corner", "n_arc"],
+    ["n_arc", "n_arc_s"],
+    ["n_arc_s", "center"],
+
+    ["center", "east_hub"],
+    ["east_hub", "east_mid"],
+    ["east_hub", "south_inner"],
+    ["east_mid", "south_inner"],
+
+    ["east_mid", "se_pocket_a"],
+    ["se_pocket_a", "se_pocket_b"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → center → east_hub → south_inner → spawn_south. 5 hops.",
+    "NW PERIMETER LOOP: north_inner → west_upper → nw_corner → n_arc → n_arc_s → center → north_inner. Use for north-side detour objectives.",
+    "EAST CLIQUE: east_hub + east_mid + south_inner is a triangle — three short paths.",
+    "SE pocket (se_pocket_a → se_pocket_b) is a 2-hop dead-end off east_mid — corner objective.",
+    "DISPATCH RULE: center is the canonical NW-loop↔east bridge; east_hub is the east clique dispatcher."
+  ]
+}
