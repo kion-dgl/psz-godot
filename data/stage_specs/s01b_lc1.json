@@ -1,0 +1,49 @@
+{
+  "stageId": "s01b_lc1",
+  "shape": "Two-hub L-corridor (N+E gates with east-hub fan-out + west-arm dead-end)",
+  "description": "Two-portal arena with two entry hubs (west and east) joined by a center bridge. The east hub (87wbe5) is the high-degree node — fans out to 4 anchors (NE corner, north area, south corner, center bridge). The west hub (wnughj) connects through a small clique (64g011 + 972a84) plus a SW dead-end pocket (vah1ye).",
+  "portals": {
+    "north": "spawn_north at (-16.91, -15.50) — gate on the NW corner",
+    "east":  "spawn_east at (23.32, 2.93) — gate on the east side, mid-Z"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-16.91, 0, -15.50], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [23.32,  0,   2.93], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-17.05, 0,  -8.82], "description": "north entry hub (matches wnughj)" },
+    { "id": "east_inner",  "position": [15.25,  0,   1.38], "description": "east entry hub — high-degree (matches 87wbe5)" },
+
+    { "id": "ne_corner",   "position": [19.85,  0, -16.86], "description": "NE corner pocket (matches u00w69)" },
+    { "id": "n_pocket",    "position": [5.18,   0, -17.02], "description": "north pocket (matches 31257h)" },
+    { "id": "se_corner",   "position": [10.55,  0,  16.95], "description": "SE south-corner pocket (matches 4wbbl2)" },
+
+    { "id": "center_e",    "position": [4.28,   0,   7.59], "description": "center east bridge (matches 421hr8)" },
+    { "id": "center_w",    "position": [-2.62,  0,   7.01], "description": "center west bridge (matches 972a84)" },
+
+    { "id": "west_mid",    "position": [-15.08, 0,   6.00], "description": "west mid clique node (matches 64g011)" },
+    { "id": "sw_pocket",   "position": [-17.33, 0,  16.38], "description": "SW corner pocket — dead-end (matches vah1ye)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["east_gate", "east_inner"],
+
+    ["east_inner", "ne_corner"],
+    ["east_inner", "n_pocket"],
+    ["east_inner", "se_corner"],
+    ["east_inner", "center_e"],
+
+    ["center_e", "center_w"],
+
+    ["north_inner", "center_w"],
+    ["north_inner", "west_mid"],
+    ["west_mid", "center_w"],
+    ["west_mid", "sw_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct N→E: spawn_north → north_inner → center_w → center_e → east_inner → spawn_east. 5 hops.",
+    "Alternative via west_mid: north_inner → west_mid → center_w → center_e → east_inner.",
+    "DISPATCH RULE: east_inner is the canonical dispatch anchor for east-side corner objectives (ne_corner, n_pocket, se_corner). west_mid + center_w handle west-side. sw_pocket is a single-degree detour off west_mid.",
+    "EAST HUB FAN-OUT: east_inner has 4 detour branches — pick the one matching the objective location."
+  ]
+}
