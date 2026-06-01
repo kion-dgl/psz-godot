@@ -1,0 +1,39 @@
+{
+  "stageId": "s01b_lb3",
+  "shape": "L-corridor with west-arm dead-end branch (N+E gates)",
+  "description": "Two-portal L-corridor running from the NW gate east across the room to the E gate. A west-arm branch hangs off the north entry hub — a chain of three anchors (l13hsc → uwc80a → 5kwn21) terminating at a SW corner pocket. Likely an objective bay.",
+  "portals": {
+    "north": "spawn_north at (-16.96, -16.27) — gate on the NW corner",
+    "east":  "spawn_east at (22.40, -17.11) — gate on the east side, north half"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-16.96, 0, -16.27], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [22.40,  0, -17.11], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-17.35, 0,  -7.07], "description": "north entry hub (matches 6p5gn7)" },
+    { "id": "east_mid",    "position": [11.16,  0, -11.60], "description": "east-mid staging (matches bqc18l)" },
+    { "id": "east_inner",  "position": [11.29,  0, -17.90], "description": "east entry hub, joins east_gate (matches hmc40p)" },
+
+    { "id": "west_arm_n",  "position": [-22.28, 0,  -0.09], "description": "west arm step 1 (matches l13hsc)" },
+    { "id": "west_arm_m",  "position": [-18.51, 0,  10.47], "description": "west arm step 2 (matches uwc80a)" },
+    { "id": "sw_corner",   "position": [-15.05, 0,  14.11], "description": "SW corner dead-end pocket (matches 5kwn21)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["east_gate", "east_inner"],
+
+    ["north_inner", "east_mid"],
+    ["east_mid", "east_inner"],
+
+    ["north_inner", "west_arm_n"],
+    ["west_arm_n", "west_arm_m"],
+    ["west_arm_m", "sw_corner"]
+  ],
+  "traversalNotes": [
+    "Direct N→E: spawn_north → north_inner → east_mid → east_inner → spawn_east. 4 hops.",
+    "WEST ARM dead-end: north_inner → west_arm_n → west_arm_m → sw_corner. Three-anchor chain terminating at the SW pocket.",
+    "DISPATCH RULE: objectives in the west arm via north_inner → west_arm_n → ... → reverse. East-side objectives via east_mid or east_inner.",
+    "STRICT-BACKBONE on west arm — single-file corridor."
+  ]
+}
