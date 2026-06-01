@@ -1,0 +1,40 @@
+{
+  "stageId": "s02a_na1",
+  "shape": "Dead-end with multi-sub-area floor (single south gate)",
+  "description": "Single-portal dead-end room with a wider interior than paru-A na1. After the south entry hub there's a north row (yffftp + q1cgjr + y7dg72) and a south-center row (llhhye + w0rduz + suj3p5) that interconnect. The autopilot enters and exits via the same south portal; any in-cell objective routes through the south entry hub and then to the appropriate sub-area.",
+  "portals": {
+    "south": "spawn_south at (-7.14, 18.91) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",   "position": [-7.14,  0,  18.91], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "south_inner",  "position": [-7.31,  0,  12.17], "description": "south entry hub (matches e45cr9)" },
+
+    { "id": "south_center", "position": [-3.28,  0,   9.01], "description": "south-center anchor (matches llhhye)" },
+    { "id": "center",       "position": [0.74,   0,   1.15], "description": "geometric center (matches w0rduz)" },
+    { "id": "south_east",   "position": [7.90,   0,   9.87], "description": "south-east anchor (matches suj3p5)" },
+
+    { "id": "north_west",   "position": [-8.89,  0,  -7.98], "description": "north-west pocket (matches yffftp)" },
+    { "id": "north_center", "position": [-0.04,  0,  -7.16], "description": "north-center pocket (matches q1cgjr)" },
+    { "id": "north_east",   "position": [9.63,   0,  -7.36], "description": "north-east pocket (matches y7dg72)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["south_inner", "south_center"],
+    ["south_inner", "north_west"],
+    ["south_inner", "north_center"],
+    ["south_center", "south_east"],
+    ["south_center", "center"],
+    ["south_east", "center"],
+    ["south_east", "north_east"],
+    ["south_east", "north_center"],
+    ["north_west", "north_center"],
+    ["north_center", "north_east"]
+  ],
+  "traversalNotes": [
+    "DEAD-END: enter and leave through spawn_south. After kill_all / objective sequence, return to south_gate.",
+    "DISPATCH RULE: south_inner is the dispatch hub. Any objective routes south_gate → south_inner → sub-area anchor → reverse.",
+    "NORTH ROW (north_west, north_center, north_east) and SOUTH ROW (south_center, center, south_east) form two interconnected combat zones — the room can stage enemies in either.",
+    "Same primitive family as paru-A na1 but with more floor area / more sub-zones."
+  ]
+}
