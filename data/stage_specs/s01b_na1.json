@@ -1,0 +1,25 @@
+{
+  "stageId": "s01b_na1",
+  "shape": "Small dead-end with east gate + 2 west detour pockets",
+  "description": "Tiny single-portal dead-end: east gate, center anchor, two west pocket detours that interconnect. Likely an objective pickup room.",
+  "portals": {
+    "east": "spawn_east at (9.68, 2.05) — the only portal, on the east side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "east_gate",   "position": [9.68,   0,  2.05], "description": "east portal (matches wp_spawn_0)" },
+    { "id": "center",      "position": [0,      0,  0],    "description": "center anchor" },
+    { "id": "nw_pocket",   "position": [-8.69,  0, -6.19], "description": "NW pocket detour (matches 6z654j)" },
+    { "id": "sw_pocket",   "position": [-14.16, 0, 10.80], "description": "SW pocket detour (matches 1c547i)" }
+  ],
+  "anchorEdges": [
+    ["east_gate", "center"],
+    ["center", "nw_pocket"],
+    ["center", "sw_pocket"],
+    ["nw_pocket", "sw_pocket"]
+  ],
+  "traversalNotes": [
+    "Tiny dead-end. Enter from east, dispatch via center to either pocket, return through east_gate.",
+    "Two pockets form a triangle with center — pick whichever is closer to the objective."
+  ]
+}
