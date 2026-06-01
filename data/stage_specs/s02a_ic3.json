@@ -1,0 +1,66 @@
+{
+  "stageId": "s02a_ic3",
+  "shape": "Multi-zone arena (N+S diagonal gates, center hub + east pocket + west arrival)",
+  "description": "Large multi-zone combat arena with portals on diagonal corners: north gate at top-center (X≈-0.5, Z≈-24), south gate at far-west (X≈-14, Z≈24). Four loosely-defined zones: a north entry zone, a richly-connected center hub (zd3ww1), an east-side detour pocket (fmnh55 + east corners), and a south/west arrival zone leading to spawn_south. The center hub is the highest-degree anchor and the natural cross-zone transit point.",
+  "portals": {
+    "north": "spawn_north at (-0.55, -24.22) — gate on the north (low-Z) end, near center X",
+    "south": "spawn_south at (-13.82, 24.36) — gate on the south (high-Z) end, far WEST"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",     "position": [-0.55,  0, -24.22], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",     "position": [-13.82, 0,  24.36], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "n_entry",        "position": [-0.74,  0, -18.26], "description": "north entry hub, joins north_gate (matches 5x540p)" },
+    { "id": "n_inner",        "position": [-1.85,  0,  -7.86], "description": "north-inner staging (matches u5oruz)" },
+    { "id": "n_branch_e",     "position": [3.54,   0, -13.56], "description": "north-east branch (matches 021lb3)" },
+
+    { "id": "center_hub",     "position": [-3.05,  0,   4.70], "description": "high-degree center hub — connects N entry zone, E pocket, S transit, and W zone (matches zd3ww1)" },
+
+    { "id": "east_inner",     "position": [6.40,   0,   1.21], "description": "east pocket entrance (matches fmnh55)" },
+    { "id": "east_corner_n",  "position": [15.77,  0,  -3.77], "description": "east pocket NE corner (matches w2746d)" },
+    { "id": "east_corner_s",  "position": [15.22,  0,   4.45], "description": "east pocket SE corner (matches jadnrf)" },
+
+    { "id": "s_center_w",     "position": [3.04,   0,   8.65], "description": "south-center transit, west (matches xnpxyx)" },
+    { "id": "s_center_e",     "position": [2.80,   0,  16.83], "description": "south-center transit, east-side (matches 3yf3hc)" },
+
+    { "id": "s_inner",        "position": [-3.47,  0,  17.39], "description": "south-inner area, between center and SW arrival (matches un3by9)" },
+    { "id": "sw_mid",         "position": [-9.40,  0,   9.66], "description": "SW middle hub (matches pxab38)" },
+    { "id": "sw_far",         "position": [-16.94, 0,   9.98], "description": "SW far corner — dead-end pocket (matches tet32r)" },
+    { "id": "sw_entry",       "position": [-14.17, 0,  17.22], "description": "SW entry hub, joins south_gate (matches t629ih)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "n_entry"],
+    ["n_entry", "n_branch_e"],
+    ["n_entry", "n_inner"],
+    ["n_inner", "center_hub"],
+    ["n_branch_e", "center_hub"],
+    ["n_branch_e", "east_inner"],
+
+    ["center_hub", "east_inner"],
+    ["center_hub", "s_center_w"],
+    ["center_hub", "s_inner"],
+    ["center_hub", "sw_mid"],
+
+    ["east_inner", "east_corner_n"],
+    ["east_inner", "east_corner_s"],
+    ["east_inner", "s_center_w"],
+
+    ["s_center_w", "s_inner"],
+    ["s_center_w", "s_center_e"],
+    ["s_inner", "s_center_e"],
+    ["s_inner", "sw_mid"],
+
+    ["sw_mid", "sw_far"],
+    ["sw_mid", "sw_entry"],
+    ["sw_far", "sw_entry"],
+    ["sw_entry", "south_gate"]
+  ],
+  "traversalNotes": [
+    "Direct N→S backbone: spawn_north → n_entry → n_inner → center_hub → sw_mid → sw_entry → spawn_south. Six hops via the high-degree center_hub.",
+    "EAST POCKET (east_inner, east_corner_n, east_corner_s) is a side combat arena — reach via center_hub → east_inner → corner → reverse.",
+    "SW DEAD-END (sw_far) is a single-degree detour off sw_mid; likely an objective spot.",
+    "DISPATCH RULE: center_hub is the cross-zone pivot. Same-zone objectives stay within their cluster (n_inner/n_entry for north zone, east_inner for east pocket, sw_mid for SW zone). Cross-zone routing always passes through center_hub.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}
