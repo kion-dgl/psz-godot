@@ -1,0 +1,54 @@
+{
+  "stageId": "s02a_tb3",
+  "shape": "Dense T-junction (3 portals: S, W, E)",
+  "description": "Three-portal T-shape with a wide shared interior. Unlike paru-A tb3's asymmetric two-anchor junction, this stage has each gate's entry hub directly connecting to multiple shared interior anchors — south_inner and west_inner each reach 5 shared anchors; east_inner is sparser (3 connections). The result is a richly-connected center where any portal can reach any interior anchor in 2–3 hops.",
+  "portals": {
+    "south": "spawn_south at (5.99, 26.66) — gate on the south (high-Z) side",
+    "west":  "spawn_west at (-23.19, 7.62) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.30, 5.87) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",   "position": [5.99,   0,  26.66], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "west_gate",    "position": [-23.19, 0,   7.62], "description": "west portal (matches wp_spawn_1)" },
+    { "id": "east_gate",    "position": [23.30,  0,   5.87], "description": "east portal (matches wp_spawn_2)" },
+
+    { "id": "south_inner",  "position": [6.59,   0,  17.32], "description": "south entry hub — connects to 5 shared interior anchors (matches 6wijk3)" },
+    { "id": "west_inner",   "position": [-15.38, 0,   7.80], "description": "west entry hub — also connects to 5 (matches qauj6c)" },
+    { "id": "east_inner",   "position": [17.33,  0,   6.24], "description": "east entry hub — sparser (matches 0664hi)" },
+
+    { "id": "north_center", "position": [-5.72,  0,  16.77], "description": "north-center transit (matches 6euwxu)" },
+    { "id": "center",       "position": [3.54,   0,   8.63], "description": "geometric center (matches r6oxb3)" },
+    { "id": "east_mid",     "position": [12.15,  0,  -0.95], "description": "east-mid transit / east arm's interior link (matches bxggx7)" },
+    { "id": "west_mid",     "position": [-10.18, 0,   2.32], "description": "west-mid transit (matches 5w1a4s)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "east_inner"],
+
+    ["south_inner", "north_center"],
+    ["south_inner", "center"],
+    ["south_inner", "east_inner"],
+    ["south_inner", "east_mid"],
+
+    ["west_inner", "north_center"],
+    ["west_inner", "west_mid"],
+    ["west_inner", "center"],
+    ["west_inner", "east_mid"],
+
+    ["east_inner", "east_mid"],
+    ["east_mid", "center"],
+    ["east_mid", "west_mid"],
+
+    ["center", "north_center"]
+  ],
+  "traversalNotes": [
+    "Direct routes (multiple equivalent paths exist):",
+    "  south ↔ west:  spawn_south → south_inner → north_center → west_inner → spawn_west (or via center / west_mid).",
+    "  south ↔ east:  spawn_south → south_inner → east_inner → spawn_east (or south_inner → east_mid → east_inner).",
+    "  west ↔ east:   spawn_west → west_inner → east_mid → east_inner → spawn_east.",
+    "DISPATCH RULE: south_inner and west_inner are the high-degree hubs and the canonical dispatch anchors. east_inner is sparser — east-side objectives generally route via east_mid as the staging hop.",
+    "Same primitive family as paru-A tb3 (3-portal T-junction) but with denser inner connectivity and 3 distinct inner-hubs instead of 2."
+  ]
+}
