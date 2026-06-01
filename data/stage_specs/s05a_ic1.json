@@ -1,0 +1,38 @@
+{
+  "stageId": "s05a_ic1",
+  "shape": "コ (sideways C, narrow corridor wrapping a void)",
+  "description": "Sideways C / コ shape: a narrow L-shaped corridor wrapping around a large central void. The autopilot MUST stay strictly on the authored backbone — most of the room's apparent floor is void or visual-mesh-only, and an off-script step in the wrong direction will drop the player. The north gate is at the WEST end of the south arm; the south gate is at the EAST end of the north arm. Reaching one from the other requires walking the full L (north arm east → corner → south arm west).",
+  "portals": {
+    "north": "spawn_north at (-16.34, -23.60) — west end of the south arm of the コ",
+    "south": "spawn_south at (9.55, 22.90) — east end of the north arm of the コ"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",       "position": [-16.34, 0, -23.60], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",       "position": [9.55,   0,  22.90], "description": "south portal (matches wp_spawn_1)" },
+    { "id": "north_arm_east",   "position": [10.21,  0,  15.96], "description": "north arm, east end — joins south_gate (matches 9zhk)" },
+    { "id": "east_bend_north",  "position": [19.54,  0,   6.08], "description": "east-side corridor, north of the south-arm bend (matches qhl8)" },
+    { "id": "east_bend_south",  "position": [19.32,  0, -15.13], "description": "east-side corridor, south end (matches hsna)" },
+    { "id": "south_arm_east",   "position": [8.61,   0, -14.99], "description": "south arm, east end (matches mm43) — a side-branch helper for objectives" },
+    { "id": "south_arm_west",   "position": [-16.12, 0, -14.55], "description": "south arm, west end — joins north_gate (matches rabl)" },
+    { "id": "north_arm_west",   "position": [-16.79, 0,  17.37], "description": "north arm, west end — corner detour, often holds a switch (matches etp1)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "north_arm_east"],
+    ["north_arm_east", "east_bend_north"],
+    ["east_bend_north", "east_bend_south"],
+    ["east_bend_south", "south_arm_east"],
+    ["east_bend_south", "south_arm_west"],
+    ["south_arm_east", "south_arm_west"],
+    ["south_arm_west", "north_gate"],
+    ["south_arm_west", "north_arm_west"]
+  ],
+  "traversalNotes": [
+    "STRICT-BACKBONE RULE: most of the room around the コ corridor is void or sloped wall — the solver MUST NOT emit any edge that isn't in anchorEdges, even if the navgrid + floor-coverage check pass. This stage's corridor width is narrow; off-script diagonals will drop the player or wedge the capsule.",
+    "Direct route (south → north): spawn_south → north_arm_east (9zhk) → east_bend_north (qhl8) → east_bend_south (hsna) → south_arm_west (rabl) → spawn_north. Six hops along the L.",
+    "Reverse (north → south): mirror of the above.",
+    "Switch placement: in-cell switches typically live at the corner detours — most often near north_arm_west (etp1) or north_arm_east (9zhk). When a switch is present, route current_gate → backbone → corner_detour → switch_press → corner_detour → backbone → next_gate. The corner_detour anchor stays a child of the backbone anchor it branches from.",
+    "Do NOT use east_bend_south → south_arm_west as a shortcut that skips south_arm_east when an objective is at south_arm_east — keep the dispatch rule strict (backbone → branch → objective → branch → backbone).",
+    "Stages are never physically rotated — all positions here are stage-local mesh-space XZ; cell.rotation in the quest plan is a gate-label swap only."
+  ]
+}

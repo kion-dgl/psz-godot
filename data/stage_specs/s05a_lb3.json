@@ -1,0 +1,34 @@
+{
+  "stageId": "s05a_lb3",
+  "shape": "Square arena, NW corner collapsed (N+E gates)",
+  "description": "Same square arena primitive as lb1 (two-gate, N + E, dispatch via center) but with the NW corner collapsed — there is no walkable floor in the negative-X / positive-Z quadrant of the room. The center anchor still handles dispatch; three corner anchors (NE, SE, SW) cover the remaining quadrants for objective discovery.",
+  "portals": {
+    "north": "spawn_north at (0.20, -23.71) — gate on the north (low-Z) side",
+    "east":  "spawn_east at (23.42, 0.38) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",   "position": [0.20,  0, -23.71], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",    "position": [23.42, 0,   0.38], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "arena_center", "position": [-0.05, 0,  -0.07], "description": "center dispatch anchor (matches ks4wny)" },
+    { "id": "ne_corner",    "position": [15.89, 0,  11.85], "description": "NE corner detour (matches dsepv0)" },
+    { "id": "se_corner",    "position": [13.79, 0, -12.30], "description": "SE corner detour (matches lvi281)" },
+    { "id": "sw_corner",    "position": [-8.94, 0, -16.05], "description": "SW corner detour (matches oawysr)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "arena_center"],
+    ["arena_center", "east_gate"],
+    ["arena_center", "ne_corner"],
+    ["arena_center", "se_corner"],
+    ["arena_center", "sw_corner"],
+    ["ne_corner", "se_corner"],
+    ["se_corner", "sw_corner"],
+    ["ne_corner", "sw_corner"]
+  ],
+  "traversalNotes": [
+    "Direct N↔E route: spawn_north → arena_center → spawn_east (and reverse). Same L-through-center as lb1.",
+    "NW QUADRANT IS COLLAPSED: there is NO floor in the negative-X / positive-Z corner. The solver must not emit any anchor or edge that crosses that quadrant. If an objective appears in the NW region of the room, route the dispatch through arena_center and approach via an axis-aligned leg from either north_gate or east_gate's nearest edge — never directly across the missing corner.",
+    "DISPATCH RULE: any in-cell objective routes through arena_center → nearest corner_detour → objective → reverse. The three corner anchors form a fully-connected triangle so the autopilot can wrap around any corner-to-corner objective chain.",
+    "Square arena variant: lb1 had all four corners; lb3 drops the NW corner. The 'square arena, dispatch via center' primitive still applies — just with fewer corner anchors and a no-go zone."
+  ]
+}

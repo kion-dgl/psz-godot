@@ -1,0 +1,76 @@
+{
+  "stageId": "s05a_lc1",
+  "shape": "C with a large rectangular platform + narrow bridge to a smaller square platform",
+  "description": "C-shape: the wide east section is a large rectangular combat platform (entered from spawn_east on its east edge); the smaller west section is a square platform (entered from spawn_north on its south edge). The two platforms are connected by a narrow bridge running along the north side of the room — bridge anchors at the NW corner of the east platform → mid-bridge → NE corner of the west platform. All other paths between platforms are void.",
+  "portals": {
+    "north": "spawn_north at (-9.62, -23.24) — south side of the west platform",
+    "east":  "spawn_east at (22.77, -2.01) — east side of the east platform"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",   "position": [-9.62,  0, -23.24], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",    "position": [22.77, 0,  -2.01], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "east_plat_e",  "position": [15.99, 0,  -2.06], "description": "east platform — east edge, joins east_gate (matches 6agdio)" },
+    { "id": "east_plat_se", "position": [15.75, 0, -19.95], "description": "east platform — SE corner (matches qs31od)" },
+    { "id": "east_plat_s",  "position": [7.66,  0, -20.23], "description": "east platform — south edge (matches 6oi4c7)" },
+    { "id": "east_plat_sw", "position": [3.92,  0, -14.30], "description": "east platform — SW corner (matches 4hr4ej)" },
+    { "id": "east_plat_nw", "position": [3.32,  0,   7.84], "description": "east platform — NW corner / bridge anchor (matches z8vbq2)" },
+    { "id": "east_plat_n",  "position": [3.14,  0,  16.12], "description": "east platform — north edge / bridge anchor (matches n8z9og)" },
+    { "id": "east_plat_ne", "position": [15.63, 0,  15.79], "description": "east platform — NE corner (matches r247c0)" },
+
+    { "id": "bridge_mid",   "position": [-6.67, 0,  14.39], "description": "narrow north bridge — middle (matches wgxzc7)" },
+
+    { "id": "west_plat_ne", "position": [-18.80,0,  14.97], "description": "west platform — NE corner / bridge landing (matches y5aqiw)" },
+    { "id": "west_plat_w",  "position": [-19.45,0,  -2.76], "description": "west platform — west edge (matches hbk2ou)" },
+    { "id": "west_plat_sw", "position": [-20.28,0, -16.01], "description": "west platform — SW corner (matches k32l6g)" },
+    { "id": "west_plat_s",  "position": [-10.39,0, -15.49], "description": "west platform — south edge, joins north_gate (matches 1teiw2)" },
+    { "id": "west_plat_c",  "position": [-10.72,0,  -6.98], "description": "west platform — center-ish staging (matches fjies2)" }
+  ],
+  "anchorEdges": [
+    ["east_gate", "east_plat_e"],
+    ["east_plat_e", "east_plat_se"],
+    ["east_plat_e", "east_plat_s"],
+    ["east_plat_e", "east_plat_sw"],
+    ["east_plat_e", "east_plat_nw"],
+    ["east_plat_e", "east_plat_n"],
+    ["east_plat_e", "east_plat_ne"],
+    ["east_plat_se", "east_plat_s"],
+    ["east_plat_se", "east_plat_sw"],
+    ["east_plat_se", "east_plat_nw"],
+    ["east_plat_se", "east_plat_n"],
+    ["east_plat_se", "east_plat_ne"],
+    ["east_plat_s", "east_plat_sw"],
+    ["east_plat_s", "east_plat_nw"],
+    ["east_plat_s", "east_plat_n"],
+    ["east_plat_s", "east_plat_ne"],
+    ["east_plat_sw", "east_plat_nw"],
+    ["east_plat_sw", "east_plat_n"],
+    ["east_plat_sw", "east_plat_ne"],
+    ["east_plat_nw", "east_plat_n"],
+    ["east_plat_nw", "east_plat_ne"],
+    ["east_plat_n", "east_plat_ne"],
+
+    ["east_plat_nw", "bridge_mid"],
+    ["east_plat_n", "bridge_mid"],
+    ["bridge_mid", "west_plat_ne"],
+
+    ["west_plat_ne", "west_plat_w"],
+    ["west_plat_ne", "west_plat_sw"],
+    ["west_plat_w", "west_plat_sw"],
+    ["west_plat_w", "west_plat_c"],
+    ["west_plat_sw", "west_plat_s"],
+    ["west_plat_sw", "west_plat_c"],
+    ["west_plat_s", "west_plat_c"],
+    ["west_plat_s", "north_gate"]
+  ],
+  "traversalNotes": [
+    "MULTI-PLATFORM TOPOLOGY with bridge: a LARGE east platform (clique of 7 anchors covering combat floor) and a SMALLER west platform (5 anchors), joined by a single narrow bridge along the north side: east_plat_nw / east_plat_n ↔ bridge_mid ↔ west_plat_ne. Voids fill everything else between the platforms.",
+    "Direct east → north: spawn_east → east_plat_e → east_plat_nw (or _n) → bridge_mid → west_plat_ne → west_plat_w → west_plat_sw → west_plat_s → spawn_north. Cross both platforms diagonally; the dispatch rule lets the autopilot pick any axis-aligned corner-to-corner traversal on the east platform clique.",
+    "Direct north → east: reverse of above.",
+    "PER-PLATFORM CLIQUE on the east platform: every corner connects to every other corner so any objective on the east platform is one hop from any other east-platform anchor. Same dispatch rule as ic3/lb1 — enter anchor, jump to objective anchor, jump back, exit.",
+    "BRIDGE IS NARROW: solver must NOT emit any cross-platform edge except through bridge_mid (wgxzc7). Off-bridge crossing is void.",
+    "Switch / fence hint: the bridge is the obvious choke point — expect fences across the bridge and a switch on the platform the autopilot must traverse first (typically east, since spawn_east enters there). Pre-switch route exhaustively covers east platform corners.",
+    "Stages are never physically rotated — all positions here are stage-local mesh-space XZ."
+  ]
+}

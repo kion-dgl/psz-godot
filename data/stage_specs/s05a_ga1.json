@@ -1,0 +1,24 @@
+{
+  "stageId": "s05a_ga1",
+  "shape": "I (corridor)",
+  "description": "Straight north-south corridor. The room is a simple I — two portals, one at the north end and one at the south, connected by a single uninterrupted corridor along X≈0. A midpoint waypoint (hzj4) sits at the center for objective dispatch.",
+  "portals": {
+    "north": "spawn_north at (0.03, -19.30) — gate on the north (low-Z) end",
+    "south": "spawn_south at (-0.03, 15.66) — gate on the south (high-Z) end"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",   "position": [0.03, 0, -19.30], "description": "north portal area (matches wp_spawn_0)" },
+    { "id": "south_gate",   "position": [-0.03, 0, 15.66], "description": "south portal area (matches wp_spawn_1)" },
+    { "id": "corridor_mid", "position": [0,    0,   0.15], "description": "midpoint of the corridor — the dispatch anchor (matches wp_1780257542036_czhzj4)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "corridor_mid"],
+    ["corridor_mid", "south_gate"]
+  ],
+  "traversalNotes": [
+    "Straight-line traversal: the autopilot can walk directly between spawn_north and spawn_south — no detour needed.",
+    "DISPATCH RULE: any in-cell objective (key drop, enemy kill, story trigger) should route through corridor_mid (hzj4). Walk from current gate → corridor_mid → objective → corridor_mid → next gate. This keeps the autopilot from cutting diagonals across the corridor that drift into the wall in narrow rooms.",
+    "Stages are never physically rotated — all positions here are stage-local mesh-space XZ; cell.rotation in the quest plan is a gate-label swap only."
+  ]
+}

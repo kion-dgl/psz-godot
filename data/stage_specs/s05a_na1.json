@@ -1,0 +1,21 @@
+{
+  "stageId": "s05a_na1",
+  "shape": "Dead-end room (single south gate)",
+  "description": "A dead-end room with one portal on the south side. The autopilot enters and must leave through the same gate. A single interior anchor sits a few meters in for objective dispatch — any in-cell objective routes through it.",
+  "portals": {
+    "south": "spawn_south at (0.19, 21.92) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [0.19, 0, 21.92], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "room_center", "position": [0.05, 0,  3.36], "description": "dispatch anchor a few meters north of the gate (matches 4kg6s)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "room_center"]
+  ],
+  "traversalNotes": [
+    "Single-gate dead-end. The autopilot enters from spawn_south and ultimately leaves through load_south (the same portal). Any objective routes through room_center.",
+    "DISPATCH RULE: south_gate → room_center → objective → room_center → south_gate (exit). The dispatch hub is room_center; never emit edges that bypass it.",
+    "This is the dead-end primitive. Same shape as any other single-gate room — only the gate direction varies."
+  ]
+}

@@ -47,7 +47,7 @@ cat > "$MANIFEST" <<JSON
 JSON
 
 echo "[record] rendering autopilot run under Xvfb → $AVI (fps=$FPS)"
-PSZ_AUTOPILOT=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 1280x720x24" \
+PSZ_AUTOPILOT=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a -s "-screen 0 640x360x24" \
 	timeout "$TIMEOUT" "$GODOT" --write-movie "$AVI" --fixed-fps "$FPS" \
 	--disable-vsync --audio-driver Dummy --path "$REPO"
 RC=$?
@@ -55,7 +55,7 @@ echo "[record] godot rc=$RC"
 [ -s "$AVI" ] || { echo "[record] ERROR: no AVI frames produced" >&2; exit 1; }
 
 echo "[record] transcoding → $MP4"
-ffmpeg -y -loglevel error -i "$AVI" -c:v libx264 -pix_fmt yuv420p -crf 23 -movflags +faststart "$MP4" || {
+ffmpeg -y -loglevel error -i "$AVI" -c:v libx264 -pix_fmt yuv420p -crf 28 -movflags +faststart "$MP4" || {
 	echo "[record] ffmpeg failed" >&2; exit 1; }
 rm -f "$AVI"
 ls -lh "$MP4"

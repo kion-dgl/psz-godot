@@ -1050,9 +1050,23 @@ func _handle_movement(delta: float) -> void:
 			velocity.x = desired_velocity.x
 			velocity.z = desired_velocity.z
 		else:
-			# No floor ahead, stop at edge
-			velocity.x = 0
-			velocity.z = 0
+			# Edge/wall ahead in the desired direction. Instead of stopping
+			# dead (the old behaviour, which made the autopilot stick on
+			# stage geometry seams and floor-mesh joins), try the axis
+			# components separately and walk whichever one keeps us on
+			# floor — effectively slide along the obstruction. Worst case
+			# both axes are blocked and we still stop.
+			var x_only := Vector3(sign(move_dir.x), 0, 0)
+			var z_only := Vector3(0, 0, sign(move_dir.z))
+			if move_dir.x != 0.0 and _can_move_to(x_only):
+				velocity.x = desired_velocity.x
+				velocity.z = 0
+			elif move_dir.z != 0.0 and _can_move_to(z_only):
+				velocity.x = 0
+				velocity.z = desired_velocity.z
+			else:
+				velocity.x = 0
+				velocity.z = 0
 	else:
 		# Stop horizontal movement
 		velocity.x = 0

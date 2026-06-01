@@ -146,3 +146,6 @@ web/public/assets/player
 # Local-only quarantine for orphan / superseded files. Moved here instead of
 # `rm`-ing so they can be inspected before permanent deletion. Never tracked.
 /archive/
+
+# bun deps for the quest solver
+scripts/tools/quest_solver/node_modules/

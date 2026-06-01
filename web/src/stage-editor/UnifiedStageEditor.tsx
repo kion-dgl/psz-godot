@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import * as THREE from 'three';
 import type { EditorTab, FloorTriangle, GateDirection, PreviewModel, PortalData, ObstacleType, ObstacleData, WaypointData } from './types';
 import { useStageConfig } from './useStageConfig';
@@ -17,6 +18,16 @@ import ObstacleTab, { type PlacementDimensions, DEFAULT_PLACEMENT_DIMENSIONS } f
 import ExportTab from './tabs/ExportTab';
 import WaypointTab from './tabs/WaypointTab';
 import WaypointOverlay from './WaypointOverlay';
+import ManhattanGridOverlay from './ManhattanGridOverlay';
+import CoordMarkerOverlay from './CoordMarkerOverlay';
+import CapsuleSimOverlay from './CapsuleSimOverlay';
+import type { Tri2D } from './manhattan/solver';
+import { useManhattanGrid } from './manhattan/useManhattanGrid';
+import QuestObjectOverlay from './QuestObjectOverlay';
+import { useQuestObjects, useQuestCells, type QuestCell } from './useQuestObjects';
+import { rotateDirection } from '../quest-editor/hooks/useStageConfigs';
+import type { Direction } from '../quest-editor/types';
+import type { SimLeg } from './CapsuleSimOverlay';
 import SvgTab from './tabs/SvgTab';
 import SceneTab, { computeLighting, PLACED_PRESETS } from './tabs/SceneTab';
 import ParticleOverlay, { type ParticleEffect } from './ParticleOverlay';
@@ -162,8 +173,39 @@ const TABS: { id: EditorTab; label: string }[] = [
 ];
 
 export default function UnifiedStageEditor() {
-  const [activeTab, setActiveTab] = useState<EditorTab>('floor');
-  const [selectedMapId, setSelectedMapId] = useState('s01a_ga1');
+  // Deep-link via URL params: ?stage=...&quest=...&cell=... — the autopilot's
+  // FAIL line surfaces the failing stage + cell, and a URL with those
+  // pre-filled drops the human directly on the right room with quest object
+  // overlays visible. Uses react-router's useSearchParams so it works
+  // correctly under HashRouter (params live after the # route).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlStage = searchParams.get('stage') ?? undefined;
+  const urlQuest = searchParams.get('quest') ?? undefined;
+  const urlCell = searchParams.get('cell') ?? undefined;
+  // `?marker=-18.6,-10` or `?marker=x,z;x,z;…` pins one or more magenta
+  // posts on the floor. Useful for "go look at where the autopilot got
+  // stuck" links. Multiple markers semicolon-separated.
+  const urlMarker = searchParams.get('marker') ?? undefined;
+
+  const [activeTab, setActiveTab] = useState<EditorTab>(urlQuest ? 'waypoints' : 'floor');
+  const [selectedMapId, setSelectedMapId] = useState(urlStage || 's01a_ga1');
+  const [selectedQuest, setSelectedQuest] = useState<string | null>(urlQuest ?? null);
+  const [highlightCell, setHighlightCell] = useState<string | null>(urlCell ?? null);
+  const questObjects = useQuestObjects(selectedQuest, selectedMapId);
+  const questCells = useQuestCells(selectedQuest, selectedMapId);
+
+  // Keep URL in sync with state. replace:true so we don't pollute history
+  // with one entry per character typed into the cell input. Preserve the
+  // `marker` param (it's set externally for "go look here" links and the
+  // editor itself doesn't write to it).
+  useEffect(() => {
+    const next = new URLSearchParams();
+    next.set('stage', selectedMapId);
+    if (selectedQuest) next.set('quest', selectedQuest);
+    if (highlightCell) next.set('cell', highlightCell);
+    if (urlMarker) next.set('marker', urlMarker);
+    setSearchParams(next, { replace: true });
+  }, [selectedMapId, selectedQuest, highlightCell, setSearchParams, urlMarker]);
   const [stageScene, setStageScene] = useState<THREE.Group | null>(null);
   const [showStage, setShowStage] = useState(true);
 
@@ -200,6 +242,49 @@ export default function UnifiedStageEditor() {
   const [waypointPlacementMode, setWaypointPlacementMode] = useState(false);
   const [selectedWaypointId, setSelectedWaypointId] = useState<string | null>(null);
 
+  // Manhattan grid overlay: visualizes what scripts/tools/quest_solver/
+  // solve_manhattan.ts would produce. Toggle from the waypoints tab.
+  // The hook itself is called below, after `config` is initialized.
+  const [showManhattanGrid, setShowManhattanGrid] = useState(false);
+  const [manhattanResolution, setManhattanResolution] = useState(0.5);
+  const [manhattanClearance, setManhattanClearance] = useState(0.5);
+  const [manhattanFuseVisual, setManhattanFuseVisual] = useState(false);
+  const [manhattanPathStart, setManhattanPathStart] = useState<{ x: number; z: number } | null>(null);
+  const [manhattanPathEnd, setManhattanPathEnd] = useState<{ x: number; z: number } | null>(null);
+
+  // Coordinate markers — independent of the Manhattan overlay. Magenta
+  // posts on the floor at specified XZ. Initialized from `?marker=x,z`
+  // (or `?marker=x1,z1;x2,z2;…` for multiple) so the user can share /
+  // be sent links pointing at specific spots.
+  const initialUrlMarkers: { x: number; z: number }[] = urlMarker
+    ? urlMarker
+        .split(';')
+        .map((pair) => pair.split(',').map((s) => parseFloat(s.trim())))
+        .filter((p) => p.length === 2 && !isNaN(p[0]) && !isNaN(p[1]))
+        .map(([x, z]) => ({ x, z }))
+    : [];
+  const [markerX, setMarkerX] = useState<string>(initialUrlMarkers[0]?.x.toString() ?? '');
+  const [markerZ, setMarkerZ] = useState<string>(initialUrlMarkers[0]?.z.toString() ?? '');
+  const [urlMarkers] = useState(initialUrlMarkers); // all url-supplied markers (read-once)
+  const markerXNum = parseFloat(markerX);
+  const markerZNum = parseFloat(markerZ);
+  const markerActive = !isNaN(markerXNum) && !isNaN(markerZNum);
+
+  // Capsule simulator state — useMemos defined below after `config` +
+  // `includedTriangles` are declared so the TDZ doesn't bite us.
+  const [simFromId, setSimFromId] = useState<string>('');
+  const [simToId, setSimToId] = useState<string>('');
+  const [simRestartKey, setSimRestartKey] = useState(0);
+  const [simResult, setSimResult] = useState<{ ok: boolean; failedAt?: { x: number; z: number }; legIndex?: number } | null>(null);
+  const [simSpeed, setSimSpeed] = useState(6);
+
+  // Multi-leg cell playback state. When activeCellPos is set, the sim runs
+  // the full per-cell autopilot sequence (spawn(entry) → switch → exit) and
+  // visualizes fence open/close state. Falsy → single-leg mode (the
+  // simFromId/simToId controls above).
+  const [activeCellPos, setActiveCellPos] = useState<string>('');
+  const [cellLegsCompleted, setCellLegsCompleted] = useState(0);
+
   // Floor extraction: show all upward-facing surfaces (stairs, ramps) so they
   // can be clicked into the floor collision mesh. Default off to keep the
   // viewport uncluttered for stages that don't need it.
@@ -235,6 +320,17 @@ export default function UnifiedStageEditor() {
   // Get config for current map
   const { config, updateConfig, undo, redo, canUndo, canRedo, reloadFromDisk } = useStageConfig(selectedMapId);
 
+  const manhattan = useManhattanGrid({
+    mapId: selectedMapId,
+    enabled: showManhattanGrid && activeTab === 'waypoints',
+    floorCollisionTriangles: config?.floorCollision?.triangles,
+    pathStart: manhattanPathStart,
+    pathEnd: manhattanPathEnd,
+    resolution: manhattanResolution,
+    clearance: manhattanClearance,
+    fuseVisualMesh: manhattanFuseVisual,
+  });
+
   // Handle scene ready callback
   const handleSceneReady = useCallback((scene: THREE.Group) => {
     setStageScene(scene);
@@ -255,6 +351,197 @@ export default function UnifiedStageEditor() {
   const includedTriangles = useMemo(() => {
     return floorTriangles.filter((t) => t.included);
   }, [floorTriangles]);
+
+  // Capsule simulator: BFS over the existing waypoint graph from
+  // `simFromId` to `simToId`, then animate a capsule along the resulting
+  // polyline + check floor at every step.
+  const simPath = useMemo<{ x: number; z: number }[]>(() => {
+    if (!config || !simFromId || !simToId) return [];
+    const waypoints = config.waypoints ?? [];
+    const edges = config.waypointEdges ?? [];
+    const byId: Record<string, [number, number, number]> = {};
+    for (const w of waypoints) byId[w.id] = w.position as [number, number, number];
+    if (!byId[simFromId] || !byId[simToId]) return [];
+    const adj: Record<string, string[]> = {};
+    for (const [a, b] of edges) {
+      (adj[a] ??= []).push(b);
+      (adj[b] ??= []).push(a);
+    }
+    const parent: Record<string, string> = { [simFromId]: '' };
+    const q = [simFromId];
+    let found = simFromId === simToId;
+    while (q.length && !found) {
+      const cur = q.shift()!;
+      if (cur === simToId) { found = true; break; }
+      for (const nb of adj[cur] ?? []) {
+        if (nb in parent) continue;
+        parent[nb] = cur;
+        if (nb === simToId) { found = true; break; }
+        q.push(nb);
+      }
+    }
+    if (!found) return [];
+    const chain: string[] = [];
+    let node: string = simToId;
+    while (node) { chain.push(node); node = parent[node]; }
+    chain.reverse();
+    return chain.map((id) => ({ x: byId[id][0], z: byId[id][2] }));
+  }, [config, simFromId, simToId]);
+
+  // Convert included floor triangles to the Tri2D shape the sim's
+  // point-in-triangle test wants.
+  const simFloor2d = useMemo<Tri2D[]>(() => {
+    return includedTriangles.map((t) => ({
+      x1: t.vertices[0].x, z1: t.vertices[0].z,
+      x2: t.vertices[1].x, z2: t.vertices[1].z,
+      x3: t.vertices[2].x, z3: t.vertices[2].z,
+    }));
+  }, [includedTriangles]);
+
+  // Resolve the active cell for the per-cell playback sim. If the user has
+  // picked a cell explicitly, use it; otherwise default to the first cell
+  // that uses this stage (the editor only shows stage IDs that the quest
+  // actually uses).
+  const activeCell = useMemo<QuestCell | null>(() => {
+    if (questCells.length === 0) return null;
+    if (activeCellPos) {
+      return questCells.find((c) => c.pos === activeCellPos) ?? questCells[0];
+    }
+    return questCells[0];
+  }, [questCells, activeCellPos]);
+
+  // Build the multi-leg playback for the active cell:
+  //   spawn(entry_dir) → switch_0 → ... → switch_N → load(exit_dir)
+  // Direction mapping: connection directions are in grid-space; portal
+  // labels are in room-local space. With a CW rotation R applied when the
+  // room is placed in the grid, grid_dir = rotateDirection(local_dir, R),
+  // so local_dir = rotateDirection(grid_dir, -R). We resolve each grid-dir
+  // connection to its local portal and pick the spawn/load waypoint there.
+  const cellSim = useMemo<{
+    legs: SimLeg[];
+    switchActivationLegIndex: number | undefined;
+    fenceMarkers: { x: number; z: number; halfWidth?: number }[];
+    description: string[];
+    error: string | null;
+  } | null>(() => {
+    if (!config || !activeCell) return null;
+    const waypoints = config.waypoints ?? [];
+    const edges = config.waypointEdges ?? [];
+    if (waypoints.length === 0) return null;
+    const wpById: Record<string, { x: number; z: number; kind?: string; label?: string }> = {};
+    for (const w of waypoints) {
+      wpById[w.id] = { x: w.position[0], z: w.position[2], kind: w.kind, label: w.label };
+    }
+    const adj: Record<string, string[]> = {};
+    for (const [a, b] of edges) {
+      (adj[a] ??= []).push(b);
+      (adj[b] ??= []).push(a);
+    }
+    const bfsPath = (from: string, to: string): { x: number; z: number }[] | null => {
+      if (!wpById[from] || !wpById[to]) return null;
+      if (from === to) return [wpById[from]];
+      const parent: Record<string, string | null> = { [from]: null };
+      const q = [from];
+      while (q.length) {
+        const cur = q.shift()!;
+        if (cur === to) break;
+        for (const nb of adj[cur] ?? []) {
+          if (nb in parent) continue;
+          parent[nb] = cur;
+          q.push(nb);
+        }
+      }
+      if (!(to in parent)) return null;
+      const ids: string[] = [];
+      let n: string | null = to;
+      while (n) { ids.push(n); n = parent[n]; }
+      ids.reverse();
+      return ids.map((id) => wpById[id]);
+    };
+    // Helper: find the spawn/load waypoint nearest a given local direction
+    // by matching its label suffix ("spawn north" etc.). Falls back to the
+    // first matching kind if no labels are present.
+    const findWaypoint = (kind: 'spawn' | 'exit', localDir: Direction): string | null => {
+      const wpsOfKind = waypoints.filter((w) => w.kind === kind);
+      const labelPrefix = kind === 'spawn' ? 'spawn ' : 'load ';
+      for (const w of wpsOfKind) {
+        if (w.label === `${labelPrefix}${localDir}`) return w.id;
+      }
+      return null;
+    };
+    const rotation = activeCell.rotation ?? 0;
+    const conns = activeCell.connections ?? {};
+    // Entry: the cell we came from. Use pathOrder to figure out — pathOrder=0
+    // is the start (no entry). For others, the previous-pathOrder cell. We
+    // don't have section context here, so use a heuristic: pick the connection
+    // direction NOT used as the exit.
+    const connDirs = Object.keys(conns) as Direction[];
+    let entryDirGrid: Direction | null = null;
+    let exitDirGrid: Direction | null = null;
+    // Heuristic: if cell has a keyGate.direction, that's the exit (gated by
+    // the switch). Otherwise pick last direction listed as exit, first as
+    // entry. Two-connection cells follow the pathOrder convention.
+    if (activeCell.keyGate?.direction) {
+      exitDirGrid = activeCell.keyGate.direction as Direction;
+      entryDirGrid = (connDirs.find((d) => d !== exitDirGrid) ?? null) as Direction | null;
+    } else if (connDirs.length >= 2) {
+      entryDirGrid = connDirs[0];
+      exitDirGrid = connDirs[1];
+    } else if (connDirs.length === 1) {
+      // Dead-end cell — same direction in and out.
+      entryDirGrid = connDirs[0];
+      exitDirGrid = connDirs[0];
+    }
+    const errors: string[] = [];
+    if (!entryDirGrid || !exitDirGrid) {
+      return {
+        legs: [], switchActivationLegIndex: undefined, fenceMarkers: [],
+        description: [], error: 'cell has no connections — nothing to play',
+      };
+    }
+    // Inverse rotation (room-local = rotate grid_dir by -R).
+    const entryDirLocal = rotateDirection(entryDirGrid, -rotation);
+    const exitDirLocal = rotateDirection(exitDirGrid, -rotation);
+    const entrySpawnId = findWaypoint('spawn', entryDirLocal);
+    const exitLoadId = findWaypoint('exit', exitDirLocal);
+    if (!entrySpawnId) errors.push(`no spawn waypoint for entry local-${entryDirLocal} (grid-${entryDirGrid})`);
+    if (!exitLoadId) errors.push(`no load waypoint for exit local-${exitDirLocal} (grid-${exitDirGrid})`);
+    const switchWps = waypoints.filter((w) => w.kind === 'switch');
+    // Order switches by pathOrder if linkIds match the cell's fence linkIds.
+    // For now we walk them in waypoint-array order (small N — usually 1).
+    const sequence: string[] = [];
+    if (entrySpawnId) sequence.push(entrySpawnId);
+    for (const sw of switchWps) sequence.push(sw.id);
+    if (exitLoadId) sequence.push(exitLoadId);
+    const legs: SimLeg[] = [];
+    const description: string[] = [];
+    for (let i = 0; i < sequence.length - 1; i++) {
+      const from = sequence[i];
+      const to = sequence[i + 1];
+      const p = bfsPath(from, to);
+      const fromLabel = wpById[from]?.label ?? from.slice(-4);
+      const toLabel = wpById[to]?.label ?? to.slice(-4);
+      if (!p || p.length < 2) {
+        errors.push(`no path: ${fromLabel} → ${toLabel}`);
+        continue;
+      }
+      legs.push({ path: p, label: `${fromLabel} → ${toLabel}` });
+      description.push(`${fromLabel} → ${toLabel}`);
+    }
+    // Switch activation = the leg that ENDS at the first switch waypoint.
+    const switchLegIdx = switchWps.length > 0 ? 0 : undefined;
+    // Fence markers (visualization). Pull positions from the cell's fences.
+    const fenceMarkers = (activeCell.fences ?? []).map((f) => ({
+      x: f.position[0], z: f.position[2], halfWidth: 1.5,
+    }));
+    return {
+      legs,
+      switchActivationLegIndex: switchLegIdx,
+      fenceMarkers,
+      description,
+      error: errors.length > 0 ? errors.join('; ') : null,
+    };
+  }, [config, activeCell]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -599,6 +886,55 @@ export default function UnifiedStageEditor() {
             setSelectedId={setSelectedWaypointId}
             onSeedFromGates={handleSeedFromGates}
             onAutoConnect={handleAutoConnect}
+            showManhattan={showManhattanGrid}
+            setShowManhattan={setShowManhattanGrid}
+            manhattanResolution={manhattanResolution}
+            setManhattanResolution={setManhattanResolution}
+            manhattanClearance={manhattanClearance}
+            setManhattanClearance={setManhattanClearance}
+            manhattanFuseVisual={manhattanFuseVisual}
+            setManhattanFuseVisual={setManhattanFuseVisual}
+            markerX={markerX}
+            setMarkerX={setMarkerX}
+            markerZ={markerZ}
+            setMarkerZ={setMarkerZ}
+            simFromId={simFromId}
+            setSimFromId={setSimFromId}
+            simToId={simToId}
+            setSimToId={setSimToId}
+            simSpeed={simSpeed}
+            setSimSpeed={setSimSpeed}
+            simResult={simResult}
+            onSimRun={() => { setSimResult(null); setSimRestartKey((n) => n + 1); }}
+            cellPlaybackAvailable={questCells.length > 0}
+            cellPlaybackCells={questCells.map((c) => c.pos)}
+            activeCellPos={activeCellPos}
+            setActiveCellPos={(pos) => {
+              setActiveCellPos(pos);
+              setSimResult(null);
+              setCellLegsCompleted(0);
+            }}
+            cellPlaybackDescription={cellSim?.description ?? []}
+            cellPlaybackError={cellSim?.error ?? null}
+            cellSwitchActivated={
+              cellSim?.switchActivationLegIndex !== undefined &&
+              cellLegsCompleted > cellSim.switchActivationLegIndex
+            }
+            cellLegsCompleted={cellLegsCompleted}
+            cellLegsTotal={cellSim?.legs.length ?? 0}
+            onPlayCell={() => {
+              setSimResult(null);
+              setCellLegsCompleted(0);
+              setSimRestartKey((n) => n + 1);
+            }}
+            manhattanInfo={{
+              loading: manhattan.loading,
+              error: manhattan.error,
+              trisFiltered: manhattan.trisFiltered,
+              gridSize: manhattan.grid ? `${manhattan.grid.rows}×${manhattan.grid.cols}` : null,
+              pathCorners: manhattan.path?.worldCorners.length ?? null,
+              usedDiagonal: manhattan.path?.usedDiagonal ?? false,
+            }}
           />
         );
       case 'svg':
@@ -729,6 +1065,42 @@ export default function UnifiedStageEditor() {
               onPlace={handlePlaceWaypoint}
               onWaypointClick={handleWaypointClick}
             />
+            <QuestObjectOverlay markers={questObjects} highlightCell={highlightCell} />
+            {showManhattanGrid && manhattan.grid && (
+              <ManhattanGridOverlay grid={manhattan.grid} path={manhattan.path} />
+            )}
+            {markerActive && <CoordMarkerOverlay x={markerXNum} z={markerZNum} />}
+            {/* Single-leg sim — only when cell playback is NOT the active mode. */}
+            {!activeCellPos && simPath.length >= 2 && (
+              <CapsuleSimOverlay
+                path={simPath}
+                floor={simFloor2d}
+                speed={simSpeed}
+                restartKey={simRestartKey}
+                onComplete={setSimResult}
+              />
+            )}
+            {/* Multi-leg cell playback — chained spawn → switch → exit. */}
+            {activeCellPos && cellSim && cellSim.legs.length > 0 && (
+              <CapsuleSimOverlay
+                legs={cellSim.legs}
+                switchActivationLegIndex={cellSim.switchActivationLegIndex}
+                fences={cellSim.fenceMarkers}
+                floor={simFloor2d}
+                speed={simSpeed}
+                restartKey={simRestartKey}
+                onComplete={setSimResult}
+                onLegComplete={(i) => setCellLegsCompleted(i + 1)}
+              />
+            )}
+            {/* URL-supplied markers stay rendered alongside the editable one
+                so the user can see the original "go look here" pin and the
+                spot they're currently typing at the same time. */}
+            {urlMarkers
+              .filter((m, i) => !(i === 0 && markerActive && m.x === markerXNum && m.z === markerZNum))
+              .map((m, i) => (
+                <CoordMarkerOverlay key={`url-${i}`} x={m.x} z={m.z} />
+              ))}
           </>
         );
       case 'svg':
@@ -762,6 +1134,34 @@ export default function UnifiedStageEditor() {
             onAreaChange={() => {}} // Area is derived from mapId
             onMapChange={setSelectedMapId}
           />
+
+          {/* Quest context — overlays switches/fences/key drops/NPCs on the floor
+              so the user knows where to drop waypoints. URL param ?quest=...&cell=...
+              auto-fills these. */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginLeft: 6, paddingLeft: 10, borderLeft: '1px solid #444' }}>
+            <label style={{ fontSize: 12, color: '#9ad6ff' }}>Quest:</label>
+            <select
+              value={selectedQuest ?? ''}
+              onChange={(e) => setSelectedQuest(e.target.value || null)}
+              style={{ padding: '5px 6px', background: '#1a1a2e', color: '#e6edf3', border: '1px solid #444', borderRadius: 3, fontSize: 12 }}
+            >
+              <option value="">— none —</option>
+              <option value="search_and_rescue">Search and Rescue</option>
+            </select>
+            {questObjects.length > 0 && (
+              <input
+                type="text"
+                placeholder="cell e.g. 2,2"
+                value={highlightCell ?? ''}
+                onChange={(e) => setHighlightCell(e.target.value || null)}
+                style={{ width: 90, padding: '5px 6px', background: '#1a1a2e', color: '#e6edf3', border: '1px solid #444', borderRadius: 3, fontSize: 12, fontFamily: 'monospace' }}
+                title="Highlight a specific cell's objects (dims others)"
+              />
+            )}
+            {selectedQuest && (
+              <span style={{ fontSize: 11, color: '#7a8b94' }}>{questObjects.length} objs</span>
+            )}
+          </div>
 
           <button
             onClick={goToPrevMap}

@@ -1,0 +1,44 @@
+{
+  "stageId": "s05a_td1",
+  "shape": "Three-portal hub with potted-plant obstacles (W/S/E gates)",
+  "description": "Three-portal hub: west, south, and east gates feed a central room that's broken up by decorative potted plants. The plants are not part of the floor mesh but DO have collision the player has to walk around. Authored paths keep the autopilot on safe lanes that thread between the plants — sticking to the backbone is mandatory.",
+  "portals": {
+    "west":  "spawn_west at (-17.42, 9.28) — gate on the west (low-X) side",
+    "south": "spawn_south at (5.75, 22.70) — gate on the south (high-Z) side",
+    "east":  "spawn_east at (22.37, -8.29) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "west_gate",   "position": [-17.42, 0,   9.28], "description": "west portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [5.75,   0,  22.70], "description": "south portal (matches wp_spawn_1)" },
+    { "id": "east_gate",   "position": [22.37,  0,  -8.29], "description": "east portal (matches wp_spawn_2)" },
+
+    { "id": "west_inner",  "position": [-8.91,  0,   9.24], "description": "west-side staging, just inside the west gate (matches dxvpst)" },
+    { "id": "north_inner", "position": [5.85,   0,   9.71], "description": "north-side staging, between west_inner and south_gate (matches makb99)" },
+    { "id": "ne_pocket",   "position": [19.51,  0,  10.42], "description": "NE corner detour — dead-end pocket (matches lqmrta)" },
+    { "id": "center",      "position": [-0.11,  0,  -0.08], "description": "room center, connects west_inner / north_inner / SE corridor (matches x2zhj3)" },
+    { "id": "se_inner",    "position": [10.81,  0,  -8.90], "description": "SE corridor staging, joins east_gate (matches d09d2e)" },
+    { "id": "se_pocket",   "position": [6.41,   0, -15.88], "description": "SE corner detour — dead-end pocket (matches iklzdo)" }
+  ],
+  "anchorEdges": [
+    ["west_gate", "west_inner"],
+    ["west_inner", "north_inner"],
+    ["west_inner", "center"],
+    ["north_inner", "south_gate"],
+    ["north_inner", "ne_pocket"],
+    ["north_inner", "center"],
+    ["center", "se_inner"],
+    ["se_inner", "east_gate"],
+    ["se_inner", "se_pocket"]
+  ],
+  "traversalNotes": [
+    "POTTED-PLANT OBSTACLES: the floor between the authored anchors is clear, but the room is decorated with potted-plant props that have collision. The solver MUST NOT emit any edge outside anchorEdges — straight-line shortcuts will wedge the player capsule against a plant.",
+    "Three direct routes through the hub:",
+    "  west ↔ south: spawn_west → west_inner → north_inner → spawn_south.",
+    "  west ↔ east:  spawn_west → west_inner → center → se_inner → spawn_east.",
+    "  south ↔ east: spawn_south → north_inner → center → se_inner → spawn_east (alt via west_inner if center is occupied).",
+    "Two DEAD-END corner pockets (ne_pocket, se_pocket) — likely homes for in-cell objectives. Routing to ne_pocket: backbone → north_inner → ne_pocket → reverse. Routing to se_pocket: backbone → se_inner → se_pocket → reverse.",
+    "DISPATCH RULE: any objective routes via the nearest backbone anchor (west_inner / north_inner / center / se_inner) — don't dispatch directly from a gate, and don't cross the hub to reach a dispatch anchor when a closer one is available.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}

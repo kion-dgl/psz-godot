@@ -1,0 +1,65 @@
+{
+  "stageId": "s05a_td2",
+  "shape": "Three-portal hub with dense potted-plant obstacles, narrow center (W/S/E gates)",
+  "description": "Variant of td1: three portals (W/S/E) feeding a central room, but with MORE potted plants constricting the floor down to a single narrow center anchor (5arqhp at the origin). All three portals route through this central pinch point. Several dead-end corner pockets (west, NE, S, SE) hold likely objective spots — each pocket is reachable only via its own backbone anchor.",
+  "portals": {
+    "west":  "spawn_west at (-18.38, 11.99) — west gate, NW area",
+    "south": "spawn_south at (4.30, 19.73) — south gate, slightly east of center",
+    "east":  "spawn_east at (22.78, -3.28) — east gate, mid-Z"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "west_gate",      "position": [-18.38, 0,  11.99], "description": "west portal (matches wp_spawn_2)" },
+    { "id": "south_gate",     "position": [4.30,   0,  19.73], "description": "south portal (matches wp_spawn_1)" },
+    { "id": "east_gate",      "position": [22.78,  0,  -3.28], "description": "east portal (matches wp_spawn_0)" },
+
+    { "id": "nw_inner",       "position": [-8.92,  0,  11.33], "description": "NW staging, just inside west gate (matches h0gwpo)" },
+    { "id": "north_inner",    "position": [3.77,   0,  12.13], "description": "north staging, between south gate and center (matches q2j7zy)" },
+    { "id": "ne_pocket",      "position": [10.13,  0,  10.17], "description": "NE detour pocket (matches vm3g94)" },
+
+    { "id": "w_inner",        "position": [-11.18, 0,  -1.65], "description": "west interior staging (matches p83hjl)" },
+    { "id": "w_pocket_n",     "position": [-20.47, 0,  -4.27], "description": "west wall dead-end, north (matches 6ozkwd)" },
+    { "id": "w_pocket_s",     "position": [-19.69, 0, -11.96], "description": "west wall dead-end, south (matches hva0we)" },
+
+    { "id": "center",         "position": [0.09,   0,   0.10], "description": "narrow center pinch point — every cross-room route funnels through here (matches 5arqhp)" },
+
+    { "id": "south_inner",    "position": [1.01,   0,  -9.38], "description": "south interior staging, between center and S/SE pockets (matches txil4k)" },
+    { "id": "s_pocket",       "position": [5.32,   0, -19.03], "description": "south dead-end pocket (matches c427wf)" },
+    { "id": "se_pocket",      "position": [14.85,  0, -18.31], "description": "SE corner dead-end pocket (matches iedaby)" },
+
+    { "id": "e_inner",        "position": [15.44,  0,  -3.72], "description": "east interior staging, joins east_gate (matches fwyli3)" },
+    { "id": "se_inner",       "position": [9.72,   0,  -8.77], "description": "SE interior staging, joins center via east route (matches sjbjcz)" }
+  ],
+  "anchorEdges": [
+    ["west_gate", "nw_inner"],
+    ["nw_inner", "w_inner"],
+    ["nw_inner", "north_inner"],
+    ["nw_inner", "center"],
+    ["w_inner", "w_pocket_n"],
+    ["w_inner", "w_pocket_s"],
+    ["w_inner", "center"],
+    ["north_inner", "south_gate"],
+    ["north_inner", "ne_pocket"],
+    ["north_inner", "center"],
+    ["center", "south_inner"],
+    ["center", "se_inner"],
+    ["south_inner", "s_pocket"],
+    ["south_inner", "se_pocket"],
+    ["south_inner", "se_inner"],
+    ["se_inner", "s_pocket"],
+    ["se_inner", "se_pocket"],
+    ["se_inner", "e_inner"],
+    ["s_pocket", "se_pocket"],
+    ["se_pocket", "e_inner"],
+    ["e_inner", "east_gate"]
+  ],
+  "traversalNotes": [
+    "DENSE POTTED-PLANT OBSTACLES: the floor is reachable but the plants narrow the safe lanes. STRICT-BACKBONE applies — any edge outside anchorEdges will wedge the player capsule.",
+    "All three portals funnel through CENTER (5arqhp). Direct routes:",
+    "  west ↔ south: spawn_west → nw_inner → north_inner → spawn_south (the north top-bar bypasses center if neither is fenced).",
+    "  west ↔ east:  spawn_west → nw_inner → center → se_inner → e_inner → spawn_east.",
+    "  south ↔ east: spawn_south → north_inner → center → se_inner → e_inner → spawn_east.",
+    "Four DEAD-END pockets for objective dispatch: w_pocket_n / w_pocket_s (via w_inner), ne_pocket (via north_inner), s_pocket / se_pocket (via south_inner or se_inner). The center should be passed through for cross-pocket transit, never used as a dispatch hub itself (it's the narrowest point — keep walks short there).",
+    "Same primitive family as td1 (3-portal hub with plant obstacles); td2 is the dense variant where the center is constricted to a single anchor. Solver should treat as td1 with the dispatch-hub anchor demoted to a transit-only pinch."
+  ]
+}

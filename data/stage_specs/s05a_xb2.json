@@ -1,0 +1,76 @@
+{
+  "stageId": "s05a_xb2",
+  "shape": "X-junction (4 portals: N/S/E/W)",
+  "description": "Four-portal X-junction with two staging hubs in the middle. A WEST hub (krgk19) gathers traffic from the west, north, and a NW dead-end pocket; a CENTRAL hub area (yumvdc + l9phbl + 28p0rn) gathers traffic from the south and east arms. The two hubs are richly interconnected, so cross-portal routing through the center has multiple equivalent paths. Each portal arm has its own short staging anchor to keep the legs axis-aligned.",
+  "portals": {
+    "south": "spawn_south at (-0.11, 23.99) — gate on the south (high-Z) side",
+    "north": "spawn_north at (-12.22, -16.99) — gate on the north (low-Z) side, slightly west of center",
+    "west":  "spawn_west at (-23.49, 0.13) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.62, 13.94) — gate on the east (high-X) side, slightly north"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-0.11,  0,  23.99], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "north_gate",  "position": [-12.22, 0, -16.99], "description": "north portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-23.49, 0,   0.13], "description": "west portal (matches wp_spawn_2)" },
+    { "id": "east_gate",   "position": [23.62,  0,  13.94], "description": "east portal (matches wp_spawn_3)" },
+
+    { "id": "west_hub",    "position": [-15.96, 0,   0.09], "description": "WEST hub — gathers west / north / NW-pocket traffic (matches krgk19)" },
+    { "id": "north_inner", "position": [-12.04, 0,  -9.99], "description": "north arm staging, between north_gate and the hubs (matches oid5o5)" },
+    { "id": "nw_pocket",   "position": [-14.26, 0,  14.01], "description": "NW corner dead-end pocket (matches 4cvis9)" },
+
+    { "id": "south_inner", "position": [-0.54,  0,  15.44], "description": "south arm staging, between south_gate and the central hub (matches 4mguoj)" },
+    { "id": "east_inner",  "position": [15.55,  0,  14.51], "description": "east arm staging, near east_gate (matches p2ejwm)" },
+    { "id": "east_mid",    "position": [7.73,   0,  14.83], "description": "east arm mid, between east_inner and the central hub (matches i4njm9)" },
+    { "id": "se_inner",    "position": [7.23,   0,   4.23], "description": "SE-side staging, connects central hub to east arm (matches 28p0rn)" },
+    { "id": "center",      "position": [0.06,   0,   0.20], "description": "geometric center of the X (matches yumvdc)" },
+    { "id": "nw_inner",    "position": [-6.94,  0,  -5.34], "description": "NW-side staging of the central hub (matches a4fvy7)" },
+    { "id": "sw_inner",    "position": [-5.41,  0,   6.72], "description": "SW-side staging of the central hub (matches l9phbl)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["north_inner", "west_hub"],
+    ["north_inner", "nw_inner"],
+    ["north_inner", "sw_inner"],
+
+    ["west_gate", "west_hub"],
+    ["west_hub", "nw_pocket"],
+    ["west_hub", "sw_inner"],
+    ["west_hub", "south_inner"],
+    ["west_hub", "se_inner"],
+    ["west_hub", "nw_inner"],
+
+    ["nw_pocket", "south_inner"],
+    ["nw_pocket", "sw_inner"],
+
+    ["nw_inner", "center"],
+    ["center", "sw_inner"],
+    ["center", "se_inner"],
+
+    ["sw_inner", "south_inner"],
+    ["sw_inner", "east_mid"],
+    ["sw_inner", "se_inner"],
+
+    ["south_gate", "south_inner"],
+    ["south_inner", "east_mid"],
+
+    ["east_mid", "se_inner"],
+    ["east_mid", "east_inner"],
+    ["east_inner", "east_gate"]
+  ],
+  "traversalNotes": [
+    "FOUR-PORTAL X-JUNCTION with TWO interconnected hubs:",
+    "  WEST HUB (west_hub) gathers west + north + NW-pocket traffic.",
+    "  CENTRAL HUB (center / sw_inner / nw_inner / se_inner) gathers south + east traffic. The two hubs are linked via several edges (e.g. west_hub ↔ sw_inner, west_hub ↔ se_inner) so cross-portal routes have alternate paths.",
+    "Direct routes through the X (picking the canonical hop sequence; alternates exist via the hub edges):",
+    "  west ↔ east:  spawn_west → west_hub → sw_inner → east_mid → east_inner → spawn_east.",
+    "  west ↔ south: spawn_west → west_hub → south_inner → spawn_south.",
+    "  west ↔ north: spawn_west → west_hub → north_inner → spawn_north.",
+    "  north ↔ south: spawn_north → north_inner → west_hub → south_inner → spawn_south (or via nw_inner → center → sw_inner → south_inner).",
+    "  north ↔ east:  spawn_north → north_inner → sw_inner → east_mid → east_inner → spawn_east.",
+    "  south ↔ east:  spawn_south → south_inner → east_mid → east_inner → spawn_east.",
+    "DISPATCH RULE: nw_pocket is the obvious dead-end detour for objectives — reach via west_hub. Other 'interior' anchors (center, nw_inner, sw_inner, se_inner) are transit-only; dispatch via the arm-end staging anchors (north_inner, south_inner, east_inner) for arm-side objectives.",
+    "Multiple equivalent routes between hubs — the solver can pick whichever stays axis-aligned. Don't emit cross-arm diagonals.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}

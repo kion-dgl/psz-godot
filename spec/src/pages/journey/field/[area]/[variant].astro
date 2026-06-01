@@ -1,0 +1,105 @@
+---
+// Dynamic per-area + per-variant field viewer. One Astro page per
+// (area, variant) pair derived from unified-stage-configs.json — every
+// stage that has a config gets a viewable URL under
+// /journey/field/<area>/<variant>.
+//
+// Each page loads the slim viewer (StageSpecExplorer) with the stage list
+// for its (area, variant) bucket. Floor + visual mesh + Manhattan grid
+// come from the runtime fetch in the viewer; specs come from
+// data/stage_specs/<id>.json at build time.
+
+import Base from '../../../../layouts/Base.astro';
+import StageSpecExplorer from '../../../../components/stage-spec/StageSpecExplorer.tsx';
+import { AREA_META, areaNumToSlug } from '../../../../components/stage-spec/areas';
+
+export async function getStaticPaths() {
+  // Re-import inside getStaticPaths (Astro hoists this to module scope,
+  // outside the frontmatter — top-level consts in the frontmatter
+  // aren't visible here).
+  const stageConfigs = (await import('../../../../../../data/stage_configs/unified-stage-configs.json')).default;
+  const { areaNumToSlug } = await import('../../../../components/stage-spec/areas');
+  const buckets: Record<string, string[]> = {};
+  for (const id of Object.keys(stageConfigs)) {
+    const m = id.match(/^s(\d{2})([a-z])_/);
+    if (!m) continue;
+    const area = areaNumToSlug(m[1]);
+    if (!area) continue;
+    const key = `${area}|${m[2]}`;
+    (buckets[key] ??= []).push(id);
+  }
+  return Object.entries(buckets).map(([key, ids]) => {
+    const [area, variant] = key.split('|');
+    return { params: { area, variant }, props: { stages: ids.sort() } };
+  });
+}
+
+const { area, variant } = Astro.params;
+const { stages } = Astro.props as { stages: string[] };
+const meta = AREA_META[area!];
+
+// Eager-load every committed stage spec at build time. Missing entries
+// render as "no spec yet" so you can tell which rooms still need authoring.
+const specs = import.meta.glob('../../../../../../data/stage_specs/*.json', {
+  eager: true,
+  import: 'default',
+}) as Record<string, any>;
+const specByStage: Record<string, any> = {};
+for (const [path, spec] of Object.entries(specs)) {
+  if (spec?.stageId) specByStage[spec.stageId] = spec;
+  else {
+    const match = path.match(/\/([^/]+)\.json$/);
+    if (match) specByStage[match[1]] = spec;
+  }
+}
+
+const floorBase = `cdn/assets/stages/${meta.folder}_${variant}`;
+const title = `${meta.display} / ${variant.toUpperCase()}`;
+---
+
+<Base title={`${title} — Field Stages`}>
+  <div class="page">
+    <header>
+      <a href="/" class="back">← spec</a>
+      <h1>{title}</h1>
+      <span class="count">{stages.length} stages</span>
+    </header>
+
+    <StageSpecExplorer
+      client:only="react"
+      stages={stages}
+      specs={specByStage}
+      floorBase={floorBase}
+    />
+  </div>
+
+  <style>
+    .page {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 8px 16px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      flex-shrink: 0;
+    }
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .back {
+      color: #8b949e;
+      font-size: 13px;
+    }
+    .count {
+      margin-left: auto;
+      color: #8b949e;
+      font-size: 12px;
+    }
+  </style>
+</Base>

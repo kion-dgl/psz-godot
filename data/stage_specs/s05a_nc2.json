@@ -1,0 +1,46 @@
+{
+  "stageId": "s05a_nc2",
+  "shape": "Dead-end cherry (single south gate, multiple platforms)",
+  "description": "Single-gate cherry layout: spawn_south enters an EAST hub platform, from which two arms wrap around the room — a NORTH arm running west along the top, and a SOUTH arm running west along the bottom. Each arm ends in its own dead-end pocket on the west side. The two arms do NOT meet on the west side (the central west region is void). Same primitive as ic3, but with one portal closed off, so the autopilot ultimately returns to spawn after exploring.",
+  "portals": {
+    "south": "spawn_south at (20.12, 12.81) — the only portal, on the east side of the east hub platform"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",      "position": [20.12,  0,  12.81], "description": "south portal (matches wp_spawn_0)" },
+
+    { "id": "east_hub_se",     "position": [20.43,  0,   5.08], "description": "east hub — SE corner, joins south_gate (matches 6xuvlg)" },
+    { "id": "east_hub_sw",     "position": [10.60,  0,   5.43], "description": "east hub — SW corner (matches 4ypron)" },
+    { "id": "east_hub_nw",     "position": [10.57,  0,  19.32], "description": "east hub — NW corner (matches nxxw7e)" },
+
+    { "id": "north_arm_mid",   "position": [-5.98,  0,  20.25], "description": "NORTH arm middle (matches v64es0)" },
+    { "id": "north_arm_end",   "position": [-16.13, 0,  10.43], "description": "NORTH arm dead-end pocket (matches f1pm2s)" },
+
+    { "id": "south_arm_e",     "position": [21.28,  0, -14.62], "description": "SOUTH arm — east end (matches zppgcb)" },
+    { "id": "south_arm_mid",   "position": [9.91,   0, -14.26], "description": "SOUTH arm — middle (matches g7wi30)" },
+    { "id": "south_arm_w",     "position": [-6.61,  0, -15.04], "description": "SOUTH arm — west end (matches fpqwqz)" },
+    { "id": "south_arm_end",   "position": [-17.18, 0,  -4.50], "description": "SOUTH arm dead-end pocket (matches 8d4thu)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "east_hub_se"],
+    ["east_hub_se", "east_hub_sw"],
+    ["east_hub_se", "south_arm_mid"],
+    ["east_hub_se", "south_arm_e"],
+    ["east_hub_sw", "east_hub_nw"],
+    ["east_hub_sw", "south_arm_mid"],
+    ["east_hub_sw", "south_arm_e"],
+    ["east_hub_nw", "north_arm_mid"],
+    ["north_arm_mid", "north_arm_end"],
+    ["south_arm_e", "south_arm_mid"],
+    ["south_arm_mid", "south_arm_w"],
+    ["south_arm_w", "south_arm_end"]
+  ],
+  "traversalNotes": [
+    "DEAD-END CHERRY: only one portal (spawn_south on the east hub). After exploring, the autopilot leaves back through spawn_south.",
+    "TWO ARMS, DISCONNECTED ENDS: the NORTH arm and SOUTH arm both leave the east hub heading west, but they do NOT meet on the west side. To traverse one arm then the other, the autopilot must return to the east hub and switch arms there.",
+    "Reaching north_arm_end: south_gate → east_hub_se → east_hub_sw → east_hub_nw → north_arm_mid → north_arm_end. Reverse to exit.",
+    "Reaching south_arm_end: south_gate → east_hub_se → south_arm_e → south_arm_mid → south_arm_w → south_arm_end. Reverse to exit.",
+    "Each arm is a single-file corridor — strict-backbone applies once the autopilot leaves the east hub. Do not emit cross-arm edges (e.g. north_arm_end ↔ south_arm_end) regardless of what the grid says.",
+    "Same primitive as ic3 (multi-platform with stems) but in dead-end form. Solver should treat as ic3 with the second portal closed."
+  ]
+}

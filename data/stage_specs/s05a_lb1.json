@@ -1,0 +1,25 @@
+{
+  "stageId": "s05a_lb1",
+  "shape": "Square arena (L-topology, N+E gates)",
+  "description": "Two-portal square arena, like ib1 but with the gates on perpendicular sides (north and east) instead of opposite sides — so the straight-line route between gates is an L through the center rather than a straight N↔S line. Wide open floor for combat.",
+  "portals": {
+    "north": "spawn_north at (-0.16, -23.95) — gate on the north (low-Z) side",
+    "east":  "spawn_east at (23.99, 0.36) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-0.16, 0, -23.95], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [23.99, 0,   0.36], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "arena_center","position": [0.30,  0,   0.10], "description": "center of the square arena — dispatch anchor (matches oc5a)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "arena_center"],
+    ["arena_center", "east_gate"]
+  ],
+  "traversalNotes": [
+    "Direct N↔E route is an L through the center: spawn_north → arena_center → spawn_east (and reverse). Both legs are axis-aligned (one north-south, one east-west), keeping the autopilot's camera-relative input clean.",
+    "DISPATCH RULE: any in-cell objective routes through arena_center (oc5a). Walk current_gate → arena_center → objective → arena_center → next_gate.",
+    "Wide combat floor: kill_all may spawn enemies anywhere on the square. After combat, return to arena_center before heading to the exit gate.",
+    "Same shape primitive as ib1 (square arena) — the only difference is which two gates exist. Solver should treat this as the SAME pattern as ib1 with gate-direction labels swapped."
+  ]
+}

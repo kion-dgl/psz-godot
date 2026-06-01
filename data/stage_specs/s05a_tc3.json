@@ -1,0 +1,43 @@
+{
+  "stageId": "s05a_tc3",
+  "shape": "E-shape (vertical spine on west, three arms going east)",
+  "description": "E-shaped layout with a vertical spine along the west side and three arms extending east. The spine runs north-south at X≈-12, joining the spine anchors p7kn6i (north end) → c217jr (middle) → i93oeu (south end). Three arms branch east: a NORTH arm running to mjad8x (dead-end), a MIDDLE arm running through 58pmly to spawn_east, and a SOUTH arm running through ho8mcg. The west portal sits at the north end of the spine; the south portal sits at the south end of the spine.",
+  "portals": {
+    "south": "spawn_south at (-14.99, 22.79) — south end of the spine area",
+    "east":  "spawn_east at (22.86, -2.04) — east end of the MIDDLE arm",
+    "west":  "spawn_west at (-22.85, -12.96) — west side, joining the north end of the spine"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-14.99, 0,  22.79], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [22.86,  0,  -2.04], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-22.85, 0, -12.96], "description": "west portal (matches wp_spawn_2)" },
+
+    { "id": "spine_north", "position": [-11.72, 0, -15.24], "description": "spine north end — joins west arm + north arm (matches p7kn6i)" },
+    { "id": "spine_mid",   "position": [-11.53, 0,  -1.33], "description": "spine middle — joins middle arm (matches c217jr)" },
+    { "id": "spine_south", "position": [-12.31, 0,  12.75], "description": "spine south end — joins south arm + south gate (matches i93oeu)" },
+
+    { "id": "north_arm_e", "position": [15.15,  0, -18.40], "description": "NORTH arm east end — DEAD-END pocket (matches mjad8x)" },
+    { "id": "mid_arm_e",   "position": [13.40,  0,  -2.95], "description": "MIDDLE arm east staging (matches 58pmly)" },
+    { "id": "south_arm_e", "position": [2.73,   0,  14.03], "description": "SOUTH arm east staging (matches ho8mcg)" }
+  ],
+  "anchorEdges": [
+    ["west_gate", "spine_north"],
+    ["spine_north", "north_arm_e"],
+    ["spine_north", "spine_mid"],
+    ["spine_mid", "mid_arm_e"],
+    ["spine_mid", "spine_south"],
+    ["spine_south", "south_arm_e"],
+    ["spine_south", "south_gate"]
+  ],
+  "traversalNotes": [
+    "E-SHAPE BACKBONE: vertical spine (spine_north → spine_mid → spine_south) with three east-going arms branching off each spine node. The west and south portals attach directly to the spine; the east portal is at the tip of the middle arm.",
+    "Direct west ↔ south: spawn_west → spine_north → spine_mid → spine_south → spawn_south.",
+    "Direct west ↔ east: spawn_west → spine_north → spine_mid → mid_arm_e → spawn_east. The middle arm's east end (mid_arm_e) is the last authored anchor before spawn_east.",
+    "Direct south ↔ east: spawn_south → spine_south → spine_mid → mid_arm_e → spawn_east.",
+    "MISSING EDGE NOTE: the authored graph as currently committed has no edge between mid_arm_e (58pmly) and spawn_east. The solver / autopilot will need this added to actually traverse via the middle arm — flag if the autopilot reaches mid_arm_e and stalls. Author probably intended it as a straight axis-aligned leg; can be added in a follow-up paste.",
+    "NORTH arm is a DEAD-END pocket (mjad8x has no portal). Routing to mjad8x: enter spine_north → mjad8x → reverse. Same dispatch-via-spine rule as the other arms.",
+    "DISPATCH RULE: arm-side objectives route via the arm's east-end anchor (north_arm_e / mid_arm_e / south_arm_e), which is the child of the spine node for that arm. Don't cross the spine to dispatch — pick the same-arm anchor.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}

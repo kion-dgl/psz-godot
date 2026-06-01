@@ -1,0 +1,24 @@
+{
+  "stageId": "s05a_ib1",
+  "shape": "Square arena (I-topology)",
+  "description": "Two-portal square arena. Like an I-corridor in topology (one entry on the north, one on the south, no branches) but the middle is a wide open square floor — room for combat encounters. The straight-line route between the portals runs through the center.",
+  "portals": {
+    "north": "spawn_north at (0.02, -23.53) — gate on the north (low-Z) end",
+    "south": "spawn_south at (-0.09, 23.50) — gate on the south (high-Z) end"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [0.02,  0, -23.53], "description": "north portal area (matches wp_spawn_1)" },
+    { "id": "south_gate",  "position": [-0.09, 0,  23.50], "description": "south portal area (matches wp_spawn_0)" },
+    { "id": "arena_center","position": [-0.10, 0,  -0.07], "description": "center of the square arena — dispatch anchor (matches wp_1780257706152_l5q4qb)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "arena_center"],
+    ["arena_center", "south_gate"]
+  ],
+  "traversalNotes": [
+    "Straight-line traversal: the autopilot can walk directly between spawn_north and spawn_south through the center of the arena.",
+    "DISPATCH RULE (same as I-corridors): any in-cell objective routes through arena_center (l5q4qb). Walk current_gate → arena_center → objective → arena_center → next_gate. This keeps movement axis-aligned and avoids drifting into walls when the player chases enemies around the arena.",
+    "The wide center floor is for combat — expect kill_all actions to spawn enemies anywhere in the room. The dispatch rule still applies after combat: pick the route back to arena_center before heading to the exit gate."
+  ]
+}

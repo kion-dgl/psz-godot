@@ -1,0 +1,31 @@
+{
+  "stageId": "s05a_tb3",
+  "shape": "T-junction (3 portals: south, east, west) — asymmetric, two-anchor junction",
+  "description": "Three-portal T-shape. The junction between corridors isn't a single point — it's split into two anchors connected by a short corridor: the SE junction (where the south and east arms meet) and the W junction (where the west arm ends). The SE junction handles south↔east routing directly; reaching the west arm requires hopping from SE junction → W junction → west gate.",
+  "portals": {
+    "south": "spawn_south at (0.08, 23.21) — gate on the south (high-Z) side",
+    "east":  "spawn_east at (23.36, 13.91) — gate on the east (high-X) side",
+    "west":  "spawn_west at (-23.33, 0.00) — gate on the west (low-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",    "position": [0.08,   0,  23.21], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "east_gate",     "position": [23.36, 0,  13.91], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "west_gate",     "position": [-23.33, 0,   0.00], "description": "west portal (matches wp_spawn_2)" },
+    { "id": "se_junction",   "position": [0.28,   0,  14.48], "description": "junction where the south and east arms meet (matches 5d21zq)" },
+    { "id": "w_junction",    "position": [-13.81, 0,  -0.23], "description": "junction at the east end of the west arm (matches carm8t)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "se_junction"],
+    ["east_gate", "se_junction"],
+    ["se_junction", "w_junction"],
+    ["w_junction", "west_gate"]
+  ],
+  "traversalNotes": [
+    "Three-portal T-junction. The junction is asymmetric — the SE corner (where south + east arms meet) is one anchor; the west arm's inner end is a separate anchor. A short connector corridor joins the two junctions.",
+    "Direct south ↔ east: spawn_south → se_junction → spawn_east. Two hops.",
+    "south or east ↔ west: spawn_(south|east) → se_junction → w_junction → spawn_west. Three hops.",
+    "DISPATCH RULE: objectives route through the nearest junction anchor (se_junction or w_junction depending on which arm the objective is on). Don't cross junctions to dispatch an objective — pick the junction in the same arm.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}
