@@ -1,0 +1,36 @@
+{
+  "stageId": "s01b_ic1",
+  "shape": "Diagonal Z-corridor (NW + SE gates with corner detour pockets)",
+  "description": "Two-portal corridor running diagonally across the room: spawn_north sits in the NW corner, spawn_south in the SE corner. The backbone steps NW → west_arm → center → east_arm → SE. Two single-degree detour pockets hang off the arm ends (sw_pocket off the west arm, ne_pocket off the east arm) — likely objective spots.",
+  "portals": {
+    "north": "spawn_north at (-17, -14.88) — gate on the NW (low-X / low-Z) side",
+    "south": "spawn_south at (16.98, 21.86) — gate on the SE (high-X / high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-17,    0, -14.88], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [16.98,  0,  21.86], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "west_arm",    "position": [-15.00, 0,   6.71], "description": "west-arm staging just inside north_gate (matches y9dmau)" },
+    { "id": "center",      "position": [0.87,   0,   7.13], "description": "center anchor (matches dpfbqi)" },
+    { "id": "east_arm",    "position": [16.18,  0,   7.51], "description": "east-arm staging just inside south_gate (matches jbxboy)" },
+
+    { "id": "sw_pocket",   "position": [-17.19, 0,  18.38], "description": "SW corner dead-end pocket off west_arm (matches dig04t)" },
+    { "id": "ne_pocket",   "position": [15.84,  0, -14.38], "description": "NE corner dead-end pocket off east_arm (matches o6wrly)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "west_arm"],
+    ["south_gate", "east_arm"],
+
+    ["west_arm", "center"],
+    ["center", "east_arm"],
+
+    ["west_arm", "sw_pocket"],
+    ["east_arm", "ne_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → west_arm → center → east_arm → spawn_south. 4 hops.",
+    "DISPATCH RULE: sw_pocket objective via west_arm → sw_pocket → reverse. ne_pocket objective via east_arm → ne_pocket → reverse. Center objectives via the backbone anchors.",
+    "STRICT-BACKBONE: corner pockets are single-degree detours — don't emit cross-pocket edges."
+  ]
+}
