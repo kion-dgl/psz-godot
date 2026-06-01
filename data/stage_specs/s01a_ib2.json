@@ -1,0 +1,51 @@
+{
+  "stageId": "s01a_ib2",
+  "shape": "2-portal diagonal arena (N + S gates) with south clique and west pocket",
+  "description": "Two-portal stage with a south clique (okby9v + uy3zyc + h6upjx + 4x7lkk) anchoring the south gate, a north clique (dgsn9n + bd6n20 + 52ssis) anchoring the north gate, and a single mid-bridge (h1s4qq) connecting east_mid to north_center. A west pocket (kmtm9a) hangs off the west-mid anchor as a dead-end.",
+  "portals": {
+    "south": "spawn_south at (11.84, 24.29) — gate on the south (high-Z) side, east column",
+    "north": "spawn_north at (-17.00, -23.53) — gate on the north (low-Z) side, west column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [11.84,  0,  24.29], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "north_gate",  "position": [-17.00, 0, -23.53], "description": "north portal (matches wp_spawn_1)" },
+
+    { "id": "south_inner", "position": [11.58,  0,  14.80], "description": "south entry hub - 4-way south-clique anchor (matches okby9v)" },
+    { "id": "south_w",     "position": [-3.37,  0,  16.91], "description": "south arc west (matches h6upjx)" },
+    { "id": "south_c",     "position": [4.40,   0,   6.38], "description": "south clique center (matches uy3zyc)" },
+    { "id": "east_mid",    "position": [13.85,  0,  -7.92], "description": "east-mid step - south to mid bridge (matches 4x7lkk)" },
+
+    { "id": "mid_bridge",  "position": [7.97,   0, -15.80], "description": "mid bridge - east_mid to north_center (matches h1s4qq)" },
+
+    { "id": "north_c",     "position": [-4.22,  0, -14.24], "description": "north-center (matches bd6n20)" },
+    { "id": "north_inner", "position": [-16.99, 0, -17.49], "description": "north entry hub (matches dgsn9n)" },
+    { "id": "west_mid",    "position": [-14.79, 0,  -9.13], "description": "west-mid step (matches 52ssis)" },
+    { "id": "west_pocket", "position": [-19.35, 0,   2.34], "description": "west pocket dead-end (matches kmtm9a)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["north_gate", "north_inner"],
+
+    ["south_inner", "south_w"],
+    ["south_inner", "south_c"],
+    ["south_inner", "east_mid"],
+    ["south_c", "south_w"],
+    ["south_c", "east_mid"],
+
+    ["east_mid", "mid_bridge"],
+    ["mid_bridge", "north_c"],
+
+    ["north_inner", "west_mid"],
+    ["north_inner", "north_c"],
+    ["west_mid", "north_c"],
+    ["west_mid", "west_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → north_c → mid_bridge → east_mid → south_inner → spawn_south. 6 hops via the mid bridge.",
+    "Alt route via west: spawn_north → north_inner → west_mid → north_c → mid_bridge → east_mid → south_inner → spawn_south (one extra hop, west arc).",
+    "mid_bridge (h1s4qq) is the only mid-arena connection between the south and north clusters — strict single bridge.",
+    "west_pocket and south_w are single-degree dead-ends — corner objectives.",
+    "south_inner is the 4-way south-clique dispatcher; north_inner is the 3-way north dispatcher."
+  ]
+}
