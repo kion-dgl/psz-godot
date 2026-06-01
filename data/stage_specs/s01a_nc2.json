@@ -1,0 +1,44 @@
+{
+  "stageId": "s01a_nc2",
+  "shape": "Single-portal dead-end (south gate) with two exploration arms + south cross-link",
+  "description": "Single-portal dead-end stage where the south entry (jn8vx8) fans into two arms: a long WEST/NORTH chain (44qlix → z1qw4m → jhbko6 → qz9f6t) and a shorter EAST chain (upcmke → n25dmk → 7odqgu). A south cross-link (44qlix ↔ upcmke) joins the two arms near the south end, giving a small loop between south_inner / 44qlix / upcmke.",
+  "portals": {
+    "south": "spawn_south at (-14.15, 24.29) — the only portal, on the south (high-Z) side, west column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-14.15, 0,  24.29], "description": "south portal (matches wp_spawn_0)" },
+
+    { "id": "south_inner", "position": [-13.78, 0,  17.43], "description": "south entry hub - 3-way dispatcher (matches jn8vx8)" },
+
+    { "id": "west_mid",    "position": [-17.28, 0,   3.10], "description": "west wall mid - cross-link to center (matches 44qlix)" },
+    { "id": "nw_step",     "position": [-15.25, 0,  -8.81], "description": "NW step (matches z1qw4m)" },
+    { "id": "n_step",      "position": [-10.20, 0, -18.10], "description": "north step (matches jhbko6)" },
+    { "id": "n_pocket",    "position": [1.16,   0, -17.20], "description": "north pocket dead-end (matches qz9f6t)" },
+
+    { "id": "center",      "position": [-4.15,  0,  10.28], "description": "central anchor - east arm start, cross-link to west (matches upcmke)" },
+    { "id": "east_c",      "position": [5.59,   0,  12.97], "description": "east-central step (matches n25dmk)" },
+    { "id": "east_corner", "position": [16.92,  0,  14.65], "description": "east corner dead-end (matches 7odqgu)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+
+    ["south_inner", "west_mid"],
+    ["south_inner", "center"],
+
+    ["west_mid", "center"],
+
+    ["west_mid", "nw_step"],
+    ["nw_step", "n_step"],
+    ["n_step", "n_pocket"],
+
+    ["center", "east_c"],
+    ["east_c", "east_corner"]
+  ],
+  "traversalNotes": [
+    "DEAD-END: single south gate. After exploring, autopilot returns to spawn_south.",
+    "Two arms: WEST/NORTH chain (south_inner → west_mid → nw_step → n_step → n_pocket, 5 hops to the N pocket) and EAST chain (south_inner → center → east_c → east_corner, 4 hops to the east corner).",
+    "South triangle (south_inner + west_mid + center) lets the autopilot pick either arm without backtracking.",
+    "STRICT-BACKBONE on the dead-end arms — single-file after the south triangle."
+  ]
+}

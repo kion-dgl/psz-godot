@@ -2402,53 +2402,142 @@
     ]
   },
   "s01a_nc2": {
-    "floorCollision": {
-      "excludedMeshPatterns": [],
-      "triangles": {
-        "tri_30": false,
-        "tri_31": false,
-        "tri_32": false,
-        "tri_33": false,
-        "tri_40": false,
-        "tri_41": false
-      },
-      "yTolerance": 0.25
-    },
-    "lastModified": "2026-02-13T19:07:52.021Z",
-    "mapId": "s01a_nc2",
-    "obstacles": [
+    "waypoints": [
       {
-        "cylinderHeight": 2,
-        "id": "obs_1769092386959_vfhdmt3te",
-        "label": "Boulder",
-        "position": [
-          -18.724136989673486,
-          0,
-          -23.137506605465084
-        ],
-        "radius": 4.1,
-        "rotation": [
-          0,
-          0,
-          0
-        ],
-        "type": "cylinder"
-      }
-    ],
-    "portals": [
-      {
-        "direction": "south",
-        "id": "portal_1769092368149_s8xo45sfu",
-        "label": "south",
+        "id": "wp_spawn_0_1780293314863",
         "position": [
           -14.148008946738306,
           0,
-          21.287074183972
-        ]
+          24.287074183972
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_1780293314863",
+        "position": [
+          -14.148008946738306,
+          0,
+          28.287074183972
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_1780293320546_jn8vx8",
+        "position": [
+          -13.77520744018689,
+          0,
+          17.42939184122441
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780293321930_44qlix",
+        "position": [
+          -17.282875156773798,
+          0,
+          3.0973177645372516
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780293323313_z1qw4m",
+        "position": [
+          -15.246624878177201,
+          0,
+          -8.808213586978066
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780293324446_jhbko6",
+        "position": [
+          -10.19522884982073,
+          0,
+          -18.10058954752687
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780293325430_qz9f6t",
+        "position": [
+          1.1631633771080416,
+          0,
+          -17.198660963281316
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780293327030_upcmke",
+        "position": [
+          -4.146942625572052,
+          0,
+          10.284930947052956
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780293328480_n25dmk",
+        "position": [
+          5.589564557926856,
+          0,
+          12.970465766995595
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780293329680_7odqgu",
+        "position": [
+          16.915232022484727,
+          0,
+          14.650166989348126
+        ],
+        "kind": "point"
       }
     ],
-    "textureFixes": [],
-    "version": 1
+    "waypointEdges": [
+      [
+        "wp_load_0_1780293314863",
+        "wp_spawn_0_1780293314863"
+      ],
+      [
+        "wp_1780293320546_jn8vx8",
+        "wp_spawn_0_1780293314863"
+      ],
+      [
+        "wp_1780293320546_jn8vx8",
+        "wp_1780293321930_44qlix"
+      ],
+      [
+        "wp_1780293320546_jn8vx8",
+        "wp_1780293327030_upcmke"
+      ],
+      [
+        "wp_1780293321930_44qlix",
+        "wp_1780293323313_z1qw4m"
+      ],
+      [
+        "wp_1780293321930_44qlix",
+        "wp_1780293327030_upcmke"
+      ],
+      [
+        "wp_1780293323313_z1qw4m",
+        "wp_1780293324446_jhbko6"
+      ],
+      [
+        "wp_1780293324446_jhbko6",
+        "wp_1780293325430_qz9f6t"
+      ],
+      [
+        "wp_1780293327030_upcmke",
+        "wp_1780293328480_n25dmk"
+      ],
+      [
+        "wp_1780293328480_n25dmk",
+        "wp_1780293329680_7odqgu"
+      ]
+    ]
   },
   "s01a_sa1": {
     "defaultSpawn": {
