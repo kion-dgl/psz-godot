@@ -1,0 +1,30 @@
+{
+  "stageId": "s01b_lc2",
+  "shape": "2-portal perimeter U-corridor (N + E gates around an impassable interior)",
+  "description": "Two-portal stage where the walkable area is a thin perimeter corridor around an impassable interior. The path from spawn_north to spawn_east makes a П shape (back-of-house perimeter): north spawn (east column) → north entry hub → NW corner → SW-ish step on the west wall → east gate (south column). The hardest valley-B stage for the auto-solver (needs res 0.5 / clearance 0.9), which is why it's hand-authored as a strict 4-anchor backbone.",
+  "portals": {
+    "north": "spawn_north at (10.00, -22.94) — gate on the north (low-Z) side, east column",
+    "east":  "spawn_east at (13.91, 15.52) — gate on the east (high-X) side, south column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [10.00,  0, -22.94], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [13.91,  0,  15.52], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [11.21,  0, -12.63], "description": "north entry step - east column (matches or6w0r)" },
+    { "id": "nw_corner",   "position": [-16.02, 0, -11.85], "description": "NW corner pivot - bridge from north wall to west wall (matches e6ozoq)" },
+    { "id": "west_n",      "position": [-14.52, 0,  16.47], "description": "west-side north end - bridge to east gate row (matches 8r1xfp)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["east_gate", "west_n"],
+
+    ["north_inner", "nw_corner"],
+    ["nw_corner", "west_n"]
+  ],
+  "traversalNotes": [
+    "STRICT-BACKBONE perimeter: spawn_north → north_inner → nw_corner → west_n → spawn_east. 4 hops, single chain.",
+    "Interior of the room is NOT walkable (this is what defeated the auto-solver — it kept emitting straight-line shortcuts across the impassable middle).",
+    "Do not emit shortcuts. The U-shape is geometrically forced: north_inner is on the east column, west_n is on the west wall — the only connection is the NW corner."
+  ]
+}

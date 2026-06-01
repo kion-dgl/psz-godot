@@ -4571,76 +4571,6 @@
     ]
   },
   "s01b_lc2": {
-    "floorCollision": {
-      "excludedMeshPatterns": [],
-      "triangles": {
-        "tri_0": true,
-        "tri_1": true,
-        "tri_10": true,
-        "tri_11": true,
-        "tri_12": true,
-        "tri_13": true,
-        "tri_14": true,
-        "tri_15": false,
-        "tri_16": false,
-        "tri_17": false,
-        "tri_18": false,
-        "tri_19": false,
-        "tri_2": true,
-        "tri_20": false,
-        "tri_21": false,
-        "tri_22": false,
-        "tri_23": false,
-        "tri_24": false,
-        "tri_25": false,
-        "tri_26": false,
-        "tri_27": false,
-        "tri_28": false,
-        "tri_29": false,
-        "tri_3": true,
-        "tri_30": false,
-        "tri_4": true,
-        "tri_5": true,
-        "tri_6": true,
-        "tri_7": true,
-        "tri_8": true,
-        "tri_82": false,
-        "tri_83": false,
-        "tri_88": false,
-        "tri_89": false,
-        "tri_9": true,
-        "tri_90": false,
-        "tri_91": false
-      },
-      "yTolerance": 0.25
-    },
-    "lastModified": "2026-02-23T04:45:23.552Z",
-    "mapId": "s01b_lc2",
-    "obstacles": [],
-    "portals": [
-      {
-        "direction": "north",
-        "id": "portal_1769178213949_siczd2y71",
-        "label": "north",
-        "position": [
-          9.995167924828028,
-          0,
-          -19.939213643537443
-        ]
-      },
-      {
-        "id": "portal_1771821922909_g43he352c",
-        "direction": "east",
-        "position": [
-          10.91,
-          0,
-          15.52
-        ],
-        "label": "east"
-      }
-    ],
-    "textureFixes": [],
-    "version": 1,
     "waypoints": [
       {
         "id": "wp_spawn_0_s01b_lc2",
@@ -4683,218 +4613,29 @@
         "label": "load east"
       },
       {
-        "id": "wp_auto_0_s01b_lc2",
+        "id": "wp_1780194342334_or6w0r",
         "position": [
-          9.9921875,
+          11.20888524040383,
           0,
-          -20
+          -12.629147479555506
         ],
         "kind": "point"
       },
       {
-        "id": "wp_auto_1_s01b_lc2",
+        "id": "wp_1780194346294_e6ozoq",
         "position": [
-          9.4921875,
+          -16.0242141560329,
           0,
-          -17
+          -11.849799828469742
         ],
         "kind": "point"
       },
       {
-        "id": "wp_auto_2_s01b_lc2",
+        "id": "wp_1780194350066_8r1xfp",
         "position": [
-          6.4921875,
+          -14.52454522160266,
           0,
-          -14
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_3_s01b_lc2",
-        "position": [
-          3.4921875,
-          0,
-          -12
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_4_s01b_lc2",
-        "position": [
-          0.4921875,
-          0,
-          -12
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_5_s01b_lc2",
-        "position": [
-          -2.5078125,
-          0,
-          -12
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_6_s01b_lc2",
-        "position": [
-          -5.5078125,
-          0,
-          -12
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_7_s01b_lc2",
-        "position": [
-          -8.5078125,
-          0,
-          -12
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_8_s01b_lc2",
-        "position": [
-          -10.0078125,
-          0,
-          -9
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_9_s01b_lc2",
-        "position": [
-          -12.5078125,
-          0,
-          -6
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_10_s01b_lc2",
-        "position": [
-          -15.0078125,
-          0,
-          -3
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_11_s01b_lc2",
-        "position": [
-          -15.0078125,
-          0,
-          0
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_12_s01b_lc2",
-        "position": [
-          -15.0078125,
-          0,
-          3
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_13_s01b_lc2",
-        "position": [
-          -15.0078125,
-          0,
-          6
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_14_s01b_lc2",
-        "position": [
-          -15.0078125,
-          0,
-          9
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_15_s01b_lc2",
-        "position": [
-          -15.0078125,
-          0,
-          12
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_16_s01b_lc2",
-        "position": [
-          -12.0078125,
-          0,
-          12
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_17_s01b_lc2",
-        "position": [
-          -9.0078125,
-          0,
-          13.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_18_s01b_lc2",
-        "position": [
-          -6.0078125,
-          0,
-          15.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_19_s01b_lc2",
-        "position": [
-          -3.0078125,
-          0,
-          15.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_20_s01b_lc2",
-        "position": [
-          -0.0078125,
-          0,
-          15.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_21_s01b_lc2",
-        "position": [
-          2.9921875,
-          0,
-          15.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_22_s01b_lc2",
-        "position": [
-          5.9921875,
-          0,
-          15.5
-        ],
-        "kind": "point"
-      },
-      {
-        "id": "wp_auto_23_s01b_lc2",
-        "position": [
-          8.9921875,
-          0,
-          15.5
+          16.47140331484774
         ],
         "kind": "point"
       }
@@ -4909,104 +4650,20 @@
         "wp_spawn_1_s01b_lc2"
       ],
       [
-        "wp_auto_0_s01b_lc2",
+        "wp_1780194342334_or6w0r",
         "wp_spawn_0_s01b_lc2"
       ],
       [
-        "wp_auto_0_s01b_lc2",
-        "wp_auto_1_s01b_lc2"
-      ],
-      [
-        "wp_auto_1_s01b_lc2",
-        "wp_auto_2_s01b_lc2"
-      ],
-      [
-        "wp_auto_2_s01b_lc2",
-        "wp_auto_3_s01b_lc2"
-      ],
-      [
-        "wp_auto_3_s01b_lc2",
-        "wp_auto_4_s01b_lc2"
-      ],
-      [
-        "wp_auto_4_s01b_lc2",
-        "wp_auto_5_s01b_lc2"
-      ],
-      [
-        "wp_auto_5_s01b_lc2",
-        "wp_auto_6_s01b_lc2"
-      ],
-      [
-        "wp_auto_6_s01b_lc2",
-        "wp_auto_7_s01b_lc2"
-      ],
-      [
-        "wp_auto_7_s01b_lc2",
-        "wp_auto_8_s01b_lc2"
-      ],
-      [
-        "wp_auto_8_s01b_lc2",
-        "wp_auto_9_s01b_lc2"
-      ],
-      [
-        "wp_auto_10_s01b_lc2",
-        "wp_auto_9_s01b_lc2"
-      ],
-      [
-        "wp_auto_10_s01b_lc2",
-        "wp_auto_11_s01b_lc2"
-      ],
-      [
-        "wp_auto_11_s01b_lc2",
-        "wp_auto_12_s01b_lc2"
-      ],
-      [
-        "wp_auto_12_s01b_lc2",
-        "wp_auto_13_s01b_lc2"
-      ],
-      [
-        "wp_auto_13_s01b_lc2",
-        "wp_auto_14_s01b_lc2"
-      ],
-      [
-        "wp_auto_14_s01b_lc2",
-        "wp_auto_15_s01b_lc2"
-      ],
-      [
-        "wp_auto_15_s01b_lc2",
-        "wp_auto_16_s01b_lc2"
-      ],
-      [
-        "wp_auto_16_s01b_lc2",
-        "wp_auto_17_s01b_lc2"
-      ],
-      [
-        "wp_auto_17_s01b_lc2",
-        "wp_auto_18_s01b_lc2"
-      ],
-      [
-        "wp_auto_18_s01b_lc2",
-        "wp_auto_19_s01b_lc2"
-      ],
-      [
-        "wp_auto_19_s01b_lc2",
-        "wp_auto_20_s01b_lc2"
-      ],
-      [
-        "wp_auto_20_s01b_lc2",
-        "wp_auto_21_s01b_lc2"
-      ],
-      [
-        "wp_auto_21_s01b_lc2",
-        "wp_auto_22_s01b_lc2"
-      ],
-      [
-        "wp_auto_22_s01b_lc2",
-        "wp_auto_23_s01b_lc2"
-      ],
-      [
-        "wp_auto_23_s01b_lc2",
+        "wp_1780194350066_8r1xfp",
         "wp_spawn_1_s01b_lc2"
+      ],
+      [
+        "wp_1780194342334_or6w0r",
+        "wp_1780194346294_e6ozoq"
+      ],
+      [
+        "wp_1780194346294_e6ozoq",
+        "wp_1780194350066_8r1xfp"
       ]
     ]
   },
