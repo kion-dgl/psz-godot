@@ -1,0 +1,54 @@
+{
+  "stageId": "s02a_ib2",
+  "shape": "Irregular dual-chamber with central hinge + west pocket (N+S gates)",
+  "description": "Two main combat chambers (south chamber Z≈3–17, north chamber Z≈-14 to -25) connected by a central hinge anchor (23z008) at Z≈-5. The south chamber has its own internal staging (south_hub plus a south-mid hub) covering two east-side corners. The north chamber routes via a west-middle hub that also branches to a small west pocket dead-end. Hinge is the only point connecting the two chambers; west pocket is a single-anchor detour off the west-middle hub.",
+  "portals": {
+    "south": "spawn_south at (-5.94, 25.43) — gate on the south (high-Z) end of the south chamber",
+    "north": "spawn_north at (-6.14, -24.62) — gate on the north (low-Z) end of the north chamber"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",    "position": [-5.94,  0,  25.43], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "north_gate",    "position": [-6.14,  0, -24.62], "description": "north portal (matches wp_spawn_1)" },
+
+    { "id": "south_hub",     "position": [-5.97,  0,  16.45], "description": "south chamber entry hub (matches 9s64wy)" },
+    { "id": "south_mid",     "position": [3.93,   0,   5.71], "description": "south chamber mid-staging (matches ehgmb3)" },
+    { "id": "south_ne",      "position": [14.98,  0,  13.17], "description": "south chamber NE corner (matches ze2upa)" },
+    { "id": "south_se",      "position": [15.58,  0,   3.19], "description": "south chamber SE corner / east-mid (matches 6ycbh1)" },
+
+    { "id": "central_hinge", "position": [-1.04,  0,  -4.93], "description": "central hinge — single connection point between south and north chambers (matches 23z008)" },
+
+    { "id": "west_mid",      "position": [-10.91, 0,  -5.27], "description": "north chamber west-middle hub (matches b701oz)" },
+    { "id": "west_pocket",   "position": [-14.34, 0,   2.28], "description": "west-side dead-end pocket (matches rnqm7u)" },
+
+    { "id": "north_hub",     "position": [-6.11,  0, -17.64], "description": "north chamber entry hub, joins north_gate (matches qqqnv9)" },
+    { "id": "north_ne",      "position": [13.03,  0, -13.82], "description": "north chamber NE area (matches 7253gy)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_hub"],
+    ["south_hub", "south_mid"],
+    ["south_hub", "south_ne"],
+    ["south_hub", "south_se"],
+    ["south_mid", "south_ne"],
+    ["south_mid", "south_se"],
+    ["south_mid", "central_hinge"],
+
+    ["central_hinge", "west_mid"],
+    ["central_hinge", "north_hub"],
+    ["central_hinge", "north_ne"],
+
+    ["west_mid", "west_pocket"],
+    ["west_mid", "north_hub"],
+    ["west_mid", "north_ne"],
+
+    ["north_hub", "north_ne"],
+    ["north_hub", "north_gate"]
+  ],
+  "traversalNotes": [
+    "Direct N↔S backbone: spawn_south → south_hub → south_mid → central_hinge → north_hub → spawn_north (alt via west_mid). Six hops.",
+    "DISPATCH RULE: corner objectives route via the same-chamber staging hub. south_ne / south_se → via south_hub or south_mid (both clique into the south chamber). north_ne → via north_hub or west_mid. Don't cross the central_hinge for a same-chamber objective.",
+    "WEST POCKET (west_pocket) is the only single-degree dead-end — purely a detour off west_mid, likely home to an in-cell objective. Routing: backbone → west_mid → west_pocket → reverse.",
+    "CENTRAL HINGE is the only connection between the two chambers; off-hinge cross-chamber edges are NOT walkable.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}
