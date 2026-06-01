@@ -16,18 +16,11 @@ type Phase =
   | 'first-mission'
   | 'the-paru-pact'
   | 'apothecary-supply'
-  | 'native-research'
-  | 'poisoned-water'
-  | 'deep-ore-extraction'
-  | 'claiming-a-stake'
   | 'finding-ogi'
-  | 'static-in-the-snow'
-  | 'messages-from-the-past'
   | 'investigate-tower'
   | 'heretic'
   | 'control-system'
   | 'the-broken-seal'
-  | 'seek-my-mentor'
   | 'dark-castle';
 type Status = 'pass' | 'fail' | 'unknown';
 interface Clip {
@@ -45,27 +38,24 @@ interface Run {
   clips: Partial<Record<Phase, Clip>>;
 }
 
-// Order phases left-to-right in the table — match the canonical story
-// progression in data/quests/manifest.json (also see /states/story-progression
-// for the dependency graph). Adding a new quest? Append a new entry here
-// AND in PHASE_PREFIX.
+// Order phases left-to-right in the table — match the CORE STORY SPINE
+// from /states/story-progression: only the required quests on the parent
+// chain from Search and Rescue to Dark Castle (the spine that gates the
+// credits roll). Side quests (Native Research, Poisoned Water, Deep Ore
+// Extraction, Claiming a Stake, Static in the Snow, Messages from the
+// Past, Seek My Mentor) are intentionally excluded from the autopilot
+// run-matrix — they're optional content and don't need to be regression-
+// tested on every release.
 const PHASES: Array<{ key: Phase; label: string }> = [
   { key: 'boot',                  label: 'Onboarding' },
   { key: 'first-mission',         label: 'Search and Rescue' },
   { key: 'the-paru-pact',         label: 'The Paru Pact' },
   { key: 'apothecary-supply',     label: "Apothecary's Supply" },
-  { key: 'native-research',       label: 'Native Research' },
-  { key: 'poisoned-water',        label: 'Poisoned Water' },
-  { key: 'deep-ore-extraction',   label: 'Deep Ore Extraction' },
-  { key: 'claiming-a-stake',      label: 'Claiming a Stake' },
   { key: 'finding-ogi',           label: 'Finding Ogi' },
-  { key: 'static-in-the-snow',    label: 'Static in the Snow' },
-  { key: 'messages-from-the-past',label: 'Messages from the Past' },
   { key: 'investigate-tower',     label: 'Investigate Tower' },
   { key: 'heretic',               label: 'Heretic' },
   { key: 'control-system',        label: 'Control System' },
   { key: 'the-broken-seal',       label: 'The Broken Seal' },
-  { key: 'seek-my-mentor',        label: 'Seek My Mentor' },
   { key: 'dark-castle',           label: 'Dark Castle' },
 ];
 
@@ -74,18 +64,11 @@ const PHASE_PREFIX: Record<Phase, string> = {
   'first-mission':         'first_mission_',
   'the-paru-pact':         'the_paru_pact_',
   'apothecary-supply':     'apothecary_supply_',
-  'native-research':       'native_research_',
-  'poisoned-water':        'poisoned_water_',
-  'deep-ore-extraction':   'deep_ore_extraction_',
-  'claiming-a-stake':      'claiming_a_stake_',
   'finding-ogi':           'finding_ogi_',
-  'static-in-the-snow':    'static_in_the_snow_',
-  'messages-from-the-past':'messages_from_the_past_',
   'investigate-tower':     'investigate_tower_',
   'heretic':               'heretic_',
   'control-system':        'control_system_',
   'the-broken-seal':       'the_broken_seal_',
-  'seek-my-mentor':        'seek_my_mentor_',
   'dark-castle':           'dark_castle_',
 };
 
