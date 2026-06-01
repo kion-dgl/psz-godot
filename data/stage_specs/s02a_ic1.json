@@ -1,0 +1,48 @@
+{
+  "stageId": "s02a_ic1",
+  "shape": "Winding S/Z-corridor (N+S gates on opposite quadrants)",
+  "description": "A long winding corridor that snakes between two diagonally-opposite gates: spawn_south is in the NW quadrant (X≈-14, Z≈24), spawn_north is in the SE quadrant (X≈1, Z≈-24). The path runs SOUTH along the west wall (X=-14), bends EAST through the middle (Z≈0), then bends back NORTH along the east-center axis (X≈1) to reach the north gate. A small east-side clique (j1x8t4 + hzp49x + 8oxwey) sits where the middle meets the north arm — likely a small east-side combat pocket.",
+  "portals": {
+    "north": "spawn_north at (1.07, -24.40) — gate on the north (low-Z) end, east-center column",
+    "south": "spawn_south at (-14.04, 23.76) — gate on the south (high-Z) end, west column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [1.07,   0, -24.40], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [-14.04, 0,  23.76], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "west_arm_s1", "position": [-14.04, 0,  16.47], "description": "west arm, near south gate (matches 4h75bi)" },
+    { "id": "west_arm_s2", "position": [-14.19, 0,   7.85], "description": "west arm, middle (matches mjq9ug)" },
+    { "id": "west_arm_s3", "position": [-12.79, 0,   1.90], "description": "west arm, south bend into middle row (matches ijit4z)" },
+
+    { "id": "middle_w",    "position": [-5.95,  0,   0.03], "description": "middle row, west side (matches c9dech)" },
+    { "id": "middle_c",    "position": [-1.44,  0,   0.27], "description": "middle row, center hub — branches into north arm and east-side clique (matches c49qjq)" },
+    { "id": "middle_e",    "position": [14.62,  0,   0.29], "description": "middle row, east end (matches j1x8t4)" },
+
+    { "id": "east_pocket", "position": [7.75,   0,  -6.16], "description": "east-side combat pocket (matches hzp49x)" },
+
+    { "id": "north_arm_mid","position": [1.42,  0, -13.40], "description": "north arm middle (matches 8oxwey)" },
+    { "id": "north_arm_in","position": [1.23,   0, -18.82], "description": "north arm staging just inside north gate (matches z11v2u)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "west_arm_s1"],
+    ["west_arm_s1", "west_arm_s2"],
+    ["west_arm_s2", "west_arm_s3"],
+    ["west_arm_s3", "middle_w"],
+    ["middle_w", "middle_c"],
+    ["middle_c", "middle_e"],
+    ["middle_c", "east_pocket"],
+    ["middle_c", "north_arm_mid"],
+    ["middle_e", "east_pocket"],
+    ["east_pocket", "north_arm_mid"],
+    ["north_arm_mid", "north_arm_in"],
+    ["north_arm_in", "north_gate"]
+  ],
+  "traversalNotes": [
+    "Direct S→N traversal: spawn_south → west_arm_s1 → west_arm_s2 → west_arm_s3 → middle_w → middle_c → north_arm_mid → north_arm_in → spawn_north. Eight hops along the strict-backbone S/Z winding path.",
+    "STRICT-BACKBONE on the west arm and north arm: the corridor segments between west_arm_s1 ↔ west_arm_s2 ↔ west_arm_s3 ↔ middle_w are single-file (no off-axis branches). Don't emit shortcuts.",
+    "EAST-SIDE CLIQUE: middle_c, middle_e, east_pocket, north_arm_mid form a connected sub-graph for a small east-side combat pocket. Objectives in the east half route via middle_c → (east_pocket | middle_e) → reverse.",
+    "DISPATCH RULE: south-half objectives route through the nearest west-arm anchor; east-half objectives via middle_c → east_pocket/middle_e; north-half via north_arm_mid.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}
