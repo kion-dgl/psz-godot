@@ -1,0 +1,76 @@
+{
+  "stageId": "s02a_tc3",
+  "shape": "Dense 3-portal arena (S+E+W gates, multi-zone interior)",
+  "description": "Three-portal arena (south, east, west) with a richly-connected interior. The west cluster forms a small clique near the west gate (zs5jga + r3atwz + y4x395 + hs4mnt). The west-side staging anchors (5ecisd + fh6d0r) bridge into the east-half via the center pivot (xrbrz1 / hm71z5). The east gate has its own entry hub (cfp45d) with two transit anchors (h2x9yv + ix9xvp) plus a side pocket (4pz0k6). South entry (lard9j) connects to the south-center clique only.",
+  "portals": {
+    "south": "spawn_south at (-0.18, 23.74) — gate on the south (high-Z) side",
+    "east":  "spawn_east at (23.55, -0.81) — gate on the east (high-X) side",
+    "west":  "spawn_west at (-23.12, -13.95) — gate on the west (low-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-0.18,  0,  23.74], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [23.55,  0,  -0.81], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-23.12, 0, -13.95], "description": "west portal (matches wp_spawn_2)" },
+
+    { "id": "south_inner", "position": [-0.18,  0,  17.50], "description": "south entry hub (matches lard9j)" },
+    { "id": "south_w",     "position": [-5.46,  0,   8.22], "description": "south-center west (matches xrbrz1)" },
+    { "id": "south_e",     "position": [5.00,   0,   7.87], "description": "south-center east (matches hm71z5)" },
+
+    { "id": "west_inner",  "position": [-17.80, 0, -13.86], "description": "west entry hub (matches zs5jga)" },
+    { "id": "west_pocket", "position": [-10.38, 0, -17.19], "description": "west south-pocket detour (matches r3atwz)" },
+    { "id": "west_mid",    "position": [-9.09,  0,  -8.87], "description": "west-mid clique node (matches y4x395)" },
+    { "id": "west_nw",     "position": [-15.10, 0,  -6.86], "description": "west NW clique node (matches hs4mnt)" },
+    { "id": "west_far",    "position": [-16.33, 0,   1.70], "description": "west far-north clique node (matches 5ecisd)" },
+    { "id": "west_inner_e","position": [-8.28,  0,   4.72], "description": "west-inner east (bridge to center) (matches fh6d0r)" },
+
+    { "id": "center",      "position": [-4.95,  0,  -5.83], "description": "center-west pivot (matches q2v9c5)" },
+    { "id": "east_mid",    "position": [6.39,   0,  -2.41], "description": "east-mid transit (matches h2x9yv)" },
+    { "id": "east_mid_n",  "position": [8.36,   0,   4.75], "description": "east-mid-north transit (matches ix9xvp)" },
+    { "id": "east_inner",  "position": [17.50,  0,  -0.43], "description": "east entry hub (matches cfp45d)" },
+    { "id": "east_pocket", "position": [12.51,  0,  -4.68], "description": "east side detour pocket (matches 4pz0k6)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["east_gate", "east_inner"],
+    ["west_gate", "west_inner"],
+
+    ["south_inner", "south_w"],
+    ["south_inner", "south_e"],
+    ["south_w", "south_e"],
+    ["south_w", "west_inner_e"],
+    ["south_e", "east_mid_n"],
+
+    ["west_inner", "west_pocket"],
+    ["west_inner", "west_mid"],
+    ["west_inner", "west_nw"],
+    ["west_mid", "west_pocket"],
+    ["west_mid", "west_nw"],
+    ["west_mid", "west_far"],
+    ["west_mid", "west_inner_e"],
+    ["west_mid", "center"],
+    ["west_nw", "west_far"],
+    ["west_nw", "west_inner_e"],
+    ["west_far", "west_inner_e"],
+
+    ["west_inner_e", "east_mid"],
+    ["west_inner_e", "east_mid_n"],
+
+    ["center", "east_mid"],
+    ["east_mid", "east_inner"],
+    ["east_mid", "east_mid_n"],
+    ["east_mid_n", "east_inner"],
+    ["east_inner", "east_pocket"],
+    ["east_pocket", "east_mid"]
+  ],
+  "traversalNotes": [
+    "Direct routes through the arena:",
+    "  south ↔ east: spawn_south → south_inner → south_e → east_mid_n → east_inner → spawn_east.",
+    "  south ↔ west: spawn_south → south_inner → south_w → west_inner_e → west_mid → west_inner → spawn_west.",
+    "  east ↔ west:  spawn_east → east_inner → east_mid → west_inner_e → west_mid → west_inner → spawn_west.",
+    "WEST CLIQUE (west_inner + west_pocket + west_mid + west_nw + west_far) covers the west half — densely connected for combat.",
+    "EAST POCKET (east_pocket) is a single-degree-ish detour off east_mid / east_inner.",
+    "DISPATCH RULE: same-cluster objectives stay within their cluster (west clique stays in west; east pocket via east_inner / east_mid; south-center via south_w / south_e). Cross-cluster transit goes via west_inner_e or east_mid_n as the bridge anchors.",
+    "Same primitive family as paru-A tc3 (3-portal E-shape) but with a much denser west clique and explicit east pocket detour."
+  ]
+}
