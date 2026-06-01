@@ -1,0 +1,67 @@
+{
+  "stageId": "s02a_lc2",
+  "shape": "Multi-zone wrap (N+E gates, long counterclockwise spine)",
+  "description": "Large multi-chamber room with a long counterclockwise spine connecting the north and east gates. The backbone enters at the north gate, descends through a north-bay area, sweeps west through a west spine, curves south, then wraps east through a south chamber and an east-side staging cluster before reaching the east gate. Five sub-zones branch off the spine: a north-bay clique (around kkr1vd), a far-west corner pair (vi6hmf + ycsd87), a south bulge (7ziyhi), an east-mid detour (oovqvm), and the east-staging cluster (hpk1e8 + v7es9b).",
+  "portals": {
+    "north": "spawn_north at (-0.11, -24.30) — gate on the north (low-Z) side, center X",
+    "east":  "spawn_east at (24.79, 0.14) — gate on the east (high-X) side, center Z"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-0.11,  0, -24.30], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [24.79,  0,   0.14], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_hub",   "position": [-0.17,  0, -13.80], "description": "north entry hub — branches into 4 north-bay detours + the SW spine (matches kkr1vd)" },
+    { "id": "north_bay_nw","position": [-3.30,  0, -17.40], "description": "north-bay NW pocket (matches craatc)" },
+    { "id": "north_bay_ne","position": [3.92,   0, -17.47], "description": "north-bay NE pocket (matches uns6zp)" },
+    { "id": "north_bay_e", "position": [2.90,   0,  -9.75], "description": "north-bay east pocket (matches zdmz0n)" },
+
+    { "id": "sw_step1",    "position": [-5.25,  0,  -8.60], "description": "SW spine step 1 — first west move (matches 71lkbz)" },
+    { "id": "sw_step2",    "position": [-8.14,  0,  -4.93], "description": "SW spine step 2 (matches vff7iq)" },
+    { "id": "west_hub",    "position": [-13.32, 0,   0.09], "description": "west hub — branches into the far-west corners (matches 5qvmjd)" },
+    { "id": "west_far_n",  "position": [-16.46, 0,  -3.61], "description": "far west NW corner — dead-end (matches ycsd87)" },
+    { "id": "west_far_s",  "position": [-17.47, 0,   2.19], "description": "far west SW corner — dead-end (matches vi6hmf)" },
+
+    { "id": "west_inner",  "position": [-8.03,  0,   5.32], "description": "west-inner staging after the corner turn (matches s6j53l)" },
+    { "id": "center",      "position": [-4.71,  0,   8.67], "description": "center pivot — joins west spine to south bay and east-center (matches v0udx4)" },
+    { "id": "south_bay",   "position": [0.03,   0,  18.26], "description": "south bay detour pocket (matches 7ziyhi)" },
+
+    { "id": "east_center", "position": [5.25,   0,   8.46], "description": "east-center anchor (matches y78irb)" },
+    { "id": "east_hub",    "position": [8.80,   0,   4.54], "description": "east hub — main east-staging junction (matches hpk1e8)" },
+    { "id": "east_pocket", "position": [9.73,   0,  -3.30], "description": "east-mid pocket detour (matches oovqvm)" },
+    { "id": "east_inner",  "position": [17.45,  0,   0.51], "description": "east entry hub, joins east_gate (matches v7es9b)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_hub"],
+    ["north_hub", "north_bay_nw"],
+    ["north_hub", "north_bay_ne"],
+    ["north_hub", "north_bay_e"],
+    ["north_hub", "sw_step1"],
+
+    ["sw_step1", "sw_step2"],
+    ["sw_step2", "west_hub"],
+    ["west_hub", "west_far_n"],
+    ["west_hub", "west_far_s"],
+    ["west_hub", "west_inner"],
+
+    ["west_inner", "center"],
+    ["center", "south_bay"],
+    ["center", "east_center"],
+    ["east_center", "south_bay"],
+    ["east_center", "east_hub"],
+
+    ["east_hub", "east_pocket"],
+    ["east_hub", "east_inner"],
+    ["east_pocket", "east_inner"],
+    ["east_inner", "east_gate"]
+  ],
+  "traversalNotes": [
+    "Direct N→E backbone (counterclockwise wrap): spawn_north → north_hub → sw_step1 → sw_step2 → west_hub → west_inner → center → east_center → east_hub → east_inner → spawn_east. TEN hops.",
+    "NORTH-BAY CLIQUE (north_bay_nw, north_bay_ne, north_bay_e): three pockets around the north entry — all dispatch via north_hub.",
+    "FAR-WEST CORNERS (west_far_n, west_far_s): single-degree dead-end pockets off west_hub. Likely objective spots.",
+    "SOUTH BAY (south_bay): triangular detour connected to both center and east_center.",
+    "EAST POCKET (east_pocket): detour between east_hub and east_inner; not a shortcut to spawn_east since both ends already connect to east_inner.",
+    "DISPATCH RULE: each sub-zone's objectives route via its hub anchor (north_hub for north bay, west_hub for far-west corners, east_hub for east pocket). Backbone is strict-backbone — don't emit cross-zone shortcuts.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}
