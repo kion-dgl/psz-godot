@@ -11,7 +11,18 @@ const doneCount = steps.filter((s) => s.status === 'done').length;
 // scripts/tools/autoplay/record_boot.sh and record_first_mission.sh, each
 // producing <phase>_<timestamp>.mp4 + <phase>_<timestamp>.json (the sidecar
 // the run-matrix below reads for pass/fail). Served by Astro at /recordings/.
-type Phase = 'boot' | 'first-mission';
+type Phase =
+  | 'boot'
+  | 'first-mission'
+  | 'the-paru-pact'
+  | 'mayors-mission'
+  | 'waltz-of-rage'
+  | 'devilish-return'
+  | 'a-small-friend'
+  | 'fallen-flowers'
+  | 'anas-request'
+  | 'mothers-memory'
+  | 'the-eternal';
 type Status = 'pass' | 'fail' | 'unknown';
 interface Clip {
   filename: string;
@@ -28,16 +39,37 @@ interface Run {
   clips: Partial<Record<Phase, Clip>>;
 }
 
-// Order phases left-to-right in the table; add new entries as quests come
-// online. Future: { key: 'second-mission', label: 'Quest 2' } etc.
+// Order phases left-to-right in the table — match the in-game progression.
+// boot → first-mission (Search and Rescue, Valley) → the-paru-pact (Paru)
+// → the 8 main story missions in their dependency-chain order
+// (mayor → waltz → devilish → small_friend → fallen → ana → mother → eternal).
+// Adding a new quest? Append a new entry here AND in PHASE_PREFIX.
 const PHASES: Array<{ key: Phase; label: string }> = [
-  { key: 'boot', label: 'Onboarding' },
-  { key: 'first-mission', label: 'Search and Rescue' },
+  { key: 'boot',           label: 'Onboarding' },
+  { key: 'first-mission',  label: 'Search and Rescue' },
+  { key: 'the-paru-pact',  label: 'The Paru Pact' },
+  { key: 'mayors-mission', label: "Mayor's Mission" },
+  { key: 'waltz-of-rage',  label: 'Waltz of Rage' },
+  { key: 'devilish-return',label: 'Devilish Return' },
+  { key: 'a-small-friend', label: 'A Small Friend' },
+  { key: 'fallen-flowers', label: 'Fallen Flowers' },
+  { key: 'anas-request',   label: "Ana's Request" },
+  { key: 'mothers-memory', label: "Mother's Memory" },
+  { key: 'the-eternal',    label: 'The Eternal' },
 ];
 
 const PHASE_PREFIX: Record<Phase, string> = {
-  'boot': 'boot_',
-  'first-mission': 'first_mission_',
+  'boot':            'boot_',
+  'first-mission':   'first_mission_',
+  'the-paru-pact':   'the_paru_pact_',
+  'mayors-mission':  'mayors_mission_',
+  'waltz-of-rage':   'waltz_of_rage_',
+  'devilish-return': 'devilish_return_',
+  'a-small-friend':  'a_small_friend_',
+  'fallen-flowers':  'fallen_flowers_',
+  'anas-request':    'anas_request_',
+  'mothers-memory':  'mothers_memory_',
+  'the-eternal':     'the_eternal_',
 };
 
 function parseTimestamp(ts: string): Date | null {
