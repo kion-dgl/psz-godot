@@ -1,0 +1,45 @@
+{
+  "stageId": "s02a_lb3",
+  "shape": "Asymmetric square arena, SE quadrant absent (N+E gates)",
+  "description": "Variant of wetlands-A lb1's twin-hub arena, but with no SE-quadrant detour anchor (the south-east region of the room appears not to be navigable, or there's nothing of dispatch interest there). The north hub is the higher-degree super-hub here — it reaches all corners + center + the east hub directly. The east hub is sparser, connecting only to its gate, the center, and the NE corner.",
+  "portals": {
+    "north": "spawn_north at (-5.97, -26.28) — gate on the north (low-Z) side",
+    "east":  "spawn_east at (25.23, -7.66) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",   "position": [-5.97,  0, -26.28], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",    "position": [25.23,  0,  -7.66], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner",  "position": [-6.10,  0, -17.44], "description": "north entry hub (super-hub for this stage) (matches qkbtih)" },
+    { "id": "east_inner",   "position": [17.72,  0,  -7.66], "description": "east entry hub (matches 3vgiat)" },
+
+    { "id": "arena_center", "position": [-0.72, 0,  -7.79], "description": "geometric center anchor — connects to most others (matches e05mq2)" },
+    { "id": "ne_corner",    "position": [8.31,  0, -16.69], "description": "NE corner detour (matches 66y6cy)" },
+    { "id": "nw_corner",    "position": [-17.04,0,  -5.84], "description": "NW corner detour (matches s4jw1a)" },
+    { "id": "sw_corner",    "position": [-13.84,0,   1.75], "description": "SW corner detour (matches gsgj0u)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["east_gate", "east_inner"],
+
+    ["north_inner", "arena_center"],
+    ["north_inner", "ne_corner"],
+    ["north_inner", "nw_corner"],
+    ["north_inner", "sw_corner"],
+    ["north_inner", "east_inner"],
+
+    ["arena_center", "ne_corner"],
+    ["arena_center", "nw_corner"],
+    ["arena_center", "sw_corner"],
+    ["arena_center", "east_inner"],
+
+    ["east_inner", "ne_corner"]
+  ],
+  "traversalNotes": [
+    "Direct N↔E: spawn_north → north_inner → east_inner → spawn_east. Three hops via the direct north_inner ↔ east_inner edge (the only place this stage allows a hub-to-hub direct).",
+    "SE QUADRANT IS NOT walkable / has no detour anchors — don't emit any edge that would route through positive-X / positive-Z when the source coords place an anchor in that region.",
+    "DISPATCH RULE: north_inner is the super-hub and the canonical dispatch anchor — it reaches all 5 detour anchors (corners + center) and both gates. East-side corner objectives (ne_corner) can also dispatch via east_inner. Other corner objectives route via north_inner.",
+    "Same primitive family as paru-A lb3 (square arena with one quadrant collapsed) but with different orientation (N+E gates instead of N+E with the NW corner missing). Solver should treat as ib1/lb1 with a coverage mask."
+  ]
+}
