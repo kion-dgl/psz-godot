@@ -1,0 +1,45 @@
+{
+  "stageId": "s01a_lc1",
+  "shape": "2-portal U-perimeter arena (N + E gates) with east-corner dead-end",
+  "description": "Two-portal stage where the main route is a perimeter U from the north gate up the west wall and across the top to the east gate. A central anchor (awa8ud) bridges from the west wall to a dead-end east-column chain (fizyln → 1bog6s) which never reaches the east gate directly. North → east path: spawn_north → north_inner → west_mid → west_corner → nw_corner → ne_anchor → spawn_east.",
+  "portals": {
+    "north": "spawn_north at (-13.45, -22.95) — gate on the north (low-Z) side, west column",
+    "east":  "spawn_east at (10.59, 13.62) — gate on the east (high-X) side, south column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-13.45, 0, -22.95], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [10.59,  0,  13.62], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-13.42, 0, -15.31], "description": "north entry hub (matches umuvab)" },
+    { "id": "west_mid",    "position": [-14.08, 0,  -1.33], "description": "west wall - mid step (matches jn8tvl)" },
+    { "id": "west_corner", "position": [-16.74, 0,   5.49], "description": "west wall - upper corner (matches jxb8hj)" },
+    { "id": "nw_corner",   "position": [-15.88, 0,  14.08], "description": "NW corner (matches 8ghx2n)" },
+    { "id": "ne_anchor",   "position": [3.17,   0,  14.04], "description": "NE / east entry step (matches o3ev7p)" },
+
+    { "id": "center",      "position": [-5.97,  0, -11.52], "description": "central junction - bridge to east dead-end chain (matches awa8ud)" },
+    { "id": "east_low",    "position": [13.61,  0, -11.33], "description": "east column - lower (matches fizyln)" },
+    { "id": "east_mid",    "position": [14.35,  0,  -5.58], "description": "east column - mid, dead-end (matches 1bog6s)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["east_gate", "ne_anchor"],
+
+    ["north_inner", "west_mid"],
+    ["north_inner", "center"],
+
+    ["west_mid", "west_corner"],
+    ["west_mid", "center"],
+    ["west_corner", "nw_corner"],
+    ["nw_corner", "ne_anchor"],
+
+    ["center", "east_low"],
+    ["east_low", "east_mid"]
+  ],
+  "traversalNotes": [
+    "Direct N→E: spawn_north → north_inner → west_mid → west_corner → nw_corner → ne_anchor → spawn_east. 6 hops along the U-perimeter.",
+    "DEAD-END east chain: center → east_low → east_mid does NOT reach east_gate. Strict 2-hop pocket off the central junction (likely corner objectives).",
+    "center (awa8ud) is wired to north_inner AND west_mid AND east_low — secondary dispatch anchor.",
+    "STRICT-BACKBONE: the U-perimeter is the only N→E route. Don't emit shortcuts across the room interior."
+  ]
+}
