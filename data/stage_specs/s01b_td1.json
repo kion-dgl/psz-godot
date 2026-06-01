@@ -1,0 +1,77 @@
+{
+  "stageId": "s01b_td1",
+  "shape": "3-portal sprawling arena (S+W+E gates) with central + south super-hubs",
+  "description": "Three-portal arena split into south clique, west arm, and south-east cluster, joined by two interior super-hubs. The CENTRAL anchor (d23dbe at (-4.57, -1.69)) is a 4-way junction that fans west, south, east-of-center. The SOUTH super-hub (wz6sk3 at (2.06, -6.65)) is a 6-way junction wired to most of the east/south cluster. The SOUTH clique (vrl6ns + xmh9aj + dfzp33 + rau5rt + 61dou8) is densely interconnected near the south gate. The WEST arm (fqrgxy → irrdxp + 2j58hb) reaches the west gate via a short chain. Largest valley-B stage authored.",
+  "portals": {
+    "south": "spawn_south at (11.14, 20.44) — gate on the south (high-Z) side, east column",
+    "west":  "spawn_west at (-23.16, 7.13) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.03, -12.85) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [11.14,  0,  20.44], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "west_gate",   "position": [-23.16, 0,   7.13], "description": "west portal (matches wp_spawn_1)" },
+    { "id": "east_gate",   "position": [23.03,  0, -12.85], "description": "east portal (matches wp_spawn_2)" },
+
+    { "id": "south_inner", "position": [11.23,  0,  12.62], "description": "south entry hub - 5-way clique anchor (matches vrl6ns)" },
+    { "id": "se_corner",   "position": [17.86,  0,   7.51], "description": "SE corner of south clique (matches 61dou8)" },
+    { "id": "south_c",     "position": [8.04,   0,   5.91], "description": "south clique center (matches xmh9aj)" },
+    { "id": "south_w",     "position": [0.83,   0,  13.46], "description": "south clique west (matches rau5rt)" },
+    { "id": "south_sw",    "position": [2.45,   0,   5.48], "description": "south clique south-west — bridge to center (matches dfzp33)" },
+
+    { "id": "center",      "position": [-4.57,  0,  -1.69], "description": "central 4-way junction (matches d23dbe)" },
+    { "id": "center_w",    "position": [-10.55, 0,   2.14], "description": "center-west step (matches irrdxp)" },
+    { "id": "west_inner",  "position": [-15.62, 0,   6.70], "description": "west entry hub (matches fqrgxy)" },
+    { "id": "west_n",      "position": [-11.85, 0,  12.38], "description": "west arm north pocket (matches 2j58hb)" },
+
+    { "id": "south_hub",   "position": [2.06,   0,  -6.65], "description": "south super-hub - 6-way junction (matches wz6sk3)" },
+    { "id": "south_hub_w", "position": [-2.40,  0,  -9.43], "description": "south-hub west arm (matches wxkzqb)" },
+    { "id": "south_hub_e", "position": [9.01,   0, -11.18], "description": "south-hub east arm (matches bu8glf)" },
+    { "id": "east_n",      "position": [12.68,  0,  -5.91], "description": "east cluster north (matches 26ptq0)" },
+    { "id": "east_inner",  "position": [16.09,  0, -13.05], "description": "east entry hub (matches kqktzf)" },
+    { "id": "east_s",      "position": [12.39,  0, -18.55], "description": "east cluster south step (matches k8jr7g)" },
+    { "id": "south_pocket","position": [5.66,   0, -21.03], "description": "south pocket dead-end (matches e0vwsy)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "east_inner"],
+
+    ["south_inner", "se_corner"],
+    ["south_inner", "south_c"],
+    ["south_inner", "south_sw"],
+    ["south_inner", "south_w"],
+    ["se_corner", "south_c"],
+    ["south_c", "south_sw"],
+    ["south_c", "south_w"],
+    ["south_w", "south_sw"],
+
+    ["south_sw", "center"],
+
+    ["center", "center_w"],
+    ["center", "south_hub"],
+    ["center", "south_hub_w"],
+
+    ["center_w", "west_inner"],
+    ["west_inner", "west_n"],
+
+    ["south_hub", "south_hub_w"],
+    ["south_hub", "south_hub_e"],
+    ["south_hub", "east_n"],
+    ["south_hub", "east_inner"],
+    ["south_hub", "east_s"],
+
+    ["south_hub_e", "east_inner"],
+    ["east_n", "east_inner"],
+    ["east_s", "east_inner"],
+    ["east_s", "south_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct south ↔ east: spawn_south → south_inner → south_sw → center → south_hub → east_inner → spawn_east. 6 hops via the two super-hubs.",
+    "Direct south ↔ west: spawn_south → south_inner → south_sw → center → center_w → west_inner → spawn_west. 6 hops.",
+    "Direct west ↔ east: spawn_west → west_inner → center_w → center → south_hub → east_inner → spawn_east. 6 hops via center + south_hub.",
+    "DISPATCH RULE: center is the canonical west↔east router; south_hub is the canonical south-cluster dispatch (6 detours).",
+    "South clique (south_inner + se_corner + south_c + south_w + south_sw) is densely interconnected — BFS will find short paths inside it.",
+    "south_pocket is a single-degree dead-end off east_s (likely a corner objective)."
+  ]
+}
