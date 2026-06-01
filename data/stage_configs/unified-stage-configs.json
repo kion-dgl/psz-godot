@@ -514,47 +514,101 @@
     ]
   },
   "s01a_ib1": {
-    "floorCollision": {
-      "excludedMeshPatterns": [],
-      "triangles": {
-        "tri_30": false,
-        "tri_31": false,
-        "tri_32": false,
-        "tri_33": false,
-        "tri_38": false,
-        "tri_39": false,
-        "tri_40": false,
-        "tri_41": false
-      },
-      "yTolerance": 0.25
-    },
-    "lastModified": "2026-02-13T19:06:55.155Z",
-    "mapId": "s01a_ib1",
-    "obstacles": [],
-    "portals": [
+    "waypoints": [
       {
-        "direction": "north",
-        "id": "portal_1769053381372_5av2efj16",
-        "label": "north",
+        "id": "wp_spawn_0_1780292190454",
         "position": [
           -17.0069421734409,
           0,
-          -20.922460651021403
-        ]
+          -23.922460651021403
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
       },
       {
-        "direction": "south",
-        "id": "portal_1769053417752_i1yyit48i",
-        "label": "south",
+        "id": "wp_load_0_1780292190454",
+        "position": [
+          -17.0069421734409,
+          0,
+          -27.922460651021403
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780292190454",
         "position": [
           14.05,
           0,
-          20.1
-        ]
+          23.1
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_1780292190454",
+        "position": [
+          14.05,
+          0,
+          27.1
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_1780292193503_j4ii4j",
+        "position": [
+          14.094145532428861,
+          0,
+          15.58922836386531
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780292194805_kfw46e",
+        "position": [
+          0.15740520725994145,
+          0,
+          -0.22922994471205982
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780292197520_7wm75t",
+        "position": [
+          -17.41386678496557,
+          0,
+          -16.73693316990653
+        ],
+        "kind": "point"
       }
     ],
-    "textureFixes": [],
-    "version": 1
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780292190454",
+        "wp_load_0_1780292190454"
+      ],
+      [
+        "wp_spawn_1_1780292190454",
+        "wp_load_1_1780292190454"
+      ],
+      [
+        "wp_1780292197520_7wm75t",
+        "wp_spawn_0_1780292190454"
+      ],
+      [
+        "wp_1780292197520_7wm75t",
+        "wp_1780292194805_kfw46e"
+      ],
+      [
+        "wp_1780292193503_j4ii4j",
+        "wp_spawn_1_1780292190454"
+      ],
+      [
+        "wp_1780292193503_j4ii4j",
+        "wp_1780292194805_kfw46e"
+      ]
+    ]
   },
   "s01a_ib2": {
     "floorCollision": {

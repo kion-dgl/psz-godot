@@ -1,0 +1,29 @@
+{
+  "stageId": "s01a_ib1",
+  "shape": "2-portal diagonal chain (N + S gates, 3-anchor center bridge)",
+  "description": "Two-portal stage with a minimal diagonal chain from the north gate (NW column) through a center anchor to the south gate (SE column). The simplest 2-portal layout in valley-A — strict 3-anchor backbone with no detours.",
+  "portals": {
+    "north": "spawn_north at (-17.01, -23.92) — gate on the north (low-Z) side, west column",
+    "south": "spawn_south at (14.05, 23.10) — gate on the south (high-Z) side, east column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-17.01, 0, -23.92], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [14.05,  0,  23.10], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-17.41, 0, -16.74], "description": "north entry hub - NW column (matches 7wm75t)" },
+    { "id": "center",      "position": [0.16,   0,  -0.23], "description": "center bridge anchor (matches kfw46e)" },
+    { "id": "south_inner", "position": [14.09,  0,  15.59], "description": "south entry hub - SE column (matches j4ii4j)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+
+    ["north_inner", "center"],
+    ["center", "south_inner"]
+  ],
+  "traversalNotes": [
+    "STRICT-BACKBONE diagonal: spawn_north → north_inner → center → south_inner → spawn_south. 4 hops, no detours.",
+    "Simplest 2-portal stage in valley-A — bidirectional, no pockets."
+  ]
+}
