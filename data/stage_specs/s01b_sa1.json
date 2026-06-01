@@ -1,0 +1,54 @@
+{
+  "stageId": "s01b_sa1",
+  "shape": "Two-portal arena with center super-hub (N+S gates)",
+  "description": "Two-portal arena where the center anchor (6uo9ly) is a high-degree super-hub fanning out to 5 interior anchors (west, west-south, south-center, north-center, east-mid) plus both entry hubs. The south route goes through a south-center clique (j182ab + 3vjxc5 + xy3sme + 2mtse8); the north route through runfb4. East and west pockets hang off center.",
+  "portals": {
+    "north": "spawn_north at (-4.91, -23.82) — gate on the north (low-Z) side",
+    "south": "spawn_south at (5.19, 20.55) — gate on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-4.91,  0, -23.82], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [5.19,   0,  20.55], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-4.83,  0, -14.01], "description": "north entry hub (matches runfb4)" },
+    { "id": "south_inner", "position": [5.33,   0,  15.01], "description": "south entry hub (matches 3vjxc5)" },
+
+    { "id": "center",      "position": [0.20,   0,  -0.15], "description": "center super-hub (matches 6uo9ly)" },
+
+    { "id": "south_c",     "position": [5.04,   0,   7.59], "description": "south-center clique anchor (matches j182ab)" },
+    { "id": "south_e",     "position": [13.96,  0,   8.52], "description": "south-east corner (matches xy3sme)" },
+    { "id": "west_s",      "position": [-6.78,  0,   7.31], "description": "west-south anchor (matches 2mtse8)" },
+
+    { "id": "east_mid",    "position": [13.64,  0,  -4.75], "description": "east-mid pocket (matches vqgvvj)" },
+    { "id": "north_c",     "position": [3.16,   0, -12.01], "description": "north-center pocket (matches 3di8lb)" },
+    { "id": "west_pocket", "position": [-13.84, 0,  -6.92], "description": "west pocket (matches guiflc)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+
+    ["north_inner", "center"],
+    ["north_inner", "north_c"],
+    ["north_inner", "west_pocket"],
+
+    ["center", "south_c"],
+    ["center", "west_s"],
+    ["center", "east_mid"],
+    ["center", "north_c"],
+    ["center", "west_pocket"],
+
+    ["north_c", "east_mid"],
+
+    ["south_c", "south_inner"],
+    ["south_c", "south_e"],
+    ["south_c", "west_s"],
+    ["south_inner", "south_e"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → center → south_c → south_inner → spawn_south. 5 hops.",
+    "DISPATCH RULE: center is the canonical dispatch anchor — reaches 5 detour anchors. Use the center for cross-zone objective dispatch.",
+    "south_c is a secondary hub covering the south-east corner.",
+    "Two single-degree pockets (east_mid via north_c, west_pocket via north_inner/center) — corner objectives."
+  ]
+}
