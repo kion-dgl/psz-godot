@@ -1,0 +1,39 @@
+{
+  "stageId": "s01b_ga1",
+  "shape": "Dead-end with center pivot + ring of corner pockets (single south gate)",
+  "description": "Single-portal dead-end room with a south entry hub (z8nffe), a center pivot (k8g99f) that fans out to four corner detour pockets (NE, north-center, NW, W), and two south-side detour pockets (S-W pfcf7p and E nbxfdt) hanging off the entry hub. After kill_all / objective sequence, return to spawn_south. Same dead-end-with-sub-zones family as paru-A na1, wetlands-A na1/nb2.",
+  "portals": {
+    "south": "spawn_south at (5.08, 19.93) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",   "position": [5.08,   0,  19.93], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "south_inner",  "position": [5.41,   0,  10.66], "description": "south entry hub (matches z8nffe)" },
+
+    { "id": "south_sw",     "position": [-5.08, 0,  11.70], "description": "south-side SW detour (matches pfcf7p)" },
+    { "id": "south_e",      "position": [14.89,  0,   6.54], "description": "south-side east detour (matches nbxfdt)" },
+
+    { "id": "center",       "position": [0.55,   0,  -0.03], "description": "center pivot — fans out to 4 corner pockets (matches k8g99f)" },
+
+    { "id": "ne_pocket",    "position": [13.07,  0, -12.75], "description": "NE corner pocket (matches 7iomvj)" },
+    { "id": "n_pocket",     "position": [-3.99,  0, -15.04], "description": "north-center pocket (matches nz04s9)" },
+    { "id": "nw_pocket",    "position": [-11.45, 0,  -7.26], "description": "NW corner pocket (matches ljljqf)" },
+    { "id": "w_pocket",     "position": [-10.71, 0,   4.60], "description": "west detour pocket (matches ufurqy)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["south_inner", "south_sw"],
+    ["south_inner", "south_e"],
+    ["south_inner", "center"],
+
+    ["center", "ne_pocket"],
+    ["center", "n_pocket"],
+    ["center", "nw_pocket"],
+    ["center", "w_pocket"]
+  ],
+  "traversalNotes": [
+    "DEAD-END. Enter and leave via spawn_south.",
+    "DISPATCH RULE: south-side objectives via south_inner; corner-pocket objectives via center → corner → reverse.",
+    "Star topology around the center: corner pockets do NOT interconnect — every cross-pocket transit goes through the center pivot."
+  ]
+}
