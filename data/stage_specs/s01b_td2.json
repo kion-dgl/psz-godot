@@ -1,0 +1,65 @@
+{
+  "stageId": "s01b_td2",
+  "shape": "3-portal split arena (S+W+E gates) with west hub + central bridge + east clique",
+  "description": "Three-portal arena split into a west cluster, a central bridge, and an east clique. The WEST cluster (83oy60) is a 4-way hub joining south_entry (kbjfy3), west_entry (wvnuag), the SW pocket chain (bh08ji → 2fd75b), and the center bridge (uoh291). The CENTER (uoh291) is the only connector between west and east halves. The EAST clique (9qaowd + 9u3qhk + ponnj7) is densely interconnected; ponnj7 also handles the east gate and the north corridor (1zu0ry → eaq2oy). One single-degree pocket (25lh0l) hangs off 9qaowd.",
+  "portals": {
+    "south": "spawn_south at (-13.36, 9.89) — gate on the south (high-Z) side, west column",
+    "east":  "spawn_east at (22.97, 5.45) — gate on the east (high-X) side",
+    "west":  "spawn_west at (-23.39, -2.77) — gate on the west (low-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-13.36, 0,   9.89], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [22.97,  0,   5.45], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-23.39, 0,  -2.77], "description": "west portal (matches wp_spawn_2)" },
+
+    { "id": "south_inner", "position": [-13.33, 0,   2.80], "description": "south entry hub (matches kbjfy3)" },
+    { "id": "west_inner",  "position": [-17.29, 0,  -1.96], "description": "west entry step (matches wvnuag)" },
+    { "id": "west_hub",    "position": [-7.33,  0,  -1.44], "description": "west cluster 4-way hub (matches 83oy60)" },
+    { "id": "sw_pocket_a", "position": [-7.67,  0, -15.39], "description": "SW pocket midpoint (matches bh08ji)" },
+    { "id": "sw_corner",   "position": [-17.97, 0, -18.24], "description": "SW corner dead-end (matches 2fd75b)" },
+
+    { "id": "center",      "position": [0.07,   0,   0.07], "description": "central bridge - west↔east connector (matches uoh291)" },
+
+    { "id": "east_hub",    "position": [4.86,   0,   1.69], "description": "east clique central hub (matches 9qaowd)" },
+    { "id": "east_n",      "position": [3.59,   0,   7.70], "description": "east clique north arm (matches 9u3qhk)" },
+    { "id": "east_inner",  "position": [16.91,  0,   5.77], "description": "east entry hub - east clique anchor (matches ponnj7)" },
+    { "id": "se_pocket",   "position": [9.09,   0,  -7.49], "description": "SE single-degree pocket (matches 25lh0l)" },
+
+    { "id": "ne_corner",   "position": [16.93,  0,  15.01], "description": "NE corner step (matches 1zu0ry)" },
+    { "id": "n_corner",    "position": [10.08,  0,  19.28], "description": "north corner dead-end (matches eaq2oy)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "east_inner"],
+
+    ["south_inner", "west_hub"],
+    ["south_inner", "west_inner"],
+    ["west_inner", "west_hub"],
+
+    ["west_hub", "sw_pocket_a"],
+    ["sw_pocket_a", "sw_corner"],
+
+    ["west_hub", "center"],
+
+    ["center", "east_n"],
+    ["center", "east_hub"],
+
+    ["east_hub", "se_pocket"],
+    ["east_hub", "east_inner"],
+    ["east_hub", "east_n"],
+    ["east_n", "east_inner"],
+
+    ["east_inner", "ne_corner"],
+    ["ne_corner", "n_corner"]
+  ],
+  "traversalNotes": [
+    "Direct south ↔ east: spawn_south → south_inner → west_hub → center → east_hub → east_inner → spawn_east. 6 hops via the center bridge.",
+    "Direct south ↔ west: spawn_south → south_inner → west_inner → spawn_west. 3 hops (south_inner is wired to both gate inners).",
+    "Direct west ↔ east: spawn_west → west_inner → west_hub → center → east_hub → east_inner → spawn_east. 6 hops.",
+    "DISPATCH RULE: west_hub and east_hub are the cluster dispatchers; center is the only west↔east bridge.",
+    "SW pocket chain (sw_pocket_a → sw_corner) and N pocket chain (ne_corner → n_corner) are strict 2-hop dead-ends.",
+    "se_pocket (25lh0l) is a single-degree pocket off east_hub."
+  ]
+}
