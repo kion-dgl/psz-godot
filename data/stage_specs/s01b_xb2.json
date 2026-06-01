@@ -1,0 +1,60 @@
+{
+  "stageId": "s01b_xb2",
+  "shape": "4-portal cross arena (N+S+W+E gates) with central super-hub",
+  "description": "Four-portal arena where all four gates fan into a CENTER super-hub (gzn6yb). The CENTER reaches all four entry hubs (j23yxt north, so954g west, 1xxydp south, ql1owe east) plus a NW pocket (bnq1im) and an east-mid corner (1jxfmf). The NW pocket (bnq1im) is wired into three west-side hubs (j23yxt, so954g, gzn6yb) for a small triangle. The EAST clique (1xxydp + 1jxfmf + ql1owe) is also a triangle off the CENTER. Most compact 4-portal stage authored.",
+  "portals": {
+    "north": "spawn_north at (-9.38, -4.19) — gate on the north (low-Z) side",
+    "south": "spawn_south at (16.98, 17.46) — gate on the south (high-Z) side",
+    "west":  "spawn_west at (-23.11, 17.35) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.28, -14.15) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-9.38,  0,  -4.19], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [16.98,  0,  17.46], "description": "south portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-23.11, 0,  17.35], "description": "west portal (matches wp_spawn_2)" },
+    { "id": "east_gate",   "position": [23.28,  0, -14.15], "description": "east portal (matches wp_spawn_3)" },
+
+    { "id": "north_inner", "position": [-9.28,  0,   2.06], "description": "north entry hub (matches j23yxt)" },
+    { "id": "west_inner",  "position": [-17.40, 0,  17.51], "description": "west entry hub (matches so954g)" },
+    { "id": "south_inner", "position": [16.89,  0,   9.50], "description": "south entry hub (matches 1xxydp)" },
+    { "id": "east_inner",  "position": [15.14,  0, -14.42], "description": "east entry hub (matches ql1owe)" },
+
+    { "id": "center",      "position": [2.13,   0,   7.74], "description": "central 6-way super-hub (matches gzn6yb)" },
+
+    { "id": "nw_pocket",   "position": [-8.51,  0,  21.82], "description": "NW pocket - triangle with north_inner + west_inner + center (matches bnq1im)" },
+    { "id": "east_mid",    "position": [20.83,  0,   2.43], "description": "east-mid corner - east triangle with south_inner + east_inner + center (matches 1jxfmf)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "east_inner"],
+
+    ["north_inner", "nw_pocket"],
+    ["north_inner", "center"],
+    ["north_inner", "west_inner"],
+
+    ["west_inner", "nw_pocket"],
+    ["west_inner", "center"],
+
+    ["center", "nw_pocket"],
+    ["center", "south_inner"],
+    ["center", "east_mid"],
+    ["center", "east_inner"],
+
+    ["south_inner", "east_mid"],
+    ["south_inner", "east_inner"],
+    ["east_inner", "east_mid"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → center → south_inner → spawn_south. 4 hops.",
+    "Direct N→W: spawn_north → north_inner → west_inner → spawn_west. 3 hops.",
+    "Direct N→E: spawn_north → north_inner → center → east_inner → spawn_east. 4 hops.",
+    "Direct W→S: spawn_west → west_inner → center → south_inner → spawn_south. 4 hops.",
+    "Direct W→E: spawn_west → west_inner → center → east_inner → spawn_east. 4 hops.",
+    "Direct S→E: spawn_south → south_inner → east_inner → spawn_east. 3 hops via the east triangle.",
+    "DISPATCH RULE: center (gzn6yb) is the canonical 4-portal dispatcher — reaches all four entry hubs in 1 hop.",
+    "Two triangles: NW (north_inner + west_inner + nw_pocket + center) and EAST (south_inner + east_inner + east_mid + center). Pick the closer side of the triangle."
+  ]
+}
