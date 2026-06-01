@@ -19,6 +19,10 @@ const KIND_COLORS: Record<WaypointKind, string> = {
   spawn: '#44ff44',
   npc: '#ffd24a',
   exit: '#ff8c00',
+  switch: '#ef4444',
+  key_drop: '#a855f7',
+  telepipe: '#f97316',
+  via: '#06b6d4',
 };
 
 const Y = 0.6; // lift markers + edge lines slightly above the floor

@@ -93,7 +93,7 @@ export interface ObstacleData {
 // "you can walk straight from A to B without snagging geometry". Locations of
 // interest (gates, spawn, NPCs, exits) are just waypoints tagged with a `kind`.
 
-export type WaypointKind = 'point' | 'gate' | 'spawn' | 'npc' | 'exit';
+export type WaypointKind = 'point' | 'gate' | 'spawn' | 'npc' | 'exit' | 'switch' | 'key_drop' | 'telepipe' | 'via';
 
 export interface WaypointData {
   id: string;
