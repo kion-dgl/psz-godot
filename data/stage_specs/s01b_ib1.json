@@ -1,0 +1,55 @@
+{
+  "stageId": "s01b_ib1",
+  "shape": "Diagonal two-portal arena (N + S on opposite quadrants)",
+  "description": "Two-portal arena where the gates sit on diagonally-opposite quadrants: spawn_north at NW (low-X, low-Z), spawn_south at SE (high-X, high-Z). The south entry hub (omamui) is the highest-degree node, reaching the center and 3 corners + the south-center. The center (sv520a) connects east, SE pocket, NW (g7kjd9), and SW pocket (gcnzgi). The north entry hub (sfbrne) is sparser, joining only the NW corridor (g7kjd9).",
+  "portals": {
+    "north": "spawn_north at (-16.89, -22.91) — gate on the north (low-Z) side, west column",
+    "south": "spawn_south at (17.02, 22.43) — gate on the south (high-Z) side, east column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-16.89, 0, -22.91], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [17.02,  0,  22.43], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "south_inner", "position": [16.77,  0,  15.57], "description": "south entry hub — high-degree pivot to corners + south-center (matches omamui)" },
+    { "id": "north_inner", "position": [-17.43, 0, -16.16], "description": "north entry hub (matches sfbrne)" },
+
+    { "id": "nw_corner",   "position": [-17.56, 0,  -8.73], "description": "NW corridor / corner (matches g7kjd9)" },
+    { "id": "sw_corner",   "position": [-18.01, 0,  18.69], "description": "SW corner pocket (matches gcnzgi)" },
+
+    { "id": "center",      "position": [0.06,   0,  -9.04], "description": "center pivot (matches sv520a)" },
+    { "id": "south_center","position": [-1.91,  0,  14.52], "description": "south-center detour anchor (matches jfuz54)" },
+
+    { "id": "east_arm",    "position": [18.91,  0, -10.87], "description": "east arm detour (matches vo3gch)" },
+    { "id": "se_pocket",   "position": [11.77,  0, -18.76], "description": "SE pocket detour (matches 5picae)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["north_gate", "north_inner"],
+
+    ["south_inner", "south_center"],
+    ["south_inner", "east_arm"],
+    ["south_inner", "center"],
+    ["south_inner", "nw_corner"],
+
+    ["north_inner", "nw_corner"],
+
+    ["south_center", "sw_corner"],
+    ["south_center", "nw_corner"],
+    ["south_center", "center"],
+
+    ["center", "east_arm"],
+    ["center", "se_pocket"],
+    ["center", "nw_corner"],
+    ["center", "sw_corner"],
+
+    ["east_arm", "se_pocket"],
+    ["sw_corner", "nw_corner"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → nw_corner → center → south_inner → spawn_south (or via south_center). Five hops.",
+    "DISPATCH RULE: south_inner is the super-hub for south-side and center objectives. north_inner is sparse — only NW corridor is direct; cross-room objectives all go through south_inner / center.",
+    "Multiple detour pockets (sw_corner, se_pocket, east_arm) for corner-objective dispatch.",
+    "Same pattern family as the diagonal-portal arenas (ic1 wetlands) but more wide-open and less corridor-y."
+  ]
+}
