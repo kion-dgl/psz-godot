@@ -1,0 +1,44 @@
+{
+  "stageId": "s02a_ib1",
+  "shape": "Square arena with TWO entry hubs (N+S gates)",
+  "description": "Two-portal square combat arena. Unlike paru-A ib1's single-center-anchor pattern, this stage has TWO entry hubs — one just inside each portal — and each hub independently connects to the four corner-detour anchors plus a shared center anchor. So either gate can dispatch to any corner without crossing through a single bottleneck. Direct N↔S transit goes hub → center → hub.",
+  "portals": {
+    "north": "spawn_north at (-6.03, -24.84) — gate on the north (low-Z) side",
+    "south": "spawn_south at (3.91, 24.73) — gate on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",   "position": [-6.03,  0, -24.84], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",   "position": [3.91,   0,  24.73], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner",  "position": [-6.06,  0, -18.67], "description": "north entry hub, joins north_gate and dispatches to all corners + center (matches uvotpk)" },
+    { "id": "south_inner",  "position": [4.31,   0,  17.05], "description": "south entry hub, joins south_gate and dispatches to all corners + center (matches rmyx7i)" },
+    { "id": "arena_center", "position": [0.02,   0,  -0.09], "description": "geometric center — shared transit anchor between the two hubs (matches kkcmve)" },
+
+    { "id": "nw_corner",    "position": [-12.64, 0, -13.80], "description": "NW corner detour (matches janabj)" },
+    { "id": "sw_corner",    "position": [-12.59, 0,  10.71], "description": "SW corner detour (matches l8ucqr)" },
+    { "id": "ne_corner",    "position": [13.89,  0, -12.59], "description": "NE corner detour (matches jr4q2u)" },
+    { "id": "se_corner",    "position": [16.64,  0,   6.71], "description": "SE corner detour (matches 09o3qt)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+
+    ["north_inner", "arena_center"],
+    ["north_inner", "nw_corner"],
+    ["north_inner", "sw_corner"],
+    ["north_inner", "ne_corner"],
+    ["north_inner", "se_corner"],
+
+    ["south_inner", "arena_center"],
+    ["south_inner", "nw_corner"],
+    ["south_inner", "sw_corner"],
+    ["south_inner", "ne_corner"],
+    ["south_inner", "se_corner"]
+  ],
+  "traversalNotes": [
+    "Direct N↔S: spawn_north → north_inner → arena_center → south_inner → spawn_south. Four hops.",
+    "DISPATCH RULE: any corner objective routes via the entering side's inner hub. Walk current_gate → current_inner → corner → current_inner → next_inner → next_gate. The two hubs DON'T directly link — transit between them always passes through arena_center (or a corner, but center is the canonical route).",
+    "Same primitive family as paru-A ib1 (two-portal square arena) but with an asymmetric hub layout that gives each portal its own dispatch staging area. Use the entering-side hub for objectives — don't cross to the far hub just to reach a corner."
+  ]
+}
