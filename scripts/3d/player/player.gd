@@ -1079,22 +1079,23 @@ func _handle_movement(delta: float) -> void:
 
 
 func _can_move_to(move_dir: Vector3) -> bool:
-	# Check multiple points to prevent walking off edges at any angle
-	# This ensures consistent edge detection regardless of approach angle
-	var center := global_position + move_dir * FLOOR_CHECK_DISTANCE
+	# Probe the standard 1.0m forward band first; if that band sits inside a
+	# small floor-mesh hole (all 3 lateral rays drop into the same gap), retry
+	# at 1.5m. Cliffs miss at both distances; mesh-triangulation gaps narrower
+	# than ~0.5m have solid floor again at the further band, and the capsule
+	# bridges the small gap on physics. Keeps the 2-of-3 lateral tolerance
+	# within each band so a single ray dropping into a hairline crack still
+	# passes when the other two land on floor.
+	var side_dir := Vector3(-move_dir.z, 0, move_dir.x)
+	if _floor_band_walkable(move_dir, FLOOR_CHECK_DISTANCE, side_dir):
+		return true
+	return _floor_band_walkable(move_dir, FLOOR_CHECK_DISTANCE * 1.5, side_dir)
 
-	# Calculate perpendicular direction for side checks
-	var side_dir := Vector3(-move_dir.z, 0, move_dir.x)  # 90 degree rotation
+
+func _floor_band_walkable(move_dir: Vector3, distance: float, side_dir: Vector3) -> bool:
+	var center := global_position + move_dir * distance
 	var left := center + side_dir * FLOOR_CHECK_SIDE
 	var right := center - side_dir * FLOOR_CHECK_SIDE
-
-	# Require at least 2 of 3 sample points to find floor. The previous
-	# all-3 rule wedged the player on hairline gaps in the floor mesh
-	# triangulation (one of the three downward rays drops cleanly into
-	# the crack and the other two land on solid floor, so the all-3
-	# check returns false and the player can't advance in any direction).
-	# 2-of-3 tolerates that single-point miss while still preventing the
-	# cliff-walk case (no floor at all = all 3 miss = stop).
 	var hits: int = 0
 	if _has_floor_at(center):
 		hits += 1
