@@ -253,6 +253,25 @@ func _ready() -> void:
 	_quest_steps = _quest_steps.duplicate(true)
 	_steps_by_cell = _populate_steps_by_cell(_quest_steps)
 	_dump_plan(_quest_steps, _steps_by_cell)
+	# Speed up the entire sim by 3x by default (overridable via
+	# PSZ_AUTOPILOT_TIME_SCALE=N — e.g. =1 to disable, =5 for fast-forward).
+	# Engine.time_scale multiplies how much GAME time advances per process
+	# frame; --write-movie with --fixed-fps 30 then produces an output MP4
+	# that shows the run at N× speed while the underlying autopilot timers
+	# (which all go through SceneTreeTimer + create_timer, both respecting
+	# time_scale) keep their relative spacing intact. Bump
+	# physics_ticks_per_second proportionally so per-tick movement stays
+	# small enough to avoid overshoot in collision detection (the
+	# QuestItemPickup interaction box is only 1m radius — at 3× speed with
+	# default 60 ticks/sec, the player could skip past it in one tick).
+	var time_scale_env: String = OS.get_environment("PSZ_AUTOPILOT_TIME_SCALE")
+	var scale: float = 3.0 if time_scale_env == "" else float(time_scale_env)
+	if scale <= 0.0:
+		scale = 1.0
+	if scale != 1.0:
+		Engine.time_scale = scale
+		Engine.physics_ticks_per_second = int(60.0 * scale)
+		print("[sanity] autopilot time_scale=%.2f, physics_ticks_per_second=%d" % [scale, Engine.physics_ticks_per_second])
 	_floor_only = OS.has_environment("PSZ_AUTOPILOT_FLOOR_ONLY")
 	if _floor_only:
 		print("[sanity] autopilot floor-only mode: shrinking player capsule, walls won't block")
