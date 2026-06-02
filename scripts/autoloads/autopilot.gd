@@ -431,8 +431,21 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 						break
 				if has_null_dialog:
 					actions.append("dismiss_dialog")
+				# Action order: unlock → key → gate → pickup. flip_switch
+				# first because switches unblock fences that may sit on the
+				# path to keys, gates, OR items (paru pact's B 3,1 has a
+				# west-wall fence link_id="b" gating the mag-fragment
+				# pickup). pickup_key before open_gate because the key
+				# dropped in this cell typically unlocks this cell's own
+				# gate (paru pact's B 2,1 drops its own gate key). The
+				# quest-item pickup is last since fences/gates may sit
+				# between the player and the item.
+				if (cell.get("switches", []) as Array).size() > 0:
+					actions.append("flip_switch")
 				if cell.get("keyDrop", null) != null:
 					actions.append("pickup_key")
+				if cell.get("keyGate", null) != null:
+					actions.append("open_gate")
 				# Always try a quest-item pickup. Some quests (paru pact's
 				# mag fragments) gate their final telepipe spawn behind
 				# picking up N of these — the Nth pickup's remaining_dialog
@@ -444,10 +457,6 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 				# action — the handler no-ops with a WARN when no
 				# QuestItemPickup is in the scene.
 				actions.append("pickup_quest_item")
-				if (cell.get("switches", []) as Array).size() > 0:
-					actions.append("flip_switch")
-				if cell.get("keyGate", null) != null:
-					actions.append("open_gate")
 				if is_terminal:
 					actions.append("wait_quest_complete")
 			var label := "%s %s%s" % [area, pos, " (passthrough)" if is_passthrough else (" (return)" if visit_n > 1 else "")]
