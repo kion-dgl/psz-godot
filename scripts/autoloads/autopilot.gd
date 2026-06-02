@@ -1209,19 +1209,24 @@ func _do_open_gate(field: Node) -> void:
 
 
 func _do_wait_quest_complete(_field: Node) -> void:
-	print("[sanity] final cell: kill_all + give the room_clear dialog ~5s, then force-complete")
+	print("[sanity] final cell: kill_all + advance any active dialogs ~12s, then force-complete")
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.has_method("_debug_kill_all"):
 		player._debug_kill_all()
-	# The room_clear dialog at B 3,0 carries action "complete_quest", but the
-	# dialog_trigger checks `SessionManager.are_objectives_complete()` first
-	# and skips on miss. Our force-advance fallback bypasses several cells
-	# (where the key-drop chain never fires), so objectives may not be met.
-	# Give the natural dialog 5s to fire, advancing pages with ui_accept; if
-	# the quest isn't marked complete by then, call complete_quest() directly.
-	for i in range(4):
-		_after(1.2 + i * 1.0, func() -> void: _press_action("ui_accept"))
-	_after(5.2, func() -> void:
+	# Two natural completion paths land here:
+	#   (a) SR's B 3,0 room_clear dialog fires complete_quest if objectives
+	#       are met (autopilot's bypass logic often skips key drops, so this
+	#       path frequently misses and we fall through to force-complete).
+	#   (b) paru pact's mag_fragment quest_item, on its 4th pickup, fires
+	#       a 6-page dialog whose final-page actions are
+	#       [dismiss_companion, complete_quest, telepipe] — this is the only
+	#       path that spawns a Telepipe for the return-to-city warp.
+	# Path (b) needs the full 6 pages to be advanced before complete_quest
+	# AND telepipe fire. Press ui_accept 12 times over ~12s (so multi-page
+	# dialogs of any plausible length advance) before force-completing.
+	for i in range(12):
+		_after(1.0 + i * 1.0, func() -> void: _press_action("ui_accept"))
+	_after(13.5, func() -> void:
 		if not SessionManager.has_completed_quest():
 			print("[sanity] dialog didn't fire complete_quest (objectives unmet from bypassed cells) — calling SessionManager.complete_quest() directly")
 			SessionManager.complete_quest())
