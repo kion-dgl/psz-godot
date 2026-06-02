@@ -67,6 +67,14 @@ const WALK_DIR_THRESHOLD := 0.3 # projection magnitude needed to hold a move act
 const KILL_ALL_SETTLE := 0.9    # per-wave settle (re-checked in a loop until enemies group is empty or KILL_ALL_MAX_WAVES caps it)
 const POST_INTERACT_SETTLE := 0.9
 const POST_GATE_SETTLE := 1.5   # gate open animation + collision flip
+# Quest-item pickups need the autopilot to dwell in the cell long enough
+# for the multi-page pickup dialog to fully advance — cell transitions
+# free the field HUD which holds the dialog_complete callback that calls
+# SessionManager.collect_quest_item. Without this dwell the item is
+# stepped on but never registers, the next pickup's item_count condition
+# matches the wrong dialog branch, and paru pact's final "spawn telepipe"
+# action (gated on item_count==4) never fires.
+const POST_QUEST_ITEM_SETTLE := 10.0
 const QUEST_COMPLETE_POLL := 0.4
 const QUEST_COMPLETE_POLL_MAX := 60  # 60 * 0.4 = 24s
 # Telepipe interact can lose the priority gamble against a dropped item that
@@ -1178,15 +1186,27 @@ func _do_pickup_quest_item(field: Node) -> void:
 	var item_id: String = str(item.get("item_id") if "item_id" in item else "?")
 	print("[sanity] walking to quest_item id=%s at (%.1f, %.1f, %.1f)" % [
 		item_id, item.global_position.x, item.global_position.y, item.global_position.z])
+	# QuestItemPickup._show_pickup_dialog only calls SessionManager.
+	# collect_quest_item() AFTER the dialog's dialog_complete signal fires
+	# (see quest_item_pickup.gd:152). The dialog box is a child of the
+	# field's HUD — cell transition reloads the scene and frees HUD +
+	# dialog box, severing the dialog_complete callback before it can run.
+	# So we have to DWELL in the cell long enough for the dialog to fully
+	# advance through every page. POST_QUEST_ITEM_SETTLE replaces the
+	# normal POST_INTERACT_SETTLE here.
+	#
 	# Step-on pickup (DropBase auto-collects on overlap) — use auto_collect.
-	_walk_then_interact(field, item.global_position, "quest_item", POST_INTERACT_SETTLE, true)
-	# Quest-item pickup dialogs are multi-page; press ui_accept a few times
-	# to advance through them. Harmless if no dialog is active. The last
-	# _after-chain fires _run_next_action so the cell's remaining actions
-	# (e.g. wait_quest_complete on the final cell) proceed regardless of
-	# whether the dialog fired.
-	for i in range(6):
-		_after(POST_INTERACT_SETTLE + 0.6 + i * 0.6, func() -> void: _press_action("ui_accept"))
+	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, true)
+	# The walk to the item is variable-length (we may BFS a multi-leg
+	# path), so a fixed offset from handler start can't tell us when the
+	# dialog actually opens. Solution: schedule a long train of ui_accept
+	# presses that covers BOTH the walk window (presses are no-ops while
+	# walking) AND the dialog window after step-on. Spaced 0.7s, 25
+	# presses = ~17.5s of coverage handles the worst-case multi-page
+	# narration (paru pact's 6-page item_count=4 Elio fitting-fragments-
+	# together dialog) plus a generous walk budget.
+	for i in range(25):
+		_after(0.9 + i * 0.7, func() -> void: _press_action("ui_accept"))
 
 
 func _do_flip_switch(field: Node) -> void:
