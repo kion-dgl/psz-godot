@@ -433,18 +433,17 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 					actions.append("dismiss_dialog")
 				if cell.get("keyDrop", null) != null:
 					actions.append("pickup_key")
-				# Quest items (mag_fragment etc.) live in cell.objects. Some
-				# quests gate their final telepipe spawn behind picking up N
-				# of these (e.g. paru pact's 4 mag fragments — the 4th
-				# pickup's dialog action list is the only path that spawns
-				# the room_clear telepipe). One pickup_quest_item per cell
-				# is enough; the handler grabs whichever QuestItemPickup is
-				# in the scene at the time.
-				var cell_objs: Array = cell.get("objects", [])
-				for obj in cell_objs:
-					if str(obj.get("type", "")) == "quest_item":
-						actions.append("pickup_quest_item")
-						break
+				# Always try a quest-item pickup. Some quests (paru pact's
+				# mag fragments) gate their final telepipe spawn behind
+				# picking up N of these — the Nth pickup's remaining_dialog
+				# fires the complete_quest + telepipe actions, the only path
+				# that spawns the room_clear telepipe. data/quest_plans/
+				# (the file the autopilot loads) drops the cell.objects
+				# array used to detect quest_items at plan-gen time, so
+				# rather than reload data/quests/ just always emit the
+				# action — the handler no-ops with a WARN when no
+				# QuestItemPickup is in the scene.
+				actions.append("pickup_quest_item")
 				if (cell.get("switches", []) as Array).size() > 0:
 					actions.append("flip_switch")
 				if cell.get("keyGate", null) != null:
