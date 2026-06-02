@@ -1552,6 +1552,51 @@ func _fail_with_reason(reason: String) -> void:
 	_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 
 
+## Cast the same 3 downward rays the player's _can_move_to uses (center,
+## left, right at FLOOR_CHECK_DISTANCE ahead of the player) and log which
+## ones hit floor. Mirrors player.gd:1081 so the result tells the stage
+## author exactly which sample point is dropping into a hole.
+func _log_floor_samples(pos: Vector3, dir: Vector3) -> void:
+	# Match player.gd constants exactly — if those change, update here too.
+	const FLOOR_CHECK_DISTANCE := 1.0
+	const FLOOR_CHECK_SIDE := 0.5
+	const FLOOR_RAY_LENGTH := 5.0
+	var center := pos + dir * FLOOR_CHECK_DISTANCE
+	# Perpendicular: 90° rotation in the XZ plane (-z, 0, x), matching
+	# player.gd:1087.
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	var left := center + side * FLOOR_CHECK_SIDE
+	var right := center - side * FLOOR_CHECK_SIDE
+	var hit_c := _ray_floor_hit(center, pos.y, FLOOR_RAY_LENGTH)
+	var hit_l := _ray_floor_hit(left, pos.y, FLOOR_RAY_LENGTH)
+	var hit_r := _ray_floor_hit(right, pos.y, FLOOR_RAY_LENGTH)
+	var hits: int = (1 if hit_c else 0) + (1 if hit_l else 0) + (1 if hit_r else 0)
+	print("[sanity] floor samples ahead of player (FLOOR_CHECK_DISTANCE=%.1f, FLOOR_CHECK_SIDE=%.1f):" % [FLOOR_CHECK_DISTANCE, FLOOR_CHECK_SIDE])
+	print("[sanity]   center=(%.3f, %.3f) floor=%s" % [center.x, center.z, hit_c])
+	print("[sanity]   left  =(%.3f, %.3f) floor=%s" % [left.x, left.z, hit_l])
+	print("[sanity]   right =(%.3f, %.3f) floor=%s" % [right.x, right.z, hit_r])
+	print("[sanity]   hits=%d/3 → all-3=%s, 2-of-3=%s, 1-of-3=%s" % [
+		hits, "PASS" if hits == 3 else "BLOCK",
+		"PASS" if hits >= 2 else "BLOCK", "PASS" if hits >= 1 else "BLOCK"])
+
+
+## Single downward raycast, mirroring player.gd:_has_floor_at.
+func _ray_floor_hit(check_pos: Vector3, base_y: float, ray_length: float) -> bool:
+	var ws := get_tree().current_scene
+	if ws == null:
+		return false
+	var space_state := ws.get_world_3d().direct_space_state
+	var ray_origin := Vector3(check_pos.x, base_y + 1.0, check_pos.z)
+	var ray_end := Vector3(check_pos.x, base_y - ray_length, check_pos.z)
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	query.collision_mask = 1
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null:
+		query.exclude = [player]
+	var result := space_state.intersect_ray(query)
+	return not result.is_empty()
+
+
 # ── Scene-tree finders for interactables ───────────────────────
 
 func _find_key_pickup(root: Node) -> Node:
@@ -1689,6 +1734,18 @@ func _tick_field_walk() -> void:
 	# walkability fix in the level. Surface the offending cell + stage so it
 	# can be opened in the waypoint editor.
 	if Time.get_ticks_msec() - _walk_started_at_ms > WALK_WATCHDOG_MS:
+		# Surface the exact stuck geometry: player position, walk target,
+		# normalized direction, and the floor-sample results at the three
+		# can_move_to check points. Makes the editor fix obvious — "ah,
+		# the center+left rays land in the void at (0.21, 8.8); add a
+		# waypoint that routes around the (0.17,8.5)-(0.25,9.1) hole."
+		var dir := (_walk_target - pos)
+		dir.y = 0.0
+		if dir.length() > 0.0:
+			dir = dir.normalized()
+		print("[sanity] stuck-walk diagnostic: player=(%.3f, %.3f, %.3f) target=(%.3f, %.3f, %.3f) dir=(%.3f, %.3f, %.3f) dist=%.2f" % [
+			pos.x, pos.y, pos.z, _walk_target.x, _walk_target.y, _walk_target.z, dir.x, dir.y, dir.z, dist])
+		_log_floor_samples(pos, dir)
 		_stop_field_walk()
 		_fail_walk_stuck(pos, dist)
 		return
