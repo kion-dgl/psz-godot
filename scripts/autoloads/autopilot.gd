@@ -1140,8 +1140,12 @@ func _walk_to_exit(field: Node, step: Dictionary) -> void:
 		return
 	var portal_data = field.get("_portal_data")
 	if typeof(portal_data) != TYPE_DICTIONARY or not portal_data.has(exit_dir):
-		_fail_with_reason("cell missing '%s' portal (step %d/%d %s)" % [
-			exit_dir, _quest_step_idx + 1, _quest_steps.size(), str(step.get("label", "?"))])
+		var have_keys: Array = []
+		if typeof(portal_data) == TYPE_DICTIONARY:
+			for k in portal_data:
+				have_keys.append(str(k))
+		_fail_with_reason("cell missing '%s' portal (step %d/%d %s) — portal_data has: %s" % [
+			exit_dir, _quest_step_idx + 1, _quest_steps.size(), str(step.get("label", "?")), str(have_keys)])
 		return
 	var trigger_pos: Vector3 = portal_data[exit_dir].get("trigger_pos", Vector3.ZERO)
 	# Advance the step counter so the next cell load picks up the next step;

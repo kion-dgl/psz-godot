@@ -1187,6 +1187,11 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 						matched = true
 						break
 				if not matched:
+					print("[sanity] portal MISS: dir='%s' id='%s' rot=%d — no config portal matched" % [dir_key, portal_id, _rotation_deg])
+					var avail_ids: Array = []
+					for cp in _stage_config.get("portals", []):
+						avail_ids.append("%s(%s)" % [str(cp.get("id", "")), str(cp.get("direction", ""))])
+					print("[sanity] portal MISS: stage_config portal IDs available: %s" % str(avail_ids))
 					push_warning("[ValleyField] No portal found for dir '%s' in stage config (rot=%d)" % [dir_key, _rotation_deg])
 			if result.has(dir_key):
 				print("[ValleyField]   v1 portal: '%s' (id=%s) → gate=%s spawn=%s trigger=%s" % [
@@ -1223,6 +1228,12 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 			result[dir_key].get("gate_pos", "n/a"),
 			result[dir_key]["spawn_pos"],
 			result[dir_key]["trigger_pos"]])
+	# Summary for [sanity] tail — shows final _portal_data direction keys so
+	# we can match against what the autopilot asks for.
+	var dirs: Array = []
+	for k in result:
+		dirs.append(str(k))
+	print("[sanity] _parse_baked_portals: final keys=%s (rot=%d)" % [str(dirs), _rotation_deg])
 	return result
 
 
