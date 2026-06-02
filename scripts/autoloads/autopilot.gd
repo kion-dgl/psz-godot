@@ -1195,30 +1195,34 @@ func _do_pickup_quest_item(field: Node) -> void:
 	# advance through every page. POST_QUEST_ITEM_SETTLE replaces the
 	# normal POST_INTERACT_SETTLE here.
 	#
-	# Use the autopilot's auto_collect=true branch — its tight arrive
-	# distance (WALK_ARRIVE_DIST_STEP_ON = 0.5m) puts the player INSIDE
-	# the QuestItemPickup's interaction_area (collision_size 2.0,
-	# half-extents 1.0m). The interaction_area.body_entered fires,
-	# Player._update_nearest_interactable picks the item up as
-	# nearest_interactable, and a subsequent interact press triggers
-	# DropBase._on_interact → _give_reward → the dialog chain.
-	# WALK_ARRIVE_DIST_INTERACT (1.5m) was outside that area, so the
-	# previous attempt's interact press did nothing.
+	# Walk to the item, then directly invoke its _on_interact rather than
+	# routing through Player._try_interact. Player.nearest_interactable
+	# depends on the area_entered signal chain (player interaction_area
+	# vs item interaction_area collision masks); empirically this didn't
+	# resolve to the quest_item even after step-on in A 3,2's pickup, so
+	# the indirect path is unreliable. We already have the
+	# QuestItemPickup node from _find_quest_item_pickup — call its
+	# DropBase._on_interact(player) directly. After that, dwell for the
+	# multi-page dialog and press ui_accept to advance it.
 	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, true)
-	# Walk-time is variable (BFS multi-leg paths), so a fixed offset from
-	# handler start can't tell us when the player is actually overlapping
-	# the item. Schedule a TRAIN of interact presses spread across the
-	# walk window AND the dwell window — most fire while walking and do
-	# nothing (no nearest_interactable yet), but at least one fires once
-	# the player enters the interaction_area on step-on, which triggers
-	# the pickup. Then ui_accept presses advance the multi-page dialog.
-	# 8 interact presses spaced 1.2s = ~9.6s of coverage handles even the
-	# longest stage cross-walks; ui_accept 25 × 0.7s = ~17.5s covers the
-	# worst-case 6-page paru-pact item_count=4 dialog after pickup.
+	# After step-on lands, fire the item's _on_interact directly. We can't
+	# tell WHEN step-on completes from here, so schedule the direct
+	# invocation a few times across the walk window; the QuestItemPickup
+	# sets element_state="collected" on the first successful pickup, so
+	# subsequent calls no-op.
+	var item_ref := item
 	for i in range(8):
-		_after(1.0 + i * 1.2, func() -> void: _press_action("interact"))
+		_after(2.0 + i * 1.5, func() -> void:
+			if is_instance_valid(item_ref) and item_ref.has_method("_on_interact"):
+				var pl: Node3D = get_tree().get_first_node_in_group("player")
+				if pl != null:
+					print("[sanity] direct-interact quest_item")
+					item_ref._on_interact(pl))
+	# ui_accept train advances the multi-page dialog after pickup so
+	# dialog_complete fires (which is what calls
+	# SessionManager.collect_quest_item).
 	for i in range(25):
-		_after(0.9 + i * 0.7, func() -> void: _press_action("ui_accept"))
+		_after(3.0 + i * 0.7, func() -> void: _press_action("ui_accept"))
 
 
 func _do_flip_switch(field: Node) -> void:
