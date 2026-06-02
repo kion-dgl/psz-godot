@@ -1,7 +1,7 @@
 {
   "stageId": "s01a_nc2",
-  "shape": "Single-portal dead-end (south gate) with two exploration arms + south cross-link",
-  "description": "Single-portal dead-end stage where the south entry (jn8vx8) fans into two arms: a long WEST/NORTH chain (44qlix → z1qw4m → jhbko6 → qz9f6t) and a shorter EAST chain (upcmke → n25dmk → 7odqgu). A south cross-link (44qlix ↔ upcmke) joins the two arms near the south end, giving a small loop between south_inner / 44qlix / upcmke.",
+  "shape": "Single-portal dead-end (south gate) with two arms + south cross-link",
+  "description": "Single-portal dead-end where the south entry hub (bbku7s) fans into two arms joined at the south end. WEST/NORTH arm: bbku7s → xqxo87 → gwh9pm → gcf52c → ki8llq (long west wall going north to N pocket). EAST arm: bbku7s → 5j2joy → q94ay8 → (lrx9zw NE pocket + z8o2nb east pocket). A south triangle (bbku7s + xqxo87 + 5j2joy) lets the autopilot pick either arm.",
   "portals": {
     "south": "spawn_south at (-14.15, 24.29) — the only portal, on the south (high-Z) side, west column"
   },
@@ -9,16 +9,17 @@
   "anchors": [
     { "id": "south_gate",  "position": [-14.15, 0,  24.29], "description": "south portal (matches wp_spawn_0)" },
 
-    { "id": "south_inner", "position": [-13.78, 0,  17.43], "description": "south entry hub - 3-way dispatcher (matches jn8vx8)" },
+    { "id": "south_inner", "position": [-13.49, 0,  16.93], "description": "south entry hub - 3-way dispatcher (matches bbku7s)" },
 
-    { "id": "west_mid",    "position": [-17.28, 0,   3.10], "description": "west wall mid - cross-link to center (matches 44qlix)" },
-    { "id": "nw_step",     "position": [-15.25, 0,  -8.81], "description": "NW step (matches z1qw4m)" },
-    { "id": "n_step",      "position": [-10.20, 0, -18.10], "description": "north step (matches jhbko6)" },
-    { "id": "n_pocket",    "position": [1.16,   0, -17.20], "description": "north pocket dead-end (matches qz9f6t)" },
+    { "id": "west_mid",    "position": [-17.00, 0,   4.48], "description": "west wall mid - south triangle (matches xqxo87)" },
+    { "id": "w_n_step",    "position": [-14.49, 0,  -9.89], "description": "west-to-north step (matches gwh9pm)" },
+    { "id": "n_step",      "position": [-10.94, 0, -16.77], "description": "north step (matches gcf52c)" },
+    { "id": "n_pocket",    "position": [0.44,   0, -17.74], "description": "north pocket dead-end (matches ki8llq)" },
 
-    { "id": "center",      "position": [-4.15,  0,  10.28], "description": "central anchor - east arm start, cross-link to west (matches upcmke)" },
-    { "id": "east_c",      "position": [5.59,   0,  12.97], "description": "east-central step (matches n25dmk)" },
-    { "id": "east_corner", "position": [16.92,  0,  14.65], "description": "east corner dead-end (matches 7odqgu)" }
+    { "id": "center",      "position": [-4.80,  0,  10.54], "description": "center / east arm start - south triangle (matches 5j2joy)" },
+    { "id": "east_hub",    "position": [6.69,   0,  13.01], "description": "east hub - 2 pockets (matches q94ay8)" },
+    { "id": "ne_pocket",   "position": [16.32,  0,  19.60], "description": "NE pocket dead-end (matches lrx9zw)" },
+    { "id": "east_pocket", "position": [18.73,  0,  11.66], "description": "east pocket dead-end (matches z8o2nb)" }
   ],
   "anchorEdges": [
     ["south_gate", "south_inner"],
@@ -27,18 +28,18 @@
     ["south_inner", "center"],
 
     ["west_mid", "center"],
-
-    ["west_mid", "nw_step"],
-    ["nw_step", "n_step"],
+    ["west_mid", "w_n_step"],
+    ["w_n_step", "n_step"],
     ["n_step", "n_pocket"],
 
-    ["center", "east_c"],
-    ["east_c", "east_corner"]
+    ["center", "east_hub"],
+    ["east_hub", "ne_pocket"],
+    ["east_hub", "east_pocket"]
   ],
   "traversalNotes": [
     "DEAD-END: single south gate. After exploring, autopilot returns to spawn_south.",
-    "Two arms: WEST/NORTH chain (south_inner → west_mid → nw_step → n_step → n_pocket, 5 hops to the N pocket) and EAST chain (south_inner → center → east_c → east_corner, 4 hops to the east corner).",
-    "South triangle (south_inner + west_mid + center) lets the autopilot pick either arm without backtracking.",
-    "STRICT-BACKBONE on the dead-end arms — single-file after the south triangle."
+    "Two arms: WEST/NORTH (south_inner → west_mid → w_n_step → n_step → n_pocket, 5 hops) and EAST (south_inner → center → east_hub, 3 hops + pockets).",
+    "south triangle (south_inner + west_mid + center) lets BFS pick the closer arm without backtracking.",
+    "Three pockets: n_pocket, ne_pocket, east_pocket."
   ]
 }

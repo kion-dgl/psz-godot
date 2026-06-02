@@ -1,0 +1,76 @@
+{
+  "stageId": "s01a_xb2",
+  "shape": "4-portal cross arena (N + S + W + E gates) with central super-hub + perimeter chain",
+  "description": "Four-portal arena with a SOUTH super-hub (4nw4xe at (12.30, 16.11), 6-way) that joins south_gate plus 5 interior anchors. The NW cluster (dkngk3 + tjh6gz west entry + k7tgqo) is a triangle near the west gate. The EAST cluster (ty6vle east-mid + mwz68d east-entry, plus 1skjqw on the south-east) joins via 4nw4xe AND ty6vle. A long PERIMETER CHAIN runs around the south and west: ty6vle → k6oip4 → u7zqie → k501rf (north) → daw2lp + 1ifdo9 + mwhatk (NW corner pocket) + 1kctoo (NW corner near spawn_north).",
+  "portals": {
+    "south": "spawn_south at (11.98, 24.19) — gate on the south (high-Z) side, east column",
+    "north": "spawn_north at (-16.60, -23.39) — gate on the north (low-Z) side, west column",
+    "west":  "spawn_west at (-26.05, 16.41) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.32, -2.98) — gate on the east (high-X) side, near midline"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [11.98,  0,  24.19], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "north_gate",  "position": [-16.60, 0, -23.39], "description": "north portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-26.05, 0,  16.41], "description": "west portal (matches wp_spawn_2)" },
+    { "id": "east_gate",   "position": [23.32,  0,  -2.98], "description": "east portal (matches wp_spawn_3)" },
+
+    { "id": "south_inner", "position": [12.30,  0,  16.11], "description": "south entry super-hub - 6-way (matches 4nw4xe)" },
+    { "id": "nw_cluster_c","position": [-10.10, 0,  13.70], "description": "NW cluster center - 5-way (matches dkngk3)" },
+    { "id": "west_inner",  "position": [-18.95, 0,  15.53], "description": "west entry hub (matches tjh6gz)" },
+    { "id": "k_center",    "position": [-3.31,  0,   4.29], "description": "center bridge (matches k7tgqo)" },
+    { "id": "mid_anchor",  "position": [6.75,   0,   8.55], "description": "south-mid anchor (matches mtw47f)" },
+
+    { "id": "east_mid",    "position": [14.66,  0,  -6.28], "description": "east-mid step (matches ty6vle)" },
+    { "id": "east_inner",  "position": [16.32,  0,  -2.29], "description": "east entry hub (matches mwz68d)" },
+
+    { "id": "se_step_a",   "position": [7.59,   0, -14.45], "description": "SE chain step A (matches k6oip4)" },
+    { "id": "se_step_b",   "position": [3.61,   0, -16.35], "description": "SE chain step B (matches u7zqie)" },
+    { "id": "n_center",    "position": [-3.79,  0, -14.32], "description": "north-center step (matches k501rf)" },
+    { "id": "nw_step_a",   "position": [-13.67, 0, -12.22], "description": "NW chain step A (matches daw2lp)" },
+    { "id": "nw_step_b",   "position": [-19.09, 0,  -8.83], "description": "NW chain step B (matches 1ifdo9)" },
+    { "id": "nw_pocket",   "position": [-21.23, 0,  -2.10], "description": "NW corner dead-end (matches mwhatk)" },
+    { "id": "nw_entry",    "position": [-16.54, 0, -16.31], "description": "NW entry - bridge to north_gate (matches 1kctoo)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["north_gate", "nw_entry"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "east_inner"],
+
+    ["south_inner", "nw_cluster_c"],
+    ["south_inner", "mid_anchor"],
+    ["south_inner", "k_center"],
+    ["south_inner", "east_mid"],
+    ["south_inner", "east_inner"],
+
+    ["nw_cluster_c", "west_inner"],
+    ["nw_cluster_c", "k_center"],
+    ["nw_cluster_c", "mid_anchor"],
+    ["nw_cluster_c", "east_mid"],
+    ["nw_cluster_c", "east_inner"],
+    ["k_center", "east_mid"],
+
+    ["east_inner", "east_mid"],
+    ["east_mid", "se_step_a"],
+    ["se_step_a", "se_step_b"],
+
+    ["n_center", "se_step_b"],
+    ["n_center", "nw_step_a"],
+    ["n_center", "nw_entry"],
+    ["nw_entry", "nw_step_b"],
+    ["nw_step_a", "nw_step_b"],
+    ["nw_step_a", "nw_pocket"],
+    ["nw_step_b", "nw_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → nw_entry → n_center → se_step_b → se_step_a → east_mid → south_inner → spawn_south. 7 hops via perimeter.",
+    "Direct N→E: spawn_north → nw_entry → n_center → se_step_b → se_step_a → east_mid → east_inner → spawn_east. 7 hops.",
+    "Direct S→W: spawn_south → south_inner → nw_cluster_c → west_inner → spawn_west. 4 hops.",
+    "Direct S→E: spawn_south → south_inner → east_inner → spawn_east. 3 hops.",
+    "Direct W→E: spawn_west → west_inner → nw_cluster_c → east_inner → spawn_east. 4 hops.",
+    "DISPATCH: south_inner is the 6-way south dispatcher; nw_cluster_c is the 5-way NW dispatcher.",
+    "NW PERIMETER CHAIN connects spawn_north to the south cluster — strict-backbone single chain along the north and west walls.",
+    "nw_pocket is a 1-degree dead-end forming a triangle with nw_step_a + nw_step_b."
+  ]
+}

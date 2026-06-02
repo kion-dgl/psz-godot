@@ -1,0 +1,65 @@
+{
+  "stageId": "s01a_td2",
+  "shape": "3-portal H-arena (S + W + E gates) with center bridge and east clique",
+  "description": "Three-portal arena split into west, center, and east halves. WEST CHAIN: spawn_west → rt4364 (west entry, 3-way) → y8dp9d (south entry hub) connects to south_gate plus a NW loop (ad7t77 + pv8w9o). CENTER: 3mu5x1 + drqiwr (south side) link to rt4364 and pv8w9o (forming a small clique). EAST CHAIN: tqeb91 → dqoid5 (east hub) → bf7d2j (east entry, joins spawn_east) + gfmmym + bx3508 → ahij18 → xri71f (SE pocket chain).",
+  "portals": {
+    "south": "spawn_south at (-14.41, 23.80) — gate on the south (high-Z) side, west column",
+    "west":  "spawn_west at (-21.61, -0.60) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.93, 6.37) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-14.41, 0,  23.80], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "west_gate",   "position": [-21.61, 0,  -0.60], "description": "west portal (matches wp_spawn_1)" },
+    { "id": "east_gate",   "position": [23.93,  0,   6.37], "description": "east portal (matches wp_spawn_2)" },
+
+    { "id": "south_inner", "position": [-13.69, 0,  14.91], "description": "south entry hub - 3-way (matches y8dp9d)" },
+    { "id": "west_inner",  "position": [-13.85, 0,  -0.47], "description": "west entry hub - 3-way (matches rt4364)" },
+    { "id": "c_loop_a",    "position": [-7.50,  0,  13.31], "description": "NW loop top (matches ad7t77)" },
+    { "id": "c_loop_b",    "position": [-7.02,  0,   3.83], "description": "NW loop south - 3-way bridge (matches pv8w9o)" },
+
+    { "id": "center",      "position": [1.41,   0,  -0.84], "description": "center clique - bridges to east (matches 3mu5x1)" },
+    { "id": "n_center",    "position": [1.57,   0,  15.20], "description": "north of center (matches drqiwr)" },
+
+    { "id": "e_step",      "position": [8.06,   0,  -2.16], "description": "east bridge step (matches tqeb91)" },
+    { "id": "east_hub",    "position": [12.86,  0,  -2.36], "description": "east hub (matches dqoid5)" },
+    { "id": "east_inner",  "position": [13.39,  0,   4.67], "description": "east entry hub (matches bf7d2j)" },
+    { "id": "ne_step",     "position": [13.45,  0,   9.01], "description": "NE step (matches gfmmym)" },
+
+    { "id": "se_step",     "position": [12.72,  0, -10.14], "description": "SE step (matches bx3508)" },
+    { "id": "se_pocket_a", "position": [12.01,  0, -16.36], "description": "SE pocket A (matches ahij18)" },
+    { "id": "se_pocket_b", "position": [3.25,   0, -15.47], "description": "SE pocket B (matches xri71f)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "east_inner"],
+
+    ["south_inner", "west_inner"],
+    ["south_inner", "c_loop_a"],
+    ["south_inner", "c_loop_b"],
+    ["c_loop_a", "c_loop_b"],
+    ["c_loop_b", "west_inner"],
+    ["c_loop_b", "center"],
+
+    ["west_inner", "center"],
+    ["center", "n_center"],
+    ["center", "e_step"],
+
+    ["e_step", "east_hub"],
+    ["east_hub", "east_inner"],
+    ["east_hub", "se_step"],
+    ["east_inner", "ne_step"],
+
+    ["se_step", "se_pocket_a"],
+    ["se_pocket_a", "se_pocket_b"]
+  ],
+  "traversalNotes": [
+    "Direct S→E: spawn_south → south_inner → west_inner → center → e_step → east_hub → east_inner → spawn_east. 7 hops.",
+    "Direct S→W: spawn_south → south_inner → west_inner → spawn_west. 3 hops.",
+    "Direct W→E: spawn_west → west_inner → center → e_step → east_hub → east_inner → spawn_east. 6 hops.",
+    "NW LOOP: south_inner + c_loop_a + c_loop_b + west_inner form a square; BFS picks the shorter side.",
+    "SE pocket chain (se_step → se_pocket_a → se_pocket_b) is a 3-hop dead-end off east_hub.",
+    "ne_step is a 1-hop pocket off east_inner."
+  ]
+}

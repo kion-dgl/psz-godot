@@ -1,7 +1,7 @@
 {
   "stageId": "s01a_lc2",
-  "shape": "2-portal corner arena (N + E gates joined at SE) with long west exploration chain",
-  "description": "Two-portal stage where the north and east gates both wire directly into a single SE hub (pjdgdt) — N→E is just 2 hops. The rest of the room is a long branching exploration chain: a north column going up the east wall (v7ivdo → sa2gf0 → htynu8 SE pocket) and a long west chain across the south (1bnq73 → 5vwqpa → qxwqow → nm621e → yxe16d → j6zfos) for corner objectives.",
+  "shape": "2-portal corner (N + E gates joined at NE) with east column + long west exploration chain",
+  "description": "Two-portal stage with a NE hub (mnljes) that joins both gates plus three chains: an east column going north up (vvlytt → ooiiew → sfx3rw SE pocket), a south pocket (xlunzs → spawn_north passthrough also xlunzs goes to north_gate, plus 8ytbs3 → 65zazi → y7o95f → 0pk3fq → y09rfg west chain + a4xij1 SW deep pocket). N→E is just 2 hops via the NE hub.",
   "portals": {
     "north": "spawn_north at (14.01, -23.26) — gate on the north (low-Z) side, east column",
     "east":  "spawn_east at (23.07, -10.44) — gate on the east (high-X) side, north of midline"
@@ -11,38 +11,42 @@
     { "id": "north_gate",  "position": [14.01,  0, -23.26], "description": "north portal (matches wp_spawn_0)" },
     { "id": "east_gate",   "position": [23.07,  0, -10.44], "description": "east portal (matches wp_spawn_1)" },
 
-    { "id": "ne_hub",      "position": [14.37,  0, -10.79], "description": "NE entry hub - joins both gates + north chain + west chain (matches pjdgdt)" },
+    { "id": "ne_hub",      "position": [14.54,  0, -10.09], "description": "NE hub - joins both gates + east column + west chain (matches mnljes)" },
+    { "id": "north_pass",  "position": [12.92,  0, -17.18], "description": "north entry passthrough (matches xlunzs)" },
 
-    { "id": "e_col_mid",   "position": [13.63,  0,  -0.24], "description": "east column mid (matches v7ivdo)" },
-    { "id": "e_col_up",    "position": [13.40,  0,   9.76], "description": "east column upper (matches sa2gf0)" },
-    { "id": "se_pocket",   "position": [11.18,  0,  17.55], "description": "SE corner pocket dead-end (matches htynu8)" },
+    { "id": "e_col_mid",   "position": [13.29,  0,  -1.12], "description": "east column mid (matches vvlytt)" },
+    { "id": "e_col_up",    "position": [13.90,  0,   9.06], "description": "east column upper (matches ooiiew)" },
+    { "id": "se_pocket",   "position": [11.13,  0,  17.51], "description": "SE corner pocket dead-end (matches sfx3rw)" },
 
-    { "id": "c_n_step",    "position": [3.21,   0,  -9.99], "description": "central north step (matches 1bnq73)" },
-    { "id": "c_n_mid",     "position": [-5.07,  0, -12.75], "description": "central north mid (matches 5vwqpa)" },
-    { "id": "nw_step",     "position": [-14.40, 0, -15.66], "description": "NW step (matches qxwqow)" },
-    { "id": "w_mid",       "position": [-16.03, 0,  -7.53], "description": "west mid (matches nm621e)" },
-    { "id": "w_up",        "position": [-18.56, 0,   1.23], "description": "west upper (matches yxe16d)" },
-    { "id": "nw_pocket",   "position": [-15.66, 0,  10.29], "description": "NW corner pocket dead-end (matches j6zfos)" }
+    { "id": "c_step",      "position": [2.12,   0, -11.09], "description": "central step - bridge to west chain (matches 8ytbs3)" },
+    { "id": "c_w",         "position": [-6.53,  0, -13.56], "description": "central west (matches 65zazi)" },
+    { "id": "sw_deep",     "position": [-18.29, 0, -20.60], "description": "SW deep pocket (matches a4xij1)" },
+    { "id": "w_mid",       "position": [-15.59, 0,  -8.12], "description": "west mid (matches y7o95f)" },
+    { "id": "w_up",        "position": [-19.17, 0,   2.58], "description": "west upper (matches 0pk3fq)" },
+    { "id": "nw_pocket",   "position": [-14.00, 0,  11.88], "description": "NW corner pocket dead-end (matches y09rfg)" }
   ],
   "anchorEdges": [
-    ["north_gate", "ne_hub"],
+    ["north_gate", "north_pass"],
     ["east_gate", "ne_hub"],
 
+    ["ne_hub", "north_pass"],
     ["ne_hub", "e_col_mid"],
+    ["ne_hub", "c_step"],
+
     ["e_col_mid", "e_col_up"],
     ["e_col_up", "se_pocket"],
 
-    ["ne_hub", "c_n_step"],
-    ["c_n_step", "c_n_mid"],
-    ["c_n_mid", "nw_step"],
-    ["nw_step", "w_mid"],
+    ["c_step", "c_w"],
+    ["c_w", "w_mid"],
+    ["c_w", "sw_deep"],
+    ["sw_deep", "w_mid"],
     ["w_mid", "w_up"],
     ["w_up", "nw_pocket"]
   ],
   "traversalNotes": [
-    "Direct N→E: spawn_north → ne_hub → spawn_east. 2 hops — the gates share a single SE hub.",
-    "STRICT-BACKBONE chains: the east column (e_col_mid → e_col_up → se_pocket) and the long west exploration (c_n_step → c_n_mid → nw_step → w_mid → w_up → nw_pocket) are single-file dead-ends.",
-    "ne_hub is the canonical 4-way dispatcher (both gates + both chains).",
-    "Two corner dead-ends: SE pocket (se_pocket, 3 hops from ne_hub) and NW pocket (nw_pocket, 6 hops from ne_hub)."
+    "Direct N→E: spawn_north → north_pass → ne_hub → spawn_east. 3 hops.",
+    "ne_hub is the canonical 4-way dispatcher (both gates + east column + west chain).",
+    "Three pockets: SE (se_pocket, 3 hops from ne_hub), NW (nw_pocket, 6 hops), SW (sw_deep, 4 hops from ne_hub).",
+    "SW pocket has a triangle (sw_deep ↔ c_w ↔ w_mid ↔ sw_deep) — BFS picks the shorter side."
   ]
 }

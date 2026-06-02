@@ -1,0 +1,64 @@
+{
+  "stageId": "s01a_td1",
+  "shape": "3-portal sprawling arena (S + W + E gates) with two super-hubs (south + center)",
+  "description": "Three-portal sprawl with two super-hub anchors. SOUTH super-hub (e02rc1, 4-way) joins south_gate + west chain top (0emaba) + south_inner clique (i56a2j + e6diuf). CENTER super-hub (i56a2j, 4-way) fans south to a south clique (zr1xue + dxy3iz + east_gate), west to rlezog (then NW cluster), and north to e6diuf. The west cluster (kec5v4) is a 4-way W-side dispatcher reaching spawn_west, rlezog, 3ch2q6, and 6i4wox. East cluster has 2 pockets (n8owd8, xqps49) off dxy3iz.",
+  "portals": {
+    "south": "spawn_south at (-13.95, 24.14) — gate on the south (high-Z) side, west column",
+    "west":  "spawn_west at (-22.89, -15.77) — gate on the west (low-X) side",
+    "east":  "spawn_east at (22.64, 0.86) — gate on the east (high-X) side, near midline"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-13.95, 0,  24.14], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "west_gate",   "position": [-22.89, 0, -15.77], "description": "west portal (matches wp_spawn_1)" },
+    { "id": "east_gate",   "position": [22.64,  0,   0.86], "description": "east portal (matches wp_spawn_2)" },
+
+    { "id": "south_inner", "position": [-12.24, 0,  16.39], "description": "south entry super-hub (matches e02rc1)" },
+    { "id": "sw_chain_t",  "position": [-13.64, 0,   3.49], "description": "SW chain top - bridge to center (matches 0emaba)" },
+    { "id": "center",      "position": [-0.13,  0,   2.96], "description": "center super-hub - 4-way (matches i56a2j)" },
+    { "id": "north_arc",   "position": [0.23,   0,  13.14], "description": "north arc bridge (matches e6diuf)" },
+
+    { "id": "c_w_step",    "position": [-1.30,  0,  -5.53], "description": "center-west step (matches rlezog)" },
+    { "id": "west_inner",  "position": [-14.10, 0, -15.11], "description": "west entry hub - 4-way (matches kec5v4)" },
+    { "id": "c_n",         "position": [-1.99,  0, -14.10], "description": "north-of-west_inner step (matches 6i4wox)" },
+    { "id": "w_mid",       "position": [-13.12, 0,  -7.08], "description": "west mid step (matches 3ch2q6)" },
+
+    { "id": "s_clique_w",  "position": [5.96,   0,   4.86], "description": "south clique west (matches zr1xue)" },
+    { "id": "s_clique_e",  "position": [13.54,  0,   3.63], "description": "south clique east / east entry (matches dxy3iz)" },
+    { "id": "se_pocket",   "position": [10.52,  0, -11.89], "description": "SE pocket (matches n8owd8)" },
+    { "id": "e_pocket",    "position": [17.16,  0, -10.30], "description": "east pocket (matches xqps49)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "s_clique_e"],
+
+    ["south_inner", "sw_chain_t"],
+    ["south_inner", "north_arc"],
+    ["south_inner", "center"],
+    ["sw_chain_t", "center"],
+    ["north_arc", "center"],
+
+    ["center", "c_w_step"],
+    ["center", "s_clique_w"],
+    ["center", "s_clique_e"],
+
+    ["c_w_step", "west_inner"],
+    ["c_w_step", "w_mid"],
+    ["c_w_step", "c_n"],
+    ["west_inner", "w_mid"],
+    ["west_inner", "c_n"],
+
+    ["s_clique_w", "s_clique_e"],
+    ["s_clique_e", "se_pocket"],
+    ["s_clique_e", "e_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct S→E: spawn_south → south_inner → center → s_clique_e → spawn_east. 4 hops.",
+    "Direct S→W: spawn_south → south_inner → sw_chain_t → center → c_w_step → west_inner → spawn_west. 6 hops.",
+    "Direct W→E: spawn_west → west_inner → c_w_step → center → s_clique_e → spawn_east. 5 hops.",
+    "DISPATCH: center (i56a2j) is the canonical 4-way router; south_inner + west_inner are entry super-hubs.",
+    "WEST CLIQUE: west_inner + c_w_step + w_mid + c_n form a 4-anchor clique near the west gate.",
+    "Two east pockets (se_pocket, e_pocket) off s_clique_e — corner objectives."
+  ]
+}

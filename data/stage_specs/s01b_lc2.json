@@ -1,30 +1,52 @@
 {
   "stageId": "s01b_lc2",
-  "shape": "2-portal perimeter U-corridor (N + E gates around an impassable interior)",
-  "description": "Two-portal stage where the walkable area is a thin perimeter corridor around an impassable interior. The path from spawn_north to spawn_east makes a П shape (back-of-house perimeter): north spawn (east column) → north entry hub → NW corner → SW-ish step on the west wall → east gate (south column). The hardest valley-B stage for the auto-solver (needs res 0.5 / clearance 0.9), which is why it's hand-authored as a strict 4-anchor backbone.",
+  "shape": "2-portal perimeter arena (N + E gates) with west wall chain + SW corner cluster",
+  "description": "Two-portal stage with a perimeter route running around the room. N→E path: spawn_north → vuk49s (NE column) → rnkxj6 (south of N gate) → 1g1ehg → b4kqrq (SW corner 4-way) → a4la5m → 5c7dgi → 2ezl95 → o2yxv3 → spawn_east. The SW corner (b4kqrq) is a 4-way hub joining the west wall + a 2-anchor SW pocket (t69p4c + 2plln2). One east pocket (rvr2lr) hangs off vuk49s.",
   "portals": {
     "north": "spawn_north at (10.00, -22.94) — gate on the north (low-Z) side, east column",
-    "east":  "spawn_east at (13.91, 15.52) — gate on the east (high-X) side, south column"
+    "east":  "spawn_east at (13.91, 15.52) — gate on the east (high-X) side, north of midline"
   },
   "objectives": {},
   "anchors": [
     { "id": "north_gate",  "position": [10.00,  0, -22.94], "description": "north portal (matches wp_spawn_0)" },
     { "id": "east_gate",   "position": [13.91,  0,  15.52], "description": "east portal (matches wp_spawn_1)" },
 
-    { "id": "north_inner", "position": [11.21,  0, -12.63], "description": "north entry step - east column (matches or6w0r)" },
-    { "id": "nw_corner",   "position": [-16.02, 0, -11.85], "description": "NW corner pivot - bridge from north wall to west wall (matches e6ozoq)" },
-    { "id": "west_n",      "position": [-14.52, 0,  16.47], "description": "west-side north end - bridge to east gate row (matches 8r1xfp)" }
+    { "id": "e_anchor",    "position": [4.57,   0,  16.47], "description": "east entry step (matches o2yxv3)" },
+    { "id": "ne_arc",      "position": [-15.11, 0,  16.26], "description": "NE arc step (matches 2ezl95)" },
+    { "id": "w_up",        "position": [-15.80, 0,   9.71], "description": "west wall upper (matches 5c7dgi)" },
+    { "id": "w_mid",       "position": [-15.42, 0,  -0.70], "description": "west wall mid (matches a4la5m)" },
+
+    { "id": "sw_hub",      "position": [-15.83, 0, -12.24], "description": "SW corner 4-way hub (matches b4kqrq)" },
+    { "id": "sw_pocket_a", "position": [-18.45, 0, -17.97], "description": "SW pocket A (matches t69p4c)" },
+    { "id": "sw_pocket_b", "position": [-13.39, 0, -18.84], "description": "SW pocket B (matches 2plln2)" },
+
+    { "id": "s_step",      "position": [-7.62,  0, -12.43], "description": "south step (matches 1g1ehg)" },
+    { "id": "n_step",      "position": [2.59,   0, -12.63], "description": "north step - east of midline (matches rnkxj6)" },
+    { "id": "ne_col",      "position": [12.13,  0, -12.04], "description": "NE column - joins spawn_north + east pocket (matches vuk49s)" },
+    { "id": "e_pocket",    "position": [19.57,  0,  -3.44], "description": "east pocket dead-end (matches rvr2lr)" }
   ],
   "anchorEdges": [
-    ["north_gate", "north_inner"],
-    ["east_gate", "west_n"],
+    ["north_gate", "ne_col"],
+    ["east_gate", "e_anchor"],
 
-    ["north_inner", "nw_corner"],
-    ["nw_corner", "west_n"]
+    ["e_anchor", "ne_arc"],
+    ["ne_arc", "w_up"],
+    ["w_up", "w_mid"],
+    ["w_mid", "sw_hub"],
+
+    ["sw_hub", "s_step"],
+    ["sw_hub", "sw_pocket_a"],
+    ["sw_hub", "sw_pocket_b"],
+
+    ["s_step", "n_step"],
+    ["n_step", "ne_col"],
+
+    ["ne_col", "e_pocket"]
   ],
   "traversalNotes": [
-    "STRICT-BACKBONE perimeter: spawn_north → north_inner → nw_corner → west_n → spawn_east. 4 hops, single chain.",
-    "Interior of the room is NOT walkable (this is what defeated the auto-solver — it kept emitting straight-line shortcuts across the impassable middle).",
-    "Do not emit shortcuts. The U-shape is geometrically forced: north_inner is on the east column, west_n is on the west wall — the only connection is the NW corner."
+    "STRICT-BACKBONE perimeter: spawn_north → ne_col → n_step → s_step → sw_hub → w_mid → w_up → ne_arc → e_anchor → spawn_east. 9 hops.",
+    "Interior is NOT walkable.",
+    "sw_hub is the 4-way SW corner dispatcher (west wall + 2 SW pockets + south step).",
+    "e_pocket is a 1-degree dead-end off ne_col."
   ]
 }

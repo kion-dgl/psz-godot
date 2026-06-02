@@ -1,0 +1,56 @@
+{
+  "stageId": "s01a_tc3",
+  "shape": "3-portal arena (S + E + W gates) with north + south clusters joined at the center",
+  "description": "Three-portal arena with a clean split: the NORTH cluster (pmxf5r west entry + cadct1 + axutip) is a small triangle near the west gate. The SOUTH cluster (rw3753 south entry + bvkyv8 + xoetx6) is a triangle near the south gate. They're joined by ONE cross-bridge cadct1 ↔ bvkyv8 (center). The east gate connects via an SE chain (8e63dl east entry + q1y4dx + letji9, plus 8e63dl east entry hub). q1y4dx ↔ xoetx6 bridges south cluster to east cluster.",
+  "portals": {
+    "south": "spawn_south at (18.94, 23.42) — gate on the south (high-Z) side, east column",
+    "east":  "spawn_east at (23.20, -16.95) — gate on the east (high-X) side, south of midline",
+    "west":  "spawn_west at (-23.58, 5.86) — gate on the west (low-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [18.94,  0,  23.42], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [23.20,  0, -16.95], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-23.58, 0,   5.86], "description": "west portal (matches wp_spawn_2)" },
+
+    { "id": "west_inner",  "position": [-17.69, 0,   6.18], "description": "west entry hub - N cluster (matches pmxf5r)" },
+    { "id": "n_clique_c",  "position": [-4.35,  0,   6.70], "description": "north cluster center (matches cadct1)" },
+    { "id": "nw_anchor",   "position": [-7.89,  0,  16.06], "description": "NW anchor (matches axutip)" },
+
+    { "id": "s_clique_w",  "position": [5.38,   0,   9.37], "description": "south cluster west (matches bvkyv8)" },
+    { "id": "south_inner", "position": [18.83,  0,  16.53], "description": "south entry hub (matches rw3753)" },
+    { "id": "s_clique_e",  "position": [12.71,  0,   1.08], "description": "south cluster east - bridge to east cluster (matches xoetx6)" },
+
+    { "id": "se_step",     "position": [7.35,   0,  -7.66], "description": "SE step (matches q1y4dx)" },
+    { "id": "south_corner","position": [1.22,   0, -17.36], "description": "south corner pocket (matches letji9)" },
+    { "id": "east_inner",  "position": [16.54,  0, -17.09], "description": "east entry hub (matches 8e63dl)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["east_gate", "east_inner"],
+    ["west_gate", "west_inner"],
+
+    ["west_inner", "nw_anchor"],
+    ["west_inner", "n_clique_c"],
+    ["n_clique_c", "nw_anchor"],
+
+    ["n_clique_c", "s_clique_w"],
+
+    ["s_clique_w", "south_inner"],
+    ["s_clique_w", "s_clique_e"],
+    ["south_inner", "s_clique_e"],
+
+    ["s_clique_e", "se_step"],
+    ["se_step", "south_corner"],
+    ["se_step", "east_inner"],
+    ["east_inner", "south_corner"]
+  ],
+  "traversalNotes": [
+    "Direct W→S: spawn_west → west_inner → n_clique_c → s_clique_w → south_inner → spawn_south. 5 hops.",
+    "Direct S→E: spawn_south → south_inner → s_clique_e → se_step → east_inner → spawn_east. 5 hops via SE chain.",
+    "Direct W→E: spawn_west → west_inner → n_clique_c → s_clique_w → s_clique_e → se_step → east_inner → spawn_east. 7 hops.",
+    "STRICT BRIDGE: n_clique_c ↔ s_clique_w is the only N↔S link.",
+    "south_corner (letji9) has TWO connections (se_step + east_inner) — small east-side triangle.",
+    "DISPATCH RULE: cluster centers (n_clique_c, s_clique_w, se_step) are the routing anchors."
+  ]
+}
