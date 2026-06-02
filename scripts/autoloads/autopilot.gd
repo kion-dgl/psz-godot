@@ -151,8 +151,31 @@ const WALK_DIAG_INTERVAL := 30   # log position every N ticks (~0.5s @ 60fps)
 const WALK_WATCHDOG_MS := 15_000 # 15s; if we haven't arrived, FAIL the run
 
 # Quest walker progress.
+# _quest_step_idx is legacy — the cell-load handler used to read
+# _quest_steps[_quest_step_idx] and assume the step counter mirrored cell
+# loads. That broke as soon as anything reloaded a cell out of order (section
+# transitions that warp back, future telepipe mechanics, etc.) — the counter
+# would race ahead of reality and cell N would run with step N+k's actions.
+# Cell-keyed lookup via _steps_by_cell + _cell_visit_count replaces the
+# counter. _quest_step_idx is still maintained for the post-quest telepipe
+# poll which reads it to label the final step.
 var _quest_step_idx: int = 0
 var _step_action_idx: int = 0
+# The step we're currently executing — resolved from the cell that just
+# loaded, NOT from a linear counter. Empty when no plan entry exists for
+# the loaded cell (signals "react to engine, don't run scripted actions").
+var _current_step: Dictionary = {}
+# "<section_idx>:<pos>" → Array of step dicts, one per visit. visit_n=1 uses
+# index 0, visit_n=2 uses index 1, etc. Populated once at startup from
+# _quest_steps via _populate_steps_by_cell.
+var _steps_by_cell: Dictionary = {}
+# "<section_idx>:<pos>" → int. Incremented each time the cell loads so we
+# pick the right plan entry for re-visits (e.g. B 1,2 → B 1,3 → B 1,2 return).
+var _cell_visit_count: Dictionary = {}
+# Set by _walk_to_exit from step.target right before the exit trigger fires.
+# Checked by the next _on_field_cell_loaded — if the loaded cell key differs,
+# the autopilot logs CELL DRIFT (something warped us somewhere unexpected).
+var _expected_next_cell_key: String = ""
 
 # Boot-phase: tracks whether we've finished the office intro + kicked off the
 # "Return to Title" path, so the title-scene handler can recognize "we're done"
@@ -211,6 +234,10 @@ func _ready() -> void:
 			_quest_steps = generated
 			_quest_manifest_index = _manifest_index_for_quest(qenv)
 			print("[sanity] autopilot quest=%s (%d steps, manifest index %d)" % [_quest_id, _quest_steps.size(), _quest_manifest_index])
+	# Build cell-keyed lookup AFTER the final _quest_steps assignment so both
+	# hardcoded SR and generated quest plans get the same treatment.
+	_steps_by_cell = _populate_steps_by_cell(_quest_steps)
+	_dump_plan(_quest_steps, _steps_by_cell)
 	_floor_only = OS.has_environment("PSZ_AUTOPILOT_FLOOR_ONLY")
 	if _floor_only:
 		print("[sanity] autopilot floor-only mode: shrinking player capsule, walls won't block")
@@ -426,8 +453,87 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 				"exit_portal_id": exit_portal_id,
 				"target": target_pos,
 				"entry": entry_dir,
+				"_section_idx": s_i,
+				"_pos": pos,
 			})
 	return steps
+
+
+## Build "<section_idx>:<pos>" → Array of step dicts (one per visit) from
+## the linear quest step list. For generated steps (paru pact etc.) the
+## section_idx + pos are baked in. For hardcoded SR_QUEST_STEPS, parse the
+## label format "<X> <pos> [...]" and map letters → indices in first-seen
+## order — for the canonical A/E/B section ordering this lands on 0/1/2,
+## matching SessionManager.get_current_section() at runtime.
+func _populate_steps_by_cell(steps: Array) -> Dictionary:
+	var by_cell: Dictionary = {}
+	var letter_to_idx: Dictionary = {}
+	for i in range(steps.size()):
+		var step: Dictionary = steps[i]
+		# Store the linear index so the post-quest telepipe poll can label
+		# the final step the same way it used to with _quest_step_idx.
+		step["_step_idx"] = i
+		var sec_idx: int
+		var pos: String
+		if step.has("_section_idx") and step.has("_pos"):
+			sec_idx = int(step["_section_idx"])
+			pos = str(step["_pos"])
+		else:
+			var label: String = str(step.get("label", ""))
+			var parts: PackedStringArray = label.split(" ", false)
+			if parts.size() < 2:
+				continue
+			var letter: String = str(parts[0]).to_lower()
+			if not letter_to_idx.has(letter):
+				letter_to_idx[letter] = letter_to_idx.size()
+			sec_idx = int(letter_to_idx[letter])
+			pos = str(parts[1])
+			step["_section_idx"] = sec_idx
+			step["_pos"] = pos
+		var key: String = "%d:%s" % [sec_idx, pos]
+		if not by_cell.has(key):
+			by_cell[key] = []
+		(by_cell[key] as Array).append(step)
+	return by_cell
+
+
+## One-time dump at autopilot startup — makes the full plan diffable when a
+## drift bug fires later.
+func _dump_plan(steps: Array, by_cell: Dictionary) -> void:
+	print("[autopilot] PLAN: %d steps for quest=%s" % [steps.size(), _quest_id])
+	for i in range(steps.size()):
+		var s: Dictionary = steps[i]
+		print("[autopilot]   #%d cell=%d:%s label='%s' do=%s exit='%s' target='%s' portal_id='%s'" % [
+			i + 1, int(s.get("_section_idx", -1)), str(s.get("_pos", "?")),
+			str(s.get("label", "?")), str(s.get("do", [])),
+			str(s.get("exit", "")), str(s.get("target", "")),
+			str(s.get("exit_portal_id", ""))])
+	print("[autopilot] BY-CELL: %d unique cells" % by_cell.size())
+	var keys: Array = by_cell.keys()
+	keys.sort()
+	for k in keys:
+		var visits: Array = by_cell[k]
+		var labels: Array = []
+		for v in visits:
+			labels.append(str(v.get("label", "?")))
+		print("[autopilot]   %s × %d: %s" % [k, visits.size(), str(labels)])
+
+
+## Compute the section_idx:pos key for the cell currently loaded in the
+## given valley_field. Returns "" if anything is missing.
+func _get_current_cell_key(field: Node) -> String:
+	if field == null:
+		return ""
+	var current_cell = field.get("_current_cell")
+	if typeof(current_cell) != TYPE_DICTIONARY:
+		return ""
+	var pos: String = str(current_cell.get("pos", ""))
+	if pos.is_empty():
+		return ""
+	var sec_idx: int = 0
+	if SessionManager and SessionManager.has_method("get_current_section"):
+		sec_idx = int(SessionManager.get_current_section())
+	return "%d:%s" % [sec_idx, pos]
 
 
 ## BFS over the cell adjacency graph (from cell.connections) to find a
@@ -893,18 +999,49 @@ func _drive_city_warp() -> void:
 ## transition — SceneManager.goto_scene reloads the scene with a fresh root
 ## node, so the instance id flips even though the path is unchanged).
 ##
-## Drives _quest_steps[_quest_step_idx]'s action list, then walks to the exit
-## portal. The next cell-load advances _quest_step_idx.
+## Resolve the step for the cell that just loaded (by section_idx:pos lookup,
+## NOT by a linear counter), then drive its action list and walk to the exit
+## portal. The next cell-load resolves the next step the same way — drifts
+## from the planned cell sequence are caught and logged at the boundary.
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
-	if _quest_step_idx >= _quest_steps.size():
-		print("[sanity] WARN: extra cell load #%d after all %d steps" % [_field_cells_visited, _quest_steps.size()])
+	var key: String = _get_current_cell_key(field)
+	var stage_id: String = ""
+	var current_cell = field.get("_current_cell") if field else null
+	if typeof(current_cell) == TYPE_DICTIONARY:
+		stage_id = str(current_cell.get("stage_id", ""))
+	if key.is_empty():
+		print("[sanity] WARN: cell load #%d couldn't compute cell key (stage=%s)" % [_field_cells_visited, stage_id])
+		_current_step = {}
 		return
-	var step: Dictionary = _quest_steps[_quest_step_idx]
-	print("[sanity] step %d/%d (%s): cell load #%d" % [
-		_quest_step_idx + 1, _quest_steps.size(), step.get("label", "?"), _field_cells_visited])
+	# Drift check: did we land on the cell the previous _walk_to_exit aimed at?
+	if not _expected_next_cell_key.is_empty() and _expected_next_cell_key != key:
+		print("[sanity] CELL DRIFT: expected %s, got %s (load #%d, stage=%s)" % [
+			_expected_next_cell_key, key, _field_cells_visited, stage_id])
+	_expected_next_cell_key = ""
+	# Visit counter — picks the right plan entry for re-visits (key gate returns).
+	var visit_n: int = int(_cell_visit_count.get(key, 0)) + 1
+	_cell_visit_count[key] = visit_n
+	var entries: Array = _steps_by_cell.get(key, [])
+	if entries.is_empty():
+		print("[sanity] WARN: no plan entry for cell %s visit=%d (load #%d, stage=%s) — autopilot will idle this cell" % [
+			key, visit_n, _field_cells_visited, stage_id])
+		_current_step = {}
+		return
+	if visit_n - 1 >= entries.size():
+		print("[sanity] WARN: visit %d exceeds plan for cell %s (have %d) — replaying last entry (load #%d, stage=%s)" % [
+			visit_n, key, entries.size(), _field_cells_visited, stage_id])
+		_current_step = entries[entries.size() - 1]
+	else:
+		_current_step = entries[visit_n - 1]
+	# Maintain _quest_step_idx for legacy consumers (telepipe poll uses it to label).
+	if _current_step.has("_step_idx"):
+		_quest_step_idx = int(_current_step["_step_idx"])
+	print("[sanity] cell-load %s visit=%d stage=%s (load #%d): plan label='%s' do=%s exit='%s' portal_id='%s'" % [
+		key, visit_n, stage_id, _field_cells_visited,
+		str(_current_step.get("label", "?")), str(_current_step.get("do", [])),
+		str(_current_step.get("exit", "")), str(_current_step.get("exit_portal_id", ""))])
 	_step_action_idx = 0
-	# Wait for controller _ready + spawn + camera settle, then start actions.
 	_after(CELL_SETTLE_DELAY, func() -> void: _run_next_action(field))
 
 
@@ -913,7 +1050,9 @@ func _run_next_action(field: Node) -> void:
 	# resets state, so just no-op here.
 	if not is_instance_valid(field) or field != get_tree().current_scene:
 		return
-	var step: Dictionary = _quest_steps[_quest_step_idx]
+	if _current_step.is_empty():
+		return
+	var step: Dictionary = _current_step
 	var actions: Array = step.get("do", [])
 	if _step_action_idx >= actions.size():
 		_walk_to_exit(field, step)
@@ -1181,9 +1320,17 @@ func _walk_to_exit(field: Node, step: Dictionary) -> void:
 			exit_portal_id, str(have_keys), str(have_ids)])
 		return
 	print("[sanity] exit portal resolved: %s → trigger=%s" % [resolved_via, trigger_pos])
-	# Advance the step counter so the next cell load picks up the next step;
-	# on stuck-walk failure we quit immediately so over-advance is moot.
-	_quest_step_idx += 1
+	# Record the cell we expect to land in next, so the next _on_field_cell_loaded
+	# can detect drift (transition warped us elsewhere, etc.). target is the
+	# next cell's pos within the same section; for section-warp exits the
+	# target is "" and we skip — drift detection only matters within a section.
+	var target_pos: String = str(step.get("target", ""))
+	if not target_pos.is_empty():
+		var sec_idx: int = int(step.get("_section_idx", -1))
+		if sec_idx >= 0:
+			_expected_next_cell_key = "%d:%s" % [sec_idx, target_pos]
+		else:
+			_expected_next_cell_key = ""
 	# Build a walkable path through the cell's spawn waypoints. If straight-
 	# line raycast from the player to the trigger is clear, the path is just
 	# [trigger]; otherwise BFS tries via spawn points + center to find a
