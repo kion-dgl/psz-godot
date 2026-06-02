@@ -69,6 +69,15 @@ const POST_INTERACT_SETTLE := 0.9
 const POST_GATE_SETTLE := 1.5   # gate open animation + collision flip
 const QUEST_COMPLETE_POLL := 0.4
 const QUEST_COMPLETE_POLL_MAX := 60  # 60 * 0.4 = 24s
+# Telepipe interact can lose the priority gamble against a dropped item that
+# happens to land at the same XZ — the interact press picks up the item
+# instead of activating the telepipe, the player ends up next to an empty
+# telepipe with no scene change. After the first attempt, poll for the
+# scene-change to CITY_WARP; if still in VALLEY_FIELD, walk back and re-press.
+# Item is gone after the first pickup, so attempt #2 unambiguously targets
+# the telepipe. 3 attempts total covers up to 2 stacked drops.
+const TELEPIPE_RETRY_DELAY := POST_INTERACT_SETTLE + 0.7
+const TELEPIPE_RETRY_MAX := 3
 const CELL_SETTLE_DELAY := STEP_DELAY * 2.0  # wait after a cell load before acting
 
 # ── Quest walk script ──────────────────────────────────────────
@@ -1024,7 +1033,7 @@ func _poll_quest_complete(n: int) -> void:
 	_after(QUEST_COMPLETE_POLL, func() -> void: _poll_quest_complete(n + 1))
 
 
-func _drive_walk_to_telepipe() -> void:
+func _drive_walk_to_telepipe(attempt: int = 0) -> void:
 	var field := get_tree().current_scene
 	if field == null or field.scene_file_path != VALLEY_FIELD:
 		print("[sanity] WARN: not in valley_field for telepipe walk (path=%s)" % str(field.scene_file_path if field else "<null>"))
@@ -1033,8 +1042,23 @@ func _drive_walk_to_telepipe() -> void:
 	if telepipe == null:
 		print("[sanity] WARN: no Telepipe in scene — quest finished but no warp out")
 		return
-	print("[sanity] walking to telepipe at (%.1f, %.1f, %.1f)" % [telepipe.global_position.x, telepipe.global_position.y, telepipe.global_position.z])
+	if attempt == 0:
+		print("[sanity] walking to telepipe at (%.1f, %.1f, %.1f)" % [telepipe.global_position.x, telepipe.global_position.y, telepipe.global_position.z])
+	else:
+		print("[sanity] telepipe retry %d/%d — scene didn't change (likely picked up an item drop on the previous interact)" % [attempt + 1, TELEPIPE_RETRY_MAX])
 	_walk_then_interact(field, telepipe.global_position, "telepipe", POST_INTERACT_SETTLE)
+	_after(TELEPIPE_RETRY_DELAY, func() -> void: _check_telepipe_advance(attempt))
+
+
+func _check_telepipe_advance(attempt: int) -> void:
+	var scene := get_tree().current_scene
+	if scene != null and scene.scene_file_path != VALLEY_FIELD:
+		# Scene transitioned — telepipe fired.
+		return
+	if attempt + 1 >= TELEPIPE_RETRY_MAX:
+		print("[sanity] WARN: telepipe didn't transition after %d attempts — giving up" % TELEPIPE_RETRY_MAX)
+		return
+	_drive_walk_to_telepipe(attempt + 1)
 
 
 func _find_telepipe(root: Node) -> Node3D:
