@@ -401,7 +401,11 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 			# the "goes backwards" failure mode.
 			var warp_edge: Variant = cell.get("warp_edge", cell.get("warpEdge", null))
 			if warp_edge != null and str(warp_edge) != "":
-				var section_exit_dir: String = str(section.get("exit_direction", ""))
+				# Check both camelCase (data/quest_plans/) and snake_case
+				# (data/quests/). data/quest_plans/ is the file the autopilot
+				# actually loads, so camelCase wins in practice — but try both
+				# so this doesn't silently regress if the source flips.
+				var section_exit_dir: String = str(section.get("exitDirection", section.get("exit_direction", "")))
 				exit_dir = section_exit_dir if not section_exit_dir.is_empty() else str(warp_edge)
 			elif not is_terminal:
 				var next_entry: Dictionary = entries[e_i + 1]
