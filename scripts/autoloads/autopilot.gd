@@ -1582,18 +1582,15 @@ func _log_floor_samples(pos: Vector3, dir: Vector3) -> void:
 
 ## Single downward raycast, mirroring player.gd:_has_floor_at.
 func _ray_floor_hit(check_pos: Vector3, base_y: float, ray_length: float) -> bool:
-	var ws := get_tree().current_scene
-	if ws == null:
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	if player == null:
 		return false
-	var space_state := ws.get_world_3d().direct_space_state
+	var space_state: PhysicsDirectSpaceState3D = player.get_world_3d().direct_space_state
 	var ray_origin := Vector3(check_pos.x, base_y + 1.0, check_pos.z)
 	var ray_end := Vector3(check_pos.x, base_y - ray_length, check_pos.z)
 	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
 	query.collision_mask = 1
-	var player := get_tree().get_first_node_in_group("player")
-	if player != null:
-		query.exclude = [player]
-	var result := space_state.intersect_ray(query)
+	var result: Dictionary = space_state.intersect_ray(query)
 	return not result.is_empty()
 
 
