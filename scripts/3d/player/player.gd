@@ -1088,8 +1088,21 @@ func _can_move_to(move_dir: Vector3) -> bool:
 	var left := center + side_dir * FLOOR_CHECK_SIDE
 	var right := center - side_dir * FLOOR_CHECK_SIDE
 
-	# All three points must have floor
-	return _has_floor_at(center) and _has_floor_at(left) and _has_floor_at(right)
+	# Require at least 2 of 3 sample points to find floor. The previous
+	# all-3 rule wedged the player on hairline gaps in the floor mesh
+	# triangulation (one of the three downward rays drops cleanly into
+	# the crack and the other two land on solid floor, so the all-3
+	# check returns false and the player can't advance in any direction).
+	# 2-of-3 tolerates that single-point miss while still preventing the
+	# cliff-walk case (no floor at all = all 3 miss = stop).
+	var hits: int = 0
+	if _has_floor_at(center):
+		hits += 1
+	if _has_floor_at(left):
+		hits += 1
+	if _has_floor_at(right):
+		hits += 1
+	return hits >= 2
 
 
 func _has_floor_at(check_pos: Vector3) -> bool:
