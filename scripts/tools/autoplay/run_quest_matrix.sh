@@ -48,21 +48,19 @@ run_godot() {
 
   echo "[matrix] $tag start quest=${quest:-(SR default)} userdir=${userdir:-(default)} → $sanity"
 
-  local quest_env=""
-  [ -n "$quest" ] && quest_env="PSZ_AUTOPILOT_QUEST=$quest"
-
-  local xdg_env=""
-  if [ -n "$userdir" ]; then
-    xdg_env="XDG_DATA_HOME=$userdir"
-  fi
-
+  # Bash treats variable-expanded `VAR=value` as a command name, not an
+  # assignment, so use explicit `env` to pass the per-branch overrides.
+  # Empty values are harmless: PSZ_AUTOPILOT_QUEST="" defaults to the
+  # hardcoded search_and_rescue path, and XDG_DATA_HOME="" makes Godot
+  # fall back to $HOME/.local/share per XDG spec.
   local start_ts; start_ts=$(date -u +%s)
-  PSZ_AUTOPILOT=1 \
+  env \
+    PSZ_AUTOPILOT=1 \
     PSZ_AUTOPILOT_PHASE=first-mission \
     PSZ_AUTOPILOT_NO_OBSTACLES=1 \
     PSZ_AUTOPILOT_NO_BOXES=1 \
-    $quest_env \
-    $xdg_env \
+    PSZ_AUTOPILOT_QUEST="$quest" \
+    XDG_DATA_HOME="$userdir" \
     LIBGL_ALWAYS_SOFTWARE=1 \
     xvfb-run -a -s "-screen 0 640x360x24" \
     timeout 1500 "$GODOT" --write-movie "$avi" --fixed-fps 30 \
