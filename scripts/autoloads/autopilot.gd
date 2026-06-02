@@ -361,9 +361,21 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 			var exit_dir: String = ""
 			var target_pos: String = ""
 			var entry_dir: String = ""
-			var warp_edge: Variant = cell.get("warpEdge", null)
+			# Data uses snake_case `warp_edge`; old camelCase `warpEdge` kept as a
+			# fallback in case anything still ships that shape. For cells that
+			# participate in a section transition (warp_edge set), prefer the
+			# section's exit_direction — `warp_edge` labels the gate-portal
+			# that's wired to the section warp, but it can sit on the ENTRY side
+			# (single-cell transition sections like paru pact's s05e_ia1, where
+			# warp_edge="south" but the section's actual exit is north) or on
+			# the EXIT side (section-end cells like SR's A 2,4). Walking to
+			# warp_edge in the entry-side case re-fires the inbound AreaWarp
+			# and sends the autopilot back to the previous section — that's
+			# the "goes backwards" failure mode.
+			var warp_edge: Variant = cell.get("warp_edge", cell.get("warpEdge", null))
 			if warp_edge != null and str(warp_edge) != "":
-				exit_dir = str(warp_edge)
+				var section_exit_dir: String = str(section.get("exit_direction", ""))
+				exit_dir = section_exit_dir if not section_exit_dir.is_empty() else str(warp_edge)
 			elif not is_terminal:
 				var next_entry: Dictionary = entries[e_i + 1]
 				var next_pos: String = str(next_entry["cell"].get("pos", ""))
