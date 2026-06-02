@@ -433,6 +433,18 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 					actions.append("dismiss_dialog")
 				if cell.get("keyDrop", null) != null:
 					actions.append("pickup_key")
+				# Quest items (mag_fragment etc.) live in cell.objects. Some
+				# quests gate their final telepipe spawn behind picking up N
+				# of these (e.g. paru pact's 4 mag fragments — the 4th
+				# pickup's dialog action list is the only path that spawns
+				# the room_clear telepipe). One pickup_quest_item per cell
+				# is enough; the handler grabs whichever QuestItemPickup is
+				# in the scene at the time.
+				var cell_objs: Array = cell.get("objects", [])
+				for obj in cell_objs:
+					if str(obj.get("type", "")) == "quest_item":
+						actions.append("pickup_quest_item")
+						break
 				if (cell.get("switches", []) as Array).size() > 0:
 					actions.append("flip_switch")
 				if cell.get("keyGate", null) != null:
@@ -1071,6 +1083,8 @@ func _run_next_action(field: Node) -> void:
 			_do_dismiss_dialog(field)
 		"pickup_key":
 			_do_pickup_key(field)
+		"pickup_quest_item":
+			_do_pickup_quest_item(field)
 		"flip_switch":
 			_do_flip_switch(field)
 		"open_gate":
@@ -1130,6 +1144,34 @@ func _do_pickup_key(field: Node) -> void:
 		_run_next_action(field)
 		return
 	_walk_then_interact(field, key.global_position, "key", POST_INTERACT_SETTLE)
+
+
+func _do_pickup_quest_item(field: Node) -> void:
+	# Quest items in the field are QuestItemPickup nodes
+	# (scripts/3d/elements/quest_item_pickup.gd). Walking onto them
+	# auto-collects (DropBase pickup), which fires the cell's
+	# remaining_dialog with condition.item_count matching the new count.
+	# The dialog may carry actions like "complete_quest" / "telepipe" on
+	# its final page (paru pact's 4th mag_fragment is the trigger for
+	# both), so after the pickup we press ui_accept several times to walk
+	# past any dialog pages and let the actions execute.
+	var item := _find_quest_item_pickup(field)
+	if item == null:
+		print("[sanity] WARN: pickup_quest_item — no QuestItemPickup in cell")
+		_run_next_action(field)
+		return
+	var item_id: String = str(item.get("item_id") if "item_id" in item else "?")
+	print("[sanity] walking to quest_item id=%s at (%.1f, %.1f, %.1f)" % [
+		item_id, item.global_position.x, item.global_position.y, item.global_position.z])
+	# Step-on pickup (DropBase auto-collects on overlap) — use auto_collect.
+	_walk_then_interact(field, item.global_position, "quest_item", POST_INTERACT_SETTLE, true)
+	# Quest-item pickup dialogs are multi-page; press ui_accept a few times
+	# to advance through them. Harmless if no dialog is active. The last
+	# _after-chain fires _run_next_action so the cell's remaining actions
+	# (e.g. wait_quest_complete on the final cell) proceed regardless of
+	# whether the dialog fired.
+	for i in range(6):
+		_after(POST_INTERACT_SETTLE + 0.6 + i * 0.6, func() -> void: _press_action("ui_accept"))
 
 
 func _do_flip_switch(field: Node) -> void:
@@ -1416,6 +1458,16 @@ func _find_key_pickup(root: Node) -> Node:
 		return root
 	for c in root.get_children():
 		var found := _find_key_pickup(c)
+		if found != null:
+			return found
+	return null
+
+
+func _find_quest_item_pickup(root: Node) -> Node:
+	if root is QuestItemPickup:
+		return root
+	for c in root.get_children():
+		var found := _find_quest_item_pickup(c)
 		if found != null:
 			return found
 	return null
