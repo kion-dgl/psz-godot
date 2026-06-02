@@ -1,0 +1,413 @@
+{
+  "questId": "apothecary_supply",
+  "questName": "Apothecary's Supply",
+  "areaId": "ozette",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "startPos": "2,0",
+      "endPos": "2,3",
+      "entryDirection": null,
+      "exitDirection": null,
+      "cells": [
+        {
+          "pos": "2,0",
+          "stageId": "s02a_sa1",
+          "rotation": 270,
+          "pathOrder": 0,
+          "isStart": true,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "2,1"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 0,
+          "boxCount": 0
+        },
+        {
+          "pos": "2,1",
+          "stageId": "s02a_tb3",
+          "rotation": 90,
+          "pathOrder": 1,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": true,
+          "connections": {
+            "west": "2,0",
+            "north": "1,1",
+            "south": "3,1"
+          },
+          "warpEdge": null,
+          "keyGate": {
+            "direction": "north",
+            "requiredKeys": 0
+          },
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [
+            {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "condition": null,
+              "actions": null
+            }
+          ],
+          "enemyCount": 6,
+          "boxCount": 0
+        },
+        {
+          "pos": "1,1",
+          "stageId": "s02a_td2",
+          "rotation": 90,
+          "pathOrder": 3,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": true,
+          "connections": {
+            "south": "2,1",
+            "north": "0,1",
+            "west": "1,0"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 4,
+          "boxCount": 2
+        },
+        {
+          "pos": "3,1",
+          "stageId": "s02a_nc2",
+          "rotation": 180,
+          "pathOrder": 2,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "north": "2,1"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": {
+            "targetCell": "0,2",
+            "position": [
+              13.1,
+              1,
+              0.1
+            ]
+          },
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [
+            {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "condition": null,
+              "actions": null
+            }
+          ],
+          "enemyCount": 7,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,1",
+          "stageId": "s02a_tc3",
+          "rotation": 0,
+          "pathOrder": 4,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": true,
+          "connections": {
+            "south": "1,1",
+            "east": "0,2",
+            "west": "0,0"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 4,
+          "boxCount": 0
+        },
+        {
+          "pos": "1,0",
+          "stageId": "s02a_nb2",
+          "rotation": 270,
+          "pathOrder": 11,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "1,1"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [
+            {
+              "propPath": "assets/kenney_nature-pack/plant_bushDetailed.glb",
+              "position": [
+                -12.7,
+                0,
+                -8.9
+              ]
+            },
+            {
+              "propPath": "assets/kenney_nature-pack/flower_purpleA.glb",
+              "position": [
+                6.3,
+                0,
+                -14.5
+              ]
+            }
+          ],
+          "dialogTriggers": [],
+          "enemyCount": 6,
+          "boxCount": 2
+        },
+        {
+          "pos": "0,2",
+          "stageId": "s02a_ga1",
+          "rotation": 90,
+          "pathOrder": 5,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "0,3",
+            "west": "0,1"
+          },
+          "warpEdge": null,
+          "keyGate": {
+            "direction": "east",
+            "requiredKeys": 2
+          },
+          "keyDrop": {
+            "targetCell": "0,2",
+            "position": [
+              0.1,
+              1,
+              -6.5
+            ]
+          },
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 3,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,0",
+          "stageId": "s02a_nb2",
+          "rotation": 270,
+          "pathOrder": 10,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "0,1"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [
+            {
+              "propPath": "assets/kenney_nature-pack/tree_fat.glb",
+              "position": [
+                -14.2,
+                0,
+                -8.1
+              ]
+            },
+            {
+              "propPath": "assets/kenney_nature-pack/tree_detailed.glb",
+              "position": [
+                4.5,
+                0,
+                -13.5
+              ]
+            }
+          ],
+          "dialogTriggers": [],
+          "enemyCount": 6,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,3",
+          "stageId": "s02a_lc2",
+          "rotation": 180,
+          "pathOrder": 6,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "south": "1,3",
+            "west": "0,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 9,
+          "boxCount": 0
+        },
+        {
+          "pos": "1,3",
+          "stageId": "s02a_td1",
+          "rotation": 270,
+          "pathOrder": 7,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": true,
+          "connections": {
+            "east": "1,4",
+            "north": "0,3",
+            "south": "2,3"
+          },
+          "warpEdge": null,
+          "keyGate": {
+            "direction": "south",
+            "requiredKeys": 1
+          },
+          "keyDrop": null,
+          "switches": [
+            {
+              "position": [
+                -8.4,
+                0,
+                13.4
+              ],
+              "linkId": "a"
+            }
+          ],
+          "fences": [
+            {
+              "position": [
+                7.8,
+                0,
+                -14.3
+              ],
+              "linkId": "a"
+            }
+          ],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 7,
+          "boxCount": 2
+        },
+        {
+          "pos": "1,4",
+          "stageId": "s02a_na1",
+          "rotation": 90,
+          "pathOrder": 8,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "west": "1,3"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": {
+            "targetCell": "1,3",
+            "position": [
+              -0.1,
+              1,
+              1.4
+            ]
+          },
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 4,
+          "boxCount": 0
+        },
+        {
+          "pos": "2,3",
+          "stageId": "s02a_nb2",
+          "rotation": 180,
+          "pathOrder": 9,
+          "isStart": false,
+          "isEnd": true,
+          "isBranch": false,
+          "connections": {
+            "north": "1,3"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [
+            {
+              "propPath": "assets/kenney_nature-pack/grass_leafs.glb",
+              "position": [
+                -12.6,
+                0,
+                -7.8
+              ]
+            },
+            {
+              "propPath": "assets/kenney_nature-pack/tree_oak_fall.glb",
+              "position": [
+                4.2,
+                0,
+                -13.2
+              ]
+            }
+          ],
+          "dialogTriggers": [],
+          "enemyCount": 6,
+          "boxCount": 0
+        }
+      ]
+    }
+  ],
+  "id": "apothecary_supply_moon_last",
+  "name": "Apothecary's Supply (moon bloom last)",
+  "description": " — variant: moon_bloom at 1,0 is picked up last."
+}
