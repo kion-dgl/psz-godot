@@ -244,6 +244,13 @@ func _ready() -> void:
 			print("[sanity] autopilot quest=%s (%d steps, manifest index %d)" % [_quest_id, _quest_steps.size(), _quest_manifest_index])
 	# Build cell-keyed lookup AFTER the final _quest_steps assignment so both
 	# hardcoded SR and generated quest plans get the same treatment.
+	# Deep-duplicate so the step dicts are mutable — SR_QUEST_STEPS is a
+	# const Array; in Godot 4 GDScript, modifying a Dictionary inside a
+	# const Array fails (silently or with an error that kills the
+	# enclosing function), which left _steps_by_cell empty for SR. Generated
+	# quest plans (paru pact, etc.) are fresh dicts already; the duplicate
+	# is a small no-op cost for them.
+	_quest_steps = _quest_steps.duplicate(true)
 	_steps_by_cell = _populate_steps_by_cell(_quest_steps)
 	_dump_plan(_quest_steps, _steps_by_cell)
 	_floor_only = OS.has_environment("PSZ_AUTOPILOT_FLOOR_ONLY")
