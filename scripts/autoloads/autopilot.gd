@@ -1195,20 +1195,28 @@ func _do_pickup_quest_item(field: Node) -> void:
 	# advance through every page. POST_QUEST_ITEM_SETTLE replaces the
 	# normal POST_INTERACT_SETTLE here.
 	#
-	# QuestItemPickup inherits DropBase.auto_collect=false (drop_base.gd:22)
-	# — overlap alone doesn't trigger pickup, the player has to press
-	# interact to fire DropBase._on_interact → _give_reward → the dialog
-	# chain. Use the autopilot's auto_collect=false branch so it walks to
-	# the item, presses interact, THEN dwells through the dialog.
-	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, false)
-	# The walk to the item is variable-length (we may BFS a multi-leg
-	# path), so a fixed offset from handler start can't tell us when the
-	# dialog actually opens. Solution: schedule a long train of ui_accept
-	# presses that covers BOTH the walk window (presses are no-ops while
-	# walking) AND the dialog window after step-on. Spaced 0.7s, 25
-	# presses = ~17.5s of coverage handles the worst-case multi-page
-	# narration (paru pact's 6-page item_count=4 Elio fitting-fragments-
-	# together dialog) plus a generous walk budget.
+	# Use the autopilot's auto_collect=true branch — its tight arrive
+	# distance (WALK_ARRIVE_DIST_STEP_ON = 0.5m) puts the player INSIDE
+	# the QuestItemPickup's interaction_area (collision_size 2.0,
+	# half-extents 1.0m). The interaction_area.body_entered fires,
+	# Player._update_nearest_interactable picks the item up as
+	# nearest_interactable, and a subsequent interact press triggers
+	# DropBase._on_interact → _give_reward → the dialog chain.
+	# WALK_ARRIVE_DIST_INTERACT (1.5m) was outside that area, so the
+	# previous attempt's interact press did nothing.
+	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, true)
+	# Walk-time is variable (BFS multi-leg paths), so a fixed offset from
+	# handler start can't tell us when the player is actually overlapping
+	# the item. Schedule a TRAIN of interact presses spread across the
+	# walk window AND the dwell window — most fire while walking and do
+	# nothing (no nearest_interactable yet), but at least one fires once
+	# the player enters the interaction_area on step-on, which triggers
+	# the pickup. Then ui_accept presses advance the multi-page dialog.
+	# 8 interact presses spaced 1.2s = ~9.6s of coverage handles even the
+	# longest stage cross-walks; ui_accept 25 × 0.7s = ~17.5s covers the
+	# worst-case 6-page paru-pact item_count=4 dialog after pickup.
+	for i in range(8):
+		_after(1.0 + i * 1.2, func() -> void: _press_action("interact"))
 	for i in range(25):
 		_after(0.9 + i * 0.7, func() -> void: _press_action("ui_accept"))
 
