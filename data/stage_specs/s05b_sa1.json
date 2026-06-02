@@ -1,0 +1,25 @@
+{
+  "stageId": "s05b_sa1",
+  "shape": "2-portal minimal arena (N + S gates) with single center bridge",
+  "description": "Two-portal stage with a minimal graph: spawn_north and spawn_south are directly connected (1 hop) AND both also connect to a single center anchor (98g0zc). Triangle topology — BFS picks the shorter side.",
+  "portals": {
+    "north": "spawn_north at (1.41, -13.30) — gate on the north (low-Z) side, center column",
+    "south": "spawn_south at (0.97, 20.02) — gate on the south (high-Z) side, center column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [1.41,  0, -13.30], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [0.97,  0,  20.02], "description": "south portal (matches wp_spawn_1)" },
+    { "id": "center",      "position": [2.03,  0,   5.09], "description": "center anchor (matches 98g0zc)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "south_gate"],
+    ["north_gate", "center"],
+    ["south_gate", "center"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: 1 hop (north_gate ↔ south_gate edge exists).",
+    "Alternate N→S via center: 2 hops (north_gate → center → south_gate).",
+    "Simplest paru-B stage."
+  ]
+}

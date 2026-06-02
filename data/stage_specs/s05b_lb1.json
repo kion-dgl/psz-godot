@@ -1,0 +1,52 @@
+{
+  "stageId": "s05b_lb1",
+  "shape": "2-portal dense arena (N + E gates) with full 6-anchor clique",
+  "description": "Two-portal arena where the 6 point anchors (o6lgrz + p3mctd + h1w8d3 + iheje8 + c4gyt0 + 33j73u) form a near-complete clique — almost every pair is connected. spawn_east links to o6lgrz + iheje8 (east side anchors). spawn_north links to p3mctd + h1w8d3 (north side anchors). The clique provides multiple alternate routes between N and E.",
+  "portals": {
+    "north": "spawn_north at (-3.99, -18.44) — gate on the north (low-Z) side",
+    "east":  "spawn_east at (23.12, 8.02) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-3.99,  0, -18.44], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [23.12,  0,   8.02], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "e_anchor",    "position": [16.09,  0,   8.27], "description": "east entry anchor (matches o6lgrz)" },
+    { "id": "n_anchor_w",  "position": [-4.47,  0, -12.34], "description": "north anchor west (matches p3mctd)" },
+    { "id": "n_anchor_c",  "position": [-3.08,  0,  -1.94], "description": "north anchor center (matches h1w8d3)" },
+    { "id": "w_anchor",    "position": [-18.56, 0,   7.95], "description": "west anchor (matches iheje8)" },
+    { "id": "sw_anchor",   "position": [-18.60, 0, -12.07], "description": "SW anchor (matches c4gyt0)" },
+    { "id": "se_anchor",   "position": [15.68,  0,  -9.10], "description": "SE anchor (matches 33j73u)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "n_anchor_w"],
+    ["north_gate", "n_anchor_c"],
+    ["east_gate", "e_anchor"],
+    ["east_gate", "w_anchor"],
+
+    ["e_anchor", "n_anchor_w"],
+    ["e_anchor", "n_anchor_c"],
+    ["e_anchor", "w_anchor"],
+    ["e_anchor", "sw_anchor"],
+    ["e_anchor", "se_anchor"],
+
+    ["n_anchor_w", "n_anchor_c"],
+    ["n_anchor_w", "w_anchor"],
+    ["n_anchor_w", "sw_anchor"],
+    ["n_anchor_w", "se_anchor"],
+
+    ["n_anchor_c", "w_anchor"],
+    ["n_anchor_c", "sw_anchor"],
+    ["n_anchor_c", "se_anchor"],
+
+    ["w_anchor", "sw_anchor"],
+    ["w_anchor", "se_anchor"],
+
+    ["sw_anchor", "se_anchor"]
+  ],
+  "traversalNotes": [
+    "Direct N→E: spawn_north → n_anchor_w (or n_anchor_c) → e_anchor → spawn_east. 3 hops.",
+    "DENSE CLIQUE: 6 interior anchors form a near-complete graph (15 edges between them). BFS picks the shortest route to any objective.",
+    "DISPATCH RULE: any single interior anchor reaches all others in 1 hop. Pick by proximity to the objective."
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "stageId": "s05b_tb3",
+  "shape": "3-portal T-junction (S + E + W gates) with center 5-way + west hub",
+  "description": "Three-portal arena. CENTER (gxbppo at (3.98, 7.72)) is a 5-way hub joining spawn_east, spawn_south, and 3 spread anchors. WEST HUB (gsr64h) is a 4-way joining spawn_west, m3bnda, fu92td, and center. m3bnda (north of west_hub) and fu92td (east of west_hub) both connect to BOTH center and west_hub — small bridge between hubs.",
+  "portals": {
+    "south": "spawn_south at (3.87, 18.88) — gate on the south (high-Z) side",
+    "east":  "spawn_east at (22.63, 7.77) — gate on the east (high-X) side",
+    "west":  "spawn_west at (-22.36, -8.02) — gate on the west (low-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [3.87,   0,  18.88], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [22.63,  0,   7.77], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-22.36, 0,  -8.02], "description": "west portal (matches wp_spawn_2)" },
+
+    { "id": "center",      "position": [3.98,   0,   7.72], "description": "center 5-way hub (matches gxbppo)" },
+    { "id": "west_hub",    "position": [-12.02, 0,  -8.59], "description": "west 4-way hub (matches gsr64h)" },
+    { "id": "n_anchor",    "position": [-12.69, 0,   8.58], "description": "north anchor - bridges center + west_hub (matches m3bnda)" },
+    { "id": "e_anchor",    "position": [16.61,  0,  -9.21], "description": "east anchor - bridges center + west_hub (matches fu92td)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "center"],
+    ["east_gate", "center"],
+    ["west_gate", "west_hub"],
+
+    ["center", "n_anchor"],
+    ["center", "e_anchor"],
+    ["center", "west_hub"],
+    ["west_hub", "n_anchor"],
+    ["west_hub", "e_anchor"]
+  ],
+  "traversalNotes": [
+    "Direct S→E: spawn_south → center → spawn_east. 2 hops.",
+    "Direct S→W: spawn_south → center → west_hub → spawn_west. 3 hops.",
+    "Direct W→E: spawn_west → west_hub → center → spawn_east. 3 hops.",
+    "DISPATCH RULE: center handles S+E; west_hub handles W. n_anchor + e_anchor are detour anchors connecting both hubs."
+  ]
+}

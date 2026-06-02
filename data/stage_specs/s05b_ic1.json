@@ -1,0 +1,65 @@
+{
+  "stageId": "s05b_ic1",
+  "shape": "2-portal sprawling arena (N + S gates) with NW + SE clusters bridged at the center",
+  "description": "Two-portal arena. NW CLUSTER (south entry hub 2qfqhd at (-8.85, 17.10), 5-way) joins spawn_south plus west wall anchors (vd8uwc + 8aqjkc + 64zesk) plus center (6u31mr). WEST WALL CHAIN: 9rlwns → nbaz7p (SW corner) + xqfufg (SW pocket). SE CLUSTER (34d4za at (6.71, 7.44), 4-way) joins center + east anchors (ja69y0 + jwvkwv + gsz5r8). NORTH ENTRY area: 2jyczi (4-way) + jg1g7t (4-way) form a small clique near spawn_north.",
+  "portals": {
+    "north": "spawn_north at (7.60, -23.12) — gate on the north (low-Z) side",
+    "south": "spawn_south at (-9.05, 23.34) — gate on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [7.60,   0, -23.12], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [-9.05,  0,  23.34], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "south_inner", "position": [-8.85,  0,  17.10], "description": "south entry hub - 5-way (matches 2qfqhd)" },
+    { "id": "w_upper",     "position": [-20.29, 0,  15.50], "description": "west wall upper (matches vd8uwc)" },
+    { "id": "w_mid_up",    "position": [-20.75, 0,   7.05], "description": "west wall mid-upper (matches 8aqjkc)" },
+    { "id": "center_w",    "position": [-12.73, 0,   2.22], "description": "center-west (matches 64zesk)" },
+    { "id": "center_n",    "position": [-0.13,  0,  10.64], "description": "center north (matches 6u31mr)" },
+
+    { "id": "w_mid",       "position": [-16.13, 0,  -5.46], "description": "west mid (matches 9rlwns)" },
+    { "id": "sw_corner",   "position": [-19.46, 0, -19.11], "description": "SW corner (matches nbaz7p)" },
+    { "id": "sw_pocket",   "position": [-9.19,  0, -14.79], "description": "SW pocket (matches xqfufg)" },
+
+    { "id": "se_hub",      "position": [6.71,   0,   7.44], "description": "SE 4-way hub (matches 34d4za)" },
+    { "id": "e_upper",     "position": [20.00,  0,   3.90], "description": "east upper (matches ja69y0)" },
+    { "id": "e_mid",       "position": [18.96,  0,  -3.88], "description": "east mid (matches jwvkwv)" },
+    { "id": "se_corner",   "position": [19.04,  0, -16.03], "description": "SE corner (matches gsz5r8)" },
+
+    { "id": "north_inner", "position": [8.84,   0, -15.13], "description": "north entry hub (matches 2jyczi)" },
+    { "id": "north_c",     "position": [4.22,   0,  -5.08], "description": "north-center 4-way (matches jg1g7t)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["north_gate", "north_inner"],
+
+    ["south_inner", "w_upper"],
+    ["south_inner", "w_mid_up"],
+    ["south_inner", "center_n"],
+    ["south_inner", "center_w"],
+
+    ["se_hub", "center_n"],
+    ["se_hub", "e_upper"],
+    ["se_hub", "e_mid"],
+    ["se_hub", "se_corner"],
+
+    ["w_mid", "center_w"],
+    ["w_mid", "sw_corner"],
+    ["w_mid", "sw_pocket"],
+
+    ["north_c", "e_mid"],
+    ["north_c", "north_inner"],
+    ["north_c", "se_corner"],
+    ["north_c", "e_upper"],
+
+    ["north_inner", "se_corner"],
+    ["north_inner", "e_mid"],
+    ["north_inner", "e_upper"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → north_c → e_mid (or se_corner via the east clique) → ... no direct center bridge.",
+    "DISPATCH RULE: south_inner (5-way) handles south cluster + west wall; se_hub (4-way) handles east upper/mid; north_c (4-way) handles east-side from north.",
+    "BRIDGE: center_n (6u31mr) is the only bridge between the south_inner clique and the se_hub clique. Strict — without it, the south and north halves are disconnected.",
+    "Pockets: sw_pocket, sw_corner off w_mid; nothing to the west of w_mid is reachable without going through south_inner."
+  ]
+}
