@@ -1195,8 +1195,12 @@ func _do_pickup_quest_item(field: Node) -> void:
 	# advance through every page. POST_QUEST_ITEM_SETTLE replaces the
 	# normal POST_INTERACT_SETTLE here.
 	#
-	# Step-on pickup (DropBase auto-collects on overlap) — use auto_collect.
-	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, true)
+	# QuestItemPickup inherits DropBase.auto_collect=false (drop_base.gd:22)
+	# — overlap alone doesn't trigger pickup, the player has to press
+	# interact to fire DropBase._on_interact → _give_reward → the dialog
+	# chain. Use the autopilot's auto_collect=false branch so it walks to
+	# the item, presses interact, THEN dwells through the dialog.
+	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, false)
 	# The walk to the item is variable-length (we may BFS a multi-leg
 	# path), so a fixed offset from handler start can't tell us when the
 	# dialog actually opens. Solution: schedule a long train of ui_accept
