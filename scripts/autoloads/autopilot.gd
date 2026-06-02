@@ -409,10 +409,21 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 				if is_terminal:
 					actions.append("wait_quest_complete")
 			var label := "%s %s%s" % [area, pos, " (passthrough)" if is_passthrough else (" (return)" if visit_n > 1 else "")]
+			# Resolve the exit portal's stable ID at step-generation time. The
+			# direction label ("west", "north", …) can drift across rotation
+			# tables and label conventions; the portal ID is invariant. At
+			# walk time we prefer ID-based lookup and only fall back to the
+			# direction key.
+			var exit_portal_id: String = ""
+			if not exit_dir.is_empty():
+				var cell_portals: Dictionary = cell.get("portals", {})
+				if cell_portals.has(exit_dir):
+					exit_portal_id = str(cell_portals[exit_dir])
 			steps.append({
 				"label": label,
 				"do": actions,
 				"exit": exit_dir,
+				"exit_portal_id": exit_portal_id,
 				"target": target_pos,
 				"entry": entry_dir,
 			})
@@ -1139,15 +1150,37 @@ func _walk_to_exit(field: Node, step: Dictionary) -> void:
 		# No exit (final cell). wait_quest_complete should have handled it.
 		return
 	var portal_data = field.get("_portal_data")
-	if typeof(portal_data) != TYPE_DICTIONARY or not portal_data.has(exit_dir):
+	# Prefer ID-based lookup: the step's exit_portal_id was captured from
+	# cell.portals at step-generation time and is invariant across rotations
+	# and direction-label changes in the engine. Falls back to direction-key
+	# lookup for cells without portal IDs in their config.
+	var exit_portal_id: String = str(step.get("exit_portal_id", ""))
+	var trigger_pos: Vector3 = Vector3.ZERO
+	var resolved_via: String = ""
+	if typeof(portal_data) == TYPE_DICTIONARY:
+		if not exit_portal_id.is_empty():
+			for dir_key in portal_data:
+				var entry = portal_data[dir_key]
+				if typeof(entry) == TYPE_DICTIONARY and str(entry.get("id", "")) == exit_portal_id:
+					trigger_pos = entry.get("trigger_pos", Vector3.ZERO)
+					resolved_via = "id=%s found at dir='%s'" % [exit_portal_id, str(dir_key)]
+					break
+		if resolved_via.is_empty() and portal_data.has(exit_dir):
+			trigger_pos = portal_data[exit_dir].get("trigger_pos", Vector3.ZERO)
+			resolved_via = "direction='%s' (fallback)" % exit_dir
+	if resolved_via.is_empty():
 		var have_keys: Array = []
+		var have_ids: Array = []
 		if typeof(portal_data) == TYPE_DICTIONARY:
 			for k in portal_data:
 				have_keys.append(str(k))
-		_fail_with_reason("cell missing '%s' portal (step %d/%d %s) — portal_data has: %s" % [
-			exit_dir, _quest_step_idx + 1, _quest_steps.size(), str(step.get("label", "?")), str(have_keys)])
+				if typeof(portal_data[k]) == TYPE_DICTIONARY:
+					have_ids.append(str(portal_data[k].get("id", "")))
+		_fail_with_reason("cell missing '%s' portal (step %d/%d %s) — looked for id='%s', portal_data has dirs=%s ids=%s" % [
+			exit_dir, _quest_step_idx + 1, _quest_steps.size(), str(step.get("label", "?")),
+			exit_portal_id, str(have_keys), str(have_ids)])
 		return
-	var trigger_pos: Vector3 = portal_data[exit_dir].get("trigger_pos", Vector3.ZERO)
+	print("[sanity] exit portal resolved: %s → trigger=%s" % [resolved_via, trigger_pos])
 	# Advance the step counter so the next cell load picks up the next step;
 	# on stuck-walk failure we quit immediately so over-advance is moot.
 	_quest_step_idx += 1
