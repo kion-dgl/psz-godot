@@ -106,39 +106,71 @@ stage_userdir() {
   cp -r "$src" "$dest/godot/app_userdata/PSZ Godot"
 }
 
-echo "=== matrix start $(date -u +%FT%TZ) ==="
+# Resume support — skip already-completed upstream phases when iterating on
+# downstream variants. Pass `--from <phase>` where phase is one of:
+#   sr  (default) — run everything from Boot
+#   pp            — skip Boot+SR, expect $SCRATCH/post-sr to exist
+#   as            — skip Boot+SR+PP, expect $SCRATCH/post-pp to exist
+# The post-SR and post-PP snapshots are written automatically by the
+# matrix on a full run, so iterate-from-AS works any time the previous run
+# made it past Phase 3.
+FROM="sr"
+case "${1:-}" in
+  --from)
+    FROM="${2:-sr}"
+    ;;
+  --from=*)
+    FROM="${1#--from=}"
+    ;;
+esac
 
-# === Phase 1: Boot (default userdir, wipes the save) ===
-echo ""; echo "=== Phase 1: Boot ==="
-bash "$REPO/scripts/tools/autoplay/record_boot.sh"
+echo "=== matrix start $(date -u +%FT%TZ) from=$FROM ==="
 
-# === Phase 2: SR (default userdir, builds the save SR+PP need) ===
-echo ""; echo "=== Phase 2: SR ==="
-bash "$REPO/scripts/tools/autoplay/record_first_mission.sh"
+if [ "$FROM" = "sr" ]; then
+  # === Phase 1: Boot (default userdir, wipes the save) ===
+  echo ""; echo "=== Phase 1: Boot ==="
+  bash "$REPO/scripts/tools/autoplay/record_boot.sh"
 
-# Snapshot post-SR for the two parallel PP branches
-echo ""; echo "[matrix] snapshotting post-SR save → /tmp/quest_matrix_scratch/post-sr"
-rm -rf "$SCRATCH/post-sr"
-cp -r "$GODOT_DEFAULT_USERDIR" "$SCRATCH/post-sr"
+  # === Phase 2: SR (default userdir, builds the save SR+PP need) ===
+  echo ""; echo "=== Phase 2: SR ==="
+  bash "$REPO/scripts/tools/autoplay/record_first_mission.sh"
 
-# === Phase 3: PP canon || PP backtrack (parallel) ===
-echo ""; echo "=== Phase 3: PP canonical + PP backtrack (parallel) ==="
-stage_userdir "$SCRATCH/pp-canon" "$SCRATCH/post-sr"
-stage_userdir "$SCRATCH/pp-backtrack" "$SCRATCH/post-sr"
+  # Snapshot post-SR for the two parallel PP branches
+  echo ""; echo "[matrix] snapshotting post-SR save → $SCRATCH/post-sr"
+  rm -rf "$SCRATCH/post-sr"
+  cp -r "$GODOT_DEFAULT_USERDIR" "$SCRATCH/post-sr"
+elif [ "$FROM" = "pp" ]; then
+  echo ""; echo "=== SKIP Phase 1 + 2: --from=pp (expects $SCRATCH/post-sr) ==="
+  [ -d "$SCRATCH/post-sr" ] || { echo "ERROR: $SCRATCH/post-sr missing — run a full matrix first to seed it"; exit 2; }
+elif [ "$FROM" = "as" ]; then
+  echo ""; echo "=== SKIP Phase 1, 2, 3: --from=as (expects $SCRATCH/post-pp) ==="
+  [ -d "$SCRATCH/post-pp" ] || { echo "ERROR: $SCRATCH/post-pp missing — run a full matrix first to seed it"; exit 2; }
+else
+  echo "ERROR: --from must be sr|pp|as (got '$FROM')"; exit 2
+fi
 
-run_godot "pp_canon" "the_paru_pact" "$SCRATCH/pp-canon" &
-PID_PP1=$!
-sleep 2
-run_godot "pp_backtrack" "the_paru_pact_backtrack" "$SCRATCH/pp-backtrack" &
-PID_PP2=$!
+if [ "$FROM" != "as" ]; then
+  # === Phase 3: PP canon || PP backtrack (parallel) ===
+  echo ""; echo "=== Phase 3: PP canonical + PP backtrack (parallel) ==="
+  stage_userdir "$SCRATCH/pp-canon" "$SCRATCH/post-sr"
+  stage_userdir "$SCRATCH/pp-backtrack" "$SCRATCH/post-sr"
 
-wait $PID_PP1 $PID_PP2
-echo "[matrix] Phase 3 done — PP_canon + PP_backtrack both finished"
+  run_godot "pp_canon" "the_paru_pact" "$SCRATCH/pp-canon" &
+  PID_PP1=$!
+  sleep 2
+  run_godot "pp_backtrack" "the_paru_pact_backtrack" "$SCRATCH/pp-backtrack" &
+  PID_PP2=$!
 
-# === Phase 4: snapshot canonical PP save for AS branches ===
-echo ""; echo "[matrix] snapshotting post-PP_canon save → /tmp/quest_matrix_scratch/post-pp"
-rm -rf "$SCRATCH/post-pp"
-cp -r "$SCRATCH/pp-canon/godot/app_userdata/PSZ Godot" "$SCRATCH/post-pp"
+  wait $PID_PP1 $PID_PP2
+  echo "[matrix] Phase 3 done — PP_canon + PP_backtrack both finished"
+
+  # === Phase 4: snapshot canonical PP save for AS branches ===
+  echo ""; echo "[matrix] snapshotting post-PP_canon save → $SCRATCH/post-pp"
+  rm -rf "$SCRATCH/post-pp"
+  cp -r "$SCRATCH/pp-canon/godot/app_userdata/PSZ Godot" "$SCRATCH/post-pp"
+else
+  echo ""; echo "=== SKIP Phase 3 + 4: --from=as (reusing $SCRATCH/post-pp) ==="
+fi
 
 # === Phase 5: AS canon || AS moon_last || AS sol_last (parallel) ===
 echo ""; echo "=== Phase 5: AS canonical + AS moon_last + AS sol_last (parallel) ==="
