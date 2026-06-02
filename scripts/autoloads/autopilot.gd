@@ -1043,6 +1043,13 @@ func _on_field_cell_loaded(field: Node) -> void:
 		print("[sanity] CELL DRIFT: expected %s, got %s (load #%d, stage=%s)" % [
 			_expected_next_cell_key, key, _field_cells_visited, stage_id])
 	_expected_next_cell_key = ""
+	# Premature-telepipe check: if a Telepipe is in the scene at suspicious
+	# coords (near world origin) AND the quest isn't marked complete yet,
+	# log a WARN. Real telepipes spawn from a dialog action at the dialog's
+	# trigger position; one at (0,0) with quest still in progress suggests
+	# the engine spawned it on the default Vector3 — a bug worth tracking
+	# across quests for fix triage. See discussion in commit log.
+	_check_premature_telepipe(field, key, stage_id)
 	# Visit counter — picks the right plan entry for re-visits (key gate returns).
 	var visit_n: int = int(_cell_visit_count.get(key, 0)) + 1
 	_cell_visit_count[key] = visit_n
@@ -1280,6 +1287,25 @@ func _check_telepipe_advance(attempt: int) -> void:
 		print("[sanity] WARN: telepipe didn't transition after %d attempts — giving up" % TELEPIPE_RETRY_MAX)
 		return
 	_drive_walk_to_telepipe(attempt + 1)
+
+
+## Snapshot the scene for a Telepipe at suspicious coords (within
+## TELEPIPE_PREMATURE_RADIUS of world origin) while the quest hasn't
+## fired complete_quest yet. Triggers a one-line [sanity] WARN per
+## occurrence so we can grep across quest runs to see the bug's
+## frequency + per-quest hot spots without taking action (just
+## tracking).
+const TELEPIPE_PREMATURE_RADIUS := 2.0
+func _check_premature_telepipe(field: Node, cell_key: String, stage_id: String) -> void:
+	if SessionManager and SessionManager.has_method("has_completed_quest") and SessionManager.has_completed_quest():
+		return
+	var t := _find_telepipe(field)
+	if t == null:
+		return
+	var p: Vector3 = t.global_position
+	if abs(p.x) <= TELEPIPE_PREMATURE_RADIUS and abs(p.z) <= TELEPIPE_PREMATURE_RADIUS:
+		print("[sanity] WARN: premature telepipe — found at (%.2f, %.2f, %.2f) in cell %s (stage=%s) before quest_completed fired" % [
+			p.x, p.y, p.z, cell_key, stage_id])
 
 
 func _find_telepipe(root: Node) -> Node3D:
