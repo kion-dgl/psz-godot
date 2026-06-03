@@ -3526,6 +3526,16 @@ func _spawn_wave(wave_num: int) -> void:
 		var enemy_id: String = str(obj.get("enemy_id", "lizard"))
 		_spawn_enemy(pos, enemy_id)
 	print("[CellObjects] Wave %d: spawned %d enemies" % [wave_num, wave_objs.size()])
+	# Empty-wave guard: if this wave spawned zero enemies, no `died` signal
+	# will ever fire and the wave system would silently stall here — locked
+	# gates wouldn't open, key drops wouldn't spawn, the room would never
+	# clear. _check_room_clear will see zero alive enemies, advance to the
+	# next wave if there is one, and fall through to the room-cleared path
+	# otherwise. Skip the call when there's already a pending death signal
+	# (we just spawned non-zero enemies) since their `died` handler will
+	# fire `_check_room_clear` for us.
+	if wave_objs.is_empty():
+		_check_room_clear()
 
 
 ## Guess gate direction from position (for gate unlock)

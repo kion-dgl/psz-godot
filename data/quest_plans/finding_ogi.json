@@ -9,7 +9,7 @@
       "startPos": "4,2",
       "endPos": "0,0",
       "entryDirection": null,
-      "exitDirection": "east",
+      "exitDirection": "west",
       "cells": [
         {
           "pos": "4,2",
