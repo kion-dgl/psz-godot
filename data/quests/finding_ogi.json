@@ -2291,5 +2291,6 @@
       "label": "Ogi's Left Leg",
       "target": 1
     }
-  ]
+  ],
+  "parent_quest": "apothecary_supply"
 }
