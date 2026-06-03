@@ -352,9 +352,11 @@ func _floor_only_walk_step(player: Node, target: Vector3, delta_ms: int) -> bool
 ## traversal in pathOrder; no detour logic (assumes keys are collected before
 ## the gate cell, which is true for paru_pact and most non-SR quests).
 ##
-## Per cell actions: ["kill_all"] + ["pickup_key" if keyDrop] + ["flip_switch"
-## if any switches] + ["open_gate" if keyGate] + ["dismiss_dialog" if cell has
-## dialog triggers with null condition] + ["wait_quest_complete" on final].
+## Loader for the flat-step plan. The solver (scripts/tools/quest_plan.ts)
+## emits sections[].steps[] with everything the executor needs (label, do[],
+## exit, exit_portal_id, target, _section_idx, _pos). All planning logic —
+## BFS detour insertion, action-list building from cell properties, exit
+## direction derivation, portal-ID resolution — lives in the solver now.
 func _build_steps_from_plan(quest_id: String) -> Array:
 	var path := "res://data/quest_plans/%s.json" % quest_id
 	var fa := FileAccess.open(path, FileAccess.READ)
@@ -366,168 +368,14 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 	var plan: Dictionary = parsed
 	var sections: Array = plan.get("sections", [])
 	var steps: Array = []
-	for s_i in range(sections.size()):
-		var section: Dictionary = sections[s_i]
-		var area: String = str(section.get("area", "?")).to_upper()
-		var cells: Array = section.get("cells", [])
-		# Sort by pathOrder so consecutive entries are the intended visit order.
-		cells = cells.duplicate()
-		cells.sort_custom(func(a, b): return int(a.get("pathOrder", 0)) < int(b.get("pathOrder", 0)))
-		# Build pos → cell map for BFS detour resolution + connection lookups.
-		var by_pos: Dictionary = {}
-		for c in cells:
-			by_pos[str(c.get("pos", ""))] = c
-		# Build the list of (cell, is_passthrough) entries. A "passthrough" is
-		# an intermediate cell inserted by the BFS detour — kill_all only,
-		# transit to the next cell. The originally-planned cells (sorted by
-		# pathOrder) are the "real" steps and carry their full action list.
-		var entries: Array = []
-		var visited_keys := {}  # pos → number of times visited (for unique labels)
-		var add_entry := func(cell: Dictionary, is_passthrough: bool) -> void:
-			entries.append({"cell": cell, "passthrough": is_passthrough})
-		for c_i in range(cells.size()):
-			var cell: Dictionary = cells[c_i]
-			if c_i > 0:
-				var prev_pos: String = str(cells[c_i - 1].get("pos", ""))
-				var cur_pos: String = str(cell.get("pos", ""))
-				# If the previous cell doesn't directly connect to this one,
-				# BFS through the section's connection graph and insert each
-				# intermediate cell as a passthrough step (kill_all + walk).
-				var prev_cell: Dictionary = cells[c_i - 1]
-				var prev_conns: Dictionary = prev_cell.get("connections", {})
-				var directly_connected := false
-				for dir in prev_conns.keys():
-					if str(prev_conns[dir]) == cur_pos:
-						directly_connected = true
-						break
-				if not directly_connected:
-					var detour: Array = _bfs_cell_path(prev_pos, cur_pos, by_pos)
-					for d_i in range(1, detour.size() - 1):
-						var passthrough_cell: Dictionary = by_pos.get(str(detour[d_i]), {})
-						if not passthrough_cell.is_empty():
-							add_entry.call(passthrough_cell, true)
-			add_entry.call(cell, false)
-		# Now walk `entries` to emit step dicts.
-		for e_i in range(entries.size()):
-			var entry: Dictionary = entries[e_i]
-			var cell: Dictionary = entry["cell"]
-			var is_passthrough: bool = entry["passthrough"]
-			var pos: String = str(cell.get("pos", "?"))
-			var visit_n: int = int(visited_keys.get(pos, 0)) + 1
-			visited_keys[pos] = visit_n
-			var is_last_section := (s_i == sections.size() - 1)
-			var is_last_entry_in_section := (e_i == entries.size() - 1)
-			var is_terminal := (is_last_section and is_last_entry_in_section)
-			# Derive exit direction.
-			var exit_dir: String = ""
-			var target_pos: String = ""
-			var entry_dir: String = ""
-			# Data uses snake_case `warp_edge`; old camelCase `warpEdge` kept as a
-			# fallback in case anything still ships that shape. For cells that
-			# participate in a section transition (warp_edge set), prefer the
-			# section's exit_direction — `warp_edge` labels the gate-portal
-			# that's wired to the section warp, but it can sit on the ENTRY side
-			# (single-cell transition sections like paru pact's s05e_ia1, where
-			# warp_edge="south" but the section's actual exit is north) or on
-			# the EXIT side (section-end cells like SR's A 2,4). Walking to
-			# warp_edge in the entry-side case re-fires the inbound AreaWarp
-			# and sends the autopilot back to the previous section — that's
-			# the "goes backwards" failure mode.
-			var warp_edge: Variant = cell.get("warp_edge", cell.get("warpEdge", null))
-			# Read the section's exit direction defensively: Dictionary.get()
-			# returns the stored value (null) when the key exists with a null
-			# value, NOT the default. str(null) is the literal "<null>", which
-			# is not empty and would silently get used as a portal direction.
-			var raw_exit_dir: Variant = section.get("exitDirection", section.get("exit_direction", ""))
-			var section_exit_dir: String = "" if raw_exit_dir == null else str(raw_exit_dir)
-			var is_start_cell: bool = bool(cell.get("isStart", cell.get("is_start", false)))
-			# Use warp_edge as the exit only when this cell is meant to exit
-			# into another section — i.e. warp_edge is set AND either the
-			# section has an explicit exitDirection (so we know which portal
-			# is the EXIT, even if warp_edge happened to be on the entry side
-			# of a single-cell transition) OR this cell is NOT the section's
-			# start (so we're sure warp_edge isn't the entry portal we just
-			# walked through). For section START cells without an exitDirection,
-			# fall through to the connections-based derivation so we walk to
-			# the next planned cell instead of bouncing back through the warp.
-			var should_use_warp_exit := false
-			if warp_edge != null and str(warp_edge) != "":
-				should_use_warp_exit = (not section_exit_dir.is_empty()) or (not is_start_cell)
-			if should_use_warp_exit:
-				exit_dir = section_exit_dir if not section_exit_dir.is_empty() else str(warp_edge)
-			elif not is_terminal:
-				var next_entry: Dictionary = entries[e_i + 1]
-				var next_pos: String = str(next_entry["cell"].get("pos", ""))
-				var conns: Dictionary = cell.get("connections", {})
-				for dir in conns.keys():
-					if str(conns[dir]) == next_pos:
-						exit_dir = str(dir)
-						target_pos = next_pos
-						entry_dir = _opposite_direction(exit_dir)
-						break
-			# Compose action list. Passthrough cells only kill_all + walk.
-			var actions: Array
-			if is_passthrough:
-				actions = ["kill_all"]
-			else:
-				actions = ["kill_all"]
-				var dialogs: Array = cell.get("dialogTriggers", [])
-				var has_null_dialog := false
-				for d in dialogs:
-					if d.get("condition", null) == null and d.get("actions", null) == null:
-						has_null_dialog = true
-						break
-				if has_null_dialog:
-					actions.append("dismiss_dialog")
-				# Action order: unlock → key → gate → pickup. flip_switch
-				# first because switches unblock fences that may sit on the
-				# path to keys, gates, OR items (paru pact's B 3,1 has a
-				# west-wall fence link_id="b" gating the mag-fragment
-				# pickup). pickup_key before open_gate because the key
-				# dropped in this cell typically unlocks this cell's own
-				# gate (paru pact's B 2,1 drops its own gate key). The
-				# quest-item pickup is last since fences/gates may sit
-				# between the player and the item.
-				if (cell.get("switches", []) as Array).size() > 0:
-					actions.append("flip_switch")
-				if cell.get("keyDrop", null) != null:
-					actions.append("pickup_key")
-				if cell.get("keyGate", null) != null:
-					actions.append("open_gate")
-				# Always try a quest-item pickup. Some quests (paru pact's
-				# mag fragments) gate their final telepipe spawn behind
-				# picking up N of these — the Nth pickup's remaining_dialog
-				# fires the complete_quest + telepipe actions, the only path
-				# that spawns the room_clear telepipe. data/quest_plans/
-				# (the file the autopilot loads) drops the cell.objects
-				# array used to detect quest_items at plan-gen time, so
-				# rather than reload data/quests/ just always emit the
-				# action — the handler no-ops with a WARN when no
-				# QuestItemPickup is in the scene.
-				actions.append("pickup_quest_item")
-				if is_terminal:
-					actions.append("wait_quest_complete")
-			var label := "%s %s%s" % [area, pos, " (passthrough)" if is_passthrough else (" (return)" if visit_n > 1 else "")]
-			# Resolve the exit portal's stable ID at step-generation time. The
-			# direction label ("west", "north", …) can drift across rotation
-			# tables and label conventions; the portal ID is invariant. At
-			# walk time we prefer ID-based lookup and only fall back to the
-			# direction key.
-			var exit_portal_id: String = ""
-			if not exit_dir.is_empty():
-				var cell_portals: Dictionary = cell.get("portals", {})
-				if cell_portals.has(exit_dir):
-					exit_portal_id = str(cell_portals[exit_dir])
-			steps.append({
-				"label": label,
-				"do": actions,
-				"exit": exit_dir,
-				"exit_portal_id": exit_portal_id,
-				"target": target_pos,
-				"entry": entry_dir,
-				"_section_idx": s_i,
-				"_pos": pos,
-			})
+	for section_data in sections:
+		var section: Dictionary = section_data
+		var section_steps: Array = section.get("steps", [])
+		for step_data in section_steps:
+			# Deep duplicate so downstream mutation (e.g. _populate_steps_by_cell
+			# adds _section_idx / _pos when they're missing for hardcoded SR
+			# steps) doesn't share refs with the parsed JSON.
+			steps.append(step_data.duplicate(true))
 	return steps
 
 
@@ -606,47 +454,6 @@ func _get_current_cell_key(field: Node) -> String:
 	if SessionManager and SessionManager.has_method("get_current_section"):
 		sec_idx = int(SessionManager.get_current_section())
 	return "%d:%s" % [sec_idx, pos]
-
-
-## BFS over the cell adjacency graph (from cell.connections) to find a
-## connected path from `start_pos` to `end_pos`. Returns the list of cell
-## positions including both endpoints, or [start, end] if no path exists.
-func _bfs_cell_path(start_pos: String, end_pos: String, by_pos: Dictionary) -> Array:
-	if start_pos == end_pos:
-		return [start_pos]
-	var parent: Dictionary = {start_pos: ""}
-	var queue: Array = [start_pos]
-	while not queue.is_empty():
-		var cur: String = queue.pop_front()
-		if cur == end_pos:
-			# Reconstruct path
-			var path_out: Array = []
-			var node := cur
-			while node != "":
-				path_out.push_front(node)
-				node = parent[node]
-			return path_out
-		var cur_cell: Dictionary = by_pos.get(cur, {})
-		var conns: Dictionary = cur_cell.get("connections", {})
-		for dir in conns.keys():
-			var next_pos: String = str(conns[dir])
-			if parent.has(next_pos):
-				continue
-			if not by_pos.has(next_pos):
-				continue # cell not in this section
-			parent[next_pos] = cur
-			queue.push_back(next_pos)
-	# No path — return the trivial pair so the caller doesn't error.
-	return [start_pos, end_pos]
-
-
-func _opposite_direction(d: String) -> String:
-	match d:
-		"north": return "south"
-		"south": return "north"
-		"east":  return "west"
-		"west":  return "east"
-	return ""
 
 
 ## Position of a quest in data/quests/manifest.json (0-based). Returns 0 if not
