@@ -213,9 +213,18 @@ function planQuest(quest: Quest): QuestPlan {
 //     key cell would need to be visited.
 function scheduleCells(cells: CellPlan[], label: string): CellPlan[] {
   // Map: gate-cell pos → key-drop cell pos (cell that drops the key for that gate)
+  //
+  // Some quests have multiple cells dropping keys for the same gate (e.g.
+  // finding_ogi's hub at B 3,2 collects 4 different drops: a self-drop in
+  // 3,2 itself plus drops in three spoke cells). The runtime treats any key
+  // as opening any gate in the room, so we only need ONE key picked up
+  // before the gate to satisfy the constraint. Prefer the FIRST cell that
+  // drops the key (don't overwrite) — that picks up self-drops on the gate
+  // cell itself, which trivially avoids the circular dependency of "key
+  // sits past the gate it would unlock."
   const keyDropOf = new Map<string, string>();
   for (const c of cells) {
-    if (c.keyDrop?.targetCell) {
+    if (c.keyDrop?.targetCell && !keyDropOf.has(c.keyDrop.targetCell)) {
       keyDropOf.set(c.keyDrop.targetCell, c.pos);
     }
   }
