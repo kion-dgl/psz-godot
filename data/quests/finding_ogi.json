@@ -262,7 +262,7 @@
               "dialog": [
                 {
                   "speaker": "Ren",
-                  "text": "Wait\u2014 is that his head over there?"
+                  "text": "Wait— is that his head over there?"
                 }
               ],
               "actions": []
@@ -759,7 +759,7 @@
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": true,
-          "key_gate_direction": "",
+          "key_gate_direction": "west",
           "key_gate_directions": [],
           "key_drop": "",
           "required_keys": 1,

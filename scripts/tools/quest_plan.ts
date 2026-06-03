@@ -220,6 +220,20 @@ function scheduleCells(cells: CellPlan[], label: string): CellPlan[] {
     }
   }
 
+  // Data-quality check: a cell flagged as a key gate must carry the direction
+  // of the locked portal. Downstream tooling (autopilot exit derivation, the
+  // solver's playback, spec viewers) relies on `keyGate.direction` to know
+  // which portal is locked. An empty string here is silently dangerous —
+  // surface it loudly so the source quest data gets fixed instead of
+  // producing wrong routes at runtime.
+  for (const c of cells) {
+    if (c.keyGate && (!c.keyGate.direction || c.keyGate.direction === '')) {
+      console.warn(
+        `  WARN [${label}]: cell ${c.pos} (${c.stageId}) is a key gate but key_gate_direction is empty — autopilot routing may pick the wrong portal`,
+      );
+    }
+  }
+
   const result = cells.map((c) => ({ ...c }));
   const reorders: string[] = [];
 
