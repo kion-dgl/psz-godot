@@ -7,10 +7,11 @@
 import { loadGlb3D, type Tri3D } from "./quest_solver/lib/floor.ts";
 import { existsSync } from "node:fs";
 
-const [stagePath, xs, zs, dirXs, dirZs] = process.argv.slice(2);
+const [stagePath, xs, zs, dirXs, dirZs, txs, tzs] = process.argv.slice(2);
 if (!stagePath || !xs || !zs) {
-	console.error("usage: bun scripts/tools/inspect_floor_at.ts <stage_id> <x> <z> [dir_x] [dir_z]");
+	console.error("usage: bun scripts/tools/inspect_floor_at.ts <stage_id> <x> <z> [dir_x] [dir_z] [target_x] [target_z]");
 	console.error("  ex:  bun scripts/tools/inspect_floor_at.ts s02a_ga1 0 7.8 0 1");
+	console.error("  ex:  bun scripts/tools/inspect_floor_at.ts s02a_ga1 0 7.8 0 1 -3.9 -15.8  (also map around the target)");
 	process.exit(2);
 }
 
@@ -84,11 +85,18 @@ function coverageMap(cx: number, cz: number, radius: number, step: number) {
 	return lines;
 }
 
-// Normalize direction
+// Normalize direction. Guard the (0,0) case — without this, both components
+// divide by zero and every downstream sample/probe lands at NaN, which the
+// floor-coverage routine silently returns false for and makes the diagnostic
+// look like "no floor anywhere" regardless of the actual mesh.
 const dirLen = Math.hypot(dirX, dirZ);
-const dx = dirX / dirLen;
-const dz = dirZ / dirLen;
-console.log(`\nplayer at (${x}, ${z}), moving toward (${dx.toFixed(2)}, ${dz.toFixed(2)})`);
+const dx = dirLen === 0 ? 0 : dirX / dirLen;
+const dz = dirLen === 0 ? 1 : dirZ / dirLen;
+if (dirLen === 0) {
+	console.log(`\nplayer at (${x}, ${z}), no direction passed — defaulting to due-south probe`);
+} else {
+	console.log(`\nplayer at (${x}, ${z}), moving toward (${dx.toFixed(2)}, ${dz.toFixed(2)})`);
+}
 
 // Sample at FLOOR_CHECK_DISTANCE ahead (the can_move_to check)
 const cx = x + dx * FLOOR_CHECK_DISTANCE;
@@ -127,16 +135,30 @@ console.log(`\nfloor coverage map (4m × 4m around player, step 0.25m, '.'=floor
 const lines = coverageMap(x, z, 2, 0.25);
 console.log(lines.join("\n"));
 
-// And around the target waypoint for context
-const tx = parseFloat(process.argv[6] ?? "0");
-const tz = parseFloat(process.argv[7] ?? "22.9");
-if (process.argv.length >= 8) {
-	console.log(`\nfloor coverage map around target waypoint (${tx}, ${tz}):`);
-	console.log(coverageMap(tx, tz, 2, 0.25).join("\n"));
+// And around the target waypoint for context. Reads positional args 6 + 7
+// via the named `txs`/`tzs` destructured at the top — earlier this used
+// `process.argv[6]`/`[7]` directly, which collided with the dir_x/dir_z
+// slots and made the target-around-map print at the wrong coordinates
+// whenever direction args were also passed.
+if (txs !== undefined && tzs !== undefined) {
+	const tx = parseFloat(txs);
+	const tz = parseFloat(tzs);
+	if (!Number.isNaN(tx) && !Number.isNaN(tz)) {
+		console.log(`\nfloor coverage map around target waypoint (${tx}, ${tz}):`);
+		console.log(coverageMap(tx, tz, 2, 0.25).join("\n"));
+	}
 }
 
-// Find continuous corridor in the desired direction
-console.log(`\nwalking forward ${(dx === 0 ? "due south" : dx > 0 ? "east" : "west")}${dx !== 0 && dz !== 0 ? "/" : ""}${dz === 0 ? "" : dz > 0 ? "south" : "north"} from player, where does floor end?`);
+// Find continuous corridor in the desired direction. Build the direction
+// label without the "due southnorth" string-concat bug — only one of the
+// X/Z components contributes when the other is zero.
+function dirLabel(dxc: number, dzc: number): string {
+	const xPart = dxc === 0 ? "" : (dxc > 0 ? "east" : "west");
+	const zPart = dzc === 0 ? "" : (dzc > 0 ? "south" : "north");
+	if (xPart && zPart) return `${zPart}-${xPart}`;
+	return xPart || zPart || "stationary";
+}
+console.log(`\nwalking forward ${dirLabel(dx, dz)} from player, where does floor end?`);
 let probeDist = 0;
 for (let d = 0; d < 30; d += 0.1) {
 	const px = x + dx * d;

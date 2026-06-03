@@ -9,9 +9,11 @@
 //       overwrites the [stageId] key, writes back with 2-space indent.
 //
 //   POST /api/stage-config/reset-stage
-//     body: { stageId: string }
-//     → git checkout HEAD -- the unified config (full file). Used as a
-//       bailout button next to the editor's existing Reload-from-Disk.
+//     body: ignored — resets ALL stage configs, not just one. Despite the
+//       endpoint name and the editor's per-stage Reset button, this runs
+//       `git checkout HEAD -- data/stage_configs/unified-stage-configs.json`
+//       on the entire file. Fine for the dev-only undo-my-last-save flow,
+//       but worth flagging so future callers know it's not stage-scoped.
 
 import type { Plugin } from 'vite';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
