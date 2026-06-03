@@ -1,0 +1,44 @@
+{
+  "stageId": "s01b_nc2",
+  "shape": "Dead-end with long east-then-north chain (single south gate)",
+  "description": "Single-portal dead-end where the floor runs from the south entry hub eastward along the south edge, then turns north along the east wall and finally west across the north edge. A small SW pocket (v9k2yt) hangs off the south entry as a side detour. After exploring, the autopilot returns to spawn_south.",
+  "portals": {
+    "south": "spawn_south at (-9.87, 23.33) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-9.87,  0,  23.33], "description": "south portal (matches wp_spawn_0)" },
+
+    { "id": "south_inner", "position": [-9.74,  0,  16.17], "description": "south entry hub (matches p94wj5)" },
+    { "id": "sw_pocket",   "position": [-15.99, 0,   3.49], "description": "SW pocket detour (matches v9k2yt)" },
+
+    { "id": "south_c",     "position": [-2.34,  0,  12.89], "description": "south arc center (matches h0u09s)" },
+    { "id": "south_e",     "position": [7.45,   0,  13.20], "description": "south arc east step (matches r31gdy)" },
+    { "id": "se_corner",   "position": [16.31,  0,  13.27], "description": "SE corner (matches ifzm7r)" },
+
+    { "id": "east_mid",    "position": [16.20,  0,   0.55], "description": "east-mid step (matches 3hybm5)" },
+    { "id": "east_n",      "position": [15.83,  0,  -8.78], "description": "east-north step (matches pdkluk)" },
+    { "id": "ne_corner",   "position": [14.86,  0, -16.10], "description": "NE corner (matches c4ztcv)" },
+    { "id": "north_pocket","position": [-2.06,  0, -16.10], "description": "north dead-end pocket (matches 6b1zyz)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+
+    ["south_inner", "sw_pocket"],
+    ["south_inner", "south_c"],
+
+    ["south_c", "sw_pocket"],
+    ["south_c", "south_e"],
+
+    ["south_e", "se_corner"],
+    ["se_corner", "east_mid"],
+    ["east_mid", "east_n"],
+    ["east_n", "ne_corner"],
+    ["ne_corner", "north_pocket"]
+  ],
+  "traversalNotes": [
+    "DEAD-END with single long chain: south_inner → south_c → south_e → se_corner → east_mid → east_n → ne_corner → north_pocket. 8 hops to reach the far north pocket.",
+    "SW POCKET (sw_pocket) is a side detour off south_inner / south_c — likely an objective.",
+    "STRICT-BACKBONE: single-file chain after south_e. Don't emit shortcuts."
+  ]
+}

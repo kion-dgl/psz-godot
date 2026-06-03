@@ -1,0 +1,76 @@
+{
+  "stageId": "s02a_td2",
+  "shape": "Dense 3-portal hub with NE clique + south arm (S+E+W gates)",
+  "description": "Three-portal hub with three distinct interior zones: a long western backbone (q572l1 → 06hvnc → 2g426j → yl6mpd) connecting spawn_west to the south entry, a center pivot (z8i9ex) branching into a south-pocket clique (hf99gj + x6cvpg + a5zgrz + uhjwjc) and an east-side clique (9iol5f + oyoryw + dsfzp1 + rbt407), and an east entry hub (zkclcj) that joins via the south-pocket / east-clique cross-links. Same primitive family as paru-A td2 (dense 3-portal hub) — strict-backbone applies because plant-style obstacles break the floor between authored anchors.",
+  "portals": {
+    "south": "spawn_south at (6.06, 23.06) — gate on the south (high-Z) side",
+    "east":  "spawn_east at (24.79, -8.05) — gate on the east (high-X) side",
+    "west":  "spawn_west at (-23.23, -5.13) — gate on the west (low-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [6.06,   0,  23.06], "description": "south portal (matches wp_spawn_2)" },
+    { "id": "east_gate",   "position": [24.79,  0,  -8.05], "description": "east portal (matches wp_spawn_0)" },
+    { "id": "west_gate",   "position": [-23.23, 0,  -5.13], "description": "west portal (matches wp_spawn_1)" },
+
+    { "id": "west_inner",  "position": [-13.64, 0,  -3.95], "description": "west entry staging (matches q572l1)" },
+    { "id": "west_n",      "position": [-13.14, 0,   8.24], "description": "west arm north corner (matches 06hvnc)" },
+    { "id": "south_arm_w", "position": [-7.00,  0,  15.05], "description": "south arm west bend (matches 2g426j)" },
+    { "id": "south_arm_n", "position": [0.35,   0,  10.42], "description": "south arm north hub (matches yl6mpd)" },
+    { "id": "south_inner", "position": [6.30,   0,  16.25], "description": "south entry staging (matches itf484)" },
+
+    { "id": "center",      "position": [0.83,   0,  -0.71], "description": "center pivot — branches to south-pocket clique + east clique (matches z8i9ex)" },
+
+    { "id": "south_pkt_c", "position": [0.47,   0, -13.37], "description": "south pocket center (matches hf99gj)" },
+    { "id": "sw_pocket",   "position": [-8.42,  0, -14.44], "description": "south-west pocket detour (matches x6cvpg)" },
+    { "id": "se_pocket",   "position": [9.70,   0, -12.23], "description": "south-east pocket detour (matches a5zgrz)" },
+    { "id": "east_inner_s","position": [9.36,   0,  -6.22], "description": "east-inner south (south pocket ↔ east clique bridge) (matches uhjwjc)" },
+
+    { "id": "east_hub_s",  "position": [8.54,   0,   3.27], "description": "east clique south (matches 9iol5f)" },
+    { "id": "east_mid",    "position": [16.30,  0,   3.06], "description": "east clique mid (matches oyoryw)" },
+    { "id": "east_n",      "position": [15.78,  0,   9.67], "description": "east clique NE (matches dsfzp1)" },
+    { "id": "ne_corner",   "position": [13.03,  0,  13.73], "description": "NE corner pocket (matches rbt407)" },
+
+    { "id": "east_inner",  "position": [16.42,  0,  -8.52], "description": "east entry hub (matches zkclcj)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["east_gate", "east_inner"],
+    ["west_gate", "west_inner"],
+
+    ["west_inner", "west_n"],
+    ["west_n", "south_arm_w"],
+    ["west_n", "south_arm_n"],
+    ["south_arm_w", "south_arm_n"],
+    ["south_arm_w", "south_inner"],
+    ["south_arm_n", "south_inner"],
+    ["south_arm_n", "center"],
+    ["south_arm_n", "east_hub_s"],
+
+    ["center", "south_pkt_c"],
+    ["center", "east_inner_s"],
+    ["center", "se_pocket"],
+    ["center", "east_hub_s"],
+
+    ["south_pkt_c", "sw_pocket"],
+    ["south_pkt_c", "se_pocket"],
+    ["south_pkt_c", "east_inner_s"],
+
+    ["east_hub_s", "east_mid"],
+    ["east_mid", "east_n"],
+    ["east_n", "ne_corner"],
+
+    ["east_inner", "se_pocket"],
+    ["east_inner", "east_inner_s"]
+  ],
+  "traversalNotes": [
+    "Three direct routes:",
+    "  west ↔ south: spawn_west → west_inner → west_n → south_arm_w → south_arm_n → south_inner → spawn_south.",
+    "  south ↔ east: spawn_south → south_inner → south_arm_n → center → east_inner_s → east_inner → spawn_east (or via south_arm_n → east_hub_s → east-clique → east_inner).",
+    "  west ↔ east:  spawn_west → west_inner → west_n → south_arm_n → center → east_inner_s → east_inner → spawn_east.",
+    "SOUTH-POCKET CLIQUE (south_pkt_c + sw_pocket + se_pocket + east_inner_s) is a dense combat / objective sub-area below the center.",
+    "EAST CLIQUE (east_hub_s + east_mid + east_n + ne_corner) is a side combat arena reached via south_arm_n or center.",
+    "STRICT-BACKBONE applies — plant-style obstacles fill the floor between authored anchors.",
+    "Same primitive family as paru-A td2 (dense 3-portal hub) with three distinct sub-cliques."
+  ]
+}

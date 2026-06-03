@@ -1,0 +1,66 @@
+{
+  "stageId": "s01b_tc3",
+  "shape": "3-portal large arena (S+W+E gates with east clique, north corridor, west arm)",
+  "description": "Three-portal arena split into three zones connected by a north corridor. The EAST cluster (around ywzng8 + t6k7dx + w6dwxc + bufut9 + i2vhnh) is densely interconnected and contains spawn_south + spawn_east. The WEST arm (bjwh3s + 7n2y6m + 66vt1g + 7jlbo3) connects spawn_west through a vertical chain. The NORTH CORRIDOR (7iwjyj + db3sm6) bridges east and west clusters along Z=-12.",
+  "portals": {
+    "south": "spawn_south at (11.88, 23.09) — gate on the south (high-Z) side, east column",
+    "west":  "spawn_west at (-22.81, 15.48) — gate on the west (low-X) side",
+    "east":  "spawn_east at (22.95, -10.97) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [11.88,  0,  23.09], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "west_gate",   "position": [-22.81, 0,  15.48], "description": "west portal (matches wp_spawn_1)" },
+    { "id": "east_gate",   "position": [22.95,  0, -10.97], "description": "east portal (matches wp_spawn_2)" },
+
+    { "id": "east_inner",  "position": [16.86,  0, -11.50], "description": "east entry hub (matches ywzng8)" },
+    { "id": "east_mid",    "position": [12.86,  0,  -3.56], "description": "east cluster - mid (matches t6k7dx)" },
+    { "id": "east_s",      "position": [14.07,  0,   3.47], "description": "east cluster - south (matches w6dwxc)" },
+    { "id": "south_inner", "position": [12.72,  0,  17.32], "description": "south entry hub — joins south_gate (matches bufut9)" },
+    { "id": "se_corner",   "position": [21.27,  0,  12.59], "description": "SE corner (matches i2vhnh)" },
+    { "id": "south_pocket","position": [10.34,  0, -20.01], "description": "south pocket detour (matches b2qwt2)" },
+
+    { "id": "north_corr_e","position": [1.21,   0, -11.92], "description": "north corridor east step — bridge anchor (matches 7iwjyj)" },
+    { "id": "north_corr_w","position": [-6.67,  0, -11.92], "description": "north corridor west step (matches db3sm6)" },
+
+    { "id": "west_nw",     "position": [-16.31, 0, -12.90], "description": "west arm NW corner (matches 7jlbo3)" },
+    { "id": "west_c",      "position": [-13.86, 0,  -2.46], "description": "west arm middle (matches 66vt1g)" },
+    { "id": "west_n",      "position": [-13.92, 0,   6.09], "description": "west arm upper (matches 7n2y6m)" },
+    { "id": "west_inner",  "position": [-13.97, 0,  16.76], "description": "west entry hub (matches bjwh3s)" },
+    { "id": "west_sb",     "position": [-6.44,  0,  20.52], "description": "south-west detour bay (matches sb9twx)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "east_inner"],
+
+    ["east_inner", "south_pocket"],
+    ["east_inner", "north_corr_e"],
+    ["east_inner", "east_mid"],
+
+    ["east_mid", "east_s"],
+    ["east_mid", "north_corr_e"],
+    ["south_pocket", "north_corr_e"],
+
+    ["east_s", "south_inner"],
+    ["east_s", "se_corner"],
+    ["south_inner", "se_corner"],
+
+    ["north_corr_e", "north_corr_w"],
+    ["north_corr_w", "west_nw"],
+    ["north_corr_w", "west_c"],
+
+    ["west_c", "west_nw"],
+    ["west_c", "west_n"],
+
+    ["west_inner", "west_n"],
+    ["west_inner", "west_sb"]
+  ],
+  "traversalNotes": [
+    "Direct south ↔ east: spawn_south → south_inner → east_s → east_mid → east_inner → spawn_east. 5 hops within the east cluster.",
+    "Direct west ↔ east: spawn_west → west_inner → west_n → west_c → north_corr_w → north_corr_e → east_inner → spawn_east. 7 hops via the north corridor bridge.",
+    "Direct west ↔ south: spawn_west → west_inner → west_n → west_c → north_corr_w → north_corr_e → east_mid → east_s → south_inner → spawn_south. 9 hops.",
+    "NORTH CORRIDOR (north_corr_e + north_corr_w along Z=-12) is the only bridge between east and west clusters — don't emit cross-cluster shortcuts.",
+    "Two single-degree pockets (south_pocket, west_sb) hang off east_inner / west_inner for corner objectives."
+  ]
+}

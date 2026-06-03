@@ -1,0 +1,49 @@
+{
+  "stageId": "s01b_ic3",
+  "shape": "Diagonal L-corridor (NE + SW gates with east-side dead-end branch)",
+  "description": "Two-portal L-shape corridor that wraps from the SW gate around the west wall, across the north, and to the NE gate. A dead-end east-side branch climbs UP (south) from the middle row through nbevoy → moufxg → mfgfrs — likely a side combat / objective arm.",
+  "portals": {
+    "north": "spawn_north at (14.35, -22.88) — gate on the NE (high-X / low-Z) corner",
+    "south": "spawn_south at (-13.34, 23.63) — gate on the SW (low-X / high-Z) corner"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [14.35,  0, -22.88], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [-13.34, 0,  23.63], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "south_inner", "position": [-13.38, 0,  16.58], "description": "south entry staging (matches 2mpdfy)" },
+    { "id": "west_mid",    "position": [-16.54, 0,   3.86], "description": "west arm middle (matches jl7ljb)" },
+    { "id": "west_far",    "position": [-17.83, 0,  -3.02], "description": "west arm far / bend (matches 3ccpml)" },
+    { "id": "nw_corner",   "position": [-17.43, 0, -13.56], "description": "NW corner (matches e99qxo)" },
+
+    { "id": "mid_w",       "position": [-6.53,  0, -11.06], "description": "middle row west (matches 4q9wsm)" },
+    { "id": "mid_c",       "position": [2.15,   0, -11.34], "description": "middle row center — branches into east arm (matches 5i2rie)" },
+    { "id": "north_inner", "position": [13.12,  0, -16.71], "description": "north entry hub, joins north_gate (matches zh0szs)" },
+
+    { "id": "east_arm_s",  "position": [10.82,  0,  -2.89], "description": "east arm south step (matches nbevoy)" },
+    { "id": "east_arm_m",  "position": [11.61,  0,   5.17], "description": "east arm middle (matches moufxg)" },
+    { "id": "east_arm_n",  "position": [12.42,  0,  15.53], "description": "east arm south end — dead-end (matches mfgfrs)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["north_gate", "north_inner"],
+
+    ["south_inner", "west_mid"],
+    ["west_mid", "west_far"],
+    ["west_far", "nw_corner"],
+    ["nw_corner", "mid_w"],
+    ["mid_w", "mid_c"],
+    ["mid_c", "north_inner"],
+
+    ["mid_c", "east_arm_s"],
+    ["east_arm_s", "north_inner"],
+    ["east_arm_s", "east_arm_m"],
+    ["east_arm_m", "east_arm_n"]
+  ],
+  "traversalNotes": [
+    "Direct S→N: spawn_south → south_inner → west_mid → west_far → nw_corner → mid_w → mid_c → north_inner → spawn_north. 8 hops around the west wall.",
+    "EAST ARM dead-end branch (east_arm_s → east_arm_m → east_arm_n): hangs off mid_c going south. east_arm_n at (12, 15) is a dead-end pocket likely with an objective.",
+    "EAST_ARM_S also has a direct edge to north_inner — a small NE clique.",
+    "STRICT-BACKBONE on the west wrap and east arm — single-file corridor segments."
+  ]
+}

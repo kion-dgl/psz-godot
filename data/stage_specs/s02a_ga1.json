@@ -1,0 +1,24 @@
+{
+  "stageId": "s02a_ga1",
+  "shape": "I (corridor, N+S gates)",
+  "description": "Straight north-south corridor in Ozette Wetlands variant A. Two portals (north end and south end) connected by an uninterrupted corridor along X≈0. A midpoint anchor (yt0xtl) sits at the center for objective dispatch. Same primitive as paru-A ga1.",
+  "portals": {
+    "north": "spawn_north at (0.05, -16.75) — gate on the north (low-Z) end",
+    "south": "spawn_south at (-0.02, 22.90) — gate on the south (high-Z) end"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",   "position": [0.05,  0, -16.75], "description": "north portal area (matches wp_spawn_0)" },
+    { "id": "south_gate",   "position": [-0.02, 0,  22.90], "description": "south portal area (matches wp_spawn_1)" },
+    { "id": "corridor_mid", "position": [-0.64, 0,   2.46], "description": "midpoint dispatch anchor (matches yt0xtl)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "corridor_mid"],
+    ["corridor_mid", "south_gate"]
+  ],
+  "traversalNotes": [
+    "Straight-line traversal: the autopilot can walk directly between spawn_north and spawn_south.",
+    "DISPATCH RULE: any in-cell objective routes through corridor_mid (yt0xtl). Walk current_gate → corridor_mid → objective → corridor_mid → next_gate.",
+    "Same shape primitive as paru-A ga1. Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}

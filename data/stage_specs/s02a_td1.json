@@ -1,0 +1,73 @@
+{
+  "stageId": "s02a_td1",
+  "shape": "Dense 3-portal hub with potted-plant style obstacles (S+E+W gates)",
+  "description": "Large three-portal arena divided into a west clique, a center-south clique near the south entry, an east arm with side detours, and a south-bay pocket near the SE. Each gate has its own entry hub; the west_inner is the highest-degree anchor and pivots between west clique + center routes. Same primitive family as paru-A td1 (3-portal hub with plant obstacles) — strict-backbone applies because the floor between authored anchors has decorative props with collision.",
+  "portals": {
+    "south": "spawn_south at (5.98, 26.11) — gate on the south (high-Z) side",
+    "east":  "spawn_east at (24.82, -8.24) — gate on the east (high-X) side",
+    "west":  "spawn_west at (-25.05, -5.67) — gate on the west (low-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",   "position": [5.98,   0,  26.11], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "east_gate",    "position": [24.82,  0,  -8.24], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "west_gate",    "position": [-25.05, 0,  -5.67], "description": "west portal (matches wp_spawn_2)" },
+
+    { "id": "south_inner",  "position": [6.12,   0,  17.95], "description": "south entry hub (matches d733gm)" },
+    { "id": "south_w",      "position": [2.86,   0,  10.86], "description": "south-center west (matches gm735f)" },
+    { "id": "south_ne",     "position": [13.61,  0,  13.83], "description": "south-cluster NE corner (matches q3261x)" },
+    { "id": "south_e",      "position": [14.48,  0,   3.06], "description": "south-east transit / east bridge (matches c688l9)" },
+
+    { "id": "west_inner",   "position": [-17.06, 0,  -5.04], "description": "west entry hub — highest-degree pivot (matches jahkbb)" },
+    { "id": "west_n",       "position": [-15.48, 0,   7.99], "description": "west-far north clique (matches 0i7ob9)" },
+    { "id": "west_inner_n", "position": [-8.99,  0,  13.26], "description": "west-clique NE (matches necpws)" },
+    { "id": "west_mid",     "position": [-8.45,  0,   2.72], "description": "west-mid clique node (matches lrafb9)" },
+    { "id": "sw_pocket",    "position": [-5.12,  0, -15.16], "description": "SW pocket detour (matches z8cwgv)" },
+
+    { "id": "center_w",     "position": [-3.04, 0,   5.32], "description": "center-west pivot (matches ycaru4)" },
+    { "id": "center",       "position": [-0.58, 0,  -4.07], "description": "center pivot (matches bu64y0)" },
+    { "id": "center_e",     "position": [7.82,  0,  -6.51], "description": "center-east bridge (matches 060yv9)" },
+
+    { "id": "east_inner",   "position": [15.10, 0,  -7.58], "description": "east entry hub (matches 200ug5)" },
+    { "id": "east_s",       "position": [11.75, 0, -13.69], "description": "east-south detour (matches 91wb2g)" },
+    { "id": "south_bay",    "position": [5.80,  0, -15.18], "description": "south-bay pocket between east arm and south (matches 4yf2dn)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["east_gate", "east_inner"],
+    ["west_gate", "west_inner"],
+
+    ["south_inner", "south_w"],
+    ["south_inner", "south_ne"],
+    ["south_w", "south_e"],
+    ["south_w", "south_ne"],
+    ["south_w", "center_w"],
+    ["south_ne", "south_e"],
+
+    ["west_inner", "sw_pocket"],
+    ["west_inner", "center"],
+    ["west_inner", "west_mid"],
+    ["west_inner", "west_n"],
+    ["west_inner", "west_inner_n"],
+    ["west_n", "west_inner_n"],
+    ["west_n", "west_mid"],
+    ["west_mid", "center_w"],
+
+    ["center_w", "center"],
+    ["center", "sw_pocket"],
+    ["center", "center_e"],
+
+    ["east_inner", "center_e"],
+    ["east_inner", "east_s"],
+    ["east_s", "south_bay"]
+  ],
+  "traversalNotes": [
+    "Three direct routes:",
+    "  south ↔ west:  spawn_south → south_inner → south_w → center_w → west_mid → west_inner → spawn_west.",
+    "  south ↔ east:  spawn_south → south_inner → south_w → south_e → ... no direct south_e ↔ east bridge in the authored graph — actual route goes south_w → center_w → center → center_e → east_inner.",
+    "  west ↔ east:   spawn_west → west_inner → center → center_e → east_inner → spawn_east.",
+    "WEST CLIQUE (west_inner + west_n + west_inner_n + west_mid) is densely connected for west-side combat.",
+    "SW POCKET + SOUTH BAY are dead-end detours likely hosting objectives.",
+    "STRICT-BACKBONE applies — the room has plant-style obstacles between anchors, so cross-cluster shortcuts will wedge the player."
+  ]
+}

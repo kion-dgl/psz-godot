@@ -1,0 +1,63 @@
+{
+  "stageId": "s01b_lb1",
+  "shape": "Dense 2-portal arena (N+E gates with center-hub + perimeter detours)",
+  "description": "Two-portal arena with a high-degree center anchor (argr4m) that connects to most other anchors. The north entry hub (jp2ewj) and east entry hub (yrnqot) both fan into the interior. A south-row cluster (yg9ndg + qhtsec + reko3w) covers the south half, with corner detours at SW (5jg4v4) and far-west (bb6kit). The east hub also has a small north-pocket detour (4o60z8).",
+  "portals": {
+    "north": "spawn_north at (-16.91, -15.59) — gate on the NW side",
+    "east":  "spawn_east at (23.10, -17.11) — gate on the east side, north half"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-16.91, 0, -15.59], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [23.10,  0, -17.11], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-16.63, 0,  -8.51], "description": "north entry hub (matches jp2ewj)" },
+    { "id": "east_inner",  "position": [14.26,  0, -16.24], "description": "east entry hub (matches yrnqot)" },
+
+    { "id": "center",      "position": [-0.21,  0,   0.08], "description": "center high-degree hub (matches argr4m)" },
+
+    { "id": "north_mid",   "position": [0.29,   0,  -9.53], "description": "north-mid anchor between hubs (matches uu3du3)" },
+    { "id": "north_pocket","position": [6.86,   0, -20.62], "description": "north pocket detour (matches 4o60z8)" },
+
+    { "id": "south_center","position": [1.86,   0,  19.74], "description": "south-center anchor (matches yg9ndg)" },
+    { "id": "south_east",  "position": [16.04,  0,  13.94], "description": "south-east corner (matches qhtsec)" },
+    { "id": "east_mid",    "position": [13.72,  0,  -0.25], "description": "east-mid transit (matches reko3w)" },
+
+    { "id": "sw_corner",   "position": [-15.07, 0,  18.50], "description": "SW corner pocket (matches 5jg4v4)" },
+    { "id": "west_pocket", "position": [-19.04, 0,   5.46], "description": "west pocket detour (matches bb6kit)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["east_gate", "east_inner"],
+
+    ["north_inner", "center"],
+    ["north_inner", "north_mid"],
+    ["north_inner", "west_pocket"],
+
+    ["east_inner", "east_mid"],
+    ["east_inner", "north_pocket"],
+    ["east_inner", "center"],
+    ["east_inner", "north_mid"],
+
+    ["center", "south_center"],
+    ["center", "east_mid"],
+    ["center", "south_east"],
+    ["center", "west_pocket"],
+    ["center", "sw_corner"],
+
+    ["north_mid", "north_pocket"],
+
+    ["south_center", "south_east"],
+    ["south_center", "east_mid"],
+    ["south_center", "sw_corner"],
+    ["south_east", "east_mid"],
+
+    ["sw_corner", "west_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct N↔E: spawn_north → north_inner → center → east_inner → spawn_east. 4 hops via center.",
+    "Alternative N↔E: north_inner → north_mid → east_inner. Also 4 hops.",
+    "DISPATCH RULE: center is the canonical dispatch anchor — reaches south_center, east_mid, south_east, sw_corner, west_pocket. Use center for cross-zone objective dispatch.",
+    "Two dead-end pockets (north_pocket, west_pocket / sw_corner) for objective detours."
+  ]
+}

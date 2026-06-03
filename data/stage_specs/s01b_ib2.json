@@ -1,0 +1,50 @@
+{
+  "stageId": "s01b_ib2",
+  "shape": "Ring / donut room (N+S gates with two arc routes)",
+  "description": "Ring-shaped room with the floor wrapping around an interior obstruction. The two portals sit on roughly opposite sides; reaching one from the other requires walking one of the TWO arcs that wrap the interior: a short east arc (nn0ofu → skuie0 → 3d8id1 → yslthu) or a longer west arc (nn0ofu → uiybk0 → d9tkl4 → 0c7njg → wa9mxo → i72pls → dhxyya → yslthu).",
+  "portals": {
+    "south": "spawn_south at (7.56, 19.79) — gate on the south (high-Z) side",
+    "north": "spawn_north at (11.14, -23.85) — gate on the north (low-Z) side, slightly east of center"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [7.56,   0,  19.79], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "north_gate",  "position": [11.14,  0, -23.85], "description": "north portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [9.05,   0, -14.98], "description": "north entry hub — east arc start (matches nn0ofu)" },
+    { "id": "south_inner", "position": [8.05,   0,  13.19], "description": "south entry hub — east arc end (matches yslthu)" },
+
+    { "id": "east_arc_n",  "position": [16.65,  0,  -6.79], "description": "east arc north step (matches skuie0)" },
+    { "id": "east_arc_s",  "position": [10.13,  0,   5.97], "description": "east arc south step (matches 3d8id1)" },
+
+    { "id": "west_arc_n1", "position": [-1.95,  0, -12.09], "description": "west arc - first step from north hub (matches uiybk0)" },
+    { "id": "west_arc_n2", "position": [-14.70, 0,  -9.35], "description": "west arc - NW corner (matches d9tkl4)" },
+    { "id": "west_arc_n3", "position": [-19.37, 0,  -0.58], "description": "west arc - far west (matches 0c7njg)" },
+    { "id": "west_arc_s1", "position": [-15.63, 0,  10.73], "description": "west arc - SW mid (matches wa9mxo)" },
+    { "id": "west_arc_s2", "position": [-10.62, 0,  16.49], "description": "west arc - SW corner (matches i72pls)" },
+    { "id": "west_arc_s3", "position": [0.59,   0,  12.86], "description": "west arc - south-center end (matches dhxyya)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["north_gate", "north_inner"],
+
+    ["north_inner", "east_arc_n"],
+    ["east_arc_n", "east_arc_s"],
+    ["east_arc_s", "south_inner"],
+    ["north_inner", "east_arc_s"],
+
+    ["north_inner", "west_arc_n1"],
+    ["west_arc_n1", "west_arc_n2"],
+    ["west_arc_n2", "west_arc_n3"],
+    ["west_arc_n3", "west_arc_s1"],
+    ["west_arc_s1", "west_arc_s2"],
+    ["west_arc_s2", "west_arc_s3"],
+    ["west_arc_s3", "south_inner"]
+  ],
+  "traversalNotes": [
+    "Direct N→S via EAST ARC (shorter): spawn_north → north_inner → east_arc_n → east_arc_s → south_inner → spawn_south. 5 hops.",
+    "Alternative via WEST ARC (longer, more anchors for objective dispatch): spawn_north → north_inner → west_arc_n1 → … → west_arc_s3 → south_inner → spawn_south. 9 hops.",
+    "RING TOPOLOGY: the two arcs do NOT cross-connect except at north_inner and south_inner — the interior of the ring is not walkable. Don't emit cross-arc shortcuts.",
+    "DISPATCH RULE: objective in the east half → via east arc; objective in the west half → via west arc. Pick the shorter arc to the objective."
+  ]
+}

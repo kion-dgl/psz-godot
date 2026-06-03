@@ -1,0 +1,44 @@
+{
+  "stageId": "s01a_ic1",
+  "shape": "2-portal arena with switch objective on the west wall (N + S gates)",
+  "description": "Two-portal stage where the autopilot must detour to a switch on the west wall before crossing to the south gate. North gate routes south via 8eh9u4 → shceyb → switch (slujtf), then the switch chains north via h1jrya → fnbfls to the south gate. A short east dead-end (rh0y75 → nu8wil) hangs off 8eh9u4. Used by SR cell 2,2.",
+  "portals": {
+    "north": "spawn_north at (-13.45, -23.55) — gate on the north (low-Z) side, west column",
+    "south": "spawn_south at (19.09, 23.02) — gate on the south (high-Z) side, east column"
+  },
+  "objectives": {
+    "switch_2_2": "switch waypoint at (-19.19, 11.81) — west wall, upper. Cell 2,2 switch trigger."
+  },
+  "anchors": [
+    { "id": "north_gate",  "position": [-13.45, 0, -23.55], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [19.09,  0,  23.02], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-11.65, 0,  -9.99], "description": "north entry hub (matches 8eh9u4)" },
+    { "id": "west_mid",    "position": [-14.71, 0,   0.38], "description": "west wall mid step - bridge to switch (matches shceyb)" },
+    { "id": "switch",      "position": [-19.19, 0,  11.81], "description": "SWITCH 2,2 - west wall upper (matches slujtf, kind=switch)" },
+    { "id": "north_arc",   "position": [7.01,   0,  13.61], "description": "north arc bridge - switch to south arc (matches h1jrya)" },
+    { "id": "south_inner", "position": [17.73,  0,  16.94], "description": "south entry hub (matches fnbfls)" },
+
+    { "id": "east_pocket_a", "position": [8.67,  0, -11.66], "description": "east pocket midpoint (matches rh0y75)" },
+    { "id": "east_pocket_b", "position": [15.22, 0,  -4.61], "description": "east pocket dead-end (matches nu8wil)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+
+    ["north_inner", "west_mid"],
+    ["west_mid", "switch"],
+    ["switch", "north_arc"],
+    ["north_arc", "south_inner"],
+
+    ["north_inner", "east_pocket_a"],
+    ["east_pocket_a", "east_pocket_b"]
+  ],
+  "traversalNotes": [
+    "SWITCH ROUTE (L1): spawn_north → north_inner → west_mid → switch. 4 hops to the switch trigger.",
+    "EXIT ROUTE (L2): switch → north_arc → south_inner → spawn_south. 4 hops.",
+    "STRICT-BACKBONE: single chain through the switch. The room is not crossable without hitting the switch first.",
+    "East pocket (east_pocket_a → east_pocket_b) is a 2-hop dead-end off north_inner — corner objective.",
+    "Used by SR cell 2,2 (north→1sw→south)."
+  ]
+}

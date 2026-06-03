@@ -9,6 +9,7 @@ const EnemyGallery = lazy(() => import('./storybook/EnemyGallery'));
 const WeaponGallery = lazy(() => import('./storybook/WeaponGallery'));
 const PlayerAnimationStorybook = lazy(() => import('./storybook/PlayerAnimationStorybook'));
 const StageEditor = lazy(() => import('./stage-editor/UnifiedStageEditor'));
+const FloorMeshEditor = lazy(() => import('./floor-mesh-editor/FloorMeshEditor'));
 const SvgCheck = lazy(() => import('./svg-check/SvgCheck'));
 const OfficeEditor = lazy(() => import('./office-editor/OfficeEditor'));
 const MarketEditor = lazy(() => import('./market-editor/MarketEditor'));
@@ -55,6 +56,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: 'Editors',
     links: [
       { to: '/stage-editor', label: 'Stage Editor' },
+      { to: '/floor-mesh-editor', label: 'Floor Mesh' },
       { to: '/svg-check', label: 'SVG Check' },
       { to: '/office-editor', label: 'Office' },
       { to: '/market-editor', label: 'Market' },
@@ -226,6 +228,7 @@ export default function App() {
             <Route path="/storybook/basic-weapons" element={<BasicWeaponPreview />} />
             <Route path="/storybook/player-animations" element={<PlayerAnimationStorybook />} />
             <Route path="/stage-editor" element={<StageEditor />} />
+            <Route path="/floor-mesh-editor" element={<FloorMeshEditor />} />
             <Route path="/svg-check" element={<SvgCheck />} />
             <Route path="/office-editor" element={<OfficeEditor />} />
             <Route path="/market-editor" element={<MarketEditor />} />

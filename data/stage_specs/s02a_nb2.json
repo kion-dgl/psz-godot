@@ -1,0 +1,48 @@
+{
+  "stageId": "s02a_nb2",
+  "shape": "Dead-end with three sub-zones (single south gate)",
+  "description": "Single-portal dead-end with three loosely-connected interior zones: a south entry cluster around b0rjxq, a center-pivot anchor (z61osu) that connects east cluster + west arm + the north zone, and a north zone with a west pocket (ni1kef) plus a north-bay anchor (0nbdig). Same single-gate-dead-end primitive as na1 / paru's na1, just with a slightly more elaborate sub-zone graph.",
+  "portals": {
+    "south": "spawn_south at (5.99, 23.25) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",   "position": [5.99,   0,  23.25], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "south_inner",  "position": [6.60,   0,  16.40], "description": "south entry hub (matches b0rjxq)" },
+
+    { "id": "south_west",   "position": [-10.12, 0,  13.39], "description": "west-south staging (matches taqlex)" },
+    { "id": "center",       "position": [0.73,   0,   3.87], "description": "center pivot connects south entry, west, and north (matches z61osu)" },
+
+    { "id": "east_inner",   "position": [17.16,  0,   7.65], "description": "east cluster N (matches f6osoh)" },
+    { "id": "east_outer",   "position": [14.48,  0,  -0.23], "description": "east cluster S (matches 2kwl4m)" },
+
+    { "id": "north_inner",  "position": [-2.14,  0,  -3.19], "description": "north-center pivot (matches 2yexhq)" },
+    { "id": "nw_pocket",    "position": [-12.89, 0,  -7.13], "description": "NW dead-end pocket (matches ni1kef)" },
+    { "id": "n_bay",        "position": [4.87,   0, -14.11], "description": "north bay detour (matches 0nbdig)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["south_inner", "south_west"],
+    ["south_inner", "center"],
+    ["south_inner", "east_inner"],
+    ["south_inner", "east_outer"],
+
+    ["east_inner", "east_outer"],
+    ["east_outer", "center"],
+    ["south_west", "center"],
+
+    ["center", "north_inner"],
+    ["north_inner", "nw_pocket"],
+    ["north_inner", "n_bay"],
+    ["nw_pocket", "n_bay"]
+  ],
+  "traversalNotes": [
+    "DEAD-END: enter and leave through spawn_south. Objective dispatch follows the sub-zones.",
+    "DISPATCH RULE by sub-zone:",
+    "  south-zone objectives → via south_inner",
+    "  east cluster (east_inner, east_outer) → via south_inner",
+    "  west arm (south_west) → via south_inner → center route",
+    "  north zone (nw_pocket, n_bay) → via center → north_inner",
+    "Three distinct combat / dispatch areas in one room — keep moves within a sub-zone."
+  ]
+}

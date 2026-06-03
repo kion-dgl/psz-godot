@@ -1,0 +1,56 @@
+{
+  "stageId": "s01b_xb2",
+  "shape": "4-portal cross arena (N + S + W + E gates) with central clique",
+  "description": "Four-portal arena with a central clique. NW cluster (pve0h8 west entry + gsii78 + yflz9o + zy1jw1) forms a 4-anchor clique on the west/center. yflz9o (3-way) bridges spawn_north + pve0h8 + zy1jw1. SE cluster (luvykz south entry + 1skjqw + zy1jw1) is a triangle. The center anchor (zy1jw1) is a 4-way: pve0h8 + yflz9o + 1skjqw + luvykz. East column: 1skjqw → 6zqmrh → spawn_east (2-hop east chain).",
+  "portals": {
+    "north": "spawn_north at (-9.38, -4.19) — gate on the north (low-Z) side",
+    "south": "spawn_south at (16.98, 17.46) — gate on the south (high-Z) side",
+    "west":  "spawn_west at (-23.11, 17.35) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.28, -14.15) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-9.38,  0,  -4.19], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [16.98,  0,  17.46], "description": "south portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-23.11, 0,  17.35], "description": "west portal (matches wp_spawn_2)" },
+    { "id": "east_gate",   "position": [23.28,  0, -14.15], "description": "east portal (matches wp_spawn_3)" },
+
+    { "id": "west_inner",  "position": [-15.65, 0,  17.45], "description": "west entry hub - 4-way (matches pve0h8)" },
+    { "id": "nw_pocket",   "position": [-7.40,  0,  19.90], "description": "NW pocket (matches gsii78)" },
+    { "id": "north_inner", "position": [-8.79,  0,   3.68], "description": "north entry hub - 3-way (matches yflz9o)" },
+    { "id": "center",      "position": [3.47,   0,   7.44], "description": "central 4-way clique anchor (matches zy1jw1)" },
+
+    { "id": "south_inner", "position": [17.49,  0,   9.88], "description": "south entry hub - 3-way (matches luvykz)" },
+    { "id": "se_step",     "position": [13.51,  0,   0.96], "description": "SE step - center triangle (matches 1skjqw)" },
+    { "id": "east_inner",  "position": [16.68,  0, -14.37], "description": "east entry hub (matches 6zqmrh)" }
+  ],
+  "anchorEdges": [
+    ["west_gate", "west_inner"],
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+    ["east_gate", "east_inner"],
+
+    ["west_inner", "nw_pocket"],
+    ["west_inner", "north_inner"],
+    ["west_inner", "center"],
+
+    ["north_inner", "center"],
+
+    ["center", "south_inner"],
+    ["center", "se_step"],
+    ["south_inner", "se_step"],
+
+    ["se_step", "east_inner"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → center → south_inner → spawn_south. 4 hops.",
+    "Direct N→W: spawn_north → north_inner → west_inner → spawn_west. 3 hops.",
+    "Direct N→E: spawn_north → north_inner → center → se_step → east_inner → spawn_east. 5 hops.",
+    "Direct W→S: spawn_west → west_inner → center → south_inner → spawn_south. 4 hops.",
+    "Direct W→E: spawn_west → west_inner → center → se_step → east_inner → spawn_east. 5 hops.",
+    "Direct S→E: spawn_south → south_inner → se_step → east_inner → spawn_east. 4 hops.",
+    "DISPATCH: center (zy1jw1) is the 4-way central router; north_inner and south_inner are 3-way gate dispatchers.",
+    "nw_pocket is a 1-degree dead-end off west_inner.",
+    "SE TRIANGLE: south_inner + center + se_step — BFS picks the shorter side."
+  ]
+}

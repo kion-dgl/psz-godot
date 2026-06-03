@@ -1,0 +1,32 @@
+{
+  "stageId": "s05b_ga1",
+  "shape": "Single-portal dead-end (south gate) with center fan-out to 4 corner pockets",
+  "description": "Single-portal dead-end where the south gate enters through a single center anchor (0d4751 at (-0.90, -6.01)) that fans to 4 corner pockets: b5tf1u (west), i094i0 (south), fid8vj (east-south), lw21zd (east). Pure dispatch topology — center is the only routing decision.",
+  "portals": {
+    "south": "spawn_south at (-3.02, 11.58) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-3.02,  0,  11.58], "description": "south portal (matches wp_spawn_0)" },
+
+    { "id": "center",      "position": [-0.90, 0,  -6.01], "description": "center 5-way hub (matches 0d4751)" },
+
+    { "id": "south_pocket","position": [-2.60, 0, -14.57], "description": "south pocket (matches i094i0)" },
+    { "id": "se_pocket",   "position": [5.65,  0,  -8.96], "description": "SE pocket (matches fid8vj)" },
+    { "id": "e_pocket",    "position": [7.67,  0,  -2.59], "description": "east pocket (matches lw21zd)" },
+    { "id": "w_pocket",    "position": [-10.88, 0, -1.59], "description": "west pocket (matches b5tf1u)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "center"],
+
+    ["center", "south_pocket"],
+    ["center", "se_pocket"],
+    ["center", "e_pocket"],
+    ["center", "w_pocket"]
+  ],
+  "traversalNotes": [
+    "DEAD-END: single south gate. Autopilot explores all 4 pockets and returns.",
+    "Pure star topology — every pocket is 2 hops from spawn_south via center.",
+    "DISPATCH RULE: center is the only routing anchor. Pick the pocket adjacent to the objective."
+  ]
+}

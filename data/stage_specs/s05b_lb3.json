@@ -1,0 +1,46 @@
+{
+  "stageId": "s05b_lb3",
+  "shape": "2-portal arena (N + E gates) with center super-hub fanning to 6 anchors",
+  "description": "Two-portal arena where the center anchor (mziaxt at (13.50, -5.07)) is a 7-way super-hub: it joins the east gate plus 6 other anchors (sxj6fb, l08i1t, 5fts87, ce1wph, tdf3ft, 2kv7to). The north entry hub (2kv7to) is a 6-way dispatcher reaching the same 5 spread anchors plus the center hub. Two clusters meeting at the east side.",
+  "portals": {
+    "north": "spawn_north at (-16.07, -22.79) — gate on the north (low-Z) side, west column",
+    "east":  "spawn_east at (23.21, -6.25) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-16.07, 0, -22.79], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [23.21,  0,  -6.25], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "east_hub",    "position": [13.50,  0,  -5.07], "description": "east super-hub - 7-way (matches mziaxt)" },
+    { "id": "north_inner", "position": [-15.85, 0, -14.85], "description": "north entry super-hub - 6-way (matches 2kv7to)" },
+
+    { "id": "center_w",    "position": [-5.10,  0,  -5.84], "description": "center-west (matches sxj6fb)" },
+    { "id": "n_arc_e",     "position": [0.78,   0,   9.07], "description": "north arc east (matches l08i1t)" },
+    { "id": "n_arc_w",     "position": [-7.39,  0,   9.07], "description": "north arc west (matches 5fts87)" },
+    { "id": "west_pocket", "position": [-18.38, 0,  -4.53], "description": "west pocket (matches ce1wph)" },
+    { "id": "s_pocket",    "position": [9.24,   0, -18.32], "description": "south pocket (matches tdf3ft)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["east_gate", "east_hub"],
+
+    ["north_inner", "center_w"],
+    ["north_inner", "n_arc_e"],
+    ["north_inner", "n_arc_w"],
+    ["north_inner", "west_pocket"],
+    ["north_inner", "s_pocket"],
+    ["north_inner", "east_hub"],
+
+    ["east_hub", "center_w"],
+    ["east_hub", "n_arc_e"],
+    ["east_hub", "n_arc_w"],
+    ["east_hub", "west_pocket"],
+    ["east_hub", "s_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct N→E: spawn_north → north_inner → east_hub → spawn_east. 3 hops.",
+    "Alternate N→E via any of the 5 interior anchors: 4 hops.",
+    "DISPATCH RULE: both hubs reach the same 5 spread anchors. BFS picks the shorter side.",
+    "Single-degree pockets: west_pocket (off both hubs), s_pocket (off both hubs)."
+  ]
+}

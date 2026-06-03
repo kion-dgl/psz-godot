@@ -1,0 +1,37 @@
+{
+  "stageId": "s01b_nb2",
+  "shape": "Dead-end ring (single south gate, perimeter loop)",
+  "description": "Single-portal dead-end where the floor forms a ring around the room's interior. The spawn_south gate connects to TWO interior anchors (south-west sidhwy and NW lnjc92), each starting one arc that wraps around the room and meets at the east side. Same ring-topology primitive as ib2 but with a single gate.",
+  "portals": {
+    "south": "spawn_south at (-11.03, 23.29) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-11.03, 0,  23.29], "description": "south portal (matches wp_spawn_0)" },
+
+    { "id": "sw_inner",    "position": [-10.72, 0,  12.01], "description": "SW arc start — south arc anchor (matches sidhwy)" },
+    { "id": "nw_inner",    "position": [-10.31, 0,  -7.12], "description": "NW arc start — north arc anchor (matches lnjc92)" },
+
+    { "id": "north_c",     "position": [2.61,   0, -14.46], "description": "north arc - center step (matches s2qtm9)" },
+    { "id": "ne_corner",   "position": [13.76,  0, -17.20], "description": "NE corner pocket (matches ovu5sa)" },
+    { "id": "east_mid",    "position": [18.84,  0,  -2.29], "description": "east-mid arc (matches lj7d45)" },
+    { "id": "se_corner",   "position": [12.91,  0,  11.77], "description": "SE corner pocket (matches kao1sy)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "sw_inner"],
+    ["south_gate", "nw_inner"],
+
+    ["nw_inner", "north_c"],
+    ["north_c", "ne_corner"],
+    ["ne_corner", "east_mid"],
+    ["east_mid", "se_corner"],
+    ["se_corner", "sw_inner"],
+
+    ["nw_inner", "sw_inner"]
+  ],
+  "traversalNotes": [
+    "DEAD-END RING: two arcs from the south gate meet at the east side. Pick either arc to explore — the autopilot's BFS will choose the shorter one to each objective.",
+    "Cross-link nw_inner ↔ sw_inner gives a shortcut between the two arcs near the west wall.",
+    "DISPATCH RULE: pick the closer arc to the objective; ring topology gives multiple paths."
+  ]
+}

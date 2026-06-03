@@ -1,0 +1,58 @@
+{
+  "stageId": "s01a_ic3",
+  "shape": "2-portal NW-isolated arena (N gate on west wall + S gate at SE) with two clusters bridged by a center",
+  "description": "Two-portal stage where the north gate sits on the west wall at Z≈-8 and the south gate sits at the SE corner. The NW half is a small cluster: 9rhrjf (north entry) + 15dm5d + 1tyryt (NW corner) + z5z7ve + h82ft4 + pqjitx (center bridge). The SE half is dense: 8ixyxy (south entry) + 8t36ha + u1ocae form a triangle, with 0hr3yu fanning to two SE pockets (1h9fhv + ivaxfv). pqjitx is the ONLY bridge between halves via 8t36ha.",
+  "portals": {
+    "north": "spawn_north at (-19.07, -8.08) — gate on the west (low-X) column, north of midline",
+    "south": "spawn_south at (18.96, 23.09) — gate on the south (high-Z) side, east column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-19.07, 0,  -8.08], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [18.96,  0,  23.09], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-18.79, 0,   0.58], "description": "north entry hub - west wall (matches 9rhrjf)" },
+    { "id": "w_up",        "position": [-20.55, 0,  11.04], "description": "west wall upper (matches 15dm5d)" },
+    { "id": "nw_corner",   "position": [-19.63, 0,  20.91], "description": "NW corner (matches 1tyryt)" },
+    { "id": "n_arc",       "position": [-12.51, 0,  22.68], "description": "north arc step (matches z5z7ve)" },
+    { "id": "n_arc_s",     "position": [-6.91,  0,  16.97], "description": "north arc south step (matches h82ft4)" },
+
+    { "id": "center",      "position": [-4.64,  0,   6.35], "description": "center bridge - sole link to south cluster (matches pqjitx)" },
+
+    { "id": "se_clique_w", "position": [5.96,   0,   9.17], "description": "SE clique west / bridge anchor (matches 8t36ha)" },
+    { "id": "south_inner", "position": [19.30,  0,  17.32], "description": "south entry hub - SE clique (matches 8ixyxy)" },
+    { "id": "se_clique_e", "position": [12.95,  0,   0.69], "description": "SE clique east (matches u1ocae)" },
+
+    { "id": "se_step",     "position": [9.32,   0,  -6.88], "description": "SE step (matches 0hr3yu)" },
+    { "id": "se_pocket_a", "position": [5.93,   0, -17.15], "description": "SE pocket A (matches 1h9fhv)" },
+    { "id": "se_pocket_b", "position": [13.44,  0, -15.72], "description": "SE pocket B (matches ivaxfv)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+
+    ["north_inner", "center"],
+    ["north_inner", "w_up"],
+    ["w_up", "nw_corner"],
+    ["nw_corner", "n_arc"],
+    ["n_arc", "n_arc_s"],
+    ["n_arc_s", "center"],
+
+    ["center", "se_clique_w"],
+
+    ["se_clique_w", "south_inner"],
+    ["se_clique_w", "se_clique_e"],
+    ["south_inner", "se_clique_e"],
+
+    ["se_clique_e", "se_step"],
+    ["se_step", "se_pocket_a"],
+    ["se_step", "se_pocket_b"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → center → se_clique_w → south_inner → spawn_south. 5 hops via the center bridge.",
+    "STRICT BRIDGE: center (pqjitx) is the only connection between the NW cluster and the SE cluster. Do not emit alternate routes.",
+    "NW LOOP: north_inner → w_up → nw_corner → n_arc → n_arc_s → center forms a 5-anchor perimeter loop.",
+    "SE TRIANGLE: south_inner + se_clique_w + se_clique_e — BFS picks the shorter side.",
+    "SE pockets (se_pocket_a, se_pocket_b) are 2-hop dead-ends off se_step — corner objectives."
+  ]
+}

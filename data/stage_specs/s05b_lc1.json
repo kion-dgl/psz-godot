@@ -1,0 +1,62 @@
+{
+  "stageId": "s05b_lc1",
+  "shape": "2-portal sprawling arena (N + E gates) with center super-hub + NW chain + SW chain",
+  "description": "Two-portal arena with a south super-hub (w0klx6 at (7.26, -6.66), 5-way) that joins south clique (nypojq + west to ey4l82 + spawn_north chain). A center anchor (nypojq) is a 4-way hub joining the east arc (9xhw22 → spawn_east + auo4nh) and the southern flow. NW cluster: k76oxk → iizgnl + 9btp3u + 3hb6ct. SW cluster off w0klx6: ey4l82 → spawn_north via gf0b6j, plus mo31a4 + w701ia.",
+  "portals": {
+    "north": "spawn_north at (-7.52, -23.20) — gate on the north (low-Z) side",
+    "east":  "spawn_east at (23.62, 9.48) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-7.52,  0, -23.20], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [23.62,  0,   9.48], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "east_inner",  "position": [17.15,  0,   8.76], "description": "east entry hub - 4-way (matches 9xhw22)" },
+    { "id": "ne_step",     "position": [13.06,  0,  20.56], "description": "NE step (matches auo4nh)" },
+    { "id": "n_center",    "position": [2.27,   0,  13.12], "description": "north-center hub (matches k76oxk)" },
+    { "id": "south_c",     "position": [10.56,  0,   0.23], "description": "south-center 4-way hub (matches nypojq)" },
+    { "id": "south_hub",   "position": [7.26,   0,  -6.66], "description": "south super-hub - 5-way (matches w0klx6)" },
+
+    { "id": "nw_center",   "position": [-5.28,  0,  15.45], "description": "NW center (matches iizgnl)" },
+    { "id": "nw_pocket",   "position": [-20.73, 0,  19.03], "description": "NW pocket (matches 9btp3u)" },
+    { "id": "nw_west",     "position": [-16.80, 0,  10.21], "description": "NW west (matches 3hb6ct)" },
+
+    { "id": "n_inner",     "position": [-6.93, 0, -16.15], "description": "north entry hub (matches ey4l82)" },
+    { "id": "nw_step",     "position": [-19.29, 0, -11.06], "description": "NW step (matches mo31a4)" },
+    { "id": "n_west",      "position": [-9.09, 0,  -6.41], "description": "north-west center (matches w701ia)" },
+    { "id": "ne_inner",    "position": [8.42,  0, -16.35], "description": "NE inner / north arc (matches gf0b6j)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "n_inner"],
+    ["east_gate", "east_inner"],
+
+    ["east_inner", "ne_step"],
+    ["east_inner", "n_center"],
+    ["east_inner", "south_c"],
+
+    ["south_c", "south_hub"],
+    ["south_c", "n_center"],
+
+    ["n_center", "ne_step"],
+    ["n_center", "nw_center"],
+
+    ["nw_center", "nw_pocket"],
+    ["nw_center", "nw_west"],
+
+    ["south_hub", "ne_inner"],
+    ["south_hub", "n_inner"],
+    ["south_hub", "nw_step"],
+    ["south_hub", "n_west"],
+
+    ["n_inner", "ne_inner"],
+    ["n_inner", "nw_step"],
+    ["n_inner", "n_west"]
+  ],
+  "traversalNotes": [
+    "Direct N→E: spawn_north → n_inner → south_hub → south_c → east_inner → spawn_east. 5 hops.",
+    "Alt N→E via south_c: spawn_north → n_inner → south_hub → south_c → n_center → east_inner. 6 hops.",
+    "DISPATCH RULE: south_hub (w0klx6) is the south 5-way dispatcher; south_c (nypojq) is the south-center 4-way; east_inner is the east 4-way.",
+    "NW CLUSTER (n_center → nw_center → nw_pocket + nw_west) is a 3-anchor west chain accessible from n_center.",
+    "ne_step and ne_inner are detour pockets."
+  ]
+}

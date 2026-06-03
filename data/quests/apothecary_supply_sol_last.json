@@ -1,0 +1,1340 @@
+{
+  "version": 1,
+  "last_updated": "2026-04-12",
+  "id": "apothecary_supply_sol_last",
+  "name": "Apothecary's Supply (sol leaf last)",
+  "description": "Requested by: Item Shop. Asks the player to gather herbs from the wetlands to use for item synthesis. \nCore Objective: Harvest Sol Leaves, Moon Blooms, and Star Husks.\nTheme: Industry. Establishes how the town produces its own Atomizers. — variant: sol_leaf at 0,0 is picked up last.",
+  "area_id": "ozette",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "start_pos": "2,0",
+      "end_pos": "2,3",
+      "cells": [
+        {
+          "pos": "2,0",
+          "stage_id": "s02a_sa1",
+          "rotation": 270,
+          "connections": {
+            "east": "2,1"
+          },
+          "portals": {
+            "east": "portal_1771802375822_jr1b5c8lp",
+            "default": "default"
+          },
+          "is_start": true,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 0
+        },
+        {
+          "pos": "2,1",
+          "stage_id": "s02a_tb3",
+          "rotation": 90,
+          "connections": {
+            "west": "2,0",
+            "north": "1,1",
+            "south": "3,1"
+          },
+          "portals": {
+            "west": "portal_1770695247101_m9zjn0us8",
+            "north": "portal_1771823444973_aynvd4nvh",
+            "south": "portal_1771823452955_ejvuqxk9k"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "north",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 1,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -4.4,
+                0,
+                16.8
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.1,
+                0,
+                10.7
+              ],
+              "enemy_id": "poison_lily"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.4,
+                0,
+                2.7
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.5,
+                0,
+                12.9
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.2,
+                0,
+                6
+              ],
+              "enemy_id": "pelcatraz",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.7,
+                0,
+                1.7
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Fern",
+                  "text": "I still can't believe hunters walk into places like this willingly."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "1,1",
+          "stage_id": "s02a_td2",
+          "rotation": 90,
+          "connections": {
+            "south": "2,1",
+            "north": "0,1",
+            "west": "1,0"
+          },
+          "portals": {
+            "south": "portal_1771823663750_e4su4kky8",
+            "north": "portal_1771823673405_g8oy6err7",
+            "west": "portal_1771823685691_nt6bxpfsj"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 3,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -2.4,
+                0,
+                4.8
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                8.9,
+                0,
+                3.4
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.8,
+                0,
+                -3.7
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.5,
+                0,
+                -6
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "box",
+              "position": [
+                -10.8,
+                0,
+                -13.3
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -7.6,
+                0,
+                -16
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "3,1",
+          "stage_id": "s02a_nc2",
+          "rotation": 180,
+          "connections": {
+            "north": "2,1"
+          },
+          "portals": {
+            "north": "portal_1770695202486_i6sg5336n"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "0,2",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 2,
+          "key_drop_position": [
+            13.1,
+            1,
+            0.1
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                9,
+                0,
+                0.5
+              ],
+              "enemy_id": "poison_lily"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3,
+                0,
+                14.4
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.2,
+                0,
+                11
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.2,
+                0,
+                13.5
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.3,
+                0,
+                -15.2
+              ],
+              "enemy_id": "hypao",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.6,
+                0,
+                -11.2
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.7,
+                0,
+                -13
+              ],
+              "enemy_id": "hypao",
+              "wave": 2
+            },
+            {
+              "type": "dialog_trigger",
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "size": [
+                1,
+                1,
+                1
+              ],
+              "trigger": "room_clear",
+              "dialog": [
+                {
+                  "speaker": "Fern",
+                  "text": "Every time I come out here I'm reminded why I can't do this alone."
+                },
+                {
+                  "speaker": "Fern",
+                  "text": "We've tried cultivating these in the city, but they won't take. The only option is to harvest them wild."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "0,1",
+          "stage_id": "s02a_tc3",
+          "rotation": 0,
+          "connections": {
+            "south": "1,1",
+            "east": "0,2",
+            "west": "0,0"
+          },
+          "portals": {
+            "south": "portal_1770695362080_6174xvg3e",
+            "east": "portal_1771823471659_ylt6dhirm",
+            "west": "portal_1771823478974_mad72pmho"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 4,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -2.9,
+                0,
+                3.2
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.2,
+                0,
+                -3.6
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                5.2,
+                0,
+                -3
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.7,
+                0,
+                2.2
+              ],
+              "enemy_id": "porel"
+            }
+          ]
+        },
+        {
+          "pos": "1,0",
+          "stage_id": "s02a_nb2",
+          "rotation": 270,
+          "connections": {
+            "east": "1,1"
+          },
+          "portals": {
+            "east": "portal_1770695186397_svb24gi87"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 10,
+          "objects": [
+            {
+              "type": "story_prop",
+              "position": [
+                -12.7,
+                0,
+                -8.9
+              ],
+              "prop_path": "assets/kenney_nature-pack/plant_bushDetailed.glb",
+              "no_collision": true
+            },
+            {
+              "type": "story_prop",
+              "position": [
+                6.3,
+                0,
+                -14.5
+              ],
+              "prop_path": "assets/kenney_nature-pack/flower_purpleA.glb",
+              "no_collision": true
+            },
+            {
+              "type": "quest_item",
+              "position": [
+                -13.1,
+                0,
+                -8.2
+              ],
+              "item_id": "moon_bloom",
+              "item_label": "Moon Bloom",
+              "dialog": [
+                {
+                  "speaker": "Fern",
+                  "text": "Moon Atomizers bring hunters back from the brink."
+                },
+                {
+                  "speaker": "Fern",
+                  "text": "Parties have been losing people because they can't restock."
+                }
+              ],
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "That's everything. Let's get out of here before more show up."
+                    },
+                    {
+                      "speaker": "Fern",
+                      "text": "Take care of yourself out there. I don't want to hear you ended up needing one of these."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.3,
+                0,
+                9.9
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.5,
+                0,
+                7.3
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.7,
+                0,
+                4.3
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -9.6,
+                0,
+                -10.4
+              ],
+              "enemy_id": "hypao",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -3.8,
+                0,
+                -12
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.4,
+                0,
+                -13.6
+              ],
+              "enemy_id": "hypao",
+              "wave": 2
+            },
+            {
+              "type": "box",
+              "position": [
+                -9.5,
+                0,
+                14.2
+              ]
+            },
+            {
+              "type": "box",
+              "position": [
+                -11.5,
+                0,
+                9.9
+              ]
+            }
+          ]
+        },
+        {
+          "pos": "0,2",
+          "stage_id": "s02a_ga1",
+          "rotation": 90,
+          "connections": {
+            "east": "0,3",
+            "west": "0,1"
+          },
+          "portals": {
+            "east": "portal_1770694163468_w6x5en6p1",
+            "west": "portal_1770694183466_bhd3dyy58"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "east",
+          "key_drop": "0,2",
+          "required_keys": 2,
+          "warp_edge": "",
+          "path_order": 5,
+          "key_drop_position": [
+            0.1,
+            1,
+            -6.5
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -3.4,
+                0,
+                2.9
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                0.8,
+                0,
+                -0.9
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.4,
+                0,
+                2.2
+              ],
+              "enemy_id": "pelcatraz"
+            }
+          ]
+        },
+        {
+          "pos": "0,0",
+          "stage_id": "s02a_nb2",
+          "rotation": 270,
+          "connections": {
+            "east": "0,1"
+          },
+          "portals": {
+            "east": "portal_1770695186397_svb24gi87"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 11,
+          "objects": [
+            {
+              "type": "story_prop",
+              "position": [
+                -14.2,
+                0,
+                -8.1
+              ],
+              "prop_path": "assets/kenney_nature-pack/tree_fat.glb"
+            },
+            {
+              "type": "story_prop",
+              "position": [
+                4.5,
+                0,
+                -13.5
+              ],
+              "prop_path": "assets/kenney_nature-pack/tree_detailed.glb"
+            },
+            {
+              "type": "quest_item",
+              "position": [
+                3.4,
+                0,
+                -13.4
+              ],
+              "item_id": "sol_leaf",
+              "item_label": "Sol Leaf",
+              "dialog": [
+                {
+                  "speaker": "Fern",
+                  "text": "Sol Atomizers cure most status effects. Poison, paralysis, confusion."
+                },
+                {
+                  "speaker": "Fern",
+                  "text": "Without them, a single sting can be fatal."
+                }
+              ],
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "That's everything. Let's get out of here before more show up."
+                    },
+                    {
+                      "speaker": "Fern",
+                      "text": "Take care of yourself out there. I don't want to hear you ended up needing one of these."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.8,
+                0,
+                10.5
+              ],
+              "enemy_id": "pelcatraz"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                2.9,
+                0,
+                9
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                9.3,
+                0,
+                5.2
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -10.1,
+                0,
+                -8.6
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.4,
+                0,
+                -10.8
+              ],
+              "enemy_id": "hypao",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.7,
+                0,
+                -12.1
+              ],
+              "enemy_id": "hypao",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "0,3",
+          "stage_id": "s02a_lc2",
+          "rotation": 180,
+          "connections": {
+            "south": "1,3",
+            "west": "0,2"
+          },
+          "portals": {
+            "south": "portal_1770695126921_s96ga4o8b",
+            "west": "portal_1771823299886_igxz0w3zl"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 6,
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                14.5,
+                0,
+                2.3
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.6,
+                0,
+                0.3
+              ],
+              "enemy_id": "rappy"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                14.8,
+                0,
+                -3.5
+              ],
+              "enemy_id": "rappy"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.2,
+                0,
+                14.8
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -0.5,
+                0,
+                10.7
+              ],
+              "enemy_id": "rappy",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                1.2,
+                0,
+                15.3
+              ],
+              "enemy_id": "rappy",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -15.3,
+                0,
+                0.1
+              ],
+              "enemy_id": "porel",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.9,
+                0,
+                -2.6
+              ],
+              "enemy_id": "pelcatraz",
+              "wave": 3
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.6,
+                0,
+                2.5
+              ],
+              "enemy_id": "hypao",
+              "wave": 3
+            }
+          ]
+        },
+        {
+          "pos": "1,3",
+          "stage_id": "s02a_td1",
+          "rotation": 270,
+          "connections": {
+            "east": "1,4",
+            "north": "0,3",
+            "south": "2,3"
+          },
+          "portals": {
+            "east": "portal_1770695441450_vb2laorp2",
+            "north": "portal_1771823520947_jywvzs3ku",
+            "south": "portal_1771823532445_ateg9d8js"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": true,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": true,
+          "key_gate_direction": "south",
+          "key_drop": "",
+          "required_keys": 1,
+          "warp_edge": "",
+          "path_order": 8,
+          "objects": [
+            {
+              "type": "fence",
+              "position": [
+                7.8,
+                0,
+                -14.3
+              ],
+              "rotation": 90,
+              "link_id": "a"
+            },
+            {
+              "type": "step_switch",
+              "position": [
+                -8.4,
+                0,
+                13.4
+              ],
+              "link_id": "a"
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                2.9,
+                0,
+                -13.5
+              ]
+            },
+            {
+              "type": "rare_box",
+              "position": [
+                3.5,
+                0,
+                -16.5
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.5,
+                0,
+                0.6
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -11.8,
+                0,
+                -7.1
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.3,
+                0,
+                1.7
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -4.3,
+                0,
+                -6.2
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.6,
+                0,
+                11.6
+              ],
+              "enemy_id": "rappy",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                10.3,
+                0,
+                6.4
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                11.2,
+                0,
+                13
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            }
+          ]
+        },
+        {
+          "pos": "1,4",
+          "stage_id": "s02a_na1",
+          "rotation": 90,
+          "connections": {
+            "west": "1,3"
+          },
+          "portals": {
+            "west": "portal_1770695165920_u1whbwviy"
+          },
+          "is_start": false,
+          "is_end": false,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "1,3",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 7,
+          "key_drop_position": [
+            -0.1,
+            1,
+            1.4
+          ],
+          "objects": [
+            {
+              "type": "enemy",
+              "position": [
+                -5.4,
+                0,
+                6
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -5.4,
+                0,
+                -4.3
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.7,
+                0,
+                -3.7
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                4.6,
+                0,
+                5.1
+              ],
+              "enemy_id": "porel"
+            }
+          ]
+        },
+        {
+          "pos": "2,3",
+          "stage_id": "s02a_nb2",
+          "rotation": 180,
+          "connections": {
+            "north": "1,3"
+          },
+          "portals": {
+            "north": "portal_1770695186397_svb24gi87"
+          },
+          "is_start": false,
+          "is_end": true,
+          "is_branch": false,
+          "has_key": false,
+          "key_for_cell": "",
+          "is_key_gate": false,
+          "key_gate_direction": "",
+          "key_drop": "",
+          "required_keys": 0,
+          "warp_edge": "",
+          "path_order": 9,
+          "objects": [
+            {
+              "type": "story_prop",
+              "position": [
+                -12.6,
+                0,
+                -7.8
+              ],
+              "prop_path": "assets/kenney_nature-pack/grass_leafs.glb",
+              "no_collision": true
+            },
+            {
+              "type": "story_prop",
+              "position": [
+                4.2,
+                0,
+                -13.2
+              ],
+              "prop_path": "assets/kenney_nature-pack/tree_oak_fall.glb"
+            },
+            {
+              "type": "quest_item",
+              "position": [
+                2.7,
+                0,
+                -12
+              ],
+              "item_id": "star_husk",
+              "item_label": "Star Husk",
+              "dialog": [
+                {
+                  "speaker": "Fern",
+                  "text": "Star Atomizers heal the whole party — the backup for groups without a Force who can cast Resta."
+                },
+                {
+                  "speaker": "Fern",
+                  "text": "They're always in demand."
+                }
+              ],
+              "remaining_dialog": [
+                {
+                  "condition": {
+                    "collected": 1
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "We still need a {remaining_items}."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 2
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "Just the {remaining_items} left."
+                    }
+                  ]
+                },
+                {
+                  "condition": {
+                    "collected": 3
+                  },
+                  "dialog": [
+                    {
+                      "speaker": "Fern",
+                      "text": "That's everything. Let's get out of here before more show up."
+                    },
+                    {
+                      "speaker": "Fern",
+                      "text": "Take care of yourself out there. I don't want to hear you ended up needing one of these."
+                    }
+                  ],
+                  "actions": [
+                    "dismiss_companion",
+                    "complete_quest",
+                    "telepipe"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -1.9,
+                0,
+                9.9
+              ],
+              "enemy_id": "rappy"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                6.3,
+                0,
+                7.4
+              ],
+              "enemy_id": "porel"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                12,
+                0,
+                5.3
+              ],
+              "enemy_id": "hypao"
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -12.7,
+                0,
+                -7
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -6.7,
+                0,
+                -9.4
+              ],
+              "enemy_id": "rappy",
+              "wave": 2
+            },
+            {
+              "type": "enemy",
+              "position": [
+                -2.4,
+                0,
+                -11.6
+              ],
+              "enemy_id": "porel",
+              "wave": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "companions": [
+    "fern"
+  ],
+  "office_npcs": [
+    {
+      "npc_id": "fern",
+      "npc_name": "Fern",
+      "office_position": "pos_1"
+    }
+  ],
+  "briefing_dialog": [
+    {
+      "speaker": "Principal",
+      "text": "We've received a supply request from the item shop. Their stock of healing atomizers is critically low."
+    },
+    {
+      "speaker": "Principal",
+      "text": "This is Fern. An herbalist who supplies the raw materials. She'll explain the situation."
+    },
+    {
+      "speaker": "Fern",
+      "text": "The wetlands used to be safe enough to harvest alone, but lately the creatures have become more aggressive."
+    },
+    {
+      "speaker": "Fern",
+      "text": "Without fresh herbs, the shop can't synthesize atomizers. And without atomizers, fewer hunters can take missions safely."
+    },
+    {
+      "speaker": "Fern",
+      "text": "It's a vicious cycle. The longer we wait, the worse it gets."
+    },
+    {
+      "speaker": "Principal",
+      "text": "We need you to escort Fern into the wetlands so she can collect what she needs: Sol Leaves, Moon Blooms, and Star Husks."
+    },
+    {
+      "speaker": "Fern",
+      "text": "I know exactly where they grow. Just keep the creatures off me and I'll handle the rest."
+    }
+  ],
+  "objectives": [
+    {
+      "item_id": "star_husk",
+      "label": "Star Husk",
+      "target": 1
+    },
+    {
+      "item_id": "moon_bloom",
+      "label": "Moon Bloom",
+      "target": 1
+    },
+    {
+      "item_id": "sol_leaf",
+      "label": "Sol Leaf",
+      "target": 1
+    }
+  ],
+  "parent_quest": "search_and_rescue"
+}

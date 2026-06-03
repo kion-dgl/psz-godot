@@ -1,0 +1,38 @@
+{
+  "stageId": "s01a_ib1",
+  "shape": "2-portal diamond arena (N + S gates) with triple cross-bridge",
+  "description": "Two-portal stage where the north and south entry hubs (1luq6b + cqydkj) each fan into THREE shared interior anchors (east, center, west). That gives three alternative N↔S routes through the room — east diagonal (7a9rbq), center (wpfiyj), or west arc (wgl08n). Clean diamond topology with no dead-ends.",
+  "portals": {
+    "north": "spawn_north at (-17.01, -23.92) — gate on the north (low-Z) side, west column",
+    "south": "spawn_south at (14.05, 23.10) — gate on the south (high-Z) side, east column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-17.01, 0, -23.92], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [14.05,  0,  23.10], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [-17.17, 0, -15.44], "description": "north entry hub - 3-way dispatcher (matches 1luq6b)" },
+    { "id": "south_inner", "position": [14.14,  0,  16.04], "description": "south entry hub - 3-way dispatcher (matches cqydkj)" },
+
+    { "id": "east_diag",   "position": [11.48,  0, -11.66], "description": "east diagonal bridge (matches 7a9rbq)" },
+    { "id": "center",      "position": [-2.79,  0,  -2.13], "description": "center bridge (matches wpfiyj)" },
+    { "id": "west_arc",    "position": [-16.37, 0,  14.48], "description": "west arc bridge (matches wgl08n)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+
+    ["north_inner", "east_diag"],
+    ["north_inner", "center"],
+    ["north_inner", "west_arc"],
+
+    ["south_inner", "east_diag"],
+    ["south_inner", "center"],
+    ["south_inner", "west_arc"]
+  ],
+  "traversalNotes": [
+    "Three direct N↔S routes (each 4 hops): east_diag, center, or west_arc.",
+    "DISPATCH RULE: both entry hubs reach all three bridges in 1 hop. BFS picks the shortest path to the objective.",
+    "No dead-ends — every anchor is on the backbone."
+  ]
+}

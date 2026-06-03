@@ -1,0 +1,61 @@
+{
+  "stageId": "s05b_ic3",
+  "shape": "2-portal arena (N + S gates) with central super-hub + east column + west wall + south detour cluster",
+  "description": "Two-portal arena. NORTH ENTRY HUB (fiizr7 at (-10.35, -16.70), 5-way) joins spawn_north plus 4 spread anchors. CENTER super-hub (tizlf2 at (-14.50, 3.99), 4-way) joins west wall + north-arc detour cluster (ry37j6 + osa223 + l96tum + t1mdid). SE COLUMN: south_inner (8x6jjl) → 46ot9b → 39uzld → howytl (east column dead-end pocket). SOUTH bridge (afn0i2 → t1mdid → center).",
+  "portals": {
+    "north": "spawn_north at (-10.83, -23.37) — gate on the north (low-Z) side",
+    "south": "spawn_south at (16.02, 17.88) — gate on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [-10.83, 0, -23.37], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "south_gate",  "position": [16.02,  0,  17.88], "description": "south portal (matches wp_spawn_1)" },
+
+    { "id": "south_inner", "position": [17.25,  0,   8.79], "description": "south entry step (matches 8x6jjl)" },
+    { "id": "e_col_mid",   "position": [18.82,  0,   2.96], "description": "east column mid (matches 46ot9b)" },
+    { "id": "e_col_low",   "position": [16.90,  0,  -5.81], "description": "east column lower (matches 39uzld)" },
+    { "id": "se_pocket",   "position": [17.47,  0, -15.47], "description": "SE pocket (matches howytl)" },
+
+    { "id": "south_c",     "position": [4.12,   0, -14.13], "description": "south-center (matches l96tum)" },
+    { "id": "south_d",     "position": [-4.72,  0, -10.26], "description": "south detour (matches osa223)" },
+    { "id": "south_w",     "position": [-16.99, 0,  -7.56], "description": "south-west (matches ry37j6)" },
+
+    { "id": "center",      "position": [-14.50, 0,   3.99], "description": "center 4-way bridge (matches tizlf2)" },
+    { "id": "n_arc",       "position": [-7.08,  0,   9.03], "description": "north arc step (matches t1mdid)" },
+    { "id": "n_pocket",    "position": [-2.26,  0,  15.08], "description": "N pocket dead-end (matches afn0i2)" },
+
+    { "id": "north_inner", "position": [-10.35, 0, -16.70], "description": "north entry super-hub - 5-way (matches fiizr7)" },
+    { "id": "s_bridge",    "position": [3.30,   0,  -3.44], "description": "south-bridge 3-way (matches 2331sp)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["south_gate", "south_inner"],
+
+    ["south_inner", "e_col_mid"],
+    ["e_col_mid", "e_col_low"],
+    ["e_col_low", "se_pocket"],
+    ["se_pocket", "north_inner"],
+
+    ["north_inner", "south_w"],
+    ["north_inner", "south_d"],
+    ["north_inner", "south_c"],
+
+    ["center", "south_w"],
+    ["center", "south_d"],
+    ["center", "south_c"],
+    ["center", "n_arc"],
+
+    ["n_arc", "n_pocket"],
+
+    ["s_bridge", "south_d"],
+    ["s_bridge", "south_c"],
+    ["s_bridge", "se_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct N→S: spawn_north → north_inner → se_pocket → e_col_low → e_col_mid → south_inner → spawn_south. 6 hops via the east column.",
+    "Alt N→S via center: spawn_north → north_inner → south_w (or south_d, south_c) → center → n_arc → ... (no direct path to south_inner from center).",
+    "DISPATCH RULE: north_inner is the 5-way north dispatcher; center is the 4-way west-side dispatcher; se_pocket is a 2-way bridge between north_inner and east column.",
+    "n_pocket is a 1-degree dead-end off n_arc.",
+    "s_bridge (2331sp) is a 3-way detour anchor near center."
+  ]
+}

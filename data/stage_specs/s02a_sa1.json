@@ -1,0 +1,20 @@
+{
+  "stageId": "s02a_sa1",
+  "shape": "Quest-start dead-end (south gate + default spawn)",
+  "description": "Same quest-start primitive as paru-A sa1: tiny dead-end stub used as the quest's start cell. South portal at the gate, default spawn just inside where the player materializes on first entry. Autopilot ultimately leaves through load_south.",
+  "portals": {
+    "south": "spawn_south at (-0.03, 6.73) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-0.03, 0,  6.73], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "quest_start", "position": [0.09,  0, -3.64], "description": "default spawn — player materializes here on quest start (matches wp_spawn_default)" }
+  ],
+  "anchorEdges": [
+    ["quest_start", "south_gate"]
+  ],
+  "traversalNotes": [
+    "Quest-start cell: on first entry the player materializes at quest_start, walks south to south_gate to exit. On re-entry via the portal, same exit path.",
+    "Same primitive as paru-A sa1."
+  ]
+}

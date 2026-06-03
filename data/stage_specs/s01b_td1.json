@@ -1,0 +1,66 @@
+{
+  "stageId": "s01b_td1",
+  "shape": "3-portal sprawling arena (S + W + E gates) with center super-hub + west cluster",
+  "description": "Three-portal arena. WEST CLUSTER (b4xepb west entry + 4dez0q + 31my8e + an0qy3) — 4-anchor clique at the west gate. CENTER super-hub (vejxsa, 5-way) reaches west chain (31my8e), south (atnngx, kevqow), south_inner (xzm7l9), and ksqmwe (NE bridge). South entry hub (xzm7l9) is 4-way (spawn_south + center + atnngx + kevqow + x4g2xv east). EAST CHAIN: ksqmwe → v1rib2 → s53ruq (east entry) → s4yqzh → 28p7by (S pocket chain).",
+  "portals": {
+    "south": "spawn_south at (11.14, 20.44) — gate on the south (high-Z) side, east column",
+    "west":  "spawn_west at (-23.16, 7.13) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.03, -12.85) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [11.14,  0,  20.44], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "west_gate",   "position": [-23.16, 0,   7.13], "description": "west portal (matches wp_spawn_1)" },
+    { "id": "east_gate",   "position": [23.03,  0, -12.85], "description": "east portal (matches wp_spawn_2)" },
+
+    { "id": "west_inner",  "position": [-15.34, 0,   7.11], "description": "west entry hub - 4-way (matches b4xepb)" },
+    { "id": "west_n",      "position": [-10.41, 0,   6.71], "description": "west cluster N (matches 4dez0q)" },
+    { "id": "west_s",      "position": [-11.87, 0,   1.30], "description": "west cluster S - bridge to center (matches 31my8e)" },
+    { "id": "west_nw",     "position": [-11.91, 0,  14.93], "description": "west cluster NW (matches an0qy3)" },
+
+    { "id": "center",      "position": [-0.66,  0,   0.08], "description": "center super-hub - 5-way (matches vejxsa)" },
+    { "id": "c_se",        "position": [-2.80,  0,  -6.53], "description": "center-SE step (matches ksqmwe)" },
+    { "id": "c_n",         "position": [2.50,   0,  12.18], "description": "center-N (matches kevqow)" },
+    { "id": "c_e",         "position": [5.33,   0,   8.05], "description": "center-E step (matches atnngx)" },
+
+    { "id": "south_inner", "position": [11.79,  0,  13.01], "description": "south entry hub - 4-way (matches xzm7l9)" },
+    { "id": "e_anchor",    "position": [16.42,  0,   8.44], "description": "east anchor - corner (matches x4g2xv)" },
+
+    { "id": "e_step",      "position": [4.53,   0,  -8.86], "description": "east-mid step (matches v1rib2)" },
+    { "id": "east_inner",  "position": [16.82,  0, -13.07], "description": "east entry hub (matches s53ruq)" },
+    { "id": "s_pocket_a",  "position": [13.23,  0, -20.91], "description": "south pocket A (matches s4yqzh)" },
+    { "id": "s_pocket_b",  "position": [6.54,   0, -22.06], "description": "south pocket B (matches 28p7by)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_inner"],
+    ["east_gate", "east_inner"],
+
+    ["west_inner", "west_n"],
+    ["west_inner", "west_s"],
+    ["west_inner", "west_nw"],
+    ["west_s", "center"],
+
+    ["center", "c_se"],
+    ["center", "c_n"],
+    ["center", "c_e"],
+    ["center", "south_inner"],
+
+    ["south_inner", "c_n"],
+    ["south_inner", "c_e"],
+    ["south_inner", "e_anchor"],
+
+    ["c_se", "e_step"],
+    ["e_step", "east_inner"],
+    ["east_inner", "s_pocket_a"],
+    ["s_pocket_a", "s_pocket_b"]
+  ],
+  "traversalNotes": [
+    "Direct W→S: spawn_west → west_inner → west_s → center → south_inner → spawn_south. 5 hops.",
+    "Direct W→E: spawn_west → west_inner → west_s → center → c_se → e_step → east_inner → spawn_east. 7 hops.",
+    "Direct S→E: spawn_south → south_inner → center → c_se → e_step → east_inner → spawn_east. 6 hops.",
+    "DISPATCH: center (vejxsa) is the canonical 5-way router; west_inner is the 4-way west cluster dispatcher; south_inner is the 4-way south clique.",
+    "S pocket chain (s_pocket_a → s_pocket_b) is a 2-hop dead-end off east_inner — corner objective.",
+    "e_anchor is a 1-degree dead-end off south_inner (NE corner)."
+  ]
+}

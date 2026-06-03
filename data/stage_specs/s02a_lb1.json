@@ -1,0 +1,44 @@
+{
+  "stageId": "s02a_lb1",
+  "shape": "Square arena with twin entry hubs (N+E gates)",
+  "description": "Same twin-hub-arena primitive as wetlands-A ib1, but with portals on PERPENDICULAR sides (north + east) instead of opposite sides. Each gate has its own entry hub (north_inner, east_inner) and both hubs fully connect to the same 5 detour anchors (4 corners + center). The hubs DON'T directly link — N↔E transit always passes through one of the shared anchors.",
+  "portals": {
+    "north": "spawn_north at (-5.99, -25.59) — gate on the north (low-Z) side",
+    "east":  "spawn_east at (25.30, 5.97) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",   "position": [-5.99,  0, -25.59], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",    "position": [25.30,  0,   5.97], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner",  "position": [-5.65,  0, -17.10], "description": "north entry hub (matches 1dgi5q)" },
+    { "id": "east_inner",   "position": [17.60,  0,   5.67], "description": "east entry hub (matches uwlxw8)" },
+
+    { "id": "arena_center", "position": [-0.03,  0,   0.23], "description": "geometric center anchor (matches ao9a8e)" },
+    { "id": "south_center", "position": [-0.05,  0,  15.20], "description": "south-center corner / detour (matches fxytzn)" },
+    { "id": "ne_corner",    "position": [11.87,  0, -13.87], "description": "NE corner detour (matches kxgwo3)" },
+    { "id": "nw_corner",    "position": [-15.19, 0,  -6.09], "description": "NW corner detour (matches h2aq9a)" },
+    { "id": "sw_corner",    "position": [-13.02, 0,  11.55], "description": "SW corner detour (matches nfj7yp)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["east_gate", "east_inner"],
+
+    ["north_inner", "arena_center"],
+    ["north_inner", "south_center"],
+    ["north_inner", "ne_corner"],
+    ["north_inner", "nw_corner"],
+    ["north_inner", "sw_corner"],
+
+    ["east_inner", "arena_center"],
+    ["east_inner", "south_center"],
+    ["east_inner", "ne_corner"],
+    ["east_inner", "nw_corner"],
+    ["east_inner", "sw_corner"]
+  ],
+  "traversalNotes": [
+    "Direct N↔E: spawn_north → north_inner → arena_center → east_inner → spawn_east. Four hops (L-route through center).",
+    "DISPATCH RULE: same as wetlands-A ib1 — corner objectives route via the entering side's inner hub. Both hubs reach all 5 detour anchors, so the entering-side dispatch is always the shortest.",
+    "Same primitive as wetlands-A ib1 (twin entry hubs) but with N+E gates instead of N+S. Note the 5 detour anchors here (center + south_center + 3 corners — NE is missing) reflect the actual room layout being not-quite-symmetric."
+  ]
+}

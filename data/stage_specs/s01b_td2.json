@@ -1,0 +1,63 @@
+{
+  "stageId": "s01b_td2",
+  "shape": "3-portal split arena (S + W + E gates) with west bridge + east clique",
+  "description": "Three-portal arena. q3d634 (-14.18, -2.61) is a 3-way west-side hub joining spawn_west + spawn_south + iihsqx (center-NW bridge). The south arm continues iihsqx → 847i5j → s6uuf1 (SW pocket chain). d4m28c bridges iihsqx to 5jwl0u (4-way south hub: grb3mx, z20krf, 98d296). The EAST CLIQUE: 98d296 → dxglkt (east entry, 3-way) → 68ahcv → r7qbex → xgayf3 (NE pocket chain).",
+  "portals": {
+    "south": "spawn_south at (-13.36, 9.89) — gate on the south (high-Z) side, west column",
+    "east":  "spawn_east at (22.97, 5.45) — gate on the east (high-X) side",
+    "west":  "spawn_west at (-23.39, -2.77) — gate on the west (low-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-13.36, 0,   9.89], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [22.97,  0,   5.45], "description": "east portal (matches wp_spawn_1)" },
+    { "id": "west_gate",   "position": [-23.39, 0,  -2.77], "description": "west portal (matches wp_spawn_2)" },
+
+    { "id": "w_hub",       "position": [-14.18, 0,  -2.61], "description": "west 3-way hub - joins S + W gates (matches q3d634)" },
+    { "id": "c_nw",        "position": [-6.56,  0,  -5.02], "description": "center-NW bridge (matches iihsqx)" },
+    { "id": "c_n",         "position": [-0.85,  0,   1.75], "description": "center-N bridge - links c_nw to south hub (matches d4m28c)" },
+
+    { "id": "sw_step",     "position": [-6.86,  0, -17.26], "description": "SW pocket step (matches 847i5j)" },
+    { "id": "sw_pocket",   "position": [-16.10, 0, -19.26], "description": "SW pocket dead-end (matches s6uuf1)" },
+
+    { "id": "s_hub",       "position": [4.45,   0,   3.73], "description": "south 4-way hub (matches 5jwl0u)" },
+    { "id": "s_pocket",    "position": [4.97,   0,  -8.12], "description": "south pocket (matches grb3mx)" },
+    { "id": "se_pocket",   "position": [12.06,  0,  -6.23], "description": "SE pocket (matches z20krf)" },
+    { "id": "se_anchor",   "position": [9.22,   0,   6.52], "description": "SE anchor - bridge to east (matches 98d296)" },
+
+    { "id": "east_inner",  "position": [15.66,  0,   6.69], "description": "east entry hub - 3-way (matches dxglkt)" },
+    { "id": "ne_step",     "position": [15.97,  0,  13.06], "description": "NE step (matches 68ahcv)" },
+    { "id": "n_anchor",    "position": [11.99,  0,  18.68], "description": "north anchor (matches r7qbex)" },
+    { "id": "n_pocket",    "position": [6.45,   0,  19.92], "description": "N pocket dead-end (matches xgayf3)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "w_hub"],
+    ["west_gate", "w_hub"],
+    ["east_gate", "east_inner"],
+
+    ["w_hub", "c_nw"],
+
+    ["c_nw", "sw_step"],
+    ["sw_step", "sw_pocket"],
+    ["c_nw", "c_n"],
+
+    ["c_n", "s_hub"],
+    ["s_hub", "s_pocket"],
+    ["s_hub", "se_pocket"],
+    ["s_hub", "se_anchor"],
+
+    ["se_anchor", "east_inner"],
+    ["east_inner", "ne_step"],
+    ["ne_step", "n_anchor"],
+    ["n_anchor", "n_pocket"]
+  ],
+  "traversalNotes": [
+    "Direct W→S: spawn_west → w_hub → spawn_south. 2 hops (w_hub directly connects both gates).",
+    "Direct W→E: spawn_west → w_hub → c_nw → c_n → s_hub → se_anchor → east_inner → spawn_east. 7 hops.",
+    "Direct S→E: spawn_south → w_hub → c_nw → c_n → s_hub → se_anchor → east_inner → spawn_east. 7 hops.",
+    "STRICT-BACKBONE: single chain from west half to east half through c_nw → c_n → s_hub. No alternate routes.",
+    "SW pocket chain (sw_step → sw_pocket) is a 2-hop dead-end off c_nw.",
+    "N pocket chain (ne_step → n_anchor → n_pocket) is a 3-hop NE dead-end off east_inner.",
+    "s_pocket and se_pocket are 1-degree dead-ends off s_hub."
+  ]
+}

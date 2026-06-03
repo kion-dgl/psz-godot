@@ -1,0 +1,50 @@
+{
+  "stageId": "s02a_nc2",
+  "shape": "Dead-end horseshoe wrap (single south gate)",
+  "description": "Single-portal dead-end room where the floor wraps counterclockwise from the south entry around the room's perimeter: south → west → north → east, with detour pockets at the corners. After exploring, the autopilot returns the way it came.",
+  "portals": {
+    "south": "spawn_south at (0.03, 23.37) — the only portal, on the south (high-Z) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [0.03,  0,  23.37], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "south_inner", "position": [0.48,  0,  17.13], "description": "south entry hub (matches 7ffz58)" },
+    { "id": "south_bay",   "position": [2.50,  0,  10.47], "description": "south-bay anchor (matches spbnrg)" },
+
+    { "id": "s_w_inner",   "position": [-4.90, 0,   8.36], "description": "south-west inner staging (matches a2xwkn)" },
+    { "id": "west_arm",    "position": [-8.26, 0,   5.07], "description": "west arm bend (matches xyf5rk)" },
+    { "id": "west_far",    "position": [-17.73,0,  -0.17], "description": "far-west dead-end pocket (matches guxplc)" },
+    { "id": "nw_inner",    "position": [-8.36, 0,  -5.01], "description": "NW inner (matches hj1pik)" },
+
+    { "id": "north_inner", "position": [-5.45, 0,  -8.37], "description": "north-inner staging (matches tgvftp)" },
+    { "id": "north_pocket","position": [-0.34, 0, -17.52], "description": "north dead-end pocket (matches jqmmlk)" },
+    { "id": "ne_inner",    "position": [4.89,  0,  -8.42], "description": "NE inner staging (matches jaws28)" },
+
+    { "id": "east_inner",  "position": [8.05,  0,  -5.48], "description": "east-inner staging (matches b1wplf)" },
+    { "id": "east_far",    "position": [13.53, 0,  -0.22], "description": "east dead-end pocket (matches zjfolj)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["south_inner", "south_bay"],
+    ["south_inner", "s_w_inner"],
+    ["south_bay", "s_w_inner"],
+
+    ["s_w_inner", "west_arm"],
+    ["west_arm", "west_far"],
+    ["west_arm", "nw_inner"],
+    ["nw_inner", "west_far"],
+    ["nw_inner", "north_inner"],
+
+    ["north_inner", "ne_inner"],
+    ["north_inner", "north_pocket"],
+    ["ne_inner", "north_pocket"],
+    ["ne_inner", "east_inner"],
+    ["east_inner", "east_far"]
+  ],
+  "traversalNotes": [
+    "DEAD-END horseshoe wrap. After kill_all / objective sequence, return to spawn_south.",
+    "Walk path (counterclockwise from entry): south_inner → s_w_inner → west_arm → nw_inner → north_inner → ne_inner → east_inner.",
+    "THREE DEAD-END POCKETS (west_far, north_pocket, east_far) likely host objectives — dispatch via the nearest backbone anchor.",
+    "Same primitive family as dead-end with sub-zones (na1, nb2) but with the floor explicitly wrapping the perimeter rather than splitting into discrete zones."
+  ]
+}

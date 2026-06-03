@@ -1,0 +1,56 @@
+{
+  "stageId": "s02a_lc1",
+  "shape": "C-wrap (long west-around corridor + east dead-end pocket, N+E gates)",
+  "description": "C-shaped wrap-around corridor. The north portal enters at top-center; the east portal sits in the SE area. To get between them you walk a long counterclockwise wrap: down through center, west across, north up the west wall, east across the south wall, then to the east portal. A short east-side dead-end pocket branches off the north entry zone (rx1d3q / 4i52v5 / guxif9 / cbxvqm) — likely a combat or objective bay.",
+  "portals": {
+    "north": "spawn_north at (1.13, -23.41) — gate on the north (low-Z) side, center X",
+    "east":  "spawn_east at (10.66, 19.22) — gate on the east side of the south arm"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "north_gate",  "position": [1.13,   0, -23.41], "description": "north portal (matches wp_spawn_0)" },
+    { "id": "east_gate",   "position": [10.66,  0,  19.22], "description": "east portal (matches wp_spawn_1)" },
+
+    { "id": "north_inner", "position": [1.13,   0, -15.73], "description": "north entry staging (matches rx1d3q)" },
+    { "id": "center",      "position": [1.14,   0,  -0.31], "description": "center pivot — branches into the east pocket and the long west wrap (matches 4i52v5)" },
+
+    { "id": "east_pocket_n","position": [7.73,  0,  -6.02], "description": "east pocket north-side (matches cbxvqm)" },
+    { "id": "east_pocket_e","position": [15.72, 0,   0.49], "description": "east pocket far-east — dead-end (matches guxif9)" },
+
+    { "id": "west_arm_s",  "position": [-9.90,  0,   0.99], "description": "west arm south end, just west of center (matches m8a9qc)" },
+    { "id": "west_arm_w",  "position": [-13.65, 0,   4.57], "description": "west arm SW corner / further along (matches o711um)" },
+    { "id": "west_arm_n",  "position": [-13.79, 0,  13.62], "description": "west arm north corner — bend back east along the south (matches re9ym3)" },
+    { "id": "sw_corner",   "position": [-10.43, 0,  18.24], "description": "south arm west end (matches qrm4z5)" },
+    { "id": "south_arm_w", "position": [-6.61,  0,  18.41], "description": "south arm west-center hub (matches isg5g3)" },
+    { "id": "south_arm_e", "position": [5.06,   0,  18.80], "description": "south arm east-center, joins east_gate (matches hms0ec)" },
+    { "id": "south_arm_c", "position": [-0.38,  0,  14.31], "description": "south arm center detour (matches qi4181)" },
+    { "id": "south_arm_sb","position": [-0.10,  0,  21.95], "description": "south arm south-bulge detour (matches hhpyjw)" }
+  ],
+  "anchorEdges": [
+    ["north_gate", "north_inner"],
+    ["north_inner", "east_pocket_n"],
+    ["north_inner", "center"],
+    ["center", "east_pocket_n"],
+    ["center", "east_pocket_e"],
+    ["center", "west_arm_s"],
+    ["east_pocket_n", "east_pocket_e"],
+
+    ["west_arm_s", "west_arm_w"],
+    ["west_arm_w", "west_arm_n"],
+    ["west_arm_n", "sw_corner"],
+    ["sw_corner", "south_arm_w"],
+    ["south_arm_w", "south_arm_c"],
+    ["south_arm_w", "south_arm_sb"],
+    ["south_arm_w", "south_arm_e"],
+    ["south_arm_e", "south_arm_c"],
+    ["south_arm_e", "south_arm_sb"],
+    ["south_arm_e", "east_gate"]
+  ],
+  "traversalNotes": [
+    "Direct N→E: spawn_north → north_inner → center → west_arm_s → west_arm_w → west_arm_n → sw_corner → south_arm_w → south_arm_e → spawn_east. NINE hops — the room wraps counterclockwise around an interior void.",
+    "EAST POCKET (east_pocket_n + east_pocket_e + center) is a dead-end side area branching off north_inner / center. Reach via center → east_pocket_n → east_pocket_e → reverse. The pocket is NOT a shortcut to east_gate — there's no walkable link from east_pocket_e to the south arm.",
+    "SOUTH-ARM CLIQUE: south_arm_w, south_arm_e, south_arm_c, south_arm_sb form a small clique covering the south arm where east_gate lives. Objectives in the south arm route via south_arm_w or south_arm_e.",
+    "STRICT-BACKBONE on the west wrap (west_arm_s → west_arm_w → west_arm_n → sw_corner): single-file corridor segments. Don't emit cross-wrap shortcuts.",
+    "Stages are never physically rotated — all positions are stage-local mesh-space XZ."
+  ]
+}

@@ -11,7 +11,17 @@ const doneCount = steps.filter((s) => s.status === 'done').length;
 // scripts/tools/autoplay/record_boot.sh and record_first_mission.sh, each
 // producing <phase>_<timestamp>.mp4 + <phase>_<timestamp>.json (the sidecar
 // the run-matrix below reads for pass/fail). Served by Astro at /recordings/.
-type Phase = 'boot' | 'first-mission';
+type Phase =
+  | 'boot'
+  | 'first-mission'
+  | 'the-paru-pact'
+  | 'apothecary-supply'
+  | 'finding-ogi'
+  | 'investigate-tower'
+  | 'heretic'
+  | 'control-system'
+  | 'the-broken-seal'
+  | 'dark-castle';
 type Status = 'pass' | 'fail' | 'unknown';
 interface Clip {
   filename: string;
@@ -28,16 +38,38 @@ interface Run {
   clips: Partial<Record<Phase, Clip>>;
 }
 
-// Order phases left-to-right in the table; add new entries as quests come
-// online. Future: { key: 'second-mission', label: 'Quest 2' } etc.
+// Order phases left-to-right in the table — match the CORE STORY SPINE
+// from /states/story-progression: only the required quests on the parent
+// chain from Search and Rescue to Dark Castle (the spine that gates the
+// credits roll). Side quests (Native Research, Poisoned Water, Deep Ore
+// Extraction, Claiming a Stake, Static in the Snow, Messages from the
+// Past, Seek My Mentor) are intentionally excluded from the autopilot
+// run-matrix — they're optional content and don't need to be regression-
+// tested on every release.
 const PHASES: Array<{ key: Phase; label: string }> = [
-  { key: 'boot', label: 'Onboarding' },
-  { key: 'first-mission', label: 'Search and Rescue' },
+  { key: 'boot',                  label: 'Onboarding' },
+  { key: 'first-mission',         label: 'Search and Rescue' },
+  { key: 'the-paru-pact',         label: 'The Paru Pact' },
+  { key: 'apothecary-supply',     label: "Apothecary's Supply" },
+  { key: 'finding-ogi',           label: 'Finding Ogi' },
+  { key: 'investigate-tower',     label: 'Investigate Tower' },
+  { key: 'heretic',               label: 'Heretic' },
+  { key: 'control-system',        label: 'Control System' },
+  { key: 'the-broken-seal',       label: 'The Broken Seal' },
+  { key: 'dark-castle',           label: 'Dark Castle' },
 ];
 
 const PHASE_PREFIX: Record<Phase, string> = {
-  'boot': 'boot_',
-  'first-mission': 'first_mission_',
+  'boot':                  'boot_',
+  'first-mission':         'first_mission_',
+  'the-paru-pact':         'the_paru_pact_',
+  'apothecary-supply':     'apothecary_supply_',
+  'finding-ogi':           'finding_ogi_',
+  'investigate-tower':     'investigate_tower_',
+  'heretic':               'heretic_',
+  'control-system':        'control_system_',
+  'the-broken-seal':       'the_broken_seal_',
+  'dark-castle':           'dark_castle_',
 };
 
 function parseTimestamp(ts: string): Date | null {

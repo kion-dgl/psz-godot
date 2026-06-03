@@ -1,0 +1,42 @@
+{
+  "stageId": "s05e_ia1",
+  "shape": "Transition cell (single-room section bridge, N + S portals) with twin 4-way hubs",
+  "description": "Single-cell transition room bridging two grid sections of a quest. The autopilot enters via spawn_south (from the prior section's grid) and must exit via spawn_north — the NORTH portal IS the section-warp to the next grid. The quest plan flags this cell `type: 'transition'` and sets `warpEdge: 'south'` (the entry side); the autopilot must walk to the OPPOSITE portal to fire the section warp. Two 4-way hubs (south_hub + east_bridge) give multiple alternate S→N routes — shortest is south_hub → north_inner (3 hops).",
+  "portals": {
+    "south": "spawn_south at (-0.04, 21.31) — entry portal from the previous grid section",
+    "north": "spawn_north at (16.60, -21.80) — section warp to the NEXT grid (this is where the autopilot must walk to advance)"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-0.04,  0,  21.31], "description": "south portal - entry from previous section (matches wp_spawn_0)" },
+    { "id": "north_gate",  "position": [16.60,  0, -21.80], "description": "north portal - section warp out (matches wp_spawn_1)" },
+
+    { "id": "south_hub",   "position": [1.13,   0,  13.94], "description": "south entry super-hub - 5-way (matches wysifc)" },
+    { "id": "east_bridge", "position": [10.78,  0,   3.98], "description": "east bridge - 4-way alternate (matches krzlvi)" },
+
+    { "id": "west_pocket", "position": [-14.01, 0,  -2.86], "description": "west pocket (matches 6nklhc)" },
+    { "id": "center",      "position": [1.88,   0,  -3.21], "description": "room center (matches 4x4jip)" },
+    { "id": "north_inner", "position": [17.46,  0, -13.22], "description": "north entry hub - leads to north_gate (matches d3idoq)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_hub"],
+    ["north_gate", "north_inner"],
+
+    ["south_hub", "west_pocket"],
+    ["south_hub", "center"],
+    ["south_hub", "east_bridge"],
+    ["south_hub", "north_inner"],
+
+    ["east_bridge", "north_inner"],
+    ["east_bridge", "center"],
+    ["east_bridge", "west_pocket"]
+  ],
+  "traversalNotes": [
+    "TRANSITION-CELL EXIT RULE: the autopilot's default behavior reads warpEdge from the quest plan and walks toward that side. For transition cells, warpEdge labels the ENTRY portal (the side the player came in from), so walking toward it just exits back to the previous section. The autopilot needs to walk to the OPPOSITE portal — the one that actually triggers the section warp.",
+    "Concretely: cell 0,0 (s05e_ia1) has warpEdge='south'. The autopilot should NOT walk to spawn_south to exit; it should walk to spawn_north (which is the actual section warp).",
+    "Direct S→N: south_gate → south_hub → north_inner → north_gate. 3 hops.",
+    "Alt S→N: south_gate → south_hub → east_bridge → north_inner → north_gate. 4 hops (via the east bridge).",
+    "DISPATCH RULE: south_hub (wysifc) and east_bridge (krzlvi) both reach the same 4 interior anchors — BFS picks the shorter side.",
+    "Spec is hand-authored — solver should NOT regenerate this stage."
+  ]
+}

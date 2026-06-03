@@ -1,0 +1,52 @@
+{
+  "stageId": "s05b_nc2",
+  "shape": "Single-portal dead-end (south gate) with center spine + east/west wings",
+  "description": "Single-portal dead-end where the south gate enters a vertical spine (s9qhjz → m6uj5n → y0zrr2 → rs88uo through the center of the room). y0zrr2 fans east to a SE cluster (832qm1 + s66ud1 + ofim2z). rs88uo (south hub) fans west to a long west chain (iyr6fi → 301dfp → qd9rtw → 7aj6yf) and continues south to 832qm1.",
+  "portals": {
+    "south": "spawn_south at (3.98, 24.06) — the only portal, on the south (high-Z) side, center column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [3.98,   0,  24.06], "description": "south portal (matches wp_spawn_0)" },
+
+    { "id": "south_inner", "position": [4.39,   0,  14.75], "description": "south entry step (matches s9qhjz)" },
+    { "id": "center_s",    "position": [4.36,   0,   3.63], "description": "center south (matches m6uj5n)" },
+    { "id": "center_n",    "position": [9.33,   0,  -6.97], "description": "center north - 3-way dispatcher (matches y0zrr2)" },
+    { "id": "se_step",     "position": [14.16,  0, -14.31], "description": "SE step (matches 832qm1)" },
+    { "id": "ne_step",     "position": [19.24,  0,   4.97], "description": "NE step (matches s66ud1)" },
+    { "id": "ne_pocket",   "position": [19.93,  0,  16.84], "description": "NE pocket dead-end (matches ofim2z)" },
+
+    { "id": "south_hub",   "position": [1.52,   0, -14.76], "description": "south hub - 4-way (matches rs88uo)" },
+    { "id": "w_mid",       "position": [-18.17, 0,  -6.05], "description": "west mid (matches iyr6fi)" },
+    { "id": "w_up",        "position": [-16.29, 0, -15.24], "description": "west upper (matches 301dfp)" },
+    { "id": "w_up_n",      "position": [-19.53, 0,   8.08], "description": "west upper north (matches qd9rtw)" },
+    { "id": "nw_pocket",   "position": [-17.26, 0,  15.84], "description": "NW pocket dead-end (matches 7aj6yf)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+
+    ["south_inner", "center_s"],
+    ["center_s", "center_n"],
+
+    ["center_n", "se_step"],
+    ["center_n", "south_hub"],
+
+    ["ne_step", "ne_pocket"],
+    ["ne_step", "se_step"],
+
+    ["south_hub", "w_mid"],
+    ["south_hub", "w_up"],
+    ["south_hub", "se_step"],
+
+    ["w_mid", "w_up"],
+    ["w_mid", "w_up_n"],
+    ["w_up_n", "nw_pocket"]
+  ],
+  "traversalNotes": [
+    "DEAD-END: single south gate. Autopilot explores and returns.",
+    "STRICT-BACKBONE spine: south_inner → center_s → center_n → south_hub branches into east/west arms.",
+    "EAST ARM: south_hub → se_step → ne_step → ne_pocket (3 hops). Plus center_n → se_step shortcut.",
+    "WEST ARM: south_hub → w_mid → (w_up south or w_up_n + nw_pocket north).",
+    "Two pockets: ne_pocket (east), nw_pocket (west)."
+  ]
+}

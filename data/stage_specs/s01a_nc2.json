@@ -1,0 +1,45 @@
+{
+  "stageId": "s01a_nc2",
+  "shape": "Single-portal dead-end (south gate) with two arms + south cross-link",
+  "description": "Single-portal dead-end where the south entry hub (bbku7s) fans into two arms joined at the south end. WEST/NORTH arm: bbku7s → xqxo87 → gwh9pm → gcf52c → ki8llq (long west wall going north to N pocket). EAST arm: bbku7s → 5j2joy → q94ay8 → (lrx9zw NE pocket + z8o2nb east pocket). A south triangle (bbku7s + xqxo87 + 5j2joy) lets the autopilot pick either arm.",
+  "portals": {
+    "south": "spawn_south at (-14.15, 24.29) — the only portal, on the south (high-Z) side, west column"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate",  "position": [-14.15, 0,  24.29], "description": "south portal (matches wp_spawn_0)" },
+
+    { "id": "south_inner", "position": [-13.49, 0,  16.93], "description": "south entry hub - 3-way dispatcher (matches bbku7s)" },
+
+    { "id": "west_mid",    "position": [-17.00, 0,   4.48], "description": "west wall mid - south triangle (matches xqxo87)" },
+    { "id": "w_n_step",    "position": [-14.49, 0,  -9.89], "description": "west-to-north step (matches gwh9pm)" },
+    { "id": "n_step",      "position": [-10.94, 0, -16.77], "description": "north step (matches gcf52c)" },
+    { "id": "n_pocket",    "position": [0.44,   0, -17.74], "description": "north pocket dead-end (matches ki8llq)" },
+
+    { "id": "center",      "position": [-4.80,  0,  10.54], "description": "center / east arm start - south triangle (matches 5j2joy)" },
+    { "id": "east_hub",    "position": [6.69,   0,  13.01], "description": "east hub - 2 pockets (matches q94ay8)" },
+    { "id": "ne_pocket",   "position": [16.32,  0,  19.60], "description": "NE pocket dead-end (matches lrx9zw)" },
+    { "id": "east_pocket", "position": [18.73,  0,  11.66], "description": "east pocket dead-end (matches z8o2nb)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+
+    ["south_inner", "west_mid"],
+    ["south_inner", "center"],
+
+    ["west_mid", "center"],
+    ["west_mid", "w_n_step"],
+    ["w_n_step", "n_step"],
+    ["n_step", "n_pocket"],
+
+    ["center", "east_hub"],
+    ["east_hub", "ne_pocket"],
+    ["east_hub", "east_pocket"]
+  ],
+  "traversalNotes": [
+    "DEAD-END: single south gate. After exploring, autopilot returns to spawn_south.",
+    "Two arms: WEST/NORTH (south_inner → west_mid → w_n_step → n_step → n_pocket, 5 hops) and EAST (south_inner → center → east_hub, 3 hops + pockets).",
+    "south triangle (south_inner + west_mid + center) lets BFS pick the closer arm without backtracking.",
+    "Three pockets: n_pocket, ne_pocket, east_pocket."
+  ]
+}

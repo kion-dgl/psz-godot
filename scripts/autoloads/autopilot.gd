@@ -67,8 +67,25 @@ const WALK_DIR_THRESHOLD := 0.3 # projection magnitude needed to hold a move act
 const KILL_ALL_SETTLE := 0.9    # per-wave settle (re-checked in a loop until enemies group is empty or KILL_ALL_MAX_WAVES caps it)
 const POST_INTERACT_SETTLE := 0.9
 const POST_GATE_SETTLE := 1.5   # gate open animation + collision flip
+# Quest-item pickups need the autopilot to dwell in the cell long enough
+# for the multi-page pickup dialog to fully advance — cell transitions
+# free the field HUD which holds the dialog_complete callback that calls
+# SessionManager.collect_quest_item. Without this dwell the item is
+# stepped on but never registers, the next pickup's item_count condition
+# matches the wrong dialog branch, and paru pact's final "spawn telepipe"
+# action (gated on item_count==4) never fires.
+const POST_QUEST_ITEM_SETTLE := 10.0
 const QUEST_COMPLETE_POLL := 0.4
 const QUEST_COMPLETE_POLL_MAX := 60  # 60 * 0.4 = 24s
+# Telepipe interact can lose the priority gamble against a dropped item that
+# happens to land at the same XZ — the interact press picks up the item
+# instead of activating the telepipe, the player ends up next to an empty
+# telepipe with no scene change. After the first attempt, poll for the
+# scene-change to CITY_WARP; if still in VALLEY_FIELD, walk back and re-press.
+# Item is gone after the first pickup, so attempt #2 unambiguously targets
+# the telepipe. 3 attempts total covers up to 2 stacked drops.
+const TELEPIPE_RETRY_DELAY := POST_INTERACT_SETTLE + 0.7
+const TELEPIPE_RETRY_MAX := 3
 const CELL_SETTLE_DELAY := STEP_DELAY * 2.0  # wait after a cell load before acting
 
 # ── Quest walk script ──────────────────────────────────────────
@@ -142,8 +159,31 @@ const WALK_DIAG_INTERVAL := 30   # log position every N ticks (~0.5s @ 60fps)
 const WALK_WATCHDOG_MS := 15_000 # 15s; if we haven't arrived, FAIL the run
 
 # Quest walker progress.
+# _quest_step_idx is legacy — the cell-load handler used to read
+# _quest_steps[_quest_step_idx] and assume the step counter mirrored cell
+# loads. That broke as soon as anything reloaded a cell out of order (section
+# transitions that warp back, future telepipe mechanics, etc.) — the counter
+# would race ahead of reality and cell N would run with step N+k's actions.
+# Cell-keyed lookup via _steps_by_cell + _cell_visit_count replaces the
+# counter. _quest_step_idx is still maintained for the post-quest telepipe
+# poll which reads it to label the final step.
 var _quest_step_idx: int = 0
 var _step_action_idx: int = 0
+# The step we're currently executing — resolved from the cell that just
+# loaded, NOT from a linear counter. Empty when no plan entry exists for
+# the loaded cell (signals "react to engine, don't run scripted actions").
+var _current_step: Dictionary = {}
+# "<section_idx>:<pos>" → Array of step dicts, one per visit. visit_n=1 uses
+# index 0, visit_n=2 uses index 1, etc. Populated once at startup from
+# _quest_steps via _populate_steps_by_cell.
+var _steps_by_cell: Dictionary = {}
+# "<section_idx>:<pos>" → int. Incremented each time the cell loads so we
+# pick the right plan entry for re-visits (e.g. B 1,2 → B 1,3 → B 1,2 return).
+var _cell_visit_count: Dictionary = {}
+# Set by _walk_to_exit from step.target right before the exit trigger fires.
+# Checked by the next _on_field_cell_loaded — if the loaded cell key differs,
+# the autopilot logs CELL DRIFT (something warped us somewhere unexpected).
+var _expected_next_cell_key: String = ""
 
 # Boot-phase: tracks whether we've finished the office intro + kicked off the
 # "Return to Title" path, so the title-scene handler can recognize "we're done"
@@ -202,6 +242,36 @@ func _ready() -> void:
 			_quest_steps = generated
 			_quest_manifest_index = _manifest_index_for_quest(qenv)
 			print("[sanity] autopilot quest=%s (%d steps, manifest index %d)" % [_quest_id, _quest_steps.size(), _quest_manifest_index])
+	# Build cell-keyed lookup AFTER the final _quest_steps assignment so both
+	# hardcoded SR and generated quest plans get the same treatment.
+	# Deep-duplicate so the step dicts are mutable — SR_QUEST_STEPS is a
+	# const Array; in Godot 4 GDScript, modifying a Dictionary inside a
+	# const Array fails (silently or with an error that kills the
+	# enclosing function), which left _steps_by_cell empty for SR. Generated
+	# quest plans (paru pact, etc.) are fresh dicts already; the duplicate
+	# is a small no-op cost for them.
+	_quest_steps = _quest_steps.duplicate(true)
+	_steps_by_cell = _populate_steps_by_cell(_quest_steps)
+	_dump_plan(_quest_steps, _steps_by_cell)
+	# Speed up the entire sim by 3x by default (overridable via
+	# PSZ_AUTOPILOT_TIME_SCALE=N — e.g. =1 to disable, =5 for fast-forward).
+	# Engine.time_scale multiplies how much GAME time advances per process
+	# frame; --write-movie with --fixed-fps 30 then produces an output MP4
+	# that shows the run at N× speed while the underlying autopilot timers
+	# (which all go through SceneTreeTimer + create_timer, both respecting
+	# time_scale) keep their relative spacing intact. Bump
+	# physics_ticks_per_second proportionally so per-tick movement stays
+	# small enough to avoid overshoot in collision detection (the
+	# QuestItemPickup interaction box is only 1m radius — at 3× speed with
+	# default 60 ticks/sec, the player could skip past it in one tick).
+	var time_scale_env: String = OS.get_environment("PSZ_AUTOPILOT_TIME_SCALE")
+	var scale: float = 3.0 if time_scale_env == "" else float(time_scale_env)
+	if scale <= 0.0:
+		scale = 1.0
+	if scale != 1.0:
+		Engine.time_scale = scale
+		Engine.physics_ticks_per_second = int(60.0 * scale)
+		print("[sanity] autopilot time_scale=%.2f, physics_ticks_per_second=%d" % [scale, Engine.physics_ticks_per_second])
 	_floor_only = OS.has_environment("PSZ_AUTOPILOT_FLOOR_ONLY")
 	if _floor_only:
 		print("[sanity] autopilot floor-only mode: shrinking player capsule, walls won't block")
@@ -352,9 +422,25 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 			var exit_dir: String = ""
 			var target_pos: String = ""
 			var entry_dir: String = ""
-			var warp_edge: Variant = cell.get("warpEdge", null)
+			# Data uses snake_case `warp_edge`; old camelCase `warpEdge` kept as a
+			# fallback in case anything still ships that shape. For cells that
+			# participate in a section transition (warp_edge set), prefer the
+			# section's exit_direction — `warp_edge` labels the gate-portal
+			# that's wired to the section warp, but it can sit on the ENTRY side
+			# (single-cell transition sections like paru pact's s05e_ia1, where
+			# warp_edge="south" but the section's actual exit is north) or on
+			# the EXIT side (section-end cells like SR's A 2,4). Walking to
+			# warp_edge in the entry-side case re-fires the inbound AreaWarp
+			# and sends the autopilot back to the previous section — that's
+			# the "goes backwards" failure mode.
+			var warp_edge: Variant = cell.get("warp_edge", cell.get("warpEdge", null))
 			if warp_edge != null and str(warp_edge) != "":
-				exit_dir = str(warp_edge)
+				# Check both camelCase (data/quest_plans/) and snake_case
+				# (data/quests/). data/quest_plans/ is the file the autopilot
+				# actually loads, so camelCase wins in practice — but try both
+				# so this doesn't silently regress if the source flips.
+				var section_exit_dir: String = str(section.get("exitDirection", section.get("exit_direction", "")))
+				exit_dir = section_exit_dir if not section_exit_dir.is_empty() else str(warp_edge)
 			elif not is_terminal:
 				var next_entry: Dictionary = entries[e_i + 1]
 				var next_pos: String = str(next_entry["cell"].get("pos", ""))
@@ -379,23 +465,133 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 						break
 				if has_null_dialog:
 					actions.append("dismiss_dialog")
-				if cell.get("keyDrop", null) != null:
-					actions.append("pickup_key")
+				# Action order: unlock → key → gate → pickup. flip_switch
+				# first because switches unblock fences that may sit on the
+				# path to keys, gates, OR items (paru pact's B 3,1 has a
+				# west-wall fence link_id="b" gating the mag-fragment
+				# pickup). pickup_key before open_gate because the key
+				# dropped in this cell typically unlocks this cell's own
+				# gate (paru pact's B 2,1 drops its own gate key). The
+				# quest-item pickup is last since fences/gates may sit
+				# between the player and the item.
 				if (cell.get("switches", []) as Array).size() > 0:
 					actions.append("flip_switch")
+				if cell.get("keyDrop", null) != null:
+					actions.append("pickup_key")
 				if cell.get("keyGate", null) != null:
 					actions.append("open_gate")
+				# Always try a quest-item pickup. Some quests (paru pact's
+				# mag fragments) gate their final telepipe spawn behind
+				# picking up N of these — the Nth pickup's remaining_dialog
+				# fires the complete_quest + telepipe actions, the only path
+				# that spawns the room_clear telepipe. data/quest_plans/
+				# (the file the autopilot loads) drops the cell.objects
+				# array used to detect quest_items at plan-gen time, so
+				# rather than reload data/quests/ just always emit the
+				# action — the handler no-ops with a WARN when no
+				# QuestItemPickup is in the scene.
+				actions.append("pickup_quest_item")
 				if is_terminal:
 					actions.append("wait_quest_complete")
 			var label := "%s %s%s" % [area, pos, " (passthrough)" if is_passthrough else (" (return)" if visit_n > 1 else "")]
+			# Resolve the exit portal's stable ID at step-generation time. The
+			# direction label ("west", "north", …) can drift across rotation
+			# tables and label conventions; the portal ID is invariant. At
+			# walk time we prefer ID-based lookup and only fall back to the
+			# direction key.
+			var exit_portal_id: String = ""
+			if not exit_dir.is_empty():
+				var cell_portals: Dictionary = cell.get("portals", {})
+				if cell_portals.has(exit_dir):
+					exit_portal_id = str(cell_portals[exit_dir])
 			steps.append({
 				"label": label,
 				"do": actions,
 				"exit": exit_dir,
+				"exit_portal_id": exit_portal_id,
 				"target": target_pos,
 				"entry": entry_dir,
+				"_section_idx": s_i,
+				"_pos": pos,
 			})
 	return steps
+
+
+## Build "<section_idx>:<pos>" → Array of step dicts (one per visit) from
+## the linear quest step list. For generated steps (paru pact etc.) the
+## section_idx + pos are baked in. For hardcoded SR_QUEST_STEPS, parse the
+## label format "<X> <pos> [...]" and map letters → indices in first-seen
+## order — for the canonical A/E/B section ordering this lands on 0/1/2,
+## matching SessionManager.get_current_section() at runtime.
+func _populate_steps_by_cell(steps: Array) -> Dictionary:
+	var by_cell: Dictionary = {}
+	var letter_to_idx: Dictionary = {}
+	for i in range(steps.size()):
+		var step: Dictionary = steps[i]
+		# Store the linear index so the post-quest telepipe poll can label
+		# the final step the same way it used to with _quest_step_idx.
+		step["_step_idx"] = i
+		var sec_idx: int
+		var pos: String
+		if step.has("_section_idx") and step.has("_pos"):
+			sec_idx = int(step["_section_idx"])
+			pos = str(step["_pos"])
+		else:
+			var label: String = str(step.get("label", ""))
+			var parts: PackedStringArray = label.split(" ", false)
+			if parts.size() < 2:
+				continue
+			var letter: String = str(parts[0]).to_lower()
+			if not letter_to_idx.has(letter):
+				letter_to_idx[letter] = letter_to_idx.size()
+			sec_idx = int(letter_to_idx[letter])
+			pos = str(parts[1])
+			step["_section_idx"] = sec_idx
+			step["_pos"] = pos
+		var key: String = "%d:%s" % [sec_idx, pos]
+		if not by_cell.has(key):
+			by_cell[key] = []
+		(by_cell[key] as Array).append(step)
+	return by_cell
+
+
+## One-time dump at autopilot startup — makes the full plan diffable when a
+## drift bug fires later.
+func _dump_plan(steps: Array, by_cell: Dictionary) -> void:
+	print("[autopilot] PLAN: %d steps for quest=%s" % [steps.size(), _quest_id])
+	for i in range(steps.size()):
+		var s: Dictionary = steps[i]
+		print("[autopilot]   #%d cell=%d:%s label='%s' do=%s exit='%s' target='%s' portal_id='%s'" % [
+			i + 1, int(s.get("_section_idx", -1)), str(s.get("_pos", "?")),
+			str(s.get("label", "?")), str(s.get("do", [])),
+			str(s.get("exit", "")), str(s.get("target", "")),
+			str(s.get("exit_portal_id", ""))])
+	print("[autopilot] BY-CELL: %d unique cells" % by_cell.size())
+	var keys: Array = by_cell.keys()
+	keys.sort()
+	for k in keys:
+		var visits: Array = by_cell[k]
+		var labels: Array = []
+		for v in visits:
+			labels.append(str(v.get("label", "?")))
+		print("[autopilot]   %s × %d: %s" % [k, visits.size(), str(labels)])
+
+
+## Compute the section_idx:pos key for the cell currently loaded in the
+## given valley_field. Returns "" if anything is missing.
+func _get_current_cell_key(field: Node) -> String:
+	if field == null:
+		return ""
+	var current_cell = field.get("_current_cell")
+	if typeof(current_cell) != TYPE_DICTIONARY:
+		return ""
+	var pos: String = str(current_cell.get("pos", ""))
+	if pos.is_empty():
+		return ""
+	var sec_idx: int = 0
+	if SessionManager and SessionManager.has_method("get_current_section"):
+		sec_idx = int(SessionManager.get_current_section())
+	return "%d:%s" % [sec_idx, pos]
 
 
 ## BFS over the cell adjacency graph (from cell.connections) to find a
@@ -861,18 +1057,56 @@ func _drive_city_warp() -> void:
 ## transition — SceneManager.goto_scene reloads the scene with a fresh root
 ## node, so the instance id flips even though the path is unchanged).
 ##
-## Drives _quest_steps[_quest_step_idx]'s action list, then walks to the exit
-## portal. The next cell-load advances _quest_step_idx.
+## Resolve the step for the cell that just loaded (by section_idx:pos lookup,
+## NOT by a linear counter), then drive its action list and walk to the exit
+## portal. The next cell-load resolves the next step the same way — drifts
+## from the planned cell sequence are caught and logged at the boundary.
 func _on_field_cell_loaded(field: Node) -> void:
 	_stop_field_walk()
-	if _quest_step_idx >= _quest_steps.size():
-		print("[sanity] WARN: extra cell load #%d after all %d steps" % [_field_cells_visited, _quest_steps.size()])
+	var key: String = _get_current_cell_key(field)
+	var stage_id: String = ""
+	var current_cell = field.get("_current_cell") if field else null
+	if typeof(current_cell) == TYPE_DICTIONARY:
+		stage_id = str(current_cell.get("stage_id", ""))
+	if key.is_empty():
+		print("[sanity] WARN: cell load #%d couldn't compute cell key (stage=%s)" % [_field_cells_visited, stage_id])
+		_current_step = {}
 		return
-	var step: Dictionary = _quest_steps[_quest_step_idx]
-	print("[sanity] step %d/%d (%s): cell load #%d" % [
-		_quest_step_idx + 1, _quest_steps.size(), step.get("label", "?"), _field_cells_visited])
+	# Drift check: did we land on the cell the previous _walk_to_exit aimed at?
+	if not _expected_next_cell_key.is_empty() and _expected_next_cell_key != key:
+		print("[sanity] CELL DRIFT: expected %s, got %s (load #%d, stage=%s)" % [
+			_expected_next_cell_key, key, _field_cells_visited, stage_id])
+	_expected_next_cell_key = ""
+	# Premature-telepipe check: if a Telepipe is in the scene at suspicious
+	# coords (near world origin) AND the quest isn't marked complete yet,
+	# log a WARN. Real telepipes spawn from a dialog action at the dialog's
+	# trigger position; one at (0,0) with quest still in progress suggests
+	# the engine spawned it on the default Vector3 — a bug worth tracking
+	# across quests for fix triage. See discussion in commit log.
+	_check_premature_telepipe(field, key, stage_id)
+	# Visit counter — picks the right plan entry for re-visits (key gate returns).
+	var visit_n: int = int(_cell_visit_count.get(key, 0)) + 1
+	_cell_visit_count[key] = visit_n
+	var entries: Array = _steps_by_cell.get(key, [])
+	if entries.is_empty():
+		print("[sanity] WARN: no plan entry for cell %s visit=%d (load #%d, stage=%s) — autopilot will idle this cell" % [
+			key, visit_n, _field_cells_visited, stage_id])
+		_current_step = {}
+		return
+	if visit_n - 1 >= entries.size():
+		print("[sanity] WARN: visit %d exceeds plan for cell %s (have %d) — replaying last entry (load #%d, stage=%s)" % [
+			visit_n, key, entries.size(), _field_cells_visited, stage_id])
+		_current_step = entries[entries.size() - 1]
+	else:
+		_current_step = entries[visit_n - 1]
+	# Maintain _quest_step_idx for legacy consumers (telepipe poll uses it to label).
+	if _current_step.has("_step_idx"):
+		_quest_step_idx = int(_current_step["_step_idx"])
+	print("[sanity] cell-load %s visit=%d stage=%s (load #%d): plan label='%s' do=%s exit='%s' portal_id='%s'" % [
+		key, visit_n, stage_id, _field_cells_visited,
+		str(_current_step.get("label", "?")), str(_current_step.get("do", [])),
+		str(_current_step.get("exit", "")), str(_current_step.get("exit_portal_id", ""))])
 	_step_action_idx = 0
-	# Wait for controller _ready + spawn + camera settle, then start actions.
 	_after(CELL_SETTLE_DELAY, func() -> void: _run_next_action(field))
 
 
@@ -881,7 +1115,9 @@ func _run_next_action(field: Node) -> void:
 	# resets state, so just no-op here.
 	if not is_instance_valid(field) or field != get_tree().current_scene:
 		return
-	var step: Dictionary = _quest_steps[_quest_step_idx]
+	if _current_step.is_empty():
+		return
+	var step: Dictionary = _current_step
 	var actions: Array = step.get("do", [])
 	if _step_action_idx >= actions.size():
 		_walk_to_exit(field, step)
@@ -896,6 +1132,8 @@ func _run_next_action(field: Node) -> void:
 			_do_dismiss_dialog(field)
 		"pickup_key":
 			_do_pickup_key(field)
+		"pickup_quest_item":
+			_do_pickup_quest_item(field)
 		"flip_switch":
 			_do_flip_switch(field)
 		"open_gate":
@@ -957,6 +1195,62 @@ func _do_pickup_key(field: Node) -> void:
 	_walk_then_interact(field, key.global_position, "key", POST_INTERACT_SETTLE)
 
 
+func _do_pickup_quest_item(field: Node) -> void:
+	# Quest items in the field are QuestItemPickup nodes
+	# (scripts/3d/elements/quest_item_pickup.gd). Walking onto them
+	# auto-collects (DropBase pickup), which fires the cell's
+	# remaining_dialog with condition.item_count matching the new count.
+	# The dialog may carry actions like "complete_quest" / "telepipe" on
+	# its final page (paru pact's 4th mag_fragment is the trigger for
+	# both), so after the pickup we press ui_accept several times to walk
+	# past any dialog pages and let the actions execute.
+	var item := _find_quest_item_pickup(field)
+	if item == null:
+		print("[sanity] WARN: pickup_quest_item — no QuestItemPickup in cell")
+		_run_next_action(field)
+		return
+	var item_id: String = str(item.get("item_id") if "item_id" in item else "?")
+	print("[sanity] walking to quest_item id=%s at (%.1f, %.1f, %.1f)" % [
+		item_id, item.global_position.x, item.global_position.y, item.global_position.z])
+	# QuestItemPickup._show_pickup_dialog only calls SessionManager.
+	# collect_quest_item() AFTER the dialog's dialog_complete signal fires
+	# (see quest_item_pickup.gd:152). The dialog box is a child of the
+	# field's HUD — cell transition reloads the scene and frees HUD +
+	# dialog box, severing the dialog_complete callback before it can run.
+	# So we have to DWELL in the cell long enough for the dialog to fully
+	# advance through every page. POST_QUEST_ITEM_SETTLE replaces the
+	# normal POST_INTERACT_SETTLE here.
+	#
+	# Walk to the item, then directly invoke its _on_interact rather than
+	# routing through Player._try_interact. Player.nearest_interactable
+	# depends on the area_entered signal chain (player interaction_area
+	# vs item interaction_area collision masks); empirically this didn't
+	# resolve to the quest_item even after step-on in A 3,2's pickup, so
+	# the indirect path is unreliable. We already have the
+	# QuestItemPickup node from _find_quest_item_pickup — call its
+	# DropBase._on_interact(player) directly. After that, dwell for the
+	# multi-page dialog and press ui_accept to advance it.
+	_walk_then_interact(field, item.global_position, "quest_item", POST_QUEST_ITEM_SETTLE, true)
+	# After step-on lands, fire the item's _on_interact directly. We can't
+	# tell WHEN step-on completes from here, so schedule the direct
+	# invocation a few times across the walk window; the QuestItemPickup
+	# sets element_state="collected" on the first successful pickup, so
+	# subsequent calls no-op.
+	var item_ref := item
+	for i in range(8):
+		_after(2.0 + i * 1.5, func() -> void:
+			if is_instance_valid(item_ref) and item_ref.has_method("_on_interact"):
+				var pl: Node3D = get_tree().get_first_node_in_group("player")
+				if pl != null:
+					print("[sanity] direct-interact quest_item")
+					item_ref._on_interact(pl))
+	# ui_accept train advances the multi-page dialog after pickup so
+	# dialog_complete fires (which is what calls
+	# SessionManager.collect_quest_item).
+	for i in range(25):
+		_after(3.0 + i * 0.7, func() -> void: _press_action("ui_accept"))
+
+
 func _do_flip_switch(field: Node) -> void:
 	# Two switch types in valley field: InteractSwitch (player presses
 	# interact while in range) and StepSwitch (auto-collects when the player
@@ -984,19 +1278,24 @@ func _do_open_gate(field: Node) -> void:
 
 
 func _do_wait_quest_complete(_field: Node) -> void:
-	print("[sanity] final cell: kill_all + give the room_clear dialog ~5s, then force-complete")
+	print("[sanity] final cell: kill_all + advance any active dialogs ~12s, then force-complete")
 	var player := get_tree().get_first_node_in_group("player")
 	if player != null and player.has_method("_debug_kill_all"):
 		player._debug_kill_all()
-	# The room_clear dialog at B 3,0 carries action "complete_quest", but the
-	# dialog_trigger checks `SessionManager.are_objectives_complete()` first
-	# and skips on miss. Our force-advance fallback bypasses several cells
-	# (where the key-drop chain never fires), so objectives may not be met.
-	# Give the natural dialog 5s to fire, advancing pages with ui_accept; if
-	# the quest isn't marked complete by then, call complete_quest() directly.
-	for i in range(4):
-		_after(1.2 + i * 1.0, func() -> void: _press_action("ui_accept"))
-	_after(5.2, func() -> void:
+	# Two natural completion paths land here:
+	#   (a) SR's B 3,0 room_clear dialog fires complete_quest if objectives
+	#       are met (autopilot's bypass logic often skips key drops, so this
+	#       path frequently misses and we fall through to force-complete).
+	#   (b) paru pact's mag_fragment quest_item, on its 4th pickup, fires
+	#       a 6-page dialog whose final-page actions are
+	#       [dismiss_companion, complete_quest, telepipe] — this is the only
+	#       path that spawns a Telepipe for the return-to-city warp.
+	# Path (b) needs the full 6 pages to be advanced before complete_quest
+	# AND telepipe fire. Press ui_accept 12 times over ~12s (so multi-page
+	# dialogs of any plausible length advance) before force-completing.
+	for i in range(12):
+		_after(1.0 + i * 1.0, func() -> void: _press_action("ui_accept"))
+	_after(13.5, func() -> void:
 		if not SessionManager.has_completed_quest():
 			print("[sanity] dialog didn't fire complete_quest (objectives unmet from bypassed cells) — calling SessionManager.complete_quest() directly")
 			SessionManager.complete_quest())
@@ -1024,7 +1323,7 @@ func _poll_quest_complete(n: int) -> void:
 	_after(QUEST_COMPLETE_POLL, func() -> void: _poll_quest_complete(n + 1))
 
 
-func _drive_walk_to_telepipe() -> void:
+func _drive_walk_to_telepipe(attempt: int = 0) -> void:
 	var field := get_tree().current_scene
 	if field == null or field.scene_file_path != VALLEY_FIELD:
 		print("[sanity] WARN: not in valley_field for telepipe walk (path=%s)" % str(field.scene_file_path if field else "<null>"))
@@ -1033,8 +1332,42 @@ func _drive_walk_to_telepipe() -> void:
 	if telepipe == null:
 		print("[sanity] WARN: no Telepipe in scene — quest finished but no warp out")
 		return
-	print("[sanity] walking to telepipe at (%.1f, %.1f, %.1f)" % [telepipe.global_position.x, telepipe.global_position.y, telepipe.global_position.z])
+	if attempt == 0:
+		print("[sanity] walking to telepipe at (%.1f, %.1f, %.1f)" % [telepipe.global_position.x, telepipe.global_position.y, telepipe.global_position.z])
+	else:
+		print("[sanity] telepipe retry %d/%d — scene didn't change (likely picked up an item drop on the previous interact)" % [attempt + 1, TELEPIPE_RETRY_MAX])
 	_walk_then_interact(field, telepipe.global_position, "telepipe", POST_INTERACT_SETTLE)
+	_after(TELEPIPE_RETRY_DELAY, func() -> void: _check_telepipe_advance(attempt))
+
+
+func _check_telepipe_advance(attempt: int) -> void:
+	var scene := get_tree().current_scene
+	if scene != null and scene.scene_file_path != VALLEY_FIELD:
+		# Scene transitioned — telepipe fired.
+		return
+	if attempt + 1 >= TELEPIPE_RETRY_MAX:
+		print("[sanity] WARN: telepipe didn't transition after %d attempts — giving up" % TELEPIPE_RETRY_MAX)
+		return
+	_drive_walk_to_telepipe(attempt + 1)
+
+
+## Snapshot the scene for a Telepipe at suspicious coords (within
+## TELEPIPE_PREMATURE_RADIUS of world origin) while the quest hasn't
+## fired complete_quest yet. Triggers a one-line [sanity] WARN per
+## occurrence so we can grep across quest runs to see the bug's
+## frequency + per-quest hot spots without taking action (just
+## tracking).
+const TELEPIPE_PREMATURE_RADIUS := 2.0
+func _check_premature_telepipe(field: Node, cell_key: String, stage_id: String) -> void:
+	if SessionManager and SessionManager.has_method("has_completed_quest") and SessionManager.has_completed_quest():
+		return
+	var t := _find_telepipe(field)
+	if t == null:
+		return
+	var p: Vector3 = t.global_position
+	if abs(p.x) <= TELEPIPE_PREMATURE_RADIUS and abs(p.z) <= TELEPIPE_PREMATURE_RADIUS:
+		print("[sanity] WARN: premature telepipe — found at (%.2f, %.2f, %.2f) in cell %s (stage=%s) before quest_completed fired" % [
+			p.x, p.y, p.z, cell_key, stage_id])
 
 
 func _find_telepipe(root: Node) -> Node3D:
@@ -1103,14 +1436,48 @@ func _walk_to_exit(field: Node, step: Dictionary) -> void:
 		# No exit (final cell). wait_quest_complete should have handled it.
 		return
 	var portal_data = field.get("_portal_data")
-	if typeof(portal_data) != TYPE_DICTIONARY or not portal_data.has(exit_dir):
-		_fail_with_reason("cell missing '%s' portal (step %d/%d %s)" % [
-			exit_dir, _quest_step_idx + 1, _quest_steps.size(), str(step.get("label", "?"))])
+	# Prefer ID-based lookup: the step's exit_portal_id was captured from
+	# cell.portals at step-generation time and is invariant across rotations
+	# and direction-label changes in the engine. Falls back to direction-key
+	# lookup for cells without portal IDs in their config.
+	var exit_portal_id: String = str(step.get("exit_portal_id", ""))
+	var trigger_pos: Vector3 = Vector3.ZERO
+	var resolved_via: String = ""
+	if typeof(portal_data) == TYPE_DICTIONARY:
+		if not exit_portal_id.is_empty():
+			for dir_key in portal_data:
+				var entry = portal_data[dir_key]
+				if typeof(entry) == TYPE_DICTIONARY and str(entry.get("id", "")) == exit_portal_id:
+					trigger_pos = entry.get("trigger_pos", Vector3.ZERO)
+					resolved_via = "id=%s found at dir='%s'" % [exit_portal_id, str(dir_key)]
+					break
+		if resolved_via.is_empty() and portal_data.has(exit_dir):
+			trigger_pos = portal_data[exit_dir].get("trigger_pos", Vector3.ZERO)
+			resolved_via = "direction='%s' (fallback)" % exit_dir
+	if resolved_via.is_empty():
+		var have_keys: Array = []
+		var have_ids: Array = []
+		if typeof(portal_data) == TYPE_DICTIONARY:
+			for k in portal_data:
+				have_keys.append(str(k))
+				if typeof(portal_data[k]) == TYPE_DICTIONARY:
+					have_ids.append(str(portal_data[k].get("id", "")))
+		_fail_with_reason("cell missing '%s' portal (step %d/%d %s) — looked for id='%s', portal_data has dirs=%s ids=%s" % [
+			exit_dir, _quest_step_idx + 1, _quest_steps.size(), str(step.get("label", "?")),
+			exit_portal_id, str(have_keys), str(have_ids)])
 		return
-	var trigger_pos: Vector3 = portal_data[exit_dir].get("trigger_pos", Vector3.ZERO)
-	# Advance the step counter so the next cell load picks up the next step;
-	# on stuck-walk failure we quit immediately so over-advance is moot.
-	_quest_step_idx += 1
+	print("[sanity] exit portal resolved: %s → trigger=%s" % [resolved_via, trigger_pos])
+	# Record the cell we expect to land in next, so the next _on_field_cell_loaded
+	# can detect drift (transition warped us elsewhere, etc.). target is the
+	# next cell's pos within the same section; for section-warp exits the
+	# target is "" and we skip — drift detection only matters within a section.
+	var target_pos: String = str(step.get("target", ""))
+	if not target_pos.is_empty():
+		var sec_idx: int = int(step.get("_section_idx", -1))
+		if sec_idx >= 0:
+			_expected_next_cell_key = "%d:%s" % [sec_idx, target_pos]
+		else:
+			_expected_next_cell_key = ""
 	# Build a walkable path through the cell's spawn waypoints. If straight-
 	# line raycast from the player to the trigger is clear, the path is just
 	# [trigger]; otherwise BFS tries via spawn points + center to find a
@@ -1185,6 +1552,48 @@ func _fail_with_reason(reason: String) -> void:
 	_after(QUIT_GRACE, func() -> void: get_tree().quit(1))
 
 
+## Cast the same 3 downward rays the player's _can_move_to uses (center,
+## left, right at FLOOR_CHECK_DISTANCE ahead of the player) and log which
+## ones hit floor. Mirrors player.gd:1081 so the result tells the stage
+## author exactly which sample point is dropping into a hole.
+func _log_floor_samples(pos: Vector3, dir: Vector3) -> void:
+	# Match player.gd constants exactly — if those change, update here too.
+	const FLOOR_CHECK_DISTANCE := 1.0
+	const FLOOR_CHECK_SIDE := 0.5
+	const FLOOR_RAY_LENGTH := 5.0
+	var center := pos + dir * FLOOR_CHECK_DISTANCE
+	# Perpendicular: 90° rotation in the XZ plane (-z, 0, x), matching
+	# player.gd:1087.
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	var left := center + side * FLOOR_CHECK_SIDE
+	var right := center - side * FLOOR_CHECK_SIDE
+	var hit_c := _ray_floor_hit(center, pos.y, FLOOR_RAY_LENGTH)
+	var hit_l := _ray_floor_hit(left, pos.y, FLOOR_RAY_LENGTH)
+	var hit_r := _ray_floor_hit(right, pos.y, FLOOR_RAY_LENGTH)
+	var hits: int = (1 if hit_c else 0) + (1 if hit_l else 0) + (1 if hit_r else 0)
+	print("[sanity] floor samples ahead of player (FLOOR_CHECK_DISTANCE=%.1f, FLOOR_CHECK_SIDE=%.1f):" % [FLOOR_CHECK_DISTANCE, FLOOR_CHECK_SIDE])
+	print("[sanity]   center=(%.3f, %.3f) floor=%s" % [center.x, center.z, hit_c])
+	print("[sanity]   left  =(%.3f, %.3f) floor=%s" % [left.x, left.z, hit_l])
+	print("[sanity]   right =(%.3f, %.3f) floor=%s" % [right.x, right.z, hit_r])
+	print("[sanity]   hits=%d/3 → all-3=%s, 2-of-3=%s, 1-of-3=%s" % [
+		hits, "PASS" if hits == 3 else "BLOCK",
+		"PASS" if hits >= 2 else "BLOCK", "PASS" if hits >= 1 else "BLOCK"])
+
+
+## Single downward raycast, mirroring player.gd:_has_floor_at.
+func _ray_floor_hit(check_pos: Vector3, base_y: float, ray_length: float) -> bool:
+	var player := get_tree().get_first_node_in_group("player") as Node3D
+	if player == null:
+		return false
+	var space_state: PhysicsDirectSpaceState3D = player.get_world_3d().direct_space_state
+	var ray_origin := Vector3(check_pos.x, base_y + 1.0, check_pos.z)
+	var ray_end := Vector3(check_pos.x, base_y - ray_length, check_pos.z)
+	var query := PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	query.collision_mask = 1
+	var result: Dictionary = space_state.intersect_ray(query)
+	return not result.is_empty()
+
+
 # ── Scene-tree finders for interactables ───────────────────────
 
 func _find_key_pickup(root: Node) -> Node:
@@ -1192,6 +1601,16 @@ func _find_key_pickup(root: Node) -> Node:
 		return root
 	for c in root.get_children():
 		var found := _find_key_pickup(c)
+		if found != null:
+			return found
+	return null
+
+
+func _find_quest_item_pickup(root: Node) -> Node:
+	if root is QuestItemPickup:
+		return root
+	for c in root.get_children():
+		var found := _find_quest_item_pickup(c)
 		if found != null:
 			return found
 	return null
@@ -1312,6 +1731,18 @@ func _tick_field_walk() -> void:
 	# walkability fix in the level. Surface the offending cell + stage so it
 	# can be opened in the waypoint editor.
 	if Time.get_ticks_msec() - _walk_started_at_ms > WALK_WATCHDOG_MS:
+		# Surface the exact stuck geometry: player position, walk target,
+		# normalized direction, and the floor-sample results at the three
+		# can_move_to check points. Makes the editor fix obvious — "ah,
+		# the center+left rays land in the void at (0.21, 8.8); add a
+		# waypoint that routes around the (0.17,8.5)-(0.25,9.1) hole."
+		var dir := (_walk_target - pos)
+		dir.y = 0.0
+		if dir.length() > 0.0:
+			dir = dir.normalized()
+		print("[sanity] stuck-walk diagnostic: player=(%.3f, %.3f, %.3f) target=(%.3f, %.3f, %.3f) dir=(%.3f, %.3f, %.3f) dist=%.2f" % [
+			pos.x, pos.y, pos.z, _walk_target.x, _walk_target.y, _walk_target.z, dir.x, dir.y, dir.z, dist])
+		_log_floor_samples(pos, dir)
 		_stop_field_walk()
 		_fail_walk_stuck(pos, dist)
 		return

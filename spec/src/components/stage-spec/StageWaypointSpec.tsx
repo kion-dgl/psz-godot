@@ -219,6 +219,12 @@ export default function StageWaypointSpec({
             for (const m of mats) {
               m.transparent = true;
               m.opacity = 0.45;
+              // Many source materials carry alphaTest=0.5 from the GLB (used
+              // for sprite-like texture cutouts). With opacity=0.45, that
+              // cutoff would discard every fragment (final alpha 0.45 < 0.5)
+              // and the mesh disappears entirely. Disable the cutoff so the
+              // translucency works.
+              m.alphaTest = 0;
               m.depthWrite = false;
               m.side = THREE.DoubleSide;
             }

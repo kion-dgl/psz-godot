@@ -5,7 +5,7 @@
 // follow the corridor backbone, avoid floor-mesh joins, and emit waypoints
 // the autopilot's camera-relative input can drive without diagonal drift.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadStage3D, loadGlb3D, type Tri3D } from "./lib/floor.ts";
@@ -19,6 +19,7 @@ import type { Tri2D } from "./lib/floor.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, "..", "..", "..");
+const STAGE_SPECS = join(REPO, "data", "stage_specs");
 const QUEST_PLANS = join(REPO, "data", "quest_plans");
 const STAGE_CFG_PATH = join(REPO, "data", "stage_configs", "unified-stage-configs.json");
 const ASSETS_STAGES = join(REPO, "assets", "stages");
@@ -85,6 +86,16 @@ function main() {
 		if (!cfg) {
 			console.log(`✗ ${stageId}: not in unified-stage-configs.json`);
 			stageFail.push(stageId);
+			continue;
+		}
+		// Skip stages that already have a hand-authored spec — the user's
+		// human-authored backbone is more topologically aware than what
+		// the solver derives from triangles. The solver fills in stages
+		// that haven't been authored yet.
+		const specPath = join(STAGE_SPECS, `${stageId}.json`);
+		if (existsSync(specPath)) {
+			console.log(`◌ ${stageId.padEnd(12)} (skipped — has spec at data/stage_specs/${stageId}.json)`);
+			stageOk++;
 			continue;
 		}
 

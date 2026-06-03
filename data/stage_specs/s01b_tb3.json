@@ -1,0 +1,37 @@
+{
+  "stageId": "s01b_tb3",
+  "shape": "Simple T-junction (3 portals: S, W, E)",
+  "description": "Three-portal T-junction with a sparse backbone — each gate has its own staging anchor, and a single south-side hub (y5kk5n) joins the south + west arms. The east arm connects via a short east corridor (89yh42 → eoad0m). Cleanest T-junction in valley-B.",
+  "portals": {
+    "south": "spawn_south at (17.09, 16.12) — gate on the south (high-Z) side",
+    "west":  "spawn_west at (-22.14, 17.04) — gate on the west (low-X) side",
+    "east":  "spawn_east at (23.31, -14.43) — gate on the east (high-X) side"
+  },
+  "objectives": {},
+  "anchors": [
+    { "id": "south_gate", "position": [17.09,  0,  16.12], "description": "south portal (matches wp_spawn_0)" },
+    { "id": "west_gate",  "position": [-22.14, 0,  17.04], "description": "west portal (matches wp_spawn_1)" },
+    { "id": "east_gate",  "position": [23.31,  0, -14.43], "description": "east portal (matches wp_spawn_2)" },
+
+    { "id": "south_inner","position": [17.81,  0,   8.09], "description": "south entry hub — joins west arm + east corridor (matches y5kk5n)" },
+    { "id": "east_mid",   "position": [21.90,  0,   0.06], "description": "east corridor mid (matches 89yh42)" },
+    { "id": "east_inner", "position": [14.08,  0, -15.26], "description": "east entry hub (matches eoad0m)" },
+    { "id": "west_arm",   "position": [-14.46, 0,  17.03], "description": "west arm step (matches q20k8i)" }
+  ],
+  "anchorEdges": [
+    ["south_gate", "south_inner"],
+    ["west_gate", "west_arm"],
+    ["east_gate", "east_inner"],
+
+    ["south_inner", "east_mid"],
+    ["east_mid", "east_inner"],
+    ["south_inner", "west_arm"]
+  ],
+  "traversalNotes": [
+    "Three direct routes:",
+    "  south ↔ west: spawn_south → south_inner → west_arm → spawn_west. 3 hops.",
+    "  south ↔ east: spawn_south → south_inner → east_mid → east_inner → spawn_east. 4 hops.",
+    "  west ↔ east:  spawn_west → west_arm → south_inner → east_mid → east_inner → spawn_east. 5 hops.",
+    "south_inner is the canonical junction anchor. Cleanest T-junction we've authored."
+  ]
+}
