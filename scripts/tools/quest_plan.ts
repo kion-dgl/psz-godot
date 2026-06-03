@@ -75,6 +75,11 @@ interface CellPlan {
   isEnd: boolean;
   isBranch: boolean;
   connections: Partial<Record<Dir, string>>;
+  // Portal direction → portal ID. Used at step-emission time to bake the
+  // stable portal ID into each step's `exit_portal_id` field so the
+  // autopilot can look up the exit portal by ID (invariant) rather than by
+  // direction label (subject to rotation-table drift).
+  portals: Record<string, string>;
   warpEdge: string | null;
   keyGate: { direction: string; requiredKeys: number } | null;
   keyDrop: { targetCell: string; position: Vec3 | null } | null;
@@ -85,6 +90,23 @@ interface CellPlan {
   dialogTriggers: { position: Vec3; condition: string | null; actions: string[] | null }[];
   enemyCount: number;
   boxCount: number;
+}
+
+// Flat-step output schema. One entry per cell visit (including BFS-detour
+// passthroughs and multi-visit hubs in finding_ogi-style quests). Matches
+// the dict shape the autopilot's _build_steps_from_plan used to emit at
+// runtime — now we emit it offline so the autopilot can be a flat-list
+// executor (see /home/kion/.claude/plans/sharded-wishing-thimble.md).
+interface PlanStep {
+  label: string;          // "A 2,4 (passthrough)" / "B 3,2 (return)" / "A 2,0"
+  do: string[];           // ordered action list: kill_all, dismiss_dialog, flip_switch, pickup_key, open_gate, pickup_quest_item, wait_quest_complete
+  exit: string;           // direction to walk after the actions: "north" | "south" | "east" | "west" | ""
+  exit_portal_id: string; // portal ID for the exit direction (preferred over direction label at walk time)
+  target: string;         // next cell pos (e.g. "2,3") or ""
+  _section_idx: number;   // section index — keys the per-cell visit count
+  _pos: string;           // cell pos — keys the per-cell visit count
+  stageId: string;        // duplicated from the source cell for tooling convenience
+  rotation: number;       // duplicated from the source cell for tooling convenience
 }
 
 interface QuestPlan {
@@ -99,6 +121,7 @@ interface QuestPlan {
     entryDirection: string | null;
     exitDirection: string | null;
     cells: CellPlan[];
+    steps: PlanStep[];
   }[];
 }
 
@@ -136,6 +159,15 @@ function planCell(cell: QuestCell): CellPlan {
   const enemyCount = ofType('enemy').length;
   const boxCount = ofType('box').length + ofType('rare_box').length;
 
+  // Portal direction → portal_id. The raw cell ships this as
+  // `cell.portals = { north: "portal_...", south: "portal_...", ... }`.
+  // Mirror it into CellPlan so step-emission can bake the stable ID into
+  // each step's exit_portal_id field.
+  const portals: Record<string, string> = {};
+  for (const [dir, id] of Object.entries(cell.portals ?? {})) {
+    if (typeof id === 'string') portals[dir] = id;
+  }
+
   return {
     pos: cell.pos,
     stageId: cell.stage_id,
@@ -145,6 +177,7 @@ function planCell(cell: QuestCell): CellPlan {
     isEnd: !!cell.is_end,
     isBranch: !!cell.is_branch,
     connections: cell.connections,
+    portals,
     warpEdge: cell.warp_edge || null,
     keyGate: cell.is_key_gate
       ? { direction: cell.key_gate_direction ?? '', requiredKeys: cell.required_keys ?? 1 }
@@ -172,19 +205,211 @@ function planCell(cell: QuestCell): CellPlan {
   };
 }
 
+// BFS through the section's cell-connection graph from `startPos` to
+// `endPos`. Returns the pos list including both endpoints. Caller treats
+// every cell BETWEEN the endpoints as a passthrough step. Matches the
+// algorithm in autopilot.gd:_bfs_cell_path — ported here so the solver
+// can emit detour passthroughs offline instead of at autopilot runtime.
+function bfsCellPath(startPos: string, endPos: string, byPos: Map<string, CellPlan>): string[] {
+  if (startPos === endPos) return [startPos];
+  const parent = new Map<string, string>([[startPos, '']]);
+  const queue: string[] = [startPos];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    if (cur === endPos) {
+      const out: string[] = [];
+      let node: string | undefined = cur;
+      while (node !== undefined && node !== '') {
+        out.unshift(node);
+        node = parent.get(node);
+      }
+      return out;
+    }
+    const curCell = byPos.get(cur);
+    if (!curCell) continue;
+    for (const next of Object.values(curCell.connections)) {
+      if (!next) continue;
+      if (parent.has(next)) continue;
+      if (!byPos.has(next)) continue; // not in this section
+      parent.set(next, cur);
+      queue.push(next);
+    }
+  }
+  // No path — trivial pair so the caller doesn't error.
+  return [startPos, endPos];
+}
+
+function oppositeDirection(d: string): string {
+  switch (d) {
+    case 'north': return 'south';
+    case 'south': return 'north';
+    case 'east':  return 'west';
+    case 'west':  return 'east';
+    default:      return '';
+  }
+}
+
+interface PreStep {
+  cell: CellPlan;
+  isPassthrough: boolean;
+}
+
+// Build the flat step list for one section. Ported from
+// autopilot.gd:_build_steps_from_plan (lines 369-531). Behaviour is
+// intended to be bit-for-bit identical to the GDScript version so the
+// regression harness sees no semantic change after this refactor.
+function buildStepsForSection(
+  cells: CellPlan[],
+  section: QuestPlan['sections'][number],
+  sectionIdx: number,
+  totalSections: number,
+): PlanStep[] {
+  // Sort by pathOrder (scheduleCells already renumbered, but we re-sort to
+  // tolerate any external mutation).
+  const sortedCells = [...cells].sort((a, b) => a.pathOrder - b.pathOrder);
+
+  // pos → cell map for BFS detour resolution + connection lookups.
+  const byPos = new Map<string, CellPlan>();
+  for (const c of sortedCells) byPos.set(c.pos, c);
+
+  // Insert BFS passthroughs whenever consecutive cells aren't directly
+  // connected. A "passthrough" is an intermediate cell visited only as
+  // transit — kill_all action only, walk to the next cell.
+  const entries: PreStep[] = [];
+  for (let ci = 0; ci < sortedCells.length; ci++) {
+    const cell = sortedCells[ci];
+    if (ci > 0) {
+      const prevCell = sortedCells[ci - 1];
+      const directlyConnected = Object.values(prevCell.connections)
+        .some((next) => next === cell.pos);
+      if (!directlyConnected) {
+        const detour = bfsCellPath(prevCell.pos, cell.pos, byPos);
+        for (let di = 1; di < detour.length - 1; di++) {
+          const passthroughCell = byPos.get(detour[di]);
+          if (passthroughCell) entries.push({ cell: passthroughCell, isPassthrough: true });
+        }
+      }
+    }
+    entries.push({ cell, isPassthrough: false });
+  }
+
+  const isLastSection = sectionIdx === totalSections - 1;
+  const visitedKeys = new Map<string, number>();
+  const steps: PlanStep[] = [];
+
+  for (let ei = 0; ei < entries.length; ei++) {
+    const { cell, isPassthrough } = entries[ei];
+    const visitN = (visitedKeys.get(cell.pos) ?? 0) + 1;
+    visitedKeys.set(cell.pos, visitN);
+    const isLastEntryInSection = ei === entries.length - 1;
+    const isTerminal = isLastSection && isLastEntryInSection;
+
+    // ── Exit direction derivation ────────────────────────────────────
+    let exitDir = '';
+    let targetPos = '';
+    const warpEdge = cell.warpEdge ?? '';
+    const sectionExitDir = section.exitDirection ?? '';
+    const isStartCell = cell.isStart;
+    // Use warp_edge as the exit only when this cell is meant to exit
+    // INTO another section (single-cell transition sections like paru
+    // pact's s05e_ia1 have warp_edge="south" on the entry side and
+    // exit north). For section-start cells without an explicit
+    // exitDirection, fall through to the connections-based derivation
+    // so we walk toward the next planned cell.
+    let shouldUseWarpExit = false;
+    if (warpEdge !== '' && warpEdge !== null) {
+      shouldUseWarpExit = sectionExitDir !== '' || !isStartCell;
+    }
+    if (shouldUseWarpExit) {
+      exitDir = sectionExitDir !== '' ? sectionExitDir : warpEdge;
+    } else if (!isTerminal) {
+      const nextEntry = entries[ei + 1];
+      const nextPos = nextEntry.cell.pos;
+      for (const [dir, p] of Object.entries(cell.connections)) {
+        if (p === nextPos) {
+          exitDir = dir;
+          targetPos = nextPos;
+          break;
+        }
+      }
+    }
+
+    // ── Action list ──────────────────────────────────────────────────
+    let actions: string[];
+    if (isPassthrough) {
+      actions = ['kill_all'];
+    } else {
+      actions = ['kill_all'];
+      const hasNullDialog = cell.dialogTriggers.some(
+        (d) => d.condition === null && d.actions === null,
+      );
+      if (hasNullDialog) actions.push('dismiss_dialog');
+      // Order: switch → key → gate → pickup. flip_switch first because
+      // switches unblock fences that may sit on the path to keys, gates,
+      // or items. pickup_key before open_gate because the key dropped in
+      // this cell typically unlocks this cell's own gate (paru pact's
+      // B 2,1 drops its own gate key). Item pickup last since
+      // fences/gates may sit between the player and the item.
+      if (cell.switches.length > 0) actions.push('flip_switch');
+      if (cell.keyDrop !== null) actions.push('pickup_key');
+      if (cell.keyGate !== null) actions.push('open_gate');
+      actions.push('pickup_quest_item');
+      if (isTerminal) actions.push('wait_quest_complete');
+    }
+
+    // ── Label ────────────────────────────────────────────────────────
+    const area = (section.area || '?').toUpperCase();
+    const suffix = isPassthrough ? ' (passthrough)' : (visitN > 1 ? ' (return)' : '');
+    const label = `${area} ${cell.pos}${suffix}`;
+
+    // ── Exit portal ID resolution ────────────────────────────────────
+    let exitPortalId = '';
+    if (exitDir !== '' && cell.portals[exitDir]) {
+      exitPortalId = cell.portals[exitDir];
+    }
+
+    steps.push({
+      label,
+      do: actions,
+      exit: exitDir,
+      exit_portal_id: exitPortalId,
+      target: targetPos,
+      _section_idx: sectionIdx,
+      _pos: cell.pos,
+      stageId: cell.stageId,
+      rotation: cell.rotation,
+    });
+  }
+
+  return steps;
+}
+
 function planQuest(quest: Quest): QuestPlan {
+  const sectionMetas = quest.sections.map((s) => ({
+    type: s.type,
+    area: s.area,
+    startPos: s.start_pos,
+    endPos: s.end_pos,
+    entryDirection: s.entry_direction ?? null,
+    exitDirection: s.exit_direction ?? null,
+  }));
+  const sectionCells = quest.sections.map((s, i) =>
+    scheduleCells(s.cells.map(planCell), `${quest.id}/${s.area}`),
+  );
+  const totalSections = quest.sections.length;
   return {
     questId: quest.id,
     questName: quest.name,
     areaId: quest.area_id,
-    sections: quest.sections.map((s) => ({
-      type: s.type,
-      area: s.area,
-      startPos: s.start_pos,
-      endPos: s.end_pos,
-      entryDirection: s.entry_direction ?? null,
-      exitDirection: s.exit_direction ?? null,
-      cells: scheduleCells(s.cells.map(planCell), `${quest.id}/${s.area}`),
+    sections: quest.sections.map((s, i) => ({
+      ...sectionMetas[i],
+      cells: sectionCells[i],
+      steps: buildStepsForSection(
+        sectionCells[i],
+        { ...sectionMetas[i], cells: [], steps: [] },
+        i,
+        totalSections,
+      ),
     })),
   };
 }
