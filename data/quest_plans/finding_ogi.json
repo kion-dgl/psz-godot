@@ -22,6 +22,10 @@
           "connections": {
             "north": "3,2"
           },
+          "portals": {
+            "north": "portal_1770733436575_0jjzynv4j",
+            "default": "default"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -46,6 +50,11 @@
             "west": "3,1",
             "east": "3,3"
           },
+          "portals": {
+            "south": "portal_1770724548563_bnzuctak9",
+            "west": "portal_1771825168757_c70171yhn",
+            "east": "portal_1771825175495_9mmsbwqbd"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -67,6 +76,9 @@
           "isBranch": false,
           "connections": {
             "east": "3,2"
+          },
+          "portals": {
+            "east": "portal_1770724448196_4mfd4mgom"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -101,6 +113,10 @@
             "west": "3,2",
             "north": "2,3"
           },
+          "portals": {
+            "west": "portal_1770724373813_qo6ja9myl",
+            "north": "portal_1771825120791_adw7ezl6e"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -124,6 +140,10 @@
             "south": "3,3",
             "north": "1,3"
           },
+          "portals": {
+            "south": "portal_1770724068139_aswsf0cji",
+            "north": "portal_1770724078993_5elsmcsc4"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -146,6 +166,10 @@
           "connections": {
             "north": "0,3",
             "south": "2,3"
+          },
+          "portals": {
+            "north": "portal_1770723916745_dtri7lila",
+            "south": "portal_1770723931285_tso6bvs29"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -188,6 +212,10 @@
             "south": "1,3",
             "west": "0,2"
           },
+          "portals": {
+            "south": "portal_1770724222445_x2qvptt3a",
+            "west": "portal_1771825059929_uhomc3vsu"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -209,6 +237,9 @@
           "isBranch": false,
           "connections": {
             "north": "0,2"
+          },
+          "portals": {
+            "north": "portal_1770724402240_3wzf2nh7w"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -241,6 +272,11 @@
             "east": "0,3",
             "west": "0,1"
           },
+          "portals": {
+            "south": "portal_1770724587451_v7qyzr36d",
+            "east": "portal_1771825202507_qp3sr9uz5",
+            "west": "portal_1771825212832_073n0aalm"
+          },
           "warpEdge": null,
           "keyGate": {
             "direction": "west",
@@ -267,6 +303,10 @@
             "west": "0,0",
             "east": "0,2"
           },
+          "portals": {
+            "west": "portal_1770724007474_9kh6jog21",
+            "east": "portal_1770724021228_2sbc5cfro"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -289,6 +329,10 @@
           "connections": {
             "east": "0,1"
           },
+          "portals": {
+            "east": "portal_1770723810436_8lyziqda8",
+            "west": "portal_1770723821191_ps69vm5m9"
+          },
           "warpEdge": "west",
           "keyGate": null,
           "keyDrop": null,
@@ -299,6 +343,191 @@
           "dialogTriggers": [],
           "enemyCount": 0,
           "boxCount": 0
+        }
+      ],
+      "steps": [
+        {
+          "label": "A 4,2",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770733436575_0jjzynv4j",
+          "target": "3,2",
+          "_section_idx": 0,
+          "_pos": "4,2",
+          "stageId": "s03a_sa1",
+          "rotation": 180
+        },
+        {
+          "label": "A 3,2",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1771825168757_c70171yhn",
+          "target": "3,1",
+          "_section_idx": 0,
+          "_pos": "3,2",
+          "stageId": "s03a_tb3",
+          "rotation": 0
+        },
+        {
+          "label": "A 3,1",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770724448196_4mfd4mgom",
+          "target": "3,2",
+          "_section_idx": 0,
+          "_pos": "3,1",
+          "stageId": "s03a_nc2",
+          "rotation": 270
+        },
+        {
+          "label": "A 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1771825175495_9mmsbwqbd",
+          "target": "3,3",
+          "_section_idx": 0,
+          "_pos": "3,2",
+          "stageId": "s03a_tb3",
+          "rotation": 0
+        },
+        {
+          "label": "A 3,3",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1771825120791_adw7ezl6e",
+          "target": "2,3",
+          "_section_idx": 0,
+          "_pos": "3,3",
+          "stageId": "s03a_lc2",
+          "rotation": 270
+        },
+        {
+          "label": "A 2,3",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770724078993_5elsmcsc4",
+          "target": "1,3",
+          "_section_idx": 0,
+          "_pos": "2,3",
+          "stageId": "s03a_ic1",
+          "rotation": 0
+        },
+        {
+          "label": "A 1,3",
+          "do": [
+            "kill_all",
+            "flip_switch",
+            "pickup_quest_item"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770723916745_dtri7lila",
+          "target": "0,3",
+          "_section_idx": 0,
+          "_pos": "1,3",
+          "stageId": "s03a_ib1",
+          "rotation": 0
+        },
+        {
+          "label": "A 0,3",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1771825059929_uhomc3vsu",
+          "target": "0,2",
+          "_section_idx": 0,
+          "_pos": "0,3",
+          "stageId": "s03a_lb1",
+          "rotation": 180
+        },
+        {
+          "label": "A 0,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770724587451_v7qyzr36d",
+          "target": "1,2",
+          "_section_idx": 0,
+          "_pos": "0,2",
+          "stageId": "s03a_tc3",
+          "rotation": 0
+        },
+        {
+          "label": "A 1,2",
+          "do": [
+            "kill_all",
+            "pickup_key",
+            "pickup_quest_item"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770724402240_3wzf2nh7w",
+          "target": "0,2",
+          "_section_idx": 0,
+          "_pos": "1,2",
+          "stageId": "s03a_na1",
+          "rotation": 180
+        },
+        {
+          "label": "A 0,2 (return)",
+          "do": [
+            "kill_all",
+            "open_gate",
+            "pickup_quest_item"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1771825212832_073n0aalm",
+          "target": "0,1",
+          "_section_idx": 0,
+          "_pos": "0,2",
+          "stageId": "s03a_tc3",
+          "rotation": 0
+        },
+        {
+          "label": "A 0,1",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770724007474_9kh6jog21",
+          "target": "0,0",
+          "_section_idx": 0,
+          "_pos": "0,1",
+          "stageId": "s03a_ib2",
+          "rotation": 90
+        },
+        {
+          "label": "A 0,0",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770723821191_ps69vm5m9",
+          "target": "",
+          "_section_idx": 0,
+          "_pos": "0,0",
+          "stageId": "s03a_ga1",
+          "rotation": 90
         }
       ]
     },
@@ -319,6 +548,10 @@
           "isEnd": true,
           "isBranch": false,
           "connections": {},
+          "portals": {
+            "south": "portal_1770730466665_bn69sos50",
+            "north": "portal_1770730482439_o10tefeqr"
+          },
           "warpEdge": "south",
           "keyGate": null,
           "keyDrop": null,
@@ -329,6 +562,22 @@
           "dialogTriggers": [],
           "enemyCount": 3,
           "boxCount": 0
+        }
+      ],
+      "steps": [
+        {
+          "label": "E 0,0",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770730482439_o10tefeqr",
+          "target": "",
+          "_section_idx": 1,
+          "_pos": "0,0",
+          "stageId": "s03e_ia1",
+          "rotation": 0
         }
       ]
     },
@@ -350,6 +599,10 @@
           "isBranch": false,
           "connections": {
             "north": "3,2"
+          },
+          "portals": {
+            "north": "portal_1770726548654_oycyfmnn7",
+            "south": "portal_1770726528804_65npyap1o"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -375,6 +628,12 @@
             "south": "4,2",
             "west": "3,1",
             "east": "3,3"
+          },
+          "portals": {
+            "north": "portal_1770730402704_u5lcq3nmu",
+            "south": "portal_1770730432067_ntksaw2t5",
+            "west": "portal_1771826673943_2f1txafrc",
+            "east": "portal_1771826685069_g3ky3uahq"
           },
           "warpEdge": null,
           "keyGate": {
@@ -419,6 +678,10 @@
             "north": "1,2",
             "south": "3,2"
           },
+          "portals": {
+            "north": "portal_1770725725304_4aaht7788",
+            "south": "portal_1770725739472_at4z8xlml"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -441,6 +704,10 @@
           "connections": {
             "east": "3,2",
             "west": "3,0"
+          },
+          "portals": {
+            "east": "portal_1770725818346_at5nongav",
+            "west": "portal_1770725830471_io341ffla"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -465,6 +732,10 @@
             "west": "3,2",
             "east": "3,4"
           },
+          "portals": {
+            "west": "portal_1770725695157_thdqlrjg4",
+            "east": "portal_1770725706335_vtdmi7t4r"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -487,6 +758,10 @@
           "connections": {
             "south": "2,2",
             "west": "1,1"
+          },
+          "portals": {
+            "south": "portal_1770726330568_qzhzh500j",
+            "west": "portal_1771826346799_a8i2jzd4z"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -511,6 +786,10 @@
             "north": "2,0",
             "east": "3,1"
           },
+          "portals": {
+            "north": "portal_1770725890680_sdcyeuwye",
+            "east": "portal_1771825467825_tj152hzva"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -534,6 +813,10 @@
             "west": "3,3",
             "north": "2,4"
           },
+          "portals": {
+            "west": "portal_1770725946219_ha5vwnji3",
+            "north": "portal_1771825482627_93ccoohau"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -555,6 +838,9 @@
           "isBranch": false,
           "connections": {
             "east": "1,2"
+          },
+          "portals": {
+            "east": "portal_1770726478489_wuhnlspfg"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -586,6 +872,10 @@
             "north": "1,0",
             "south": "3,0"
           },
+          "portals": {
+            "north": "portal_1770725725304_4aaht7788",
+            "south": "portal_1770725739472_at4z8xlml"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -609,6 +899,10 @@
             "south": "3,4",
             "north": "1,4"
           },
+          "portals": {
+            "south": "portal_1770725853822_n4epcpmr9",
+            "north": "portal_1770725865315_z0q9secmh"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -630,6 +924,9 @@
           "isBranch": false,
           "connections": {
             "south": "2,0"
+          },
+          "portals": {
+            "south": "portal_1770726423430_7ck6f1jmn"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -660,6 +957,9 @@
           "connections": {
             "south": "2,4"
           },
+          "portals": {
+            "south": "portal_1770725676213_mbx0o9fxx"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": {
@@ -677,6 +977,677 @@
           "dialogTriggers": [],
           "enemyCount": 3,
           "boxCount": 0
+        }
+      ],
+      "steps": [
+        {
+          "label": "B 4,2",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770726548654_oycyfmnn7",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "4,2",
+          "stageId": "s03b_sa1",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,2",
+          "do": [
+            "kill_all",
+            "pickup_key",
+            "open_gate",
+            "pickup_quest_item"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770730402704_u5lcq3nmu",
+          "target": "2,2",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 2,2",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770725739472_at4z8xlml",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "2,2",
+          "stageId": "s03b_ib2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1771826673943_2f1txafrc",
+          "target": "3,1",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,1",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770725818346_at5nongav",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "3,1",
+          "stageId": "s03b_ic1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1771826685069_g3ky3uahq",
+          "target": "3,3",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,3",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770725695157_thdqlrjg4",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "3,3",
+          "stageId": "s03b_ib1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770730402704_u5lcq3nmu",
+          "target": "2,2",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 2,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770725725304_4aaht7788",
+          "target": "1,2",
+          "_section_idx": 2,
+          "_pos": "2,2",
+          "stageId": "s03b_ib2",
+          "rotation": 0
+        },
+        {
+          "label": "B 1,2",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770726330568_qzhzh500j",
+          "target": "2,2",
+          "_section_idx": 2,
+          "_pos": "1,2",
+          "stageId": "s03b_lc1",
+          "rotation": 180
+        },
+        {
+          "label": "B 2,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770725739472_at4z8xlml",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "2,2",
+          "stageId": "s03b_ib2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1771826673943_2f1txafrc",
+          "target": "3,1",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,1 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770725830471_io341ffla",
+          "target": "3,0",
+          "_section_idx": 2,
+          "_pos": "3,1",
+          "stageId": "s03b_ic1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,0",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1771825467825_tj152hzva",
+          "target": "3,1",
+          "_section_idx": 2,
+          "_pos": "3,0",
+          "stageId": "s03b_lb1",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,1 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770725818346_at5nongav",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "3,1",
+          "stageId": "s03b_ic1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1771826685069_g3ky3uahq",
+          "target": "3,3",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,3 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770725706335_vtdmi7t4r",
+          "target": "3,4",
+          "_section_idx": 2,
+          "_pos": "3,3",
+          "stageId": "s03b_ib1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,4",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770725946219_ha5vwnji3",
+          "target": "3,3",
+          "_section_idx": 2,
+          "_pos": "3,4",
+          "stageId": "s03b_lb3",
+          "rotation": 270
+        },
+        {
+          "label": "B 3,3 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770725695157_thdqlrjg4",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "3,3",
+          "stageId": "s03b_ib1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770730402704_u5lcq3nmu",
+          "target": "2,2",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 2,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770725725304_4aaht7788",
+          "target": "1,2",
+          "_section_idx": 2,
+          "_pos": "2,2",
+          "stageId": "s03b_ib2",
+          "rotation": 0
+        },
+        {
+          "label": "B 1,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1771826346799_a8i2jzd4z",
+          "target": "1,1",
+          "_section_idx": 2,
+          "_pos": "1,2",
+          "stageId": "s03b_lc1",
+          "rotation": 180
+        },
+        {
+          "label": "B 1,1",
+          "do": [
+            "kill_all",
+            "pickup_key",
+            "pickup_quest_item"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770726478489_wuhnlspfg",
+          "target": "1,2",
+          "_section_idx": 2,
+          "_pos": "1,1",
+          "stageId": "s03b_nc2",
+          "rotation": 270
+        },
+        {
+          "label": "B 1,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770726330568_qzhzh500j",
+          "target": "2,2",
+          "_section_idx": 2,
+          "_pos": "1,2",
+          "stageId": "s03b_lc1",
+          "rotation": 180
+        },
+        {
+          "label": "B 2,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770725739472_at4z8xlml",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "2,2",
+          "stageId": "s03b_ib2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1771826673943_2f1txafrc",
+          "target": "3,1",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,1 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770725830471_io341ffla",
+          "target": "3,0",
+          "_section_idx": 2,
+          "_pos": "3,1",
+          "stageId": "s03b_ic1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,0 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770725890680_sdcyeuwye",
+          "target": "2,0",
+          "_section_idx": 2,
+          "_pos": "3,0",
+          "stageId": "s03b_lb1",
+          "rotation": 0
+        },
+        {
+          "label": "B 2,0",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770725739472_at4z8xlml",
+          "target": "3,0",
+          "_section_idx": 2,
+          "_pos": "2,0",
+          "stageId": "s03b_ib2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,0 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1771825467825_tj152hzva",
+          "target": "3,1",
+          "_section_idx": 2,
+          "_pos": "3,0",
+          "stageId": "s03b_lb1",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,1 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770725818346_at5nongav",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "3,1",
+          "stageId": "s03b_ic1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1771826685069_g3ky3uahq",
+          "target": "3,3",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,3 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770725706335_vtdmi7t4r",
+          "target": "3,4",
+          "_section_idx": 2,
+          "_pos": "3,3",
+          "stageId": "s03b_ib1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,4 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1771825482627_93ccoohau",
+          "target": "2,4",
+          "_section_idx": 2,
+          "_pos": "3,4",
+          "stageId": "s03b_lb3",
+          "rotation": 270
+        },
+        {
+          "label": "B 2,4",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770725853822_n4epcpmr9",
+          "target": "3,4",
+          "_section_idx": 2,
+          "_pos": "2,4",
+          "stageId": "s03b_ic3",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,4 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770725946219_ha5vwnji3",
+          "target": "3,3",
+          "_section_idx": 2,
+          "_pos": "3,4",
+          "stageId": "s03b_lb3",
+          "rotation": 270
+        },
+        {
+          "label": "B 3,3 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770725695157_thdqlrjg4",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "3,3",
+          "stageId": "s03b_ib1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1771826673943_2f1txafrc",
+          "target": "3,1",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,1 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "west",
+          "exit_portal_id": "portal_1770725830471_io341ffla",
+          "target": "3,0",
+          "_section_idx": 2,
+          "_pos": "3,1",
+          "stageId": "s03b_ic1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,0 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770725890680_sdcyeuwye",
+          "target": "2,0",
+          "_section_idx": 2,
+          "_pos": "3,0",
+          "stageId": "s03b_lb1",
+          "rotation": 0
+        },
+        {
+          "label": "B 2,0 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770725725304_4aaht7788",
+          "target": "1,0",
+          "_section_idx": 2,
+          "_pos": "2,0",
+          "stageId": "s03b_ib2",
+          "rotation": 0
+        },
+        {
+          "label": "B 1,0",
+          "do": [
+            "kill_all",
+            "pickup_key",
+            "pickup_quest_item"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770726423430_7ck6f1jmn",
+          "target": "2,0",
+          "_section_idx": 2,
+          "_pos": "1,0",
+          "stageId": "s03b_na1",
+          "rotation": 0
+        },
+        {
+          "label": "B 2,0 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "south",
+          "exit_portal_id": "portal_1770725739472_at4z8xlml",
+          "target": "3,0",
+          "_section_idx": 2,
+          "_pos": "2,0",
+          "stageId": "s03b_ib2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,0 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1771825467825_tj152hzva",
+          "target": "3,1",
+          "_section_idx": 2,
+          "_pos": "3,0",
+          "stageId": "s03b_lb1",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,1 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770725818346_at5nongav",
+          "target": "3,2",
+          "_section_idx": 2,
+          "_pos": "3,1",
+          "stageId": "s03b_ic1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,2 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1771826685069_g3ky3uahq",
+          "target": "3,3",
+          "_section_idx": 2,
+          "_pos": "3,2",
+          "stageId": "s03b_xb2",
+          "rotation": 0
+        },
+        {
+          "label": "B 3,3 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "east",
+          "exit_portal_id": "portal_1770725706335_vtdmi7t4r",
+          "target": "3,4",
+          "_section_idx": 2,
+          "_pos": "3,3",
+          "stageId": "s03b_ib1",
+          "rotation": 90
+        },
+        {
+          "label": "B 3,4 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1771825482627_93ccoohau",
+          "target": "2,4",
+          "_section_idx": 2,
+          "_pos": "3,4",
+          "stageId": "s03b_lb3",
+          "rotation": 270
+        },
+        {
+          "label": "B 2,4 (passthrough)",
+          "do": [
+            "kill_all"
+          ],
+          "exit": "north",
+          "exit_portal_id": "portal_1770725865315_z0q9secmh",
+          "target": "1,4",
+          "_section_idx": 2,
+          "_pos": "2,4",
+          "stageId": "s03b_ic3",
+          "rotation": 0
+        },
+        {
+          "label": "B 1,4",
+          "do": [
+            "kill_all",
+            "pickup_key",
+            "pickup_quest_item",
+            "wait_quest_complete"
+          ],
+          "exit": "",
+          "exit_portal_id": "",
+          "target": "",
+          "_section_idx": 2,
+          "_pos": "1,4",
+          "stageId": "s03b_ga1",
+          "rotation": 0
         }
       ]
     }
