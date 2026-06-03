@@ -41,6 +41,7 @@ interface QuestCell {
   is_branch?: boolean;
   is_key_gate?: boolean;
   key_gate_direction?: string;
+  key_gate_directions?: string[];
   required_keys?: number;
   key_drop?: string;
   key_drop_position?: Vec3;
@@ -81,7 +82,13 @@ interface CellPlan {
   // direction label (subject to rotation-table drift).
   portals: Record<string, string>;
   warpEdge: string | null;
-  keyGate: { direction: string; requiredKeys: number } | null;
+  // `direction` is the legacy single-gate field. `directions` carries the
+  // full list when the cell has more than one locked portal (multi-gate
+  // hubs like finding_ogi B 3,2). For single-gate cells `directions` is
+  // [direction]; for multi-gate hubs `direction` is the FIRST entry in
+  // `directions` (the spoke walked first), used as the default for any
+  // legacy consumer that doesn't yet know about the multi-direction list.
+  keyGate: { direction: string; directions: string[]; requiredKeys: number } | null;
   keyDrop: { targetCell: string; position: Vec3 | null } | null;
   switches: { position: Vec3; linkId: string | null }[];
   fences: { position: Vec3; linkId: string | null }[];
@@ -180,7 +187,16 @@ function planCell(cell: QuestCell): CellPlan {
     portals,
     warpEdge: cell.warp_edge || null,
     keyGate: cell.is_key_gate
-      ? { direction: cell.key_gate_direction ?? '', requiredKeys: cell.required_keys ?? 1 }
+      ? (() => {
+          const dirs = (cell.key_gate_directions && cell.key_gate_directions.length > 0)
+            ? cell.key_gate_directions
+            : (cell.key_gate_direction ? [cell.key_gate_direction] : []);
+          return {
+            direction: dirs[0] ?? (cell.key_gate_direction ?? ''),
+            directions: dirs,
+            requiredKeys: cell.required_keys ?? 1,
+          };
+        })()
       : null,
     // keyDrop covers two raw-format shapes:
     //   • `cell.key_drop = "<target>"` (search_and_rescue): a key spawns
@@ -254,6 +270,250 @@ interface PreStep {
   isPassthrough: boolean;
 }
 
+// BFS through a section's connection graph but refuse to step into any cell
+// in `barred`. Used by hub-and-spoke planning to walk one spoke without
+// crossing back through the hub.
+function bfsCellPathExcluding(
+  startPos: string,
+  endPos: string,
+  byPos: Map<string, CellPlan>,
+  barred: Set<string>,
+): string[] {
+  if (startPos === endPos) return [startPos];
+  if (barred.has(startPos)) return [];
+  const parent = new Map<string, string>([[startPos, '']]);
+  const queue: string[] = [startPos];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    if (cur === endPos) {
+      const out: string[] = [];
+      let node: string | undefined = cur;
+      while (node !== undefined && node !== '') {
+        out.unshift(node);
+        node = parent.get(node);
+      }
+      return out;
+    }
+    const curCell = byPos.get(cur);
+    if (!curCell) continue;
+    for (const next of Object.values(curCell.connections)) {
+      if (!next) continue;
+      if (parent.has(next)) continue;
+      if (!byPos.has(next)) continue;
+      if (barred.has(next)) continue;
+      parent.set(next, cur);
+      queue.push(next);
+    }
+  }
+  return [];
+}
+
+// Find this section's hub-and-spoke geometry from a hub cell with multiple
+// locked-gate directions. For each direction in `hub.keyGate.directions`, walk
+// the spoke (BFS through the section, avoiding re-entering the hub) until
+// reaching a cell with `keyDrop.targetCell == hub.pos` OR the section's
+// end-cell. Returns the spoke cell-path for each direction (including the
+// hub-neighbour cell on each end but NOT the hub itself).
+function discoverSpokes(
+  hub: CellPlan,
+  byPos: Map<string, CellPlan>,
+  sectionEndPos: string,
+): { direction: string; path: string[] }[] {
+  if (!hub.keyGate) return [];
+  const spokes: { direction: string; path: string[] }[] = [];
+  const hubBar = new Set<string>([hub.pos]);
+  for (const dir of hub.keyGate.directions) {
+    const startNeighbour = hub.connections[dir as Dir];
+    if (!startNeighbour) continue;
+    // Find any cell reachable through this gate that either drops a key for
+    // the hub OR is the section's final cell. BFS-expand step by step so
+    // every visited cell becomes a candidate.
+    const candidates: string[] = [];
+    const visited = new Set<string>(hubBar);
+    visited.add(startNeighbour);
+    const queue: string[] = [startNeighbour];
+    while (queue.length > 0) {
+      const cur = queue.shift()!;
+      const curCell = byPos.get(cur);
+      if (!curCell) continue;
+      const dropsHubKey = curCell.keyDrop?.targetCell === hub.pos && cur !== hub.pos;
+      const isSectionEnd = cur === sectionEndPos;
+      if (dropsHubKey || isSectionEnd) candidates.push(cur);
+      for (const next of Object.values(curCell.connections)) {
+        if (!next) continue;
+        if (visited.has(next)) continue;
+        if (!byPos.has(next)) continue;
+        visited.add(next);
+        queue.push(next);
+      }
+    }
+    if (candidates.length === 0) continue;
+    // Prefer the section-end if it matches, otherwise pick the first
+    // candidate that drops a hub key (which is the spoke payload).
+    const target =
+      candidates.find((p) => p === sectionEndPos) ?? candidates[0];
+    const path = bfsCellPathExcluding(startNeighbour, target, byPos, hubBar);
+    if (path.length > 0) spokes.push({ direction: dir, path });
+  }
+  return spokes;
+}
+
+// Multi-gate hub section: emit start→hub passthroughs, then for each spoke
+// direction emit hub-visit + spoke-forward + payload + spoke-return + hub-revisit,
+// closing on the final spoke's payload (which is also the section end).
+function buildHubAndSpokeSteps(
+  hub: CellPlan,
+  spokes: { direction: string; path: string[] }[],
+  startCell: CellPlan,
+  byPos: Map<string, CellPlan>,
+  section: QuestPlan['sections'][number],
+  sectionIdx: number,
+  totalSections: number,
+): PlanStep[] {
+  const area = (section.area || '?').toUpperCase();
+  const isLastSection = sectionIdx === totalSections - 1;
+  const steps: PlanStep[] = [];
+  const visitedKeys = new Map<string, number>();
+
+  const pushStep = (
+    cell: CellPlan,
+    actions: string[],
+    exitDir: string,
+    targetPos: string,
+    suffix: string,
+  ): void => {
+    const visitN = (visitedKeys.get(cell.pos) ?? 0) + 1;
+    visitedKeys.set(cell.pos, visitN);
+    const label = `${area} ${cell.pos}${suffix}`;
+    let exitPortalId = '';
+    if (exitDir !== '' && cell.portals[exitDir]) exitPortalId = cell.portals[exitDir];
+    steps.push({
+      label,
+      do: actions,
+      exit: exitDir,
+      exit_portal_id: exitPortalId,
+      target: targetPos,
+      _section_idx: sectionIdx,
+      _pos: cell.pos,
+      stageId: cell.stageId,
+      rotation: cell.rotation,
+    });
+  };
+
+  // ── Start → hub approach ───────────────────────────────────────
+  // BFS the path from section start to the hub. Each intermediate is a
+  // passthrough; the start cell itself gets a real visit (kill_all).
+  const approach = bfsCellPathExcluding(startCell.pos, hub.pos, byPos, new Set());
+  for (let i = 0; i < approach.length - 1; i++) {
+    const cell = byPos.get(approach[i])!;
+    const nextPos = approach[i + 1];
+    let exitDir = '';
+    for (const [d, p] of Object.entries(cell.connections)) {
+      if (p === nextPos) {
+        exitDir = d;
+        break;
+      }
+    }
+    const isStartLikeCell = i === 0;
+    const actions: string[] = ['kill_all'];
+    if (isStartLikeCell) {
+      const hasNullDialog = cell.dialogTriggers.some((d) => d.condition === null && d.actions === null);
+      if (hasNullDialog) actions.push('dismiss_dialog');
+      if (cell.switches.length > 0) actions.push('flip_switch');
+      if (cell.keyDrop !== null) actions.push('pickup_key');
+      // No quest items on the approach by definition; if any quest data
+      // ever puts an item on a path cell before the hub, the existing
+      // single-pass code would have picked it up — keep parity with that.
+    }
+    pushStep(cell, actions, exitDir, nextPos, isStartLikeCell ? '' : ' (passthrough)');
+  }
+
+  // ── Hub + spokes ────────────────────────────────────────────────
+  // Per-visit hub action list:
+  //   first visit  : kill_all + (pickup_key if self-drop) + open_gate:<dirN>
+  //   later visits : open_gate:<dirN> only (kill_all on an already-cleared
+  //                  room can stall the wave-clear hook with empty waves)
+  for (let si = 0; si < spokes.length; si++) {
+    const { direction, path } = spokes[si];
+    const isFirstHubVisit = si === 0;
+    const isLastSpoke = si === spokes.length - 1;
+
+    // Hub step.
+    const hubActions: string[] = [];
+    if (isFirstHubVisit) {
+      hubActions.push('kill_all');
+      const hasNullDialog = hub.dialogTriggers.some((d) => d.condition === null && d.actions === null);
+      if (hasNullDialog) hubActions.push('dismiss_dialog');
+      if (hub.keyDrop !== null && hub.keyDrop.targetCell === hub.pos) hubActions.push('pickup_key');
+    }
+    hubActions.push(`open_gate:${direction}`);
+    pushStep(hub, hubActions, direction, path[0], isFirstHubVisit ? '' : ' (return)');
+
+    // Spoke forward: path[0..length-2] are passthroughs, path[length-1] is payload.
+    for (let pi = 0; pi < path.length; pi++) {
+      const cell = byPos.get(path[pi])!;
+      const isPayload = pi === path.length - 1;
+      let exitDir = '';
+      let target = '';
+      if (!isPayload) {
+        const nextPos = path[pi + 1];
+        for (const [d, p] of Object.entries(cell.connections)) {
+          if (p === nextPos) {
+            exitDir = d;
+            target = nextPos;
+            break;
+          }
+        }
+        pushStep(cell, ['kill_all'], exitDir, target, ' (passthrough)');
+      } else {
+        // Payload cell.
+        const actions: string[] = ['kill_all'];
+        const hasNullDialog = cell.dialogTriggers.some((d) => d.condition === null && d.actions === null);
+        if (hasNullDialog) actions.push('dismiss_dialog');
+        if (cell.switches.length > 0) actions.push('flip_switch');
+        if (cell.keyDrop !== null) actions.push('pickup_key');
+        actions.push('pickup_quest_item');
+        const isTerminal = isLastSpoke && isLastSection;
+        if (isTerminal) actions.push('wait_quest_complete');
+        // Exit: if this is the final payload, no exit (we're done); otherwise
+        // walk back toward the hub via the reverse of the way we came.
+        if (!isLastSpoke) {
+          // Find the connection on this payload cell that leads back along
+          // the spoke (toward path[pi-1] if length>1, else back to hub).
+          const prevPos = path.length >= 2 ? path[pi - 1] : hub.pos;
+          for (const [d, p] of Object.entries(cell.connections)) {
+            if (p === prevPos) {
+              exitDir = d;
+              target = prevPos;
+              break;
+            }
+          }
+        }
+        pushStep(cell, actions, exitDir, target, '');
+      }
+    }
+
+    // Spoke return path (only if not last spoke): from payload back to hub.
+    if (!isLastSpoke) {
+      // Walk path in reverse, excluding the payload (already emitted).
+      for (let pi = path.length - 2; pi >= 0; pi--) {
+        const cell = byPos.get(path[pi])!;
+        const nextPos = pi === 0 ? hub.pos : path[pi - 1];
+        let exitDir = '';
+        for (const [d, p] of Object.entries(cell.connections)) {
+          if (p === nextPos) {
+            exitDir = d;
+            break;
+          }
+        }
+        pushStep(cell, ['kill_all'], exitDir, nextPos, ' (return)');
+      }
+    }
+  }
+
+  return steps;
+}
+
 // Build the flat step list for one section. Ported from
 // autopilot.gd:_build_steps_from_plan (lines 369-531). Behaviour is
 // intended to be bit-for-bit identical to the GDScript version so the
@@ -271,6 +531,29 @@ function buildStepsForSection(
   // pos → cell map for BFS detour resolution + connection lookups.
   const byPos = new Map<string, CellPlan>();
   for (const c of sortedCells) byPos.set(c.pos, c);
+
+  // Multi-gate hub fast-path: when the section contains a hub (cell with
+  // `keyGate.directions.length > 1`), the natural pathOrder traversal can't
+  // express the hub→spoke→hub→spoke→hub pattern the gameplay needs. Emit
+  // a custom hub-and-spoke step list instead.
+  const hub = sortedCells.find((c) => c.keyGate && c.keyGate.directions.length > 1);
+  if (hub) {
+    const startCell = sortedCells.find((c) => c.isStart) ?? sortedCells[0];
+    const spokes = discoverSpokes(hub, byPos, section.endPos);
+    if (spokes.length > 0) {
+      return buildHubAndSpokeSteps(
+        hub,
+        spokes,
+        startCell,
+        byPos,
+        section,
+        sectionIdx,
+        totalSections,
+      );
+    }
+    // Fall through to the linear builder if spoke discovery returned
+    // nothing — the warning surfaces in scheduleCells output.
+  }
 
   // Insert BFS passthroughs whenever consecutive cells aren't directly
   // connected. A "passthrough" is an intermediate cell visited only as

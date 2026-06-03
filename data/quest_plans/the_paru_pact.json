@@ -171,6 +171,9 @@
           "warpEdge": null,
           "keyGate": {
             "direction": "south",
+            "directions": [
+              "south"
+            ],
             "requiredKeys": 1
           },
           "keyDrop": null,
@@ -639,6 +642,9 @@
           "warpEdge": null,
           "keyGate": {
             "direction": "south",
+            "directions": [
+              "south"
+            ],
             "requiredKeys": 1
           },
           "keyDrop": {

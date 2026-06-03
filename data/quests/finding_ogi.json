@@ -1159,10 +1159,10 @@
           "has_key": false,
           "key_for_cell": "",
           "is_key_gate": true,
-          "key_gate_direction": "north",
+          "key_gate_direction": "west",
           "key_gate_directions": [
-            "north",
             "west",
+            "north",
             "east"
           ],
           "key_drop": "3,2",

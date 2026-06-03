@@ -946,6 +946,12 @@ func _run_next_action(field: Node) -> void:
 	var action: String = str(actions[_step_action_idx])
 	_step_action_idx += 1
 	print("[sanity] action %d/%d: %s" % [_step_action_idx, actions.size(), action])
+	# `open_gate:<dir>` carries the spoke direction for multi-gate hubs
+	# (finding_ogi B 3,2). Stripped here so the match below stays exhaustive.
+	var open_gate_dir := ""
+	if action.begins_with("open_gate:"):
+		open_gate_dir = action.substr("open_gate:".length())
+		action = "open_gate"
 	match action:
 		"kill_all":
 			_do_kill_all(field)
@@ -958,7 +964,7 @@ func _run_next_action(field: Node) -> void:
 		"flip_switch":
 			_do_flip_switch(field)
 		"open_gate":
-			_do_open_gate(field)
+			_do_open_gate(field, open_gate_dir)
 		"wait_quest_complete":
 			_do_wait_quest_complete(field)
 		_:
@@ -1089,10 +1095,18 @@ func _do_flip_switch(field: Node) -> void:
 	_walk_then_interact(field, sw.global_position, "switch", POST_INTERACT_SETTLE, auto_collect)
 
 
-func _do_open_gate(field: Node) -> void:
-	var gate := _find_key_gate(field)
+func _do_open_gate(field: Node, direction: String = "") -> void:
+	# Multi-gate hubs (finding_ogi B 3,2) carry three KeyGate children, each
+	# named KeyGate_<dir> by valley_field_controller. When `direction` is
+	# provided, target that specific one; otherwise fall back to the legacy
+	# "first KeyGate found" behaviour so single-gate cells stay unchanged.
+	var gate: Node = null
+	if direction != "":
+		gate = _find_key_gate_by_direction(field, direction)
 	if gate == null:
-		print("[sanity] WARN: open_gate — no KeyGate in cell")
+		gate = _find_key_gate(field)
+	if gate == null:
+		print("[sanity] WARN: open_gate — no KeyGate in cell (direction='%s')" % direction)
 		_run_next_action(field)
 		return
 	_walk_then_interact(field, gate.global_position, "gate", POST_GATE_SETTLE)
@@ -1465,6 +1479,34 @@ func _find_key_gate(root: Node) -> Node:
 		if found != null:
 			return found
 	return null
+
+
+# Find a KeyGate by direction. Field cells name multi-gate hub children
+# "KeyGate_<dir>" (valley_field_controller.gd:2010). Match by node name
+# first; fall back to nearest-locked-gate if naming convention drifts. Skip
+# already-opened gates so a repeat call walks to a still-locked target
+# instead of bouncing off the one we just opened.
+func _find_key_gate_by_direction(root: Node, direction: String) -> Node:
+	var expected_name := "KeyGate_%s" % direction
+	var locked_gates: Array = []
+	_collect_key_gates(root, locked_gates)
+	for g in locked_gates:
+		if g.name == expected_name:
+			return g
+	# Fallback: any still-locked gate. _do_open_gate's outer fallback covers
+	# the "no locked gates at all" case.
+	for g in locked_gates:
+		return g
+	return null
+
+
+func _collect_key_gates(root: Node, out: Array) -> void:
+	if root is KeyGate:
+		var kg := root as KeyGate
+		if kg.element_state == "locked":
+			out.append(kg)
+	for c in root.get_children():
+		_collect_key_gates(c, out)
 
 
 # ── Field walk primitive ───────────────────────────────────────
