@@ -1,0 +1,84 @@
+{
+  "questId": "poisoned_water",
+  "questName": "Poisoned Water",
+  "areaId": "ozette",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "startPos": "0,0",
+      "endPos": "0,2",
+      "entryDirection": null,
+      "exitDirection": null,
+      "cells": [
+        {
+          "pos": "0,0",
+          "stageId": "s02a_na1",
+          "rotation": 0,
+          "pathOrder": 0,
+          "isStart": true,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "south": "0,1"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 0,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,1",
+          "stageId": "s02a_sa1",
+          "rotation": 0,
+          "pathOrder": 1,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "north": "0,0",
+            "south": "0,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 3,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,2",
+          "stageId": "s02z_na1",
+          "rotation": 0,
+          "pathOrder": 2,
+          "isStart": false,
+          "isEnd": true,
+          "isBranch": false,
+          "connections": {
+            "north": "0,1"
+          },
+          "warpEdge": "south",
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 1,
+          "boxCount": 0
+        }
+      ]
+    }
+  ]
+}

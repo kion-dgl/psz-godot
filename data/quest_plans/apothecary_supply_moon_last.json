@@ -1,6 +1,6 @@
 {
-  "questId": "apothecary_supply",
-  "questName": "Apothecary's Supply",
+  "questId": "apothecary_supply_moon_last",
+  "questName": "Apothecary's Supply (moon bloom last)",
   "areaId": "ozette",
   "sections": [
     {
@@ -74,7 +74,7 @@
           "pos": "1,1",
           "stageId": "s02a_td2",
           "rotation": 90,
-          "pathOrder": 3,
+          "pathOrder": 2,
           "isStart": false,
           "isEnd": false,
           "isBranch": true,
@@ -98,7 +98,7 @@
           "pos": "3,1",
           "stageId": "s02a_nc2",
           "rotation": 180,
-          "pathOrder": 2,
+          "pathOrder": 3,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -161,7 +161,7 @@
           "pos": "1,0",
           "stageId": "s02a_nb2",
           "rotation": 270,
-          "pathOrder": 11,
+          "pathOrder": 5,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -200,7 +200,7 @@
           "pos": "0,2",
           "stageId": "s02a_ga1",
           "rotation": 90,
-          "pathOrder": 5,
+          "pathOrder": 6,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -233,7 +233,7 @@
           "pos": "0,0",
           "stageId": "s02a_nb2",
           "rotation": 270,
-          "pathOrder": 10,
+          "pathOrder": 7,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -272,7 +272,7 @@
           "pos": "0,3",
           "stageId": "s02a_lc2",
           "rotation": 180,
-          "pathOrder": 6,
+          "pathOrder": 8,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -292,10 +292,39 @@
           "boxCount": 0
         },
         {
+          "pos": "1,4",
+          "stageId": "s02a_na1",
+          "rotation": 90,
+          "pathOrder": 9,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "west": "1,3"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": {
+            "targetCell": "1,3",
+            "position": [
+              -0.1,
+              1,
+              1.4
+            ]
+          },
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 4,
+          "boxCount": 0
+        },
+        {
           "pos": "1,3",
           "stageId": "s02a_td1",
           "rotation": 270,
-          "pathOrder": 8,
+          "pathOrder": 10,
           "isStart": false,
           "isEnd": false,
           "isBranch": true,
@@ -337,39 +366,10 @@
           "boxCount": 2
         },
         {
-          "pos": "1,4",
-          "stageId": "s02a_na1",
-          "rotation": 90,
-          "pathOrder": 7,
-          "isStart": false,
-          "isEnd": false,
-          "isBranch": false,
-          "connections": {
-            "west": "1,3"
-          },
-          "warpEdge": null,
-          "keyGate": null,
-          "keyDrop": {
-            "targetCell": "1,3",
-            "position": [
-              -0.1,
-              1,
-              1.4
-            ]
-          },
-          "switches": [],
-          "fences": [],
-          "npcs": [],
-          "storyProps": [],
-          "dialogTriggers": [],
-          "enemyCount": 4,
-          "boxCount": 0
-        },
-        {
           "pos": "2,3",
           "stageId": "s02a_nb2",
           "rotation": 180,
-          "pathOrder": 9,
+          "pathOrder": 11,
           "isStart": false,
           "isEnd": true,
           "isBranch": false,
@@ -406,8 +406,5 @@
         }
       ]
     }
-  ],
-  "id": "apothecary_supply_moon_last",
-  "name": "Apothecary's Supply (moon bloom last)",
-  "description": " — variant: moon_bloom at 1,0 is picked up last."
+  ]
 }

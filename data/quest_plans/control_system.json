@@ -1,0 +1,391 @@
+{
+  "questId": "control_system",
+  "questName": "Control System",
+  "areaId": "arca",
+  "sections": [
+    {
+      "type": "transition",
+      "area": "e",
+      "startPos": "0,0",
+      "endPos": "0,0",
+      "entryDirection": "south",
+      "exitDirection": "north",
+      "cells": [
+        {
+          "pos": "0,0",
+          "stageId": "s06e_ia1",
+          "rotation": 0,
+          "pathOrder": 0,
+          "isStart": true,
+          "isEnd": true,
+          "isBranch": false,
+          "connections": {},
+          "warpEdge": "north",
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [
+            {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "condition": "room_clear",
+              "actions": []
+            }
+          ],
+          "enemyCount": 0,
+          "boxCount": 0
+        }
+      ]
+    },
+    {
+      "type": "grid",
+      "area": "b",
+      "startPos": "4,2",
+      "endPos": "0,1",
+      "entryDirection": "south",
+      "exitDirection": "north",
+      "cells": [
+        {
+          "pos": "4,2",
+          "stageId": "s06b_sa1",
+          "rotation": 180,
+          "pathOrder": 0,
+          "isStart": true,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "north": "3,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 0,
+          "boxCount": 0
+        },
+        {
+          "pos": "3,1",
+          "stageId": "s06b_nc2",
+          "rotation": 270,
+          "pathOrder": 1,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "3,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": {
+            "targetCell": "3,2",
+            "position": [
+              -11.8,
+              1,
+              -5.7
+            ]
+          },
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 8,
+          "boxCount": 0
+        },
+        {
+          "pos": "3,2",
+          "stageId": "s06b_tb3",
+          "rotation": 90,
+          "pathOrder": 2,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": true,
+          "connections": {
+            "west": "3,1",
+            "south": "4,2",
+            "north": "2,2"
+          },
+          "warpEdge": null,
+          "keyGate": {
+            "direction": "north",
+            "requiredKeys": 1
+          },
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 9,
+          "boxCount": 0
+        },
+        {
+          "pos": "2,2",
+          "stageId": "s06b_tb3",
+          "rotation": 90,
+          "pathOrder": 3,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": true,
+          "connections": {
+            "west": "2,1",
+            "south": "3,2",
+            "north": "1,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 6,
+          "boxCount": 0
+        },
+        {
+          "pos": "2,1",
+          "stageId": "s06b_na1",
+          "rotation": 270,
+          "pathOrder": 4,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "2,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 4,
+          "boxCount": 0
+        },
+        {
+          "pos": "1,2",
+          "stageId": "s06b_lc1",
+          "rotation": 90,
+          "pathOrder": 5,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "1,3",
+            "south": "2,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 9,
+          "boxCount": 0
+        },
+        {
+          "pos": "1,3",
+          "stageId": "s06b_ib2",
+          "rotation": 270,
+          "pathOrder": 6,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "west": "1,2",
+            "east": "1,4"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 7,
+          "boxCount": 0
+        },
+        {
+          "pos": "1,4",
+          "stageId": "s06b_lb3",
+          "rotation": 270,
+          "pathOrder": 7,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "west": "1,3",
+            "north": "0,4"
+          },
+          "warpEdge": null,
+          "keyGate": {
+            "direction": "north",
+            "requiredKeys": 1
+          },
+          "keyDrop": {
+            "targetCell": "1,4",
+            "position": [
+              13.2,
+              1,
+              0.6
+            ]
+          },
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 6,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,4",
+          "stageId": "s06b_lc2",
+          "rotation": 180,
+          "pathOrder": 8,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "south": "1,4",
+            "west": "0,3"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 9,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,3",
+          "stageId": "s06b_ic1",
+          "rotation": 90,
+          "pathOrder": 9,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "0,4",
+            "west": "0,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 10,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,2",
+          "stageId": "s06b_ic3",
+          "rotation": 90,
+          "pathOrder": 10,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "east": "0,3",
+            "west": "0,1"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 11,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,1",
+          "stageId": "s06b_lb1",
+          "rotation": 0,
+          "pathOrder": 11,
+          "isStart": false,
+          "isEnd": true,
+          "isBranch": false,
+          "connections": {
+            "east": "0,2"
+          },
+          "warpEdge": "north",
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 9,
+          "boxCount": 0
+        }
+      ]
+    },
+    {
+      "type": "boss",
+      "area": "z",
+      "startPos": "0,0",
+      "endPos": "0,0",
+      "entryDirection": "south",
+      "exitDirection": null,
+      "cells": [
+        {
+          "pos": "0,0",
+          "stageId": "s07z_na1",
+          "rotation": 0,
+          "pathOrder": 0,
+          "isStart": true,
+          "isEnd": true,
+          "isBranch": false,
+          "connections": {},
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [
+            {
+              "position": [
+                0,
+                0,
+                0
+              ],
+              "condition": "room_clear",
+              "actions": []
+            }
+          ],
+          "enemyCount": 1,
+          "boxCount": 0
+        }
+      ]
+    }
+  ]
+}

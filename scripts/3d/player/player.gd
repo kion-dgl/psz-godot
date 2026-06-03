@@ -75,6 +75,14 @@ const FLOOR_CHECK_DISTANCE: float = 1.0  # How far ahead to check for floor
 const FLOOR_CHECK_SIDE: float = 0.5  # Side offset for corner checks
 const FLOOR_RAY_LENGTH: float = 5.0  # How far down to raycast
 
+# Step-up tolerance: small obstacles (planks, kerbs, raised tile edges) up to
+# this height are stepped onto instead of treated as walls. CharacterBody3D's
+# move_and_slide doesn't auto-climb vertical steps — without this, the player
+# capsule wedges against any prop sitting a few cm above the surrounding
+# floor. 0.5 m covers ~0.3 m props after the player capsule has sunk slightly
+# into the ground (overlap with floor pushes the feet a few cm below Y=0).
+const STEP_UP_MAX_HEIGHT: float = 0.5
+
 # Animation references (found at runtime)
 var animation_player: AnimationPlayer
 var skeleton: Skeleton3D
@@ -879,6 +887,12 @@ func _physics_process(delta: float) -> void:
 	# Apply movement
 	move_and_slide()
 
+	# If we ran into a vertical step (≤ STEP_UP_MAX_HEIGHT) while moving
+	# horizontally, lift the player onto it. Without this, move_and_slide
+	# treats every prop-shaped collider as a wall and the capsule wedges in
+	# place. See the s03a_ib2 plank case in static_in_the_snow.
+	_apply_step_up()
+
 	# Update model rotation
 	if model:
 		model.rotation.y = player_rotation
@@ -1117,6 +1131,56 @@ func _has_floor_at(check_pos: Vector3) -> bool:
 
 	var result := space_state.intersect_ray(query)
 	return not result.is_empty()
+
+
+# After move_and_slide: if we hit a wall while trying to move horizontally and
+# there's walkable floor just above the wall's lip (≤ STEP_UP_MAX_HEIGHT), snap
+# the player up onto it. Probe at several forward distances because a single
+# probe distance can either miss (probe lands before the obstacle) or land too
+# far (probe lands past a thin obstacle into the next gap).
+var _step_up_logged_miss: bool = false
+func _apply_step_up() -> void:
+	if not is_on_wall():
+		return
+	var horiz := Vector3(velocity.x, 0.0, velocity.z)
+	if horiz.length_squared() < 0.01:
+		return
+	var move_dir := horiz.normalized()
+	var space_state := get_world_3d().direct_space_state
+	# Probe ahead at multiple distances spanning roughly capsule-radius to
+	# capsule-radius + 0.6 m. Whichever returns the highest valid step-top
+	# (within STEP_UP_MAX_HEIGHT) wins — that's the obstacle we want to climb.
+	var best_lift: float = -1.0
+	var best_top: float = 0.0
+	var probe_distances: PackedFloat32Array = [0.3, 0.5, 0.7, 0.9]
+	for d in probe_distances:
+		var px := global_position.x + move_dir.x * d
+		var pz := global_position.z + move_dir.z * d
+		var from := Vector3(px, global_position.y + STEP_UP_MAX_HEIGHT, pz)
+		var to := Vector3(px, global_position.y - 0.05, pz)
+		var q := PhysicsRayQueryParameters3D.create(from, to)
+		q.collision_mask = 1
+		q.exclude = [self]
+		var hit: Dictionary = space_state.intersect_ray(q)
+		if hit.is_empty():
+			continue
+		var step_top: float = hit.position.y
+		var lift: float = step_top - global_position.y
+		if lift > 0.01 and lift <= STEP_UP_MAX_HEIGHT and lift > best_lift:
+			best_lift = lift
+			best_top = step_top
+	if best_lift > 0.0:
+		global_position.y = best_top + 0.001
+		velocity.y = 0.0
+	elif not _step_up_logged_miss:
+		# One-shot debug: when we're stuck on a wall but no climbable step is
+		# anywhere in the probe range, log so the cause is visible in the
+		# sanity log. Silent on successful climbs (they're the expected case).
+		_step_up_logged_miss = true
+		print("[step-up] miss: on_wall no climbable step within %.2fm of player=(%.3f,%.3f,%.3f) move_dir=(%.2f,%.2f)" % [
+			STEP_UP_MAX_HEIGHT,
+			global_position.x, global_position.y, global_position.z,
+			move_dir.x, move_dir.z])
 
 
 func _start_dodge() -> void:

@@ -434,12 +434,26 @@ func _build_steps_from_plan(quest_id: String) -> Array:
 			# and sends the autopilot back to the previous section — that's
 			# the "goes backwards" failure mode.
 			var warp_edge: Variant = cell.get("warp_edge", cell.get("warpEdge", null))
+			# Read the section's exit direction defensively: Dictionary.get()
+			# returns the stored value (null) when the key exists with a null
+			# value, NOT the default. str(null) is the literal "<null>", which
+			# is not empty and would silently get used as a portal direction.
+			var raw_exit_dir: Variant = section.get("exitDirection", section.get("exit_direction", ""))
+			var section_exit_dir: String = "" if raw_exit_dir == null else str(raw_exit_dir)
+			var is_start_cell: bool = bool(cell.get("isStart", cell.get("is_start", false)))
+			# Use warp_edge as the exit only when this cell is meant to exit
+			# into another section — i.e. warp_edge is set AND either the
+			# section has an explicit exitDirection (so we know which portal
+			# is the EXIT, even if warp_edge happened to be on the entry side
+			# of a single-cell transition) OR this cell is NOT the section's
+			# start (so we're sure warp_edge isn't the entry portal we just
+			# walked through). For section START cells without an exitDirection,
+			# fall through to the connections-based derivation so we walk to
+			# the next planned cell instead of bouncing back through the warp.
+			var should_use_warp_exit := false
 			if warp_edge != null and str(warp_edge) != "":
-				# Check both camelCase (data/quest_plans/) and snake_case
-				# (data/quests/). data/quest_plans/ is the file the autopilot
-				# actually loads, so camelCase wins in practice — but try both
-				# so this doesn't silently regress if the source flips.
-				var section_exit_dir: String = str(section.get("exitDirection", section.get("exit_direction", "")))
+				should_use_warp_exit = (not section_exit_dir.is_empty()) or (not is_start_cell)
+			if should_use_warp_exit:
 				exit_dir = section_exit_dir if not section_exit_dir.is_empty() else str(warp_edge)
 			elif not is_terminal:
 				var next_entry: Dictionary = entries[e_i + 1]

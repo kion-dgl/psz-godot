@@ -1,0 +1,107 @@
+{
+  "questId": "claiming_a_stake",
+  "questName": "Claiming a Stake",
+  "areaId": "gurhacia",
+  "sections": [
+    {
+      "type": "grid",
+      "area": "a",
+      "startPos": "0,0",
+      "endPos": "0,3",
+      "entryDirection": null,
+      "exitDirection": null,
+      "cells": [
+        {
+          "pos": "0,0",
+          "stageId": "s01a_na1",
+          "rotation": 0,
+          "pathOrder": 0,
+          "isStart": true,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "south": "0,1"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 0,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,1",
+          "stageId": "s01a_sa1",
+          "rotation": 0,
+          "pathOrder": 1,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "north": "0,0",
+            "south": "0,2"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 3,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,2",
+          "stageId": "s01a_sa1",
+          "rotation": 0,
+          "pathOrder": 2,
+          "isStart": false,
+          "isEnd": false,
+          "isBranch": false,
+          "connections": {
+            "north": "0,1",
+            "south": "0,3"
+          },
+          "warpEdge": null,
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 3,
+          "boxCount": 0
+        },
+        {
+          "pos": "0,3",
+          "stageId": "s01z_na1",
+          "rotation": 0,
+          "pathOrder": 3,
+          "isStart": false,
+          "isEnd": true,
+          "isBranch": false,
+          "connections": {
+            "north": "0,2"
+          },
+          "warpEdge": "south",
+          "keyGate": null,
+          "keyDrop": null,
+          "switches": [],
+          "fences": [],
+          "npcs": [],
+          "storyProps": [],
+          "dialogTriggers": [],
+          "enemyCount": 1,
+          "boxCount": 0
+        }
+      ]
+    }
+  ]
+}

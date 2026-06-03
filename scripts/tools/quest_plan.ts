@@ -184,9 +184,94 @@ function planQuest(quest: Quest): QuestPlan {
       endPos: s.end_pos,
       entryDirection: s.entry_direction ?? null,
       exitDirection: s.exit_direction ?? null,
-      cells: s.cells.map(planCell),
+      cells: scheduleCells(s.cells.map(planCell), `${quest.id}/${s.area}`),
     })),
   };
+}
+
+// Reorder cells so action dependencies are honored before the autopilot
+// executes the cell's listed actions:
+//
+//   • key→gate: if cell G has `keyGate` and cell K has `keyDrop.targetCell ==
+//     G.pos`, K must appear before G. Quest authors lay cells out in spatial
+//     `path_order` (left-right, top-bottom on the grid), which is friendly to
+//     the level editor but doesn't reflect logical action order — we'd ask the
+//     autopilot to `open_gate` at G before any cell has dropped the key.
+//
+// The autopilot's _build_steps_from_plan already handles inserting BFS
+// passthroughs between non-adjacent cells (visit transit cells with kill_all
+// only). So when we move K (the key cell) before G (the gate cell), the
+// autopilot naturally re-routes through G as a passthrough on its way to K,
+// then visits G "for real" later for the open_gate + pickup actions.
+//
+// Out of scope for v1:
+//   • Switch→fence dependencies (link_id matching) — more cells, more graph
+//     edges, can wait until we hit a quest where it actually matters.
+//   • Cross-section dependencies — every quest we ship today keeps keys and
+//     gates in the same section.
+//   • Multi-key gates (`required_keys > 1`) — currently a stretch since each
+//     key cell would need to be visited.
+function scheduleCells(cells: CellPlan[], label: string): CellPlan[] {
+  // Map: gate-cell pos → key-drop cell pos (cell that drops the key for that gate)
+  const keyDropOf = new Map<string, string>();
+  for (const c of cells) {
+    if (c.keyDrop?.targetCell) {
+      keyDropOf.set(c.keyDrop.targetCell, c.pos);
+    }
+  }
+
+  // Data-quality check: a cell flagged as a key gate must carry the direction
+  // of the locked portal. Downstream tooling (autopilot exit derivation, the
+  // solver's playback, spec viewers) relies on `keyGate.direction` to know
+  // which portal is locked. An empty string here is silently dangerous —
+  // surface it loudly so the source quest data gets fixed instead of
+  // producing wrong routes at runtime.
+  for (const c of cells) {
+    if (c.keyGate && (!c.keyGate.direction || c.keyGate.direction === '')) {
+      console.warn(
+        `  WARN [${label}]: cell ${c.pos} (${c.stageId}) is a key gate but key_gate_direction is empty — autopilot routing may pick the wrong portal`,
+      );
+    }
+  }
+
+  const result = cells.map((c) => ({ ...c }));
+  const reorders: string[] = [];
+
+  let i = 0;
+  while (i < result.length) {
+    const cell = result[i];
+    if (cell.keyGate) {
+      const keyPos = keyDropOf.get(cell.pos);
+      // Self-drops (key spawns in the same cell as the gate) need no reorder.
+      if (keyPos && keyPos !== cell.pos) {
+        const keyIdx = result.findIndex((c) => c.pos === keyPos);
+        if (keyIdx > i) {
+          const [keyCell] = result.splice(keyIdx, 1);
+          result.splice(i, 0, keyCell);
+          reorders.push(`${keyPos} (key) → before ${cell.pos} (gate)`);
+          // Gate cell is now at i+1. Skip past both so we don't re-check
+          // the moved key cell as a "gate" on the next iteration.
+          i += 2;
+          continue;
+        }
+      }
+    }
+    i++;
+  }
+
+  // Renumber pathOrder so it reflects the post-schedule order. Downstream
+  // consumers (the autopilot, debugging tools) sort by pathOrder, not array
+  // index — keep them aligned.
+  for (let k = 0; k < result.length; k++) {
+    result[k].pathOrder = k;
+  }
+
+  if (reorders.length > 0) {
+    console.log(`  scheduler [${label}]: ${reorders.length} reorder(s)`);
+    for (const r of reorders) console.log(`    ${r}`);
+  }
+
+  return result;
 }
 
 function runOne(questPath: string) {
