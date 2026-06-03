@@ -146,8 +146,8 @@ JSON
       "pp:boot"|"pp:sr"|"pp:pp")  return 0 ;;
       "as:boot"|"as:sr"|"as:pp"|"as:as") return 0 ;;
       "doe:boot"|"doe:sr"|"doe:pp"|"doe:as"|"doe:doe") return 0 ;;
-      "static:boot"|"static:sr"|"static:pp"|"static:as"|"static:doe"|"static:static") return 0 ;;
-      "fo:"*) return 0 ;;  # always run FO at the end if requested
+      "fo:boot"|"fo:sr"|"fo:pp"|"fo:as"|"fo:doe"|"fo:fo") return 0 ;;
+      "static:"*) return 0 ;;  # static is always last; honour any --from
     esac
     return 1
   }
@@ -217,30 +217,38 @@ JSON
   fi
 
   # === Phase 6: static_in_the_snow (sequential) ===
-  # Per the new manifest order this comes after FO. From post-DOE the guild
-  # menu won't show SIS yet — it'll fail at quest selection. Keep it in the
-  # chain so the report makes that visible. To run SIS for real, the chain
-  # must pass FO first; we'll re-run SIS after FO lands.
-  if reached static; then
-    [ -d "$SCRATCH/post-doe" ] || { echo "[regression] ERROR: $SCRATCH/post-doe missing for SIS"; exit 2; }
-    echo ""; echo "=== Phase 6: static_in_the_snow (will fail until FO lands) ==="
-    stage_userdir "$SCRATCH/sis" "$SCRATCH/post-doe"
-    run_godot "sis" "static_in_the_snow" "$SCRATCH/sis"
-    LATEST_SIS=$(ls -t "$OUTDIR"/sis_*.json 2>/dev/null | head -1)
-    if [ -n "$LATEST_SIS" ] && jq -e '.status == "pass"' "$LATEST_SIS" >/dev/null 2>&1; then
-      echo "[regression] snapshotting post-SIS save → $SCRATCH/post-sis"
-      rm -rf "$SCRATCH/post-sis"
-      cp -r "$SCRATCH/sis/godot/app_userdata/PSZ Godot" "$SCRATCH/post-sis"
+  # === Phase 6: finding_ogi (sequential, unlocks SIS) ===
+  if reached fo; then
+    # FO is unlocked directly after AS per the manifest graph. Snapshot
+    # the post-FO save so Phase 7 can resume from a state where SIS is
+    # actually selectable at the guild counter.
+    [ -d "$SCRATCH/post-as" ] || { echo "[regression] ERROR: $SCRATCH/post-as missing for FO"; exit 2; }
+    echo ""; echo "=== Phase 6: finding_ogi ==="
+    stage_userdir "$SCRATCH/fo" "$SCRATCH/post-as"
+    run_godot "fo" "finding_ogi" "$SCRATCH/fo"
+    LATEST_FO=$(ls -t "$OUTDIR"/fo_*.json 2>/dev/null | head -1)
+    if [ -n "$LATEST_FO" ] && jq -e '.status == "pass"' "$LATEST_FO" >/dev/null 2>&1; then
+      echo "[regression] snapshotting post-FO save → $SCRATCH/post-fo"
+      rm -rf "$SCRATCH/post-fo"
+      cp -r "$SCRATCH/fo/godot/app_userdata/PSZ Godot" "$SCRATCH/post-fo"
     fi
   fi
 
-  # === Phase 7: finding_ogi (sequential) ===
-  if reached fo; then
-    # Use post-AS save — FO is unlocked directly after AS per the new graph.
-    [ -d "$SCRATCH/post-as" ] || { echo "[regression] ERROR: $SCRATCH/post-as missing for FO"; exit 2; }
-    echo ""; echo "=== Phase 7: finding_ogi ==="
-    stage_userdir "$SCRATCH/fo" "$SCRATCH/post-as"
-    run_godot "fo" "finding_ogi" "$SCRATCH/fo"
+  # === Phase 7: static_in_the_snow (sequential, after FO unlocks it) ===
+  if reached static; then
+    # Prefer the post-FO save (where SIS is unlocked). Fall back to
+    # post-DOE if FO didn't snapshot — that path still exercises the
+    # "guild won't let me accept" failure mode, with a per-quest
+    # timeout so the matrix doesn't sit for 30 minutes.
+    SIS_SRC="$SCRATCH/post-fo"
+    if [ ! -d "$SIS_SRC" ]; then
+      SIS_SRC="$SCRATCH/post-doe"
+      echo "[regression] WARN: post-fo missing — SIS will run from post-doe and is expected to fail"
+    fi
+    [ -d "$SIS_SRC" ] || { echo "[regression] ERROR: no save state available for SIS"; exit 2; }
+    echo ""; echo "=== Phase 7: static_in_the_snow ==="
+    stage_userdir "$SCRATCH/sis" "$SIS_SRC"
+    run_godot "sis" "static_in_the_snow" "$SCRATCH/sis"
   fi
 
   echo ""; echo "=== regression matrix done $(date -u +%FT%TZ) ==="
@@ -254,7 +262,7 @@ echo "[regression] building $REPORT"
 TMPREPORT="$(mktemp)"
 echo '{"started_at":"'"$RUN_START_ISO"'","quests":[' > "$TMPREPORT"
 FIRST=1
-for tag in boot first_mission pp_canon pp_backtrack as_canon as_moon as_sol doe sis fo; do
+for tag in boot first_mission pp_canon pp_backtrack as_canon as_moon as_sol doe fo sis; do
   # Newest sidecar JSON for this tag prefix
   latest=$(ls -t "$OUTDIR"/${tag}_*.json 2>/dev/null | head -1)
   if [ -z "$latest" ]; then continue; fi
