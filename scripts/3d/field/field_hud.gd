@@ -142,6 +142,12 @@ func _process(_delta: float) -> void:
 	if _action_palette and not _hidden_for_overlay:
 		_action_palette.visible = not _is_in_city()
 
+	# Autopilot HUD overlay (top-center): wall-clock + quest + cell. The
+	# overlay is only instantiated when PSZ_AUTOPILOT=1, so this is a
+	# cheap nil-check in normal play.
+	if _debug_info:
+		_render_debug_info()
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("quest_log"):
@@ -247,11 +253,6 @@ func _render_debug_info() -> void:
 	var ss: int = total_sec % 60
 	var time_str := "%02d:%02d" % [mm, ss]
 	(_debug_info as _DebugInfoPanel).set_info(time_str, _debug_last_quest, _debug_last_section, _debug_last_cell)
-
-
-func _process(_delta: float) -> void:
-	if _debug_info:
-		_render_debug_info()
 
 
 # ── Debug Info Panel (top-center) ────────────────────────────────────────────
