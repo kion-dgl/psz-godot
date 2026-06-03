@@ -1251,6 +1251,65 @@ export default function UnifiedStageEditor() {
             Reload from Disk
           </button>
 
+          <button
+            onClick={async () => {
+              if (!config) return;
+              if (!confirm(`Overwrite data/stage_configs/unified-stage-configs.json[${selectedMapId}] with the current local edits?`)) return;
+              try {
+                const res = await fetch('/api/stage-config/save-stage', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: JSON.stringify({ stageId: selectedMapId, config }),
+                });
+                const text = await res.text();
+                if (res.ok) {
+                  alert(`Saved to disk:\n${selectedMapId}\n${text}`);
+                } else {
+                  alert(`Save failed (${res.status}): ${text}`);
+                }
+              } catch (err) {
+                alert(`Save error: ${(err as Error).message}`);
+              }
+            }}
+            style={{
+              padding: '6px 12px',
+              background: '#238636',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+            title="Persist this stage's current config (waypoints, portals, obstacles, floorCollision, etc.) to data/stage_configs/unified-stage-configs.json. Dev-only — only works against the local Vite server."
+          >
+            Save to Disk
+          </button>
+
+          <button
+            onClick={() => {
+              if (!config) return;
+              const blob = new Blob([JSON.stringify({ [selectedMapId]: config }, null, 2)], {
+                type: 'application/json',
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `${selectedMapId}-config.json`;
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            style={{
+              padding: '6px 12px',
+              background: '#1f6feb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+            title="Download just this stage's config as JSON — useful when you can't reach the dev server's save endpoint (e.g. on the deployed PWA)."
+          >
+            Download JSON
+          </button>
+
           <div style={{ width: '1px', height: '20px', background: '#444', margin: '0 4px' }} />
 
           <button
