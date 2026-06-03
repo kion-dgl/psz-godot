@@ -1,6 +1,6 @@
 {
-  "questId": "the_paru_pact",
-  "questName": "The Paru Pact",
+  "questId": "the_paru_pact_backtrack",
+  "questName": "The Paru Pact (backtrack variant)",
   "areaId": "paru",
   "sections": [
     {
@@ -413,7 +413,7 @@
           "pos": "3,1",
           "stageId": "s05b_nc2",
           "rotation": 180,
-          "pathOrder": 8,
+          "pathOrder": 4,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -453,7 +453,7 @@
           "pos": "2,0",
           "stageId": "s05b_lc1",
           "rotation": 0,
-          "pathOrder": 4,
+          "pathOrder": 5,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -476,7 +476,7 @@
           "pos": "1,0",
           "stageId": "s05b_ic1",
           "rotation": 180,
-          "pathOrder": 5,
+          "pathOrder": 6,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -499,7 +499,7 @@
           "pos": "0,0",
           "stageId": "s05b_lb1",
           "rotation": 90,
-          "pathOrder": 6,
+          "pathOrder": 7,
           "isStart": false,
           "isEnd": false,
           "isBranch": false,
@@ -522,7 +522,7 @@
           "pos": "0,1",
           "stageId": "s05b_ga1",
           "rotation": 90,
-          "pathOrder": 7,
+          "pathOrder": 8,
           "isStart": false,
           "isEnd": true,
           "isBranch": false,
@@ -542,8 +542,5 @@
         }
       ]
     }
-  ],
-  "id": "the_paru_pact_backtrack",
-  "name": "The Paru Pact (backtrack variant)",
-  "description": " — backtrack variant: player misses mag fragment 3 on first pass and returns to B 3,1 last to complete the quest."
+  ]
 }
