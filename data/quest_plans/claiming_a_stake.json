@@ -22,6 +22,9 @@
           "connections": {
             "south": "0,1"
           },
+          "portals": {
+            "default": "default"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -44,6 +47,9 @@
           "connections": {
             "north": "0,0",
             "south": "0,2"
+          },
+          "portals": {
+            "default": "default"
           },
           "warpEdge": null,
           "keyGate": null,
@@ -68,6 +74,9 @@
             "north": "0,1",
             "south": "0,3"
           },
+          "portals": {
+            "default": "default"
+          },
           "warpEdge": null,
           "keyGate": null,
           "keyDrop": null,
@@ -90,6 +99,9 @@
           "connections": {
             "north": "0,2"
           },
+          "portals": {
+            "default": "default"
+          },
           "warpEdge": "south",
           "keyGate": null,
           "keyDrop": null,
@@ -100,6 +112,65 @@
           "dialogTriggers": [],
           "enemyCount": 1,
           "boxCount": 0
+        }
+      ],
+      "steps": [
+        {
+          "label": "A 0,0",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "south",
+          "exit_portal_id": "",
+          "target": "0,1",
+          "_section_idx": 0,
+          "_pos": "0,0",
+          "stageId": "s01a_na1",
+          "rotation": 0
+        },
+        {
+          "label": "A 0,1",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "south",
+          "exit_portal_id": "",
+          "target": "0,2",
+          "_section_idx": 0,
+          "_pos": "0,1",
+          "stageId": "s01a_sa1",
+          "rotation": 0
+        },
+        {
+          "label": "A 0,2",
+          "do": [
+            "kill_all",
+            "pickup_quest_item"
+          ],
+          "exit": "south",
+          "exit_portal_id": "",
+          "target": "0,3",
+          "_section_idx": 0,
+          "_pos": "0,2",
+          "stageId": "s01a_sa1",
+          "rotation": 0
+        },
+        {
+          "label": "A 0,3",
+          "do": [
+            "kill_all",
+            "pickup_quest_item",
+            "wait_quest_complete"
+          ],
+          "exit": "south",
+          "exit_portal_id": "",
+          "target": "",
+          "_section_idx": 0,
+          "_pos": "0,3",
+          "stageId": "s01z_na1",
+          "rotation": 0
         }
       ]
     }
