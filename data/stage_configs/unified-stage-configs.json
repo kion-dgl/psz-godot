@@ -26340,7 +26340,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_ga1",
+        "position": [
+          -0.155601217159743,
+          0,
+          23.448458371680925
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_ga1",
+        "position": [
+          -0.155601217159743,
+          0,
+          27.448458371680925
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04a_ga1",
+        "position": [
+          -5.038044956714173,
+          0,
+          -22.887241542862625
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s04a_ga1",
+        "position": [
+          -5.038044956714173,
+          0,
+          -26.887241542862625
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_ga1",
+        "wp_spawn_0_auto_s04a_ga1"
+      ],
+      [
+        "wp_load_1_auto_s04a_ga1",
+        "wp_spawn_1_auto_s04a_ga1"
+      ],
+      [
+        "wp_spawn_0_auto_s04a_ga1",
+        "wp_spawn_1_auto_s04a_ga1"
+      ]
+    ]
   },
   "s04a_ib1": {
     "floorCollision": {
@@ -26427,7 +26483,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_ib2",
+        "position": [
+          0.021439701375798315,
+          0,
+          23.961144283131105
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_ib2",
+        "position": [
+          0.021439701375798315,
+          0,
+          27.961144283131105
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04a_ib2",
+        "position": [
+          -5.10922383002505,
+          0,
+          -23.73484005349343
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s04a_ib2",
+        "position": [
+          -5.10922383002505,
+          0,
+          -27.73484005349343
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_ib2",
+        "wp_spawn_0_auto_s04a_ib2"
+      ],
+      [
+        "wp_load_1_auto_s04a_ib2",
+        "wp_spawn_1_auto_s04a_ib2"
+      ],
+      [
+        "wp_spawn_0_auto_s04a_ib2",
+        "wp_spawn_1_auto_s04a_ib2"
+      ]
+    ]
   },
   "s04a_ic1": {
     "floorCollision": {
@@ -26495,7 +26607,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_ic3",
+        "position": [
+          7.638567823926534,
+          0,
+          24.759900162267016
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_ic3",
+        "position": [
+          7.638567823926534,
+          0,
+          28.759900162267016
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04a_ic3",
+        "position": [
+          -7.600314673072462,
+          0,
+          -24.931864983836086
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s04a_ic3",
+        "position": [
+          -7.600314673072462,
+          0,
+          -28.931864983836086
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_ic3",
+        "wp_spawn_0_auto_s04a_ic3"
+      ],
+      [
+        "wp_load_1_auto_s04a_ic3",
+        "wp_spawn_1_auto_s04a_ic3"
+      ],
+      [
+        "wp_spawn_0_auto_s04a_ic3",
+        "wp_spawn_1_auto_s04a_ic3"
+      ]
+    ]
   },
   "s04a_lb1": {
     "floorCollision": {
@@ -26533,7 +26701,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_lb1",
+        "position": [
+          -5.215538307662123,
+          0,
+          -24.067417218083936
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_lb1",
+        "position": [
+          -5.215538307662123,
+          0,
+          -28.067417218083936
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04a_lb1",
+        "position": [
+          23.707241533581666,
+          0,
+          -4.269976310264205
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s04a_lb1",
+        "position": [
+          27.707241533581666,
+          0,
+          -4.269976310264205
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s04a_lb1",
+        "position": [
+          -5.215538307662123,
+          0,
+          -4.269976310264205
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_lb1",
+        "wp_spawn_0_auto_s04a_lb1"
+      ],
+      [
+        "wp_load_1_auto_s04a_lb1",
+        "wp_spawn_1_auto_s04a_lb1"
+      ],
+      [
+        "wp_spawn_0_auto_s04a_lb1",
+        "wp_elbow_s04a_lb1"
+      ],
+      [
+        "wp_spawn_1_auto_s04a_lb1",
+        "wp_elbow_s04a_lb1"
+      ]
+    ]
   },
   "s04a_lb3": {
     "floorCollision": {
@@ -26571,7 +26809,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_lb3",
+        "position": [
+          -0.13272110857990072,
+          0,
+          -25.29354529416402
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_lb3",
+        "position": [
+          -0.13272110857990072,
+          0,
+          -29.29354529416402
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04a_lb3",
+        "position": [
+          23.418964430753054,
+          0,
+          -4.91311604601173
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s04a_lb3",
+        "position": [
+          27.418964430753054,
+          0,
+          -4.91311604601173
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s04a_lb3",
+        "position": [
+          -0.13272110857990072,
+          0,
+          -4.91311604601173
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_lb3",
+        "wp_spawn_0_auto_s04a_lb3"
+      ],
+      [
+        "wp_load_1_auto_s04a_lb3",
+        "wp_spawn_1_auto_s04a_lb3"
+      ],
+      [
+        "wp_spawn_0_auto_s04a_lb3",
+        "wp_elbow_s04a_lb3"
+      ],
+      [
+        "wp_spawn_1_auto_s04a_lb3",
+        "wp_elbow_s04a_lb3"
+      ]
+    ]
   },
   "s04a_lc1": {
     "floorCollision": {
@@ -26605,7 +26913,102 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780542458865",
+        "position": [
+          -7.871335735854529,
+          0,
+          -24.3480886936134
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780542458865",
+        "position": [
+          -7.871335735854529,
+          0,
+          -28.3480886936134
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780542458865",
+        "position": [
+          24.303324486097953,
+          0,
+          2.02531984934663
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_1780542458865",
+        "position": [
+          28.303324486097953,
+          0,
+          2.0253198493466296
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780542461080_ebzxa4",
+        "position": [
+          14.764916794942526,
+          0,
+          2.210349194143326
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780542463912_bd1hky",
+        "position": [
+          15.757153366641916,
+          0,
+          -14.866447620749558
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780542465713_x2571t",
+        "position": [
+          -7.803616493072634,
+          0,
+          -15.424984122675088
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_1780542458865",
+        "wp_spawn_0_1780542458865"
+      ],
+      [
+        "wp_load_1_1780542458865",
+        "wp_spawn_1_1780542458865"
+      ],
+      [
+        "wp_1780542465713_x2571t",
+        "wp_spawn_0_1780542458865"
+      ],
+      [
+        "wp_1780542461080_ebzxa4",
+        "wp_spawn_1_1780542458865"
+      ],
+      [
+        "wp_1780542461080_ebzxa4",
+        "wp_1780542463912_bd1hky"
+      ],
+      [
+        "wp_1780542463912_bd1hky",
+        "wp_1780542465713_x2571t"
+      ]
+    ]
   },
   "s04a_lc2": {
     "floorCollision": {
@@ -26639,7 +27042,115 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780541681066",
+        "position": [
+          -7.453278193118272,
+          0,
+          -24.885388880370172
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780541681066",
+        "position": [
+          -7.453278193118272,
+          0,
+          -28.885388880370172
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780541681066",
+        "position": [
+          24.11146104205507,
+          0,
+          1.7246153100181534
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_1780541681066",
+        "position": [
+          28.11146104205507,
+          0,
+          1.7246153100181532
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780541683600_6mbz7k",
+        "position": [
+          16.05748625953704,
+          0,
+          2.578042506655393
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780541688234_mcwm5i",
+        "position": [
+          6.941561917907104,
+          0,
+          -7.8660665131058565
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780541690334_cyttkc",
+        "position": [
+          -11.33622746252242,
+          0,
+          12.891104741235534
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780541692883_yx7voi",
+        "position": [
+          -7.535002434330272,
+          0,
+          -14.822911998885907
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780541681066",
+        "wp_load_0_1780541681066"
+      ],
+      [
+        "wp_spawn_1_1780541681066",
+        "wp_load_1_1780541681066"
+      ],
+      [
+        "wp_1780541692883_yx7voi",
+        "wp_spawn_0_1780541681066"
+      ],
+      [
+        "wp_1780541692883_yx7voi",
+        "wp_1780541688234_mcwm5i"
+      ],
+      [
+        "wp_1780541688234_mcwm5i",
+        "wp_1780541690334_cyttkc"
+      ],
+      [
+        "wp_1780541688234_mcwm5i",
+        "wp_1780541683600_6mbz7k"
+      ],
+      [
+        "wp_1780541683600_6mbz7k",
+        "wp_spawn_1_1780541681066"
+      ]
+    ]
   },
   "s04a_na1": {
     "floorCollision": {
@@ -26667,7 +27178,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_na1",
+        "position": [
+          5.0367759422174165,
+          0,
+          24.436174320820577
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_na1",
+        "position": [
+          5.0367759422174165,
+          0,
+          28.436174320820577
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_na1",
+        "wp_spawn_0_auto_s04a_na1"
+      ]
+    ]
   },
   "s04a_nb2": {
     "floorCollision": {
@@ -26705,7 +27244,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_nb2",
+        "position": [
+          -0.156495768606435,
+          0,
+          24.0386755771641
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_nb2",
+        "position": [
+          -0.156495768606435,
+          0,
+          28.0386755771641
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_nb2",
+        "wp_spawn_0_auto_s04a_nb2"
+      ]
+    ]
   },
   "s04a_nc2": {
     "floorCollision": {
@@ -26761,7 +27328,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_sa1",
+        "position": [
+          0.20819301467784612,
+          0,
+          20.99441405647056
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_sa1",
+        "position": [
+          0.20819301467784612,
+          0,
+          24.99441405647056
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_sa1",
+        "wp_spawn_0_auto_s04a_sa1"
+      ]
+    ]
   },
   "s04a_tb3": {
     "floorCollision": {
@@ -26809,7 +27404,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04a_tb3",
+        "position": [
+          5.458594990539375,
+          0,
+          23.34620421567257
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04a_tb3",
+        "position": [
+          5.458594990539375,
+          0,
+          27.34620421567257
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04a_tb3",
+        "position": [
+          23.926500203947114,
+          0,
+          -0.19354633608476846
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s04a_tb3",
+        "position": [
+          27.926500203947114,
+          0,
+          -0.19354633608476846
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_spawn_2_auto_s04a_tb3",
+        "position": [
+          -24.142602073146424,
+          0,
+          5.11150567506297
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_2_auto_s04a_tb3",
+        "position": [
+          -28.142602073146424,
+          0,
+          5.11150567506297
+        ],
+        "kind": "exit",
+        "label": "load west"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04a_tb3",
+        "wp_spawn_0_auto_s04a_tb3"
+      ],
+      [
+        "wp_load_1_auto_s04a_tb3",
+        "wp_spawn_1_auto_s04a_tb3"
+      ],
+      [
+        "wp_load_2_auto_s04a_tb3",
+        "wp_spawn_2_auto_s04a_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s04a_tb3",
+        "wp_spawn_1_auto_s04a_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s04a_tb3",
+        "wp_spawn_2_auto_s04a_tb3"
+      ],
+      [
+        "wp_spawn_1_auto_s04a_tb3",
+        "wp_spawn_2_auto_s04a_tb3"
+      ]
+    ]
   },
   "s04a_tc3": {
     "floorCollision": {
@@ -26853,7 +27536,117 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780539563472",
+        "position": [
+          -12.4956490038885,
+          0,
+          24.70276062301587
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_1780539563472",
+        "position": [
+          -12.4956490038885,
+          0,
+          28.70276062301587
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_1780539563472",
+        "position": [
+          -24.438026922376668,
+          0,
+          7.493201882351551
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_1_1780539563472",
+        "position": [
+          -28.438026922376668,
+          0,
+          7.493201882351551
+        ],
+        "kind": "exit",
+        "label": "load west"
+      },
+      {
+        "id": "wp_spawn_2_1780539563472",
+        "position": [
+          24.864222808539576,
+          0,
+          -7.765603114230504
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_2_1780539563472",
+        "position": [
+          28.864222808539576,
+          0,
+          -7.765603114230504
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780539567521_zekulw",
+        "position": [
+          -14.116073413572922,
+          0,
+          7.607575913834687
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780539571988_kk97lw",
+        "position": [
+          10.640300364327667,
+          0,
+          -8.722314503837346
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780539563472",
+        "wp_load_0_1780539563472"
+      ],
+      [
+        "wp_spawn_1_1780539563472",
+        "wp_load_1_1780539563472"
+      ],
+      [
+        "wp_spawn_2_1780539563472",
+        "wp_load_2_1780539563472"
+      ],
+      [
+        "wp_1780539567521_zekulw",
+        "wp_spawn_1_1780539563472"
+      ],
+      [
+        "wp_1780539567521_zekulw",
+        "wp_spawn_0_1780539563472"
+      ],
+      [
+        "wp_1780539567521_zekulw",
+        "wp_1780539571988_kk97lw"
+      ],
+      [
+        "wp_spawn_2_1780539563472",
+        "wp_1780539571988_kk97lw"
+      ]
+    ]
   },
   "s04a_td1": {
     "floorCollision": {
@@ -27081,7 +27874,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_ga1",
+        "position": [
+          0.033583178919373,
+          0,
+          23.560845373684593
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_ga1",
+        "position": [
+          0.033583178919373,
+          0,
+          27.560845373684593
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_ga1",
+        "wp_spawn_0_auto_s04b_ga1"
+      ]
+    ]
   },
   "s04b_ib1": {
     "floorCollision": {
@@ -27208,7 +28029,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_ib1",
+        "position": [
+          -0.026143860225849025,
+          0,
+          24.30150541021868
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_ib1",
+        "position": [
+          -0.026143860225849025,
+          0,
+          28.30150541021868
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04b_ib1",
+        "position": [
+          -0.07052718534363223,
+          0,
+          -23.932817947892957
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s04b_ib1",
+        "position": [
+          -0.07052718534363223,
+          0,
+          -27.932817947892957
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_ib1",
+        "wp_spawn_0_auto_s04b_ib1"
+      ],
+      [
+        "wp_load_1_auto_s04b_ib1",
+        "wp_spawn_1_auto_s04b_ib1"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_ib1",
+        "wp_spawn_1_auto_s04b_ib1"
+      ]
+    ]
   },
   "s04b_ib2": {
     "floorCollision": {
@@ -27251,7 +28128,115 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780542815782",
+        "position": [
+          0.01380074420107924,
+          0,
+          -24.018192601842507
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780542815782",
+        "position": [
+          0.01380074420107924,
+          0,
+          -28.018192601842507
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780542815782",
+        "position": [
+          -0.12769657389844583,
+          0,
+          24.236407445362275
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_1780542815782",
+        "position": [
+          -0.12769657389844633,
+          0,
+          28.236407445362275
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_1780542818548_un06qc",
+        "position": [
+          -0.2328561766247255,
+          0,
+          14.763991610749251
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780542821280_zunrj2",
+        "position": [
+          10.593078542747502,
+          0,
+          15.035550069964177
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780542824747_1ycs7y",
+        "position": [
+          10.924127069720383,
+          0,
+          -12.192631539768769
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780542827164_1xsqg3",
+        "position": [
+          0.10824663630135925,
+          0,
+          -13.241753988492967
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780542815782",
+        "wp_load_0_1780542815782"
+      ],
+      [
+        "wp_spawn_1_1780542815782",
+        "wp_load_1_1780542815782"
+      ],
+      [
+        "wp_1780542827164_1xsqg3",
+        "wp_spawn_0_1780542815782"
+      ],
+      [
+        "wp_1780542827164_1xsqg3",
+        "wp_1780542824747_1ycs7y"
+      ],
+      [
+        "wp_1780542821280_zunrj2",
+        "wp_1780542824747_1ycs7y"
+      ],
+      [
+        "wp_1780542821280_zunrj2",
+        "wp_1780542818548_un06qc"
+      ],
+      [
+        "wp_1780542818548_un06qc",
+        "wp_spawn_1_1780542815782"
+      ]
+    ]
   },
   "s04b_ic1": {
     "floorCollision": {
@@ -27306,7 +28291,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_ic1",
+        "position": [
+          -0.20539485620670161,
+          0,
+          -23.16899025413266
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_ic1",
+        "position": [
+          -0.20539485620670161,
+          0,
+          -27.16899025413266
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04b_ic1",
+        "position": [
+          0.12308850325034726,
+          0,
+          23.20868714152202
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s04b_ic1",
+        "position": [
+          0.12308850325034726,
+          0,
+          27.20868714152202
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_ic1",
+        "wp_spawn_0_auto_s04b_ic1"
+      ],
+      [
+        "wp_load_1_auto_s04b_ic1",
+        "wp_spawn_1_auto_s04b_ic1"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_ic1",
+        "wp_spawn_1_auto_s04b_ic1"
+      ]
+    ]
   },
   "s04b_ic3": {
     "floorCollision": {
@@ -27349,7 +28390,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_ic3",
+        "position": [
+          10.039663224733715,
+          0,
+          -22.881343882374644
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_ic3",
+        "position": [
+          10.039663224733715,
+          0,
+          -26.881343882374644
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04b_ic3",
+        "position": [
+          -15.124088314913571,
+          0,
+          25.354563928533757
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s04b_ic3",
+        "position": [
+          -15.124088314913571,
+          0,
+          29.354563928533757
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_ic3",
+        "wp_spawn_0_auto_s04b_ic3"
+      ],
+      [
+        "wp_load_1_auto_s04b_ic3",
+        "wp_spawn_1_auto_s04b_ic3"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_ic3",
+        "wp_spawn_1_auto_s04b_ic3"
+      ]
+    ]
   },
   "s04b_lb1": {
     "floorCollision": {
@@ -27392,7 +28489,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_lb1",
+        "position": [
+          -0.18535744731050027,
+          0,
+          -24.649643165195535
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_lb1",
+        "position": [
+          -0.18535744731050027,
+          0,
+          -28.649643165195535
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04b_lb1",
+        "position": [
+          25.14891246211127,
+          0,
+          0.1845387188345593
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s04b_lb1",
+        "position": [
+          29.14891246211127,
+          0,
+          0.1845387188345593
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s04b_lb1",
+        "position": [
+          -0.18535744731050027,
+          0,
+          0.1845387188345593
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_lb1",
+        "wp_spawn_0_auto_s04b_lb1"
+      ],
+      [
+        "wp_load_1_auto_s04b_lb1",
+        "wp_spawn_1_auto_s04b_lb1"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_lb1",
+        "wp_elbow_s04b_lb1"
+      ],
+      [
+        "wp_spawn_1_auto_s04b_lb1",
+        "wp_elbow_s04b_lb1"
+      ]
+    ]
   },
   "s04b_lb3": {
     "floorCollision": {
@@ -27435,7 +28602,102 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780543253064",
+        "position": [
+          0.27016776233399664,
+          0,
+          -24.779178791520415
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780543253064",
+        "position": [
+          0.27016776233399664,
+          0,
+          -28.779178791520415
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780543253064",
+        "position": [
+          25.070849079064395,
+          0,
+          0.06296354140701259
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_1780543253064",
+        "position": [
+          29.070849079064395,
+          0,
+          0.06296354140701234
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780543254765_skbr6q",
+        "position": [
+          15.487555926084841,
+          0,
+          0.8669823356977808
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780543256164_9n6n4e",
+        "position": [
+          10.181071977814556,
+          0,
+          -10.122049936795609
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780543257798_orlmyn",
+        "position": [
+          0.33201083427053885,
+          0,
+          -16.02285541721231
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780543253064",
+        "wp_load_0_1780543253064"
+      ],
+      [
+        "wp_spawn_1_1780543253064",
+        "wp_load_1_1780543253064"
+      ],
+      [
+        "wp_1780543257798_orlmyn",
+        "wp_spawn_0_1780543253064"
+      ],
+      [
+        "wp_1780543257798_orlmyn",
+        "wp_1780543256164_9n6n4e"
+      ],
+      [
+        "wp_1780543254765_skbr6q",
+        "wp_1780543256164_9n6n4e"
+      ],
+      [
+        "wp_1780543254765_skbr6q",
+        "wp_spawn_1_1780543253064"
+      ]
+    ]
   },
   "s04b_lc1": {
     "floorCollision": {
@@ -27508,7 +28770,115 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780544160261",
+        "position": [
+          -5.124351012180815,
+          0,
+          -22.91108983071321
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780544160261",
+        "position": [
+          -5.124351012180815,
+          0,
+          -26.91108983071321
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780544160261",
+        "position": [
+          17.615475103264377,
+          0,
+          15.039133765068932
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_1780544160261",
+        "position": [
+          21.615475103264377,
+          0,
+          15.039133765068932
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780544162944_9a0tt2",
+        "position": [
+          11.270562783342449,
+          0,
+          15.306483428550756
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780544166610_2b0gem",
+        "position": [
+          0.9130524858353225,
+          0,
+          5.611976406723979
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780544168094_376tbc",
+        "position": [
+          0.7763295562700595,
+          0,
+          -1.152790576715411
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780544169744_n2cjbu",
+        "position": [
+          -5.117394509533477,
+          0,
+          -16.819530264521838
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780544160261",
+        "wp_load_0_1780544160261"
+      ],
+      [
+        "wp_spawn_1_1780544160261",
+        "wp_load_1_1780544160261"
+      ],
+      [
+        "wp_1780544169744_n2cjbu",
+        "wp_spawn_0_1780544160261"
+      ],
+      [
+        "wp_1780544169744_n2cjbu",
+        "wp_1780544168094_376tbc"
+      ],
+      [
+        "wp_1780544166610_2b0gem",
+        "wp_1780544168094_376tbc"
+      ],
+      [
+        "wp_1780544166610_2b0gem",
+        "wp_1780544162944_9a0tt2"
+      ],
+      [
+        "wp_1780544162944_9a0tt2",
+        "wp_spawn_1_1780544160261"
+      ]
+    ]
   },
   "s04b_lc2": {
     "floorCollision": {
@@ -27565,7 +28935,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_lc2",
+        "position": [
+          9.94729006734903,
+          0,
+          -23.197688469013173
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_lc2",
+        "position": [
+          9.94729006734903,
+          0,
+          -27.197688469013173
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04b_lc2",
+        "position": [
+          23.72465619860921,
+          0,
+          5.4297473031631664
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s04b_lc2",
+        "position": [
+          27.72465619860921,
+          0,
+          5.4297473031631664
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s04b_lc2",
+        "position": [
+          9.94729006734903,
+          0,
+          5.4297473031631664
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_lc2",
+        "wp_spawn_0_auto_s04b_lc2"
+      ],
+      [
+        "wp_load_1_auto_s04b_lc2",
+        "wp_spawn_1_auto_s04b_lc2"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_lc2",
+        "wp_elbow_s04b_lc2"
+      ],
+      [
+        "wp_spawn_1_auto_s04b_lc2",
+        "wp_elbow_s04b_lc2"
+      ]
+    ]
   },
   "s04b_na1": {
     "floorCollision": {
@@ -27589,7 +29029,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_na1",
+        "position": [
+          -0.3425544237242344,
+          0,
+          23.79802846560863
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_na1",
+        "position": [
+          -0.3425544237242344,
+          0,
+          27.79802846560863
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_na1",
+        "wp_spawn_0_auto_s04b_na1"
+      ]
+    ]
   },
   "s04b_nb2": {
     "floorCollision": {
@@ -27710,7 +29178,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_sa1",
+        "position": [
+          -0.25306308233362285,
+          0,
+          23.723496570938764
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_sa1",
+        "position": [
+          -0.25306308233362285,
+          0,
+          27.723496570938764
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04b_sa1",
+        "position": [
+          -0.019340132772513147,
+          0,
+          -23.57588164296233
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s04b_sa1",
+        "position": [
+          -0.019340132772513147,
+          0,
+          -27.57588164296233
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_sa1",
+        "wp_spawn_0_auto_s04b_sa1"
+      ],
+      [
+        "wp_load_1_auto_s04b_sa1",
+        "wp_spawn_1_auto_s04b_sa1"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_sa1",
+        "wp_spawn_1_auto_s04b_sa1"
+      ]
+    ]
   },
   "s04b_tb3": {
     "floorCollision": {
@@ -27763,7 +29287,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_tb3",
+        "position": [
+          -0.202441167704964,
+          0,
+          23.874161222217445
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_tb3",
+        "position": [
+          -0.202441167704964,
+          0,
+          27.874161222217445
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04b_tb3",
+        "position": [
+          -24.996598022098393,
+          0,
+          -0.12875247946235113
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_1_auto_s04b_tb3",
+        "position": [
+          -28.996598022098393,
+          0,
+          -0.12875247946235113
+        ],
+        "kind": "exit",
+        "label": "load west"
+      },
+      {
+        "id": "wp_spawn_2_auto_s04b_tb3",
+        "position": [
+          25.2689368651576,
+          0,
+          0.0923076740490707
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_2_auto_s04b_tb3",
+        "position": [
+          29.2689368651576,
+          0,
+          0.0923076740490707
+        ],
+        "kind": "exit",
+        "label": "load east"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_tb3",
+        "wp_spawn_0_auto_s04b_tb3"
+      ],
+      [
+        "wp_load_1_auto_s04b_tb3",
+        "wp_spawn_1_auto_s04b_tb3"
+      ],
+      [
+        "wp_load_2_auto_s04b_tb3",
+        "wp_spawn_2_auto_s04b_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_tb3",
+        "wp_spawn_1_auto_s04b_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_tb3",
+        "wp_spawn_2_auto_s04b_tb3"
+      ],
+      [
+        "wp_spawn_1_auto_s04b_tb3",
+        "wp_spawn_2_auto_s04b_tb3"
+      ]
+    ]
   },
   "s04b_tc3": {
     "floorCollision": {
@@ -27877,7 +29489,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04b_td1",
+        "position": [
+          -0.07018154835580559,
+          0,
+          23.94502306858672
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s04b_td1",
+        "position": [
+          -0.07018154835580559,
+          0,
+          27.94502306858672
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04b_td1",
+        "position": [
+          23.5,
+          0,
+          0.30387516936326486
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s04b_td1",
+        "position": [
+          27.5,
+          0,
+          0.30387516936326486
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_spawn_2_auto_s04b_td1",
+        "position": [
+          -25.088538920686716,
+          0,
+          -0.08740199471244026
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_2_auto_s04b_td1",
+        "position": [
+          -29.088538920686716,
+          0,
+          -0.08740199471244026
+        ],
+        "kind": "exit",
+        "label": "load west"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04b_td1",
+        "wp_spawn_0_auto_s04b_td1"
+      ],
+      [
+        "wp_load_1_auto_s04b_td1",
+        "wp_spawn_1_auto_s04b_td1"
+      ],
+      [
+        "wp_load_2_auto_s04b_td1",
+        "wp_spawn_2_auto_s04b_td1"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_td1",
+        "wp_spawn_1_auto_s04b_td1"
+      ],
+      [
+        "wp_spawn_0_auto_s04b_td1",
+        "wp_spawn_2_auto_s04b_td1"
+      ],
+      [
+        "wp_spawn_1_auto_s04b_td1",
+        "wp_spawn_2_auto_s04b_td1"
+      ]
+    ]
   },
   "s04b_td2": {
     "floorCollision": {
@@ -28027,7 +29727,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s04e_ia1",
+        "position": [
+          -0.050998049149022506,
+          0,
+          -23.01209266415799
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s04e_ia1",
+        "position": [
+          -0.050998049149022506,
+          0,
+          -27.01209266415799
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s04e_ia1",
+        "position": [
+          -0.021645115476683685,
+          0,
+          22.955156827601165
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s04e_ia1",
+        "position": [
+          -0.021645115476683685,
+          0,
+          26.955156827601165
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s04e_ia1",
+        "wp_spawn_0_auto_s04e_ia1"
+      ],
+      [
+        "wp_load_1_auto_s04e_ia1",
+        "wp_spawn_1_auto_s04e_ia1"
+      ],
+      [
+        "wp_spawn_0_auto_s04e_ia1",
+        "wp_spawn_1_auto_s04e_ia1"
+      ]
+    ]
   },
   "s04z_na1": {
     "defaultSpawn": {
@@ -28048,7 +29804,9 @@
     "obstacles": [],
     "portals": [],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [],
+    "waypointEdges": []
   },
   "s05a_ga1": {
     "floorCollision": {
@@ -34853,7 +36611,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_ib1",
+        "position": [
+          -0.053988154668533905,
+          0,
+          22.929477165509244
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_ib1",
+        "position": [
+          -0.053988154668533905,
+          0,
+          26.929477165509244
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06a_ib1",
+        "position": [
+          0.04482418181694392,
+          0,
+          -22.985637622955313
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s06a_ib1",
+        "position": [
+          0.04482418181694392,
+          0,
+          -26.985637622955313
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_ib1",
+        "wp_spawn_0_auto_s06a_ib1"
+      ],
+      [
+        "wp_load_1_auto_s06a_ib1",
+        "wp_spawn_1_auto_s06a_ib1"
+      ],
+      [
+        "wp_spawn_0_auto_s06a_ib1",
+        "wp_spawn_1_auto_s06a_ib1"
+      ]
+    ]
   },
   "s06a_ib2": {
     "floorCollision": {
@@ -34985,7 +36799,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_ic3",
+        "position": [
+          -0.11660839628520314,
+          0,
+          -23.309399854121242
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_ic3",
+        "position": [
+          -0.11660839628520314,
+          0,
+          -27.309399854121242
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06a_ic3",
+        "position": [
+          0.01847119330959135,
+          0,
+          22.829182831859292
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s06a_ic3",
+        "position": [
+          0.01847119330959135,
+          0,
+          26.829182831859292
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_ic3",
+        "wp_spawn_0_auto_s06a_ic3"
+      ],
+      [
+        "wp_load_1_auto_s06a_ic3",
+        "wp_spawn_1_auto_s06a_ic3"
+      ],
+      [
+        "wp_spawn_0_auto_s06a_ic3",
+        "wp_spawn_1_auto_s06a_ic3"
+      ]
+    ]
   },
   "s06a_lb1": {
     "floorCollision": {
@@ -35209,7 +37079,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_lb3",
+        "position": [
+          0.12725002477955258,
+          0,
+          -22.85451372523443
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_lb3",
+        "position": [
+          0.12725002477955258,
+          0,
+          -26.85451372523443
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06a_lb3",
+        "position": [
+          22.908743487096594,
+          0,
+          0.2094478787515781
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s06a_lb3",
+        "position": [
+          26.908743487096594,
+          0,
+          0.2094478787515781
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s06a_lb3",
+        "position": [
+          0.12725002477955258,
+          0,
+          0.2094478787515781
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_lb3",
+        "wp_spawn_0_auto_s06a_lb3"
+      ],
+      [
+        "wp_load_1_auto_s06a_lb3",
+        "wp_spawn_1_auto_s06a_lb3"
+      ],
+      [
+        "wp_spawn_0_auto_s06a_lb3",
+        "wp_elbow_s06a_lb3"
+      ],
+      [
+        "wp_spawn_1_auto_s06a_lb3",
+        "wp_elbow_s06a_lb3"
+      ]
+    ]
   },
   "s06a_lc1": {
     "floorCollision": {
@@ -35243,7 +37183,115 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780536029392",
+        "position": [
+          -0.012347242019602522,
+          0,
+          -23.28919641999814
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780536029392",
+        "position": [
+          -0.012347242019602522,
+          0,
+          -27.28919641999814
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780536029392",
+        "position": [
+          23.065608723608637,
+          0,
+          0.04221468799333587
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_1780536029392",
+        "position": [
+          27.065608723608637,
+          0,
+          0.04221468799333562
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780536032259_teb5eq",
+        "position": [
+          15.730239726444102,
+          0,
+          1.258253300934463
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536034357_e80x4t",
+        "position": [
+          13.588033894976247,
+          0,
+          9.60819091013019
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536036141_lxhihs",
+        "position": [
+          0.24687715806458468,
+          0,
+          9.906763089342292
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536037808_v5578c",
+        "position": [
+          0.08917256700344404,
+          0,
+          -15.196140964570958
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_1780536029392",
+        "wp_spawn_0_1780536029392"
+      ],
+      [
+        "wp_load_1_1780536029392",
+        "wp_spawn_1_1780536029392"
+      ],
+      [
+        "wp_1780536037808_v5578c",
+        "wp_spawn_0_1780536029392"
+      ],
+      [
+        "wp_1780536032259_teb5eq",
+        "wp_spawn_1_1780536029392"
+      ],
+      [
+        "wp_1780536032259_teb5eq",
+        "wp_1780536034357_e80x4t"
+      ],
+      [
+        "wp_1780536034357_e80x4t",
+        "wp_1780536036141_lxhihs"
+      ],
+      [
+        "wp_1780536036141_lxhihs",
+        "wp_1780536037808_v5578c"
+      ]
+    ]
   },
   "s06a_lc2": {
     "floorCollision": {
@@ -35277,7 +37325,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_lc2",
+        "position": [
+          -0.04405867456187562,
+          0,
+          -24.04938199324954
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_lc2",
+        "position": [
+          -0.04405867456187562,
+          0,
+          -28.04938199324954
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06a_lc2",
+        "position": [
+          23.647074805716297,
+          0,
+          -0.12135687372009052
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s06a_lc2",
+        "position": [
+          27.647074805716297,
+          0,
+          -0.12135687372009052
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s06a_lc2",
+        "position": [
+          -0.04405867456187562,
+          0,
+          -0.12135687372009052
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_lc2",
+        "wp_spawn_0_auto_s06a_lc2"
+      ],
+      [
+        "wp_load_1_auto_s06a_lc2",
+        "wp_spawn_1_auto_s06a_lc2"
+      ],
+      [
+        "wp_spawn_0_auto_s06a_lc2",
+        "wp_elbow_s06a_lc2"
+      ],
+      [
+        "wp_spawn_1_auto_s06a_lc2",
+        "wp_elbow_s06a_lc2"
+      ]
+    ]
   },
   "s06a_na1": {
     "floorCollision": {
@@ -35301,7 +37419,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_na1",
+        "position": [
+          0.026915345384181943,
+          0,
+          23.083073063945903
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_na1",
+        "position": [
+          0.026915345384181943,
+          0,
+          27.083073063945903
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_na1",
+        "wp_spawn_0_auto_s06a_na1"
+      ]
+    ]
   },
   "s06a_nb2": {
     "floorCollision": {
@@ -35352,7 +37498,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_nb2",
+        "position": [
+          -0.050425706996078734,
+          0,
+          23.055526250428183
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_nb2",
+        "position": [
+          -0.050425706996078734,
+          0,
+          27.055526250428183
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_nb2",
+        "wp_spawn_0_auto_s06a_nb2"
+      ]
+    ]
   },
   "s06a_nc2": {
     "floorCollision": {
@@ -35376,7 +37550,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_nc2",
+        "position": [
+          0.2688101156911964,
+          0,
+          23.82315115056775
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_nc2",
+        "position": [
+          0.2688101156911964,
+          0,
+          27.82315115056775
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_nc2",
+        "wp_spawn_0_auto_s06a_nc2"
+      ]
+    ]
   },
   "s06a_sa1": {
     "defaultSpawn": {
@@ -35461,7 +37663,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_sa1",
+        "position": [
+          -0.12287471355927448,
+          0,
+          23.06890954552656
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_sa1",
+        "position": [
+          -0.12287471355927448,
+          0,
+          27.06890954552656
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_sa1",
+        "wp_spawn_0_auto_s06a_sa1"
+      ]
+    ]
   },
   "s06a_tb3": {
     "floorCollision": {
@@ -35528,7 +37758,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_tb3",
+        "position": [
+          0.0515389941599258,
+          0,
+          22.915371894282643
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_tb3",
+        "position": [
+          0.0515389941599258,
+          0,
+          26.915371894282643
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06a_tb3",
+        "position": [
+          22.972419944161565,
+          0,
+          -0.03139030281046551
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s06a_tb3",
+        "position": [
+          26.972419944161565,
+          0,
+          -0.03139030281046551
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_spawn_2_auto_s06a_tb3",
+        "position": [
+          -22.87348023916456,
+          0,
+          -0.29776794814893803
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_2_auto_s06a_tb3",
+        "position": [
+          -26.87348023916456,
+          0,
+          -0.29776794814893803
+        ],
+        "kind": "exit",
+        "label": "load west"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_tb3",
+        "wp_spawn_0_auto_s06a_tb3"
+      ],
+      [
+        "wp_load_1_auto_s06a_tb3",
+        "wp_spawn_1_auto_s06a_tb3"
+      ],
+      [
+        "wp_load_2_auto_s06a_tb3",
+        "wp_spawn_2_auto_s06a_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s06a_tb3",
+        "wp_spawn_1_auto_s06a_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s06a_tb3",
+        "wp_spawn_2_auto_s06a_tb3"
+      ],
+      [
+        "wp_spawn_1_auto_s06a_tb3",
+        "wp_spawn_2_auto_s06a_tb3"
+      ]
+    ]
   },
   "s06a_tc3": {
     "floorCollision": {
@@ -35572,7 +37890,186 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780535437031",
+        "position": [
+          -0.1759466990688038,
+          0,
+          24.152783016651362
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_1780535437031",
+        "position": [
+          -0.1759466990688043,
+          0,
+          28.152783016651362
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_1780535437031",
+        "position": [
+          -22.520147911285065,
+          0,
+          -0.6005142541971209
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_1_1780535437031",
+        "position": [
+          -26.520147911285065,
+          0,
+          -0.6005142541971211
+        ],
+        "kind": "exit",
+        "label": "load west"
+      },
+      {
+        "id": "wp_spawn_2_1780535437031",
+        "position": [
+          22.392310360698005,
+          0,
+          -0.016873948450194926
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_2_1780535437031",
+        "position": [
+          26.392310360698005,
+          0,
+          -0.016873948450195173
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780535440014_vrpjko",
+        "position": [
+          -0.7226368634246256,
+          0,
+          15.733045461964627
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780535441346_8zaorx",
+        "position": [
+          -14.93096681047377,
+          0,
+          1.2830556631774606
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780535442863_6x7dkx",
+        "position": [
+          -9.189390542592122,
+          0,
+          -13.880855102848312
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780535449597_2sqvdu",
+        "position": [
+          -6.144823626920392,
+          0,
+          1.8879002020583542
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780535450780_4di96k",
+        "position": [
+          0.09478981395160346,
+          0,
+          2.047352474520232
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780535452630_cvp5e2",
+        "position": [
+          1.0001893526552905,
+          0,
+          -14.755109944385952
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780535459163_zxtkbj",
+        "position": [
+          12.693292242077408,
+          0,
+          0.2982641405385742
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780535437031",
+        "wp_load_0_1780535437031"
+      ],
+      [
+        "wp_spawn_1_1780535437031",
+        "wp_load_1_1780535437031"
+      ],
+      [
+        "wp_spawn_2_1780535437031",
+        "wp_load_2_1780535437031"
+      ],
+      [
+        "wp_1780535440014_vrpjko",
+        "wp_spawn_0_1780535437031"
+      ],
+      [
+        "wp_1780535440014_vrpjko",
+        "wp_1780535441346_8zaorx"
+      ],
+      [
+        "wp_1780535441346_8zaorx",
+        "wp_spawn_1_1780535437031"
+      ],
+      [
+        "wp_1780535441346_8zaorx",
+        "wp_1780535442863_6x7dkx"
+      ],
+      [
+        "wp_1780535441346_8zaorx",
+        "wp_1780535449597_2sqvdu"
+      ],
+      [
+        "wp_1780535450780_4di96k",
+        "wp_1780535449597_2sqvdu"
+      ],
+      [
+        "wp_1780535450780_4di96k",
+        "wp_1780535459163_zxtkbj"
+      ],
+      [
+        "wp_1780535452630_cvp5e2",
+        "wp_1780535442863_6x7dkx"
+      ],
+      [
+        "wp_1780535452630_cvp5e2",
+        "wp_1780535459163_zxtkbj"
+      ],
+      [
+        "wp_spawn_2_1780535437031",
+        "wp_1780535459163_zxtkbj"
+      ]
+    ]
   },
   "s06a_td1": {
     "floorCollision": {
@@ -35773,7 +38270,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06a_td1",
+        "position": [
+          -0.12253531790540784,
+          0,
+          22.901030971105225
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06a_td1",
+        "position": [
+          -0.12253531790540784,
+          0,
+          26.901030971105225
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06a_td1",
+        "position": [
+          23.01516610141064,
+          0,
+          0.27078815506770937
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s06a_td1",
+        "position": [
+          27.01516610141064,
+          0,
+          0.27078815506770937
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_spawn_2_auto_s06a_td1",
+        "position": [
+          -23.109992992853886,
+          0,
+          -0.504836263525648
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_2_auto_s06a_td1",
+        "position": [
+          -27.109992992853886,
+          0,
+          -0.504836263525648
+        ],
+        "kind": "exit",
+        "label": "load west"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06a_td1",
+        "wp_spawn_0_auto_s06a_td1"
+      ],
+      [
+        "wp_load_1_auto_s06a_td1",
+        "wp_spawn_1_auto_s06a_td1"
+      ],
+      [
+        "wp_load_2_auto_s06a_td1",
+        "wp_spawn_2_auto_s06a_td1"
+      ],
+      [
+        "wp_spawn_0_auto_s06a_td1",
+        "wp_spawn_1_auto_s06a_td1"
+      ],
+      [
+        "wp_spawn_0_auto_s06a_td1",
+        "wp_spawn_2_auto_s06a_td1"
+      ],
+      [
+        "wp_spawn_1_auto_s06a_td1",
+        "wp_spawn_2_auto_s06a_td1"
+      ]
+    ]
   },
   "s06a_td2": {
     "floorCollision": {
@@ -36029,7 +38614,145 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780536511834",
+        "position": [
+          -0.07508388712824043,
+          0,
+          -23.14056704975389
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780536511834",
+        "position": [
+          -0.07508388712824043,
+          0,
+          -27.14056704975389
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780536511834",
+        "position": [
+          0.014721046530495295,
+          0,
+          23.01072970244538
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_1780536511834",
+        "position": [
+          0.014721046530494806,
+          0,
+          27.01072970244538
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_1780536514152_0yp6cs",
+        "position": [
+          -0.038222178150281394,
+          0,
+          15.222503979920516
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536516318_625t5j",
+        "position": [
+          0.6101901748141252,
+          0,
+          -16.22418226442832
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536520367_z41tw8",
+        "position": [
+          10.458892406007138,
+          0,
+          9.369044539458503
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536521718_xl6dhh",
+        "position": [
+          -8.715774681840106,
+          0,
+          9.707770308788877
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536523185_2ba6uo",
+        "position": [
+          -10.750081241287173,
+          0,
+          -7.190745043246315
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536524384_x3xsw6",
+        "position": [
+          10.650270983886195,
+          0,
+          -8.640590778052916
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780536511834",
+        "wp_load_0_1780536511834"
+      ],
+      [
+        "wp_spawn_1_1780536511834",
+        "wp_load_1_1780536511834"
+      ],
+      [
+        "wp_1780536514152_0yp6cs",
+        "wp_spawn_1_1780536511834"
+      ],
+      [
+        "wp_1780536514152_0yp6cs",
+        "wp_1780536521718_xl6dhh"
+      ],
+      [
+        "wp_1780536514152_0yp6cs",
+        "wp_1780536520367_z41tw8"
+      ],
+      [
+        "wp_1780536516318_625t5j",
+        "wp_spawn_0_1780536511834"
+      ],
+      [
+        "wp_1780536516318_625t5j",
+        "wp_1780536524384_x3xsw6"
+      ],
+      [
+        "wp_1780536516318_625t5j",
+        "wp_1780536523185_2ba6uo"
+      ],
+      [
+        "wp_1780536524384_x3xsw6",
+        "wp_1780536520367_z41tw8"
+      ],
+      [
+        "wp_1780536521718_xl6dhh",
+        "wp_1780536523185_2ba6uo"
+      ]
+    ]
   },
   "s06b_ic1": {
     "floorCollision": {
@@ -36063,7 +38786,153 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780537698406",
+        "position": [
+          -0.7013930708743032,
+          0,
+          -23.331058681452873
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780537698406",
+        "position": [
+          -0.7013930708743032,
+          0,
+          -27.331058681452873
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780537698406",
+        "position": [
+          -0.6450476496298044,
+          0,
+          23.935568267641234
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_1780537698406",
+        "position": [
+          -0.645047649629805,
+          0,
+          27.935568267641234
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_1780537701122_dinds3",
+        "position": [
+          -0.32590370766023774,
+          0,
+          -13.596474580323523
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537702937_50nqno",
+        "position": [
+          16.208056045280117,
+          0,
+          -13.065342026994223
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537704570_tzf7yu",
+        "position": [
+          -15.93514581224254,
+          0,
+          -12.71439793058461
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537707437_rf343k",
+        "position": [
+          -15.455311316744043,
+          0,
+          12.514045345438252
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537709120_i2us0d",
+        "position": [
+          -0.4779507298822515,
+          0,
+          12.898890716261981
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537710587_9dghj2",
+        "position": [
+          15.090590592800405,
+          0,
+          12.712349224321859
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_1780537698406",
+        "wp_spawn_0_1780537698406"
+      ],
+      [
+        "wp_load_1_1780537698406",
+        "wp_spawn_1_1780537698406"
+      ],
+      [
+        "wp_1780537701122_dinds3",
+        "wp_spawn_0_1780537698406"
+      ],
+      [
+        "wp_1780537709120_i2us0d",
+        "wp_spawn_1_1780537698406"
+      ],
+      [
+        "wp_1780537701122_dinds3",
+        "wp_1780537702937_50nqno"
+      ],
+      [
+        "wp_1780537701122_dinds3",
+        "wp_1780537704570_tzf7yu"
+      ],
+      [
+        "wp_1780537702937_50nqno",
+        "wp_1780537704570_tzf7yu"
+      ],
+      [
+        "wp_1780537702937_50nqno",
+        "wp_1780537710587_9dghj2"
+      ],
+      [
+        "wp_1780537704570_tzf7yu",
+        "wp_1780537707437_rf343k"
+      ],
+      [
+        "wp_1780537707437_rf343k",
+        "wp_1780537709120_i2us0d"
+      ],
+      [
+        "wp_1780537707437_rf343k",
+        "wp_1780537710587_9dghj2"
+      ],
+      [
+        "wp_1780537709120_i2us0d",
+        "wp_1780537710587_9dghj2"
+      ]
+    ]
   },
   "s06b_ic3": {
     "floorCollision": {
@@ -36097,7 +38966,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06b_ic3",
+        "position": [
+          -0.612050872253592,
+          0,
+          -23.354108546380235
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s06b_ic3",
+        "position": [
+          -0.612050872253592,
+          0,
+          -27.354108546380235
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06b_ic3",
+        "position": [
+          -0.39861879217549134,
+          0,
+          23.715310016419664
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s06b_ic3",
+        "position": [
+          -0.39861879217549134,
+          0,
+          27.715310016419664
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06b_ic3",
+        "wp_spawn_0_auto_s06b_ic3"
+      ],
+      [
+        "wp_load_1_auto_s06b_ic3",
+        "wp_spawn_1_auto_s06b_ic3"
+      ],
+      [
+        "wp_spawn_0_auto_s06b_ic3",
+        "wp_spawn_1_auto_s06b_ic3"
+      ]
+    ]
   },
   "s06b_lb1": {
     "floorCollision": {
@@ -36131,7 +39056,158 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780538074169",
+        "position": [
+          -0.07549332166915335,
+          0,
+          -23.191446792462063
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780538074169",
+        "position": [
+          -0.07549332166915335,
+          0,
+          -27.191446792462063
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780538074169",
+        "position": [
+          23.050624371660497,
+          0,
+          0.06798428028565599
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_1780538074169",
+        "position": [
+          27.050624371660497,
+          0,
+          0.06798428028565574
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780538076452_38ign2",
+        "position": [
+          14.330382552368038,
+          0,
+          0.627287803986345
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780538078918_kt93lr",
+        "position": [
+          -0.5111988331116335,
+          0,
+          -14.880603978781334
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780538080202_f5xff3",
+        "position": [
+          -11.907685808943292,
+          0,
+          -5.454468896386768
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780538082601_2i0n1r",
+        "position": [
+          -15.558701056856723,
+          0,
+          0.6272878039863414
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780538083885_c8bu95",
+        "position": [
+          -10.672042859768728,
+          0,
+          11.11871203960576
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780538085801_0raofq",
+        "position": [
+          0.10303310271604316,
+          0,
+          15.918906127359124
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780538086901_fp7cpz",
+        "position": [
+          9.081516868715905,
+          0,
+          11.447203852804066
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_1780538074169",
+        "wp_spawn_0_1780538074169"
+      ],
+      [
+        "wp_load_1_1780538074169",
+        "wp_spawn_1_1780538074169"
+      ],
+      [
+        "wp_1780538078918_kt93lr",
+        "wp_spawn_0_1780538074169"
+      ],
+      [
+        "wp_1780538076452_38ign2",
+        "wp_spawn_1_1780538074169"
+      ],
+      [
+        "wp_1780538076452_38ign2",
+        "wp_1780538078918_kt93lr"
+      ],
+      [
+        "wp_1780538076452_38ign2",
+        "wp_1780538086901_fp7cpz"
+      ],
+      [
+        "wp_1780538078918_kt93lr",
+        "wp_1780538080202_f5xff3"
+      ],
+      [
+        "wp_1780538080202_f5xff3",
+        "wp_1780538082601_2i0n1r"
+      ],
+      [
+        "wp_1780538082601_2i0n1r",
+        "wp_1780538083885_c8bu95"
+      ],
+      [
+        "wp_1780538083885_c8bu95",
+        "wp_1780538085801_0raofq"
+      ],
+      [
+        "wp_1780538085801_0raofq",
+        "wp_1780538086901_fp7cpz"
+      ]
+    ]
   },
   "s06b_lb3": {
     "floorCollision": {
@@ -36165,7 +39241,115 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780536786613",
+        "position": [
+          0.12472525469538809,
+          0,
+          -23.378025682208783
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780536786613",
+        "position": [
+          0.12472525469538809,
+          0,
+          -27.378025682208783
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780536786613",
+        "position": [
+          23.091593970277017,
+          0,
+          0.12205864242769086
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_1780536786613",
+        "position": [
+          27.091593970277017,
+          0,
+          0.12205864242769061
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780536788647_hik4nh",
+        "position": [
+          -0.02695959518264246,
+          0,
+          -13.098037118704497
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536791614_twzt4k",
+        "position": [
+          0.36838987990079275,
+          0,
+          -8.0241109703619
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536792847_ir8194",
+        "position": [
+          7.766043957285234,
+          0,
+          -0.4333856982293227
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780536793946_crdtws",
+        "position": [
+          16.86058038073491,
+          0,
+          0.3330835282170099
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780536786613",
+        "wp_load_0_1780536786613"
+      ],
+      [
+        "wp_spawn_1_1780536786613",
+        "wp_load_1_1780536786613"
+      ],
+      [
+        "wp_spawn_0_1780536786613",
+        "wp_1780536788647_hik4nh"
+      ],
+      [
+        "wp_1780536791614_twzt4k",
+        "wp_1780536788647_hik4nh"
+      ],
+      [
+        "wp_1780536791614_twzt4k",
+        "wp_1780536792847_ir8194"
+      ],
+      [
+        "wp_1780536793946_crdtws",
+        "wp_1780536792847_ir8194"
+      ],
+      [
+        "wp_1780536793946_crdtws",
+        "wp_spawn_1_1780536786613"
+      ]
+    ]
   },
   "s06b_lc1": {
     "floorCollision": {
@@ -36199,7 +39383,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06b_lc1",
+        "position": [
+          -0.09336478139853455,
+          0,
+          -23.097240889508427
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s06b_lc1",
+        "position": [
+          -0.09336478139853455,
+          0,
+          -27.097240889508427
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06b_lc1",
+        "position": [
+          23.399821481004842,
+          0,
+          0.29846119914418745
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s06b_lc1",
+        "position": [
+          27.399821481004842,
+          0,
+          0.29846119914418745
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s06b_lc1",
+        "position": [
+          -0.09336478139853455,
+          0,
+          0.29846119914418745
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06b_lc1",
+        "wp_spawn_0_auto_s06b_lc1"
+      ],
+      [
+        "wp_load_1_auto_s06b_lc1",
+        "wp_spawn_1_auto_s06b_lc1"
+      ],
+      [
+        "wp_spawn_0_auto_s06b_lc1",
+        "wp_elbow_s06b_lc1"
+      ],
+      [
+        "wp_spawn_1_auto_s06b_lc1",
+        "wp_elbow_s06b_lc1"
+      ]
+    ]
   },
   "s06b_lc2": {
     "floorCollision": {
@@ -36233,7 +39487,175 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_1780537386289",
+        "position": [
+          -0.5510922561635176,
+          0,
+          -23.507558804067838
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_1780537386289",
+        "position": [
+          -0.5510922561635176,
+          0,
+          -27.507558804067838
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_1780537386289",
+        "position": [
+          23.430066869862262,
+          0,
+          0.23014297677503706
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_1780537386289",
+        "position": [
+          27.430066869862262,
+          0,
+          0.23014297677503684
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_1780537389990_9czube",
+        "position": [
+          12.407848730953415,
+          0,
+          0.7607231772480034
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537391538_i83j5h",
+        "position": [
+          12.210212351247899,
+          0,
+          15.822349326174457
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537392971_l57q4m",
+        "position": [
+          -1.1534539581808456,
+          0,
+          16.118108237175814
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537394805_g0izxz",
+        "position": [
+          -8.872551812701387,
+          0,
+          9.608190910130194
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537395755_h16j7x",
+        "position": [
+          -16.46626180851971,
+          0,
+          16.813996593017016
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537397505_amazxh",
+        "position": [
+          -17.436619966950058,
+          0,
+          0.4585370660184438
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537400088_zlwx8s",
+        "position": [
+          -17.980222923413837,
+          0,
+          -13.082457485562493
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780537402038_lmzfrv",
+        "position": [
+          -0.5211658818380803,
+          0,
+          -13.0824574855625
+        ],
+        "kind": "point"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_spawn_0_1780537386289",
+        "wp_load_0_1780537386289"
+      ],
+      [
+        "wp_spawn_1_1780537386289",
+        "wp_load_1_1780537386289"
+      ],
+      [
+        "wp_1780537402038_lmzfrv",
+        "wp_spawn_0_1780537386289"
+      ],
+      [
+        "wp_1780537402038_lmzfrv",
+        "wp_1780537400088_zlwx8s"
+      ],
+      [
+        "wp_1780537400088_zlwx8s",
+        "wp_1780537397505_amazxh"
+      ],
+      [
+        "wp_1780537400088_zlwx8s",
+        "wp_1780537394805_g0izxz"
+      ],
+      [
+        "wp_1780537394805_g0izxz",
+        "wp_1780537395755_h16j7x"
+      ],
+      [
+        "wp_1780537394805_g0izxz",
+        "wp_1780537397505_amazxh"
+      ],
+      [
+        "wp_1780537394805_g0izxz",
+        "wp_1780537392971_l57q4m"
+      ],
+      [
+        "wp_1780537394805_g0izxz",
+        "wp_1780537391538_i83j5h"
+      ],
+      [
+        "wp_1780537391538_i83j5h",
+        "wp_1780537392971_l57q4m"
+      ],
+      [
+        "wp_1780537391538_i83j5h",
+        "wp_1780537389990_9czube"
+      ],
+      [
+        "wp_1780537389990_9czube",
+        "wp_spawn_1_1780537386289"
+      ]
+    ]
   },
   "s06b_na1": {
     "floorCollision": {
@@ -36257,7 +39679,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06b_na1",
+        "position": [
+          -0.05554759092563,
+          0,
+          22.846171978143456
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06b_na1",
+        "position": [
+          -0.05554759092563,
+          0,
+          26.846171978143456
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06b_na1",
+        "wp_spawn_0_auto_s06b_na1"
+      ]
+    ]
   },
   "s06b_nb2": {
     "floorCollision": {
@@ -36305,7 +39755,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06b_nc2",
+        "position": [
+          -0.13666856544503436,
+          0,
+          23.049395137867503
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06b_nc2",
+        "position": [
+          -0.13666856544503436,
+          0,
+          27.049395137867503
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06b_nc2",
+        "wp_spawn_0_auto_s06b_nc2"
+      ]
+    ]
   },
   "s06b_sa1": {
     "floorCollision": {
@@ -36339,7 +39817,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06b_sa1",
+        "position": [
+          -0.11183895428747515,
+          0,
+          15.202591478711028
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06b_sa1",
+        "position": [
+          -0.11183895428747515,
+          0,
+          19.202591478711028
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06b_sa1",
+        "position": [
+          0.11072409410475678,
+          0,
+          -15.984012878842838
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s06b_sa1",
+        "position": [
+          0.11072409410475678,
+          0,
+          -19.98401287884284
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06b_sa1",
+        "wp_spawn_0_auto_s06b_sa1"
+      ],
+      [
+        "wp_load_1_auto_s06b_sa1",
+        "wp_spawn_1_auto_s06b_sa1"
+      ],
+      [
+        "wp_spawn_0_auto_s06b_sa1",
+        "wp_spawn_1_auto_s06b_sa1"
+      ]
+    ]
   },
   "s06b_tb3": {
     "floorCollision": {
@@ -36383,7 +39917,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06b_tb3",
+        "position": [
+          -0.24021649281390722,
+          0,
+          22.98272575172585
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06b_tb3",
+        "position": [
+          -0.24021649281390722,
+          0,
+          26.98272575172585
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06b_tb3",
+        "position": [
+          22.920147879306125,
+          0,
+          0.15629191686945632
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s06b_tb3",
+        "position": [
+          26.920147879306125,
+          0,
+          0.15629191686945632
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_spawn_2_auto_s06b_tb3",
+        "position": [
+          -23.604637655268938,
+          0,
+          -0.11874702045299879
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_2_auto_s06b_tb3",
+        "position": [
+          -27.604637655268938,
+          0,
+          -0.11874702045299879
+        ],
+        "kind": "exit",
+        "label": "load west"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06b_tb3",
+        "wp_spawn_0_auto_s06b_tb3"
+      ],
+      [
+        "wp_load_1_auto_s06b_tb3",
+        "wp_spawn_1_auto_s06b_tb3"
+      ],
+      [
+        "wp_load_2_auto_s06b_tb3",
+        "wp_spawn_2_auto_s06b_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s06b_tb3",
+        "wp_spawn_1_auto_s06b_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s06b_tb3",
+        "wp_spawn_2_auto_s06b_tb3"
+      ],
+      [
+        "wp_spawn_1_auto_s06b_tb3",
+        "wp_spawn_2_auto_s06b_tb3"
+      ]
+    ]
   },
   "s06b_tc3": {
     "floorCollision": {
@@ -36606,7 +40228,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s06e_ia1",
+        "position": [
+          16.645527389798936,
+          0,
+          12.911197630185228
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s06e_ia1",
+        "position": [
+          16.645527389798936,
+          0,
+          16.911197630185228
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s06e_ia1",
+        "position": [
+          0.010979930178571351,
+          0,
+          -13.569914308535079
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s06e_ia1",
+        "position": [
+          0.010979930178571351,
+          0,
+          -17.56991430853508
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s06e_ia1",
+        "wp_spawn_0_auto_s06e_ia1"
+      ],
+      [
+        "wp_load_1_auto_s06e_ia1",
+        "wp_spawn_1_auto_s06e_ia1"
+      ],
+      [
+        "wp_spawn_0_auto_s06e_ia1",
+        "wp_spawn_1_auto_s06e_ia1"
+      ]
+    ]
   },
   "s06z_na1": {
     "defaultSpawn": {
@@ -36668,7 +40346,9 @@
     "obstacles": [],
     "portals": [],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [],
+    "waypointEdges": []
   },
   "s07a_ga1": {
     "floorCollision": {
@@ -36702,7 +40382,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_ga1",
+        "position": [
+          0.17806688139644677,
+          0,
+          -23.130861025111862
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_ga1",
+        "position": [
+          0.17806688139644677,
+          0,
+          -27.130861025111862
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_ga1",
+        "position": [
+          0.014752104424935353,
+          0,
+          22.843132264199753
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_ga1",
+        "position": [
+          0.014752104424935353,
+          0,
+          26.843132264199753
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_ga1",
+        "wp_spawn_0_auto_s07a_ga1"
+      ],
+      [
+        "wp_load_1_auto_s07a_ga1",
+        "wp_spawn_1_auto_s07a_ga1"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_ga1",
+        "wp_spawn_1_auto_s07a_ga1"
+      ]
+    ]
   },
   "s07a_ib1": {
     "floorCollision": {
@@ -36736,7 +40472,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_ib1",
+        "position": [
+          0.28347603149136624,
+          0,
+          22.818390022603207
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_ib1",
+        "position": [
+          0.28347603149136624,
+          0,
+          26.818390022603207
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_ib1",
+        "position": [
+          0.2716211250785303,
+          0,
+          -22.76571865845355
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_ib1",
+        "position": [
+          0.2716211250785303,
+          0,
+          -26.76571865845355
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_ib1",
+        "wp_spawn_0_auto_s07a_ib1"
+      ],
+      [
+        "wp_load_1_auto_s07a_ib1",
+        "wp_spawn_1_auto_s07a_ib1"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_ib1",
+        "wp_spawn_1_auto_s07a_ib1"
+      ]
+    ]
   },
   "s07a_ib2": {
     "floorCollision": {
@@ -36838,7 +40630,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_ic3",
+        "position": [
+          -0.46789438217967927,
+          0,
+          -20.339120381133064
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_ic3",
+        "position": [
+          -0.46789438217967927,
+          0,
+          -24.339120381133064
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_ic3",
+        "position": [
+          0.0074071735032976704,
+          0,
+          20.015509043512495
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_ic3",
+        "position": [
+          0.0074071735032976704,
+          0,
+          24.015509043512495
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_ic3",
+        "wp_spawn_0_auto_s07a_ic3"
+      ],
+      [
+        "wp_load_1_auto_s07a_ic3",
+        "wp_spawn_1_auto_s07a_ic3"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_ic3",
+        "wp_spawn_1_auto_s07a_ic3"
+      ]
+    ]
   },
   "s07a_lb1": {
     "floorCollision": {
@@ -36872,7 +40720,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_lb1",
+        "position": [
+          0.11992395123467592,
+          0,
+          -23.143755104173806
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_lb1",
+        "position": [
+          0.11992395123467592,
+          0,
+          -27.143755104173806
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_lb1",
+        "position": [
+          22.82176257534612,
+          0,
+          -0.23626369425734595
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_lb1",
+        "position": [
+          26.82176257534612,
+          0,
+          -0.23626369425734595
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s07a_lb1",
+        "position": [
+          0.11992395123467592,
+          0,
+          -0.23626369425734595
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_lb1",
+        "wp_spawn_0_auto_s07a_lb1"
+      ],
+      [
+        "wp_load_1_auto_s07a_lb1",
+        "wp_spawn_1_auto_s07a_lb1"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_lb1",
+        "wp_elbow_s07a_lb1"
+      ],
+      [
+        "wp_spawn_1_auto_s07a_lb1",
+        "wp_elbow_s07a_lb1"
+      ]
+    ]
   },
   "s07a_lb3": {
     "floorCollision": {
@@ -36906,7 +40824,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_lb3",
+        "position": [
+          -0.06540194206005623,
+          0,
+          -22.612063449889057
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_lb3",
+        "position": [
+          -0.06540194206005623,
+          0,
+          -26.612063449889057
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_lb3",
+        "position": [
+          22.769147297666077,
+          0,
+          0.054581346578149004
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_lb3",
+        "position": [
+          26.769147297666077,
+          0,
+          0.054581346578149004
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s07a_lb3",
+        "position": [
+          -0.06540194206005623,
+          0,
+          0.054581346578149004
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_lb3",
+        "wp_spawn_0_auto_s07a_lb3"
+      ],
+      [
+        "wp_load_1_auto_s07a_lb3",
+        "wp_spawn_1_auto_s07a_lb3"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_lb3",
+        "wp_elbow_s07a_lb3"
+      ],
+      [
+        "wp_spawn_1_auto_s07a_lb3",
+        "wp_elbow_s07a_lb3"
+      ]
+    ]
   },
   "s07a_lc1": {
     "floorCollision": {
@@ -36940,7 +40928,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_lc1",
+        "position": [
+          0.018789143667582664,
+          0,
+          -20.167234036140396
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_lc1",
+        "position": [
+          0.018789143667582664,
+          0,
+          -24.167234036140396
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_lc1",
+        "position": [
+          20.411990247136433,
+          0,
+          0.0424922005549635
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_lc1",
+        "position": [
+          24.411990247136433,
+          0,
+          0.0424922005549635
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s07a_lc1",
+        "position": [
+          0.018789143667582664,
+          0,
+          0.0424922005549635
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_lc1",
+        "wp_spawn_0_auto_s07a_lc1"
+      ],
+      [
+        "wp_load_1_auto_s07a_lc1",
+        "wp_spawn_1_auto_s07a_lc1"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_lc1",
+        "wp_elbow_s07a_lc1"
+      ],
+      [
+        "wp_spawn_1_auto_s07a_lc1",
+        "wp_elbow_s07a_lc1"
+      ]
+    ]
   },
   "s07a_lc2": {
     "floorCollision": {
@@ -36974,7 +41032,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_lc2",
+        "position": [
+          -0.09440733521957512,
+          0,
+          -20.331240394525967
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_lc2",
+        "position": [
+          -0.09440733521957512,
+          0,
+          -24.331240394525967
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_lc2",
+        "position": [
+          20.36978559425688,
+          0,
+          -0.07272536802488982
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_lc2",
+        "position": [
+          24.36978559425688,
+          0,
+          -0.07272536802488982
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s07a_lc2",
+        "position": [
+          -0.09440733521957512,
+          0,
+          -0.07272536802488982
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_lc2",
+        "wp_spawn_0_auto_s07a_lc2"
+      ],
+      [
+        "wp_load_1_auto_s07a_lc2",
+        "wp_spawn_1_auto_s07a_lc2"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_lc2",
+        "wp_elbow_s07a_lc2"
+      ],
+      [
+        "wp_spawn_1_auto_s07a_lc2",
+        "wp_elbow_s07a_lc2"
+      ]
+    ]
   },
   "s07a_na1": {
     "floorCollision": {
@@ -37022,7 +41150,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_nb2",
+        "position": [
+          0.0563513134800413,
+          0,
+          22.808947510566
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_nb2",
+        "position": [
+          0.0563513134800413,
+          0,
+          26.808947510566
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_nb2",
+        "wp_spawn_0_auto_s07a_nb2"
+      ]
+    ]
   },
   "s07a_nc2": {
     "floorCollision": {
@@ -37046,7 +41202,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_nc2",
+        "position": [
+          0.2846533108861804,
+          0,
+          20.165955326957402
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_nc2",
+        "position": [
+          0.2846533108861804,
+          0,
+          24.165955326957402
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_nc2",
+        "wp_spawn_0_auto_s07a_nc2"
+      ]
+    ]
   },
   "s07a_sa1": {
     "defaultSpawn": {
@@ -37078,7 +41262,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_sa1",
+        "position": [
+          -0.08072562278612949,
+          0,
+          21.74093286805664
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_sa1",
+        "position": [
+          -0.08072562278612949,
+          0,
+          25.74093286805664
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_sa1",
+        "wp_spawn_0_auto_s07a_sa1"
+      ]
+    ]
   },
   "s07a_tb3": {
     "floorCollision": {
@@ -37122,7 +41334,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_tb3",
+        "position": [
+          0.13366793533437793,
+          0,
+          23.618178733202974
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_tb3",
+        "position": [
+          0.13366793533437793,
+          0,
+          27.618178733202974
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_tb3",
+        "position": [
+          23.255451291047095,
+          0,
+          -0.15909451000643227
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_tb3",
+        "position": [
+          27.255451291047095,
+          0,
+          -0.15909451000643227
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_spawn_2_auto_s07a_tb3",
+        "position": [
+          -22.52609537147006,
+          0,
+          0.21721983251879173
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_2_auto_s07a_tb3",
+        "position": [
+          -26.52609537147006,
+          0,
+          0.21721983251879173
+        ],
+        "kind": "exit",
+        "label": "load west"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_tb3",
+        "wp_spawn_0_auto_s07a_tb3"
+      ],
+      [
+        "wp_load_1_auto_s07a_tb3",
+        "wp_spawn_1_auto_s07a_tb3"
+      ],
+      [
+        "wp_load_2_auto_s07a_tb3",
+        "wp_spawn_2_auto_s07a_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_tb3",
+        "wp_spawn_1_auto_s07a_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_tb3",
+        "wp_spawn_2_auto_s07a_tb3"
+      ],
+      [
+        "wp_spawn_1_auto_s07a_tb3",
+        "wp_spawn_2_auto_s07a_tb3"
+      ]
+    ]
   },
   "s07a_tc3": {
     "floorCollision": {
@@ -37166,7 +41466,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07a_tc3",
+        "position": [
+          -0.23660167776964824,
+          0,
+          21.14060186493341
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07a_tc3",
+        "position": [
+          -0.23660167776964824,
+          0,
+          25.14060186493341
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07a_tc3",
+        "position": [
+          -20.326773271392597,
+          0,
+          0.2862596582673369
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_1_auto_s07a_tc3",
+        "position": [
+          -24.326773271392597,
+          0,
+          0.2862596582673369
+        ],
+        "kind": "exit",
+        "label": "load west"
+      },
+      {
+        "id": "wp_spawn_2_auto_s07a_tc3",
+        "position": [
+          19.276088101224683,
+          0,
+          -0.06188638398012014
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_2_auto_s07a_tc3",
+        "position": [
+          23.276088101224683,
+          0,
+          -0.06188638398012014
+        ],
+        "kind": "exit",
+        "label": "load east"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07a_tc3",
+        "wp_spawn_0_auto_s07a_tc3"
+      ],
+      [
+        "wp_load_1_auto_s07a_tc3",
+        "wp_spawn_1_auto_s07a_tc3"
+      ],
+      [
+        "wp_load_2_auto_s07a_tc3",
+        "wp_spawn_2_auto_s07a_tc3"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_tc3",
+        "wp_spawn_1_auto_s07a_tc3"
+      ],
+      [
+        "wp_spawn_0_auto_s07a_tc3",
+        "wp_spawn_2_auto_s07a_tc3"
+      ],
+      [
+        "wp_spawn_1_auto_s07a_tc3",
+        "wp_spawn_2_auto_s07a_tc3"
+      ]
+    ]
   },
   "s07a_td1": {
     "floorCollision": {
@@ -37332,7 +41720,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_ga1",
+        "position": [
+          -0.03620017952243004,
+          0,
+          22.41172530615794
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_ga1",
+        "position": [
+          -0.03620017952243004,
+          0,
+          26.41172530615794
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_ga1",
+        "wp_spawn_0_auto_s07b_ga1"
+      ]
+    ]
   },
   "s07b_ib1": {
     "floorCollision": {
@@ -37366,7 +41782,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_ib1",
+        "position": [
+          0.07965780679178458,
+          0,
+          22.37515844816143
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_ib1",
+        "position": [
+          0.07965780679178458,
+          0,
+          26.37515844816143
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07b_ib1",
+        "position": [
+          0.05568465460652661,
+          0,
+          -22.34048604558276
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_1_auto_s07b_ib1",
+        "position": [
+          0.05568465460652661,
+          0,
+          -26.34048604558276
+        ],
+        "kind": "exit",
+        "label": "load north"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_ib1",
+        "wp_spawn_0_auto_s07b_ib1"
+      ],
+      [
+        "wp_load_1_auto_s07b_ib1",
+        "wp_spawn_1_auto_s07b_ib1"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_ib1",
+        "wp_spawn_1_auto_s07b_ib1"
+      ]
+    ]
   },
   "s07b_ib2": {
     "floorCollision": {
@@ -37502,7 +41974,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_lb1",
+        "position": [
+          -0.019123773792147247,
+          0,
+          -22.443505863751646
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_lb1",
+        "position": [
+          -0.019123773792147247,
+          0,
+          -26.443505863751646
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07b_lb1",
+        "position": [
+          22.53682520729176,
+          0,
+          -0.19949246857710534
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07b_lb1",
+        "position": [
+          26.53682520729176,
+          0,
+          -0.19949246857710534
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s07b_lb1",
+        "position": [
+          -0.019123773792147247,
+          0,
+          -0.19949246857710534
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_lb1",
+        "wp_spawn_0_auto_s07b_lb1"
+      ],
+      [
+        "wp_load_1_auto_s07b_lb1",
+        "wp_spawn_1_auto_s07b_lb1"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_lb1",
+        "wp_elbow_s07b_lb1"
+      ],
+      [
+        "wp_spawn_1_auto_s07b_lb1",
+        "wp_elbow_s07b_lb1"
+      ]
+    ]
   },
   "s07b_lb3": {
     "floorCollision": {
@@ -37570,7 +42112,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_lc1",
+        "position": [
+          0.01245355999931963,
+          0,
+          -20.35024409726428
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_lc1",
+        "position": [
+          0.01245355999931963,
+          0,
+          -24.35024409726428
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07b_lc1",
+        "position": [
+          19.917300322434038,
+          0,
+          0.030547663349315357
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07b_lc1",
+        "position": [
+          23.917300322434038,
+          0,
+          0.030547663349315357
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s07b_lc1",
+        "position": [
+          0.01245355999931963,
+          0,
+          0.030547663349315357
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_lc1",
+        "wp_spawn_0_auto_s07b_lc1"
+      ],
+      [
+        "wp_load_1_auto_s07b_lc1",
+        "wp_spawn_1_auto_s07b_lc1"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_lc1",
+        "wp_elbow_s07b_lc1"
+      ],
+      [
+        "wp_spawn_1_auto_s07b_lc1",
+        "wp_elbow_s07b_lc1"
+      ]
+    ]
   },
   "s07b_lc2": {
     "floorCollision": {
@@ -37604,7 +42216,77 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_lc2",
+        "position": [
+          0.04232266571080512,
+          0,
+          -20.011855411881523
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_lc2",
+        "position": [
+          0.04232266571080512,
+          0,
+          -24.011855411881523
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07b_lc2",
+        "position": [
+          19.937922394703826,
+          0,
+          -0.15312401693219613
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07b_lc2",
+        "position": [
+          23.937922394703826,
+          0,
+          -0.15312401693219613
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_elbow_s07b_lc2",
+        "position": [
+          0.04232266571080512,
+          0,
+          -0.15312401693219613
+        ],
+        "kind": "point",
+        "label": "elbow"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_lc2",
+        "wp_spawn_0_auto_s07b_lc2"
+      ],
+      [
+        "wp_load_1_auto_s07b_lc2",
+        "wp_spawn_1_auto_s07b_lc2"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_lc2",
+        "wp_elbow_s07b_lc2"
+      ],
+      [
+        "wp_spawn_1_auto_s07b_lc2",
+        "wp_elbow_s07b_lc2"
+      ]
+    ]
   },
   "s07b_na1": {
     "floorCollision": {
@@ -37628,7 +42310,35 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_na1",
+        "position": [
+          -0.03369639207467667,
+          0,
+          22.479870774206873
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_na1",
+        "position": [
+          -0.03369639207467667,
+          0,
+          26.479870774206873
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_na1",
+        "wp_spawn_0_auto_s07b_na1"
+      ]
+    ]
   },
   "s07b_nb2": {
     "floorCollision": {
@@ -37710,7 +42420,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_sa1",
+        "position": [
+          -0.09840659131945273,
+          0,
+          -14.1573876951525
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_sa1",
+        "position": [
+          -0.09840659131945273,
+          0,
+          -18.1573876951525
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07b_sa1",
+        "position": [
+          0.022889345421346796,
+          0,
+          24.631579666547275
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s07b_sa1",
+        "position": [
+          0.022889345421346796,
+          0,
+          28.631579666547275
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_sa1",
+        "wp_spawn_0_auto_s07b_sa1"
+      ],
+      [
+        "wp_load_1_auto_s07b_sa1",
+        "wp_spawn_1_auto_s07b_sa1"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_sa1",
+        "wp_spawn_1_auto_s07b_sa1"
+      ]
+    ]
   },
   "s07b_tb3": {
     "floorCollision": {
@@ -37754,7 +42520,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_tb3",
+        "position": [
+          0.06736649377744364,
+          0,
+          22.786692763518268
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_tb3",
+        "position": [
+          0.06736649377744364,
+          0,
+          26.786692763518268
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07b_tb3",
+        "position": [
+          22.309603973253495,
+          0,
+          0.042918174819854826
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07b_tb3",
+        "position": [
+          26.309603973253495,
+          0,
+          0.042918174819854826
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_spawn_2_auto_s07b_tb3",
+        "position": [
+          -22.78048258742395,
+          0,
+          0.044474768686358024
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_2_auto_s07b_tb3",
+        "position": [
+          -26.78048258742395,
+          0,
+          0.044474768686358024
+        ],
+        "kind": "exit",
+        "label": "load west"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_tb3",
+        "wp_spawn_0_auto_s07b_tb3"
+      ],
+      [
+        "wp_load_1_auto_s07b_tb3",
+        "wp_spawn_1_auto_s07b_tb3"
+      ],
+      [
+        "wp_load_2_auto_s07b_tb3",
+        "wp_spawn_2_auto_s07b_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_tb3",
+        "wp_spawn_1_auto_s07b_tb3"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_tb3",
+        "wp_spawn_2_auto_s07b_tb3"
+      ],
+      [
+        "wp_spawn_1_auto_s07b_tb3",
+        "wp_spawn_2_auto_s07b_tb3"
+      ]
+    ]
   },
   "s07b_tc3": {
     "floorCollision": {
@@ -37886,7 +42740,95 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07b_td2",
+        "position": [
+          -0.04767463652651571,
+          0,
+          20.147296471589804
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_0_auto_s07b_td2",
+        "position": [
+          -0.04767463652651571,
+          0,
+          24.147296471589804
+        ],
+        "kind": "exit",
+        "label": "load south"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07b_td2",
+        "position": [
+          20.096216472574724,
+          0,
+          0.04452424063730476
+        ],
+        "kind": "spawn",
+        "label": "spawn east"
+      },
+      {
+        "id": "wp_load_1_auto_s07b_td2",
+        "position": [
+          24.096216472574724,
+          0,
+          0.04452424063730476
+        ],
+        "kind": "exit",
+        "label": "load east"
+      },
+      {
+        "id": "wp_spawn_2_auto_s07b_td2",
+        "position": [
+          -19.88140814883555,
+          0,
+          0.04414488196843003
+        ],
+        "kind": "spawn",
+        "label": "spawn west"
+      },
+      {
+        "id": "wp_load_2_auto_s07b_td2",
+        "position": [
+          -23.88140814883555,
+          0,
+          0.04414488196843003
+        ],
+        "kind": "exit",
+        "label": "load west"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07b_td2",
+        "wp_spawn_0_auto_s07b_td2"
+      ],
+      [
+        "wp_load_1_auto_s07b_td2",
+        "wp_spawn_1_auto_s07b_td2"
+      ],
+      [
+        "wp_load_2_auto_s07b_td2",
+        "wp_spawn_2_auto_s07b_td2"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_td2",
+        "wp_spawn_1_auto_s07b_td2"
+      ],
+      [
+        "wp_spawn_0_auto_s07b_td2",
+        "wp_spawn_2_auto_s07b_td2"
+      ],
+      [
+        "wp_spawn_1_auto_s07b_td2",
+        "wp_spawn_2_auto_s07b_td2"
+      ]
+    ]
   },
   "s07b_xb2": {
     "floorCollision": {
@@ -37975,7 +42917,63 @@
       }
     ],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [
+      {
+        "id": "wp_spawn_0_auto_s07e_ia1",
+        "position": [
+          7.553465073675753,
+          0,
+          -19.10881748794499
+        ],
+        "kind": "spawn",
+        "label": "spawn north"
+      },
+      {
+        "id": "wp_load_0_auto_s07e_ia1",
+        "position": [
+          7.553465073675753,
+          0,
+          -23.10881748794499
+        ],
+        "kind": "exit",
+        "label": "load north"
+      },
+      {
+        "id": "wp_spawn_1_auto_s07e_ia1",
+        "position": [
+          -15.601720706878684,
+          0,
+          19.647413564579452
+        ],
+        "kind": "spawn",
+        "label": "spawn south"
+      },
+      {
+        "id": "wp_load_1_auto_s07e_ia1",
+        "position": [
+          -15.601720706878684,
+          0,
+          23.647413564579452
+        ],
+        "kind": "exit",
+        "label": "load south"
+      }
+    ],
+    "waypointEdges": [
+      [
+        "wp_load_0_auto_s07e_ia1",
+        "wp_spawn_0_auto_s07e_ia1"
+      ],
+      [
+        "wp_load_1_auto_s07e_ia1",
+        "wp_spawn_1_auto_s07e_ia1"
+      ],
+      [
+        "wp_spawn_0_auto_s07e_ia1",
+        "wp_spawn_1_auto_s07e_ia1"
+      ]
+    ]
   },
   "s07z_na1": {
     "defaultSpawn": {
@@ -37996,7 +42994,9 @@
     "obstacles": [],
     "portals": [],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [],
+    "waypointEdges": []
   },
   "s07z_na2": {
     "defaultSpawn": {
@@ -38017,7 +43017,9 @@
     "obstacles": [],
     "portals": [],
     "textureFixes": [],
-    "version": 1
+    "version": 1,
+    "waypoints": [],
+    "waypointEdges": []
   },
   "s080_sa0": {
     "defaultSpawn": {
