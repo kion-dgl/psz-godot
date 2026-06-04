@@ -3,7 +3,3 @@
 # Prefer fixing the reference over adding entries here. This file exists so a
 # new CI check can be introduced without having to resolve every latent issue
 # in the repo first.
-
-# scenes/3d/enemies/ghowl.tscn — lizard/s_001.glb is not in the vendored asset
-# drop and has never shipped. Tracked separately.
-assets/enemies/lizard/s_001.glb
