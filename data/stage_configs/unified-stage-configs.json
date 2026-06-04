@@ -40385,7 +40385,7 @@
     "version": 1,
     "waypoints": [
       {
-        "id": "wp_spawn_0_auto_s07a_ga1",
+        "id": "wp_spawn_0_1780545410290",
         "position": [
           0.17806688139644677,
           0,
@@ -40395,7 +40395,7 @@
         "label": "spawn north"
       },
       {
-        "id": "wp_load_0_auto_s07a_ga1",
+        "id": "wp_load_0_1780545410290",
         "position": [
           0.17806688139644677,
           0,
@@ -40405,9 +40405,9 @@
         "label": "load north"
       },
       {
-        "id": "wp_spawn_1_auto_s07a_ga1",
+        "id": "wp_spawn_1_1780545410290",
         "position": [
-          0.014752104424935353,
+          0.014752104424934985,
           0,
           22.843132264199753
         ],
@@ -40415,28 +40415,80 @@
         "label": "spawn south"
       },
       {
-        "id": "wp_load_1_auto_s07a_ga1",
+        "id": "wp_load_1_1780545410290",
         "position": [
-          0.014752104424935353,
+          0.014752104424934496,
           0,
           26.843132264199753
         ],
         "kind": "exit",
         "label": "load south"
+      },
+      {
+        "id": "wp_1780545413491_1tsq4e",
+        "position": [
+          0.8542382854472734,
+          0,
+          12.228923454821913
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780545415440_hhozac",
+        "position": [
+          -9.550875676532328,
+          0,
+          1.587036153947765
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780545417257_uzpd2m",
+        "position": [
+          1.2297999386216745,
+          0,
+          -10.832565827346803
+        ],
+        "kind": "point"
+      },
+      {
+        "id": "wp_1780545444423_xesapy",
+        "position": [
+          -9.931903142673939,
+          0,
+          -3.000456777787499
+        ],
+        "kind": "point"
       }
     ],
     "waypointEdges": [
       [
-        "wp_load_0_auto_s07a_ga1",
-        "wp_spawn_0_auto_s07a_ga1"
+        "wp_spawn_0_1780545410290",
+        "wp_load_0_1780545410290"
       ],
       [
-        "wp_load_1_auto_s07a_ga1",
-        "wp_spawn_1_auto_s07a_ga1"
+        "wp_spawn_1_1780545410290",
+        "wp_load_1_1780545410290"
       ],
       [
-        "wp_spawn_0_auto_s07a_ga1",
-        "wp_spawn_1_auto_s07a_ga1"
+        "wp_1780545413491_1tsq4e",
+        "wp_spawn_1_1780545410290"
+      ],
+      [
+        "wp_1780545413491_1tsq4e",
+        "wp_1780545415440_hhozac"
+      ],
+      [
+        "wp_1780545444423_xesapy",
+        "wp_1780545415440_hhozac"
+      ],
+      [
+        "wp_1780545444423_xesapy",
+        "wp_1780545417257_uzpd2m"
+      ],
+      [
+        "wp_1780545417257_uzpd2m",
+        "wp_spawn_0_1780545410290"
       ]
     ]
   },
