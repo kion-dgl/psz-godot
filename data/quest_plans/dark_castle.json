@@ -586,7 +586,7 @@
       "area": "b",
       "startPos": "2,4",
       "endPos": "3,4",
-      "entryDirection": "east",
+      "entryDirection": "south",
       "exitDirection": "east",
       "cells": [
         {
