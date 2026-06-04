@@ -173,3 +173,94 @@ the sidecar proves at sub-KB cost.
 CI also requires `VERSION` and `project.godot` `config/version` to be
 bumped on every PR. Patch bump (0.x.y → 0.x.y+1) is fine for most
 changes; minor bump for notable features.
+
+## "Run autopilot" — what the user means
+
+When the user says **"run autopilot"** (or "run autopilot on
+\<quest_id>", "play through \<quest_id>", "drive the autopilot",
+"run the matrix"), they mean: launch the headless Godot game with
+`PSZ_AUTOPILOT=1`, point it at a quest, and watch its `[sanity]`
+log lines for `DONE ok` (pass) or a stuck-walk / timeout (fail).
+
+There is **no single CLI command** — you have to assemble it from
+env vars + a save-state stage. The standing entry points:
+
+| Need | Script |
+|---|---|
+| Boot → title → character creation only | `scripts/tools/autoplay/record_boot.sh` |
+| Search and Rescue (first quest, from a fresh save) | `scripts/tools/autoplay/record_first_mission.sh` |
+| Full regression chain (Boot → SR → PP → AS → DOE → FO → SIS) | `scripts/tools/autoplay/run_regression_matrix.sh` |
+| Per-quest matrix (older, smaller scope) | `scripts/tools/autoplay/run_quest_matrix.sh` |
+
+For **one-off quests not covered by those scripts** (heretic,
+control_system, the_broken_seal, dark_castle, investigate_tower,
+static_in_the_snow, etc.) you have to launch godot directly. The
+shape:
+
+```bash
+# 1. Override assets_manifest.json so the game loads the LOCAL pack
+#    instead of downloading from Arweave. Always back it up + restore.
+MANIFEST_BAK=$(mktemp); cp assets_manifest.json "$MANIFEST_BAK"
+PACK_SIZE=$(stat -c %s dist/assets.pck)
+PACK_SHA=$(sha256sum dist/assets.pck | cut -d' ' -f1)
+cat > assets_manifest.json <<JSON
+{ "version": "sanity", "godot_version": "4.5", "pack": { "sha256": "$PACK_SHA", "size": $PACK_SIZE, "urls": ["file://LOCAL_DIST/assets.pck"] } }
+JSON
+trap 'cp "$MANIFEST_BAK" assets_manifest.json; rm -f "$MANIFEST_BAK"' EXIT
+
+# 2. Stage a userdir from a save state that has the quest UNLOCKED
+#    (the parent quest must be completed). Snapshots live in
+#    /tmp/quest_matrix_scratch/post-<quest_tag>/ after each matrix run.
+USERDIR=/tmp/some_scratch/userdir
+rm -rf "$USERDIR"; mkdir -p "$USERDIR/godot/app_userdata"
+cp -r /tmp/quest_matrix_scratch/post-<parent_quest> "$USERDIR/godot/app_userdata/PSZ Godot"
+
+# 3. Launch headless godot with autopilot env vars.
+env PSZ_AUTOPILOT=1 \
+    PSZ_AUTOPILOT_PHASE=first-mission \
+    PSZ_AUTOPILOT_NO_OBSTACLES=1 \
+    PSZ_AUTOPILOT_NO_BOXES=1 \
+    PSZ_AUTOPILOT_QUEST=<quest_id> \
+    XDG_DATA_HOME="$USERDIR" \
+    LIBGL_ALWAYS_SOFTWARE=1 \
+    xvfb-run -a -s "-screen 0 640x360x24" \
+    timeout 1500 godot --write-movie out.avi --fixed-fps 30 \
+    --disable-vsync --audio-driver Dummy --path . \
+    > out.sanity.log 2>&1
+
+# 4. Pass = grep -qF '[sanity] DONE ok' out.sanity.log
+#    Fail = grep 'stuck-walk\|FAIL:\|author waypoints' out.sanity.log
+#    Timeout (rc=124) = stuck in an unproductive loop
+```
+
+### Save-state chaining
+
+Each quest's autopilot resume save lives at
+`/tmp/quest_matrix_scratch/post-<tag>/`. The matrix harness
+snapshots them in chain order. A child quest must start from its
+parent's post-save, or the guild counter won't surface it and the
+autopilot hangs at "guild accept limit reached" until the 1800s
+timeout. See `feedback_test_chain_must_make_unlocks_reachable`
+auto-memory.
+
+### Sanity log conventions
+
+The autopilot prints `[sanity] …` checkpoints throughout the run.
+The diagnostic vocabulary:
+
+- `[sanity] checkpoint: <name>` — milestone reached
+- `[sanity] cell-load <sec>:<pos> visit=<n> stage=<sid> … plan label='…' do=[…] exit='…'` — step transition
+- `[sanity] action <i>/<n>: <name>` — executing an action from the cell's do[] list
+- `[sanity] walk to exit '<dir>' via <n> waypoint(s):` — pathfinding through the stage's waypoint graph
+- `[sanity] waypoint <i>/<n> reached` — navigation progress
+- `[sanity] stuck-walk diagnostic: player=… target=… dir=… dist=…` — walk primitive hasn't moved the player toward the target; about to fail
+- `[sanity] FAIL: walk stuck at dist=… in cell … — author waypoints for this stage` — the actionable error; the stage's waypoint graph needs hand-authoring
+- `[sanity] DONE ok` — quest cleared end-to-end; this is the success oracle
+
+### Waypoint authoring URLs
+
+When a stage needs hand-authored waypoints, the stage editor is
+at `http://<host>:5173/psz-godot/#/stage-editor?stage=<sid>&quest=<qid>`
+(LAN host `192.168.10.36`, Tailscale `100.89.189.126`). Note the
+`/psz-godot/` base path — Vite serves the SPA there, omitting it
+loads a blank page.
