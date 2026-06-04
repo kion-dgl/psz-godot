@@ -901,7 +901,7 @@
                 -0.7
               ],
               "enemy_id": "stagg",
-              "wave": 3
+              "wave": 1
             },
             {
               "type": "enemy",
@@ -911,7 +911,7 @@
                 -0.9
               ],
               "enemy_id": "usanny",
-              "wave": 3
+              "wave": 1
             }
           ]
         },
@@ -1034,7 +1034,7 @@
           "path_order": 10
         }
       ],
-      "exit_direction": "east"
+      "exit_direction": "west"
     },
     {
       "type": "transition",
@@ -2291,5 +2291,6 @@
       "label": "Ogi's Left Leg",
       "target": 1
     }
-  ]
+  ],
+  "parent_quest": "apothecary_supply"
 }

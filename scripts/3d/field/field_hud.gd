@@ -11,6 +11,12 @@ var _action_palette: Control
 var _quick_weapon: Control
 var _debug_info: Control
 var _fps_label: Label
+# Cached state for the autopilot debug overlay so _process can re-render the
+# wall-clock without re-querying the field controller every frame.
+var _session_start_msec: int = 0
+var _debug_last_quest: String = ""
+var _debug_last_section: String = ""
+var _debug_last_cell: String = ""
 var _log_visible: bool = false
 var _hidden_for_overlay: bool = false
 # Tracks the keep_stats arg we last applied so we can detect transitions
@@ -63,6 +69,16 @@ func _ready() -> void:
 	_fps_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.2))
 	_fps_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	add_child(_fps_label)
+
+	# Quest-context overlay (top-center): quest id, section, cell, wall-clock.
+	# Only mounted when PSZ_AUTOPILOT=1 so it's invisible in normal play but
+	# always visible in recorded autopilot runs — makes debugging stuck-walks
+	# from the recording-window timestamp trivial.
+	if OS.has_environment("PSZ_AUTOPILOT"):
+		_debug_info = _DebugInfoPanel.new()
+		add_child(_debug_info)
+		set_process(true)
+		_session_start_msec = Time.get_ticks_msec()
 
 	# Quest log disabled for now
 	_log_visible = false
@@ -125,6 +141,12 @@ func _process(_delta: float) -> void:
 	# scenes via GameState.is_gameplay_blocked() for safety.
 	if _action_palette and not _hidden_for_overlay:
 		_action_palette.visible = not _is_in_city()
+
+	# Autopilot HUD overlay (top-center): wall-clock + quest + cell. The
+	# overlay is only instantiated when PSZ_AUTOPILOT=1, so this is a
+	# cheap nil-check in normal play.
+	if _debug_info:
+		_render_debug_info()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -213,8 +235,24 @@ func _auto_show_log() -> void:
 
 
 ## Set the debug info text shown at top-center (quest ID, section, cell).
-func set_debug_info(_quest_id: String, _section_text: String, _cell_pos: String) -> void:
-	pass
+## No-op when the panel wasn't mounted (i.e. PSZ_AUTOPILOT wasn't set).
+func set_debug_info(quest_id: String, section_text: String, cell_pos: String) -> void:
+	_debug_last_quest = quest_id
+	_debug_last_section = section_text
+	_debug_last_cell = cell_pos
+	if _debug_info:
+		_render_debug_info()
+
+
+func _render_debug_info() -> void:
+	if not _debug_info or not (_debug_info is _DebugInfoPanel):
+		return
+	var elapsed_ms: int = Time.get_ticks_msec() - _session_start_msec
+	var total_sec: int = elapsed_ms / 1000
+	var mm: int = total_sec / 60
+	var ss: int = total_sec % 60
+	var time_str := "%02d:%02d" % [mm, ss]
+	(_debug_info as _DebugInfoPanel).set_info(time_str, _debug_last_quest, _debug_last_section, _debug_last_cell)
 
 
 # ── Debug Info Panel (top-center) ────────────────────────────────────────────
@@ -267,10 +305,12 @@ class _DebugInfoPanel extends Control:
 
 		add_child(_panel)
 
-	func set_info(quest_id: String, section_text: String, cell_pos: String) -> void:
+	func set_info(time_str: String, quest_id: String, section_text: String, cell_pos: String) -> void:
 		if not _label:
 			return
 		var parts: PackedStringArray = PackedStringArray()
+		if not time_str.is_empty():
+			parts.append(time_str)
 		if not quest_id.is_empty():
 			parts.append(quest_id)
 		if not section_text.is_empty():

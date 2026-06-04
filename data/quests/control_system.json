@@ -1339,15 +1339,15 @@
     },
     {
       "speaker": "Ana",
-      "text": "Mother Trinity has been silent for hundreds of years. Our tradition says her voice failed when the neutrino furnace failed \u2014 and we have not had a mind capable of repairing the furnace in living memory."
+      "text": "Mother Trinity has been silent for hundreds of years. Our tradition says her voice failed when the neutrino furnace failed — and we have not had a mind capable of repairing the furnace in living memory."
     },
     {
       "speaker": "Ana",
-      "text": "Your CAST \u2014 the one called Ogi \u2014 could. If he is willing."
+      "text": "Your CAST — the one called Ogi — could. If he is willing."
     },
     {
       "speaker": "Ana",
-      "text": "If we can wake her, she may be able to help undo what was done. The Great Blank \u2014 what was lost during it \u2014 may not be lost forever."
+      "text": "If we can wake her, she may be able to help undo what was done. The Great Blank — what was lost during it — may not be lost forever."
     },
     {
       "speaker": "Ana",
@@ -1360,5 +1360,6 @@
       "label": "Defeat Humilias",
       "target": 1
     }
-  ]
+  ],
+  "parent_quest": "heretic"
 }

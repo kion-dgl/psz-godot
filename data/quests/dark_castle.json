@@ -2126,7 +2126,9 @@
               "trigger_id": "dark_castle_z_0_0_clear",
               "trigger_condition": "room_clear",
               "dialog": [],
-              "actions": ["play_credits"]
+              "actions": [
+                "play_credits"
+              ]
             }
           ]
         }
@@ -2173,5 +2175,6 @@
       "label": "Defeat Dark Falz",
       "target": 1
     }
-  ]
+  ],
+  "parent_quest": "the_broken_seal"
 }
