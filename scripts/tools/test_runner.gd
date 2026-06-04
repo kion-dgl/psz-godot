@@ -25,6 +25,7 @@ func _ready() -> void:
 	test_mission_progression()
 	test_mag_feeding()
 	test_mag_evolution()
+	test_mag_personality_contract()
 	test_shops()
 	test_damage_formulas()
 	test_ranger_playthrough()
@@ -1153,6 +1154,34 @@ func test_mag_evolution() -> void:
 	print("  INFO: Primary=%s, Secondary=%s → Form=%s" % [primary, secondary, mag.form_id])
 	assert_eq(mag.form_id, "wyn", "Power/Hit feeding → Wyn (Stage 4)")
 	print("  PASS: Evolved to %s (Stage 4)" % mag.form_id)
+
+	print("")
+
+
+# ── Mag personality contract ────────────────────────────────
+# Regression guard for the removal of the MagPersonalityData resource
+# bundle (data/mag_personalities/*.tres + scripts/resources/
+# mag_personality_data.gd). The runtime never loaded those resources —
+# personality is stored as a plain String on the mag state. This test
+# locks that contract so a future change can't silently reintroduce a
+# dependency on the deleted resource-driven system.
+
+func test_mag_personality_contract() -> void:
+	print("── Mag Personality Contract ──")
+
+	var mag := MagManager.create_mag()
+	assert_eq(typeof(mag.personality), TYPE_STRING, "Personality is a plain String, not a resource")
+	assert_eq(mag.personality, "playful", "New mag defaults to 'playful' personality")
+
+	# Personality is identity data — feeding must never mutate it.
+	MagManager.feed_mag(mag, "monomate")
+	MagManager.feed_mag(mag, "star_atomizer")
+	assert_eq(mag.personality, "playful", "Personality unchanged after feeding")
+
+	# Mag forms still load from data/mags/ (NOT the deleted
+	# data/mag_personalities/) — proves the form pipeline is independent
+	# of the removed personality resources.
+	assert_gt(MagManager.get_all_mag_forms().size(), 20, "Mag forms load without the personality bundle")
 
 	print("")
 
