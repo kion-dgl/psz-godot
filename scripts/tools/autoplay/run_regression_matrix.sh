@@ -12,20 +12,37 @@
 #   PP canon + backtrack  (parallel from post-SR)
 #   AS canon + moon + sol (parallel from post-PP_canon)
 #   DOE               (sequential from post-AS_canon)
-#   static_in_the_snow (sequential from post-DOE) — currently unreachable from
-#                       post-DOE save without finishing FO first, so this slot
-#                       will fail at the guild counter until FO lands. Kept in
-#                       the chain so the report flags it.
-#   finding_ogi       (sequential from post-static, or from post-AS canon if
-#                       static unreachable) — the work target.
+#   finding_ogi       (sequential from post-AS_canon) — unlocks the endgame.
+#   static_in_the_snow (sequential from post-FO) — side branch off FO.
+#   --- core story endgame spine (each from the previous quest's post-save) ---
+#   investigate_tower (from post-FO)
+#   heretic           (from post-IT)
+#   control_system    (from post-heretic)
+#   the_broken_seal   (from post-CSY)
+#   dark_castle       (from post-TBS) — credits-gating final quest.
+#
+# Chain integrity: each endgame quest resumes from its parent_quest's
+# post-save so the guild counter surfaces it (see the
+# feedback_test_chain_must_make_unlocks_reachable note). If an upstream
+# quest fails, its post-save is NOT written, and the downstream phases
+# skip with a warning rather than running from a stale state.
 #
 # Resume:  --from <quest_id>  to skip already-completed upstream phases.
+#          Stages, in order: boot sr pp as doe fo static it heretic csy tbs dc
+# Speed:   --speed N   set autopilot time_scale (default 3x; physics ticks
+#                       scale with it so collision stays accurate). 3x is the
+#                       only VALIDATED speed — higher is best-effort: at 6x the
+#                       city/guild quest-accept flow loops forever and the
+#                       engine crashed mid-quest. Warns past 3x.
+#          --fast      alias for --speed 4 (modest smoke bump; still unvalidated).
 # Output:  /tmp/quest_matrix_scratch/regression_report.json
 #          /tmp/regression_matrix.log (full bash log)
 #
 # Use:
 #   bash scripts/tools/autoplay/run_regression_matrix.sh
 #   bash scripts/tools/autoplay/run_regression_matrix.sh --from doe
+#   bash scripts/tools/autoplay/run_regression_matrix.sh --from it --fast
+#   bash scripts/tools/autoplay/run_regression_matrix.sh --speed 5
 #   bash scripts/tools/autoplay/run_regression_matrix.sh --report-only
 #
 set -u
@@ -50,12 +67,42 @@ PACK_SIZE="$(stat -c %s "$PACK")"
 # --- Parse args ---
 FROM=""
 REPORT_ONLY=0
+SPEED=""          # empty → autopilot's built-in default (3x)
 RUN_START_ISO="$(date -u +%FT%TZ)"
-case "${1:-}" in
-  --from)         FROM="${2:-}" ;;
-  --from=*)       FROM="${1#--from=}" ;;
-  --report-only)  REPORT_ONLY=1 ;;
-esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --from)         FROM="${2:-}"; shift 2 ;;
+    --from=*)       FROM="${1#--from=}"; shift ;;
+    --speed)        SPEED="${2:-}"; shift 2 ;;
+    --speed=*)      SPEED="${1#--speed=}"; shift ;;
+    --fast)         SPEED="4"; shift ;;
+    --report-only)  REPORT_ONLY=1; shift ;;
+    *)              echo "unknown arg: $1" >&2; shift ;;
+  esac
+done
+
+# Build the env assignment passed to each godot run. Empty when SPEED is
+# unset, so `env ... $SPEED_ENV ...` simply contributes no argument and the
+# autopilot falls back to its own 3x default.
+SPEED_ENV=""
+if [ -n "$SPEED" ]; then
+  # Validate before passing through: autopilot.gd does float($PSZ_AUTOPILOT_TIME_SCALE),
+  # so a non-numeric value (e.g. "fast", "4x") would silently coerce toward 0 and
+  # destabilize the run. Fail fast with a clear message instead.
+  case "$SPEED" in
+    *[!0-9.]* | *.*.* | .) echo "[regression] ERROR: --speed must be a positive number (got '$SPEED')" >&2; exit 2 ;;
+  esac
+  if [ "$(awk -v s="$SPEED" 'BEGIN{print (s+0>0)?1:0}')" != "1" ]; then
+    echo "[regression] ERROR: --speed must be > 0 (got '$SPEED')" >&2; exit 2
+  fi
+  SPEED_ENV="PSZ_AUTOPILOT_TIME_SCALE=$SPEED"
+  # 3x is the validated default. Higher is best-effort: at 6x the
+  # city/guild quest-accept flow loops indefinitely (office<->counter)
+  # and the engine crashed mid-quest (heretic). Warn past 3x.
+  if [ "$(awk -v s="$SPEED" 'BEGIN{print (s+0>3)?1:0}')" = "1" ]; then
+    echo "[regression] WARN: speed ${SPEED}x exceeds the validated 3x — full quest flow may loop or crash (6x is known-bad). Use for stage-pathfinding smoke only." >&2
+  fi
+fi
 
 # When report-only, skip everything and just aggregate existing sidecars.
 if [ "$REPORT_ONLY" -ne 1 ]; then
@@ -81,7 +128,7 @@ JSON
     local sanity="$OUTDIR/${tag}_${stamp}.sanity.log"
     local json="$OUTDIR/${tag}_${stamp}.json"
 
-    echo "[regression] $tag start quest=${quest:-(SR default)} userdir=${userdir:-(default)} → $sanity"
+    echo "[regression] $tag start quest=${quest:-(SR default)} userdir=${userdir:-(default)} speed=${SPEED:-3(default)} → $sanity"
 
     local start_ts; start_ts=$(date -u +%s)
     env \
@@ -90,6 +137,7 @@ JSON
       PSZ_AUTOPILOT_NO_OBSTACLES=1 \
       PSZ_AUTOPILOT_NO_BOXES=1 \
       PSZ_AUTOPILOT_QUEST="$quest" \
+      $SPEED_ENV \
       XDG_DATA_HOME="$userdir" \
       LIBGL_ALWAYS_SOFTWARE=1 \
       xvfb-run -a -s "-screen 0 640x360x24" \
@@ -135,21 +183,57 @@ JSON
   }
 
   # --- Resume guards ---
+  # Execution order of the phases. `reached <stage>` returns 0 (run it) when
+  # no --from was given, or when <stage> is at-or-after FROM in this order.
+  PHASE_ORDER=(boot sr pp as doe fo static it heretic csy tbs dc)
+  phase_index() {
+    local name=$1 i=0
+    for p in "${PHASE_ORDER[@]}"; do
+      [ "$p" = "$name" ] && { echo "$i"; return; }
+      i=$((i + 1))
+    done
+    echo -1
+  }
   reached() {
-    # reached <stage> returns 0 if FROM is unset or alphabetically <= stage
-    # so we can use a string compare as a "this phase or later" gate.
     local stage=$1
-    case "$stage:$FROM" in
-      *":")                       return 0 ;;  # no --from → run everything
-      "boot:boot")                return 0 ;;
-      "sr:boot"|"sr:sr")          return 0 ;;
-      "pp:boot"|"pp:sr"|"pp:pp")  return 0 ;;
-      "as:boot"|"as:sr"|"as:pp"|"as:as") return 0 ;;
-      "doe:boot"|"doe:sr"|"doe:pp"|"doe:as"|"doe:doe") return 0 ;;
-      "fo:boot"|"fo:sr"|"fo:pp"|"fo:as"|"fo:doe"|"fo:fo") return 0 ;;
-      "static:"*) return 0 ;;  # static is always last; honour any --from
-    esac
-    return 1
+    [ -z "$FROM" ] && return 0          # no --from → run everything
+    local si fi
+    si=$(phase_index "$stage")
+    fi=$(phase_index "$FROM")
+    if [ "$fi" -lt 0 ]; then
+      echo "[regression] WARN: unknown --from '$FROM' — running all phases" >&2
+      return 0
+    fi
+    [ "$fi" -le "$si" ]                 # run this phase iff FROM is at/before it
+  }
+
+  # run_chain_phase <tag> <quest_id> <parent_post> <child_post> <label>
+  # Resume from the parent's post-save, run the quest, and snapshot the
+  # child post-save ONLY if the quest passed. If the parent post-save is
+  # missing (upstream failed/skipped), skip this phase with a warning so
+  # the chain degrades gracefully instead of running from a stale state.
+  run_chain_phase() {
+    local tag=$1 quest=$2 parent_post=$3 child_post=$4 label=$5
+    if [ ! -d "$SCRATCH/$parent_post" ]; then
+      echo ""; echo "=== $label ==="
+      echo "[regression] SKIP $tag — $SCRATCH/$parent_post missing (upstream did not pass)"
+      return 0
+    fi
+    echo ""; echo "=== $label ==="
+    stage_userdir "$SCRATCH/$tag" "$SCRATCH/$parent_post"
+    run_godot "$tag" "$quest" "$SCRATCH/$tag"
+    local latest; latest=$(ls -t "$OUTDIR"/${tag}_*.json 2>/dev/null | head -1)
+    if [ -n "$latest" ] && jq -e '.status == "pass"' "$latest" >/dev/null 2>&1; then
+      echo "[regression] snapshotting $tag post-save → $SCRATCH/$child_post"
+      rm -rf "$SCRATCH/$child_post"
+      cp -r "$SCRATCH/$tag/godot/app_userdata/PSZ Godot" "$SCRATCH/$child_post"
+    else
+      # Invalidate any stale child snapshot from a prior run so the
+      # downstream phase's `[ -d ]` parent check fails and it skips —
+      # otherwise it would resume from an out-of-date save.
+      echo "[regression] $tag did not pass — clearing stale $child_post so downstream phases skip"
+      rm -rf "$SCRATCH/$child_post"
+    fi
   }
 
   # === Phase 1: Boot ===
@@ -251,6 +335,25 @@ JSON
     run_godot "sis" "static_in_the_snow" "$SCRATCH/sis"
   fi
 
+  # === Core story endgame spine (sequential; each from the prior post-save) ===
+  # investigate_tower branches off finding_ogi (parent_quest=finding_ogi),
+  # the same parent as static_in_the_snow — so it resumes from post-fo.
+  if reached it; then
+    run_chain_phase it      "investigate_tower" "post-fo"      "post-it"      "Phase 8: investigate_tower"
+  fi
+  if reached heretic; then
+    run_chain_phase heretic "heretic"           "post-it"      "post-heretic" "Phase 9: heretic"
+  fi
+  if reached csy; then
+    run_chain_phase csy     "control_system"    "post-heretic" "post-csy"     "Phase 10: control_system"
+  fi
+  if reached tbs; then
+    run_chain_phase tbs     "the_broken_seal"   "post-csy"     "post-tbs"     "Phase 11: the_broken_seal"
+  fi
+  if reached dc; then
+    run_chain_phase dc      "dark_castle"       "post-tbs"     "post-dc"      "Phase 12: dark_castle"
+  fi
+
   echo ""; echo "=== regression matrix done $(date -u +%FT%TZ) ==="
 fi
 
@@ -262,7 +365,7 @@ echo "[regression] building $REPORT"
 TMPREPORT="$(mktemp)"
 echo '{"started_at":"'"$RUN_START_ISO"'","quests":[' > "$TMPREPORT"
 FIRST=1
-for tag in boot first_mission pp_canon pp_backtrack as_canon as_moon as_sol doe fo sis; do
+for tag in boot first_mission pp_canon pp_backtrack as_canon as_moon as_sol doe fo sis it heretic csy tbs dc; do
   # Newest sidecar JSON for this tag prefix
   latest=$(ls -t "$OUTDIR"/${tag}_*.json 2>/dev/null | head -1)
   if [ -z "$latest" ]; then continue; fi

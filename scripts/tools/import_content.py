@@ -464,38 +464,6 @@ items = {array_to_gdscript(data.get('items', []))}
     return count
 
 
-# ---- Mag Personality Data ----
-def import_mag_personalities(content_dir: str, data_dir: str):
-    src = os.path.join(content_dir, 'mag-personalities')
-    if not os.path.isdir(src):
-        return 0
-    count = 0
-    for fname in sorted(os.listdir(src)):
-        if not fname.endswith('.json'):
-            continue
-        data = read_json(os.path.join(src, fname))
-        slug = slugify(data['name'])
-        tres = f'''[gd_resource type="Resource" script_class="MagPersonalityData" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://scripts/resources/mag_personality_data.gd" id="1"]
-
-[resource]
-script = ExtResource("1")
-id = "{slug}"
-name = "{data['name']}"
-japanese_name = "{data.get('japaneseName', '')}"
-category = "{data.get('category', '')}"
-tier = "{data.get('tier', '')}"
-unlock_level = {data.get('unlockLevel', 0)}
-favorite_food = "{data.get('favoriteFood', '')}"
-switch_from = "{data.get('switchFrom', '')}"
-triggers = {dict_to_gdscript(data.get('triggers', {}))}
-'''
-        write_tres(os.path.join(data_dir, 'mag_personalities', f'{slug}.tres'), tres)
-        count += 1
-    return count
-
-
 # ---- Modifier Data ----
 def import_modifiers(content_dir: str, data_dir: str):
     src = os.path.join(content_dir, 'modifiers')
@@ -578,7 +546,6 @@ def main():
         ("Set Bonuses", import_set_bonuses),
         ("Drop Tables", import_drop_tables),
         ("Shops", import_shops),
-        ("Mag Personalities", import_mag_personalities),
         ("Modifiers", import_modifiers),
         ("Experience Table", import_experience),
     ]
