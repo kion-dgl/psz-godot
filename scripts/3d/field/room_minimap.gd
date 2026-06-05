@@ -44,8 +44,6 @@ var _svg_offset_x := 0.0
 var _svg_offset_y := 0.0
 var _rotation_deg: int = 0
 
-const MINIMAP_DIRECTIONS := ["north", "east", "south", "west"]
-
 
 func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 		connections: Dictionary, warp_edge: String,
@@ -354,7 +352,7 @@ func _build_gate_entries(svg_gates: Array, connections: Dictionary,
 
 		if not base_dir.is_empty():
 			# Convert base stage direction to grid direction using cell rotation
-			grid_dir = _rotate_dir(base_dir, _rotation_deg)
+			grid_dir = StageRotation.rotate_dir(base_dir, _rotation_deg)
 
 		if not grid_dir.is_empty():
 			if grid_dir == warp_edge and not warp_edge.is_empty():
@@ -376,17 +374,6 @@ func _build_gate_entries(svg_gates: Array, connections: Dictionary,
 		_gate_entries.append({"center": svg_center, "color": color, "label": label, "dir": grid_dir})
 		if not grid_dir.is_empty():
 			_gate_dir_index[grid_dir] = _gate_entries.size() - 1
-
-
-## Rotate a direction CW by the given degrees.
-func _rotate_dir(dir: String, rotation: int) -> String:
-	if rotation == 0:
-		return dir
-	var idx: int = MINIMAP_DIRECTIONS.find(dir)
-	if idx < 0:
-		return dir
-	var steps: int = (rotation / 90) % 4
-	return MINIMAP_DIRECTIONS[(idx + steps) % 4]
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
