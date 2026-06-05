@@ -86,6 +86,15 @@ done
 # autopilot falls back to its own 3x default.
 SPEED_ENV=""
 if [ -n "$SPEED" ]; then
+  # Validate before passing through: autopilot.gd does float($PSZ_AUTOPILOT_TIME_SCALE),
+  # so a non-numeric value (e.g. "fast", "4x") would silently coerce toward 0 and
+  # destabilize the run. Fail fast with a clear message instead.
+  case "$SPEED" in
+    *[!0-9.]* | *.*.* | .) echo "[regression] ERROR: --speed must be a positive number (got '$SPEED')" >&2; exit 2 ;;
+  esac
+  if [ "$(awk -v s="$SPEED" 'BEGIN{print (s+0>0)?1:0}')" != "1" ]; then
+    echo "[regression] ERROR: --speed must be > 0 (got '$SPEED')" >&2; exit 2
+  fi
   SPEED_ENV="PSZ_AUTOPILOT_TIME_SCALE=$SPEED"
   # 3x is the validated default. Higher is best-effort: at 6x the
   # city/guild quest-accept flow loops indefinitely (office<->counter)

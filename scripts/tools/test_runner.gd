@@ -1174,8 +1174,12 @@ func test_mag_personality_contract() -> void:
 	assert_eq(mag.personality, "playful", "New mag defaults to 'playful' personality")
 
 	# Personality is identity data — feeding must never mutate it.
-	MagManager.feed_mag(mag, "monomate")
-	MagManager.feed_mag(mag, "star_atomizer")
+	# Assert the feeds actually succeed so this can't pass vacuously if
+	# feed_mag ever starts rejecting these items.
+	var fed1 := MagManager.feed_mag(mag, "monomate")
+	var fed2 := MagManager.feed_mag(mag, "star_atomizer")
+	assert_true(fed1.get("success", false), "monomate feed succeeded")
+	assert_true(fed2.get("success", false), "star_atomizer feed succeeded")
 	assert_eq(mag.personality, "playful", "Personality unchanged after feeding")
 
 	# Mag forms still load from data/mags/ (NOT the deleted
