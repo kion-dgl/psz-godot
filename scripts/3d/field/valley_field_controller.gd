@@ -410,7 +410,7 @@ func _ready() -> void:
 	print("[ValleyField]     pos=%s  rot=%.2f rad (%.1f°)" % [
 		spawn_pos, spawn_rot, rad_to_deg(spawn_rot)])
 	print("[ValleyField]     reason: %s" % spawn_reason)
-	print("[ValleyField]     _dir_to_yaw table: N=%.2f E=%.2f S=%.2f W=%.2f" % [
+	print("[ValleyField]     StageRotation.dir_to_yaw table: N=%.2f E=%.2f S=%.2f W=%.2f" % [
 		StageRotation.dir_to_yaw("north"), StageRotation.dir_to_yaw("east"), StageRotation.dir_to_yaw("south"), StageRotation.dir_to_yaw("west")])
 
 	var connections: Dictionary = _current_cell.get("connections", {})
