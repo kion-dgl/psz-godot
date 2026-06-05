@@ -96,15 +96,19 @@ check "quest accepted"                         "[sanity] guild_counter: quest ac
 check "reached city_warp"                      "[sanity] checkpoint: city_warp"
 check "warp_teleporter opened"                 "[sanity] checkpoint: warp_teleporter"
 check "valley_field entered"                   "[sanity] checkpoint: valley_field entered"
-check "step 1 (A 0,2)"                         "step 1/24 (A 0,2 start)"
-check "step 6 (A 2,1 return)"                  "step 6/24 (A 2,1 (return, open gate))"
-check "step 7 (A 2,2 switch)"                  "step 7/24 (A 2,2 (switch))"
-check "step 11 (A 2,4 end)"                    "step 11/24 (A 2,4 (end, warp east))"
-check "step 12 (E 0,0 transition)"             "step 12/24 (E 0,0 (transition, warp north))"
-check "step 13 (B 0,2 start)"                  "step 13/24 (B 0,2 start)"
-check "step 16 (B 1,2 return)"                 "step 16/24 (B 1,2 (return, open gate))"
-check "step 23 (B 3,1 return)"                 "step 23/24 (B 3,1 (return, open gate))"
-check "step 24 (B 3,0 final)"                  "step 24/24 (B 3,0 (final, quest complete))"
+# Step progress is logged via the autopilot's cell-load plan lines
+# ("[sanity] cell-load … plan label='<label>' do=[…] exit='…'"). We assert
+# on the plan label, which carries the same cell/step identity the old
+# "step N/24 (<label>)" lines did before that logging was refactored.
+check "step (A 0,2 start)"                     "plan label='A 0,2 start'"
+check "step (A 2,1 return, open gate)"         "plan label='A 2,1 (return, open gate)'"
+check "step (A 2,2 switch)"                    "plan label='A 2,2 (switch)'"
+check "step (A 2,4 end, warp east)"            "plan label='A 2,4 (end, warp east)'"
+check "step (E 0,0 transition, warp north)"    "plan label='E 0,0 (transition, warp north)'"
+check "step (B 0,2 start)"                     "plan label='B 0,2 start'"
+check "step (B 1,2 return, open gate)"         "plan label='B 1,2 (return, open gate)'"
+check "step (B 3,1 return, open gate)"         "plan label='B 3,1 (return, open gate)'"
+check "step (B 3,0 final, quest complete)"     "plan label='B 3,0 (final, quest complete)'"
 check "quest completed"                        "[sanity] checkpoint: quest_completed"
 check "back in city after quest"               "[sanity] checkpoint: quest report — back in city"
 check "autopilot finished cleanly"             "[sanity] DONE ok"
