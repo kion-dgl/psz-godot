@@ -38,7 +38,6 @@ const CompanionNpcScript := preload("res://scripts/3d/elements/companion_npc.gd"
 # Start menu handled by PsoStartMenu autoload
 
 const OPPOSITE := {"north": "south", "south": "north", "east": "west", "west": "east"}
-const DIRECTIONS := ["north", "east", "south", "west"]
 
 ## Maps session area_id → DropRegistry area key for enemy drop lookups
 const AREA_DROP_KEYS := {
@@ -297,14 +296,14 @@ func _ready() -> void:
 				if orig_dir == "default":
 					remapped["default"] = _portal_data["default"]
 				else:
-					remapped[_rotate_dir(orig_dir, _rotation_deg)] = _portal_data[orig_dir].duplicate()
+					remapped[StageRotation.rotate_dir(orig_dir, _rotation_deg)] = _portal_data[orig_dir].duplicate()
 			_portal_data = remapped
 
 	# Ensure all stage config portals are in _portal_data (some quest JSONs
 	# omit unconnected portals like warp_edge from the portals dict).
 	for cp in _stage_config.get("portals", []):
 		var base_dir: String = str(cp.get("direction", ""))
-		var game_dir: String = _rotate_dir(base_dir, _rotation_deg)
+		var game_dir: String = StageRotation.rotate_dir(base_dir, _rotation_deg)
 		if not _portal_data.has(game_dir):
 			_portal_data[game_dir] = _compute_portal_from_config(cp, game_dir)
 			print("[ValleyField]   Synthesized missing portal: '%s' (config dir='%s')" % [game_dir, base_dir])
@@ -412,7 +411,7 @@ func _ready() -> void:
 		spawn_pos, spawn_rot, rad_to_deg(spawn_rot)])
 	print("[ValleyField]     reason: %s" % spawn_reason)
 	print("[ValleyField]     _dir_to_yaw table: N=%.2f E=%.2f S=%.2f W=%.2f" % [
-		_dir_to_yaw("north"), _dir_to_yaw("east"), _dir_to_yaw("south"), _dir_to_yaw("west")])
+		StageRotation.dir_to_yaw("north"), StageRotation.dir_to_yaw("east"), StageRotation.dir_to_yaw("south"), StageRotation.dir_to_yaw("west")])
 
 	var connections: Dictionary = _current_cell.get("connections", {})
 	print("[ValleyField]   ── Grid Cell Data ──")
@@ -645,17 +644,6 @@ func _find_child_by_name(node: Node, child_name: String) -> Node:
 	return null
 
 
-func _dir_to_yaw(dir: String) -> float:
-	# Model coordinate convention: east=-X, west=+X, north=-Z, south=+Z
-	# Player movement: Vector3(sin(rot), 0, cos(rot))
-	match dir:
-		"north": return PI        # sin(PI)=0,  cos(PI)=-1  → -Z
-		"south": return 0.0       # sin(0)=0,   cos(0)=1    → +Z
-		"east": return -PI / 2.0  # sin(-PI/2)=-1, cos=0    → -X
-		"west": return PI / 2.0   # sin(PI/2)=1,  cos=0     → +X
-	return 0.0
-
-
 ## Compute yaw angle for facing from position `from_pos` toward `to_pos` (XZ plane).
 func _facing_yaw(from_pos: Vector3, to_pos: Vector3) -> float:
 	var dx := to_pos.x - from_pos.x
@@ -663,41 +651,6 @@ func _facing_yaw(from_pos: Vector3, to_pos: Vector3) -> float:
 	if dx * dx + dz * dz < 0.001:
 		return 0.0
 	return atan2(dx, dz)
-
-
-## Rotate a direction CW by degrees (0/90/180/270).
-func _rotate_dir(dir: String, rotation: int) -> String:
-	if rotation == 0:
-		return dir
-	var idx: int = DIRECTIONS.find(dir)
-	if idx < 0:
-		return dir
-	var steps: int = (rotation / 90) % 4
-	return DIRECTIONS[(idx + steps) % 4]
-
-
-## Convert a grid-space direction back to the original GLB direction.
-## Reverse rotation: apply (360 - rotation) CW.
-func _grid_to_original_dir(grid_dir: String, rotation: int) -> String:
-	if rotation == 0:
-		return grid_dir
-	return _rotate_dir(grid_dir, (360 - rotation) % 360)
-
-
-## Remap quest cell directions from psz-sketch convention to GLB convention.
-## The quest editor uses mirrored east/west (east=+X, west=-X) while GLB portal
-## nodes use standard convention (east=-X, west=+X). North/south are the same.
-## Only applies to quest sessions — generated fields already use GLB directions.
-## Rotate a point around Y axis by degrees (CW when viewed from above).
-func _rotate_point(point: Vector3, degrees: int) -> Vector3:
-	var rad := deg_to_rad(float(degrees))
-	var cos_a := cos(rad)
-	var sin_a := sin(rad)
-	return Vector3(
-		point.x * cos_a - point.z * sin_a,
-		point.y,
-		point.x * sin_a + point.z * cos_a
-	)
 
 
 func _spawn_player(pos: Vector3, rot: float) -> void:
@@ -1181,7 +1134,7 @@ func _parse_baked_portals(baked: Dictionary) -> Dictionary:
 				var matched := false
 				for cp in _stage_config.get("portals", []):
 					var base_dir: String = str(cp.get("direction", ""))
-					var rotated_dir: String = _rotate_dir(base_dir, _rotation_deg)
+					var rotated_dir: String = StageRotation.rotate_dir(base_dir, _rotation_deg)
 					if rotated_dir == dir_key:
 						result[dir_key] = _compute_portal_from_config(cp, dir_key)
 						matched = true
@@ -1817,12 +1770,12 @@ func _spawn_field_elements() -> void:
 			var start_entry_dir: String = str(OPPOSITE.get(warp_edge, ""))
 			if not start_entry_dir.is_empty() and _portal_data.has(start_entry_dir):
 				start_pos = _portal_data[start_entry_dir]["spawn_pos"]
-				start_rot = _dir_to_yaw(warp_edge)
+				start_rot = StageRotation.dir_to_yaw(warp_edge)
 			else:
 				for dir in _portal_data:
 					if dir != "default":
 						start_pos = _portal_data[dir]["spawn_pos"]
-						start_rot = _dir_to_yaw(str(OPPOSITE.get(dir, "south")))
+						start_rot = StageRotation.dir_to_yaw(str(OPPOSITE.get(dir, "south")))
 						break
 		add_child(start_warp)
 		start_warp.global_position = Vector3(start_pos.x, 0.0, start_pos.z)
