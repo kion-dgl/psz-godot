@@ -84,6 +84,17 @@ done
 # Build the env assignment passed to each godot run. Empty when SPEED is
 # unset, so `env ... $SPEED_ENV ...` simply contributes no argument and the
 # autopilot falls back to its own 3x default.
+# dbus-run-session gives each godot launch a private session bus so its
+# AccessKit layer can't SIGABRT (exit 134) when the box's ambient a11y bus is
+# absent. Optional: run without it (and warn) if not installed, so a missing
+# dep doesn't read as every phase "failing".
+DBUS_WRAP=""
+if command -v dbus-run-session >/dev/null 2>&1; then
+  DBUS_WRAP="dbus-run-session --"
+else
+  echo "[regression] WARN: dbus-run-session not found — running without a private DBus session; godot may SIGABRT if no ambient a11y bus is present." >&2
+fi
+
 SPEED_ENV=""
 if [ -n "$SPEED" ]; then
   # Validate before passing through: autopilot.gd does float($PSZ_AUTOPILOT_TIME_SCALE),
@@ -140,7 +151,7 @@ JSON
       $SPEED_ENV \
       XDG_DATA_HOME="$userdir" \
       LIBGL_ALWAYS_SOFTWARE=1 \
-      dbus-run-session -- \
+      $DBUS_WRAP \
       xvfb-run -a -s "-screen 0 640x360x24" \
       timeout 1800 "$GODOT" --write-movie "$avi" --fixed-fps 30 \
       --disable-vsync --audio-driver Dummy --path "$REPO" >"$sanity" 2>&1

@@ -65,8 +65,15 @@ START_TS="$(date -u +%s)"
 # dbus-run-session gives godot a private session bus so its AccessKit
 # (accessibility) layer can't SIGABRT at startup when the ambient a11y bus
 # is missing/disconnected (headless boxes) — otherwise the run dies exit 134.
+# Optional: fall back to running without it (and warn) if it isn't installed.
+DBUS_WRAP=""
+if command -v dbus-run-session >/dev/null 2>&1; then
+	DBUS_WRAP="dbus-run-session --"
+else
+	echo "[record-first-mission] WARN: dbus-run-session not found — running without a private DBus session; godot may SIGABRT if no ambient a11y bus is present." >&2
+fi
 PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_PHASE=first-mission LIBGL_ALWAYS_SOFTWARE=1 \
-	dbus-run-session -- \
+	$DBUS_WRAP \
 	xvfb-run -a -s "-screen 0 ${RES}x24" \
 	timeout "$TIMEOUT" "$GODOT" --write-movie "$AVI" --fixed-fps "$FPS" \
 	--disable-vsync --audio-driver Dummy --path "$REPO" >"$LOG" 2>&1
