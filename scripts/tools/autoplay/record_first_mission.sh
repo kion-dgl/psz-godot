@@ -62,7 +62,11 @@ JSON
 # 3) Render under Xvfb, capturing the autopilot's stdout for pass/fail.
 echo "[record-first-mission] rendering → $AVI (phase=first-mission, $RES @ ${FPS}fps, timeout=${TIMEOUT}s)"
 START_TS="$(date -u +%s)"
+# dbus-run-session gives godot a private session bus so its AccessKit
+# (accessibility) layer can't SIGABRT at startup when the ambient a11y bus
+# is missing/disconnected (headless boxes) — otherwise the run dies exit 134.
 PSZ_AUTOPILOT=1 PSZ_AUTOPILOT_PHASE=first-mission LIBGL_ALWAYS_SOFTWARE=1 \
+	dbus-run-session -- \
 	xvfb-run -a -s "-screen 0 ${RES}x24" \
 	timeout "$TIMEOUT" "$GODOT" --write-movie "$AVI" --fixed-fps "$FPS" \
 	--disable-vsync --audio-driver Dummy --path "$REPO" >"$LOG" 2>&1

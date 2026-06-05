@@ -140,6 +140,7 @@ JSON
       $SPEED_ENV \
       XDG_DATA_HOME="$userdir" \
       LIBGL_ALWAYS_SOFTWARE=1 \
+      dbus-run-session -- \
       xvfb-run -a -s "-screen 0 640x360x24" \
       timeout 1800 "$GODOT" --write-movie "$avi" --fixed-fps 30 \
       --disable-vsync --audio-driver Dummy --path "$REPO" >"$sanity" 2>&1
