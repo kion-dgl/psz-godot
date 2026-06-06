@@ -126,6 +126,9 @@ afford/room checks inline, or not at all). See `/mechanics/shops`.
 - [ ] **5. Portrait** — collapse the identical `photon`/`crafting` setup; hook the rest.
 
 ## Status log
+- 2026-06-06 — Added buy-guard regression tests to `test_shops` (affordability
+  + room: `buy_item` refuses + leaves state unchanged) as the pre-change net for
+  increment 2 — the invariants `_can_buy()` must mirror. Tests 1413/0.
 - 2026-06-06 — Canonical names settled (Item/Weapon/Tekker/Photon/Synthesis/
   Blackjack + Storage/Guild counters); naming drift + standalone-`tech_shop`
   redundancy logged; `_can_buy` affordance added to the plan. Fixed `tech_shop`
