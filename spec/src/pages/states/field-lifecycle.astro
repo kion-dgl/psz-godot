@@ -1,0 +1,188 @@
+---
+// Field stage lifecycle — the runtime BEHAVIOR of a field session (what the
+// field controller and its modules do, and where). Companion to the per-stage
+// geometry viewer (the Field Stages index). Keep this in sync with the
+// valley_field_controller.gd split (see docs/valley-field-split.md).
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const lifecycle = `flowchart TD
+  Enter["Enter field (warp / telepipe from city)"] --> Ready["valley_field_controller _ready: build cell graph, spawn player + camera"]
+  Ready --> Load["cell-load (sec:row,col)"]
+  Load --> Restore{"visited before?"}
+  Restore -- "yes" --> RebuildSaved["restore_cell_objects from _cell_states"]
+  Restore -- "no" --> Fresh["spawn_fresh_cell_objects from stage config"]
+  RebuildSaved --> Plan["run plan do[] actions"]
+  Fresh --> Plan
+  Plan --> Walk["walk to exit via waypoint graph"]
+  Walk --> Save["save_cell_state (objects + drops)"]
+  Save --> More{"exit leads to another cell?"}
+  More -- "yes" --> Load
+  More -- "no / objectives met" --> End["end-cell exit -> telepipe back to city"]
+
+  classDef mod fill:#0d1117,stroke:#58a6ff,color:#e6edf3,stroke-width:2px
+  class RebuildSaved,Fresh,Save mod
+`;
+---
+
+<Concept title="Field Stage Lifecycle" section="States">
+  <div class="diagram"><Mermaid chart={lifecycle} /></div>
+
+  <p>This page documents the <em>runtime behavior</em> of a field session — what
+  happens, in what order, and which module owns it. The
+  <a href="/journey/field">Field Stages</a> viewer shows the per-stage geometry
+  (floor mesh, grid, waypoints); this is the contract for the logic that drives
+  the player through them. The key words <strong>MUST</strong>,
+  <strong>MUST NOT</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>Historically all of this lived in one 3,900-line
+  <code>valley_field_controller.gd</code>. It is being split into focused modules
+  (tracked in <code>docs/valley-field-split.md</code>); the
+  <a href="#where">module map</a> below records where each behavior lives.</p>
+
+  <h2>The cell model</h2>
+  <p>A field is a graph of <strong>cells</strong> grouped into <strong>sections</strong>.
+  The autopilot log identifies a cell as <code>sec:row,col</code> (e.g.
+  <code>0:1,2</code>); the human label pairs a section letter with grid coords
+  (e.g. <code>A 1,2</code>). Each cell loads one stage (a <code>floor.glb</code> +
+  visual <code>_m.glb</code>) and has up to four cardinal exits.</p>
+  <p>A cell <strong>MAY</strong> be authored with a rotation (0/90/180/270). Rotation
+  is a <strong>label swap only</strong>: it relabels which gate is
+  north/east/south/west. The floor mesh, waypoints, and objectives stay in
+  stage-local space — the runtime <strong>MUST NOT</strong> apply a rotation matrix
+  to geometry. Direction relabeling goes through <code>StageRotation.rotate_dir</code>.</p>
+
+  <h2>Cell load: restore vs. fresh</h2>
+  <p>On entering a cell the controller checks <code>_cell_states</code> (keyed by cell
+  position):</p>
+  <ul>
+    <li><strong>First visit</strong> → <code>spawn_fresh_cell_objects</code> reads the
+    stage config and instantiates every authored object.</li>
+    <li><strong>Re-entry</strong> → <code>restore_cell_objects</code> rebuilds from the
+    saved snapshot, so prior progress is preserved (see <a href="#persist">persistence</a>).</li>
+  </ul>
+  <p>Each cell carries a <strong>plan</strong>: a <code>label</code>, an ordered
+  <code>do[]</code> action list, and an <code>exit</code> direction. After objects
+  are present, the plan's actions run, then the player walks to the exit.</p>
+
+  <h2>Objects a cell can contain</h2>
+  <p>All cell objects are created by <code>CellObjectSpawner</code>:</p>
+  <table>
+    <tr><th>Object</th><th>Behavior</th><th>Persisted state</th></tr>
+    <tr><td><code>box</code></td><td>breakable container; may drop meseta / item / material</td><td><code>intact</code> → <code>broken</code></td></tr>
+    <tr><td><code>enemy</code></td><td>combat target; killing all in a room can unlock gates / drop a key</td><td><code>alive</code> → <code>dead</code></td></tr>
+    <tr><td><code>fence</code> / <code>switch</code></td><td>a step-switch toggles its linked fence(s)</td><td>link state</td></tr>
+    <tr><td><code>wall</code></td><td>blocker; <code>destructible</code> walls can be cleared</td><td>intact / destroyed</td></tr>
+    <tr><td><code>message</code></td><td>readable pack; reading <strong>MAY</strong> advance an objective or trigger a reaction</td><td><code>available</code> → <code>read</code></td></tr>
+    <tr><td><code>needle_trap</code> / <code>bear_trap</code></td><td>damage / immobilize on contact</td><td>armed / sprung</td></tr>
+    <tr><td><code>dialog_trigger</code></td><td>fires dialog on enter (or a condition)</td><td><code>ready</code> → fired</td></tr>
+    <tr><td><code>field_npc</code></td><td>placed NPC with dialog / animation</td><td>—</td></tr>
+    <tr><td><code>warp_point</code> / <code>area_warp</code></td><td>moves the player to another section / cell</td><td>—</td></tr>
+    <tr><td><code>quest_item</code></td><td>pickup that counts toward an objective</td><td><code>available</code> → collected</td></tr>
+  </table>
+
+  <h2>Plan actions (<code>do[]</code>)</h2>
+  <p>Observed in the autopilot as <code>action i/n: &lt;name&gt;</code>. A cell's
+  plan <strong>MUST</strong> complete its <code>do[]</code> list before the walk-to-exit
+  begins:</p>
+  <table>
+    <tr><th>Action</th><th>Meaning</th></tr>
+    <tr><td><code>kill_all</code></td><td>defeat every enemy in the room</td></tr>
+    <tr><td><code>flip_switch</code></td><td>step on the switch (toggles linked fences)</td></tr>
+    <tr><td><code>open_gate</code></td><td>open a now-unlocked gate (after key / clear)</td></tr>
+    <tr><td><code>pickup_key</code></td><td>collect the key dropped for a locked gate</td></tr>
+    <tr><td><code>dismiss_dialog</code></td><td>advance past a triggered dialog</td></tr>
+    <tr><td><code>wait_quest_complete</code></td><td>hold until objectives flip the quest complete (final cell)</td></tr>
+  </table>
+
+  <h2 id="persist">Persistence across re-entry</h2>
+  <p><code>save_cell_state</code> snapshots each cell as
+  <code>&#123; objects: [&#123; type, state, pos &#125;], drops: [...] &#125;</code> into
+  <code>_cell_states</code>, alongside controller-level <code>_keys_collected</code>,
+  <code>_gates_opened</code>, and <code>_visited_cells</code>. The invariant: walking
+  back through a cleared cell <strong>MUST NOT</strong> undo progress.</p>
+  <ul>
+    <li>Killed enemies <strong>MUST NOT</strong> respawn.</li>
+    <li>Broken boxes <strong>MUST NOT</strong> reappear (and <strong>MUST NOT</strong> re-drop loot).</li>
+    <li>Opened gates <strong>MUST</strong> stay open; collected keys stay collected.</li>
+    <li>Read messages stay read.</li>
+    <li>Picked-up items (quest items, box drops) <strong>MUST NOT</strong> reappear.
+    Items still on the ground <strong>MUST</strong> keep the same position and the
+    same state on re-entry — they <strong>MUST NOT</strong> move, re-roll, or change
+    state.</li>
+  </ul>
+
+  <h2>Gates</h2>
+  <p>A gate blocks a cell exit until its condition is met. There are three kinds:</p>
+  <ul>
+    <li><strong>Normal gate</strong> — unlocks once every enemy in the room is
+    cleared (the cell's <code>kill_all</code> action).</li>
+    <li><strong>Key gate</strong> — opened with a key. Keys are <em>section-scoped</em>:
+    <strong>any</strong> key found anywhere in a section opens <strong>any</strong>
+    key gate in that same section (they are not paired one-to-one). A sibling cell
+    typically drops the key on clear; the player does <code>pickup_key</code> then
+    <code>open_gate</code>.</li>
+    <li><strong>Area gate</strong> — currently the <code>area_warp</code> object (a
+    clearer name would be <em>area gate</em>). Not a barrier within a section but a
+    connection <strong>to a different section</strong>; passing through transitions
+    the player across sections.</li>
+  </ul>
+  <p>Gate <em>direction</em> is resolved through <code>StageRotation</code> so a
+  rotated cell still opens the correct physical exit.</p>
+
+  <h2>Fences &amp; switches</h2>
+  <p>Fences are distinct from gates. A fence is toggled by its own dedicated
+  <strong>step-switch</strong>: stepping on the switch (<code>flip_switch</code>)
+  toggles the fence(s) linked to it. Unlike a key — which is section-wide — a switch
+  is bound to a specific fence link, so a given switch only ever affects its own
+  fence(s).</p>
+
+  <h2>Exit & end of stage</h2>
+  <p>Walking onto an exit trigger transitions to the connected cell (or section, via
+  an area gate). When the cell's exit is empty and objectives are met, the final
+  cell's <code>wait_quest_complete</code> resolves and the controller spawns the
+  end-cell exit, which telepipes the player back to the city for the quest report.</p>
+
+  <h3>Quests vs. free roam</h3>
+  <p>Quests and free (explorable) areas share the <strong>same stage JSON
+  format</strong>. The only difference is that a free area has no guild quest
+  counter and no associated quest dialog — so it has <strong>no hard clear
+  condition</strong>. The player roams it without a "report back" objective; there
+  is no <code>wait_quest_complete</code> / end-cell telepipe gating exploration.</p>
+  <p><em>Planned — implicit quests in free roam:</em> hidden objectives the player
+  can discover, trigger, and complete by exploring, rather than the guild's explicit
+  "go here, do this" structure. Because free areas already use the same format, this
+  would layer optional, discoverable goals onto a free area without changing the
+  format — the player picks them up by exploring, not by accepting them at a counter.</p>
+
+  <h2 id="where">Where each behavior lives</h2>
+  <p>The split is in progress; ✅ = extracted, ⏳ = still on the controller (target
+  module named):</p>
+  <table>
+    <tr><th>Behavior</th><th>Module</th></tr>
+    <tr><td>Direction / rotation math</td><td>✅ <code>StageRotation</code></td></tr>
+    <tr><td>Cell object spawning + save/restore</td><td>✅ <code>CellObjectSpawner</code></td></tr>
+    <tr><td>Player spawn + orbit camera</td><td>⏳ controller</td></tr>
+    <tr><td>Floor / map collision</td><td>⏳ controller → <code>MapCollisionBuilder</code></td></tr>
+    <tr><td>Portals, gate triggers + labels</td><td>⏳ controller → <code>PortalGateManager</code></td></tr>
+    <tr><td>Weather, sky, lights, stage effects</td><td>⏳ controller → <code>WeatherController</code></td></tr>
+    <tr><td>Telepipe, companion, combat waves</td><td>⏳ controller</td></tr>
+  </table>
+
+  <h2>Observable contract (<code>[sanity]</code> log)</h2>
+  <p>The autopilot prints the lifecycle as it runs; the regression matrix asserts on
+  these lines, so they are the behavioral contract:</p>
+  <table>
+    <tr><th>Line</th><th>Means</th></tr>
+    <tr><td><code>checkpoint: &lt;name&gt;</code></td><td>milestone reached (title, city_office, valley_field entered, …)</td></tr>
+    <tr><td><code>cell-load sec:r,c … plan label='…' do=[…] exit='…'</code></td><td>a cell loaded; its plan</td></tr>
+    <tr><td><code>action i/n: &lt;name&gt;</code></td><td>executing a <code>do[]</code> action</td></tr>
+    <tr><td><code>walk to exit '&lt;dir&gt;' via N waypoint(s)</code> / <code>waypoint i/n reached</code></td><td>navigating to the exit</td></tr>
+    <tr><td><code>stuck-walk diagnostic …</code> / <code>FAIL: walk stuck …</code></td><td>pathfinding failed — the stage needs authored waypoints</td></tr>
+    <tr><td><code>DONE ok</code></td><td>quest cleared end-to-end (success oracle)</td></tr>
+  </table>
+</Concept>
+
+<style>
+  .diagram { margin: 0 0 28px; }
+</style>
