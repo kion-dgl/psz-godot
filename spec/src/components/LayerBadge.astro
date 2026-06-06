@@ -1,0 +1,33 @@
+---
+// Inline pill that tags a script/identifier with its architecture layer.
+// Usage: <LayerBadge layer="core">scripts/autoloads/inventory.gd</LayerBadge>
+// The six layers + colors mirror the README "Architecture overview".
+type Layer = 'bootstrap' | 'core' | 'registry' | 'gameplay' | 'scene' | 'entity';
+interface Props {
+  layer: Layer;
+}
+const { layer } = Astro.props;
+---
+
+<span class:list={['layer-badge', `layer-${layer}`]}><slot /></span>
+
+<style>
+  .layer-badge {
+    display: inline-block;
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid;
+    white-space: nowrap;
+    color: #e6edf3;
+  }
+  /* border = layer color, fill = ~15% alpha of it, text = light */
+  .layer-bootstrap { border-color: #a371f7; background: rgba(163, 113, 247, 0.15); }
+  .layer-core      { border-color: #539bf5; background: rgba(83, 155, 245, 0.15); }
+  .layer-registry  { border-color: #57ab5a; background: rgba(87, 171, 90, 0.15); }
+  .layer-gameplay  { border-color: #e0823d; background: rgba(224, 130, 61, 0.15); }
+  .layer-scene     { border-color: #daaa3f; background: rgba(218, 170, 63, 0.15); }
+  .layer-entity    { border-color: #e5534b; background: rgba(229, 83, 75, 0.15); }
+</style>

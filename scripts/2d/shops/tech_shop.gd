@@ -12,7 +12,7 @@ var _active_modal: Control = null
 
 
 func _ready() -> void:
-	title_label.text = "TECH SHOP"
+	title_label.text = "Tech Shop"
 	hint_label.text = "[↑/↓] Select  [ENTER] Buy  [ESC] Leave"
 	_generate_inventory()
 	_refresh_display()

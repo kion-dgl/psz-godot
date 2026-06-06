@@ -1,0 +1,76 @@
+---
+import Concept from '../layouts/Concept.astro';
+import Mermaid from '../components/Mermaid.astro';
+import LayerBadge from '../components/LayerBadge.astro';
+
+// Top-down layer map. classDef per layer tints each node by its layer color
+// (stroke = layer color, dark fill, light text) — mirrors the README
+// "Architecture overview" box diagram and the LayerBadge palette.
+const layers = `flowchart TD
+  subgraph BOOTSTRAP["BOOTSTRAP"]
+    Boot["bootstrap.gd — asset-pack loader → Title → Character Select"]
+  end
+
+  subgraph AUTO["AUTOLOADS (singletons)"]
+    direction TB
+    Core["CORE STATE\\nGameState · CharacterManager · SaveManager\\nInventory · SceneManager · PlayerConfig"]
+    Reg["REGISTRY (data-only lookups)\\nWeapon · Armor · Consumable · Enemy · Class · Mag\\nTechnique · PhotonArt · Shop · Drop · Mission"]
+    Play["GAMEPLAY\\nCombatManager · SessionManager · QuestLoader\\nEnemySpawner · CityState · TimeManager"]
+  end
+
+  Scene["SCENE / UI\\n2D screens (shops · guild_counter · char_select)\\n3D field (valley_field_controller) · city"]
+  Entity["ENTITY\\nplayer.gd (CharacterBody3D) · enemies (AI) · GameElements (NPCs)"]
+
+  Boot --> AUTO
+  Core --> Scene
+  Reg --> Scene
+  Play --> Scene
+  Scene --> Entity
+
+  classDef bootstrap fill:#1c1430,stroke:#a371f7,color:#e6edf3,stroke-width:2px
+  classDef core      fill:#0d1c30,stroke:#539bf5,color:#e6edf3,stroke-width:2px
+  classDef registry  fill:#10220f,stroke:#57ab5a,color:#e6edf3,stroke-width:2px
+  classDef gameplay  fill:#2a1a0c,stroke:#e0823d,color:#e6edf3,stroke-width:2px
+  classDef scene     fill:#2a230d,stroke:#daaa3f,color:#e6edf3,stroke-width:2px
+  classDef entity    fill:#2a110f,stroke:#e5534b,color:#e6edf3,stroke-width:2px
+
+  class Boot bootstrap
+  class Core core
+  class Reg registry
+  class Play gameplay
+  class Scene scene
+  class Entity entity
+`;
+---
+
+<Concept title="Architecture" section="Architecture">
+  <div class="diagram"><Mermaid chart={layers} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
+
+  <p>The engine is organized in <strong>layers</strong>. Boot flows top-down: the bootstrap brings the asset pack online and hands off to the autoload singletons (Core State, Registry, Gameplay), which drive the Scene / UI layer, which in turn instantiates the Entity layer (player, enemies, NPCs). A lower layer <strong>MUST NOT</strong> reach up into a higher one — entities read state through the autoloads, scenes don't poke at bootstrap, and the registries are pure data lookups with no outbound dependencies.</p>
+
+  <p>Throughout the rest of this spec, every <strong>"Implemented by"</strong> badge is colored by the layer the script lives in, so you can trace a feature across layers at a glance. The legend below is the key.</p>
+
+  <h2>Color legend</h2>
+  <ul>
+    <li><LayerBadge layer="bootstrap">bootstrap</LayerBadge> — the asset-pack loader and entry flow. <LayerBadge layer="bootstrap">bootstrap.gd</LayerBadge> (Title → Character Select).</li>
+    <li><LayerBadge layer="core">core</LayerBadge> — Core State: the authoritative game/session state singletons. <LayerBadge layer="core">GameState</LayerBadge> <LayerBadge layer="core">CharacterManager</LayerBadge> <LayerBadge layer="core">SaveManager</LayerBadge> <LayerBadge layer="core">Inventory</LayerBadge> <LayerBadge layer="core">SceneManager</LayerBadge> <LayerBadge layer="core">PlayerConfig</LayerBadge>.</li>
+    <li><LayerBadge layer="registry">registry</LayerBadge> — data-only lookups, no outbound deps. <LayerBadge layer="registry">WeaponRegistry</LayerBadge> <LayerBadge layer="registry">ArmorRegistry</LayerBadge> <LayerBadge layer="registry">ConsumableRegistry</LayerBadge> <LayerBadge layer="registry">EnemyRegistry</LayerBadge> <LayerBadge layer="registry">ClassRegistry</LayerBadge> <LayerBadge layer="registry">MagRegistry</LayerBadge> <LayerBadge layer="registry">TechniqueRegistry</LayerBadge> <LayerBadge layer="registry">PhotonArtRegistry</LayerBadge> <LayerBadge layer="registry">ShopRegistry</LayerBadge> <LayerBadge layer="registry">DropRegistry</LayerBadge> <LayerBadge layer="registry">MissionRegistry</LayerBadge>.</li>
+    <li><LayerBadge layer="gameplay">gameplay</LayerBadge> — runtime systems that mutate state. <LayerBadge layer="gameplay">CombatManager</LayerBadge> <LayerBadge layer="gameplay">SessionManager</LayerBadge> <LayerBadge layer="gameplay">QuestLoader</LayerBadge> <LayerBadge layer="gameplay">EnemySpawner</LayerBadge> <LayerBadge layer="gameplay">CityState</LayerBadge> <LayerBadge layer="gameplay">TimeManager</LayerBadge>.</li>
+    <li><LayerBadge layer="scene">scene</LayerBadge> — Scene / UI: 2D screens and field/city controllers. <LayerBadge layer="scene">shops</LayerBadge> <LayerBadge layer="scene">guild_counter</LayerBadge> <LayerBadge layer="scene">char_select</LayerBadge> <LayerBadge layer="scene">valley_field_controller</LayerBadge>.</li>
+    <li><LayerBadge layer="entity">entity</LayerBadge> — instanced 3D actors. <LayerBadge layer="entity">player.gd</LayerBadge> (CharacterBody3D) · enemies (AI) · <LayerBadge layer="entity">GameElements</LayerBadge> (NPCs).</li>
+  </ul>
+
+  <h2>Key data flows</h2>
+  <ul>
+    <li><strong>Boot</strong> — <LayerBadge layer="bootstrap">bootstrap.gd</LayerBadge> fetches <code>assets.pck</code> → mounts the pack → transitions to Title, then Character Select.</li>
+    <li><strong>Combat</strong> — Input → <LayerBadge layer="scene">ActionPalette</LayerBadge> → <LayerBadge layer="entity">player.gd</LayerBadge> → <LayerBadge layer="gameplay">CombatManager</LayerBadge> (damage calc) → hitbox / hurtbox → drops → <LayerBadge layer="core">Inventory</LayerBadge>.</li>
+    <li><strong>Save / Load</strong> — <LayerBadge layer="core">SaveManager</LayerBadge> → <LayerBadge layer="core">CharacterManager</LayerBadge><code>.get_save_data()</code> + <LayerBadge layer="core">GameState</LayerBadge> → <code>user://save_data.json</code>.</li>
+    <li><strong>Quests</strong> — <LayerBadge layer="gameplay">QuestLoader</LayerBadge> → <LayerBadge layer="gameplay">SessionManager</LayerBadge><code>.start_quest()</code> → <LayerBadge layer="scene">FieldController</LayerBadge> → CellObjectSpawner.</li>
+  </ul>
+</Concept>
+
+<style>
+  .diagram { margin: 0 0 28px; }
+</style>
