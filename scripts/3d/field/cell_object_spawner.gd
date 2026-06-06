@@ -402,7 +402,7 @@ func _restore_cell_objects(saved: Dictionary) -> void:
 				if has_objs and SessionManager.are_objectives_complete():
 					_c._spawn_telepipe(_c._compute_drop_position())
 				else:
-					_c._drop_key_on_clear(key_drop_target, drop_tracking_key)
+					_c._gate_mgr._drop_key_on_clear(key_drop_target, drop_tracking_key)
 
 
 ## Save current cell's object states before transitioning away.
