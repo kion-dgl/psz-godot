@@ -1,4 +1,4 @@
-extends Control
+extends ShopBase
 ## Weapon shop — browse and buy weapons, armor, and units via tabs.
 
 enum Tab { WEAPONS, ARMOR, UNITS, SELL }
@@ -615,13 +615,6 @@ func _refresh_detail() -> void:
 	detail_panel.add_child(vbox)
 
 
-func _get_meseta() -> int:
-	var character = CharacterManager.get_active_character()
-	if character:
-		return int(character.get("meseta", 0))
-	return 0
-
-
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
 var _nav: NavRepeat = null
 
@@ -633,10 +626,3 @@ func _process(delta: float) -> void:
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
-
-
-func _on_nav_repeat(action: String) -> void:
-	var ev := InputEventAction.new()
-	ev.action = action
-	ev.pressed = true
-	_unhandled_input(ev)
