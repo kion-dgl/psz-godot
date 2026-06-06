@@ -65,9 +65,9 @@ const layers = `flowchart TD
   <h2>Key data flows</h2>
   <ul>
     <li><strong>Boot</strong> — <LayerBadge layer="bootstrap">bootstrap.gd</LayerBadge> fetches <code>assets.pck</code> → mounts the pack → transitions to Title, then Character Select.</li>
-    <li><strong>Combat</strong> — Input → <LayerBadge layer="scene">ActionPalette</LayerBadge> → <LayerBadge layer="entity">player.gd</LayerBadge> → <LayerBadge layer="gameplay">CombatManager</LayerBadge> (damage calc) → hitbox / hurtbox → drops → <LayerBadge layer="core">Inventory</LayerBadge>.</li>
+    <li><strong>Combat</strong> — Input → <LayerBadge layer="core">ActionPalette</LayerBadge> → <LayerBadge layer="entity">player.gd</LayerBadge> → <LayerBadge layer="gameplay">CombatManager</LayerBadge> (damage calc) → hitbox / hurtbox → drops → <LayerBadge layer="core">Inventory</LayerBadge>.</li>
     <li><strong>Save / Load</strong> — <LayerBadge layer="core">SaveManager</LayerBadge> → <LayerBadge layer="core">CharacterManager</LayerBadge><code>.get_save_data()</code> + <LayerBadge layer="core">GameState</LayerBadge> → <code>user://save_data.json</code>.</li>
-    <li><strong>Quests</strong> — <LayerBadge layer="gameplay">QuestLoader</LayerBadge> → <LayerBadge layer="gameplay">SessionManager</LayerBadge><code>.start_quest()</code> → <LayerBadge layer="scene">FieldController</LayerBadge> → CellObjectSpawner.</li>
+    <li><strong>Quests</strong> — <LayerBadge layer="gameplay">QuestLoader</LayerBadge> → <LayerBadge layer="gameplay">SessionManager</LayerBadge><code>.start_quest()</code> → <LayerBadge layer="scene">valley_field_controller.gd</LayerBadge> → <LayerBadge layer="scene">CellObjectSpawner</LayerBadge>.</li>
   </ul>
 </Concept>
 
