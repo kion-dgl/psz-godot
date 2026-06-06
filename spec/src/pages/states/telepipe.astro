@@ -69,4 +69,11 @@ const chart = `stateDiagram-v2
 
   <h2>Persistence</h2>
   <p>The placed pipe is in-memory only and <strong>MUST NOT</strong> survive any of the closing events above. Item counts persist with the inventory as normal.</p>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/autoloads/telepipe_manager.gd</code> (TelepipeManager) — single-slot lifecycle: one-active <code>_state</code> dict, <code>place()</code> / <code>cancel()</code>, and the one-shot <code>consume_return()</code> round-trip return.</li>
+    <li><code>scripts/3d/elements/telepipe.gd</code> (Telepipe) — the placed in-world pipe element; an interactable cylinder that emits <code>activated</code> when the player steps in to warp.</li>
+    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) — calls <code>TelepipeManager.cancel()</code> on quest accept/cancel, quest/expedition end, and title return.</li>
+  </ul>
 </Concept>

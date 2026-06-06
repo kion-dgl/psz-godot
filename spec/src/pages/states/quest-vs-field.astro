@@ -88,4 +88,10 @@ const chart = `stateDiagram-v2
 
   <h2>Why the distinction matters</h2>
   <p>Because free fields and quests share the same format, the guild counter and session bookkeeping <strong>MUST</strong> key off the Free-Roam / On-Quest mode rather than the presence of a loaded quest structure. Treating a free field as a quest (e.g. offering "Cancel Quest" while the player is merely free-roaming) is out of spec and is the root of the telepipe / quest-counter stranding behavior — see <a href="/states/telepipe">Telepipe</a>.</p>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) — owns the City/Field macro-state (<code>_location</code>) and the Free-Roam ↔ On-Quest transitions via <code>enter_field()</code> / <code>accept_quest()</code> / <code>cancel_accepted_quest()</code> / <code>return_to_city()</code>.</li>
+    <li><code>scripts/autoloads/scene_manager.gd</code> (SceneManager) — performs the actual scene loads/transitions (<code>goto_scene</code> + overlay stack) between city and field scenes.</li>
+  </ul>
 </Concept>
