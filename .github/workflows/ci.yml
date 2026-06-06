@@ -174,6 +174,31 @@ jobs:
           mkdir -p web/dist/data
           rsync -a --delete data/ web/dist/data/
 
+  spec:
+    # Build the Astro spec/docs site so a broken page fails the PR. astro build
+    # compiles every page, which catches the common breakages — a stray `{`/`}`
+    # in markup parsed as a JS expression, a bad import, a malformed component —
+    # that an HTTP 200 + grep check on the dev server would miss.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: spec/package-lock.json
+
+      - name: Install dependencies
+        run: cd spec && npm ci
+
+      - name: Build
+        # Asset URLs resolve to a relative /cdn/ path at runtime, so no
+        # assets-base env is needed at build time.
+        run: cd spec && npm run build
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
