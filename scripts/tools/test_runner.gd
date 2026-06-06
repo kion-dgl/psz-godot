@@ -1280,6 +1280,12 @@ func test_shops() -> void:
 	# without ever enforcing the invariants this block exists to lock.
 	assert_gt(mono_cost, 0, "Monomate is sold by item_shop with a price (buy-guard fixture)")
 	if mono_cost > 0:
+		# ShopBase._can_buy() must AGREE with buy_item's guards — it's what the
+		# UI greys/disables on, so any drift would let the screen offer (or
+		# refuse) a purchase the transaction layer disagrees with.
+		var sb := ShopBase.new()
+		var mono_item := {"item": "Monomate", "cost": mono_cost}
+
 		# Affordability: meseta below cost → buy must fail, nothing changes.
 		Inventory.clear_inventory()
 		character["meseta"] = mono_cost - 1
@@ -1289,6 +1295,9 @@ func test_shops() -> void:
 		assert_eq(int(character.get("meseta", 0)), mono_cost - 1, "Character meseta unchanged after unaffordable buy")
 		assert_eq(GameState.meseta, mono_cost - 1, "GameState.meseta unchanged after unaffordable buy")
 		assert_eq(Inventory.get_item_count("monomate"), 0, "No item added after unaffordable buy")
+		var v_afford: Dictionary = sb._can_buy(mono_item)
+		assert_true(not v_afford.get("ok", true), "_can_buy: not ok when can't afford")
+		assert_eq(str(v_afford.get("reason", "")), "Can't afford", "_can_buy reason = Can't afford")
 
 		# Room: inventory at capacity → buy must fail, nothing changes.
 		Inventory.clear_inventory()
@@ -1304,8 +1313,18 @@ func test_shops() -> void:
 		assert_eq(GameState.meseta, 999999, "GameState.meseta unchanged after no-room buy")
 		assert_eq(Inventory.get_item_count("monomate"), 0, "No Monomate added after no-room buy")
 		assert_gt(Inventory.get_item_count("saber"), 0, "Pre-filled saber still present after no-room buy")
+		var v_room: Dictionary = sb._can_buy(mono_item)
+		assert_true(not v_room.get("ok", true), "_can_buy: not ok when no room")
+		assert_eq(str(v_room.get("reason", "")), "No room", "_can_buy reason = No room")
 		Inventory.capacity = saved_cap
 		Inventory.clear_inventory()
+
+		# Positive: affordable + room → _can_buy ok (matches a successful buy).
+		character["meseta"] = 999999
+		GameState.meseta = 999999
+		var v_ok: Dictionary = sb._can_buy(mono_item)
+		assert_true(v_ok.get("ok", false), "_can_buy: ok when affordable and there's room")
+		sb.free()
 
 	Inventory.clear_inventory()
 	print("")
