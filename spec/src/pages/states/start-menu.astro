@@ -1,0 +1,124 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+import LayerBadge from '../../components/LayerBadge.astro';
+
+const chart = `stateDiagram-v2
+  [*] --> CLOSED
+
+  CLOSED --> MAIN: Start / ESC (toggle, open)
+  MAIN --> CLOSED: Start / ESC / Back (close)
+
+  MAIN --> ITEMS: select "Items"
+  MAIN --> EQUIP: select "Equip"
+  MAIN --> TECHS: select "Techs" (non-CAST only)
+  MAIN --> PALETTE: select "Palette"
+  MAIN --> MAGS: select "Mags"
+  MAIN --> QUEST: select "Quest"
+  MAIN --> SYSTEM: select "System"
+
+  ITEMS --> MAIN: Back
+  EQUIP --> MAIN: Back
+  TECHS --> MAIN: Back
+  PALETTE --> MAIN: Back
+  MAGS --> MAIN: Back
+  QUEST --> MAIN: Back
+  SYSTEM --> MAIN: Back
+
+  ITEMS --> ITEMS_MOVE: Sort -> Manual
+  ITEMS_MOVE --> ITEMS: place / Back
+
+  EQUIP --> EQUIP_PICK: select slot
+  EQUIP_PICK --> EQUIP: equip / Back
+
+  PALETTE --> PALETTE_PICK: select slot
+  PALETTE_PICK --> PALETTE: assign / Back
+
+  MAGS --> MAG_FEED: select mag
+  MAG_FEED --> MAGS: Back
+
+  SYSTEM --> OPTIONS: select "Options"
+  OPTIONS --> SYSTEM: Back
+
+  SYSTEM --> CLOSED: "Return to Title" (save + goto title)
+`;
+---
+
+<Concept title="Start Menu" section="States">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
+
+  <p>The start menu is a PSO-style, non-pausing overlay with an L-shaped backdrop: a left strip plus a bottom strip, leaving the upper-right of the screen clear so the player can still see the world. It is a single autoload <code>CanvasLayer</code> (<code>PsoStartMenu</code>) driven by one <code>Mode</code> enum; exactly one <code>Mode</code> is active at a time, held in <code>_mode</code>. Input routing and drawing both dispatch on that mode. This page is the behavior reference the planned three-way split (see <em>Implemented by</em>) <strong>MUST</strong> preserve.</p>
+
+  <h2>Opening and closing</h2>
+  <p>The menu is toggled with Start / ESC via <code>toggle()</code>, which calls <code>open()</code> when closed and <code>close()</code> when open. <code>open()</code> resets <code>_mode</code> to <code>MAIN</code> and clears every per-mode cursor (<code>_menu_idx</code>, <code>_sub_idx</code>, the equip / palette / mag indices, scroll, and the one-shot action message) so reopening always lands on a clean main menu rather than resuming in a sub-mode the player had backed out of. <code>is_open()</code> reports the current state.</p>
+  <p>Because it is an autoload, the menu <strong>MUST</strong> be available globally — it works in both the field and the city without each scene instantiating it. It is registered with <code>process_mode = PROCESS_MODE_ALWAYS</code> and it <strong>MUST NOT</strong> pause the game: opening it pushes a modal flag (<code>GameState.push_modal()</code>) but does not set the tree paused. As a direct consequence, the player can still walk around with the analog stick while the menu is open — <code>_unhandled_input</code> explicitly lets the four movement actions pass through unconsumed, while the d-pad / right stick navigate the menu. Every other gameplay input (camera, interact, quick-weapon, palette) is consumed while the menu is open.</p>
+  <p>Opening is gated: from the closed state the menu only opens on <code>pause</code> when there is no other overlay on the <code>SceneManager</code> overlay stack and the current scene is a gameplay scene. While open, the joypad Start button always closes the menu regardless of mode; ESC / <code>pause</code> closes only from <code>MAIN</code> and otherwise acts as Back into the active mode handler.</p>
+
+  <h2>Modes (views)</h2>
+
+  <h3>MAIN</h3>
+  <p>The menu spine. Up / Down move the cursor over the dynamically built label list; Left / Right flip the four info pages (also bound to LB / RB); Accept enters the highlighted sub-view via <code>_enter_sub</code>; Back / Cancel closes the menu. The label list comes from <code>_get_menu_labels()</code> — <code>Items</code>, <code>Equip</code>, optionally <code>Techs</code>, then <code>Palette</code>, <code>Mags</code>, <code>Quest</code>, <code>System</code> — so its size is the wrap bound for the cursor.</p>
+
+  <h3>ITEMS (and ITEMS_MOVE)</h3>
+  <p>Lists the inventory in storage order. Accept on a row opens an item modal offering <code>Equip</code> / <code>Unequip</code> (when the item is equippable), <code>Use</code>, <code>Drop</code> (disabled for equipped gear), and <code>Sort</code>; choices are greyed PSO-style when unavailable. <code>Use</code> calls <code>Inventory.use_item</code> and writes a one-shot result line (restored HP / PP, learned a disk, telepipe placed, etc.). <code>Sort</code> offers <code>Auto</code> (rebuild in canonical order) or <code>Manual</code>, and <code>Manual</code> enters <strong>ITEMS_MOVE</strong>, a relocate sub-mode where Up / Down pick the destination row and Accept drops the held item there (Back cancels the move). The move origin is tracked by item id so the cursor survives a list that reorders under it.</p>
+
+  <h3>EQUIP (and EQUIP_PICK)</h3>
+  <p>Lists the character's equipment slots — a <code>Weapon</code> slot, the armor <code>Frame</code> slot, and one <code>Unit</code> slot per the equipped armor's <code>max_slots</code> (so the unit slots are built dynamically, and an unarmored character shows none). Accept on a slot enters <strong>EQUIP_PICK</strong>, which lists the inventory items that fit that slot (<code>_get_equip_candidates</code>); Accept there equips the chosen item via <code>_do_equip</code> and returns to EQUIP, Back returns without changing the loadout. Equipping a weapon or mag refreshes the player's held model; changing the armor frame prunes unit slots beyond the new armor's capacity.</p>
+
+  <h3>TECHS</h3>
+  <p>Lists the character's techniques; Accept casts a learned technique when the player is in the field (routes to the player node's <code>_cast_technique</code>). This view <strong>MAY</strong> be absent: see <em>Techs gating</em> below.</p>
+
+  <h3>PALETTE (and PALETTE_PICK)</h3>
+  <p>Edits the action palette. PALETTE shows the three slots of the current page; Up / Down move between the three slots, Left / Right flip palette pages, Accept enters <strong>PALETTE_PICK</strong> for the highlighted slot (seeding the picker cursor to the slot's current action). PALETTE_PICK is a two-column grid of assignable actions (combat / recovery on the left, techniques on the right) navigated with all four directions, with edge wrapping that crosses columns; Accept assigns the action to the slot (when available) and returns to PALETTE, Back returns without assigning.</p>
+
+  <h3>MAGS (and MAG_FEED)</h3>
+  <p>Lists the character's mags. Accept on a mag enters <strong>MAG_FEED</strong>, which lists feedable inventory items; Accept feeds the selected item to the mag (<code>_do_feed_mag</code> → <code>MagManager.feed_mag</code>, consuming one item on success), Back returns to MAGS.</p>
+
+  <h3>QUEST</h3>
+  <p>Read-only view of the current quest's info / objectives. It has no sub-navigation — its only input is Back to <code>MAIN</code> (<code>_input_back</code>).</p>
+
+  <h3>SYSTEM (and OPTIONS)</h3>
+  <p>A fixed three-item list (<code>SYSTEM_LABELS</code>): <code>Save</code> (writes the save and plays the saved SFX), <code>Return to Title</code> (saves, closes the menu, and navigates to the title scene — leaving the open state entirely), and <code>Options</code> (enters <strong>OPTIONS</strong>). Back returns to <code>MAIN</code>.</p>
+
+  <h3>OPTIONS</h3>
+  <p>An adjustable settings list (<code>_get_options_list</code>): Music Volume and SFX Volume are stepped with Left / Right; the remaining rows are toggles or actions fired with Accept — <code>Controls: Reconfigure</code> (closes the menu, clears the input config, and pushes the input-select scene as an overlay), On-Screen Controls, camera-rotation / camera-Y options, Auto-Sort Inventory, and a block of debug toggles (floor collision, gate dots, hitboxes, combo timing, time/room, frame profiler, player position). Back returns to <strong>SYSTEM</strong> with the cursor restored to the <code>Options</code> row.</p>
+
+  <h2>Techs gating</h2>
+  <p>The <code>Techs</code> view <strong>MAY</strong> be absent. <code>_can_use_techs()</code> looks up the active character's class and returns <code>false</code> when its race is <code>CAST</code>; <code>_get_menu_labels()</code> (and the parallel <code>_get_menu_descs()</code>) omit the <code>Techs</code> entry in that case. Therefore, for a CAST character the main menu <strong>MUST NOT</strong> offer Techs, and for any non-CAST character it <strong>MUST</strong>. Because the label list is the cursor's wrap bound, the same gate that hides the label also keeps the cursor from ever landing on a missing row.</p>
+
+  <h2>Data contract</h2>
+  <p>A set of pure data helpers feeds both rendering (the <code>_draw_*</code> family) and input (the <code>_input_*</code> router), so the two halves never disagree about what a view contains:</p>
+  <ul>
+    <li><code>_get_menu_labels()</code> — the main-menu label list (Techs included iff <code>_can_use_techs()</code>).</li>
+    <li><code>_category_to_type(category)</code> — maps a display category to an item type (e.g. <code>Weapon</code> → <code>weapon</code>, <code>Disk</code> → <code>tech</code>, with a <code>tool</code> fallback).</li>
+    <li><code>_get_item_category(item_id)</code> — the display category for an item id.</li>
+    <li><code>_item_fits_slot(item_id, slot_key)</code> — whether an item is equippable into a given slot.</li>
+    <li><code>_can_use_techs()</code> — the CAST gate above.</li>
+  </ul>
+  <p>These helpers are locked by <code>test_start_menu_data()</code> in <code>scripts/tools/test_runner.gd</code>, which asserts the category mappings, the fits-slot results, and the invariant that <code>Techs</code> is present in the labels exactly when <code>_can_use_techs()</code> is true. They are the regression net for the split below, and the split <strong>MUST</strong> keep them behaving identically.</p>
+
+  <h2>Invariants</h2>
+  <ul>
+    <li>Exactly one <code>Mode</code> is active at a time; every sub-view returns to <code>MAIN</code> on Back, and closing from <code>MAIN</code> closes the overlay.</li>
+    <li>The menu <strong>MUST NOT</strong> pause the game (<code>PROCESS_MODE_ALWAYS</code>, modal flag only); movement input <strong>MUST</strong> pass through while open, all other gameplay input <strong>MUST</strong> be consumed.</li>
+    <li>The menu <strong>MUST</strong> be globally available (autoload) so it opens in both field and city.</li>
+    <li><code>open()</code> <strong>MUST</strong> reset to <code>MAIN</code> and clear all per-mode cursors.</li>
+    <li>The <code>Techs</code> view <strong>MUST</strong> be hidden for CAST characters and present otherwise.</li>
+    <li>Rendering and input <strong>MUST</strong> derive their view contents from the same data helpers.</li>
+  </ul>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><LayerBadge layer="scene">scripts/3d/field/pso_start_menu.gd</LayerBadge> (<code>PsoStartMenu</code>) — the entire menu today: the <code>Mode</code> enum, <code>open()</code> / <code>close()</code> / <code>toggle()</code> / <code>is_open()</code>, the <code>_unhandled_input</code> router and every <code>_input_*</code> handler, the <code>_draw_*</code> rendering family, the action helpers (equip / drop / feed / use), and the data helpers above.</li>
+  </ul>
+  <p>This 2,279-line autoload is slated to split by concern; this page is the contract that split <strong>MUST</strong> preserve:</p>
+  <ul>
+    <li><strong>StartMenuRenderer</strong> — the <code>_draw_*</code> family (backdrop, status bars, per-view panels, scanlines, list / desc helpers).</li>
+    <li><strong>StartMenuInput</strong> — the <code>_unhandled_input</code> router plus the per-mode <code>_input_*</code> handlers and the nav-repeat / right-stick scroll logic.</li>
+    <li><strong>StartMenuActions</strong> — the equip / drop / feed / use operations (<code>_do_equip</code>, <code>_do_move</code>, <code>_do_feed_mag</code>, <code>_execute_use_item</code>) plus the data getters (<code>_get_menu_labels</code>, <code>_category_to_type</code>, <code>_get_item_category</code>, <code>_item_fits_slot</code>, <code>_can_use_techs</code>).</li>
+  </ul>
+  <p>The <code>Mode</code> enum, the transition rules in the diagram, and the data contract are the seams the split crosses; whichever unit ends up owning each piece, the contract above <strong>MUST</strong> hold.</p>
+
+</Concept>
