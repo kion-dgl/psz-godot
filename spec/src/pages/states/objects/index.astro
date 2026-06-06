@@ -1,0 +1,32 @@
+---
+// Cell Objects index — lists every field cell-object type with a link to its
+// per-object reference page. Generated from the cell-objects data module.
+import Concept from '../../../layouts/Concept.astro';
+import { cellObjects } from '../../../data/cell-objects';
+---
+
+<Concept title="Cell Objects" section="States">
+  <p>Every object a field cell can contain has its own reference page: a live
+  3D model viewer, the stage-JSON config schema, and prose for its spawn
+  behavior, persisted state, and interactions. These complement the
+  <a href="/states/field-lifecycle">Field Stage Lifecycle</a> overview, which
+  covers the cell load / restore contract that spawns and persists them.</p>
+
+  <p>All cell objects are created by <code>CellObjectSpawner</code> from the
+  stage config. The key words <strong>MUST</strong>, <strong>MUST NOT</strong>,
+  and <strong>MAY</strong> on these pages are used as in RFC 2119.</p>
+
+  <h2>Object types</h2>
+  <table>
+    <tr><th>Object</th><th>Type tag</th><th>Model</th></tr>
+    {cellObjects.map((o) => (
+      <tr>
+        <td><a href={`/states/objects/${o.slug}`}>{o.title}</a></td>
+        <td><code>{o.type}</code></td>
+        <td>{o.glb ? <span>3D viewer</span> : <span>varies at runtime</span>}</td>
+      </tr>
+    ))}
+  </table>
+
+  <p><a href="/states">← States</a></p>
+</Concept>
