@@ -72,10 +72,11 @@ static func has_static_body(node: Node) -> bool:
 
 
 static func create_collision_from_meshes(root: Node) -> void:
-	## Find MeshInstance3D nodes in the floor GLB and create StaticBody3D + trimesh collision.
+	## Find MeshInstance3D nodes under `root` and build StaticBody3D + trimesh
+	## collision. Used for both the floor GLB and obstacle GLBs.
 	var meshes: Array[MeshInstance3D] = []
 	collect_mesh_instances(root, meshes)
-	print("[ValleyField] Found %d mesh instances in floor GLB for manual collision" % meshes.size())
+	print("[ValleyField] Found %d mesh instances for manual collision" % meshes.size())
 	for mi in meshes:
 		var mesh := mi.mesh
 		if not mesh:
