@@ -85,7 +85,7 @@ authority where one exists; the drift is in code/scene/title strings.
 | **Item Shop** | `item_shop` | `item_shop` | — (consistent). **Sells technique disks** via its Disks tab. |
 | **Weapon Shop** | `weapon_shop` | `weapon_shop` | — |
 | **Tekker** | — | `tekker` | uses a `Mode` enum (Grind/Identify), not `Tab` like the others |
-| **Photon Shop** | `photon_collector` | `photon_shop` | data id `photon_collector` + title "Photon Collector" ≠ canonical. NOTE: this counter *trades photon drops*, not meseta — "Collector" may be the intended name; confirm before any code rebrand. |
+| **Photon Collector** | `photon_collector` | `photon_shop` | canonical name confirmed "Photon Collector" (it trades photon drops, not meseta). Only file-level drift remains: scene/script is `photon_shop`. Rename deferred (risky), not a player-facing issue. |
 | **Synthesis Shop** | — | `crafting_shop` | code identifier is `crafting_shop`; player-facing title/NPC already say "Synthesis Shop". File/scene/id rename deferred (risky). |
 | **Blackjack** | — | `scenes/2d/blackjack/blackjack_table.tscn` | not under `shops/`; gambling table |
 | **Storage Counter** | — | `storage` | a bank, not a vendor |
