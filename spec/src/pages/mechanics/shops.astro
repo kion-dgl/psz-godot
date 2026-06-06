@@ -50,7 +50,7 @@ const flow = `flowchart TD
     <li>the six counters under <code>scripts/2d/shops/</code> (<code>item_shop</code>, <code>weapon_shop</code>, <code>photon_shop</code>, <code>tech_shop</code>, <code>tekker</code>, <code>crafting_shop</code>) plus <code>scripts/2d/storage.gd</code> and <code>scripts/2d/equipment_screen.gd</code> — the eight screens (each <code>extends Control</code> today; a shared <code>ShopBase</code> is planned).</li>
     <li><code>scripts/autoloads/shop_manager.gd</code> (ShopManager) — transactions: <code>get_shop_inventory()</code>, <code>buy_item()</code>, <code>sell_item()</code>.</li>
     <li><code>scripts/autoloads/shop_registry.gd</code> (ShopRegistry) — shop definitions / stock (<code>get_shop()</code>, <code>get_all_shops()</code>).</li>
-    <li><code>scripts/autoloads/inventory.gd</code> (Inventory) + <code>character_manager.gd</code> (CharacterManager) — the meseta + carried items a transaction reads/writes.</li>
+    <li><code>scripts/autoloads/inventory.gd</code> (Inventory) + <code>scripts/autoloads/character_manager.gd</code> (CharacterManager) — the meseta + carried items a transaction reads/writes.</li>
   </ul>
   <p>The eight screens share a lot of copy-pasted scaffolding (<code>_get_meseta</code> and <code>_on_nav_repeat</code> are byte-identical across them; <code>_unhandled_input</code> / <code>_open_confirm_modal</code> share a skeleton but have drifted). The de-duplication plan — a <code>ShopBase</code> that owns the shared loop with per-shop override hooks — is tracked in <code>docs/shop-dedup.md</code>.</p>
 </Concept>
