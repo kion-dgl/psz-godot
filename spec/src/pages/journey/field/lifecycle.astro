@@ -105,26 +105,55 @@ const lifecycle = `flowchart TD
     <li>Killed enemies <strong>MUST NOT</strong> respawn.</li>
     <li>Broken boxes <strong>MUST NOT</strong> reappear (and <strong>MUST NOT</strong> re-drop loot).</li>
     <li>Opened gates <strong>MUST</strong> stay open; collected keys stay collected.</li>
-    <li>Read messages stay read; collected quest items stay collected.</li>
+    <li>Read messages stay read.</li>
+    <li>Picked-up items (quest items, box drops) <strong>MUST NOT</strong> reappear.
+    Items still on the ground <strong>MUST</strong> keep the same position and the
+    same state on re-entry — they <strong>MUST NOT</strong> move, re-roll, or change
+    state.</li>
   </ul>
 
-  <h2>Gates, keys & switches</h2>
-  <p>A locked gate blocks an exit until its condition is met. Two patterns:</p>
+  <h2>Gates</h2>
+  <p>A gate blocks a cell exit until its condition is met. There are three kinds:</p>
   <ul>
-    <li><strong>Key gate</strong> — a sibling cell drops a key on clear
-    (<code>pickup_key</code>); returning to the gate cell with the key allows
+    <li><strong>Normal gate</strong> — unlocks once every enemy in the room is
+    cleared (the cell's <code>kill_all</code> action).</li>
+    <li><strong>Key gate</strong> — opened with a key. Keys are <em>section-scoped</em>:
+    <strong>any</strong> key found anywhere in a section opens <strong>any</strong>
+    key gate in that same section (they are not paired one-to-one). A sibling cell
+    typically drops the key on clear; the player does <code>pickup_key</code> then
     <code>open_gate</code>.</li>
-    <li><strong>Switch gate / fence</strong> — a step-switch (<code>flip_switch</code>)
-    toggles linked fences.</li>
+    <li><strong>Area gate</strong> — currently the <code>area_warp</code> object (a
+    clearer name would be <em>area gate</em>). Not a barrier within a section but a
+    connection <strong>to a different section</strong>; passing through transitions
+    the player across sections.</li>
   </ul>
   <p>Gate <em>direction</em> is resolved through <code>StageRotation</code> so a
   rotated cell still opens the correct physical exit.</p>
 
+  <h2>Fences &amp; switches</h2>
+  <p>Fences are distinct from gates. A fence is toggled by its own dedicated
+  <strong>step-switch</strong>: stepping on the switch (<code>flip_switch</code>)
+  toggles the fence(s) linked to it. Unlike a key — which is section-wide — a switch
+  is bound to a specific fence link, so a given switch only ever affects its own
+  fence(s).</p>
+
   <h2>Exit & end of stage</h2>
   <p>Walking onto an exit trigger transitions to the connected cell (or section, via
-  a warp). When the cell's exit is empty and objectives are met, the final cell's
-  <code>wait_quest_complete</code> resolves and the controller spawns the end-cell
-  exit, which telepipes the player back to the city for the quest report.</p>
+  an area gate). When the cell's exit is empty and objectives are met, the final
+  cell's <code>wait_quest_complete</code> resolves and the controller spawns the
+  end-cell exit, which telepipes the player back to the city for the quest report.</p>
+
+  <h3>Quests vs. free roam</h3>
+  <p>Quests and free (explorable) areas share the <strong>same stage JSON
+  format</strong>. The only difference is that a free area has no guild quest
+  counter and no associated quest dialog — so it has <strong>no hard clear
+  condition</strong>. The player roams it without a "report back" objective; there
+  is no <code>wait_quest_complete</code> / end-cell telepipe gating exploration.</p>
+  <p><em>Planned — implicit quests in free roam:</em> hidden objectives the player
+  can discover, trigger, and complete by exploring, rather than the guild's explicit
+  "go here, do this" structure. Because free areas already use the same format, this
+  would layer optional, discoverable goals onto a free area without changing the
+  format — the player picks them up by exploring, not by accepting them at a counter.</p>
 
   <h2 id="where">Where each behavior lives</h2>
   <p>The split is in progress; ✅ = extracted, ⏳ = still on the controller (target
