@@ -418,7 +418,8 @@ func _save_cell_state() -> void:
 	# Save box states
 	for box in _c._room_boxes:
 		if not is_instance_valid(box):
-			# Box was destroyed — save as destroyed
+			# Instance gone — skip it here; its destroyed state is recorded
+			# later by diffing the surviving boxes against the original config.
 			continue
 		var b: Box = box as Box
 		obj_states.append({
@@ -736,7 +737,6 @@ func _spawn_enemy(pos: Vector3, enemy_id: String, state: String = "alive") -> vo
 		_c._map_root.add_child(enemy)
 		enemy.position = pos
 		_c._room_enemies.append(enemy)
-		var spawn_pos := pos
 		var spawn_id := enemy_id
 		enemy.died.connect(func(e: EnemyBase) -> void:
 			_spawn_enemy_drops(e.global_position, spawn_id)
