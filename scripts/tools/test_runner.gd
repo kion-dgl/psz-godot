@@ -1396,11 +1396,23 @@ func test_start_menu_data() -> void:
 	assert_true(PsoStartMenu._item_fits_slot("saber", "weapon"), "saber fits the weapon slot")
 	assert_true(not PsoStartMenu._item_fits_slot("monomate", "weapon"), "monomate does not fit the weapon slot")
 
-	# _get_menu_labels: core views always present; Techs gated by _can_use_techs.
+	# _get_menu_labels: core views always present.
 	var labels: Array = PsoStartMenu._get_menu_labels()
 	assert_true(labels.has("Items") and labels.has("Equip") and labels.has("Palette") and labels.has("System"),
 		"menu labels include the core views")
-	assert_eq(labels.has("Techs"), PsoStartMenu._can_use_techs(), "Techs label present iff _can_use_techs()")
+
+	# Techs gating — assert BOTH real cases (not labels==_can_use_techs, which is
+	# circular): a non-CAST can use techs (Techs view present), a CAST cannot.
+	var sm_char = CharacterManager.get_active_character()
+	if sm_char:
+		var sm_saved_class = sm_char.get("class_id", "")
+		sm_char["class_id"] = "humar"  # Human Hunter — can use techniques
+		assert_true(PsoStartMenu._can_use_techs(), "_can_use_techs true for a non-CAST (HUmar)")
+		assert_true(PsoStartMenu._get_menu_labels().has("Techs"), "Techs view present for a non-CAST")
+		sm_char["class_id"] = "hucast"  # CAST Hunter — cannot use techniques
+		assert_true(not PsoStartMenu._can_use_techs(), "_can_use_techs false for a CAST (HUcast)")
+		assert_true(not PsoStartMenu._get_menu_labels().has("Techs"), "Techs view absent for a CAST")
+		sm_char["class_id"] = sm_saved_class
 	print("")
 
 
