@@ -164,6 +164,9 @@ JSON
     local status="fail"; local fail_reason=""
     if [ "$rc" -eq 0 ] && grep -qF '[sanity] DONE ok' "$sanity"; then
       status="pass"
+    elif [ "$rc" -eq 124 ]; then
+      # `timeout` SIGTERMs at the budget → exit 124.
+      fail_reason="timed out after ${timeout_s}s (budget) — hung or slower than expected"
     elif [ "$rc" -ne 0 ]; then
       fail_reason="godot exit $rc"
     else
@@ -222,8 +225,9 @@ JSON
     [ "$fi" -le "$si" ]                 # run this phase iff FROM is at/before it
   }
 
-  # run_chain_phase <tag> <quest_id> <parent_post> <child_post> <label>
-  # Resume from the parent's post-save, run the quest, and snapshot the
+  # run_chain_phase <tag> <quest_id> <parent_post> <child_post> <label> [timeout_s]
+  # timeout_s is the per-quest wall-clock budget (default 900s), forwarded to
+  # run_godot. Resume from the parent's post-save, run the quest, and snapshot the
   # child post-save ONLY if the quest passed. If the parent post-save is
   # missing (upstream failed/skipped), skip this phase with a warning so
   # the chain degrades gracefully instead of running from a stale state.
@@ -258,7 +262,16 @@ JSON
   # class of gotcha as needing a reimport after editing GLBs. Headless editor
   # import, ~30-60s; harmless on resumes.
   echo "[regression] reimport: regenerating class cache (so new class_name scripts resolve)…"
-  timeout 300 "$GODOT" --headless --editor --quit --path "$REPO" >/dev/null 2>&1 || true
+  REIMPORT_LOG="$OUTDIR/reimport_${RUN_START_ISO//:/-}.log"
+  if timeout 300 "$GODOT" --headless --editor --quit --path "$REPO" >"$REIMPORT_LOG" 2>&1; then
+    echo "[regression] reimport ok"
+  else
+    # Don't abort the whole run, but make it loud — a failed reimport means the
+    # class cache may still be stale, which is exactly what causes silent
+    # gray-screen phase failures downstream.
+    echo "[regression] WARN: reimport FAILED (rc=$?) — class cache may be stale; see $REIMPORT_LOG" >&2
+    grep -iE "error|script error|parse" "$REIMPORT_LOG" 2>/dev/null | tail -5 >&2 || true
+  fi
 
   # === Phase 1: Boot ===
   if reached boot; then
