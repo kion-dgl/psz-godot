@@ -1,4 +1,4 @@
-extends Control
+extends ShopBase
 ## Tekker — grind weapons and identify unknown weapons.
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/custom-shop.png"
@@ -371,13 +371,6 @@ func _update_grinder_info() -> void:
 			_grinder_info.add_child(acc_lbl)
 
 
-func _get_meseta() -> int:
-	var character = CharacterManager.get_active_character()
-	if character:
-		return int(character.get("meseta", 0))
-	return 0
-
-
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
 var _nav: NavRepeat = null
 
@@ -386,10 +379,3 @@ func _process(delta: float) -> void:
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
-
-
-func _on_nav_repeat(action: String) -> void:
-	var ev := InputEventAction.new()
-	ev.action = action
-	ev.pressed = true
-	_unhandled_input(ev)
