@@ -208,8 +208,17 @@ func _open_confirm_modal() -> void:
 		_open_sell_confirm(item)
 		return
 
-	# ITEMS / MATERIALS: bulk-buy aware. Compute the maximum qty the
-	# player can both afford and fit, route to QuantityDialog if > 1.
+	# ITEMS / MATERIALS: the row is disabled (greyed + reason in _refresh_display)
+	# when it can't be bought — confirm just echoes the reason in the hint and
+	# opens nothing, so the player never reaches a rejection modal.
+	var verdict: Dictionary = _can_buy(item)
+	if not verdict.get("ok", true):
+		hint_label.text = str(verdict.get("reason", ""))
+		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
+		return
+
+	# Bulk-buy aware: compute the maximum qty the player can both afford and
+	# fit, route to QuantityDialog if > 1.
 	_open_item_buy(item)
 
 
@@ -416,10 +425,19 @@ func _refresh_display() -> void:
 			var held_str: String = " (%d)" % held if held > 0 else ""
 			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
 			var buy_icons: Array = [buy_icon] if buy_icon else []
+			# Affordance: a row the player can't buy is greyed and tagged with
+			# the reason, so the Buy action reads as disabled rather than
+			# opening a rejection on confirm (see _open_confirm_modal).
+			var verdict: Dictionary = _can_buy(item)
+			var label_text: String = shop_name + held_str
+			var row_color := Color.TRANSPARENT
+			if not verdict.get("ok", true):
+				label_text += "  [%s]" % str(verdict.get("reason", ""))
+				row_color = PszStyle.TEXT_MUTED
 			var pill := PszStyle.create_pill_with_icons(
 				buy_icons,
-				shop_name + held_str,
-				i == _selected_index, "%d M" % int(item.get("cost", 0)))
+				label_text,
+				i == _selected_index, "%d M" % int(item.get("cost", 0)), row_color)
 			vbox.add_child(pill)
 			if i == _selected_index:
 				selected_pill = pill

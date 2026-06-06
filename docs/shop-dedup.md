@@ -117,8 +117,12 @@ afford/room checks inline, or not at all). See `/mechanics/shops`.
 - [x] **1. `ShopBase` + pure dups** (done) — new `scripts/2d/shops/shop_base.gd`;
       lift `_get_meseta` + `_on_nav_repeat`; make the screens extend it.
       Lowest risk (identical code), validated by `test_shops` + reimport.
-- [ ] **2. Buy affordance** — base owns `_can_buy(item) -> {ok, reason}` + disabled-row
+- [~] **2. Buy affordance** — base owns `_can_buy(item) -> {ok, reason}` + disabled-row
       rendering; shops stop reimplementing afford/room checks.
+      Done: `ShopBase._can_buy` (mirrors `buy_item`, tested to agree) + **Item Shop**
+      as the reference (greys/tags un-buyable rows, confirm echoes the reason
+      instead of opening a rejection modal). TODO 2b: roll the affordance into
+      Weapon Shop (+ level/class requirement reasons) and Synthesis Shop.
 - [ ] **3. Nav skeleton** — move the shared `_unhandled_input` skeleton into the
       base with action hooks; reconcile accidental key drift.
 - [ ] **4. Confirm flow** — base owns the `_open_confirm_modal` guard + a
