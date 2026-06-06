@@ -117,7 +117,7 @@ afford/room checks inline, or not at all). See `/mechanics/shops`.
 - [x] **1. `ShopBase` + pure dups** (done) — new `scripts/2d/shops/shop_base.gd`;
       lift `_get_meseta` + `_on_nav_repeat`; make the screens extend it.
       Lowest risk (identical code), validated by `test_shops` + reimport.
-- [~] **2. Buy affordance** — base owns `_can_buy(item) -> {ok, reason}` + disabled-row
+- [x] **2. Buy affordance** — base owns `_can_buy(item) -> {ok, reason}` + disabled-row
       rendering; shops stop reimplementing afford/room checks.
       Done: `ShopBase._can_buy` (mirrors `buy_item`, tested to agree) + **Item Shop**
       as the reference (greys/tags un-buyable rows, confirm echoes the reason

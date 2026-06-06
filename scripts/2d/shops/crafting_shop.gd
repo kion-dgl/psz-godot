@@ -315,24 +315,17 @@ func _craft_selected() -> void:
 	if _craft_recipes.is_empty() or _selected_index >= _craft_recipes.size():
 		return
 
-	var character = CharacterManager.get_active_character()
-	if character == null:
-		return
-
 	var entry: Dictionary = _craft_recipes[_selected_index]
 	var recipe: RecipeBoardData = entry["recipe"]
 
-	if int(character.get("meseta", 0)) < recipe.craft_cost:
-		hint_label.text = "Not enough meseta! Need %d M" % recipe.craft_cost
+	# Affordance: a greyed (un-craftable) recipe echoes why and does nothing.
+	# The row already shows per-material owned/needed counts; gate on the same
+	# _can_craft_recipe predicate the greying uses so they can't disagree, and
+	# never proceed into the photon flow only to reject.
+	if not _can_craft_recipe(recipe):
+		hint_label.text = _craft_block_reason(recipe)
+		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
 		return
-
-	for ingredient in recipe.ingredients:
-		var owned: int = Inventory.get_item_count(ingredient["item_id"])
-		if owned < int(ingredient["quantity"]):
-			var mat = MaterialRegistry.get_material(ingredient["item_id"])
-			var mat_name: String = mat.name if mat else ingredient["item_id"]
-			hint_label.text = "Not enough %s!" % mat_name
-			return
 
 	# All synthesis requires a photon crystal
 	_selecting_photon = true
@@ -340,6 +333,18 @@ func _craft_selected() -> void:
 	_pending_recipe_index = _selected_index
 	hint_label.text = "Choose a photon crystal  Up/Down: Select  Enter: Confirm  Esc: Back"
 	_refresh_display()
+
+
+## Human-readable reason a recipe can't be crafted right now (meseta first,
+## then the first short material). Empty when _can_craft_recipe() is true.
+func _craft_block_reason(recipe: RecipeBoardData) -> String:
+	if _get_meseta() < recipe.craft_cost:
+		return "Not enough meseta! Need %d M" % recipe.craft_cost
+	for ingredient in recipe.ingredients:
+		if Inventory.get_item_count(ingredient["item_id"]) < int(ingredient["quantity"]):
+			var mat = MaterialRegistry.get_material(ingredient["item_id"])
+			return "Not enough %s!" % (mat.name if mat else str(ingredient["item_id"]))
+	return ""
 
 
 func _confirm_craft_with_photon() -> void:
