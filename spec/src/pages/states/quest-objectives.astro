@@ -34,7 +34,7 @@ const flow = `flowchart TD
   <p>A quest <strong>MAY</strong> declare multiple objectives; the quest is complete only when <strong>every</strong> objective's count reaches its <code>target</code>. Free-roam field quests carry no <code>objectives</code> key (see <a href="/states/quest-vs-field">Quest vs Field</a>) and therefore never enter the Completed state.</p>
 
   <h2>Runtime tracking</h2>
-  <p>On accept, <code>SessionManager</code> loads the objective array and seeds a per-<code>item_id</code> count at zero. <code>collect_quest_item(item_id)</code> is the single increment path: it bumps the count, emits <code>quest_item_collected</code> (for the HUD), and — when <code>are_objectives_complete()</code> first returns true — calls <code>mark_quest_complete()</code>, which records the completion and emits the <code>quest_completed</code> signal.</p>
+  <p>When the quest session starts (<code>SessionManager.enter_quest</code>, not at accept time), it loads the objective array and seeds a per-<code>item_id</code> count at zero. <code>collect_quest_item(item_id)</code> is the single increment path: it bumps the count, emits <code>quest_item_collected</code> (for the HUD), and — when <code>are_objectives_complete()</code> first returns true — calls <code>mark_quest_complete()</code>, which records the completion and emits the <code>quest_completed</code> signal.</p>
   <p>Counts and objectives are part of the suspendable session state, so they survive a telepipe round-trip to the city and back.</p>
 
   <h2>What ticks an objective</h2>
@@ -49,7 +49,7 @@ const flow = `flowchart TD
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) — seeds per-<code>item_id</code> counts on accept and runs the increment/completion path: <code>collect_quest_item()</code>, <code>are_objectives_complete()</code>, <code>mark_quest_complete()</code>.</li>
+    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) — seeds per-<code>item_id</code> counts in <code>enter_quest</code> (quest-session start) and runs the increment/completion path: <code>collect_quest_item()</code>, <code>are_objectives_complete()</code>, <code>mark_quest_complete()</code>.</li>
     <li><code>scripts/autoloads/quest_loader.gd</code> (QuestLoader) — <code>load_quest()</code> parses the quest JSON whose <code>objectives</code> array SessionManager reads into <code>_quest_objectives</code>.</li>
   </ul>
 
