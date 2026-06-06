@@ -34,13 +34,22 @@ pre-beta refactor milestone (issue #215).
 - [x] **3. `MapCollisionBuilder`** (PR #260, merged) — 7 pure static collision
       helpers to `map_collision_builder.gd`. Controller 2950 → 2835.
       `_debug_show_floor_collision` stays (needs instance state). Matrix 15/15.
-- [~] **4. `PortalGateManager`** (PR #261) — portal parsing + gate triggers/labels
-      + gate material/depth + key-gate logic + gate queries (16 fns) to
-      `portal_gate_manager.gd` via a controller back-reference. Controller
-      2835 → 2408. Shared material fixups stay (used by CellObjectSpawner).
+- [x] **4. `PortalGateManager`** (PR #261, merged) — portal parsing + gate
+      triggers/labels + gate material/depth + key-gate logic + gate queries
+      (16 fns) to `portal_gate_manager.gd` via a controller back-reference.
+      Controller 2835 → 2408. Shared material fixups stay (used by
+      CellObjectSpawner). Matrix 15/15 (csy was a flake, passed on retry).
+- [~] **5. `WeatherController`** (PR #263) — weather + stage-effects +
+      embedded-light handling (`_spawn_weather`, `_kick_weather`,
+      `_spawn_stage_effects`, `_apply_stage_effects`, `_spawn_placed_effect`,
+      `_strip/_collect_embedded_lights`) to `weather_controller.gd` via a
+      back-reference. Controller 2408 → 2179. **Final increment** — completes
+      the split (3944 → 2179, ~45% smaller; 5 modules extracted).
       *Reimport clean, tests 1407/0; matrix running.*
-- [ ] **5. `WeatherController`** — `_spawn_weather`, `_kick_weather`,
-      `_spawn_stage_effects` (+ embedded-light strip/collect helpers). Last one.
+
+Harness/infra that landed alongside: #257 (dbus-run-session wrapper),
+#262 (reimport-before-matrix + per-quest timeouts). Behavior docs:
+#259 (/states/objects/*), plus /states/field-lifecycle.
 
 ## Status log
 
