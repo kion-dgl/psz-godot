@@ -133,13 +133,16 @@ JSON
     local tag=$1
     local quest=$2
     local userdir=$3
+    # Per-quest wall-clock budget (happy-path + margin). Defaults to 1200s if a
+    # caller doesn't pass one. A hang now fails in ~minutes, not the old flat 30.
+    local timeout_s=${4:-1200}
     local stamp; stamp=$(date -u +%Y%m%d-%H%M%S)
     local avi="$OUTDIR/${tag}_${stamp}.avi"
     local mp4="$OUTDIR/${tag}_${stamp}.mp4"
     local sanity="$OUTDIR/${tag}_${stamp}.sanity.log"
     local json="$OUTDIR/${tag}_${stamp}.json"
 
-    echo "[regression] $tag start quest=${quest:-(SR default)} userdir=${userdir:-(default)} speed=${SPEED:-3(default)} → $sanity"
+    echo "[regression] $tag start quest=${quest:-(SR default)} userdir=${userdir:-(default)} speed=${SPEED:-3(default)} timeout=${timeout_s}s → $sanity"
 
     local start_ts; start_ts=$(date -u +%s)
     env \
@@ -153,7 +156,7 @@ JSON
       LIBGL_ALWAYS_SOFTWARE=1 \
       $DBUS_WRAP \
       xvfb-run -a -s "-screen 0 640x360x24" \
-      timeout 1800 "$GODOT" --write-movie "$avi" --fixed-fps 30 \
+      timeout "$timeout_s" "$GODOT" --write-movie "$avi" --fixed-fps 30 \
       --disable-vsync --audio-driver Dummy --path "$REPO" >"$sanity" 2>&1
     local rc=$?
     local end_ts; end_ts=$(date -u +%s)
@@ -161,6 +164,9 @@ JSON
     local status="fail"; local fail_reason=""
     if [ "$rc" -eq 0 ] && grep -qF '[sanity] DONE ok' "$sanity"; then
       status="pass"
+    elif [ "$rc" -eq 124 ]; then
+      # `timeout` SIGTERMs at the budget → exit 124.
+      fail_reason="timed out after ${timeout_s}s (budget) — hung or slower than expected"
     elif [ "$rc" -ne 0 ]; then
       fail_reason="godot exit $rc"
     else
@@ -219,13 +225,14 @@ JSON
     [ "$fi" -le "$si" ]                 # run this phase iff FROM is at/before it
   }
 
-  # run_chain_phase <tag> <quest_id> <parent_post> <child_post> <label>
-  # Resume from the parent's post-save, run the quest, and snapshot the
+  # run_chain_phase <tag> <quest_id> <parent_post> <child_post> <label> [timeout_s]
+  # timeout_s is the per-quest wall-clock budget (default 900s), forwarded to
+  # run_godot. Resume from the parent's post-save, run the quest, and snapshot the
   # child post-save ONLY if the quest passed. If the parent post-save is
   # missing (upstream failed/skipped), skip this phase with a warning so
   # the chain degrades gracefully instead of running from a stale state.
   run_chain_phase() {
-    local tag=$1 quest=$2 parent_post=$3 child_post=$4 label=$5
+    local tag=$1 quest=$2 parent_post=$3 child_post=$4 label=$5 timeout_s=${6:-900}
     if [ ! -d "$SCRATCH/$parent_post" ]; then
       echo ""; echo "=== $label ==="
       echo "[regression] SKIP $tag — $SCRATCH/$parent_post missing (upstream did not pass)"
@@ -233,7 +240,7 @@ JSON
     fi
     echo ""; echo "=== $label ==="
     stage_userdir "$SCRATCH/$tag" "$SCRATCH/$parent_post"
-    run_godot "$tag" "$quest" "$SCRATCH/$tag"
+    run_godot "$tag" "$quest" "$SCRATCH/$tag" "$timeout_s"
     local latest; latest=$(ls -t "$OUTDIR"/${tag}_*.json 2>/dev/null | head -1)
     if [ -n "$latest" ] && jq -e '.status == "pass"' "$latest" >/dev/null 2>&1; then
       echo "[regression] snapshotting $tag post-save → $SCRATCH/$child_post"
@@ -248,6 +255,24 @@ JSON
     fi
   }
 
+  # Regenerate the global class cache before any from-source run. Without this, a
+  # newly-added `class_name` script (e.g. an extracted module) isn't registered,
+  # so any script referencing it fails to parse → the field scene silently fails
+  # to load (gray screen) and the autopilot stalls reading an empty cell. Same
+  # class of gotcha as needing a reimport after editing GLBs. Headless editor
+  # import, ~30-60s; harmless on resumes.
+  echo "[regression] reimport: regenerating class cache (so new class_name scripts resolve)…"
+  REIMPORT_LOG="$OUTDIR/reimport_${RUN_START_ISO//:/-}.log"
+  if timeout 300 "$GODOT" --headless --editor --quit --path "$REPO" >"$REIMPORT_LOG" 2>&1; then
+    echo "[regression] reimport ok"
+  else
+    # Don't abort the whole run, but make it loud — a failed reimport means the
+    # class cache may still be stale, which is exactly what causes silent
+    # gray-screen phase failures downstream.
+    echo "[regression] WARN: reimport FAILED (rc=$?) — class cache may be stale; see $REIMPORT_LOG" >&2
+    grep -iE "error|script error|parse" "$REIMPORT_LOG" 2>/dev/null | tail -5 >&2 || true
+  fi
+
   # === Phase 1: Boot ===
   if reached boot; then
     echo ""; echo "=== Phase 1: Boot ==="
@@ -257,7 +282,7 @@ JSON
   # === Phase 2: SR ===
   if reached sr; then
     echo ""; echo "=== Phase 2: SR (search_and_rescue) ==="
-    bash "$REPO/scripts/tools/autoplay/record_first_mission.sh"
+    REC_TIMEOUT=900 bash "$REPO/scripts/tools/autoplay/record_first_mission.sh"
     echo "[regression] snapshotting post-SR save → $SCRATCH/post-sr"
     rm -rf "$SCRATCH/post-sr"
     cp -r "$GODOT_DEFAULT_USERDIR" "$SCRATCH/post-sr"
@@ -269,10 +294,10 @@ JSON
     echo ""; echo "=== Phase 3: PP canon + PP backtrack ==="
     stage_userdir "$SCRATCH/pp-canon" "$SCRATCH/post-sr"
     stage_userdir "$SCRATCH/pp-backtrack" "$SCRATCH/post-sr"
-    run_godot "pp_canon" "the_paru_pact" "$SCRATCH/pp-canon" &
+    run_godot "pp_canon" "the_paru_pact" "$SCRATCH/pp-canon" 1100 &
     local_pid_pp1=$!
     sleep 2
-    run_godot "pp_backtrack" "the_paru_pact_backtrack" "$SCRATCH/pp-backtrack" &
+    run_godot "pp_backtrack" "the_paru_pact_backtrack" "$SCRATCH/pp-backtrack" 1100 &
     local_pid_pp2=$!
     wait $local_pid_pp1 $local_pid_pp2
     echo "[regression] snapshotting post-PP_canon save → $SCRATCH/post-pp"
@@ -287,13 +312,13 @@ JSON
     stage_userdir "$SCRATCH/as-canon" "$SCRATCH/post-pp"
     stage_userdir "$SCRATCH/as-moon"  "$SCRATCH/post-pp"
     stage_userdir "$SCRATCH/as-sol"   "$SCRATCH/post-pp"
-    run_godot "as_canon" "apothecary_supply" "$SCRATCH/as-canon" &
+    run_godot "as_canon" "apothecary_supply" "$SCRATCH/as-canon" 1200 &
     local_pid_as1=$!
     sleep 2
-    run_godot "as_moon" "apothecary_supply_moon_last" "$SCRATCH/as-moon" &
+    run_godot "as_moon" "apothecary_supply_moon_last" "$SCRATCH/as-moon" 1200 &
     local_pid_as2=$!
     sleep 2
-    run_godot "as_sol" "apothecary_supply_sol_last" "$SCRATCH/as-sol" &
+    run_godot "as_sol" "apothecary_supply_sol_last" "$SCRATCH/as-sol" 1200 &
     local_pid_as3=$!
     wait $local_pid_as1 $local_pid_as2 $local_pid_as3
     echo "[regression] snapshotting post-AS_canon save → $SCRATCH/post-as"
@@ -306,7 +331,7 @@ JSON
     [ -d "$SCRATCH/post-as" ] || { echo "[regression] ERROR: $SCRATCH/post-as missing for DOE"; exit 2; }
     echo ""; echo "=== Phase 5: DOE (deep_ore_extraction) ==="
     stage_userdir "$SCRATCH/doe" "$SCRATCH/post-as"
-    run_godot "doe" "deep_ore_extraction" "$SCRATCH/doe"
+    run_godot "doe" "deep_ore_extraction" "$SCRATCH/doe" 1200
     echo "[regression] snapshotting post-DOE save → $SCRATCH/post-doe"
     rm -rf "$SCRATCH/post-doe"
     cp -r "$SCRATCH/doe/godot/app_userdata/PSZ Godot" "$SCRATCH/post-doe"
@@ -321,7 +346,7 @@ JSON
     [ -d "$SCRATCH/post-as" ] || { echo "[regression] ERROR: $SCRATCH/post-as missing for FO"; exit 2; }
     echo ""; echo "=== Phase 6: finding_ogi ==="
     stage_userdir "$SCRATCH/fo" "$SCRATCH/post-as"
-    run_godot "fo" "finding_ogi" "$SCRATCH/fo"
+    run_godot "fo" "finding_ogi" "$SCRATCH/fo" 900
     LATEST_FO=$(ls -t "$OUTDIR"/fo_*.json 2>/dev/null | head -1)
     if [ -n "$LATEST_FO" ] && jq -e '.status == "pass"' "$LATEST_FO" >/dev/null 2>&1; then
       echo "[regression] snapshotting post-FO save → $SCRATCH/post-fo"
@@ -344,26 +369,26 @@ JSON
     [ -d "$SIS_SRC" ] || { echo "[regression] ERROR: no save state available for SIS"; exit 2; }
     echo ""; echo "=== Phase 7: static_in_the_snow ==="
     stage_userdir "$SCRATCH/sis" "$SIS_SRC"
-    run_godot "sis" "static_in_the_snow" "$SCRATCH/sis"
+    run_godot "sis" "static_in_the_snow" "$SCRATCH/sis" 900
   fi
 
   # === Core story endgame spine (sequential; each from the prior post-save) ===
   # investigate_tower branches off finding_ogi (parent_quest=finding_ogi),
   # the same parent as static_in_the_snow — so it resumes from post-fo.
   if reached it; then
-    run_chain_phase it      "investigate_tower" "post-fo"      "post-it"      "Phase 8: investigate_tower"
+    run_chain_phase it      "investigate_tower" "post-fo"      "post-it"      "Phase 8: investigate_tower" 900
   fi
   if reached heretic; then
-    run_chain_phase heretic "heretic"           "post-it"      "post-heretic" "Phase 9: heretic"
+    run_chain_phase heretic "heretic"           "post-it"      "post-heretic" "Phase 9: heretic" 900
   fi
   if reached csy; then
-    run_chain_phase csy     "control_system"    "post-heretic" "post-csy"     "Phase 10: control_system"
+    run_chain_phase csy     "control_system"    "post-heretic" "post-csy"     "Phase 10: control_system" 900
   fi
   if reached tbs; then
-    run_chain_phase tbs     "the_broken_seal"   "post-csy"     "post-tbs"     "Phase 11: the_broken_seal"
+    run_chain_phase tbs     "the_broken_seal"   "post-csy"     "post-tbs"     "Phase 11: the_broken_seal" 900
   fi
   if reached dc; then
-    run_chain_phase dc      "dark_castle"       "post-tbs"     "post-dc"      "Phase 12: dark_castle"
+    run_chain_phase dc      "dark_castle"       "post-tbs"     "post-dc"      "Phase 12: dark_castle" 900
   fi
 
   echo ""; echo "=== regression matrix done $(date -u +%FT%TZ) ==="
