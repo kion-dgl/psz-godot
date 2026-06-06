@@ -4,7 +4,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { assetUrl } from '../../utils/assets';
 
-const W = 720, H = 440;
+const MAX_W = 720;
+const ASPECT = 720 / 440;
 
 interface Props {
   glb: string;
@@ -16,25 +17,37 @@ interface Props {
  * Reusable single-object turntable viewer. Loads one GLB, centers it on a
  * grid, auto-frames the camera to its bounding box, and slowly autorotates.
  * Mirrors the raw-three pattern in screens/StagePreview.tsx (the spec site
- * does not use @react-three/fiber). Renders a placeholder panel when no GLB
- * is supplied (objects whose model varies at runtime).
+ * does not use @react-three/fiber).
+ *
+ * The wrapper is fluid (width:100%, capped at MAX_W, fixed aspect ratio); the
+ * renderer + camera are sized from the container's real dimensions and kept in
+ * sync with a ResizeObserver, so the canvas never overflows on narrow layouts.
+ * On unmount it disposes geometries/materials/textures to avoid leaking GPU
+ * memory across page navigations. Pages with no model render a static
+ * placeholder instead of mounting this island (see [object].astro).
  */
 export default function ObjectViewer({ glb, scale = 1, cameraOffset }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!glb) return; // placeholder rendered in JSX below
+    if (!glb) return;
     const el = ref.current;
     if (!el) return;
+
+    const w0 = el.clientWidth || MAX_W;
+    const h0 = el.clientHeight || Math.round(MAX_W / ASPECT);
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a1a2a);
 
-    const camera = new THREE.PerspectiveCamera(45, W / H, 0.01, 1000);
+    const camera = new THREE.PerspectiveCamera(45, w0 / h0, 0.01, 1000);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(W, H);
+    renderer.setSize(w0, h0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.display = 'block';
     el.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -115,6 +128,17 @@ export default function ObjectViewer({ glb, scale = 1, cameraOffset }: Props) {
       },
     );
 
+    // Keep renderer + camera matched to the container's actual size.
+    const resize = () => {
+      const w = el.clientWidth || MAX_W;
+      const h = el.clientHeight || Math.round(MAX_W / ASPECT);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    const ro = new ResizeObserver(resize);
+    ro.observe(el);
+
     let raf = 0;
     const animate = () => {
       raf = requestAnimationFrame(animate);
@@ -125,43 +149,37 @@ export default function ObjectViewer({ glb, scale = 1, cameraOffset }: Props) {
 
     return () => {
       cancelAnimationFrame(raf);
+      ro.disconnect();
       controls.dispose();
+      // Dispose GPU resources so navigating between viewers doesn't leak.
+      scene.traverse((obj) => {
+        const m = obj as THREE.Mesh;
+        if (!m.isMesh) return;
+        m.geometry?.dispose?.();
+        const mats = Array.isArray(m.material) ? m.material : [m.material];
+        for (const mat of mats) {
+          if (!mat) continue;
+          for (const key of Object.keys(mat) as (keyof THREE.Material)[]) {
+            const val = (mat as Record<string, unknown>)[key as string];
+            if (val && (val as THREE.Texture).isTexture) (val as THREE.Texture).dispose();
+          }
+          mat.dispose();
+        }
+      });
+      grid.geometry.dispose();
+      (grid.material as THREE.Material).dispose();
       renderer.dispose();
       if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
     };
   }, [glb, scale, cameraOffset?.[0], cameraOffset?.[1], cameraOffset?.[2]]);
 
-  if (!glb) {
-    return (
-      <div
-        style={{
-          width: W,
-          maxWidth: '100%',
-          height: H,
-          background: '#1a1a2a',
-          border: '1px solid #30363d',
-          borderRadius: 8,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#8b949e',
-          fontSize: 14,
-          fontStyle: 'italic',
-          boxSizing: 'border-box',
-        }}
-      >
-        No single model — varies at runtime
-      </div>
-    );
-  }
-
   return (
     <div
       ref={ref}
       style={{
-        width: W,
-        maxWidth: '100%',
-        height: H,
+        width: '100%',
+        maxWidth: MAX_W,
+        aspectRatio: `${ASPECT}`,
         background: '#000',
         borderRadius: 8,
         overflow: 'hidden',

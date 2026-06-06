@@ -30,7 +30,9 @@ function fmt(s: string): string {
 
 <Concept title={spec.title} section="States">
   <div class="viewer">
-    <ObjectViewer client:only="react" glb={spec.glb ?? ''} scale={spec.scale ?? 1} />
+    {spec.glb
+      ? <ObjectViewer client:only="react" glb={spec.glb} scale={spec.scale ?? 1} />
+      : <div class="no-model">No single model — varies at runtime</div>}
   </div>
 
   <p>
@@ -72,4 +74,18 @@ function fmt(s: string): string {
 
 <style>
   .viewer { margin: 0 0 24px; }
+  .no-model {
+    width: 100%;
+    max-width: 720px;
+    aspect-ratio: 720 / 440;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a2a;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    color: #8b949e;
+    font-size: 14px;
+    font-style: italic;
+  }
 </style>
