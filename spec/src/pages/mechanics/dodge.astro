@@ -11,5 +11,11 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Reference</h2>
   <p>The in-repo <code>dodge-debug</code> tool (web mock at <code>#/dodge-debug</code>) visualizes the roll and i-frames for tuning — to be ported here as an interactive view.</p>
 
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/player/player.gd</code> (Player) — <code>_start_dodge</code> caches the facing direction and scales the move phase to the active weapon's <code>_esc_f</code> clip length; <code>_handle_dodge</code> drives the roll at <code>DODGE_SPEED</code> for the move fraction (with an edge check so it won't roll off a ledge), then zeroes velocity through the recovery and returns to IDLE.</li>
+  </ul>
+  <p>Status: the i-frame / invincibility window is <strong>intended behavior but not yet implemented</strong> — <code>_handle_dodge</code> has no damage immunity today, so a hit can still interrupt a roll. It's on the <a href="/states/player-state">Player State Machine</a> refactor punch-list.</p>
+
   <p><a href="/mechanics">← Mechanics</a></p>
 </Concept>
