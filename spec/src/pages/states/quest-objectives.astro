@@ -47,5 +47,11 @@ const flow = `flowchart TD
   <h2>From complete to cleared</h2>
   <p><code>mark_quest_complete()</code> stashes the run summary and flips state to Completed (guild tag <code>REPORT</code>). Reporting at the guild counter calls <code>report_quest()</code> then <code>GameState.complete_mission(quest_id)</code>, which appends to the persisted <code>completed_missions</code> set (saved per character) — from then on <code>is_mission_completed(id)</code> is true and the counter shows <code>CLEAR</code>. Completion is <strong>not</strong> persisted until reported.</p>
 
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) — seeds per-<code>item_id</code> counts on accept and runs the increment/completion path: <code>collect_quest_item()</code>, <code>are_objectives_complete()</code>, <code>mark_quest_complete()</code>.</li>
+    <li><code>scripts/autoloads/quest_loader.gd</code> (QuestLoader) — <code>load_quest()</code> parses the quest JSON whose <code>objectives</code> array SessionManager reads into <code>_quest_objectives</code>.</li>
+  </ul>
+
   <p><a href="/states">← States</a></p>
 </Concept>

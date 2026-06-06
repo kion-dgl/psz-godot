@@ -86,6 +86,14 @@ const lifeChart = `stateDiagram-v2
 
   <h2>Rewards &amp; credits</h2>
   <p>Reporting the final story quest, <strong>Dark Castle</strong> (the Dark Falz fight), rolls the end <a href="/start-menu">credits</a> on victory.</p>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) — drives the quest lifecycle (accept / cancel / <code>mark_quest_complete</code> / <code>report_quest</code>) that flips a quest from in-progress to completed to reported.</li>
+    <li><code>scripts/autoloads/game_state.gd</code> (GameState) — stores the runtime completed-mission set: <code>completed_missions</code>, <code>complete_mission()</code>, and <code>is_mission_completed()</code>.</li>
+    <li><code>scripts/autoloads/character_manager.gd</code> (CharacterManager) — persists that set per character slot, swapping each slot's <code>completed_missions</code> in and out of GameState on slot activation.</li>
+    <li><code>scripts/2d/guild_counter.gd</code> — the guild counter that derives the REPORT / LOCKED / CLEAR tags (from <code>has_completed_quest</code>, <code>parent_quest</code>/<code>required_quests</code>, and <code>is_mission_completed</code>).</li>
+  </ul>
 </Concept>
 
 <style is:global>
