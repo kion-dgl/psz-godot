@@ -20,24 +20,28 @@ pre-beta refactor milestone (issue #215).
 - [x] **0. Prereq: PR #255** (Tier 1 dead-code sweep + endgame matrix) — **MERGED**.
 - [x] **0b. PR #257** — autoplay `dbus-run-session` wrapper (unblocked the matrix
       from a Godot AccessKit/DBus SIGABRT) — **MERGED**.
-- [x] **1. `StageRotation`** — extracted pure rotation helpers (`rotate_dir`,
-      `dir_to_yaw`) to `scripts/3d/field/stage_rotation.gd`; deduped the copy in
-      `room_minimap.gd`; dropped dead `_grid_to_original_dir` + `_rotate_point`.
-      *Reimport clean; tests assertion-neutral; full matrix 15/15 green on the
-      dbus-fixed main. PR #256 — merging.*
-- [ ] **2. `CellObjectSpawner`** — the `_spawn_box / _spawn_enemy / _spawn_fence
-      / _spawn_switch / _spawn_message / _spawn_wall / _spawn_npc / _spawn_trap…`
-      wall. The big coupled one (needs a back-reference to the controller).
-- [ ] **3. `MapCollisionBuilder`** — `_setup_map_collision`,
-      `_filter_floor_collision`, `_collect_collision_faces`,
-      `_create_collision_from_meshes`, `_configure_collision_nodes`.
+- [x] **1. `StageRotation`** (PR #256, merged) — pure rotation helpers
+      (`rotate_dir`, `dir_to_yaw`) to `scripts/3d/field/stage_rotation.gd`; deduped
+      the `room_minimap.gd` copy; dropped dead `_grid_to_original_dir` +
+      `_rotate_point`. Matrix 15/15.
+- [x] **2. `CellObjectSpawner`** (PR #258, merged) — the 14 object factories +
+      orchestration + save/restore (`_spawn_*`, `_spawn_cell_objects`,
+      `_restore_cell_objects`, `_save_cell_state`) to `cell_object_spawner.gd`
+      via a controller back-reference. ~994 lines out. Matrix 15/15. (This folded
+      in what was originally planned as increment 5, `CellStateManager`.)
+- [x] **2b. Per-object 3D docs** (PR #259, merged) — `/states/objects/*` pages
+      with a turntable `ObjectViewer` island + config schema per cell object.
+- [~] **3. `MapCollisionBuilder`** (PR #260) — 7 pure static collision helpers
+      (`setup_map_collision`, `filter_floor_collision`, `collect_collision_faces`,
+      `has_static_body`, `create_collision_from_meshes`, `collect_mesh_instances`,
+      `configure_collision_nodes`) to `map_collision_builder.gd`. Controller
+      2950 → 2835. `_debug_show_floor_collision` stays (needs instance state).
+      *Reimport clean, tests 1407/0; matrix running.*
 - [ ] **4. `PortalGateManager`** — `_parse_baked_portals`,
       `_compute_portal_from_config`, `_build_portal_data_from_config`, gate
       triggers + labels + material fixups.
-- [ ] **5. `CellStateManager`** — `_save_cell_state`, `_restore_cell_objects`,
-      `_spawn_cell_objects`, `_spawn_fresh_cell_objects`.
-- [ ] **6. `WeatherController`** — `_spawn_weather`, `_kick_weather`,
-      `_spawn_stage_effects`.
+- [ ] **5. `WeatherController`** — `_spawn_weather`, `_kick_weather`,
+      `_spawn_stage_effects` (+ embedded-light strip/collect helpers).
 
 ## Status log
 
