@@ -27,6 +27,7 @@ func _ready() -> void:
 	test_mag_evolution()
 	test_mag_personality_contract()
 	test_shops()
+	test_start_menu_data()
 	test_damage_formulas()
 	test_ranger_playthrough()
 	test_technique_disks()
@@ -1370,6 +1371,48 @@ func test_shops() -> void:
 	cs.free()
 
 	Inventory.clear_inventory()
+	print("")
+
+
+# ── Start menu data contract ─────────────────────────────
+# Locks the pure data helpers the PSO-style start menu's rendering AND input
+# both read (PsoStartMenu autoload), as the regression net before the
+# pso_start_menu.gd split (StartMenuRenderer / Input / Actions). These are
+# behavior-preserving extractions, so this contract must stay identical.
+func test_start_menu_data() -> void:
+	print("── Start Menu (data contract) ──")
+
+	# _category_to_type: pure category → icon/type-key map
+	assert_eq(PsoStartMenu._category_to_type("Weapon"), "weapon", "category Weapon → weapon")
+	assert_eq(PsoStartMenu._category_to_type("Disk"), "tech", "category Disk → tech")
+	assert_eq(PsoStartMenu._category_to_type("Consumable"), "tool", "category Consumable → tool")
+	assert_eq(PsoStartMenu._category_to_type("Nonsense"), "tool", "category fallback → tool")
+
+	# _get_item_category: registry-driven classification
+	assert_eq(PsoStartMenu._get_item_category("saber"), "Weapon", "saber → Weapon")
+	assert_eq(PsoStartMenu._get_item_category("monomate"), "Consumable", "monomate → Consumable")
+
+	# _item_fits_slot: slot acceptance
+	assert_true(PsoStartMenu._item_fits_slot("saber", "weapon"), "saber fits the weapon slot")
+	assert_true(not PsoStartMenu._item_fits_slot("monomate", "weapon"), "monomate does not fit the weapon slot")
+
+	# _get_menu_labels: core views always present.
+	var labels: Array = PsoStartMenu._get_menu_labels()
+	assert_true(labels.has("Items") and labels.has("Equip") and labels.has("Palette") and labels.has("System"),
+		"menu labels include the core views")
+
+	# Techs gating — assert BOTH real cases (not labels==_can_use_techs, which is
+	# circular): a non-CAST can use techs (Techs view present), a CAST cannot.
+	var sm_char = CharacterManager.get_active_character()
+	if sm_char:
+		var sm_saved_class = sm_char.get("class_id", "")
+		sm_char["class_id"] = "humar"  # Human Hunter — can use techniques
+		assert_true(PsoStartMenu._can_use_techs(), "_can_use_techs true for a non-CAST (HUmar)")
+		assert_true(PsoStartMenu._get_menu_labels().has("Techs"), "Techs view present for a non-CAST")
+		sm_char["class_id"] = "hucast"  # CAST Hunter — cannot use techniques
+		assert_true(not PsoStartMenu._can_use_techs(), "_can_use_techs false for a CAST (HUcast)")
+		assert_true(not PsoStartMenu._get_menu_labels().has("Techs"), "Techs view absent for a CAST")
+		sm_char["class_id"] = sm_saved_class
 	print("")
 
 
