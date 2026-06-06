@@ -1,10 +1,9 @@
 extends Control
 ## Shop menu overlay — sub-menu for the Shop NPC.
-## Options: Item Shop, Tech Shop.
+## Options: Item Shop (which also sells technique disks via its Disks tab).
 
 const MENU_ITEMS := [
 	"Item Shop",
-	"Tech Shop",
 ]
 
 @onready var menu_list = $CenterPanel/VBox/MenuList
@@ -28,5 +27,3 @@ func _on_menu_selected(index: int) -> void:
 	match MENU_ITEMS[index]:
 		"Item Shop":
 			SceneManager.push_scene("res://scenes/2d/shops/item_shop.tscn")
-		"Tech Shop":
-			SceneManager.push_scene("res://scenes/2d/shops/tech_shop.tscn")

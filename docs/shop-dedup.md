@@ -112,7 +112,7 @@ afford/room checks inline, or not at all). See `/mechanics/shops`.
 
 - [x] **0. Docs** — this tracker + `/mechanics/shops` + the top-level Architecture
       page & layer color-coding.
-- [ ] **0b. Remove standalone `tech_shop`** — disks live in Item Shop; drop the
+- [x] **0b. Remove standalone `tech_shop`** (done) — disks live in Item Shop; drop the
       redundant script/scene/`.tres` + Services-menu route.
 - [ ] **1. `ShopBase` + pure dups** — new `scripts/2d/shops/shop_base.gd`;
       lift `_get_meseta` + `_on_nav_repeat`; make the screens extend it.
