@@ -49,6 +49,8 @@ const chart = `stateDiagram-v2
 
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as in RFC 2119.</p>
 
+  <p class="note">This is the runtime behavior reference. For the player-facing view with a live visual preview, see the <a href="/start-menu">Start Menu journey page</a>.</p>
+
   <p>The start menu is a PSO-style, non-pausing overlay with an L-shaped backdrop: a left strip plus a bottom strip, leaving the upper-right of the screen clear so the player can still see the world. It is a single autoload <code>CanvasLayer</code> (<code>PsoStartMenu</code>) driven by one <code>Mode</code> enum; exactly one <code>Mode</code> is active at a time, held in <code>_mode</code>. Input routing and drawing both dispatch on that mode. This page is the behavior reference the planned three-way split (see <em>Implemented by</em>) <strong>MUST</strong> preserve.</p>
 
   <h2>Opening and closing</h2>
