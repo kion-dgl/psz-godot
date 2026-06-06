@@ -1,0 +1,75 @@
+---
+// Dynamic per-object documentation page. ONE template generates every
+// /states/objects/<slug> page from the cell-objects data module. Each page
+// shows a live 3D model viewer, the stage-JSON config schema, and prose for
+// spawn behavior / persisted state / interactions.
+import Concept from '../../../layouts/Concept.astro';
+import ObjectViewer from '../../../components/object-viewer/ObjectViewer.tsx';
+import type { CellObjectSpec } from '../../../data/cell-objects';
+
+export async function getStaticPaths() {
+  const { cellObjects } = await import('../../../data/cell-objects');
+  return cellObjects.map((o) => ({ params: { object: o.slug }, props: { spec: o } }));
+}
+
+const { spec } = Astro.props as { spec: CellObjectSpec };
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Minimal inline formatter: **bold**, *em*, `code`. Renders to HTML so the
+// data module can carry RFC-2119 emphasis without literal-brace JSX hazards.
+function fmt(s: string): string {
+  return escapeHtml(s)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+}
+---
+
+<Concept title={spec.title} section="States">
+  <div class="viewer">
+    <ObjectViewer client:only="react" glb={spec.glb ?? ''} scale={spec.scale ?? 1} />
+  </div>
+
+  <p>
+    Field cell-object reference. Type tag: <code>{spec.type}</code>. The key words
+    <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> are
+    used as in RFC 2119. See the <a href="/states/objects">Cell Objects index</a>
+    and the <a href="/states/field-lifecycle">Field Stage Lifecycle</a> for how
+    objects are spawned and persisted.
+  </p>
+
+  <h2>Config schema</h2>
+  <p>Fields authored on this object in the stage JSON:</p>
+  <table>
+    <tr><th>Field</th><th>Type</th><th>Default</th><th>Note</th></tr>
+    {spec.configFields.map((f) => (
+      <tr>
+        <td><code>{f.name}</code></td>
+        <td><code>{f.type}</code></td>
+        <td>{f.default ? <code>{f.default}</code> : '—'}</td>
+        <td set:html={fmt(f.note)} />
+      </tr>
+    ))}
+  </table>
+
+  <h2>Spawn behavior</h2>
+  <p set:html={fmt(spec.spawns)} />
+
+  <h2>Persisted state</h2>
+  <p set:html={fmt(spec.state)} />
+
+  <h2>Interactions</h2>
+  <p set:html={fmt(spec.interactions)} />
+
+  {spec.notes && <h2>Notes</h2>}
+  {spec.notes && <p set:html={fmt(spec.notes)} />}
+
+  <p><a href="/states/objects">← Cell Objects</a></p>
+</Concept>
+
+<style>
+  .viewer { margin: 0 0 24px; }
+</style>
