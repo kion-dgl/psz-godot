@@ -66,6 +66,7 @@ var _icon_cache: Dictionary = {}  # action_id → Texture2D
 var _rstick_held: bool = false  # Prevents right stick repeat until released
 var _active_modal: Control = null  # Yes/No confirmation overlay for state-change actions
 var _renderer: StartMenuRenderer  # Canvas rendering, extracted to StartMenuRenderer
+var _input: StartMenuInput  # Input / navigation routing, extracted to StartMenuInput
 
 # ── Directional scroll repeat (PSO GC timing) ──────────────────────────────────
 # Match PSO's menu scroll: hold 6/30f (~0.2s) before auto-scroll, then 1/30f
@@ -128,56 +129,13 @@ func _ready() -> void:
 	_canvas = Control.new()
 	_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_renderer = StartMenuRenderer.new(self)
+	_input = StartMenuInput.new(self)
 	_canvas.draw.connect(_renderer._draw_menu)
 	add_child(_canvas)
 
 
 func _process(delta: float) -> void:
-	_tick_nav_repeat(delta)
-
-
-# Synthesize repeated ui_* action events when the player holds a direction,
-# matching PSO GC's scroll timing. Works the same for keyboard and gamepad so
-# controller users get auto-scroll even though Godot has no built-in gamepad
-# echo. Menu handlers use `allow_echo = false` so OS keyboard echo doesn't
-# also fire and double the tick rate.
-func _tick_nav_repeat(delta: float) -> void:
-	if not _is_open:
-		for action in NAV_ACTIONS:
-			_nav_hold[action] = 0.0
-			_nav_next[action] = 0.0
-		return
-	for action in NAV_ACTIONS:
-		if Input.is_action_pressed(action):
-			var held: float = float(_nav_hold[action]) + delta
-			_nav_hold[action] = held
-			if held >= SCROLL_HOLD:
-				# Decrement first and dispatch same frame so the effective
-				# repeat rate actually is SCROLL_REPEAT, not SCROLL_REPEAT + delta.
-				# The while-loop catches up if a long frame skipped multiple ticks.
-				var next_at: float = float(_nav_next[action]) - delta
-				while next_at <= 0.0:
-					_dispatch_ui_action(action)
-					next_at += SCROLL_REPEAT
-				_nav_next[action] = next_at
-		else:
-			_nav_hold[action] = 0.0
-			_nav_next[action] = 0.0
-
-
-func _dispatch_ui_action(action: String) -> void:
-	## Route a synthetic press directly to our own input handler. Going through
-	## Input.parse_input_event would mark the action as globally pressed without
-	## a matching release, so Input.is_action_pressed() would return true forever
-	## and _tick_nav_repeat would keep dispatching after the player let go.
-	# Modal owns input — don't fire menu-scroll synthetic events while a
-	# confirm dialog is open, otherwise list cursor moves under the modal.
-	if is_instance_valid(_active_modal):
-		return
-	var ev := InputEventAction.new()
-	ev.action = action
-	ev.pressed = true
-	_unhandled_input(ev)
+	if _input: _input._tick_nav_repeat(delta)
 
 
 ## Open a Yes/No ConfirmDialog overlay for state-changing actions (equip,
@@ -326,27 +284,6 @@ func _do_move() -> void:
 	SaveManager.save_game()
 	_action_message = "Moved."
 	_exit_move_mode()
-
-
-func _input_items_move(event: InputEvent) -> bool:
-	var count: int = _get_inventory().size()
-	if event.is_action_pressed("ui_up", false) and count > 0:
-		_sub_idx = wrapi(_sub_idx - 1, 0, count)
-		# Recompute move origin index in case the list changed under us.
-		_move_from_idx = _find_idx_for_id(_move_from_id)
-		return true
-	elif event.is_action_pressed("ui_down", false) and count > 0:
-		_sub_idx = wrapi(_sub_idx + 1, 0, count)
-		_move_from_idx = _find_idx_for_id(_move_from_id)
-		return true
-	elif event.is_action_pressed("ui_accept"):
-		_do_move()
-		return true
-	elif event.is_action_pressed("ui_cancel"):
-		_action_message = ""
-		_exit_move_mode()
-		return true
-	return false
 
 
 func _find_idx_for_id(item_id: String) -> int:
@@ -512,200 +449,10 @@ func toggle() -> void:
 
 
 # ── Input ───────────────────────────────────────────────────────────────────────
+# Thin delegator — the engine calls this on the Node; the actual routing lives
+# in StartMenuInput (a RefCounted, so it gets no lifecycle callbacks).
 func _unhandled_input(event: InputEvent) -> void:
-	# Open menu from anywhere with ESC/pause (only when closed, no overlay, and in gameplay)
-	if not _is_open:
-		if event.is_action_pressed("pause") and SceneManager._overlay_stack.is_empty() and _is_gameplay_scene():
-			open()
-			get_viewport().set_input_as_handled()
-		return
-
-	# Modal owns input. ConfirmDialog uses _input (priority) and calls
-	# set_input_as_handled, so events should be swallowed before they
-	# reach _unhandled_input — but the synthetic events from
-	# _tick_nav_repeat skip _input entirely, so we still need this gate.
-	if is_instance_valid(_active_modal):
-		return
-
-	# ── Menu is open — consume ALL input except movement ──
-
-	# Joypad Start button always closes the menu, regardless of mode.
-	# Checked first because Start and pause share button index 6 — if the pause
-	# branch ran first in a sub-mode it would fall through without closing.
-	# Enter also maps to the "start" action so we guard on InputEventJoypadButton
-	# to keep Enter usable as accept inside menus.
-	if event is InputEventJoypadButton and event.is_action_pressed("start"):
-		close()
-		get_viewport().set_input_as_handled()
-		return
-	if event.is_action_pressed("pause"):
-		if _mode == Mode.MAIN:
-			close()
-			get_viewport().set_input_as_handled()
-			return
-		# In sub-menus, Esc/pause acts as back (falls through to mode handler)
-
-	# Let movement actions pass through (WASD + left stick)
-	if event.is_action("move_forward") or event.is_action("move_backward") or \
-	   event.is_action("move_left") or event.is_action("move_right"):
-		return  # Don't consume — let player walk
-
-	# LB/RB → page flip when in main view
-	if _mode == Mode.MAIN:
-		if event.is_action_pressed("palette_swap"):  # LB
-			_info_page = wrapi(_info_page - 1, 0, 4)
-			_canvas.queue_redraw()
-			get_viewport().set_input_as_handled()
-			return
-		if event.is_action_pressed("quest_log"):  # RB
-			_info_page = wrapi(_info_page + 1, 0, 4)
-			_canvas.queue_redraw()
-			get_viewport().set_input_as_handled()
-			return
-
-	# Right stick Y axis → menu scroll (alternative to d-pad). Active threshold
-	# 0.3 so a gentle tilt registers; release threshold 0.15 so the hysteresis
-	# band (0.15–0.3) keeps the stick from re-triggering on small oscillations.
-	if event is InputEventJoypadMotion:
-		var joy: InputEventJoypadMotion = event as InputEventJoypadMotion
-		if joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) > 0.3:
-			# Throttle: only trigger once per stick deflection
-			if not _rstick_held:
-				_rstick_held = true
-				if joy.axis_value > 0:
-					_simulate_menu_down()
-				else:
-					_simulate_menu_up()
-				_canvas.queue_redraw()
-			get_viewport().set_input_as_handled()
-			return
-		elif joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) < 0.15:
-			_rstick_held = false
-			# Consume the deadzone-return event after resetting hold state.
-			get_viewport().set_input_as_handled()
-			return
-
-	# Route to mode-specific handler
-	var handled := true
-	match _mode:
-		Mode.MAIN:
-			handled = _input_main(event)
-		Mode.ITEMS:
-			handled = _input_list(event, _get_inventory().size())
-		Mode.ITEMS_MOVE:
-			handled = _input_items_move(event)
-		Mode.EQUIP:
-			handled = _input_list(event, _get_equip_slots().size())
-		Mode.EQUIP_PICK:
-			handled = _input_equip_pick(event)
-		Mode.TECHS:
-			handled = _input_list(event, _get_techniques().size())
-		Mode.PALETTE:
-			handled = _input_palette(event)
-		Mode.PALETTE_PICK:
-			handled = _input_palette_pick(event)
-		Mode.MAGS:
-			handled = _input_list(event, _get_mags().size())
-		Mode.MAG_FEED:
-			handled = _input_list(event, _get_feed_items().size())
-		Mode.QUEST:
-			handled = _input_back(event)
-		Mode.SYSTEM:
-			handled = _input_system(event)
-		Mode.OPTIONS:
-			handled = _input_options(event)
-
-	if handled:
-		# Skip generic SFX if menu was just closed — close() plays its own sound
-		if not _is_open:
-			_canvas.queue_redraw()
-			get_viewport().set_input_as_handled()
-			return
-		# Play menu SFX
-		if event.is_action_pressed("ui_accept"):
-			SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-		elif event.is_action_pressed("ui_cancel"):
-			SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-		elif event.is_action_pressed("ui_up", false) or event.is_action_pressed("ui_down", false) \
-			or event.is_action_pressed("ui_left", false) or event.is_action_pressed("ui_right", false):
-			SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		_canvas.queue_redraw()
-
-	# ALWAYS consume input when menu is open (blocks camera, interact, quick weapon, palette)
-	get_viewport().set_input_as_handled()
-
-
-func _simulate_menu_up() -> void:
-	## Simulate pressing ui_up for right stick scroll
-	var fake := InputEventAction.new()
-	fake.action = "ui_up"
-	fake.pressed = true
-	_unhandled_input(fake)
-
-
-func _simulate_menu_down() -> void:
-	var fake := InputEventAction.new()
-	fake.action = "ui_down"
-	fake.pressed = true
-	_unhandled_input(fake)
-
-
-func _input_main(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up", false):
-		_menu_idx = wrapi(_menu_idx - 1, 0, _get_menu_labels().size())
-		return true
-	elif event.is_action_pressed("ui_down", false):
-		_menu_idx = wrapi(_menu_idx + 1, 0, _get_menu_labels().size())
-		return true
-	elif event.is_action_pressed("ui_left", false):
-		_info_page = wrapi(_info_page - 1, 0, 4)
-		return true
-	elif event.is_action_pressed("ui_right", false):
-		_info_page = wrapi(_info_page + 1, 0, 4)
-		return true
-	elif event.is_action_pressed("ui_accept"):
-		_enter_sub(_menu_idx)
-		return true
-	elif event.is_action_pressed("ui_cancel"):
-		close()
-		return true
-	return false
-
-
-func _input_list(event: InputEvent, count: int) -> bool:
-	if event.is_action_pressed("ui_up", false) and count > 0:
-		_sub_idx = wrapi(_sub_idx - 1, 0, count)
-		_action_message = ""
-		return true
-	elif event.is_action_pressed("ui_down", false) and count > 0:
-		_sub_idx = wrapi(_sub_idx + 1, 0, count)
-		_action_message = ""
-		return true
-	elif event.is_action_pressed("ui_accept"):
-		_sub_accept()
-		return true
-	elif event.is_action_pressed("ui_cancel"):
-		_action_message = ""
-		_go_back()
-		return true
-	return false
-
-
-func _input_equip_pick(event: InputEvent) -> bool:
-	var candidates := _get_equip_candidates(_equip_slot_idx)
-	if event.is_action_pressed("ui_up", false) and candidates.size() > 0:
-		_equip_item_idx = wrapi(_equip_item_idx - 1, 0, candidates.size())
-		return true
-	elif event.is_action_pressed("ui_down", false) and candidates.size() > 0:
-		_equip_item_idx = wrapi(_equip_item_idx + 1, 0, candidates.size())
-		return true
-	elif event.is_action_pressed("ui_accept"):
-		_do_equip()
-		return true
-	elif event.is_action_pressed("ui_cancel"):
-		_mode = Mode.EQUIP
-		return true
-	return false
+	if _input: _input.handle_input(event)
 
 
 func _do_equip() -> void:
@@ -757,35 +504,6 @@ func _do_equip() -> void:
 	_sub_idx = _equip_slot_idx
 
 
-func _input_palette(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up", false):
-		_pal_slot_idx = wrapi(_pal_slot_idx - 1, 0, 3)
-		return true
-	elif event.is_action_pressed("ui_down", false):
-		_pal_slot_idx = wrapi(_pal_slot_idx + 1, 0, 3)
-		return true
-	elif event.is_action_pressed("ui_left", false):
-		_pal_page_idx = wrapi(_pal_page_idx - 1, 0, ActionPalette.pages.size())
-		return true
-	elif event.is_action_pressed("ui_right", false):
-		_pal_page_idx = wrapi(_pal_page_idx + 1, 0, ActionPalette.pages.size())
-		return true
-	elif event.is_action_pressed("ui_accept"):
-		_mode = Mode.PALETTE_PICK
-		_sub_idx = 0
-		var current_id: String = str(ActionPalette.pages[_pal_page_idx][_pal_slot_idx])
-		var actions := _get_palette_actions()
-		for i in range(actions.size()):
-			if str(actions[i].get("id", "")) == current_id:
-				_sub_idx = i
-				break
-		return true
-	elif event.is_action_pressed("ui_cancel"):
-		_mode = Mode.MAIN
-		return true
-	return false
-
-
 const _PAL_PICKER_ROWS: Array = [
 	{"label": "Combat", "ids": ["attack", "strong_attack", "dodge"]},
 	{"label": "Recovery", "ids": ["monomate", "dimate", "trimate"]},
@@ -801,134 +519,6 @@ const _PAL_PICKER_ROWS: Array = [
 
 const _PAL_LEFT_COL_SIZE: int = 5   # rows 0-4: combat + recovery
 const _PAL_RIGHT_COL_SIZE: int = 5  # rows 5-9: techniques
-
-func _pal_flat_to_row_col(flat_idx: int) -> Vector2i:
-	var fi := 0
-	for ri in range(_PAL_PICKER_ROWS.size()):
-		var row_ids: Array = _PAL_PICKER_ROWS[ri].ids
-		for ci in range(row_ids.size()):
-			if fi == flat_idx:
-				return Vector2i(ri, ci)
-			fi += 1
-	return Vector2i(0, 0)
-
-func _pal_row_col_to_flat(row: int, col: int) -> int:
-	var fi := 0
-	for ri in range(row):
-		fi += int(_PAL_PICKER_ROWS[ri].ids.size())
-	fi += col
-	return fi
-
-func _input_palette_pick(event: InputEvent) -> bool:
-	var actions := _get_palette_actions()
-	var rc := _pal_flat_to_row_col(_sub_idx)
-	var in_left: bool = rc.x < _PAL_LEFT_COL_SIZE
-	var col_start: int = 0 if in_left else _PAL_LEFT_COL_SIZE
-	var col_size: int = _PAL_LEFT_COL_SIZE if in_left else _PAL_RIGHT_COL_SIZE
-
-	if event.is_action_pressed("ui_up", false):
-		var local_row: int = rc.x - col_start
-		var new_local: int = wrapi(local_row - 1, 0, col_size)
-		var new_row: int = col_start + new_local
-		var new_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[new_row].ids.size()) - 1)
-		_sub_idx = _pal_row_col_to_flat(new_row, new_col)
-		return true
-	elif event.is_action_pressed("ui_down", false):
-		var local_row: int = rc.x - col_start
-		var new_local: int = wrapi(local_row + 1, 0, col_size)
-		var new_row: int = col_start + new_local
-		var new_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[new_row].ids.size()) - 1)
-		_sub_idx = _pal_row_col_to_flat(new_row, new_col)
-		return true
-	elif event.is_action_pressed("ui_right", false):
-		var row_ids: Array = _PAL_PICKER_ROWS[rc.x].ids
-		if rc.y < row_ids.size() - 1:
-			_sub_idx = _pal_row_col_to_flat(rc.x, rc.y + 1)
-		elif in_left:
-			var target_row: int = clampi(rc.x - col_start, 0, _PAL_RIGHT_COL_SIZE - 1) + _PAL_LEFT_COL_SIZE
-			var target_col: int = clampi(rc.y, 0, int(_PAL_PICKER_ROWS[target_row].ids.size()) - 1)
-			_sub_idx = _pal_row_col_to_flat(target_row, target_col)
-		return true
-	elif event.is_action_pressed("ui_left", false):
-		if rc.y > 0:
-			_sub_idx = _pal_row_col_to_flat(rc.x, rc.y - 1)
-		elif not in_left:
-			var target_row: int = clampi(rc.x - _PAL_LEFT_COL_SIZE, 0, _PAL_LEFT_COL_SIZE - 1)
-			var target_ids: Array = _PAL_PICKER_ROWS[target_row].ids
-			_sub_idx = _pal_row_col_to_flat(target_row, target_ids.size() - 1)
-		return true
-	elif event.is_action_pressed("ui_accept"):
-		if _sub_idx < actions.size():
-			var action: Dictionary = actions[_sub_idx]
-			var action_id: String = str(action.get("id", ""))
-			if _is_palette_action_available(action_id):
-				ActionPalette.set_action(_pal_page_idx, _pal_slot_idx, action_id)
-				_mode = Mode.PALETTE
-		return true
-	elif event.is_action_pressed("ui_cancel"):
-		_mode = Mode.PALETTE
-		return true
-	return false
-
-
-func _input_system(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_up", false):
-		_sub_idx = wrapi(_sub_idx - 1, 0, SYSTEM_LABELS.size())
-		return true
-	elif event.is_action_pressed("ui_down", false):
-		_sub_idx = wrapi(_sub_idx + 1, 0, SYSTEM_LABELS.size())
-		return true
-	elif event.is_action_pressed("ui_accept"):
-		match _sub_idx:
-			0:
-				SaveManager.save_game()
-				SfxManager.play("res://assets/sfx/ui/game_saved.wav")
-			1:
-				SaveManager.save_game()
-				SfxManager.play("res://assets/sfx/ui/game_saved.wav")
-				close()
-				SceneManager.goto_scene("res://scenes/2d/title.tscn")
-			2:
-				_mode = Mode.OPTIONS
-				_options_idx = 0
-		return true
-	elif event.is_action_pressed("ui_cancel"):
-		_mode = Mode.MAIN
-		return true
-	return false
-
-
-func _input_options(event: InputEvent) -> bool:
-	var opts := _get_options_list()
-	if event.is_action_pressed("ui_up", false) and opts.size() > 0:
-		_options_idx = wrapi(_options_idx - 1, 0, opts.size())
-		return true
-	elif event.is_action_pressed("ui_down", false) and opts.size() > 0:
-		_options_idx = wrapi(_options_idx + 1, 0, opts.size())
-		return true
-	elif event.is_action_pressed("ui_left", false):
-		if _options_idx == 0:
-			_adjust_music_volume(-0.1)
-			return true
-		elif _options_idx == 1:
-			_adjust_sfx_volume(-0.1)
-			return true
-		# (Controls: Reconfigure at idx 2 is action-only — Left/Right is a no-op.)
-	elif event.is_action_pressed("ui_right", false):
-		if _options_idx == 0:
-			_adjust_music_volume(0.1)
-			return true
-		elif _options_idx == 1:
-			_adjust_sfx_volume(0.1)
-			return true
-	elif event.is_action_pressed("ui_accept"):
-		_toggle_option(_options_idx)
-		return true
-	elif event.is_action_pressed("ui_cancel"):
-		_mode = Mode.SYSTEM
-		_sub_idx = 2
-		return true
-	return false
 
 
 func _adjust_sfx_volume(delta: float) -> void:
@@ -1005,13 +595,6 @@ func _toggle_option(idx: int) -> void:
 			DebugConfig.profile_frames = not DebugConfig.profile_frames
 		13:
 			DebugConfig.show_player_position = not DebugConfig.show_player_position
-
-
-func _input_back(event: InputEvent) -> bool:
-	if event.is_action_pressed("ui_cancel"):
-		_mode = Mode.MAIN
-		return true
-	return false
 
 
 func _enter_sub(idx: int) -> void:
