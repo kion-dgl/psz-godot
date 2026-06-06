@@ -1,6 +1,7 @@
 ---
 import Concept from '../../layouts/Concept.astro';
 import Mermaid from '../../components/Mermaid.astro';
+import LayerBadge from '../../components/LayerBadge.astro';
 
 const flow = `flowchart TD
   Ready["_ready"] --> Portrait["_setup_portrait"]
@@ -28,31 +29,84 @@ const flow = `flowchart TD
 
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
 
-  <p>Shops are list-driven menus in the city. There are six selling/service counters — <strong>item</strong>, <strong>weapon</strong>, <strong>photon</strong> (units), <strong>tech</strong> (disks), <strong>tekker</strong> (identify/grind), and <strong>crafting</strong> — plus two inventory screens that share the same shell, <strong>storage</strong> (the shared bank) and <strong>equipment</strong>. Each is its own scene under <code>/shop</code>.</p>
+  <p>Shops are list-driven menus in the city. There are eight canonical counters: six vendor/service counters, plus the shared <strong>Storage Counter</strong> bank and the <strong>Guild Counter</strong> (a quest desk, not a vendor). Each is its own scene.</p>
 
   <h2>The shared shopping loop</h2>
-  <p>Every counter follows the same shape (the diagram above): on open it builds its lists and draws them, the player navigates a selection with the d-pad (with a hold-to-repeat), <strong>confirm</strong> opens a yes/no (or quantity) modal, and a successful buy/sell runs the transaction and redraws. Currency is the active character's meseta; a purchase <strong>MUST</strong> be rejected if the player can't afford it or has no inventory room, and a successful transaction <strong>MUST</strong> update meseta and inventory before the display refreshes.</p>
+  <p>Every vendor counter follows the same shape (the diagram above): on open it builds its lists and draws them, the player navigates a selection with the d-pad (with a hold-to-repeat), <strong>confirm</strong> opens a yes/no (or quantity) modal, and a successful buy/sell runs the transaction and redraws. A successful transaction <strong>MUST</strong> update meseta and inventory before the display refreshes.</p>
 
   <h2>Counters</h2>
-  <ul>
-    <li><strong>Item</strong> — consumables and materials; bulk-buy aware (quantity dialog). Sell tab buys back inventory.</li>
-    <li><strong>Weapon</strong> — weapons by class/requirement; buy/sell with a price-confirm.</li>
-    <li><strong>Photon</strong> — units (armor/mag slots).</li>
-    <li><strong>Tech</strong> — technique disks; learning is level-gated.</li>
-    <li><strong>Tekker</strong> — identify unidentified drops and grind weapons.</li>
-    <li><strong>Crafting</strong> — recipes consuming materials.</li>
-    <li><strong>Storage</strong> — the shared bank (<code>GameState.shared_storage</code>), cross-character.</li>
-    <li><strong>Equipment</strong> — equip/unequip the carried loadout.</li>
-  </ul>
+  <table>
+    <thead>
+      <tr><th>Counter</th><th>What it does</th><th>Tabs</th><th>Scene</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Item Shop</strong></td>
+        <td>Consumables, materials, technique disks, and buy-back.</td>
+        <td>Items · Materials · Disks · Sell</td>
+        <td><code>scenes/2d/shops/item_shop.tscn</code></td>
+      </tr>
+      <tr>
+        <td><strong>Weapon Shop</strong></td>
+        <td>Weapons / armor / units by class &amp; requirement.</td>
+        <td>Weapons · Armor · Units · Sell</td>
+        <td><code>scenes/2d/shops/weapon_shop.tscn</code></td>
+      </tr>
+      <tr>
+        <td><strong>Tekker</strong></td>
+        <td>Identify unknown weapons &amp; grind weapons.</td>
+        <td>Grind · Identify</td>
+        <td><code>scenes/2d/shops/tekker.tscn</code></td>
+      </tr>
+      <tr>
+        <td><strong>Photon Collector</strong></td>
+        <td>Trade photon drops (not meseta) for grinders / crystals / materials.</td>
+        <td>—</td>
+        <td><code>scenes/2d/shops/photon_shop.tscn</code></td>
+      </tr>
+      <tr>
+        <td><strong>Synthesis Shop</strong></td>
+        <td>Craft items from recipes / materials.</td>
+        <td>Craft · Boards</td>
+        <td><code>scenes/2d/shops/crafting_shop.tscn</code></td>
+      </tr>
+      <tr>
+        <td><strong>Blackjack</strong></td>
+        <td>Gambling table.</td>
+        <td>—</td>
+        <td><code>scenes/2d/blackjack/blackjack_table.tscn</code></td>
+      </tr>
+      <tr>
+        <td><strong>Storage Counter</strong></td>
+        <td>The shared bank (<code>GameState.shared_storage</code>), cross-character.</td>
+        <td>Deposit / Withdraw × Items / Meseta</td>
+        <td><code>storage</code> screen</td>
+      </tr>
+      <tr>
+        <td><strong>Guild Counter</strong></td>
+        <td>Accept / report quests (not a vendor).</td>
+        <td>—</td>
+        <td><code>guild_counter</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Naming notes.</strong> The <strong>Photon Collector</strong>'s scene/script is named <code>photon_shop</code> (file-level drift only — the player-facing name is "Photon Collector"). The <strong>Synthesis Shop</strong>'s code identifier is <code>crafting_shop</code>, but the player-facing name is "Synthesis Shop".</p>
+
+  <p><strong>Technique disks</strong> are sold in the Item Shop's <strong>Disks</strong> tab — this is canonical. A separate standalone tech shop is redundant and slated for removal.</p>
+
+  <h2>Buy affordance</h2>
+  <p>The player <strong>MAY</strong> select any item on a counter to read its details. For any item they can't afford, can't fit, or don't meet the requirements for, the <strong>Buy action MUST be disabled</strong> — rendered greyed out with a reason on the row (<code>"No room"</code> / <code>"Lv N req"</code> / <code>"Can't afford"</code>). Because the unaffordable path is gated before confirm, the player <strong>MUST NOT</strong> be able to reach a rejection dialog at all: there is no "you can't buy that" pop-up to dismiss, only a disabled control with an inline explanation.</p>
+
+  <p>This shared check — a single <code>_can_buy(item) -&gt; &#123;ok, reason&#125;</code> predicate plus the disabled-row rendering it drives — is slated to live on a planned <strong>ShopBase</strong> so every counter renders affordance identically. See <code>docs/shop-dedup.md</code>.</p>
 
   <h2>Implemented by</h2>
   <ul>
-    <li>the six counters under <code>scripts/2d/shops/</code> (<code>item_shop</code>, <code>weapon_shop</code>, <code>photon_shop</code>, <code>tech_shop</code>, <code>tekker</code>, <code>crafting_shop</code>) plus <code>scripts/2d/storage.gd</code> and <code>scripts/2d/equipment_screen.gd</code> — the eight screens (each <code>extends Control</code> today; a shared <code>ShopBase</code> is planned).</li>
-    <li><code>scripts/autoloads/shop_manager.gd</code> (ShopManager) — transactions: <code>get_shop_inventory()</code>, <code>buy_item()</code>, <code>sell_item()</code>.</li>
-    <li><code>scripts/autoloads/shop_registry.gd</code> (ShopRegistry) — shop definitions / stock (<code>get_shop()</code>, <code>get_all_shops()</code>).</li>
-    <li><code>scripts/autoloads/inventory.gd</code> (Inventory) + <code>scripts/autoloads/character_manager.gd</code> (CharacterManager) — the meseta + carried items a transaction reads/writes.</li>
+    <li><LayerBadge layer="scene">item_shop.gd</LayerBadge> <LayerBadge layer="scene">weapon_shop.gd</LayerBadge> <LayerBadge layer="scene">tekker.gd</LayerBadge> <LayerBadge layer="scene">photon_shop.gd</LayerBadge> <LayerBadge layer="scene">crafting_shop.gd</LayerBadge> <LayerBadge layer="scene">blackjack_table.gd</LayerBadge> <LayerBadge layer="scene">storage.gd</LayerBadge> <LayerBadge layer="scene">guild_counter.gd</LayerBadge> — the eight screens (each <code>extends Control</code> today; a shared <code>ShopBase</code> is planned).</li>
+    <li><LayerBadge layer="gameplay">shop_manager.gd</LayerBadge> (ShopManager) — transactions: <code>get_shop_inventory()</code>, <code>buy_item()</code>, <code>sell_item()</code>.</li>
+    <li><LayerBadge layer="registry">shop_registry.gd</LayerBadge> (ShopRegistry) — shop definitions / stock (<code>get_shop()</code>, <code>get_all_shops()</code>).</li>
+    <li><LayerBadge layer="core">inventory.gd</LayerBadge> (Inventory) + <LayerBadge layer="core">character_manager.gd</LayerBadge> (CharacterManager) — the meseta + carried items a transaction reads / writes.</li>
   </ul>
-  <p>The eight screens share a lot of copy-pasted scaffolding (<code>_get_meseta</code> and <code>_on_nav_repeat</code> are byte-identical across them; <code>_unhandled_input</code> / <code>_open_confirm_modal</code> share a skeleton but have drifted). The de-duplication plan — a <code>ShopBase</code> that owns the shared loop with per-shop override hooks — is tracked in <code>docs/shop-dedup.md</code>.</p>
 </Concept>
 
 <style>

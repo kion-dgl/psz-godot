@@ -75,19 +75,61 @@ changing the drifted `_unhandled_input` / `_open_confirm_modal`**, add a
 shop-interaction smoke (open shop → navigate → buy → confirm meseta/inventory
 change) or rely on manual verification, so nav/confirm regressions are caught.
 
+## Canonical names & naming drift
+
+Canonical names (the player-facing list). The data `.tres` `name` field is the
+authority where one exists; the drift is in code/scene/title strings.
+
+| Canonical | data id | script / scene | drift to reconcile |
+|---|---|---|---|
+| **Item Shop** | `item_shop` | `item_shop` | — (consistent). **Sells technique disks** via its Disks tab. |
+| **Weapon Shop** | `weapon_shop` | `weapon_shop` | — |
+| **Tekker** | — | `tekker` | uses a `Mode` enum (Grind/Identify), not `Tab` like the others |
+| **Photon Collector** | `photon_collector` | `photon_shop` | canonical name confirmed "Photon Collector" (it trades photon drops, not meseta). Only file-level drift remains: scene/script is `photon_shop`. Rename deferred (risky), not a player-facing issue. |
+| **Synthesis Shop** | — | `crafting_shop` | code identifier is `crafting_shop`; player-facing title/NPC already say "Synthesis Shop". File/scene/id rename deferred (risky). |
+| **Blackjack** | — | `scenes/2d/blackjack/blackjack_table.tscn` | not under `shops/`; gambling table |
+| **Storage Counter** | — | `storage` | a bank, not a vendor |
+| **Guild Counter** | — | `guild_counter` | quest accept/report, not a vendor |
+
+Fixed this pass: `tech_shop` title `"TECH SHOP"` → `"Tech Shop"` (casing).
+
+**Redundant: standalone `tech_shop`.** Technique disks are sold in *two* places —
+the Item Shop's **Disks** tab (`TechniqueManager.generate_shop_inventory`) and the
+standalone `tech_shop` (own script/scene/`.tres`, routed from the city Services
+menu). Disks are canonically the Item Shop's. **Remove the standalone `tech_shop`**
+(script, scene, `.tres`, the Services-menu route) once nothing else depends on it.
+
+## Buy affordance (a `ShopBase` responsibility)
+
+The intended UX is **not** reactive rejection. The player can select any item to
+read its details, but the **Buy action is disabled** (greyed, with a reason —
+"No room" / "Lv N req" / "Can't afford") for anything they can't take, so they
+never reach a rejection. That makes a shared predicate `_can_buy(item) -> {ok,
+reason}` plus disabled-row rendering a base-class job (today each shop reimplements
+afford/room checks inline, or not at all). See `/mechanics/shops`.
+
 ## Plan (layered, one PR each)
 
-- [ ] **0. Docs** — this tracker + `/mechanics/shops` (player-facing, code-linked).
+- [x] **0. Docs** — this tracker + `/mechanics/shops` + the top-level Architecture
+      page & layer color-coding.
+- [ ] **0b. Remove standalone `tech_shop`** — disks live in Item Shop; drop the
+      redundant script/scene/`.tres` + Services-menu route.
 - [ ] **1. `ShopBase` + pure dups** — new `scripts/2d/shops/shop_base.gd`;
-      lift `_get_meseta` + `_on_nav_repeat`; make the 8 screens extend it.
+      lift `_get_meseta` + `_on_nav_repeat`; make the screens extend it.
       Lowest risk (identical code), validated by `test_shops` + reimport.
-- [ ] **2. Nav skeleton** — move the shared `_unhandled_input` skeleton into the
+- [ ] **2. Buy affordance** — base owns `_can_buy(item) -> {ok, reason}` + disabled-row
+      rendering; shops stop reimplementing afford/room checks.
+- [ ] **3. Nav skeleton** — move the shared `_unhandled_input` skeleton into the
       base with action hooks; reconcile accidental key drift.
-- [ ] **3. Confirm flow** — base owns the `_open_confirm_modal` guard + a
+- [ ] **4. Confirm flow** — base owns the `_open_confirm_modal` guard + a
       `_confirm()` helper; shops override the body.
-- [ ] **4. Portrait** — collapse the identical `photon`/`crafting` setup; hook the rest.
+- [ ] **5. Portrait** — collapse the identical `photon`/`crafting` setup; hook the rest.
 
 ## Status log
+- 2026-06-06 — Canonical names settled (Item/Weapon/Tekker/Photon/Synthesis/
+  Blackjack + Storage/Guild counters); naming drift + standalone-`tech_shop`
+  redundancy logged; `_can_buy` affordance added to the plan. Fixed `tech_shop`
+  title casing.
 - 2026-06-06 — Tracker created. Dup/drift matrix verified by per-function body
   hashing (corrected one false-positive: `_on_nav_repeat` is pure dup across all
   7, not drifted). No code changed yet — docs first.
