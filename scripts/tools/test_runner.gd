@@ -1275,6 +1275,10 @@ func test_shops() -> void:
 	for shop_it in ShopManager.get_shop_inventory("item_shop"):
 		if str(shop_it.get("item", "")) == "Monomate":
 			mono_cost = int(shop_it.get("cost", 0))
+			break
+	# Fail (don't skip) if the fixture is missing — otherwise CI could go green
+	# without ever enforcing the invariants this block exists to lock.
+	assert_gt(mono_cost, 0, "Monomate is sold by item_shop with a price (buy-guard fixture)")
 	if mono_cost > 0:
 		# Affordability: meseta below cost → buy must fail, nothing changes.
 		Inventory.clear_inventory()
@@ -1282,7 +1286,8 @@ func test_shops() -> void:
 		GameState.meseta = mono_cost - 1
 		var afford_ok: bool = ShopManager.buy_item("item_shop", "Monomate", 1)
 		assert_true(not afford_ok, "Cannot buy when meseta < cost")
-		assert_eq(int(character.get("meseta", 0)), mono_cost - 1, "Meseta unchanged after unaffordable buy")
+		assert_eq(int(character.get("meseta", 0)), mono_cost - 1, "Character meseta unchanged after unaffordable buy")
+		assert_eq(GameState.meseta, mono_cost - 1, "GameState.meseta unchanged after unaffordable buy")
 		assert_eq(Inventory.get_item_count("monomate"), 0, "No item added after unaffordable buy")
 
 		# Room: inventory at capacity → buy must fail, nothing changes.
@@ -1295,11 +1300,12 @@ func test_shops() -> void:
 		assert_true(not Inventory.can_add_item("monomate"), "Inventory reports full (no room for a new item)")
 		var room_ok: bool = ShopManager.buy_item("item_shop", "Monomate", 1)
 		assert_true(not room_ok, "Cannot buy when inventory is full")
-		assert_eq(int(character.get("meseta", 0)), 999999, "Meseta unchanged after no-room buy")
+		assert_eq(int(character.get("meseta", 0)), 999999, "Character meseta unchanged after no-room buy")
+		assert_eq(GameState.meseta, 999999, "GameState.meseta unchanged after no-room buy")
+		assert_eq(Inventory.get_item_count("monomate"), 0, "No Monomate added after no-room buy")
+		assert_gt(Inventory.get_item_count("saber"), 0, "Pre-filled saber still present after no-room buy")
 		Inventory.capacity = saved_cap
 		Inventory.clear_inventory()
-	else:
-		print("  INFO: Monomate cost missing — buy-guard checks skipped")
 
 	Inventory.clear_inventory()
 	print("")
