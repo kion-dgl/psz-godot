@@ -286,6 +286,23 @@ func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	return {"can_equip": true, "reason": ""}
 
 
+## Affordance override: a weapon/armor/unit row is buyable only if the
+## character's class can use it, can afford it, and has inventory room. Mirrors
+## _buy_selected's guards (which key off the registry id, not a name-derived
+## one), so the disabled-row rendering can't drift from what _buy_selected
+## accepts.
+func _can_buy(item: Dictionary) -> Dictionary:
+	var item_id: String = str(item.get("id", ""))
+	var cat: String = str(item.get("category", ""))
+	if not _check_equippability(item_id, cat).get("can_equip", true):
+		return {"ok": false, "reason": "Class can't use"}
+	if _get_meseta() < int(item.get("cost", 0)):
+		return {"ok": false, "reason": "Can't afford"}
+	if not Inventory.can_add_item(item_id):
+		return {"ok": false, "reason": "No room"}
+	return {"ok": true, "reason": ""}
+
+
 func _open_confirm_modal() -> void:
 	var list := _get_current_list()
 	if list.is_empty() or _selected_index >= list.size():
@@ -298,6 +315,13 @@ func _open_confirm_modal() -> void:
 		prompt = "Sell %s for %d M?" % [str(item.get("name", "???")), sell_price]
 		on_yes = _sell_selected
 	else:
+		# Disabled row (greyed + reason in _refresh_display) → echo the reason
+		# and open nothing, so the player never reaches a rejection.
+		var verdict: Dictionary = _can_buy(item)
+		if not verdict.get("ok", true):
+			hint_label.text = str(verdict.get("reason", ""))
+			SfxManager.play("res://assets/sfx/ui/menu_back.wav")
+			return
 		var cost: int = int(item.get("cost", 0))
 		prompt = "Buy %s for %d M?" % [str(item.get("name", "???")), cost]
 		on_yes = _buy_selected
@@ -424,8 +448,6 @@ func _refresh_display() -> void:
 	for child in list_panel.get_children():
 		child.queue_free()
 
-	var character = CharacterManager.get_active_character()
-	var current_meseta: int = int(character.get("meseta", 0)) if character else 0
 	var list := _get_current_list()
 
 	var scroll := ScrollContainer.new()
@@ -489,21 +511,22 @@ func _refresh_display() -> void:
 			var held: int = int(Inventory._items.get(item_id, 0))
 			var held_str := " x%d" % held if held > 1 else ""
 
-			var equip_check: Dictionary = _check_equippability(item_id, cat)
-			var can_equip: bool = equip_check.get("can_equip", true)
-			var reason: String = str(equip_check.get("reason", ""))
-			var cant_afford: bool = current_meseta < cost
-
+			# Affordance: drive the row's colour + reason tag off _can_buy so it
+			# matches exactly what _open_confirm_modal / _buy_selected accept
+			# (class, affordability, AND inventory room). Colour by reason:
+			# class = danger, can't-afford = warning, no-room = muted.
+			var verdict: Dictionary = _can_buy(item)
 			var text_color := Color.TRANSPARENT
-			if not can_equip:
-				text_color = PszStyle.TEXT_DANGER
-			elif cant_afford:
-				text_color = PszStyle.TEXT_WARNING
-
 			var restriction_tag := ""
-			if not can_equip:
-				if reason == "class":
-					restriction_tag = " [Class]"
+			if not verdict.get("ok", true):
+				var vr: String = str(verdict.get("reason", ""))
+				restriction_tag = " [%s]" % vr
+				if vr == "Class can't use":
+					text_color = PszStyle.TEXT_DANGER
+				elif vr == "Can't afford":
+					text_color = PszStyle.TEXT_WARNING
+				else:
+					text_color = PszStyle.TEXT_MUTED
 
 			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
 			var buy_icons: Array = [buy_icon] if buy_icon else []

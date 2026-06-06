@@ -1326,6 +1326,49 @@ func test_shops() -> void:
 		assert_true(v_ok.get("ok", false), "_can_buy: ok when affordable and there's room")
 		sb.free()
 
+	# Weapon Shop affordance override (class / afford / room, keyed on the
+	# registry id — weapon buys go through _buy_selected, not ShopManager, so
+	# they need their own coverage). A synthetic weapon id has no class
+	# restriction, exercising the afford + room branches cleanly.
+	var ws = load("res://scripts/2d/shops/weapon_shop.gd").new()
+	var wpn_item := {"id": "test_synthetic_weapon", "category": "weapon", "cost": 1000}
+	Inventory.clear_inventory()
+	character["meseta"] = 500
+	GameState.meseta = 500
+	var wv_afford: Dictionary = ws._can_buy(wpn_item)
+	assert_true(not wv_afford.get("ok", true), "weapon _can_buy: not ok when can't afford")
+	assert_eq(str(wv_afford.get("reason", "")), "Can't afford", "weapon _can_buy reason = Can't afford")
+	character["meseta"] = 999999
+	GameState.meseta = 999999
+	var ws_saved_cap: int = Inventory.capacity
+	Inventory.capacity = 1
+	Inventory.add_item("saber", 1)
+	var wv_room: Dictionary = ws._can_buy(wpn_item)
+	assert_true(not wv_room.get("ok", true), "weapon _can_buy: not ok when no room")
+	assert_eq(str(wv_room.get("reason", "")), "No room", "weapon _can_buy reason = No room")
+	Inventory.capacity = ws_saved_cap
+	Inventory.clear_inventory()
+	ws.free()
+
+	# Synthesis affordance: the craft is gated on _can_craft_recipe (the same
+	# predicate the rows grey on). With no meseta and no materials, a recipe
+	# that costs either must be un-craftable and give a non-empty reason.
+	var cs = load("res://scripts/2d/shops/crafting_shop.gd").new()
+	var synth_recipe = null
+	for r in RecipeRegistry.get_all_recipes():
+		if int(r.craft_cost) > 0 or not r.ingredients.is_empty():
+			synth_recipe = r
+			break
+	if synth_recipe != null:
+		Inventory.clear_inventory()
+		character["meseta"] = 0
+		GameState.meseta = 0
+		assert_true(not cs._can_craft_recipe(synth_recipe), "synth _can_craft_recipe: false when broke + no materials")
+		assert_true(not str(cs._craft_block_reason(synth_recipe)).is_empty(), "synth _craft_block_reason: non-empty when blocked")
+	else:
+		print("  INFO: no recipe with cost/ingredients — synth craft check skipped")
+	cs.free()
+
 	Inventory.clear_inventory()
 	print("")
 
