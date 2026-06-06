@@ -8,5 +8,12 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Scope</h2>
   <p>Will define locomotion (walk / run / sprint speeds, footstep cadence) and target lock-on: how a target is acquired, switched, and released, and how lock-on steers attacks and the camera.</p>
 
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/player/player.gd</code> (Player) — locomotion lives in <code>_handle_movement</code> (camera-relative input, walk/run/sprint speeds and the walk-to-run timer, turn-speed scaling) with floor/edge checks in <code>_can_move_to</code> / <code>_has_floor_at</code> and step climbing in <code>_apply_step_up</code>; target acquisition (the forward targeting box and reticles that lock-on rides on) is in <code>_update_combat_targets</code>.</li>
+    <li><code>scripts/3d/camera/orbit_camera.gd</code> (OrbitCamera node) — the orbit/follow camera whose basis <code>_handle_movement</code> reads to make movement camera-relative; exposes <code>get_camera_rotation()</code> / <code>set_camera_rotation()</code> and recenters behind the player.</li>
+  </ul>
+  <p>The full state machine these movement states belong to is documented in <a href="/states/player-state">Player State Machine</a>.</p>
+
   <p><a href="/mechanics">← Mechanics</a></p>
 </Concept>

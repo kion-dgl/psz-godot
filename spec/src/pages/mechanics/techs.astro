@@ -8,5 +8,12 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Scope</h2>
   <p>Will define technique casting: PP costs, elements and status procs, level scaling, and the hold-to-charge behavior (tap = base cast, hold past the threshold = charged variant). Disks learned from the item shop unlock techniques.</p>
 
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/3d/player/player.gd</code> (Player) — the hold-to-charge lifecycle (<code>_on_palette_pressed</code> / <code>_on_palette_released</code>, the per-frame charge timer in <code>_physics_process</code> crossing <code>TECH_CHARGE_THRESHOLD</code>); <code>_cast_technique</code> checks learned level + PP cost, deducts PP, and enters the cast; <code>_spawn_technique_effect</code> dispatches to the per-spell spawners (<code>_spawn_foie</code>, <code>_spawn_gifoie</code>, <code>_spawn_rafoie</code>, <code>_spawn_barta</code>, <code>_spawn_gibarta</code>, <code>_spawn_rabarta</code>, <code>_spawn_zonde</code>, <code>_spawn_gizonde</code>, <code>_spawn_razonde</code>).</li>
+    <li><code>scripts/autoloads/technique_manager.gd</code> (TechniqueManager) — the technique table (<code>TECHNIQUES</code>), learned-level lookup (<code>get_technique_level</code>), and the tap-vs-charged mapping (<code>get_charged_technique</code> / <code>get_base_technique</code>) plus disk learning used by the shop.</li>
+  </ul>
+  <p>A technique cast runs as the ATTACKING state of the <a href="/states/player-state">Player State Machine</a>; a mid-charge technique is cancelled if the avatar is hit.</p>
+
   <p><a href="/mechanics">← Mechanics</a></p>
 </Concept>
