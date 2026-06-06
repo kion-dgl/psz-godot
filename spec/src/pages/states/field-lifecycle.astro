@@ -3,8 +3,8 @@
 // field controller and its modules do, and where). Companion to the per-stage
 // geometry viewer (the Field Stages index). Keep this in sync with the
 // valley_field_controller.gd split (see docs/valley-field-split.md).
-import Concept from '../../../layouts/Concept.astro';
-import Mermaid from '../../../components/Mermaid.astro';
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
 
 const lifecycle = `flowchart TD
   Enter["Enter field (warp / telepipe from city)"] --> Ready["valley_field_controller _ready: build cell graph, spawn player + camera"]
@@ -25,7 +25,7 @@ const lifecycle = `flowchart TD
 `;
 ---
 
-<Concept title="Field Stage Lifecycle" section="Journey">
+<Concept title="Field Stage Lifecycle" section="States">
   <div class="diagram"><Mermaid chart={lifecycle} /></div>
 
   <p>This page documents the <em>runtime behavior</em> of a field session — what
