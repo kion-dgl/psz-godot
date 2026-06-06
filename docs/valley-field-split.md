@@ -31,17 +31,16 @@ pre-beta refactor milestone (issue #215).
       in what was originally planned as increment 5, `CellStateManager`.)
 - [x] **2b. Per-object 3D docs** (PR #259, merged) — `/states/objects/*` pages
       with a turntable `ObjectViewer` island + config schema per cell object.
-- [~] **3. `MapCollisionBuilder`** (PR #260) — 7 pure static collision helpers
-      (`setup_map_collision`, `filter_floor_collision`, `collect_collision_faces`,
-      `has_static_body`, `create_collision_from_meshes`, `collect_mesh_instances`,
-      `configure_collision_nodes`) to `map_collision_builder.gd`. Controller
-      2950 → 2835. `_debug_show_floor_collision` stays (needs instance state).
+- [x] **3. `MapCollisionBuilder`** (PR #260, merged) — 7 pure static collision
+      helpers to `map_collision_builder.gd`. Controller 2950 → 2835.
+      `_debug_show_floor_collision` stays (needs instance state). Matrix 15/15.
+- [~] **4. `PortalGateManager`** (PR #261) — portal parsing + gate triggers/labels
+      + gate material/depth + key-gate logic + gate queries (16 fns) to
+      `portal_gate_manager.gd` via a controller back-reference. Controller
+      2835 → 2408. Shared material fixups stay (used by CellObjectSpawner).
       *Reimport clean, tests 1407/0; matrix running.*
-- [ ] **4. `PortalGateManager`** — `_parse_baked_portals`,
-      `_compute_portal_from_config`, `_build_portal_data_from_config`, gate
-      triggers + labels + material fixups.
 - [ ] **5. `WeatherController`** — `_spawn_weather`, `_kick_weather`,
-      `_spawn_stage_effects` (+ embedded-light strip/collect helpers).
+      `_spawn_stage_effects` (+ embedded-light strip/collect helpers). Last one.
 
 ## Status log
 
