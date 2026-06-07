@@ -1,0 +1,90 @@
+---
+import Concept from '../layouts/Concept.astro';
+import Mermaid from '../components/Mermaid.astro';
+
+// Where each kind of file lives at runtime. Three channels, two of them
+// committed-to-source and one published.
+const flow = `flowchart LR
+  subgraph SRC["Git source (committed)"]
+    Code["Code\\nscripts/ · scenes/ · data/ · themes/"]
+    Small["Small in-repo assets\\nkenney_* · office landmark mesh\\nboot/title UI"]
+    Manifest["assets_manifest.json\\nasset_tree.txt"]
+  end
+
+  subgraph BUILD["Build"]
+    APK["APK / desktop / web export\\n= Code + Small assets"]
+  end
+
+  subgraph PUB["Published (not in git)"]
+    PCK["Arweave assets.pck\\nheavy media (~340 MB)"]
+    R2["R2 raw mirror\\nsame media, per-file"]
+  end
+
+  Code --> APK
+  Small --> APK
+  Manifest --> APK
+  Code -. "upload-pack" .-> PCK
+  Code -. "sync-tree" .-> R2
+  APK == "runtime: download + mount (replace_files=false)" ==> PCK
+  R2 == "web tools fetch per-file" ==> R2
+
+  classDef src fill:#10220f,stroke:#57ab5a,color:#e6edf3,stroke-width:2px
+  classDef build fill:#0d1c30,stroke:#539bf5,color:#e6edf3,stroke-width:2px
+  classDef pub fill:#2a1a0c,stroke:#e0823d,color:#e6edf3,stroke-width:2px
+  class Code,Small,Manifest src
+  class APK build
+  class PCK,R2 pub
+`;
+---
+
+<Concept title="Asset Distribution" section="Architecture">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
+
+  <p>PSZ ships its content through <strong>three channels</strong>. Two are committed to git and travel inside the build; one is published separately and downloaded at runtime. This page is the canonical definition of <em>what lives where</em> and the invariants CI enforces to stop the two from drifting.</p>
+
+  <div class="diagram"><Mermaid chart={flow} /></div>
+
+  <h2>The three channels</h2>
+  <ul>
+    <li><strong>Git source → build (APK / desktop / web)</strong> — everything the game needs to <em>boot and run logic</em>: all <strong>code</strong> (<code>scripts/</code>, <code>scenes/</code>), all <strong>data resources</strong> (<code>data/*.tres</code> registries), <code>themes/</code>, and the <strong>small assets</strong> needed before the pack is available (the boot/title UI, vendored <code>assets/kenney_*</code>, the office landmark mesh). These are committed and compiled into the build.</li>
+    <li><strong>Arweave <code>assets.pck</code></strong> — the bulk media (~340&nbsp;MB): enemy / player / NPC models, weapons, music, SFX, icons, images, mags, title art, and stage meshes &amp; textures. <strong>Not committed.</strong> The runtime <code>bootstrap.gd</code> downloads it on first launch, verifies its sha256 against <code>assets_manifest.json</code>, and mounts it.</li>
+    <li><strong>R2 raw mirror</strong> — the same media as the pack, but as individual files, consumed by the Vite web tools (quest editor, storybook, retarget viewers) via <code>VITE_ASSETS_BASE</code>. <strong>Not committed.</strong></li>
+  </ul>
+
+  <h2>The split rule</h2>
+  <p>The dividing line is <strong>size and boot-time need</strong>, not file type:</p>
+  <ul>
+    <li><strong>In the build (committed):</strong> code, data, and any asset small enough to ship in the binary or needed before the pack downloads.</li>
+    <li><strong>In the pack (published):</strong> the heavy media that would bloat the binary and isn't needed until gameplay.</li>
+  </ul>
+  <p>The <strong>authoritative, machine-readable</strong> definition of the split is the <strong>export presets</strong> (<code>export_presets.cfg</code>): the platform presets (Android / Linux / Windows / macOS) <code>exclude_filter</code> the heavy dirs (so they stay out of the binary), and the <strong>"Asset Pack"</strong> preset builds <code>dist/assets.pck</code> from them. This page describes the <em>intent</em>; the presets are the <em>mechanism</em>. When they disagree, the presets win and this page is the bug.</p>
+
+  <h2>Source-of-truth files (committed)</h2>
+  <ul>
+    <li><code>export_presets.cfg</code> — the per-platform include/exclude that decides build-vs-pack.</li>
+    <li><code>assets_manifest.json</code> — the pack the game expects: <code>version</code>, <code>pack.sha256</code>, <code>pack.size</code>, gateway <code>urls</code>, and <code>sidecar.urls</code>.</li>
+    <li><code>asset_tree.txt</code> — the flat list of every path inside the published pack, committed alongside the manifest so <code>check-asset-refs</code> can verify source references resolve.</li>
+  </ul>
+
+  <h2>Invariants (CI MUST enforce)</h2>
+  <ul>
+    <li><strong>No code in the pack.</strong> The pack <strong>MUST NOT</strong> contain <code>scripts/</code>, <code>scenes/</code>, <code>data/</code>, or <code>.godot/global_script_class_cache.cfg</code>. Code ships in the build; a pack that carries code lets a stale published pack shadow it. <em>(Guard: publish-time check in <code>publish_assets.ts</code> — see issue #284.)</em></li>
+    <li><strong>Every referenced asset is in the pack.</strong> Each <code>res://assets/…</code> string in source <strong>MUST</strong> appear in <code>asset_tree.txt</code>. <em>(Guard: <code>check-asset-refs</code>.)</em></li>
+    <li><strong>Texture URIs inside GLBs resolve.</strong> A GLB's <code>images[].uri</code> (a bare filename Godot resolves as a GLB sibling) <strong>MUST</strong> exist on disk / in the tree. Source-text greps can't see inside binary GLBs, so this is its own check. <em>(Guard: GLB-URI check — the blind spot behind issue #245.)</em></li>
+    <li><strong>The published pack matches the manifest.</strong> The pack URL serves a valid <code>GDPC</code> and the sidecar's <code>version</code>/<code>sha256</code>/<code>size</code> equal the in-repo manifest. <em>(Guard: <code>verify-assets</code>.)</em></li>
+    <li><strong>The R2 mirror has every added/modified asset.</strong> <em>(Guard: <code>r2-mirror-check</code>.)</em></li>
+  </ul>
+
+  <h2>Why a code-only change never needs a republish</h2>
+  <p>The pack is mounted with <code>load_resource_pack(path, <strong>false</strong>)</code> — <code>replace_files=false</code>, so in-tree (build) resources win over the pack — and the global class cache is read at engine init, <em>before</em> the pack mounts. So the build's code is always authoritative: <strong>editing <code>scripts/</code> or <code>scenes/</code> ships entirely via the next build; the pack is irrelevant to it.</strong> Only adding or changing files under <code>assets/</code> (heavy media) requires a republish.</p>
+
+  <h2>Backup</h2>
+  <p>The published pack lives on Arweave (permanent) and is mirrored to R2. The <strong>source/dev asset tree</strong> (the working media under <code>assets/</code> that the pack is built from, much of which is <em>not</em> committed to git) <strong>SHOULD</strong> be backed up to R2 as well, so a lost dev box doesn't lose unpublished art. R2 credentials live in <code>.env</code> (<code>R2_ACCESS_KEY_ID</code>, <code>R2_SECRET_ACCESS_KEY</code>, …); the backup reuses the same bucket/tooling as <code>sync-tree</code>.</p>
+
+  <h2>Publishing (when assets change)</h2>
+  <ol>
+    <li><code>cd scripts/publish &amp;&amp; npm run sync-tree</code> — upload added/modified files to the R2 mirror (no commit).</li>
+    <li><code>npm run upload-pack</code> — rebuild <code>dist/assets.pck</code>, upload to Arweave, rewrite <code>assets_manifest.json</code> + <code>asset_tree.txt</code>.</li>
+    <li>Bump <code>VERSION</code> + <code>project.godot</code>, commit the manifest + tree, open a PR. <code>verify-assets</code> + <code>r2-mirror-check</code> validate both channels.</li>
+  </ol>
+</Concept>
