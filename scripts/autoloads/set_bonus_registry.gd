@@ -1,7 +1,7 @@
 extends Node
 ## Autoload that provides access to all SetBonusData resources by ID.
 
-const _RU = preload("res://scripts/utils/resource_utils.gd")
+const _RH = preload("res://scripts/utils/registry_helper.gd")
 const SET_BONUSES_PATH = "res://data/set_bonuses/"
 
 var _set_bonuses: Dictionary = {}
@@ -14,12 +14,7 @@ func _ready() -> void:
 
 
 func _load_all() -> void:
-	_set_bonuses.clear()
-	for path in _RU.list_resources(SET_BONUSES_PATH):
-		var res = load(path)
-		if res and not res.id.is_empty():
-			_set_bonuses[res.id] = res
-	print("[SetBonusRegistry] Loaded ", _set_bonuses.size(), " set bonuses")
+	_RH.load_dir(SET_BONUSES_PATH, _set_bonuses, "SetBonusRegistry", "set bonuses")
 	set_bonuses_loaded.emit()
 
 

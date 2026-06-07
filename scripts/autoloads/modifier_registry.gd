@@ -1,7 +1,7 @@
 extends Node
 ## Autoload that provides access to all ModifierData resources by ID.
 
-const _RU = preload("res://scripts/utils/resource_utils.gd")
+const _RH = preload("res://scripts/utils/registry_helper.gd")
 const MODIFIERS_PATH = "res://data/modifiers/"
 
 var _modifiers: Dictionary = {}
@@ -14,12 +14,7 @@ func _ready() -> void:
 
 
 func _load_all() -> void:
-	_modifiers.clear()
-	for path in _RU.list_resources(MODIFIERS_PATH):
-		var res = load(path)
-		if res and not res.id.is_empty():
-			_modifiers[res.id] = res
-	print("[ModifierRegistry] Loaded ", _modifiers.size(), " modifiers")
+	_RH.load_dir(MODIFIERS_PATH, _modifiers, "ModifierRegistry", "modifiers")
 	modifiers_loaded.emit()
 
 
