@@ -14,14 +14,10 @@ const DIR_OFFSET := {
 
 ## Rotate a direction clockwise by the given degrees (0, 90, 180, 270).
 ## CW from above: 90 → N→E, E→S, S→W, W→N.
+## Thin alias over StageRotation.rotate_dir — kept so callers/tests that use
+## the grid-generator name don't have to change (#215-C8).
 static func rotate_direction(dir: String, rotation: int) -> String:
-	if rotation == 0:
-		return dir
-	var idx: int = DIRECTIONS.find(dir)
-	if idx < 0:
-		return dir
-	var steps: int = (rotation / 90) % 4
-	return DIRECTIONS[(idx + steps) % 4]
+	return StageRotation.rotate_dir(dir, rotation)
 
 
 ## Get gate directions in grid-space for a cell, applying its rotation.
