@@ -5,9 +5,9 @@ import Mermaid from '../components/Mermaid.astro';
 // Where each kind of file lives at runtime. Three channels, two of them
 // committed-to-source and one published.
 const flow = `flowchart LR
-  subgraph SRC["Git source (committed)"]
+  subgraph SRC["Git source (committed = redistributable)"]
     Code["Code\\nscripts/ · scenes/ · data/ · themes/"]
-    Small["Small in-repo assets\\nkenney_* · office landmark mesh\\nboot/title UI"]
+    Small["Original + CC assets\\nour art · kenney_* (CC)"]
     Manifest["assets_manifest.json\\nasset_tree.txt"]
   end
 
@@ -16,7 +16,7 @@ const flow = `flowchart LR
   end
 
   subgraph PUB["Published (not in git)"]
-    PCK["Arweave assets.pck\\nheavy media (~340 MB)"]
+    PCK["Arweave assets.pck\\nSEGA-derived media (~340 MB)"]
     R2["R2 raw mirror\\nsame media, per-file"]
   end
 
@@ -40,24 +40,24 @@ const flow = `flowchart LR
 <Concept title="Asset Distribution" section="Architecture">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
 
-  <p>PSZ ships its content through <strong>three channels</strong>. Two are committed to git and travel inside the build; one is published separately and downloaded at runtime. This page is the canonical definition of <em>what lives where</em> and the invariants CI enforces to stop the two from drifting.</p>
+  <p>PSZ is a <strong>fan game</strong>, and that — not file size — is what decides where an asset lives. SEGA's Phantasy Star assets <strong>MUST NOT</strong> be redistributed in this public git repo, so they're kept out of source and shipped through a separately-published pack. Everything the project <em>owns</em> (original art, all code) or is permissively licensed to redistribute (Creative Commons, vendored permissive packs) is <strong>committed to source</strong>. Absent licensing, we'd simply commit and distribute everything; the split exists purely to keep redistributable and non-redistributable content apart. This page is the canonical definition of what lives where and the invariants CI enforces.</p>
 
   <div class="diagram"><Mermaid chart={flow} /></div>
 
   <h2>The three channels</h2>
   <ul>
-    <li><strong>Git source → build (APK / desktop / web)</strong> — everything the game needs to <em>boot and run logic</em>: all <strong>code</strong> (<code>scripts/</code>, <code>scenes/</code>), all <strong>data resources</strong> (<code>data/*.tres</code> registries), <code>themes/</code>, and the <strong>small assets</strong> needed before the pack is available (the boot/title UI, vendored <code>assets/kenney_*</code>, the office landmark mesh). These are committed and compiled into the build.</li>
-    <li><strong>Arweave <code>assets.pck</code></strong> — the bulk media (~340&nbsp;MB): enemy / player / NPC models, weapons, music, SFX, icons, images, mags, title art, and stage meshes &amp; textures. <strong>Not committed.</strong> The runtime <code>bootstrap.gd</code> downloads it on first launch, verifies its sha256 against <code>assets_manifest.json</code>, and mounts it.</li>
-    <li><strong>R2 raw mirror</strong> — the same media as the pack, but as individual files, consumed by the Vite web tools (quest editor, storybook, retarget viewers) via <code>VITE_ASSETS_BASE</code>. <strong>Not committed.</strong></li>
+    <li><strong>Git source → build (APK / desktop / web)</strong> — everything we may redistribute: all <strong>code</strong> (<code>scripts/</code>, <code>scenes/</code>), all <strong>data resources</strong> (<code>data/*.tres</code> registries), <code>themes/</code>, our <strong>original art</strong>, and permissively-licensed assets (Creative Commons, vendored <code>assets/kenney_*</code>). Committed and compiled into the build.</li>
+    <li><strong>Arweave <code>assets.pck</code></strong> — the <strong>SEGA / Phantasy Star–derived assets</strong> we can't redistribute in the repo (enemy / player / NPC models, weapons, music, SFX, stage meshes &amp; textures, …; ~340&nbsp;MB). <strong>Not committed.</strong> The runtime <code>bootstrap.gd</code> downloads it on first launch, verifies its sha256 against <code>assets_manifest.json</code>, and mounts it.</li>
+    <li><strong>R2 raw mirror</strong> — the same pack assets as individual files, for the Vite web tools (quest editor, storybook, retarget viewers) via <code>VITE_ASSETS_BASE</code>, and doubling as the dev backup. <strong>Not committed.</strong> A few bundle-OK-but-not-raw-redistributable assets are excluded (see Backup).</li>
   </ul>
 
   <h2>The split rule</h2>
-  <p>The dividing line is <strong>size and boot-time need</strong>, not file type:</p>
+  <p>The dividing line is <strong>licensing / provenance</strong>, not size or file type. Ask: <em>may we legally redistribute this file in a public repo?</em></p>
   <ul>
-    <li><strong>In the build (committed):</strong> code, data, and any asset small enough to ship in the binary or needed before the pack downloads.</li>
-    <li><strong>In the pack (published):</strong> the heavy media that would bloat the binary and isn't needed until gameplay.</li>
+    <li><strong>Yes → commit to source</strong> (ships in the build): all code, plus original art we made and permissively-licensed assets (Creative Commons, vendored packs like <code>kenney_*</code>).</li>
+    <li><strong>No → pack only</strong> (Arweave, not committed): SEGA / Phantasy Star–derived assets. The pack is the fan-game distribution mechanism that keeps them out of the repo.</li>
   </ul>
-  <p>The <strong>authoritative, machine-readable</strong> definition of the split is the <strong>export presets</strong> (<code>export_presets.cfg</code>): the platform presets (Android / Linux / Windows / macOS) <code>exclude_filter</code> the heavy dirs (so they stay out of the binary), and the <strong>"Asset Pack"</strong> preset builds <code>dist/assets.pck</code> from them. This page describes the <em>intent</em>; the presets are the <em>mechanism</em>. When they disagree, the presets win and this page is the bug.</p>
+  <p>Size is <em>incidental</em> — the SEGA media happens to be the bulk, and keeping it out of the binary also keeps the download small, but that's a side effect, not the reason. The <strong>authoritative, machine-readable</strong> encoding of the split is the <strong>export presets</strong> (<code>export_presets.cfg</code>): the platform presets (Android / Linux / Windows / macOS) <code>exclude_filter</code> the SEGA-derived dirs (so they stay out of the binary), and the <strong>"Asset Pack"</strong> preset builds <code>dist/assets.pck</code> from them. This page is the <em>intent</em>; the presets are the <em>mechanism</em>. When they disagree, the presets win and this page is the bug.</p>
 
   <h2>Source-of-truth files (committed)</h2>
   <ul>
@@ -82,8 +82,8 @@ const flow = `flowchart LR
   <p>Much of the working media under <code>assets/</code> is <strong>not committed to git</strong> (the heavy art is gitignored — it lives in the pack, not the repo). The safety net for it is R2: <code>npm run sync-tree</code> mirrors the <em>entire</em> <code>assets/</code> tree to R2 (incremental md5 diff), so <strong>the R2 mirror doubles as the dev-asset backup</strong>, not just the web-tools CDN. Run it whenever you add or change media; a lost dev box can then be restored with <code>scripts/tools/fetch_assets_dev.sh</code>. R2 credentials live in <code>.env</code> (<code>R2_ACCESS_KEY_ID</code>, <code>R2_SECRET_ACCESS_KEY</code>, …).</p>
   <p>Two things are <strong>not</strong> on R2 and rely on other backups:</p>
   <ul>
-    <li><code>assets/kenney_*</code> — vendored <em>in git</em>, so the repo is its backup.</li>
-    <li><code>assets/npcs/cowgirl/</code> — license-restricted (pack-embed only, no public CDN), so it's <strong>dev-box-only</strong> — the one real backup gap; keep an offline copy.</li>
+    <li><code>assets/kenney_*</code> — vendored <em>in git</em> (Creative Commons), so the repo is its backup.</li>
+    <li><code>assets/npcs/cowgirl/</code> — the Booth.pm license permits <em>bundling</em> (so it ships in the pack) but not re-hosting the <em>raw</em> file on a public CDN, so it's excluded from the R2 mirror. The model actually used is a custom hybrid GLB (<code>cowgirl_hybrid.glb</code>); keep an offline copy of any cowgirl source that isn't committed to git, since R2 (the usual backup) doesn't hold it.</li>
   </ul>
   <p>Caveat: <code>sync-tree --delete</code> removes R2 objects missing locally, so run a plain <code>sync-tree</code> (never <code>--delete</code>) from an <em>incomplete</em> local tree, or it will prune the backup.</p>
 
