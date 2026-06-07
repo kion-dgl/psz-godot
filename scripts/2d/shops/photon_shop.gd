@@ -1,4 +1,4 @@
-extends ShopBase
+extends Control
 ## Photon Collector — trade Photon Drops for grinders, photon crystals, and materials.
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/photon-collector.png"
@@ -294,3 +294,17 @@ func _process(delta: float) -> void:
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
+
+# --- Shop scaffolding, inlined. These screens are standalone (extends Control)
+# --- rather than sharing a ShopBase: a cross-script base class fails to
+# --- resolve in the Android export at runtime (works in-editor and on every
+# --- other platform). See the shop-dedup tracker.
+
+## NavRepeat callback: re-emit a held nav action as a synthetic input event
+## so this screen's own _unhandled_input handles it (hold-to-repeat nav).
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)
+

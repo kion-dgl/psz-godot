@@ -1284,7 +1284,9 @@ func test_shops() -> void:
 		# ShopBase._can_buy() must AGREE with buy_item's guards — it's what the
 		# UI greys/disables on, so any drift would let the screen offer (or
 		# refuse) a purchase the transaction layer disagrees with.
-		var sb := ShopBase.new()
+		# item_shop carries the canonical _can_buy (shops are standalone now —
+		# the shared ShopBase base class broke Android export resolution).
+		var sb = load("res://scripts/2d/shops/item_shop.gd").new()
 		var mono_item := {"item": "Monomate", "cost": mono_cost}
 
 		# Affordability: meseta below cost → buy must fail, nothing changes.

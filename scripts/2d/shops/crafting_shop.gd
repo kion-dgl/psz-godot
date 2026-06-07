@@ -1,4 +1,4 @@
-extends ShopBase
+extends Control
 ## Synthesis Shop — craft weapons from materials, learn rare boards.
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/synth-shop.png"
@@ -785,3 +785,25 @@ func _process(delta: float) -> void:
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
+
+# --- Shop scaffolding, inlined. These screens are standalone (extends Control)
+# --- rather than sharing a ShopBase: a cross-script base class fails to
+# --- resolve in the Android export at runtime (works in-editor and on every
+# --- other platform). See the shop-dedup tracker.
+
+## The active character's meseta (0 if no active character).
+func _get_meseta() -> int:
+	var character = CharacterManager.get_active_character()
+	if character:
+		return int(character.get("meseta", 0))
+	return 0
+
+
+## NavRepeat callback: re-emit a held nav action as a synthetic input event
+## so this screen's own _unhandled_input handles it (hold-to-repeat nav).
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)
+
