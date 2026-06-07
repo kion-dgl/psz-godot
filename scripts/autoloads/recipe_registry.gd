@@ -1,7 +1,7 @@
 extends Node
 ## Autoload that provides access to all RecipeBoardData resources by ID.
 
-const _RU = preload("res://scripts/utils/resource_utils.gd")
+const _RH = preload("res://scripts/utils/registry_helper.gd")
 const RECIPES_PATH = "res://data/recipes/"
 
 var _recipes: Dictionary = {}
@@ -14,12 +14,7 @@ func _ready() -> void:
 
 
 func _load_all() -> void:
-	_recipes.clear()
-	for path in _RU.list_resources(RECIPES_PATH):
-		var res = load(path)
-		if res and not res.id.is_empty():
-			_recipes[res.id] = res
-	print("[RecipeRegistry] Loaded ", _recipes.size(), " recipes")
+	_RH.load_dir(RECIPES_PATH, _recipes, "RecipeRegistry", "recipes")
 	recipes_loaded.emit()
 
 

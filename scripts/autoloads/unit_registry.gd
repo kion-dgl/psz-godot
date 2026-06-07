@@ -1,7 +1,7 @@
 extends Node
 ## Autoload that provides access to all UnitData resources by ID.
 
-const _RU = preload("res://scripts/utils/resource_utils.gd")
+const _RH = preload("res://scripts/utils/registry_helper.gd")
 const UNITS_PATH = "res://data/units/"
 var _units: Dictionary = {}
 signal units_loaded()
@@ -10,12 +10,7 @@ func _ready() -> void:
 	_load_all()
 
 func _load_all() -> void:
-	_units.clear()
-	for path in _RU.list_resources(UNITS_PATH):
-		var res = load(path)
-		if res and not res.id.is_empty():
-			_units[res.id] = res
-	print("[UnitRegistry] Loaded ", _units.size(), " units")
+	_RH.load_dir(UNITS_PATH, _units, "UnitRegistry", "units")
 	units_loaded.emit()
 
 func get_unit(id: String):

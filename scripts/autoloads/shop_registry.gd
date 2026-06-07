@@ -1,7 +1,7 @@
 extends Node
 ## Autoload that provides access to all ShopData resources by ID.
 
-const _RU = preload("res://scripts/utils/resource_utils.gd")
+const _RH = preload("res://scripts/utils/registry_helper.gd")
 const SHOPS_PATH = "res://data/shops/"
 
 var _shops: Dictionary = {}
@@ -14,12 +14,7 @@ func _ready() -> void:
 
 
 func _load_all() -> void:
-	_shops.clear()
-	for path in _RU.list_resources(SHOPS_PATH):
-		var res = load(path)
-		if res and not res.id.is_empty():
-			_shops[res.id] = res
-	print("[ShopRegistry] Loaded ", _shops.size(), " shops")
+	_RH.load_dir(SHOPS_PATH, _shops, "ShopRegistry", "shops")
 	shops_loaded.emit()
 
 

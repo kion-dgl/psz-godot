@@ -97,6 +97,8 @@
 # Web app
 web/node_modules/
 web/dist/
+# incremental tsc build cache — machine-local
+web/tsconfig.tsbuildinfo
 # Dev-only symlinks to psz-sketch (absolute, not portable)
 web/public/weapons
 web/public/player

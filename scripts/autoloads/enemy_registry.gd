@@ -1,7 +1,7 @@
 extends Node
 ## Autoload that provides access to all EnemyData resources by ID.
 
-const _RU = preload("res://scripts/utils/resource_utils.gd")
+const _RH = preload("res://scripts/utils/registry_helper.gd")
 const ENEMIES_PATH = "res://data/enemies/"
 
 var _enemies: Dictionary = {}
@@ -14,12 +14,7 @@ func _ready() -> void:
 
 
 func _load_all_enemies() -> void:
-	_enemies.clear()
-	for path in _RU.list_resources(ENEMIES_PATH):
-		var enemy = load(path)
-		if enemy and not enemy.id.is_empty():
-			_enemies[enemy.id] = enemy
-	print("[EnemyRegistry] Loaded ", _enemies.size(), " enemies")
+	_RH.load_dir(ENEMIES_PATH, _enemies, "EnemyRegistry", "enemies")
 	enemies_loaded.emit()
 
 

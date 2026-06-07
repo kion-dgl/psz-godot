@@ -124,6 +124,14 @@ var _gate_mgr: PortalGateManager
 var _weather: WeatherController
 
 
+## Verbose field-debug log, gated by DebugConfig.verbose_field (#215-E).
+## All [ValleyField]/[FieldElements]/[CellObjects] diagnostics go through here
+## so normal play stays quiet; autopilot runs flip the flag on automatically.
+func _fdbg(msg: String) -> void:
+	if DebugConfig.verbose_field:
+		print(msg)
+
+
 func _ready() -> void:
 	_cell_spawner = CellObjectSpawner.new(self)
 	_gate_mgr = PortalGateManager.new(self)
@@ -236,7 +244,7 @@ func _ready() -> void:
 			skybox_root.name = "Skybox"
 			_map_root.add_child(skybox_root)
 			_fix_materials(skybox_root)
-			print("[ValleyField] Loaded skybox: %s" % skybox_path)
+			_fdbg("[ValleyField] Loaded skybox: %s" % skybox_path)
 	await get_tree().process_frame
 
 	# Load floor collision from separate floor GLB, fall back to embedded -colonly meshes
@@ -250,11 +258,11 @@ func _ready() -> void:
 			var has_static := MapCollisionBuilder.has_static_body(floor_root)
 			if has_static:
 				MapCollisionBuilder.setup_map_collision(floor_root)
-				print("[ValleyField] Floor collision from GLB import suffix: %s" % floor_path)
+				_fdbg("[ValleyField] Floor collision from GLB import suffix: %s" % floor_path)
 			else:
 				# Suffix import didn't create collision — build manually from meshes
 				MapCollisionBuilder.create_collision_from_meshes(floor_root)
-				print("[ValleyField] Floor collision built manually from mesh: %s" % floor_path)
+				_fdbg("[ValleyField] Floor collision built manually from mesh: %s" % floor_path)
 		else:
 			MapCollisionBuilder.setup_map_collision(_map_root)
 	else:
@@ -266,7 +274,7 @@ func _ready() -> void:
 	# colliders that the spec doesn't yet route around.
 	var skip_obstacles := OS.has_environment("PSZ_AUTOPILOT_NO_OBSTACLES")
 	if skip_obstacles:
-		print("[ValleyField] PSZ_AUTOPILOT_NO_OBSTACLES set — skipping obstacle collision for %s" % stage_id)
+		_fdbg("[ValleyField] PSZ_AUTOPILOT_NO_OBSTACLES set — skipping obstacle collision for %s" % stage_id)
 	elif ResourceLoader.exists(obstacles_path):
 		var obs_scene := load(obstacles_path) as PackedScene
 		if obs_scene:
@@ -275,10 +283,10 @@ func _ready() -> void:
 			add_child(obs_root)
 			if MapCollisionBuilder.has_static_body(obs_root):
 				MapCollisionBuilder.configure_collision_nodes(obs_root)
-				print("[ValleyField] Obstacle collision from GLB import suffix: %s" % obstacles_path)
+				_fdbg("[ValleyField] Obstacle collision from GLB import suffix: %s" % obstacles_path)
 			else:
 				MapCollisionBuilder.create_collision_from_meshes(obs_root)
-				print("[ValleyField] Obstacle collision built manually from mesh: %s" % obstacles_path)
+				_fdbg("[ValleyField] Obstacle collision built manually from mesh: %s" % obstacles_path)
 
 	# Spawn stage particle effects (spores, embers, etc.)
 	_weather._spawn_stage_effects(stage_id)
@@ -311,7 +319,7 @@ func _ready() -> void:
 		var game_dir: String = StageRotation.rotate_dir(base_dir, _rotation_deg)
 		if not _portal_data.has(game_dir):
 			_portal_data[game_dir] = _gate_mgr._compute_portal_from_config(cp, game_dir)
-			print("[ValleyField]   Synthesized missing portal: '%s' (config dir='%s')" % [game_dir, base_dir])
+			_fdbg("[ValleyField]   Synthesized missing portal: '%s' (config dir='%s')" % [game_dir, base_dir])
 
 	# For quest mode: derive spawn_edge from target cell's own connections.
 	# The source cell's OPPOSITE[exit_dir] may not match target portal data keys
@@ -325,19 +333,19 @@ func _ready() -> void:
 				_spawn_edge = dir
 				break
 
-	print("[ValleyField] ══════════════════════════════════════════")
-	print("[ValleyField] CELL LOAD: %s  stage=%s" % [
+	_fdbg("[ValleyField] ══════════════════════════════════════════")
+	_fdbg("[ValleyField] CELL LOAD: %s  stage=%s" % [
 		str(_current_cell.get("pos", "?")), stage_id])
-	print("[ValleyField]   section: %d/%d (%s, area=%s)" % [
+	_fdbg("[ValleyField]   section: %d/%d (%s, area=%s)" % [
 		section_idx + 1, sections.size(),
 		str(section.get("type", "?")), str(section.get("area", "?"))])
-	print("[ValleyField]   spawn_edge='%s'" % spawn_edge)
+	_fdbg("[ValleyField]   spawn_edge='%s'" % spawn_edge)
 
 	# Log portal data
-	print("[ValleyField]   ── Portal data ──")
+	_fdbg("[ValleyField]   ── Portal data ──")
 	for key in _portal_data:
 		var pd: Dictionary = _portal_data[key]
-		print("[ValleyField]     '%s': spawn=%s  trigger=%s" % [
+		_fdbg("[ValleyField]     '%s': spawn=%s  trigger=%s" % [
 			key, pd["spawn_pos"], pd["trigger_pos"]])
 
 	# Determine warp_edge early (needed for spawn resolution)
@@ -374,7 +382,7 @@ func _ready() -> void:
 						_spawn_edge = dir
 				if not _spawn_edge.is_empty():
 					spawn_edge = _spawn_edge
-					print("[ValleyField] Inferred spawn_edge='%s' from spawn_position proximity (dist=%.2f)" % [_spawn_edge, best_dist])
+					_fdbg("[ValleyField] Inferred spawn_edge='%s' from spawn_position proximity (dist=%.2f)" % [_spawn_edge, best_dist])
 	if not spawn_reason.is_empty():
 		pass  # spawn_position already resolved above
 	elif not spawn_edge.is_empty() and _portal_data.has(spawn_edge):
@@ -411,23 +419,23 @@ func _ready() -> void:
 		spawn_pos = Vector3(0, 1, 0)
 		spawn_reason = "center fallback"
 
-	print("[ValleyField]   ── Spawn Resolution ──")
-	print("[ValleyField]     pos=%s  rot=%.2f rad (%.1f°)" % [
+	_fdbg("[ValleyField]   ── Spawn Resolution ──")
+	_fdbg("[ValleyField]     pos=%s  rot=%.2f rad (%.1f°)" % [
 		spawn_pos, spawn_rot, rad_to_deg(spawn_rot)])
-	print("[ValleyField]     reason: %s" % spawn_reason)
-	print("[ValleyField]     StageRotation.dir_to_yaw table: N=%.2f E=%.2f S=%.2f W=%.2f" % [
+	_fdbg("[ValleyField]     reason: %s" % spawn_reason)
+	_fdbg("[ValleyField]     StageRotation.dir_to_yaw table: N=%.2f E=%.2f S=%.2f W=%.2f" % [
 		StageRotation.dir_to_yaw("north"), StageRotation.dir_to_yaw("east"), StageRotation.dir_to_yaw("south"), StageRotation.dir_to_yaw("west")])
 
 	var connections: Dictionary = _current_cell.get("connections", {})
-	print("[ValleyField]   ── Grid Cell Data ──")
-	print("[ValleyField]     connections: %s" % str(connections))
-	print("[ValleyField]     warp_edge: '%s'" % warp_edge)
-	print("[ValleyField]     cell keys: %s" % str(_current_cell.keys()))
+	_fdbg("[ValleyField]   ── Grid Cell Data ──")
+	_fdbg("[ValleyField]     connections: %s" % str(connections))
+	_fdbg("[ValleyField]     warp_edge: '%s'" % warp_edge)
+	_fdbg("[ValleyField]     cell keys: %s" % str(_current_cell.keys()))
 	# Log the full cell dict (truncated for readability)
 	for ck in _current_cell:
 		if ck != "connections":
-			print("[ValleyField]     cell.%s = %s" % [ck, str(_current_cell[ck])])
-	print("[ValleyField] ══════════════════════════════════════════")
+			_fdbg("[ValleyField]     cell.%s = %s" % [ck, str(_current_cell[ck])])
+	_fdbg("[ValleyField] ══════════════════════════════════════════")
 
 	_spawn_player(spawn_pos, spawn_rot)
 	_weather._spawn_weather()
@@ -561,17 +569,17 @@ func _on_quest_item_collected_check_exit(_item_id: String, _new_count: int, _tar
 	if _has_pending_section_requirements():
 		return
 	# Section requirements met — unlock exits
-	print("[ValleyField] Section warp requirements met — unlocking exits")
+	_fdbg("[ValleyField] Section warp requirements met — unlocking exits")
 	_gate_mgr._unlock_objective_exits()
 
 
 func _on_quest_completed() -> void:
-	print("[ValleyField] Quest objectives complete — unlocking exits")
+	_fdbg("[ValleyField] Quest objectives complete — unlocking exits")
 	_gate_mgr._unlock_objective_exits()
 	# Spawn any quest_complete-deferred telepipe authored in the current cell.
 	if not _deferred_quest_complete_telepipe.is_empty():
 		var tp_pos: Vector3 = _deferred_quest_complete_telepipe.get("position", Vector3.ZERO)
-		print("[ValleyField] Spawning quest_complete-deferred telepipe at %s" % tp_pos)
+		_fdbg("[ValleyField] Spawning quest_complete-deferred telepipe at %s" % tp_pos)
 		_spawn_telepipe(tp_pos)
 		_deferred_quest_complete_telepipe = {}
 		return
@@ -694,7 +702,7 @@ func _debug_show_floor_collision() -> void:
 	var faces := PackedVector3Array()
 	MapCollisionBuilder.collect_collision_faces(self, faces)
 	if faces.is_empty():
-		print("[ValleyField] DEBUG: No collision faces found to visualize")
+		_fdbg("[ValleyField] DEBUG: No collision faces found to visualize")
 		return
 
 	var arr_mesh := ArrayMesh.new()
@@ -723,7 +731,7 @@ func _debug_show_floor_collision() -> void:
 	mi.visible = DebugConfig.show_floor_collision
 	add_child(mi)
 	_debug_floor_viz = mi
-	print("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (faces.size() / 3))
+	_fdbg("[ValleyField] DEBUG: Floor collision visualized — %d triangles" % (faces.size() / 3))
 
 
 ## Derive the assets/stages/ subfolder from a stage_id and area folder name.
@@ -752,7 +760,7 @@ func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
 			var json := JSON.new()
 			if json.parse(file.get_as_text()) == OK:
 				_unified_config_cache = json.data as Dictionary
-				print("[ValleyField] Loaded unified config: %d stages" % _unified_config_cache.size())
+				_fdbg("[ValleyField] Loaded unified config: %d stages" % _unified_config_cache.size())
 			file.close()
 
 	# Load global texture fixes on first access
@@ -763,7 +771,7 @@ func _load_stage_config(_folder: String, stage_id: String) -> Dictionary:
 			var gtf_json := JSON.new()
 			if gtf_json.parse(gtf_file.get_as_text()) == OK:
 				_global_texture_fixes = gtf_json.data as Dictionary
-				print("[ValleyField] Loaded global texture fixes: %d entries" % _global_texture_fixes.size())
+				_fdbg("[ValleyField] Loaded global texture fixes: %d entries" % _global_texture_fixes.size())
 			gtf_file.close()
 
 	# Look up by stage_id
@@ -1086,14 +1094,14 @@ func _spawn_field_elements() -> void:
 		var aw_callback := func(_body: Node3D) -> void:
 			if _body.is_in_group("player"):
 				if is_final:
-					print("[ValleyField] AreaWarp %s → final exit, returning to city" % portal_dir)
+					_fdbg("[ValleyField] AreaWarp %s → final exit, returning to city" % portal_dir)
 					if SessionManager.get_session().get("type") == "quest":
 						SessionManager.complete_quest()
 					else:
 						SessionManager.return_to_city()
 					SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
 				else:
-					print("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
+					_fdbg("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
 					_cell_spawner._save_cell_state()
 					SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
 					var target_state: Dictionary = SessionManager.get_section_state(t_section)
@@ -1131,7 +1139,7 @@ func _spawn_field_elements() -> void:
 		_add_debug_sphere(aw_spawn_pos, Color(0, 1, 0), "SpawnMark_%s" % portal_dir)
 		_add_debug_sphere(aw_trigger_pos, Color(1, 0, 0), "TriggerMark_%s" % portal_dir)
 
-		print("[FieldElements] AreaWarp '%s' → gate=%s trigger=%s open=%s target=s%d/%s" % [
+		_fdbg("[FieldElements] AreaWarp '%s' → gate=%s trigger=%s open=%s target=s%d/%s" % [
 			portal_dir, aw_gate_pos, aw_trigger_pos, is_open, target_section, target_cell])
 
 	# End cells WITHOUT warp_edge — defer telepipe until room clear
@@ -1163,14 +1171,14 @@ func _spawn_field_elements() -> void:
 			_needs_telepipe = true
 
 	# Gates and Waypoints at each connection trigger (skip warp_edge)
-	print("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
+	_fdbg("[FieldElements] spawn_edge='%s' warp_edge='%s' connections=%s" % [
 		_spawn_edge, warp_edge, str(connections)])
 	for dir in connections:
 		if dir == warp_edge:
-			print("[FieldElements]   skip %s (warp_edge)" % dir)
+			_fdbg("[FieldElements]   skip %s (warp_edge)" % dir)
 			continue
 		if not _portal_data.has(dir):
-			print("[FieldElements]   skip %s (no portal data)" % dir)
+			_fdbg("[FieldElements]   skip %s (no portal data)" % dir)
 			continue
 		var trigger_pos: Vector3 = _portal_data[dir]["trigger_pos"]
 		var gate_pos: Vector3 = _portal_data[dir].get("gate_pos", trigger_pos)
@@ -1223,13 +1231,13 @@ func _spawn_field_elements() -> void:
 					var trigger := _find_child_by_name(self, gate_trigger_name) as Area3D
 					if trigger:
 						trigger.monitoring = true
-						print("[ValleyField] KeyGate opened → trigger '%s' enabled, gate tracked" % gate_trigger_name)
+						_fdbg("[ValleyField] KeyGate opened → trigger '%s' enabled, gate tracked" % gate_trigger_name)
 					if _room_minimap:
 						_room_minimap.set_gate_locked(gate_dir_for_minimap, false)
 					if _grid_minimap:
 						_grid_minimap.set_gate_state(cell_pos_for_gate, gate_dir_for_minimap, "open")
 			)
-			print("[FieldElements] ── KEY GATE DONE ──")
+			_fdbg("[FieldElements] ── KEY GATE DONE ──")
 		else:
 			# Regular gate — open if entry, visited, or room has no enemies
 			var target_visited: bool = _visited_cells.has(str(connections[dir]))
@@ -1270,7 +1278,7 @@ func _spawn_field_elements() -> void:
 		else:
 			gate_waypoint.mark_new()
 			wp_state = "unvisited"
-		print("[Waypoint] dir=%s → target_cell=%s  state=%s" % [dir, target_cell_pos, wp_state])
+		_fdbg("[Waypoint] dir=%s → target_cell=%s  state=%s" % [dir, target_cell_pos, wp_state])
 
 	# Re-spawn the player telepipe in this room if one is active here. Per spec,
 	# the player can drop a telepipe, go to the city, then walk back via the
@@ -1283,7 +1291,7 @@ func _spawn_field_elements() -> void:
 		var saved_state: Dictionary = TelepipeManager.get_state()
 		var saved_pos: Vector3 = saved_state.get("world_pos", Vector3.ZERO)
 		if saved_pos != Vector3.ZERO:
-			print("[FieldElements] Re-spawning player telepipe at %s (came back via city teleporter)" % saved_pos)
+			_fdbg("[FieldElements] Re-spawning player telepipe at %s (came back via city teleporter)" % saved_pos)
 			respawn_player_telepipe_from_state(saved_pos)
 
 
@@ -1324,17 +1332,17 @@ func _spawn_end_cell_exit(connections: Dictionary) -> void:
 	# Create exit trigger at same position
 	var callback := func(_body: Node3D) -> void:
 		if _body.is_in_group("player"):
-			print("[ValleyField] Player entered end-cell exit warp")
+			_fdbg("[ValleyField] Player entered end-cell exit warp")
 			_on_end_reached()
 
 	_gate_mgr._create_fallback_trigger("EndCellExit", exit_pos, callback, true)
-	print("[FieldElements] End cell exit warp at %s (dir=%s)" % [exit_pos, exit_dir])
+	_fdbg("[FieldElements] End cell exit warp at %s (dir=%s)" % [exit_pos, exit_dir])
 
 
 ## Spawn a telepipe (cyan cylinder placeholder). Player steps into it to complete the section / quest.
 ## If pos is zero, falls back to room center / default spawn.
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
-	print("[FieldElements] Spawning telepipe at %s" % pos)
+	_fdbg("[FieldElements] Spawning telepipe at %s" % pos)
 	# Per spec: when a quest-completion telepipe spawns, any player-dropped
 	# telepipe is closed. The quest one takes the slot conceptually — the
 	# player has the boss-clear pad RIGHT THERE, no need for the older one
@@ -1350,7 +1358,7 @@ func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:
 	_map_root.add_child(telepipe)
 	telepipe.position = tp_pos
 	telepipe.activated.connect(func() -> void:
-		print("[ValleyField] Player activated telepipe")
+		_fdbg("[ValleyField] Player activated telepipe")
 		_on_end_reached()
 	)
 
@@ -1384,7 +1392,7 @@ func respawn_player_telepipe_from_state(world_pos: Vector3) -> void:
 ## "travel to city" handler. Used by both fresh placement and re-entry.
 ## world_pos is in global coordinates (e.g. player.global_position).
 func _spawn_player_telepipe_node(world_pos: Vector3) -> void:
-	print("[FieldElements] Spawning PLAYER telepipe at %s" % world_pos)
+	_fdbg("[FieldElements] Spawning PLAYER telepipe at %s" % world_pos)
 	var telepipe := TelepipeScript.new()
 	telepipe.name = "PlayerTelepipe"
 	_map_root.add_child(telepipe)
@@ -1404,7 +1412,7 @@ func _on_start_warp_interacted(_player: Node3D) -> void:
 	if _transitioning:
 		return
 	_transitioning = true
-	print("[ValleyField] Player triggered StartWarp → return to city (suspended)")
+	_fdbg("[ValleyField] Player triggered StartWarp → return to city (suspended)")
 	# Per spec, only title return / quest accept / quest end may reset
 	# field state. StartWarp is a backtrack escape hatch from the spawn
 	# room — it must preserve cleared rooms, opened gates, picked-up items,
@@ -1426,7 +1434,7 @@ func _on_start_warp_interacted(_player: Node3D) -> void:
 ## the session so resume_session() can later restore quest progress, then
 ## transitions to city_counter where the city-side Telepipe will spawn.
 func _travel_to_city_via_telepipe() -> void:
-	print("[ValleyField] Player travelling to city via telepipe")
+	_fdbg("[ValleyField] Player travelling to city via telepipe")
 	# CRITICAL: persist the current cell's state into _cell_states BEFORE
 	# section-level save, otherwise the room the player just cleared (and is
 	# standing in) gets a fresh enemy spawn on re-entry. _cell_states is only
@@ -1434,14 +1442,14 @@ func _travel_to_city_via_telepipe() -> void:
 	_cell_spawner._save_cell_state()
 	# State preservation — the same dicts that section transitions save.
 	var section_idx: int = SessionManager.get_current_section()
-	print("[TelepipeDEBUG] saving section_idx=%d, current_cell.pos=%s, _cell_states keys=%s" % [
+	_fdbg("[TelepipeDEBUG] saving section_idx=%d, current_cell.pos=%s, _cell_states keys=%s" % [
 		section_idx, str(_current_cell.get("pos", "")), str(_cell_states.keys())])
 	SessionManager.save_section_state(
 		section_idx, _cell_states, _keys_collected, _gates_opened, _visited_cells
 	)
 	# Verify it round-tripped through SessionManager
 	var verify: Dictionary = SessionManager.get_section_state(section_idx)
-	print("[TelepipeDEBUG] post-save get_section_state keys=%s, cell_states keys=%s" % [
+	_fdbg("[TelepipeDEBUG] post-save get_section_state keys=%s, cell_states keys=%s" % [
 		str(verify.keys()),
 		str(verify.get("cell_states", {}).keys())])
 	# Suspend rather than return_to_city() — resume_session() restores quest
@@ -1501,7 +1509,7 @@ func _spawn_companion() -> void:
 	else:
 		add_child(_companion)
 
-	print("[Companion] Spawned '%s' behind player" % comp_id)
+	_fdbg("[Companion] Spawned '%s' behind player" % comp_id)
 
 
 ## Wire switch.activated → linked fences.disable()
@@ -1515,12 +1523,12 @@ func _wire_fence_links() -> void:
 			var step_sw: StepSwitch = sw as StepSwitch
 			step_sw.activated.connect(func() -> void:
 				SessionManager.set_link_activated(lid)
-				print("[CellObjects] Link '%s' activated" % lid)
+				_fdbg("[CellObjects] Link '%s' activated" % lid)
 				for fence in fences:
 					(fence as Fence).disable()
 			)
 		if fences.size() > 0 and switches.size() > 0:
-			print("[CellObjects] Wired link '%s': %d switches → %d fences" % [
+			_fdbg("[CellObjects] Wired link '%s': %d switches → %d fences" % [
 				link_id, switches.size(), fences.size()])
 
 
@@ -1545,7 +1553,7 @@ func _lock_gates_for_enemies() -> void:
 						_room_minimap.set_gate_locked(dir, true)
 					if _grid_minimap:
 						_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), dir, "locked")
-					print("[CellObjects] Gate %s locked (enemies present)" % dir)
+					_fdbg("[CellObjects] Gate %s locked (enemies present)" % dir)
 					break
 
 	# Lock area warps (like gates) until room clear — skip entry direction
@@ -1576,7 +1584,7 @@ func _lock_gates_for_enemies() -> void:
 			if aw_trigger:
 				aw_trigger.monitoring = false
 				_warp_edge_locked.append(aw_trigger)
-			print("[CellObjects] AreaWarp locked (enemies present) [dir=%s]" % aw_dir)
+			_fdbg("[CellObjects] AreaWarp locked (enemies present) [dir=%s]" % aw_dir)
 			if _room_minimap:
 				_room_minimap.set_gate_locked(aw_dir, true)
 			if _grid_minimap:
@@ -1596,7 +1604,7 @@ func _check_room_clear() -> void:
 				alive_count += 1
 		elif enemy.get("element_state") != "dead":
 			alive_count += 1
-	print("[RoomClear] %d/%d enemies alive, %d locked gates, %d locked warps" % [
+	_fdbg("[RoomClear] %d/%d enemies alive, %d locked gates, %d locked warps" % [
 		alive_count, total_count, _room_gates_locked.size(), _warp_edge_locked.size()])
 	if alive_count > 0:
 		return
@@ -1604,11 +1612,11 @@ func _check_room_clear() -> void:
 	# Check for next wave
 	if _current_wave < _max_wave:
 		_current_wave += 1
-		print("[CellObjects] Wave %d cleared! Spawning wave %d" % [_current_wave - 1, _current_wave])
+		_fdbg("[CellObjects] Wave %d cleared! Spawning wave %d" % [_current_wave - 1, _current_wave])
 		_spawn_wave(_current_wave)
 		return
 
-	print("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
+	_fdbg("[CellObjects] Room cleared! Opening %d locked gates" % _room_gates_locked.size())
 	if _room_gates_locked.size() > 0:
 		SfxManager.play("res://assets/sfx/ui/door_unlocked.wav")
 	for gate in _room_gates_locked:
@@ -1636,7 +1644,7 @@ func _check_room_clear() -> void:
 					_room_minimap.set_gate_locked(aw_dir, false)
 				if _grid_minimap and not aw_dir.is_empty():
 					_grid_minimap.set_gate_state(str(_current_cell.get("pos", "")), aw_dir, "open")
-				print("[CellObjects] AreaWarp unlocked (room cleared) [dir=%s]" % aw_dir)
+				_fdbg("[CellObjects] AreaWarp unlocked (room cleared) [dir=%s]" % aw_dir)
 			elif node is StaticBody3D:
 				node.queue_free()
 			elif node is Area3D:
@@ -1700,7 +1708,7 @@ func _check_room_clear() -> void:
 			var ds: Dictionary = _stage_config.get("defaultSpawn", {})
 			var ds_pos_arr: Array = ds.get("position", [0, 0, 0])
 			var warp_pos := Vector3(float(ds_pos_arr[0]), 0, float(ds_pos_arr[2]))
-			print("[CellObjects] Boss cleared! Spawning return warp at %s" % warp_pos)
+			_fdbg("[CellObjects] Boss cleared! Spawning return warp at %s" % warp_pos)
 			_spawn_telepipe(warp_pos)
 
 
@@ -1713,7 +1721,7 @@ func _spawn_wave(wave_num: int) -> void:
 		var pos := Vector3(float(pos_arr[0]), float(pos_arr[1]), float(pos_arr[2]))
 		var enemy_id: String = str(obj.get("enemy_id", "lizard"))
 		_cell_spawner._spawn_enemy(pos, enemy_id)
-	print("[CellObjects] Wave %d: spawned %d enemies" % [wave_num, wave_objs.size()])
+	_fdbg("[CellObjects] Wave %d: spawned %d enemies" % [wave_num, wave_objs.size()])
 	# Empty-wave guard: if this wave spawned zero enemies, no `died` signal
 	# will ever fire and the wave system would silently stall here — locked
 	# gates wouldn't open, key drops wouldn't spawn, the room would never
@@ -2114,7 +2122,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				_gate_nudge_mode = not _gate_nudge_mode
 				if orbit_camera:
 					orbit_camera.input_enabled = not _gate_nudge_mode
-				print("[GateNudge] Mode %s" % ("ON — arrows to nudge, G to exit" if _gate_nudge_mode else "OFF"))
+				_fdbg("[GateNudge] Mode %s" % ("ON — arrows to nudge, G to exit" if _gate_nudge_mode else "OFF"))
 				get_viewport().set_input_as_handled()
 
 	# Gate nudge mode: arrow keys move nearest gate
@@ -2153,7 +2161,7 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 				nearest = child
 
 	if nearest == null:
-		print("[GateNudge] No gates found in current room")
+		_fdbg("[GateNudge] No gates found in current room")
 		return
 
 	nearest.global_position += nudge
@@ -2175,5 +2183,5 @@ func _nudge_nearest_gate(nudge: Vector3) -> void:
 	var cell_pos: String = str(_current_cell.get("pos", ""))
 	var stage_id: String = str(_current_cell.get("stage_id", ""))
 	var gp := nearest.global_position
-	print("[GateNudge] dir=%s cell=%s stage=%s portal=%s → gate_pos=[%.2f, %.2f, %.2f]" % [
+	_fdbg("[GateNudge] dir=%s cell=%s stage=%s portal=%s → gate_pos=[%.2f, %.2f, %.2f]" % [
 		gate_dir, cell_pos, stage_id, portal_id, gp.x, gp.y, gp.z])

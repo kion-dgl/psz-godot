@@ -38,7 +38,7 @@ const AREA_NAME_TO_ID := {
 	"Eternal Tower": "tower",
 }
 
-# PSZ palette (matches field_pause_menu.gd)
+# PSZ palette
 const BG_COLOR := Color(0.0, 0.0, 0.0, 0.5)
 const PANEL_COLOR := Color(0.66, 0.80, 0.91)
 const BORDER_COLOR := Color(0.48, 0.63, 0.75)

@@ -1,7 +1,7 @@
 extends Node
 ## Autoload that provides access to DropTableData resources.
 
-const _RU = preload("res://scripts/utils/resource_utils.gd")
+const _RH = preload("res://scripts/utils/registry_helper.gd")
 const DROPS_PATH = "res://data/drop_tables/"
 var _drops: Dictionary = {}
 signal drops_loaded()
@@ -10,12 +10,7 @@ func _ready() -> void:
 	_load_all()
 
 func _load_all() -> void:
-	_drops.clear()
-	for path in _RU.list_resources(DROPS_PATH):
-		var res = load(path)
-		if res and not res.id.is_empty():
-			_drops[res.id] = res
-	print("[DropRegistry] Loaded ", _drops.size(), " drop tables")
+	_RH.load_dir(DROPS_PATH, _drops, "DropRegistry", "drop tables")
 	drops_loaded.emit()
 
 func get_drop_table(difficulty: String):
