@@ -344,7 +344,7 @@ func _build_picker_grid(parent: VBoxContainer) -> void:
 func _picker_cell_style(is_selected: bool, is_current: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	if is_selected:
-		style.bg_color = PszStyle.PILL_SELECTED
+		style.bg_color = PszStyle.SEL_BG
 		style.border_color = PszStyle.TEXT_WHITE
 		style.set_border_width_all(1)
 	elif is_current:
