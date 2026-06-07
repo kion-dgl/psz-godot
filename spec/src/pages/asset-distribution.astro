@@ -78,8 +78,14 @@ const flow = `flowchart LR
   <h2>Why a code-only change never needs a republish</h2>
   <p>The pack is mounted with <code>load_resource_pack(path, <strong>false</strong>)</code> — <code>replace_files=false</code>, so in-tree (build) resources win over the pack — and the global class cache is read at engine init, <em>before</em> the pack mounts. So the build's code is always authoritative: <strong>editing <code>scripts/</code> or <code>scenes/</code> ships entirely via the next build; the pack is irrelevant to it.</strong> Only adding or changing files under <code>assets/</code> (heavy media) requires a republish.</p>
 
-  <h2>Backup</h2>
-  <p>The published pack lives on Arweave (permanent) and is mirrored to R2. The <strong>source/dev asset tree</strong> (the working media under <code>assets/</code> that the pack is built from, much of which is <em>not</em> committed to git) <strong>SHOULD</strong> be backed up to R2 as well, so a lost dev box doesn't lose unpublished art. R2 credentials live in <code>.env</code> (<code>R2_ACCESS_KEY_ID</code>, <code>R2_SECRET_ACCESS_KEY</code>, …); the backup reuses the same bucket/tooling as <code>sync-tree</code>.</p>
+  <h2>Backup of the dev asset tree</h2>
+  <p>Much of the working media under <code>assets/</code> is <strong>not committed to git</strong> (the heavy art is gitignored — it lives in the pack, not the repo). The safety net for it is R2: <code>npm run sync-tree</code> mirrors the <em>entire</em> <code>assets/</code> tree to R2 (incremental md5 diff), so <strong>the R2 mirror doubles as the dev-asset backup</strong>, not just the web-tools CDN. Run it whenever you add or change media; a lost dev box can then be restored with <code>scripts/tools/fetch_assets_dev.sh</code>. R2 credentials live in <code>.env</code> (<code>R2_ACCESS_KEY_ID</code>, <code>R2_SECRET_ACCESS_KEY</code>, …).</p>
+  <p>Two things are <strong>not</strong> on R2 and rely on other backups:</p>
+  <ul>
+    <li><code>assets/kenney_*</code> — vendored <em>in git</em>, so the repo is its backup.</li>
+    <li><code>assets/npcs/cowgirl/</code> — license-restricted (pack-embed only, no public CDN), so it's <strong>dev-box-only</strong> — the one real backup gap; keep an offline copy.</li>
+  </ul>
+  <p>Caveat: <code>sync-tree --delete</code> removes R2 objects missing locally, so run a plain <code>sync-tree</code> (never <code>--delete</code>) from an <em>incomplete</em> local tree, or it will prune the backup.</p>
 
   <h2>Publishing (when assets change)</h2>
   <ol>
