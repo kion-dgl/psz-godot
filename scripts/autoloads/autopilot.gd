@@ -213,6 +213,12 @@ var _quest_manifest_index: int = 0  # used by guild_counter to scroll-down befor
 # wall hits go away.
 var _floor_only := false
 
+# Shop/storage smoke coverage: when PSZ_AUTOPILOT_SHOPS=1, after the office
+# intro the autopilot detours through the principal (debug meseta grant) and
+# the shop/storage screens instead of accepting a quest. Gated so the
+# regression-matrix quest flow is completely untouched. See issue #9.
+var _shops_phase := false
+
 
 func _ready() -> void:
 	_enabled = OS.has_environment("PSZ_AUTOPILOT") or ("--autopilot" in OS.get_cmdline_user_args())
@@ -229,6 +235,9 @@ func _ready() -> void:
 		_:
 			_phase = Phase.ALL
 			print("[sanity] autopilot enabled (phase=all: full run from boot to quest report)")
+	_shops_phase = OS.has_environment("PSZ_AUTOPILOT_SHOPS")
+	if _shops_phase:
+		print("[sanity] autopilot SHOPS coverage enabled (principal → shops → storage smoke)")
 	# Optionally override which quest to drive (defaults to search_and_rescue).
 	# Other quests load their step list from data/quest_plans/<id>.json.
 	var qenv: String = OS.get_environment("PSZ_AUTOPILOT_QUEST")
@@ -763,6 +772,9 @@ func _drive_office_intro() -> void:
 	if _phase == Phase.BOOT:
 		print("[sanity] checkpoint: boot intro complete → Save + Return to Title")
 		_after(STEP_DELAY, _save_and_return_to_title)
+	elif _shops_phase:
+		print("[sanity] office intro complete → shop/storage smoke (PSZ_AUTOPILOT_SHOPS)")
+		_after(STEP_DELAY, _drive_shop_smoke)
 	else:
 		print("[sanity] office intro complete → exit to counter")
 		_teleport_player(OFFICE_EXIT_POS)
@@ -795,6 +807,54 @@ func _drive_office_briefing() -> void:
 	else:
 		print("[sanity] WARN: briefing advance limit; forcing exit")
 		_teleport_player(OFFICE_EXIT_POS)
+
+
+# ── Shop / storage smoke (PSZ_AUTOPILOT_SHOPS) ─────────────────
+# Exercises the shop + storage screens the regression matrix never opens, to
+# catch flow regressions (and screen-load breaks like #283). Runs after the
+# office intro instead of accepting a quest; each step prints a [sanity]
+# checkpoint asserted by the smoke script. Built incrementally — see #9.
+var _shop_meseta_before := -1
+
+
+func _get_active_meseta() -> int:
+	if CharacterManager != null and CharacterManager.has_method("get_active_character"):
+		var c = CharacterManager.get_active_character()
+		if c:
+			return int(c.get("meseta", 0))
+	return -1
+
+
+func _drive_shop_smoke() -> void:
+	var node := get_tree().current_scene
+	if node == null or node.scene_file_path != CITY_OFFICE:
+		return
+	# Inc 0: talk to the principal for the debug 10k-meseta grant. The grant
+	# path (_on_principal_interact) only fires when no quest is completed —
+	# true here, pre-quest — see city_office_controller.gd.
+	_shop_meseta_before = _get_active_meseta()
+	print("[sanity] shop-smoke: meseta before principal = %d" % _shop_meseta_before)
+	_teleport_player(PRINCIPAL_INTERACT_POS)
+	_after(0.6, func() -> void:
+		print("[sanity] shop-smoke: interact principal (debug meseta)")
+		_press_action("interact"))
+	_after(1.5, func() -> void: _poll_principal_meseta(0))
+
+
+func _poll_principal_meseta(n: int) -> void:
+	if (n % 2) == 0:
+		_press_action("ui_accept")  # advance the grant dialog
+	var now := _get_active_meseta()
+	if _shop_meseta_before >= 0 and now > _shop_meseta_before:
+		print("[sanity] checkpoint: principal debug meseta granted (%d -> %d)" % [_shop_meseta_before, now])
+		# Inc 0 terminal — later increments continue into the shops from here.
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	if n > 20:
+		print("[sanity] FAIL: principal debug meseta not granted (still %d)" % now)
+		_save_and_quit()
+		return
+	_after(0.5, func() -> void: _poll_principal_meseta(n + 1))
 
 
 # ── City: counter ──────────────────────────────────────────────
