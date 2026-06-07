@@ -103,6 +103,9 @@ jobs:
       - name: Verify res://assets/ refs resolve in asset_tree.txt
         run: python3 scripts/tools/check_asset_refs.py
 
+      - name: Verify GLB texture URIs resolve (binary refs check_asset_refs can't see)
+        run: python3 scripts/tools/check_glb_textures.py
+
   verify-assets:
     runs-on: ubuntu-latest
     timeout-minutes: 20
