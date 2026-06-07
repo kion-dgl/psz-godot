@@ -32,6 +32,8 @@ const CITY_WARP := "res://scenes/3d/city/city_warp.tscn"
 const GUILD_COUNTER := "res://scenes/2d/guild_counter.tscn"
 const WARP_TELEPORTER := "res://scenes/2d/warp_teleporter.tscn"
 const VALLEY_FIELD := "res://scenes/3d/field/valley_field.tscn"
+const ITEM_SHOP := "res://scenes/2d/shops/item_shop.tscn"
+const STORAGE := "res://scenes/2d/storage.tscn"
 
 # ── Teleport targets (from the city controllers) ───────────────
 const OFFICE_EXIT_POS := Vector3(0, 0.5, 27)             # office Area3D → counter
@@ -847,14 +849,37 @@ func _poll_principal_meseta(n: int) -> void:
 	var now := _get_active_meseta()
 	if _shop_meseta_before >= 0 and now > _shop_meseta_before:
 		print("[sanity] checkpoint: principal debug meseta granted (%d -> %d)" % [_shop_meseta_before, now])
-		# Inc 0 terminal — later increments continue into the shops from here.
-		_after(STEP_DELAY, _save_and_quit)
+		_after(STEP_DELAY, _open_item_shop)
 		return
 	if n > 20:
 		print("[sanity] FAIL: principal debug meseta not granted (still %d)" % now)
 		_save_and_quit()
 		return
 	_after(0.5, func() -> void: _poll_principal_meseta(n + 1))
+
+
+# Inc 1: open the Item Shop overlay (the screen class that broke in #283) and
+# assert it mounts. Pushed directly — same call the market NPC makes — rather
+# than physically walking office→counter→market.
+func _open_item_shop() -> void:
+	print("[sanity] shop-smoke: opening item_shop")
+	SceneManager.push_scene(ITEM_SHOP, {"npc_display_name": "Item Shop"})
+	_after(2.0, _check_item_shop_opened)
+
+
+func _check_item_shop_opened() -> void:
+	var top := ""
+	if SceneManager != null and not SceneManager._scene_stack.is_empty():
+		top = String(SceneManager._scene_stack[SceneManager._scene_stack.size() - 1])
+	if top == ITEM_SHOP:
+		print("[sanity] checkpoint: item_shop opened")
+	else:
+		print("[sanity] FAIL: item_shop did not open (top overlay='%s')" % top)
+	# Close the overlay, then DONE (Inc 1 terminal — buy/equip/storage follow).
+	_after(STEP_DELAY, func() -> void:
+		if SceneManager != null and SceneManager.has_method("pop_scene"):
+			SceneManager.pop_scene()
+		_after(STEP_DELAY, _save_and_quit))
 
 
 # ── City: counter ──────────────────────────────────────────────
