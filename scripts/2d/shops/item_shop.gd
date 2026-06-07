@@ -1,4 +1,4 @@
-extends ShopBase
+extends Control
 ## Shop — buy consumables or technique disks, toggled with tabs.
 
 enum Tab { ITEMS, MATERIALS, DISKS, SELL }
@@ -603,3 +603,41 @@ func _process(delta: float) -> void:
 	if _nav == null:
 		_nav = NavRepeat.new(["ui_up", "ui_down", "ui_left", "ui_right"], _on_nav_repeat)
 	_nav.tick(delta)
+
+# --- Shop scaffolding, inlined. These screens are standalone (extends Control)
+# --- rather than sharing a ShopBase: a cross-script base class fails to
+# --- resolve in the Android export at runtime (works in-editor and on every
+# --- other platform). See the shop-dedup tracker.
+
+## The active character's meseta (0 if no active character).
+func _get_meseta() -> int:
+	var character = CharacterManager.get_active_character()
+	if character:
+		return int(character.get("meseta", 0))
+	return 0
+
+
+## NavRepeat callback: re-emit a held nav action as a synthetic input event
+## so this screen's own _unhandled_input handles it (hold-to-repeat nav).
+func _on_nav_repeat(action: String) -> void:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	_unhandled_input(ev)
+
+
+## Buy-affordance check for a shop row. Returns {"ok": bool, "reason": String}.
+## Mirrors ShopManager.buy_item's guards (currency, affordability, room).
+func _can_buy(item: Dictionary) -> Dictionary:
+	var currency: String = str(item.get("currency", "Meseta"))
+	if currency != "Meseta":
+		return {"ok": false, "reason": currency}
+	var cost: int = int(item.get("cost", 0))
+	if _get_meseta() < cost:
+		return {"ok": false, "reason": "Can't afford"}
+	var item_name: String = str(item.get("item", item.get("name", "")))
+	var item_id: String = item_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
+	if not Inventory.can_add_item(item_id):
+		return {"ok": false, "reason": "No room"}
+	return {"ok": true, "reason": ""}
+

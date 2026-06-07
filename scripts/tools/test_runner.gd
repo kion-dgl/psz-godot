@@ -1268,8 +1268,8 @@ func test_shops() -> void:
 	# ── Buy guards: affordability + room ──
 	# ShopManager.buy_item already refuses an unaffordable / no-room purchase
 	# (returns false, no state change). These lock that behavior in as the
-	# source of truth that the planned ShopBase `_can_buy(item) -> {ok, reason}`
-	# + disabled-row rendering must mirror — so the affordance refactor can't
+	# source of truth that each shop's `_can_buy(item) -> {ok, reason}` +
+	# disabled-row rendering must mirror — so the affordance logic can't
 	# silently regress what is/ isn't purchasable. See docs/shop-dedup.md.
 	print("  ── Buy guards ──")
 	var mono_cost: int = 0
@@ -1281,10 +1281,12 @@ func test_shops() -> void:
 	# without ever enforcing the invariants this block exists to lock.
 	assert_gt(mono_cost, 0, "Monomate is sold by item_shop with a price (buy-guard fixture)")
 	if mono_cost > 0:
-		# ShopBase._can_buy() must AGREE with buy_item's guards — it's what the
+		# A shop's _can_buy() must AGREE with buy_item's guards — it's what the
 		# UI greys/disables on, so any drift would let the screen offer (or
-		# refuse) a purchase the transaction layer disagrees with.
-		var sb := ShopBase.new()
+		# refuse) a purchase the transaction layer disagrees with. item_shop
+		# carries the canonical _can_buy (shops are standalone — the shared
+		# ShopBase base class broke Android export resolution; see #283/#284).
+		var sb = load("res://scripts/2d/shops/item_shop.gd").new()
 		var mono_item := {"item": "Monomate", "cost": mono_cost}
 
 		# Affordability: meseta below cost → buy must fail, nothing changes.
