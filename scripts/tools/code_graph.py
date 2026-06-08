@@ -122,7 +122,9 @@ def extract_functions(path: Path) -> list[dict]:
         while len(body) > 1 and body[-1].strip() == "":
             body.pop()  # trailing blanks belong to the gap, not the function
         src = "\n".join(body)
-        no_comments = re.sub(r"#.*", "", src)
+        # strip strings too (not just comments) so decision keywords inside
+        # literals ("and then", "#2a2a4e") don't skew the cyclomatic proxy
+        clean = _strip_strings_and_comments(src)
         out.append({
             "name": name,
             # Occurrence-indexed (NOT line-numbered): this both disambiguates
@@ -133,7 +135,7 @@ def extract_functions(path: Path) -> list[dict]:
             "line": i + 1,  # metadata for reporting only
             "tokens": _tokenize(src),
             "nlines": len(body),
-            "cyclomatic": 1 + len(_DECISION_RE.findall(no_comments)),
+            "cyclomatic": 1 + len(_DECISION_RE.findall(clean)),
         })
         i = j
     return out
