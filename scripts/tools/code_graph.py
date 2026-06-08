@@ -49,11 +49,8 @@ GODOT_VIRTUALS = {
     "_set", "_get_property_list", "_property_can_revert", "_property_get_revert",
     "_validate_property", "_get_configuration_warnings", "_input_event",
     "_can_drop_data", "_drop_data", "_get_drag_data", "_make_custom_tooltip",
-    "_integrate_forces", "_physics_process", "_iter_init", "_iter_next",
-    "_iter_get",
+    "_integrate_forces", "_iter_init", "_iter_next", "_iter_get",
 }
-# Folders whose references count, but not searched for new dead defs (3rd-party).
-DEAD_SCAN_SKIP = ("scripts/tools/test",)  # test fns are invoked by reflection
 
 _FUNC_RE = re.compile(r"^([ \t]*)(?:static\s+)?func\s+([A-Za-z_]\w*)")
 _INDENT_RE = re.compile(r"^[ \t]*")
@@ -89,6 +86,7 @@ def extract_functions(path: Path) -> list[dict]:
     except OSError:
         return []
     out: list[dict] = []
+    name_seen: dict[str, int] = {}  # per-file occurrence index for same-named funcs
     i, n = 0, len(lines)
     while i < n:
         m = _FUNC_RE.match(lines[i])
@@ -97,6 +95,8 @@ def extract_functions(path: Path) -> list[dict]:
             continue
         head_indent = _indent_width(m.group(1))
         name = m.group(2)
+        occ = name_seen.get(name, 0)
+        name_seen[name] = occ + 1
         body = [lines[i]]
         j = i + 1
         while j < n:
@@ -111,10 +111,12 @@ def extract_functions(path: Path) -> list[dict]:
             j += 1
         out.append({
             "name": name,
-            # line-qualified so same-named funcs (inner classes) don't collide
-            "qn": f"{rel}:{name}:{i + 1}",
+            # Occurrence-indexed (NOT line-numbered): this both disambiguates
+            # same-named funcs in one file AND keeps the id stable when unrelated
+            # lines shift above the function (line numbers would not).
+            "qn": f"{rel}:{name}#{occ}",
             "file": rel,
-            "line": i + 1,
+            "line": i + 1,  # metadata for reporting only
             "tokens": _tokenize("\n".join(body)),
         })
         i = j
@@ -181,9 +183,8 @@ def find_dead_functions(funcs: list[dict]) -> list[dict]:
     dead: list[dict] = []
     for f in funcs:
         name = f["name"]
+        # virtuals are engine-invoked; test_* are run by the test_runner via reflection
         if name in GODOT_VIRTUALS or name.startswith("test_"):
-            continue
-        if any(f["file"].startswith(s) for s in DEAD_SCAN_SKIP):
             continue
         # uses beyond the definition lines themselves
         uses = ref_counts.get(name, 0) - def_counts.get(name, 0)
@@ -205,8 +206,9 @@ def _load_sigs(path: Path, key: str) -> set[str]:
 def write_baselines(pairs: list[dict], dead: list[dict]) -> None:
     DUP_BASELINE.write_text(json.dumps({
         "_comment": ("Accepted near-duplicate function pairs (EPIC #295). "
-                     "code_graph.py --check fails on any pair NOT here. "
-                     "Regenerate with --update-baseline after deduping (#294)."),
+                     "code_graph.py --check fails on any pair NOT here. Run "
+                     "--update-baseline to regenerate this — both after deduping "
+                     "(#294) AND to consciously accept a new intentional pair."),
         "jaccard_min": JACCARD_MIN,
         "accepted_pairs": [{"sig": p["sig"], "jaccard": p["jaccard"]} for p in pairs],
     }, indent=2) + "\n")
@@ -222,10 +224,14 @@ def write_baselines(pairs: list[dict], dead: list[dict]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--check", action="store_true")
-    g.add_argument("--update-baseline", action="store_true")
-    g.add_argument("--report", action="store_true")
-    g.add_argument("--report-dead", action="store_true")
+    g.add_argument("--check", action="store_true",
+                   help="CI gate: exit 1 on NEW duplication or dead code")
+    g.add_argument("--update-baseline", action="store_true",
+                   help="rewrite both baselines (after cleanup, or to accept new findings)")
+    g.add_argument("--report", action="store_true",
+                   help="list all near-duplicate function pairs")
+    g.add_argument("--report-dead", action="store_true",
+                   help="list all dead-code candidates")
     args = ap.parse_args()
 
     funcs = build_graph()
