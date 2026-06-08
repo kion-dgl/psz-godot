@@ -111,8 +111,9 @@ def extract_functions(path: Path) -> list[dict]:
             j += 1
         out.append({
             "name": name,
-            # occurrence-indexed (NOT line) so same-named funcs don't collide yet
-            # the id stays stable when unrelated lines shift above it.
+            # Occurrence-indexed (NOT line-numbered): this both disambiguates
+            # same-named funcs in one file AND keeps the id stable when unrelated
+            # lines shift above the function (line numbers would not).
             "qn": f"{rel}:{name}#{occ}",
             "file": rel,
             "line": i + 1,  # metadata for reporting only
