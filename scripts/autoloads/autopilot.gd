@@ -33,6 +33,7 @@ const GUILD_COUNTER := "res://scenes/2d/guild_counter.tscn"
 const WARP_TELEPORTER := "res://scenes/2d/warp_teleporter.tscn"
 const VALLEY_FIELD := "res://scenes/3d/field/valley_field.tscn"
 const ITEM_SHOP := "res://scenes/2d/shops/item_shop.tscn"
+const WEAPON_SHOP := "res://scenes/2d/shops/weapon_shop.tscn"
 const STORAGE := "res://scenes/2d/storage.tscn"
 
 # ── Teleport targets (from the city controllers) ───────────────
@@ -895,7 +896,68 @@ func _check_item_bought() -> void:
 		print("[sanity] checkpoint: item_shop bought (meseta %d -> %d)" % [_shop_buy_before, now])
 	else:
 		print("[sanity] FAIL: item_shop purchase did not register (meseta still %d)" % now)
-	# Close the shop, then DONE (Inc 0-2 terminal — weapon/equip/storage extend here).
+	# Close the item shop, then on to the weapon shop (Inc 3).
+	_after(STEP_DELAY, func() -> void:
+		if SceneManager != null and SceneManager.has_method("pop_scene"):
+			SceneManager.pop_scene()
+		_after(STEP_DELAY, _open_weapon_shop))
+
+
+# Inc 3: weapon shop. Opening it is the hard regression assert (it's a ShopBase
+# screen too). The buy is best-effort: weapon rows can be legitimately disabled
+# by class-equippability, so try a few rows and WARN (not FAIL) if none take.
+var _weapon_buy_attempt := 0
+
+
+func _open_weapon_shop() -> void:
+	print("[sanity] shop-smoke: opening weapon_shop")
+	SceneManager.push_scene(WEAPON_SHOP, {"npc_display_name": "Weapon Shop"})
+	_after(2.0, _check_weapon_shop_opened)
+
+
+func _check_weapon_shop_opened() -> void:
+	var top := ""
+	if SceneManager != null and not SceneManager._scene_stack.is_empty():
+		top = String(SceneManager._scene_stack[SceneManager._scene_stack.size() - 1])
+	if top != WEAPON_SHOP:
+		print("[sanity] FAIL: weapon_shop did not open (top overlay='%s')" % top)
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	print("[sanity] checkpoint: weapon_shop opened")
+	_shop_buy_before = _get_active_meseta()
+	_weapon_buy_attempt = 0
+	_after(0.6, _try_weapon_buy)
+
+
+func _try_weapon_buy() -> void:
+	# Try the current row: open the buy modal + confirm (covers Confirm/Quantity).
+	_press_action("ui_accept")
+	_after(0.5, func() -> void: _press_action("ui_accept"))
+	_after(1.0, func() -> void: _press_action("ui_accept"))
+	_after(1.6, _check_weapon_buy_result)
+
+
+func _check_weapon_buy_result() -> void:
+	var now := _get_active_meseta()
+	if _shop_buy_before >= 0 and now < _shop_buy_before:
+		print("[sanity] checkpoint: weapon_shop bought (meseta %d -> %d)" % [_shop_buy_before, now])
+		_finish_weapon_shop()
+		return
+	_weapon_buy_attempt += 1
+	if _weapon_buy_attempt >= 6:
+		# Not a hard fail: the open succeeded (the regression-critical part); a
+		# class may simply not be able to equip the first rows.
+		print("[sanity] WARN: weapon_shop — no buyable row in first %d (class equippability?)" % _weapon_buy_attempt)
+		_finish_weapon_shop()
+		return
+	# Close any modal that opened on a disabled/echo row, move to next row, retry.
+	_press_action("ui_cancel")
+	_after(0.3, func() -> void: _press_action("ui_down"))
+	_after(0.7, _try_weapon_buy)
+
+
+func _finish_weapon_shop() -> void:
+	# Close the weapon shop, then DONE (Inc 0-3 terminal — equip/storage extend here).
 	_after(STEP_DELAY, func() -> void:
 		if SceneManager != null and SceneManager.has_method("pop_scene"):
 			SceneManager.pop_scene()
