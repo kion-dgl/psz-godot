@@ -1,0 +1,96 @@
+---
+import Concept from '../layouts/Concept.astro';
+import Mermaid from '../components/Mermaid.astro';
+
+// Where each kind of file lives at runtime. Three channels, two of them
+// committed-to-source and one published.
+const flow = `flowchart LR
+  subgraph SRC["Git source (committed = redistributable)"]
+    Code["Code\\nscripts/ · scenes/ · data/ · themes/"]
+    Small["Original + CC assets\\nour art · kenney_* (CC)"]
+    Manifest["assets_manifest.json\\nasset_tree.txt"]
+  end
+
+  subgraph BUILD["Build"]
+    APK["APK / desktop / web export\\n= Code + Small assets"]
+  end
+
+  subgraph PUB["Published (not in git)"]
+    PCK["Arweave assets.pck\\nSEGA-derived media (~340 MB)"]
+    R2["R2 raw mirror\\nsame media, per-file"]
+  end
+
+  Code --> APK
+  Small --> APK
+  Manifest --> APK
+  Code -. "upload-pack" .-> PCK
+  Code -. "sync-tree" .-> R2
+  APK == "runtime: download + mount (replace_files=false)" ==> PCK
+  R2 == "web tools fetch per-file" ==> R2
+
+  classDef src fill:#10220f,stroke:#57ab5a,color:#e6edf3,stroke-width:2px
+  classDef build fill:#0d1c30,stroke:#539bf5,color:#e6edf3,stroke-width:2px
+  classDef pub fill:#2a1a0c,stroke:#e0823d,color:#e6edf3,stroke-width:2px
+  class Code,Small,Manifest src
+  class APK build
+  class PCK,R2 pub
+`;
+---
+
+<Concept title="Asset Distribution" section="Architecture">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> below are used as in RFC 2119.</p>
+
+  <p>PSZ is a <strong>fan game</strong>, and that — not file size — is what decides where an asset lives. SEGA's Phantasy Star assets <strong>MUST NOT</strong> be redistributed in this public git repo, so they're kept out of source and shipped through a separately-published pack. Everything the project <em>owns</em> (original art, all code) or is permissively licensed to redistribute (Creative Commons, vendored permissive packs) is <strong>committed to source</strong>. Absent licensing, we'd simply commit and distribute everything; the split exists purely to keep redistributable and non-redistributable content apart. This page is the canonical definition of what lives where and the invariants CI enforces.</p>
+
+  <div class="diagram"><Mermaid chart={flow} /></div>
+
+  <h2>The three channels</h2>
+  <ul>
+    <li><strong>Git source → build (APK / desktop / web)</strong> — everything we may redistribute: all <strong>code</strong> (<code>scripts/</code>, <code>scenes/</code>), all <strong>data resources</strong> (<code>data/*.tres</code> registries), <code>themes/</code>, our <strong>original art</strong>, and permissively-licensed assets (Creative Commons, vendored <code>assets/kenney_*</code>). Committed and compiled into the build.</li>
+    <li><strong>Arweave <code>assets.pck</code></strong> — the <strong>SEGA / Phantasy Star–derived assets</strong> we can't redistribute in the repo (enemy / player / NPC models, weapons, music, SFX, stage meshes &amp; textures, …; ~340&nbsp;MB). <strong>Not committed.</strong> The runtime <code>bootstrap.gd</code> downloads it on first launch, verifies its sha256 against <code>assets_manifest.json</code>, and mounts it.</li>
+    <li><strong>R2 raw mirror</strong> — the same pack assets as individual files, for the Vite web tools (quest editor, storybook, retarget viewers) via <code>VITE_ASSETS_BASE</code>, and doubling as the dev backup. <strong>Not committed.</strong> A few bundle-OK-but-not-raw-redistributable assets are excluded (see Backup).</li>
+  </ul>
+
+  <h2>The split rule</h2>
+  <p>The dividing line is <strong>licensing / provenance</strong>, not size or file type. Ask: <em>may we legally redistribute this file in a public repo?</em></p>
+  <ul>
+    <li><strong>Yes → commit to source</strong> (ships in the build): all code, plus original art we made and permissively-licensed assets (Creative Commons, vendored packs like <code>kenney_*</code>).</li>
+    <li><strong>No → pack only</strong> (Arweave, not committed): SEGA / Phantasy Star–derived assets. The pack is the fan-game distribution mechanism that keeps them out of the repo.</li>
+  </ul>
+  <p>Size is <em>incidental</em> — the SEGA media happens to be the bulk, and keeping it out of the binary also keeps the download small, but that's a side effect, not the reason. The <strong>authoritative, machine-readable</strong> encoding of the split is the <strong>export presets</strong> (<code>export_presets.cfg</code>): the platform presets (Android / Linux / Windows / macOS) <code>exclude_filter</code> the SEGA-derived dirs (so they stay out of the binary), and the <strong>"Asset Pack"</strong> preset builds <code>dist/assets.pck</code> from them. This page is the <em>intent</em>; the presets are the <em>mechanism</em>. When they disagree, the presets win and this page is the bug.</p>
+
+  <h2>Source-of-truth files (committed)</h2>
+  <ul>
+    <li><code>export_presets.cfg</code> — the per-platform include/exclude that decides build-vs-pack.</li>
+    <li><code>assets_manifest.json</code> — the pack the game expects: <code>version</code>, <code>pack.sha256</code>, <code>pack.size</code>, gateway <code>urls</code>, and <code>sidecar.urls</code>.</li>
+    <li><code>asset_tree.txt</code> — the flat list of every path inside the published pack, committed alongside the manifest so <code>check-asset-refs</code> can verify source references resolve.</li>
+  </ul>
+
+  <h2>Invariants (CI MUST enforce)</h2>
+  <ul>
+    <li><strong>Every referenced asset is in the pack.</strong> Each <code>res://assets/…</code> string in source <strong>MUST</strong> appear in <code>asset_tree.txt</code>. <em>(Guard: <code>check-asset-refs</code>.)</em></li>
+    <li><strong>Texture URIs inside GLBs resolve.</strong> A GLB's <code>images[].uri</code> (a bare filename Godot resolves as a GLB sibling) <strong>MUST</strong> exist on disk / in the tree. Source-text greps can't see inside binary GLBs, so this is its own check. <em>(Guard: GLB-URI check — the blind spot behind issue #245.)</em></li>
+    <li><strong>The published pack matches the manifest.</strong> The pack URL serves a valid <code>GDPC</code> and the sidecar's <code>version</code>/<code>sha256</code>/<code>size</code> equal the in-repo manifest. <em>(Guard: <code>verify-assets</code>.)</em></li>
+    <li><strong>The R2 mirror has every added/modified asset.</strong> <em>(Guard: <code>r2-mirror-check</code>.)</em></li>
+  </ul>
+
+  <h2>Code in the pack is harmless (and accepted)</h2>
+  <p>Godot's <code>--export-pack</code> (<code>all_resources</code>) bundles <code>scripts/</code>, <code>scenes/</code>, and <code>.godot/global_script_class_cache.cfg</code> into the pack, and the glob <code>exclude_filter</code> can't strip resources. <strong>This is fine.</strong> The pack is mounted with <code>load_resource_pack(path, <strong>false</strong>)</code> — <code>replace_files=false</code>, so in-tree (build) resources win — and the global class cache is read at engine init, <em>before</em> the pack mounts. So the build's code is always authoritative; the pack's code copy never runs. The only way to produce a truly code-free pack is a custom <code>PCKPacker</code>, which was attempted and abandoned as not worth it — so this is <strong>accepted, not gated</strong> (the publish logs pack composition for visibility but never fails on it; see issue #284).</p>
+  <p>A direct consequence: <strong>a code-only change never needs a republish.</strong> Editing <code>scripts/</code> or <code>scenes/</code> ships entirely via the next build; the pack is irrelevant to it. Only adding or changing files under <code>assets/</code> (the SEGA media) requires a republish.</p>
+
+  <h2>Backup of the dev asset tree</h2>
+  <p>Much of the working media under <code>assets/</code> is <strong>not committed to git</strong> (the heavy art is gitignored — it lives in the pack, not the repo). The safety net for it is R2: <code>npm run sync-tree</code> mirrors the <em>entire</em> <code>assets/</code> tree to R2 (incremental md5 diff), so <strong>the R2 mirror doubles as the dev-asset backup</strong>, not just the web-tools CDN. Run it whenever you add or change media; a lost dev box can then be restored with <code>scripts/tools/fetch_assets_dev.sh</code>. R2 credentials live in <code>.env</code> (<code>R2_ACCESS_KEY_ID</code>, <code>R2_SECRET_ACCESS_KEY</code>, …).</p>
+  <p>Two things are <strong>not</strong> on R2 and rely on other backups:</p>
+  <ul>
+    <li><code>assets/kenney_*</code> — vendored <em>in git</em> (Creative Commons), so the repo is its backup.</li>
+    <li><code>assets/npcs/cowgirl/</code> — the Booth.pm license permits <em>bundling</em> (so it ships in the pack) but not re-hosting the <em>raw</em> file on a public CDN, so it's excluded from the R2 mirror. The model actually used is a custom hybrid GLB (<code>cowgirl_hybrid.glb</code>); keep an offline copy of any cowgirl source that isn't committed to git, since R2 (the usual backup) doesn't hold it.</li>
+  </ul>
+  <p>Caveat: <code>sync-tree --delete</code> removes R2 objects missing locally, so run a plain <code>sync-tree</code> (never <code>--delete</code>) from an <em>incomplete</em> local tree, or it will prune the backup.</p>
+
+  <h2>Publishing (when assets change)</h2>
+  <ol>
+    <li><code>cd scripts/publish &amp;&amp; npm run sync-tree</code> — upload added/modified files to the R2 mirror (no commit).</li>
+    <li><code>npm run upload-pack</code> — rebuild <code>dist/assets.pck</code>, upload to Arweave, rewrite <code>assets_manifest.json</code> + <code>asset_tree.txt</code>.</li>
+    <li>Bump <code>VERSION</code> + <code>project.godot</code>, commit the manifest + tree, open a PR. <code>verify-assets</code> + <code>r2-mirror-check</code> validate both channels.</li>
+  </ol>
+</Concept>

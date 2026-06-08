@@ -182,6 +182,34 @@ function formatBytes(n: number): string {
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
+// Godot's --export-pack ("all_resources") bundles scripts/scenes/data + the
+// global class cache into the pck, and the glob exclude_filter can't strip
+// resources. This is ACCEPTED, not a bug: the pack mounts with
+// replace_files=false and the class cache is read at engine-init *before* the
+// mount, so the build's (APK's) code always wins — the pack's code copy never
+// runs. The only true fix is a custom PCKPacker, which was tried and abandoned.
+// So this is purely informational (never fails the publish). See issue #284 +
+// the asset-distribution spec page.
+const PACK_CODE_MARKERS = [
+  "res://scripts/",
+  "res://scenes/",
+  "res://data/",
+  "global_script_class_cache",
+];
+
+function logPackComposition(pckPath: string): void {
+  const buf = readFileSync(pckPath);
+  const found = PACK_CODE_MARKERS.filter((m) => buf.includes(Buffer.from(m)));
+  if (found.length === 0) {
+    console.log("  pack is media-only (no code/scene/data/class-cache entries)");
+  } else {
+    console.log(
+      `  note: pack includes code/cache entries (${found.join(", ")}) — Godot's ` +
+      `--export-pack bundles them; inert at runtime (replace_files=false). Accepted; see #284.`,
+    );
+  }
+}
+
 function buildPack(): { sha256: string; size: number } {
   mkdirSync(DIST_DIR, { recursive: true });
   const cmd = `godot --headless --path . --export-pack "${PRESET_NAME}" ${PCK_OUT}`;
@@ -191,6 +219,7 @@ function buildPack(): { sha256: string; size: number } {
   if (!existsSync(PCK_OUT)) {
     throw new Error(`godot --export-pack claimed success but ${PCK_OUT} doesn't exist`);
   }
+  logPackComposition(PCK_OUT);
   return sha256OfFile(PCK_OUT);
 }
 
