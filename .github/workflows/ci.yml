@@ -109,6 +109,19 @@ jobs:
       - name: Verify repo layout (no root junk; binary assets under sanctioned trees)
         run: python3 scripts/tools/check_repo_layout.py
 
+  code-health:
+    # Self-contained (stdlib-only) GDScript duplication ratchet — rebuilds the
+    # function graph from source every run, so it can't go stale. Fails only on
+    # NEW near-duplicate functions vs scripts/tools/code_dup_baseline.json, so
+    # the existing backlog (#294) doesn't block. EPIC #295.
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Duplication ratchet (no new near-duplicate functions)
+        run: python3 scripts/tools/code_graph.py --check
+
   verify-assets:
     runs-on: ubuntu-latest
     timeout-minutes: 20
