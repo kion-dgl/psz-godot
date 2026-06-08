@@ -817,6 +817,7 @@ func _drive_office_briefing() -> void:
 # office intro instead of accepting a quest; each step prints a [sanity]
 # checkpoint asserted by the smoke script. Built incrementally — see #9.
 var _shop_meseta_before := -1
+var _shop_buy_before := -1
 
 
 func _get_active_meseta() -> int:
@@ -871,11 +872,30 @@ func _check_item_shop_opened() -> void:
 	var top := ""
 	if SceneManager != null and not SceneManager._scene_stack.is_empty():
 		top = String(SceneManager._scene_stack[SceneManager._scene_stack.size() - 1])
-	if top == ITEM_SHOP:
-		print("[sanity] checkpoint: item_shop opened")
-	else:
+	if top != ITEM_SHOP:
 		print("[sanity] FAIL: item_shop did not open (top overlay='%s')" % top)
-	# Close the overlay, then DONE (Inc 1 terminal — buy/equip/storage follow).
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	print("[sanity] checkpoint: item_shop opened")
+	# Inc 2: buy the first Items-tab row (affordable — 10.5k meseta + fresh
+	# inventory). ui_accept opens the buy modal; QuantityDialog wants
+	# accept-to-advance then accept-to-confirm, ConfirmDialog just confirms — so a
+	# few spaced ui_accepts cover both paths. Assert success by a meseta drop.
+	_shop_buy_before = _get_active_meseta()
+	print("[sanity] shop-smoke: buying item (meseta before = %d)" % _shop_buy_before)
+	_after(0.6, func() -> void: _press_action("ui_accept"))   # open buy modal
+	_after(1.2, func() -> void: _press_action("ui_accept"))   # qty → confirm step
+	_after(1.8, func() -> void: _press_action("ui_accept"))   # confirm
+	_after(2.6, _check_item_bought)
+
+
+func _check_item_bought() -> void:
+	var now := _get_active_meseta()
+	if _shop_buy_before >= 0 and now < _shop_buy_before:
+		print("[sanity] checkpoint: item_shop bought (meseta %d -> %d)" % [_shop_buy_before, now])
+	else:
+		print("[sanity] FAIL: item_shop purchase did not register (meseta still %d)" % now)
+	# Close the shop, then DONE (Inc 0-2 terminal — weapon/equip/storage extend here).
 	_after(STEP_DELAY, func() -> void:
 		if SceneManager != null and SceneManager.has_method("pop_scene"):
 			SceneManager.pop_scene()
