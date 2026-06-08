@@ -12,6 +12,7 @@ existing backlog never blocks a PR):
   • DEAD CODE: functions whose name is referenced nowhere else across all
     .gd + .tscn (scenes wire signal handlers by name), minus engine virtuals.
   • COMPLEXITY: god-functions over a size / cyclomatic bound (hotspots).
+  • COUPLING: god-orchestrators with high call-graph fan-out (name-resolved).
 
 Usage:
   code_graph.py --check             # CI: exit 1 on NEW duplication OR dead code
@@ -35,6 +36,7 @@ TOOLS = Path(__file__).resolve().parent
 DUP_BASELINE = TOOLS / "code_dup_baseline.json"
 DEAD_BASELINE = TOOLS / "code_dead_baseline.json"
 COMPLEXITY_BASELINE = TOOLS / "code_complexity_baseline.json"
+COUPLING_BASELINE = TOOLS / "code_coupling_baseline.json"
 
 # Duplication tuning. JACCARD_MIN matches the MCP SIMILAR_TO threshold that
 # produced #294; MIN_TOKENS skips trivial functions; SIZE_RATIO prunes pairs of
@@ -48,6 +50,12 @@ SIZE_RATIO = 0.6
 # huge baseline. cyclomatic = 1 + #decision-keywords (a coarse but stable proxy).
 MAX_LINES = 80
 MAX_CYCLOMATIC = 20
+
+# Coupling tuning. fan-out = # of distinct in-repo functions a function calls
+# (name-resolved — GDScript dynamic dispatch can't be typed precisely, so this
+# is approximate). A god-orchestrator calls too many things. fan-IN is NOT gated:
+# a high fan-in helper is usually a healthy hub, not a smell.
+MAX_FANOUT = 15
 
 # Engine-invoked callbacks: never referenced by name in source, but NOT dead.
 GODOT_VIRTUALS = {
@@ -67,6 +75,8 @@ _TOKEN_RE = re.compile(r"[A-Za-z_]\w*|[^\sA-Za-z_]")
 _WORD_RE = re.compile(r"[A-Za-z_]\w*")
 # branch/loop/boolean keywords → cyclomatic-complexity proxy
 _DECISION_RE = re.compile(r"\b(?:if|elif|for|while|and|or|match)\b")
+# identifier immediately before "(" → a call site (callee name)
+_CALL_RE = re.compile(r"\b([A-Za-z_]\w*)\s*\(")
 
 
 def _indent_width(line: str) -> int:
@@ -136,6 +146,7 @@ def extract_functions(path: Path) -> list[dict]:
             "tokens": _tokenize(src),
             "nlines": len(body),
             "cyclomatic": 1 + len(_DECISION_RE.findall(clean)),
+            "callees": set(_CALL_RE.findall(clean)),  # names; resolved later
         })
         i = j
     return out
@@ -226,6 +237,29 @@ def find_complex_functions(funcs: list[dict]) -> list[dict]:
     return out
 
 
+# ── coupling (call-graph fan-out) ─────────────────────────────────────────────
+
+def _is_test_fn(f: dict) -> bool:
+    return f["name"].startswith("test_") or f["file"].endswith("test_runner.gd")
+
+
+def find_coupling_hotspots(funcs: list[dict]) -> list[dict]:
+    """God-orchestrators: functions calling > MAX_FANOUT distinct in-repo
+    functions. Resolution is by name (approximate — GDScript can't be typed
+    statically); only callees that are defined functions in scripts/ count."""
+    defined = {f["name"] for f in funcs}
+    out: list[dict] = []
+    for f in funcs:
+        if _is_test_fn(f):  # test orchestrators legitimately call many things
+            continue
+        callees = {c for c in f["callees"] if c in defined and c != f["name"]}
+        if len(callees) > MAX_FANOUT:
+            out.append({"qn": f["qn"], "file": f["file"], "line": f["line"],
+                        "fanout": len(callees)})
+    out.sort(key=lambda d: -d["fanout"])
+    return out
+
+
 # ── baselines ────────────────────────────────────────────────────────────────
 
 def _load_sigs(path: Path, key: str) -> set[str]:
@@ -235,7 +269,8 @@ def _load_sigs(path: Path, key: str) -> set[str]:
             for e in json.loads(path.read_text()).get(key, [])}
 
 
-def write_baselines(pairs: list[dict], dead: list[dict], complex_: list[dict]) -> None:
+def write_baselines(pairs: list[dict], dead: list[dict], complex_: list[dict],
+                    coupling: list[dict]) -> None:
     DUP_BASELINE.write_text(json.dumps({
         "_comment": ("Accepted near-duplicate function pairs (EPIC #295). "
                      "code_graph.py --check fails on any pair NOT here. Run "
@@ -259,13 +294,21 @@ def write_baselines(pairs: list[dict], dead: list[dict], complex_: list[dict]) -
         "max_lines": MAX_LINES, "max_cyclomatic": MAX_CYCLOMATIC,
         "accepted_complex": [d["qn"] for d in complex_],
     }, indent=2) + "\n")
+    COUPLING_BASELINE.write_text(json.dumps({
+        "_comment": (f"Accepted god-orchestrators — functions calling > {MAX_FANOUT} "
+                     "distinct in-repo functions (fan-out, name-resolved; EPIC #295). "
+                     "--check fails on a NEW one. Split the orchestration + "
+                     "--update-baseline. fan-IN is intentionally not gated."),
+        "max_fanout": MAX_FANOUT,
+        "accepted_coupling": [d["qn"] for d in coupling],
+    }, indent=2) + "\n")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--check", action="store_true",
-                   help="CI gate: exit 1 on NEW duplication, dead code, or complexity")
+                   help="CI gate: exit 1 on NEW dup, dead code, complexity, or coupling")
     g.add_argument("--update-baseline", action="store_true",
                    help="rewrite all baselines (after cleanup, or to accept new findings)")
     g.add_argument("--report", action="store_true",
@@ -274,6 +317,8 @@ def main() -> int:
                    help="list all dead-code candidates")
     g.add_argument("--report-complex", action="store_true",
                    help="list all complex-function hotspots")
+    g.add_argument("--report-coupling", action="store_true",
+                   help="list all high-fan-out god-orchestrators")
     args = ap.parse_args()
 
     funcs = build_graph()
@@ -302,29 +347,42 @@ def main() -> int:
             print(f"  cx={d['cyclomatic']:>3} lines={d['nlines']:>4}  {d['qn']}")
         return 0
 
+    if args.report_coupling:
+        coup = find_coupling_hotspots(funcs)
+        print(f"[code-graph] {len(funcs)} functions, {len(coup)} god-orchestrators "
+              f"(fan-out > {MAX_FANOUT} distinct in-repo callees):")
+        for d in coup:
+            print(f"  fanout={d['fanout']:>3}  {d['qn']}")
+        return 0
+
     if args.update_baseline:
         pairs = find_duplicate_pairs(funcs)
         dead = find_dead_functions(funcs)
         comp = find_complex_functions(funcs)
-        write_baselines(pairs, dead, comp)
+        coup = find_coupling_hotspots(funcs)
+        write_baselines(pairs, dead, comp, coup)
         print(f"[code-graph] baselines written: {len(pairs)} dup pairs, "
-              f"{len(dead)} dead candidates, {len(comp)} complex.")
+              f"{len(dead)} dead candidates, {len(comp)} complex, {len(coup)} coupling.")
         return 0
 
-    # --check (ratchet all three)
+    # --check (ratchet all four)
     pairs = find_duplicate_pairs(funcs)
     dead = find_dead_functions(funcs)
     comp = find_complex_functions(funcs)
+    coup = find_coupling_hotspots(funcs)
     dup_base = _load_sigs(DUP_BASELINE, "accepted_pairs")
     dead_base = _load_sigs(DEAD_BASELINE, "accepted_dead")
     comp_base = _load_sigs(COMPLEXITY_BASELINE, "accepted_complex")
+    coup_base = _load_sigs(COUPLING_BASELINE, "accepted_coupling")
     new_dup = [p for p in pairs if p["sig"] not in dup_base]
     new_dead = [d for d in dead if d["qn"] not in dead_base]
     new_comp = [d for d in comp if d["qn"] not in comp_base]
+    new_coup = [d for d in coup if d["qn"] not in coup_base]
 
     print(f"[code-graph] {len(funcs)} functions | dup: {len(pairs)} ({len(new_dup)} new) "
           f"| dead: {len(dead)} ({len(new_dead)} new) "
-          f"| complex: {len(comp)} ({len(new_comp)} new)")
+          f"| complex: {len(comp)} ({len(new_comp)} new) "
+          f"| coupling: {len(coup)} ({len(new_coup)} new)")
     rc = 0
     if new_dup:
         print("::error::new duplicate function pair(s) — extract a shared helper "
@@ -344,8 +402,14 @@ def main() -> int:
         for d in new_comp:
             print(f"  cx={d['cyclomatic']} lines={d['nlines']}  {d['file']}:{d['line']}")
         rc = 1
+    if new_coup:
+        print("::error::new god-orchestrator(s) — calls too many distinct functions. "
+              "Decompose it, or accept with --update-baseline:")
+        for d in new_coup:
+            print(f"  fanout={d['fanout']}  {d['file']}:{d['line']}")
+        rc = 1
     if rc == 0:
-        print("[code-graph] no new duplication, dead code, or complexity ✓")
+        print("[code-graph] no new duplication, dead code, complexity, or coupling ✓")
     return rc
 
 
