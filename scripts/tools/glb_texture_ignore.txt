@@ -1,11 +1,6 @@
 # GLBs allowed to reference a missing sibling texture, skipped by
 # check_glb_textures.py. Repo-relative GLB path, one per line; '#' comments.
 #
-# These four are issue #245: the generic basic/ shapes were skinned with PSO
-# textures that ship under assets/weapons/<id>/ but were never co-located into
-# basic/. The fix (copy the 4 canonical PNGs + republish the pack) is tracked
-# separately; remove these lines when that lands so the guard goes fully strict.
-assets/weapons/basic/Claw.glb
-assets/weapons/basic/DoubleSaber.glb
-assets/weapons/basic/Launcher.glb
-assets/weapons/basic/Slicer.glb
+# Empty: the #245 basic/ weapon GLBs now have their sibling textures co-located
+# and shipped in the pack, so the guard runs fully strict. Add an entry here
+# only as a temporary allowance for a known-pending texture fix.
