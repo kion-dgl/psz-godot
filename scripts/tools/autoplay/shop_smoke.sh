@@ -66,6 +66,7 @@ check "reached city_office"               "[sanity] checkpoint: city_office"
 check "entered shop-smoke detour"         "[sanity] office intro complete → shop/storage smoke"
 check "principal debug meseta granted"    "[sanity] checkpoint: principal debug meseta granted"
 check "item shop opened"                  "[sanity] checkpoint: item_shop opened"
+check "item shop purchase registered"     "[sanity] checkpoint: item_shop bought"
 check "autopilot finished cleanly"        "[sanity] DONE ok"
 
 # Any explicit [sanity] FAIL line is a hard failure.
