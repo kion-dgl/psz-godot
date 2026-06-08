@@ -3,6 +3,7 @@
   "private": true,
   "description": "Repo-level dev/test entry points for PSZ Godot.",
   "scripts": {
-    "sanity-check": "bash scripts/tools/autoplay/sanity_check.sh"
+    "sanity-check": "bash scripts/tools/autoplay/sanity_check.sh",
+    "shop-smoke": "bash scripts/tools/autoplay/shop_smoke.sh"
   }
 }
