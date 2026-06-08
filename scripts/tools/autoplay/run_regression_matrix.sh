@@ -203,7 +203,7 @@ JSON
   # --- Resume guards ---
   # Execution order of the phases. `reached <stage>` returns 0 (run it) when
   # no --from was given, or when <stage> is at-or-after FROM in this order.
-  PHASE_ORDER=(boot sr pp as doe fo static it heretic csy tbs dc)
+  PHASE_ORDER=(boot sr pp as doe fo static it heretic csy tbs dc shops)
   phase_index() {
     local name=$1 i=0
     for p in "${PHASE_ORDER[@]}"; do
@@ -391,6 +391,16 @@ JSON
     run_chain_phase dc      "dark_castle"       "post-tbs"     "post-dc"      "Phase 12: dark_castle" 900
   fi
 
+  # === Phase 13: Shops (city-economy smoke — issue #9) ===
+  # The quest chain never opens a shop/storage screen — the surface that shipped
+  # broken in #283/#245. This phase drives a fresh boot → principal debug-meseta
+  # → item shop → DONE. Runs LAST and self-contained: it wipes the default save,
+  # so it must not precede the save-chained quest phases.
+  if reached shops; then
+    echo ""; echo "=== Phase 13: Shops (shop/storage smoke) ==="
+    bash "$REPO/scripts/tools/autoplay/record_shops.sh" || true
+  fi
+
   echo ""; echo "=== regression matrix done $(date -u +%FT%TZ) ==="
 fi
 
@@ -402,7 +412,7 @@ echo "[regression] building $REPORT"
 TMPREPORT="$(mktemp)"
 echo '{"started_at":"'"$RUN_START_ISO"'","quests":[' > "$TMPREPORT"
 FIRST=1
-for tag in boot first_mission pp_canon pp_backtrack as_canon as_moon as_sol doe fo sis it heretic csy tbs dc; do
+for tag in boot first_mission pp_canon pp_backtrack as_canon as_moon as_sol doe fo sis it heretic csy tbs dc shops; do
   # Newest sidecar JSON for this tag prefix
   latest=$(ls -t "$OUTDIR"/${tag}_*.json 2>/dev/null | head -1)
   if [ -z "$latest" ]; then continue; fi
