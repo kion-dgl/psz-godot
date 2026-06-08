@@ -112,15 +112,15 @@ jobs:
   code-health:
     # Self-contained (stdlib-only) GDScript graph ratchet — rebuilds the
     # function graph from source every run, so it can't go stale. Fails on NEW
-    # near-duplicate functions (vs code_dup_baseline.json) or NEW dead code
-    # (functions referenced nowhere in .gd/.tscn, vs code_dead_baseline.json),
-    # so the existing backlogs (#294 dup) don't block. EPIC #295.
+    # near-duplicate functions, NEW dead code (referenced nowhere in .gd/.tscn),
+    # or NEW complexity hotspots (god-functions over the size/cyclomatic bound),
+    # each vs a committed baseline, so the existing backlogs don't block. #295.
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
 
-      - name: Duplication + dead-code ratchet (no new dup/dead functions)
+      - name: Duplication + dead-code + complexity ratchet
         run: python3 scripts/tools/code_graph.py --check
 
   verify-assets:

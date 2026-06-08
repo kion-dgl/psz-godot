@@ -11,6 +11,7 @@ existing backlog never blocks a PR):
   • DUPLICATION (#294): near-duplicate functions via normalized-token Jaccard.
   • DEAD CODE: functions whose name is referenced nowhere else across all
     .gd + .tscn (scenes wire signal handlers by name), minus engine virtuals.
+  • COMPLEXITY: god-functions over a size / cyclomatic bound (hotspots).
 
 Usage:
   code_graph.py --check             # CI: exit 1 on NEW duplication OR dead code
@@ -33,6 +34,7 @@ SRC_GLOB = "scripts/**/*.gd"
 TOOLS = Path(__file__).resolve().parent
 DUP_BASELINE = TOOLS / "code_dup_baseline.json"
 DEAD_BASELINE = TOOLS / "code_dead_baseline.json"
+COMPLEXITY_BASELINE = TOOLS / "code_complexity_baseline.json"
 
 # Duplication tuning. JACCARD_MIN matches the MCP SIMILAR_TO threshold that
 # produced #294; MIN_TOKENS skips trivial functions; SIZE_RATIO prunes pairs of
@@ -40,6 +42,12 @@ DEAD_BASELINE = TOOLS / "code_dead_baseline.json"
 JACCARD_MIN = 0.85
 MIN_TOKENS = 20
 SIZE_RATIO = 0.6
+
+# Complexity tuning. A function is a "hotspot" when it exceeds EITHER bound.
+# Chosen to flag the genuine god-functions (~80 in the current tree) without a
+# huge baseline. cyclomatic = 1 + #decision-keywords (a coarse but stable proxy).
+MAX_LINES = 80
+MAX_CYCLOMATIC = 20
 
 # Engine-invoked callbacks: never referenced by name in source, but NOT dead.
 GODOT_VIRTUALS = {
@@ -57,6 +65,8 @@ _INDENT_RE = re.compile(r"^[ \t]*")
 # identifiers OR single non-space symbols — coarse but stable token stream
 _TOKEN_RE = re.compile(r"[A-Za-z_]\w*|[^\sA-Za-z_]")
 _WORD_RE = re.compile(r"[A-Za-z_]\w*")
+# branch/loop/boolean keywords → cyclomatic-complexity proxy
+_DECISION_RE = re.compile(r"\b(?:if|elif|for|while|and|or|match)\b")
 
 
 def _indent_width(line: str) -> int:
@@ -109,6 +119,12 @@ def extract_functions(path: Path) -> list[dict]:
                 break
             body.append(ln)
             j += 1
+        while len(body) > 1 and body[-1].strip() == "":
+            body.pop()  # trailing blanks belong to the gap, not the function
+        src = "\n".join(body)
+        # strip strings too (not just comments) so decision keywords inside
+        # literals ("and then", "#2a2a4e") don't skew the cyclomatic proxy
+        clean = _strip_strings_and_comments(src)
         out.append({
             "name": name,
             # Occurrence-indexed (NOT line-numbered): this both disambiguates
@@ -117,7 +133,9 @@ def extract_functions(path: Path) -> list[dict]:
             "qn": f"{rel}:{name}#{occ}",
             "file": rel,
             "line": i + 1,  # metadata for reporting only
-            "tokens": _tokenize("\n".join(body)),
+            "tokens": _tokenize(src),
+            "nlines": len(body),
+            "cyclomatic": 1 + len(_DECISION_RE.findall(clean)),
         })
         i = j
     return out
@@ -194,6 +212,20 @@ def find_dead_functions(funcs: list[dict]) -> list[dict]:
     return dead
 
 
+# ── complexity / hotspots ─────────────────────────────────────────────────────
+
+def find_complex_functions(funcs: list[dict]) -> list[dict]:
+    """Functions over MAX_LINES or MAX_CYCLOMATIC — god-function hotspots."""
+    out = [
+        {"qn": f["qn"], "file": f["file"], "line": f["line"],
+         "nlines": f["nlines"], "cyclomatic": f["cyclomatic"]}
+        for f in funcs
+        if f["nlines"] > MAX_LINES or f["cyclomatic"] > MAX_CYCLOMATIC
+    ]
+    out.sort(key=lambda d: (-d["cyclomatic"], -d["nlines"]))
+    return out
+
+
 # ── baselines ────────────────────────────────────────────────────────────────
 
 def _load_sigs(path: Path, key: str) -> set[str]:
@@ -203,7 +235,7 @@ def _load_sigs(path: Path, key: str) -> set[str]:
             for e in json.loads(path.read_text()).get(key, [])}
 
 
-def write_baselines(pairs: list[dict], dead: list[dict]) -> None:
+def write_baselines(pairs: list[dict], dead: list[dict], complex_: list[dict]) -> None:
     DUP_BASELINE.write_text(json.dumps({
         "_comment": ("Accepted near-duplicate function pairs (EPIC #295). "
                      "code_graph.py --check fails on any pair NOT here. Run "
@@ -219,19 +251,29 @@ def write_baselines(pairs: list[dict], dead: list[dict]) -> None:
                      "any candidate NOT here; --update-baseline after cleanup."),
         "accepted_dead": [d["qn"] for d in dead],
     }, indent=2) + "\n")
+    COMPLEXITY_BASELINE.write_text(json.dumps({
+        "_comment": (f"Accepted complex functions — over {MAX_LINES} lines or "
+                     f"{MAX_CYCLOMATIC} cyclomatic (EPIC #295). --check fails on a "
+                     "NEW hotspot (new god-function, or an existing one crossing a "
+                     "bound). Shrink by refactoring + --update-baseline."),
+        "max_lines": MAX_LINES, "max_cyclomatic": MAX_CYCLOMATIC,
+        "accepted_complex": [d["qn"] for d in complex_],
+    }, indent=2) + "\n")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     g = ap.add_mutually_exclusive_group(required=True)
     g.add_argument("--check", action="store_true",
-                   help="CI gate: exit 1 on NEW duplication or dead code")
+                   help="CI gate: exit 1 on NEW duplication, dead code, or complexity")
     g.add_argument("--update-baseline", action="store_true",
-                   help="rewrite both baselines (after cleanup, or to accept new findings)")
+                   help="rewrite all baselines (after cleanup, or to accept new findings)")
     g.add_argument("--report", action="store_true",
                    help="list all near-duplicate function pairs")
     g.add_argument("--report-dead", action="store_true",
                    help="list all dead-code candidates")
+    g.add_argument("--report-complex", action="store_true",
+                   help="list all complex-function hotspots")
     args = ap.parse_args()
 
     funcs = build_graph()
@@ -252,24 +294,37 @@ def main() -> int:
             print(f"  {d['file']}:{d['line']}  {d['name']}()")
         return 0
 
+    if args.report_complex:
+        comp = find_complex_functions(funcs)
+        print(f"[code-graph] {len(funcs)} functions, {len(comp)} hotspots "
+              f"(> {MAX_LINES} lines or > {MAX_CYCLOMATIC} cyclomatic):")
+        for d in comp:
+            print(f"  cx={d['cyclomatic']:>3} lines={d['nlines']:>4}  {d['qn']}")
+        return 0
+
     if args.update_baseline:
         pairs = find_duplicate_pairs(funcs)
         dead = find_dead_functions(funcs)
-        write_baselines(pairs, dead)
+        comp = find_complex_functions(funcs)
+        write_baselines(pairs, dead, comp)
         print(f"[code-graph] baselines written: {len(pairs)} dup pairs, "
-              f"{len(dead)} dead candidates.")
+              f"{len(dead)} dead candidates, {len(comp)} complex.")
         return 0
 
-    # --check (ratchet both)
+    # --check (ratchet all three)
     pairs = find_duplicate_pairs(funcs)
     dead = find_dead_functions(funcs)
+    comp = find_complex_functions(funcs)
     dup_base = _load_sigs(DUP_BASELINE, "accepted_pairs")
     dead_base = _load_sigs(DEAD_BASELINE, "accepted_dead")
+    comp_base = _load_sigs(COMPLEXITY_BASELINE, "accepted_complex")
     new_dup = [p for p in pairs if p["sig"] not in dup_base]
     new_dead = [d for d in dead if d["qn"] not in dead_base]
+    new_comp = [d for d in comp if d["qn"] not in comp_base]
 
-    print(f"[code-graph] {len(funcs)} functions | dup: {len(pairs)} pairs "
-          f"({len(new_dup)} new) | dead: {len(dead)} candidates ({len(new_dead)} new)")
+    print(f"[code-graph] {len(funcs)} functions | dup: {len(pairs)} ({len(new_dup)} new) "
+          f"| dead: {len(dead)} ({len(new_dead)} new) "
+          f"| complex: {len(comp)} ({len(new_comp)} new)")
     rc = 0
     if new_dup:
         print("::error::new duplicate function pair(s) — extract a shared helper "
@@ -283,8 +338,14 @@ def main() -> int:
         for d in new_dead:
             print(f"  {d['file']}:{d['line']}  {d['name']}()")
         rc = 1
+    if new_comp:
+        print("::error::new complex function(s) — over the size/cyclomatic bound. "
+              "Split it, or accept with --update-baseline:")
+        for d in new_comp:
+            print(f"  cx={d['cyclomatic']} lines={d['nlines']}  {d['file']}:{d['line']}")
+        rc = 1
     if rc == 0:
-        print("[code-graph] no new duplication or dead code ✓")
+        print("[code-graph] no new duplication, dead code, or complexity ✓")
     return rc
 
 
