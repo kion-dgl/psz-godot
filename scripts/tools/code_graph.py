@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
-"""Self-contained GDScript code-health graph + duplication ratchet.
+"""Self-contained GDScript code-health graph + ratchets.
 
 Builds a lightweight *function-level graph* from scripts/**/*.gd using only the
 stdlib — so it rebuilds deterministically in CI every PR (never goes stale) and
 needs no MCP and no `pip install`. The codebase-memory MCP stays the rich
-dev-time explorer; this is the CI gate.
+dev-time explorer; this is the CI gate. EPIC #295.
 
-Increment 1 (EPIC #295): DUPLICATION. Near-duplicate functions are detected via
-normalized-token Jaccard and ratcheted against a committed baseline — the PR
-fails only on *new* duplication, so the existing backlog (#294) never blocks.
-Dead-code (CALLS edges) and coupling extend the same graph in later increments.
+Checks (each ratcheted against a committed baseline — fail on NEW only, so the
+existing backlog never blocks a PR):
+  • DUPLICATION (#294): near-duplicate functions via normalized-token Jaccard.
+  • DEAD CODE: functions whose name is referenced nowhere else across all
+    .gd + .tscn (scenes wire signal handlers by name), minus engine virtuals.
 
 Usage:
-  code_graph.py --check             # CI: exit 1 on NEW duplicate clusters
-  code_graph.py --update-baseline   # rewrite the baseline (after cleanup/accept)
-  code_graph.py --report            # human-readable cluster list (no exit code)
+  code_graph.py --check             # CI: exit 1 on NEW duplication OR dead code
+  code_graph.py --update-baseline   # rewrite both baselines (after cleanup/accept)
+  code_graph.py --report            # near-duplicate pairs
+  code_graph.py --report-dead       # dead-code candidates
 """
 from __future__ import annotations
 
@@ -22,39 +24,65 @@ import argparse
 import json
 import re
 import sys
+from collections import Counter
 from itertools import combinations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC_GLOB = "scripts/**/*.gd"
-BASELINE = Path(__file__).resolve().parent / "code_dup_baseline.json"
+TOOLS = Path(__file__).resolve().parent
+DUP_BASELINE = TOOLS / "code_dup_baseline.json"
+DEAD_BASELINE = TOOLS / "code_dead_baseline.json"
 
-# Tuning. JACCARD_MIN matches the MCP's SIMILAR_TO threshold that produced #294;
-# MIN_TOKENS skips trivial functions (getters, one-liners) where shared vocab
-# trivially overlaps; SIZE_RATIO prunes pairs of very different length cheaply.
+# Duplication tuning. JACCARD_MIN matches the MCP SIMILAR_TO threshold that
+# produced #294; MIN_TOKENS skips trivial functions; SIZE_RATIO prunes pairs of
+# very different length cheaply.
 JACCARD_MIN = 0.85
 MIN_TOKENS = 20
 SIZE_RATIO = 0.6
 
+# Engine-invoked callbacks: never referenced by name in source, but NOT dead.
+GODOT_VIRTUALS = {
+    "_ready", "_enter_tree", "_exit_tree", "_process", "_physics_process",
+    "_input", "_unhandled_input", "_unhandled_key_input", "_shortcut_input",
+    "_gui_input", "_draw", "_init", "_notification", "_to_string", "_get",
+    "_set", "_get_property_list", "_property_can_revert", "_property_get_revert",
+    "_validate_property", "_get_configuration_warnings", "_input_event",
+    "_can_drop_data", "_drop_data", "_get_drag_data", "_make_custom_tooltip",
+    "_integrate_forces", "_physics_process", "_iter_init", "_iter_next",
+    "_iter_get",
+}
+# Folders whose references count, but not searched for new dead defs (3rd-party).
+DEAD_SCAN_SKIP = ("scripts/tools/test",)  # test fns are invoked by reflection
+
 _FUNC_RE = re.compile(r"^([ \t]*)(?:static\s+)?func\s+([A-Za-z_]\w*)")
 _INDENT_RE = re.compile(r"^[ \t]*")
-# identifiers OR single non-space symbols — a coarse but stable token stream
+# identifiers OR single non-space symbols — coarse but stable token stream
 _TOKEN_RE = re.compile(r"[A-Za-z_]\w*|[^\sA-Za-z_]")
+_WORD_RE = re.compile(r"[A-Za-z_]\w*")
 
 
 def _indent_width(line: str) -> int:
     return len(_INDENT_RE.match(line).group(0).expandtabs())
 
 
-def _tokenize(src: str) -> set[str]:
-    src = re.sub(r"#.*", "", src)            # comments
-    src = re.sub(r'"[^"\n]*"', '""', src)    # string contents → placeholder
+def _strip_strings_and_comments(src: str) -> str:
+    # strings FIRST — a `#` inside a literal (e.g. SVG color "#2a2a4e") is NOT a
+    # comment. Triple-quoted before single so the inner quotes don't mis-split.
+    src = re.sub(r'"""[\s\S]*?"""', '""', src)
+    src = re.sub(r"'''[\s\S]*?'''", "''", src)
+    src = re.sub(r'"[^"\n]*"', '""', src)
     src = re.sub(r"'[^'\n]*'", "''", src)
-    return set(_TOKEN_RE.findall(src))
+    src = re.sub(r"#.*", "", src)
+    return src
+
+
+def _tokenize(src: str) -> set[str]:
+    return set(_TOKEN_RE.findall(_strip_strings_and_comments(src)))
 
 
 def extract_functions(path: Path) -> list[dict]:
-    """Return [{name, qn, file, line, tokens}] for each func, body by indentation."""
+    """Return [{name, qn, file, line, tokens}] per func, body by indentation."""
     rel = path.relative_to(ROOT).as_posix()
     try:
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -83,7 +111,8 @@ def extract_functions(path: Path) -> list[dict]:
             j += 1
         out.append({
             "name": name,
-            "qn": f"{rel}:{name}",
+            # line-qualified so same-named funcs (inner classes) don't collide
+            "qn": f"{rel}:{name}:{i + 1}",
             "file": rel,
             "line": i + 1,
             "tokens": _tokenize("\n".join(body)),
@@ -96,15 +125,16 @@ def build_graph() -> list[dict]:
     funcs: list[dict] = []
     for p in sorted(ROOT.glob(SRC_GLOB)):
         funcs.extend(extract_functions(p))
-    return [f for f in funcs if len(f["tokens"]) >= MIN_TOKENS]
+    return funcs
 
+
+# ── duplication ────────────────────────────────────────────────────────────
 
 def find_duplicate_pairs(funcs: list[dict]) -> list[dict]:
-    """Near-duplicate function pairs (normalized-token Jaccard >= JACCARD_MIN)."""
+    big = [f for f in funcs if len(f["tokens"]) >= MIN_TOKENS]
     pairs: list[dict] = []
-    for a, b in combinations(funcs, 2):
+    for a, b in combinations(big, 2):
         ta, tb = a["tokens"], b["tokens"]
-        # cheap size prune before the set ops
         if min(len(ta), len(tb)) < SIZE_RATIO * max(len(ta), len(tb)):
             continue
         inter = len(ta & tb)
@@ -113,83 +143,143 @@ def find_duplicate_pairs(funcs: list[dict]) -> list[dict]:
         jac = inter / len(ta | tb)
         if jac >= JACCARD_MIN:
             pairs.append({
-                "a": a["qn"], "b": b["qn"],
-                "jaccard": round(jac, 3),
-                "sig": _sig(a["qn"], b["qn"]),
+                "a": a["qn"], "b": b["qn"], "jaccard": round(jac, 3),
+                "sig": "||".join(sorted((a["qn"], b["qn"]))),
             })
     pairs.sort(key=lambda p: (-p["jaccard"], p["sig"]))
     return pairs
 
 
-def _sig(qn_a: str, qn_b: str) -> str:
-    """Order-independent stable signature for a pair (survives a/b swap)."""
-    return "||".join(sorted((qn_a, qn_b)))
+# ── dead code ────────────────────────────────────────────────────────────────
+
+def _iter_ref_files():
+    """All .gd + .tscn that may *reference* a function by name (calls, Callables,
+    string invokes, and scene [connection] method="…"). Skip generated/vendored."""
+    for ext in ("gd", "tscn"):
+        for p in ROOT.glob(f"**/*.{ext}"):
+            rel = p.relative_to(ROOT).as_posix()
+            if rel.startswith((".godot/", "archive/", "addons/")):
+                continue
+            yield p
 
 
-def load_baseline() -> set[str]:
-    if not BASELINE.exists():
+def build_reference_counts() -> Counter:
+    """Count every identifier occurrence across source + scenes (incl. strings
+    and comments — conservative: a name mentioned anywhere counts as 'used')."""
+    counts: Counter = Counter()
+    for p in _iter_ref_files():
+        try:
+            counts.update(_WORD_RE.findall(p.read_text(encoding="utf-8", errors="replace")))
+        except OSError:
+            continue
+    return counts
+
+
+def find_dead_functions(funcs: list[dict]) -> list[dict]:
+    ref_counts = build_reference_counts()
+    def_counts = Counter(f["name"] for f in funcs)
+    dead: list[dict] = []
+    for f in funcs:
+        name = f["name"]
+        if name in GODOT_VIRTUALS or name.startswith("test_"):
+            continue
+        if any(f["file"].startswith(s) for s in DEAD_SCAN_SKIP):
+            continue
+        # uses beyond the definition lines themselves
+        uses = ref_counts.get(name, 0) - def_counts.get(name, 0)
+        if uses <= 0:
+            dead.append({"qn": f["qn"], "name": name, "file": f["file"], "line": f["line"]})
+    dead.sort(key=lambda d: d["qn"])
+    return dead
+
+
+# ── baselines ────────────────────────────────────────────────────────────────
+
+def _load_sigs(path: Path, key: str) -> set[str]:
+    if not path.exists():
         return set()
-    data = json.loads(BASELINE.read_text())
-    return {e["sig"] for e in data.get("accepted_pairs", [])}
+    return {e if isinstance(e, str) else e["sig"]
+            for e in json.loads(path.read_text()).get(key, [])}
 
 
-def write_baseline(pairs: list[dict]) -> None:
-    payload = {
-        "_comment": (
-            "Accepted near-duplicate function pairs (EPIC #295, increment 1). "
-            "code_graph.py --check fails on any pair NOT listed here. Regenerate "
-            "with `python3 scripts/tools/code_graph.py --update-baseline` after "
-            "deduping (#294) or after consciously accepting a new pair."
-        ),
+def write_baselines(pairs: list[dict], dead: list[dict]) -> None:
+    DUP_BASELINE.write_text(json.dumps({
+        "_comment": ("Accepted near-duplicate function pairs (EPIC #295). "
+                     "code_graph.py --check fails on any pair NOT here. "
+                     "Regenerate with --update-baseline after deduping (#294)."),
         "jaccard_min": JACCARD_MIN,
-        "accepted_pairs": [
-            {"sig": p["sig"], "jaccard": p["jaccard"]} for p in pairs
-        ],
-    }
-    BASELINE.write_text(json.dumps(payload, indent=2) + "\n")
+        "accepted_pairs": [{"sig": p["sig"], "jaccard": p["jaccard"]} for p in pairs],
+    }, indent=2) + "\n")
+    DEAD_BASELINE.write_text(json.dumps({
+        "_comment": ("Accepted dead-code candidates — functions referenced "
+                     "nowhere else across .gd + .tscn (EPIC #295). Conservative "
+                     "(name-based), so triage before deleting. --check fails on "
+                     "any candidate NOT here; --update-baseline after cleanup."),
+        "accepted_dead": [d["qn"] for d in dead],
+    }, indent=2) + "\n")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     g = ap.add_mutually_exclusive_group(required=True)
-    g.add_argument("--check", action="store_true", help="fail on new dup clusters")
-    g.add_argument("--update-baseline", action="store_true", help="rewrite baseline")
-    g.add_argument("--report", action="store_true", help="list all dup pairs")
+    g.add_argument("--check", action="store_true")
+    g.add_argument("--update-baseline", action="store_true")
+    g.add_argument("--report", action="store_true")
+    g.add_argument("--report-dead", action="store_true")
     args = ap.parse_args()
 
     funcs = build_graph()
-    pairs = find_duplicate_pairs(funcs)
 
     if args.report:
-        print(f"[code-graph] {len(funcs)} functions (>= {MIN_TOKENS} tokens), "
-              f"{len(pairs)} near-duplicate pairs (jaccard >= {JACCARD_MIN}):")
+        pairs = find_duplicate_pairs(funcs)
+        print(f"[code-graph] {len(funcs)} functions, {len(pairs)} near-dup pairs "
+              f"(jaccard >= {JACCARD_MIN}):")
         for p in pairs:
             print(f"  {p['jaccard']:.2f}  {p['a']}  ~  {p['b']}")
         return 0
 
-    if args.update_baseline:
-        write_baseline(pairs)
-        print(f"[code-graph] baseline written: {len(pairs)} accepted pairs → "
-              f"{BASELINE.relative_to(ROOT)}")
+    if args.report_dead:
+        dead = find_dead_functions(funcs)
+        print(f"[code-graph] {len(funcs)} functions, {len(dead)} dead-code "
+              f"candidates (referenced nowhere else in .gd/.tscn):")
+        for d in dead:
+            print(f"  {d['file']}:{d['line']}  {d['name']}()")
         return 0
 
-    # --check (ratchet)
-    baseline = load_baseline()
-    new = [p for p in pairs if p["sig"] not in baseline]
-    stale = baseline - {p["sig"] for p in pairs}
-    print(f"[code-graph] {len(funcs)} functions, {len(pairs)} dup pairs "
-          f"({len(baseline)} baselined, {len(new)} new)")
-    if stale:
-        print(f"[code-graph] note: {len(stale)} baselined pair(s) no longer "
-              f"duplicate (dedup progress — run --update-baseline to prune).")
-    if new:
-        print("::error::new duplicate function pair(s) — extract a shared "
-              "helper, or accept with --update-baseline (see EPIC #295 / #294):")
-        for p in new:
+    if args.update_baseline:
+        pairs = find_duplicate_pairs(funcs)
+        dead = find_dead_functions(funcs)
+        write_baselines(pairs, dead)
+        print(f"[code-graph] baselines written: {len(pairs)} dup pairs, "
+              f"{len(dead)} dead candidates.")
+        return 0
+
+    # --check (ratchet both)
+    pairs = find_duplicate_pairs(funcs)
+    dead = find_dead_functions(funcs)
+    dup_base = _load_sigs(DUP_BASELINE, "accepted_pairs")
+    dead_base = _load_sigs(DEAD_BASELINE, "accepted_dead")
+    new_dup = [p for p in pairs if p["sig"] not in dup_base]
+    new_dead = [d for d in dead if d["qn"] not in dead_base]
+
+    print(f"[code-graph] {len(funcs)} functions | dup: {len(pairs)} pairs "
+          f"({len(new_dup)} new) | dead: {len(dead)} candidates ({len(new_dead)} new)")
+    rc = 0
+    if new_dup:
+        print("::error::new duplicate function pair(s) — extract a shared helper "
+              "or accept with --update-baseline (EPIC #295 / #294):")
+        for p in new_dup:
             print(f"  jaccard={p['jaccard']:.2f}  {p['a']}  ~  {p['b']}")
-        return 1
-    print("[code-graph] no new duplication ✓")
-    return 0
+        rc = 1
+    if new_dead:
+        print("::error::new dead-code — function referenced nowhere else "
+              "(.gd/.tscn). Remove it, or accept with --update-baseline:")
+        for d in new_dead:
+            print(f"  {d['file']}:{d['line']}  {d['name']}()")
+        rc = 1
+    if rc == 0:
+        print("[code-graph] no new duplication or dead code ✓")
+    return rc
 
 
 if __name__ == "__main__":
