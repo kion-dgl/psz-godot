@@ -363,7 +363,11 @@ func _http_download(url: String, cache_path: String) -> bool:
 ## Remove a partial / junk download so it isn't left in user://packs/.
 func _discard_download(dest_abs: String) -> void:
 	if FileAccess.file_exists(dest_abs):
-		DirAccess.remove_absolute(dest_abs)
+		var err: int = DirAccess.remove_absolute(dest_abs)
+		if err != OK:
+			# Leaving the junk behind is the very failure this guards against,
+			# so surface it rather than swallowing the error silently.
+			push_warning("[bootstrap] failed to remove junk download %s: %s" % [dest_abs, error_string(err)])
 
 
 ## True if the file begins with the Godot pack magic ("GDPC"). Cheap guard

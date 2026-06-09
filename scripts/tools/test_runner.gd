@@ -2650,6 +2650,7 @@ func test_bootstrap_pack_magic_guard() -> void:
 	var junk_abs: String = ProjectSettings.globalize_path(junk_path)
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://packs"))
 	var jf := FileAccess.open(junk_abs, FileAccess.WRITE)
+	assert_true(jf != null, "Junk fixture opened for write (user:// writable)")
 	jf.store_string("<html><head><title>502 Bad Gateway</title></head></html>")
 	jf.close()
 	assert_true(not boot._has_pack_magic(junk_abs), "HTML error body rejected (no GDPC magic)")
@@ -2660,6 +2661,7 @@ func test_bootstrap_pack_magic_guard() -> void:
 	var good_path: String = "user://packs/test-good.pck"
 	var good_abs: String = ProjectSettings.globalize_path(good_path)
 	var gf := FileAccess.open(good_abs, FileAccess.WRITE)
+	assert_true(gf != null, "Good fixture opened for write (user:// writable)")
 	gf.store_buffer(PackedByteArray([0x47, 0x44, 0x50, 0x43, 0x00, 0x00, 0x00, 0x00]))
 	gf.close()
 	assert_true(boot._has_pack_magic(good_abs), "Valid GDPC pack accepted")
