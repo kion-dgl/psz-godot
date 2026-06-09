@@ -131,31 +131,6 @@ func _process(delta: float) -> void:
 	if _input: _input._tick_nav_repeat(delta)
 
 
-## Open a Yes/No ConfirmDialog overlay for state-changing actions (equip,
-## feed mag, use item). On Yes the callback runs; on No or cancel the
-## modal just closes. Adds the modal as a child of `_canvas` so it
-## renders on top of the menu's _draw output.
-##
-## Without this confirmation step, accept-button presses would commit the
-## action immediately with only a small inline visual change, which
-## playtesters consistently missed (dashgl's 2026-05-07 feedback). The
-## modal makes the commit point unmissable.
-func _open_confirm(prompt: String, on_confirmed: Callable) -> void:
-	var modal := ConfirmDialog.new()
-	modal.confirmed.connect(func() -> void:
-		_active_modal = null
-		on_confirmed.call()
-		_canvas.queue_redraw()
-	)
-	modal.cancelled.connect(func() -> void:
-		_active_modal = null
-		_canvas.queue_redraw()
-	)
-	_active_modal = modal
-	_canvas.add_child(modal)
-	modal.ask(prompt)
-
-
 ## Open a multi-button ChoiceDialog. The callback receives the chosen
 ## index (into the original `choices` array). On cancel the modal just
 ## closes. Used for the unified inventory item menu (Equip / Use / Drop
