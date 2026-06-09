@@ -1295,50 +1295,6 @@ func _spawn_field_elements() -> void:
 			respawn_player_telepipe_from_state(saved_pos)
 
 
-func _spawn_end_cell_exit(connections: Dictionary) -> void:
-	## Spawn an AreaWarp + exit trigger on quest end cells that have no warp_edge.
-	## Finds a dead-end portal direction (not used by connections) for placement,
-	## or falls back to default spawn / room center.
-	var exit_pos := Vector3.ZERO
-	var exit_rot := 0.0
-	var exit_dir := ""
-
-	# Try to find a portal direction that isn't a connection (dead-end side)
-	for dir in ["south", "east", "west", "north"]:
-		if not connections.has(dir) and _portal_data.has(dir):
-			exit_dir = dir
-			exit_pos = _portal_data[dir].get("gate_pos", _portal_data[dir]["trigger_pos"])
-			exit_rot = _portal_data[dir].get("gate_rot", Vector3.ZERO).y
-			break
-
-	# Fallback to default spawn
-	if exit_dir.is_empty() and _portal_data.has("default"):
-		exit_pos = _portal_data["default"]["spawn_pos"]
-		if _portal_data["default"].has("default_rotation"):
-			exit_rot = _portal_data["default"]["default_rotation"]
-
-	# Fallback to room center
-	if exit_dir.is_empty() and not _portal_data.has("default"):
-		exit_pos = Vector3(0, 0, 0)
-
-	# Spawn AreaWarp
-	var area_warp := AreaWarpScript.new()
-	area_warp.auto_collect = false
-	area_warp.element_state = "open"
-	add_child(area_warp)
-	area_warp.global_position = exit_pos
-	area_warp.rotation.y = exit_rot
-
-	# Create exit trigger at same position
-	var callback := func(_body: Node3D) -> void:
-		if _body.is_in_group("player"):
-			_fdbg("[ValleyField] Player entered end-cell exit warp")
-			_on_end_reached()
-
-	_gate_mgr._create_fallback_trigger("EndCellExit", exit_pos, callback, true)
-	_fdbg("[FieldElements] End cell exit warp at %s (dir=%s)" % [exit_pos, exit_dir])
-
-
 ## Spawn a telepipe (cyan cylinder placeholder). Player steps into it to complete the section / quest.
 ## If pos is zero, falls back to room center / default spawn.
 func _spawn_telepipe(pos: Vector3 = Vector3.ZERO) -> void:

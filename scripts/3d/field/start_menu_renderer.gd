@@ -52,35 +52,6 @@ func _draw_menu() -> void:
 		PsoStartMenu.Mode.OPTIONS: _draw_options(c, font)
 
 
-func _draw_status(c: Control, font: Font, pos: Vector2) -> void:
-	var ch: Dictionary = _c._get_character()
-	var w: float = PsoStartMenu.LEFT_W - PsoStartMenu.PAD * 2
-	_draw_inner_panel(c, Rect2(pos, Vector2(w, 60)))
-
-	var name_str: String = str(ch.get("name", "Player"))
-	c.draw_string(font, pos + Vector2(12, 20), name_str, HORIZONTAL_ALIGNMENT_LEFT, -1, PsoStartMenu.FONT_SIZE, PsoStartMenu.C_TEXT)
-
-	# HP bar
-	var hp: float = float(ch.get("hp", 100))
-	var max_hp: float = float(ch.get("max_hp", 100))
-	var hp_pct: float = clampf(hp / maxf(max_hp, 1), 0, 1)
-	_draw_bar(c, Rect2(pos.x + 30, pos.y + 28, w - 42, 10), hp_pct, PsoStartMenu.C_HP)
-	c.draw_string(font, pos + Vector2(8, 38), "HP", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, PsoStartMenu.C_TEXT_MUTED)
-
-	# PP bar
-	var pp: float = float(ch.get("pp", 50))
-	var max_pp: float = float(ch.get("max_pp", 50))
-	var pp_pct: float = clampf(pp / maxf(max_pp, 1), 0, 1)
-	_draw_bar(c, Rect2(pos.x + 30, pos.y + 42, w - 42, 10), pp_pct, PsoStartMenu.C_PP)
-	c.draw_string(font, pos + Vector2(8, 52), "PP", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, PsoStartMenu.C_TEXT_MUTED)
-
-
-func _draw_bar(c: Control, rect: Rect2, pct: float, color: Color) -> void:
-	c.draw_rect(rect, Color(0, 0, 0, 0.15))
-	if pct > 0:
-		c.draw_rect(Rect2(rect.position, Vector2(rect.size.x * pct, rect.size.y)), color)
-
-
 func _draw_main(c: Control, font: Font) -> void:
 	# Main menu uses the assets/ui/main.png sprite (200×292). Text area inside
 	# the sprite: x=12, y=29, 176×233. Selection highlight and menu rows live

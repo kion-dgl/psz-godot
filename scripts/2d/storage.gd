@@ -163,10 +163,6 @@ func _is_items_tab() -> bool:
 	return _tab == Tab.DEPOSIT_ITEMS or _tab == Tab.WITHDRAW_ITEMS
 
 
-func _is_deposit_tab() -> bool:
-	return _tab == Tab.DEPOSIT_ITEMS or _tab == Tab.DEPOSIT_MESETA
-
-
 func _current_list() -> Array:
 	# For items tabs: deposit shows inventory, withdraw shows storage.
 	if _tab == Tab.DEPOSIT_ITEMS:

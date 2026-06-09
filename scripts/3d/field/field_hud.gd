@@ -162,13 +162,6 @@ func _toggle_log() -> void:
 	_quest_log.visible = _log_visible
 
 
-func _is_in_quest() -> bool:
-	if SessionManager.has_accepted_quest():
-		return true
-	var session: Dictionary = SessionManager.get_session()
-	return not session.is_empty() and str(session.get("type", "")) == "quest"
-
-
 func _is_in_city() -> bool:
 	return SessionManager.get_location() == "city"
 
