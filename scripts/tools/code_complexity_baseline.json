@@ -65,7 +65,6 @@
     "scripts/2d/character_create.gd:_make_slat_pack#0",
     "scripts/3d/city/city_counter_controller.gd:_show_npc_speech_bubble#0",
     "scripts/3d/field/field_hud.gd:_ready#3",
-    "scripts/2d/character_create.gd:_show_confirm#0",
     "scripts/2d/blackjack/blackjack_table.gd:_build_ui#0",
     "scripts/tools/test_runner.gd:test_quest_lifecycle#0",
     "scripts/2d/character_create.gd:_build_preview_scene#0",

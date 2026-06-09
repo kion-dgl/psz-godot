@@ -229,18 +229,6 @@ func _create_gate_trigger(direction: String, target_cell_pos: String, _portal: D
 	_add_gate_label(direction, _portal["gate_pos"] if _portal.has("gate_pos") else _portal["trigger_pos"], target_cell_pos, str(_portal.get("id", "")))
 
 
-func _create_exit_trigger(_direction: String, _portal: Dictionary) -> void:
-	var objectives_pending: bool = _c._has_pending_objectives()
-	var callback := func(_body: Node3D) -> void:
-		if _body.is_in_group("player"):
-			print("[ValleyField] Player entered exit trigger")
-			_c._on_end_reached()
-	_create_fallback_trigger("ExitTrigger", _portal["trigger_pos"], callback, false, objectives_pending)
-	if objectives_pending:
-		# Track for unlocking when objectives complete
-		print("[FieldElements] Exit trigger locked (quest objectives incomplete)")
-
-
 ## Create a programmatic Area3D trigger at the given position.
 func _create_fallback_trigger(trigger_name: String, pos: Vector3, callback: Callable, delayed: bool = false, locked: bool = false) -> void:
 	var trigger := Area3D.new()
@@ -362,12 +350,6 @@ func _drop_key_on_clear(target_cell: String, tracking_key: String) -> void:
 	)
 	print("[ValleyField] Key dropped on room clear for gate %s at %s (id=%s)" % [
 		target_cell, key_pos, key_item_id])
-
-
-func _unlock_key_gates(_key_item_id: String) -> void:
-	# KeyGates are opened by player interaction (E key), not automatically.
-	# This is kept as a no-op for potential future use.
-	pass
 
 
 ## Apply storybook-style material fixup to gate elements.

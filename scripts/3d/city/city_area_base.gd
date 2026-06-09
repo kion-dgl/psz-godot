@@ -229,11 +229,6 @@ func _connect_player_to_interactables() -> void:
 		pad.set_player(player)
 
 
-func _handle_esc() -> void:
-	_save_player_state()
-	SceneManager.push_scene("res://scenes/3d/city/city_menu.tscn")
-
-
 func _unhandled_input(event: InputEvent) -> void:
 	# Pause/Start handled by PsoStartMenu autoload
 	pass

@@ -86,13 +86,6 @@ func _get_menu_labels() -> Array:
 	labels.append_array(["Palette", "Mags", "Quest", "System"])
 	return labels
 
-func _get_menu_descs() -> Array:
-	var descs: Array = ["Use items.", "Equip weapons and armor."]
-	if _can_use_techs():
-		descs.append("Cast techniques.")
-	descs.append_array(["Edit the action palette.", "Feed and manage your Mag.", "View current quest objectives.", "System settings and options."])
-	return descs
-
 func _can_use_techs() -> bool:
 	var ch := _get_character()
 	var class_id: String = str(ch.get("class_id", ""))

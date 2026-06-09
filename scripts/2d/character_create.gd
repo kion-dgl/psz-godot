@@ -1,9 +1,9 @@
 extends Node3D
 ## Character creation screen — PSZ-themed design with Gamecube-style class select,
-## appearance customization with 3D preview, name entry, and confirmation.
+## appearance customization with 3D preview, and name entry.
 ## All UI is built programmatically on a CanvasLayer overlay.
 
-enum Step { CLASS_SELECT, APPEARANCE, NAME_ENTRY, CONFIRM }
+enum Step { CLASS_SELECT, APPEARANCE, NAME_ENTRY }
 
 # ── PSZ Theme Colors ────────────────────────────────────────────
 # Sourced from web/src/storybook/MenuDesign.tsx + slats-PSZ palette.
@@ -304,8 +304,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			_handle_appearance_input(event)
 		Step.NAME_ENTRY:
 			_handle_name_entry_input(event)
-		Step.CONFIRM:
-			_handle_confirm_input(event)
 
 
 func _handle_class_select_input(event: InputEvent) -> void:
@@ -391,15 +389,6 @@ func _cycle_appearance_value(direction: int) -> void:
 func _handle_name_entry_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_show_appearance()
-		get_viewport().set_input_as_handled()
-
-
-func _handle_confirm_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_accept"):
-		_create_character()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_cancel"):
-		_show_name_entry()
 		get_viewport().set_input_as_handled()
 
 
@@ -903,146 +892,6 @@ func _on_name_submitted(text: String) -> void:
 	if _char_name.is_empty():
 		return
 	_create_character()
-
-
-# ── Step 4: CONFIRM ─────────────────────────────────────────────
-
-func _show_confirm() -> void:
-	_step = Step.CONFIRM
-	_title_label.text = "CONFIRM CHARACTER"
-	_hint_label.text = "Confirm: Create Character    Cancel: Back to Name"
-	_bg_rect.visible = true
-	_clear_content()
-
-	await get_tree().process_frame
-	var area_size: Vector2 = _content_area.size
-
-	var cls = _class_list[_selected_class_index]
-	var is_cast := _is_cast_class()
-
-	# Centered confirmation panel
-	var panel_width: float = 500.0
-	var panel_height: float = 340.0
-	var panel_x: float = (area_size.x - panel_width) / 2.0
-	var panel_y: float = (area_size.y - panel_height) / 2.0
-
-	var panel := Panel.new()
-	panel.position = Vector2(panel_x, panel_y)
-	panel.size = Vector2(panel_width, panel_height)
-	panel.add_theme_stylebox_override("panel",
-		_make_bordered_stylebox(Color(0.82, 0.84, 0.88, 0.95), C_PANEL_BORDER, 1, 8, 0))
-	_content_area.add_child(panel)
-
-	# Header
-	var header_bar := ColorRect.new()
-	header_bar.position = Vector2(0, 0)
-	header_bar.size = Vector2(panel_width, 40)
-	header_bar.color = C_TITLE_BOT
-	panel.add_child(header_bar)
-
-	var header_lbl := Label.new()
-	header_lbl.text = "  CREATE THIS CHARACTER?"
-	header_lbl.add_theme_font_size_override("font_size", 16)
-	header_lbl.add_theme_color_override("font_color", C_WHITE)
-	header_lbl.position = Vector2(0, 0)
-	header_lbl.size = Vector2(panel_width, 40)
-	header_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	panel.add_child(header_lbl)
-
-	# Class art on the left side
-	var art_size: float = 180.0
-	if _class_art_cache.has(cls.id):
-		var art := TextureRect.new()
-		art.texture = _class_art_cache[cls.id]
-		art.position = Vector2(20, 54)
-		art.size = Vector2(art_size, art_size)
-		art.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
-		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		panel.add_child(art)
-
-	# Info on the right side
-	var info_x: float = art_size + 40.0
-	var info_width: float = panel_width - info_x - 20.0
-	var iy: float = 54.0
-
-	# Name
-	var name_lbl := Label.new()
-	name_lbl.text = _char_name
-	name_lbl.add_theme_font_size_override("font_size", 24)
-	name_lbl.add_theme_color_override("font_color", C_DARK)
-	name_lbl.position = Vector2(info_x, iy)
-	name_lbl.size = Vector2(info_width, 30)
-	panel.add_child(name_lbl)
-	iy += 36.0
-
-	# Separator
-	var sep := ColorRect.new()
-	sep.position = Vector2(info_x, iy)
-	sep.size = Vector2(info_width, 1)
-	sep.color = C_PANEL_BORDER
-	panel.add_child(sep)
-	iy += 10.0
-
-	# Class
-	_add_confirm_row(panel, "Class:", cls.name, info_x, iy, info_width, _get_type_color(cls.type))
-	iy += 24.0
-
-	# Type
-	_add_confirm_row(panel, "Type:", cls.type, info_x, iy, info_width)
-	iy += 24.0
-
-	# Race
-	_add_confirm_row(panel, "Race:", cls.race, info_x, iy, info_width)
-	iy += 24.0
-
-	# Gender
-	_add_confirm_row(panel, "Gender:", cls.gender, info_x, iy, info_width)
-	iy += 32.0
-
-	# Appearance summary
-	var appear_header := Label.new()
-	appear_header.text = "Appearance"
-	appear_header.add_theme_font_size_override("font_size", 13)
-	appear_header.add_theme_color_override("font_color", C_DARK_MUTED)
-	appear_header.position = Vector2(info_x, iy)
-	appear_header.size = Vector2(info_width, 16)
-	panel.add_child(appear_header)
-	iy += 20.0
-
-	if is_cast:
-		_add_confirm_row(panel, "Head:", str(int(_appearance["variation_index"]) + 1), info_x, iy, info_width)
-		iy += 20.0
-		_add_confirm_row(panel, "Color A:", str(int(_appearance["hair_color_index"]) + 1), info_x, iy, info_width)
-		iy += 20.0
-		_add_confirm_row(panel, "Color B:", str(int(_appearance["body_color_index"]) + 1), info_x, iy, info_width)
-		iy += 20.0
-		_add_confirm_row(panel, "Color C:", str(int(_appearance["skin_tone_index"]) + 1), info_x, iy, info_width)
-	else:
-		_add_confirm_row(panel, "Head:", str(int(_appearance["variation_index"]) + 1), info_x, iy, info_width)
-		iy += 20.0
-		_add_confirm_row(panel, "Hair:", PlayerConfig.HAIR_COLORS[int(_appearance["hair_color_index"])], info_x, iy, info_width)
-		iy += 20.0
-		_add_confirm_row(panel, "Costume:", PlayerConfig.BODY_COLORS[int(_appearance["body_color_index"])], info_x, iy, info_width)
-		iy += 20.0
-		_add_confirm_row(panel, "Skin:", PlayerConfig.SKIN_TONES[int(_appearance["skin_tone_index"])], info_x, iy, info_width)
-
-
-func _add_confirm_row(parent: Node, label_text: String, value_text: String, x: float, y: float, width: float, value_color: Color = C_DARK) -> void:
-	var lbl := Label.new()
-	lbl.text = label_text
-	lbl.add_theme_font_size_override("font_size", 14)
-	lbl.add_theme_color_override("font_color", C_DARK_MUTED)
-	lbl.position = Vector2(x, y)
-	lbl.size = Vector2(80, 18)
-	parent.add_child(lbl)
-
-	var val := Label.new()
-	val.text = value_text
-	val.add_theme_font_size_override("font_size", 14)
-	val.add_theme_color_override("font_color", value_color)
-	val.position = Vector2(x + 80, y)
-	val.size = Vector2(width - 80, 18)
-	parent.add_child(val)
 
 
 # ── 3D Preview ──────────────────────────────────────────────────

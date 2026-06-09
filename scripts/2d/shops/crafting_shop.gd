@@ -463,26 +463,6 @@ func _roll_attributes(photon_id: String) -> Dictionary:
 	return result
 
 
-func _get_element_level(rarity: int) -> int:
-	# Randomly rolled; higher rarity weapons are more likely to get higher levels.
-	# Lv3 chance: rarity 1-3 = 5%, 4-5 = 15%, 6-7 = 30%
-	# Lv2 chance: rarity 1-3 = 20%, 4-5 = 40%, 6-7 = 50%
-	var roll := randf()
-	var lv3_chance := 0.05
-	var lv2_chance := 0.20
-	if rarity >= 6:
-		lv3_chance = 0.30
-		lv2_chance = 0.50
-	elif rarity >= 4:
-		lv3_chance = 0.15
-		lv2_chance = 0.40
-	if roll < lv3_chance:
-		return 3
-	elif roll < lv3_chance + lv2_chance:
-		return 2
-	return 1
-
-
 func _show_result_popup(weapon_id: String, photon_id: String, cost: int) -> void:
 	_showing_result = true
 	var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(weapon_id))
