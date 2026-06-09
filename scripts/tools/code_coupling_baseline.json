@@ -1,0 +1,11 @@
+{
+  "_comment": "Accepted god-orchestrators \u2014 functions calling > 15 distinct in-repo functions (fan-out, name-resolved; EPIC #295). --check fails on a NEW one. Split the orchestration + --update-baseline. fan-IN is intentionally not gated.",
+  "max_fanout": 15,
+  "accepted_coupling": [
+    "scripts/3d/field/valley_field_controller.gd:_ready#0",
+    "scripts/3d/field/valley_field_controller.gd:_spawn_field_elements#0",
+    "scripts/3d/field/cell_object_spawner.gd:_restore_cell_objects#0",
+    "scripts/3d/field/start_menu_input.gd:handle_input#0",
+    "scripts/2d/inventory_screen.gd:_refresh_detail#0"
+  ]
+}
