@@ -1073,7 +1073,10 @@ func _finish_equipment() -> void:
 # via ui_right; the screen resets the row selection on each tab change. We read
 # the live storage node (top overlay) to pick a non-equipped item rather than
 # guessing a row index, so the deposit can't trip the "Unequip first!" block.
+const STORAGE_MESETA_DEPOSIT := 2   # qty bumped to via one ui_up in the dialog
+const STORAGE_MESETA_WITHDRAW := 1  # default qty (no bump) on the withdraw side
 var _storage_meseta_before := -1
+var _storage_meseta_after_deposit := -1
 var _storage_deposit_item_id := ""
 var _storage_count_before := -1
 
@@ -1119,11 +1122,16 @@ func _storage_deposit_meseta() -> void:
 
 
 func _check_meseta_deposited() -> void:
-	if GameState.stored_meseta > _storage_meseta_before:
+	# Exact: the dialog was bumped to qty 2, so the bank must rise by exactly 2.
+	# A dropped ui_up (depositing 1) would otherwise slip past a "just rose"
+	# check and leave the withdraw on the wrong dialog path.
+	var expected: int = _storage_meseta_before + STORAGE_MESETA_DEPOSIT
+	if GameState.stored_meseta == expected:
 		print("[sanity] checkpoint: storage deposited meseta (%d -> %d)" % [_storage_meseta_before, GameState.stored_meseta])
+		_storage_meseta_after_deposit = GameState.stored_meseta
 		_after(STEP_DELAY, _storage_deposit_item)
 	else:
-		print("[sanity] FAIL: storage meseta deposit did not register (bank still %d)" % GameState.stored_meseta)
+		print("[sanity] FAIL: storage meseta deposit wrong (bank %d, expected %d)" % [GameState.stored_meseta, expected])
 		_after(STEP_DELAY, _save_and_quit)
 
 
@@ -1222,14 +1230,16 @@ func _storage_withdraw_meseta() -> void:
 
 
 func _check_meseta_withdrawn() -> void:
-	# A withdraw must drop the bank below its post-deposit peak. (We deposited 2,
-	# withdraw 1, so it lands above the original baseline — the point is that the
-	# withdraw path moved meseta the other way.)
-	if GameState.stored_meseta < _storage_meseta_before + 2:
-		print("[sanity] checkpoint: storage withdrew meseta (bank now %d)" % GameState.stored_meseta)
+	# Exact: withdraw moved 1 back out, so the bank must drop by exactly 1 from
+	# its post-deposit peak. Checking against the peak (not just "< peak") means
+	# a failed withdraw — which would leave the bank AT the peak — fails here,
+	# and a partial/over withdraw is caught too.
+	var expected: int = _storage_meseta_after_deposit - STORAGE_MESETA_WITHDRAW
+	if GameState.stored_meseta == expected:
+		print("[sanity] checkpoint: storage withdrew meseta (%d -> %d)" % [_storage_meseta_after_deposit, GameState.stored_meseta])
 		print("[sanity] checkpoint: storage round-trip")
 	else:
-		print("[sanity] FAIL: storage meseta withdraw did not register (bank still %d)" % GameState.stored_meseta)
+		print("[sanity] FAIL: storage meseta withdraw wrong (bank %d, expected %d)" % [GameState.stored_meseta, expected])
 		_after(STEP_DELAY, _save_and_quit)
 		return
 	_finish_storage()
