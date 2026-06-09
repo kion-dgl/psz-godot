@@ -957,17 +957,18 @@ func _check_weapon_buy_result() -> void:
 
 
 func _finish_weapon_shop() -> void:
-	# Close the weapon shop, then exercise the start menu (Inc 5).
+	# Close the weapon shop, then exercise the start menu.
 	_after(STEP_DELAY, func() -> void:
 		if SceneManager != null and SceneManager.has_method("pop_scene"):
 			SceneManager.pop_scene()
 		_after(STEP_DELAY, _open_start_menu))
 
 
-# Inc 5: the PsoStartMenu autoload. It opens in the city too (post-onboarding,
-# pre-quest — exactly this slot), so drive it here: open → enter a submenu →
-# back → close. Open/close are hard asserts (it's a complex autoload that could
-# regress); the submenu hop is best-effort.
+# Start-menu leg (separate from the #290 shop increments — those reserve Inc 4/5
+# for equip/storage). The PsoStartMenu autoload opens in the city too (post-
+# onboarding, pre-quest — exactly this slot), so drive it here: open → enter a
+# submenu → back → close. Open/close are hard asserts (it's a complex autoload
+# that could regress); the submenu hop is best-effort.
 func _open_start_menu() -> void:
 	print("[sanity] shop-smoke: opening start menu")
 	if PsoStartMenu == null:
