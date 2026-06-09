@@ -997,10 +997,12 @@ func _check_equipment_opened() -> void:
 	var seeded := _seed_equippable_weapon()
 	_equip_weapon_before = _get_equipped_weapon()
 	if seeded.is_empty():
-		# No alternate weapon the class can equip — opening still passed (the
-		# regression-critical part); skip the equip action with a WARN.
-		print("[sanity] WARN: equipment — no alternate equippable weapon to seed; skipping equip")
-		_finish_equipment()
+		# Fresh character + full registry: the class should always have some
+		# equippable weapon that fits in inventory. Empty here means a broken
+		# class/registry definition or the inventory rejected every add — a real
+		# regression, so fail hard rather than silently skip the equip assert.
+		print("[sanity] FAIL: equipment — no class-equippable weapon could be seeded")
+		_after(STEP_DELAY, _save_and_quit)
 		return
 	print("[sanity] shop-smoke: equipping weapon (slot 0, before = '%s')" % _equip_weapon_before)
 	# Slot 0 is the weapon slot by default. Open its item list, step off the
@@ -1012,24 +1014,29 @@ func _check_equipment_opened() -> void:
 
 
 ## Add one class-equippable weapon (different from the equipped one) to the
-## inventory so the equip list has a concrete row to select. Returns the id, or
-## "" if none fits.
+## inventory so the equip list has a concrete row to select. Returns the id that
+## was actually added, or "" if none could be seeded. Ids are sorted so the pick
+## is deterministic regardless of registry/filesystem load order.
 func _seed_equippable_weapon() -> String:
 	var character = CharacterManager.get_active_character()
 	if character == null:
 		return ""
 	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
 	var equipped: String = str(character.get("equipment", {}).get("weapon", ""))
-	for wid in WeaponRegistry.get_all_weapon_ids():
+	var ids: Array = WeaponRegistry.get_all_weapon_ids()
+	ids.sort()
+	for wid in ids:
 		if wid == equipped:
 			continue
 		var w = WeaponRegistry.get_weapon(wid)
 		if w == null:
 			continue
 		if class_data == null or class_data.can_equip_weapon_type(w.weapon_type):
-			Inventory.add_item(wid, 1)
-			print("[sanity] equipment: seeded equippable weapon '%s'" % wid)
-			return wid
+			# add_item can fail (e.g. inventory full); only claim success when
+			# the weapon is actually in inventory, otherwise keep looking.
+			if Inventory.add_item(wid, 1):
+				print("[sanity] equipment: seeded equippable weapon '%s'" % wid)
+				return wid
 	return ""
 
 
