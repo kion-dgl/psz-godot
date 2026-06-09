@@ -957,10 +957,55 @@ func _check_weapon_buy_result() -> void:
 
 
 func _finish_weapon_shop() -> void:
-	# Close the weapon shop, then DONE (Inc 0-3 terminal — equip/storage extend here).
+	# Close the weapon shop, then exercise the start menu.
 	_after(STEP_DELAY, func() -> void:
 		if SceneManager != null and SceneManager.has_method("pop_scene"):
 			SceneManager.pop_scene()
+		_after(STEP_DELAY, _open_start_menu))
+
+
+# Start-menu leg (separate from the #290 shop increments — those reserve Inc 4/5
+# for equip/storage). The PsoStartMenu autoload opens in the city too (post-
+# onboarding, pre-quest — exactly this slot), so drive it here: open → enter a
+# submenu → back → close. Open/close are hard asserts (it's a complex autoload
+# that could regress); the submenu hop is best-effort.
+func _open_start_menu() -> void:
+	print("[sanity] shop-smoke: opening start menu")
+	if PsoStartMenu == null:
+		print("[sanity] FAIL: PsoStartMenu autoload missing")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	PsoStartMenu.open()
+	_after(1.0, _check_start_menu_opened)
+
+
+func _check_start_menu_opened() -> void:
+	if not PsoStartMenu.is_open():
+		print("[sanity] FAIL: start menu did not open")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	print("[sanity] checkpoint: start_menu opened")
+	# Enter the first submenu (proves StartMenuInput routing works in the city).
+	_press_action("ui_accept")
+	_after(0.8, _check_start_menu_submenu)
+
+
+func _check_start_menu_submenu() -> void:
+	if PsoStartMenu._mode != PsoStartMenu.Mode.MAIN:
+		print("[sanity] checkpoint: start_menu submenu entered (mode %d)" % PsoStartMenu._mode)
+	else:
+		print("[sanity] WARN: start_menu stayed on MAIN after accept (non-fatal)")
+	_press_action("ui_cancel")  # back to MAIN
+	_after(0.6, _close_start_menu)
+
+
+func _close_start_menu() -> void:
+	PsoStartMenu.close()
+	_after(0.6, func() -> void:
+		if PsoStartMenu.is_open():
+			print("[sanity] FAIL: start menu did not close")
+		else:
+			print("[sanity] checkpoint: start_menu closed")
 		_after(STEP_DELAY, _save_and_quit))
 
 
