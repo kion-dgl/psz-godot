@@ -77,6 +77,26 @@ func _setup_collision() -> void:
 	add_child(interaction_area)
 
 
+## Build + attach a StaticBody3D environment collider sized to collision_size,
+## and return it. Shared by wall/box/fence/enemy_spawn, whose per-subclass
+## setups were byte-identical except the node name (#294 dedup).
+func _build_static_collision(body_name: String) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = body_name
+	body.collision_layer = 1  # Environment layer
+	body.collision_mask = 0
+
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = collision_size
+	shape.shape = box
+	shape.position.y = collision_size.y / 2
+	body.add_child(shape)
+
+	add_child(body)
+	return body
+
+
 ## Override to apply visual changes based on state
 func _apply_state() -> void:
 	pass

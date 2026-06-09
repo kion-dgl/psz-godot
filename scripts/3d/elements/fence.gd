@@ -41,24 +41,8 @@ func _ready() -> void:
 			model_path = "valley/o0c_dgfance.glb"
 
 	super._ready()
-	_setup_fence_collision()
+	collision_body = _build_static_collision("FenceCollision")
 	_setup_laser_materials()
-
-
-func _setup_fence_collision() -> void:
-	collision_body = StaticBody3D.new()
-	collision_body.name = "FenceCollision"
-	collision_body.collision_layer = 1  # Environment layer
-	collision_body.collision_mask = 0
-
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = collision_size
-	shape.shape = box
-	shape.position.y = collision_size.y / 2
-	collision_body.add_child(shape)
-
-	add_child(collision_body)
 
 
 func _setup_laser_materials() -> void:
