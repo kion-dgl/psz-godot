@@ -33,6 +33,7 @@ func _ready() -> void:
 	test_technique_disks()
 	test_new_registries()
 	test_autoload_api_surface()
+	test_element_collision_setup()
 	test_material_system()
 	test_set_bonuses()
 	test_technique_casting()
@@ -173,6 +174,33 @@ func test_autoload_api_surface() -> void:
 	assert_true(CharacterManager.has_method("get_active_character"), "CharacterManager.get_active_character exists")
 	assert_true(SessionManager.has_method("get_suspended_area_id"), "SessionManager.get_suspended_area_id exists")
 	assert_true(Inventory.has_method("get_all_items"), "Inventory.get_all_items exists")
+	print("")
+
+
+# ── Element collision setup (dedup guard, #294) ──────────────
+# Pins GameElement._build_static_collision — the shared helper the
+# wall/box/fence/enemy_spawn colliders were folded into. This is a fast,
+# pack-free regression gate so a change to the deduped collision setup fails
+# in CI rather than only in the autopilot matrix.
+func test_element_collision_setup() -> void:
+	print("── GameElement._build_static_collision (dedup guard) ──")
+	const GameElementScript := preload("res://scripts/3d/elements/game_element.gd")
+	var el = GameElementScript.new()
+	el.collision_size = Vector3(6, 1.85, 0.52)
+	var body = el._build_static_collision("WallCollision")
+	assert_true(body is StaticBody3D, "_build_static_collision returns a StaticBody3D")
+	assert_eq(body.name, "WallCollision", "collider node name set from arg")
+	assert_eq(body.collision_layer, 1, "collider on environment layer 1")
+	assert_eq(body.collision_mask, 0, "collider mask 0")
+	assert_eq(body.get_parent(), el, "collider parented to the element")
+	assert_eq(body.get_child_count(), 1, "collider has one shape child")
+	var shape = body.get_child(0)
+	assert_true(shape is CollisionShape3D, "child is a CollisionShape3D")
+	assert_true(shape.shape is BoxShape3D, "shape is a BoxShape3D")
+	if shape.shape is BoxShape3D:
+		assert_eq((shape.shape as BoxShape3D).size, el.collision_size, "box sized to collision_size")
+	assert_true(is_equal_approx(shape.position.y, el.collision_size.y / 2.0), "shape offset half-height")
+	el.free()
 	print("")
 
 
