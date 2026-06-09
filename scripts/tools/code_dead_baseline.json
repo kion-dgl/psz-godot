@@ -8,7 +8,6 @@
     "scripts/2d/components/combat_log.gd:clear_log#0",
     "scripts/3d/enemies/enemy_base.gd:_spawn_meseta_drop#0",
     "scripts/3d/enemies/enemy_base.gd:set_enemy_data#0",
-    "scripts/3d/field/pso_start_menu.gd:_open_confirm#0",
     "scripts/3d/player/player.gd:get_combo_state#0",
     "scripts/autoloads/combat_manager.gd:is_enemy_aggroed#0",
     "scripts/autoloads/enemy_registry.gd:get_all_enemy_ids#0",
