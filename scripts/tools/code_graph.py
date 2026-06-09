@@ -245,14 +245,24 @@ def _is_test_fn(f: dict) -> bool:
 
 def find_coupling_hotspots(funcs: list[dict]) -> list[dict]:
     """God-orchestrators: functions calling > MAX_FANOUT distinct in-repo
-    functions. Resolution is by name (approximate — GDScript can't be typed
-    statically); only callees that are defined functions in scripts/ count."""
-    defined = {f["name"] for f in funcs}
+    functions. A callee is resolved (and counted) only when UNAMBIGUOUS — defined
+    in the same file, or a globally-unique name. Names defined in several files
+    are skipped unless same-file; otherwise adding a same-named helper elsewhere
+    would retroactively shift unrelated callers' fan-out (resolution by name is
+    already approximate — GDScript can't be typed statically)."""
+    name_files: dict[str, set] = {}
+    by_file: dict[str, set] = {}
+    for f in funcs:
+        name_files.setdefault(f["name"], set()).add(f["file"])
+        by_file.setdefault(f["file"], set()).add(f["name"])
+    unique_names = {n for n, files in name_files.items() if len(files) == 1}
     out: list[dict] = []
     for f in funcs:
         if _is_test_fn(f):  # test orchestrators legitimately call many things
             continue
-        callees = {c for c in f["callees"] if c in defined and c != f["name"]}
+        local = by_file.get(f["file"], set())
+        callees = {c for c in f["callees"]
+                   if c != f["name"] and (c in local or c in unique_names)}
         if len(callees) > MAX_FANOUT:
             out.append({"qn": f["qn"], "file": f["file"], "line": f["line"],
                         "fanout": len(callees)})
