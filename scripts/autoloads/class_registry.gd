@@ -29,24 +29,8 @@ func get_class_data(class_id: String):
 	return _classes.get(class_id, null)
 
 
-func has_class(class_id: String) -> bool:
-	return _classes.has(class_id)
-
-
 func get_all_classes() -> Array:
 	return _classes.values()
-
-
-func get_all_class_ids() -> Array:
-	return _classes.keys()
-
-
-func get_classes_by_type(type: String) -> Array:
-	var result: Array = []
-	for cls in _classes.values():
-		if cls.type == type:
-			result.append(cls)
-	return result
 
 
 func get_class_count() -> int:

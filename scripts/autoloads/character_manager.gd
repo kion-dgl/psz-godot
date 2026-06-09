@@ -133,11 +133,6 @@ func set_active_slot(slot: int) -> void:
 	_sync_to_game_state()
 
 
-## Get all characters (array of 4, with nulls for empty slots)
-func get_all_characters() -> Array:
-	return _characters.duplicate()
-
-
 ## Delete a character from a slot
 func delete_character(slot: int) -> void:
 	if slot < 0 or slot >= MAX_SLOTS:
@@ -208,11 +203,6 @@ func get_exp_progress() -> Dictionary:
 	return {"current": progress, "needed": next_level_exp, "percent": percent}
 
 
-## Get the active slot index
-func get_active_slot() -> int:
-	return _active_slot
-
-
 ## Load characters from save data
 func load_from_save(data: Array) -> void:
 	for i in range(mini(data.size(), MAX_SLOTS)):
@@ -248,17 +238,6 @@ func migrate_global_inventory(inv_data: Dictionary) -> void:
 	for i in range(MAX_SLOTS):
 		if _characters[i] != null and _characters[i].get("inventory", {}).is_empty():
 			_characters[i]["inventory"] = inv_data.duplicate()
-
-
-## Heal the active character
-func heal_character(hp_amount: int, pp_amount: int = 0) -> void:
-	var character = get_active_character()
-	if character == null:
-		return
-	character["hp"] = mini(int(character["hp"]) + hp_amount, int(character["max_hp"]))
-	if pp_amount > 0:
-		character["pp"] = mini(int(character["pp"]) + pp_amount, int(character["max_pp"]))
-	_sync_to_game_state()
 
 
 func _calculate_level(total_exp: int) -> int:

@@ -73,13 +73,6 @@ func add_item(text: String, disabled: bool = false) -> void:
 	_update_display()
 
 
-func clear_items() -> void:
-	_items.clear()
-	_disabled.clear()
-	_current_index = 0
-	_update_display()
-
-
 func get_current_index() -> int:
 	return _current_index
 

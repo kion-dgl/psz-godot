@@ -133,25 +133,6 @@ func _on_collected(_player: Node3D) -> void:
 	pass
 
 
-## Utility: Find a mesh by name in the model
-func find_mesh_by_name(mesh_name: String) -> MeshInstance3D:
-	if not model:
-		return null
-	return _find_mesh_recursive(model, mesh_name)
-
-
-func _find_mesh_recursive(node: Node, mesh_name: String) -> MeshInstance3D:
-	if node.name == mesh_name and node is MeshInstance3D:
-		return node as MeshInstance3D
-
-	for child in node.get_children():
-		var found := _find_mesh_recursive(child, mesh_name)
-		if found:
-			return found
-
-	return null
-
-
 ## Utility: Apply material properties to all meshes
 func apply_to_all_materials(callback: Callable) -> void:
 	if not model:
@@ -169,13 +150,6 @@ func _apply_materials_recursive(node: Node, callback: Callable) -> void:
 
 	for child in node.get_children():
 		_apply_materials_recursive(child, callback)
-
-
-## Utility: Set visibility of a specific mesh
-func set_mesh_visible(mesh_name: String, is_visible: bool) -> void:
-	var mesh := find_mesh_by_name(mesh_name)
-	if mesh:
-		mesh.visible = is_visible
 
 
 ## Utility: Set overall visibility (hides when collected)

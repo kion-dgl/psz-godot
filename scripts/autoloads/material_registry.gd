@@ -25,6 +25,3 @@ func get_material(id: String):
 func get_all_materials() -> Array:
 	return _materials.values()
 
-
-func get_all_material_ids() -> Array:
-	return _materials.keys()

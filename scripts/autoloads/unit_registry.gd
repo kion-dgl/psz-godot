@@ -18,10 +18,3 @@ func get_unit(id: String):
 
 func get_all_units() -> Array:
 	return _units.values()
-
-func get_units_by_category(category: String) -> Array:
-	var result: Array = []
-	for unit in _units.values():
-		if unit.category == category:
-			result.append(unit)
-	return result

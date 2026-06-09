@@ -212,18 +212,6 @@ func clear() -> void:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
 
 
-func get_label() -> String:
-	return SCHEME_LABELS.get(current_scheme, current_scheme)
-
-
-func is_switch() -> bool:
-	return current_scheme == "switch"
-
-
-func accept_on_east() -> bool:
-	return accept_position == "east"
-
-
 func has_saved_config() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 

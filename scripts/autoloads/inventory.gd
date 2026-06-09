@@ -280,16 +280,6 @@ func get_all_items() -> Array:
 	return result
 
 
-## Get all items of a specific type (use ItemData.ItemType enum value)
-func get_items_by_type(type: int) -> Array:
-	var result = []
-	for item_id in _items:
-		var item_data = ItemRegistry.get_item(item_id)
-		if item_data and item_data.type == type:
-			result.append({"id": item_id, "quantity": _items[item_id], "data": item_data})
-	return result
-
-
 ## Maximum stack size for an item id. Per-slot items always return 1.
 ## Used by the shop UI's quantity picker to clamp the qty selector.
 func get_max_stack(item_id: String) -> int:

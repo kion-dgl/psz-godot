@@ -44,23 +44,6 @@ enum ItemType {
 @export var max_stack: int = 99
 
 
-## Get a stat value, returns 0 if not present
-func get_stat(stat_name: String) -> int:
-	return stats.get(stat_name, 0)
-
-
-## Check if item has a specific stat
-func has_stat(stat_name: String) -> bool:
-	return stats.has(stat_name)
-
-
-## Get the full model path for loading
-func get_model_resource_path() -> String:
-	if model_path.is_empty():
-		return ""
-	return "res://assets/objects/" + model_path
-
-
 ## Get type as readable string
 func get_type_name() -> String:
 	match type:

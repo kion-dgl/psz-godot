@@ -68,6 +68,3 @@ func _trigger_transition() -> void:
 	print("[TriggerZone] Transitioning to: ", target_map, " spawn: ", spawn_index)
 	get_tree().call_group("map_controller", "on_trigger_activated", target_map, spawn_index)
 
-
-func reset_trigger() -> void:
-	has_triggered = false

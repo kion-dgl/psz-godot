@@ -26,17 +26,5 @@ func has_armor(armor_id: String) -> bool:
 	return _armors.has(armor_id)
 
 
-func get_armors_by_type(armor_type: int) -> Array:
-	var result: Array = []
-	for armor in _armors.values():
-		if armor.type == armor_type:
-			result.append(armor)
-	return result
-
-
-func get_all_armor_ids() -> Array:
-	return _armors.keys()
-
-
 func get_armor_count() -> int:
 	return _armors.size()

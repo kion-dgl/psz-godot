@@ -88,41 +88,7 @@ func set_max_mp(value: int) -> void:
 
 
 # Equipment management
-func equip_item(slot: String, item: String) -> void:
-	if slot in equipment:
-		equipment[slot] = item
-		equipment_changed.emit(slot, item)
-
-
-func unequip_item(slot: String) -> void:
-	if slot in equipment:
-		equipment[slot] = ""
-		equipment_changed.emit(slot, "")
-
-
-func get_equipped_item(slot: String) -> String:
-	if slot in equipment:
-		return equipment[slot]
-	return ""
-
-
 # UI state management
-func toggle_pause_menu() -> void:
-	is_pause_menu_open = not is_pause_menu_open
-	pause_menu_toggled.emit(is_pause_menu_open)
-	get_tree().paused = is_pause_menu_open
-
-
-func open_shop(npc_name: String) -> void:
-	active_shop_npc = npc_name
-	shop_opened.emit(npc_name)
-
-
-func close_shop() -> void:
-	active_shop_npc = ""
-	shop_closed.emit()
-
-
 # Reset all state to defaults
 func reset_game_state() -> void:
 	hp = 100
@@ -163,31 +129,11 @@ func is_alive() -> bool:
 	return hp > 0
 
 
-func get_hp_percentage() -> float:
-	if max_hp <= 0:
-		return 0.0
-	return float(hp) / float(max_hp)
-
-
-func get_mp_percentage() -> float:
-	if max_mp <= 0:
-		return 0.0
-	return float(mp) / float(max_mp)
-
-
 # Meseta (currency) management
 func add_meseta(amount: int) -> void:
 	if amount > 0:
 		meseta += amount
 		meseta_changed.emit(meseta)
-
-
-func remove_meseta(amount: int) -> bool:
-	if amount > 0 and meseta >= amount:
-		meseta -= amount
-		meseta_changed.emit(meseta)
-		return true
-	return false
 
 
 func get_meseta() -> int:

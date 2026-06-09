@@ -62,14 +62,6 @@ func play_at(path: String, position: Vector3, volume_db: float = 0.0) -> void:
 	player.play()
 
 
-## Play a random file matching a glob pattern, e.g. "res://assets/sfx/weapons/saber_swing_*.wav"
-func play_random(base_path: String, volume_db: float = 0.0) -> void:
-	var files := _glob_cache(base_path)
-	if files.is_empty():
-		return
-	play(files[randi() % files.size()], volume_db)
-
-
 ## Play a random file at a 3D position.
 func play_random_at(base_path: String, position: Vector3, volume_db: float = 0.0) -> void:
 	var files := _glob_cache(base_path)
