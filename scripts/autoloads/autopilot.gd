@@ -1057,15 +1057,212 @@ func _check_weapon_equipped() -> void:
 
 
 func _finish_equipment() -> void:
-	# Close the equipment screen, then exercise the start menu.
+	# Close the equipment screen, then exercise storage (Inc 5).
+	_after(STEP_DELAY, func() -> void:
+		if SceneManager != null and SceneManager.has_method("pop_scene"):
+			SceneManager.pop_scene()
+		_after(STEP_DELAY, _open_storage))
+
+
+# Inc 5: storage round-trip. Opening it is a hard regression assert (a 4-tab
+# screen with its own modals that could break on load like the shops did). Then
+# a full deposit→withdraw round-trip on both meseta and an item, asserting the
+# GameState.stored_meseta / shared_storage state actually moves and comes back.
+#
+# Tabs cycle Deposit Items → Withdraw Items → Deposit Meseta → Withdraw Meseta
+# via ui_right; the screen resets the row selection on each tab change. We read
+# the live storage node (top overlay) to pick a non-equipped item rather than
+# guessing a row index, so the deposit can't trip the "Unequip first!" block.
+var _storage_meseta_before := -1
+var _storage_deposit_item_id := ""
+var _storage_count_before := -1
+
+
+func _storage_node() -> Node:
+	if SceneManager == null or SceneManager._overlay_stack.is_empty():
+		return null
+	var top = SceneManager._overlay_stack[SceneManager._overlay_stack.size() - 1].get("scene")
+	if top != null and top.scene_file_path == STORAGE:
+		return top
+	return null
+
+
+func _open_storage() -> void:
+	print("[sanity] shop-smoke: opening storage")
+	SceneManager.push_scene(STORAGE, {})
+	_after(2.0, _check_storage_opened)
+
+
+func _check_storage_opened() -> void:
+	if _storage_node() == null:
+		print("[sanity] FAIL: storage did not open")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	print("[sanity] checkpoint: storage opened")
+	_after(STEP_DELAY, _storage_deposit_meseta)
+
+
+# ── Meseta deposit (tab 0 → Deposit Meseta = tab 2) ───────────────
+func _storage_deposit_meseta() -> void:
+	_storage_meseta_before = GameState.stored_meseta
+	print("[sanity] storage: depositing meseta (bank before = %d)" % _storage_meseta_before)
+	# Cycle Deposit Items (0) → Deposit Meseta (2).
+	_press_action("ui_right")
+	_after(0.4, func() -> void: _press_action("ui_right"))
+	# Open the qty dialog, bump to 2 (so the later withdraw also has max_qty>1
+	# and stays on the SelectingQty→Confirming path), then confirm.
+	_after(0.9, func() -> void: _press_action("ui_accept"))   # open QuantityDialog
+	_after(1.4, func() -> void: _press_action("ui_up"))       # qty 1 → 2
+	_after(1.9, func() -> void: _press_action("ui_accept"))   # SelectingQty → Confirming
+	_after(2.4, func() -> void: _press_action("ui_accept"))   # confirm
+	_after(3.0, _check_meseta_deposited)
+
+
+func _check_meseta_deposited() -> void:
+	if GameState.stored_meseta > _storage_meseta_before:
+		print("[sanity] checkpoint: storage deposited meseta (%d -> %d)" % [_storage_meseta_before, GameState.stored_meseta])
+		_after(STEP_DELAY, _storage_deposit_item)
+	else:
+		print("[sanity] FAIL: storage meseta deposit did not register (bank still %d)" % GameState.stored_meseta)
+		_after(STEP_DELAY, _save_and_quit)
+
+
+# ── Item deposit (back to Deposit Items = tab 0) ──────────────────
+func _storage_deposit_item() -> void:
+	# Deposit Meseta (2) → Deposit Items (0).
+	_press_action("ui_left")
+	_after(0.4, func() -> void: _press_action("ui_left"))
+	_after(0.9, _do_storage_item_deposit)
+
+
+func _do_storage_item_deposit() -> void:
+	var node := _storage_node()
+	if node == null:
+		print("[sanity] FAIL: storage node gone before item deposit")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	# Pick the first non-equipped inventory row (equipped gear is blocked from
+	# being stored). _inventory_items mirrors the Deposit-Items list order.
+	var items: Array = node._inventory_items
+	var target: int = -1
+	for i in range(items.size()):
+		if not node._is_equipped(str(items[i].get("id", ""))):
+			target = i
+			break
+	if target < 0:
+		print("[sanity] FAIL: storage — no depositable (non-equipped) item in inventory")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	_storage_deposit_item_id = str(items[target].get("id", ""))
+	_storage_count_before = GameState.shared_storage.size()
+	print("[sanity] storage: depositing item '%s' (row %d, bank items before = %d)" % [_storage_deposit_item_id, target, _storage_count_before])
+	# Navigate from row 0 (reset on tab change) down to the target, then confirm.
+	_nav_down_to(target, _confirm_item_deposit)
+
+
+func _confirm_item_deposit() -> void:
+	# Per-slot gear → ConfirmDialog (one accept); stackables → QuantityDialog
+	# (accept advances SelectingQty→Confirming, second accept confirms).
+	_press_action("ui_accept")   # open the move modal
+	if Inventory._is_per_slot(_storage_deposit_item_id):
+		_after(0.6, func() -> void: _press_action("ui_accept"))   # Confirm Yes
+		_after(1.2, _check_item_deposited)
+	else:
+		_after(0.6, func() -> void: _press_action("ui_accept"))   # SelectingQty → Confirming
+		_after(1.1, func() -> void: _press_action("ui_accept"))   # confirm qty=1
+		_after(1.7, _check_item_deposited)
+
+
+func _check_item_deposited() -> void:
+	if _storage_has_item(_storage_deposit_item_id):
+		print("[sanity] checkpoint: storage deposited item ('%s')" % _storage_deposit_item_id)
+		_after(STEP_DELAY, _storage_withdraw_item)
+	else:
+		print("[sanity] FAIL: storage item deposit did not register ('%s' not in bank)" % _storage_deposit_item_id)
+		_after(STEP_DELAY, _save_and_quit)
+
+
+# ── Item withdraw (Deposit Items 0 → Withdraw Items = tab 1) ──────
+func _storage_withdraw_item() -> void:
+	_press_action("ui_right")   # 0 → 1 (Withdraw Items)
+	_after(0.6, _do_storage_item_withdraw)
+
+
+func _do_storage_item_withdraw() -> void:
+	# Row selection reset to 0 on tab change; the just-deposited item is the
+	# first (only, on a fresh save) storage row.
+	_press_action("ui_accept")   # open the move modal
+	if Inventory._is_per_slot(_storage_deposit_item_id):
+		_after(0.6, func() -> void: _press_action("ui_accept"))
+		_after(1.2, _check_item_withdrawn)
+	else:
+		_after(0.6, func() -> void: _press_action("ui_accept"))
+		_after(1.1, func() -> void: _press_action("ui_accept"))
+		_after(1.7, _check_item_withdrawn)
+
+
+func _check_item_withdrawn() -> void:
+	if not _storage_has_item(_storage_deposit_item_id):
+		print("[sanity] checkpoint: storage withdrew item ('%s' back to inventory)" % _storage_deposit_item_id)
+		_after(STEP_DELAY, _storage_withdraw_meseta)
+	else:
+		print("[sanity] FAIL: storage item withdraw did not register ('%s' still in bank)" % _storage_deposit_item_id)
+		_after(STEP_DELAY, _save_and_quit)
+
+
+# ── Meseta withdraw (Withdraw Items 1 → Withdraw Meseta = tab 3) ──
+func _storage_withdraw_meseta() -> void:
+	print("[sanity] storage: withdrawing meseta (bank = %d)" % GameState.stored_meseta)
+	_press_action("ui_right")   # 1 → 2
+	_after(0.4, func() -> void: _press_action("ui_right"))   # 2 → 3 (Withdraw Meseta)
+	_after(0.9, func() -> void: _press_action("ui_accept"))   # open QuantityDialog
+	_after(1.4, func() -> void: _press_action("ui_accept"))   # SelectingQty → Confirming
+	_after(1.9, func() -> void: _press_action("ui_accept"))   # confirm qty=1
+	_after(2.5, _check_meseta_withdrawn)
+
+
+func _check_meseta_withdrawn() -> void:
+	# A withdraw must drop the bank below its post-deposit peak. (We deposited 2,
+	# withdraw 1, so it lands above the original baseline — the point is that the
+	# withdraw path moved meseta the other way.)
+	if GameState.stored_meseta < _storage_meseta_before + 2:
+		print("[sanity] checkpoint: storage withdrew meseta (bank now %d)" % GameState.stored_meseta)
+		print("[sanity] checkpoint: storage round-trip")
+	else:
+		print("[sanity] FAIL: storage meseta withdraw did not register (bank still %d)" % GameState.stored_meseta)
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	_finish_storage()
+
+
+func _finish_storage() -> void:
+	# Close storage, then exercise the start menu.
 	_after(STEP_DELAY, func() -> void:
 		if SceneManager != null and SceneManager.has_method("pop_scene"):
 			SceneManager.pop_scene()
 		_after(STEP_DELAY, _open_start_menu))
 
 
-# Start-menu leg (separate from the #290 shop increments — those reserve Inc 4/5
-# for equip/storage). The PsoStartMenu autoload opens in the city too (post-
+## True if shared storage currently holds an entry for item_id.
+func _storage_has_item(item_id: String) -> bool:
+	for s in GameState.shared_storage:
+		if str(s.get("id", "")) == item_id:
+			return true
+	return false
+
+
+## Press ui_down `count` times (spaced) then run `done`. count==0 runs `done`
+## immediately. Used to land on a known row before opening its modal.
+func _nav_down_to(count: int, done: Callable) -> void:
+	if count <= 0:
+		done.call()
+		return
+	_press_action("ui_down")
+	_after(0.35, func() -> void: _nav_down_to(count - 1, done))
+
+
+# Start-menu leg (separate from the #290 shop increments, which end at Inc 5 /
+# storage above). The PsoStartMenu autoload opens in the city too (post-
 # onboarding, pre-quest — exactly this slot), so drive it here: open → enter a
 # submenu → back → close. Open/close are hard asserts (it's a complex autoload
 # that could regress); the submenu hop is best-effort.
