@@ -68,6 +68,8 @@ check "principal debug meseta granted"    "[sanity] checkpoint: principal debug 
 check "item shop opened"                  "[sanity] checkpoint: item_shop opened"
 check "item shop purchase registered"     "[sanity] checkpoint: item_shop bought"
 check "weapon shop opened"                "[sanity] checkpoint: weapon_shop opened"
+check "start menu opened (in city)"       "[sanity] checkpoint: start_menu opened"
+check "start menu closed"                 "[sanity] checkpoint: start_menu closed"
 check "autopilot finished cleanly"        "[sanity] DONE ok"
 
 # Any explicit [sanity] FAIL line is a hard failure.

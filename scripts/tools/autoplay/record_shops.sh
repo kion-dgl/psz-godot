@@ -6,8 +6,9 @@
 # that the quest chain never opens). See issue #9.
 #
 # Drives a fresh first-run boot → character create → Principal's Office, then
-# (PSZ_AUTOPILOT_SHOPS=1) detours through the principal debug-meseta grant and
-# the shop/storage screens instead of accepting a quest, ending on DONE.
+# (PSZ_AUTOPILOT_SHOPS=1) detours — after onboarding, before the first quest —
+# through the principal debug-meseta grant, the item + weapon shops, and the
+# PsoStartMenu (opened in the city), instead of accepting a quest, ending on DONE.
 #
 # Self-contained + terminal: it wipes the default save like record_boot.sh, so
 # run it as the LAST matrix phase (or standalone) — it does NOT chain a save
