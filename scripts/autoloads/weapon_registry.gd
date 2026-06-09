@@ -29,23 +29,6 @@ func get_weapon(weapon_id: String):
 	return null
 
 
-func has_weapon(weapon_id: String) -> bool:
-	if _weapons.has(weapon_id):
-		return true
-	var idx: int = weapon_id.rfind("#")
-	if idx >= 0:
-		return _weapons.has(weapon_id.substr(0, idx))
-	return false
-
-
-func get_weapons_by_type(weapon_type: int) -> Array:
-	var result: Array = []
-	for weapon in _weapons.values():
-		if weapon.weapon_type == weapon_type:
-			result.append(weapon)
-	return result
-
-
 func get_all_weapon_ids() -> Array:
 	return _weapons.keys()
 

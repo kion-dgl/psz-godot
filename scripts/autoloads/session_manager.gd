@@ -57,10 +57,6 @@ func set_link_activated(link_id: String) -> void:
 	_activated_links[link_id] = true
 
 
-func clear_activated_links() -> void:
-	_activated_links.clear()
-
-
 ## Enter a field area
 func enter_field(area_id: String, difficulty: String) -> Dictionary:
 	# A fresh expedition starts here, so any in-flight telepipe is no longer
@@ -277,26 +273,9 @@ func has_suspended_session() -> bool:
 	return not _suspended_session.is_empty()
 
 
-## Area_id of the currently-suspended session (or "" if none). Used by the
-## warp_teleporter to decide whether the player picking the same area should
-## resume_session() (telepipe stays alive) vs enter_field() (fresh expedition).
-func get_suspended_area() -> String:
-	return str(_suspended_session.get("area_id", ""))
-
-
 ## Check if a session is active
 func has_active_session() -> bool:
 	return not _session.is_empty()
-
-
-## Store grid layout for field exploration
-func set_grid(grid: Array) -> void:
-	_session["grid"] = grid
-
-
-## Get stored grid layout
-func get_grid() -> Array:
-	return _session.get("grid", [])
 
 
 ## Store field sections (a→e→b→z progression)

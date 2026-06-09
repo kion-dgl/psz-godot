@@ -133,10 +133,3 @@ func _center_behind_player() -> void:
 func set_target(new_target: Node3D) -> void:
 	target = new_target
 
-
-func get_camera_rotation() -> float:
-	return camera_rotation
-
-
-func set_camera_rotation(new_rotation: float) -> void:
-	camera_rotation = new_rotation

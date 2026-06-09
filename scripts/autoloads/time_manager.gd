@@ -165,11 +165,6 @@ func apply_to_scene(env: Environment, sky_mat: ProceduralSkyMaterial, light: Dir
 			moonlight.rotation_degrees = Vector3(cfg["light_pitch"], light.rotation_degrees.y + 180.0, 0)
 
 
-func is_dark() -> bool:
-	## Returns true when it's dark enough to show entity glow lights (sunset through sunrise).
-	return current_hour >= 19.0 or current_hour < 6.0
-
-
 func get_darkness_factor() -> float:
 	## Returns 0.0 during full day, 1.0 during full night, with smooth ramps
 	## during sunset (17:00-21:00) and sunrise (5:00-7:00).

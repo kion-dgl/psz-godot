@@ -115,22 +115,11 @@ func _init_gate_states() -> void:
 			_gate_states[exit_key] = "exit"
 
 
-func update_current_cell(pos: String) -> void:
-	_current_pos = pos
-	_visited_cells[pos] = true
-	queue_redraw()
-
-
 func set_gate_state(cell_pos: String, direction: String, state: String) -> void:
 	## state: "open", "locked", or "exit"
 	var key := "%s>%s" % [cell_pos, direction]
 	_gate_states[key] = state
 	queue_redraw()
-
-
-func get_gate_state(cell_pos: String, direction: String) -> String:
-	var key := "%s>%s" % [cell_pos, direction]
-	return _gate_states.get(key, "open")
 
 
 # ── Drawing ──────────────────────────────────────────────────────────────────

@@ -38,12 +38,6 @@ func _process(delta: float) -> void:
 		_apply_bar_color()
 
 
-func set_values(current: int, maximum: int) -> void:
-	current_value = current
-	max_value = maximum
-	update_bar()
-
-
 func update_bar() -> void:
 	if not is_inside_tree():
 		return

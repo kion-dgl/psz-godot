@@ -13,10 +13,3 @@ func set_info(title: String, body: String) -> void:
 	body_label.text = body
 	separator.text = "─".repeat(maxi(title.length() + 6, 20))
 
-
-func clear_info() -> void:
-	if not is_inside_tree():
-		await ready
-	title_label.text = ""
-	separator.text = ""
-	body_label.text = ""

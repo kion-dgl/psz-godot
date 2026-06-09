@@ -25,6 +25,3 @@ func get_recipe(id: String):
 func get_all_recipes() -> Array:
 	return _recipes.values()
 
-
-func get_all_recipe_ids() -> Array:
-	return _recipes.keys()

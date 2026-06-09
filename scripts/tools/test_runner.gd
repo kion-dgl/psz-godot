@@ -32,6 +32,7 @@ func _ready() -> void:
 	test_ranger_playthrough()
 	test_technique_disks()
 	test_new_registries()
+	test_autoload_api_surface()
 	test_material_system()
 	test_set_bonuses()
 	test_technique_casting()
@@ -144,6 +145,34 @@ func test_registries() -> void:
 
 	var monomate = ConsumableRegistry.get_consumable("monomate")
 	assert_true(monomate != null, "Can look up monomate")
+	print("")
+
+
+# ── Autoload API-surface guard (dead-code cleanup, #298) ─────
+# Pins the primary lookup methods gameplay depends on across the registries
+# and managers being pruned in the dead-code burndown. If a future cleanup
+# batch removes a *used* getter (vs the unused siblings we're deleting), this
+# fails in the fast headless suite instead of only surfacing in the autopilot
+# matrix. Keep the asserted methods narrow — the ones real code calls.
+func test_autoload_api_surface() -> void:
+	print("── Autoload API surface (cleanup guard) ──")
+	# Registry primary getters (key by resource .id).
+	assert_true(WeaponRegistry.get_weapon("saber") != null, "WeaponRegistry.get_weapon resolves")
+	assert_gt(WeaponRegistry.get_all_weapon_ids().size(), 0, "WeaponRegistry.get_all_weapon_ids non-empty")
+	assert_true(ArmorRegistry.get_armor("common_armor") != null, "ArmorRegistry.get_armor resolves")
+	assert_true(ArmorRegistry.has_armor("common_armor"), "ArmorRegistry.has_armor resolves")
+	assert_true(ClassRegistry.get_class_data("fomar") != null, "ClassRegistry.get_class_data resolves")
+	assert_true(ItemRegistry.get_item("key_valley") != null, "ItemRegistry.get_item resolves")
+	assert_gt(ItemRegistry.get_item_count(), 0, "ItemRegistry non-empty")
+	assert_true(ConsumableRegistry.get_consumable("monomate") != null, "ConsumableRegistry.get_consumable resolves")
+	assert_true(MaterialRegistry.get_material("carlian") != null, "MaterialRegistry.get_material resolves")
+	assert_gt(MaterialRegistry.get_all_materials().size(), 0, "MaterialRegistry non-empty")
+	assert_gt(RecipeRegistry.get_all_recipes().size(), 0, "RecipeRegistry.get_all_recipes non-empty")
+	assert_gt(UnitRegistry.get_all_units().size(), 0, "UnitRegistry.get_all_units non-empty")
+	# Manager/state getters the game actually calls (pin against future sweeps).
+	assert_true(CharacterManager.has_method("get_active_character"), "CharacterManager.get_active_character exists")
+	assert_true(SessionManager.has_method("get_suspended_area_id"), "SessionManager.get_suspended_area_id exists")
+	assert_true(Inventory.has_method("get_all_items"), "Inventory.get_all_items exists")
 	print("")
 
 

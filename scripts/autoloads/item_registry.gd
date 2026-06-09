@@ -41,25 +41,7 @@ func has_item(item_id: String) -> bool:
 	return _items.has(item_id)
 
 
-## Get all items of a specific type
-func get_items_by_type(type: int) -> Array:
-	var result: Array = []
-	for item in _items.values():
-		if item.type == type:
-			result.append(item)
-	return result
-
-
-## Get all item IDs
-func get_all_item_ids() -> Array:
-	return _items.keys()
-
-
 ## Get total number of registered items
 func get_item_count() -> int:
 	return _items.size()
 
-
-## Reload all items (useful for development)
-func reload_items() -> void:
-	_load_all_items()

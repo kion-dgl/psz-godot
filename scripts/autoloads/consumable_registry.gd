@@ -22,13 +22,6 @@ func get_consumable(id: String):
 	return _consumables.get(id, null)
 
 
-func has_consumable(id: String) -> bool:
-	return _consumables.has(id)
-
-
 func get_all_consumables() -> Array:
 	return _consumables.values()
 
-
-func get_consumable_count() -> int:
-	return _consumables.size()
