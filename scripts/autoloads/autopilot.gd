@@ -34,6 +34,7 @@ const WARP_TELEPORTER := "res://scenes/2d/warp_teleporter.tscn"
 const VALLEY_FIELD := "res://scenes/3d/field/valley_field.tscn"
 const ITEM_SHOP := "res://scenes/2d/shops/item_shop.tscn"
 const WEAPON_SHOP := "res://scenes/2d/shops/weapon_shop.tscn"
+const EQUIPMENT := "res://scenes/2d/equipment.tscn"
 const STORAGE := "res://scenes/2d/storage.tscn"
 
 # ── Teleport targets (from the city controllers) ───────────────
@@ -957,7 +958,106 @@ func _check_weapon_buy_result() -> void:
 
 
 func _finish_weapon_shop() -> void:
-	# Close the weapon shop, then exercise the start menu.
+	# Close the weapon shop, then exercise the equipment screen (Inc 4).
+	_after(STEP_DELAY, func() -> void:
+		if SceneManager != null and SceneManager.has_method("pop_scene"):
+			SceneManager.pop_scene()
+		_after(STEP_DELAY, _open_equipment))
+
+
+# Inc 4: equipment screen. Opening it is a hard regression assert (a complex
+# stat-preview screen that could break on load like the shops did). Then equip
+# a weapon and assert the active character's weapon slot actually changed.
+#
+# The character starts with a class starter weapon already equipped (saber /
+# handgun / rod), and Inc 3's weapon-shop buy is best-effort (class
+# equippability can leave it a no-op). So rather than depend on either, we seed
+# one guaranteed class-equippable weapon into the inventory, then drive the
+# screen to equip it — the assertion is "weapon slot changed", robust to row
+# ordering and to whatever Inc 3 did.
+var _equip_weapon_before := ""
+
+
+func _open_equipment() -> void:
+	print("[sanity] shop-smoke: opening equipment")
+	SceneManager.push_scene(EQUIPMENT, {})
+	_after(2.0, _check_equipment_opened)
+
+
+func _check_equipment_opened() -> void:
+	var top := ""
+	if SceneManager != null and not SceneManager._scene_stack.is_empty():
+		top = String(SceneManager._scene_stack[SceneManager._scene_stack.size() - 1])
+	if top != EQUIPMENT:
+		print("[sanity] FAIL: equipment did not open (top overlay='%s')" % top)
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	print("[sanity] checkpoint: equipment opened")
+	# Seed a guaranteed class-equippable weapon distinct from the equipped one.
+	var seeded := _seed_equippable_weapon()
+	_equip_weapon_before = _get_equipped_weapon()
+	if seeded.is_empty():
+		# Fresh character + full registry: the class should always have some
+		# equippable weapon that fits in inventory. Empty here means a broken
+		# class/registry definition or the inventory rejected every add — a real
+		# regression, so fail hard rather than silently skip the equip assert.
+		print("[sanity] FAIL: equipment — no class-equippable weapon could be seeded")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	print("[sanity] shop-smoke: equipping weapon (slot 0, before = '%s')" % _equip_weapon_before)
+	# Slot 0 is the weapon slot by default. Open its item list, step off the
+	# [Equipped] row to the first inventory weapon, equip it.
+	_after(0.6, func() -> void: _press_action("ui_accept"))   # open weapon item list
+	_after(1.2, func() -> void: _press_action("ui_down"))     # off [Equipped] → inventory weapon
+	_after(1.8, func() -> void: _press_action("ui_accept"))   # equip it
+	_after(2.6, _check_weapon_equipped)
+
+
+## Add one class-equippable weapon (different from the equipped one) to the
+## inventory so the equip list has a concrete row to select. Returns the id that
+## was actually added, or "" if none could be seeded. Ids are sorted so the pick
+## is deterministic regardless of registry/filesystem load order.
+func _seed_equippable_weapon() -> String:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return ""
+	var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
+	var equipped: String = str(character.get("equipment", {}).get("weapon", ""))
+	var ids: Array = WeaponRegistry.get_all_weapon_ids()
+	ids.sort()
+	for wid in ids:
+		if wid == equipped:
+			continue
+		var w = WeaponRegistry.get_weapon(wid)
+		if w == null:
+			continue
+		if class_data == null or class_data.can_equip_weapon_type(w.weapon_type):
+			# add_item can fail (e.g. inventory full); only claim success when
+			# the weapon is actually in inventory, otherwise keep looking.
+			if Inventory.add_item(wid, 1):
+				print("[sanity] equipment: seeded equippable weapon '%s'" % wid)
+				return wid
+	return ""
+
+
+func _get_equipped_weapon() -> String:
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		return ""
+	return str(character.get("equipment", {}).get("weapon", ""))
+
+
+func _check_weapon_equipped() -> void:
+	var now := _get_equipped_weapon()
+	if now != _equip_weapon_before and not now.is_empty():
+		print("[sanity] checkpoint: equipment equipped weapon ('%s' -> '%s')" % [_equip_weapon_before, now])
+	else:
+		print("[sanity] FAIL: equipment — weapon slot unchanged (still '%s')" % now)
+	_finish_equipment()
+
+
+func _finish_equipment() -> void:
+	# Close the equipment screen, then exercise the start menu.
 	_after(STEP_DELAY, func() -> void:
 		if SceneManager != null and SceneManager.has_method("pop_scene"):
 			SceneManager.pop_scene()

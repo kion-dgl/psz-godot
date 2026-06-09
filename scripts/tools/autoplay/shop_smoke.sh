@@ -68,6 +68,8 @@ check "principal debug meseta granted"    "[sanity] checkpoint: principal debug 
 check "item shop opened"                  "[sanity] checkpoint: item_shop opened"
 check "item shop purchase registered"     "[sanity] checkpoint: item_shop bought"
 check "weapon shop opened"                "[sanity] checkpoint: weapon_shop opened"
+check "equipment screen opened"           "[sanity] checkpoint: equipment opened"
+check "equipment equipped a weapon"       "[sanity] checkpoint: equipment equipped weapon"
 check "start menu opened (in city)"       "[sanity] checkpoint: start_menu opened"
 check "start menu closed"                 "[sanity] checkpoint: start_menu closed"
 check "autopilot finished cleanly"        "[sanity] DONE ok"
