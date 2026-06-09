@@ -345,8 +345,36 @@ func _http_download(url: String, cache_path: String) -> bool:
 			if host != "":
 				_bad_hosts[host] = true
 				print("[bootstrap] blacklisting host %s for this session" % host)
+		# HTTPRequest streamed the error-body to dest_abs; drop it so a junk
+		# (e.g. nginx "502 Bad Gateway" HTML) page isn't left in the cache.
+		_discard_download(dest_abs)
+		return false
+	# A 200 with an HTML error body (some gateways serve their failure page
+	# with a 200) would pass the response-code check but isn't a pack. Reject
+	# anything that doesn't start with the Godot pack magic before it can be
+	# hash-checked or mounted.
+	if not _has_pack_magic(dest_abs):
+		push_warning("[bootstrap] response from %s is not a Godot pack (bad magic)" % url)
+		_discard_download(dest_abs)
 		return false
 	return true
+
+
+## Remove a partial / junk download so it isn't left in user://packs/.
+func _discard_download(dest_abs: String) -> void:
+	if FileAccess.file_exists(dest_abs):
+		DirAccess.remove_absolute(dest_abs)
+
+
+## True if the file begins with the Godot pack magic ("GDPC"). Cheap guard
+## against HTML error pages masquerading as the pack.
+func _has_pack_magic(dest_abs: String) -> bool:
+	var f := FileAccess.open(dest_abs, FileAccess.READ)
+	if f == null:
+		return false
+	var head: PackedByteArray = f.get_buffer(4)
+	f.close()
+	return head == PackedByteArray([0x47, 0x44, 0x50, 0x43])
 
 
 func _url_host(url: String) -> String:

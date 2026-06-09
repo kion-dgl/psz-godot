@@ -47,6 +47,7 @@ func _ready() -> void:
 	test_telepipe_cancel_hooks()
 	test_telepipe_use_item_outside_field()
 	test_build_info_sentinel()
+	test_bootstrap_pack_magic_guard()
 	test_warp_teleporter_section_label()
 	test_character_appearance()
 	test_valley_grid()
@@ -2630,6 +2631,41 @@ func test_build_info_sentinel() -> void:
 	# the source-of-truth state of the file.
 	assert_eq(BuildInfo.LOCAL_BUILD, 0,
 		"BuildInfo.LOCAL_BUILD == 0 (sentinel — bumped value must never be committed)")
+	print("")
+
+
+func test_bootstrap_pack_magic_guard() -> void:
+	print("── bootstrap — pack-magic guard rejects junk downloads (#243) ──")
+
+	# A failed pack download (gateway 502, or a 200-with-HTML error page)
+	# must never linger in user://packs/ masquerading as the pack. bootstrap
+	# guards downloads with _has_pack_magic (leading bytes must be "GDPC")
+	# and drops anything that fails via _discard_download. Both are pure
+	# file ops, so we can exercise them without the scene tree / HTTPRequest.
+	var boot = load("res://scripts/2d/bootstrap.gd").new()
+
+	# An nginx-style error body is not a pack → magic check must reject it,
+	# and discarding it must remove the file from the cache dir.
+	var junk_path: String = "user://packs/test-junk.pck"
+	var junk_abs: String = ProjectSettings.globalize_path(junk_path)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("user://packs"))
+	var jf := FileAccess.open(junk_abs, FileAccess.WRITE)
+	jf.store_string("<html><head><title>502 Bad Gateway</title></head></html>")
+	jf.close()
+	assert_true(not boot._has_pack_magic(junk_abs), "HTML error body rejected (no GDPC magic)")
+	boot._discard_download(junk_abs)
+	assert_true(not FileAccess.file_exists(junk_abs), "Junk download removed from cache")
+
+	# A real pack starts with the Godot pack magic "GDPC" → must pass.
+	var good_path: String = "user://packs/test-good.pck"
+	var good_abs: String = ProjectSettings.globalize_path(good_path)
+	var gf := FileAccess.open(good_abs, FileAccess.WRITE)
+	gf.store_buffer(PackedByteArray([0x47, 0x44, 0x50, 0x43, 0x00, 0x00, 0x00, 0x00]))
+	gf.close()
+	assert_true(boot._has_pack_magic(good_abs), "Valid GDPC pack accepted")
+	boot._discard_download(good_abs)
+
+	boot.free()
 	print("")
 
 
