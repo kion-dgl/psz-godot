@@ -85,7 +85,7 @@ func _ready() -> void:
 	_setup_collision()
 	_apply_state()
 
-	_setup_enemy_collision()
+	collision_body = _build_static_collision("EnemyCollision")
 	_setup_hurtbox()
 	_apply_enemy_texture()
 	_setup_reticle()
@@ -171,22 +171,6 @@ func _load_anims_from_source(source_id: String) -> void:
 	_anim_player.add_animation_library("", lib)
 	src_scene.queue_free()
 	print("[EnemySpawn] Loaded %d animations from %s for %s" % [lib.get_animation_list().size(), source_id, _model_id])
-
-
-func _setup_enemy_collision() -> void:
-	collision_body = StaticBody3D.new()
-	collision_body.name = "EnemyCollision"
-	collision_body.collision_layer = 1  # Environment layer
-	collision_body.collision_mask = 0
-
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = collision_size
-	shape.shape = box
-	shape.position.y = collision_size.y / 2
-	collision_body.add_child(shape)
-
-	add_child(collision_body)
 
 
 func _setup_hurtbox() -> void:

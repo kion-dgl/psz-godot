@@ -319,30 +319,6 @@
       "jaccard": 0.944
     },
     {
-      "sig": "scripts/3d/elements/box.gd:_setup_box_collision#0||scripts/3d/elements/enemy_spawn.gd:_setup_enemy_collision#0",
-      "jaccard": 0.938
-    },
-    {
-      "sig": "scripts/3d/elements/box.gd:_setup_box_collision#0||scripts/3d/elements/fence.gd:_setup_fence_collision#0",
-      "jaccard": 0.938
-    },
-    {
-      "sig": "scripts/3d/elements/box.gd:_setup_box_collision#0||scripts/3d/elements/wall.gd:_setup_wall_collision#0",
-      "jaccard": 0.938
-    },
-    {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_setup_enemy_collision#0||scripts/3d/elements/fence.gd:_setup_fence_collision#0",
-      "jaccard": 0.938
-    },
-    {
-      "sig": "scripts/3d/elements/enemy_spawn.gd:_setup_enemy_collision#0||scripts/3d/elements/wall.gd:_setup_wall_collision#0",
-      "jaccard": 0.938
-    },
-    {
-      "sig": "scripts/3d/elements/fence.gd:_setup_fence_collision#0||scripts/3d/elements/wall.gd:_setup_wall_collision#0",
-      "jaccard": 0.938
-    },
-    {
       "sig": "scripts/2d/shops/crafting_shop.gd:_update_selection#0||scripts/2d/shops/weapon_shop.gd:_update_selection#0",
       "jaccard": 0.935
     },

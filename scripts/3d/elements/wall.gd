@@ -22,24 +22,8 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
-	_setup_wall_collision()
+	collision_body = _build_static_collision("WallCollision")
 	_setup_textures()
-
-
-func _setup_wall_collision() -> void:
-	collision_body = StaticBody3D.new()
-	collision_body.name = "WallCollision"
-	collision_body.collision_layer = 1  # Environment layer
-	collision_body.collision_mask = 0
-
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = collision_size
-	shape.shape = box
-	shape.position.y = collision_size.y / 2
-	collision_body.add_child(shape)
-
-	add_child(collision_body)
 
 
 func _setup_textures() -> void:

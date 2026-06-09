@@ -42,26 +42,10 @@ func _ready() -> void:
 		model_path = "valley/o01_cont.glb"
 
 	super._ready()
-	_setup_box_collision()
+	collision_body = _build_static_collision("BoxCollision")
 	_setup_hurtbox()
 	_setup_textures()
 	_setup_reticle()
-
-
-func _setup_box_collision() -> void:
-	collision_body = StaticBody3D.new()
-	collision_body.name = "BoxCollision"
-	collision_body.collision_layer = 1  # Environment layer
-	collision_body.collision_mask = 0
-
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = collision_size
-	shape.shape = box
-	shape.position.y = collision_size.y / 2
-	collision_body.add_child(shape)
-
-	add_child(collision_body)
 
 
 func _setup_hurtbox() -> void:
