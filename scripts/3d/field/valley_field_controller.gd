@@ -1037,7 +1037,6 @@ func _spawn_field_elements() -> void:
 		# Determine warp target based on direction
 		var target_section := 0
 		var target_cell := ""
-		var target_position := Vector3.ZERO
 		var is_entry: bool = is_start_cell and (portal_dir == entry_dir)
 		var is_exit: bool = (portal_dir == warp_edge or portal_dir == exit_dir) and not is_entry
 
@@ -1080,7 +1079,6 @@ func _spawn_field_elements() -> void:
 		# Gate trigger — same as _create_gate_trigger but transitions to another section
 		var t_section := target_section
 		var t_cell := target_cell
-		var t_pos := target_position
 		# Compute entry edge for the target section
 		var aw_entry_edge: String = ""
 		if is_exit and t_section < sections_for_warp.size():
@@ -1497,7 +1495,6 @@ func _lock_gates_for_enemies() -> void:
 		if _visited_cells.has(str(connections[dir])):
 			continue  # Don't lock gates to visited cells
 		# Find the gate element for this direction
-		var gate_name := "Gate"  # Gates are children of self
 		for child in get_children():
 			if child is Gate and child.global_position.distance_to(
 				_portal_data.get(dir, {}).get("gate_pos", Vector3.INF)) < 2.0:

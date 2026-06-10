@@ -767,7 +767,6 @@ func cast_technique(technique_id: String, target_index: int) -> Dictionary:
 	var tech_name: String = str(tech.get("name", technique_id))
 	var power: float = float(tech.get("power", 0))
 	var target_type: String = str(tech.get("target", "single"))
-	var element: String = str(tech.get("element", "none"))
 
 	# Support techniques
 	match technique_id:
@@ -836,7 +835,6 @@ func cast_technique(technique_id: String, target_index: int) -> Dictionary:
 	var base := power * (1.0 + float(level) / 10.0)
 	var scaled := base * (float(tech_stat) / 100.0)
 
-	var results: Array = []
 	var targets: Array = []
 
 	if target_type == "area":

@@ -34,7 +34,21 @@ jobs:
         run: godot --headless --path . --import --quit || true
 
       - name: Run tests
-        run: godot --headless --path . res://scripts/tools/test_runner.tscn
+        # This step doubles as the GDScript warnings-as-errors gate (#291).
+        # The error-level warnings in project.godot's [debug] section make
+        # offending scripts print "Warning treated as error" when the runtime
+        # recompiles every .gd (test_script_parse loads them all). A warning-as-
+        # error does NOT make load() return null at runtime, so we can't rely on
+        # the test exit code — we grep the output and fail explicitly.
+        run: |
+          godot --headless --path . res://scripts/tools/test_runner.tscn 2>&1 | tee /tmp/test_run.log
+          rc=${PIPESTATUS[0]}
+          if grep -q "Warning treated as error" /tmp/test_run.log; then
+            echo "::error::GDScript warnings-as-errors violations (see project.godot [debug]):"
+            grep -A1 "Warning treated as error" /tmp/test_run.log
+            exit 1
+          fi
+          exit $rc
 
   version-check:
     if: github.event_name == 'pull_request'

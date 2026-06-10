@@ -3092,7 +3092,6 @@ func test_wetlands_field() -> void:
 	var a_count := 0
 	var b_count := 0
 	var e_count := 0
-	var z_count := 0
 	for stage_id in gates:
 		if str(stage_id).begins_with("s02a_"):
 			a_count += 1
@@ -3100,13 +3099,10 @@ func test_wetlands_field() -> void:
 			b_count += 1
 		elif str(stage_id).begins_with("s02e_"):
 			e_count += 1
-		elif str(stage_id).begins_with("s02z_"):
-			z_count += 1
 	# Some stages may have empty portals in config (not yet set up) — skip those
 	assert_true(a_count >= 17, "Ozette has >= 17 A stages with portals (got %d)" % a_count)
 	assert_eq(b_count, 18, "Ozette has 18 B stages")
 	assert_eq(e_count, 1, "Ozette has 1 E stage")
-	# z_count may be 0 if boss has no portals (empty portals array)
 
 	# ── Field generation for ozette ──
 	var field: Dictionary = gen.generate_field("normal", "ozette")
