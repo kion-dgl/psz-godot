@@ -1520,6 +1520,14 @@ func test_damage_formulas() -> void:
 		print("  SKIP: No active character")
 		return
 
+	# Pin the global RNG so the sampled-average asserts below are deterministic.
+	# CombatManager.attack() draws damage variance / crits / hit rolls from the
+	# global RNG (randf/randf_range), so without a fixed seed the DEF-tier
+	# comparison (DEF 0 > DEF 20) intermittently inverts when two close averages
+	# land within sampling noise — spuriously reddening the CI merge gate (#316).
+	# randomize() is restored at the end so later tests keep their entropy.
+	seed(0x05ED_D46)
+
 	var class_data = ClassRegistry.get_class_data("humar")
 	var stats: Dictionary = class_data.get_stats_at_level(1) if class_data else {}
 	var player_atk: int = stats.get("attack", 50)
@@ -1571,7 +1579,11 @@ func test_damage_formulas() -> void:
 		CombatManager.set_enemies([def_enemy])
 		var total_dmg := 0
 		var hit_count := 0
-		for _i in range(50):
+		# 200 samples (was 50): with the RNG seeded above this is deterministic,
+		# and the larger sample keeps the seeded average close to the true
+		# expected value so the DEF-tier ordering reflects real defense scaling
+		# rather than seed luck on a narrow gap.
+		for _i in range(200):
 			def_enemy["hp"] = 9999
 			def_enemy["alive"] = true
 			var result := CombatManager.attack(0)
@@ -1674,6 +1686,8 @@ func test_damage_formulas() -> void:
 	# Restore character for subsequent tests
 	character["hp"] = int(character.get("max_hp", 100))
 	CharacterManager._sync_to_game_state()
+	# Re-seed from entropy so subsequent tests aren't pinned to this fixed stream.
+	randomize()
 	print("")
 
 
