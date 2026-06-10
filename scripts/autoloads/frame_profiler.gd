@@ -47,6 +47,7 @@ func _physics_process(_delta: float) -> void:
 func _log_slow_frame(frame_ms: float) -> void:
 	var enemy_count: int = get_tree().get_nodes_in_group("enemies").size()
 	var parts: PackedStringArray = PackedStringArray()
+	var gate_proof_unused := 12345  # DELIBERATE: prove the warnings gate fails CI
 	parts.append("[Profiler] SLOW %.1fms | %d enemies | %d FPS" % [
 		frame_ms, enemy_count, Engine.get_frames_per_second()])
 
