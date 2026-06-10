@@ -52,6 +52,7 @@ func _ready() -> void:
 	test_build_info_sentinel()
 	test_bootstrap_pack_magic_guard()
 	test_warp_teleporter_section_label()
+	test_warp_area_unlock()
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
@@ -905,12 +906,6 @@ func test_session_manager() -> void:
 	assert_true(not SessionManager.has_active_session(), "Session ended")
 	assert_eq(SessionManager.get_location(), "city", "Location = city")
 	assert_eq(summary.get("total_exp"), 150, "Summary has EXP")
-
-	# Mission session
-	var mission_session := SessionManager.enter_mission("gurhacia_main", "normal")
-	assert_true(SessionManager.has_active_session(), "Mission session active")
-	assert_eq(mission_session.get("type"), "mission", "Type = mission")
-	SessionManager.return_to_city()
 
 	# Mission rewards test
 	print("")
@@ -2809,6 +2804,38 @@ func test_warp_teleporter_section_label() -> void:
 	# we still produce a usable string.
 	assert_eq(WarpTeleporter.derive_section_label("", "s01a_sa1", 0),
 		" A", "Empty area_name still derives the letter (caller's job to default)")
+	print("")
+
+
+func test_warp_area_unlock() -> void:
+	print("── warp_teleporter._is_area_unlocked — quest-cleared area unlock ──")
+
+	# Characterizes the free-roam unlock rule after the dead legacy-mission
+	# unlock paths were removed (#281 inc 2): an area unlocks iff a *completed
+	# quest* cleared it (quest.area_id == area_id). Gurhacia is always open.
+	# _is_area_unlocked reads only GameState.completed_missions + QuestLoader,
+	# so we can drive it on a bare instance — no scene tree needed.
+	const WarpTeleporter := preload("res://scripts/2d/warp_teleporter.gd")
+	var wt: Control = WarpTeleporter.new()
+	var saved_completed: Array = GameState.completed_missions.duplicate()
+
+	GameState.completed_missions = []
+	assert_true(wt._is_area_unlocked("gurhacia"), "Gurhacia (start area) always unlocked")
+	assert_true(not wt._is_area_unlocked("paru"), "Paru locked when no quests completed")
+
+	# Completing the quest that clears Paru (the_paru_pact, area_id=paru) unlocks it.
+	var pact: Dictionary = QuestLoader.load_quest("the_paru_pact")
+	var pact_area: String = str(pact.get("area_id", ""))
+	assert_eq(pact_area, "paru", "the_paru_pact clears Paru (fixture sanity)")
+	GameState.completed_missions = ["the_paru_pact"]
+	assert_true(wt._is_area_unlocked("paru"), "Completing the_paru_pact unlocks Paru")
+
+	# A completed quest that clears a *different* area does not unlock Paru.
+	GameState.completed_missions = ["search_and_rescue"]  # clears gurhacia
+	assert_true(not wt._is_area_unlocked("paru"), "Unrelated completed quest leaves Paru locked")
+
+	wt.free()
+	GameState.completed_missions = saved_completed
 	print("")
 
 

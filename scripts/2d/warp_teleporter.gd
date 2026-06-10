@@ -15,29 +15,6 @@ const AREAS := [
 	{"id": "tower", "name": "Eternal Tower"},
 ]
 
-## Story mission that must be completed to unlock each warp area.
-const AREA_UNLOCK_MISSIONS := {
-	"rioh": "waltz_of_rage",
-	"ozette": "devilish_return",
-	"paru": "a_small_friend",
-	"makara": "fallen_flowers",
-	"arca": "ana_s_request",
-	"dark": "mother_s_memory",
-	"tower": "the_eternal",
-}
-
-## Display area name → area_id mapping (for quest-based unlock checks).
-const AREA_NAME_TO_ID := {
-	"Valley": "gurhacia",
-	"Snowfield": "rioh",
-	"Wetlands": "ozette",
-	"Forgotten City": "paru",
-	"Ruins": "makara",
-	"Moon Facility": "arca",
-	"Dark Shrine": "dark",
-	"Eternal Tower": "tower",
-}
-
 # PSZ palette
 const BG_COLOR := Color(0.0, 0.0, 0.0, 0.5)
 const PANEL_COLOR := Color(0.66, 0.80, 0.91)
@@ -175,16 +152,8 @@ static func derive_section_label(area_name: String, first_stage_id: String,
 func _is_area_unlocked(area_id: String) -> bool:
 	if area_id == "gurhacia":
 		return true
-	# Check story mission unlock
-	var mission_id: String = AREA_UNLOCK_MISSIONS.get(area_id, "")
-	if not mission_id.is_empty() and GameState.is_mission_completed(mission_id):
-		return true
+	# An area unlocks when a completed quest cleared it (quest.area_id == area_id).
 	for completed_id in GameState.completed_missions:
-		# Check story missions by area name
-		var mission = MissionRegistry.get_mission(str(completed_id))
-		if mission and AREA_NAME_TO_ID.get(mission.area, "") == area_id:
-			return true
-		# Check guild quests by area_id
 		var quest: Dictionary = QuestLoader.load_quest(str(completed_id))
 		if not quest.is_empty() and str(quest.get("area_id", "")) == area_id:
 			return true

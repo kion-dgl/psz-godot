@@ -80,31 +80,6 @@ func enter_field(area_id: String, difficulty: String) -> Dictionary:
 	return _session
 
 
-## Enter a mission
-func enter_mission(mission_id: String, difficulty: String) -> Dictionary:
-	TelepipeManager.cancel("enter_mission")
-	clear_section_states()
-	# Look up area from mission data and convert to spawner area_id
-	var area_id := "gurhacia"
-	var mission = MissionRegistry.get_mission(mission_id)
-	if mission:
-		area_id = _area_name_to_id(mission.area)
-	_session = {
-		"type": "mission",
-		"mission_id": mission_id,
-		"area_id": area_id,
-		"difficulty": difficulty,
-		"stage": 1,
-		"wave": 1,
-		"total_exp": 0,
-		"total_meseta": 0,
-		"items_collected": [],
-	}
-	_location = "field"
-	session_started.emit(_session)
-	return _session
-
-
 ## Enter a quest (hand-authored fixed layout)
 func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 	TelepipeManager.cancel("enter_quest")
@@ -138,20 +113,6 @@ func enter_quest(quest_id: String, difficulty: String) -> Dictionary:
 
 
 ## Convert display area name to spawner area_id
-func _area_name_to_id(area_name: String) -> String:
-	var mapping := {
-		"Valley": "gurhacia",
-		"Snowfield": "rioh",
-		"Wetlands": "ozette",
-		"Forgotten City": "paru",
-		"Ruins": "makara",
-		"Moon Facility": "arca",
-		"Dark Shrine": "dark",
-		"Eternal Tower": "tower",
-	}
-	return mapping.get(area_name, "gurhacia")
-
-
 ## Advance to next wave. Returns true if there's a next wave, false if stage complete.
 func next_wave() -> bool:
 	if _session.is_empty():
@@ -348,7 +309,7 @@ func get_section_state(section_idx: int) -> Dictionary:
 ## always saves before clearing _session.
 ##
 ## Resets when `_section_cell_states` resets — i.e. on `enter_field`,
-## `enter_quest`, `enter_mission`, `return_to_city`, and `reset_all_state`.
+## `enter_quest`, `return_to_city`, and `reset_all_state`.
 func get_visited_section_indices() -> Array:
 	var keys: Array = _section_cell_states.keys()
 	keys.sort()
