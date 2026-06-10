@@ -53,6 +53,7 @@ func _ready() -> void:
 	test_warp_teleporter_section_label()
 	test_warp_area_unlock()
 	test_mesh_utils_apply_texture()
+	test_game_element_build_prompt_label()
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
@@ -2776,6 +2777,24 @@ func test_mesh_utils_apply_texture() -> void:
 		assert_eq((om2 as StandardMaterial3D).albedo_texture, tex, "Duplicated material gets the texture")
 	assert_true(orig_mat.albedo_texture == null, "Source material left unmutated")
 	mi2.free()
+	print("")
+
+
+func test_game_element_build_prompt_label() -> void:
+	print("── GameElement._build_prompt_label — shared interaction prompt ──")
+	# Deduped _setup_prompt across key_pickup/key_gate/message_pack (#294): same
+	# Label3D config, parameterized by text / color / height.
+	var ge := GameElement.new()
+	var label := ge._build_prompt_label("Pick up", Color(1.0, 0.4, 0.4), 2.0)
+	assert_true(label is Label3D, "Returns a Label3D")
+	assert_eq(label.text, "Pick up", "Text param applied")
+	assert_eq(label.modulate, Color(1.0, 0.4, 0.4), "Color param applied")
+	assert_eq(label.position, Vector3(0, 2.0, 0), "Y-offset param applied")
+	assert_eq(label.font_size, 28, "Shared font_size")
+	assert_true(label.billboard == BaseMaterial3D.BILLBOARD_ENABLED, "Billboard enabled")
+	assert_true(not label.visible, "Prompt starts hidden")
+	label.free()
+	ge.free()
 	print("")
 
 

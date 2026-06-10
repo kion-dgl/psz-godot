@@ -53,17 +53,7 @@ func _setup_laser_material() -> void:
 
 
 func _setup_prompt() -> void:
-	_prompt_label = Label3D.new()
-	_prompt_label.text = "Unlock"
-	_prompt_label.font_size = 28
-	_prompt_label.pixel_size = 0.01
-	_prompt_label.position = Vector3(0, 3.0, 0)
-	_prompt_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_prompt_label.no_depth_test = true
-	_prompt_label.modulate = Color(1.0, 0.4, 0.4)
-	_prompt_label.outline_size = 8
-	_prompt_label.outline_modulate = Color(0, 0, 0)
-	_prompt_label.visible = false
+	_prompt_label = _build_prompt_label("Unlock", Color(1.0, 0.4, 0.4), 3.0)
 	add_child(_prompt_label)
 
 
