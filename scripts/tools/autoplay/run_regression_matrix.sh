@@ -67,6 +67,7 @@ PACK_SIZE="$(stat -c %s "$PACK")"
 # --- Parse args ---
 FROM=""
 REPORT_ONLY=0
+SELF_TEST=0
 SPEED=""          # empty → autopilot's built-in default (3x)
 RUN_START_ISO="$(date -u +%FT%TZ)"
 while [ $# -gt 0 ]; do
@@ -77,9 +78,55 @@ while [ $# -gt 0 ]; do
     --speed=*)      SPEED="${1#--speed=}"; shift ;;
     --fast)         SPEED="4"; shift ;;
     --report-only)  REPORT_ONLY=1; shift ;;
+    --self-test)    SELF_TEST=1; shift ;;
     *)              echo "unknown arg: $1" >&2; shift ;;
   esac
 done
+
+# Decide whether a failed quest attempt is a retryable intermittent flake
+# (the ~3.6-unit exit-approach stuck-walk, or a timeout/hang) vs a real
+# failure (logic [sanity] FAIL, parse/script error, other non-zero exit).
+# Args: <sanity_log> <rc>. Returns 0 = retry, 1 = fail immediately. (#313)
+# Defined at top level so run_godot uses it AND `--self-test` can check it.
+_is_retryable_flake() {
+  local sanity=$1 rc=$2
+  # Timeout / hang (budget SIGTERM).
+  [ "$rc" -eq 124 ] && return 0
+  # Navigation stuck-walk stall: floor present but the walk primitive isn't
+  # advancing toward an exit waypoint. The specific actionable failure line.
+  if [ -f "$sanity" ] && grep -qF '[sanity] FAIL: walk stuck' "$sanity"; then
+    return 0
+  fi
+  # Everything else (real [sanity] FAIL asserts, parse/script errors, other
+  # non-zero exits, "did not reach DONE") is a genuine failure — fail fast.
+  return 1
+}
+
+# `--self-test`: fixture-check the flake classifier and exit. Fast, pack-free —
+# this is the CI-runnable regression guard for the retry gate (#313).
+if [ "$SELF_TEST" -eq 1 ]; then
+  _t_pass=0; _t_fail=0
+  _expect() {  # <desc> <expected 0|1> <sanity_file> <rc>
+    if _is_retryable_flake "$3" "$4"; then _got=0; else _got=1; fi
+    if [ "$_got" -eq "$2" ]; then echo "  PASS: $1"; _t_pass=$((_t_pass+1));
+    else echo "  FAIL: $1 (got $_got, want $2)"; _t_fail=$((_t_fail+1)); fi
+  }
+  _tmp=$(mktemp -d)
+  printf '[sanity] FAIL: walk stuck at dist=3.63 in cell 4,3 (stage s06a_td1) — author waypoints\n' > "$_tmp/stuck.log"
+  printf '[sanity] checkpoint: quest accepted\n[sanity] FAIL: quest objective mismatch\n' > "$_tmp/assert.log"
+  printf '[sanity] checkpoint: title\nSCRIPT ERROR: Parse Error: boom\n' > "$_tmp/parse.log"
+  printf '[sanity] DONE ok\n' > "$_tmp/ok.log"
+  echo "── run_regression_matrix --self-test: _is_retryable_flake ──"
+  _expect "stuck-walk (rc=1) → retry"                 0 "$_tmp/stuck.log" 1
+  _expect "timeout (rc=124) → retry"                  0 "$_tmp/ok.log"    124
+  _expect "stuck-walk also wins under rc=124"         0 "$_tmp/stuck.log" 124
+  _expect "real [sanity] FAIL assert (rc=1) → no retry" 1 "$_tmp/assert.log" 1
+  _expect "parse/script error (rc=1) → no retry"      1 "$_tmp/parse.log" 1
+  _expect "clean-ish non-stuck rc=1 → no retry"       1 "$_tmp/ok.log"   1
+  rm -rf "$_tmp"
+  echo "── self-test: $_t_pass passed, $_t_fail failed ──"
+  [ "$_t_fail" -eq 0 ] && exit 0 || exit 1
+fi
 
 # Build the env assignment passed to each godot run. Empty when SPEED is
 # unset, so `env ... $SPEED_ENV ...` simply contributes no argument and the
@@ -142,42 +189,71 @@ JSON
     local sanity="$OUTDIR/${tag}_${stamp}.sanity.log"
     local json="$OUTDIR/${tag}_${stamp}.json"
 
-    echo "[regression] $tag start quest=${quest:-(SR default)} userdir=${userdir:-(default)} speed=${SPEED:-3(default)} timeout=${timeout_s}s → $sanity"
-
-    local start_ts; start_ts=$(date -u +%s)
-    env \
-      PSZ_AUTOPILOT=1 \
-      PSZ_AUTOPILOT_PHASE=first-mission \
-      PSZ_AUTOPILOT_NO_OBSTACLES=1 \
-      PSZ_AUTOPILOT_NO_BOXES=1 \
-      PSZ_AUTOPILOT_QUEST="$quest" \
-      $SPEED_ENV \
-      XDG_DATA_HOME="$userdir" \
-      LIBGL_ALWAYS_SOFTWARE=1 \
-      $DBUS_WRAP \
-      xvfb-run -a -s "-screen 0 640x360x24" \
-      timeout "$timeout_s" "$GODOT" --write-movie "$avi" --fixed-fps 30 \
-      --disable-vsync --audio-driver Dummy --path "$REPO" >"$sanity" 2>&1
-    local rc=$?
-    local end_ts; end_ts=$(date -u +%s)
-
-    local status="fail"; local fail_reason=""
-    if [ "$rc" -eq 0 ] && grep -qF '[sanity] DONE ok' "$sanity"; then
-      status="pass"
-    elif [ "$rc" -eq 124 ]; then
-      # `timeout` SIGTERMs at the budget → exit 124.
-      fail_reason="timed out after ${timeout_s}s (budget) — hung or slower than expected"
-    elif [ "$rc" -ne 0 ]; then
-      fail_reason="godot exit $rc"
-    else
-      fail_reason="autopilot did not reach DONE checkpoint"
+    # Retry intermittent navigation flakes (the ~3.6-unit exit-approach
+    # stuck-walk, and timeout/hangs) so a flake doesn't spuriously red the
+    # gate (#313). Re-run from a clean copy of the staged userdir each attempt,
+    # since a stuck run mutates the save. Real [sanity] asserts / parse errors
+    # fail immediately. Tune attempts with QUEST_MAX_ATTEMPTS (default 3).
+    local max_attempts=${QUEST_MAX_ATTEMPTS:-3}
+    local seed=""
+    if [ -n "$userdir" ] && [ -d "$userdir" ]; then
+      seed=$(mktemp -d); cp -r "$userdir/." "$seed/" 2>/dev/null || true
     fi
+
+    local attempt=1 rc=0 status="fail" fail_reason="" start_ts=0 end_ts=0
+    while : ; do
+      if [ "$attempt" -gt 1 ] && [ -n "$seed" ]; then
+        rm -rf "$userdir"; mkdir -p "$userdir"; cp -r "$seed/." "$userdir/" 2>/dev/null || true
+      fi
+      echo "[regression] $tag start quest=${quest:-(SR default)} userdir=${userdir:-(default)} attempt=$attempt/$max_attempts speed=${SPEED:-3(default)} timeout=${timeout_s}s → $sanity"
+
+      start_ts=$(date -u +%s)
+      env \
+        PSZ_AUTOPILOT=1 \
+        PSZ_AUTOPILOT_PHASE=first-mission \
+        PSZ_AUTOPILOT_NO_OBSTACLES=1 \
+        PSZ_AUTOPILOT_NO_BOXES=1 \
+        PSZ_AUTOPILOT_QUEST="$quest" \
+        $SPEED_ENV \
+        XDG_DATA_HOME="$userdir" \
+        LIBGL_ALWAYS_SOFTWARE=1 \
+        $DBUS_WRAP \
+        xvfb-run -a -s "-screen 0 640x360x24" \
+        timeout "$timeout_s" "$GODOT" --write-movie "$avi" --fixed-fps 30 \
+        --disable-vsync --audio-driver Dummy --path "$REPO" >"$sanity" 2>&1
+      rc=$?
+      end_ts=$(date -u +%s)
+
+      status="fail"; fail_reason=""
+      if [ "$rc" -eq 0 ] && grep -qF '[sanity] DONE ok' "$sanity"; then
+        status="pass"
+      elif [ "$rc" -eq 124 ]; then
+        # `timeout` SIGTERMs at the budget → exit 124.
+        fail_reason="timed out after ${timeout_s}s (budget) — hung or slower than expected"
+      elif [ "$rc" -ne 0 ]; then
+        fail_reason="godot exit $rc"
+      else
+        fail_reason="autopilot did not reach DONE checkpoint"
+      fi
+
+      if [ "$status" = "pass" ]; then
+        [ "$attempt" -gt 1 ] && echo "[regression] $tag passed on attempt $attempt (earlier attempt was an intermittent flake)"
+        break
+      fi
+      if [ "$attempt" -lt "$max_attempts" ] && _is_retryable_flake "$sanity" "$rc"; then
+        echo "[regression] $tag flake on attempt $attempt/$max_attempts ($fail_reason) — retrying from clean save"
+        attempt=$((attempt + 1)); continue
+      fi
+      break
+    done
+    [ -n "$seed" ] && rm -rf "$seed"
 
     cat > "$json" <<JSON
 {
   "phase": "$tag",
   "status": "$status",
   "godot_exit": $rc,
+  "attempts": $attempt,
   "captured_at": "$(date -u -d "@$start_ts" +%Y-%m-%dT%H:%M:%SZ)",
   "duration_sec": $((end_ts - start_ts)),
   "fail_reason": "$fail_reason",
@@ -189,7 +265,7 @@ JSON
       ffmpeg -y -loglevel error -i "$avi" -c:v libx264 -pix_fmt yuv420p -crf 28 -movflags +faststart "$mp4" 2>&1 && rm -f "$avi"
     fi
 
-    echo "[regression] $tag $status (rc=$rc, $((end_ts - start_ts))s) → $mp4"
+    echo "[regression] $tag $status (rc=$rc, $((end_ts - start_ts))s, attempt $attempt/$max_attempts) → $mp4"
   }
 
   stage_userdir() {
