@@ -892,7 +892,7 @@ func _get_equip_candidates(slot_idx: int) -> Array:
 			continue
 		if item_id in other_ids:
 			continue
-		if _item_fits_slot(item_id, slot_key):
+		if EquipmentUtils.item_fits_slot(item_id, slot_key):
 			var info: Dictionary = Inventory._lookup_item(item_id)
 			result.append({"id": item_id, "name": str(info.get("name", item_id)), "equipped": false})
 
@@ -903,26 +903,6 @@ func _get_equip_candidates(slot_idx: int) -> Array:
 	return result
 
 
-func _item_fits_slot(item_id: String, slot_key: String) -> bool:
-	match slot_key:
-		"weapon":
-			var base_id: String = Inventory.get_base_id(item_id)
-			var weapon = WeaponRegistry.get_weapon(base_id)
-			if weapon == null:
-				return false
-			var character = CharacterManager.get_active_character()
-			if character:
-				var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
-				if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type):
-					return false
-			return true
-		"frame":
-			return ArmorRegistry.has_armor(item_id)
-		"unit1", "unit2", "unit3", "unit4":
-			return UnitRegistry.get_unit(item_id) != null
-		"mag":
-			return MagManager.is_mag(item_id)
-	return false
 
 
 func _get_mags() -> Array:
