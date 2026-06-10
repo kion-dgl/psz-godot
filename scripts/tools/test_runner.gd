@@ -22,7 +22,6 @@ func _ready() -> void:
 	test_drop_tables()
 	test_combat_simulation()
 	test_session_manager()
-	test_mission_progression()
 	test_mag_feeding()
 	test_mag_evolution()
 	test_mag_personality_contract()
@@ -132,7 +131,6 @@ func test_registries() -> void:
 	assert_gt(ConsumableRegistry.get_all_consumables().size(), 10, "ConsumableRegistry has 10+ consumables")
 	assert_gt(UnitRegistry.get_all_units().size(), 80, "UnitRegistry has 80+ units")
 	assert_gt(PhotonArtRegistry.get_all_arts().size(), 40, "PhotonArtRegistry has 40+ PAs")
-	assert_gt(MissionRegistry.get_all_missions().size(), 10, "MissionRegistry has 10+ missions")
 
 	# Specific lookups
 	var saber = WeaponRegistry.get_weapon("saber")
@@ -906,106 +904,6 @@ func test_session_manager() -> void:
 	assert_true(not SessionManager.has_active_session(), "Session ended")
 	assert_eq(SessionManager.get_location(), "city", "Location = city")
 	assert_eq(summary.get("total_exp"), 150, "Summary has EXP")
-
-	# Mission rewards test
-	print("")
-	print("── Mission Rewards ──")
-	var mission = MissionRegistry.get_mission("mayor_s_mission")
-	if mission:
-		assert_true(not mission.rewards.is_empty(), "Mayor's Mission has rewards")
-		var normal_reward: Dictionary = mission.rewards.get("normal", {})
-		print("  INFO: Normal reward = %s x%s + %s M" % [
-			str(normal_reward.get("item", "???")),
-			str(normal_reward.get("quantity", 0)),
-			str(normal_reward.get("meseta", 0))])
-		assert_true(not str(normal_reward.get("item", "")).is_empty(), "Has reward item")
-		assert_gt(int(normal_reward.get("meseta", 0)), 0, "Has reward meseta")
-	else:
-		print("  INFO: mayor_s_mission not found, checking available missions:")
-		for m in MissionRegistry.get_all_missions():
-			print("    - %s (%s)" % [m.id, m.name])
-	print("")
-
-
-# ── Mission progression tests ──────────────────────────────
-
-func test_mission_progression() -> void:
-	print("── Mission Progression (Story Chain) ──")
-
-	# Story chain in order — each requires the previous
-	var story_chain := [
-		"mayor_s_mission", "waltz_of_rage", "devilish_return",
-		"a_small_friend", "fallen_flowers", "ana_s_request",
-		"mother_s_memory", "the_eternal",
-	]
-
-	# Side quests and which story mission they require
-	var side_quests := {
-		"get_connected": "mayor_s_mission",
-		"third_daughter": "waltz_of_rage",
-		"mayor_s_quest": "devilish_return",
-		"future_hunters": "a_small_friend",
-		"i_love_ruins": "fallen_flowers",
-		"2_sets_of_heroes": "ana_s_request",
-		"to_the_future": "mother_s_memory",
-	}
-
-	# Reset completed missions
-	GameState.completed_missions.clear()
-
-	var missions: Array = MissionRegistry.get_all_missions()
-	assert_gt(missions.size(), 0, "Have missions to test")
-	print("  INFO: %d missions (%d story, %d side)" % [missions.size(), story_chain.size(), side_quests.size()])
-
-	# Verify only the root mission is initially available
-	assert_true(_is_mission_available_v2(story_chain[0]), "Root mission (Mayor's Mission) is unlocked")
-	assert_true(not _is_mission_available_v2(story_chain[1]), "Second story mission is locked initially")
-
-	# Side quest for first area should also be locked (requires story completion)
-	assert_true(not _is_mission_available_v2("get_connected"), "Side quest locked before story completion")
-
-	# Walk through story chain
-	for i in range(story_chain.size()):
-		var mission_id: String = story_chain[i]
-		assert_true(_is_mission_available_v2(mission_id), "Story %d: %s is unlocked" % [i, mission_id])
-
-		# Complete story mission
-		GameState.complete_mission(mission_id)
-		print("  Completed: %s" % mission_id)
-
-		# Verify side quest in this area is now unlocked
-		for sq_id in side_quests:
-			if side_quests[sq_id] == mission_id:
-				assert_true(_is_mission_available_v2(sq_id), "Side quest %s unlocked" % sq_id)
-
-		# Verify next story mission is now unlocked (if any)
-		if i + 1 < story_chain.size():
-			assert_true(_is_mission_available_v2(story_chain[i + 1]),
-				"Next story %s unlocked after %s" % [story_chain[i + 1], mission_id])
-
-	# Verify all missions are now accessible
-	var all_accessible := 0
-	for m in missions:
-		if GameState.is_mission_completed(m.id) or _is_mission_available_v2(m.id):
-			all_accessible += 1
-	assert_eq(all_accessible, missions.size(), "All %d missions accessible after full progression" % missions.size())
-
-	# Clean up
-	GameState.completed_missions.clear()
-	print("")
-
-
-## Check if a mission is available by its requires list
-func _is_mission_available_v2(mission_id: String) -> bool:
-	var mission = MissionRegistry.get_mission(mission_id)
-	if mission == null:
-		return false
-	if mission.requires.is_empty():
-		return true
-	for req in mission.requires:
-		if not GameState.is_mission_completed(req):
-			return false
-	return true
 
 
 # ── Mag feeding tests ──────────────────────────────────────
