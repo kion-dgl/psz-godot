@@ -517,7 +517,7 @@ func _update_preview() -> void:
 	if ResourceLoader.exists(texture_path):
 		var tex := load(texture_path) as Texture2D
 		if tex:
-			_apply_texture_recursive(model_node, tex)
+			MeshUtils.apply_texture_recursive(model_node, tex)
 
 	# Drive an idle (wait) animation so the preview isn't stuck in T-pose.
 	# Animations live in a separate GLB and target a different skeleton
@@ -607,27 +607,6 @@ func _remap_animation(source: Animation, skeleton_name: String) -> Animation:
 			var prop_part := path_str.substr(skel_idx + 10)
 			anim.track_set_path(i, NodePath(skeleton_name + prop_part))
 	return anim
-
-
-func _apply_texture_recursive(node: Node, texture: Texture2D) -> void:
-	if node is MeshInstance3D:
-		var mesh_instance := node as MeshInstance3D
-		var mesh := mesh_instance.mesh
-		if mesh:
-			for surface_idx in range(mesh.get_surface_count()):
-				var mat := mesh_instance.get_active_material(surface_idx)
-				if mat is StandardMaterial3D:
-					var new_mat := mat.duplicate() as StandardMaterial3D
-					new_mat.albedo_texture = texture
-					new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-					mesh_instance.set_surface_override_material(surface_idx, new_mat)
-				elif mat == null:
-					var new_mat := StandardMaterial3D.new()
-					new_mat.albedo_texture = texture
-					new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-					mesh_instance.set_surface_override_material(surface_idx, new_mat)
-	for child in node.get_children():
-		_apply_texture_recursive(child, texture)
 
 
 func _filled_count() -> int:

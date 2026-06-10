@@ -3,10 +3,6 @@
   "jaccard_min": 0.85,
   "accepted_pairs": [
     {
-      "sig": "scripts/2d/character_create.gd:_apply_texture_recursive#0||scripts/2d/character_select.gd:_apply_texture_recursive#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/2d/character_select.gd:_find_animation_player#0||scripts/3d/enemies/enemy_base.gd:_find_animation_player#0",
       "jaccard": 1.0
     },
@@ -287,14 +283,6 @@
       "jaccard": 0.955
     },
     {
-      "sig": "scripts/2d/character_create.gd:_apply_texture_recursive#0||scripts/3d/player/player.gd:_apply_texture_to_materials#0",
-      "jaccard": 0.953
-    },
-    {
-      "sig": "scripts/2d/character_select.gd:_apply_texture_recursive#0||scripts/3d/player/player.gd:_apply_texture_to_materials#0",
-      "jaccard": 0.953
-    },
-    {
       "sig": "scripts/2d/inventory_screen.gd:_get_item_category#0||scripts/autoloads/inventory.gd:get_item_category#0",
       "jaccard": 0.952
     },
@@ -317,6 +305,10 @@
     {
       "sig": "scripts/2d/shops/crafting_shop.gd:_update_selection#0||scripts/2d/shops/weapon_shop.gd:_update_selection#0",
       "jaccard": 0.935
+    },
+    {
+      "sig": "scripts/3d/player/player.gd:_apply_texture_to_materials#0||scripts/utils/mesh_utils.gd:apply_texture_recursive#0",
+      "jaccard": 0.932
     },
     {
       "sig": "scripts/2d/action_palette_screen.gd:_is_action_available#0||scripts/3d/field/pso_start_menu.gd:_is_palette_action_available#0",
