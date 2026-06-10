@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="PSZ Godot"
-config/version="0.32.53"
+config/version="0.32.54"
 run/main_scene="res://scenes/2d/bootstrap.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
@@ -35,7 +35,6 @@ ShopRegistry="*res://scripts/autoloads/shop_registry.gd"
 ShopManager="*res://scripts/autoloads/shop_manager.gd"
 UnitRegistry="*res://scripts/autoloads/unit_registry.gd"
 PhotonArtRegistry="*res://scripts/autoloads/photon_art_registry.gd"
-MissionRegistry="*res://scripts/autoloads/mission_registry.gd"
 DropRegistry="*res://scripts/autoloads/drop_registry.gd"
 EnemySpawner="*res://scripts/autoloads/enemy_spawner.gd"
 CombatManager="*res://scripts/autoloads/combat_manager.gd"
