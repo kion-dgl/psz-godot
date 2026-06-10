@@ -270,7 +270,6 @@ func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	if character == null:
 		return {"can_equip": false, "reason": ""}
 	var class_str: String = _get_class_use_string()
-	var char_level: int = int(character.get("level", 1))
 
 	if cat == "weapon":
 		var w = WeaponRegistry.get_weapon(item_id)
@@ -385,7 +384,6 @@ func _buy_selected() -> void:
 
 	var equip_check: Dictionary = _check_equippability(item_id, cat)
 	if not equip_check.get("can_equip", true):
-		var reason: String = str(equip_check.get("reason", ""))
 		hint_label.text = "Your class cannot use this!"
 		return
 
@@ -494,7 +492,6 @@ func _refresh_display() -> void:
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
 			var item_id: String = str(item.get("id", ""))
-			var cat: String = str(item.get("category", ""))
 			var cost: int = int(item.get("cost", 0))
 
 			# Section headers for weapon types

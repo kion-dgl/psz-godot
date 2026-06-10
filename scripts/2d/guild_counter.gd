@@ -334,8 +334,6 @@ func _accept_entry() -> void:
 			_refresh_display()
 			return
 		# Accept quest — don't start session yet, player must walk to warp
-		var area_id: String = AREA_DISPLAY.keys()[AREA_DISPLAY.values().find(entry["area"])] \
-			if AREA_DISPLAY.values().has(entry["area"]) else "gurhacia"
 		SessionManager.accept_quest(entry["quest_id"], difficulty)
 		_selecting_difficulty = false
 		SceneManager.pop_scene({"quest_accepted": true})

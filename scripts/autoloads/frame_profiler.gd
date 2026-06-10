@@ -58,10 +58,7 @@ func _log_slow_frame(frame_ms: float) -> void:
 		if delta_ms > 0.5:  # Only show sections taking >0.5ms
 			parts.append("  %s → %s: %.2fms" % [_marks[i - 1].label, _marks[i].label, delta_ms])
 
-	# Time after last mark
-	if _marks.size() > 0:
-		var last_time: int = _marks[_marks.size() - 1]["time"]
-		var remainder_ms: float = (Time.get_ticks_usec() - last_time) / 1000.0
-		# Don't log remainder — it includes idle time waiting for next frame
+	# Time after the last mark is intentionally not logged — it includes idle
+	# time spent waiting for the next frame.
 
 	print("\n".join(parts))

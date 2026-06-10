@@ -118,7 +118,6 @@ func _process(delta: float) -> void:
 		return
 
 	if SessionManager.has_suspended_session():
-		var suspended: Dictionary = SessionManager.get_session()
 		# get_session returns empty when suspended — check the suspended data
 		var susp_area: String = ""
 		# Access internal suspended session area

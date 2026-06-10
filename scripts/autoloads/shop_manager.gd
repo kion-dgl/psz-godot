@@ -5,8 +5,6 @@ extends Node
 signal item_bought(item_name: String, cost: int)
 signal item_sold(item_name: String, meseta_gained: int)
 
-var _last_refresh_count: int = -1
-
 
 ## Get the item list for a shop
 func get_shop_inventory(shop_id: String) -> Array:

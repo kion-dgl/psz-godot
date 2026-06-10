@@ -950,6 +950,10 @@ func _process_status_effects(delta: float) -> void:
 	if _status_effects.is_empty():
 		return
 
+	# TODO(#291 combat window): hp_before is currently unused — remove it (and
+	# this annotation) when the combat pass revisits status-effect damage. Kept
+	# now to avoid churning enemy_base.gd outside the combat-last window.
+	@warning_ignore("unused_variable")
 	var hp_before := current_hp
 	var expired: Array = []
 
