@@ -45,20 +45,17 @@ func _get_visible_slots() -> Array:
 	return slots
 
 
-## Display names matching _get_visible_slots().
+## Display names matching _get_visible_slots() — derived from it so the two
+## stay index-aligned by construction (#294 dedup; was a parallel copy of the
+## same armor-slot logic).
 func _get_visible_slot_names() -> Array:
-	var names: Array = ["Weapon", "Frame", "Mag"]
-	var character = CharacterManager.get_active_character()
-	if character == null:
-		return names
-	var frame_id: String = str(character.get("equipment", {}).get("frame", ""))
-	if frame_id.is_empty():
-		return names
-	var armor = ArmorRegistry.get_armor(frame_id)
-	if armor == null:
-		return names
-	for i in range(armor.max_slots):
-		names.append("Unit %d" % (i + 1))
+	var names: Array = []
+	for slot in _get_visible_slots():
+		match slot:
+			"weapon": names.append("Weapon")
+			"frame": names.append("Frame")
+			"mag": names.append("Mag")
+			_: names.append("Unit %d" % int(str(slot).substr(4)))  # "unitN" → "Unit N"
 	return names
 
 

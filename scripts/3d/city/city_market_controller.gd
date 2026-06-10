@@ -28,10 +28,9 @@ func _ready() -> void:
 	# s00e_sa1 uses baked textures from psz-asset-viewer — no runtime fixes needed
 	_add_interior_lights([Vector3(0, 5, 0), Vector3(0, 5, -15), Vector3(0, 5, 15)])
 
-	# Drop in the replacement weapon-shop cart over the empty spot
-	# the no-cart GLB left behind.
-	_add_weapon_shop_cart()
-	_add_item_shop_cart()
+	# Drop in the replacement shop carts over the empty spots the no-cart
+	# GLB left behind.
+	_add_shop_carts()
 
 	# Heal on city entry
 	_heal_character()
@@ -103,23 +102,26 @@ func _get_area_name() -> String:
 	return "market"
 
 
-func _add_weapon_shop_cart() -> void:
-	var cart: Node3D = WEAPON_SHOP_CART_SCENE.instantiate()
-	cart.transform = Transform3D(
+## Place the weapon + item shop carts at their fixed transforms.
+func _add_shop_carts() -> void:
+	_add_shop_cart(WEAPON_SHOP_CART_SCENE, Transform3D(
 		Vector3(2.0545, 0.0, -2.0467),
 		Vector3(0.0, 2.9, 0.0),
 		Vector3(2.0467, 0.0, 2.0545),
 		Vector3(-9.0751, 0.0, 20.1794)
-	)
-	add_child(cart)
-
-
-func _add_item_shop_cart() -> void:
-	var cart: Node3D = ITEM_SHOP_CART_SCENE.instantiate()
-	cart.transform = Transform3D(
+	))
+	_add_shop_cart(ITEM_SHOP_CART_SCENE, Transform3D(
 		Vector3(-0.0798, 0.0, -2.2987),
 		Vector3(0.0, 2.3, 0.0),
 		Vector3(2.2987, 0.0, -0.0798),
 		Vector3(-14.5643, 0.0, 27.5287)
-	)
+	))
+
+
+## Instantiate a shop-cart scene at a fixed transform and parent it here.
+## Replaces the per-shop _add_*_shop_cart pair — they differed only in the
+## scene + transform data (#294).
+func _add_shop_cart(scene: PackedScene, xform: Transform3D) -> void:
+	var cart: Node3D = scene.instantiate()
+	cart.transform = xform
 	add_child(cart)
