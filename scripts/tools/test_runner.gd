@@ -1371,9 +1371,13 @@ func test_start_menu_data() -> void:
 	assert_eq(PsoStartMenu._get_item_category("saber"), "Weapon", "saber → Weapon")
 	assert_eq(PsoStartMenu._get_item_category("monomate"), "Consumable", "monomate → Consumable")
 
-	# _item_fits_slot: slot acceptance
-	assert_true(PsoStartMenu._item_fits_slot("saber", "weapon"), "saber fits the weapon slot")
-	assert_true(not PsoStartMenu._item_fits_slot("monomate", "weapon"), "monomate does not fit the weapon slot")
+	# EquipmentUtils.item_fits_slot: slot acceptance (deduped from
+	# equipment_screen + pso_start_menu — #294)
+	assert_true(EquipmentUtils.item_fits_slot("saber", "weapon"), "saber fits the weapon slot")
+	assert_true(not EquipmentUtils.item_fits_slot("monomate", "weapon"), "monomate does not fit the weapon slot")
+	assert_true(not EquipmentUtils.item_fits_slot("saber", "frame"), "weapon does not fit the frame slot")
+	assert_true(not EquipmentUtils.item_fits_slot("saber", "mag"), "weapon does not fit the mag slot")
+	assert_true(not EquipmentUtils.item_fits_slot("saber", "bogus_slot"), "unknown slot accepts nothing")
 
 	# _get_menu_labels: core views always present.
 	var labels: Array = PsoStartMenu._get_menu_labels()

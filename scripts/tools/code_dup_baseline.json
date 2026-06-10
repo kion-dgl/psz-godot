@@ -15,10 +15,6 @@
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/2d/equipment_screen.gd:_item_fits_slot#0||scripts/3d/field/pso_start_menu.gd:_item_fits_slot#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/2d/guild_counter.gd:_process#0||scripts/2d/shops/crafting_shop.gd:_process#0",
       "jaccard": 1.0
     },
