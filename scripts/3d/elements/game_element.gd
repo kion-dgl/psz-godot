@@ -97,6 +97,25 @@ func _build_static_collision(body_name: String) -> StaticBody3D:
 	return body
 
 
+## Build a billboarded, hidden interaction-prompt Label3D (e.g. "Pick up",
+## "Unlock", "Read"). Shared by the element subclasses' `_setup_prompt` — they
+## differ only in text/color/height (#294). Caller adds it to the tree and keeps
+## the reference; the label starts invisible.
+func _build_prompt_label(text: String, modulate_color: Color, y_offset: float) -> Label3D:
+	var label := Label3D.new()
+	label.text = text
+	label.font_size = 28
+	label.pixel_size = 0.01
+	label.position = Vector3(0, y_offset, 0)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = modulate_color
+	label.outline_size = 8
+	label.outline_modulate = Color(0, 0, 0)
+	label.visible = false
+	return label
+
+
 ## Override to apply visual changes based on state
 func _apply_state() -> void:
 	pass

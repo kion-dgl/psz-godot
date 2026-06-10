@@ -211,10 +211,6 @@
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/3d/elements/key_pickup.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/3d/elements/telepipe.gd:_init#0||scripts/3d/elements/warp_point.gd:_init#0",
       "jaccard": 1.0
     },
@@ -236,14 +232,6 @@
     },
     {
       "sig": "scripts/3d/city/city_area_base.gd:_find_global_fix_for_material#0||scripts/3d/field/valley_field_controller.gd:_find_global_fix_for_material#0",
-      "jaccard": 0.974
-    },
-    {
-      "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/key_pickup.gd:_setup_prompt#0",
-      "jaccard": 0.974
-    },
-    {
-      "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
       "jaccard": 0.974
     },
     {
@@ -284,6 +272,10 @@
     },
     {
       "sig": "scripts/2d/inventory_screen.gd:_get_item_category#0||scripts/autoloads/inventory.gd:get_item_category#0",
+      "jaccard": 0.952
+    },
+    {
+      "sig": "scripts/3d/elements/key_pickup.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
       "jaccard": 0.952
     },
     {
@@ -340,14 +332,6 @@
     },
     {
       "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/city/warp_pad.gd:_setup_prompt#0",
-      "jaccard": 0.923
-    },
-    {
-      "sig": "scripts/3d/elements/drop_base.gd:_setup_prompt#0||scripts/3d/elements/key_pickup.gd:_setup_prompt#0",
-      "jaccard": 0.923
-    },
-    {
-      "sig": "scripts/3d/elements/drop_base.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
       "jaccard": 0.923
     },
     {
@@ -443,24 +427,12 @@
       "jaccard": 0.905
     },
     {
+      "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/key_pickup.gd:_setup_prompt#0",
+      "jaccard": 0.905
+    },
+    {
       "sig": "scripts/2d/inventory_screen.gd:_get_item_category#0||scripts/3d/field/pso_start_menu.gd:_get_item_category#0",
       "jaccard": 0.902
-    },
-    {
-      "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/elements/key_gate.gd:_setup_prompt#0",
-      "jaccard": 0.9
-    },
-    {
-      "sig": "scripts/3d/elements/drop_base.gd:_setup_prompt#0||scripts/3d/elements/key_gate.gd:_setup_prompt#0",
-      "jaccard": 0.9
-    },
-    {
-      "sig": "scripts/3d/city/warp_pad.gd:_setup_prompt#0||scripts/3d/elements/key_pickup.gd:_setup_prompt#0",
-      "jaccard": 0.897
-    },
-    {
-      "sig": "scripts/3d/city/warp_pad.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
-      "jaccard": 0.897
     },
     {
       "sig": "scripts/3d/elements/gate.gd:_apply_state#0||scripts/3d/elements/key_gate.gd:_apply_state#0",
@@ -519,19 +491,7 @@
       "jaccard": 0.879
     },
     {
-      "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/elements/key_pickup.gd:_setup_prompt#0",
-      "jaccard": 0.875
-    },
-    {
-      "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
-      "jaccard": 0.875
-    },
-    {
       "sig": "scripts/3d/city/warp_pad.gd:_setup_prompt#0||scripts/3d/elements/drop_base.gd:_setup_prompt#0",
-      "jaccard": 0.875
-    },
-    {
-      "sig": "scripts/3d/city/warp_pad.gd:_setup_prompt#0||scripts/3d/elements/key_gate.gd:_setup_prompt#0",
       "jaccard": 0.875
     },
     {
@@ -573,6 +533,10 @@
     {
       "sig": "scripts/3d/elements/interact_switch.gd:_init#0||scripts/3d/elements/key_pickup.gd:_init#0",
       "jaccard": 0.87
+    },
+    {
+      "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
+      "jaccard": 0.864
     },
     {
       "sig": "scripts/3d/field/pso_start_menu.gd:_get_item_category#0||scripts/autoloads/inventory.gd:get_item_category#0",
