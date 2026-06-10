@@ -451,10 +451,6 @@
       "jaccard": 0.909
     },
     {
-      "sig": "scripts/2d/equipment_screen.gd:_get_visible_slot_names#0||scripts/2d/equipment_screen.gd:_get_visible_slots#0",
-      "jaccard": 0.907
-    },
-    {
       "sig": "scripts/3d/elements/bear_trap.gd:_setup_materials#0||scripts/3d/elements/needle_trap.gd:_setup_materials#0",
       "jaccard": 0.905
     },

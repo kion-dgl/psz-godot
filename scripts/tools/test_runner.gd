@@ -34,6 +34,7 @@ func _ready() -> void:
 	test_new_registries()
 	test_autoload_api_surface()
 	test_element_collision_setup()
+	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
 	test_technique_casting()
@@ -201,6 +202,31 @@ func test_element_collision_setup() -> void:
 		assert_eq((shape.shape as BoxShape3D).size, el.collision_size, "box sized to collision_size")
 	assert_true(is_equal_approx(shape.position.y, el.collision_size.y / 2.0), "shape offset half-height")
 	el.free()
+	print("")
+
+
+# ── Equipment slot-name derivation (dedup guard, #294) ───────
+# _get_visible_slot_names now derives from _get_visible_slots (one source of
+# truth) instead of a parallel copy. Pins the invariants that mattered: same
+# length (index-aligned) and the slot→label mapping. Pack-free.
+func test_equipment_slot_names() -> void:
+	print("── equipment_screen slot names derive from slots (dedup guard) ──")
+	const EquipScreen := preload("res://scripts/2d/equipment_screen.gd")
+	var es = EquipScreen.new()
+	var slots: Array = es._get_visible_slots()
+	var names: Array = es._get_visible_slot_names()
+	assert_eq(names.size(), slots.size(), "slot names index-aligned with slots")
+	var label_map := {"weapon": "Weapon", "frame": "Frame", "mag": "Mag"}
+	var aligned := true
+	for i in range(slots.size()):
+		var slot: String = str(slots[i])
+		var want: String = label_map.get(slot, "Unit %d" % int(slot.substr(4)) if slot.begins_with("unit") else slot)
+		if str(names[i]) != want:
+			aligned = false
+	assert_true(aligned, "each slot maps to its expected display name")
+	# Base slots are always present (weapon/frame/mag) regardless of character.
+	assert_true(slots.size() >= 3 and str(slots[0]) == "weapon" and str(names[0]) == "Weapon", "base weapon slot present + labeled")
+	es.free()
 	print("")
 
 
