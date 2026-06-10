@@ -52,6 +52,7 @@ func _ready() -> void:
 	test_bootstrap_pack_magic_guard()
 	test_warp_teleporter_section_label()
 	test_warp_area_unlock()
+	test_mesh_utils_apply_texture()
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
@@ -2738,6 +2739,43 @@ func test_warp_area_unlock() -> void:
 
 	wt.free()
 	GameState.completed_missions = saved_completed
+	print("")
+
+
+func test_mesh_utils_apply_texture() -> void:
+	print("── MeshUtils.apply_texture_recursive — recursive albedo override ──")
+	# Deduped from character_create/character_select (#294). Covers both branches
+	# (no-material → fresh StandardMaterial3D; existing StandardMaterial3D →
+	# duplicated, source unmutated) plus recursion through a nested tree.
+	var tex := PlaceholderTexture2D.new()
+
+	# No-material branch, two levels deep (root → child → mesh).
+	var root := Node3D.new()
+	var child := Node3D.new()
+	var mi := MeshInstance3D.new()
+	mi.mesh = BoxMesh.new()  # 1 surface, no material
+	child.add_child(mi)
+	root.add_child(child)
+	MeshUtils.apply_texture_recursive(root, tex)
+	var om := mi.get_surface_override_material(0)
+	assert_true(om is StandardMaterial3D, "Fresh StandardMaterial3D created for unmaterialed surface")
+	if om is StandardMaterial3D:
+		assert_eq((om as StandardMaterial3D).albedo_texture, tex, "Albedo applied recursively through nested nodes")
+		assert_eq((om as StandardMaterial3D).texture_filter, BaseMaterial3D.TEXTURE_FILTER_NEAREST, "Nearest texture filter set")
+	root.free()
+
+	# Existing-StandardMaterial3D branch: duplicated, source left unmutated.
+	var mi2 := MeshInstance3D.new()
+	mi2.mesh = BoxMesh.new()
+	var orig_mat := StandardMaterial3D.new()
+	mi2.set_surface_override_material(0, orig_mat)
+	MeshUtils.apply_texture_recursive(mi2, tex)
+	var om2 := mi2.get_surface_override_material(0)
+	assert_true(om2 != orig_mat, "Existing material is duplicated, not mutated in place")
+	if om2 is StandardMaterial3D:
+		assert_eq((om2 as StandardMaterial3D).albedo_texture, tex, "Duplicated material gets the texture")
+	assert_true(orig_mat.albedo_texture == null, "Source material left unmutated")
+	mi2.free()
 	print("")
 
 

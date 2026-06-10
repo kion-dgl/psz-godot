@@ -1024,28 +1024,7 @@ func _update_preview_model() -> void:
 	if ResourceLoader.exists(tex_path):
 		var texture := load(tex_path) as Texture2D
 		if texture:
-			_apply_texture_recursive(_preview_model, texture)
-
-
-func _apply_texture_recursive(node: Node, texture: Texture2D) -> void:
-	if node is MeshInstance3D:
-		var mesh_instance := node as MeshInstance3D
-		var mesh := mesh_instance.mesh
-		if mesh:
-			for surface_idx in range(mesh.get_surface_count()):
-				var mat := mesh_instance.get_active_material(surface_idx)
-				if mat is StandardMaterial3D:
-					var new_mat := mat.duplicate() as StandardMaterial3D
-					new_mat.albedo_texture = texture
-					new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-					mesh_instance.set_surface_override_material(surface_idx, new_mat)
-				elif mat == null:
-					var new_mat := StandardMaterial3D.new()
-					new_mat.albedo_texture = texture
-					new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-					mesh_instance.set_surface_override_material(surface_idx, new_mat)
-	for child in node.get_children():
-		_apply_texture_recursive(child, texture)
+			MeshUtils.apply_texture_recursive(_preview_model, texture)
 
 
 func _teardown_preview() -> void:
