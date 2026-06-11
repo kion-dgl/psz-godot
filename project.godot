@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="PSZ Godot"
-config/version="0.32.60"
+config/version="0.32.61"
 run/main_scene="res://scenes/2d/bootstrap.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 boot_splash/bg_color=Color(0, 0, 0, 1)
@@ -20,11 +20,10 @@ config/icon="res://icon.svg"
 
 [debug]
 
-; GDScript warnings-as-errors (#291). The unambiguous dead-code / likely-bug set
-; is enforced as errors (level 2) — these fail CI via the script-parse gate.
-; Noisier-but-idiomatic categories (unused params, base-class/global shadowing)
-; are kept at warn (level 1): visible in compile output, promotable to errors
-; after a dedicated cleanup pass.
+; GDScript warnings-as-errors (#291 + strict pass). The dead-code / likely-bug /
+; shadowing / unused-param set is enforced as errors (level 2) — these fail CI
+; via the script-parse gate. untyped_declaration is deliberately NOT enforced
+; (hundreds of low-value annotations, esp. for-loop iterators).
 gdscript/warnings/enable=true
 gdscript/warnings/exclude_addons=true
 gdscript/warnings/unused_variable=2
@@ -35,10 +34,10 @@ gdscript/warnings/standalone_expression=2
 gdscript/warnings/standalone_ternary=2
 gdscript/warnings/redundant_await=2
 gdscript/warnings/shadowed_variable=2
-gdscript/warnings/unused_parameter=1
-gdscript/warnings/unused_signal=1
-gdscript/warnings/shadowed_variable_base_class=1
-gdscript/warnings/shadowed_global_identifier=1
+gdscript/warnings/unused_parameter=2
+gdscript/warnings/unused_signal=2
+gdscript/warnings/shadowed_variable_base_class=2
+gdscript/warnings/shadowed_global_identifier=2
 ; unused_private_class_variable is WARN, not error: Godot analyzes it per-class,
 ; so it false-positives on this codebase's extracted-controller pattern, where
 ; sibling modules (weather_controller, start_menu_input, cell_object_spawner…)

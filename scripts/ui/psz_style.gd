@@ -299,7 +299,7 @@ static func create_bar(label_text: String, ratio: float, value_text: String, fil
 ## for API back-compat but unused.
 static func setup_shop_portrait(
 		panel: PanelContainer, menu_panel: PanelContainer,
-		detail_ref: PanelContainer, model_path: String) -> Control:
+		detail_ref: PanelContainer, _model_path: String) -> Control:
 	# Make panel fullscreen and opaque
 	panel.offset_left = 0
 	panel.offset_top = 0

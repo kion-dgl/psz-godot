@@ -88,8 +88,8 @@ func _color(hex: String) -> Color:
 	return Color(hex)
 
 
-func _load_tex(name: String) -> Texture2D:
-	return load(ASSET_BASE + name) as Texture2D
+func _load_tex(tex_name: String) -> Texture2D:
+	return load(ASSET_BASE + tex_name) as Texture2D
 
 
 # --- lighting ----------------------------------------------------------------
@@ -270,8 +270,8 @@ func _build_stars(config: Dictionary) -> void:
 			rng.randf_range(y_lo, y_hi),
 			rng.randf_range(z_lo, z_hi),
 		)
-		var scale := rng.randf_range(0.6, 2.0)
-		mm.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ONE * scale), pos))
+		var inst_scale := rng.randf_range(0.6, 2.0)
+		mm.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ONE * inst_scale), pos))
 		mm.set_instance_color(i, palette[rng.randi() % palette.size()])
 
 	_stars.multimesh = mm

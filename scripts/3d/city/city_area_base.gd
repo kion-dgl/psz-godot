@@ -229,7 +229,7 @@ func _connect_player_to_interactables() -> void:
 		pad.set_player(player)
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _unhandled_input(_event: InputEvent) -> void:
 	# Pause/Start handled by PsoStartMenu autoload
 	pass
 

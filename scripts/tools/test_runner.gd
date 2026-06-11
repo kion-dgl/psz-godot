@@ -2836,14 +2836,14 @@ func test_shop_ui_setup_portrait() -> void:
 	# broke the Android export; #274 inc 5). Deduped from photon_shop/crafting_shop.
 	const ShopUI := preload("res://scripts/2d/shops/shop_ui.gd")
 	# Minimal shop shape: a "Panel" PanelContainer whose first child is the VBox.
-	var owner := Control.new()
+	var shop := Control.new()
 	var panel := PanelContainer.new()
 	panel.name = "Panel"
 	var content := VBoxContainer.new()
 	panel.add_child(content)
-	owner.add_child(panel)
+	shop.add_child(panel)
 
-	ShopUI.setup_portrait(owner)
+	ShopUI.setup_portrait(shop)
 
 	assert_eq(panel.get_child_count(), 1, "Panel reduced to a single outer container")
 	var outer := panel.get_child(0)
@@ -2854,7 +2854,7 @@ func test_shop_ui_setup_portrait() -> void:
 	assert_true(outer.get_child(1) is VBoxContainer, "Right column is a VBox")
 	assert_eq((outer.get_child(1) as Control).size_flags_stretch_ratio, 2.0, "Right column stretches 2")
 	assert_true(panel.has_theme_stylebox_override("panel"), "Panel stylebox override applied")
-	owner.free()
+	shop.free()
 	print("")
 
 
@@ -3646,9 +3646,9 @@ func test_input_config() -> void:
 	}
 	for palette_scheme in palette_expected:
 		InputConfig._apply_scheme_no_save(palette_scheme)
-		var exp: Dictionary = palette_expected[palette_scheme]
-		for action in exp:
-			assert_eq(_get_joypad_button(action), exp[action], "%s: %s on button %d" % [palette_scheme, action, exp[action]])
+		var btn_map: Dictionary = palette_expected[palette_scheme]
+		for action in btn_map:
+			assert_eq(_get_joypad_button(action), btn_map[action], "%s: %s on button %d" % [palette_scheme, action, btn_map[action]])
 
 	# Restore original for any tests that run after.
 	InputConfig._apply_scheme_no_save(original_scheme)

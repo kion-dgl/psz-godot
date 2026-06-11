@@ -25,25 +25,25 @@ const SCALE_FACTOR := 1.8
 
 static func attach(parent: Control, texture_path: String) -> TextureRect:
 	var tex: Texture2D = load(texture_path)
-	var tr := TextureRect.new()
-	tr.name = "ShopPreview"
-	tr.texture = tex
-	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tr.stretch_mode = TextureRect.STRETCH_SCALE
-	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var rect := TextureRect.new()
+	rect.name = "ShopPreview"
+	rect.texture = tex
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_SCALE
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	# All four anchors at the parent's bottom-right corner; offsets
 	# compute the final rect relative to that anchor.
-	tr.anchor_left = 1.0
-	tr.anchor_top = 1.0
-	tr.anchor_right = 1.0
-	tr.anchor_bottom = 1.0
+	rect.anchor_left = 1.0
+	rect.anchor_top = 1.0
+	rect.anchor_right = 1.0
+	rect.anchor_bottom = 1.0
 	var natural := tex.get_size() if tex else Vector2(256, 256)
 	var sz := natural * SCALE_FACTOR
-	tr.offset_right = -float(RIGHT_INSET)
-	tr.offset_bottom = float(BOTTOM_PUSH)
-	tr.offset_left = -sz.x - float(RIGHT_INSET)
-	tr.offset_top = -sz.y + float(BOTTOM_PUSH)
+	rect.offset_right = -float(RIGHT_INSET)
+	rect.offset_bottom = float(BOTTOM_PUSH)
+	rect.offset_left = -sz.x - float(RIGHT_INSET)
+	rect.offset_top = -sz.y + float(BOTTOM_PUSH)
 
 	# Rounded top corners (top-left + top-right). Bottom corners stay
 	# sharp because the bottom is flush against the screen edge — no
@@ -70,7 +70,7 @@ void fragment() {
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
 	mat.set_shader_parameter("radius", CORNER_RADIUS)
-	tr.material = mat
+	rect.material = mat
 
-	parent.add_child(tr)
-	return tr
+	parent.add_child(rect)
+	return rect

@@ -143,13 +143,13 @@ func _show_pickup_dialog() -> void:
 		dialog_box.name = "DialogBox"
 		hud.add_child(dialog_box)
 
-	var item_id := quest_item_id
+	var qitem_id := quest_item_id
 	var actions := pickup_actions
 	var dlg := pickup_dialog
 	var comp := companion_node
 	var rem_dlg := remaining_dialog
 	dialog_box.dialog_complete.connect(func() -> void:
-		SessionManager.collect_quest_item(item_id)
+		SessionManager.collect_quest_item(qitem_id)
 		if not dlg.is_empty() and comp and is_instance_valid(comp) and comp.has_method("show_speech"):
 			_show_companion_pages(comp, dlg, 0, func() -> void:
 				_show_remaining_dialog(comp, rem_dlg, actions)

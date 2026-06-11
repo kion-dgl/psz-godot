@@ -210,6 +210,6 @@ func _override_textured_material(texture_name: String) -> StandardMaterial3D:
 
 
 ## Utility: Set overall visibility (hides when collected)
-func set_element_visible(is_visible: bool) -> void:
+func set_element_visible(visible_state: bool) -> void:
 	if model:
-		model.visible = is_visible
+		model.visible = visible_state

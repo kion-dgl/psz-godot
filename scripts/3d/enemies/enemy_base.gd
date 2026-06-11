@@ -616,7 +616,7 @@ func _start_attack() -> void:
 	attack_cooldown_timer = cooldown
 
 
-func _on_hit_received(raw_damage: int, knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
+func _on_hit_received(raw_damage: int, _knockback: Vector3, accuracy: int = 100, hit_element: String = "", hit_element_level: int = 0) -> void:
 	if not is_alive:
 		return
 

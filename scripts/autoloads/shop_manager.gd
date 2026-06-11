@@ -3,7 +3,6 @@ extends Node
 ## Ported from psz-sketch/src/api/shop.ts
 
 signal item_bought(item_name: String, cost: int)
-signal item_sold(item_name: String, meseta_gained: int)
 
 
 ## Get the item list for a shop

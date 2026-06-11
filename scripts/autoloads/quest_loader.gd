@@ -57,8 +57,8 @@ func _list_json_dir(dir_path: String) -> Array[String]:
 	var file := dir.get_next()
 	while not file.is_empty():
 		if file.ends_with(".json") or file.ends_with(".json.remap"):
-			var name := file.replace(".json.remap", "").replace(".json", "")
-			if name != "manifest":
-				result.append(name)
+			var qname := file.replace(".json.remap", "").replace(".json", "")
+			if qname != "manifest":
+				result.append(qname)
 		file = dir.get_next()
 	return result
