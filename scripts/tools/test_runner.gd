@@ -54,6 +54,7 @@ func _ready() -> void:
 	test_warp_area_unlock()
 	test_mesh_utils_apply_texture()
 	test_game_element_build_prompt_label()
+	test_game_element_override_textured_material()
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
@@ -2794,6 +2795,36 @@ func test_game_element_build_prompt_label() -> void:
 	assert_true(label.billboard == BaseMaterial3D.BILLBOARD_ENABLED, "Billboard enabled")
 	assert_true(not label.visible, "Prompt starts hidden")
 	label.free()
+	ge.free()
+	print("")
+
+
+func test_game_element_override_textured_material() -> void:
+	print("── GameElement._override_textured_material — scrolling-texture override ──")
+	# Deduped gate/key_gate laser + message_pack scroll material setup (#294):
+	# same find-surface-by-texture-name + duplicate, parameterized by name.
+	var ge := GameElement.new()
+
+	# No model → null (apply_to_all_materials guards on `model`).
+	assert_true(ge._override_textured_material("o0c_1_gate") == null, "Null model → null")
+
+	# Build a model whose mesh material's albedo texture path contains the name.
+	var model := Node3D.new()
+	var mi := MeshInstance3D.new()
+	mi.mesh = BoxMesh.new()
+	var src_mat := StandardMaterial3D.new()
+	var tex := PlaceholderTexture2D.new()
+	tex.take_over_path("res://_test_o0c_1_gate.png")
+	src_mat.albedo_texture = tex
+	mi.set_surface_override_material(0, src_mat)
+	model.add_child(mi)
+	ge.model = model
+	ge.add_child(model)
+
+	var result := ge._override_textured_material("o0c_1_gate")
+	assert_true(result is StandardMaterial3D, "Matching surface → returns a StandardMaterial3D")
+	assert_true(result != src_mat, "Returned material is a duplicate, not the shared source")
+	assert_true(ge._override_textured_material("does_not_exist") == null, "No matching surface → null")
 	ge.free()
 	print("")
 
