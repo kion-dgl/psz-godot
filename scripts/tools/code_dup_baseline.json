@@ -195,10 +195,6 @@
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/3d/elements/gate.gd:_setup_laser_material#0||scripts/3d/elements/key_gate.gd:_setup_laser_material#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/3d/elements/key_gate.gd:_on_body_exited#0||scripts/3d/elements/key_pickup.gd:_on_body_exited#0",
       "jaccard": 1.0
     },
@@ -565,14 +561,6 @@
     {
       "sig": "scripts/3d/field/map_collision_builder.gd:collect_mesh_instances#0||scripts/3d/ui/title_backdrop.gd:_walk_recursive#0",
       "jaccard": 0.852
-    },
-    {
-      "sig": "scripts/3d/elements/fence.gd:_setup_laser_materials#0||scripts/3d/elements/gate.gd:_setup_laser_material#0",
-      "jaccard": 0.85
-    },
-    {
-      "sig": "scripts/3d/elements/fence.gd:_setup_laser_materials#0||scripts/3d/elements/key_gate.gd:_setup_laser_material#0",
-      "jaccard": 0.85
     }
   ]
 }

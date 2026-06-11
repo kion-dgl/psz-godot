@@ -191,6 +191,24 @@ func _apply_materials_recursive(node: Node, callback: Callable) -> void:
 		_apply_materials_recursive(child, callback)
 
 
+## Find the surface whose albedo texture path contains `texture_name`, duplicate
+## that StandardMaterial3D as a per-surface override (so per-instance scroll
+## animation doesn't mutate the shared mesh material) and return the duplicate.
+## Returns null when `model` is unset or no surface matches. Shared by the
+## scrolling-texture elements — gate/key_gate laser, message_pack scroll (#294).
+func _override_textured_material(texture_name: String) -> StandardMaterial3D:
+	var found: Array[StandardMaterial3D] = []
+	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
+		if mat is StandardMaterial3D:
+			var std_mat := mat as StandardMaterial3D
+			if std_mat.albedo_texture and texture_name in std_mat.albedo_texture.resource_path:
+				var dup := std_mat.duplicate() as StandardMaterial3D
+				mesh.set_surface_override_material(surface, dup)
+				found.append(dup)
+	)
+	return found.back() if not found.is_empty() else null
+
+
 ## Utility: Set overall visibility (hides when collected)
 func set_element_visible(is_visible: bool) -> void:
 	if model:

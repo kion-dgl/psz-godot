@@ -38,16 +38,7 @@ func _ready() -> void:
 
 
 func _setup_scroll_material() -> void:
-	if not model:
-		return
-	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
-		if mat is StandardMaterial3D:
-			var std_mat := mat as StandardMaterial3D
-			if std_mat.albedo_texture and SCROLL_TEXTURE_NAME in std_mat.albedo_texture.resource_path:
-				var dup := std_mat.duplicate() as StandardMaterial3D
-				mesh.set_surface_override_material(surface, dup)
-				_scroll_material = dup
-	)
+	_scroll_material = _override_textured_material(SCROLL_TEXTURE_NAME)
 
 
 func _setup_prompt() -> void:
