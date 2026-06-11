@@ -53,27 +53,32 @@ helpers: _get_meseta, _get_current_list, _update_hint
 | `_unhandled_input` | 🔴 | all 8 differ — but all are the same nav skeleton (dir keys → selection, confirm/cancel) with shop-specific actions — base owns the skeleton, shops supply actions |
 | `_refresh_display` | ⚪ | all 8 differ (66–120L) — genuinely per-shop content rendering; **stays an override**, not duplication |
 
-## `ShopBase` shape (template method)
+## Shared-behavior shape (composition — NOT a base class)
 
-- **Lift to `ShopBase extends Control` (shared):** `_get_meseta`, `_on_nav_repeat`,
-  selection state (`_selected_index`, `_update_selection`), the
-  `_unhandled_input` nav skeleton, the `_open_confirm_modal` guard, and a
-  shared confirm helper (`_confirm(prompt, on_yes)`).
-- **Overridable hooks (legit per-shop):** `_get_current_list()`, the confirm
-  body / `_confirm_selected(item)`, `_refresh_display()` (content), tabs, and
-  `_setup_portrait()` for the shops that diverge.
-- **Reconcile:** fold the identical `photon`/`crafting` `_setup_portrait` into
-  the base; audit the `_unhandled_input` key-handling differences for any that
-  are accidental vs intentional.
+Per the Android-export constraint above, the shared plumbing lives in preloaded
+helper scripts that shops `preload()` and call statically, passing `self`:
+
+- **`shop_ui.gd`** (`ShopUI`, done): `setup_portrait(owner)` — the two-column
+  panel layout. Future home for other shared UI scaffolding.
+- **Candidate helpers (increments 3/4):** a nav helper —
+  `handle_nav(shop, event, hooks)` for the `_unhandled_input` skeleton — and a
+  confirm helper owning the `_open_confirm_modal` guard + `confirm(shop, prompt,
+  on_yes)`. Each takes the shop instance + callbacks instead of being inherited.
+- **`_get_meseta` / `_on_nav_repeat` / `_can_buy`:** small, currently inlined per
+  shop (post-revert). Could move to a helper, but the duplication is tiny.
+- **Legit per-shop (stay in the shop):** `_get_current_list()`, the confirm
+  body, `_refresh_display()` content, tabs, and the diverging `_setup_portrait`
+  for `tekker`/`item`/`weapon`.
 
 ## Coverage (the forcing function)
 
-Shops are **not** in the autopilot regression matrix (it never opens a shop).
-`scripts/tools/test_runner.gd` has `test_shops` (logic-level), but the UI/nav
-and confirm-modal paths — exactly the drifted code — aren't covered. **Before
-changing the drifted `_unhandled_input` / `_open_confirm_modal`**, add a
-shop-interaction smoke (open shop → navigate → buy → confirm meseta/inventory
-change) or rely on manual verification, so nav/confirm regressions are caught.
+**Update:** shops are now in the autopilot coverage — `npm run shop-smoke` and
+the regression matrix's **`shops` phase** (added post-#290) open each shop and
+exercise navigate → buy → confirm → equip → storage round-trip on device-like
+headless runs. `scripts/tools/test_runner.gd` `test_shops` still covers the
+logic level. So the drifted `_unhandled_input` / `_open_confirm_modal` paths
+(increments 3/4) now have a regression net — run `shop-smoke` (fast) or the full
+matrix when changing them.
 
 ## Canonical names & naming drift
 
@@ -108,28 +113,61 @@ never reach a rejection. That makes a shared predicate `_can_buy(item) -> {ok,
 reason}` plus disabled-row rendering a base-class job (today each shop reimplements
 afford/room checks inline, or not at all). See `/mechanics/shops`.
 
+## ⚠️ `ShopBase` base class was reverted — extractions must be composition
+
+Increments 1–2 originally built a `ShopBase extends Control` base class. That
+**broke the Android export**: a cross-script base class fails to resolve at
+runtime when a shop screen is lazily loaded —
+
+```
+Parse Error: Could not resolve class "ShopBase"
+  at: GDScript::reload (res://scripts/2d/storage.gd:1)
+```
+
+— so every shop + the storage counter became unopenable on device (verified on
+a Retroid Pocket 3+). Commit `dda43246` dropped the base class; the screens are
+`extends Control` again with the helpers inlined. **`shop_base.gd` no longer
+exists.**
+
+**Constraint going forward:** shared shop behavior must use **preloaded static
+helpers (composition), not inheritance** — the same pattern that keeps
+`RegistryHelper` working in the export. Prefer a no-`class_name` script that
+consumers `preload()` (embeds the dependency in the shop script) over relying on
+the global class registry. `_can_buy` lives per-shop again (its logic preserved).
+
 ## Plan (layered, one PR each)
 
 - [x] **0. Docs** — this tracker + `/mechanics/shops` + the top-level Architecture
       page & layer color-coding.
-- [x] **0b. Remove standalone `tech_shop`** (done) — disks live in Item Shop; drop the
-      redundant script/scene/`.tres` + Services-menu route.
-- [x] **1. `ShopBase` + pure dups** (done) — new `scripts/2d/shops/shop_base.gd`;
-      lift `_get_meseta` + `_on_nav_repeat`; make the screens extend it.
-      Lowest risk (identical code), validated by `test_shops` + reimport.
-- [x] **2. Buy affordance** — base owns `_can_buy(item) -> {ok, reason}` + disabled-row
-      rendering; shops stop reimplementing afford/room checks.
-      Done: `ShopBase._can_buy` (mirrors `buy_item`, tested to agree) + **Item Shop**
-      as the reference (greys/tags un-buyable rows, confirm echoes the reason
-      instead of opening a rejection modal). TODO 2b: roll the affordance into
-      Weapon Shop (+ level/class requirement reasons) and Synthesis Shop.
-- [ ] **3. Nav skeleton** — move the shared `_unhandled_input` skeleton into the
-      base with action hooks; reconcile accidental key drift.
-- [ ] **4. Confirm flow** — base owns the `_open_confirm_modal` guard + a
-      `_confirm()` helper; shops override the body.
-- [ ] **5. Portrait** — collapse the identical `photon`/`crafting` setup; hook the rest.
+- [x] **0b. Remove standalone `tech_shop`** — disks live in Item Shop; redundant
+      script/scene/`.tres` + Services-menu route removed.
+- [~] **1. `ShopBase` + pure dups** — built then **reverted** (Android export, above).
+      The three shared helpers (`_get_meseta`, `_on_nav_repeat`, `_can_buy`) are
+      **inlined per shop** again. Re-do as composition if/when worthwhile.
+- [~] **2. Buy affordance** — `_can_buy(item) -> {ok, reason}` + disabled-row
+      rendering shipped on **Item Shop**, but as per-shop code (the `ShopBase`
+      owner was reverted). TODO 2b: roll the affordance into Weapon/Synthesis as
+      a preloaded helper, not a base method.
+- [ ] **3. Nav skeleton** — extract the shared `_unhandled_input` skeleton into a
+      **preloaded helper** taking the shop + action hooks; reconcile accidental
+      key drift. (Now gated by the autopilot `shops` matrix phase + `shop-smoke`,
+      which postdate this tracker — see Coverage.)
+- [ ] **4. Confirm flow** — a preloaded helper owns the `_open_confirm_modal`
+      guard + a `confirm()` helper; shops pass the body.
+- [x] **5. Portrait** — `_setup_portrait` (byte-identical across `photon_shop`,
+      `crafting_shop`, **and** `storage` — only comments differed) collapsed into
+      `ShopUI.setup_portrait(owner)` (`scripts/2d/shops/shop_ui.gd`, preloaded, no
+      `class_name`). 6 dup pairs resolved; `tekker`/`item`/`weapon` portraits
+      legitimately differ and stay per-shop.
 
 ## Status log
+- 2026-06-10 — Increment 5 (portrait) done **as composition**: `ShopUI.setup_portrait`
+  in a preloaded `scripts/2d/shops/shop_ui.gd` (no `class_name`); `photon_shop`,
+  `crafting_shop`, **and** `storage` now delegate (storage's body was identical
+  bar comments — corrected the tracker, which had called it divergent). 6 dup
+  pairs resolved (140→134); `test_shop_ui_setup_portrait` added. Also corrected
+  this tracker: `ShopBase` was reverted (Android export) — incs 1/2 are not in
+  the code; extractions are composition-only now.
 - 2026-06-06 — Added buy-guard regression tests to `test_shops` (affordability
   + room: `buy_item` refuses + leaves state unchanged) as the pre-change net for
   increment 2 — the invariants `_can_buy()` must mirror. Tests 1413/0.

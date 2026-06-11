@@ -55,6 +55,7 @@ func _ready() -> void:
 	test_mesh_utils_apply_texture()
 	test_game_element_build_prompt_label()
 	test_game_element_override_textured_material()
+	test_shop_ui_setup_portrait()
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
@@ -2826,6 +2827,34 @@ func test_game_element_override_textured_material() -> void:
 	assert_true(result != src_mat, "Returned material is a duplicate, not the shared source")
 	assert_true(ge._override_textured_material("does_not_exist") == null, "No matching surface → null")
 	ge.free()
+	print("")
+
+
+func test_shop_ui_setup_portrait() -> void:
+	print("── ShopUI.setup_portrait — shared two-column shop layout ──")
+	# Composition helper (preloaded, NOT a base class — a ShopBase base class
+	# broke the Android export; #274 inc 5). Deduped from photon_shop/crafting_shop.
+	const ShopUI := preload("res://scripts/2d/shops/shop_ui.gd")
+	# Minimal shop shape: a "Panel" PanelContainer whose first child is the VBox.
+	var owner := Control.new()
+	var panel := PanelContainer.new()
+	panel.name = "Panel"
+	var content := VBoxContainer.new()
+	panel.add_child(content)
+	owner.add_child(panel)
+
+	ShopUI.setup_portrait(owner)
+
+	assert_eq(panel.get_child_count(), 1, "Panel reduced to a single outer container")
+	var outer := panel.get_child(0)
+	assert_true(outer is HBoxContainer, "Outer container is an HBox (two columns)")
+	assert_eq(outer.get_child_count(), 2, "Outer has [content | right column]")
+	assert_true(outer.get_child(0) == content, "Left column is the original content VBox")
+	assert_eq(content.size_flags_stretch_ratio, 3.0, "Content VBox stretches 3")
+	assert_true(outer.get_child(1) is VBoxContainer, "Right column is a VBox")
+	assert_eq((outer.get_child(1) as Control).size_flags_stretch_ratio, 2.0, "Right column stretches 2")
+	assert_true(panel.has_theme_stylebox_override("panel"), "Panel stylebox override applied")
+	owner.free()
 	print("")
 
 

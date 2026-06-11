@@ -1,6 +1,7 @@
 extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/storage-counter.png"
+const SHOP_UI := preload("res://scripts/2d/shops/shop_ui.gd")
 
 ## Storage screen — 4 tabs grouped by content:
 ##     [Deposit Items] [Withdraw Items] [Deposit Meseta] [Withdraw Meseta]
@@ -49,43 +50,7 @@ func _ready() -> void:
 
 
 func _setup_portrait() -> void:
-	# Make panel fullscreen
-	var panel: PanelContainer = $Panel
-	panel.offset_left = 0
-	panel.offset_top = 0
-	panel.offset_right = 0
-	panel.offset_bottom = 0
-	var fs := StyleBoxFlat.new()
-	fs.bg_color = PszStyle.BG
-	fs.content_margin_left = 12.0
-	fs.content_margin_top = 8.0
-	fs.content_margin_bottom = 8.0
-	panel.add_theme_stylebox_override("panel", fs)
-
-	# Wrap VBox in outer HBox: left menu (3/5) + right portrait (2/5)
-	var vbox := panel.get_child(0) as VBoxContainer
-	panel.remove_child(vbox)
-	var outer := HBoxContainer.new()
-	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	outer.add_theme_constant_override("separation", 0)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_stretch_ratio = 3.0
-	outer.add_child(vbox)
-
-	# Right: just portrait (no detail panel for storage)
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.size_flags_stretch_ratio = 2.0
-	right.add_theme_constant_override("separation", 0)
-	# Right column intentionally empty — shop preview is added separately
-	# as an absolute overlay (see ShopPreviewSprite.attach below).
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(spacer)
-	outer.add_child(right)
-	panel.add_child(outer)
+	SHOP_UI.setup_portrait(self)
 
 
 func _load_items() -> void:

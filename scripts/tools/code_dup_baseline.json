@@ -63,14 +63,6 @@
       "jaccard": 1.0
     },
     {
-      "sig": "scripts/2d/shops/crafting_shop.gd:_setup_portrait#0||scripts/2d/shops/photon_shop.gd:_setup_portrait#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/2d/shops/crafting_shop.gd:_setup_portrait#0||scripts/2d/storage.gd:_setup_portrait#0",
-      "jaccard": 1.0
-    },
-    {
       "sig": "scripts/2d/shops/item_shop.gd:_get_meseta#0||scripts/2d/shops/tekker.gd:_get_meseta#0",
       "jaccard": 1.0
     },
@@ -104,10 +96,6 @@
     },
     {
       "sig": "scripts/2d/shops/photon_shop.gd:_process#0||scripts/2d/storage.gd:_process#0",
-      "jaccard": 1.0
-    },
-    {
-      "sig": "scripts/2d/shops/photon_shop.gd:_setup_portrait#0||scripts/2d/storage.gd:_setup_portrait#0",
       "jaccard": 1.0
     },
     {
@@ -277,18 +265,6 @@
     {
       "sig": "scripts/2d/character_select.gd:_remap_animation#0||scripts/3d/player/player.gd:_remap_animation#0",
       "jaccard": 0.949
-    },
-    {
-      "sig": "scripts/2d/shops/crafting_shop.gd:_setup_portrait#0||scripts/2d/shops/tekker.gd:_setup_portrait#0",
-      "jaccard": 0.944
-    },
-    {
-      "sig": "scripts/2d/shops/photon_shop.gd:_setup_portrait#0||scripts/2d/shops/tekker.gd:_setup_portrait#0",
-      "jaccard": 0.944
-    },
-    {
-      "sig": "scripts/2d/shops/tekker.gd:_setup_portrait#0||scripts/2d/storage.gd:_setup_portrait#0",
-      "jaccard": 0.944
     },
     {
       "sig": "scripts/2d/shops/crafting_shop.gd:_update_selection#0||scripts/2d/shops/weapon_shop.gd:_update_selection#0",
