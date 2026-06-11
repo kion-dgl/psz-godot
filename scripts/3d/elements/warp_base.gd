@@ -34,7 +34,7 @@ func _apply_state() -> void:
 	)
 
 
-func _on_collected(player: Node3D) -> void:
+func _on_collected(_player: Node3D) -> void:
 	if element_state != "active":
 		return
 

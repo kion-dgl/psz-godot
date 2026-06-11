@@ -195,7 +195,7 @@ func _play_npc_reaction(npc_name: String, anim_name: String) -> void:
 			return
 
 
-func _show_npc_speech_bubble(npc: Node3D, world_pos: Vector3, text: String) -> void:
+func _show_npc_speech_bubble(_npc: Node3D, world_pos: Vector3, text: String) -> void:
 	SfxManager.play("res://assets/sfx/ui/dialog_open.wav")
 	# Build a speech bubble at a fixed world position (not parented to scaled NPC)
 	var viewport := SubViewport.new()

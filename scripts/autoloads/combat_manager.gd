@@ -1064,8 +1064,8 @@ func process_player_buffs() -> Array:
 			expired.append(buff_name)
 			messages.append("%s wore off." % buff_name.capitalize())
 
-	for name in expired:
-		buffs.erase(name)
+	for expired_buff in expired:
+		buffs.erase(expired_buff)
 
 	return messages
 

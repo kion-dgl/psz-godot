@@ -928,8 +928,8 @@ func _validate_reachability(grid: Dictionary, start_pos: Vector2i,
 
 
 ## Convert internal grid to output cell list format.
-func _to_output(grid: Dictionary, path: Array[Vector2i],
-		branch_cells: Array[Vector2i], start_pos: Vector2i,
+func _to_output(grid: Dictionary, _path: Array[Vector2i],
+		_branch_cells: Array[Vector2i], start_pos: Vector2i,
 		end_pos: Vector2i) -> Dictionary:
 	var cells: Array[Dictionary] = []
 

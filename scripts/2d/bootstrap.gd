@@ -174,13 +174,13 @@ func _run() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(CACHE_DIR))
 
 	var sha: String = str(pack.get("sha256", "")).strip_edges().to_lower()
-	var size: int = int(pack.get("size", 0))
+	var pack_size: int = int(pack.get("size", 0))
 	var urls: Array = pack.get("urls", [])
 	if sha.is_empty() or urls.is_empty():
 		_fatal("Manifest pack entry missing sha256 or urls.")
 		return
 
-	_total_bytes = size
+	_total_bytes = pack_size
 
 	var cache_path: String = "%s/assets-%s.pck" % [CACHE_DIR, sha.substr(0, 12)]
 	_cleanup_stale(cache_path)
@@ -226,14 +226,14 @@ func _cleanup_stale(keep_path: String) -> void:
 	if d == null:
 		return
 	d.list_dir_begin()
-	var name := d.get_next()
-	while name != "":
-		if name != "." and name != ".." and name.ends_with(".pck"):
-			var abs_entry: String = abs_dir.path_join(name)
+	var pck_name := d.get_next()
+	while pck_name != "":
+		if pck_name != "." and pck_name != ".." and pck_name.ends_with(".pck"):
+			var abs_entry: String = abs_dir.path_join(pck_name)
 			if abs_entry != abs_keep:
 				DirAccess.remove_absolute(abs_entry)
-				print("[bootstrap] cleaned stale pack: %s" % name)
-		name = d.get_next()
+				print("[bootstrap] cleaned stale pack: %s" % pck_name)
+		pck_name = d.get_next()
 	d.list_dir_end()
 
 
@@ -393,14 +393,14 @@ func _url_host(url: String) -> String:
 
 
 func _verify_hash(path: String, expected_hex: String) -> bool:
-	var abs: String = ProjectSettings.globalize_path(path)
-	var f := FileAccess.open(abs, FileAccess.READ)
+	var abs_path: String = ProjectSettings.globalize_path(path)
+	var f := FileAccess.open(abs_path, FileAccess.READ)
 	if f == null:
 		return false
-	var size: int = f.get_length()
+	var file_size: int = f.get_length()
 	var ctx := HashingContext.new()
 	ctx.start(HashingContext.HASH_SHA256)
-	while f.get_position() < size:
+	while f.get_position() < file_size:
 		ctx.update(f.get_buffer(HASH_CHUNK))
 		await _yield_frame()
 	f.close()

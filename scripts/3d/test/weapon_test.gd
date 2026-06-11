@@ -200,12 +200,12 @@ func _unhandled_input(event: InputEvent) -> void:
 func _play_anim(suffix: String) -> void:
 	if not _anim_player:
 		return
-	var name := _anim_prefix + suffix
-	if _anim_player.has_animation(name):
-		_anim_player.play(name)
-		print("[WeaponTest] Playing: %s" % name)
+	var anim_name := _anim_prefix + suffix
+	if _anim_player.has_animation(anim_name):
+		_anim_player.play(anim_name)
+		print("[WeaponTest] Playing: %s" % anim_name)
 	else:
-		print("[WeaponTest] Animation not found: %s" % name)
+		print("[WeaponTest] Animation not found: %s" % anim_name)
 
 
 func _print_values() -> void:

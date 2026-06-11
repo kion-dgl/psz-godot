@@ -189,16 +189,16 @@ func _show_detect() -> void:
 	_clear_cards()
 
 
-func _show_face_map(position: String) -> void:
+func _show_face_map(face_pos: String) -> void:
 	_step = {
 		"south": Step.MAP_SOUTH,
 		"east": Step.MAP_EAST,
 		"west": Step.MAP_WEST,
 		"north": Step.MAP_NORTH,
-	}[position]
-	_title.text = "Map Face Buttons (%d/4)" % (MAP_ORDER.find(position) + 1)
-	_prompt.text = POSITION_PROMPT[position]
-	_hint.text = POSITION_HINT[position]
+	}[face_pos]
+	_title.text = "Map Face Buttons (%d/4)" % (MAP_ORDER.find(face_pos) + 1)
+	_prompt.text = POSITION_PROMPT[face_pos]
+	_hint.text = POSITION_HINT[face_pos]
 	_clear_cards()
 
 
@@ -389,17 +389,17 @@ func _on_face_map_event(event: InputEvent) -> void:
 	if not (event is InputEventJoypadButton and event.pressed):
 		return
 	var btn_idx: int = (event as InputEventJoypadButton).button_index
-	var position: String = _current_map_position()
+	var map_pos: String = _current_map_position()
 	# Reject duplicates — that button is already assigned to a different
 	# position. Stay on the same prompt; the player can press a different
 	# button.
 	for existing in _face.keys():
-		if existing != position and int(_face[existing]) == btn_idx:
+		if existing != map_pos and int(_face[existing]) == btn_idx:
 			_hint.text = "That button is already mapped to %s. Press a different face button." % existing.to_upper()
 			get_viewport().set_input_as_handled()
 			return
-	_face[position] = btn_idx
-	var next_idx: int = MAP_ORDER.find(position) + 1
+	_face[map_pos] = btn_idx
+	var next_idx: int = MAP_ORDER.find(map_pos) + 1
 	if next_idx < MAP_ORDER.size():
 		_show_face_map(MAP_ORDER[next_idx])
 	else:

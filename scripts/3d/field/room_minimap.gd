@@ -47,7 +47,7 @@ var _rotation_deg: int = 0
 
 func setup(stage_id: String, area_folder: String, portal_data: Dictionary,
 		connections: Dictionary, warp_edge: String,
-		map_root: Node3D, rotation_deg: int = 0, entry_edge: String = "") -> void:
+		_map_root: Node3D, rotation_deg: int = 0, entry_edge: String = "") -> void:
 	_rotation_deg = rotation_deg
 	mouse_filter = MOUSE_FILTER_IGNORE
 	var total_w: float = DISPLAY_SIZE + PANEL_PAD * 2 + 22  # extra for key column
@@ -340,7 +340,7 @@ func _parse_gates_with_dirs(svg_text: String) -> Array:
 # ── Gate entries ─────────────────────────────────────────────────────────────
 
 func _build_gate_entries(svg_gates: Array, connections: Dictionary,
-		warp_edge: String, portal_data: Dictionary, entry_edge: String = "") -> void:
+		warp_edge: String, _portal_data: Dictionary, entry_edge: String = "") -> void:
 	## Build gate display entries.  Uses data-gate-dir from SVG to identify
 	## gate directions (base stage direction), then rotates to grid direction.
 	for gate in svg_gates:
