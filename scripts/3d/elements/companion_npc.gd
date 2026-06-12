@@ -111,7 +111,7 @@ func _build_capsule() -> void:
 				if ResourceLoader.exists(tex_path):
 					var texture := load(tex_path) as Texture2D
 					if texture:
-						_apply_texture(npc_model, texture)
+						MeshUtils.apply_texture(npc_model, texture)
 				_setup_companion_anims(npc_model)
 				return
 
@@ -130,20 +130,6 @@ func _build_capsule() -> void:
 	mesh_inst.material_override = mat
 
 	add_child(mesh_inst)
-
-
-func _apply_texture(node: Node, texture: Texture2D) -> void:
-	if node is MeshInstance3D:
-		var mesh_inst := node as MeshInstance3D
-		for i in range(mesh_inst.get_surface_override_material_count()):
-			var mat := mesh_inst.get_active_material(i)
-			if mat is StandardMaterial3D:
-				var new_mat := mat.duplicate() as StandardMaterial3D
-				new_mat.albedo_texture = texture
-				new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-				mesh_inst.set_surface_override_material(i, new_mat)
-	for child in node.get_children():
-		_apply_texture(child, texture)
 
 
 func _setup_companion_anims(npc_model: Node) -> void:

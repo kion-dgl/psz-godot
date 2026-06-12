@@ -22,29 +22,5 @@ func get_enemy(enemy_id: String):
 	return _enemies.get(enemy_id, null)
 
 
-func has_enemy(enemy_id: String) -> bool:
-	return _enemies.has(enemy_id)
-
-
-func get_enemies_by_element(element: int) -> Array:
-	var result: Array = []
-	for enemy in _enemies.values():
-		if enemy.element == element:
-			result.append(enemy)
-	return result
-
-
-func get_enemies_in_location(location: String) -> Array:
-	var result: Array = []
-	for enemy in _enemies.values():
-		if enemy.spawns_in(location):
-			result.append(enemy)
-	return result
-
-
-func get_all_enemy_ids() -> Array:
-	return _enemies.keys()
-
-
 func get_enemy_count() -> int:
 	return _enemies.size()

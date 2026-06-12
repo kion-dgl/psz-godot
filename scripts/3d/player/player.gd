@@ -2222,10 +2222,6 @@ func get_state() -> PlayerState:
 	return current_state
 
 
-func get_combo_state() -> int:
-	return combo_state
-
-
 # Combat System
 func _setup_attack_hitbox() -> void:
 	attack_hitbox = Hitbox.new()

@@ -174,7 +174,7 @@ func _setup_model() -> void:
 		if ResourceLoader.exists(tex_path):
 			var texture := load(tex_path) as Texture2D
 			if texture:
-				_apply_texture(model, texture)
+				MeshUtils.apply_texture(model, texture)
 
 	# Find AnimationPlayer in the model hierarchy
 	animation_player = _find_animation_player(model)
@@ -250,20 +250,6 @@ func _cache_model_materials() -> void:
 				var mat := mi.get_active_material(i)
 				if mat is StandardMaterial3D:
 					_cached_materials.append(mat)
-
-
-func _apply_texture(node: Node, texture: Texture2D) -> void:
-	if node is MeshInstance3D:
-		var mesh_inst := node as MeshInstance3D
-		for i in range(mesh_inst.get_surface_override_material_count()):
-			var mat := mesh_inst.get_active_material(i)
-			if mat is StandardMaterial3D:
-				var new_mat := mat.duplicate() as StandardMaterial3D
-				new_mat.albedo_texture = texture
-				new_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-				mesh_inst.set_surface_override_material(i, new_mat)
-	for child in node.get_children():
-		_apply_texture(child, texture)
 
 
 func _find_animation_player(node: Node) -> AnimationPlayer:
@@ -687,27 +673,6 @@ func _die() -> void:
 	var tween := create_tween()
 	tween.tween_interval(delay)
 	tween.tween_callback(queue_free)
-
-
-func _spawn_meseta_drop(amount: int) -> void:
-	# Spawn a meseta drop at our position
-	var drop_scene: PackedScene = load("res://scenes/3d/elements/drop_meseta.tscn")
-	if drop_scene:
-		var drop: Node3D = drop_scene.instantiate()
-		drop.set("amount", amount)
-		drop.global_position = global_position + Vector3(0, 0.5, 0)
-		get_parent().add_child(drop)
-	else:
-		# Just add meseta directly if no drop scene
-		GameState.add_meseta(amount)
-		print("[Enemy] Dropped ", amount, " meseta (no scene)")
-
-
-## Set the enemy data and reinitialize
-func set_enemy_data(data: Resource) -> void:
-	enemy_data = data
-	if is_inside_tree():
-		_setup_from_data()
 
 
 ## Face a direction (model faces -Z, so we look opposite way)
