@@ -1,6 +1,8 @@
 extends Control
 ## Mag Feeder — feed consumables to a mag, view stats and evolution.
 
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+
 var _mag_id: String = ""
 var _feedable_items: Array = []  # Array of {id, name, effects}
 var _selected_index: int = 0
@@ -24,20 +26,13 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		SceneManager.pop_scene()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up"):
-		_selected_index = wrapi(_selected_index - 1, 0, maxi(_feedable_items.size(), 1))
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_down"):
-		_selected_index = wrapi(_selected_index + 1, 0, maxi(_feedable_items.size(), 1))
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		_feed_selected()
-		get_viewport().set_input_as_handled()
+	# sfx=false: these list screens predate the shop menu sfx convention.
+	ShopNav.handle(self, event, {
+		"sfx": false,
+		"list_size": func() -> int: return _feedable_items.size(),
+		"on_move": func(_old: int) -> void: _refresh_display(),
+		"on_accept": _feed_selected,
+	})
 
 
 func _refresh_feedable() -> void:

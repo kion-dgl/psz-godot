@@ -3,6 +3,7 @@ extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/photon-collector.png"
 const SHOP_UI := preload("res://scripts/2d/shops/shop_ui.gd")
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 const EXCHANGE_ITEMS := [
 	{"name": "Monogrinder", "id": "monogrinder", "cost": 1, "category": "Grinders"},
@@ -52,22 +53,12 @@ func _setup_portrait() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if is_instance_valid(_active_modal):
-		return
-	if event.is_action_pressed("ui_cancel"):
-		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-		SceneManager.pop_scene()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
-		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
-		_selected_index = wrapi(_selected_index + dir, 0, EXCHANGE_ITEMS.size())
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-		_open_confirm_modal()
-		get_viewport().set_input_as_handled()
+	ShopNav.handle(self, event, {
+		"modal": _active_modal,
+		"list_size": func() -> int: return EXCHANGE_ITEMS.size(),
+		"on_move": func(_old: int) -> void: _refresh_display(),
+		"on_accept": _open_confirm_modal,
+	})
 
 
 func _open_confirm_modal() -> void:

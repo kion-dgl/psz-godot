@@ -1,6 +1,8 @@
 extends Control
 ## Inventory screen — 40-slot grid with item details and actions.
 
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+
 const CATEGORY_ORDER := ["Weapon", "Armor", "Unit", "Mag", "Disk", "Consumable", "Material", "Modifier", "Key Item", "Other"]
 
 var _selected_index: int = 0
@@ -22,23 +24,19 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		SceneManager.pop_scene()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up"):
-		_selected_index = wrapi(_selected_index - 1, 0, maxi(_items.size(), 1))
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_down"):
-		_selected_index = wrapi(_selected_index + 1, 0, maxi(_items.size(), 1))
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		_use_selected()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("action_3"):
-		_drop_selected()
-		get_viewport().set_input_as_handled()
+	# sfx=false: these list screens predate the shop menu sfx convention.
+	ShopNav.handle(self, event, {
+		"sfx": false,
+		"list_size": func() -> int: return _items.size(),
+		"on_move": func(_old: int) -> void: _refresh_display(),
+		"on_accept": _use_selected,
+		"on_other": func(ev: InputEvent) -> bool:
+			if ev.is_action_pressed("action_3"):
+				_drop_selected()
+				get_viewport().set_input_as_handled()
+				return true
+			return false,
+	})
 
 
 func _refresh_items() -> void:

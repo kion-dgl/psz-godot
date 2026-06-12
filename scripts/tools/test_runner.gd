@@ -56,6 +56,7 @@ func _ready() -> void:
 	test_game_element_build_prompt_label()
 	test_game_element_override_textured_material()
 	test_shop_ui_setup_portrait()
+	test_shop_nav()
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
@@ -2858,6 +2859,70 @@ func test_shop_ui_setup_portrait() -> void:
 	assert_true(panel.has_theme_stylebox_override("panel"), "Panel stylebox override applied")
 	shop.free()
 	print("")
+
+
+# ── ShopNav.handle — shared shop/menu input skeleton (#274 inc 3) ──
+# Characterizes the skeleton every shop now delegates to: modal guard,
+# cancel, tab keys, up/down wrap over list_size, accept, on_other tail.
+func test_shop_nav() -> void:
+	print("── ShopNav.handle — shared shop input skeleton ──")
+	const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+	var stub := GDScript.new()
+	stub.source_code = "extends Control\nvar _selected_index: int = 0\n"
+	stub.reload()
+	var shop: Control = stub.new()
+	add_child(shop)
+
+	var calls: Array = []
+	var opts := {
+		"sfx": false,
+		"on_cancel": func() -> void: calls.append("cancel"),
+		"on_tab": func(dir: int) -> void: calls.append("tab%+d" % dir),
+		"list_size": func() -> int: return 3,
+		"on_move": func(old: int) -> void: calls.append("move<%d" % old),
+		"on_accept": func() -> void: calls.append("accept"),
+	}
+
+	assert_true(ShopNav.handle(shop, _nav_event("ui_down"), opts), "ui_down consumed")
+	assert_eq(shop.get("_selected_index"), 1, "ui_down advances selection")
+	assert_eq(calls, ["move<0"], "on_move fired with old index")
+	shop.set("_selected_index", 0)
+	ShopNav.handle(shop, _nav_event("ui_up"), opts)
+	assert_eq(shop.get("_selected_index"), 2, "ui_up wraps 0 → size-1")
+	ShopNav.handle(shop, _nav_event("ui_right"), opts)
+	ShopNav.handle(shop, _nav_event("ui_left"), opts)
+	ShopNav.handle(shop, _nav_event("ui_accept"), opts)
+	ShopNav.handle(shop, _nav_event("ui_cancel"), opts)
+	assert_eq(calls.slice(1), ["move<0", "tab+1", "tab-1", "accept", "cancel"],
+		"tab/accept/cancel route to their hooks")
+
+	# Modal guard: a valid modal swallows everything.
+	calls.clear()
+	opts["modal"] = shop  # any valid Object
+	assert_true(not ShopNav.handle(shop, _nav_event("ui_accept"), opts), "modal blocks input")
+	assert_eq(calls, [], "no hooks fire while modal is open")
+	opts.erase("modal")
+
+	# Empty list: selection pins to 0. Omitted hooks: keys fall through.
+	opts["list_size"] = func() -> int: return 0
+	ShopNav.handle(shop, _nav_event("ui_down"), opts)
+	assert_eq(shop.get("_selected_index"), 0, "empty list pins selection to 0")
+	var other_hit := [false]
+	var bare := {"sfx": false, "on_other": func(_ev: InputEvent) -> bool:
+		other_hit[0] = true
+		return true}
+	assert_true(ShopNav.handle(shop, _nav_event("ui_up"), bare), "unclaimed key reaches on_other")
+	assert_true(other_hit[0], "on_other fired")
+
+	shop.free()
+	print("")
+
+
+static func _nav_event(action: String) -> InputEventAction:
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	return ev
 
 
 # ── Character Appearance tests ─────────────────────────────────

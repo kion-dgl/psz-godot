@@ -2,6 +2,7 @@ extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/storage-counter.png"
 const SHOP_UI := preload("res://scripts/2d/shops/shop_ui.gd")
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 ## Storage screen — 4 tabs grouped by content:
 ##     [Deposit Items] [Withdraw Items] [Deposit Meseta] [Withdraw Meseta]
@@ -64,33 +65,29 @@ func _load_items() -> void:
 # ── Input ──────────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Modal owns input while open.
-	if is_instance_valid(_active_modal):
-		return
-	if event.is_action_pressed("ui_cancel"):
-		SceneManager.pop_scene({"storage_closed": true})
-		get_viewport().set_input_as_handled()
-		return
-	if event.is_action_pressed("ui_left"):
-		_change_tab(-1)
-		get_viewport().set_input_as_handled()
-		return
-	if event.is_action_pressed("ui_right"):
-		_change_tab(1)
-		get_viewport().set_input_as_handled()
-		return
-	if event.is_action_pressed("palette_swap"):
-		# Bumper buttons also cycle tabs (broader-stroke convention from
-		# other game menus); identical to ui_right here.
-		_change_tab(1)
-		get_viewport().set_input_as_handled()
-		return
-
-	# Per-tab handlers.
-	if _is_items_tab():
-		_handle_items_input(event)
-	else:
-		_handle_meseta_input(event)
+	# No list_size/on_accept: up/down and accept belong to the per-tab
+	# handlers below. sfx=false: _change_tab and the per-tab handlers play
+	# their own (cancel stays silent here — storage predates the menu_back
+	# convention; revisit with the key-drift pass).
+	ShopNav.handle(self, event, {
+		"modal": _active_modal,
+		"sfx": false,
+		"on_cancel": func() -> void: SceneManager.pop_scene({"storage_closed": true}),
+		"on_tab": _change_tab,
+		"on_other": func(ev: InputEvent) -> bool:
+			if ev.is_action_pressed("palette_swap"):
+				# Bumper buttons also cycle tabs (broader-stroke convention
+				# from other game menus); identical to ui_right here.
+				_change_tab(1)
+				get_viewport().set_input_as_handled()
+				return true
+			# Per-tab handlers.
+			if _is_items_tab():
+				_handle_items_input(ev)
+			else:
+				_handle_meseta_input(ev)
+			return false,
+	})
 
 
 func _change_tab(direction: int) -> void:
