@@ -1,0 +1,39 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Enemy Hierarchy" section="Hierarchies">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>Today every enemy is one class — <code>EnemyBase</code> (<code>scripts/3d/enemies/enemy_base.gd</code>) — driven by an <code>EnemyData</code> resource (<a href="/states/enemies">/states/enemies</a>). Beta keeps that as the default and adds <em>justified</em> behavior subclasses. This page is the contract both sides honor.</p>
+
+  <h2>What the base owns (subclasses inherit, MUST NOT reimplement)</h2>
+  <table>
+    <tr><th>Responsibility</th><th>Surface</th></tr>
+    <tr><td>AI state machine shell</td><td><code>EnemyState</code> enum (IDLE / CHASING / ATTACKING / LOAFING / HURT / DEAD) + the per-state tick dispatch. Subclasses override state <em>handlers</em>, not the dispatch.</td></tr>
+    <tr><td>Damage intake</td><td><code>take_damage</code> → HP mutation → HURT/DEAD transitions, damage numbers, hit SFX.</td></tr>
+    <tr><td>Status effects</td><td>Application via <code>CombatManager.roll_element_status</code> / <code>apply_status_effect</code>, non-stacking rule, DoT ticking, model tint (<code>STATUS_COLORS</code>).</td></tr>
+    <tr><td>Death &amp; rewards</td><td>Drop rolls, EXP grant (#343), death animation/cleanup, session kill accounting.</td></tr>
+    <tr><td>Presentation plumbing</td><td>Model load + texture application (<code>MeshUtils</code>), per-model SFX map, reticle, hurtbox construction.</td></tr>
+    <tr><td>Floor-edge movement guard</td><td><code>_can_move_to</code> all-3-probe rule — deliberately stricter than the player's 2-of-3 (#215-C6: intentional divergence; do not "unify").</td></tr>
+  </table>
+
+  <h2>When to subclass — and when NOT to</h2>
+  <ul>
+    <li><strong>New enemy, same behavior shape</strong> → a new <code>EnemyData</code> resource. No script. This stays the common case.</li>
+    <li><strong>Movement/attack pattern divergence</strong> (flier, burrower, ranged keep-away — the <code>WolfEnemy</code> / <code>SmallEnemy</code> tier) → subclass overriding the specific state handlers; the enum and dispatch stay the base's.</li>
+    <li><strong>Bosses (#62)</strong> → subclass with its own phase machine layered <em>over</em> the base intake/status/death contract, following the PSOBB FSM taxonomy (<code>headers/bosses.h</code>): <em>Architecture A</em> — per-boss FSM, subtype-indexed, variants share one FSM; <em>Architecture B</em> — multi-actor outer phase sequencer coordinating actor FSMs (the finale shape).</li>
+    <li><strong>Stat/aura variants (#108)</strong> → NOT a subclass: a multiplier set + visual flag on the spawn roll, BattleParams-style.</li>
+  </ul>
+
+  <h2>Invariants every leaf preserves</h2>
+  <ul>
+    <li>Exactly one <code>EnemyState</code> active; transitions go through the base's transition path so signals/animation stay coherent.</li>
+    <li><code>take_damage</code> is the only damage door — bosses MAY scale or gate it (armor phases) by overriding a hook, never by bypassing it.</li>
+    <li>Status non-stacking and the element→status routing (<a href="/states/enemies">spec table</a>) hold for every enemy; a leaf MAY declare status <em>immunities</em> as data, not by reimplementing application.</li>
+    <li>Death always reaches the base's reward path — a boss that skips drops/EXP is a bug, not a feature flag.</li>
+  </ul>
+
+  <h2>Testing (two layers, per <a href="/engineering">/engineering</a>)</h2>
+  <p>Each new subclass ships a seeded unit test of its divergent handlers (state-transition table, the <code>test_player_states</code> pattern) and a post-build probe (a matrix phase or kill_all room exercising it under autopilot).</p>
+</Concept>

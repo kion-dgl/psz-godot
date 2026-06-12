@@ -1,0 +1,35 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Weapon Hierarchy" section="Hierarchies">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>Weapons split three ways: <strong>data rows</strong> (every individual weapon), <strong>archetype behavior</strong> (one class per weapon <em>type</em>), and the <strong>shared combat spine</strong> (#157's CombatResolver). The 360 loaded weapons stay data; the archetype layer is what #56/#57 build.</p>
+
+  <h2>The split</h2>
+  <table>
+    <tr><th>Layer</th><th>Owns</th><th>Examples</th></tr>
+    <tr><td><strong>WeaponData</strong> (resource, per weapon)</td><td>Stats (ATK/ATA/range), grind, element + level, special/PA id (#95 — the PSOBB <code>weapon_special</code> field pattern), model path, rarity, class restrictions</td><td>every saber, every rifle</td></tr>
+    <tr><td><strong>Archetype class</strong> (one per type)</td><td>Combo chain (animation triple + per-motion windows from #155), hitbox preset geometry (#157 inc 3), fire mode (single/burst/spread — #57), hold/swap animations</td><td><code>SaberWeapon</code>, <code>MechgunWeapon</code></td></tr>
+    <tr><td><strong>CombatResolver</strong> (shared, #157)</td><td>Damage formula, accuracy rolls (melee + projectile variants), crit/just-attack bonuses</td><td>one module</td></tr>
+  </table>
+
+  <h2>Archetype contract</h2>
+  <ul>
+    <li>An archetype class provides: its combo table (per step — animation, window fractions, hitbox preset, damage multiplier), its fire mode (melee archetypes: none), and its PA binding hook. Nothing else.</li>
+    <li>Archetypes MUST NOT carry damage math — multipliers are <em>inputs</em> to CombatResolver, never local formulas. (The Alpha pattern of inline afford/damage checks per shop/weapon is what the ratchet now guards against.)</li>
+    <li>A new weapon of an existing type MUST be a WeaponData row. A new archetype class MUST correspond to a genuinely new moveset (PSZ's roster: saber, sword, daggers, claws, partisan, fists / handgun, rifle, mechgun, laser, slicer / rod, wand, shield — implement as content demands, not speculatively).</li>
+    <li>Attack-speed stats scale windows in real time (PSOBB <code>animation_speeds</code> analog) — archetypes declare window <em>fractions</em>; the speed scaling is shared.</li>
+  </ul>
+
+  <h2>Invariants</h2>
+  <ul>
+    <li>Every hit, melee or projectile, resolves through CombatResolver — one damage door, mirroring the enemy contract's <code>take_damage</code> rule.</li>
+    <li>Hitboxes only monitor inside their declared frame window (#157 inc 4); an always-on hitbox is a bug.</li>
+    <li>Equip/class legality is data (<code>WeaponData</code> restrictions + ClassData), checked in one shared predicate — not per-screen logic.</li>
+  </ul>
+
+  <h2>Testing</h2>
+  <p>Per archetype: seeded unit tests for the combo window table and damage-multiplier routing; the post-build layer is the autopilot equipping that archetype in a kill_all room (extend the shops/equip smoke — it already equips a weapon).</p>
+</Concept>

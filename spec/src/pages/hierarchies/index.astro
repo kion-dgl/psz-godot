@@ -1,0 +1,17 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Class Hierarchies" section="Hierarchies">
+  <p>Per the <a href="/engineering">engineering policy</a>, every behavior hierarchy gets a contract page here <strong>before or with</strong> its implementation: what the base owns, where subclasses may diverge, and the invariants any leaf must preserve. A PR adding a leaf class links the contract it extends and states why the behavior can't live in the base.</p>
+
+  <p>The shared rule across all of them: <strong>data variation is not behavior</strong>. Stats, models, tables, and tuning live in resources; a subclass exists only when the <em>logic</em> diverges.</p>
+
+  <ul>
+    <li><a href="/hierarchies/enemy">Enemy</a> — the <code>EnemyBase</code> contract: AI state machine, status intake, death/drops; where boss FSMs and movement-divergent enemies subclass.</li>
+    <li><a href="/hierarchies/weapon">Weapon</a> — <code>WeaponData</code> + archetype behavior: what's a data row vs. an archetype class, and the CombatResolver interface (#157).</li>
+    <li><a href="/hierarchies/shop-screen">Shop / list screens</a> — the composition contract (<code>ShopNav</code> / <code>ShopUI</code> hooks): grouping without inheritance, because inheritance breaks the Android export here.</li>
+  </ul>
+
+  <p>The <a href="/states/player-state">player state machine</a> page serves the same role for the player avatar and predates this section.</p>
+</Concept>
