@@ -5,6 +5,35 @@
   "name": "The Paru Pact (backtrack variant)",
   "description": "Requested by: Research Division. Help Elio, the guild's Mag custodian, recover Mag fragments from Paru ruins to assemble a new Mag for guild rotation. — backtrack variant: player misses mag fragment 3 on first pass and returns to B 3,1 last to complete the quest.",
   "area_id": "paru",
+  "rewards": {
+    "normal": {
+      "meseta": 150,
+      "items": [
+        {
+          "id": "monofluid",
+          "quantity": 2
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 750,
+      "items": [
+        {
+          "id": "difluid",
+          "quantity": 2
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 2250,
+      "items": [
+        {
+          "id": "trifluid",
+          "quantity": 2
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

@@ -5,6 +5,35 @@
   "name": "The Broken Seal",
   "description": "Makara ruins seal puzzle, door to Dark Shrine.",
   "area_id": "makara",
+  "rewards": {
+    "normal": {
+      "meseta": 1000,
+      "items": [
+        {
+          "id": "heal_trap",
+          "quantity": 2
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 5000,
+      "items": [
+        {
+          "id": "heal_trap",
+          "quantity": 4
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 15000,
+      "items": [
+        {
+          "id": "heal_trap",
+          "quantity": 6
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

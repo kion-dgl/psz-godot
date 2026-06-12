@@ -5,6 +5,35 @@
   "name": "Messages from the Past",
   "description": "Requested by: Research Division. Join Elio's excavation team in the classified Paru ruins to recover ancient logs from before the Great Blank.",
   "area_id": "paru",
+  "rewards": {
+    "normal": {
+      "meseta": 600,
+      "items": [
+        {
+          "id": "moon_atomizer",
+          "quantity": 1
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 3000,
+      "items": [
+        {
+          "id": "moon_atomizer",
+          "quantity": 2
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 9000,
+      "items": [
+        {
+          "id": "moon_atomizer",
+          "quantity": 3
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",
@@ -325,7 +354,7 @@
                 0,
                 -1.6
               ],
-              "text": "...sit\u2588 holds. d\u2588ep galler\u2588es \u2588ntact. p\u2588\u2588er dorm\u2588nt \u2014 n\u2588ver dest\u2588\u2588yed. recom\u2588\u2588nd cataloguing once we und\u2588\u2588stand the secur\u2588ty pr\u2588toc\u2588l...",
+              "text": "...sit█ holds. d█ep galler█es █ntact. p██er dorm█nt — n█ver dest██yed. recom██nd cataloguing once we und██stand the secur█ty pr█toc█l...",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
@@ -553,7 +582,7 @@
                 0,
                 -18.7
               ],
-              "text": "...evac\u2588ation order \u2588\u2588scinded. all non-essent\u2588al staff have refused reass\u2588gnment regardl\u2588\u2588\u2588. council silenc\u2588 on jurisdic\u2588ion has been... inform\u2588tive...",
+              "text": "...evac█ation order ██scinded. all non-essent█al staff have refused reass█gnment regardl███. council silenc█ on jurisdic█ion has been... inform█tive...",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
@@ -1179,7 +1208,7 @@
                 0,
                 -14.9
               ],
-              "text": "...my han\u2588s w\u2588n't stop \u2588haking. we kn\u2588w. we al\u2588 knew. and we kept arg\u2588\u2588ng about who\u2588\u2588 fault it was inst\u2588\u2588d of stop\u2588\u2588ng it...",
+              "text": "...my han█s w█n't stop █haking. we kn█w. we al█ knew. and we kept arg██ng about who██ fault it was inst██d of stop██ng it...",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {
@@ -1861,7 +1890,7 @@
                 0,
                 -11.8
               ],
-              "text": "...we did this to ours\u2588\u2588ves... no one l\u2588ft to figh\u2588... just us, burn\u2588ng ev\u2588rything we c\u2588uldn't c\u2588\u2588ry... the \u2588light wasn't from outs\u2588de... it was n\u2588ver from outsid\u2588...",
+              "text": "...we did this to ours██ves... no one l█ft to figh█... just us, burn█ng ev█rything we c█uldn't c██ry... the █light wasn't from outs█de... it was n█ver from outsid█...",
               "objective_item_id": "message_log",
               "reaction_dialog": [
                 {

@@ -5,6 +5,35 @@
   "name": "Investigate Tower",
   "description": "Climb the Eternal Tower and conduct a blade survey.",
   "area_id": "tower",
+  "rewards": {
+    "normal": {
+      "meseta": 700,
+      "items": [
+        {
+          "id": "star_atomizer",
+          "quantity": 1
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 3500,
+      "items": [
+        {
+          "id": "star_atomizer",
+          "quantity": 2
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 10500,
+      "items": [
+        {
+          "id": "star_atomizer",
+          "quantity": 3
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

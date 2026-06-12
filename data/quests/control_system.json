@@ -5,6 +5,35 @@
   "name": "Control System",
   "description": "Crumbling infrastructure + Mother Trinity boss.",
   "area_id": "arca",
+  "rewards": {
+    "normal": {
+      "meseta": 900,
+      "items": [
+        {
+          "id": "trifluid",
+          "quantity": 2
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 4500,
+      "items": [
+        {
+          "id": "trifluid",
+          "quantity": 3
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 13500,
+      "items": [
+        {
+          "id": "trifluid",
+          "quantity": 4
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "transition",

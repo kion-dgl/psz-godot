@@ -5,6 +5,35 @@
   "name": "Finding Ogi",
   "description": "A veteran CAST hunter has gone missing in the Rioh Snowfield. Find him and recover his body parts.",
   "area_id": "rioh",
+  "rewards": {
+    "normal": {
+      "meseta": 450,
+      "items": [
+        {
+          "id": "scape_doll",
+          "quantity": 1
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 2250,
+      "items": [
+        {
+          "id": "scape_doll",
+          "quantity": 1
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 6750,
+      "items": [
+        {
+          "id": "scape_doll",
+          "quantity": 2
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

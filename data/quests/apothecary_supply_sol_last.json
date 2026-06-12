@@ -5,6 +5,35 @@
   "name": "Apothecary's Supply (sol leaf last)",
   "description": "Requested by: Item Shop. Asks the player to gather herbs from the wetlands to use for item synthesis. \nCore Objective: Harvest Sol Leaves, Moon Blooms, and Star Husks.\nTheme: Industry. Establishes how the town produces its own Atomizers. — variant: sol_leaf at 0,0 is picked up last.",
   "area_id": "ozette",
+  "rewards": {
+    "normal": {
+      "meseta": 200,
+      "items": [
+        {
+          "id": "monomate",
+          "quantity": 3
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 1000,
+      "items": [
+        {
+          "id": "dimate",
+          "quantity": 3
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 3000,
+      "items": [
+        {
+          "id": "trimate",
+          "quantity": 3
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

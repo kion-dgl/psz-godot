@@ -6,6 +6,35 @@
   "name": "Claiming a Stake",
   "description": "Clear out hostile creatures from a mining site in Gurhacia Valley.",
   "area_id": "gurhacia",
+  "rewards": {
+    "normal": {
+      "meseta": 300,
+      "items": [
+        {
+          "id": "heat_trap",
+          "quantity": 2
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 1500,
+      "items": [
+        {
+          "id": "heat_trap",
+          "quantity": 4
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 4500,
+      "items": [
+        {
+          "id": "heat_trap",
+          "quantity": 6
+        }
+      ]
+    }
+  },
   "office_npcs": [],
   "briefing_dialog": [
     {
@@ -18,7 +47,7 @@
     },
     {
       "speaker": "Principal",
-      "text": "Clear the area so they can resume operations. Watch out \u2014 there are reports of a large creature deeper in."
+      "text": "Clear the area so they can resume operations. Watch out — there are reports of a large creature deeper in."
     }
   ],
   "sections": [
