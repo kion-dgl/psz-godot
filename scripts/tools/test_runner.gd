@@ -4085,12 +4085,31 @@ func test_script_parse() -> void:
 		# (e.g. a child redeclaring a parent const) — can_instantiate() is
 		# false in that case, so check it too, not just null.
 		if script == null or (script is GDScript and not script.can_instantiate()):
+			if script is GDScript and _compile_blocked_by_missing_pack_asset(script):
+				continue  # pack-only asset preload; absent in repo-only CI checkouts
 			_fail += 1
 			failures += 1
 			print("  FAIL: Parse/compile error in %s" % path)
 	if failures == 0:
 		_pass += 1
 		print("  PASS: %d scripts parsed cleanly" % paths.size())
+
+
+# Scripts that preload() pack-distributed assets (the Arweave .pck — SEGA
+# media is never committed) can't compile in a repo-only checkout like the
+# CI test job. Skip the strict can_instantiate check only when the failing
+# script preloads a res://assets/ path that doesn't exist here; on dev
+# boxes with assets present the strict check still applies in full.
+func _compile_blocked_by_missing_pack_asset(script: GDScript) -> bool:
+	for line in script.source_code.split("\n"):
+		var idx := line.find("preload(\"res://assets/")
+		if idx < 0:
+			continue
+		var start := line.find("\"", idx) + 1
+		var path := line.substr(start, line.find("\"", start) - start)
+		if not ResourceLoader.exists(path):
+			return true
+	return false
 
 
 func _collect_gd_files(dir_path: String, out: Array) -> void:
