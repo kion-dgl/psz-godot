@@ -20,5 +20,9 @@
     "@types/node": "^22.10.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "elliptic": "^6.6.1",
+    "secp256k1": "^5.0.1"
   }
 }
