@@ -3,6 +3,21 @@
 Project-specific conventions enforced by CI. Anything else lives in code or
 git history.
 
+## Beta working agreement (full text: spec /engineering)
+
+- **Hierarchies**: shared behavior lives in base classes (`Enemy` →
+  `WolfEnemy`); leaf classes only where behavior genuinely diverges, and
+  the PR must say why. Data variation goes in resources, not scripts.
+  Every hierarchy gets an Astro spec page defining the base contract.
+  Exception: lazily-loaded 2D screens use preloaded-helper composition,
+  never cross-script inheritance (Android export breaks — docs/shop-dedup.md).
+- **Debt is loud**: growing any `code_*_baseline.json` count fails CI
+  unless a commit carries `Debt-Accepted: <reason>`. Deliberate debt
+  belongs at the END of beta; mid-beta acceptance should answer "why now?".
+- **Two test layers** for anything frame/timing/combat-driven: a seeded
+  unit test in test_runner AND a post-build autopilot probe (matrix
+  phase / smoke / sanity checkpoint). One layer is not done planning.
+
 ## Always work on a branch + open a PR — never push direct to `main`
 
 Even when the change looks trivial, even when "commit and merge" sounds

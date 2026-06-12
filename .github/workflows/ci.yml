@@ -134,9 +134,18 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Dup + dead-code + complexity + coupling ratchet
         run: python3 scripts/tools/code_graph.py --check
+
+      # Beta working agreement: accepting debt (growing any baseline) must be
+      # loud and deliberate — requires a `Debt-Accepted: <reason>` trailer in
+      # a PR commit. Decreases pass silently. spec /engineering.
+      - name: Baseline-debt acknowledgment guard (PRs only)
+        if: github.event_name == 'pull_request'
+        run: BASE_REF=origin/${{ github.base_ref }} python3 scripts/tools/check_baseline_debt.py
 
   verify-assets:
     runs-on: ubuntu-latest

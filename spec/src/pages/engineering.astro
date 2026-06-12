@@ -1,0 +1,41 @@
+---
+import Concept from '../layouts/Concept.astro';
+---
+
+<Concept title="Engineering Policy (Beta)" section="Spec">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>SHOULD</strong>, and <strong>MAY</strong> are used as in RFC 2119. These are the working rules for all Beta implementation work; they exist so the Alpha cleanup cost (#215's 50-item audit) doesn't repeat.</p>
+
+  <h2>Class hierarchies: behavior in bases, leaves earn their existence</h2>
+  <p>Shared behavior <strong>MUST</strong> live in a base class with a clear interface — <code>Enemy</code> owns AI dispatch, status handling, damage intake; <code>WolfEnemy</code> / <code>SmallEnemy</code>-style subclasses exist only where <em>behavior</em> genuinely diverges (a different FSM, a different movement model). This applies to enemies, player classes, weapons, and shops alike.</p>
+  <ul>
+    <li><strong>Data variation is not behavior.</strong> Stats, models, elements, spawn tables stay in resources (<code>EnemyData</code>, <code>WeaponData</code>) — a new enemy that only differs in numbers <strong>MUST</strong> be a new resource, not a new script (per <a href="/states/enemies">/states/enemies</a>).</li>
+    <li><strong>Leaf classes are one-offs that earn it.</strong> A PR adding a leaf class <strong>MUST</strong> state why the behavior can't be expressed in the base (a hook, a parameter, a resource field). "It was faster" is the answer we're guarding against.</li>
+    <li><strong>When the second similar thing appears, extract the base first.</strong> Don't ship sibling copies and dedup later — that was Alpha's pattern and it cost a milestone to undo.</li>
+    <li><strong>Every hierarchy gets a spec page.</strong> Expected behavior of the base contract (which methods subclasses override, which invariants hold) is defined here in the spec, with the implementation linked — the <a href="/states/player-state">player state machine page</a> is the model.</li>
+    <li><strong>Known exception — shop screens.</strong> Lazily-loaded 2D screens <strong>MUST NOT</strong> use cross-script <code>class_name</code> inheritance: it breaks the Android export (<code>Could not resolve class "ShopBase"</code> — see <code>docs/shop-dedup.md</code>). Screens reuse via preloaded static helpers (<code>ShopNav</code>, <code>ShopUI</code>) — same grouping goal, composition mechanism.</li>
+  </ul>
+
+  <h2>Tech debt: blocked by default, loud when deliberate</h2>
+  <p>The CI ratchet (<code>code_graph.py --check</code>) fails any PR introducing <em>new</em> duplication, dead code, complexity, or coupling. Accepting debt by growing a baseline is possible but <strong>MUST</strong> be acknowledged: the baseline-debt guard fails any PR that increases an accepted-debt count unless a commit carries a <code>Debt-Accepted: &lt;reason&gt;</code> trailer.</p>
+  <ul>
+    <li>Baseline <em>decreases</em> are wins and pass silently — shrink freely.</li>
+    <li>Deliberate one-off debt belongs at the <strong>end</strong> of beta, if at all. A mid-beta <code>Debt-Accepted</code> is a prompt to ask <em>why now?</em> — the answer goes in the trailer.</li>
+  </ul>
+
+  <h2>Testing: two layers for anything that moves</h2>
+  <p>Every gameplay mechanic — and <em>especially</em> attacks, timing windows, and frame-dependent behavior — <strong>MUST</strong> ship with both layers:</p>
+  <table>
+    <tr><th>Layer</th><th>What</th><th>Catches</th></tr>
+    <tr><td><strong>Unit</strong></td><td>Seeded test in <code>test_runner.gd</code> pinning the math / window classification / state transition (the <code>test_element_status</code> / <code>test_player_states</code> pattern)</td><td>formula and logic regressions, deterministically</td></tr>
+    <tr><td><strong>Post-build</strong></td><td>An autopilot probe — a matrix phase, smoke script, or sanity checkpoint that exercises the mechanic in the running game</td><td>integration breakage units can't see (the #335 lesson: the unit suite was green while the autopilot hung)</td></tr>
+  </table>
+  <p>A combat increment whose plan has only one layer is not done being planned. The unit layer is the merge gate in CI; the post-build layer runs in the sanity check (every merge) and the full matrix (every combat-behavior PR).</p>
+
+  <h2>Enforced by</h2>
+  <ul>
+    <li><code>scripts/tools/code_graph.py --check</code> — the four-way ratchet (CI, every PR).</li>
+    <li><code>scripts/tools/check_baseline_debt.py</code> — the debt-acknowledgment guard (CI, every PR).</li>
+    <li><code>scripts/tools/autoplay/merge_gate.sh</code> — blocks merges without a green sanity run for the exact HEAD.</li>
+    <li><code>scripts/tools/autoplay/run_regression_matrix.sh</code> — the full post-build layer (dev-box, before combat merges).</li>
+  </ul>
+</Concept>
