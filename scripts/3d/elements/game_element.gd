@@ -3,6 +3,8 @@ class_name GameElement
 ## Base class for interactive game elements (gates, switches, pickups, etc.)
 ## Ported from psz-sketch element patterns
 
+const MIRROR_SHADER := preload("res://scripts/3d/shaders/mirror_repeat.gdshader")
+
 signal state_changed(old_state: String, new_state: String)
 signal interacted(player: Node3D)
 signal collected(element: GameElement)
@@ -189,6 +191,75 @@ func _apply_materials_recursive(node: Node, callback: Callable) -> void:
 
 	for child in node.get_children():
 		_apply_materials_recursive(child, callback)
+
+
+## Duplicate every StandardMaterial3D as a per-instance override with
+## nearest filtering, split into {"feature": …, "base": …} by whether the
+## albedo texture path contains `feature_tex`. Shared by the trap elements
+## (bear prongs / needle spikes, #215-C2); last non-matching surface wins
+## the "base" slot, matching the original per-trap behavior.
+func _setup_split_materials(feature_tex: String) -> Dictionary:
+	var result := {"feature": null, "base": null}
+	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int) -> void:
+		if mat is StandardMaterial3D:
+			var std_mat := mat as StandardMaterial3D
+			var dup := std_mat.duplicate() as StandardMaterial3D
+			dup.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+			if std_mat.albedo_texture:
+				std_mat.albedo_texture.flags_mirrored_repeat = true
+			mesh.set_surface_override_material(surface, dup)
+			if std_mat.albedo_texture and feature_tex in std_mat.albedo_texture.resource_path:
+				result["feature"] = dup
+			else:
+				result["base"] = dup
+	)
+	return result
+
+
+## Build the glowing translucent warp cylinder (telepipe / warp point —
+## identical but for tint and node name, #215-C3). Returns the mesh,
+## already positioned and added as a child.
+func _build_warp_cylinder(tint: Color, mesh_name: String) -> MeshInstance3D:
+	var mesh := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.8
+	cyl.bottom_radius = 0.8
+	cyl.height = 3.0
+	mesh.mesh = cyl
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(tint.r, tint.g, tint.b, 0.6)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.emission_enabled = true
+	mat.emission = tint
+	mat.emission_energy_multiplier = 2.0
+	mesh.material_override = mat
+	mesh.name = mesh_name
+	mesh.position.y = 1.5
+	add_child(mesh)
+	return mesh
+
+
+## Replace every albedo-textured StandardMaterial3D on the model with the
+## mirror-repeat shader (2x2 UV, mirrored both axes). `uv_offset` shifts the
+## palette row — Box passes (0, 1) for rare variants. Shared by the
+## destructible elements — wall, box (#294).
+func _setup_mirror_textures(uv_offset := Vector2.ZERO) -> void:
+	if not model:
+		return
+	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
+		if mat is StandardMaterial3D:
+			var std_mat := mat as StandardMaterial3D
+			if std_mat.albedo_texture:
+				var smat := ShaderMaterial.new()
+				smat.shader = MIRROR_SHADER
+				smat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
+				smat.set_shader_parameter("uv_scale", Vector2(2, 2))
+				smat.set_shader_parameter("mirror_x", true)
+				smat.set_shader_parameter("mirror_y", true)
+				if uv_offset != Vector2.ZERO:
+					smat.set_shader_parameter("uv_offset", uv_offset)
+				mesh.set_surface_override_material(surface, smat)
+	)
 
 
 ## Find the surface whose albedo texture path contains `texture_name`, duplicate

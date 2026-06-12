@@ -31,19 +31,9 @@ func _ready() -> void:
 
 
 func _setup_materials() -> void:
-	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int) -> void:
-		if mat is StandardMaterial3D:
-			var std_mat := mat as StandardMaterial3D
-			var dup := std_mat.duplicate() as StandardMaterial3D
-			dup.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			if std_mat.albedo_texture:
-				std_mat.albedo_texture.flags_mirrored_repeat = true
-			mesh.set_surface_override_material(surface, dup)
-			if std_mat.albedo_texture and SPIKE_TEX_NAME in std_mat.albedo_texture.resource_path:
-				_spike_material = dup
-			else:
-				_base_material = dup
-	)
+	var mats := _setup_split_materials(SPIKE_TEX_NAME)
+	_spike_material = mats["feature"]
+	_base_material = mats["base"]
 
 
 func _setup_damage_area() -> void:

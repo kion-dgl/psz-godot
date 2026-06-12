@@ -231,10 +231,6 @@
       "jaccard": 0.957
     },
     {
-      "sig": "scripts/3d/elements/telepipe.gd:_build_mesh#0||scripts/3d/elements/warp_point.gd:_build_mesh#0",
-      "jaccard": 0.957
-    },
-    {
       "sig": "scripts/3d/elements/field_npc.gd:_init#0||scripts/3d/elements/message_pack.gd:_init#0",
       "jaccard": 0.955
     },
@@ -245,10 +241,6 @@
     {
       "sig": "scripts/3d/elements/field_npc.gd:_init#0||scripts/3d/elements/warp_point.gd:_init#0",
       "jaccard": 0.955
-    },
-    {
-      "sig": "scripts/2d/inventory_screen.gd:_get_item_category#0||scripts/autoloads/inventory.gd:get_item_category#0",
-      "jaccard": 0.952
     },
     {
       "sig": "scripts/3d/elements/key_pickup.gd:_setup_prompt#0||scripts/3d/elements/message_pack.gd:_setup_prompt#0",
@@ -269,10 +261,6 @@
     {
       "sig": "scripts/2d/action_palette_screen.gd:_is_action_available#0||scripts/3d/field/pso_start_menu.gd:_is_palette_action_available#0",
       "jaccard": 0.931
-    },
-    {
-      "sig": "scripts/3d/elements/box.gd:_setup_textures#0||scripts/3d/elements/wall.gd:_setup_textures#0",
-      "jaccard": 0.929
     },
     {
       "sig": "scripts/3d/elements/box.gd:_setup_reticle#0||scripts/3d/enemies/enemy_base.gd:_setup_reticle#0",
@@ -387,16 +375,8 @@
       "jaccard": 0.909
     },
     {
-      "sig": "scripts/3d/elements/bear_trap.gd:_setup_materials#0||scripts/3d/elements/needle_trap.gd:_setup_materials#0",
-      "jaccard": 0.905
-    },
-    {
       "sig": "scripts/3d/elements/key_gate.gd:_setup_prompt#0||scripts/3d/elements/key_pickup.gd:_setup_prompt#0",
       "jaccard": 0.905
-    },
-    {
-      "sig": "scripts/2d/inventory_screen.gd:_get_item_category#0||scripts/3d/field/pso_start_menu.gd:_get_item_category#0",
-      "jaccard": 0.902
     },
     {
       "sig": "scripts/3d/elements/gate.gd:_apply_state#0||scripts/3d/elements/key_gate.gd:_apply_state#0",

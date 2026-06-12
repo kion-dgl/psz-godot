@@ -162,8 +162,9 @@ func _refresh_display() -> void:
 			var norm_id: String = item_id.replace("-", "_").replace("/", "_")
 			var is_unresolved: bool = (item_id != norm_id)
 
-			# Category header
-			var cat: String = _get_item_category(item_id)
+			# Category header — Inventory autoload owns the canonical
+			# id→category mapping (#215-C9).
+			var cat: String = Inventory.get_item_category(item_id)
 			if cat != current_category:
 				current_category = cat
 				current_weapon_type = -1
@@ -433,29 +434,3 @@ func _refresh_detail() -> void:
 			vbox.add_child(PszStyle.detail_label("Materials used: %d/%d" % [used, CombatManager.MAX_MATERIALS]))
 
 	detail_panel.add_child(vbox)
-
-
-func _get_item_category(item_id: String) -> String:
-	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
-	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
-		return "Weapon"
-	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
-		return "Armor"
-	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
-		return "Unit"
-	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
-		return "Mag"
-	if item_id.begins_with("disk_"):
-		return "Disk"
-	if ConsumableRegistry.get_consumable(item_id) or ConsumableRegistry.get_consumable(norm_id):
-		return "Consumable"
-	if CombatManager.MATERIAL_STAT_MAP.has(item_id) or MaterialRegistry.get_material(item_id):
-		return "Material"
-	if ModifierRegistry.get_modifier(item_id) or ModifierRegistry.get_modifier(norm_id):
-		return "Modifier"
-	var item_data = ItemRegistry.get_item(item_id)
-	if item_data == null:
-		item_data = ItemRegistry.get_item(norm_id)
-	if item_data:
-		return "Key Item"
-	return "Other"
