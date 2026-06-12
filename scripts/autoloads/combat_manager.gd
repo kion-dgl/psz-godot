@@ -33,13 +33,18 @@ const ELEMENT_WEAKNESS := {
 	"light": "dark",  # Light is bonus damage vs dark only
 }
 
-## Status effects from elements
+## Statuses an element can proc — the single source of truth (#242; spec
+## /states/enemies). A successful proc picks uniformly among the element's
+## entries via roll_element_status(). "devil" is the instant ¼-HP effect,
+## not a STATUS_EFFECTS timed entry. Every timed status here MUST exist in
+## STATUS_EFFECTS, and every STATUS_EFFECTS key MUST be reachable from
+## some element — test_element_status pins both directions.
 const ELEMENT_STATUS := {
 	"fire": ["burn"],
 	"ice": ["freeze", "slow"],
 	"lightning": ["stun", "paralysis"],
-	"dark": ["poison"],
-	"light": [],  # No status, extra damage only
+	"dark": ["poison", "devil"],
+	"light": ["sleep"],
 }
 
 ## Status effect definitions
@@ -53,14 +58,14 @@ const STATUS_EFFECTS := {
 	"sleep": {"duration": 2, "skip_chance": 1.0, "breaks_on_hit": true},
 }
 
-## Map photon element to status effect
-const ELEMENT_TO_STATUS := {
-	"fire": "burn",
-	"ice": "freeze",
-	"lightning": "stun",
-	"dark": "devil",
-	"light": "sleep",
-}
+
+## Roll the status a hit with `element` procs: "" when the element has no
+## statuses, otherwise a uniform pick among ELEMENT_STATUS[element].
+static func roll_element_status(element: String) -> String:
+	var options: Array = ELEMENT_STATUS.get(element, [])
+	if options.is_empty():
+		return ""
+	return str(options[randi() % options.size()])
 
 ## Map enemy element to attribute key
 const ENEMY_ELEMENT_TO_ATTR := {
@@ -684,7 +689,7 @@ func _try_element_special(enemy: Dictionary, w_stats: Dictionary) -> String:
 	if randf() > trigger_chance:
 		return ""
 
-	var status_type: String = ELEMENT_TO_STATUS.get(element, "")
+	var status_type: String = roll_element_status(element)
 	if status_type.is_empty():
 		return ""
 
@@ -713,9 +718,7 @@ func _try_element_special(enemy: Dictionary, w_stats: Dictionary) -> String:
 	var duration: int = int(effect_def.get("duration", 2))
 	enemy["status_effects"].append({"type": status_type, "duration": duration})
 
-	var element_names := {"fire": "Burn", "ice": "Freeze", "lightning": "Stun", "light": "Sleep"}
-	var effect_name: String = element_names.get(element, element.capitalize())
-	return " %s inflicted on %s!" % [effect_name, enemy_name]
+	return " %s inflicted on %s!" % [status_type.capitalize(), enemy_name]
 
 
 ## Special attack — lower accuracy, can apply status effects

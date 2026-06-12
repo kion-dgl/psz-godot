@@ -17,6 +17,7 @@ func _ready() -> void:
 	test_inventory_capacity()
 	test_character_creation()
 	test_equipment()
+	test_element_status()
 	test_combat_math()
 	test_combat_drops()
 	test_drop_tables()
@@ -381,6 +382,63 @@ func test_equipment() -> void:
 	# Restore saber for further tests
 	equipment["weapon"] = "saber"
 	Inventory.remove_item("blade", 1)
+	print("")
+
+
+# ── Element → status routing (#242, spec /states/enemies) ──────
+# Characterizes the single ELEMENT_STATUS map: every timed status in
+# STATUS_EFFECTS is reachable from some element, every routed status is
+# defined (or devil), every status has a model tint, and the live proc
+# path (_try_element_special) actually lands each of dark's two effects.
+func test_element_status() -> void:
+	print("── Element → Status Routing ──")
+
+	# Map invariants — both directions.
+	var reachable := {}
+	for element in CombatManager.ELEMENT_STATUS:
+		var statuses: Array = CombatManager.ELEMENT_STATUS[element]
+		assert_gt(statuses.size(), 0, "%s routes to at least one status" % element)
+		for s in statuses:
+			reachable[str(s)] = true
+			assert_true(s == "devil" or CombatManager.STATUS_EFFECTS.has(s),
+				"%s→%s is devil or a defined status" % [element, s])
+	for s in CombatManager.STATUS_EFFECTS:
+		assert_true(reachable.has(s), "status '%s' is reachable from some element" % s)
+
+	# Model tint coverage — the gap that hid paralysis (#242 secondary).
+	const EnemyBaseScript := preload("res://scripts/3d/enemies/enemy_base.gd")
+	for s in CombatManager.STATUS_EFFECTS:
+		assert_true(EnemyBaseScript.STATUS_COLORS.has(s), "STATUS_COLORS tints '%s'" % s)
+
+	# roll_element_status: seeded sampling observes every option per element.
+	seed(0x242)
+	for element in CombatManager.ELEMENT_STATUS:
+		var seen := {}
+		for _i in range(200):
+			seen[CombatManager.roll_element_status(element)] = true
+		assert_eq(seen.size(), (CombatManager.ELEMENT_STATUS[element] as Array).size(),
+			"%s rolls cover all its options" % element)
+	assert_eq(CombatManager.roll_element_status("native"), "", "unmapped element rolls nothing")
+
+	# Live path: element_level 9 → chance 1.0 → every hit procs. Dark must
+	# land both poison (timed) and devil (instant ¼ HP) across samples.
+	seed(0x242)
+	var procced := {}
+	var all_procced := true
+	var devil_hp_ok := true
+	for _i in range(100):
+		var enemy := {"name": "Dummy", "hp": 400, "alive": true}
+		var msg: String = CombatManager._try_element_special(enemy, {"element": "dark", "element_level": 9})
+		all_procced = all_procced and not msg.is_empty()
+		if msg.contains("Devil"):
+			procced["devil"] = true
+			devil_hp_ok = devil_hp_ok and int(enemy["hp"]) == 100
+		elif not (enemy.get("status_effects", []) as Array).is_empty():
+			procced[str(enemy["status_effects"][0]["type"])] = true
+	assert_true(all_procced, "level-9 dark hits always proc (100/100)")
+	assert_true(procced.has("devil"), "dark procs devil through the live path")
+	assert_true(devil_hp_ok, "devil drops 400 HP to ¼ (100) every time")
+	assert_true(procced.has("poison"), "dark procs poison through the live path")
 	print("")
 
 
