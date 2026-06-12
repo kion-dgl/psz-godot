@@ -234,6 +234,14 @@ func has_suspended_session() -> bool:
 	return not _suspended_session.is_empty()
 
 
+## True only when the suspended session is a QUEST run. A suspended
+## free-field session must NOT lock the guild counter into cancel-only
+## (#239 bug 2) — the player can accept a quest, which abandons the
+## field run (see accept_quest).
+func has_suspended_quest() -> bool:
+	return _suspended_session.get("type", "") == "quest"
+
+
 ## Check if a session is active
 func has_active_session() -> bool:
 	return not _session.is_empty()
@@ -353,8 +361,12 @@ func accept_quest(quest_id: String, difficulty: String) -> Dictionary:
 	if quest.is_empty():
 		return {}
 	# Per spec: accepting a quest cancels any active telepipe — the player
-	# is committing to a new expedition, the old field run is over.
+	# is committing to a new expedition, the old field run is over. A
+	# suspended free-field session is abandoned with it (#239 bug 2);
+	# without this it lingers and re-locks the guild counter forever.
 	TelepipeManager.cancel("accept_quest")
+	if _suspended_session.get("type", "") == "field":
+		_suspended_session.clear()
 	_accepted_quest = {
 		"quest_id": quest_id,
 		"area_id": quest.get("area_id", "gurhacia"),

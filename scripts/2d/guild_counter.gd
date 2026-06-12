@@ -78,7 +78,10 @@ func _load_entries() -> void:
 		})
 		return
 
-	if SessionManager.has_accepted_quest() or SessionManager.has_suspended_session():
+	# Cancel-only lock applies to QUEST runs only — a suspended free-field
+	# session falls through to the normal quest list (#239 bug 2; accepting
+	# a quest abandons the field run via accept_quest).
+	if SessionManager.has_accepted_quest() or SessionManager.has_suspended_quest():
 		var quest_name := ""
 		if SessionManager.has_accepted_quest():
 			quest_name = str(SessionManager.get_accepted_quest().get("name", "Quest"))

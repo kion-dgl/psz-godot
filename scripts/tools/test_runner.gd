@@ -50,6 +50,7 @@ func _ready() -> void:
 	test_section_state_round_trip()
 	test_telepipe_cancel_hooks()
 	test_telepipe_use_item_outside_field()
+	test_telepipe_239_fixes()
 	test_build_info_sentinel()
 	test_bootstrap_pack_magic_guard()
 	test_warp_teleporter_section_label()
@@ -2725,6 +2726,61 @@ func test_telepipe_use_item_outside_field() -> void:
 
 	# Cleanup
 	Inventory.clear_inventory()
+	print("")
+
+
+# ── #239 telepipe fixes — node dedup + free-field counter unlock ──
+# Bug 1: placing a second pipe must free the first pipe's NODE (the
+# manager state already replaced; the visual drifted). Bug 2: a
+# suspended FREE-FIELD session must not lock the guild counter into
+# cancel-only — accepting a quest abandons the field run.
+func test_telepipe_239_fixes() -> void:
+	print("── Telepipe #239 — node dedup + free-field counter unlock ──")
+
+	# Bug 1: controller-level node dedup, off-tree (no scene load).
+	const FieldController := preload("res://scripts/3d/field/valley_field_controller.gd")
+	var ctl = FieldController.new()
+	var map_root := Node3D.new()
+	ctl.add_child(map_root)
+	ctl._map_root = map_root
+	ctl._spawn_player_telepipe_node(Vector3(1, 0, 1))
+	ctl._spawn_player_telepipe_node(Vector3(9, 0, 9))
+	var live: Array = []
+	for child in map_root.get_children():
+		if not child.is_queued_for_deletion():
+			live.append(child)
+	assert_eq(live.size(), 1, "second placement frees the first pipe node")
+	assert_eq(str(live[0].name), "PlayerTelepipe", "surviving node keeps the canonical name")
+	ctl.free()
+
+	# Bug 2: suspended free-field session — predicate + accept-quest cleanup.
+	SessionManager.return_to_city()
+	SessionManager._accepted_quest.clear()
+	SessionManager._suspended_session.clear()
+
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.suspend_session()
+	assert_true(SessionManager.has_suspended_session(), "field session suspends")
+	assert_true(not SessionManager.has_suspended_quest(),
+		"suspended FIELD run is not a suspended quest (counter stays unlocked)")
+
+	TelepipeManager.place("gurhacia", 0, "0,0", Vector3.ZERO, "res://x.tscn")
+	SessionManager.accept_quest("search_and_rescue", "normal")
+	assert_true(not SessionManager.has_suspended_session(),
+		"accepting a quest abandons the suspended field run")
+	assert_true(not TelepipeManager.is_active(), "accepting a quest cancels the telepipe")
+	SessionManager.cancel_accepted_quest()
+
+	# Suspended QUEST run still locks the counter (existing behavior, pinned).
+	SessionManager.enter_quest("search_and_rescue", "normal")
+	SessionManager.suspend_session()
+	assert_true(SessionManager.has_suspended_quest(), "suspended QUEST run still reads as quest")
+	SessionManager.cancel_accepted_quest()
+	assert_true(not SessionManager.has_suspended_session(),
+		"cancel clears the suspended quest run")
+
+	SessionManager.return_to_city()
+	SessionManager._suspended_session.clear()
 	print("")
 
 
