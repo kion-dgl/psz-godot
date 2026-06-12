@@ -72,6 +72,51 @@ static func handle(shop: Control, event: InputEvent, opts: Dictionary) -> bool:
 	return false
 
 
+## Guard for "confirm acts on the selected row" (#274 inc 4): the selected
+## entry of `list`, or null when the list is empty / selection out of bounds.
+## The screen must declare `var _selected_index: int`.
+static func selected_item(shop: Control, list: Array) -> Variant:
+	var idx: int = int(shop.get("_selected_index"))
+	if list.is_empty() or idx >= list.size():
+		return null
+	return list[idx]
+
+
+## Open a yes/no ConfirmDialog owned by the screen's `_active_modal` guard
+## (the guard ShopNav.handle and the screens' NavRepeat checks key off).
+## on_yes runs on confirm, on_cancel (optional) on cancel — both after the
+## modal has released `_active_modal`.
+static func confirm(shop: Control, prompt: String, on_yes: Callable, on_cancel := Callable()) -> void:
+	var modal := ConfirmDialog.new()
+	modal.ask(prompt)
+	modal.confirmed.connect(func() -> void:
+		shop.set("_active_modal", null)
+		on_yes.call()
+	)
+	modal.cancelled.connect(func() -> void:
+		shop.set("_active_modal", null)
+		if on_cancel.is_valid():
+			on_cancel.call()
+	)
+	shop.set("_active_modal", modal)
+	shop.add_child(modal)
+
+
+## Single-button info modal for blocking error states (inventory full,
+## can't afford, …) so the failure is unmissable. Same `_active_modal`
+## lifecycle as confirm(); on_dismiss (optional) runs after dismissal.
+static func info(shop: Control, msg: String, on_dismiss := Callable()) -> void:
+	var modal := ConfirmDialog.new()
+	modal.confirmed.connect(func() -> void:
+		shop.set("_active_modal", null)
+		if on_dismiss.is_valid():
+			on_dismiss.call()
+	)
+	shop.set("_active_modal", modal)
+	shop.add_child(modal)
+	modal.info(msg)
+
+
 ## Standard tab switch for buy/sell shops (item + weapon): wrap `_tab`,
 ## reset the selection, regenerate the sell list when landing on it,
 ## refresh hint + display. The shop must define those members.

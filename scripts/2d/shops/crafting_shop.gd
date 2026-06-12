@@ -204,20 +204,11 @@ func _handle_photon_input(event: InputEvent) -> void:
 
 
 func _open_learn_modal() -> void:
-	if _board_items.is_empty() or _selected_index >= _board_items.size():
+	var board_v: Variant = ShopNav.selected_item(self, _board_items)
+	if board_v == null:
 		return
-	var board_info: Dictionary = _board_items[_selected_index]
-	var modal := ConfirmDialog.new()
-	modal.ask("Learn %s?" % str(board_info.get("name", "this board")))
-	modal.confirmed.connect(func() -> void:
-		_active_modal = null
-		_learn_selected()
-	)
-	modal.cancelled.connect(func() -> void:
-		_active_modal = null
-	)
-	_active_modal = modal
-	add_child(modal)
+	var board_info: Dictionary = board_v
+	ShopNav.confirm(self, "Learn %s?" % str(board_info.get("name", "this board")), _learn_selected)
 
 
 func _open_craft_modal() -> void:
@@ -232,17 +223,8 @@ func _open_craft_modal() -> void:
 	var weapon = WeaponRegistry.get_weapon(recipe.output_weapon_id)
 	var weapon_name: String = weapon.name if weapon else recipe.output_weapon_id
 
-	var modal := ConfirmDialog.new()
-	modal.ask("Craft %s using %s?\n(%d M)" % [weapon_name, PHOTON_OPTIONS[_photon_index], recipe.craft_cost])
-	modal.confirmed.connect(func() -> void:
-		_active_modal = null
-		_confirm_craft_with_photon()
-	)
-	modal.cancelled.connect(func() -> void:
-		_active_modal = null
-	)
-	_active_modal = modal
-	add_child(modal)
+	ShopNav.confirm(self, "Craft %s using %s?\n(%d M)" % [weapon_name, PHOTON_OPTIONS[_photon_index], recipe.craft_cost],
+		_confirm_craft_with_photon)
 
 
 func _learn_selected() -> void:

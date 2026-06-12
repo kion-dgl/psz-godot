@@ -145,13 +145,7 @@ func _current_list_size() -> int:
 ## silent hint_label update.
 func _open_info_modal(msg: String) -> void:
 	hint_label.text = msg
-	var info_modal := ConfirmDialog.new()
-	info_modal.confirmed.connect(func() -> void:
-		_active_modal = null
-	)
-	_active_modal = info_modal
-	add_child(info_modal)
-	info_modal.info(msg)
+	ShopNav.info(self, msg)
 
 
 func _open_meseta_modal() -> void:
@@ -192,10 +186,10 @@ func _open_meseta_modal() -> void:
 
 
 func _open_move_modal() -> void:
-	var list: Array = _current_list()
-	if list.is_empty() or _selected_index >= list.size():
+	var item_v: Variant = ShopNav.selected_item(self, _current_list())
+	if item_v == null:
 		return
-	var item: Dictionary = list[_selected_index]
+	var item: Dictionary = item_v
 	var item_id: String = str(item.get("id", ""))
 	var item_name: String = str(item.get("name", item_id))
 	var available_qty: int = int(item.get("quantity", 1))
@@ -228,17 +222,7 @@ func _open_move_modal() -> void:
 	# Per-slot items (weapons, armor, units, mags, disks) always move 1
 	# at a time; QuantityDialog with max_qty=1 collapses to a confirm.
 	if Inventory._is_per_slot(item_id) or max_qty <= 1:
-		var modal := ConfirmDialog.new()
-		modal.ask("%s %s?" % [verb, item_name])
-		modal.confirmed.connect(func() -> void:
-			_active_modal = null
-			_do_item_move(1)
-		)
-		modal.cancelled.connect(func() -> void:
-			_active_modal = null
-		)
-		_active_modal = modal
-		add_child(modal)
+		ShopNav.confirm(self, "%s %s?" % [verb, item_name], func() -> void: _do_item_move(1))
 	else:
 		var qty_modal := QuantityDialog.new()
 		qty_modal.set_item(item_name, 0, max_qty, verb)
