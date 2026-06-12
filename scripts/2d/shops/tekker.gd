@@ -2,6 +2,7 @@ extends Control
 ## Tekker — grind weapons and identify unknown weapons.
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/custom-shop.png"
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 enum Mode { GRIND, IDENTIFY }
 
@@ -125,30 +126,20 @@ func _build_lists() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-		SceneManager.pop_scene()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
-		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		_mode = Mode.IDENTIFY if _mode == Mode.GRIND else Mode.GRIND
-		_selected_index = 0
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
-		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		var max_items: int = _grindable_weapons.size() if _mode == Mode.GRIND else _unidentified_weapons.size()
-		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
-		_selected_index = wrapi(_selected_index + dir, 0, maxi(max_items, 1))
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-		if _mode == Mode.GRIND:
-			_grind_selected()
-		else:
-			_identify_selected()
-		get_viewport().set_input_as_handled()
+	ShopNav.handle(self, event, {
+		"on_tab": func(_dir: int) -> void:
+			_mode = Mode.IDENTIFY if _mode == Mode.GRIND else Mode.GRIND
+			_selected_index = 0
+			_refresh_display(),
+		"list_size": func() -> int:
+			return _grindable_weapons.size() if _mode == Mode.GRIND else _unidentified_weapons.size(),
+		"on_move": func(_old: int) -> void: _refresh_display(),
+		"on_accept": func() -> void:
+			if _mode == Mode.GRIND:
+				_grind_selected()
+			else:
+				_identify_selected(),
+	})
 
 
 func _grind_selected() -> void:

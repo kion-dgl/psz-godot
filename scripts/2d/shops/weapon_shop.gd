@@ -1,6 +1,8 @@
 extends Control
 ## Weapon shop — browse and buy weapons, armor, and units via tabs.
 
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+
 enum Tab { WEAPONS, ARMOR, UNITS, SELL }
 
 const TAB_NAMES := ["Weapons", "Armor", "Units", "Sell"]
@@ -340,34 +342,15 @@ func _open_confirm_modal() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Modal owns input while open.
-	if is_instance_valid(_active_modal):
-		return
-	if event.is_action_pressed("ui_cancel"):
-		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-		SceneManager.pop_scene()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
-		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		_tab = wrapi(_tab + (1 if event.is_action_pressed("ui_right") else -1), 0, TAB_COUNT)
-		_selected_index = 0
-		if _tab == Tab.SELL:
-			_generate_sell_list()
-		_update_hint()
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
-		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
-		var old_index: int = _selected_index
-		_selected_index = wrapi(_selected_index + dir, 0, maxi(_get_current_list().size(), 1))
-		_update_hint()
-		_update_selection(old_index)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-		_open_confirm_modal()
-		get_viewport().set_input_as_handled()
+	ShopNav.handle(self, event, {
+		"modal": _active_modal,
+		"on_tab": func(dir: int) -> void: ShopNav.switch_shop_tab(self, dir, TAB_COUNT, Tab.SELL),
+		"list_size": func() -> int: return _get_current_list().size(),
+		"on_move": func(old_index: int) -> void:
+			_update_hint()
+			_update_selection(old_index),
+		"on_accept": _open_confirm_modal,
+	})
 
 
 func _buy_selected() -> void:

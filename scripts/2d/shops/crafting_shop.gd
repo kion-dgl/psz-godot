@@ -3,6 +3,7 @@ extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/synth-shop.png"
 const SHOP_UI := preload("res://scripts/2d/shops/shop_ui.gd")
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 enum Mode { CRAFT, BOARDS }
 
@@ -163,31 +164,20 @@ func _unhandled_input(event: InputEvent) -> void:
 		_handle_photon_input(event)
 		return
 
-	if event.is_action_pressed("ui_cancel"):
-		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
-		SceneManager.pop_scene()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
-		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		_mode = Mode.BOARDS if _mode == Mode.CRAFT else Mode.CRAFT
-		_selected_index = 0
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
-		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
-		var max_items: int = _craft_recipes.size() if _mode == Mode.CRAFT else _board_items.size()
-		var dir: int = -1 if event.is_action_pressed("ui_up") else 1
-		var old_index: int = _selected_index
-		_selected_index = wrapi(_selected_index + dir, 0, maxi(max_items, 1))
-		_update_selection(old_index, _selected_index)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		SfxManager.play("res://assets/sfx/ui/menu_select.wav")
-		if _mode == Mode.CRAFT:
-			_craft_selected()
-		else:
-			_open_learn_modal()
-		get_viewport().set_input_as_handled()
+	ShopNav.handle(self, event, {
+		"on_tab": func(_dir: int) -> void:
+			_mode = Mode.BOARDS if _mode == Mode.CRAFT else Mode.CRAFT
+			_selected_index = 0
+			_refresh_display(),
+		"list_size": func() -> int:
+			return _craft_recipes.size() if _mode == Mode.CRAFT else _board_items.size(),
+		"on_move": func(old_index: int) -> void: _update_selection(old_index, _selected_index),
+		"on_accept": func() -> void:
+			if _mode == Mode.CRAFT:
+				_craft_selected()
+			else:
+				_open_learn_modal(),
+	})
 
 
 func _handle_photon_input(event: InputEvent) -> void:

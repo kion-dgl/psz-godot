@@ -1,6 +1,8 @@
 extends Control
 ## Mag List — shows all mags in inventory, marks equipped, opens feeder on select.
 
+const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+
 var _mags: Array = []  # Array of {id, name, level, form, equipped}
 var _selected_index: int = 0
 
@@ -19,20 +21,13 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		SceneManager.pop_scene()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_up"):
-		_selected_index = wrapi(_selected_index - 1, 0, maxi(_mags.size(), 1))
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_down"):
-		_selected_index = wrapi(_selected_index + 1, 0, maxi(_mags.size(), 1))
-		_refresh_display()
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("ui_accept"):
-		_open_feeder()
-		get_viewport().set_input_as_handled()
+	# sfx=false: these list screens predate the shop menu sfx convention.
+	ShopNav.handle(self, event, {
+		"sfx": false,
+		"list_size": func() -> int: return _mags.size(),
+		"on_move": func(_old: int) -> void: _refresh_display(),
+		"on_accept": _open_feeder,
+	})
 
 
 func _refresh_mags() -> void:

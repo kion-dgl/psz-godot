@@ -231,10 +231,6 @@
       "jaccard": 0.96
     },
     {
-      "sig": "scripts/2d/shops/item_shop.gd:_unhandled_input#0||scripts/2d/shops/weapon_shop.gd:_unhandled_input#0",
-      "jaccard": 0.959
-    },
-    {
       "sig": "scripts/2d/warp_teleporter.gd:_enter_3d_field#0||scripts/3d/city/warp_pad.gd:_enter_3d_field#0",
       "jaccard": 0.957
     },
@@ -443,6 +439,10 @@
       "jaccard": 0.884
     },
     {
+      "sig": "scripts/2d/shops/item_shop.gd:_unhandled_input#0||scripts/2d/shops/weapon_shop.gd:_unhandled_input#0",
+      "jaccard": 0.882
+    },
+    {
       "sig": "scripts/3d/city/city_npc.gd:_apply_npc_texture#0||scripts/3d/elements/companion_npc.gd:_apply_texture#0",
       "jaccard": 0.881
     },
@@ -457,10 +457,6 @@
     {
       "sig": "scripts/3d/elements/enemy_spawn.gd:_find_animation#0||scripts/3d/enemies/enemy_base.gd:_find_animation#0",
       "jaccard": 0.88
-    },
-    {
-      "sig": "scripts/2d/mag_feeder.gd:_unhandled_input#0||scripts/2d/mag_list.gd:_unhandled_input#0",
-      "jaccard": 0.879
     },
     {
       "sig": "scripts/3d/city/warp_pad.gd:_setup_prompt#0||scripts/3d/elements/drop_base.gd:_setup_prompt#0",
@@ -511,20 +507,16 @@
       "jaccard": 0.864
     },
     {
+      "sig": "scripts/2d/mag_feeder.gd:_unhandled_input#0||scripts/2d/mag_list.gd:_unhandled_input#0",
+      "jaccard": 0.857
+    },
+    {
       "sig": "scripts/3d/field/pso_start_menu.gd:_get_item_category#0||scripts/autoloads/inventory.gd:get_item_category#0",
       "jaccard": 0.857
     },
     {
       "sig": "scripts/3d/city/city_npc.gd:_setup_prompt#0||scripts/3d/elements/drop_base.gd:_setup_prompt#0",
       "jaccard": 0.854
-    },
-    {
-      "sig": "scripts/2d/inventory_screen.gd:_unhandled_input#0||scripts/2d/mag_feeder.gd:_unhandled_input#0",
-      "jaccard": 0.853
-    },
-    {
-      "sig": "scripts/2d/inventory_screen.gd:_unhandled_input#0||scripts/2d/mag_list.gd:_unhandled_input#0",
-      "jaccard": 0.853
     },
     {
       "sig": "scripts/ui/choice_dialog.gd:_make_button#0||scripts/ui/confirm_dialog.gd:_make_button#0",
