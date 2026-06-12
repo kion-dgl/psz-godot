@@ -6,7 +6,8 @@ class_name StartWarp
 ## Animated warp surface texture identifier
 const WARP_TEXTURE_NAME := "swarp3"
 const WARP_SCROLL_SPEED := 1.35
-const MIRROR_SHADER = preload("res://scripts/3d/shaders/mirror_repeat_alpha.gdshader")
+# Alpha variant — distinct from GameElement.MIRROR_SHADER (mirror_repeat).
+const WARP_MIRROR_SHADER = preload("res://scripts/3d/shaders/mirror_repeat_alpha.gdshader")
 
 var _warp_shader_mat: ShaderMaterial = null
 var _scroll_offset: float = 0.0
@@ -30,7 +31,7 @@ func _setup_warp_material() -> void:
 			var std_mat := mat as StandardMaterial3D
 			if std_mat.albedo_texture and WARP_TEXTURE_NAME in std_mat.albedo_texture.resource_path:
 				var smat := ShaderMaterial.new()
-				smat.shader = MIRROR_SHADER
+				smat.shader = WARP_MIRROR_SHADER
 				smat.set_shader_parameter("albedo_texture", std_mat.albedo_texture)
 				smat.set_shader_parameter("mirror_x", true)
 				smat.set_shader_parameter("mirror_y", true)
