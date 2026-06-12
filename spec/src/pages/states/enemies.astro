@@ -73,6 +73,16 @@ const fsm = `stateDiagram-v2
   </table>
   <p>Plus the instant <strong>devil</strong> effect (dark element): no timer — it drops the target to ¼ HP immediately. The same status <strong>MUST NOT</strong> stack on itself; the model tints to the most recent status's colour while any effect is active.</p>
 
+  <p>The element → status routing (<code>CombatManager.ELEMENT_STATUS</code>, the single source of truth) — a successful proc picks <em>uniformly</em> among the element's statuses, so every status above <strong>MUST</strong> be reachable:</p>
+  <table>
+    <tr><th>Element</th><th>Procs</th></tr>
+    <tr><td>fire</td><td>burn</td></tr>
+    <tr><td>ice</td><td>freeze <em>or</em> slow</td></tr>
+    <tr><td>lightning</td><td>stun <em>or</em> paralysis</td></tr>
+    <tr><td>dark</td><td>poison <em>or</em> devil (instant)</td></tr>
+    <tr><td>light</td><td>sleep</td></tr>
+  </table>
+
   <h2>Per-model SFX</h2>
   <p><code>EnemyBase.ENEMY_SFX</code> is a map keyed by <code>model_id</code>, each entry naming a <code>damage</code> / <code>death</code> / <code>attack</code> / <code>idle</code> sound. On <code>_ready</code> the enemy picks up the entry for its model; a missing key resolves to silence for that enemy.</p>
 

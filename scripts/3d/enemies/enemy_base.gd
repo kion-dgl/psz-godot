@@ -55,6 +55,9 @@ var _status_effects: Array = []  # [{type: String, timer: float, dot_timer: floa
 var _is_immobilized: bool = false  # frozen/stunned(phase1)/sleeping
 var _stun_no_attack: bool = false  # stun phase 2: can move, can't attack
 const DOT_TICK_INTERVAL := 1.0
+## Model tint per timed status — every CombatManager.STATUS_EFFECTS key
+## MUST have an entry (test_element_status pins it). Devil is instant and
+## tints nothing; its damage number uses its own purple.
 const STATUS_COLORS := {
 	"freeze": Color(0.5, 0.7, 1.0),
 	"burn": Color(1.0, 0.6, 0.3),
@@ -62,6 +65,7 @@ const STATUS_COLORS := {
 	"sleep": Color(0.7, 0.5, 0.9),
 	"poison": Color(0.5, 0.9, 0.3),
 	"slow": Color(0.6, 0.6, 0.8),
+	"paralysis": Color(0.95, 0.82, 0.15),
 }
 
 ## Target reticle (shown when player is targeting this enemy)
@@ -906,7 +910,7 @@ func hide_reticle() -> void:
 # ── Status Effects ──────────────────────────────────────────────────────────
 
 func _try_apply_status(hit_element: String, level: int) -> void:
-	var status_type: String = CombatManager.ELEMENT_TO_STATUS.get(hit_element, "")
+	var status_type: String = CombatManager.roll_element_status(hit_element)
 	if status_type.is_empty():
 		return
 
