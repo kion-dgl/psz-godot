@@ -1,31 +1,7 @@
 {
   "_comment": "Accepted dead-code candidates \u2014 functions referenced nowhere else across .gd + .tscn (EPIC #295). Conservative (name-based), so triage before deleting. --check fails on any candidate NOT here; --update-baseline after cleanup.",
   "accepted_dead": [
-    "scripts/2d/components/combat_log.gd:add_damage#0",
-    "scripts/2d/components/combat_log.gd:add_heal#0",
-    "scripts/2d/components/combat_log.gd:add_info#0",
-    "scripts/2d/components/combat_log.gd:add_loot#0",
-    "scripts/2d/components/combat_log.gd:clear_log#0",
-    "scripts/3d/enemies/enemy_base.gd:_spawn_meseta_drop#0",
-    "scripts/3d/enemies/enemy_base.gd:set_enemy_data#0",
-    "scripts/3d/player/player.gd:get_combo_state#0",
-    "scripts/autoloads/combat_manager.gd:is_enemy_aggroed#0",
-    "scripts/autoloads/enemy_registry.gd:get_all_enemy_ids#0",
-    "scripts/autoloads/enemy_registry.gd:get_enemies_by_element#0",
-    "scripts/autoloads/enemy_registry.gd:get_enemies_in_location#0",
-    "scripts/autoloads/enemy_registry.gd:has_enemy#0",
-    "scripts/autoloads/enemy_spawner.gd:get_enemy_pool#0",
-    "scripts/autoloads/photon_art_registry.gd:get_arts_by_class#0",
     "scripts/autoloads/save_manager.gd:delete_save#0",
-    "scripts/autoloads/save_manager.gd:has_save#0",
-    "scripts/autoloads/technique_manager.gd:get_all_technique_ids#0",
-    "scripts/resources/armor_data.gd:get_defense_at_grind#0",
-    "scripts/resources/armor_data.gd:get_evasion_at_grind#0",
-    "scripts/resources/armor_data.gd:get_total_resistance#0",
-    "scripts/resources/enemy_data.gd:get_attack_for_difficulty#0",
-    "scripts/resources/enemy_data.gd:get_behavior_name#0",
-    "scripts/resources/enemy_data.gd:get_element_name#0",
-    "scripts/resources/enemy_data.gd:get_hp_for_difficulty#0",
-    "scripts/resources/enemy_data.gd:get_meseta_drop#0"
+    "scripts/autoloads/save_manager.gd:has_save#0"
   ]
 }

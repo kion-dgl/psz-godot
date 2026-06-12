@@ -256,7 +256,3 @@ func get_disk_price(technique_id: String, level: int) -> int:
 func get_technique(technique_id: String) -> Dictionary:
 	return TECHNIQUES.get(technique_id, {})
 
-
-## Get all technique IDs
-func get_all_technique_ids() -> Array:
-	return TECHNIQUES.keys()

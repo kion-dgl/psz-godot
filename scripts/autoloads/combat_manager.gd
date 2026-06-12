@@ -1161,13 +1161,6 @@ func aggro_on_attack(target_index: int) -> void:
 					neighbor["aggroed"] = true
 
 
-## Check if an enemy is aggroed (for UI display)
-func is_enemy_aggroed(index: int) -> bool:
-	if index < 0 or index >= _enemies.size():
-		return false
-	return _enemies[index].get("aggroed", false)
-
-
 ## Generate drops when an enemy is defeated
 func generate_drops(enemy: Dictionary) -> Array:
 	var drops: Array = []

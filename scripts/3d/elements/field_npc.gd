@@ -83,7 +83,7 @@ func _load_npc_model() -> void:
 	if not tex_path.is_empty():
 		var tex := load(tex_path) as Texture2D
 		if tex:
-			_apply_texture(model, tex)
+			MeshUtils.apply_texture(model, tex, false)
 
 
 func _spawn_capsule_placeholder() -> void:
@@ -147,19 +147,6 @@ func _find_hud() -> CanvasLayer:
 				return hud as CanvasLayer
 		node = node.get_parent()
 	return null
-
-
-func _apply_texture(node: Node, tex: Texture2D) -> void:
-	if node is MeshInstance3D:
-		var mi := node as MeshInstance3D
-		for i in range(mi.get_surface_override_material_count()):
-			var mat := mi.get_active_material(i)
-			if mat is StandardMaterial3D:
-				var new_mat := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-				new_mat.albedo_texture = tex
-				mi.set_surface_override_material(i, new_mat)
-	for child in node.get_children():
-		_apply_texture(child, tex)
 
 
 func _apply_state() -> void:

@@ -210,7 +210,3 @@ func _get_enemy_element(enemy_id: String) -> String:
 	# Native-type enemies (default)
 	return "native"
 
-
-## Get the enemy pool for an area
-func get_enemy_pool(area_id: String) -> Dictionary:
-	return _enemy_pools.get(area_id, {})

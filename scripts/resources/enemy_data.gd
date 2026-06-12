@@ -91,48 +91,6 @@ enum BehaviorType {
 @export var collision_height: float = 1.5
 
 
-## Get element as string
-func get_element_name() -> String:
-	match element:
-		Element.NATIVE: return "Native"
-		Element.BEAST: return "Beast"
-		Element.MACHINE: return "Machine"
-		Element.DARK: return "Dark"
-	return "Unknown"
-
-
-## Get behavior as string
-func get_behavior_name() -> String:
-	match behavior:
-		BehaviorType.MELEE: return "Melee"
-		BehaviorType.RANGED: return "Ranged"
-		BehaviorType.CHARGER: return "Charger"
-		BehaviorType.SWARM: return "Swarm"
-		BehaviorType.TANK: return "Tank"
-		BehaviorType.BOSS: return "Boss"
-	return "Unknown"
-
-
-## Get HP scaled for difficulty (1.0 = normal, 1.5 = hard, 2.0 = super hard)
-func get_hp_for_difficulty(difficulty_mult: float = 1.0) -> int:
-	return int(hp_base * difficulty_mult)
-
-
-## Get attack scaled for difficulty
-func get_attack_for_difficulty(difficulty_mult: float = 1.0) -> int:
-	return int(attack_base * difficulty_mult)
-
-
-## Get random meseta drop amount
-func get_meseta_drop() -> int:
-	return randi_range(meseta_min, meseta_max)
-
-
-## Check if enemy spawns in a location
-func spawns_in(location: String) -> bool:
-	return location in locations
-
-
 ## Get model resource path
 func get_model_path() -> String:
 	if model_id.is_empty():

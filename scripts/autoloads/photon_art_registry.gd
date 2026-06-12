@@ -25,10 +25,3 @@ func get_arts_by_weapon_type(weapon_type: String) -> Array:
 		if art.weapon_type == weapon_type:
 			result.append(art)
 	return result
-
-func get_arts_by_class(class_type: String) -> Array:
-	var result: Array = []
-	for art in _arts.values():
-		if art.class_type == class_type:
-			result.append(art)
-	return result

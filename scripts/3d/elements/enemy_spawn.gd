@@ -231,13 +231,7 @@ func _apply_enemy_texture() -> void:
 func _apply_texture(texture: Texture2D) -> void:
 	if not model:
 		return
-	apply_to_all_materials(func(mat: Material, mesh: MeshInstance3D, surface: int):
-		if mat is StandardMaterial3D:
-			var dup := (mat as StandardMaterial3D).duplicate() as StandardMaterial3D
-			dup.albedo_texture = texture
-			dup.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-			mesh.set_surface_override_material(surface, dup)
-	)
+	MeshUtils.apply_texture(model, texture)
 
 
 func _apply_state() -> void:

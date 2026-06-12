@@ -77,22 +77,6 @@ func get_type_name() -> String:
 	return "Unknown"
 
 
-## Get defense at specific grind level
-func get_defense_at_grind(grind: int) -> int:
-	if max_grind <= 0:
-		return defense_base
-	var t = clampf(float(grind) / float(max_grind), 0.0, 1.0)
-	return int(lerpf(defense_base, defense_max, t))
-
-
-## Get evasion at specific grind level
-func get_evasion_at_grind(grind: int) -> int:
-	if max_grind <= 0:
-		return evasion_base
-	var t = clampf(float(grind) / float(max_grind), 0.0, 1.0)
-	return int(lerpf(evasion_base, evasion_max, t))
-
-
 ## Check if a class can use this armor
 func can_be_used_by(class_name_str: String) -> bool:
 	if usable_by.is_empty():
@@ -107,7 +91,3 @@ func get_rarity_string() -> String:
 		stars += "★"
 	return stars
 
-
-## Get total elemental resistance
-func get_total_resistance() -> int:
-	return resist_fire + resist_ice + resist_lightning + resist_light + resist_dark
