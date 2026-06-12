@@ -421,7 +421,7 @@ func _process_follow(_delta: float) -> void:
 	var delayed_state: int = entry_a["state"]
 
 	# Mirror the delayed player animation state
-	# IDLE=0, WALKING=1, RUNNING=2, SPRINTING=3
+	# IDLE=0, WALKING=1, RUNNING=2 (anything past IDLE counts as moving)
 	var is_moving: bool = delayed_state >= 1
 
 	if is_moving:
