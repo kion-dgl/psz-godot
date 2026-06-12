@@ -57,6 +57,7 @@ func _ready() -> void:
 	test_game_element_override_textured_material()
 	test_shop_ui_setup_portrait()
 	test_shop_nav()
+	test_shop_confirm()
 	test_character_appearance()
 	test_valley_grid()
 	test_field_config()
@@ -2923,6 +2924,53 @@ static func _nav_event(action: String) -> InputEventAction:
 	ev.action = action
 	ev.pressed = true
 	return ev
+
+
+# ── ShopNav confirm flow — shared modal lifecycle (#274 inc 4) ──
+# Characterizes the _active_modal guard contract: selected_item bounds,
+# confirm() owning set/clear of _active_modal around on_yes/on_cancel,
+# info() doing the same for single-button error modals.
+func test_shop_confirm() -> void:
+	print("── ShopNav confirm flow — shared modal lifecycle ──")
+	const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
+	var stub := GDScript.new()
+	stub.source_code = "extends Control\nvar _selected_index: int = 0\nvar _active_modal: Control = null\n"
+	stub.reload()
+	var shop: Control = stub.new()
+	add_child(shop)
+
+	# selected_item guard
+	assert_eq(ShopNav.selected_item(shop, []), null, "selected_item: empty list → null")
+	shop.set("_selected_index", 2)
+	assert_eq(ShopNav.selected_item(shop, ["a", "b"]), null, "selected_item: index OOB → null")
+	shop.set("_selected_index", 1)
+	assert_eq(ShopNav.selected_item(shop, ["a", "b"]), "b", "selected_item: in bounds → entry")
+
+	# confirm(): modal owns _active_modal; confirmed → clear + on_yes
+	var fired: Array = []
+	ShopNav.confirm(shop, "Buy?", func() -> void: fired.append("yes"))
+	var modal: Control = shop.get("_active_modal")
+	assert_true(is_instance_valid(modal), "confirm() sets _active_modal")
+	assert_true(modal.get_parent() == shop, "modal added under the shop")
+	modal.confirmed.emit()
+	assert_eq(shop.get("_active_modal"), null, "confirmed releases _active_modal")
+	assert_eq(fired, ["yes"], "on_yes ran")
+
+	# confirm(): cancelled → clear + on_cancel
+	ShopNav.confirm(shop, "Sell?", func() -> void: fired.append("yes2"),
+		func() -> void: fired.append("no"))
+	(shop.get("_active_modal") as Control).cancelled.emit()
+	assert_eq(shop.get("_active_modal"), null, "cancelled releases _active_modal")
+	assert_eq(fired, ["yes", "no"], "on_cancel ran, on_yes didn't")
+
+	# info(): single-button dismiss → clear + on_dismiss
+	ShopNav.info(shop, "Inventory full!", func() -> void: fired.append("ok"))
+	(shop.get("_active_modal") as Control).confirmed.emit()
+	assert_eq(shop.get("_active_modal"), null, "info dismiss releases _active_modal")
+	assert_eq(fired, ["yes", "no", "ok"], "on_dismiss ran")
+
+	shop.free()
+	print("")
 
 
 # ── Character Appearance tests ─────────────────────────────────

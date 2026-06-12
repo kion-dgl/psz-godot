@@ -179,10 +179,10 @@ func _get_current_list() -> Array:
 
 
 func _open_confirm_modal() -> void:
-	var list := _get_current_list()
-	if list.is_empty() or _selected_index >= list.size():
+	var item_v: Variant = ShopNav.selected_item(self, _get_current_list())
+	if item_v == null:
 		return
-	var item: Dictionary = list[_selected_index]
+	var item: Dictionary = item_v
 
 	# DISKS and SELL: simple yes/no, qty=1.
 	if _tab == Tab.DISKS:
@@ -223,14 +223,7 @@ func _open_item_buy(item: Dictionary) -> void:
 		# buy button was broken (psobb/dashgl playtest 2026-05-07).
 		var msg: String = "Not enough meseta!" if meseta_cap <= 0 else "Inventory full!"
 		hint_label.text = msg
-		var info_modal := ConfirmDialog.new()
-		info_modal.confirmed.connect(func() -> void:
-			_active_modal = null
-			_update_hint()
-		)
-		_active_modal = info_modal
-		add_child(info_modal)
-		info_modal.info(msg)
+		ShopNav.info(self, msg, _update_hint)
 		return
 
 	var modal := QuantityDialog.new()
@@ -251,35 +244,13 @@ func _open_item_buy(item: Dictionary) -> void:
 func _open_disk_confirm(item: Dictionary) -> void:
 	var disk_name: String = str(item.get("name", "???"))
 	var cost: int = int(item.get("cost", 0))
-	var modal := ConfirmDialog.new()
-	modal.ask("Buy %s for %d M?" % [disk_name, cost])
-	modal.confirmed.connect(func() -> void:
-		_active_modal = null
-		_buy_disk()
-	)
-	modal.cancelled.connect(func() -> void:
-		_active_modal = null
-		_update_hint()
-	)
-	_active_modal = modal
-	add_child(modal)
+	ShopNav.confirm(self, "Buy %s for %d M?" % [disk_name, cost], _buy_disk, _update_hint)
 
 
 func _open_sell_confirm(item: Dictionary) -> void:
 	var name_str: String = str(item.get("name", "???"))
 	var sell_price: int = int(item.get("sell_price", 0))
-	var modal := ConfirmDialog.new()
-	modal.ask("Sell %s for %d M?" % [name_str, sell_price])
-	modal.confirmed.connect(func() -> void:
-		_active_modal = null
-		_sell_selected()
-	)
-	modal.cancelled.connect(func() -> void:
-		_active_modal = null
-		_update_hint()
-	)
-	_active_modal = modal
-	add_child(modal)
+	ShopNav.confirm(self, "Sell %s for %d M?" % [name_str, sell_price], _sell_selected, _update_hint)
 
 
 func _buy_item(item_name: String, unit_cost: int, qty: int) -> void:

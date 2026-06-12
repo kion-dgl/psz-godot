@@ -305,10 +305,10 @@ func _can_buy(item: Dictionary) -> Dictionary:
 
 
 func _open_confirm_modal() -> void:
-	var list := _get_current_list()
-	if list.is_empty() or _selected_index >= list.size():
+	var item_v: Variant = ShopNav.selected_item(self, _get_current_list())
+	if item_v == null:
 		return
-	var item: Dictionary = list[_selected_index]
+	var item: Dictionary = item_v
 	var prompt: String
 	var on_yes: Callable
 	if _tab == Tab.SELL:
@@ -327,18 +327,7 @@ func _open_confirm_modal() -> void:
 		prompt = "Buy %s for %d M?" % [str(item.get("name", "???")), cost]
 		on_yes = _buy_selected
 
-	var modal := ConfirmDialog.new()
-	modal.ask(prompt)
-	modal.confirmed.connect(func() -> void:
-		_active_modal = null
-		on_yes.call()
-	)
-	modal.cancelled.connect(func() -> void:
-		_active_modal = null
-		_update_hint()
-	)
-	_active_modal = modal
-	add_child(modal)
+	ShopNav.confirm(self, prompt, on_yes, _update_hint)
 
 
 func _unhandled_input(event: InputEvent) -> void:

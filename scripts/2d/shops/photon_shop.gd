@@ -62,9 +62,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _open_confirm_modal() -> void:
-	if _selected_index >= EXCHANGE_ITEMS.size():
+	var item_v: Variant = ShopNav.selected_item(self, EXCHANGE_ITEMS)
+	if item_v == null:
 		return
-	var item: Dictionary = EXCHANGE_ITEMS[_selected_index]
+	var item: Dictionary = item_v
 	var cost: int = int(item["cost"])
 	var item_name: String = item["name"]
 
@@ -88,30 +89,14 @@ func _open_confirm_modal() -> void:
 		# debug_mag freebies — no PD spend
 		prompt = "Take %s?" % item_name
 
-	var modal := ConfirmDialog.new()
-	modal.ask(prompt)
-	modal.confirmed.connect(func() -> void:
-		_active_modal = null
-		_exchange_selected()
-	)
-	modal.cancelled.connect(func() -> void:
-		_active_modal = null
-	)
-	_active_modal = modal
-	add_child(modal)
+	ShopNav.confirm(self, prompt, _exchange_selected)
 
 
 ## Open a single-button info modal for blocking error states (not enough
 ## photon drops, inventory full, etc.) so the failure is unmissable.
 func _open_info_modal(msg: String) -> void:
 	hint_label.text = msg
-	var info_modal := ConfirmDialog.new()
-	info_modal.confirmed.connect(func() -> void:
-		_active_modal = null
-	)
-	_active_modal = info_modal
-	add_child(info_modal)
-	info_modal.info(msg)
+	ShopNav.info(self, msg)
 
 
 func _exchange_selected() -> void:
