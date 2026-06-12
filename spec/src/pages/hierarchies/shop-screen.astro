@@ -1,0 +1,39 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Shop / List-Screen Contract" section="Hierarchies">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>This is the one hierarchy that is deliberately <strong>not</strong> a class hierarchy: a cross-script base class on a lazily-loaded screen fails to resolve at runtime in the Android export (<code>Could not resolve class "ShopBase"</code> — every shop became unopenable; see <code>docs/shop-dedup.md</code>). The grouping goal is identical — shared behavior in one place, screens only owning what's theirs — but the mechanism is <strong>preloaded static helpers</strong>. Screens <code>preload()</code> and delegate.</p>
+
+  <h2>What the helpers own</h2>
+  <table>
+    <tr><th>Helper</th><th>Owns</th></tr>
+    <tr><td><code>ShopNav.handle(screen, event, opts)</code></td><td>The input skeleton: modal guard → cancel → tab keys → up/down selection wrap → accept → screen-specific tail. Uniform SFX and input-as-handled.</td></tr>
+    <tr><td><code>ShopNav.switch_shop_tab</code></td><td>The buy/sell tab switch (wrap, selection reset, sell-list regen).</td></tr>
+    <tr><td><code>ShopNav.selected_item / confirm / info</code></td><td>The selected-row bounds guard and the ConfirmDialog lifecycle — building the modal, owning <code>_active_modal</code> set/release, callback ordering.</td></tr>
+    <tr><td><code>ShopUI.setup_portrait</code></td><td>The shared two-column panel layout.</td></tr>
+  </table>
+
+  <h2>What a screen MUST provide</h2>
+  <ul>
+    <li><code>var _selected_index: int</code> (when using selection) and <code>var _active_modal: Control</code> (when using modals) — the helpers read/write these by name.</li>
+    <li>Hooks via the <code>opts</code> dictionary: <code>list_size</code>, <code>on_move</code>, <code>on_accept</code>, <code>on_tab</code>, <code>on_cancel</code>, <code>on_other</code> — omitted hooks make those keys fall through. Per-screen content rendering (<code>_refresh_display</code>) stays per-screen by design.</li>
+    <li>Historically-silent screens pass <code>sfx: false</code>; behavior changes (gaining sfx) are deliberate, not side effects.</li>
+  </ul>
+
+  <h2>Invariants</h2>
+  <ul>
+    <li>Screens MUST NOT hand-roll the input skeleton or the modal lifecycle — a new list screen that doesn't delegate to <code>ShopNav</code> is reintroducing the nine-copy drift #274 removed (the dup ratchet will flag it).</li>
+    <li>While <code>_active_modal</code> is valid, the modal owns input — both the helper and any screen-local <code>_process</code> polling MUST respect it.</li>
+    <li>Buy affordance is <em>disabled rows with reasons</em>, never rejection modals on confirm (see <code>/mechanics/shops</code>).</li>
+    <li>Screens MUST NOT gain a <code>class_name</code> base — if a future Godot release fixes the Android resolution bug, migrate deliberately, not opportunistically.</li>
+  </ul>
+
+  <h2>Autopilot coupling (a real constraint, not a footnote)</h2>
+  <p>The autopilot drives these screens by reading their privates via <code>node.get("_selected_index")</code>-style access. Renaming or relocating a screen's state variables MUST be paired with a grep of <code>autopilot.gd</code> — <code>get()</code> on a missing property returns null silently and the sanity gate times out (the #335 incident).</p>
+
+  <h2>Testing</h2>
+  <p>The helper contract is pinned by <code>test_shop_nav</code> / <code>test_shop_confirm</code> (synthesized input events against a stub screen). New screens get a logic-level test plus coverage in the shop-smoke / shops matrix phase.</p>
+</Concept>
