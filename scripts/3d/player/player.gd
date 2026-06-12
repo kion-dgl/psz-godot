@@ -4,7 +4,6 @@ extends CharacterBody3D
 
 # Movement settings
 const MOVE_SPEED: float = 6.0
-const SPRINT_SPEED: float = 8.0
 const WALK_SPEED: float = 2.5
 const WALK_TO_RUN_DELAY: float = 1.2
 const ROTATE_SPEED: float = 10.0
@@ -23,7 +22,6 @@ enum PlayerState {
 	IDLE,
 	WALKING,
 	RUNNING,
-	SPRINTING,
 	ATTACKING,
 	DODGING,
 	DAMAGED,
@@ -59,7 +57,6 @@ var _anim_prefix: String = DEFAULT_ANIM_PREFIX_M
 # Gender-aware walk/run/sprint animation names
 var _walk_anim: String = "pmsa_walk"
 var _run_anim: String = "pmsa_run_pso"
-var _sprint_anim: String = ""  # Set in _load_weapon_animations; empty = use _anim_prefix + "_run"
 var _is_female: bool = false
 
 # Default asset paths (fallback when no character data)
@@ -183,7 +180,6 @@ signal tech_charge_released(slot: int)
 var _footstep_timer: float = 0.0
 const FOOTSTEP_WALK_INTERVAL := 0.55
 const FOOTSTEP_RUN_INTERVAL := 0.40
-const FOOTSTEP_SPRINT_INTERVAL := 0.30
 
 # Footstep samples keyed by (terrain, race). PSO uses a single sample per combo
 # (no step1/step2 alternation). Terrain is resolved from the current area id;
@@ -415,31 +411,14 @@ func _load_weapon_animations() -> void:
 					new_anim.loop_mode = Animation.LOOP_LINEAR
 					lib.add_animation(anim_name, new_anim)
 
-	# Set gender-aware walk/run/sprint animation names
+	# Set gender-aware walk/run animation names
 	if _is_female:
 		_walk_anim = "pwsa_walk" if lib.has_animation("pwsa_walk") else "pmsa_walk"
 		_run_anim = "pwsa_run_pso" if lib.has_animation("pwsa_run_pso") else "pmsa_run_pso"
-		# Sprint uses weapon-specific run; search for best pw*_run in library
-		var female_sprint := _anim_prefix + "_run"
-		if not lib.has_animation(female_sprint):
-			for anim_name in lib.get_animation_list():
-				if anim_name.begins_with("pw") and anim_name.ends_with("_run") and not anim_name.ends_with("_run_pso"):
-					female_sprint = anim_name
-					break
-		_sprint_anim = female_sprint
 	else:
 		_walk_anim = "pmsa_walk"
 		_run_anim = "pmsa_run_pso"
-		_sprint_anim = _anim_prefix + "_run"
-		# Sprint fallback (mirrors female logic above): some prefix sets don't
-		# ship a `<prefix>_run` (e.g. pmbn/unarmed reuses pmsa_run from
-		# common_m.glb). Fall back to any pm*_run that's actually in the lib.
-		if not lib.has_animation(_sprint_anim):
-			for anim_name in lib.get_animation_list():
-				if anim_name.begins_with("pm") and anim_name.ends_with("_run") and not anim_name.ends_with("_run_pso"):
-					_sprint_anim = anim_name
-					break
-	print("[Player] Walk=%s, Run=%s, Sprint=%s" % [_walk_anim, _run_anim, _sprint_anim])
+	print("[Player] Walk=%s, Run=%s" % [_walk_anim, _run_anim])
 
 	# Replace existing library
 	if animation_player.has_animation_library(""):
@@ -871,7 +850,7 @@ func _physics_process(delta: float) -> void:
 
 	# Handle state-specific logic
 	match current_state:
-		PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING, PlayerState.SPRINTING:
+		PlayerState.IDLE, PlayerState.WALKING, PlayerState.RUNNING:
 			_handle_movement(delta)
 		PlayerState.DODGING:
 			_handle_dodge(delta)
@@ -898,12 +877,10 @@ func _physics_process(delta: float) -> void:
 		model.rotation.y = player_rotation
 
 	# Footstep sounds
-	if is_on_floor() and current_state in [PlayerState.WALKING, PlayerState.RUNNING, PlayerState.SPRINTING]:
+	if is_on_floor() and current_state in [PlayerState.WALKING, PlayerState.RUNNING]:
 		var interval: float = FOOTSTEP_WALK_INTERVAL
 		if current_state == PlayerState.RUNNING:
 			interval = FOOTSTEP_RUN_INTERVAL
-		elif current_state == PlayerState.SPRINTING:
-			interval = FOOTSTEP_SPRINT_INTERVAL
 		_footstep_timer -= delta
 		if _footstep_timer <= 0:
 			_footstep_timer = interval
@@ -1032,9 +1009,7 @@ func _handle_movement(delta: float) -> void:
 		player_rotation += rot_diff * ROTATE_SPEED * delta
 
 		# State transitions: IDLE → WALKING → RUNNING
-		if current_state == PlayerState.SPRINTING:
-			transition_to(PlayerState.RUNNING)
-		elif current_state == PlayerState.IDLE:
+		if current_state == PlayerState.IDLE:
 			walk_timer = 0.0
 			transition_to(PlayerState.WALKING)
 		elif current_state == PlayerState.WALKING:
@@ -1046,8 +1021,6 @@ func _handle_movement(delta: float) -> void:
 		var speed: float = MOVE_SPEED
 		if current_state == PlayerState.WALKING:
 			speed = WALK_SPEED
-		elif current_state == PlayerState.SPRINTING:
-			speed = SPRINT_SPEED
 
 		# Scale speed by facing-error so sharp turns tighten instead of skating
 		# forward in the old direction while rotation catches up.
@@ -1086,8 +1059,8 @@ func _handle_movement(delta: float) -> void:
 		velocity.x = 0
 		velocity.z = 0
 
-		# Switch to idle if walking, running, or sprinting
-		if current_state in [PlayerState.WALKING, PlayerState.RUNNING, PlayerState.SPRINTING]:
+		# Switch to idle if walking or running
+		if current_state in [PlayerState.WALKING, PlayerState.RUNNING]:
 			walk_timer = 0.0
 			transition_to(PlayerState.IDLE)
 
@@ -2103,7 +2076,9 @@ func _update_charge_visual(delta: float) -> void:
 
 
 func transition_to(new_state: PlayerState) -> void:
-	if _charging_slot >= 0 and new_state in [PlayerState.DAMAGED, PlayerState.DOWN]:
+	# A mid-charge technique drops on damage, knockdown, or dodging
+	# (#273, spec /states/player-state) — rolling releases the charge.
+	if _charging_slot >= 0 and new_state in [PlayerState.DAMAGED, PlayerState.DOWN, PlayerState.DODGING]:
 		var slot := _charging_slot
 		_charging_slot = -1
 		_charging_tech_id = ""
@@ -2133,8 +2108,6 @@ func transition_to(new_state: PlayerState) -> void:
 			play_animation(_walk_anim, true)
 		PlayerState.RUNNING:
 			play_animation(_run_anim, true)
-		PlayerState.SPRINTING:
-			play_animation(_sprint_anim, true)
 		PlayerState.DODGING:
 			play_animation(_anim_prefix + "_esc_f", false)
 		PlayerState.DAMAGED, PlayerState.DOWN:
@@ -2209,6 +2182,11 @@ func _on_animation_finished(_anim_name: String) -> void:
 func take_damage(damage: int, _knockback: Vector3 = Vector3.ZERO) -> void:
 	# Already dead — ignore further hits
 	if current_state == PlayerState.DOWN and GameState.hp <= 0:
+		return
+
+	# Dodge i-frames (#273, spec /mechanics/dodge): the roll's move phase
+	# grants invincibility; the recovery (crouch + rise) is vulnerable.
+	if current_state == PlayerState.DODGING and dodge_timer < dodge_move_end:
 		return
 
 	GameState.set_hp(GameState.hp - damage)

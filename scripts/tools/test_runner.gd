@@ -17,6 +17,7 @@ func _ready() -> void:
 	test_inventory_capacity()
 	test_character_creation()
 	test_equipment()
+	test_player_states()
 	test_element_status()
 	test_combat_math()
 	test_combat_drops()
@@ -382,6 +383,56 @@ func test_equipment() -> void:
 	# Restore saber for further tests
 	equipment["weapon"] = "saber"
 	Inventory.remove_item("blade", 1)
+	print("")
+
+
+# ── Player state table (#273, spec /states/player-state) ───────
+# Pins the PlayerState enum: locomotion is exactly IDLE/WALKING/RUNNING
+# (SPRINTING removed — a future "cleanup" can't quietly re-add an
+# unreachable state), STUNNED stays reserved, and the full state set
+# matches the spec's table.
+func test_player_states() -> void:
+	print("── Player State Table ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var states: Dictionary = PlayerScript.PlayerState
+	assert_true(not states.has("SPRINTING"), "SPRINTING removed from PlayerState (#273)")
+	var expected := ["IDLE", "WALKING", "RUNNING", "ATTACKING", "DODGING",
+		"DAMAGED", "DOWN", "STUNNED", "CUTSCENE"]
+	assert_eq(states.keys(), expected, "PlayerState matches the spec's state table exactly")
+	# Call through a typed GDScript var — a direct PlayerScript.method()
+	# resolves as a static call, not a Resource method.
+	var player_gd: GDScript = PlayerScript
+	var consts: Dictionary = player_gd.get_script_constant_map()
+	assert_true(not consts.has("SPRINT_SPEED"), "SPRINT_SPEED constant removed")
+	assert_true(not consts.has("FOOTSTEP_SPRINT_INTERVAL"), "sprint footstep interval removed")
+
+	# Dodge i-frames (spec /mechanics/dodge): the roll's move phase grants
+	# invincibility; the recovery is vulnerable. Off-tree instance —
+	# take_damage's i-frame return fires before any tree-dependent call.
+	var p = PlayerScript.new()
+	var hp_full: int = GameState.max_hp
+	GameState.set_hp(hp_full)
+	p.current_state = states["DODGING"]
+	p.dodge_timer = 0.1
+	p.dodge_move_end = 0.5
+	p.take_damage(25)
+	assert_eq(GameState.hp, hp_full, "move-phase dodge ignores damage (i-frames)")
+	p.dodge_timer = 0.6  # past move_end → recovery, vulnerable
+	p.take_damage(5)
+	assert_eq(GameState.hp, hp_full - 5, "recovery-phase dodge still takes damage")
+	GameState.set_hp(hp_full)
+
+	# Charge-cancel on DODGING (spec /states/player-state): a mid-charge
+	# technique drops on entering DODGING, releasing the slot.
+	var released: Array = []
+	p.tech_charge_released.connect(func(slot: int) -> void: released.append(slot))
+	p._charging_slot = 2
+	p.transition_to(states["WALKING"])
+	assert_eq(p._charging_slot, 2, "charge survives a locomotion transition")
+	p.transition_to(states["DODGING"])
+	assert_eq(p._charging_slot, -1, "entering DODGING releases the charge")
+	assert_eq(released, [2], "tech_charge_released fired with the charged slot")
+	p.free()
 	print("")
 
 
