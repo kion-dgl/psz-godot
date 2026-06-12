@@ -706,14 +706,18 @@ func _after(seconds: float, cb: Callable) -> void:
 
 
 # ── Character-create wizard ────────────────────────────────────
-## Walk the create wizard by its _step (CLASS_SELECT=0, APPEARANCE=1,
-## NAME_ENTRY=2): accept defaults, then set + submit the name to fire
-## _on_name_submitted → _create_character → city. Re-arms until scene leaves.
+## Walk the create wizard by its flow step (CLASS_SELECT=0, APPEARANCE=1,
+## NAME_ENTRY=2, read from the screen's CharacterCreateState): accept
+## defaults, then set + submit the name to fire _on_name_submitted →
+## _create_character → city. Re-arms until scene leaves.
 func _drive_char_create() -> void:
 	var node := get_tree().current_scene
 	if node == null or node.scene_file_path != CHAR_CREATE:
 		return
-	var step: int = int(node.get("_step"))
+	var create_state: Object = node.get("_state")
+	if create_state == null:
+		return
+	var step: int = int(create_state.get("step"))
 	if step != _cc_acted_step:
 		_cc_acted_step = step
 		match step:
