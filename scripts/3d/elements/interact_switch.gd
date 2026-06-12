@@ -6,7 +6,7 @@ class_name InteractSwitch
 signal activated
 signal deactivated
 
-const MIRROR_SHADER = preload("res://scripts/3d/shaders/mirror_repeat.gdshader")
+# MIRROR_SHADER is inherited from GameElement (same mirror_repeat shader).
 
 ## Emissive color when switch is on
 const ON_EMISSION_COLOR := Color(0, 1, 0)  # Green

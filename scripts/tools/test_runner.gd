@@ -59,6 +59,7 @@ func _ready() -> void:
 	test_shop_nav()
 	test_shop_confirm()
 	test_character_appearance()
+	test_character_create_state()
 	test_valley_grid()
 	test_field_config()
 	test_wetlands_field()
@@ -2973,6 +2974,63 @@ func test_shop_confirm() -> void:
 	print("")
 
 
+# ── CharacterCreateState — create-flow state machine (#215-D) ──
+# Characterizes the extracted state: class clamping, confirm reset,
+# appearance row/value wrap, name trimming, cast detection.
+func test_character_create_state() -> void:
+	print("── CharacterCreateState — create-flow state machine ──")
+	const CCState := preload("res://scripts/2d/character_create_state.gd")
+	var s = CCState.new()
+	s.class_list = ClassRegistry.get_all_classes()
+	assert_gt(s.class_list.size(), 0, "registry provides classes")
+
+	# move_class clamps at both edges (no wrap — edges feel like edges)
+	assert_true(not s.move_class(-1), "left edge clamps")
+	assert_true(s.move_class(1), "move right changes selection")
+	s.selected_class_index = s.class_list.size() - 1
+	assert_true(not s.move_class(1), "right edge clamps")
+
+	# confirm_class locks id, resets appearance + row, advances step
+	s.selected_class_index = 0
+	s.appearance["variation_index"] = 2
+	s.appearance_row = 3
+	s.confirm_class()
+	assert_eq(s.selected_class_id, str(s.class_list[0].id), "confirm locks hovered class id")
+	assert_eq(int(s.appearance["variation_index"]), 0, "confirm resets appearance")
+	assert_eq(s.appearance_row, 0, "confirm resets appearance row")
+	assert_eq(s.step, CCState.Step.APPEARANCE, "confirm advances to APPEARANCE")
+
+	# appearance row wraps both directions
+	s.move_appearance_row(-1)
+	assert_eq(s.appearance_row, 3, "row wraps 0 → 3 going up")
+	s.move_appearance_row(1)
+	assert_eq(s.appearance_row, 0, "row wraps 3 → 0 going down")
+
+	# value cycling wraps within PlayerConfig bounds
+	s.cycle_appearance_value(-1)
+	assert_eq(int(s.appearance["variation_index"]), PlayerConfig.HEAD_VARIATIONS - 1,
+		"head variation wraps backward to last option")
+	s.cycle_appearance_value(1)
+	assert_eq(int(s.appearance["variation_index"]), 0, "head variation wraps forward to 0")
+	s.appearance_row = 3
+	s.cycle_appearance_value(-1)
+	assert_eq(int(s.appearance["skin_tone_index"]), PlayerConfig.SKIN_TONES.size() - 1,
+		"skin tone wraps within its option count")
+
+	# name trim / empty rejection
+	assert_true(not s.set_char_name("   "), "blank name rejected")
+	assert_true(s.set_char_name("  Kai  "), "non-blank name accepted")
+	assert_eq(s.char_name, "Kai", "name is trimmed")
+
+	# cast detection follows the selected row
+	for i in range(s.class_list.size()):
+		if s.class_list[i].race == "Cast":
+			s.selected_class_index = i
+			assert_true(s.is_cast_class(), "cast class detected at index %d" % i)
+			break
+	print("")
+
+
 # ── Character Appearance tests ─────────────────────────────────
 
 func test_character_appearance() -> void:
@@ -4023,13 +4081,35 @@ func test_script_parse() -> void:
 		if path == "res://scripts/tools/test_runner.gd":
 			continue
 		var script: Resource = load(path)
-		if script == null:
+		# load() returns a GDScript resource even when compilation failed
+		# (e.g. a child redeclaring a parent const) — can_instantiate() is
+		# false in that case, so check it too, not just null.
+		if script == null or (script is GDScript and not script.can_instantiate()):
+			if script is GDScript and _compile_blocked_by_missing_pack_asset(script):
+				continue  # pack-only asset preload; absent in repo-only CI checkouts
 			_fail += 1
 			failures += 1
-			print("  FAIL: Parse error in %s" % path)
+			print("  FAIL: Parse/compile error in %s" % path)
 	if failures == 0:
 		_pass += 1
 		print("  PASS: %d scripts parsed cleanly" % paths.size())
+
+
+# Scripts that preload() pack-distributed assets (the Arweave .pck — SEGA
+# media is never committed) can't compile in a repo-only checkout like the
+# CI test job. Skip the strict can_instantiate check only when the failing
+# script preloads a res://assets/ path that doesn't exist here; on dev
+# boxes with assets present the strict check still applies in full.
+func _compile_blocked_by_missing_pack_asset(script: GDScript) -> bool:
+	for line in script.source_code.split("\n"):
+		var idx := line.find("preload(\"res://assets/")
+		if idx < 0:
+			continue
+		var start := line.find("\"", idx) + 1
+		var path := line.substr(start, line.find("\"", start) - start)
+		if not ResourceLoader.exists(path):
+			return true
+	return false
 
 
 func _collect_gd_files(dir_path: String, out: Array) -> void:

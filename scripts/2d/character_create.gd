@@ -2,8 +2,10 @@ extends Node3D
 ## Character creation screen — PSZ-themed design with Gamecube-style class select,
 ## appearance customization with 3D preview, and name entry.
 ## All UI is built programmatically on a CanvasLayer overlay.
+## Flow state (step / class / appearance / name) lives in
+## CharacterCreateState (#215-D); this script only renders and forwards input.
 
-enum Step { CLASS_SELECT, APPEARANCE, NAME_ENTRY }
+const CCState := preload("res://scripts/2d/character_create_state.gd")
 
 # ── PSZ Theme Colors ────────────────────────────────────────────
 # Sourced from web/src/storybook/MenuDesign.tsx + slats-PSZ palette.
@@ -27,21 +29,9 @@ const C_TYPE_FORCE := Color(0.25, 0.40, 1.00)             # blue
 const C_PANEL_BORDER := Color(0.478, 0.627, 0.753, 0.5)   # #7aa0c0 subtle
 
 # ── State ───────────────────────────────────────────────────────
-var _step: int = Step.CLASS_SELECT
+var _state := CCState.new()                  # step / class / appearance / name
 var _slot: int = 0
-var _class_list: Array = []                  # sorted ClassData array
-var _selected_class_index: int = 0
-var _selected_class_id: String = ""
-var _char_name: String = ""
 var _hovered_type_index: int = 0             # which type group (0=Hunter,1=Ranger,2=Force)
-
-var _appearance_row: int = 0                 # 0=head, 1=hair/bodyA, 2=costume/bodyB, 3=skin/bodyC
-var _appearance := {
-	"variation_index": 0,
-	"body_color_index": 0,
-	"hair_color_index": 0,
-	"skin_tone_index": 0,
-}
 
 # Classes grouped by type for the sidebar
 var _type_groups: Array = []                 # [{type, color, classes: [{index, data}]}]
@@ -99,11 +89,11 @@ func _ready() -> void:
 # ── Class Loading & Sorting ─────────────────────────────────────
 
 func _load_classes() -> void:
-	_class_list = ClassRegistry.get_all_classes()
+	_state.class_list = ClassRegistry.get_all_classes()
 	var type_order := {"Hunter": 0, "Ranger": 1, "Force": 2}
 	var gender_order := {"Male": 0, "Female": 1}
 	var race_order := {"Human": 0, "Newman": 1, "Cast": 2}
-	_class_list.sort_custom(func(a, b):
+	_state.class_list.sort_custom(func(a, b):
 		var ta: int = type_order.get(a.type, 9)
 		var tb: int = type_order.get(b.type, 9)
 		if ta != tb: return ta < tb
@@ -120,8 +110,8 @@ func _load_classes() -> void:
 	var type_colors := {"Hunter": C_TYPE_HUNTER, "Ranger": C_TYPE_RANGER, "Force": C_TYPE_FORCE}
 	var current_type := ""
 	var current_group: Dictionary = {}
-	for i in range(_class_list.size()):
-		var cls = _class_list[i]
+	for i in range(_state.class_list.size()):
+		var cls = _state.class_list[i]
 		if cls.type != current_type:
 			if not current_type.is_empty():
 				_type_groups.append(current_group)
@@ -136,17 +126,11 @@ func _load_classes() -> void:
 		_type_groups.append(current_group)
 
 	# Preload class art textures
-	for cls in _class_list:
+	for cls in _state.class_list:
 		var art_name: String = CLASS_ART_OVERRIDES.get(cls.id, cls.id)
 		var art_path := "res://assets/images/%s.png" % art_name
 		if ResourceLoader.exists(art_path):
 			_class_art_cache[cls.id] = load(art_path) as Texture2D
-
-
-func _is_cast_class() -> bool:
-	if _class_list.is_empty():
-		return false
-	return _class_list[_selected_class_index].race == "Cast"
 
 
 func _get_type_color(type_name: String) -> Color:
@@ -297,12 +281,12 @@ func _make_bordered_stylebox(color: Color, border_color: Color, border_width: in
 # ── Input Handling ──────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
-	match _step:
-		Step.CLASS_SELECT:
+	match _state.step:
+		CCState.Step.CLASS_SELECT:
 			_handle_class_select_input(event)
-		Step.APPEARANCE:
+		CCState.Step.APPEARANCE:
 			_handle_appearance_input(event)
-		Step.NAME_ENTRY:
+		CCState.Step.NAME_ENTRY:
 			_handle_name_entry_input(event)
 
 
@@ -312,23 +296,17 @@ func _handle_class_select_input(event: InputEvent) -> void:
 	# vertical mental model aren't stuck. Selection stops at the first /
 	# last class (no wrap), so the leftmost / rightmost feel like edges.
 	if event.is_action_pressed("ui_left") or event.is_action_pressed("ui_up"):
-		var prev := _selected_class_index
-		_selected_class_index = max(0, _selected_class_index - 1)
-		if _selected_class_index != prev:
+		if _state.move_class(-1):
 			_sync_type_from_class()
 			_update_class_select()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right") or event.is_action_pressed("ui_down"):
-		var prev := _selected_class_index
-		_selected_class_index = min(_class_list.size() - 1, _selected_class_index + 1)
-		if _selected_class_index != prev:
+		if _state.move_class(1):
 			_sync_type_from_class()
 			_update_class_select()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
-		_selected_class_id = _class_list[_selected_class_index].id
-		_appearance = {"variation_index": 0, "body_color_index": 0, "hair_color_index": 0, "skin_tone_index": 0}
-		_appearance_row = 0
+		_state.confirm_class()
 		_show_appearance()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_cancel"):
@@ -343,20 +321,20 @@ func _handle_appearance_input(event: InputEvent) -> void:
 	# (which is bound to camera_lock) used to swallow every dpad press
 	# and the accept button on Bluetooth pads with sloppy calibration.
 	if event.is_action_pressed("ui_up"):
-		_appearance_row = wrapi(_appearance_row - 1, 0, 4)
+		_state.move_appearance_row(-1)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
-		_appearance_row = wrapi(_appearance_row + 1, 0, 4)
+		_state.move_appearance_row(1)
 		_update_appearance()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_left"):
-		_cycle_appearance_value(-1)
+		_state.cycle_appearance_value(-1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_right"):
-		_cycle_appearance_value(1)
+		_state.cycle_appearance_value(1)
 		_update_appearance()
 		_update_preview_model()
 		get_viewport().set_input_as_handled()
@@ -370,22 +348,6 @@ func _handle_appearance_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-func _cycle_appearance_value(direction: int) -> void:
-	match _appearance_row:
-		0:
-			_appearance["variation_index"] = wrapi(
-				int(_appearance["variation_index"]) + direction, 0, PlayerConfig.HEAD_VARIATIONS)
-		1:
-			_appearance["hair_color_index"] = wrapi(
-				int(_appearance["hair_color_index"]) + direction, 0, PlayerConfig.HAIR_COLORS.size())
-		2:
-			_appearance["body_color_index"] = wrapi(
-				int(_appearance["body_color_index"]) + direction, 0, PlayerConfig.BODY_COLORS.size())
-		3:
-			_appearance["skin_tone_index"] = wrapi(
-				int(_appearance["skin_tone_index"]) + direction, 0, PlayerConfig.SKIN_TONES.size())
-
-
 func _handle_name_entry_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_show_appearance()
@@ -395,7 +357,7 @@ func _handle_name_entry_input(event: InputEvent) -> void:
 # ── Step 1: CLASS SELECT (Gamecube style) ───────────────────────
 
 func _sync_type_from_class() -> void:
-	var cls = _class_list[_selected_class_index]
+	var cls = _state.class_list[_state.selected_class_index]
 	for gi in range(_type_groups.size()):
 		if _type_groups[gi]["type"] == cls.type:
 			_hovered_type_index = gi
@@ -403,7 +365,7 @@ func _sync_type_from_class() -> void:
 
 
 func _show_class_select() -> void:
-	_step = Step.CLASS_SELECT
+	_state.step = CCState.Step.CLASS_SELECT
 	_title_label.text = "SELECT CLASS"
 	_hint_label.text = "◀  ▶  NAVIGATE          A · CONFIRM          ESC · BACK"
 	# Restore PSZ chrome (in case we came back from APPEARANCE which hid the bg)
@@ -429,7 +391,7 @@ func _update_class_select() -> void:
 	# themselves persist across navigation; only the selection state animates.
 	# Ported from web/src/character-select/SlatsView.tsx (slats-PSZ palette).
 	if _slats_building:
-		# An initial build is in flight; it'll re-read _selected_class_index
+		# An initial build is in flight; it'll re-read _state.selected_class_index
 		# when it finishes via its trailing _animate_to_selection(false), so
 		# the latest input wins. Don't kick off a parallel build.
 		return
@@ -446,11 +408,11 @@ func _build_class_select_slats() -> void:
 	await get_tree().process_frame
 
 	# Sort by type, preserving original index so the input handler can keep
-	# operating on _class_list indices.
+	# operating on _state.class_list indices.
 	var sorted_entries: Array = []
 	for type_name in ["Hunter", "Ranger", "Force"]:
-		for i in range(_class_list.size()):
-			var c = _class_list[i]
+		for i in range(_state.class_list.size()):
+			var c = _state.class_list[i]
 			if c.type == type_name:
 				sorted_entries.append({"cls": c, "orig_index": i})
 
@@ -481,7 +443,7 @@ func _animate_to_selection(animated: bool) -> void:
 	var dur: float = SLAT_ANIM_DURATION if animated else 0.0
 
 	for d in _slat_data:
-		var is_selected: bool = (d["orig_index"] == _selected_class_index)
+		var is_selected: bool = (d["orig_index"] == _state.selected_class_index)
 		var target_ratio: float = SLAT_RATIO_SELECTED if is_selected else SLAT_RATIO_UNSELECTED
 		var overlay_alpha: float = 1.0 if is_selected else 0.0
 		var v_name_alpha: float = 0.0 if is_selected else 1.0
@@ -628,7 +590,7 @@ func _make_slat_pack(cls, orig_index: int) -> Dictionary:
 # ── Step 2: APPEARANCE ──────────────────────────────────────────
 
 func _show_appearance() -> void:
-	_step = Step.APPEARANCE
+	_state.step = CCState.Step.APPEARANCE
 	_title_label.text = "CUSTOMIZE APPEARANCE"
 	_hint_label.text = "Up/Down: Row    Left/Right: Change    Tab+L/R: Rotate    Confirm: Next    Cancel: Back"
 
@@ -682,23 +644,23 @@ func _update_appearance() -> void:
 	header_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	panel_bg.add_child(header_lbl)
 
-	var is_cast := _is_cast_class()
+	var is_cast := _state.is_cast_class()
 
 	# Row definitions: [label, current_value, max_count]
 	var rows: Array = []
 	if is_cast:
 		rows = [
-			["Head Parts", int(_appearance["variation_index"]) + 1, PlayerConfig.HEAD_VARIATIONS],
-			["Body Color A", int(_appearance["hair_color_index"]) + 1, PlayerConfig.HAIR_COLORS.size()],
-			["Body Color B", int(_appearance["body_color_index"]) + 1, PlayerConfig.BODY_COLORS.size()],
-			["Body Color C", int(_appearance["skin_tone_index"]) + 1, PlayerConfig.SKIN_TONES.size()],
+			["Head Parts", int(_state.appearance["variation_index"]) + 1, PlayerConfig.HEAD_VARIATIONS],
+			["Body Color A", int(_state.appearance["hair_color_index"]) + 1, PlayerConfig.HAIR_COLORS.size()],
+			["Body Color B", int(_state.appearance["body_color_index"]) + 1, PlayerConfig.BODY_COLORS.size()],
+			["Body Color C", int(_state.appearance["skin_tone_index"]) + 1, PlayerConfig.SKIN_TONES.size()],
 		]
 	else:
 		rows = [
-			["Head Type", int(_appearance["variation_index"]) + 1, PlayerConfig.HEAD_VARIATIONS],
-			["Hair Color", int(_appearance["hair_color_index"]) + 1, PlayerConfig.HAIR_COLORS.size()],
-			["Costume Color", int(_appearance["body_color_index"]) + 1, PlayerConfig.BODY_COLORS.size()],
-			["Skin Tone", int(_appearance["skin_tone_index"]) + 1, PlayerConfig.SKIN_TONES.size()],
+			["Head Type", int(_state.appearance["variation_index"]) + 1, PlayerConfig.HEAD_VARIATIONS],
+			["Hair Color", int(_state.appearance["hair_color_index"]) + 1, PlayerConfig.HAIR_COLORS.size()],
+			["Costume Color", int(_state.appearance["body_color_index"]) + 1, PlayerConfig.BODY_COLORS.size()],
+			["Skin Tone", int(_state.appearance["skin_tone_index"]) + 1, PlayerConfig.SKIN_TONES.size()],
 		]
 
 	var row_start_y: float = 44.0
@@ -709,7 +671,7 @@ func _update_appearance() -> void:
 		var row_label_text: String = row_data[0]
 		var current_val: int = row_data[1]
 		var max_val: int = row_data[2]
-		var is_selected := (i == _appearance_row)
+		var is_selected := (i == _state.appearance_row)
 		var ry: float = row_start_y + i * row_height
 
 		# Row background
@@ -780,7 +742,7 @@ func _update_appearance() -> void:
 		panel_bg.add_child(right_arrow)
 
 	# Class name at bottom of panel
-	var cls = _class_list[_selected_class_index]
+	var cls = _state.class_list[_state.selected_class_index]
 	var cls_lbl := Label.new()
 	cls_lbl.text = cls.name
 	cls_lbl.add_theme_font_size_override("font_size", 16)
@@ -794,7 +756,7 @@ func _update_appearance() -> void:
 # ── Step 3: NAME ENTRY ──────────────────────────────────────────
 
 func _show_name_entry() -> void:
-	_step = Step.NAME_ENTRY
+	_state.step = CCState.Step.NAME_ENTRY
 	_title_label.text = "ENTER NAME"
 	_hint_label.text = "Type a name, then press Enter    Cancel: Back"
 	_bg_rect.visible = true
@@ -833,7 +795,7 @@ func _show_name_entry() -> void:
 	panel.add_child(header_lbl)
 
 	# Class info
-	var cls = _class_list[_selected_class_index]
+	var cls = _state.class_list[_state.selected_class_index]
 	var cls_info := Label.new()
 	cls_info.text = "%s  (%s %s %s)" % [cls.name, cls.race, cls.gender, cls.type]
 	cls_info.add_theme_font_size_override("font_size", 14)
@@ -852,7 +814,7 @@ func _show_name_entry() -> void:
 
 	var line_edit := LineEdit.new()
 	line_edit.max_length = 16
-	line_edit.text = _char_name
+	line_edit.text = _state.char_name
 	line_edit.placeholder_text = "Enter name..."
 	line_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	line_edit.position = Vector2(44, 94)
@@ -888,8 +850,7 @@ func _on_name_gui_input(event: InputEvent) -> void:
 
 
 func _on_name_submitted(text: String) -> void:
-	_char_name = text.strip_edges()
-	if _char_name.is_empty():
+	if not _state.set_char_name(text):
 		return
 	_create_character()
 
@@ -1000,8 +961,8 @@ func _update_preview_model() -> void:
 		_preview_model.queue_free()
 		_preview_model = null
 
-	var vi: int = int(_appearance["variation_index"])
-	var model_path: String = PlayerConfig.get_model_path(_selected_class_id, vi)
+	var vi: int = int(_state.appearance["variation_index"])
+	var model_path: String = PlayerConfig.get_model_path(_state.selected_class_id, vi)
 
 	if not ResourceLoader.exists(model_path):
 		return
@@ -1016,10 +977,10 @@ func _update_preview_model() -> void:
 	_preview_pivot.add_child(_preview_model)
 
 	# Apply texture
-	var hair: int = int(_appearance["hair_color_index"])
-	var skin: int = int(_appearance["skin_tone_index"])
-	var body: int = int(_appearance["body_color_index"])
-	var tex_path: String = PlayerConfig.get_texture_path(_selected_class_id, vi, hair, skin, body)
+	var hair: int = int(_state.appearance["hair_color_index"])
+	var skin: int = int(_state.appearance["skin_tone_index"])
+	var body: int = int(_state.appearance["body_color_index"])
+	var tex_path: String = PlayerConfig.get_texture_path(_state.selected_class_id, vi, hair, skin, body)
 
 	if ResourceLoader.exists(tex_path):
 		var texture := load(tex_path) as Texture2D
@@ -1042,7 +1003,7 @@ func _teardown_preview() -> void:
 
 func _create_character() -> void:
 	var character: Dictionary = CharacterManager.create_character(
-		_slot, _selected_class_id, _char_name, _appearance)
+		_slot, _state.selected_class_id, _state.char_name, _state.appearance)
 	if character.is_empty():
 		push_warning("[CharCreate] Failed to create character")
 		return
