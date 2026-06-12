@@ -95,6 +95,34 @@ Full text: spec `/engineering` (+ CLAUDE.md condensed copy). The short form:
   regression matrix before merging combat-behavior changes; stop the chain
   at the first failed phase.
 
+## Throughput model — two PR lanes (the human is the bottleneck)
+
+The gates verify *correctness*; only kion's hands verify *feel*. Route every
+PR into one of two lanes by which of those it needs:
+
+**Gate-verified lane** — merges on green, no human wait. Refactors, data
+wiring, bug fixes with an autopilot repro, spec/docs/CI. The suite + ratchet
++ sanity + matrix fully capture these. Produce at full speed.
+
+**Playtest lane** — label `needs-playtest`, merge blocked on hands-on.
+Anything with a feel component: combat windows, speeds, a new mechanic's
+first playable increment, UI ergonomics. Rules:
+
+- **WIP cap: 2–3 open playtest PRs max**, sequenced to be independent (no
+  stacking — conflicts burn the human's time worst of all).
+- **Every playtest PR ships a sideload-ready APK** signed with the bundle
+  keystore (installs in-place on the Pixel 8a / Retroid — see the device
+  notes) plus a 3–5 bullet "what to feel for" script. Pickup cost: minutes.
+- **Feel tunables are data, not code** — window fractions, speeds, gauge
+  rates live in config/resources so a feel iteration is a value tweak, not
+  a PR round-trip.
+- While the playtest queue is full, keep producing gate-lane work; never
+  block the pipeline on an unreviewed feel change.
+
+Most of the #157 foundation chain is gate-lane (formulas are unit-testable);
+the playtest lane receives only the moments feel actually changes — the
+first combo-window build, the first PA, the death flow.
+
 ## Known traps (learned the hard way; memories exist for each)
 
 - Autopilot reads screen privates via `node.get("_x")` — grep autopilot.gd
