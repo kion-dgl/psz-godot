@@ -63,6 +63,7 @@ func _ready() -> void:
 	test_tower_field()
 	test_quest_lifecycle()
 	test_quest_objectives()
+	test_quest_rewards()
 	test_input_config()
 	test_blackjack()
 	test_script_parse()
@@ -3594,6 +3595,79 @@ func test_quest_objectives() -> void:
 	assert_true(SessionManager.has_completed_quest(), "quest auto-marked complete when objectives met")
 
 	SessionManager.quest_completed.disconnect(cb)
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+	print("")
+
+
+# ── Quest rewards (#318) ────────────────────────────────────────
+# Characterization: reporting a quest with a per-difficulty rewards block
+# grants exactly that meseta + those items (spec /states/story-progression:
+# report MUST grant rewards). search_and_rescue carries the schema's proof
+# data; quests without a rewards block must grant nothing.
+func test_quest_rewards() -> void:
+	print("── Quest Rewards ──")
+
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+
+	var quest: Dictionary = QuestLoader.load_quest("search_and_rescue")
+	var tier: Dictionary = quest.get("rewards", {}).get("normal", {})
+	assert_true(not tier.is_empty(), "search_and_rescue defines normal-difficulty rewards")
+	var reward_meseta: int = int(tier.get("meseta", 0))
+	var reward_items: Array = tier.get("items", [])
+	assert_gt(reward_meseta, 0, "reward tier defines meseta")
+	assert_gt(reward_items.size(), 0, "reward tier defines items")
+
+	# Complete + report the quest, watching meseta/inventory deltas.
+	var session: Dictionary = SessionManager.enter_quest("search_and_rescue", "normal")
+	assert_true(not session.is_empty(), "enter_quest(search_and_rescue) starts a session")
+	SessionManager.mark_quest_complete()
+	assert_eq(str(SessionManager.get_completed_quest().get("difficulty", "")), "normal",
+		"completed quest carries its difficulty")
+
+	var meseta_before: int = GameState.get_meseta()
+	var counts_before: Dictionary = {}
+	for entry in reward_items:
+		var iid: String = str(entry.get("id", ""))
+		counts_before[iid] = Inventory.get_item_count(iid)
+
+	var data: Dictionary = SessionManager.report_quest()
+	var granted: Dictionary = data.get("rewards_granted", {})
+	assert_eq(int(granted.get("meseta", 0)), reward_meseta, "report grants the defined meseta")
+	assert_eq(GameState.get_meseta(), meseta_before + reward_meseta, "meseta balance increased by reward")
+	var granted_items: Array = granted.get("items", [])
+	assert_eq(granted_items.size(), reward_items.size(), "report grants every defined item")
+	for entry in reward_items:
+		var iid: String = str(entry.get("id", ""))
+		var qty: int = int(entry.get("quantity", 1))
+		assert_eq(Inventory.get_item_count(iid), int(counts_before[iid]) + qty,
+			"inventory gained %dx %s" % [qty, iid])
+
+	# Reporting again (nothing completed) returns empty — no double-grant.
+	assert_true(SessionManager.report_quest().is_empty(), "second report returns empty")
+	assert_eq(GameState.get_meseta(), meseta_before + reward_meseta, "no double-grant of meseta")
+
+	# A quest with no rewards block grants nothing.
+	var bare_quest := ""
+	for qid in QuestLoader.list_quests():
+		if qid == "manifest" or qid == "hello_quest":
+			continue
+		if not QuestLoader.load_quest(qid).has("rewards"):
+			bare_quest = qid
+			break
+	if bare_quest != "":
+		assert_eq(SessionManager._grant_quest_rewards(bare_quest, "normal"), {},
+			"quest without rewards block grants nothing (%s)" % bare_quest)
+
+	# Unknown difficulty tier grants nothing.
+	assert_eq(SessionManager._grant_quest_rewards("search_and_rescue", "nightmare"), {},
+		"undefined difficulty tier grants nothing")
+
+	# Cleanup: revert the granted meseta/items so later tests see a clean slate.
+	GameState.meseta = meseta_before
+	for entry in reward_items:
+		Inventory.remove_item(str(entry.get("id", "")), int(entry.get("quantity", 1)))
 	SessionManager.return_to_city()
 	SessionManager._completed_quest.clear()
 	print("")

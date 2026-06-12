@@ -5,6 +5,35 @@
   "name": "Search and Rescue",
   "description": "Investigate reports of something falling from the sky in Gurhacia Valley.",
   "area_id": "gurhacia",
+  "rewards": {
+    "normal": {
+      "meseta": 100,
+      "items": [
+        {
+          "id": "monomate",
+          "quantity": 2
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 500,
+      "items": [
+        {
+          "id": "dimate",
+          "quantity": 2
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 1500,
+      "items": [
+        {
+          "id": "trimate",
+          "quantity": 2
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

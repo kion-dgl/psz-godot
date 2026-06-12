@@ -407,6 +407,7 @@ func mark_quest_complete() -> void:
 		"quest_id": str(_session.get("quest_id", "")),
 		"area_id": str(_session.get("area_id", "")),
 		"name": str(_session.get("quest_id", "")),
+		"difficulty": str(_session.get("difficulty", "normal")),
 		"total_exp": int(_session.get("total_exp", 0)),
 		"total_meseta": int(_session.get("total_meseta", 0)),
 		"items_collected": _session.get("items_collected", []),
@@ -428,11 +429,48 @@ func get_completed_quest() -> Dictionary:
 	return _completed_quest
 
 
-## Report quest completion at guild — returns completion data, clears state.
+## Report quest completion at guild — grants the quest's per-difficulty
+## rewards, returns completion data (with "rewards_granted"), clears state.
 func report_quest() -> Dictionary:
 	var data: Dictionary = _completed_quest.duplicate()
 	_completed_quest.clear()
+	if data.is_empty():
+		return data
+	data["rewards_granted"] = _grant_quest_rewards(
+		str(data.get("quest_id", "")), str(data.get("difficulty", "normal")))
 	return data
+
+
+## Grant the rewards a quest defines for the given difficulty (spec:
+## /states/story-progression — report MUST grant rewards). Returns what was
+## actually granted: {meseta: int, items: [{id, quantity}]}, or {} when the
+## quest defines none for this difficulty.
+func _grant_quest_rewards(quest_id: String, difficulty: String) -> Dictionary:
+	if quest_id.is_empty():
+		return {}
+	var quest: Dictionary = QuestLoader.load_quest(quest_id)
+	var rewards: Dictionary = quest.get("rewards", {})
+	var tier: Dictionary = rewards.get(difficulty, {})
+	if tier.is_empty():
+		return {}
+	var granted: Dictionary = {}
+	var meseta: int = int(tier.get("meseta", 0))
+	if meseta > 0:
+		GameState.add_meseta(meseta)
+		granted["meseta"] = meseta
+	var granted_items: Array = []
+	for entry in tier.get("items", []):
+		var item_id: String = str(entry.get("id", ""))
+		var quantity: int = int(entry.get("quantity", 1))
+		if item_id.is_empty() or quantity <= 0:
+			continue
+		if Inventory.add_item(item_id, quantity):
+			granted_items.append({"id": item_id, "quantity": quantity})
+		else:
+			push_warning("Quest reward dropped (inventory full): %dx %s" % [quantity, item_id])
+	if not granted_items.is_empty():
+		granted["items"] = granted_items
+	return granted
 
 
 # ── Quest Item Objectives ──────────────────────────────────────

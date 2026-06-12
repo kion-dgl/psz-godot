@@ -348,14 +348,35 @@ func _report_quest() -> void:
 	if not quest_id.is_empty():
 		GameState.complete_mission(quest_id)
 	# Show completion message
-	hint_label.text = "Quest complete! EXP: %d  Meseta: %d" % [
+	var msg := "Quest complete! EXP: %d  Meseta: %d" % [
 		int(data.get("total_exp", 0)), int(data.get("total_meseta", 0))]
+	msg += _format_rewards(data.get("rewards_granted", {}))
+	hint_label.text = msg
 	# Auto-save after quest completion so progress isn't lost
 	SaveManager.auto_save()
 	_selected_index = 0
 	_selecting_difficulty = false
 	_load_entries()
 	_refresh_display()
+
+
+## Render the rewards_granted dict from SessionManager.report_quest as a
+## hint-label suffix, e.g. "  Reward: 100 Meseta, Monomate x2".
+func _format_rewards(granted: Dictionary) -> String:
+	if granted.is_empty():
+		return ""
+	var parts: Array[String] = []
+	var meseta: int = int(granted.get("meseta", 0))
+	if meseta > 0:
+		parts.append("%d Meseta" % meseta)
+	for entry in granted.get("items", []):
+		var item_id: String = str(entry.get("id", ""))
+		var consumable = ConsumableRegistry.get_consumable(item_id)
+		var item_name: String = str(consumable.name) if consumable else item_id.capitalize()
+		parts.append("%s x%d" % [item_name, int(entry.get("quantity", 1))])
+	if parts.is_empty():
+		return ""
+	return "  Reward: %s" % ", ".join(parts)
 
 
 func _refresh_display() -> void:
