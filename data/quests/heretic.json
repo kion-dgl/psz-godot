@@ -5,6 +5,35 @@
   "name": "Heretic",
   "description": "Newman guards + Reve heretic boss.",
   "area_id": "arca",
+  "rewards": {
+    "normal": {
+      "meseta": 800,
+      "items": [
+        {
+          "id": "light_trap",
+          "quantity": 2
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 4000,
+      "items": [
+        {
+          "id": "light_trap",
+          "quantity": 4
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 12000,
+      "items": [
+        {
+          "id": "light_trap",
+          "quantity": 6
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

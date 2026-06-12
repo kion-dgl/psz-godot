@@ -5,6 +5,35 @@
   "name": "Poisoned Water",
   "description": "Investigate the source of pollution in Dairon's water supply.",
   "area_id": "ozette",
+  "rewards": {
+    "normal": {
+      "meseta": 400,
+      "items": [
+        {
+          "id": "sol_atomizer",
+          "quantity": 2
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 2000,
+      "items": [
+        {
+          "id": "sol_atomizer",
+          "quantity": 3
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 6000,
+      "items": [
+        {
+          "id": "sol_atomizer",
+          "quantity": 4
+        }
+      ]
+    }
+  },
   "office_npcs": [],
   "briefing_dialog": [
     {

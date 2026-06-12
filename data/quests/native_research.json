@@ -6,6 +6,35 @@
   "name": "Native Research",
   "description": "Requested by: Dr. Carlo. Escort a researcher through the valley, wetlands, and snowfield to conduct a wildlife survey across all three biomes.",
   "area_id": "ozette",
+  "rewards": {
+    "normal": {
+      "meseta": 350,
+      "items": [
+        {
+          "id": "trap_vision",
+          "quantity": 1
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 1750,
+      "items": [
+        {
+          "id": "trap_vision",
+          "quantity": 2
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 5250,
+      "items": [
+        {
+          "id": "trap_vision",
+          "quantity": 3
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

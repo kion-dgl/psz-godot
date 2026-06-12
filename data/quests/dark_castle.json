@@ -5,6 +5,35 @@
   "name": "Dark Castle",
   "description": "Falz boss, Lassic's ethereal castle remains.",
   "area_id": "dark",
+  "rewards": {
+    "normal": {
+      "meseta": 2000,
+      "items": [
+        {
+          "id": "photon_drop",
+          "quantity": 3
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 10000,
+      "items": [
+        {
+          "id": "photon_drop",
+          "quantity": 5
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 30000,
+      "items": [
+        {
+          "id": "photon_drop",
+          "quantity": 10
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

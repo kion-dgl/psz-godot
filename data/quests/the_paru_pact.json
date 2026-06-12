@@ -5,6 +5,35 @@
   "name": "The Paru Pact",
   "description": "Requested by: Research Division. Help Elio, the guild's Mag custodian, recover Mag fragments from Paru ruins to assemble a new Mag for guild rotation.",
   "area_id": "paru",
+  "rewards": {
+    "normal": {
+      "meseta": 150,
+      "items": [
+        {
+          "id": "monofluid",
+          "quantity": 2
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 750,
+      "items": [
+        {
+          "id": "difluid",
+          "quantity": 2
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 2250,
+      "items": [
+        {
+          "id": "trifluid",
+          "quantity": 2
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",

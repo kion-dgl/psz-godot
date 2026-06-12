@@ -64,6 +64,7 @@ func _ready() -> void:
 	test_quest_lifecycle()
 	test_quest_objectives()
 	test_quest_rewards()
+	test_quest_reward_data()
 	test_input_config()
 	test_blackjack()
 	test_script_parse()
@@ -3648,18 +3649,6 @@ func test_quest_rewards() -> void:
 	assert_true(SessionManager.report_quest().is_empty(), "second report returns empty")
 	assert_eq(GameState.get_meseta(), meseta_before + reward_meseta, "no double-grant of meseta")
 
-	# A quest with no rewards block grants nothing.
-	var bare_quest := ""
-	for qid in QuestLoader.list_quests():
-		if qid == "manifest" or qid == "hello_quest":
-			continue
-		if not QuestLoader.load_quest(qid).has("rewards"):
-			bare_quest = qid
-			break
-	if bare_quest != "":
-		assert_eq(SessionManager._grant_quest_rewards(bare_quest, "normal"), {},
-			"quest without rewards block grants nothing (%s)" % bare_quest)
-
 	# Unknown difficulty tier grants nothing.
 	assert_eq(SessionManager._grant_quest_rewards("search_and_rescue", "nightmare"), {},
 		"undefined difficulty tier grants nothing")
@@ -3671,6 +3660,44 @@ func test_quest_rewards() -> void:
 	SessionManager.return_to_city()
 	SessionManager._completed_quest.clear()
 	print("")
+
+
+# Every canon quest defines all three difficulty tiers, each with meseta and
+# items whose ids resolve in the registries — so a new quest can't ship
+# reward-less (#318) and a typo'd item id can't ship at all.
+func test_quest_reward_data() -> void:
+	print("── Quest Reward Data ──")
+
+	var ok_quests := 0
+	for qid in QuestLoader.list_quests():
+		if qid == "manifest" or qid == "hello_quest":
+			continue
+		if _assert_quest_reward_tiers(qid):
+			ok_quests += 1
+	assert_gt(ok_quests, 0, "all canon quests define complete reward tiers (%d ok)" % ok_quests)
+	print("")
+
+
+## Assert one quest's rewards block is complete; returns true when every
+## tier has meseta and resolvable item ids.
+func _assert_quest_reward_tiers(qid: String) -> bool:
+	var q_rewards: Dictionary = QuestLoader.load_quest(qid).get("rewards", {})
+	assert_true(not q_rewards.is_empty(), "%s defines rewards" % qid)
+	var tiers_ok := not q_rewards.is_empty()
+	for diff in ["normal", "hard", "super-hard"]:
+		var t: Dictionary = q_rewards.get(diff, {})
+		if t.is_empty() or int(t.get("meseta", 0)) <= 0:
+			assert_true(false, "%s rewards[%s] has meseta" % [qid, diff])
+			tiers_ok = false
+			continue
+		for entry in t.get("items", []):
+			var iid: String = str(entry.get("id", ""))
+			var resolvable: bool = ConsumableRegistry.get_consumable(iid) != null \
+				or ItemRegistry.get_item(iid) != null
+			if not resolvable:
+				assert_true(false, "%s rewards[%s] item id resolves: %s" % [qid, diff, iid])
+				tiers_ok = false
+	return tiers_ok
 
 
 # ── Input scheme regression test ────────────────────────────────

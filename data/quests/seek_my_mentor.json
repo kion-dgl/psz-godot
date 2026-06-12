@@ -6,6 +6,35 @@
   "name": "Seek My Mentor",
   "description": "Requested by: Ren. Search the Makara Ruins for veteran hunter Vash, who went missing three days ago and hasn't come back.",
   "area_id": "makara",
+  "rewards": {
+    "normal": {
+      "meseta": 1200,
+      "items": [
+        {
+          "id": "scape_doll",
+          "quantity": 1
+        }
+      ]
+    },
+    "hard": {
+      "meseta": 6000,
+      "items": [
+        {
+          "id": "scape_doll",
+          "quantity": 2
+        }
+      ]
+    },
+    "super-hard": {
+      "meseta": 18000,
+      "items": [
+        {
+          "id": "scape_doll",
+          "quantity": 3
+        }
+      ]
+    }
+  },
   "sections": [
     {
       "type": "grid",
