@@ -486,17 +486,18 @@ func _manifest_index_for_quest(quest_id: String) -> int:
 	return 0
 
 
-## Drive the post-quest report at the Principal NPC.
-## PRINCIPAL_POSITION lives at city_office_controller.gd:13 — Vector3(0, 0.4, -9.7).
-## Teleport just south of that (so the camera sees the dialog face-on), press
-## interact to fire _on_principal_interact → _report_quest, then spam
-## ui_accept to advance the 2-page report dialog. report_quest() clears the
-## completed-quest state (SessionManager.report_quest body, ~line 492), so
-## once has_completed_quest() goes false the report ran.
+## Post-quest report flow (#354): quests are reported at the GUILD COUNTER
+## only — the Principal is story dialog (intro/briefing), never completion.
+## The autopilot tests BOTH surfaces in one pass:
+##   1. Talk to the Principal — the interaction must work, but MUST NOT
+##      complete the quest (negative guard). If it does, that's a regression.
+##   2. Leave the office, go to the counter, report there → quest clears → DONE.
 const PRINCIPAL_INTERACT_POS := Vector3(0.0, 0.5, -8.5)
-const REPORT_POLL_MAX := 30  # 30 * 0.5 = 15s
 
-var _report_acted := false
+var _report_acted := false           # office Principal-guard fired
+var _principal_guard_done := false   # Principal proven not to complete the quest
+var _counter_report_acted := false   # counter NPC interacted for report
+var _guild_report_count := 0
 
 func _drive_office_report() -> void:
 	var node := get_tree().current_scene
@@ -505,28 +506,65 @@ func _drive_office_report() -> void:
 	if _report_acted:
 		return
 	_report_acted = true
-	print("[sanity] teleport to Principal at (%.2f, %.2f, %.2f)" % [PRINCIPAL_INTERACT_POS.x, PRINCIPAL_INTERACT_POS.y, PRINCIPAL_INTERACT_POS.z])
+	# Talk to the Principal — interaction must work + direct to the counter,
+	# but MUST NOT complete the quest (#354).
+	print("[sanity] teleport to Principal (report-guard) at (%.2f, %.2f, %.2f)" % [PRINCIPAL_INTERACT_POS.x, PRINCIPAL_INTERACT_POS.y, PRINCIPAL_INTERACT_POS.z])
 	_teleport_player(PRINCIPAL_INTERACT_POS)
 	_after(0.6, func() -> void:
 		print("[sanity] press interact (Principal)")
 		_press_action("interact"))
-	_after(1.5, func() -> void: _poll_report_complete(0))
+	# Advance the Principal's "report at the counter" dialog (2 pages + slack).
+	for i in range(4):
+		_after(1.2 + 0.4 * i, func() -> void: _press_action("ui_accept"))
+	_after(3.4, _verify_principal_did_not_report)
 
 
-func _poll_report_complete(n: int) -> void:
-	if n > REPORT_POLL_MAX:
-		print("[sanity] WARN: report poll timeout — quitting anyway")
-		_save_and_quit()
-		return
-	# Advance any visible dialog page. Harmless if no dialog is open
-	# (in CUTSCENE the input is consumed; in IDLE it does nothing field-side).
-	if (n % 2) == 0:
-		_press_action("ui_accept")
+func _verify_principal_did_not_report() -> void:
+	# The Principal is story-dialog only (#354): talking to it MUST NOT
+	# complete the quest. If it did, that's exactly the regression we guard.
 	if not SessionManager.has_completed_quest():
-		print("[sanity] checkpoint: quest reported (SessionManager cleared completed quest)")
+		_fail_and_quit("Principal completed the quest — reporting must happen at the guild counter only (#354)")
+		return
+	print("[sanity] checkpoint: Principal did NOT complete the quest (correct) — going to guild counter to report")
+	_principal_guard_done = true
+	SceneManager.goto_scene(CITY_COUNTER)
+
+
+## At the counter scene with a completed quest: teleport to the guild NPC and
+## interact, which pushes the guild_counter overlay (driven by _drive_guild_report).
+func _drive_counter_report() -> void:
+	var node := get_tree().current_scene
+	if node == null or node.scene_file_path != CITY_COUNTER:
+		return
+	if _counter_report_acted:
+		return
+	_counter_report_acted = true
+	print("[sanity] counter: teleport to guild NPC to report quest")
+	_teleport_player(COUNTER_NPC_POS)
+	_after(0.6, func() -> void: _press_action("interact"))
+
+
+## In the guild_counter overlay with a completed quest: the "Report" entry is
+## at index 0. ui_accept opens the confirm modal; another confirms → report_quest
+## clears the completed-quest state → DONE.
+func _drive_guild_report() -> void:
+	if not SessionManager.has_completed_quest():
+		print("[sanity] checkpoint: quest reported at guild counter")
 		_save_and_quit()
 		return
-	_after(0.5, func() -> void: _poll_report_complete(n + 1))
+	if _guild_report_count >= 6:
+		_fail_and_quit("guild-counter report did not complete after 6 accepts")
+		return
+	_press_action("ui_accept")
+	_guild_report_count += 1
+	_after(1.0, _drive_guild_report)
+
+
+## Fail terminator — print the FAIL line (matrix oracle greps for it) and quit
+## non-zero, deliberately WITHOUT the DONE-ok marker so the phase reads failed.
+func _fail_and_quit(reason: String) -> void:
+	print("[sanity] FAIL: %s" % reason)
+	_after(0.5, func() -> void: get_tree().quit(1))
 
 
 ## Persist state via SaveManager + quit. Terminator shared by all phases.
@@ -582,20 +620,26 @@ func _process(_delta: float) -> void:
 
 
 func _drive_scene(path: String) -> void:
-	# Post-quest report flow: after the quest's complete_quest fires the
-	# player returns to a city scene with SessionManager.has_completed_quest()
-	# true. The actual report happens at the OFFICE (Principal interaction
-	# at city_office_controller.gd:457 _on_principal_interact → _report_quest).
-	# Drive: any-city → office → teleport to Principal + interact + advance
-	# dialog → SessionManager.report_quest() clears the completed quest →
-	# save + DONE.
+	# Post-quest report flow (#354): after complete_quest, the player returns
+	# to a city scene with has_completed_quest() true. Test BOTH surfaces:
+	# first the Principal (must NOT complete — office report-guard), then the
+	# guild counter (the only real turn-in). Always do the office guard first,
+	# regardless of which city scene we land in.
 	if SessionManager.has_completed_quest() and path.begins_with("res://scenes/3d/city/"):
-		if path == CITY_OFFICE:
-			print("[sanity] checkpoint: in office for quest report")
-			_after(STEP_DELAY * 2.0, _drive_office_report)
+		if not _principal_guard_done:
+			if path == CITY_OFFICE:
+				print("[sanity] checkpoint: office — Principal report-guard (#354)")
+				_after(STEP_DELAY * 2.0, _drive_office_report)
+			else:
+				print("[sanity] checkpoint: quest report — go to office for Principal guard (%s)" % path)
+				_after(STEP_DELAY, func() -> void: SceneManager.goto_scene(CITY_OFFICE))
 		else:
-			print("[sanity] checkpoint: quest report — back in city (%s) → goto office" % path)
-			_after(STEP_DELAY, func() -> void: SceneManager.goto_scene(CITY_OFFICE))
+			if path == CITY_COUNTER:
+				print("[sanity] checkpoint: counter — report quest (#354)")
+				_after(STEP_DELAY * 2.0, _drive_counter_report)
+			else:
+				print("[sanity] checkpoint: quest report — go to counter (%s)" % path)
+				_after(STEP_DELAY, func() -> void: SceneManager.goto_scene(CITY_COUNTER))
 		return
 
 	if path == INPUT_SELECT:
@@ -648,8 +692,13 @@ func _drive_scene(path: String) -> void:
 func _drive_overlay(path: String) -> void:
 	if path == GUILD_COUNTER:
 		print("[sanity] checkpoint: guild_counter")
-		_guild_accept_count = 0
-		_after(STEP_DELAY, _drive_guild_counter)
+		# A completed quest → report flow; otherwise the accept flow (#354).
+		if SessionManager.has_completed_quest():
+			_guild_report_count = 0
+			_after(STEP_DELAY, _drive_guild_report)
+		else:
+			_guild_accept_count = 0
+			_after(STEP_DELAY, _drive_guild_counter)
 	elif path == WARP_TELEPORTER:
 		print("[sanity] checkpoint: warp_teleporter")
 		_after(STEP_DELAY, func() -> void: _press_action("ui_accept"))

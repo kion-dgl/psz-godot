@@ -453,8 +453,20 @@ func _spawn_capsule_npc(npc_id: String, npc_name: String, pos: Vector3, rot: flo
 # ── Principal Interaction & Reporting ────────────────────────────────────────
 
 func _on_principal_interact(_player: Node3D) -> void:
+	# Quest turn-in happens at the GUILD COUNTER only (#354) — the Principal
+	# handles story dialog (intro / briefing), never completion. When a quest
+	# is awaiting report, point the player at the counter instead of reporting
+	# here. (The autopilot asserts has_completed_quest() stays true through
+	# this interaction — if the Principal ever completes a quest again, the
+	# regression matrix catches it.)
 	if SessionManager.has_completed_quest():
-		_report_quest()
+		_show_dialog([
+			{"speaker": "Principal", "text": "Good work out there, hunter."},
+			{"speaker": "Principal", "text": "Report your mission at the guild counter to make it official."},
+		], func() -> void:
+			player.transition_to(player.PlayerState.IDLE)
+		)
+		player.transition_to(player.PlayerState.CUTSCENE)
 		return
 
 	# Default: give debug meseta. The prior `else` path pushed the guild
@@ -472,39 +484,6 @@ func _on_principal_interact(_player: Node3D) -> void:
 		player.transition_to(player.PlayerState.IDLE)
 	)
 	player.transition_to(player.PlayerState.CUTSCENE)
-
-
-func _report_quest() -> void:
-	player.transition_to(player.PlayerState.CUTSCENE)
-	var data: Dictionary = SessionManager.report_quest()
-	if data.is_empty():
-		player.transition_to(player.PlayerState.IDLE)
-		return
-
-	var quest_id: String = str(data.get("quest_id", ""))
-	if not quest_id.is_empty():
-		GameState.complete_mission(quest_id)
-
-	var exp_val: int = int(data.get("total_exp", 0))
-	var meseta_val: int = int(data.get("total_meseta", 0))
-	var report_dialog := [
-		{"speaker": "Principal", "text": "Mission complete. Well done, hunter."},
-		{"speaker": "Principal", "text": "Your reward: %d EXP, %d meseta." % [exp_val, meseta_val]},
-	]
-	# Difficulty unlock (#344) — applied in SessionManager.report_quest; the
-	# office is the main story-report NPC, so it announces the new tier.
-	var unlocked: String = str(data.get("difficulty_unlocked", ""))
-	if not unlocked.is_empty():
-		var label: String = "Super-Hard" if unlocked == "super-hard" else unlocked.capitalize()
-		report_dialog.append({"speaker": "Principal",
-			"text": "And — you've proven yourself. %s difficulty is now open to you." % label})
-
-	_show_dialog(report_dialog, _on_report_complete)
-
-
-func _on_report_complete() -> void:
-	SaveManager.auto_save()
-	player.transition_to(player.PlayerState.IDLE)
 
 
 func _show_dialog(pages: Array, on_complete: Callable) -> void:
