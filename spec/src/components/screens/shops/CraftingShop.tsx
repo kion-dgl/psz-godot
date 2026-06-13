@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C, DetailPanel } from '../pszui';
 
 type Recipe = { name: string; type: string; rarity: string; mats: string; cost: number };
 const RECIPES: Recipe[] = [
@@ -28,12 +28,11 @@ export default function CraftingShop() {
       hint="Left/Right: Switch Mode   Up/Down: Select   Enter: Confirm   Esc: Leave"
       portrait="synth-shop"
       info={
-        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
+        <DetailPanel>
           {tab === 0 ? (() => {
             const r = RECIPES[i];
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>{r.name}</div>
                 <div style={{ fontSize: 12, color: C.textLight, marginBottom: 8 }}>{r.rarity} · {r.type}</div>
                 <Divider />
                 <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>Materials:</div>
@@ -48,7 +47,6 @@ export default function CraftingShop() {
             const b = BOARDS[i];
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 2 }}>{b.name}</div>
                 <div style={{ fontSize: 12, color: C.textLight, marginBottom: 8 }}>{b.rarity}</div>
                 <Divider />
                 <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>Materials:</div>
@@ -59,10 +57,10 @@ export default function CraftingShop() {
               </>
             );
           })()}
-        </div>
+        </DetailPanel>
       }
     >
-      <TabBar tabs={['Craft', 'Boards']} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+      <TabBar tabs={['Craft', 'Boards']} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} right="12,450 M" />
       {tab === 0
         ? RECIPES.map((r, idx) => (
             <PillRow

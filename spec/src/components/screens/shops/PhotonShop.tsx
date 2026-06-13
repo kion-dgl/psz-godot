@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopScreen, PillRow, Divider, Balance, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, Divider, StatRow, ActionButton, C, DetailPanel } from '../pszui';
 
 const ITEMS = [
   { name: 'Monogrinder', cost: 1, cat: 'Grinders' },
@@ -21,15 +21,18 @@ export default function PhotonShop() {
       hint="Up/Down: Select   Enter: Exchange   Esc: Leave"
       portrait="photon-collector"
       info={
-        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 4 }}>{item.name}</div>
+        <DetailPanel>
           <div style={{ fontSize: 12, color: C.textLight, marginBottom: 8 }}>{item.cat}</div>
           <Divider />
           <StatRow label="Cost" value={`${item.cost} Photon Drops`} color="#4488ee" />
           <ActionButton label="Exchange" />
-        </div>
+        </DetailPanel>
       }
     >
+      {/* No TABS here, so the balance pins to the top of the LIST. */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <span style={{ fontSize: 12, fontWeight: 800, color: C.pp, background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(150,180,210,0.5)', borderRadius: 10, padding: '3px 10px' }}>12 Photon Drops</span>
+      </div>
       {ITEMS.map((it, i) => {
         const showHeader = it.cat !== lastCat;
         lastCat = it.cat;
@@ -40,8 +43,6 @@ export default function PhotonShop() {
           </div>
         );
       })}
-      <Divider />
-      <Balance label="Your Photon Drops:" value="12" color="#4488ee" />
     </ShopScreen>
   );
 }

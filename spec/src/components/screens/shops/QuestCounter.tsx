@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopScreen, PillRow, Divider, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, Divider, StatRow, ActionButton, C, DetailPanel } from '../pszui';
 
 type Quest = {
   name: string; area: string; reward: string; desc: string;
@@ -22,10 +22,8 @@ export default function QuestCounter() {
       title="Guild Counter"
       hint="Up/Down: Select   Enter: Accept   Esc: Leave"
       portrait="quest-counter"
-      infoTitle="Quest Info"
       info={
-        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{q.name}</div>
+        <DetailPanel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <StatRow label="Area" value={q.area} />
             <StatRow label="Type" value="Quest" />
@@ -37,7 +35,7 @@ export default function QuestCounter() {
             <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5, marginTop: 8, fontWeight: 600 }}>{q.lockedNote}</div>
           )}
           <ActionButton label="Accept Quest" />
-        </div>
+        </DetailPanel>
       }
     >
       {QUESTS.map((quest, i) => (
