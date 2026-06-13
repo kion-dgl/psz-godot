@@ -7,7 +7,7 @@ const chart = `stateDiagram-v2
   NoPipe --> Open: use a Telepipe item (one item consumed)
   Open --> Open: use another item — previous pipe closes
   Open --> NoPipe: return to field via the city-side pipe
-  Open --> NoPipe: quest accepted / quest ended / title return
+  Open --> NoPipe: quest accepted / reported / cancelled / title return
 
   NoPipe: No active pipe
   Open: Pipe open (exactly one)
@@ -42,11 +42,13 @@ const chart = `stateDiagram-v2
   <ul>
     <li>The player returns to the field through the city-side pipe (round trip complete).</li>
     <li>A new Telepipe item is used (the new pipe replaces it).</li>
-    <li>A quest is <strong>accepted</strong>.</li>
-    <li>A quest <strong>ends</strong> (reported / completed or cancelled).</li>
+    <li>A quest is <strong>accepted</strong> (a fresh expedition replaces any free-field pipe).</li>
+    <li>A quest is <strong>reported</strong> at the guild counter (rewards claimed) or <strong>cancelled</strong>.</li>
     <li>The player returns to the <strong>title screen</strong>.</li>
   </ul>
   <p>Switching free fields does <strong>NOT</strong> close the pipe. A pipe dropped in Valley 2 stays open and keeps routing back to Valley 2 even after the player starts Wetlands 1 — it persists for the whole Free-Roam period until one of the events above occurs.</p>
+
+  <p><strong>Completing a quest's objectives does NOT close the pipe.</strong> Meeting the last objective marks the quest <em>complete</em> (rewards now claimable) but leaves the player in a live quest field — they <strong>MAY</strong> keep exploring and round-tripping through the pipe. The pipe (and the field) close only when the player <strong>reports</strong> the quest to the guild or <strong>cancels</strong> it. See the <a href="/states/session-model">Session Model</a> for why "complete" (in-field) and "report / cancel" (the exit) are distinct.</p>
 
   <h2>End-of-quest telepipe</h2>
   <p>A quest <strong>MAY</strong> open a telepipe at its end as a quick ride back to the city. Because exactly one pipe may exist, this story pipe <strong>MUST</strong> close any pipe the player had already placed. The player <strong>MAY</strong> instead ignore it and use their own item; doing so closes the story pipe in turn. Whichever was opened most recently is the one that remains.</p>
@@ -63,9 +65,9 @@ const chart = `stateDiagram-v2
     <li>Ride the field-side pipe to the city again — still open (round-tripping is unlimited).</li>
     <li>Return to the field via the <strong>city-side</strong> pipe → the round trip completes and the pipe closes.</li>
     <li>Drop another telepipe.</li>
-    <li>Reach the quest's final objective. The quest auto-spawns an end-of-quest telepipe, which <strong>closes</strong> the pipe from step 10 (replaced).</li>
+    <li>Reach the quest's final objective — the quest is now <em>complete</em> (rewards claimable) but the pipe stays open and the player MAY keep exploring. The quest auto-spawns an end-of-quest telepipe, which <strong>closes</strong> the pipe from step 10 (replaced).</li>
     <li>Ride the end-of-quest telepipe back to the city.</li>
-    <li>Report the quest at the guild counter → the quest ends and the telepipe is cleared (<em>quest ended</em>).</li>
+    <li>Report the quest at the guild counter → rewards granted and the telepipe is cleared (<em>quest reported</em>).</li>
   </ol>
   <p>Edge case: returning to the <strong>title screen</strong> at any point clears the active telepipe.</p>
 
@@ -76,6 +78,6 @@ const chart = `stateDiagram-v2
   <ul>
     <li><code>scripts/autoloads/telepipe_manager.gd</code> (TelepipeManager) — single-slot lifecycle: one-active <code>_state</code> dict, <code>place()</code> / <code>cancel()</code>, and the one-shot <code>consume_return()</code> round-trip return.</li>
     <li><code>scripts/3d/elements/telepipe.gd</code> (Telepipe) — the placed in-world pipe element; an interactable cylinder that emits <code>activated</code> when the player steps in to warp.</li>
-    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) — calls <code>TelepipeManager.cancel()</code> on quest accept/cancel, quest/expedition end, and title return.</li>
+    <li><code>scripts/autoloads/session_manager.gd</code> (SessionManager) — <strong>MUST</strong> call <code>TelepipeManager.cancel()</code> on quest <code>accept_quest()</code>, <code>report_quest()</code>, and <code>cancel_accepted_quest()</code>, and on title return — but <strong>NOT</strong> on objective completion (<code>mark_quest_complete()</code>), which leaves the pipe and field alive.</li>
   </ul>
 </Concept>
