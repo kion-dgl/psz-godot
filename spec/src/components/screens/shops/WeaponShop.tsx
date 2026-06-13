@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ShopScreen, PillRow, TabBar, Divider, Balance, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, Divider, Balance, StatRow, ActionButton, DetailPanel } from '../pszui';
+
+const MESETA = 12450; // player's current meseta (shown pinned in the tab row)
 
 type Weapon = {
   name: string; price: number; type: string; rarity: string;
@@ -48,12 +50,11 @@ export default function WeaponShop() {
       hint="Left/Right: Category   Up/Down: Select   Enter: Buy   Esc: Leave"
       portrait="weapon-shop"
       info={
-        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
+        <DetailPanel>
           {tab === 0 ? (() => {
             const w = WEAPONS[i];
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{w.name}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <StatRow label="Type" value={w.type} />
                   <StatRow label="Rarity" value={w.rarity} />
@@ -63,65 +64,57 @@ export default function WeaponShop() {
                   <StatRow label="Max Grind" value={w.maxGrind} />
                 </div>
                 <Divider />
-                <Balance label="Buy" value={`${w.price} M`} />
-                <Balance label="Sell" value={`${Math.floor(w.price / 2)} M`} />
-                <ActionButton label={`Buy — ${w.price} M`} />
+                <Balance label="Price" value={`${w.price} M`} />
+                <ActionButton label="Buy" />
               </>
             );
           })() : tab === 1 ? (() => {
             const a = ARMOR[i];
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{a.name}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <StatRow label="Type" value="Armor" />
                   <StatRow label="Slots" value={a.slots} />
                   <StatRow label="DEF" value={a.def} />
                 </div>
                 <Divider />
-                <Balance label="Buy" value={`${a.price} M`} />
-                <Balance label="Sell" value={`${Math.floor(a.price / 2)} M`} />
-                <ActionButton label={`Buy — ${a.price} M`} />
+                <Balance label="Price" value={`${a.price} M`} />
+                <ActionButton label="Buy" />
               </>
             );
           })() : tab === 2 ? (() => {
             const u = UNITS[i];
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{u.name}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <StatRow label="Type" value="Unit" />
                   <StatRow label="Effect" value={u.effect} />
                 </div>
                 <Divider />
-                <Balance label="Buy" value={`${u.price} M`} />
-                <Balance label="Sell" value={`${Math.floor(u.price / 2)} M`} />
-                <ActionButton label={`Buy — ${u.price} M`} />
+                <Balance label="Price" value={`${u.price} M`} />
+                <ActionButton label="Buy" />
               </>
             );
           })() : (() => {
             const s = SELL[i];
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{s.name}</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <StatRow label="Type" value={s.type} />
                 </div>
                 <Divider />
                 <Balance label="Sell (half price)" value={`${s.price} M`} />
-                <ActionButton label={`Sell — ${s.price} M`} />
+                <ActionButton label="Sell" />
               </>
             );
           })()}
-        </div>
+        </DetailPanel>
       }
     >
-      <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+      <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} right={`${MESETA.toLocaleString()} M`} />
       {list.map((it, idx) => (
         <PillRow key={it.name} label={it.name} rightText={`${it.price} M`} selected={i === idx} onClick={() => setSel(idx)} />
       ))}
-      <Divider />
-      <Balance label="Your Meseta:" value="12,450" />
     </ShopScreen>
   );
 }

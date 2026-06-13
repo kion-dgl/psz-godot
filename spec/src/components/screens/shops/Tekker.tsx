@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C, DetailPanel } from '../pszui';
 
 type Grind = {
   name: string; grind: number; max: number; grinder: string; cost: number;
@@ -37,7 +37,7 @@ export default function Tekker() {
       hint="Left/Right: Switch Mode   Up/Down: Select   Enter: Confirm   Esc: Leave"
       portrait="custom-shop"
       info={
-        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
+        <DetailPanel>
           {tab === 0 ? (() => {
             const w = GRINDABLE[i];
             return (
@@ -52,25 +52,28 @@ export default function Tekker() {
                   <StatRow label="ATK" value={`${w.atkFrom} → ${w.atkTo} (+${Number(w.atkTo) - Number(w.atkFrom)})`} color="#338844" />
                   <StatRow label="ACC" value={`${w.accFrom} → ${w.accTo} (+0)`} color={C.textLight} />
                 </div>
-                <ActionButton label={`Grind — ${w.cost} M`} />
+                <Divider />
+                <StatRow label="Cost" value={`${w.cost} M`} />
+                <ActionButton label="Grind" />
               </>
             );
           })() : (() => {
             const w = UNIDENTIFIED[i];
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.rare, marginBottom: 4 }}>{w.name}</div>
                 <div style={{ fontSize: 11, color: C.textLight, marginBottom: 8 }}>Unidentified weapon</div>
                 <Divider />
                 <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>The Tekker reveals its true stats and element.</div>
-                <ActionButton label={`Identify — ${w.cost.toLocaleString()} M`} />
+                <Divider />
+                <StatRow label="Cost" value={`${w.cost.toLocaleString()} M`} />
+                <ActionButton label="Identify" />
               </>
             );
           })()}
-        </div>
+        </DetailPanel>
       }
     >
-      <TabBar tabs={['Grind', 'Identify']} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+      <TabBar tabs={['Grind', 'Identify']} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} right="12,450 M" />
       {tab === 0
         ? GRINDABLE.map((w, idx) => (
             <PillRow
