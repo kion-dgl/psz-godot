@@ -423,6 +423,10 @@ func mark_quest_complete() -> void:
 		"total_exp": int(_session.get("total_exp", 0)),
 		"total_meseta": int(_session.get("total_meseta", 0)),
 		"items_collected": _session.get("items_collected", []),
+		# Snapshot the objective-item counts — the live dict is cleared on
+		# return_to_city, but completion-scaled rewards (#190) need them
+		# at guild report time.
+		"quest_item_counts": _quest_item_counts.duplicate(true),
 	}
 	quest_completed.emit()
 
@@ -449,15 +453,19 @@ func report_quest() -> Dictionary:
 	if data.is_empty():
 		return data
 	data["rewards_granted"] = _grant_quest_rewards(
-		str(data.get("quest_id", "")), str(data.get("difficulty", "normal")))
+		str(data.get("quest_id", "")), str(data.get("difficulty", "normal")),
+		data.get("quest_item_counts", {}))
 	return data
 
 
 ## Grant the rewards a quest defines for the given difficulty (spec:
-## /states/story-progression — report MUST grant rewards). Returns what was
-## actually granted: {meseta: int, items: [{id, quantity}]}, or {} when the
-## quest defines none for this difficulty.
-func _grant_quest_rewards(quest_id: String, difficulty: String) -> Dictionary:
+## /states/story-progression — report MUST grant rewards), plus the
+## completion-scaled tier when the quest defines one (#190: reward
+## quality scales with optional objective items collected). Returns what
+## was actually granted: {meseta: int, items: [{id, quantity}]}, or {}
+## when the quest defines nothing for this difficulty.
+func _grant_quest_rewards(quest_id: String, difficulty: String,
+		quest_item_counts: Dictionary = {}) -> Dictionary:
 	if quest_id.is_empty():
 		return {}
 	var quest: Dictionary = QuestLoader.load_quest(quest_id)
@@ -470,19 +478,47 @@ func _grant_quest_rewards(quest_id: String, difficulty: String) -> Dictionary:
 	if meseta > 0:
 		GameState.add_meseta(meseta)
 		granted["meseta"] = meseta
-	var granted_items: Array = []
-	for entry in tier.get("items", []):
+	var granted_items: Array = _grant_reward_items(tier.get("items", []))
+	granted_items.append_array(_grant_reward_items(
+		_pick_scaled_tier(rewards.get("scaled", {}), quest_item_counts).get("items", [])))
+	if not granted_items.is_empty():
+		granted["items"] = granted_items
+	return granted
+
+
+## Grant a rewards items list into the inventory; returns what landed.
+## Items that don't fit are dropped with a warning rather than blocking
+## the turn-in.
+func _grant_reward_items(entries: Array) -> Array:
+	var granted: Array = []
+	for entry in entries:
 		var item_id: String = str(entry.get("id", ""))
 		var quantity: int = int(entry.get("quantity", 1))
 		if item_id.is_empty() or quantity <= 0:
 			continue
 		if Inventory.add_item(item_id, quantity):
-			granted_items.append({"id": item_id, "quantity": quantity})
+			granted.append({"id": item_id, "quantity": quantity})
 		else:
 			push_warning("Quest reward dropped (inventory full): %dx %s" % [quantity, item_id])
-	if not granted_items.is_empty():
-		granted["items"] = granted_items
 	return granted
+
+
+## Pick the highest completion-scaled reward tier the player earned
+## (#190). `scaled` is the quest's rewards.scaled block: tiers keyed by
+## "min" total objective items collected. Returns {} when no tier (or no
+## scaled block) applies.
+func _pick_scaled_tier(scaled: Dictionary, quest_item_counts: Dictionary) -> Dictionary:
+	if scaled.is_empty():
+		return {}
+	var collected := 0
+	for v in quest_item_counts.values():
+		collected += int(v)
+	var best: Dictionary = {}
+	for t in scaled.get("tiers", []):
+		var tier_min: int = int(t.get("min", 0))
+		if collected >= tier_min and tier_min >= int(best.get("min", -1)):
+			best = t
+	return best
 
 
 # ── Quest Item Objectives ──────────────────────────────────────

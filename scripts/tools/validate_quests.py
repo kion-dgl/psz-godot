@@ -43,6 +43,32 @@ def validate_quest(filepath: str) -> list[str]:
     if quest.get('version') != 1:
         errors.append(f'{fname}: version must be 1, got {quest.get("version")}')
 
+    # Completion-scaled rewards (#190): rewards.scaled.tiers must each carry
+    # an int "min" and a non-empty items list of {id, quantity>0}; mins must
+    # be unique so the highest-earned-tier pick is unambiguous.
+    scaled = quest.get('rewards', {}).get('scaled')
+    if scaled is not None:
+        tiers = scaled.get('tiers', [])
+        if not tiers:
+            errors.append(f'{fname}: rewards.scaled has no tiers')
+        mins = []
+        for ti, tier in enumerate(tiers):
+            t_label = f'{fname} rewards.scaled.tiers[{ti}]'
+            if not isinstance(tier.get('min'), int):
+                errors.append(f'{t_label}: "min" must be an int')
+            else:
+                mins.append(tier['min'])
+            items = tier.get('items', [])
+            if not items:
+                errors.append(f'{t_label}: no items')
+            for item in items:
+                if not item.get('id'):
+                    errors.append(f'{t_label}: item missing id')
+                if not isinstance(item.get('quantity'), int) or item.get('quantity', 0) <= 0:
+                    errors.append(f'{t_label}: item quantity must be a positive int')
+        if len(mins) != len(set(mins)):
+            errors.append(f'{fname}: rewards.scaled tier "min" values must be unique')
+
     for si, section in enumerate(quest.get('sections', [])):
         sec_label = f'{fname} section[{si}]'
         sec_missing = REQUIRED_SECTION_FIELDS - set(section.keys())

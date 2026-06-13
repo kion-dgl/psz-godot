@@ -71,6 +71,7 @@ func _ready() -> void:
 	test_quest_objectives()
 	test_quest_rewards()
 	test_quest_reward_data()
+	test_scaled_rewards()
 	test_input_config()
 	test_blackjack()
 	test_script_parse()
@@ -4028,12 +4029,75 @@ func _assert_quest_reward_tiers(qid: String) -> bool:
 			continue
 		for entry in t.get("items", []):
 			var iid: String = str(entry.get("id", ""))
-			var resolvable: bool = ConsumableRegistry.get_consumable(iid) != null \
-				or ItemRegistry.get_item(iid) != null
-			if not resolvable:
+			if not _reward_item_resolvable(iid):
 				assert_true(false, "%s rewards[%s] item id resolves: %s" % [qid, diff, iid])
 				tiers_ok = false
+	# Completion-scaled tiers (#190): every tier item must resolve too.
+	for tier in q_rewards.get("scaled", {}).get("tiers", []):
+		for entry in tier.get("items", []):
+			var iid: String = str(entry.get("id", ""))
+			if not _reward_item_resolvable(iid):
+				assert_true(false, "%s rewards.scaled item id resolves: %s" % [qid, iid])
+				tiers_ok = false
 	return tiers_ok
+
+
+## A reward item id is valid when any registry can name it — consumables,
+## general items, or weapons (scaled tiers grant weapons, #190).
+func _reward_item_resolvable(iid: String) -> bool:
+	return ConsumableRegistry.get_consumable(iid) != null \
+		or ItemRegistry.get_item(iid) != null \
+		or WeaponRegistry.get_weapon(iid) != null
+
+
+# ── Completion-scaled rewards (#190) ────────────────────────────
+# DOE's Weapon Smith thank-you scales with optional samples collected:
+# the rewards.scaled tier picker plus the end-to-end report path with
+# the quest_item_counts snapshot riding _completed_quest.
+func test_scaled_rewards() -> void:
+	print("── Completion-Scaled Rewards (#190) ──")
+
+	var scaled: Dictionary = QuestLoader.load_quest("deep_ore_extraction") \
+		.get("rewards", {}).get("scaled", {})
+	assert_true(not scaled.is_empty(), "deep_ore_extraction defines rewards.scaled")
+
+	# Tier picker: highest earned tier wins; zero collected → nothing.
+	assert_true(SessionManager._pick_scaled_tier(scaled, {}).is_empty(),
+		"no samples → no scaled tier")
+	var one: Dictionary = SessionManager._pick_scaled_tier(scaled, {"dianaline": 1})
+	assert_eq(str(one.get("items", [{}])[0].get("id", "")), "saber", "1/4 samples → Saber")
+	var two: Dictionary = SessionManager._pick_scaled_tier(scaled, {"dianaline": 1, "carlian": 1})
+	assert_eq(str(two.get("items", [{}])[0].get("id", "")), "brand", "2/4 samples → Brand")
+	var four: Dictionary = SessionManager._pick_scaled_tier(scaled,
+		{"dianaline": 1, "carlian": 1, "acenaline": 1, "peparian": 1})
+	assert_eq(str(four.get("items", [{}])[0].get("id", "")), "blue_saber", "4/4 samples → Blue Saber")
+
+	# End-to-end: collect all four, report, scaled weapon rides rewards_granted.
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+	SessionManager.enter_quest("deep_ore_extraction", "normal")
+	for iid in ["carlian", "acenaline", "peparian", "dianaline"]:
+		SessionManager.collect_quest_item(iid)
+	SessionManager.mark_quest_complete()
+	assert_eq(int(SessionManager.get_completed_quest().get("quest_item_counts", {}).size()), 4,
+		"completion snapshot carries the objective counts")
+	var meseta_before: int = GameState.get_meseta()
+	var data: Dictionary = SessionManager.report_quest()
+	var ids: Array = []
+	for entry in data.get("rewards_granted", {}).get("items", []):
+		ids.append(str(entry.get("id", "")))
+	assert_true(ids.has("blue_saber"), "report grants the 4/4 scaled weapon")
+	assert_gt(ids.size(), 1, "difficulty-tier items still granted alongside the scaled one")
+
+	# Cleanup: revert meseta and the granted items.
+	GameState.meseta = meseta_before
+	Inventory.remove_item("blue_saber", 1)
+	for entry in data.get("rewards_granted", {}).get("items", []):
+		if str(entry.get("id", "")) != "blue_saber":
+			Inventory.remove_item(str(entry.get("id", "")), int(entry.get("quantity", 1)))
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+	print("")
 
 
 # ── Input scheme regression test ────────────────────────────────
