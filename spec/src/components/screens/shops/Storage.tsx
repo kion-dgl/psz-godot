@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopScreen, PillRow, TabBar, StatRow, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, StatRow, C, DetailPanel } from '../pszui';
 
 type StorageItem = { name: string; qty: string; equipped?: boolean };
 const INVENTORY: StorageItem[] = [
@@ -34,10 +34,9 @@ export default function Storage() {
       hint={isItems ? itemsHint : mesetaHint}
       portrait="storage-counter"
       info={
-        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
+        <DetailPanel>
           {isItems ? (
             <>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 8 }}>{item.name}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <StatRow label="Qty" value={item.qty} />
                 <StatRow label="Status" value={item.equipped ? 'Equipped — cannot deposit' : 'Storable'} />
@@ -48,7 +47,7 @@ export default function Storage() {
               Transfer meseta between your wallet and the bank.
             </div>
           )}
-        </div>
+        </DetailPanel>
       }
     >
       <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />

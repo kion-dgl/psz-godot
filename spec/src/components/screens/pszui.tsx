@@ -105,11 +105,14 @@ export function ActionButton({ label }: { label: string }) {
   );
 }
 
-export function TabBar({ tabs, active, onSelect }: {
-  tabs: string[]; active: number; onSelect: (i: number) => void;
+// `right` pins content to the right of the tab row — used for the persistent
+// meseta/balance readout, which must stay visible no matter how far the LIST
+// scrolls (it can't live at the bottom of the list).
+export function TabBar({ tabs, active, onSelect, right }: {
+  tabs: string[]; active: number; onSelect: (i: number) => void; right?: ReactNode;
 }) {
   return (
-    <div style={{ display: 'flex', gap: 3, marginBottom: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 8 }}>
       {tabs.map((tab, i) => (
         <button key={tab} onClick={() => onSelect(i)} style={{
           padding: '5px 14px', fontSize: 12, fontWeight: 700,
@@ -118,12 +121,35 @@ export function TabBar({ tabs, active, onSelect }: {
           borderRadius: 4, cursor: 'pointer',
         }}>{tab}</button>
       ))}
+      {right && (
+        <span style={{
+          marginLeft: 'auto', fontSize: 12, fontWeight: 800, color: C.text,
+          background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(150,180,210,0.5)',
+          borderRadius: 10, padding: '3px 10px', whiteSpace: 'nowrap',
+        }}>{right}</span>
+      )}
     </div>
   );
 }
 
 export function Divider() {
   return <div style={{ height: 2, background: C.separator, margin: '6px 0', opacity: 0.5 }} />;
+}
+
+// DETAILS — the single white rounded info panel on the right of a shop. One
+// source for the look (scanline texture + dark-blue top edge); every shop wraps
+// its selected-item content in it. flex-fills the column slot above the
+// PORTRAIT, scrolling only if a detail genuinely overflows. No "Detail"/name
+// header — the selected LIST row already names the item.
+export function DetailPanel({ children }: { children: ReactNode }) {
+  return (
+    <div style={{
+      flex: 1, minHeight: 0, overflowY: 'auto',
+      background: C.itemBg, backgroundImage: SCANLINES,
+      border: '1px solid rgba(150,180,210,0.4)', borderTop: `3px solid ${C.bgDark}`,
+      borderRadius: 6, padding: '12px 14px',
+    }}>{children}</div>
+  );
 }
 
 export function ShopFrame({ children }: { children: ReactNode }) {
@@ -138,41 +164,42 @@ export function ShopFrame({ children }: { children: ReactNode }) {
   );
 }
 
-// Standard shop layout: list panel fills the left 75%, the right column
-// stacks the highlighted-item info (top) over the shop-keeper portrait
-// (bottom). Portrait images live at assets/ui/shop-previews/<portrait>.png
-// (256x256, served via the /cdn R2 proxy).
-export function ShopScreen({ title, hint, portrait, info, infoTitle = 'Detail', children }: {
+// Standard shop layout. The four named regions — use these names when
+// describing the screen:
+//   • TABS     — the category bar (TabBar) at the top of the LIST.
+//   • LIST     — the scrollable item list (left panel).
+//   • DETAILS  — the selected item's info (right column, top). A single white
+//                rounded area = the shop's `info` content; no blue Panel,
+//                border-top, or "Detail"/name header wrapping it.
+//   • PORTRAIT — the shop-keeper image, flush at the bottom of the right column.
+// Portrait images live at assets/ui/shop-previews/<portrait>.png (256x256,
+// served via the /cdn R2 proxy).
+export function ShopScreen({ title, hint, portrait, info, children }: {
   title: string;
   hint?: string;
   portrait: string;
   info: ReactNode;
-  infoTitle?: string;
   children: ReactNode;
 }) {
-  // Right column (~40%): info panel fills the top, shop-keeper portrait sits
-  // flush at the bottom (flex pushes it down). No border on the portrait.
   return (
     <div style={{
       width: 960, height: 540, background: C.bgLight, backgroundImage: SCANLINES,
       display: 'flex', gap: 10, padding: 16, boxSizing: 'border-box',
     }}>
-      {/* Left — the shop list */}
+      {/* LIST (with TABS inside) */}
       <div style={{ flex: 1, minWidth: 0, display: 'flex' }}>
         <Panel title={title} hint={hint} style={{ width: '100%', height: '100%' }}>
           <div style={{ height: '100%', overflowY: 'auto' }}>{children}</div>
         </Panel>
       </div>
 
-      {/* Right — info at the top, portrait at the bottom of the column.
-          space-between distributes the leftover height as the gap. */}
-      <div style={{ flex: '0 0 38%', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <Panel style={{ width: '100%' }}>
-          <div style={{ maxHeight: 190, overflowY: 'auto' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{infoTitle}</div>
-            {info}
-          </div>
-        </Panel>
+      {/* Right column — DETAILS fills the height above the PORTRAIT (flush at
+          the bottom). DETAILS is just a flex slot; the shop's `info` is the
+          white rounded panel that fills it — no blue Panel / border-top / header. */}
+      <div style={{ flex: '0 0 38%', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* DETAILS — a flex slot; the shop's `info` is the white rounded panel
+            that fills it (it owns its own background/border). */}
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>{info}</div>
         <img
           src={assetUrl(`assets/ui/shop-previews/${portrait}.png`)}
           alt="shop keeper"

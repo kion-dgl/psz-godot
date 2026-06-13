@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShopScreen, PillRow, TabBar, Divider, Balance, StatRow, ActionButton, C } from '../pszui';
+import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C, DetailPanel } from '../pszui';
 
 const ITEMS = [
   { name: 'Monomate', price: 50, desc: 'Restores a small amount of HP.' },
@@ -45,12 +45,11 @@ export default function ItemShop() {
       hint="Left/Right: Category   Up/Down: Select   Enter: Buy   Esc: Leave"
       portrait="item-shop"
       info={
-        <div style={{ background: C.itemBg, borderRadius: 4, padding: '10px 12px', border: '1px solid rgba(150,180,210,0.4)' }}>
+        <DetailPanel>
           {tab === 2 ? (() => {
             const d = DISKS[i];
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 4 }}>{d.name}</div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#886600', marginBottom: 8 }}>{d.price.toLocaleString()} M</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   <StatRow label="Element" value={d.element} />
@@ -61,30 +60,29 @@ export default function ItemShop() {
                 </div>
                 <Divider />
                 <div style={{ fontSize: 12, color: C.textLight, lineHeight: 1.5 }}>Use from inventory to learn. Disks are buy-1-only.</div>
-                <ActionButton label={`Buy — ${d.price.toLocaleString()} M`} />
+                <ActionButton label="Buy" />
               </>
             );
           })() : (() => {
             const it = list[i] as { name: string; price: number; desc: string };
             return (
               <>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 4 }}>{it.name}</div>
                 {tab !== 1 && <div style={{ fontSize: 12, fontWeight: 600, color: '#886600', marginBottom: 8 }}>{it.price.toLocaleString()} M</div>}
                 <Divider />
                 <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{it.desc}</div>
                 {tab !== 1 && (
                   <>
                     {bulk && <div style={{ fontSize: 11, color: C.textLight, marginTop: 8 }}>× quantity (bulk)</div>}
-                    <ActionButton label={tab === 3 ? `Sell — ${it.price.toLocaleString()} M` : `Buy — ${it.price.toLocaleString()} M`} />
+                    <ActionButton label={tab === 3 ? 'Sell' : 'Buy'} />
                   </>
                 )}
               </>
             );
           })()}
-        </div>
+        </DetailPanel>
       }
     >
-      <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} />
+      <TabBar tabs={TABS} active={tab} onSelect={(t) => { setTab(t); setSel(0); }} right="12,450 M" />
       {list.map((it, idx) => (
         <PillRow
           key={it.name}
@@ -94,8 +92,6 @@ export default function ItemShop() {
           onClick={() => setSel(idx)}
         />
       ))}
-      <Divider />
-      <Balance label="Your Meseta:" value="12,450" />
     </ShopScreen>
   );
 }
