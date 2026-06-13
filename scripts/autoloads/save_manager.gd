@@ -17,7 +17,7 @@ func save_game() -> void:
 	CharacterManager.sync_inventory_to_active()
 
 	var save_data := {
-		"version": 6,
+		"version": 7,
 		"characters": CharacterManager.get_save_data(),
 		"shared_storage": GameState.shared_storage.duplicate(),
 		"stored_meseta": GameState.stored_meseta,
@@ -83,6 +83,13 @@ func load_game() -> void:
 	# Migrate v5: add mag_states for existing characters
 	if version < 6:
 		_migrate_v5_to_v6(characters)
+
+	# Migrate v6: seed unlocked_difficulties for existing characters (#344).
+	# A character that already cleared the story finale retroactively keeps
+	# Hard unlocked (we can't recover which difficulty old saves cleared it
+	# on, so we grant conservatively — only the first tier up).
+	if version < 7:
+		CharacterManager.migrate_seed_unlocked_difficulties()
 
 	# Load shared storage
 	GameState.shared_storage = save_data.get("shared_storage", []).duplicate()

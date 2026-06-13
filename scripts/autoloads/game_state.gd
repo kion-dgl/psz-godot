@@ -22,6 +22,12 @@ var equipment: Dictionary = {
 # Completed missions tracking
 var completed_missions: Array = []  # Array of mission IDs
 
+# Difficulty unlock tracking (per-character; mirrors completed_missions —
+# CharacterManager swaps it per slot, SaveManager persists it). Normal is
+# always unlocked; clearing the story finale on a tier unlocks the next.
+# #344, spec /states/difficulty-unlock.
+var unlocked_difficulties: Array = ["normal"]
+
 # Shared storage (across all characters)
 var shared_storage: Array = []  # Array of {id, name, quantity}
 var stored_meseta: int = 0
@@ -119,6 +125,44 @@ func complete_mission(mission_id: String) -> void:
 
 func is_mission_completed(mission_id: String) -> bool:
 	return mission_id in completed_missions
+
+
+# ── Difficulty unlock loop (#344, spec /states/difficulty-unlock) ──
+
+## The story-finale quest whose clear unlocks the next difficulty tier.
+const STORY_FINALE_QUEST := "dark_castle"
+
+## Difficulty → the tier its clear unlocks. Keys are the canonical
+## difficulty ids (see the guild counter / quest rewards).
+const DIFFICULTY_PROGRESSION := {
+	"normal": "hard",
+	"hard": "super-hard",
+}
+
+
+func is_difficulty_unlocked(difficulty: String) -> bool:
+	# Normal is always available, even before unlocked_difficulties is set up.
+	return difficulty == "normal" or difficulty in unlocked_difficulties
+
+
+## Unlock a difficulty tier. Returns true if it was newly unlocked.
+func unlock_difficulty(difficulty: String) -> bool:
+	if difficulty in unlocked_difficulties:
+		return false
+	unlocked_difficulties.append(difficulty)
+	return true
+
+
+## Apply the difficulty-unlock rule for a reported quest. Clearing the
+## story finale on tier D unlocks the next tier per DIFFICULTY_PROGRESSION.
+## Returns the newly unlocked difficulty, or "" if nothing changed.
+func apply_quest_clear_unlock(quest_id: String, difficulty: String) -> String:
+	if quest_id != STORY_FINALE_QUEST:
+		return ""
+	var next: String = DIFFICULTY_PROGRESSION.get(difficulty, "")
+	if next != "" and unlock_difficulty(next):
+		return next
+	return ""
 
 
 func is_alive() -> bool:

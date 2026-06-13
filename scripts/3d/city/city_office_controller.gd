@@ -491,6 +491,13 @@ func _report_quest() -> void:
 		{"speaker": "Principal", "text": "Mission complete. Well done, hunter."},
 		{"speaker": "Principal", "text": "Your reward: %d EXP, %d meseta." % [exp_val, meseta_val]},
 	]
+	# Difficulty unlock (#344) — applied in SessionManager.report_quest; the
+	# office is the main story-report NPC, so it announces the new tier.
+	var unlocked: String = str(data.get("difficulty_unlocked", ""))
+	if not unlocked.is_empty():
+		var label: String = "Super-Hard" if unlocked == "super-hard" else unlocked.capitalize()
+		report_dialog.append({"speaker": "Principal",
+			"text": "And — you've proven yourself. %s difficulty is now open to you." % label})
 
 	_show_dialog(report_dialog, _on_report_complete)
 

@@ -88,6 +88,7 @@ func create_character(slot: int, class_id: String, char_name: String, appearance
 		"material_bonuses": {},
 		"combat_buffs": {},
 		"completed_missions": [],
+		"unlocked_difficulties": ["normal"],
 		"storage": [],
 		"mag_states": {"mag": MagManager.create_mag()},
 		"action_palette": ActionPalette.DEFAULT_PAGES.duplicate(true),
@@ -123,11 +124,13 @@ func set_active_slot(slot: int) -> void:
 	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
 		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
 		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
+		_characters[_active_slot]["unlocked_difficulties"] = GameState.unlocked_difficulties.duplicate()
 		_characters[_active_slot]["meseta"] = GameState.meseta
 	_active_slot = slot
 	# Load incoming character's data
 	Inventory._items = _characters[slot].get("inventory", {}).duplicate()
 	GameState.completed_missions = _characters[slot].get("completed_missions", []).duplicate()
+	GameState.unlocked_difficulties = _characters[slot].get("unlocked_difficulties", ["normal"]).duplicate()
 	ActionPalette.load_from_character(_characters[slot])
 	active_character_changed.emit(slot)
 	_sync_to_game_state()
@@ -222,8 +225,24 @@ func sync_inventory_to_active() -> void:
 	if _active_slot >= 0 and _active_slot < MAX_SLOTS and _characters[_active_slot] != null:
 		_characters[_active_slot]["inventory"] = Inventory._items.duplicate()
 		_characters[_active_slot]["completed_missions"] = GameState.completed_missions.duplicate()
+		_characters[_active_slot]["unlocked_difficulties"] = GameState.unlocked_difficulties.duplicate()
 		_characters[_active_slot]["meseta"] = GameState.meseta
 		_characters[_active_slot]["action_palette"] = ActionPalette.pages.duplicate(true)
+
+
+## Migrate v6→v7 (#344): seed unlocked_difficulties for characters that
+## predate the field. Normal always; Hard if the story finale was already
+## cleared (difficulty unknown in old saves → grant only the first tier up).
+func migrate_seed_unlocked_difficulties() -> void:
+	for i in range(_characters.size()):
+		if _characters[i] == null:
+			continue
+		if not _characters[i].get("unlocked_difficulties", []).is_empty():
+			continue
+		var unlocked: Array = ["normal"]
+		if GameState.STORY_FINALE_QUEST in _characters[i].get("completed_missions", []):
+			unlocked.append("hard")
+		_characters[i]["unlocked_difficulties"] = unlocked
 
 
 ## Migrate v3 global completed_missions to all existing characters
