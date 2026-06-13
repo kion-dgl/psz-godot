@@ -390,12 +390,9 @@ func get_accepted_quest_area() -> String:
 
 func cancel_accepted_quest() -> void:
 	_accepted_quest.clear()
-	# Also clear any suspended session from this quest
-	if not _suspended_session.is_empty() and _suspended_session.get("type") == "quest":
-		_suspended_session.clear()
-	# Per spec: cancelling a quest closes any active telepipe (it was
-	# anchored to the suspended quest session we just wiped).
-	TelepipeManager.cancel("cancel_accepted_quest")
+	# Cancelling is a quest exit (#384): tear down the Field Context — closes any
+	# open telepipe and clears the live OR suspended quest session + section state.
+	_end_quest_field_context()
 
 
 ## Start the accepted quest — calls enter_quest() and clears acceptance.
@@ -431,10 +428,34 @@ func mark_quest_complete() -> void:
 	quest_completed.emit()
 
 
-## Mark quest as complete and return to city immediately.
+## Objective completion (#384): mark the quest complete but KEEP the Field
+## Context alive. Per the Session Model (/states/session-model), completing a
+## quest's objectives does not leave the field — the player stays in a live
+## quest field and MAY keep exploring and round-tripping through a telepipe.
+## The Field Context is torn down only at the quest's *exit*: report_quest()
+## or cancel_accepted_quest(). The field→city ride itself suspends the session
+## (see valley_field_controller, which calls suspend_session() at the boundary)
+## so the player can return via the city teleporter until they report.
 func complete_quest() -> void:
 	mark_quest_complete()
-	return_to_city()
+
+
+## Tear down a quest's Field Context — the quest's *exit* (#384). Called from
+## report_quest() (rewards claimed) and cancel_accepted_quest(). Closes any open
+## telepipe, clears the live OR suspended quest session, section state, and
+## objective bookkeeping, and lands the player in the city. No-op-safe to call
+## with nothing active.
+func _end_quest_field_context() -> void:
+	TelepipeManager.cancel("quest_ended")
+	if _session.get("type", "") == "quest":
+		_session.clear()
+	if _suspended_session.get("type", "") == "quest":
+		_suspended_session.clear()
+	_quest_objectives.clear()
+	_quest_item_counts.clear()
+	clear_section_states()
+	_location = "city"
+	session_ended.emit()
 
 
 func has_completed_quest() -> bool:
@@ -461,6 +482,10 @@ func report_quest() -> Dictionary:
 	data["rewards_granted"] = _grant_quest_rewards(
 		quest_id, difficulty, data.get("quest_item_counts", {}))
 	data["difficulty_unlocked"] = GameState.apply_quest_clear_unlock(quest_id, difficulty)
+	# Reporting is the quest's exit (#384): now tear down the Field Context that
+	# objective completion deliberately left alive — closes any open telepipe and
+	# clears the live/suspended quest session + section state.
+	_end_quest_field_context()
 	return data
 
 

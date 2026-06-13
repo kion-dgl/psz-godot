@@ -1092,9 +1092,12 @@ func _spawn_field_elements() -> void:
 		var aw_callback := func(_body: Node3D) -> void:
 			if _body.is_in_group("player"):
 				if is_final:
-					_fdbg("[ValleyField] AreaWarp %s → final exit, returning to city" % portal_dir)
+					_fdbg("[ValleyField] AreaWarp %s → final exit, leaving field" % portal_dir)
+					# #384: a quest's final exit marks complete + suspends (resumable
+					# until report/cancel); a free field returns to city as before.
 					if SessionManager.get_session().get("type") == "quest":
-						SessionManager.complete_quest()
+						SessionManager.mark_quest_complete()
+						SessionManager.suspend_session()
 					else:
 						SessionManager.return_to_city()
 					SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
@@ -2034,9 +2037,13 @@ func _on_end_reached() -> void:
 			"grid_minimap_visible": _grid_minimap.visible if _grid_minimap else true,
 		})
 	else:
-		# All sections complete
+		# All sections complete. For a quest this is the player leaving the field
+		# at the end (#384): mark complete (rewards pending) and SUSPEND, so the
+		# run stays resumable from the city teleporter until the player reports or
+		# cancels — that is when the Field Context actually closes.
 		if SessionManager.get_session().get("type") == "quest":
-			SessionManager.complete_quest()
+			SessionManager.mark_quest_complete()
+			SessionManager.suspend_session()
 		else:
 			SessionManager.return_to_city()
 		SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
