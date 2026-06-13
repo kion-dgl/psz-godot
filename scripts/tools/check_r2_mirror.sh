@@ -31,7 +31,7 @@ done
 
 # Subtrees that don't go to R2 — keep in sync with scripts/publish/sync_tree.ts
 # (VENDORED_SKIPS + RESTRICTED_REL_PREFIXES) and scripts/tools/fetch_assets_dev.sh.
-EXCLUDE_RE='^(assets/(kenney_input-prompts|kenney_nature-pack|npcs/cowgirl)/)|\.(import|uid)$'
+EXCLUDE_RE='^(assets/(kenney_input-prompts|kenney_nature-pack|npcs/cowgirl|cc0_textures)/)|\.(import|uid)$'
 
 # Build the list of paths added or modified in the PR diff. Two trees go to R2:
 #   assets/*                        → key = assets/...
