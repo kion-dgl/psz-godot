@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C, DetailPanel } from '../pszui';
 
 const ITEMS = [
-  { name: 'Monomate', price: 50, desc: 'Restores a small amount of HP.' },
-  { name: 'Dimate', price: 300, desc: 'Restores a moderate amount of HP.' },
-  { name: 'Trimate', price: 2000, desc: 'Fully restores HP.' },
-  { name: 'Telepipe', price: 350, desc: 'Warps back to the city from the field.' },
-  { name: 'Moon Atomizer', price: 500, desc: 'Revives a fallen ally.' },
+  { name: 'Monomate', price: 50, desc: 'Restores a small amount of HP.', max: 10, have: 5 },
+  { name: 'Dimate', price: 300, desc: 'Restores a moderate amount of HP.', max: 10, have: 2 },
+  { name: 'Trimate', price: 2000, desc: 'Fully restores HP.', max: 10, have: 0 },
+  { name: 'Telepipe', price: 350, desc: 'Warps back to the city from the field.', max: 10, have: 3 },
+  { name: 'Moon Atomizer', price: 500, desc: 'Revives a fallen ally.', max: 10, have: 1 },
 ];
 
 const MATERIALS = [
@@ -26,18 +26,40 @@ const DISKS: Disk[] = [
 ];
 
 const SELL = [
-  { name: 'Monomate', price: 25, desc: 'Sells for half its buy price.' },
-  { name: 'Telepipe', price: 175, desc: 'Sells for half its buy price.' },
+  { name: 'Monomate', price: 25, desc: 'Sells for half its buy price.', max: 10, have: 5 },
+  { name: 'Telepipe', price: 175, desc: 'Sells for half its buy price.', max: 10, have: 3 },
 ];
+
+// Small ◀ N ▶ stepper for the buy/sell quantity.
+function QtyStepper({ qty, max, onChange, total }: { qty: number; max: number; onChange: (q: number) => void; total: string }) {
+  const btn: CSSProperties = {
+    width: 24, height: 24, fontSize: 13, fontWeight: 800, lineHeight: '22px',
+    background: C.itemBg, border: '1px solid rgba(150,180,210,0.5)', borderRadius: 4,
+    color: C.text, cursor: 'pointer', padding: 0,
+  };
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13 }}>
+        <span style={{ color: C.textLight }}>Quantity</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button style={btn} onClick={() => onChange(Math.max(1, qty - 1))}>◀</button>
+          <span style={{ fontWeight: 800, minWidth: 22, textAlign: 'center' }}>{qty}</span>
+          <button style={btn} onClick={() => onChange(Math.min(max, qty + 1))}>▶</button>
+        </div>
+      </div>
+      <StatRow label="Total" value={total} />
+    </div>
+  );
+}
 
 const TABS = ['Items', 'Materials', 'Disks', 'Sell'];
 
 export default function ItemShop() {
   const [tab, setTab] = useState(0);
   const [sel, setSel] = useState(0);
+  const [qty, setQty] = useState(1);
   const list = [ITEMS, MATERIALS, DISKS, SELL][tab];
   const i = Math.min(sel, list.length - 1);
-  const bulk = tab === 0 || tab === 1;
 
   return (
     <ShopScreen
@@ -64,16 +86,24 @@ export default function ItemShop() {
               </>
             );
           })() : (() => {
-            const it = list[i] as { name: string; price: number; desc: string };
+            const it = list[i] as { name: string; price: number; desc: string; max?: number; have?: number };
+            const isDebug = tab === 1; // Materials tab = debug, not purchasable
+            const max = it.max ?? 10;
+            const have = it.have ?? 0;
+            // Buy up to the free stack space; sell up to what you own.
+            const maxQty = Math.max(1, tab === 3 ? have : max - have);
+            const q = Math.min(Math.max(1, qty), maxQty);
             return (
               <>
-                {tab !== 1 && <div style={{ fontSize: 12, fontWeight: 600, color: '#886600', marginBottom: 8 }}>{it.price.toLocaleString()} M</div>}
-                <Divider />
                 <div style={{ fontSize: 13, color: C.text, lineHeight: 1.5 }}>{it.desc}</div>
-                {tab !== 1 && (
+                {!isDebug && (
                   <>
-                    {bulk && <div style={{ fontSize: 11, color: C.textLight, marginTop: 8 }}>× quantity (bulk)</div>}
-                    <ActionButton label={tab === 3 ? 'Sell' : 'Buy'} />
+                    <Divider />
+                    <StatRow label={tab === 3 ? 'Sell price' : 'Cost'} value={`${it.price.toLocaleString()} M each`} />
+                    <StatRow label="Max stack" value={`${max}`} />
+                    <StatRow label="You have" value={`${have} / ${max}`} />
+                    <QtyStepper qty={q} max={maxQty} onChange={setQty} total={`${(it.price * q).toLocaleString()} M`} />
+                    <ActionButton label={tab === 3 ? `Sell ${q}` : `Buy ${q}`} />
                   </>
                 )}
               </>
