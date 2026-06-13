@@ -1347,6 +1347,13 @@ func respawn_player_telepipe_from_state(world_pos: Vector3) -> void:
 ## world_pos is in global coordinates (e.g. player.global_position).
 func _spawn_player_telepipe_node(world_pos: Vector3) -> void:
 	_fdbg("[FieldElements] Spawning PLAYER telepipe at %s" % world_pos)
+	# One pipe ever (spec /states/telepipe; #239 bug 1): TelepipeManager
+	# replaced the state, so the previous pipe's visual must go too.
+	# Rename before the deferred free so the new node can take the name.
+	var old := _map_root.get_node_or_null("PlayerTelepipe")
+	if old:
+		old.name = "PlayerTelepipeStale"
+		old.queue_free()
 	var telepipe := TelepipeScript.new()
 	telepipe.name = "PlayerTelepipe"
 	_map_root.add_child(telepipe)
