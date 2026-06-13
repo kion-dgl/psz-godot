@@ -25,7 +25,7 @@ func _ready() -> void:
 
 
 # Registries, inventory, combat math, mags, shops, techniques, telepipe + the
-# recent playtest-fix regression tests (#357/#358/#359).
+# recent playtest-fix regression tests (#357/#358/#359/#352).
 func _run_tests_core() -> void:
 	test_registries()
 	test_inventory()
@@ -70,6 +70,7 @@ func _run_tests_core() -> void:
 	test_equipment_screen_dup_frame()
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
+	test_charge_drop_paths()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -2960,6 +2961,66 @@ func test_freefield_quest_unblock() -> void:
 
 	SessionManager.return_to_city()
 	SessionManager._suspended_session.clear()
+	print("")
+
+
+# ── #352: charge-cancel — _drop_charge shared by every drop path ──
+# #273 made only dodge cancel a mid-charge technique; #352 extracts the cancel
+# into _drop_charge and adds N/H/S-attack and menu-open as drop paths. Off-tree
+# bare player (no _ready) so _drop_charge / _on_palette_pressed run without the
+# field/combat scene — _end_charge_visual is null-safe.
+func test_charge_drop_paths() -> void:
+	print("── Charge cancel: _drop_charge clears + different-slot drop (#352) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = PlayerScript.new()
+
+	# Core: _drop_charge clears the charge and emits tech_charge_released once.
+	var released: Array = []
+	pl.tech_charge_released.connect(func(s: int) -> void: released.append(s))
+	pl.set("_charging_slot", 2)
+	pl.set("_charging_tech_id", "foie")
+	pl.set("_tech_charge_ready", true)
+	pl._drop_charge()
+	assert_eq(pl.get("_charging_slot"), -1, "_drop_charge clears the charging slot")
+	assert_eq(str(pl.get("_charging_tech_id")), "", "_drop_charge clears the tech id")
+	assert_eq(released, [2], "_drop_charge emits tech_charge_released with the dropped slot")
+
+	# No-op when nothing is charging — menu opens fire this every time, so a
+	# spurious release would phantom-cancel / double-emit.
+	released.clear()
+	pl._drop_charge()
+	assert_eq(released, [], "_drop_charge is a no-op (no emit) when not charging")
+
+	# A DIFFERENT palette slot mid-charge drops the old charge first. Use two
+	# techs so the new press starts a fresh charge (no combat executes) — same
+	# branch an N/H/S attack takes before _execute_palette_action.
+	var page: int = ActionPalette.current_page
+	var saved0: String = ActionPalette.get_action_for_slot(0)
+	var saved1: String = ActionPalette.get_action_for_slot(1)
+	ActionPalette.set_action(page, 0, "foie")
+	ActionPalette.set_action(page, 1, "barta")
+	if ActionPalette.get_action_for_slot(1) == "barta":
+		released.clear()
+		pl.set("_charging_slot", 0)
+		pl.set("_charging_tech_id", "foie")
+		pl._on_palette_pressed(1)
+		assert_eq(released, [0], "pressing a different slot mid-charge drops the old charge (slot 0)")
+		assert_eq(pl.get("_charging_slot"), 1, "the new charge starts on the pressed slot")
+		assert_eq(str(pl.get("_charging_tech_id")), "barta", "the new charge tracks the new tech")
+
+		# Re-pressing the SAME charging slot must NOT drop — the hold→release
+		# cast path (#273) still owns same-slot, so no spurious release fires.
+		released.clear()
+		pl.set("_charging_slot", 1)
+		pl.set("_charging_tech_id", "barta")
+		pl._on_palette_pressed(1)
+		assert_eq(released, [], "re-pressing the same charging slot does not drop (no release emit)")
+	else:
+		print("  (skipped palette-driven drop: page has <2 slots)")
+
+	ActionPalette.set_action(page, 0, saved0)
+	ActionPalette.set_action(page, 1, saved1)
+	pl.free()
 	print("")
 
 

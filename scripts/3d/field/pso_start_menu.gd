@@ -5,6 +5,10 @@ extends CanvasLayer
 ## Registered as autoload so it works in both field and city.
 
 signal closed()
+## Emitted when the menu opens. There was no project-wide "menu open" signal
+## (mobile_controls polls is_open() for this reason); added so the player can
+## drop an in-progress technique charge on menu open (#352).
+signal opened()
 
 # ── Layout ──────────────────────────────────────────────────────────────────────
 const VIEWPORT_W := 1280.0
@@ -393,6 +397,7 @@ func open() -> void:
 	_action_message = ""
 	_canvas.queue_redraw()
 	print("[PsoStartMenu] Opened")
+	opened.emit()
 
 
 func close() -> void:
