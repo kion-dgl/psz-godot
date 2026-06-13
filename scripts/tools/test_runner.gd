@@ -12,6 +12,21 @@ func _ready() -> void:
 	print("  PSZ-GODOT HEADLESS TEST RUNNER")
 	print("══════════════════════════════════\n")
 
+	# Split across two registration helpers so neither crosses the code-health
+	# size bound as the suite grows (each new test is one more line here).
+	_run_tests_core()
+	_run_tests_systems()
+
+	print("\n══════════════════════════════════")
+	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
+	print("══════════════════════════════════\n")
+
+	get_tree().quit(1 if _fail > 0 else 0)
+
+
+# Registries, inventory, combat math, mags, shops, techniques, telepipe + the
+# recent playtest-fix regression tests (#357/#358/#359/#352).
+func _run_tests_core() -> void:
 	test_registries()
 	test_inventory()
 	test_inventory_capacity()
@@ -56,6 +71,10 @@ func _ready() -> void:
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
 	test_charge_drop_paths()
+
+
+# Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
+func _run_tests_systems() -> void:
 	test_build_info_sentinel()
 	test_bootstrap_pack_magic_guard()
 	test_warp_teleporter_section_label()
@@ -82,12 +101,6 @@ func _ready() -> void:
 	test_input_config()
 	test_blackjack()
 	test_script_parse()
-
-	print("\n══════════════════════════════════")
-	print("  RESULTS: %d passed, %d failed" % [_pass, _fail])
-	print("══════════════════════════════════\n")
-
-	get_tree().quit(1 if _fail > 0 else 0)
 
 
 func assert_true(condition: bool, label: String) -> void:
