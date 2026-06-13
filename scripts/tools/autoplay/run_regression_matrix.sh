@@ -50,6 +50,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 LOG=/tmp/regression_matrix.log
 SCRATCH=/tmp/quest_matrix_scratch
 REPORT="$SCRATCH/regression_report.json"
+MATRIX_FAIL=0  # post-build state assertions (e.g. #344) flip this; exit reflects it
 GODOT="/home/kion/.local/bin/godot"
 OUTDIR="$REPO/spec/public/recordings"
 PACK="$REPO/dist/assets.pck"
@@ -465,6 +466,18 @@ JSON
   fi
   if reached dc; then
     run_chain_phase dc      "dark_castle"       "post-tbs"     "post-dc"      "Phase 12: dark_castle" 900
+    # Post-build assertion for #344: clearing the story finale on Normal
+    # must unlock Hard in the persisted save. The unit test pins the rule;
+    # this proves the wiring fires in the running game (the #335 lesson).
+    dc_save="$SCRATCH/post-dc/save_data.json"
+    if [ -f "$dc_save" ]; then
+      if jq -e '[.characters[]? | select(.!=null) | (.unlocked_difficulties // []) | any(. == "hard")] | any' "$dc_save" >/dev/null 2>&1; then
+        echo "[regression] #344 OK — Hard unlocked in post-dc save"
+      else
+        echo "[regression] ::error:: #344 — post-dc save did NOT unlock Hard"
+        MATRIX_FAIL=1
+      fi
+    fi
   fi
 
   # === Phase 13: Shops (city-economy smoke — issue #9) ===
@@ -503,3 +516,11 @@ rm -f "$TMPREPORT"
 
 echo "[regression] report: $REPORT"
 cat "$REPORT" | jq -r '.quests[] | "  \(.phase): \(.status)  (\(.duration_sec)s)"' 2>/dev/null || cat "$REPORT"
+
+# Post-build state assertions (#344 etc.) are not phase sidecars — surface
+# them in the exit code so a failed assertion is loud even when every phase
+# passed its DONE-ok oracle.
+if [ "$MATRIX_FAIL" -ne 0 ]; then
+  echo "[regression] ::error:: post-build state assertion(s) FAILED — see #344 line above"
+  exit 1
+fi

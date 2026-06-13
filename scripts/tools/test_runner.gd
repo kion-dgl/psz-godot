@@ -72,6 +72,7 @@ func _ready() -> void:
 	test_quest_rewards()
 	test_quest_reward_data()
 	test_scaled_rewards()
+	test_difficulty_unlock()
 	test_input_config()
 	test_blackjack()
 	test_script_parse()
@@ -4097,6 +4098,75 @@ func test_scaled_rewards() -> void:
 			Inventory.remove_item(str(entry.get("id", "")), int(entry.get("quantity", 1)))
 	SessionManager.return_to_city()
 	SessionManager._completed_quest.clear()
+	print("")
+
+
+# ── Difficulty unlock loop (#344, spec /states/difficulty-unlock) ──
+# The story-finale clear rule, the always-on Normal, the non-finale
+# no-op, and per-character persistence through the CharacterManager swap.
+func test_difficulty_unlock() -> void:
+	print("── Difficulty Unlock Loop (#344) ──")
+
+	var saved: Array = GameState.unlocked_difficulties.duplicate()
+	GameState.unlocked_difficulties = ["normal"]
+
+	# Baseline: Normal always, the rest locked.
+	assert_true(GameState.is_difficulty_unlocked("normal"), "Normal always unlocked")
+	assert_true(not GameState.is_difficulty_unlocked("hard"), "Hard locked initially")
+	assert_true(not GameState.is_difficulty_unlocked("super-hard"), "Super-Hard locked initially")
+
+	# Non-finale quest reports never unlock.
+	assert_eq(GameState.apply_quest_clear_unlock("search_and_rescue", "normal"), "",
+		"clearing a non-finale quest unlocks nothing")
+	assert_true(not GameState.is_difficulty_unlocked("hard"), "still locked after a side quest")
+
+	# Finale on Normal → Hard.
+	assert_eq(GameState.apply_quest_clear_unlock(GameState.STORY_FINALE_QUEST, "normal"), "hard",
+		"finale on Normal unlocks Hard")
+	assert_true(GameState.is_difficulty_unlocked("hard"), "Hard now unlocked")
+	assert_true(not GameState.is_difficulty_unlocked("super-hard"), "Super-Hard still locked")
+
+	# Re-clearing the finale on Normal is a no-op (already unlocked).
+	assert_eq(GameState.apply_quest_clear_unlock(GameState.STORY_FINALE_QUEST, "normal"), "",
+		"re-clearing on Normal unlocks nothing new")
+
+	# Finale on Hard → Super-Hard; on Super-Hard → nothing.
+	assert_eq(GameState.apply_quest_clear_unlock(GameState.STORY_FINALE_QUEST, "hard"), "super-hard",
+		"finale on Hard unlocks Super-Hard")
+	assert_true(GameState.is_difficulty_unlocked("super-hard"), "Super-Hard now unlocked")
+	assert_eq(GameState.apply_quest_clear_unlock(GameState.STORY_FINALE_QUEST, "super-hard"), "",
+		"finale on Super-Hard has no further tier")
+
+	# Per-character persistence: unlock state swaps with the active slot,
+	# mirroring completed_missions. Two scratch slots, swap, assert isolation.
+	var slot_a := 0
+	var slot_b := 1
+	var bak_a = CharacterManager.get_character(slot_a)
+	var bak_b = CharacterManager.get_character(slot_b)
+	var bak_active: int = CharacterManager._active_slot
+	CharacterManager.create_character(slot_a, "humar", "UnlockA")
+	CharacterManager.create_character(slot_b, "humar", "UnlockB")
+	CharacterManager.set_active_slot(slot_a)
+	GameState.unlocked_difficulties = ["normal", "hard"]
+	CharacterManager.set_active_slot(slot_b)
+	assert_eq(GameState.unlocked_difficulties, ["normal"], "slot B starts at Normal only")
+	GameState.unlocked_difficulties = ["normal", "hard", "super-hard"]
+	CharacterManager.set_active_slot(slot_a)
+	assert_eq(GameState.unlocked_difficulties, ["normal", "hard"], "slot A retained its own unlocks")
+
+	# Migration: a finale-cleared old character retroactively keeps Hard.
+	var ch = CharacterManager.get_character(slot_a)
+	ch["completed_missions"] = [GameState.STORY_FINALE_QUEST]
+	ch.erase("unlocked_difficulties")
+	CharacterManager.migrate_seed_unlocked_difficulties()
+	assert_eq(ch["unlocked_difficulties"], ["normal", "hard"],
+		"migration retroactively grants Hard to a story-cleared character")
+
+	# Restore the scratch slots and global state.
+	CharacterManager._characters[slot_a] = bak_a
+	CharacterManager._characters[slot_b] = bak_b
+	CharacterManager._active_slot = bak_active
+	GameState.unlocked_difficulties = saved
 	print("")
 
 

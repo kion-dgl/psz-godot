@@ -1,0 +1,34 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Difficulty Unlock Loop" section="States">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
+
+  <p>PSZ's replay structure: clearing the story raises the ceiling. Three tiers — <strong>Normal</strong>, <strong>Hard</strong>, <strong>Super-Hard</strong> — gate behind story completion, per character. The per-difficulty enemy scaling, rewards (<a href="/states/story-progression">#318</a> tiers), and technique levels already exist; this is the loop that gates access to them.</p>
+
+  <h2>The rule</h2>
+  <ul>
+    <li><strong>Normal</strong> is always unlocked — even on a brand-new character, even before the unlock state is initialized.</li>
+    <li>Reporting the <strong>story finale</strong> (<code>dark_castle</code>) on <strong>Normal</strong> <strong>MUST</strong> unlock <strong>Hard</strong> for that character.</li>
+    <li>Reporting <code>dark_castle</code> on <strong>Hard</strong> <strong>MUST</strong> unlock <strong>Super-Hard</strong>.</li>
+    <li>The unlock fires at guild turn-in (alongside <code>complete_mission</code>), keyed on the difficulty the run was played at — the same <code>difficulty</code> field the reward grant reads.</li>
+  </ul>
+  <p>Only the finale gates tiers; clearing side or variant quests on a difficulty does nothing. The progression map (<code>GameState.DIFFICULTY_PROGRESSION</code>) is <code>normal → hard → super-hard</code>; the finale id is <code>GameState.STORY_FINALE_QUEST</code>.</p>
+
+  <h2>Persistence</h2>
+  <p>Unlock state is <strong>per character</strong>, mirroring <code>completed_missions</code> exactly: <code>GameState.unlocked_difficulties</code> is the runtime list, <code>CharacterManager</code> swaps it in/out per slot, <code>SaveManager</code> persists it in the character dict (save v7). Old saves migrate by seeding <code>["normal"]</code>; a character whose <code>completed_missions</code> already contains the finale retroactively keeps <strong>Hard</strong> (the cleared difficulty is unrecoverable from pre-v7 saves, so the grant is conservative — first tier up only).</p>
+
+  <h2>Guild counter gating</h2>
+  <p>The difficulty submenu <strong>MUST</strong> show all three tiers; locked ones render muted with a <code>[LOCKED]</code> tag (the same treatment locked quests get), and the hint names the unlock condition ("Clear the story on Normal"). The player <strong>MAY</strong> highlight a locked tier to read the condition but <strong>MUST NOT</strong> be able to accept a quest on it — both the input gate and the async confirm path re-check.</p>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/autoloads/game_state.gd</code> — <code>unlocked_difficulties</code>, <code>is_difficulty_unlocked</code>, <code>unlock_difficulty</code>, <code>apply_quest_clear_unlock</code>, and the progression constants.</li>
+    <li><code>scripts/autoloads/character_manager.gd</code> — per-slot swap + the v7 seed migration.</li>
+    <li><code>scripts/2d/guild_counter.gd</code> — the submenu gating and the turn-in unlock message.</li>
+  </ul>
+
+  <h2>Testing</h2>
+  <p>Unit (<code>test_difficulty_unlock</code>): the finale-clear rule per tier, the non-finale no-op, the always-on Normal, and the counter's locked-tier predicate. Post-build: the regression matrix's <code>dark_castle</code> phase asserts Hard is unlocked in the post-finale save snapshot.</p>
+</Concept>

@@ -13,6 +13,15 @@ var _active_modal: Control = null
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
 
+## Canonical difficulty id → display label (#344).
+const _DIFFICULTY_LABELS := {"hard": "Hard", "super-hard": "Super-Hard"}
+
+## Per locked tier: the message naming what clears it. Keyed by difficulty id.
+const _DIFFICULTY_UNLOCK_HINT := {
+	"hard": "Clear the story on Normal",
+	"super-hard": "Clear the story on Hard",
+}
+
 const AREA_DISPLAY := {
 	"gurhacia": "Valley",
 	"rioh": "Snowfield",
@@ -58,6 +67,11 @@ func _setup_portrait() -> void:
 func _has_active_quest() -> bool:
 	return SessionManager.has_accepted_quest() or SessionManager.has_suspended_session() \
 		or SessionManager.has_completed_quest()
+
+
+## Canonical difficulty id for a DIFFICULTIES index ("Super-Hard" → "super-hard").
+func _difficulty_key(index: int) -> String:
+	return DIFFICULTIES[index].to_lower().replace(" ", "-")
 
 
 func _load_entries() -> void:
@@ -220,6 +234,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if _selecting_difficulty:
+			# Locked tier (#344): refuse, naming the unlock condition.
+			var diff_key: String = _difficulty_key(_selected_difficulty)
+			if not GameState.is_difficulty_unlocked(diff_key):
+				hint_label.text = "Locked — %s." % _DIFFICULTY_UNLOCK_HINT.get(diff_key, "complete the story")
+				SfxManager.play("res://assets/sfx/ui/menu_back.wav")
+				get_viewport().set_input_as_handled()
+				return
 			# Difficulty already chosen — confirm before locking in the quest.
 			_open_accept_modal()
 		elif not _entries.is_empty() and _selected_index < _entries.size():
@@ -328,8 +349,15 @@ func _accept_entry() -> void:
 		_selecting_difficulty = false
 		_refresh_display()
 		return
-	var difficulty: String = DIFFICULTIES[_selected_difficulty].to_lower().replace(" ", "-")
+	var difficulty: String = _difficulty_key(_selected_difficulty)
 	if entry["type"] == "quest":
+		# Defense in depth (#344): the ui_accept gate already blocks locked
+		# tiers, but the modal confirm is async — re-check before committing.
+		if not GameState.is_difficulty_unlocked(difficulty):
+			hint_label.text = "Locked — %s." % _DIFFICULTY_UNLOCK_HINT.get(difficulty, "complete the story")
+			_selecting_difficulty = false
+			_refresh_display()
+			return
 		# Block if another quest is already active
 		if _has_active_quest():
 			hint_label.text = "Complete your current quest first."
@@ -350,10 +378,16 @@ func _report_quest() -> void:
 	var quest_id: String = str(data.get("quest_id", ""))
 	if not quest_id.is_empty():
 		GameState.complete_mission(quest_id)
+	# Difficulty unlock loop (#344): clearing the story finale unlocks the
+	# next tier for this character.
+	var unlocked: String = GameState.apply_quest_clear_unlock(
+		quest_id, str(data.get("difficulty", "normal")))
 	# Show completion message
 	var msg := "Quest complete! EXP: %d  Meseta: %d" % [
 		int(data.get("total_exp", 0)), int(data.get("total_meseta", 0))]
 	msg += _format_rewards(data.get("rewards_granted", {}))
+	if not unlocked.is_empty():
+		msg += "  ★ %s difficulty unlocked!" % _DIFFICULTY_LABELS.get(unlocked, unlocked)
 	hint_label.text = msg
 	# Auto-save after quest completion so progress isn't lost
 	SaveManager.auto_save()
@@ -382,6 +416,37 @@ func _format_rewards(granted: Dictionary) -> String:
 	return "  Reward: %s" % ", ".join(parts)
 
 
+## Render the per-quest difficulty submenu into `vbox`; returns the pill
+## for the highlighted tier (for scroll-into-view). Locked tiers (#344)
+## render muted with a [LOCKED] tag and drive the unlock-hint label.
+func _render_difficulty_submenu(vbox: VBoxContainer) -> Control:
+	var entry: Dictionary = _entries[_selected_index]
+	vbox.add_child(PszStyle.create_section_header(entry["name"]))
+	vbox.add_child(PszStyle.detail_label(""))
+	vbox.add_child(PszStyle.detail_label("Select Difficulty:"))
+
+	var selected_pill: Control = null
+	for i in range(DIFFICULTIES.size()):
+		var diff_key: String = _difficulty_key(i)
+		var diff_unlocked: bool = GameState.is_difficulty_unlocked(diff_key)
+		var label: String = DIFFICULTIES[i] + ("" if diff_unlocked else " [LOCKED]")
+		var color := Color.TRANSPARENT if diff_unlocked else PszStyle.TEXT_MUTED
+		var pill := PszStyle.create_pill(label, i == _selected_difficulty, "", color)
+		vbox.add_child(pill)
+		if i == _selected_difficulty:
+			selected_pill = pill
+
+	# Hint reflects whether the highlighted tier can be taken.
+	var sel_key: String = _difficulty_key(_selected_difficulty)
+	if GameState.is_difficulty_unlocked(sel_key):
+		hint_label.text = "Up/Down: Select Difficulty  Enter: Accept  Esc: Back"
+	else:
+		hint_label.text = "%s — %s" % [
+			DIFFICULTIES[_selected_difficulty],
+			_DIFFICULTY_UNLOCK_HINT.get(sel_key, "complete the story")]
+	return selected_pill
+
+
 func _refresh_display() -> void:
 	# List panel — pill rows
 	for child in list_panel.get_children():
@@ -397,17 +462,7 @@ func _refresh_display() -> void:
 	var selected_pill: Control = null
 
 	if _selecting_difficulty and not _entries.is_empty():
-		var entry: Dictionary = _entries[_selected_index]
-		vbox.add_child(PszStyle.create_section_header(entry["name"]))
-		vbox.add_child(PszStyle.detail_label(""))
-		vbox.add_child(PszStyle.detail_label("Select Difficulty:"))
-
-		for i in range(DIFFICULTIES.size()):
-			var pill := PszStyle.create_pill(DIFFICULTIES[i], i == _selected_difficulty)
-			vbox.add_child(pill)
-			if i == _selected_difficulty:
-				selected_pill = pill
-		hint_label.text = "Up/Down: Select Difficulty  Enter: Accept  Esc: Back"
+		selected_pill = _render_difficulty_submenu(vbox)
 	else:
 		if _entries.is_empty():
 			vbox.add_child(PszStyle.create_pill("(No quests available)", false, "", PszStyle.TEXT_MUTED))
