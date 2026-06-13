@@ -52,6 +52,7 @@ func _ready() -> void:
 	test_telepipe_use_item_outside_field()
 	test_telepipe_239_fixes()
 	test_dup_equipment()
+	test_equipment_screen_dup_frame()
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
 	test_build_info_sentinel()
@@ -2831,6 +2832,73 @@ func test_dup_equipment() -> void:
 		assert_true(EquipmentUtils.item_fits_slot(unit_ids[1], "unit1"), "2nd unit copy fits a unit slot")
 		assert_eq(Inventory.get_item_category(unit_ids[1]), "Unit", "2nd unit copy categorizes as Unit")
 	Inventory.clear_inventory()
+	print("")
+
+
+# ── #357: the REAL equipment screen lists + equips duplicate frames ──
+# test_dup_equipment proves the equipment_utils/inventory layer; this drives
+# the actual equipment_screen.tscn node — the surface the player touched when
+# they reported "only the first copy is equippable." Pre-fix, the screen's
+# _open_item_selection filtered the #N copies out (item_fits_slot saw the raw
+# suffixed id), so the list showed one frame; this asserts all three appear AND
+# that a NON-first (#N-suffixed) instance equips through the screen's own flow.
+func test_equipment_screen_dup_frame() -> void:
+	print("── Equipment screen lists + equips duplicate frames (#357) ──")
+	const EquipmentScreen := preload("res://scenes/2d/equipment.tscn")
+
+	# Deterministic active character (any class can wear any frame).
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	CharacterManager.create_character(0, "humar", "EquipDupTester")
+	CharacterManager.set_active_slot(0)
+	var character = CharacterManager.get_active_character()
+	assert_true(character != null, "active character set up")
+	character["equipment"] = character.get("equipment", {})
+	character["equipment"]["frame"] = ""
+
+	Inventory.clear_inventory()
+	for _i in range(3):
+		Inventory.add_item("armor", 1)
+	var frame_ids: Array = []
+	for iid in Inventory._items:
+		if Inventory.get_base_id(iid) == "armor":
+			frame_ids.append(iid)
+	assert_eq(frame_ids.size(), 3, "3 distinct frame instances seeded")
+
+	var screen: Control = EquipmentScreen.instantiate()
+	add_child(screen)  # runs _ready → @onready + _refresh_display
+
+	# Open the frame slot's item list through the real screen.
+	var slots: Array = screen._get_visible_slots()
+	var frame_idx: int = slots.find("frame")
+	assert_true(frame_idx >= 0, "frame slot is visible")
+	screen._selected_slot = frame_idx
+	screen._open_item_selection()
+
+	# Every seeded copy must appear as an equippable frame row — the regression:
+	# pre-fix only the bare-id copy survived item_fits_slot, so this was 1.
+	var rows: Array = []
+	var suffixed_idx: int = -1
+	for i in range(screen._equippable_items.size()):
+		var row: Dictionary = screen._equippable_items[i]
+		var rid: String = str(row.get("id", ""))
+		if Inventory.get_base_id(rid) == "armor" and not bool(row.get("equipped", false)):
+			rows.append(rid)
+			if "#" in rid and suffixed_idx < 0:
+				suffixed_idx = i
+	assert_eq(rows.size(), 3, "all 3 frame instances are listed as equippable")
+	assert_true(suffixed_idx >= 0, "a #N-suffixed (non-first) instance is in the list")
+
+	# Equip the non-first instance through the screen, assert it sticks.
+	var target_id: String = str(screen._equippable_items[suffixed_idx].get("id", ""))
+	screen._selected_item = suffixed_idx
+	screen._equip_selected_item()
+	assert_eq(str(character["equipment"]["frame"]), target_id,
+		"equipping a #N-suffixed frame instance through the screen sticks")
+
+	screen.free()
+	Inventory.clear_inventory()
+	character["equipment"]["frame"] = ""
 	print("")
 
 

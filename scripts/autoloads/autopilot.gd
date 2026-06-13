@@ -1113,6 +1113,77 @@ func _check_weapon_equipped() -> void:
 		print("[sanity] checkpoint: equipment equipped weapon ('%s' -> '%s')" % [_equip_weapon_before, now])
 	else:
 		print("[sanity] FAIL: equipment — weapon slot unchanged (still '%s')" % now)
+	# Inc 4b (#357): the duplicate-frame regression — seed several copies of one
+	# frame, then equip a NON-first copy through this same screen. The player bug
+	# was "only the first copy equips; the rest act like tools." The weapon equip
+	# left the screen in slot-navigation mode (_choosing_item=false), so the probe
+	# drives the frame slot directly (no ui_cancel — that would pop the screen).
+	_after(STEP_DELAY, _probe_frame_dup_equip)
+
+
+# Inc 4b (#357): drive the live equipment screen to list + equip duplicate
+# frame instances. A hard regression assert — this is the exact surface the
+# Rozalin playtest flagged. Reads the screen node from SceneManager's overlay
+# top and calls its own _open_item_selection / _equip_selected_item so the
+# assertion follows the real code path (item_fits_slot filtering included).
+func _probe_frame_dup_equip() -> void:
+	var screen: Node = SceneManager._get_current_top() if SceneManager != null else null
+	if screen == null or not screen.has_method("_open_item_selection"):
+		print("[sanity] FAIL: frame-dup — equipment screen node not on top (got '%s')" % (
+			screen.name if screen != null else "<null>"))
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		print("[sanity] FAIL: frame-dup — no active character")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	# Seed three copies of one frame. add_item gives the first the bare id and
+	# the rest "#N" suffixes — the suffix is what broke item_fits_slot pre-#357.
+	for _i in range(3):
+		Inventory.add_item("armor", 1)
+	# Open the frame slot's equippable list through the screen itself.
+	var slots: Array = screen._get_visible_slots()
+	var frame_idx: int = slots.find("frame")
+	if frame_idx < 0:
+		print("[sanity] FAIL: frame-dup — no frame slot visible")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	screen._selected_slot = frame_idx
+	screen._open_item_selection()
+	# Count the listed frame instances + locate a #N-suffixed (non-first) one.
+	var listed := 0
+	var suffixed_idx := -1
+	for i in range(screen._equippable_items.size()):
+		var row: Dictionary = screen._equippable_items[i]
+		var rid: String = str(row.get("id", ""))
+		if Inventory.get_base_id(rid) == "armor" and not bool(row.get("equipped", false)):
+			listed += 1
+			if "#" in rid and suffixed_idx < 0:
+				suffixed_idx = i
+	if listed < 3 or suffixed_idx < 0:
+		print("[sanity] FAIL: frame-dup — screen listed %d/3 frame copies, suffixed_idx=%d (the #357 regression)" % [
+			listed, suffixed_idx])
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	print("[sanity] checkpoint: frame-dup all 3 copies listed as equippable")
+	# Equip the non-first instance through the screen and assert it sticks.
+	var target_id: String = str(screen._equippable_items[suffixed_idx].get("id", ""))
+	screen._selected_item = suffixed_idx
+	screen._equip_selected_item()
+	var equipped_frame: String = str(character.get("equipment", {}).get("frame", ""))
+	if equipped_frame == target_id:
+		print("[sanity] checkpoint: frame-dup equipped non-first instance ('%s')" % target_id)
+	else:
+		print("[sanity] FAIL: frame-dup — non-first frame did not equip (want '%s', got '%s')" % [
+			target_id, equipped_frame])
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	# Leave a clean slate for storage (Inc 5): unequip + drop the seeded frames.
+	character["equipment"]["frame"] = ""
+	for iid in Inventory._items.keys():
+		if Inventory.get_base_id(iid) == "armor":
+			Inventory.remove_item(iid, Inventory.get_item_count(iid))
 	_finish_equipment()
 
 
@@ -1373,7 +1444,53 @@ func _close_start_menu() -> void:
 			print("[sanity] FAIL: start menu did not close")
 		else:
 			print("[sanity] checkpoint: start_menu closed")
-		_after(STEP_DELAY, _save_and_quit))
+		_after(STEP_DELAY, _probe_freefield_accept))
+
+
+# Inc 6 (#359): a suspended FREE field must not block guild quest accept. The
+# Rozalin bug — enter a free field, StartWarp back to the city, then the guild
+# refuses to let you accept a quest. Reproduce the precondition (a suspended
+# type-"field" session — NOT a quest) and drive the REAL guild_counter overlay
+# accept; assert acceptance succeeds. Guarded with a poll cap so a blocked/stuck
+# accept fails loudly instead of hanging (the #354 lesson).
+func _probe_freefield_accept() -> void:
+	# Clean slate, then leave a free field the way StartWarp does — this suspends
+	# a type-"field" session (mirrors test_freefield_quest_unblock).
+	SessionManager.return_to_city()
+	SessionManager._accepted_quest.clear()
+	SessionManager._suspended_session.clear()
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.suspend_session()
+	if not SessionManager.has_suspended_session() or SessionManager.has_suspended_quest():
+		print("[sanity] FAIL: freefield-accept — couldn't set up a suspended FREE field (susp=%s quest=%s)" % [
+			str(SessionManager.has_suspended_session()), str(SessionManager.has_suspended_quest())])
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	print("[sanity] checkpoint: freefield-accept precondition (suspended field, not a quest)")
+	# Reset the guild accept driver, then push the overlay — the _process overlay
+	# poll auto-detects it and runs _drive_guild_counter (the same accept-spam the
+	# matrix uses for every quest), exercising guild_counter._has_active_quest.
+	_guild_accept_count = 0
+	_guild_scroll_done = false
+	_last_overlay = ""
+	SessionManager._accepted_quest.clear()
+	SceneManager.push_scene(GUILD_COUNTER, {})
+	_after(2.0, func() -> void: _poll_freefield_accept(0))
+
+
+func _poll_freefield_accept(n: int) -> void:
+	if SessionManager.has_accepted_quest():
+		print("[sanity] checkpoint: freefield-accept — quest accepted despite suspended free field (#359)")
+		SessionManager.cancel_accepted_quest()
+		SessionManager.return_to_city()
+		SessionManager._suspended_session.clear()
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	if n > 12:
+		print("[sanity] FAIL: freefield-accept — guild never accepted (suspended free field blocked it? #359)")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	_after(1.0, func() -> void: _poll_freefield_accept(n + 1))
 
 
 # ── City: counter ──────────────────────────────────────────────
