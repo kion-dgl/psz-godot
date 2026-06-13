@@ -70,6 +70,7 @@ func _run_tests_core() -> void:
 	test_equipment_screen_dup_frame()
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
+	test_field_quest_decouple()
 	test_charge_drop_paths()
 
 
@@ -2933,6 +2934,58 @@ func test_telepipe_city_visual_cleared() -> void:
 	print("")
 
 
+# ── #384: Field Context outlives objective completion; report/cancel exit ──
+func test_field_quest_decouple() -> void:
+	print("── Field Context vs Quest State decoupling (#384) ──")
+	# Clean slate.
+	SessionManager.return_to_city()
+	SessionManager._suspended_session.clear()
+	SessionManager._accepted_quest.clear()
+	SessionManager._completed_quest.clear()
+	TelepipeManager.cancel("test_setup")
+
+	# Enter a quest field and drop a player telepipe in it.
+	SessionManager.accept_quest("search_and_rescue", "normal")
+	SessionManager.start_accepted_quest()
+	assert_true(SessionManager.has_active_session(), "quest Field Context active")
+	TelepipeManager.place("gurhacia", 0, "0,0", Vector3(1, 0, 1),
+		"res://scenes/3d/field/valley_field.tscn")
+	assert_true(TelepipeManager.is_active(), "telepipe placed in the field")
+
+	# Complete objectives → MUST keep the Field Context AND the telepipe alive.
+	SessionManager.complete_quest()
+	assert_true(SessionManager.has_active_session(),
+		"completion keeps the Field Context (a later cell move won't hit Invalid section index — #378)")
+	assert_true(not SessionManager.get_field_sections().is_empty(),
+		"field sections still present after completion")
+	assert_true(SessionManager.has_completed_quest(), "quest marked complete")
+	assert_true(TelepipeManager.is_active(),
+		"completing objectives does NOT cancel a placed telepipe (#384)")
+
+	# Report → the quest's exit: tears down the Field Context + closes the pipe.
+	SessionManager.report_quest()
+	assert_true(not SessionManager.has_active_session(), "report clears the Field Context")
+	assert_true(not TelepipeManager.is_active(), "report closes the telepipe")
+	assert_true(not SessionManager.has_completed_quest(), "completed quest cleared on report")
+
+	# Cancel is the other exit — also clears + closes.
+	SessionManager.accept_quest("search_and_rescue", "normal")
+	SessionManager.start_accepted_quest()
+	TelepipeManager.place("gurhacia", 0, "0,0", Vector3(1, 0, 1),
+		"res://scenes/3d/field/valley_field.tscn")
+	SessionManager.complete_quest()
+	assert_true(TelepipeManager.is_active(), "telepipe still up after completion (control)")
+	SessionManager.cancel_accepted_quest()
+	assert_true(not TelepipeManager.is_active(), "cancel closes the telepipe")
+	assert_true(SessionManager._session.get("type", "") != "quest", "cancel cleared the live quest session")
+
+	# Cleanup.
+	SessionManager.return_to_city()
+	SessionManager._suspended_session.clear()
+	SessionManager._completed_quest.clear()
+	print("")
+
+
 # ── #359: a suspended FREE-FIELD session must not block quest accept ──
 func test_freefield_quest_unblock() -> void:
 	print("── Free-field session doesn't block quest accept (#359) ──")
@@ -4062,20 +4115,25 @@ func test_quest_lifecycle() -> void:
 	var sections: Array = SessionManager.get_field_sections()
 	assert_true(not sections.is_empty(), "Field sections set after starting quest")
 
-	# ── Complete quest ──
+	# ── Complete quest objectives (#384: marks complete, KEEPS the Field Context) ──
 	SessionManager.complete_quest()
-	assert_true(not SessionManager.has_active_session(), "No active session after complete_quest")
+	assert_true(SessionManager.has_active_session(),
+		"Session stays ACTIVE after objective completion (#384 — player can keep exploring)")
 	assert_true(SessionManager.has_completed_quest(), "Has completed quest")
-	assert_eq(SessionManager.get_location(), "city", "Location is city after complete_quest")
+	assert_eq(SessionManager.get_location(), "field",
+		"Still in the field after completing objectives (no forced city return)")
 
 	var cq: Dictionary = SessionManager.get_completed_quest()
 	assert_eq(str(cq.get("quest_id", "")), test_quest_id, "Completed quest has correct ID")
 
-	# ── Report quest ──
+	# ── Report quest (the exit → tears down the Field Context) ──
 	var report: Dictionary = SessionManager.report_quest()
 	assert_true(not report.is_empty(), "report_quest returns data")
 	assert_eq(str(report.get("quest_id", "")), test_quest_id, "Report has correct quest ID")
 	assert_true(not SessionManager.has_completed_quest(), "No completed quest after report")
+	assert_true(not SessionManager.has_active_session(),
+		"Field Context cleared after report (#384 — the quest exit)")
+	assert_eq(SessionManager.get_location(), "city", "Location is city after reporting")
 
 	# ── Cancel with suspended session ──
 	SessionManager.accept_quest(test_quest_id, "normal")
