@@ -38,7 +38,7 @@ const EQUIPMENT := "res://scenes/2d/equipment.tscn"
 const STORAGE := "res://scenes/2d/storage.tscn"
 
 # ── Teleport targets (from the city controllers) ───────────────
-const OFFICE_EXIT_POS := Vector3(0, 0.5, 27)             # office Area3D → counter
+const OFFICE_EXIT_POS := Vector3(0, 0.5, 6.5)            # office Area3D → counter (#356 library room)
 const COUNTER_NPC_POS := Vector3(-8.31, 0.5, -9.5)       # inside QuestCounterNPC range
 const COUNTER_TO_OFFICE_POS := Vector3(11.496, 0.5, -11.572)   # counter Area3D → office
 const COUNTER_TO_WARP_POS := Vector3(-0.015, 0.5, -22.305)     # counter Area3D → warp
@@ -492,7 +492,7 @@ func _manifest_index_for_quest(quest_id: String) -> int:
 ##   1. Talk to the Principal — the interaction must work, but MUST NOT
 ##      complete the quest (negative guard). If it does, that's a regression.
 ##   2. Leave the office, go to the counter, report there → quest clears → DONE.
-const PRINCIPAL_INTERACT_POS := Vector3(0.0, 0.5, -8.5)
+const PRINCIPAL_INTERACT_POS := Vector3(0.0, 0.5, -3.9)  # desk front, within INTERACTION_RADIUS of Principal at z=-5.6 (#356)
 
 var _report_acted := false           # office Principal-guard fired
 var _principal_guard_done := false   # Principal proven not to complete the quest

@@ -36,6 +36,7 @@ const REPO_ROOT = resolve(__dirname, "../..");
 const VENDORED_SKIPS = new Set<string>([
   "kenney_input-prompts",
   "kenney_nature-pack",
+  "cc0_textures", // ambientCG CC0 — vendored in-repo, ships with the exe, never on R2 (#356)
 ]);
 
 // Relative-path prefixes (under each SYNC_ROOTS entry) that are licensed

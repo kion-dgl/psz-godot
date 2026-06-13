@@ -2,38 +2,42 @@ extends "res://scripts/3d/city/city_area_base.gd"
 ## Principal's office — quest client NPC.
 ## Handles intro cutscene for new characters, quest briefing, and quest reporting.
 
+const OfficeLibraryRoom := preload("res://scripts/3d/city/office_library_room.gd")
+
 # -- Configurable NPC positions --
 # Update these if the office geometry changes.
 # Principal always stands at PRINCIPAL_POSITION.
 # pos_1 and pos_2 are for quest client NPCs.
-# Coords match the v0.28 in-house GLB at scale 1.0:
-#   round chamber centered at origin (radius 16),
-#   platform top at y=0.4, principal stands behind desk at chair (z≈-9.7),
-#   hallway extends out the front along Godot +Z to z ≈ +28.
-const PRINCIPAL_POSITION := { "position": Vector3(0.000, 0.400, -9.700), "rotation": 0.000 }
+# Coords match the procedural library room (OfficeLibraryRoom, #356): a R=9
+# circular hall centred at origin, floor at y=0, the desk + dais at z=-4.5, the
+# sun window on the back wall (-Z), the entrance/door open at the +Z front.
+# Positions taken from web/src/office-editor DEFAULT_LAYOUT (the approved
+# screenshot-loop layout). Principal stands just behind the desk; the player
+# enters from +Z. Furniture has no collision, so interact positions can sit
+# right at the desk front.
+const PRINCIPAL_POSITION := { "position": Vector3(0.000, 0.000, -5.600), "rotation": 0.000 }
 const NPC_POSITIONS := {
-	"pos_1": { "position": Vector3(-3.000, 0.000, -3.000), "rotation": 0.000 },
-	"pos_2": { "position": Vector3(-4.000, 0.000, -2.000), "rotation": -0.401 },
+	"pos_1": { "position": Vector3(-2.800, 0.000, -2.400), "rotation": 0.000 },
+	"pos_2": { "position": Vector3(-3.900, 0.000, -1.500), "rotation": -0.401 },
 }
 
 const NPC_SCALE := 0.090
 
-const DOOR_TRIGGER_POSITION := Vector3(0.000, 1.000, 27.000)
-const DOOR_TRIGGER_SIZE := Vector3(7.000, 2.500, 1.500)
+const DOOR_TRIGGER_POSITION := Vector3(0.000, 1.000, 6.500)
+const DOOR_TRIGGER_SIZE := Vector3(8.100, 2.000, 1.200)
 
-# Spawn inside the round chamber so the room is visible immediately
-# (spawning in the hallway puts the chamber wall in front of the camera).
-const DEFAULT_SPAWN := Vector3(0.000, 0.000, 8.000)
-const DEFAULT_ROT := 3.142
+# Spawn just inside the entrance, facing the Principal / sun window (-Z).
+const DEFAULT_SPAWN := Vector3(0.000, 0.000, 4.400)
+const DEFAULT_ROT := PI
 
 const SPAWN_VARIANTS := {
 	"counter-office": {
-		"position": Vector3(0.000, 0.000, 8.000),
-		"rotation": 3.142,
+		"position": Vector3(0.000, 0.000, 4.400),
+		"rotation": PI,
 	},
 	"intro": {
-		"position": Vector3(0.000, 0.000, -3.000),
-		"rotation": 3.142,
+		"position": Vector3(0.000, 0.000, 1.500),
+		"rotation": PI,
 	},
 }
 
@@ -90,9 +94,9 @@ var _active_bubble_sprite: Sprite3D = null
 
 
 func _ready() -> void:
-	# Apply texture fixes from global config
-	_fix_city_materials()
-	_add_interior_lights([Vector3(0, 6, 0), Vector3(0, 6, 18)])
+	# Build the procedural library room (#356) — replaces the old in-house office
+	# GLB. Geometry + textures + warm/cool lighting mirror the approved R3F set.
+	OfficeLibraryRoom.build(self)
 
 	# Capture spawn key before _spawn_player consumes it
 	var spawn_key := CityState.get_spawn_key()
@@ -111,8 +115,8 @@ func _ready() -> void:
 	# Camera
 	_setup_camera(player)
 
-	# Floor collision (covers round chamber + hallway)
-	_add_floor_collision(Vector3(0, 0, 6), Vector3(40, 0.2, 60))
+	# Floor collision — covers the R=9 round hall plus the +Z door threshold.
+	_add_floor_collision(Vector3(0, 0, 0), Vector3(24, 0.2, 24))
 
 	# Principal NPC at fixed position
 	_principal_npc = _add_npc(
