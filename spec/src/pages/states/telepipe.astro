@@ -21,6 +21,8 @@ const chart = `stateDiagram-v2
 
   <p>A telepipe is a portable shortcut between the field and the city. Distinguish two things: the <strong>Telepipe item</strong> (a stackable consumable in the inventory) and the <strong>placed telepipe</strong> (the open portal in the world).</p>
 
+  <p>The telepipe is a pure <strong>movement primitive</strong> that binds to the <a href="/states/session-model">Field Context</a>, not to quest state — completing a quest does not cancel it. See <a href="/states/session-model">Session Model</a> for that contract and why the coupling caused crashes.</p>
+
   <h2>Items vs the placed pipe</h2>
   <ul>
     <li>The player <strong>MAY</strong> carry up to <strong>10</strong> Telepipe items.</li>

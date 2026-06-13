@@ -11,6 +11,7 @@ import Concept from '../../layouts/Concept.astro';
 
   <h2>Definitions</h2>
   <ul>
+    <li><a href="/states/session-model">Session Model</a> — the foundational split between <strong>Field Context</strong> (the expedition: map, sections, position — what the telepipe binds to) and <strong>Quest State</strong> (objectives, completion, rewards). Decoupling them is what makes the telepipe a movement primitive and dissolves the quest/free-field confusion.</li>
     <li><a href="/states/player-state">Player State Machine</a> — the player avatar's runtime states (idle / locomotion / attacking / dodging / damaged / down / cutscene), the transitions between them, and the contract a future <code>player.gd</code> split must preserve.</li>
     <li><a href="/states/start-menu">Start Menu</a> — the PSO-style start-menu <code>Mode</code> state machine (Items / Equip / Techs / Palette / Mags / Quest / System), its non-pausing overlay behavior, and the contract a future renderer / input / actions split must preserve.</li>
     <li><a href="/states/quest-vs-field">Quest vs Field</a> — the City / Field / Quest macro-states and how <code>SessionManager</code> transitions between them.</li>
