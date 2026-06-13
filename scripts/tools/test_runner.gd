@@ -73,6 +73,7 @@ func _ready() -> void:
 	test_quest_reward_data()
 	test_scaled_rewards()
 	test_difficulty_unlock()
+	test_difficulty_unlock_persistence()
 	test_input_config()
 	test_blackjack()
 	test_script_parse()
@@ -4137,8 +4138,37 @@ func test_difficulty_unlock() -> void:
 	assert_eq(GameState.apply_quest_clear_unlock(GameState.STORY_FINALE_QUEST, "super-hard"), "",
 		"finale on Super-Hard has no further tier")
 
-	# Per-character persistence: unlock state swaps with the active slot,
-	# mirroring completed_missions. Two scratch slots, swap, assert isolation.
+	# Integration: the unlock MUST fire through SessionManager.report_quest —
+	# the single chokepoint both report UIs call. (The first matrix run caught
+	# that hooking only the guild counter missed the autopilot's city-office
+	# report path; this pins the chokepoint at the unit layer too.)
+	GameState.unlocked_difficulties = ["normal"]
+	var meseta_before: int = GameState.get_meseta()
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+	SessionManager.enter_quest(GameState.STORY_FINALE_QUEST, "normal")
+	SessionManager.mark_quest_complete()
+	var report: Dictionary = SessionManager.report_quest()
+	assert_eq(str(report.get("difficulty_unlocked", "")), "hard",
+		"report_quest fires the unlock and reports it in the data")
+	assert_true(GameState.is_difficulty_unlocked("hard"), "Hard unlocked via report_quest")
+	# Undo the reward grant report_quest performed, so later tests see a clean slate.
+	GameState.meseta = meseta_before
+	for entry in report.get("rewards_granted", {}).get("items", []):
+		Inventory.remove_item(str(entry.get("id", "")), int(entry.get("quantity", 1)))
+	GameState.unlocked_difficulties = saved
+	SessionManager.return_to_city()
+	SessionManager._completed_quest.clear()
+	print("")
+
+
+# Per-character persistence + the v7 seed migration for #344's unlock state.
+func test_difficulty_unlock_persistence() -> void:
+	print("── Difficulty Unlock — persistence + migration (#344) ──")
+
+	var saved: Array = GameState.unlocked_difficulties.duplicate()
+
+	# Unlock state swaps with the active slot, mirroring completed_missions.
 	var slot_a := 0
 	var slot_b := 1
 	var bak_a = CharacterManager.get_character(slot_a)

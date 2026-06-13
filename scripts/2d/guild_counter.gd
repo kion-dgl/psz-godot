@@ -378,10 +378,9 @@ func _report_quest() -> void:
 	var quest_id: String = str(data.get("quest_id", ""))
 	if not quest_id.is_empty():
 		GameState.complete_mission(quest_id)
-	# Difficulty unlock loop (#344): clearing the story finale unlocks the
-	# next tier for this character.
-	var unlocked: String = GameState.apply_quest_clear_unlock(
-		quest_id, str(data.get("difficulty", "normal")))
+	# Difficulty unlock (#344) is applied inside SessionManager.report_quest
+	# (the chokepoint both report UIs share); we just surface its result.
+	var unlocked: String = str(data.get("difficulty_unlocked", ""))
 	# Show completion message
 	var msg := "Quest complete! EXP: %d  Meseta: %d" % [
 		int(data.get("total_exp", 0)), int(data.get("total_meseta", 0))]

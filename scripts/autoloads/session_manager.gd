@@ -445,16 +445,22 @@ func get_completed_quest() -> Dictionary:
 	return _completed_quest
 
 
-## Report quest completion at guild — grants the quest's per-difficulty
-## rewards, returns completion data (with "rewards_granted"), clears state.
+## Report quest completion — grants the quest's per-difficulty rewards and
+## applies the difficulty-unlock rule (#344), returns completion data (with
+## "rewards_granted" + "difficulty_unlocked"), clears state. This is the
+## single chokepoint BOTH report UIs (guild counter + city office) call, so
+## the side-effects live here, not duplicated per UI — non-finale clears are
+## a no-op for the unlock.
 func report_quest() -> Dictionary:
 	var data: Dictionary = _completed_quest.duplicate()
 	_completed_quest.clear()
 	if data.is_empty():
 		return data
+	var quest_id: String = str(data.get("quest_id", ""))
+	var difficulty: String = str(data.get("difficulty", "normal"))
 	data["rewards_granted"] = _grant_quest_rewards(
-		str(data.get("quest_id", "")), str(data.get("difficulty", "normal")),
-		data.get("quest_item_counts", {}))
+		quest_id, difficulty, data.get("quest_item_counts", {}))
+	data["difficulty_unlocked"] = GameState.apply_quest_clear_unlock(quest_id, difficulty)
 	return data
 
 
