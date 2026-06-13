@@ -5,6 +5,11 @@ import * as THREE from 'three';
 import { assetUrl } from '../utils/assets';
 import type { OfficeLayoutData, PlacementMode } from './types';
 import OfficeOverlay from './OfficeOverlay';
+import LibrarySet from './LibrarySet';
+
+// #356 library redesign: blocking the new look in R3F. Flip to false to get
+// the original circular-room GLB + flat lighting back.
+const LIBRARY_PREVIEW = true;
 
 const ROOM_PATH = 'assets/stages/city_e/s00e_office/lndmd/s00e_office_m.glb';
 const NPC_PATH = 'assets/npcs/principal/principal.glb';
@@ -54,35 +59,46 @@ interface OfficeCanvasProps {
 
 export default function OfficeCanvas({ layout, placementMode, onPlacePoint }: OfficeCanvasProps) {
   return (
-    <Canvas camera={{ position: [0, 15, 20], fov: 50 }}>
-      <color attach="background" args={['#1a1a2e']} />
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 20, 10]} intensity={0.8} />
+    <Canvas shadows camera={{ position: [0, 6, 14], fov: 50 }}>
+      <color attach="background" args={[LIBRARY_PREVIEW ? '#241a12' : '#1a1a2e']} />
 
-      <Suspense fallback={null}>
-        <RoomModel scale={layout.roomScale} />
-        <PrincipalModel position={layout.npcPosition} rotationY={layout.npcRotationY} scale={layout.npcScale} />
-        <ReferenceModel />
-      </Suspense>
+      {LIBRARY_PREVIEW ? (
+        <Suspense fallback={null}>
+          <LibrarySet />
+          <ReferenceModel />
+        </Suspense>
+      ) : (
+        <>
+          <ambientLight intensity={0.6} />
+          <directionalLight position={[10, 20, 10]} intensity={0.8} />
+          <Suspense fallback={null}>
+            <RoomModel scale={layout.roomScale} />
+            <PrincipalModel position={layout.npcPosition} rotationY={layout.npcRotationY} scale={layout.npcScale} />
+            <ReferenceModel />
+          </Suspense>
+        </>
+      )}
 
       <OfficeOverlay layout={layout} placementMode={placementMode} />
 
       {placementMode !== 'none' && <FloorPlane onClick={onPlacePoint} />}
 
-      <Grid
-        args={[100, 100]}
-        position={[0, 0.01, 0]}
-        cellSize={1}
-        cellThickness={0.5}
-        cellColor="#444"
-        sectionSize={10}
-        sectionThickness={1}
-        sectionColor="#666"
-        fadeDistance={50}
-        fadeStrength={1}
-      />
+      {!LIBRARY_PREVIEW && (
+        <Grid
+          args={[100, 100]}
+          position={[0, 0.01, 0]}
+          cellSize={1}
+          cellThickness={0.5}
+          cellColor="#444"
+          sectionSize={10}
+          sectionThickness={1}
+          sectionColor="#666"
+          fadeDistance={50}
+          fadeStrength={1}
+        />
+      )}
 
-      <OrbitControls makeDefault />
+      <OrbitControls makeDefault target={[0, 2, -4]} />
     </Canvas>
   );
 }

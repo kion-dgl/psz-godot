@@ -42,6 +42,10 @@ IN_REPO_PREFIXES = (
     "assets/ui/",
     "assets/animations/",
     "assets/stages/city_e/s00e_sa4/",
+    # CC0 textures (ambientCG) are vendored in-repo and ship with the main
+    # binary — like the kenney packs they're licensing-clear originals, kept
+    # out of the SEGA-asset pack (#356 office library wood/desk).
+    "assets/cc0_textures/",
 )
 
 

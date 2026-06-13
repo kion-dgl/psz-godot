@@ -14,6 +14,9 @@
 /assets/*
 !/assets/kenney_input-prompts/
 !/assets/kenney_nature-pack/
+# CC0 textures (ambientCG) — vendored in-repo like the kenney packs; ship with
+# the main binary, kept out of the SEGA-asset pack + R2 (#356 office library).
+!/assets/cc0_textures/
 # Small UI sprites (menu panels, icons) committed directly — too small to be
 # worth the R2 round-trip and painful to iterate on through the asset pack.
 !/assets/ui/

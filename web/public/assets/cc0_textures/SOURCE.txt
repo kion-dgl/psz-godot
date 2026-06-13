@@ -1,0 +1,5 @@
+CC0 textures from ambientCG (https://ambientcg.com) — public domain (CC0 1.0).
+  wood062_color.jpg   ← Wood062  (1K Color map)
+  carpet013_color.jpg ← Carpet013 (1K Color map)
+Office's own marble floor / carved-stone wall come from the in-game
+city_e office textures (s00e_office_m_*).

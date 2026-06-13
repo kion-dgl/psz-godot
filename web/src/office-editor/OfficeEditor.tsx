@@ -11,8 +11,11 @@ const DEFAULT_LAYOUT: OfficeLayoutData = {
   npcRotationY: 0,
   npcScale: 0.09,
   roomScale: 0.16,
-  doorTrigger: { position: [0, 1, 10.9], size: [8.1, 2, 1.2] },
-  spawnPoint: { position: [0, 0, 8.7], rotationY: Math.PI },
+  // Aligned to the entrance columns of the redesigned room (#356): the
+  // loading trigger sits at the column threshold (z 6.5), spawn just inside
+  // (z 4.4). Values dialed in via the editor.
+  doorTrigger: { position: [0, 1, 6.5], size: [8.1, 2, 1.2] },
+  spawnPoint: { position: [0, 0, 4.4], rotationY: Math.PI },
   npcPositions: {
     pos_1: { position: [-2.8, 0, -2.4], rotationY: 0 },
     pos_2: { position: [-3.9, 0, -1.5], rotationY: -0.401 },
