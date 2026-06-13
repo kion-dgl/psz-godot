@@ -278,6 +278,14 @@ func _ready() -> void:
 	if animation_player:
 		animation_player.animation_finished.connect(_on_animation_finished)
 
+	# #352: opening the Start Menu drops inputs, so it cancels an in-progress
+	# technique charge (the Quick Menu #141 should connect here too once it
+	# lands). _drop_charge no-ops when nothing is charging, so this is safe to
+	# fire on every menu open.
+	var start_menu := get_node_or_null("/root/PsoStartMenu")
+	if start_menu and start_menu.has_signal("opened"):
+		start_menu.opened.connect(_drop_charge)
+
 	# Lantern-style warm light — only in field areas, toggled by time of day
 	if not in_city:
 		_glow_light = OmniLight3D.new()
@@ -1249,6 +1257,13 @@ func _start_attack() -> void:
 func _on_palette_pressed(slot: int) -> void:
 	if current_state == PlayerState.DAMAGED or current_state == PlayerState.DOWN:
 		return
+	# #352: a DIFFERENT palette input mid-charge drops the current charge first.
+	# An attack (N/H/S) cancels-and-swings in place; a different tech starts a
+	# fresh charge with no orphaned visual. Re-pressing the SAME charging slot
+	# falls through unchanged — the hold→release cast path (_on_palette_released)
+	# still owns that case, so #273's charged-cast behaviour is untouched.
+	if _charging_slot >= 0 and slot != _charging_slot:
+		_drop_charge()
 	var action_id: String = ActionPalette.get_action_for_slot(slot)
 	if TechniqueManager.TECHNIQUES.has(action_id):
 		_charging_slot = slot
@@ -2075,17 +2090,29 @@ func _update_charge_visual(delta: float) -> void:
 		_charge_particles.global_position = global_position + Vector3(0, 0.8, 0)
 
 
+## Cancel an in-progress technique charge WITHOUT casting (#352). Clears the
+## charge slot/tech/timer/ready, ends the visual, and emits tech_charge_released
+## so the HUD + action palette reset. No-op when nothing is charging, so it's
+## safe to call from any drop path. Shared by: dodge/damage/knockdown
+## transitions (#273), a mid-charge N/H/S attack or different-tech press, and
+## Start/Quick menu open (those drop inputs, so the charge dies silently).
+func _drop_charge() -> void:
+	if _charging_slot < 0:
+		return
+	var slot := _charging_slot
+	_charging_slot = -1
+	_charging_tech_id = ""
+	_tech_charge_timer = 0.0
+	_tech_charge_ready = false
+	_end_charge_visual()
+	tech_charge_released.emit(slot)
+
+
 func transition_to(new_state: PlayerState) -> void:
 	# A mid-charge technique drops on damage, knockdown, or dodging
 	# (#273, spec /states/player-state) — rolling releases the charge.
-	if _charging_slot >= 0 and new_state in [PlayerState.DAMAGED, PlayerState.DOWN, PlayerState.DODGING]:
-		var slot := _charging_slot
-		_charging_slot = -1
-		_charging_tech_id = ""
-		_tech_charge_timer = 0.0
-		_tech_charge_ready = false
-		_end_charge_visual()
-		tech_charge_released.emit(slot)
+	if new_state in [PlayerState.DAMAGED, PlayerState.DOWN, PlayerState.DODGING]:
+		_drop_charge()
 	var was_attacking: bool = current_state == PlayerState.ATTACKING
 	current_state = new_state
 	state_changed.emit(new_state)
