@@ -1484,13 +1484,61 @@ func _poll_freefield_accept(n: int) -> void:
 		SessionManager.cancel_accepted_quest()
 		SessionManager.return_to_city()
 		SessionManager._suspended_session.clear()
-		_after(STEP_DELAY, _save_and_quit)
+		_after(STEP_DELAY, _probe_field_quest_decouple)
 		return
 	if n > 12:
 		print("[sanity] FAIL: freefield-accept — guild never accepted (suspended free field blocked it? #359)")
 		_after(STEP_DELAY, _save_and_quit)
 		return
 	_after(1.0, func() -> void: _poll_freefield_accept(n + 1))
+
+
+# Inc 7 (#384/#378): the Field-Context/Quest-State decoupling. Rozalin's crash
+# was a player completing a quest's objectives, then MOVING — with the old code
+# the session (field sections) was cleared on completion, so the next cell load
+# hit "Invalid section index". Drive the real managers headlessly through the
+# contract: completion keeps the field + telepipe alive; report tears both down.
+# FAIL-capped (each failure saves + quits — no no-retry, #354 lesson).
+func _probe_field_quest_decouple() -> void:
+	SessionManager.return_to_city()
+	SessionManager._suspended_session.clear()
+	SessionManager._accepted_quest.clear()
+	SessionManager._completed_quest.clear()
+	TelepipeManager.cancel("decouple_probe_setup")
+	# Enter a quest field and drop a telepipe in it.
+	SessionManager.accept_quest("search_and_rescue", "normal")
+	SessionManager.start_accepted_quest()
+	TelepipeManager.place("gurhacia", 0, "0,0", Vector3(1, 0, 1), VALLEY_FIELD)
+	if not SessionManager.has_active_session() or not TelepipeManager.is_active():
+		print("[sanity] FAIL: decouple — couldn't set up quest field + telepipe")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	# Completion MUST keep the Field Context (sections) + the telepipe alive —
+	# this is exactly what prevents the #378 crash when the player then moves.
+	SessionManager.complete_quest()
+	if SessionManager.has_active_session() \
+			and not SessionManager.get_field_sections().is_empty() \
+			and TelepipeManager.is_active():
+		print("[sanity] checkpoint: decouple — completion keeps field+telepipe alive (#384/#378)")
+	else:
+		print("[sanity] FAIL: decouple — completion cleared field/telepipe (active=%s sections=%d pipe=%s)" % [
+			str(SessionManager.has_active_session()), SessionManager.get_field_sections().size(),
+			str(TelepipeManager.is_active())])
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	# Report is the quest exit — it MUST tear down the field context + telepipe.
+	SessionManager.report_quest()
+	if not SessionManager.has_active_session() and not TelepipeManager.is_active():
+		print("[sanity] checkpoint: decouple — report cleared field+telepipe (#384)")
+	else:
+		print("[sanity] FAIL: decouple — report didn't clear (active=%s pipe=%s)" % [
+			str(SessionManager.has_active_session()), str(TelepipeManager.is_active())])
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	SessionManager.return_to_city()
+	SessionManager._suspended_session.clear()
+	SessionManager._completed_quest.clear()
+	_after(STEP_DELAY, _save_and_quit)
 
 
 # ── City: counter ──────────────────────────────────────────────
