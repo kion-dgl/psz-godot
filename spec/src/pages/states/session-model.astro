@@ -1,0 +1,91 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import Mermaid from '../../components/Mermaid.astro';
+
+const REPO = 'https://github.com/kion-dgl/psz-godot/blob/main';
+
+const chart = `stateDiagram-v2
+  [*] --> City
+  City --> Field: enter a field (free OR quest) — Field Context created
+  Field --> City: leave the field — Field Context destroyed
+
+  state Field {
+    [*] --> Exploring
+    Exploring --> Exploring: complete quest objective (Quest State only)
+    Exploring --> ViaPipe: step into a placed telepipe
+    ViaPipe --> Exploring: round-trip back (Field Context still alive)
+  }
+
+  note right of Field
+    Field Context lives the WHOLE time
+    you are in / returning to the field.
+    Completing a quest does NOT end it.
+  end note
+`;
+---
+
+<Concept title="Session Model — Field Context vs Quest State">
+  <div class="diagram"><Mermaid chart={chart} /></div>
+
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>MAY</strong>, and <strong>REQUIRED</strong> below are used as in RFC 2119. This page defines the <em>target</em> contract; the <a href="#current-divergence">current divergence</a> section records where the code conflates the two layers today.</p>
+
+  <p>A field run involves <strong>two independent concerns</strong> that are easy to entangle. The session model keeps them separate:</p>
+
+  <h2>The two layers</h2>
+  <ul>
+    <li><strong>Field Context</strong> — the <em>expedition</em>: which area, the generated <code>sections</code> / cell grid, the <code>current_section</code>, per-cell state (keys, gates, drops, cleared waves), and the player's position. This is the map and where you stand on it. It is <strong>REQUIRED</strong> whenever the player is in a field, and it is the <em>only</em> thing needed to rebuild the field when returning to it.</li>
+    <li><strong>Quest State</strong> — an <em>optional overlay</em>: the <code>quest_id</code>, objectives + progress, completion, and pending rewards. A field <strong>MAY</strong> have a quest attached. A free field has none.</li>
+  </ul>
+
+  <p>Crucially, <strong>presence or absence of Quest State is the only thing that distinguishes a quest run from a free field.</strong> There <strong>MUST NOT</strong> be a separate <code>"type": "field" | "quest"</code> discriminator on the field context — a free field is simply a Field Context with no Quest State.</p>
+
+  <h2>Field Context lifecycle</h2>
+  <ul>
+    <li>A Field Context <strong>MUST</strong> be created when the player enters a field — whether via accepting a quest or via the free-field teleporter.</li>
+    <li>A Field Context <strong>MUST</strong> persist until the player <em>leaves the field</em>. The only things that end it are: returning to the city through the entrance, a StartWarp to a <em>different</em> area, or a title return.</li>
+    <li>Completing a quest's objectives <strong>MUST NOT</strong> destroy the Field Context. After the last objective the player is still standing in a live field; they leave it deliberately (walk out, telepipe, or StartWarp).</li>
+  </ul>
+
+  <h2>Quest State lifecycle (independent)</h2>
+  <ul>
+    <li>Quest State transitions <em>accepted → in-progress → complete → reported</em> are independent of the Field Context lifecycle.</li>
+    <li>Completing a quest <strong>MUST</strong> only flip Quest State to <em>complete</em> (rewards pending at the guild). It <strong>MUST NOT</strong> clear the Field Context, cancel a placed telepipe, or force a city return.</li>
+    <li>Reporting (at the guild counter) grants the rewards and clears the completed Quest State. By then the player has already left the field, so no Field Context is involved.</li>
+  </ul>
+
+  <h2>The telepipe is a movement primitive</h2>
+  <p>A telepipe is a two-endpoint warp — like an <a href={`${REPO}/scripts/3d/elements/area_warp.gd`}><code>area_warp</code></a> — and it binds to the <strong>Field Context</strong>, not to objectives or rewards:</p>
+  <ul>
+    <li>A placed telepipe <strong>MUST</strong> carry its own destination (field scene + section + cell + world position), so the round trip works from the Field Context alone.</li>
+    <li>Because the Field Context outlives quest-objective completion, meeting the final objective <strong>MUST NOT</strong> strand a placed telepipe or destroy the field around it — the player is still standing in a live field with a usable pipe.</li>
+    <li>The telepipe's open/close <em>lifecycle</em> (one-active rule, round-trip return, replacement, and the quest-accept / report / title-return clears) is defined by <a href="/states/telepipe">Telepipe</a> — this page does not redefine it. The two specs <strong>MUST</strong> agree.</li>
+  </ul>
+
+  <h2 id="open-question">Open question — reconcile with the Telepipe spec</h2>
+  <p>The current <a href="/states/telepipe">Telepipe</a> spec lists &ldquo;a quest <strong>ends</strong> (reported / completed or cancelled)&rdquo; among the pipe-close triggers. That wording <strong>MUST</strong> be reconciled with this model: &ldquo;quest ends&rdquo; should mean <strong>reported at the guild</strong> — by which point the player has already left the field — <em>not</em> the in-field moment the last objective is met. And whether accepting a <em>new</em> quest should still clear a free-field pipe (a fresh expedition replacing the old one) is a deliberate design call. Both are pinned here so the definitions are aligned <em>before</em> the decoupling is implemented.</p>
+
+  <h2>Why this matters</h2>
+  <p>Tying the telepipe and the free-field run to Quest State is the root cause of a cluster of bugs: the field is procedurally built from the quest's <code>sections</code>, so &ldquo;return to the field&rdquo; needs that layout — and historically the layout only lived inside a single quest-flavoured session dict that quest completion cleared. Keeping the Field Context separate and alive until the player leaves removes that coupling entirely.</p>
+
+  <h2 id="implemented-by">Implemented by</h2>
+  <ul>
+    <li><a href={`${REPO}/scripts/autoloads/session_manager.gd`}><code>scripts/autoloads/session_manager.gd</code></a> (<strong>SessionManager</strong>) — owns both layers. Today they are conflated in a single <code>_session</code> dict; the target split makes Field Context and Quest State separable.</li>
+    <li><a href={`${REPO}/scripts/autoloads/telepipe_manager.gd`}><code>scripts/autoloads/telepipe_manager.gd</code></a> (<strong>TelepipeManager</strong>) — the single placed-pipe slot. Should bind its return data to the Field Context, not be cancelled on quest end.</li>
+    <li><a href={`${REPO}/scripts/3d/elements/telepipe.gd`}><code>scripts/3d/elements/telepipe.gd</code></a> (<strong>Telepipe</strong>) — the placed in-world pipe element.</li>
+    <li><a href={`${REPO}/scripts/3d/field/valley_field_controller.gd`}><code>scripts/3d/field/valley_field_controller.gd</code></a> (<strong>ValleyField</strong>) — rebuilds a cell from the Field Context (<code>get_field_sections()</code> / <code>get_current_section()</code>). The <code>Invalid section index</code> guard fires when the context was wrongly cleared.</li>
+    <li><a href={`${REPO}/scripts/3d/elements/quest_item_pickup.gd`}><code>scripts/3d/elements/quest_item_pickup.gd</code></a> (<strong>QuestItem</strong>) — runs pickup actions. <code>complete_quest</code> (clears) vs <code>end_quest</code> (marks complete, keeps context + spawns pipe) is the action-level expression of this split.</li>
+  </ul>
+
+  <h2 id="current-divergence">Current divergence (the bug)</h2>
+  <p>The code does not yet implement this split:</p>
+  <ul>
+    <li><code>_session</code> is one dict mixing Field Context (<code>sections</code>, <code>cell_states</code>, position) and Quest State (<code>quest_id</code>, objectives, completion), tagged with a <code>"type"</code> discriminator.</li>
+    <li><code>SessionManager.complete_quest()</code> → <code>return_to_city()</code> → <code>_session.clear()</code> wipes the Field Context along with the Quest State.</li>
+    <li>A pickup using <code>["complete_quest", "telepipe"]</code> therefore spawns a pipe into a cleared context; a subsequent cell move hits <code>Invalid section index</code> and tears down uncleanly.</li>
+  </ul>
+  <p>Tracked in the architecture issue, with the crash detail in <a href="https://github.com/kion-dgl/psz-godot/issues/378">#378</a> and the free-field/quest confusion in <a href="https://github.com/kion-dgl/psz-godot/issues/359">#359</a> / <a href="https://github.com/kion-dgl/psz-godot/issues/360">#360</a>.</p>
+</Concept>
+
+<style>
+  .diagram { margin: 1.5rem 0; }
+</style>

@@ -17,6 +17,13 @@ git history.
 - **Two test layers** for anything frame/timing/combat-driven: a seeded
   unit test in test_runner AND a post-build autopilot probe (matrix
   phase / smoke / sanity checkpoint). One layer is not done planning.
+- **Definitions and tests are aligned before implementation.** Spec the
+  behavior (an Astro `/states` or `/engineering` page — the normative,
+  RFC-2119 contract) and pin/align the tests against it *first*, then
+  implement. A new definition MUST NOT contradict an existing one: if it
+  does, reconcile them (or mark the conflict an explicit open question)
+  before merging. Implementation then points at the doc + the tests:
+  "this is how it's expected to work." Spec/test drift is a bug.
 
 ## Always work on a branch + open a PR — never push direct to `main`
 
@@ -55,6 +62,14 @@ If the user's exact words are "commit and merge", interpret it as
 "commit and open the PR for me" unless they've also said something
 like "skip the PR" or "force-push, I'll deal with it." When in doubt,
 ask — opening a PR is cheap, undoing a direct-merge is expensive.
+
+**Do not let PRs stack up.** Land each green PR before opening the next,
+and don't accumulate a queue of open PRs. Stacked PRs fight over `VERSION`
+(every PR must bump it, so the second to merge hits a conflict + a
+re-bump), drift out of sync with `main`, and make the merge order
+load-bearing. When several PRs are unavoidably open at once, merge them
+promptly in order and `git pull` / resolve each next branch against the
+new `main` right away — don't leave them parked.
 
 ## Orphan / superseded files → `/archive/`, not `rm`
 
