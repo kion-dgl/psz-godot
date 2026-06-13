@@ -103,6 +103,11 @@ func _ready() -> void:
 	# field cell where it was dropped, and the telepipe disappears in both
 	# city and field (one-shot return per spec).
 	_maybe_spawn_city_telepipe()
+	# Clear the city visual if the telepipe is canceled while we're here
+	# (quest accept / abandon / report all cancel it) — #358. Without this the
+	# state clears but the orphaned pad lingers. Autoload→scene connections
+	# auto-drop when this node frees, so no manual disconnect is needed.
+	TelepipeManager.canceled.connect(_on_telepipe_canceled)
 
 	# Wire up
 	_connect_player_to_interactables()
@@ -116,6 +121,14 @@ func _maybe_spawn_city_telepipe() -> void:
 	add_child(telepipe)
 	telepipe.position = TELEPIPE_CITY_POS
 	telepipe.activated.connect(_on_city_telepipe_activated)
+
+
+## #358 — free the orphaned city telepipe pad when the manager state is canceled.
+func _on_telepipe_canceled(_reason: String) -> void:
+	var pipe := get_node_or_null("CityTelepipe")
+	if pipe:
+		pipe.name = "CityTelepipeStale"
+		pipe.queue_free()
 
 
 func _on_city_telepipe_activated() -> void:

@@ -157,24 +157,29 @@ func sort_in_place() -> void:
 ## layers (storage, start menu, inventory_screen) agree on what's a
 ## Weapon vs Armor vs Mag etc.
 func get_item_category(item_id: String) -> String:
-	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
-	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
+	# Strip the per-slot instance suffix ("frame#2" → "frame") before every
+	# registry lookup so duplicates of equippable gear categorize as their
+	# real type rather than falling through to "Other"/tool (#357 — same root
+	# cause as item_fits_slot).
+	var base_id: String = get_base_id(item_id)
+	var norm_id: String = base_id.replace("-", "_").replace("/", "_")
+	if WeaponRegistry.get_weapon(base_id) or WeaponRegistry.get_weapon(norm_id):
 		return "Weapon"
-	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
+	if ArmorRegistry.get_armor(base_id) or ArmorRegistry.get_armor(norm_id):
 		return "Armor"
-	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
+	if UnitRegistry.get_unit(base_id) or UnitRegistry.get_unit(norm_id):
 		return "Unit"
-	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
+	if MagManager.is_mag(base_id) or MagManager.is_mag(norm_id):
 		return "Mag"
-	if item_id.begins_with("disk_"):
+	if base_id.begins_with("disk_"):
 		return "Disk"
-	if ConsumableRegistry.get_consumable(item_id) or ConsumableRegistry.get_consumable(norm_id):
+	if ConsumableRegistry.get_consumable(base_id) or ConsumableRegistry.get_consumable(norm_id):
 		return "Consumable"
-	if CombatManager.MATERIAL_STAT_MAP.has(item_id) or MaterialRegistry.get_material(item_id):
+	if CombatManager.MATERIAL_STAT_MAP.has(base_id) or MaterialRegistry.get_material(base_id):
 		return "Material"
-	if ModifierRegistry.get_modifier(item_id) or ModifierRegistry.get_modifier(norm_id):
+	if ModifierRegistry.get_modifier(base_id) or ModifierRegistry.get_modifier(norm_id):
 		return "Modifier"
-	var item_data = ItemRegistry.get_item(item_id)
+	var item_data = ItemRegistry.get_item(base_id)
 	if item_data == null:
 		item_data = ItemRegistry.get_item(norm_id)
 	if item_data:
