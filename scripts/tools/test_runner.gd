@@ -51,6 +51,9 @@ func _ready() -> void:
 	test_telepipe_cancel_hooks()
 	test_telepipe_use_item_outside_field()
 	test_telepipe_239_fixes()
+	test_dup_equipment()
+	test_telepipe_city_visual_cleared()
+	test_freefield_quest_unblock()
 	test_build_info_sentinel()
 	test_bootstrap_pack_magic_guard()
 	test_warp_teleporter_section_label()
@@ -2781,6 +2784,98 @@ func test_telepipe_239_fixes() -> void:
 	SessionManager.cancel_accepted_quest()
 	assert_true(not SessionManager.has_suspended_session(),
 		"cancel clears the suspended quest run")
+
+	SessionManager.return_to_city()
+	SessionManager._suspended_session.clear()
+	print("")
+
+
+# ── #357: duplicate non-weapon equipment is equippable ──────────
+# Buying multiples gives each copy a unique instance id; every copy must
+# categorize as its real type and fit its slot (the bug stripped the suffix
+# only for weapons, so armor/unit/mag duplicates became "tools").
+func test_dup_equipment() -> void:
+	print("── Duplicate equipment is equippable (#357) ──")
+	Inventory.clear_inventory()
+	for _i in range(3):
+		Inventory.add_item("armor", 1)
+	var armor_ids: Array = []
+	for iid in Inventory._items:
+		if Inventory.get_base_id(iid) == "armor":
+			armor_ids.append(iid)
+	assert_eq(armor_ids.size(), 3, "3 distinct armor instances in inventory")
+	for iid in armor_ids:
+		assert_eq(Inventory.get_item_category(iid), "Armor", "copy %s categorizes as Armor" % iid)
+		assert_true(EquipmentUtils.item_fits_slot(iid, "frame"), "copy %s fits the frame slot" % iid)
+
+	# Equip the 2nd copy, then switch to the 3rd — any instance is equippable.
+	var character = CharacterManager.get_active_character()
+	if character != null:
+		character["equipment"] = character.get("equipment", {})
+		character["equipment"]["frame"] = armor_ids[1]
+		assert_eq(str(character["equipment"]["frame"]), str(armor_ids[1]), "can equip frame B")
+		character["equipment"]["frame"] = armor_ids[2]
+		assert_eq(str(character["equipment"]["frame"]), str(armor_ids[2]), "can switch to frame C")
+		character["equipment"]["frame"] = ""
+
+	# Same root cause hit units + mags — regress those too.
+	Inventory.clear_inventory()
+	Inventory.add_item("ace_guard", 1)
+	Inventory.add_item("ace_guard", 1)
+	var unit_ids: Array = []
+	for iid in Inventory._items:
+		if Inventory.get_base_id(iid) == "ace_guard":
+			unit_ids.append(iid)
+	assert_eq(unit_ids.size(), 2, "2 distinct unit instances")
+	if unit_ids.size() >= 2:
+		assert_true(EquipmentUtils.item_fits_slot(unit_ids[1], "unit1"), "2nd unit copy fits a unit slot")
+		assert_eq(Inventory.get_item_category(unit_ids[1]), "Unit", "2nd unit copy categorizes as Unit")
+	Inventory.clear_inventory()
+	print("")
+
+
+# ── #358: city telepipe visual cleared when the state is canceled ──
+func test_telepipe_city_visual_cleared() -> void:
+	print("── City telepipe visual cleared on cancel (#358) ──")
+	const CityCounter := preload("res://scripts/3d/city/city_counter_controller.gd")
+	# Off-tree instance — _ready (heavy city setup) doesn't run; we test the
+	# cancel handler directly with a stub CityTelepipe child.
+	var ctl = CityCounter.new()
+	var pipe := Node3D.new()
+	pipe.name = "CityTelepipe"
+	ctl.add_child(pipe)
+	assert_true(ctl.get_node_or_null("CityTelepipe") != null, "CityTelepipe present before cancel")
+	ctl._on_telepipe_canceled("test")
+	assert_true(pipe.is_queued_for_deletion(), "CityTelepipe node freed when the telepipe is canceled")
+	ctl.free()
+	print("")
+
+
+# ── #359: a suspended FREE-FIELD session must not block quest accept ──
+func test_freefield_quest_unblock() -> void:
+	print("── Free-field session doesn't block quest accept (#359) ──")
+	SessionManager.return_to_city()
+	SessionManager._accepted_quest.clear()
+	SessionManager._suspended_session.clear()
+
+	# Leaving a free field via StartWarp suspends a type-"field" session.
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.suspend_session()
+	assert_true(SessionManager.has_suspended_session(), "free-field session suspended")
+	assert_true(not SessionManager.has_suspended_quest(),
+		"a field suspension is NOT a quest suspension (guild accept-block won't fire)")
+
+	# Accepting a quest is allowed and abandons the field session.
+	SessionManager.accept_quest("search_and_rescue", "normal")
+	assert_true(SessionManager.has_accepted_quest(), "quest accepted after a free-field trip")
+	assert_true(not SessionManager.has_suspended_session(), "accepting abandoned the field session")
+	SessionManager.cancel_accepted_quest()
+
+	# Control: a suspended QUEST still reads as a quest (would block accept).
+	SessionManager.enter_quest("search_and_rescue", "normal")
+	SessionManager.suspend_session()
+	assert_true(SessionManager.has_suspended_quest(), "a suspended QUEST still blocks accept (control)")
+	SessionManager.cancel_accepted_quest()
 
 	SessionManager.return_to_city()
 	SessionManager._suspended_session.clear()

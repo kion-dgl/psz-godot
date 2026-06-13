@@ -65,7 +65,13 @@ func _setup_portrait() -> void:
 
 
 func _has_active_quest() -> bool:
-	return SessionManager.has_accepted_quest() or SessionManager.has_suspended_session() \
+	# Only a QUEST blocks accepting another (#359). A suspended FREE-FIELD
+	# session must NOT block — leaving a free field via StartWarp suspends the
+	# session (to preserve cleared rooms), and accept_quest already abandons
+	# that field session (#239). Using has_suspended_session() here (any type)
+	# wrongly locked the guild after a free-field trip. Same fix the cancel
+	# lock got in #239; this is the accept-block path that was missed.
+	return SessionManager.has_accepted_quest() or SessionManager.has_suspended_quest() \
 		or SessionManager.has_completed_quest()
 
 
