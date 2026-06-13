@@ -42,15 +42,15 @@ const chart = `stateDiagram-v2
   <h2>Field Context lifecycle</h2>
   <ul>
     <li>A Field Context <strong>MUST</strong> be created when the player enters a field — whether via accepting a quest or via the free-field teleporter.</li>
-    <li>A Field Context <strong>MUST</strong> persist until the player <em>leaves the field</em>. The only things that end it are: returning to the city through the entrance, a StartWarp to a <em>different</em> area, or a title return.</li>
-    <li>Completing a quest's objectives <strong>MUST NOT</strong> destroy the Field Context. After the last objective the player is still standing in a live field; they leave it deliberately (walk out, telepipe, or StartWarp).</li>
+    <li>A Field Context <strong>MUST</strong> persist across round-trips to the city (telepipe or the city teleporter). Completing a quest's objectives <strong>MUST NOT</strong> destroy it — after the last objective the player is still in a live field and <strong>MAY</strong> keep exploring and round-tripping.</li>
+    <li>A <em>quest's</em> Field Context ends only at the quest's exit — when the player <strong>reports</strong> the quest (rewards claimed) or <strong>cancels</strong> it. Accepting a (new) quest or a title return also clears it. A <em>free</em> field's context follows the Free-Roam rules in <a href="/states/quest-vs-field">Quest vs Field</a> (retained across city visits, cleared on quest accept).</li>
   </ul>
 
   <h2>Quest State lifecycle (independent)</h2>
   <ul>
-    <li>Quest State transitions <em>accepted → in-progress → complete → reported</em> are independent of the Field Context lifecycle.</li>
-    <li>Completing a quest <strong>MUST</strong> only flip Quest State to <em>complete</em> (rewards pending at the guild). It <strong>MUST NOT</strong> clear the Field Context, cancel a placed telepipe, or force a city return.</li>
-    <li>Reporting (at the guild counter) grants the rewards and clears the completed Quest State. By then the player has already left the field, so no Field Context is involved.</li>
+    <li>Quest State transitions <em>accepted → in-progress → complete → reported</em>. The <em>complete</em> step is reached in-field and is independent of the Field Context lifecycle.</li>
+    <li>Reaching the final objective <strong>MUST</strong> only flip Quest State to <em>complete</em> (rewards pending at the guild). It <strong>MUST NOT</strong> clear the Field Context, cancel a placed telepipe, or force a city return — the player stays in the field with a usable pipe.</li>
+    <li><strong>Reporting</strong> at the guild counter grants the rewards, clears the completed Quest State, and is the moment the quest's Field Context and any open telepipe close. <strong>Cancelling</strong> does the same without rewards. These two are the quest's exit.</li>
   </ul>
 
   <h2>The telepipe is a movement primitive</h2>
@@ -58,11 +58,17 @@ const chart = `stateDiagram-v2
   <ul>
     <li>A placed telepipe <strong>MUST</strong> carry its own destination (field scene + section + cell + world position), so the round trip works from the Field Context alone.</li>
     <li>Because the Field Context outlives quest-objective completion, meeting the final objective <strong>MUST NOT</strong> strand a placed telepipe or destroy the field around it — the player is still standing in a live field with a usable pipe.</li>
-    <li>The telepipe's open/close <em>lifecycle</em> (one-active rule, round-trip return, replacement, and the quest-accept / report / title-return clears) is defined by <a href="/states/telepipe">Telepipe</a> — this page does not redefine it. The two specs <strong>MUST</strong> agree.</li>
+    <li>The telepipe's open/close <em>lifecycle</em> (one-active rule, round-trip return, replacement, and the quest <strong>accept / report / cancel</strong> + title-return clears — never objective completion) is defined by <a href="/states/telepipe">Telepipe</a>. This page does not redefine it; the two specs <strong>MUST</strong> agree.</li>
   </ul>
 
-  <h2 id="open-question">Open question — reconcile with the Telepipe spec</h2>
-  <p>The current <a href="/states/telepipe">Telepipe</a> spec lists &ldquo;a quest <strong>ends</strong> (reported / completed or cancelled)&rdquo; among the pipe-close triggers. That wording <strong>MUST</strong> be reconciled with this model: &ldquo;quest ends&rdquo; should mean <strong>reported at the guild</strong> — by which point the player has already left the field — <em>not</em> the in-field moment the last objective is met. And whether accepting a <em>new</em> quest should still clear a free-field pipe (a fresh expedition replacing the old one) is a deliberate design call. Both are pinned here so the definitions are aligned <em>before</em> the decoupling is implemented.</p>
+  <h2 id="quest-pipe-boundaries">Quest lifecycle &amp; the telepipe (settled)</h2>
+  <p>The boundary is <strong>completion vs. exit</strong>:</p>
+  <ul>
+    <li>Accepting a quest <strong>MUST</strong> close any open telepipe (a fresh expedition).</li>
+    <li><strong>Completing</strong> the objectives <strong>MUST NOT</strong> close the telepipe — the player is still inside the quest field and may ride to and from the city.</li>
+    <li><strong>Reporting</strong> the quest at the guild (to claim rewards) and <strong>cancelling</strong> the quest <strong>MUST</strong> close any open telepipe — these are the quest's exit.</li>
+  </ul>
+  <p>Worked example: accept <em>Search and Rescue</em> → enter the valley → meet the objectives. The quest is now complete, but the player keeps exploring and round-tripping through the pipe. Only when they <em>report</em> at the guild (or <em>cancel</em>) does the pipe — and the Field Context — close.</p>
 
   <h2>Why this matters</h2>
   <p>Tying the telepipe and the free-field run to Quest State is the root cause of a cluster of bugs: the field is procedurally built from the quest's <code>sections</code>, so &ldquo;return to the field&rdquo; needs that layout — and historically the layout only lived inside a single quest-flavoured session dict that quest completion cleared. Keeping the Field Context separate and alive until the player leaves removes that coupling entirely.</p>

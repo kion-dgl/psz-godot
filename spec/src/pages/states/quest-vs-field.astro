@@ -5,7 +5,7 @@ import Mermaid from '../../components/Mermaid.astro';
 const chart = `stateDiagram-v2
   [*] --> FreeRoam
   FreeRoam --> OnQuest: accept quest — free-field state cleared
-  OnQuest --> FreeRoam: complete or cancel — fields reset
+  OnQuest --> FreeRoam: report or cancel — pipe + fields cleared
 
   state FreeRoam {
     [*] --> CityFree
@@ -57,9 +57,9 @@ const chart = `stateDiagram-v2
 
   <h2>On Quest rules</h2>
   <ul>
-    <li>Accepting a quest <strong>MUST</strong> clear all retained free-field run-state (including reached warp points).</li>
+    <li>Accepting a quest <strong>MUST</strong> clear all retained free-field run-state (including reached warp points) and close any open telepipe.</li>
     <li>While on a quest, the teleporter <strong>MUST</strong> only offer the quest's content; free fields <strong>MUST NOT</strong> be selectable.</li>
-    <li>A quest <strong>MAY</strong> be completed or cancelled. On either, the game <strong>MUST</strong> return to Free Roam.</li>
+    <li><strong>Completion vs. exit.</strong> Meeting a quest's objectives marks it <em>complete</em> but does <strong>NOT</strong> leave the quest — the player stays in the quest field and <strong>MAY</strong> keep exploring and round-tripping through a telepipe. The quest is left only by <strong>reporting</strong> it at the guild (rewards claimed) or <strong>cancelling</strong> it; either returns the game to Free Roam and closes any open telepipe (see <a href="/states/telepipe">Telepipe</a> and the <a href="/states/session-model">Session Model</a>).</li>
     <li>On returning to Free Roam, the free fields <strong>MUST</strong> be reset to their initial state — every enemy and object restored and every field back to area "1" — so the player starts from the beginning again.</li>
   </ul>
 
