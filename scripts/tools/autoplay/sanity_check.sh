@@ -110,7 +110,8 @@ check "step (B 1,2 return, open gate)"         "plan label='B 1,2 (return, open 
 check "step (B 3,1 return, open gate)"         "plan label='B 3,1 (return, open gate)'"
 check "step (B 3,0 final, quest complete)"     "plan label='B 3,0 (final, quest complete)'"
 check "quest completed"                        "[sanity] checkpoint: quest_completed"
-check "back in city after quest"               "[sanity] checkpoint: quest report — back in city"
+check "Principal did not complete quest (#354)" "[sanity] checkpoint: Principal did NOT complete the quest"
+check "reported at guild counter (#354)"       "[sanity] checkpoint: quest reported at guild counter"
 check "autopilot finished cleanly"             "[sanity] DONE ok"
 
 echo
