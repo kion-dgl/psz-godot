@@ -164,11 +164,13 @@ export function ShopScreen({ title, hint, portrait, info, infoTitle = 'Detail', 
         </Panel>
       </div>
 
-      {/* Right — info at the top, portrait at the bottom of the column.
-          space-between distributes the leftover height as the gap. */}
-      <div style={{ flex: '0 0 38%', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <Panel style={{ width: '100%' }}>
-          <div style={{ maxHeight: 190, overflowY: 'auto' }}>
+      {/* Right — info panel fills the height above the shop-keeper portrait,
+          which sits flush at the bottom. The info Panel flex-grows so the
+          detail content has the full column height (only scrolls if a detail
+          is genuinely taller than the available space, not at a fixed 190px). */}
+      <div style={{ flex: '0 0 38%', minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Panel style={{ width: '100%', flex: 1, minHeight: 0 }}>
+          <div style={{ height: '100%', overflowY: 'auto' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{infoTitle}</div>
             {info}
           </div>
