@@ -54,12 +54,15 @@ const chart = `stateDiagram-v2
   </ul>
 
   <h2>The telepipe is a movement primitive</h2>
-  <p>A telepipe is a two-endpoint warp — exactly like an <a href={`${REPO}/scripts/3d/elements/area_warp.gd`}><code>area_warp</code></a>. It binds to the <strong>Field Context</strong>, never to Quest State:</p>
+  <p>A telepipe is a two-endpoint warp — like an <a href={`${REPO}/scripts/3d/elements/area_warp.gd`}><code>area_warp</code></a> — and it binds to the <strong>Field Context</strong>, not to objectives or rewards:</p>
   <ul>
     <li>A placed telepipe <strong>MUST</strong> carry its own destination (field scene + section + cell + world position), so the round trip works from the Field Context alone.</li>
-    <li>A placed telepipe <strong>MUST</strong> remain valid as long as its Field Context is alive, regardless of Quest State. Completing a quest <strong>MUST NOT</strong> cancel a telepipe.</li>
-    <li>A telepipe is canceled only by: placing a new one (one-active rule), completing its round-trip return, leaving the Field Context (StartWarp to a different area, or returning to the city through the entrance), or a title return. See <a href="/states/telepipe">Telepipe</a> for the slot lifecycle.</li>
+    <li>Because the Field Context outlives quest-objective completion, meeting the final objective <strong>MUST NOT</strong> strand a placed telepipe or destroy the field around it — the player is still standing in a live field with a usable pipe.</li>
+    <li>The telepipe's open/close <em>lifecycle</em> (one-active rule, round-trip return, replacement, and the quest-accept / report / title-return clears) is defined by <a href="/states/telepipe">Telepipe</a> — this page does not redefine it. The two specs <strong>MUST</strong> agree.</li>
   </ul>
+
+  <h2 id="open-question">Open question — reconcile with the Telepipe spec</h2>
+  <p>The current <a href="/states/telepipe">Telepipe</a> spec lists &ldquo;a quest <strong>ends</strong> (reported / completed or cancelled)&rdquo; among the pipe-close triggers. That wording <strong>MUST</strong> be reconciled with this model: &ldquo;quest ends&rdquo; should mean <strong>reported at the guild</strong> — by which point the player has already left the field — <em>not</em> the in-field moment the last objective is met. And whether accepting a <em>new</em> quest should still clear a free-field pipe (a fresh expedition replacing the old one) is a deliberate design call. Both are pinned here so the definitions are aligned <em>before</em> the decoupling is implemented.</p>
 
   <h2>Why this matters</h2>
   <p>Tying the telepipe and the free-field run to Quest State is the root cause of a cluster of bugs: the field is procedurally built from the quest's <code>sections</code>, so &ldquo;return to the field&rdquo; needs that layout — and historically the layout only lived inside a single quest-flavoured session dict that quest completion cleared. Keeping the Field Context separate and alive until the player leaves removes that coupling entirely.</p>
