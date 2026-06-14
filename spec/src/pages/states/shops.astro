@@ -1,0 +1,130 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Shops">
+  <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHALL</strong>, <strong>SHOULD</strong>, <strong>MAY</strong>, and <strong>OPTIONAL</strong> below are used as described in RFC 2119 — they define expected behavior, not current implementation status.</p>
+
+  <p>A <strong>shop</strong> is a full-screen 2D menu where the player exchanges one resource for another: meseta for goods, Photon Drops for goods, materials for crafted gear, or items between the inventory and the bank. Every shop screen presents the same skeleton and the same input grammar so a player who has learned one shop has learned them all. The <strong>storage</strong> counter is built from the same skeleton and is treated as a shop for the purposes of this contract, even though it moves items rather than selling them.</p>
+
+  <p>Shops <strong>MUST</strong> share behavior through <em>composition</em> — preloaded static helpers (<code>PszStyle</code>, <code>ShopNav</code>, <code>ShopUI</code>) — and <strong>MUST NOT</strong> share it through a common base class. A cross-script base class fails to resolve in the Android export at runtime (it works in-editor and on every other platform); see <code>docs/shop-dedup.md</code>. Each shop is therefore its own <code>extends Control</code> script that calls into the shared helpers.</p>
+
+  <h2>The common interface</h2>
+  <p>Every shop screen <strong>MUST</strong>:</p>
+  <ul>
+    <li>Lay out a fixed skeleton, top to bottom: a <strong>title</strong>, a <strong>tab bar</strong> (the "mode bar"), a <strong>content row</strong> holding a scrolling <strong>list</strong> (and, where applicable, a <strong>detail panel</strong>), and a <strong>hint line</strong>. A <strong>portrait</strong> of the shopkeeper <strong>MUST</strong> be overlaid on the right via <code>ShopUI.setup_portrait()</code>.</li>
+    <li>Drive navigation through <code>ShopNav</code> so the input grammar is identical everywhere (see below).</li>
+    <li>Render every list entry through <code>PszStyle.shop_row()</code> (see <a href="#the-row-contract">The row contract</a>), and the tab bar through <code>PszStyle.create_tab_bar()</code>.</li>
+    <li>Show the player's spendable balance — meseta or Photon Drops — in the <strong>top-right of the tab row</strong>, not inline in the list. The title <strong>MUST</strong> sit above center so the on-screen keyboard cannot cover it.</li>
+  </ul>
+
+  <h3>Input grammar</h3>
+  <p>All shops <strong>MUST</strong> honor this mapping, dispatched by <code>ShopNav.handle()</code>:</p>
+  <ul>
+    <li><strong>Left / Right</strong> — switch tab or mode. The selection index <strong>MUST</strong> reset to the top of the new tab's list.</li>
+    <li><strong>Up / Down</strong> — move the selection within the current list. Hold-to-repeat <strong>SHOULD</strong> be supported.</li>
+    <li><strong>Accept</strong> — confirm the action on the selected row. A shop <strong>SHOULD</strong> open a confirmation modal before any irreversible transaction.</li>
+    <li><strong>Cancel</strong> — close the shop and return to the city. It <strong>MUST NOT</strong> charge the player or mutate inventory.</li>
+  </ul>
+
+  <h3 id="the-row-contract">The row contract</h3>
+  <p>A list row carries an optional icon, a name, and a right-aligned value (price, count, or yield). One rule governs every shop so the disabled state reads the same everywhere:</p>
+  <ul>
+    <li>A row <strong>MUST</strong> be greyed only when it is <em>un-actionable</em> — the player cannot afford it, or it is gear that cannot currently be acted on (already equipped, so it cannot be re-bought, deposited, or sold). Shops <strong>MUST NOT</strong> use a second colour (red, yellow) to distinguish <em>why</em> a row is disabled.</li>
+    <li>Equipped gear <strong>MUST</strong> be marked with an <strong><code>[E]</code> prefix</strong>, never a trailing tag.</li>
+    <li>Rarity stars, required level, held count, and the can't-buy <em>reason</em> <strong>MUST</strong> appear in the <strong>detail panel</strong>, not inline in the row label. The row stays short: name, value, and at most the item's own identity (e.g. a weapon's grind, <code>Saber +3</code>).</li>
+    <li>A row the player can buy but <em>should not</em> (for example, gear their class cannot equip) <strong>SHOULD</strong> stay selectable, with the caveat surfaced in the detail panel rather than blocking selection. <em>(Whether such gear is purchasable at all is an open economy decision — see issue #375.)</em></li>
+  </ul>
+
+  <h3>The detail panel</h3>
+  <p>The detail panel is the right-hand column that describes the selected row. Where a shop presents items with stats or effects, it <strong>MUST</strong> render them here rather than in the list. It <strong>MUST</strong> distinguish item kinds:</p>
+  <ul>
+    <li><strong>Gear</strong> (weapon / armor / unit) — rarity stars, then the stat block (type, ATK/ACC, DEF/EVA, element, grind, slots, effect).</li>
+    <li><strong>Consumables / materials</strong> — the effect text and the count the player holds.</li>
+    <li>A <strong>status</strong> line where relevant (e.g. <em>Can equip</em> / <em>Cannot equip: class</em>, or <em>Storable</em> / <em>Equipped — cannot deposit</em>).</li>
+  </ul>
+  <p>A shop whose entries have no per-item stats (a flat exchange list) <strong>MAY</strong> omit the detail panel and present a single full-width list. Such list-only shops <strong>SHOULD</strong> adopt the detail panel as their content grows. <em>(photon / crafting / tekker are list-only today; migrating them to the standard list + detail layout is tracked on issue #368.)</em></p>
+
+  <h2>How each shop differs</h2>
+  <p>Within the shared skeleton, each shop specializes its tabs, its currency, and what "confirm" does:</p>
+
+  <table>
+    <thead>
+      <tr><th>Shop</th><th>Tabs / modes</th><th>Currency</th><th>Confirm does</th><th>Detail panel</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Item Shop</strong></td>
+        <td>Items · Materials · Disks · Sell</td>
+        <td>Meseta</td>
+        <td>Buy a consumable / technique disk, or sell back at half price</td>
+        <td>Effect, cost, max stack, held count <em>(qty stepper planned)</em></td>
+      </tr>
+      <tr>
+        <td><strong>Weapon Shop</strong></td>
+        <td>Weapons · Armor · Units · Sell</td>
+        <td>Meseta</td>
+        <td>Buy gear, or sell owned gear</td>
+        <td>Gear stats + <em>Can equip / Cannot equip: class</em></td>
+      </tr>
+      <tr>
+        <td><strong>Photon Shop</strong></td>
+        <td>— (single list)</td>
+        <td>Photon Drops</td>
+        <td>Exchange Photon Drops for a reward item</td>
+        <td>List-only</td>
+      </tr>
+      <tr>
+        <td><strong>Synthesis (Crafting)</strong></td>
+        <td>Craft · Boards</td>
+        <td>Meseta + materials</td>
+        <td>Craft a weapon from a recipe; a photon crystal sets the element / special tier</td>
+        <td>List-only <em>(materials "have of need" planned)</em></td>
+      </tr>
+      <tr>
+        <td><strong>Tekker</strong></td>
+        <td>Grind · Identify</td>
+        <td>Meseta + grinders</td>
+        <td>Grind a weapon up, or identify an unknown 5–7★ weapon</td>
+        <td>List-only</td>
+      </tr>
+      <tr>
+        <td><strong>Storage</strong></td>
+        <td>Deposit Items · Withdraw Items · Deposit Meseta · Withdraw Meseta</td>
+        <td>— (no cost)</td>
+        <td>Move items / meseta between the inventory and the bank</td>
+        <td>Gear stats / item effect + count, storable status</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Shop-specific rules</h3>
+  <ul>
+    <li><strong>Item Shop.</strong> Selling <strong>MUST</strong> return half the buy price. The Materials tab is debug-only (not purchasable) and <strong>MUST</strong> be marked as such. Disk purchases <strong>MUST</strong> be one-at-a-time and <strong>MUST</strong> surface the required level and the player's known technique level in the detail.</li>
+    <li><strong>Weapon Shop.</strong> The detail panel <strong>MUST</strong> state whether the active character's class can equip the selected gear. Selling <strong>MUST</strong> exclude currently-equipped items.</li>
+    <li><strong>Synthesis.</strong> A recipe's required materials <strong>MUST</strong> be shown as <em>have&nbsp;of&nbsp;need</em> (e.g. <code>2 of 3</code>), coloured to show whether each is met. The recipe <strong>MUST NOT</strong> be craftable until every material and the meseta cost are satisfied.</li>
+    <li><strong>Storage.</strong> Currently-equipped gear <strong>MUST NOT</strong> be depositable; it <strong>MUST</strong> be shown greyed with the <code>[E]</code> prefix and a <em>Equipped — cannot deposit</em> status. The four tabs <strong>MUST</strong> each be a distinct, unambiguous destination so Left/Right cannot trap the player on one direction.</li>
+  </ul>
+
+  <h2>What is not a shop</h2>
+  <p>The <strong>guild counter</strong> reuses the same screen skeleton (tab bar, list, portrait) but is <strong>not</strong> governed by the row contract above. Its row colours encode quest-board <em>action types</em> — report, cancel, locked, cleared — not buy affordance, and the red "Cancel Quest" row is a deliberate destructive-action cue. Shops <strong>MUST NOT</strong> borrow those colours for affordance, and the guild counter <strong>MUST NOT</strong> be flattened into the single-grey disabled rule. See <a href="/states/story-progression">Story Progression</a> for the counter's REPORT / LOCKED / CLEAR derivation.</p>
+
+  <h2>Conformance</h2>
+  <ol>
+    <li>Open any shop. The title sits above center; the balance is top-right of the tabs; the hint line names the Left/Right, Up/Down, Accept, Cancel actions.</li>
+    <li>Move Left/Right — the tab changes and the selection resets to the top.</li>
+    <li>Move Up/Down onto a row you cannot afford — it is greyed (one grey, no second colour), and the detail panel states the reason.</li>
+    <li>Select equipped gear (weapon shop sell, or storage deposit) — the row shows <code>[E]</code> as a <em>prefix</em> and is greyed; the detail explains it cannot be sold / deposited.</li>
+    <li>Press Cancel — the shop closes with no charge and no inventory change.</li>
+  </ol>
+
+  <h2>Implemented by</h2>
+  <ul>
+    <li><code>scripts/ui/psz_style.gd</code> (PszStyle) — shared styling: <code>shop_row()</code> (the row contract), <code>create_tab_bar()</code>, <code>create_meseta_label()</code>, <code>create_pill_with_icons()</code>, <code>detail_label()</code>.</li>
+    <li><code>scripts/2d/shops/shop_nav.gd</code> (ShopNav) — the input grammar: <code>handle()</code> dispatch, <code>selected_item()</code>, <code>confirm()</code> / <code>info()</code> modals, <code>switch_shop_tab()</code>.</li>
+    <li><code>scripts/2d/shops/shop_ui.gd</code> (ShopUI) — <code>setup_portrait()</code>, the two-column content + portrait-overlay layout.</li>
+    <li><code>scripts/2d/shops/item_shop.gd</code>, <code>weapon_shop.gd</code>, <code>photon_shop.gd</code>, <code>crafting_shop.gd</code>, <code>tekker.gd</code> — the five shops, each <code>extends Control</code>.</li>
+    <li><code>scripts/2d/storage.gd</code> (Storage) — the bank counter, same skeleton, backed by <code>GameState.stored_meseta</code> and <code>GameState.shared_storage</code>.</li>
+    <li><code>scripts/2d/guild_counter.gd</code> (GuildCounter) — the quest board; same skeleton, distinct row semantics (not the shop row contract).</li>
+  </ul>
+</Concept>
