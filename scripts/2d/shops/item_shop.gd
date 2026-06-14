@@ -31,7 +31,6 @@ var _disk_items: Array = []
 var _sell_items: Array = []
 
 var _mode_bar: HBoxContainer
-var _portrait: Control
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
@@ -57,7 +56,7 @@ const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/item-shop.png"
 
 
 func _setup_portrait() -> void:
-	_portrait = PszStyle.setup_shop_portrait($Panel, shop_panel, detail_panel, SHOP_PREVIEW_PATH)
+	PszStyle.setup_shop_portrait($Panel, detail_panel, SHOP_PREVIEW_PATH)
 
 
 func _load_shop_items() -> void:

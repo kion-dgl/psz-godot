@@ -2,7 +2,6 @@ extends Control
 ## Synthesis Shop — craft weapons from materials, learn rare boards.
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/synth-shop.png"
-const SHOP_UI := preload("res://scripts/2d/shops/shop_ui.gd")
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 enum Mode { CRAFT, BOARDS }
@@ -60,7 +59,7 @@ var _active_modal: Control = null
 
 var _mode_bar_parent: Control
 var _tab_row: HBoxContainer
-var _portrait: Control
+var _detail_panel: PanelContainer
 
 # Cached pill nodes from the last _refresh_display, one entry per selectable
 # row in the current mode. Allows cursor moves to toggle selection styling
@@ -85,7 +84,9 @@ func _ready() -> void:
 
 
 func _setup_portrait() -> void:
-	SHOP_UI.setup_portrait(self)
+	# Shared layout: list left (3/5), detail card top-right (2/5) stopping 10px
+	# above the portrait — same scaffold as every other shop.
+	_detail_panel = PszStyle.setup_shop_portrait($Panel, null, SHOP_PREVIEW_PATH)
 
 
 func _build_lists() -> void:
@@ -663,6 +664,72 @@ func _refresh_display() -> void:
 	if selected_pill != null:
 		scroll.ensure_control_visible.call_deferred(selected_pill)
 
+	_refresh_detail()
+
+
+## Render the current selection into the shared right-column detail card. Mirrors
+## the three list states: choosing a photon crystal, a rare board, or a recipe.
+func _refresh_detail() -> void:
+	if not is_instance_valid(_detail_panel):
+		return
+	PszStyle.clear_detail_panel(_detail_panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+
+	if _selecting_photon:
+		_build_photon_detail(vbox)
+	elif _mode == Mode.BOARDS:
+		_build_board_detail(vbox)
+	else:
+		_build_recipe_detail(vbox)
+
+	_detail_panel.add_child(vbox)
+
+
+func _build_photon_detail(vbox: VBoxContainer) -> void:
+	if _photon_index < 0 or _photon_index >= PHOTON_OPTIONS.size():
+		return
+	var photon_id: String = PHOTON_IDS[_photon_index]
+	vbox.add_child(PszStyle.detail_label(PHOTON_OPTIONS[_photon_index], PszStyle.TITLE_BG))
+	var info: Dictionary = PHOTON_ELEMENT.get(photon_id, {})
+	if not info.is_empty():
+		vbox.add_child(PszStyle.detail_label("Element: %s" % str(info.get("element", "none")).capitalize()))
+		vbox.add_child(PszStyle.detail_label(str(info.get("desc", "")), PszStyle.TEXT_SUCCESS))
+	vbox.add_child(PszStyle.detail_label("You have: %d" % Inventory.get_item_count(photon_id)))
+
+
+func _build_board_detail(vbox: VBoxContainer) -> void:
+	if _board_items.is_empty() or _selected_index >= _board_items.size():
+		vbox.add_child(PszStyle.detail_label("No recipe boards", PszStyle.TEXT_MUTED))
+		return
+	var b: Dictionary = _board_items[_selected_index]
+	vbox.add_child(PszStyle.detail_label(str(b["name"]), PszStyle.TITLE_BG))
+	vbox.add_child(PszStyle.detail_label("★".repeat(int(b["rarity"])), PszStyle.TEXT_HIGHLIGHT))
+	vbox.add_child(PszStyle.detail_label("Learn this board to craft its weapon.", PszStyle.TEXT_MUTED))
+
+
+func _build_recipe_detail(vbox: VBoxContainer) -> void:
+	if _craft_recipes.is_empty() or _selected_index >= _craft_recipes.size():
+		vbox.add_child(PszStyle.detail_label("No recipes available", PszStyle.TEXT_MUTED))
+		return
+	var entry: Dictionary = _craft_recipes[_selected_index]
+	var recipe: RecipeBoardData = entry["recipe"]
+	vbox.add_child(PszStyle.detail_label(recipe.name.replace(" Board", ""), PszStyle.TITLE_BG))
+	vbox.add_child(PszStyle.detail_label("%s · %s" % [str(entry["stars"]), str(entry["weapon_type_name"])]))
+
+	for ingredient in recipe.ingredients:
+		var mat = MaterialRegistry.get_material(ingredient["item_id"])
+		var mat_name: String = mat.name if mat else str(ingredient["item_id"])
+		var owned: int = Inventory.get_item_count(ingredient["item_id"])
+		var needed: int = int(ingredient["quantity"])
+		var color: Color = PszStyle.TEXT if owned >= needed else PszStyle.TEXT_WARNING
+		vbox.add_child(PszStyle.detail_label("%s  %d/%d" % [mat_name, owned, needed], color))
+
+	vbox.add_child(PszStyle.detail_label("Cost: %d M" % recipe.craft_cost, PszStyle.TEXT_MESETA))
+	if not _can_craft_recipe(recipe):
+		vbox.add_child(PszStyle.detail_label(_craft_block_reason(recipe), PszStyle.TEXT_WARNING))
+
 
 # Cheap cursor-move update — toggle the selected stylebox on the old and new
 # pills instead of rebuilding the list. Required for hold-scroll to not tank
@@ -681,6 +748,8 @@ func _update_selection(old_index: int, new_index: int) -> void:
 				parent = parent.get_parent()
 			if parent is ScrollContainer:
 				(parent as ScrollContainer).ensure_control_visible.call_deferred(new_pill)
+	# Cursor moves don't rebuild the list, so refresh the detail card here too.
+	_refresh_detail()
 
 
 func _can_craft_recipe(recipe: RecipeBoardData) -> bool:

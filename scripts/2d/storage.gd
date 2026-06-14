@@ -1,7 +1,6 @@
 extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/storage-counter.png"
-const SHOP_UI := preload("res://scripts/2d/shops/shop_ui.gd")
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 ## Storage screen — 4 tabs grouped by content:
@@ -46,10 +45,8 @@ func _ready() -> void:
 	PszStyle.style_menu(title_label, hint_label, [inventory_panel, storage_panel])
 	title_label.text = "Storage"
 	storage_panel.visible = true
-	inventory_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	inventory_panel.size_flags_stretch_ratio = 3.0
-	storage_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	storage_panel.size_flags_stretch_ratio = 2.0
+	# Column ratios + detail placement are handled by setup_shop_portrait, which
+	# lifts storage_panel out of the inner HBox into the top-right detail slot.
 	_setup_portrait()
 	_load_items()
 	_refresh_display()
@@ -57,7 +54,10 @@ func _ready() -> void:
 
 
 func _setup_portrait() -> void:
-	SHOP_UI.setup_portrait(self)
+	# Same scaffold the other detail-bearing shops use: list on the left (3/5),
+	# detail card top-right (2/5) stopping 10px above the portrait. inventory_panel
+	# stays on the left; storage_panel becomes the right-column detail card.
+	PszStyle.setup_shop_portrait($Panel, storage_panel, SHOP_PREVIEW_PATH)
 
 
 func _load_items() -> void:

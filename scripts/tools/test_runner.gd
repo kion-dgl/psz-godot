@@ -83,7 +83,7 @@ func _run_tests_systems() -> void:
 	test_mesh_utils_apply_texture()
 	test_game_element_build_prompt_label()
 	test_game_element_override_textured_material()
-	test_shop_ui_setup_portrait()
+	test_setup_shop_portrait()
 	test_shop_nav()
 	test_shop_confirm()
 	test_character_appearance()
@@ -3293,20 +3293,19 @@ func test_game_element_override_textured_material() -> void:
 	print("")
 
 
-func test_shop_ui_setup_portrait() -> void:
-	print("── ShopUI.setup_portrait — shared two-column shop layout ──")
-	# Composition helper (preloaded, NOT a base class — a ShopBase base class
-	# broke the Android export; #274 inc 5). Deduped from photon_shop/crafting_shop.
-	const ShopUI := preload("res://scripts/2d/shops/shop_ui.gd")
-	# Minimal shop shape: a "Panel" PanelContainer whose first child is the VBox.
-	var shop := Control.new()
+func test_setup_shop_portrait() -> void:
+	print("── PszStyle.setup_shop_portrait — single shared shop layout ──")
+	# THE one layout path every shop uses (composition, NOT a base class — a
+	# ShopBase base class broke the Android export; #274 inc 5 / #368). Left list
+	# 3/5, detail card top-right 2/5 stopping 10px above the portrait. Passing
+	# null detail makes it create a styled card (photon/crafting/tekker path).
 	var panel := PanelContainer.new()
 	panel.name = "Panel"
 	var content := VBoxContainer.new()
 	panel.add_child(content)
-	shop.add_child(panel)
+	add_child(panel)
 
-	ShopUI.setup_portrait(shop)
+	var card := PszStyle.setup_shop_portrait(panel, null, "")
 
 	assert_eq(panel.get_child_count(), 1, "Panel reduced to a single outer container")
 	var outer := panel.get_child(0)
@@ -3314,10 +3313,18 @@ func test_shop_ui_setup_portrait() -> void:
 	assert_eq(outer.get_child_count(), 2, "Outer has [content | right column]")
 	assert_true(outer.get_child(0) == content, "Left column is the original content VBox")
 	assert_eq(content.size_flags_stretch_ratio, 3.0, "Content VBox stretches 3")
-	assert_true(outer.get_child(1) is VBoxContainer, "Right column is a VBox")
-	assert_eq((outer.get_child(1) as Control).size_flags_stretch_ratio, 2.0, "Right column stretches 2")
+	var right := outer.get_child(1)
+	assert_true(right is VBoxContainer, "Right column is a VBox")
+	assert_eq((right as Control).size_flags_stretch_ratio, 2.0, "Right column stretches 2")
+	# Right column = [detail margin (card), portrait spacer] so the card stops
+	# above the portrait instead of running full height.
+	assert_eq(right.get_child_count(), 2, "Right column has [detail | portrait spacer]")
+	assert_true(card is PanelContainer, "Returns the detail card PanelContainer")
+	assert_true(card.has_theme_stylebox_override("panel"), "Detail card styled")
+	assert_true(card.has_node("ScanlineOverlay"), "Detail card has the scanline overlay")
+	assert_true(right.get_child(1).custom_minimum_size.y > 0.0, "Portrait spacer reserves height")
 	assert_true(panel.has_theme_stylebox_override("panel"), "Panel stylebox override applied")
-	shop.free()
+	panel.free()
 	print("")
 
 

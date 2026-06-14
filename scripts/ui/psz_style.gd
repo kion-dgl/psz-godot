@@ -314,14 +314,22 @@ static func create_bar(label_text: String, ratio: float, value_text: String, fil
 	return pill
 
 
-## Restructure a shop with list+detail panels into fullscreen layout.
-## Left 3/5: title, tabs, list, hints. Right 2/5: detail panel (full height).
-## The shop preview image is added separately by ShopPreviewSprite — this
-## function no longer adds an NPC portrait. The `model_path` param is kept
-## for API back-compat but unused.
+## Restructure a shop into the standard fullscreen layout and return its detail
+## card. Left 3/5: title, tabs, list, hints. Right 2/5: detail card on top,
+## stopping 10px above the shop portrait (NOT full height). The portrait itself
+## is an absolute overlay added separately by ShopPreviewSprite; `model_path` is
+## the same preview texture path, used here to size the bottom spacer that
+## reserves the portrait's footprint.
+##
+## This is THE single layout path every shop uses, so they stay consistent:
+##   • Pass `detail_ref` when the scene already has a DetailPanel node (item,
+##     weapon, guild, storage) — it's lifted out of the inner HBox into the slot.
+##   • Pass `null` and this creates a styled detail card for shops whose scene
+##     has no detail node (photon, crafting, tekker). Either way the returned
+##     PanelContainer is the card the shop renders its selection into.
 static func setup_shop_portrait(
-		panel: PanelContainer, menu_panel: PanelContainer,
-		detail_ref: PanelContainer, _model_path: String) -> Control:
+		panel: PanelContainer, detail_ref: PanelContainer,
+		model_path: String) -> PanelContainer:
 	# Make panel fullscreen and opaque
 	panel.offset_left = 0
 	panel.offset_top = 0
@@ -334,10 +342,17 @@ static func setup_shop_portrait(
 	fs.content_margin_bottom = 8.0
 	panel.add_theme_stylebox_override("panel", fs)
 
-	# Pull VBox out of Panel, remove detail from inner HBox
+	# Pull VBox out of Panel. When the scene supplies the detail node, lift it
+	# out of its inner HBox; otherwise create a styled card for the right slot.
 	var vbox := panel.get_child(0) as VBoxContainer
 	panel.remove_child(vbox)
-	menu_panel.get_parent().remove_child(detail_ref)
+	var detail := detail_ref
+	if detail != null:
+		detail.get_parent().remove_child(detail)
+	else:
+		detail = PanelContainer.new()
+		detail.name = "DetailPanel"
+	apply_detail_panel_style(detail)
 
 	# Outer HBox: left menu (3/5) + right detail/portrait (2/5)
 	var outer := HBoxContainer.new()
@@ -359,17 +374,26 @@ static func setup_shop_portrait(
 	detail_margin.add_theme_constant_override("margin_left", 8)
 	detail_margin.add_theme_constant_override("margin_top", 8)
 	detail_margin.add_theme_constant_override("margin_right", 8)
-	detail_margin.add_theme_constant_override("margin_bottom", 8)
+	# Bottom inset handled by the spacer below, not here — keep this 0 so the
+	# spacer height alone controls the gap to the portrait.
+	detail_margin.add_theme_constant_override("margin_bottom", 0)
 	detail_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_ref.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_margin.add_child(detail_ref)
+	detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_margin.add_child(detail)
 	right.add_child(detail_margin)
+
+	# The detail card stops 10px above the portrait rather than running full
+	# height: reserve the portrait's footprint as a fixed bottom spacer so the
+	# EXPAND_FILL card above ends just above the artwork (#368).
+	var portrait_spacer := Control.new()
+	portrait_spacer.custom_minimum_size = Vector2(0, ShopPreviewSprite.detail_reserve_height(model_path))
+	portrait_spacer.size_flags_vertical = Control.SIZE_FILL
+	portrait_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	right.add_child(portrait_spacer)
 
 	outer.add_child(right)
 	panel.add_child(outer)
-	# `model_path` is intentionally unused — see header comment.
-	# Returning a no-op MarginContainer to preserve the existing API.
-	return MarginContainer.new()
+	return detail
 
 
 static func detail_label(text: String, color := TEXT) -> Label:

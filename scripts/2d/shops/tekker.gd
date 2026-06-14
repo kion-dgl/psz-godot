@@ -16,8 +16,7 @@ var _grindable_weapons: Array = []  # Array of {id, name, grind, max_grind, rari
 
 var _mode_bar_parent: Control  # Parent of mode_label for tab bar rebuilding
 var _tab_row: HBoxContainer    # Persistent tab bar container
-var _portrait: Control
-var _grinder_info: VBoxContainer  # Grinder counts + stat preview panel
+var _detail_panel: PanelContainer  # Shared right-column detail card
 
 ## Grinder requirements by weapon rarity
 const GRINDER_FOR_RARITY := {
@@ -46,47 +45,10 @@ func _ready() -> void:
 
 
 func _setup_portrait() -> void:
-	# Make panel fullscreen
-	var panel: PanelContainer = $Panel
-	panel.offset_left = 0
-	panel.offset_top = 0
-	panel.offset_right = 0
-	panel.offset_bottom = 0
-	var fs := StyleBoxFlat.new()
-	fs.bg_color = PszStyle.BG
-	fs.content_margin_left = 12.0
-	fs.content_margin_top = 8.0
-	fs.content_margin_bottom = 8.0
-	panel.add_theme_stylebox_override("panel", fs)
-
-	# Wrap VBox in outer HBox: left menu (3/5) + right portrait (2/5)
-	var vbox := panel.get_child(0) as VBoxContainer
-	panel.remove_child(vbox)
-	var outer := HBoxContainer.new()
-	outer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	outer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	outer.add_theme_constant_override("separation", 0)
-	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	vbox.size_flags_stretch_ratio = 3.0
-	outer.add_child(vbox)
-
-	# Right: just portrait (no detail panel for tekker)
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.size_flags_stretch_ratio = 2.0
-	right.add_theme_constant_override("separation", 0)
-	# Grinder info panel (above portrait)
-	# Right column: grinder info takes the full vertical space; the shop
-	# preview is added separately as an absolute overlay (see
-	# ShopPreviewSprite.attach below).
-	_grinder_info = VBoxContainer.new()
-	_grinder_info.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_grinder_info.add_theme_constant_override("separation", 4)
-	right.add_child(_grinder_info)
-
-	outer.add_child(right)
-	panel.add_child(outer)
+	# Shared layout: list left (3/5), detail card top-right (2/5) stopping 10px
+	# above the portrait. The grinder counts + after-grind preview render into
+	# this card (see _update_grinder_info) — same scaffold as every other shop.
+	_detail_panel = PszStyle.setup_shop_portrait($Panel, null, SHOP_PREVIEW_PATH)
 
 
 func _build_lists() -> void:
@@ -224,37 +186,24 @@ func _refresh_display() -> void:
 
 
 func _update_grinder_info() -> void:
-	if not _grinder_info:
+	if not is_instance_valid(_detail_panel):
 		return
-	for child in _grinder_info.get_children():
-		child.queue_free()
+	PszStyle.clear_detail_panel(_detail_panel)
 
-	# Grinder counts
-	var header := Label.new()
-	header.text = "Grinders"
-	header.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
-	header.add_theme_font_size_override("font_size", PszStyle.FONT_ITEM)
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_grinder_info.add_child(header)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
 
+	# Grinder counts on hand.
+	vbox.add_child(PszStyle.detail_label("Grinders", PszStyle.TITLE_BG))
 	var grinders := ["monogrinder", "digrinder", "trigrinder"]
 	var grinder_labels := ["Monogrinder", "Digrinder", "Trigrinder"]
 	for i in range(grinders.size()):
 		var count: int = Inventory.get_item_count(grinders[i])
 		var color: Color = PszStyle.TEXT if count > 0 else PszStyle.TEXT_MUTED
-		var lbl := Label.new()
-		lbl.text = "%s: %d" % [grinder_labels[i], count]
-		lbl.add_theme_color_override("font_color", color)
-		lbl.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		_grinder_info.add_child(lbl)
+		vbox.add_child(PszStyle.detail_label("%s: %d" % [grinder_labels[i], count], color))
 
-	# Stat preview for the selected weapon
+	# After-grind stat preview + cost for the selected weapon.
 	if not _grindable_weapons.is_empty() and _selected_index < _grindable_weapons.size():
-		var sep := HSeparator.new()
-		sep.add_theme_constant_override("separation", 6)
-		_grinder_info.add_child(sep)
-
 		var w: Dictionary = _grindable_weapons[_selected_index]
 		var weapon = WeaponRegistry.get_weapon(Inventory.get_base_id(w["id"]))
 		if weapon:
@@ -263,30 +212,21 @@ func _update_grinder_info() -> void:
 			var cur_acc: int = weapon.get_accuracy_at_grind(cur_grind)
 			var next_atk: int = weapon.get_attack_at_grind(cur_grind + 1)
 			var next_acc: int = weapon.get_accuracy_at_grind(cur_grind + 1)
-
-			var preview_header := Label.new()
-			preview_header.text = "After Grind"
-			preview_header.add_theme_color_override("font_color", PszStyle.TEXT_HIGHLIGHT)
-			preview_header.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
-			preview_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			_grinder_info.add_child(preview_header)
-
 			var atk_diff: int = next_atk - cur_atk
 			var acc_diff: int = next_acc - cur_acc
 
-			var atk_lbl := Label.new()
-			atk_lbl.text = "ATK: %d → %d (+%d)" % [cur_atk, next_atk, atk_diff]
-			atk_lbl.add_theme_color_override("font_color", PszStyle.TEXT_SUCCESS if atk_diff > 0 else PszStyle.TEXT)
-			atk_lbl.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
-			atk_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			_grinder_info.add_child(atk_lbl)
+			vbox.add_child(PszStyle.detail_label("After Grind", PszStyle.TITLE_BG))
+			vbox.add_child(PszStyle.detail_label(
+				"ATK: %d → %d (+%d)" % [cur_atk, next_atk, atk_diff],
+				PszStyle.TEXT_SUCCESS if atk_diff > 0 else PszStyle.TEXT))
+			vbox.add_child(PszStyle.detail_label(
+				"ACC: %d → %d (+%d)" % [cur_acc, next_acc, acc_diff],
+				PszStyle.TEXT_SUCCESS if acc_diff > 0 else PszStyle.TEXT))
 
-			var acc_lbl := Label.new()
-			acc_lbl.text = "ACC: %d → %d (+%d)" % [cur_acc, next_acc, acc_diff]
-			acc_lbl.add_theme_color_override("font_color", PszStyle.TEXT_SUCCESS if acc_diff > 0 else PszStyle.TEXT)
-			acc_lbl.add_theme_font_size_override("font_size", PszStyle.FONT_DETAIL)
-			acc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			_grinder_info.add_child(acc_lbl)
+			var cost := int((200 + cur_grind * 100) * RARITY_COST_MULT.get(w["rarity"], 1.0))
+			vbox.add_child(PszStyle.detail_label("Cost: %d M" % cost, PszStyle.TEXT_MESETA))
+
+	_detail_panel.add_child(vbox)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────

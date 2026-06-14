@@ -19,7 +19,6 @@ var _units: Array = []
 var _sell_items: Array = []
 
 var _mode_bar: HBoxContainer
-var _portrait: Control
 
 # Cached pill nodes from the last _refresh_display, one entry per list item
 # (null for section headers). Allows cursor moves to toggle selection styling
@@ -90,7 +89,7 @@ const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/weapon-shop.png"
 
 
 func _setup_portrait() -> void:
-	_portrait = PszStyle.setup_shop_portrait($Panel, list_panel, detail_panel, SHOP_PREVIEW_PATH)
+	PszStyle.setup_shop_portrait($Panel, detail_panel, SHOP_PREVIEW_PATH)
 
 
 func _generate_inventory() -> void:
