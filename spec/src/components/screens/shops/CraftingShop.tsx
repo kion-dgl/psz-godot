@@ -1,20 +1,43 @@
 import { useState } from 'react';
 import { ShopScreen, PillRow, TabBar, Divider, StatRow, ActionButton, C, DetailPanel } from '../pszui';
 
-type Recipe = { name: string; type: string; rarity: string; mats: string; cost: number };
+// A required material: how many you have vs how many the recipe needs.
+type Mat = { name: string; need: number; have: number };
+
+type Recipe = { name: string; type: string; rarity: string; materials: Mat[]; cost: number };
 const RECIPES: Recipe[] = [
-  { name: 'Flame Sword', type: 'Sword', rarity: '★', mats: 'Ore 3', cost: 250 },
-  { name: 'Ice Rifle', type: 'Rifle', rarity: '★★', mats: 'Metal Alloy 2, Ice Essence 1', cost: 600 },
-  { name: 'Dark Staff', type: 'Staff', rarity: '★★★', mats: 'Dark Matter 1, Amethyst 2', cost: 1500 },
+  { name: 'Flame Sword', type: 'Sword', rarity: '★', cost: 250,
+    materials: [{ name: 'Ore', need: 3, have: 2 }] },
+  { name: 'Ice Rifle', type: 'Rifle', rarity: '★★', cost: 600,
+    materials: [{ name: 'Metal Alloy', need: 2, have: 4 }, { name: 'Ice Essence', need: 1, have: 0 }] },
+  { name: 'Dark Staff', type: 'Staff', rarity: '★★★', cost: 1500,
+    materials: [{ name: 'Dark Matter', need: 1, have: 1 }, { name: 'Amethyst', need: 2, have: 3 }] },
 ];
 
-type Board = { name: string; rarity: string; yield: string; cost: number };
+type Board = { name: string; rarity: string; yield: string; materials: Mat[]; cost: number };
 const BOARDS: Board[] = [
-  { name: 'Monogrinder Board', rarity: '★★', yield: 'x2', cost: 500 },
-  { name: 'Digrinder Board', rarity: '★★★', yield: 'x1', cost: 1000 },
+  { name: 'Monogrinder Board', rarity: '★★', yield: 'x2', cost: 500,
+    materials: [{ name: 'Photon Drop', need: 2, have: 12 }] },
+  { name: 'Digrinder Board', rarity: '★★★', yield: 'x1', cost: 1000,
+    materials: [{ name: 'Photon Sphere', need: 1, have: 0 }] },
 ];
 
 const ELEMENT_NOTE = 'Choose a photon crystal (Im / El / Ban / Ray / Zon / Megi / Gra) to set the weapon’s element & special-attack tier (rolled by rarity).';
+
+// Each required material as "have of need" — red when short, green when met.
+function Materials({ materials }: { materials: Mat[] }) {
+  return (
+    <>
+      <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>Materials</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {materials.map((m) => (
+          <StatRow key={m.name} label={m.name} value={`${m.have} of ${m.need}`}
+            color={m.have < m.need ? C.rare : '#338844'} />
+        ))}
+      </div>
+    </>
+  );
+}
 
 export default function CraftingShop() {
   const [tab, setTab] = useState(0);
@@ -35,8 +58,7 @@ export default function CraftingShop() {
               <>
                 <div style={{ fontSize: 12, color: C.textLight, marginBottom: 8 }}>{r.rarity} · {r.type}</div>
                 <Divider />
-                <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>Materials:</div>
-                <div style={{ fontSize: 12, color: C.textLight, lineHeight: 1.5 }}>{r.mats}</div>
+                <Materials materials={r.materials} />
                 <Divider />
                 <StatRow label="Cost" value={`${r.cost.toLocaleString()} M`} />
                 <div style={{ fontSize: 11, color: C.textLight, lineHeight: 1.5, marginTop: 8 }}>{ELEMENT_NOTE}</div>
@@ -47,10 +69,9 @@ export default function CraftingShop() {
             const b = BOARDS[i];
             return (
               <>
-                <div style={{ fontSize: 12, color: C.textLight, marginBottom: 8 }}>{b.rarity}</div>
+                <div style={{ fontSize: 12, color: C.textLight, marginBottom: 8 }}>{b.rarity} · crafts {b.yield} per board</div>
                 <Divider />
-                <div style={{ fontSize: 13, color: C.text, marginBottom: 4 }}>Materials:</div>
-                <div style={{ fontSize: 12, color: C.textLight, lineHeight: 1.5 }}>Crafts {b.yield} per board.</div>
+                <Materials materials={b.materials} />
                 <Divider />
                 <StatRow label="Cost" value={`${b.cost.toLocaleString()} M`} />
                 <ActionButton label="Craft" />
@@ -65,7 +86,7 @@ export default function CraftingShop() {
         ? RECIPES.map((r, idx) => (
             <PillRow
               key={r.name}
-              label={`${r.name} ${r.rarity} (${r.mats})`}
+              label={`${r.name} ${r.rarity}`}
               rightText={`${r.cost.toLocaleString()} M`}
               selected={i === idx}
               onClick={() => setSel(idx)}
