@@ -31,7 +31,6 @@ var _disk_items: Array = []
 var _sell_items: Array = []
 
 var _mode_bar: HBoxContainer
-var _portrait: Control
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
@@ -57,7 +56,7 @@ const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/item-shop.png"
 
 
 func _setup_portrait() -> void:
-	_portrait = PszStyle.setup_shop_portrait($Panel, shop_panel, detail_panel, SHOP_PREVIEW_PATH)
+	PszStyle.setup_shop_portrait($Panel, detail_panel, SHOP_PREVIEW_PATH)
 
 
 func _load_shop_items() -> void:
@@ -376,23 +375,18 @@ func _refresh_display() -> void:
 			var item: Dictionary = list[i]
 			var shop_name: String = str(item.get("item", "???"))
 			var item_id: String = shop_name.to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
-			var held: int = Inventory.get_item_count(item_id)
-			var held_str: String = " (%d)" % held if held > 0 else ""
 			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
 			var buy_icons: Array = [buy_icon] if buy_icon else []
-			# Affordance: a row the player can't buy is greyed and tagged with
-			# the reason, so the Buy action reads as disabled rather than
-			# opening a rejection on confirm (see _open_confirm_modal).
+			# Unified shop row (#368): grey only when the row can't be bought;
+			# the reason and held count live in the detail panel, not the label.
 			var verdict: Dictionary = _can_buy(item)
-			var label_text: String = shop_name + held_str
-			var row_color := Color.TRANSPARENT
-			if not verdict.get("ok", true):
-				label_text += "  [%s]" % str(verdict.get("reason", ""))
-				row_color = PszStyle.TEXT_MUTED
-			var pill := PszStyle.create_pill_with_icons(
-				buy_icons,
-				label_text,
-				i == _selected_index, "%d M" % int(item.get("cost", 0)), row_color)
+			var cost: int = int(item.get("cost", 0))
+			var right_text: String = "%d M" % cost
+			var pill := PszStyle.shop_row(shop_name, right_text, {
+				"icons": buy_icons,
+				"affordable": bool(verdict.get("ok", true)),
+				"selected": i == _selected_index,
+			})
 			vbox.add_child(pill)
 			if i == _selected_index:
 				selected_pill = pill
@@ -418,26 +412,16 @@ func _refresh_display() -> void:
 			var too_low_level: bool = char_level < required_level
 			var already_higher: bool = current_tech_level >= level
 
-			var text_color := Color.TRANSPARENT
-			if already_higher:
-				text_color = PszStyle.TEXT_MUTED
-			elif too_low_level:
-				text_color = PszStyle.TEXT_WARNING
-			elif cant_afford:
-				text_color = PszStyle.TEXT_WARNING
-
-			var status_tag := ""
-			if current_tech_level > 0:
-				status_tag = " [Lv.%d]" % current_tech_level
-			if too_low_level:
-				status_tag += " [Req.%d]" % required_level
-
+			# Unified shop row (#368): one grey for any can't-buy reason —
+			# affordability, req-level, or already-known-higher. Current/required
+			# level live in the detail panel, not as inline row tags.
 			var disk_icon: Texture2D = InventoryIcons.for_item("disk_%s_1" % technique_id, "Disk")
 			var disk_icons: Array = [disk_icon] if disk_icon else []
-			var pill := PszStyle.create_pill_with_icons(
-				disk_icons,
-				disk_name + status_tag,
-				i == _selected_index, "%d M" % cost, text_color)
+			var pill := PszStyle.shop_row(disk_name, "%d M" % cost, {
+				"icons": disk_icons,
+				"affordable": not (cant_afford or too_low_level or already_higher),
+				"selected": i == _selected_index,
+			})
 			vbox.add_child(pill)
 			if i == _selected_index:
 				selected_pill = pill
@@ -452,8 +436,7 @@ func _refresh_display() -> void:
 
 
 func _refresh_detail() -> void:
-	for child in detail_panel.get_children():
-		child.queue_free()
+	PszStyle.clear_detail_panel(detail_panel)
 
 	var list := _get_current_list()
 	if list.is_empty() or _selected_index >= list.size():
@@ -481,13 +464,20 @@ func _refresh_item_detail(item: Dictionary) -> void:
 		PszStyle.TEXT_HIGHLIGHT)
 	vbox.add_child(cost_label)
 
-	var consumable = ConsumableRegistry.get_consumable(
-		str(item.get("item", "")).to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
-	)
+	var item_id: String = str(item.get("item", "")).to_lower().replace(" ", "_").replace("-", "_").replace("/", "_")
+	if _tab != Tab.MATERIALS:
+		vbox.add_child(PszStyle.detail_label("You have: %d" % Inventory.get_item_count(item_id)))
+
+	var consumable = ConsumableRegistry.get_consumable(item_id)
 	if consumable:
 		var details_label := PszStyle.detail_label(consumable.details)
 		details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		vbox.add_child(details_label)
+
+	# Surface the can't-buy reason here (the row no longer carries an inline tag).
+	var verdict: Dictionary = _can_buy(item)
+	if not verdict.get("ok", true):
+		vbox.add_child(PszStyle.detail_label(str(verdict.get("reason", "")), PszStyle.TEXT_WARNING))
 
 	detail_panel.add_child(vbox)
 

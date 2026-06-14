@@ -8,7 +8,6 @@ var _selected_index: int = 0
 var _selecting_difficulty: bool = false
 var _selected_difficulty: int = 0
 
-var _portrait: Control
 var _active_modal: Control = null
 
 const DIFFICULTIES := ["Normal", "Hard", "Super-Hard"]
@@ -61,7 +60,7 @@ const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/quest-counter.png"
 
 
 func _setup_portrait() -> void:
-	_portrait = PszStyle.setup_shop_portrait($Panel, list_panel, detail_panel, SHOP_PREVIEW_PATH)
+	PszStyle.setup_shop_portrait($Panel, detail_panel, SHOP_PREVIEW_PATH)
 
 
 func _has_active_quest() -> bool:

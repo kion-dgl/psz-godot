@@ -71,6 +71,38 @@ load-bearing. When several PRs are unavoidably open at once, merge them
 promptly in order and `git pull` / resolve each next branch against the
 new `main` right away — don't leave them parked.
 
+## Feature flow — spec-first, Godot-implemented, human-tested
+
+The standard path for a behavior change or feature:
+
+1. **Define the expected behavior in Astro first** — a `/states` /
+   `/engineering` page or a shop/screen **mock** under `spec/` is the
+   normative contract (RFC-2119 for `/states`). It says how it *should*
+   work, independent of the current code. Reconcile it with any existing
+   definition (see "definitions aligned before implementation" above).
+2. **Implement it in Godot** so the runtime matches the spec/mock.
+3. **Add/update tests to confirm it** — the two-layer rule: a seeded
+   `test_runner` unit test AND an autopilot probe.
+4. **Open the PR; run the autopilot matrix** (Godot changes only — see
+   the rule below).
+5. **Kion pulls the branch and builds/tests on his Mac** (real hardware)
+   before it lands; merge stays human (the branch/PR rule above).
+
+A change can be at any stage of this. A **spec/mock-only PR** (step 1 with
+no Godot yet) is legitimate and lands as the definition — the Godot
+implementation that makes the runtime match is the *next* PR. Don't treat
+a mock PR as incomplete for lacking Godot code; treat it as the contract
+the Godot work will be tested against.
+
+**Sanity-check and the regression matrix verify Godot behavior — run them
+only when the change touches `.gd`, scenes, or quest data.** A spec-only
+(`spec/`), docs, or `CLAUDE.md` PR does NOT need the godot autopilot; CI's
+`spec` build + `version-check` cover it. Running sanity on a non-Godot PR
+just burns ~3 min of autopilot and can flake on a loaded box. (The
+`merge_gate.sh` hook still asks for a `.sanity-pass` on a *local CLI*
+merge regardless — pointless for a non-Godot diff; relaxing it to skip
+diffs with no `.gd`/scene/quest changes is a reasonable follow-up.)
+
 ## Orphan / superseded files → `/archive/`, not `rm`
 
 When working files turn up that look orphaned (untracked, no references

@@ -2,7 +2,6 @@ extends Control
 ## Photon Collector — trade Photon Drops for grinders, photon crystals, and materials.
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/photon-collector.png"
-const SHOP_UI := preload("res://scripts/2d/shops/shop_ui.gd")
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 const EXCHANGE_ITEMS := [
@@ -29,7 +28,7 @@ const EXCHANGE_ITEMS := [
 var _selected_index: int = 0
 var _mode_bar_parent: Control
 var _tab_row: HBoxContainer
-var _portrait: Control
+var _detail_panel: PanelContainer
 var _active_modal: Control = null
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
@@ -49,7 +48,9 @@ func _ready() -> void:
 
 
 func _setup_portrait() -> void:
-	SHOP_UI.setup_portrait(self)
+	# Shared layout: list left (3/5), detail card top-right (2/5) stopping 10px
+	# above the portrait — same scaffold as every other shop.
+	_detail_panel = PszStyle.setup_shop_portrait($Panel, null, SHOP_PREVIEW_PATH)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -203,19 +204,19 @@ func _refresh_display() -> void:
 			vbox.add_child(PszStyle.create_section_header(category))
 
 		var can_afford: bool = pd_count >= cost
-		var text_color := Color.TRANSPARENT
-		if not can_afford:
-			text_color = PszStyle.TEXT_DANGER
 
 		var held: int = Inventory.get_item_count(item["id"])
 		var held_str: String = " (x%d)" % held if held > 0 else ""
 
 		var item_icon: Texture2D = InventoryIcons.for_item(str(item["id"]))
 		var icons: Array = [item_icon] if item_icon else []
-		var pill := PszStyle.create_pill_with_icons(
-			icons,
-			"%s%s" % [item["name"], held_str],
-			i == _selected_index, "%d PD" % cost, text_color)
+		# Unified shop row (#368): grey (not red) when the player can't afford.
+		# This is a list-only shop, so the held count stays in the row label.
+		var pill := PszStyle.shop_row("%s%s" % [item["name"], held_str], "%d PD" % cost, {
+			"icons": icons,
+			"affordable": can_afford,
+			"selected": i == _selected_index,
+		})
 		vbox.add_child(pill)
 		if i == _selected_index:
 			selected_pill = pill
@@ -225,6 +226,34 @@ func _refresh_display() -> void:
 
 	if selected_pill != null:
 		scroll.ensure_control_visible.call_deferred(selected_pill)
+
+	_refresh_detail()
+
+
+## Render the selected exchange item into the shared right-column detail card —
+## category, photon-drop cost, held count, and the can't-afford reason.
+func _refresh_detail() -> void:
+	if not is_instance_valid(_detail_panel):
+		return
+	PszStyle.clear_detail_panel(_detail_panel)
+	if _selected_index < 0 or _selected_index >= EXCHANGE_ITEMS.size():
+		return
+
+	var item: Dictionary = EXCHANGE_ITEMS[_selected_index]
+	var cost: int = int(item["cost"])
+	var pd_count: int = Inventory.get_item_count("photon_drop")
+	var held: int = Inventory.get_item_count(item["id"])
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+	vbox.add_child(PszStyle.detail_label(str(item["name"]), PszStyle.TITLE_BG))
+	vbox.add_child(PszStyle.detail_label("Category: %s" % str(item["category"])))
+	var cost_text: String = "Free" if cost == 0 else "%d Photon Drop%s" % [cost, "" if cost == 1 else "s"]
+	vbox.add_child(PszStyle.detail_label("Cost: %s" % cost_text, PszStyle.TEXT_HIGHLIGHT))
+	vbox.add_child(PszStyle.detail_label("You have: %d" % held))
+	if cost > 0 and pd_count < cost:
+		vbox.add_child(PszStyle.detail_label("Not enough Photon Drops", PszStyle.TEXT_WARNING))
+	_detail_panel.add_child(vbox)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────

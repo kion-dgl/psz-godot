@@ -21,6 +21,24 @@ const CORNER_RADIUS := 18.0
 # 256×256 sources scale × 1.8 → ~461×461 visible. Both axes scale
 # together so aspect is preserved.
 const SCALE_FACTOR := 1.8
+# Gap kept between the bottom of a shop's detail card and the top of the
+# portrait, so the card doesn't run flush into the artwork (#368).
+const DETAIL_GAP := 10
+# The detail column's bottom sits this far above the parent Control's bottom
+# (the shop panel's content_margin_bottom — see setup_shop_portrait).
+const COLUMN_BOTTOM_INSET := 8
+
+
+## How much vertical space the detail card must leave free at the bottom of the
+## right column so it ends DETAIL_GAP px above the portrait. The portrait is an
+## absolute overlay whose top sits (sz.y - BOTTOM_PUSH) px above the parent's
+## bottom; the column bottom sits COLUMN_BOTTOM_INSET px above it. Shops pass
+## this as a fixed-height bottom spacer in the detail column.
+static func detail_reserve_height(texture_path: String) -> float:
+	var tex: Texture2D = load(texture_path) if texture_path != "" else null
+	var natural := tex.get_size() if tex else Vector2(256, 256)
+	var sz := natural * SCALE_FACTOR
+	return maxf(0.0, sz.y - float(BOTTOM_PUSH) + float(DETAIL_GAP) - float(COLUMN_BOTTOM_INSET))
 
 
 static func attach(parent: Control, texture_path: String) -> TextureRect:

@@ -194,6 +194,28 @@ static func create_pill_with_icons(icons: Array, left_text: String, selected: bo
 	return pill
 
 
+## The ONE shop/storage list row, shared by every shop (#368 — match the Astro
+## mock at spec/src/components/screens/shops). Rules, identical everywhere:
+##   • A row greys out ONLY when the player can't AFFORD it. Soft reasons (class
+##     can't equip, req-level, stack-full, …) keep the row selectable and
+##     surface in the DETAIL panel — never as an inline "[reason]" in the label.
+##   • Equipped gear is marked with an [E] PREFIX (not a right-side tag).
+##   • Rarity stars / req-level tags do NOT go in the name; they belong in the
+##     detail panel.
+## `opts`: { icons:Array, equipped:bool, affordable:bool=true, selected:bool }.
+static func shop_row(item_name: String, right_text: String, opts: Dictionary = {}) -> PanelContainer:
+	var equipped: bool = bool(opts.get("equipped", false))
+	var affordable: bool = bool(opts.get("affordable", true))
+	var selected: bool = bool(opts.get("selected", false))
+	var icons: Array = opts.get("icons", [])
+	var label: String = ("[E] " if equipped else "") + item_name
+	# Muted for rows the player can't act on: unaffordable, or equipped gear
+	# (which can't be re-bought / deposited / sold). Everything else is normal.
+	var muted: bool = (not affordable) or equipped
+	var color: Color = TEXT_MUTED if muted else Color.TRANSPARENT
+	return create_pill_with_icons(icons, label, selected, right_text, color)
+
+
 static func create_section_header(text: String) -> PanelContainer:
 	var pill := PanelContainer.new()
 	pill.add_theme_stylebox_override("panel", section_header_style())
@@ -292,14 +314,22 @@ static func create_bar(label_text: String, ratio: float, value_text: String, fil
 	return pill
 
 
-## Restructure a shop with list+detail panels into fullscreen layout.
-## Left 3/5: title, tabs, list, hints. Right 2/5: detail panel (full height).
-## The shop preview image is added separately by ShopPreviewSprite — this
-## function no longer adds an NPC portrait. The `model_path` param is kept
-## for API back-compat but unused.
+## Restructure a shop into the standard fullscreen layout and return its detail
+## card. Left 3/5: title, tabs, list, hints. Right 2/5: detail card on top,
+## stopping 10px above the shop portrait (NOT full height). The portrait itself
+## is an absolute overlay added separately by ShopPreviewSprite; `model_path` is
+## the same preview texture path, used here to size the bottom spacer that
+## reserves the portrait's footprint.
+##
+## This is THE single layout path every shop uses, so they stay consistent:
+##   • Pass `detail_ref` when the scene already has a DetailPanel node (item,
+##     weapon, guild, storage) — it's lifted out of the inner HBox into the slot.
+##   • Pass `null` and this creates a styled detail card for shops whose scene
+##     has no detail node (photon, crafting, tekker). Either way the returned
+##     PanelContainer is the card the shop renders its selection into.
 static func setup_shop_portrait(
-		panel: PanelContainer, menu_panel: PanelContainer,
-		detail_ref: PanelContainer, _model_path: String) -> Control:
+		panel: PanelContainer, detail_ref: PanelContainer,
+		model_path: String) -> PanelContainer:
 	# Make panel fullscreen and opaque
 	panel.offset_left = 0
 	panel.offset_top = 0
@@ -312,10 +342,17 @@ static func setup_shop_portrait(
 	fs.content_margin_bottom = 8.0
 	panel.add_theme_stylebox_override("panel", fs)
 
-	# Pull VBox out of Panel, remove detail from inner HBox
+	# Pull VBox out of Panel. When the scene supplies the detail node, lift it
+	# out of its inner HBox; otherwise create a styled card for the right slot.
 	var vbox := panel.get_child(0) as VBoxContainer
 	panel.remove_child(vbox)
-	menu_panel.get_parent().remove_child(detail_ref)
+	var detail := detail_ref
+	if detail != null:
+		detail.get_parent().remove_child(detail)
+	else:
+		detail = PanelContainer.new()
+		detail.name = "DetailPanel"
+	apply_detail_panel_style(detail)
 
 	# Outer HBox: left menu (3/5) + right detail/portrait (2/5)
 	var outer := HBoxContainer.new()
@@ -337,17 +374,26 @@ static func setup_shop_portrait(
 	detail_margin.add_theme_constant_override("margin_left", 8)
 	detail_margin.add_theme_constant_override("margin_top", 8)
 	detail_margin.add_theme_constant_override("margin_right", 8)
-	detail_margin.add_theme_constant_override("margin_bottom", 8)
+	# Bottom inset handled by the spacer below, not here — keep this 0 so the
+	# spacer height alone controls the gap to the portrait.
+	detail_margin.add_theme_constant_override("margin_bottom", 0)
 	detail_margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_ref.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	detail_margin.add_child(detail_ref)
+	detail.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	detail_margin.add_child(detail)
 	right.add_child(detail_margin)
+
+	# The detail card stops 10px above the portrait rather than running full
+	# height: reserve the portrait's footprint as a fixed bottom spacer so the
+	# EXPAND_FILL card above ends just above the artwork (#368).
+	var portrait_spacer := Control.new()
+	portrait_spacer.custom_minimum_size = Vector2(0, ShopPreviewSprite.detail_reserve_height(model_path))
+	portrait_spacer.size_flags_vertical = Control.SIZE_FILL
+	portrait_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	right.add_child(portrait_spacer)
 
 	outer.add_child(right)
 	panel.add_child(outer)
-	# `model_path` is intentionally unused — see header comment.
-	# Returning a no-op MarginContainer to preserve the existing API.
-	return MarginContainer.new()
+	return detail
 
 
 static func detail_label(text: String, color := TEXT) -> Label:
@@ -369,3 +415,71 @@ static func style_menu(p_title: Label, p_hint: Label, panels: Array = []) -> voi
 	for panel in panels:
 		if panel is PanelContainer:
 			panel.add_theme_stylebox_override("panel", inner_panel_style())
+
+
+# ── Detail panel (the white scan-lined card, matching the shop mock) ──────────
+# The mock's DetailPanel is a translucent-white card with a subtle scanline
+# texture, a thin border with a darker top edge, and rounded corners. See
+# spec/src/components/screens/pszui.tsx (DetailPanel + SCANLINES).
+const DETAIL_BG := Color(1.0, 1.0, 1.0, 0.85)
+const DETAIL_BORDER := Color(0.165, 0.204, 0.282)  # dark-blue edge (#2a3448)
+const SCANLINE_COLOR := Color(0.47, 0.627, 0.784, 0.08)
+
+static var _scanline_tex: Texture2D = null
+
+
+static func detail_panel_style() -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = DETAIL_BG
+	s.border_color = DETAIL_BORDER
+	s.border_width_left = 1
+	s.border_width_right = 1
+	s.border_width_bottom = 1
+	s.border_width_top = 3  # heavier top edge, like the mock
+	s.corner_radius_top_left = 6
+	s.corner_radius_top_right = 6
+	s.corner_radius_bottom_right = 6
+	s.corner_radius_bottom_left = 6
+	s.content_margin_left = 12.0
+	s.content_margin_right = 12.0
+	s.content_margin_top = 10.0
+	s.content_margin_bottom = 10.0
+	return s
+
+
+## A 1×4 tiling texture: two transparent rows then two faint-line rows, so a
+## TextureRect on STRETCH_TILE paints horizontal scanlines every 4px.
+static func scanline_texture() -> Texture2D:
+	if _scanline_tex != null:
+		return _scanline_tex
+	var img := Image.create(1, 4, false, Image.FORMAT_RGBA8)
+	img.set_pixel(0, 0, Color(0, 0, 0, 0))
+	img.set_pixel(0, 1, Color(0, 0, 0, 0))
+	img.set_pixel(0, 2, SCANLINE_COLOR)
+	img.set_pixel(0, 3, SCANLINE_COLOR)
+	_scanline_tex = ImageTexture.create_from_image(img)
+	return _scanline_tex
+
+
+## Apply the white scan-lined card style to a detail PanelContainer and ensure
+## a single back-most scanline overlay. Idempotent — safe to call every refresh.
+static func apply_detail_panel_style(panel: PanelContainer) -> void:
+	panel.add_theme_stylebox_override("panel", detail_panel_style())
+	var overlay: TextureRect = panel.get_node_or_null("ScanlineOverlay")
+	if overlay == null:
+		overlay = TextureRect.new()
+		overlay.name = "ScanlineOverlay"
+		overlay.texture = scanline_texture()
+		overlay.stretch_mode = TextureRect.STRETCH_TILE
+		overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.add_child(overlay)
+	panel.move_child(overlay, 0)
+
+
+## Clear a detail panel's content (everything but the scanline overlay) and
+## (re)apply the card style. Shops call this, then add their content VBox.
+static func clear_detail_panel(panel: PanelContainer) -> void:
+	apply_detail_panel_style(panel)
+	for child in panel.get_children():
+		if child.name != "ScanlineOverlay":
+			child.queue_free()

@@ -1,7 +1,6 @@
 extends Control
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/storage-counter.png"
-const SHOP_UI := preload("res://scripts/2d/shops/shop_ui.gd")
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
 ## Storage screen — 4 tabs grouped by content:
@@ -38,12 +37,16 @@ var _active_modal: Control = null
 
 func _ready() -> void:
 	_mode_bar = mode_label.get_parent()
-	# Single full-width content panel — the old side-by-side layout was
-	# tied to the 2-tab "items vs meseta" split that this redesign drops.
-	PszStyle.style_menu(title_label, hint_label, [inventory_panel])
+	# Two-column content — item list (left) + detail panel (right), matching
+	# the shop screens. The detail panel reuses the scene's previously-hidden
+	# StoragePanel node (#368 storage-detail-consistency): selecting a row
+	# shows stats for gear / effect + count for consumables, with rarity
+	# stars in the detail rather than the row label.
+	PszStyle.style_menu(title_label, hint_label, [inventory_panel, storage_panel])
 	title_label.text = "Storage"
-	storage_panel.visible = false
-	inventory_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	storage_panel.visible = true
+	# Column ratios + detail placement are handled by setup_shop_portrait, which
+	# lifts storage_panel out of the inner HBox into the top-right detail slot.
 	_setup_portrait()
 	_load_items()
 	_refresh_display()
@@ -51,7 +54,10 @@ func _ready() -> void:
 
 
 func _setup_portrait() -> void:
-	SHOP_UI.setup_portrait(self)
+	# Same scaffold the other detail-bearing shops use: list on the left (3/5),
+	# detail card top-right (2/5) stopping 10px above the portrait. inventory_panel
+	# stays on the left; storage_panel becomes the right-column detail card.
+	PszStyle.setup_shop_portrait($Panel, storage_panel, SHOP_PREVIEW_PATH)
 
 
 func _load_items() -> void:
@@ -337,6 +343,7 @@ func _refresh_display() -> void:
 		hint_label.text = "Left/Right: Switch Tab  Enter: Transfer  Esc: Back"
 
 	_refresh_panel()
+	_refresh_detail()
 
 
 func _refresh_panel() -> void:
@@ -359,6 +366,81 @@ func _refresh_panel() -> void:
 
 	scroll.add_child(vbox)
 	panel.add_child(scroll)
+
+
+## Detail panel for the selected row — stats for gear, effect + count for
+## consumables, with rarity stars here rather than in the row label (#368).
+func _refresh_detail() -> void:
+	PszStyle.clear_detail_panel(storage_panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 4)
+
+	if not _is_items_tab():
+		vbox.add_child(PszStyle.detail_label(
+			"Transfer meseta between your wallet and the bank.", PszStyle.TEXT_MUTED))
+		storage_panel.add_child(vbox)
+		return
+
+	var items: Array = _current_list()
+	if items.is_empty() or _selected_index < 0 or _selected_index >= items.size():
+		storage_panel.add_child(vbox)
+		return
+
+	var item: Dictionary = items[_selected_index]
+	var item_id: String = str(item.get("id", "???"))
+	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
+	var weapon = WeaponRegistry.get_weapon(item_id)
+	if weapon == null:
+		weapon = WeaponRegistry.get_weapon(norm_id)
+	var armor_data = ArmorRegistry.get_armor(item_id)
+	if armor_data == null:
+		armor_data = ArmorRegistry.get_armor(norm_id)
+	var unit_data = UnitRegistry.get_unit(item_id)
+	if unit_data == null:
+		unit_data = UnitRegistry.get_unit(norm_id)
+
+	var item_name: String = str(item.get("name", item_id))
+	if weapon:
+		item_name = weapon.name
+	elif armor_data:
+		item_name = armor_data.name
+	vbox.add_child(PszStyle.detail_label(item_name, PszStyle.TITLE_BG))
+
+	if weapon:
+		vbox.add_child(PszStyle.detail_label(weapon.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("Type: %s" % weapon.get_weapon_type_name()))
+		vbox.add_child(PszStyle.detail_label("ATK: %d-%d" % [weapon.attack_base, weapon.attack_max]))
+		vbox.add_child(PszStyle.detail_label("ACC: %d" % weapon.accuracy_base))
+		if not weapon.element.is_empty():
+			vbox.add_child(PszStyle.detail_label("Element: %s Lv.%d" % [weapon.element, weapon.element_level]))
+		var character = CharacterManager.get_active_character()
+		var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0)) if character else 0
+		vbox.add_child(PszStyle.detail_label("Grind: +%d / +%d" % [grind, weapon.max_grind]))
+	elif armor_data:
+		vbox.add_child(PszStyle.detail_label(armor_data.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("DEF: %d-%d" % [armor_data.defense_base, armor_data.defense_max]))
+		vbox.add_child(PszStyle.detail_label("EVA: %d-%d" % [armor_data.evasion_base, armor_data.evasion_max]))
+		vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % armor_data.max_slots))
+	elif unit_data:
+		vbox.add_child(PszStyle.detail_label("*".repeat(int(unit_data.rarity)), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("Effect: %s" % unit_data.effect, PszStyle.TEXT_SUCCESS))
+	else:
+		# Consumable / material — effect + count.
+		var consumable = ConsumableRegistry.get_consumable(norm_id)
+		if consumable:
+			var eff := PszStyle.detail_label(consumable.details)
+			eff.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			vbox.add_child(eff)
+		vbox.add_child(PszStyle.detail_label("Count: x%d" % int(item.get("quantity", 1))))
+
+	vbox.add_child(PszStyle.detail_label(""))
+	if _is_equipped(item_id):
+		vbox.add_child(PszStyle.detail_label("Equipped — cannot deposit", PszStyle.TEXT_MUTED))
+	else:
+		vbox.add_child(PszStyle.detail_label("Storable", PszStyle.TEXT_SUCCESS))
+
+	storage_panel.add_child(vbox)
 
 
 func _render_meseta_panel(vbox: VBoxContainer) -> void:
@@ -427,7 +509,8 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 			elif armor_data:
 				item_name = armor_data.name
 		var qty: int = int(item.get("quantity", 1))
-		var equip_tag: String = " [E]" if item_id in equipped_ids else ""
+		# Unified shop convention (#368): [E] is a PREFIX, matching every shop.
+		var equip_prefix: String = "[E] " if item_id in equipped_ids else ""
 
 		var grind_tag := ""
 		if weapon and character:
@@ -435,33 +518,29 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 			if grind > 0:
 				grind_tag = " +%d" % grind
 
-		var suffix := ""
-		if weapon:
-			suffix = "%s %s" % [grind_tag, weapon.get_rarity_string()]
-		elif armor_data:
-			suffix = " %s" % armor_data.get_rarity_string()
-
-		var display_name := item_name + equip_tag + suffix
+		# Rarity stars now live in the detail panel (#368); the row keeps the
+		# weapon's grind level, which is part of its identity ("Saber +3").
+		var display_name := equip_prefix + item_name + grind_tag
 		var right_text := "x%d" % qty if qty > 1 else ""
 
 		# Equipped items are locked from being moved into storage (see
 		# _do_item_move); show muted to make the locked state legible.
+		# Unified disabled style (#368): one grey for every can't-use state
+		# (equipped/locked, class mismatch, under-level) — matching the shops,
+		# no red/yellow split. Only genuinely-broken data (an id that won't
+		# resolve to a weapon/armor) stays red as an error indicator.
 		var text_color := Color.TRANSPARENT
 		var is_locked_equipped: bool = item_id in equipped_ids
-		if is_locked_equipped:
-			text_color = PszStyle.TEXT_MUTED
-		elif is_unresolved:
+		if is_unresolved:
 			text_color = PszStyle.TEXT_DANGER
+		elif is_locked_equipped:
+			text_color = PszStyle.TEXT_MUTED
 		elif weapon and not class_type_race.is_empty():
-			if not weapon.can_be_used_by(class_type_race):
-				text_color = PszStyle.TEXT_DANGER
-			elif char_level < weapon.level:
-				text_color = PszStyle.TEXT_WARNING
+			if not weapon.can_be_used_by(class_type_race) or char_level < weapon.level:
+				text_color = PszStyle.TEXT_MUTED
 		elif armor_data and not class_type_race.is_empty():
-			if not armor_data.can_be_used_by(class_type_race):
-				text_color = PszStyle.TEXT_DANGER
-			elif char_level < armor_data.level:
-				text_color = PszStyle.TEXT_WARNING
+			if not armor_data.can_be_used_by(class_type_race) or char_level < armor_data.level:
+				text_color = PszStyle.TEXT_MUTED
 
 		var is_selected: bool = i == _selected_index
 		var item_icon: Texture2D = InventoryIcons.for_item(item_id)

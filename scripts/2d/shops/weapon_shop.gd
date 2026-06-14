@@ -19,7 +19,6 @@ var _units: Array = []
 var _sell_items: Array = []
 
 var _mode_bar: HBoxContainer
-var _portrait: Control
 
 # Cached pill nodes from the last _refresh_display, one entry per list item
 # (null for section headers). Allows cursor moves to toggle selection styling
@@ -27,9 +26,6 @@ var _portrait: Control
 # because the weapon list can be large and rebuild+detail+registry lookups
 # take several ms per cursor tick.
 var _pill_nodes: Array = []
-
-## Set true to show all weapon tiers in the shop (for testing)
-const DEBUG_ALL_TIERS := true
 
 ## Shop weapon pool — PSO basic weapon tiers
 const SHOP_WEAPON_TIER1 := [
@@ -93,7 +89,7 @@ const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/weapon-shop.png"
 
 
 func _setup_portrait() -> void:
-	_portrait = PszStyle.setup_shop_portrait($Panel, list_panel, detail_panel, SHOP_PREVIEW_PATH)
+	PszStyle.setup_shop_portrait($Panel, detail_panel, SHOP_PREVIEW_PATH)
 
 
 func _generate_inventory() -> void:
@@ -101,11 +97,10 @@ func _generate_inventory() -> void:
 	_armors.clear()
 	_units.clear()
 
+	# Two weapons per type: tier 1 + tier 2. Tiers 3-4 stay in the catalog
+	# (drops, future stock) but the shop stocks only two of each kind.
 	var weapon_ids: Array = SHOP_WEAPON_TIER1.duplicate()
-	if DEBUG_ALL_TIERS:
-		weapon_ids.append_array(SHOP_WEAPON_TIER2)
-		weapon_ids.append_array(SHOP_WEAPON_TIER3)
-		weapon_ids.append_array(SHOP_WEAPON_TIER4)
+	weapon_ids.append_array(SHOP_WEAPON_TIER2)
 	for wid in weapon_ids:
 		var w = WeaponRegistry.get_weapon(wid)
 		if w == null:
@@ -446,15 +441,15 @@ func _refresh_display() -> void:
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
-			var equip_tag: String = " [E]" if item.get("equipped", false) else ""
-			var text_color := PszStyle.TEXT_MUTED if item.get("equipped", false) else Color.TRANSPARENT
 			var sell_id: String = str(item.get("id", ""))
 			var sell_icon: Texture2D = InventoryIcons.for_item(sell_id)
 			var sell_icons: Array = [sell_icon] if sell_icon else []
-			var pill := PszStyle.create_pill_with_icons(
-				sell_icons,
-				str(item.get("name", "???")) + equip_tag + qty_str,
-				i == _selected_index, "%d M" % sell_price, text_color)
+			# Unified shop row (#368): [E] prefix + muted for equipped gear.
+			var pill := PszStyle.shop_row(str(item.get("name", "???")) + qty_str, "%d M" % sell_price, {
+				"icons": sell_icons,
+				"equipped": bool(item.get("equipped", false)),
+				"selected": i == _selected_index,
+			})
 			vbox.add_child(pill)
 			_pill_nodes[i] = pill
 			if i == _selected_index:
@@ -473,36 +468,20 @@ func _refresh_display() -> void:
 					last_type_name = type_name
 					vbox.add_child(PszStyle.create_section_header(type_name))
 
-			# Rarity stars are only shown in the detail panel (top right) —
-			# inline stars cluttered long item names without adding info
-			# the player couldn't get from selecting the row.
+			# Rarity stars + held count + can't-buy reason all live in the detail
+			# panel — the row carries only name, price, and the one grey rule.
 
-			var held: int = int(Inventory._items.get(item_id, 0))
-			var held_str := " x%d" % held if held > 1 else ""
-
-			# Affordance: drive the row's colour + reason tag off _can_buy so it
-			# matches exactly what _open_confirm_modal / _buy_selected accept
-			# (class, affordability, AND inventory room). Colour by reason:
-			# class = danger, can't-afford = warning, no-room = muted.
+			# Unified shop row (#368): grey only when _can_buy rejects the row
+			# (class / affordability / room — same verdict _buy_selected uses);
+			# no per-reason colour split. The reason itself shows in the detail.
 			var verdict: Dictionary = _can_buy(item)
-			var text_color := Color.TRANSPARENT
-			var restriction_tag := ""
-			if not verdict.get("ok", true):
-				var vr: String = str(verdict.get("reason", ""))
-				restriction_tag = " [%s]" % vr
-				if vr == "Class can't use":
-					text_color = PszStyle.TEXT_DANGER
-				elif vr == "Can't afford":
-					text_color = PszStyle.TEXT_WARNING
-				else:
-					text_color = PszStyle.TEXT_MUTED
-
 			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
 			var buy_icons: Array = [buy_icon] if buy_icon else []
-			var pill := PszStyle.create_pill_with_icons(
-				buy_icons,
-				str(item.get("name", "???")) + held_str + restriction_tag,
-				i == _selected_index, "%d M" % cost, text_color)
+			var pill := PszStyle.shop_row(str(item.get("name", "???")), "%d M" % cost, {
+				"icons": buy_icons,
+				"affordable": bool(verdict.get("ok", true)),
+				"selected": i == _selected_index,
+			})
 			vbox.add_child(pill)
 			_pill_nodes[i] = pill
 			if i == _selected_index:
@@ -539,8 +518,7 @@ func _update_selection(old_index: int) -> void:
 
 
 func _refresh_detail() -> void:
-	for child in detail_panel.get_children():
-		child.queue_free()
+	PszStyle.clear_detail_panel(detail_panel)
 
 	var list := _get_current_list()
 	if list.is_empty() or _selected_index >= list.size():
@@ -553,7 +531,37 @@ func _refresh_detail() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 
 	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
+	_append_gear_stats(vbox, cat, item_id)
 
+	# Price info
+	vbox.add_child(PszStyle.detail_label(""))
+	if _tab == Tab.SELL:
+		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("Owned: %d" % int(item.get("quantity", 0))))
+	else:
+		vbox.add_child(PszStyle.detail_label("Buy: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_MUTED))
+		vbox.add_child(PszStyle.detail_label("You have: %d" % int(Inventory._items.get(item_id, 0))))
+
+		# Equippability status
+		if cat in ["weapon", "armor"]:
+			var equip_check: Dictionary = _check_equippability(item_id, cat)
+			if equip_check.get("can_equip", true):
+				vbox.add_child(PszStyle.detail_label("Can equip", PszStyle.TEXT_SUCCESS))
+			else:
+				vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
+
+		# Unified: surface the can't-buy reason (the row no longer tags it).
+		var buy_verdict: Dictionary = _can_buy(item)
+		if not buy_verdict.get("ok", true):
+			vbox.add_child(PszStyle.detail_label(str(buy_verdict.get("reason", "")), PszStyle.TEXT_WARNING))
+
+	detail_panel.add_child(vbox)
+
+
+## Append the gear stat lines (weapon / armor / unit) to the detail panel.
+## Extracted from _refresh_detail to keep it under the complexity bound.
+func _append_gear_stats(vbox: VBoxContainer, cat: String, item_id: String) -> void:
 	if cat == "weapon":
 		var w = WeaponRegistry.get_weapon(item_id)
 		if w:
@@ -586,25 +594,6 @@ func _refresh_detail() -> void:
 			vbox.add_child(PszStyle.detail_label("Rarity: %s" % ("*".repeat(int(u.rarity))), PszStyle.TEXT_HIGHLIGHT))
 			vbox.add_child(PszStyle.detail_label("Category: %s" % u.category))
 			vbox.add_child(PszStyle.detail_label("Effect: %s" % u.effect, PszStyle.TEXT_SUCCESS))
-
-	# Price info
-	vbox.add_child(PszStyle.detail_label(""))
-	if _tab == Tab.SELL:
-		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("Owned: %d" % int(item.get("quantity", 0))))
-	else:
-		vbox.add_child(PszStyle.detail_label("Buy: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_MUTED))
-
-		# Equippability status
-		if cat in ["weapon", "armor"]:
-			var equip_check: Dictionary = _check_equippability(item_id, cat)
-			if equip_check.get("can_equip", true):
-				vbox.add_child(PszStyle.detail_label("Can equip", PszStyle.TEXT_SUCCESS))
-			else:
-				vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
-
-	detail_panel.add_child(vbox)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
