@@ -446,15 +446,15 @@ func _refresh_display() -> void:
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
-			var equip_tag: String = " [E]" if item.get("equipped", false) else ""
-			var text_color := PszStyle.TEXT_MUTED if item.get("equipped", false) else Color.TRANSPARENT
 			var sell_id: String = str(item.get("id", ""))
 			var sell_icon: Texture2D = InventoryIcons.for_item(sell_id)
 			var sell_icons: Array = [sell_icon] if sell_icon else []
-			var pill := PszStyle.create_pill_with_icons(
-				sell_icons,
-				str(item.get("name", "???")) + equip_tag + qty_str,
-				i == _selected_index, "%d M" % sell_price, text_color)
+			# Unified shop row (#368): [E] prefix + muted for equipped gear.
+			var pill := PszStyle.shop_row(str(item.get("name", "???")) + qty_str, "%d M" % sell_price, {
+				"icons": sell_icons,
+				"equipped": bool(item.get("equipped", false)),
+				"selected": i == _selected_index,
+			})
 			vbox.add_child(pill)
 			_pill_nodes[i] = pill
 			if i == _selected_index:
@@ -473,36 +473,20 @@ func _refresh_display() -> void:
 					last_type_name = type_name
 					vbox.add_child(PszStyle.create_section_header(type_name))
 
-			# Rarity stars are only shown in the detail panel (top right) —
-			# inline stars cluttered long item names without adding info
-			# the player couldn't get from selecting the row.
+			# Rarity stars + held count + can't-buy reason all live in the detail
+			# panel — the row carries only name, price, and the one grey rule.
 
-			var held: int = int(Inventory._items.get(item_id, 0))
-			var held_str := " x%d" % held if held > 1 else ""
-
-			# Affordance: drive the row's colour + reason tag off _can_buy so it
-			# matches exactly what _open_confirm_modal / _buy_selected accept
-			# (class, affordability, AND inventory room). Colour by reason:
-			# class = danger, can't-afford = warning, no-room = muted.
+			# Unified shop row (#368): grey only when _can_buy rejects the row
+			# (class / affordability / room — same verdict _buy_selected uses);
+			# no per-reason colour split. The reason itself shows in the detail.
 			var verdict: Dictionary = _can_buy(item)
-			var text_color := Color.TRANSPARENT
-			var restriction_tag := ""
-			if not verdict.get("ok", true):
-				var vr: String = str(verdict.get("reason", ""))
-				restriction_tag = " [%s]" % vr
-				if vr == "Class can't use":
-					text_color = PszStyle.TEXT_DANGER
-				elif vr == "Can't afford":
-					text_color = PszStyle.TEXT_WARNING
-				else:
-					text_color = PszStyle.TEXT_MUTED
-
 			var buy_icon: Texture2D = InventoryIcons.for_item(item_id)
 			var buy_icons: Array = [buy_icon] if buy_icon else []
-			var pill := PszStyle.create_pill_with_icons(
-				buy_icons,
-				str(item.get("name", "???")) + held_str + restriction_tag,
-				i == _selected_index, "%d M" % cost, text_color)
+			var pill := PszStyle.shop_row(str(item.get("name", "???")), "%d M" % cost, {
+				"icons": buy_icons,
+				"affordable": bool(verdict.get("ok", true)),
+				"selected": i == _selected_index,
+			})
 			vbox.add_child(pill)
 			_pill_nodes[i] = pill
 			if i == _selected_index:
@@ -595,6 +579,7 @@ func _refresh_detail() -> void:
 	else:
 		vbox.add_child(PszStyle.detail_label("Buy: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
 		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_MUTED))
+		vbox.add_child(PszStyle.detail_label("You have: %d" % int(Inventory._items.get(item_id, 0))))
 
 		# Equippability status
 		if cat in ["weapon", "armor"]:
@@ -603,6 +588,11 @@ func _refresh_detail() -> void:
 				vbox.add_child(PszStyle.detail_label("Can equip", PszStyle.TEXT_SUCCESS))
 			else:
 				vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
+
+		# Unified: surface the can't-buy reason (the row no longer tags it).
+		var buy_verdict: Dictionary = _can_buy(item)
+		if not buy_verdict.get("ok", true):
+			vbox.add_child(PszStyle.detail_label(str(buy_verdict.get("reason", "")), PszStyle.TEXT_WARNING))
 
 	detail_panel.add_child(vbox)
 

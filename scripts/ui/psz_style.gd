@@ -194,6 +194,28 @@ static func create_pill_with_icons(icons: Array, left_text: String, selected: bo
 	return pill
 
 
+## The ONE shop/storage list row, shared by every shop (#368 — match the Astro
+## mock at spec/src/components/screens/shops). Rules, identical everywhere:
+##   • A row greys out ONLY when the player can't AFFORD it. Soft reasons (class
+##     can't equip, req-level, stack-full, …) keep the row selectable and
+##     surface in the DETAIL panel — never as an inline "[reason]" in the label.
+##   • Equipped gear is marked with an [E] PREFIX (not a right-side tag).
+##   • Rarity stars / req-level tags do NOT go in the name; they belong in the
+##     detail panel.
+## `opts`: { icons:Array, equipped:bool, affordable:bool=true, selected:bool }.
+static func shop_row(item_name: String, right_text: String, opts: Dictionary = {}) -> PanelContainer:
+	var equipped: bool = bool(opts.get("equipped", false))
+	var affordable: bool = bool(opts.get("affordable", true))
+	var selected: bool = bool(opts.get("selected", false))
+	var icons: Array = opts.get("icons", [])
+	var label: String = ("[E] " if equipped else "") + item_name
+	# Muted for rows the player can't act on: unaffordable, or equipped gear
+	# (which can't be re-bought / deposited / sold). Everything else is normal.
+	var muted: bool = (not affordable) or equipped
+	var color: Color = TEXT_MUTED if muted else Color.TRANSPARENT
+	return create_pill_with_icons(icons, label, selected, right_text, color)
+
+
 static func create_section_header(text: String) -> PanelContainer:
 	var pill := PanelContainer.new()
 	pill.add_theme_stylebox_override("panel", section_header_style())
