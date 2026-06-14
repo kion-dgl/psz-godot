@@ -23,6 +23,7 @@ BASELINES = {
     "dead code": ("scripts/tools/code_dead_baseline.json", "accepted_dead"),
     "complexity": ("scripts/tools/code_complexity_baseline.json", "accepted_complex"),
     "coupling": ("scripts/tools/code_coupling_baseline.json", "accepted_coupling"),
+    "orphan files": ("scripts/tools/orphan_baseline.json", "accepted_orphans"),
 }
 
 
