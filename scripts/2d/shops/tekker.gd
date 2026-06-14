@@ -1,17 +1,18 @@
 extends Control
-## Tekker — grind weapons and identify unknown weapons.
+## Tekker — grind weapons to raise their attack power.
 
 const SHOP_PREVIEW_PATH := "res://assets/ui/shop-previews/custom-shop.png"
 const ShopNav := preload("res://scripts/2d/shops/shop_nav.gd")
 
-enum Mode { GRIND, IDENTIFY }
+# Grind is the only mode — PSZ has no PSO-style weapon identification (no
+# special-attack mechanic to unlock), so the Identify tab was removed.
+enum Mode { GRIND }
 
-const TAB_NAMES := ["Grind", "Identify"]
+const TAB_NAMES := ["Grind"]
 
 var _mode: int = Mode.GRIND
 var _selected_index: int = 0
 var _grindable_weapons: Array = []  # Array of {id, name, grind, max_grind, rarity}
-var _unidentified_weapons: Array = []  # Array of {id, name, rarity}
 
 var _mode_bar_parent: Control  # Parent of mode_label for tab bar rebuilding
 var _tab_row: HBoxContainer    # Persistent tab bar container
@@ -27,8 +28,6 @@ const GRINDER_FOR_RARITY := {
 
 const RARITY_COST_MULT := {1: 1.0, 2: 1.5, 3: 2.0, 4: 3.0, 5: 4.0, 6: 6.0, 7: 10.0}
 
-const IDENTIFY_COST := {5: 1000, 6: 2500, 7: 5000}
-
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeLabel
 @onready var content_panel: PanelContainer = $Panel/VBox/ContentPanel
@@ -40,7 +39,7 @@ func _ready() -> void:
 	PszStyle.style_menu(title_label, hint_label, [content_panel])
 	title_label.text = "Tekker"
 	_setup_portrait()
-	hint_label.text = "Left/Right: Switch Mode  Up/Down: Select  Enter: Confirm  Esc: Leave"
+	hint_label.text = "Up/Down: Select  Enter: Grind  Esc: Leave"
 	_build_lists()
 	_refresh_display()
 	ShopPreviewSprite.attach(self, SHOP_PREVIEW_PATH)
@@ -92,7 +91,6 @@ func _setup_portrait() -> void:
 
 func _build_lists() -> void:
 	_grindable_weapons.clear()
-	_unidentified_weapons.clear()
 
 	var character = CharacterManager.get_active_character()
 	if character == null:
@@ -114,31 +112,13 @@ func _build_lists() -> void:
 					"rarity": weapon.rarity,
 				})
 
-	# Unidentified weapons
-	for weapon_id in character.get("unidentified_weapons", []):
-		var weapon = WeaponRegistry.get_weapon(weapon_id)
-		if weapon:
-			_unidentified_weapons.append({
-				"id": weapon.id,
-				"name": weapon.name,
-				"rarity": weapon.rarity,
-			})
-
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Single mode (Grind) — no tab switching.
 	ShopNav.handle(self, event, {
-		"on_tab": func(_dir: int) -> void:
-			_mode = Mode.IDENTIFY if _mode == Mode.GRIND else Mode.GRIND
-			_selected_index = 0
-			_refresh_display(),
-		"list_size": func() -> int:
-			return _grindable_weapons.size() if _mode == Mode.GRIND else _unidentified_weapons.size(),
+		"list_size": func() -> int: return _grindable_weapons.size(),
 		"on_move": func(_old: int) -> void: _refresh_display(),
-		"on_accept": func() -> void:
-			if _mode == Mode.GRIND:
-				_grind_selected()
-			else:
-				_identify_selected(),
+		"on_accept": func() -> void: _grind_selected(),
 	})
 
 
@@ -183,42 +163,6 @@ func _grind_selected() -> void:
 	_refresh_display()
 
 
-func _identify_selected() -> void:
-	if _unidentified_weapons.is_empty() or _selected_index >= _unidentified_weapons.size():
-		return
-
-	var character = CharacterManager.get_active_character()
-	if character == null:
-		return
-
-	var weapon_info: Dictionary = _unidentified_weapons[_selected_index]
-	var weapon_id: String = weapon_info["id"]
-	var rarity: int = weapon_info["rarity"]
-
-	var cost: int = IDENTIFY_COST.get(rarity, 1000)
-	if int(character.get("meseta", 0)) < cost:
-		hint_label.text = "Not enough meseta! Need %d M" % cost
-		return
-
-	# Deduct meseta
-	character["meseta"] = int(character["meseta"]) - cost
-	GameState.meseta = int(character["meseta"])
-
-	# Remove from unidentified list
-	var unid_list: Array = character.get("unidentified_weapons", [])
-	var idx: int = unid_list.find(weapon_id)
-	if idx >= 0:
-		unid_list.remove_at(idx)
-
-	# Add to inventory
-	Inventory.add_item(weapon_id, 1)
-
-	hint_label.text = "Identified %s! (-%d M)" % [weapon_info["name"], cost]
-	_build_lists()
-	_selected_index = mini(_selected_index, maxi(_unidentified_weapons.size() - 1, 0))
-	_refresh_display()
-
-
 func _refresh_display() -> void:
 	# Tab bar — mode_label is direct child of VBox, so we hide it and
 	# reuse a persistent HBoxContainer for the tab bar
@@ -249,43 +193,26 @@ func _refresh_display() -> void:
 
 	var selected_pill: Control = null
 
-	if _mode == Mode.GRIND:
-		vbox.add_child(PszStyle.create_section_header("Grinding increases a weapon's attack power."))
-
-		if _grindable_weapons.is_empty():
-			vbox.add_child(PszStyle.create_pill("(No grindable weapons in inventory)", false, "", PszStyle.TEXT_MUTED))
-		else:
-			for i in range(_grindable_weapons.size()):
-				var w: Dictionary = _grindable_weapons[i]
-				var grinder_id: String = GRINDER_FOR_RARITY.get(w["rarity"], "monogrinder")
-				var has_grinder: bool = Inventory.has_item(grinder_id)
-				var cost := int((200 + w["grind"] * 100) * RARITY_COST_MULT.get(w["rarity"], 1.0))
-
-				var text_color := Color.TRANSPARENT
-				if not has_grinder:
-					text_color = PszStyle.TEXT_MUTED  # unified disabled style (#368)
-
-				var pill := PszStyle.create_pill(
-					"%s  +%d/%d  [%s]" % [w["name"], w["grind"], w["max_grind"], grinder_id.replace("_", " ")],
-					i == _selected_index, "%d M" % cost, text_color)
-				vbox.add_child(pill)
-				if i == _selected_index:
-					selected_pill = pill
+	vbox.add_child(PszStyle.create_section_header("Grinding increases a weapon's attack power."))
+	if _grindable_weapons.is_empty():
+		vbox.add_child(PszStyle.create_pill("(No grindable weapons in inventory)", false, "", PszStyle.TEXT_MUTED))
 	else:
-		vbox.add_child(PszStyle.create_section_header("Identify unknown weapons (5-7 star rarity)."))
+		for i in range(_grindable_weapons.size()):
+			var w: Dictionary = _grindable_weapons[i]
+			var grinder_id: String = GRINDER_FOR_RARITY.get(w["rarity"], "monogrinder")
+			var has_grinder: bool = Inventory.has_item(grinder_id)
+			var cost := int((200 + w["grind"] * 100) * RARITY_COST_MULT.get(w["rarity"], 1.0))
 
-		if _unidentified_weapons.is_empty():
-			vbox.add_child(PszStyle.create_pill("(No unidentified weapons)", false, "", PszStyle.TEXT_MUTED))
-		else:
-			for i in range(_unidentified_weapons.size()):
-				var w: Dictionary = _unidentified_weapons[i]
-				var cost: int = IDENTIFY_COST.get(w["rarity"], 1000)
-				var pill := PszStyle.create_pill(
-					"%s  %s star" % [w["name"], str(w["rarity"])],
-					i == _selected_index, "%d M" % cost)
-				vbox.add_child(pill)
-				if i == _selected_index:
-					selected_pill = pill
+			var text_color := Color.TRANSPARENT
+			if not has_grinder:
+				text_color = PszStyle.TEXT_MUTED  # unified disabled style (#368)
+
+			var pill := PszStyle.create_pill(
+				"%s  +%d/%d  [%s]" % [w["name"], w["grind"], w["max_grind"], grinder_id.replace("_", " ")],
+				i == _selected_index, "%d M" % cost, text_color)
+			vbox.add_child(pill)
+			if i == _selected_index:
+				selected_pill = pill
 
 	scroll.add_child(vbox)
 	content_panel.add_child(scroll)
@@ -322,8 +249,8 @@ func _update_grinder_info() -> void:
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_grinder_info.add_child(lbl)
 
-	# Stat preview for selected weapon (grind mode only)
-	if _mode == Mode.GRIND and not _grindable_weapons.is_empty() and _selected_index < _grindable_weapons.size():
+	# Stat preview for the selected weapon
+	if not _grindable_weapons.is_empty() and _selected_index < _grindable_weapons.size():
 		var sep := HSeparator.new()
 		sep.add_theme_constant_override("separation", 6)
 		_grinder_info.add_child(sep)

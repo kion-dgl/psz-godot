@@ -28,9 +28,6 @@ var _portrait: Control
 # take several ms per cursor tick.
 var _pill_nodes: Array = []
 
-## Set true to show all weapon tiers in the shop (for testing)
-const DEBUG_ALL_TIERS := true
-
 ## Shop weapon pool — PSO basic weapon tiers
 const SHOP_WEAPON_TIER1 := [
 	"saber", "sword", "dagger", "partisan",
@@ -101,11 +98,10 @@ func _generate_inventory() -> void:
 	_armors.clear()
 	_units.clear()
 
+	# Two weapons per type: tier 1 + tier 2. Tiers 3-4 stay in the catalog
+	# (drops, future stock) but the shop stocks only two of each kind.
 	var weapon_ids: Array = SHOP_WEAPON_TIER1.duplicate()
-	if DEBUG_ALL_TIERS:
-		weapon_ids.append_array(SHOP_WEAPON_TIER2)
-		weapon_ids.append_array(SHOP_WEAPON_TIER3)
-		weapon_ids.append_array(SHOP_WEAPON_TIER4)
+	weapon_ids.append_array(SHOP_WEAPON_TIER2)
 	for wid in weapon_ids:
 		var w = WeaponRegistry.get_weapon(wid)
 		if w == null:
@@ -523,8 +519,7 @@ func _update_selection(old_index: int) -> void:
 
 
 func _refresh_detail() -> void:
-	for child in detail_panel.get_children():
-		child.queue_free()
+	PszStyle.clear_detail_panel(detail_panel)
 
 	var list := _get_current_list()
 	if list.is_empty() or _selected_index >= list.size():

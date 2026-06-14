@@ -382,7 +382,7 @@ func _refresh_display() -> void:
 			# the reason and held count live in the detail panel, not the label.
 			var verdict: Dictionary = _can_buy(item)
 			var cost: int = int(item.get("cost", 0))
-			var right_text: String = "debug" if _tab == Tab.MATERIALS else "%d M" % cost
+			var right_text: String = "%d M" % cost
 			var pill := PszStyle.shop_row(shop_name, right_text, {
 				"icons": buy_icons,
 				"affordable": bool(verdict.get("ok", true)),
@@ -437,8 +437,7 @@ func _refresh_display() -> void:
 
 
 func _refresh_detail() -> void:
-	for child in detail_panel.get_children():
-		child.queue_free()
+	PszStyle.clear_detail_panel(detail_panel)
 
 	var list := _get_current_list()
 	if list.is_empty() or _selected_index >= list.size():

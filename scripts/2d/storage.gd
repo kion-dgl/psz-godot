@@ -371,8 +371,7 @@ func _refresh_panel() -> void:
 ## Detail panel for the selected row — stats for gear, effect + count for
 ## consumables, with rarity stars here rather than in the row label (#368).
 func _refresh_detail() -> void:
-	for child in storage_panel.get_children():
-		child.queue_free()
+	PszStyle.clear_detail_panel(storage_panel)
 
 	var vbox := VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 4)

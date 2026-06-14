@@ -391,3 +391,71 @@ static func style_menu(p_title: Label, p_hint: Label, panels: Array = []) -> voi
 	for panel in panels:
 		if panel is PanelContainer:
 			panel.add_theme_stylebox_override("panel", inner_panel_style())
+
+
+# ── Detail panel (the white scan-lined card, matching the shop mock) ──────────
+# The mock's DetailPanel is a translucent-white card with a subtle scanline
+# texture, a thin border with a darker top edge, and rounded corners. See
+# spec/src/components/screens/pszui.tsx (DetailPanel + SCANLINES).
+const DETAIL_BG := Color(1.0, 1.0, 1.0, 0.85)
+const DETAIL_BORDER := Color(0.165, 0.204, 0.282)  # dark-blue edge (#2a3448)
+const SCANLINE_COLOR := Color(0.47, 0.627, 0.784, 0.08)
+
+static var _scanline_tex: Texture2D = null
+
+
+static func detail_panel_style() -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = DETAIL_BG
+	s.border_color = DETAIL_BORDER
+	s.border_width_left = 1
+	s.border_width_right = 1
+	s.border_width_bottom = 1
+	s.border_width_top = 3  # heavier top edge, like the mock
+	s.corner_radius_top_left = 6
+	s.corner_radius_top_right = 6
+	s.corner_radius_bottom_right = 6
+	s.corner_radius_bottom_left = 6
+	s.content_margin_left = 12.0
+	s.content_margin_right = 12.0
+	s.content_margin_top = 10.0
+	s.content_margin_bottom = 10.0
+	return s
+
+
+## A 1×4 tiling texture: two transparent rows then two faint-line rows, so a
+## TextureRect on STRETCH_TILE paints horizontal scanlines every 4px.
+static func scanline_texture() -> Texture2D:
+	if _scanline_tex != null:
+		return _scanline_tex
+	var img := Image.create(1, 4, false, Image.FORMAT_RGBA8)
+	img.set_pixel(0, 0, Color(0, 0, 0, 0))
+	img.set_pixel(0, 1, Color(0, 0, 0, 0))
+	img.set_pixel(0, 2, SCANLINE_COLOR)
+	img.set_pixel(0, 3, SCANLINE_COLOR)
+	_scanline_tex = ImageTexture.create_from_image(img)
+	return _scanline_tex
+
+
+## Apply the white scan-lined card style to a detail PanelContainer and ensure
+## a single back-most scanline overlay. Idempotent — safe to call every refresh.
+static func apply_detail_panel_style(panel: PanelContainer) -> void:
+	panel.add_theme_stylebox_override("panel", detail_panel_style())
+	var overlay: TextureRect = panel.get_node_or_null("ScanlineOverlay")
+	if overlay == null:
+		overlay = TextureRect.new()
+		overlay.name = "ScanlineOverlay"
+		overlay.texture = scanline_texture()
+		overlay.stretch_mode = TextureRect.STRETCH_TILE
+		overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.add_child(overlay)
+	panel.move_child(overlay, 0)
+
+
+## Clear a detail panel's content (everything but the scanline overlay) and
+## (re)apply the card style. Shops call this, then add their content VBox.
+static func clear_detail_panel(panel: PanelContainer) -> void:
+	apply_detail_panel_style(panel)
+	for child in panel.get_children():
+		if child.name != "ScanlineOverlay":
+			child.queue_free()
