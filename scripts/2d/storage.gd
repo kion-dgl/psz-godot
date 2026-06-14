@@ -427,7 +427,8 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 			elif armor_data:
 				item_name = armor_data.name
 		var qty: int = int(item.get("quantity", 1))
-		var equip_tag: String = " [E]" if item_id in equipped_ids else ""
+		# Unified shop convention (#368): [E] is a PREFIX, matching every shop.
+		var equip_prefix: String = "[E] " if item_id in equipped_ids else ""
 
 		var grind_tag := ""
 		if weapon and character:
@@ -441,27 +442,27 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 		elif armor_data:
 			suffix = " %s" % armor_data.get_rarity_string()
 
-		var display_name := item_name + equip_tag + suffix
+		var display_name := equip_prefix + item_name + suffix
 		var right_text := "x%d" % qty if qty > 1 else ""
 
 		# Equipped items are locked from being moved into storage (see
 		# _do_item_move); show muted to make the locked state legible.
+		# Unified disabled style (#368): one grey for every can't-use state
+		# (equipped/locked, class mismatch, under-level) — matching the shops,
+		# no red/yellow split. Only genuinely-broken data (an id that won't
+		# resolve to a weapon/armor) stays red as an error indicator.
 		var text_color := Color.TRANSPARENT
 		var is_locked_equipped: bool = item_id in equipped_ids
-		if is_locked_equipped:
-			text_color = PszStyle.TEXT_MUTED
-		elif is_unresolved:
+		if is_unresolved:
 			text_color = PszStyle.TEXT_DANGER
+		elif is_locked_equipped:
+			text_color = PszStyle.TEXT_MUTED
 		elif weapon and not class_type_race.is_empty():
-			if not weapon.can_be_used_by(class_type_race):
-				text_color = PszStyle.TEXT_DANGER
-			elif char_level < weapon.level:
-				text_color = PszStyle.TEXT_WARNING
+			if not weapon.can_be_used_by(class_type_race) or char_level < weapon.level:
+				text_color = PszStyle.TEXT_MUTED
 		elif armor_data and not class_type_race.is_empty():
-			if not armor_data.can_be_used_by(class_type_race):
-				text_color = PszStyle.TEXT_DANGER
-			elif char_level < armor_data.level:
-				text_color = PszStyle.TEXT_WARNING
+			if not armor_data.can_be_used_by(class_type_race) or char_level < armor_data.level:
+				text_color = PszStyle.TEXT_MUTED
 
 		var is_selected: bool = i == _selected_index
 		var item_icon: Texture2D = InventoryIcons.for_item(item_id)

@@ -203,19 +203,19 @@ func _refresh_display() -> void:
 			vbox.add_child(PszStyle.create_section_header(category))
 
 		var can_afford: bool = pd_count >= cost
-		var text_color := Color.TRANSPARENT
-		if not can_afford:
-			text_color = PszStyle.TEXT_DANGER
 
 		var held: int = Inventory.get_item_count(item["id"])
 		var held_str: String = " (x%d)" % held if held > 0 else ""
 
 		var item_icon: Texture2D = InventoryIcons.for_item(str(item["id"]))
 		var icons: Array = [item_icon] if item_icon else []
-		var pill := PszStyle.create_pill_with_icons(
-			icons,
-			"%s%s" % [item["name"], held_str],
-			i == _selected_index, "%d PD" % cost, text_color)
+		# Unified shop row (#368): grey (not red) when the player can't afford.
+		# This is a list-only shop, so the held count stays in the row label.
+		var pill := PszStyle.shop_row("%s%s" % [item["name"], held_str], "%d PD" % cost, {
+			"icons": icons,
+			"affordable": can_afford,
+			"selected": i == _selected_index,
+		})
 		vbox.add_child(pill)
 		if i == _selected_index:
 			selected_pill = pill

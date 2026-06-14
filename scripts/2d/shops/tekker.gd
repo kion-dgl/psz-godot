@@ -263,7 +263,7 @@ func _refresh_display() -> void:
 
 				var text_color := Color.TRANSPARENT
 				if not has_grinder:
-					text_color = PszStyle.TEXT_DANGER
+					text_color = PszStyle.TEXT_MUTED  # unified disabled style (#368)
 
 				var pill := PszStyle.create_pill(
 					"%s  +%d/%d  [%s]" % [w["name"], w["grind"], w["max_grind"], grinder_id.replace("_", " ")],

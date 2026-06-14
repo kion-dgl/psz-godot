@@ -583,9 +583,10 @@ func _refresh_display() -> void:
 		for i in range(PHOTON_OPTIONS.size()):
 			var option_name: String = PHOTON_OPTIONS[i]
 			var has_it: bool = Inventory.has_item(PHOTON_IDS[i])
+			# Unified shop disabled style (#368): grey, not red, for can't-use.
 			var text_color := Color.TRANSPARENT
 			if not has_it:
-				text_color = PszStyle.TEXT_DANGER
+				text_color = PszStyle.TEXT_MUTED
 			var count_text: String = "x%d" % Inventory.get_item_count(PHOTON_IDS[i])
 			var pill := PszStyle.create_pill(option_name, i == _photon_index, count_text, text_color)
 			vbox.add_child(pill)
@@ -633,7 +634,7 @@ func _refresh_display() -> void:
 				var can_craft: bool = _can_craft_recipe(recipe)
 				var text_color := Color.TRANSPARENT
 				if not can_craft:
-					text_color = PszStyle.TEXT_DANGER
+					text_color = PszStyle.TEXT_MUTED  # unified disabled style (#368)
 
 				var ing_parts: PackedStringArray = []
 				for ingredient in recipe.ingredients:
