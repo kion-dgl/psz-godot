@@ -537,7 +537,37 @@ func _refresh_detail() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 
 	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
+	_append_gear_stats(vbox, cat, item_id)
 
+	# Price info
+	vbox.add_child(PszStyle.detail_label(""))
+	if _tab == Tab.SELL:
+		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("Owned: %d" % int(item.get("quantity", 0))))
+	else:
+		vbox.add_child(PszStyle.detail_label("Buy: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
+		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_MUTED))
+		vbox.add_child(PszStyle.detail_label("You have: %d" % int(Inventory._items.get(item_id, 0))))
+
+		# Equippability status
+		if cat in ["weapon", "armor"]:
+			var equip_check: Dictionary = _check_equippability(item_id, cat)
+			if equip_check.get("can_equip", true):
+				vbox.add_child(PszStyle.detail_label("Can equip", PszStyle.TEXT_SUCCESS))
+			else:
+				vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
+
+		# Unified: surface the can't-buy reason (the row no longer tags it).
+		var buy_verdict: Dictionary = _can_buy(item)
+		if not buy_verdict.get("ok", true):
+			vbox.add_child(PszStyle.detail_label(str(buy_verdict.get("reason", "")), PszStyle.TEXT_WARNING))
+
+	detail_panel.add_child(vbox)
+
+
+## Append the gear stat lines (weapon / armor / unit) to the detail panel.
+## Extracted from _refresh_detail to keep it under the complexity bound.
+func _append_gear_stats(vbox: VBoxContainer, cat: String, item_id: String) -> void:
 	if cat == "weapon":
 		var w = WeaponRegistry.get_weapon(item_id)
 		if w:
@@ -570,31 +600,6 @@ func _refresh_detail() -> void:
 			vbox.add_child(PszStyle.detail_label("Rarity: %s" % ("*".repeat(int(u.rarity))), PszStyle.TEXT_HIGHLIGHT))
 			vbox.add_child(PszStyle.detail_label("Category: %s" % u.category))
 			vbox.add_child(PszStyle.detail_label("Effect: %s" % u.effect, PszStyle.TEXT_SUCCESS))
-
-	# Price info
-	vbox.add_child(PszStyle.detail_label(""))
-	if _tab == Tab.SELL:
-		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("Owned: %d" % int(item.get("quantity", 0))))
-	else:
-		vbox.add_child(PszStyle.detail_label("Buy: %d M" % int(item.get("cost", 0)), PszStyle.TEXT_HIGHLIGHT))
-		vbox.add_child(PszStyle.detail_label("Sell: %d M" % int(item.get("sell_price", 0)), PszStyle.TEXT_MUTED))
-		vbox.add_child(PszStyle.detail_label("You have: %d" % int(Inventory._items.get(item_id, 0))))
-
-		# Equippability status
-		if cat in ["weapon", "armor"]:
-			var equip_check: Dictionary = _check_equippability(item_id, cat)
-			if equip_check.get("can_equip", true):
-				vbox.add_child(PszStyle.detail_label("Can equip", PszStyle.TEXT_SUCCESS))
-			else:
-				vbox.add_child(PszStyle.detail_label("Cannot equip: class", PszStyle.TEXT_DANGER))
-
-		# Unified: surface the can't-buy reason (the row no longer tags it).
-		var buy_verdict: Dictionary = _can_buy(item)
-		if not buy_verdict.get("ok", true):
-			vbox.add_child(PszStyle.detail_label(str(buy_verdict.get("reason", "")), PszStyle.TEXT_WARNING))
-
-	detail_panel.add_child(vbox)
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────────
