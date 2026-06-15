@@ -415,10 +415,7 @@ func _refresh_display() -> void:
 
 	var list := _get_current_list()
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := PszStyle.make_list_scroll()
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
@@ -431,13 +428,8 @@ func _refresh_display() -> void:
 		var empty_text := "(Nothing to sell)" if _tab == Tab.SELL else "(Nothing for sale)"
 		vbox.add_child(PszStyle.create_pill(empty_text, false, "", PszStyle.TEXT_MUTED))
 	elif _tab == Tab.SELL:
-		var last_cat := ""
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
-			var cat: String = str(item.get("category", ""))
-			if cat != last_cat:
-				last_cat = cat
-				vbox.add_child(PszStyle.create_section_header(cat))
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
@@ -455,18 +447,10 @@ func _refresh_display() -> void:
 			if i == _selected_index:
 				selected_pill = pill
 	else:
-		var last_type_name := ""
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
 			var item_id: String = str(item.get("id", ""))
 			var cost: int = int(item.get("cost", 0))
-
-			# Section headers for weapon types
-			if _tab == Tab.WEAPONS:
-				var type_name: String = str(item.get("weapon_type_name", ""))
-				if not type_name.is_empty() and type_name != last_type_name:
-					last_type_name = type_name
-					vbox.add_child(PszStyle.create_section_header(type_name))
 
 			# Rarity stars + held count + can't-buy reason all live in the detail
 			# panel — the row carries only name, price, and the one grey rule.
@@ -491,7 +475,7 @@ func _refresh_display() -> void:
 	list_panel.add_child(scroll)
 
 	if selected_pill != null:
-		scroll.ensure_control_visible.call_deferred(selected_pill)
+		PszStyle.scroll_into_view(selected_pill)
 
 	_refresh_detail()
 
@@ -508,12 +492,7 @@ func _update_selection(old_index: int) -> void:
 		var new_pill: Control = _pill_nodes[_selected_index]
 		if new_pill:
 			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
-			# Keep the selected row scrolled into view.
-			var parent: Node = new_pill.get_parent()
-			while parent != null and not (parent is ScrollContainer):
-				parent = parent.get_parent()
-			if parent is ScrollContainer:
-				(parent as ScrollContainer).ensure_control_visible.call_deferred(new_pill)
+			PszStyle.scroll_into_view(new_pill)  # keep selected row in view
 	_refresh_detail()
 
 

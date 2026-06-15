@@ -228,6 +228,31 @@ static func create_section_header(text: String) -> PanelContainer:
 	return pill
 
 
+## The standard vertical scrolling list container for shop/storage screens:
+## fills its slot and scrolls vertically only. Add a VBox of rows as its child.
+## Shared so every list scrolls identically (#368 list-scroll consistency).
+static func make_list_scroll() -> ScrollContainer:
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	return scroll
+
+
+## Scroll `row`'s ancestor ScrollContainer so the row is visible. Walks up from
+## the row itself, so it works whoever holds the reference (rebuild or
+## incremental update). MUST be called after the row is in the tree (under the
+## scroll); deferred so it runs once layout has settled. No-ops otherwise.
+static func scroll_into_view(row: Control) -> void:
+	if row == null:
+		return
+	var p: Node = row.get_parent()
+	while p != null and not (p is ScrollContainer):
+		p = p.get_parent()
+	if p is ScrollContainer:
+		(p as ScrollContainer).ensure_control_visible.call_deferred(row)
+
+
 static func create_tab_bar(tab_names: Array, active_tab: int) -> HBoxContainer:
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 4)

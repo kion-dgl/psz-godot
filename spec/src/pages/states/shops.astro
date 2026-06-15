@@ -10,6 +10,96 @@ import Concept from '../../layouts/Concept.astro';
   <p>Shops <strong>MUST</strong> share behavior through <em>composition</em> — preloaded static helpers (<code>PszStyle</code>, <code>ShopNav</code>, <code>ShopUI</code>) — and <strong>MUST NOT</strong> share it through a common base class. A cross-script base class fails to resolve in the Android export at runtime (it works in-editor and on every other platform); see <code>docs/shop-dedup.md</code>. Each shop is therefore its own <code>extends Control</code> script that calls into the shared helpers.</p>
 
   <h2>The common interface</h2>
+
+  <figure class="shop-wf">
+    <div class="wf-frame">
+      <div class="wf-screen">
+        <div class="wf-main">
+          <div class="wf-title">TITLE <span>· shop name — above center (keyboard-safe)</span></div>
+          <div class="wf-tabs">
+            <span class="wf-tab wf-on">Tab</span><span class="wf-tab">Tab</span><span class="wf-tab">Tab</span><span class="wf-tab">Tab</span>
+            <span class="wf-bal">BALANCE</span>
+            <em>TAB BAR (mode bar)</em>
+          </div>
+          <div class="wf-list">
+            <strong>LIST</strong>
+            <span class="wf-row wf-on">selected row ▸</span>
+            <span class="wf-row">row</span>
+            <span class="wf-row wf-off">disabled row · can't afford</span>
+            <span class="wf-row">row</span>
+            <span class="wf-row wf-off">[E] equipped · can't sell</span>
+            <span class="wf-row">row</span>
+            <em>scrolls · selection stays in view</em>
+          </div>
+          <div class="wf-hint">HINT — Left/Right · Up/Down · Accept · Cancel</div>
+        </div>
+        <div class="wf-side">
+          <div class="wf-detail"><strong>DETAIL&nbsp;PANEL</strong><span>stats (gear) / effect + count (item) for the selected row — the white scan-lined card</span></div>
+          <div class="wf-portrait"><strong>PORTRAIT</strong><span>shopkeeper, overlaid on the right</span></div>
+        </div>
+      </div>
+    </div>
+    <figcaption>The shared shop / storage skeleton at the game's native <strong>1280 × 720 (16:9)</strong>. Every shop fills these regions; only the tab set, the list contents, and the detail differ. The storage counter uses the same layout (its tabs are Deposit / Withdraw · Items / Meseta).</figcaption>
+  </figure>
+
+  <style>
+    /* Native game frame: fixed 16:9 at 1280×720, scaling down to fit while
+       keeping the ratio. cq units (relative to the frame's size) make every
+       element scale in proportion, so it reads true-to-scale at any width. */
+    .shop-wf { margin: 1.75rem 0; }
+    .shop-wf .wf-frame {
+      width: 1280px; max-width: 100%; aspect-ratio: 16 / 9;
+      container-type: size;
+    }
+    .shop-wf .wf-screen {
+      width: 100%; height: 100%; box-sizing: border-box; overflow: hidden;
+      background: #a8cce8; border: 1px solid #7aa0c0; border-radius: 1.1cqh; padding: 1.6cqh;
+      display: flex; flex-direction: row; gap: 1.4cqh;
+      font-size: 2.5cqh; line-height: 1.25; color: #1a1a2a;
+    }
+    /* Left column: title, tabs, list, hint — all aligned to the list width.
+       Right column (detail + portrait) runs the full height alongside it. */
+    .shop-wf .wf-main { flex: 3; min-width: 0; display: flex; flex-direction: column; gap: 1.2cqh; }
+    .shop-wf .wf-title {
+      background: #2a3448; color: #f8c840; padding: 1.3cqh 1.8cqh; border-radius: 0.8cqh;
+      font-weight: 700; letter-spacing: 0.04em;
+    }
+    .shop-wf .wf-title span { color: #c9d4e4; font-weight: 400; font-size: 0.82em; }
+    .shop-wf .wf-tabs {
+      display: flex; align-items: center; gap: 0.9cqh;
+      background: rgba(255,255,255,0.35); border: 1px dashed #7aa0c0; border-radius: 0.8cqh; padding: 1cqh 1.6cqh;
+    }
+    .shop-wf .wf-tab { background: #fff; border: 1px solid rgba(150,180,210,0.6); border-radius: 0.6cqh; padding: 0.3cqh 1.6cqh; }
+    .shop-wf .wf-on { background: linear-gradient(90deg,#f0a020,#f8c840); border-color: #d08010; }
+    .shop-wf .wf-bal { margin-left: auto; font-weight: 700; }
+    .shop-wf em { font-style: normal; color: #3a4a5a; font-size: 0.78em; }
+    .shop-wf .wf-tabs em { order: -1; margin-right: 0.4cqh; }
+    .shop-wf .wf-list {
+      flex: 1; min-height: 0; background: rgba(255,255,255,0.5); border: 1px dashed #7aa0c0; border-radius: 0.8cqh;
+      padding: 1.4cqh; display: flex; flex-direction: column; gap: 0.9cqh;
+    }
+    .shop-wf .wf-row { background: #fff; border: 1px solid rgba(150,180,210,0.5); border-radius: 0.5cqh; padding: 0.6cqh 1.4cqh; }
+    .shop-wf .wf-row.wf-on { background: linear-gradient(90deg,#f0a020,#f8c840); border-color: #d08010; font-weight: 700; }
+    .shop-wf .wf-row.wf-off { color: #8a98aa; background: rgba(255,255,255,0.4); }
+    .shop-wf .wf-side { flex: 2; display: flex; flex-direction: column; gap: 1.4cqh; }
+    .shop-wf .wf-detail {
+      flex: 3; background: rgba(255,255,255,0.85);
+      background-image: repeating-linear-gradient(0deg,transparent,transparent 0.3cqh,rgba(120,160,200,0.14) 0.3cqh,rgba(120,160,200,0.14) 0.6cqh);
+      border: 1px solid rgba(150,180,210,0.5); border-top: 0.45cqh solid #2a3448; border-radius: 0.9cqh; padding: 1.4cqh;
+    }
+    .shop-wf .wf-portrait {
+      flex: 2; background: #8ab8d8; border: 1px dashed #2a3448; border-radius: 0.9cqh; padding: 1.4cqh;
+      display: flex; flex-direction: column; justify-content: flex-end;
+    }
+    .shop-wf strong { display: block; font-size: 0.95em; letter-spacing: 0.05em; margin-bottom: 0.7cqh; }
+    .shop-wf .wf-detail span, .shop-wf .wf-portrait span { color: #3a4a5a; font-size: 0.8em; }
+    .shop-wf .wf-hint {
+      background: rgba(255,255,255,0.7); border: 1px solid #8aa8c8; border-radius: 0 0 2cqh 2cqh;
+      padding: 1cqh 1.6cqh; text-align: center;
+    }
+    .shop-wf figcaption { font-size: 0.82rem; color: #556; margin-top: 10px; max-width: 1280px; }
+  </style>
+
   <p>Every shop screen <strong>MUST</strong>:</p>
   <ul>
     <li>Lay out a fixed skeleton, top to bottom: a <strong>title</strong>, a <strong>tab bar</strong> (the "mode bar"), a <strong>content row</strong> holding a scrolling <strong>list</strong> (and, where applicable, a <strong>detail panel</strong>), and a <strong>hint line</strong>. A <strong>portrait</strong> of the shopkeeper <strong>MUST</strong> be overlaid on the right via <code>ShopUI.setup_portrait()</code>.</li>
@@ -25,6 +115,14 @@ import Concept from '../../layouts/Concept.astro';
     <li><strong>Up / Down</strong> — move the selection within the current list. Hold-to-repeat <strong>SHOULD</strong> be supported.</li>
     <li><strong>Accept</strong> — confirm the action on the selected row. A shop <strong>SHOULD</strong> open a confirmation modal before any irreversible transaction.</li>
     <li><strong>Cancel</strong> — close the shop and return to the city. It <strong>MUST NOT</strong> charge the player or mutate inventory.</li>
+  </ul>
+
+  <h3>List scrolling</h3>
+  <p>A list longer than its panel scrolls. The behavior <strong>MUST</strong> be identical across every shop and the storage counter:</p>
+  <ul>
+    <li>The list <strong>MUST</strong> sit in a vertically-scrolling container (horizontal scrolling disabled) — built via <code>PszStyle.make_list_scroll()</code> so the setup can't drift.</li>
+    <li>Moving the selection <strong>MUST</strong> keep the selected row visible: when the selection moves past the visible edge, the list <strong>MUST</strong> scroll to follow it. Shops <strong>MUST</strong> call <code>PszStyle.scroll_into_view(row)</code> for this, and only <em>after</em> the row is in the scene tree under its scroll container (it walks up from the row to find the container; before the row is parented it no-ops). This was the storage bug: it scrolled off a not-yet-parented row and silently never followed the selection.</li>
+    <li>Whether a shop rebuilds the whole list on each move or updates the rows in place is an implementation choice; the scroll-follow behavior <strong>MUST</strong> be the same either way.</li>
   </ul>
 
   <h3 id="the-row-contract">The row contract</h3>
@@ -95,8 +193,16 @@ import Concept from '../../layouts/Concept.astro';
         <td>Move items / meseta between the inventory and the bank</td>
         <td>Gear stats / item effect + count, storable status</td>
       </tr>
+      <tr>
+        <td><strong>Guild Counter</strong> (quest board)</td>
+        <td>Quest list · accept / report / cancel</td>
+        <td>— (no cost)</td>
+        <td>Accept, report, or cancel the selected quest</td>
+        <td>Quest brief — area, type, objective</td>
+      </tr>
     </tbody>
   </table>
+  <p>The guild counter shares this skeleton and input grammar — it is effectively a shop — so it sits in the table. It diverges in one place: its rows are not the buy-affordance <a href="#the-row-contract">row contract</a> (see below).</p>
 
   <h3>Shop-specific rules</h3>
   <ul>
@@ -106,8 +212,8 @@ import Concept from '../../layouts/Concept.astro';
     <li><strong>Storage.</strong> Currently-equipped gear <strong>MUST NOT</strong> be depositable; it <strong>MUST</strong> be shown greyed with the <code>[E]</code> prefix and a <em>Equipped — cannot deposit</em> status. The four tabs <strong>MUST</strong> each be a distinct, unambiguous destination so Left/Right cannot trap the player on one direction.</li>
   </ul>
 
-  <h2>What is not a shop</h2>
-  <p>The <strong>guild counter</strong> reuses the same screen skeleton (tab bar, list, portrait) but is <strong>not</strong> governed by the row contract above. Its row colours encode quest-board <em>action types</em> — report, cancel, locked, cleared — not buy affordance, and the red "Cancel Quest" row is a deliberate destructive-action cue. Shops <strong>MUST NOT</strong> borrow those colours for affordance, and the guild counter <strong>MUST NOT</strong> be flattened into the single-grey disabled rule. See <a href="/states/story-progression">Story Progression</a> for the counter's REPORT / LOCKED / CLEAR derivation.</p>
+  <h2>The guild counter: same layout, different rows</h2>
+  <p>The <strong>guild counter</strong> is effectively a shop — it shares the exact skeleton above (title, tab bar, list, detail, portrait, hint) and the same input grammar. What it does <strong>not</strong> share is the <a href="#the-row-contract">row contract</a>: its row colours encode quest-board <em>action types</em> — report, cancel, locked, cleared — not buy affordance, and the red "Cancel Quest" row is a deliberate destructive-action cue. So the actual shops <strong>MUST NOT</strong> borrow those colours for affordance, and the guild counter <strong>MUST NOT</strong> be flattened into the single-grey disabled rule. See <a href="/states/story-progression">Story Progression</a> for the counter's REPORT / LOCKED / CLEAR derivation.</p>
 
   <h2>Conformance</h2>
   <ol>
@@ -120,7 +226,7 @@ import Concept from '../../layouts/Concept.astro';
 
   <h2>Implemented by</h2>
   <ul>
-    <li><code>scripts/ui/psz_style.gd</code> (PszStyle) — shared styling: <code>shop_row()</code> (the row contract), <code>create_tab_bar()</code>, <code>create_meseta_label()</code>, <code>create_pill_with_icons()</code>, <code>detail_label()</code>.</li>
+    <li><code>scripts/ui/psz_style.gd</code> (PszStyle) — shared styling: <code>shop_row()</code> (the row contract), <code>create_tab_bar()</code>, <code>create_meseta_label()</code>, <code>create_pill_with_icons()</code>, <code>detail_label()</code>, and the list-scroll primitives <code>make_list_scroll()</code> + <code>scroll_into_view()</code>.</li>
     <li><code>scripts/2d/shops/shop_nav.gd</code> (ShopNav) — the input grammar: <code>handle()</code> dispatch, <code>selected_item()</code>, <code>confirm()</code> / <code>info()</code> modals, <code>switch_shop_tab()</code>.</li>
     <li><code>scripts/2d/shops/shop_ui.gd</code> (ShopUI) — <code>setup_portrait()</code>, the two-column content + portrait-overlay layout.</li>
     <li><code>scripts/2d/shops/item_shop.gd</code>, <code>weapon_shop.gd</code>, <code>photon_shop.gd</code>, <code>crafting_shop.gd</code>, <code>tekker.gd</code> — the five shops, each <code>extends Control</code>.</li>

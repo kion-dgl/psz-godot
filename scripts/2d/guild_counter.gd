@@ -229,6 +229,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_selected_index = wrapi(_selected_index - 1, 0, maxi(_entries.size(), 1))
 		_refresh_display()
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
 		if _selecting_difficulty:
@@ -236,6 +237,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_selected_index = wrapi(_selected_index + 1, 0, maxi(_entries.size(), 1))
 		_refresh_display()
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		if _selecting_difficulty:
