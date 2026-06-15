@@ -765,11 +765,14 @@ func _show_name_entry() -> void:
 	await get_tree().process_frame
 	var area_size: Vector2 = _content_area.size
 
-	# Centered panel
+	# Horizontally centered, but sitting in the UPPER area — not vertical
+	# center. On Android the soft keyboard covers the lower ~half of the
+	# screen, and a vertically-centered input lands right behind it (#373).
+	# Keep a floor so the panel never rides up under the title.
 	var panel_width: float = 420.0
 	var panel_height: float = 200.0
 	var panel_x: float = (area_size.x - panel_width) / 2.0
-	var panel_y: float = (area_size.y - panel_height) / 2.0
+	var panel_y: float = maxf(20.0, area_size.y * 0.10)
 
 	var panel := Panel.new()
 	panel.position = Vector2(panel_x, panel_y)
