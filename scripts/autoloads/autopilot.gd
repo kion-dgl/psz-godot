@@ -844,8 +844,9 @@ func _drive_office_intro() -> void:
 		_teleport_player(OFFICE_EXIT_POS)
 
 
-## Match the "Return to Title" menu item exactly (scripts/3d/city/city_menu.gd:150):
-## SaveManager.save_game() → CityState.clear() → goto_scene(TITLE). The TITLE
+## Match the "Return to Title" sequence: SaveManager.save_game() →
+## CityState.clear() → goto_scene(TITLE). (The old city_menu drove this before
+## the PSO start-menu renderer replaced it; it now lives in archive/.) The TITLE
 ## handler above recognises _boot_returning_to_title and DONEs there, so the
 ## mp4 ends on the title screen instead of a hard cut from the office.
 func _save_and_return_to_title() -> void:

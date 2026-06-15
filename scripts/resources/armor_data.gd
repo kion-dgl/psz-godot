@@ -67,16 +67,6 @@ enum ArmorType {
 @export var icon: Texture2D
 
 
-## Get armor type as string
-func get_type_name() -> String:
-	match type:
-		ArmorType.ARMOR: return "Armor"
-		ArmorType.FRAME: return "Frame"
-		ArmorType.ROBE: return "Robe"
-		ArmorType.RARE: return "Rare"
-	return "Unknown"
-
-
 ## Check if a class can use this armor
 func can_be_used_by(class_name_str: String) -> bool:
 	if usable_by.is_empty():

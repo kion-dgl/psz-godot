@@ -1,13 +1,4 @@
 {
   "_comment": "Accepted orphan files \u2014 committed .gd/.tscn referenced nowhere (by path, class_name, autoload, or main scene). Triage before deleting; move true orphans to /archive/ (CLAUDE.md). --check fails on any orphan NOT listed here. Regenerate after cleanup.",
-  "accepted_orphans": [
-    "scenes/3d/city/city_menu.tscn",
-    "scenes/3d/elements/drop_meseta.tscn",
-    "scenes/3d/field/texture_fix_test.gd",
-    "scripts/2d/components/confirm_dialog.gd",
-    "scripts/2d/components/info_panel.gd",
-    "scripts/2d/components/item_grid.gd",
-    "scripts/2d/components/stat_bar.gd",
-    "scripts/3d/triggers/trigger_zone.gd"
-  ]
+  "accepted_orphans": []
 }
