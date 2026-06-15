@@ -145,10 +145,7 @@ func _refresh_display() -> void:
 	for child in content_panel.get_children():
 		child.queue_free()
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := PszStyle.make_list_scroll()
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
@@ -180,7 +177,7 @@ func _refresh_display() -> void:
 	content_panel.add_child(scroll)
 
 	if selected_pill != null:
-		scroll.ensure_control_visible.call_deferred(selected_pill)
+		PszStyle.scroll_into_view(selected_pill)
 
 	_update_grinder_info()
 

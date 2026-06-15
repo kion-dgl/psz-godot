@@ -112,11 +112,13 @@ func _handle_items_input(event: InputEvent) -> void:
 		var max_idx: int = _current_list_size() - 1
 		_selected_index = wrapi(_selected_index - 1, 0, maxi(max_idx + 1, 1))
 		_refresh_display()
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_down"):
 		var max_idx: int = _current_list_size() - 1
 		_selected_index = wrapi(_selected_index + 1, 0, maxi(max_idx + 1, 1))
 		_refresh_display()
+		SfxManager.play("res://assets/sfx/ui/menu_move.wav")
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_accept"):
 		_open_move_modal()
@@ -355,10 +357,7 @@ func _refresh_panel() -> void:
 	for child in panel.get_children():
 		child.queue_free()
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := PszStyle.make_list_scroll()
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
@@ -375,7 +374,7 @@ func _refresh_panel() -> void:
 	# Keep the selected row in view. Deferred so it runs after the
 	# ScrollContainer has laid the rows out (matches the shop screens).
 	if _scroll_to_pill != null:
-		scroll.ensure_control_visible.call_deferred(_scroll_to_pill)
+		PszStyle.scroll_into_view(_scroll_to_pill)
 
 
 ## Detail panel for the selected row — stats for gear, effect + count for
@@ -472,12 +471,6 @@ func _render_meseta_panel(vbox: VBoxContainer) -> void:
 
 func _render_items_panel(vbox: VBoxContainer) -> void:
 	var items: Array = _current_list()
-	var header: String
-	if _tab == Tab.DEPOSIT_ITEMS:
-		header = "INVENTORY (%d/40)" % Inventory.get_total_slots()
-	else:
-		header = "STORAGE (%d)" % _storage_items.size()
-	vbox.add_child(PszStyle.create_section_header(header))
 
 	if items.is_empty():
 		vbox.add_child(PszStyle.create_pill("(Empty)", false, "", PszStyle.TEXT_MUTED))

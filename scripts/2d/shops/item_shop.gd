@@ -319,24 +319,23 @@ func _sell_selected() -> void:
 	_refresh_display()
 
 
-func _refresh_display() -> void:
-	# Tab bar
+## Rebuild the tab bar + balance label (the mode bar above the list).
+func _refresh_mode_bar() -> void:
 	for child in _mode_bar.get_children():
 		child.queue_free()
-	var tab_bar := PszStyle.create_tab_bar(TAB_NAMES, _tab)
-	_mode_bar.add_child(tab_bar)
-	var meseta_lbl := PszStyle.create_meseta_label(_get_meseta())
-	_mode_bar.add_child(meseta_lbl)
+	_mode_bar.add_child(PszStyle.create_tab_bar(TAB_NAMES, _tab))
+	_mode_bar.add_child(PszStyle.create_meseta_label(_get_meseta()))
+
+
+func _refresh_display() -> void:
+	_refresh_mode_bar()
 
 	# Shop panel — pill rows
 	for child in shop_panel.get_children():
 		child.queue_free()
 
 	var list := _get_current_list()
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := PszStyle.make_list_scroll()
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
@@ -348,13 +347,8 @@ func _refresh_display() -> void:
 		var pill := PszStyle.create_pill(empty_text, false, "", PszStyle.TEXT_MUTED)
 		vbox.add_child(pill)
 	elif _tab == Tab.SELL:
-		var last_cat := ""
 		for i in range(list.size()):
 			var item: Dictionary = list[i]
-			var cat: String = str(item.get("category", ""))
-			if cat != last_cat:
-				last_cat = cat
-				vbox.add_child(PszStyle.create_section_header(cat))
 			var sell_price: int = int(item.get("sell_price", 0))
 			var qty: int = int(item.get("quantity", 1))
 			var qty_str := " x%d" % qty if qty > 1 else ""
@@ -430,7 +424,7 @@ func _refresh_display() -> void:
 	shop_panel.add_child(scroll)
 
 	if selected_pill != null:
-		scroll.ensure_control_visible.call_deferred(selected_pill)
+		PszStyle.scroll_into_view(selected_pill)
 
 	_refresh_detail()
 

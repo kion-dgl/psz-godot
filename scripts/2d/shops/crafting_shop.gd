@@ -567,10 +567,7 @@ func _refresh_display() -> void:
 	for child in content_panel.get_children():
 		child.queue_free()
 
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var scroll := PszStyle.make_list_scroll()
 	var vbox := VBoxContainer.new()
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
@@ -619,18 +616,11 @@ func _refresh_display() -> void:
 			vbox.add_child(PszStyle.create_pill("(No recipes available)", false, "", PszStyle.TEXT_MUTED))
 		else:
 			_pill_nodes.resize(_craft_recipes.size())
-			var last_type_name: String = ""
 			for i in range(_craft_recipes.size()):
 				var entry: Dictionary = _craft_recipes[i]
 				var recipe: RecipeBoardData = entry["recipe"]
 				var is_def: bool = entry["is_default"]
-				var type_name: String = entry["weapon_type_name"]
 				var stars: String = entry["stars"]
-
-				# Section headers by weapon type
-				if not type_name.is_empty() and type_name != last_type_name:
-					last_type_name = type_name
-					vbox.add_child(PszStyle.create_section_header(type_name))
 
 				var can_craft: bool = _can_craft_recipe(recipe)
 				var text_color := Color.TRANSPARENT
@@ -662,7 +652,7 @@ func _refresh_display() -> void:
 	content_panel.add_child(scroll)
 
 	if selected_pill != null:
-		scroll.ensure_control_visible.call_deferred(selected_pill)
+		PszStyle.scroll_into_view(selected_pill)
 
 	_refresh_detail()
 
@@ -743,11 +733,7 @@ func _update_selection(old_index: int, new_index: int) -> void:
 		var new_pill: Control = _pill_nodes[new_index]
 		if new_pill:
 			new_pill.add_theme_stylebox_override("panel", PszStyle.pill_style(true))
-			var parent: Node = new_pill.get_parent()
-			while parent != null and not (parent is ScrollContainer):
-				parent = parent.get_parent()
-			if parent is ScrollContainer:
-				(parent as ScrollContainer).ensure_control_visible.call_deferred(new_pill)
+			PszStyle.scroll_into_view(new_pill)  # keep selected row in view
 	# Cursor moves don't rebuild the list, so refresh the detail card here too.
 	_refresh_detail()
 
