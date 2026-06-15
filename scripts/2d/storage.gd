@@ -27,6 +27,10 @@ var _storage_items: Array = []
 var _mode_bar: HBoxContainer
 var _portrait: Control
 var _active_modal: Control = null
+# Selected row to scroll into view, set during list render and consumed in
+# _refresh_panel AFTER the vbox is parented to the ScrollContainer (the row
+# can't find its scroll ancestor before it's in the tree).
+var _scroll_to_pill: Control = null
 
 @onready var title_label: Label = $Panel/VBox/TitleLabel
 @onready var mode_label: Label = $Panel/VBox/ModeBar/ModeLabel
@@ -359,6 +363,7 @@ func _refresh_panel() -> void:
 	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	vbox.add_theme_constant_override("separation", 3)
 
+	_scroll_to_pill = null
 	if _is_items_tab():
 		_render_items_panel(vbox)
 	else:
@@ -366,6 +371,11 @@ func _refresh_panel() -> void:
 
 	scroll.add_child(vbox)
 	panel.add_child(scroll)
+
+	# Keep the selected row in view. Deferred so it runs after the
+	# ScrollContainer has laid the rows out (matches the shop screens).
+	if _scroll_to_pill != null:
+		scroll.ensure_control_visible.call_deferred(_scroll_to_pill)
 
 
 ## Detail panel for the selected row — stats for gear, effect + count for
@@ -550,9 +560,7 @@ func _render_items_panel(vbox: VBoxContainer) -> void:
 		pills_ref.append(pill)
 
 	if _selected_index >= 0 and _selected_index < pills_ref.size():
-		var scroll := vbox.get_parent() as ScrollContainer
-		if scroll != null:
-			scroll.ensure_control_visible.call_deferred(pills_ref[_selected_index])
+		_scroll_to_pill = pills_ref[_selected_index]
 
 
 # ── Hold-to-repeat navigation (NavRepeat) ──────────────────────────────────
