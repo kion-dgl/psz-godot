@@ -763,10 +763,14 @@ class _QuickWeaponMenu extends Control:
 	var _selected_index: int = 0
 	var _scroll_offset: int = 0
 	var _weapon_list: Array = []  # [{id, name, equipped}]
+	# Shared hold-to-repeat (d-pad + right stick), same as the shops/start menu.
+	var _nav: NavRepeat
 
 	func _ready() -> void:
 		mouse_filter = MOUSE_FILTER_IGNORE
 		visible = false
+		_nav = NavRepeat.new(["ui_up", "ui_down"], _on_nav_repeat)
+		set_process(true)
 		# Bottom-left positioning
 		anchor_left = 0.0
 		anchor_right = 0.0
@@ -786,13 +790,7 @@ class _QuickWeaponMenu extends Control:
 			if mb.pressed and (mb.button_index == MOUSE_BUTTON_WHEEL_UP or mb.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 				if not _is_open:
 					_open()
-				if _weapon_list.size() > 0:
-					if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
-						_selected_index = wrapi(_selected_index - 1, 0, _weapon_list.size())
-					else:
-						_selected_index = wrapi(_selected_index + 1, 0, _weapon_list.size())
-					_update_scroll()
-					queue_redraw()
+				_move_selection(-1 if mb.button_index == MOUSE_BUTTON_WHEEL_UP else 1)
 				get_viewport().set_input_as_handled()
 				return
 
@@ -807,15 +805,18 @@ class _QuickWeaponMenu extends Control:
 		if not _is_open:
 			return
 
+		# Right-stick scroll is driven by NavRepeat (polls the axis + repeats like
+		# the d-pad); swallow its motion events so they don't also pan the camera
+		# while the menu is open.
+		if event is InputEventJoypadMotion and (event as InputEventJoypadMotion).axis == JOY_AXIS_RIGHT_Y:
+			get_viewport().set_input_as_handled()
+			return
+
 		if event.is_action_pressed("ui_up"):
-			_selected_index = wrapi(_selected_index - 1, 0, _weapon_list.size())
-			_update_scroll()
-			queue_redraw()
+			_move_selection(-1)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("ui_down"):
-			_selected_index = wrapi(_selected_index + 1, 0, _weapon_list.size())
-			_update_scroll()
-			queue_redraw()
+			_move_selection(1)
 			get_viewport().set_input_as_handled()
 		elif event.is_action_pressed("ui_accept"):
 			_equip_selected()
@@ -823,6 +824,31 @@ class _QuickWeaponMenu extends Control:
 		elif event.is_action_pressed("ui_cancel"):
 			_close()
 			get_viewport().set_input_as_handled()
+
+
+	## Move the cursor and keep it in the scroll window. Shared by d-pad,
+	## right-stick repeat (NavRepeat), and the mouse wheel.
+	func _move_selection(dir: int) -> void:
+		if _weapon_list.is_empty():
+			return
+		_selected_index = wrapi(_selected_index + dir, 0, _weapon_list.size())
+		_update_scroll()
+		queue_redraw()
+
+
+	func _on_nav_repeat(action: String) -> void:
+		if _is_open:
+			_move_selection(-1 if action == "ui_up" else 1)
+
+
+	func _process(delta: float) -> void:
+		# Tick hold-to-repeat only while open; reset so the right stick stays free
+		# for the camera otherwise.
+		if _nav:
+			if _is_open:
+				_nav.tick(delta)
+			else:
+				_nav.reset()
 
 	func _open() -> void:
 		_build_weapon_list()

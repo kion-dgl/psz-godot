@@ -9,8 +9,8 @@ extends RefCounted
 ## change.
 ##
 ## PsoStartMenu (a Node) keeps thin `_unhandled_input`/`_process` callbacks that
-## forward to `handle_input` / `_tick_nav_repeat` here, since the engine won't
-## call lifecycle methods on a RefCounted.
+## forward to `handle_input` here and tick the shared NavRepeat, since the engine
+## won't call lifecycle methods on a RefCounted.
 ##
 ## Constants live on the PsoStartMenu autoload and are referenced statically as
 ## `PsoStartMenu.<CONST>` (warning-free); enum values as `PsoStartMenu.Mode.*`.
@@ -23,40 +23,14 @@ func _init(controller) -> void:
 	_c = controller
 
 
-# Synthesize repeated ui_* action events when the player holds a direction,
-# matching PSO GC's scroll timing. Works the same for keyboard and gamepad so
-# controller users get auto-scroll even though Godot has no built-in gamepad
-# echo. Menu handlers use `allow_echo = false` so OS keyboard echo doesn't
-# also fire and double the tick rate.
-func _tick_nav_repeat(delta: float) -> void:
-	if not _c._is_open:
-		for action in PsoStartMenu.NAV_ACTIONS:
-			_c._nav_hold[action] = 0.0
-			_c._nav_next[action] = 0.0
-		return
-	for action in PsoStartMenu.NAV_ACTIONS:
-		if Input.is_action_pressed(action):
-			var held: float = float(_c._nav_hold[action]) + delta
-			_c._nav_hold[action] = held
-			if held >= PsoStartMenu.SCROLL_HOLD:
-				# Decrement first and dispatch same frame so the effective
-				# repeat rate actually is SCROLL_REPEAT, not SCROLL_REPEAT + delta.
-				# The while-loop catches up if a long frame skipped multiple ticks.
-				var next_at: float = float(_c._nav_next[action]) - delta
-				while next_at <= 0.0:
-					_dispatch_ui_action(action)
-					next_at += PsoStartMenu.SCROLL_REPEAT
-				_c._nav_next[action] = next_at
-		else:
-			_c._nav_hold[action] = 0.0
-			_c._nav_next[action] = 0.0
-
-
+# Hold-to-repeat is handled by the shared NavRepeat (owned by the controller);
+# its callback routes here. The initial d-pad/keyboard press still arrives via
+# the normal event flow — NavRepeat only adds the repeats and the right stick.
 func _dispatch_ui_action(action: String) -> void:
 	## Route a synthetic press directly to our own input handler. Going through
 	## Input.parse_input_event would mark the action as globally pressed without
 	## a matching release, so Input.is_action_pressed() would return true forever
-	## and _tick_nav_repeat would keep dispatching after the player let go.
+	## and NavRepeat would keep dispatching after the player let go.
 	# Modal owns input — don't fire menu-scroll synthetic events while a
 	# confirm dialog is open, otherwise list cursor moves under the modal.
 	if is_instance_valid(_c._active_modal):
@@ -78,8 +52,8 @@ func handle_input(event: InputEvent) -> void:
 
 	# Modal owns input. ConfirmDialog uses _input (priority) and calls
 	# set_input_as_handled, so events should be swallowed before they
-	# reach _unhandled_input — but the synthetic events from
-	# _tick_nav_repeat skip _input entirely, so we still need this gate.
+	# reach _unhandled_input — but the synthetic events from NavRepeat
+	# skip _input entirely, so we still need this gate.
 	if is_instance_valid(_c._active_modal):
 		return
 
@@ -119,27 +93,12 @@ func handle_input(event: InputEvent) -> void:
 			_c.get_viewport().set_input_as_handled()
 			return
 
-	# Right stick Y axis → menu scroll (alternative to d-pad). Active threshold
-	# 0.3 so a gentle tilt registers; release threshold 0.15 so the hysteresis
-	# band (0.15–0.3) keeps the stick from re-triggering on small oscillations.
-	if event is InputEventJoypadMotion:
-		var joy: InputEventJoypadMotion = event as InputEventJoypadMotion
-		if joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) > 0.3:
-			# Throttle: only trigger once per stick deflection
-			if not _c._rstick_held:
-				_c._rstick_held = true
-				if joy.axis_value > 0:
-					_simulate_menu_down()
-				else:
-					_simulate_menu_up()
-				_c._canvas.queue_redraw()
-			_c.get_viewport().set_input_as_handled()
-			return
-		elif joy.axis == JOY_AXIS_RIGHT_Y and absf(joy.axis_value) < 0.15:
-			_c._rstick_held = false
-			# Consume the deadzone-return event after resetting hold state.
-			_c.get_viewport().set_input_as_handled()
-			return
+	# Right-stick menu scroll is handled by the shared NavRepeat (polls the axis
+	# and repeats like the d-pad). Swallow the stick's motion events here so they
+	# don't drift the camera while the menu is open.
+	if event is InputEventJoypadMotion and (event as InputEventJoypadMotion).axis == JOY_AXIS_RIGHT_Y:
+		_c.get_viewport().set_input_as_handled()
+		return
 
 	# Route to mode-specific handler
 	var handled := true
@@ -189,21 +148,6 @@ func handle_input(event: InputEvent) -> void:
 
 	# ALWAYS consume input when menu is open (blocks camera, interact, quick weapon, palette)
 	_c.get_viewport().set_input_as_handled()
-
-
-func _simulate_menu_up() -> void:
-	## Simulate pressing ui_up for right stick scroll
-	var fake := InputEventAction.new()
-	fake.action = "ui_up"
-	fake.pressed = true
-	handle_input(fake)
-
-
-func _simulate_menu_down() -> void:
-	var fake := InputEventAction.new()
-	fake.action = "ui_down"
-	fake.pressed = true
-	handle_input(fake)
 
 
 func _input_items_move(event: InputEvent) -> bool:
