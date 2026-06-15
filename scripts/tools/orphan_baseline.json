@@ -1,0 +1,4 @@
+{
+  "_comment": "Accepted orphan files \u2014 committed .gd/.tscn referenced nowhere (by path, class_name, autoload, or main scene). Triage before deleting; move true orphans to /archive/ (CLAUDE.md). --check fails on any orphan NOT listed here. Regenerate after cleanup.",
+  "accepted_orphans": []
+}

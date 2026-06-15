@@ -44,24 +44,6 @@ enum ItemType {
 @export var max_stack: int = 99
 
 
-## Get type as readable string
-func get_type_name() -> String:
-	match type:
-		ItemType.WEAPON:
-			return "Weapon"
-		ItemType.ARMOR:
-			return "Armor"
-		ItemType.CONSUMABLE:
-			return "Consumable"
-		ItemType.KEY:
-			return "Key"
-		ItemType.MATERIAL:
-			return "Material"
-		ItemType.ACCESSORY:
-			return "Accessory"
-	return "Unknown"
-
-
 ## Get rarity as star string
 func get_rarity_string() -> String:
 	var stars = ""

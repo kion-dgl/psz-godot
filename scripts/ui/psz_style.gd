@@ -254,66 +254,6 @@ static func create_meseta_label(meseta: int) -> Label:
 	return label
 
 
-## Create a labeled progress bar inside a pill row.
-## label_text: "HP", "PP", "EXP" etc.  ratio: 0.0-1.0.  value_text: "45/100".
-## fill_color: bar fill color.
-static func create_bar(label_text: String, ratio: float, value_text: String, fill_color: Color) -> PanelContainer:
-	var pill := PanelContainer.new()
-	pill.add_theme_stylebox_override("panel", pill_style(false))
-	pill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 8)
-
-	# Left label (HP, PP, EXP)
-	var lbl := Label.new()
-	lbl.text = label_text
-	lbl.add_theme_color_override("font_color", TEXT)
-	lbl.add_theme_font_size_override("font_size", FONT_ITEM)
-	lbl.custom_minimum_size.x = 30
-	hbox.add_child(lbl)
-
-	# Bar background
-	var bar_bg := PanelContainer.new()
-	var bg_style := StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.48, 0.63, 0.75, 0.3)
-	bg_style.corner_radius_top_left = 3
-	bg_style.corner_radius_top_right = 3
-	bg_style.corner_radius_bottom_right = 3
-	bg_style.corner_radius_bottom_left = 3
-	bar_bg.add_theme_stylebox_override("panel", bg_style)
-	bar_bg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bar_bg.custom_minimum_size.y = 16
-
-	# Bar fill (ColorRect clipped by bar_bg)
-	var fill := ColorRect.new()
-	fill.color = fill_color
-	fill.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	fill.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	# We use a container to clip the fill to ratio width
-	var fill_container := Control.new()
-	fill_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	fill_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	fill_container.clip_contents = true
-	fill.anchor_right = clampf(ratio, 0.0, 1.0)
-	fill.anchor_bottom = 1.0
-	fill_container.add_child(fill)
-	bar_bg.add_child(fill_container)
-
-	hbox.add_child(bar_bg)
-
-	# Right value text
-	var val_lbl := Label.new()
-	val_lbl.text = value_text
-	val_lbl.add_theme_color_override("font_color", TEXT_LIGHT)
-	val_lbl.add_theme_font_size_override("font_size", FONT_DETAIL)
-	val_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	hbox.add_child(val_lbl)
-
-	pill.add_child(hbox)
-	return pill
-
-
 ## Restructure a shop into the standard fullscreen layout and return its detail
 ## card. Left 3/5: title, tabs, list, hints. Right 2/5: detail card on top,
 ## stopping 10px above the shop portrait (NOT full height). The portrait itself

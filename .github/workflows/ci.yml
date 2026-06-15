@@ -127,9 +127,10 @@ jobs:
     # Self-contained (stdlib-only) GDScript graph ratchet — rebuilds the
     # function graph from source every run, so it can't go stale. Fails on NEW
     # near-duplicate functions, dead code (referenced nowhere in .gd/.tscn),
-    # complexity hotspots (over the size/cyclomatic bound), or god-orchestrators
-    # (high call-graph fan-out), each vs a committed baseline, so the existing
-    # backlogs don't block. EPIC #295.
+    # complexity hotspots (over the size/cyclomatic bound), god-orchestrators
+    # (high call-graph fan-out), or orphan files (committed .gd/.tscn nothing
+    # references), each vs a committed baseline, so the existing backlogs don't
+    # block. EPIC #295.
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
@@ -139,6 +140,12 @@ jobs:
 
       - name: Dup + dead-code + complexity + coupling ratchet
         run: python3 scripts/tools/code_graph.py --check
+
+      # File-level orphans: committed .gd/.tscn that nothing references (the
+      # reverse of check-asset-refs). New orphans fail; existing ones are
+      # baselined. Move true orphans to /archive/ (CLAUDE.md). EPIC #295.
+      - name: Orphan-file ratchet
+        run: python3 scripts/tools/orphan_files.py --check
 
       # Beta working agreement: accepting debt (growing any baseline) must be
       # loud and deliberate — requires a `Debt-Accepted: <reason>` trailer in
