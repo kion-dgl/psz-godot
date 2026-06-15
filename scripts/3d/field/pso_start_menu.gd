@@ -67,20 +67,16 @@ var _move_from_id: String = ""  # Origin item id, used to relocate cursor after 
 var _canvas: Control  # Child control for drawing
 var _is_open: bool = false
 var _icon_cache: Dictionary = {}  # action_id → Texture2D
-var _rstick_held: bool = false  # Prevents right stick repeat until released
 var _active_modal: Control = null  # Yes/No confirmation overlay for state-change actions
 var _renderer: StartMenuRenderer  # Canvas rendering, extracted to StartMenuRenderer
 var _input: StartMenuInput  # Input / navigation routing, extracted to StartMenuInput
 
-# ── Directional scroll repeat (PSO GC timing) ──────────────────────────────────
-# Match PSO's menu scroll: hold 6/30f (~0.2s) before auto-scroll, then 1/30f
-# (~0.033s) between ticks. Applies to both keyboard and gamepad so controller
-# holds repeat at the same rate as keyboard echo would.
-const SCROLL_HOLD := 0.2
-const SCROLL_REPEAT := 1.0 / 30.0
+# ── Directional scroll repeat ──────────────────────────────────────────────────
+# Hold-to-repeat for d-pad AND right stick, shared with the shops/counters via
+# NavRepeat (PSO GC timing: ~0.2s hold then 30Hz). Right-stick scroll matches
+# the d-pad instead of moving once per deflection.
 const NAV_ACTIONS := ["ui_up", "ui_down", "ui_left", "ui_right"]
-var _nav_hold: Dictionary = {}   # action → seconds currently held
-var _nav_next: Dictionary = {}   # action → seconds until next repeat tick
+var _nav: NavRepeat
 
 ## Menu labels built dynamically — Techs hidden for Cast race
 func _get_menu_labels() -> Array:
@@ -115,9 +111,6 @@ func _ready() -> void:
 	name = "PsoStartMenu"
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
-	for action in NAV_ACTIONS:
-		_nav_hold[action] = 0.0
-		_nav_next[action] = 0.0
 	# Action-palette icons load lazily via _get_action_icon — they live in
 	# the R2 asset pack which mounts after this autoload _ready runs, so a
 	# pre-cache pass here would just store nulls.
@@ -127,12 +120,22 @@ func _ready() -> void:
 	_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_renderer = StartMenuRenderer.new(self)
 	_input = StartMenuInput.new(self)
+	# Shared hold-to-repeat (d-pad + right stick). Repeats route back through the
+	# input handler; the initial d-pad/keyboard press still arrives via the
+	# normal event flow, so only the right stick's first move is synthesized here.
+	_nav = NavRepeat.new(NAV_ACTIONS, _input._dispatch_ui_action)
 	_canvas.draw.connect(_renderer._draw_menu)
 	add_child(_canvas)
 
 
 func _process(delta: float) -> void:
-	if _input: _input._tick_nav_repeat(delta)
+	# Tick repeat only while open; reset when closed so the right stick stays
+	# free for camera control in gameplay.
+	if _nav:
+		if _is_open:
+			_nav.tick(delta)
+		else:
+			_nav.reset()
 
 
 ## Open a multi-button ChoiceDialog. The callback receives the chosen
