@@ -68,6 +68,7 @@ func _run_tests_core() -> void:
 	test_telepipe_239_fixes()
 	test_dup_equipment()
 	test_equipment_screen_dup_frame()
+	test_frame_change_clears_units()
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
 	test_field_quest_decouple()
@@ -2811,7 +2812,7 @@ func test_telepipe_239_fixes() -> void:
 # categorize as its real type and fit its slot (the bug stripped the suffix
 # only for weapons, so armor/unit/mag duplicates became "tools").
 func test_dup_equipment() -> void:
-	print("── Duplicate equipment is equippable (#357) ──")
+	print("── Same-stat items are each their own equippable item (#357) ──")
 	Inventory.clear_inventory()
 	for _i in range(3):
 		Inventory.add_item("armor", 1)
@@ -2850,7 +2851,7 @@ func test_dup_equipment() -> void:
 	print("")
 
 
-# ── #357: the REAL equipment screen lists + equips duplicate frames ──
+# ── #357: the REAL equipment screen lists + equips every same-stat frame ──
 # test_dup_equipment proves the equipment_utils/inventory layer; this drives
 # the actual equipment_screen.tscn node — the surface the player touched when
 # they reported "only the first copy is equippable." Pre-fix, the screen's
@@ -2858,7 +2859,7 @@ func test_dup_equipment() -> void:
 # suffixed id), so the list showed one frame; this asserts all three appear AND
 # that a NON-first (#N-suffixed) instance equips through the screen's own flow.
 func test_equipment_screen_dup_frame() -> void:
-	print("── Equipment screen lists + equips duplicate frames (#357) ──")
+	print("── Equipment screen lists + equips every same-stat frame (#357) ──")
 	const EquipmentScreen := preload("res://scenes/2d/equipment.tscn")
 
 	# Deterministic active character (any class can wear any frame).
@@ -2911,9 +2912,73 @@ func test_equipment_screen_dup_frame() -> void:
 	assert_eq(str(character["equipment"]["frame"]), target_id,
 		"equipping a #N-suffixed frame instance through the screen sticks")
 
+	# Rule 1 (/mechanics/inventory): a suffixed instance is a full, equal item.
+	# It MUST contribute its base type's stats and expose its unit slots — not
+	# read as a 0-stat / 0-slot item (the #363 raw-suffixed-id registry bug).
+	var bonuses: Dictionary = screen._calc_equip_bonuses(character["equipment"], character)
+	assert_eq(int(bonuses.get("def", 0)), 35,
+		"suffixed frame contributes its base type's full DEF (35), not 0")
+	var vis: Array = screen._get_visible_slots()
+	assert_true(vis.has("unit1") and vis.has("unit4"),
+		"suffixed frame exposes its 4 unit slots (max_slots resolves through the suffix)")
+
 	screen.free()
 	Inventory.clear_inventory()
 	character["equipment"]["frame"] = ""
+	print("")
+
+
+# ── Spec /mechanics/inventory: "Changing the frame clears every equipped unit" ──
+# Any frame change to a DIFFERENT item unequips ALL units, even when the new
+# frame has the same or more unit slots — the player re-slots into the new frame.
+func test_frame_change_clears_units() -> void:
+	print("── Changing the frame clears every equipped unit (#363, spec /mechanics/inventory) ──")
+	const EquipmentScreen := preload("res://scenes/2d/equipment.tscn")
+
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	CharacterManager.create_character(0, "humar", "FrameSwapTester")
+	CharacterManager.set_active_slot(0)
+	var character = CharacterManager.get_active_character()
+	assert_true(character != null, "active character set up")
+	character["equipment"] = {"weapon": "", "frame": "", "mag": ""}
+
+	Inventory.clear_inventory()
+	Inventory.add_item("armor", 1)          # 4 unit slots
+	Inventory.add_item("valiant_frame", 1)  # 3 unit slots (still > 0)
+	Inventory.add_item("ace_guard", 1)      # a unit to occupy a slot
+
+	# Start with the 4-slot frame and a unit equipped in slot 1.
+	character["equipment"]["frame"] = "armor"
+	character["equipment"]["unit1"] = "ace_guard"
+
+	var screen: Control = EquipmentScreen.instantiate()
+	add_child(screen)
+
+	# Equip the OTHER frame through the real screen flow.
+	var slots: Array = screen._get_visible_slots()
+	var frame_idx: int = slots.find("frame")
+	assert_true(frame_idx >= 0, "frame slot is visible")
+	screen._selected_slot = frame_idx
+	screen._open_item_selection()
+	var pick: int = -1
+	for i in range(screen._equippable_items.size()):
+		if str(screen._equippable_items[i].get("id", "")) == "valiant_frame":
+			pick = i
+			break
+	assert_true(pick >= 0, "the other frame is offered in the frame list")
+	screen._selected_item = pick
+	screen._equip_selected_item()
+
+	assert_eq(str(character["equipment"]["frame"]), "valiant_frame", "frame changed to the other frame")
+	# The contract: EVERY unit slot is cleared, even though valiant_frame has 3 slots.
+	for s in ["unit1", "unit2", "unit3", "unit4"]:
+		assert_eq(str(character["equipment"].get(s, "")), "",
+			"%s is unequipped after the frame change" % s)
+
+	screen.free()
+	Inventory.clear_inventory()
+	character["equipment"] = {"weapon": "", "frame": "", "mag": ""}
 	print("")
 
 

@@ -11,8 +11,15 @@ import Concept from '../../layouts/Concept.astro';
   <ul>
     <li>The inventory holds <strong>40 slots</strong>. Adding past the cap <strong>MUST</strong> fail (and play the error cue), not silently drop the item.</li>
     <li><strong>Stackable</strong> items (consumables, materials, modifiers) occupy <strong>one slot per stack</strong>, capped by the item's max stack.</li>
-    <li><strong>Per-slot</strong> items (weapons, armor, units, mags, technique disks) take <strong>one slot per copy</strong> and each get a unique instance id (e.g. <code>ein_blade#3</code>).</li>
+    <li><strong>Per-slot</strong> items (weapons, armor, units, mags, technique disks) take <strong>one slot each</strong> and every one gets its own unique instance id (e.g. <code>ein_blade#3</code>). Two items with identical stats are still two distinct items.</li>
     <li>Equipped gear <strong>MUST NOT</strong> be deposited or sold until unequipped.</li>
+  </ul>
+
+  <h2>Equipping gear</h2>
+  <p>Gear is equipped from the <a href="/start-menu">equipment screen</a>; each equip slot (weapon, armor <code>frame</code>, one <code>unit</code> slot per the frame's <code>max_slots</code>, mag) holds at most one item, referenced by its <strong>instance id</strong>.</p>
+  <ul>
+    <li><strong>Every frame is its own item.</strong> Two frames with the same stats are two different frames, each with its own instance id (<code>frame</code>, <code>frame#2</code>, …), and each <strong>MUST</strong> behave as a full, equal item — same DEF/EVA, same unit-slot count, same everything. The player <strong>MAY</strong> equip <em>any</em> of them — equipping is by the item's own id, never by stat profile or base type. Buy three frames of the same type and the player <strong>MUST</strong> be able to equip whichever they choose, interchangeably. (This already holds for weapons; it <strong>MUST</strong> hold equally for armor, units, and mags.)</li>
+    <li><strong>Changing the frame clears every equipped unit.</strong> Whenever the equipped frame changes to a <em>different</em> item, all currently-equipped units <strong>MUST</strong> be unequipped — even when the new frame has the same number of unit slots, or more. Example: equip a 3-slot frame, fill all three unit slots, then equip a different 3-slot frame → all three units are unequipped, and the player re-slots them into the new frame. Re-selecting the frame that is already equipped <strong>MUST</strong> be a no-op (its units are retained).</li>
   </ul>
 
   <h2>Stack limits</h2>

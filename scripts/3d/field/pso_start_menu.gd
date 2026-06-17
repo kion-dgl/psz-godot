@@ -286,13 +286,11 @@ func _equip_from_inventory(item: Dictionary) -> void:
 		return
 	var equip: Dictionary = ch.get("equipment", {})
 	var item_id: String = str(item.get("id", ""))
-	equip[slot_key] = item_id
-	if slot_key == "frame":
-		var armor = ArmorRegistry.get_armor(item_id)
-		var new_max: int = armor.max_slots if armor else 0
+	# Changing to a different frame clears every equipped unit (spec: /mechanics/inventory).
+	if slot_key == "frame" and item_id != str(equip.get("frame", "")):
 		for i in range(4):
-			if i >= new_max:
-				equip["unit%d" % (i + 1)] = ""
+			equip["unit%d" % (i + 1)] = ""
+	equip[slot_key] = item_id
 	ch["equipment"] = equip
 	var player_node = get_tree().get_first_node_in_group("player")
 	if slot_key == "weapon" and player_node and player_node.has_method("refresh_weapon"):
@@ -460,12 +458,10 @@ func _do_equip() -> void:
 		pass  # Already equipped, no-op
 	else:
 		equip[slot_key] = item_id
+		# A frame change clears every equipped unit (spec: /mechanics/inventory).
 		if slot_key == "frame":
-			var armor = ArmorRegistry.get_armor(item_id)
-			var new_max: int = armor.max_slots if armor else 0
 			for i in range(4):
-				if i >= new_max:
-					equip["unit%d" % (i + 1)] = ""
+				equip["unit%d" % (i + 1)] = ""
 
 	ch["equipment"] = equip
 
@@ -755,14 +751,18 @@ func _category_to_type(category: String) -> String:
 
 
 func _get_item_category(item_id: String) -> String:
-	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
-	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
+	# Strip the per-slot instance suffix (frame#2) before the registry lookups,
+	# then normalize dash/slash — else a same-stat copy mislabels as Other/tool
+	# (the #357 bug; mirrors Inventory.get_item_category).
+	var base_id: String = Inventory.get_base_id(item_id)
+	var norm_id: String = base_id.replace("-", "_").replace("/", "_")
+	if WeaponRegistry.get_weapon(base_id) or WeaponRegistry.get_weapon(norm_id):
 		return "Weapon"
-	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
+	if ArmorRegistry.get_armor(base_id) or ArmorRegistry.get_armor(norm_id):
 		return "Armor"
-	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
+	if UnitRegistry.get_unit(base_id) or UnitRegistry.get_unit(norm_id):
 		return "Unit"
-	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
+	if MagManager.is_mag(base_id) or MagManager.is_mag(norm_id):
 		return "Mag"
 	if item_id.begins_with("disk_"):
 		return "Disk"
@@ -854,7 +854,7 @@ func _get_equip_slots() -> Array:
 	# Unit slots — count depends on equipped armor's max_slots
 	var unit_count: int = 0
 	if not frame_id.is_empty():
-		var armor_data = ArmorRegistry.get_armor(frame_id) if ArmorRegistry.has_method("get_armor") else null
+		var armor_data = ArmorRegistry.get_armor(Inventory.get_base_id(frame_id)) if ArmorRegistry.has_method("get_armor") else null
 		if armor_data and "max_slots" in armor_data:
 			unit_count = int(armor_data.max_slots)
 	for i in range(unit_count):

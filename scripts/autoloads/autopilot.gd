@@ -1180,10 +1180,51 @@ func _probe_frame_dup_equip() -> void:
 			target_id, equipped_frame])
 		_after(STEP_DELAY, _save_and_quit)
 		return
-	# Leave a clean slate for storage (Inc 5): unequip + drop the seeded frames.
+	# Rule 1 (/mechanics/inventory): a suffixed instance is a full, equal item —
+	# it must contribute its base type's DEF through the live screen, not read as
+	# 0 (the #363 raw-suffixed-id registry bug, distinct from "can't equip it").
+	var dup_def: int = int(screen._calc_equip_bonuses(character["equipment"], character).get("def", 0))
+	if dup_def > 0:
+		print("[sanity] checkpoint: frame-dup suffixed frame full stats (def=%d)" % dup_def)
+	else:
+		print("[sanity] FAIL: frame-dup — suffixed frame gave 0 DEF (raw-suffixed-id lookup, #363)")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	# Rule 2 (/mechanics/inventory): changing the frame clears EVERY equipped unit.
+	# Equip a unit, swap to a different frame instance through the screen, assert
+	# all unit slots come back empty (even though the new frame also has slots).
+	Inventory.add_item("ace_guard", 1)
+	character["equipment"]["unit1"] = "ace_guard"
+	screen._selected_slot = frame_idx
+	screen._open_item_selection()
+	var swap_idx := -1
+	for i in range(screen._equippable_items.size()):
+		var r: Dictionary = screen._equippable_items[i]
+		if Inventory.get_base_id(str(r.get("id", ""))) == "armor" and not bool(r.get("equipped", false)):
+			swap_idx = i
+			break
+	if swap_idx < 0:
+		print("[sanity] FAIL: frame-change — no second frame instance to swap to")
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	screen._selected_item = swap_idx
+	screen._equip_selected_item()
+	var units_after: Array = []
+	for s in ["unit1", "unit2", "unit3", "unit4"]:
+		if not str(character["equipment"].get(s, "")).is_empty():
+			units_after.append(s)
+	if units_after.is_empty():
+		print("[sanity] checkpoint: frame-change cleared all units")
+	else:
+		print("[sanity] FAIL: frame-change — units survived a frame swap: %s" % str(units_after))
+		_after(STEP_DELAY, _save_and_quit)
+		return
+	# Leave a clean slate for storage (Inc 5): unequip + drop the seeded gear.
 	character["equipment"]["frame"] = ""
+	for s in ["unit1", "unit2", "unit3", "unit4"]:
+		character["equipment"][s] = ""
 	for iid in Inventory._items.keys():
-		if Inventory.get_base_id(iid) == "armor":
+		if Inventory.get_base_id(iid) == "armor" or Inventory.get_base_id(iid) == "ace_guard":
 			Inventory.remove_item(iid, Inventory.get_item_count(iid))
 	_finish_equipment()
 

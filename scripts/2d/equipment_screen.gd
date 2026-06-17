@@ -37,7 +37,7 @@ func _get_visible_slots() -> Array:
 	var frame_id: String = str(character.get("equipment", {}).get("frame", ""))
 	if frame_id.is_empty():
 		return slots
-	var armor = ArmorRegistry.get_armor(frame_id)
+	var armor = ArmorRegistry.get_armor(Inventory.get_base_id(frame_id))
 	if armor == null:
 		return slots
 	for i in range(armor.max_slots):
@@ -196,11 +196,11 @@ func _equip_selected_item() -> void:
 	# Equip new item
 	equipment[slot_key] = item_id
 
-	# If equipping a new frame, auto-unequip units beyond new armor's max_slots
+	# Changing to a different frame clears EVERY equipped unit, regardless of the
+	# new frame's slot count (spec: /mechanics/inventory). The already-equipped
+	# frame no-ops above, so reaching here always means a real frame change.
 	if slot_key == "frame":
-		var armor = ArmorRegistry.get_armor(item_id)
-		var new_max: int = armor.max_slots if armor else 0
-		_auto_unequip_excess_units(equipment, new_max)
+		_auto_unequip_excess_units(equipment, 0)
 
 	# Update 3D weapon model if weapon slot changed
 	if slot_key == "weapon":
@@ -307,17 +307,18 @@ func _refresh_display() -> void:
 
 
 func _get_item_brief(item_id: String) -> String:
-	var w = WeaponRegistry.get_weapon(item_id)
+	var base_id: String = Inventory.get_base_id(item_id)
+	var w = WeaponRegistry.get_weapon(base_id)
 	if w:
 		var character = CharacterManager.get_active_character()
 		var grind: int = int(character.get("weapon_grinds", {}).get(item_id, 0)) if character else 0
 		if grind > 0:
 			return "ATK %d (+%d)" % [w.attack_base + grind, grind]
 		return "ATK %d" % w.attack_base
-	var a = ArmorRegistry.get_armor(item_id)
+	var a = ArmorRegistry.get_armor(base_id)
 	if a:
 		return "DEF %d  Slots:%d" % [a.defense_base, a.max_slots]
-	var u = UnitRegistry.get_unit(item_id)
+	var u = UnitRegistry.get_unit(base_id)
 	if u:
 		return u.effect
 	return ""
@@ -339,7 +340,7 @@ func _calc_equip_bonuses(equip: Dictionary, character: Dictionary) -> Dictionary
 	# Armor bonuses
 	var frame_id: String = str(equip.get("frame", ""))
 	if not frame_id.is_empty():
-		var armor = ArmorRegistry.get_armor(frame_id)
+		var armor = ArmorRegistry.get_armor(Inventory.get_base_id(frame_id))
 		if armor:
 			bonuses["def"] += int(armor.defense_base)
 			bonuses["eva"] += int(armor.evasion_base)
@@ -348,7 +349,7 @@ func _calc_equip_bonuses(equip: Dictionary, character: Dictionary) -> Dictionary
 	for slot in ["unit1", "unit2", "unit3", "unit4"]:
 		var unit_id: String = str(equip.get(slot, ""))
 		if not unit_id.is_empty():
-			var unit = UnitRegistry.get_unit(unit_id)
+			var unit = UnitRegistry.get_unit(Inventory.get_base_id(unit_id))
 			if unit:
 				var bonus_key: String = UNIT_CATEGORY_TO_BONUS.get(unit.category, "")
 				if not bonus_key.is_empty() and bonus_key in bonuses:
@@ -410,12 +411,10 @@ func _refresh_stats() -> void:
 							preview_equip["unit%d" % (i + 1)] = ""
 				else:
 					preview_equip[slot_key] = item_id
+					# A frame change clears every unit (spec: /mechanics/inventory).
 					if slot_key == "frame":
-						var armor = ArmorRegistry.get_armor(item_id)
-						var new_max: int = armor.max_slots if armor else 0
 						for i in range(4):
-							if i >= new_max:
-								preview_equip["unit%d" % (i + 1)] = ""
+							preview_equip["unit%d" % (i + 1)] = ""
 				preview_bonuses = _calc_equip_bonuses(preview_equip, character)
 				has_preview = true
 
