@@ -1094,12 +1094,17 @@ func _spawn_field_elements() -> void:
 				if is_final:
 					_fdbg("[ValleyField] AreaWarp %s → final exit, leaving field" % portal_dir)
 					# #384: a quest's final exit marks complete + suspends (resumable
-					# until report/cancel); a free field returns to city as before.
+					# until report/cancel). A free field flushes its run-state into the
+					# per-area Free-Roam store so re-entering shows it cleared (spec
+					# /states/quest-vs-field) — save the end cell first, like the
+					# StartWarp/telepipe paths do.
 					if SessionManager.get_session().get("type") == "quest":
 						SessionManager.mark_quest_complete()
 						SessionManager.suspend_session()
 					else:
-						SessionManager.return_to_city()
+						_cell_spawner._save_cell_state()
+						SessionManager.save_section_state(SessionManager.get_current_section(), _cell_states, _keys_collected, _gates_opened, _visited_cells)
+						SessionManager.flush_free_roam_field()
 					SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
 				else:
 					_fdbg("[ValleyField] AreaWarp %s activated → section %d, cell %s, entry=%s" % [portal_dir, t_section, t_cell, aw_entry_edge])
@@ -1389,7 +1394,13 @@ func _on_start_warp_interacted(_player: Node3D) -> void:
 		SessionManager.get_current_section(),
 		_cell_states, _keys_collected, _gates_opened, _visited_cells
 	)
-	SessionManager.suspend_session()
+	# A quest backtrack stays in the single suspended-quest slot (resumable
+	# until report/cancel); a free field flushes to its per-area Free-Roam
+	# store so other fields' state survives the trip (spec /states/quest-vs-field).
+	if SessionManager.get_session().get("type") == "quest":
+		SessionManager.suspend_session()
+	else:
+		SessionManager.flush_free_roam_field()
 	SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
 
 
@@ -1416,9 +1427,15 @@ func _travel_to_city_via_telepipe() -> void:
 	_fdbg("[TelepipeDEBUG] post-save get_section_state keys=%s, cell_states keys=%s" % [
 		str(verify.keys()),
 		str(verify.get("cell_states", {}).keys())])
-	# Suspend rather than return_to_city() — resume_session() restores quest
-	# objectives + companions when the player comes back via the city telepipe.
-	SessionManager.suspend_session()
+	# Suspend rather than return_to_city() — coming back via the city telepipe
+	# restores the run. A quest uses the suspended-quest slot (resume_session
+	# brings back objectives + companions); a free field flushes to its per-area
+	# Free-Roam store. Either way the telepipe stays active so the city-side pipe
+	# spawns and the round-trip works (city_counter_controller branches on which).
+	if SessionManager.get_session().get("type") == "quest":
+		SessionManager.suspend_session()
+	else:
+		SessionManager.flush_free_roam_field()
 	# city_area_base._spawn_player reads CityState.get_spawn_key(), not the
 	# SceneManager transition_data dict — set the variant key on CityState so
 	# city_counter's "telepipe-arrival" SPAWN_VARIANT actually fires.
@@ -2040,12 +2057,14 @@ func _on_end_reached() -> void:
 		# All sections complete. For a quest this is the player leaving the field
 		# at the end (#384): mark complete (rewards pending) and SUSPEND, so the
 		# run stays resumable from the city teleporter until the player reports or
-		# cancels — that is when the Field Context actually closes.
+		# cancels — that is when the Field Context actually closes. A free field
+		# flushes its run-state into the per-area Free-Roam store (the current
+		# section was just saved above) so it stays cleared on re-entry.
 		if SessionManager.get_session().get("type") == "quest":
 			SessionManager.mark_quest_complete()
 			SessionManager.suspend_session()
 		else:
-			SessionManager.return_to_city()
+			SessionManager.flush_free_roam_field()
 		SceneManager.goto_scene("res://scenes/3d/city/city_warp.tscn")
 
 

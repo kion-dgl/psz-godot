@@ -73,8 +73,11 @@ func _run_tests_core() -> void:
 	test_shop_armor_purchase_records_slots()
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
+	test_free_roam_per_area_state()
+	test_free_telepipe_round_trip()
 	test_field_quest_decouple()
 	test_charge_drop_paths()
+	test_mechgun_final_step_no_root()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -2778,21 +2781,25 @@ func test_telepipe_239_fixes() -> void:
 	assert_eq(str(live[0].name), "PlayerTelepipe", "surviving node keeps the canonical name")
 	ctl.free()
 
-	# Bug 2: suspended free-field session — predicate + accept-quest cleanup.
+	# Bug 2: a free field in progress is held in the per-area Free-Roam store
+	# (not the single suspended slot), must not block quest accept, and is
+	# cleared when a quest is accepted (spec /states/quest-vs-field).
 	SessionManager.return_to_city()
 	SessionManager._accepted_quest.clear()
 	SessionManager._suspended_session.clear()
+	SessionManager.clear_free_roam_state()
 
 	SessionManager.enter_field("gurhacia", "normal")
-	SessionManager.suspend_session()
-	assert_true(SessionManager.has_suspended_session(), "field session suspends")
+	SessionManager.flush_free_roam_field()
+	assert_true(SessionManager.has_free_roam_field("gurhacia"), "free field flushes to the per-area store")
+	assert_true(not SessionManager.has_suspended_session(), "a free field is NOT held in the suspended slot")
 	assert_true(not SessionManager.has_suspended_quest(),
-		"suspended FIELD run is not a suspended quest (counter stays unlocked)")
+		"free field is not a suspended quest (counter stays unlocked)")
 
 	TelepipeManager.place("gurhacia", 0, "0,0", Vector3.ZERO, "res://x.tscn")
 	SessionManager.accept_quest("search_and_rescue", "normal")
-	assert_true(not SessionManager.has_suspended_session(),
-		"accepting a quest abandons the suspended field run")
+	assert_true(not SessionManager.has_free_roam_field("gurhacia"),
+		"accepting a quest clears retained free-field state")
 	assert_true(not TelepipeManager.is_active(), "accepting a quest cancels the telepipe")
 	SessionManager.cancel_accepted_quest()
 
@@ -2806,6 +2813,7 @@ func test_telepipe_239_fixes() -> void:
 
 	SessionManager.return_to_city()
 	SessionManager._suspended_session.clear()
+	SessionManager.clear_free_roam_state()
 	print("")
 
 
@@ -3167,17 +3175,20 @@ func test_freefield_quest_unblock() -> void:
 	SessionManager._accepted_quest.clear()
 	SessionManager._suspended_session.clear()
 
-	# Leaving a free field via StartWarp suspends a type-"field" session.
+	# Leaving a free field via StartWarp flushes to the per-area Free-Roam store
+	# (not the suspended slot).
+	SessionManager.clear_free_roam_state()
 	SessionManager.enter_field("gurhacia", "normal")
-	SessionManager.suspend_session()
-	assert_true(SessionManager.has_suspended_session(), "free-field session suspended")
+	SessionManager.flush_free_roam_field()
+	assert_true(SessionManager.has_free_roam_field("gurhacia"), "free-field run retained in the store")
+	assert_true(not SessionManager.has_suspended_session(), "a free field is not a suspended session")
 	assert_true(not SessionManager.has_suspended_quest(),
-		"a field suspension is NOT a quest suspension (guild accept-block won't fire)")
+		"a free field is NOT a quest suspension (guild accept-block won't fire)")
 
-	# Accepting a quest is allowed and abandons the field session.
+	# Accepting a quest is allowed and clears the retained free-field state.
 	SessionManager.accept_quest("search_and_rescue", "normal")
 	assert_true(SessionManager.has_accepted_quest(), "quest accepted after a free-field trip")
-	assert_true(not SessionManager.has_suspended_session(), "accepting abandoned the field session")
+	assert_true(not SessionManager.has_free_roam_field("gurhacia"), "accepting cleared the free-field state")
 	SessionManager.cancel_accepted_quest()
 
 	# Control: a suspended QUEST still reads as a quest (would block accept).
@@ -3188,6 +3199,139 @@ func test_freefield_quest_unblock() -> void:
 
 	SessionManager.return_to_city()
 	SessionManager._suspended_session.clear()
+	SessionManager.clear_free_roam_state()
+	print("")
+
+
+# ── Free-Roam per-area field state (spec /states/quest-vs-field) ──
+# Free-field run-state MUST persist per area across field switches + city
+# returns for the whole Free-Roam period, and reset on quest accept / exit.
+func _reset_session_state() -> void:
+	SessionManager.return_to_city()
+	SessionManager._accepted_quest.clear()
+	SessionManager._suspended_session.clear()
+	SessionManager._completed_quest.clear()
+	SessionManager.clear_free_roam_state()
+	TelepipeManager.cancel("test_setup")
+
+
+func test_free_roam_per_area_state() -> void:
+	print("── Free-Roam per-area state persists across field switches ──")
+	_reset_session_state()
+
+	# Enter Valley, clear a cell, and leave to the city (StartWarp/final-exit
+	# both call flush_free_roam_field).
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.set_field_sections([{"cells": [{"stage_id": "s01a_sa1"}], "start_pos": "1,1"}])
+	SessionManager.save_section_state(0, {"1,1": {"objects": ["cleared"]}}, {}, {}, {"1,1": true})
+	SessionManager.flush_free_roam_field()
+	assert_true(SessionManager.has_free_roam_field("gurhacia"), "Valley retained after leaving")
+
+	# Now visit Wetlands and leave — this MUST NOT wipe Valley's state.
+	SessionManager.enter_field("ozette", "normal")
+	SessionManager.set_field_sections([{"cells": [{"stage_id": "s02a_wa1"}], "start_pos": "2,2"}])
+	SessionManager.save_section_state(0, {"2,2": {"objects": ["wet"]}}, {}, {}, {})
+	SessionManager.flush_free_roam_field()
+	assert_true(SessionManager.has_free_roam_field("ozette"), "Wetlands retained after leaving")
+	assert_true(SessionManager.has_free_roam_field("gurhacia"),
+		"Valley state survived the Wetlands trip (MUST NOT reset between free fields)")
+
+	# Re-enter Valley from the store — its cleared cell comes back.
+	assert_true(SessionManager.enter_free_roam_field("gurhacia"), "re-enter Valley from the store")
+	assert_true(not SessionManager.get_field_sections().is_empty(), "Valley sections restored")
+	var st: Dictionary = SessionManager.get_section_state(0)
+	assert_true(st.get("cell_states", {}).has("1,1"), "Valley's cleared cell restored on re-entry")
+
+	# Teleporter listing: both areas present, each at its reached section.
+	var ids: Array = SessionManager.get_free_roam_area_ids()
+	assert_true(ids.has("gurhacia") and ids.has("ozette"), "teleporter lists every retained free field")
+	assert_eq(SessionManager.get_free_roam_visited_section_indices("ozette"), [0],
+		"Wetlands lists its reached section as a warp point")
+
+	# Accepting a quest clears ALL retained free-field state.
+	SessionManager.accept_quest("search_and_rescue", "normal")
+	assert_true(SessionManager.get_free_roam_area_ids().is_empty(),
+		"accepting a quest clears all retained free-field state")
+
+	# The quest's exit (report) leaves Free Roam reset — store stays empty.
+	SessionManager.start_accepted_quest()
+	SessionManager.complete_quest()
+	SessionManager.report_quest()
+	assert_true(SessionManager.get_free_roam_area_ids().is_empty(),
+		"reporting a quest returns to a fresh Free Roam (no stale fields)")
+
+	_reset_session_state()
+	print("")
+
+
+# ── Free-field telepipe round-trip restores from the per-area store ──
+# The city-side telepipe pad must rehydrate a FREE field from _free_roam_state
+# (it has no suspended session under the new model).
+func test_free_telepipe_round_trip() -> void:
+	print("── Free-field telepipe round-trip (store-backed) ──")
+	_reset_session_state()
+
+	SessionManager.enter_field("gurhacia", "normal")
+	SessionManager.set_field_sections([{"cells": [{"stage_id": "s01a_sa1"}], "start_pos": "3,3"}])
+	SessionManager.save_section_state(0, {"3,3": {"objects": ["x"]}}, {}, {}, {})
+	TelepipeManager.place("gurhacia", 0, "3,3", Vector3.ZERO, "res://scenes/3d/field/valley_field.tscn")
+	SessionManager.flush_free_roam_field()
+	assert_true(TelepipeManager.is_active(), "free-field telepipe stays active after leaving")
+	assert_true(not SessionManager.has_suspended_session(), "free field does not use the suspended slot")
+	assert_true(SessionManager.has_free_roam_field("gurhacia"), "field retained in the store")
+
+	# Simulate the city-side pad: consume the return + rehydrate from the store.
+	var snap: Dictionary = TelepipeManager.consume_return()
+	assert_eq(str(snap.get("area_id", "")), "gurhacia", "telepipe snapshot carries the area")
+	assert_true(SessionManager.enter_free_roam_field(str(snap.get("area_id", ""))),
+		"city-side return rehydrates the free field from the store")
+	SessionManager.set_current_section(int(snap.get("section_idx", 0)))
+	assert_true(SessionManager.has_active_session(), "field session live again after telepipe return")
+	var st2: Dictionary = SessionManager.get_section_state(int(snap.get("section_idx", 0)))
+	assert_true(st2.get("cell_states", {}).has("3,3"), "cleared cell restored via the telepipe return")
+
+	_reset_session_state()
+	print("")
+
+
+# ── Mechgun root-after-fire (Rozalin): final combo step recovers ──
+# The final combo step opens no combo window, so without a safety net a looping
+# attack animation (mechgun spray never emits animation_finished) strands the
+# player in ATTACKING with movement zeroed. _handle_attack_state must end the
+# attack once the final step's animation length elapses.
+func test_mechgun_final_step_no_root() -> void:
+	print("── Mechgun: final combo step recovers without animation_finished ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	var pl = PlayerScript.new()
+
+	# Final step (combo_state >= max_combo), no open window, anim "looping" so
+	# animation_finished never fires. Tick past the anim length.
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 3)
+	pl.set("combo_window_open", false)
+	pl.set("_combo_window_opened", true)
+	pl.set("_attack_anim_length", 0.4)
+	pl.set("_attack_anim_elapsed", 0.0)
+	for _i in range(10):
+		pl._handle_attack_state(0.1)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.IDLE),
+		"final combo step returns to IDLE once the anim length elapses (no permanent root)")
+	assert_eq(int(pl.get("combo_state")), 0, "combo resets after the final step ends")
+
+	# Control: a non-final step with its combo window OPEN must stay attackable
+	# (the safety net must not eat the chain window even past the anim length).
+	pl.set("current_state", PlayerScript.PlayerState.ATTACKING)
+	pl.set("combo_state", 1)
+	pl.set("combo_window_open", true)
+	pl.set("combo_timer", 0.0)
+	pl.set("_combo_window_opened", true)
+	pl.set("_attack_anim_length", 0.4)
+	pl.set("_attack_anim_elapsed", 0.5)
+	pl._handle_attack_state(0.05)
+	assert_eq(int(pl.get("current_state")), int(PlayerScript.PlayerState.ATTACKING),
+		"non-final step stays attackable while its combo window is open")
+
+	pl.free()
 	print("")
 
 

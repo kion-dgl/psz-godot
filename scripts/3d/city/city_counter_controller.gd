@@ -140,10 +140,14 @@ func _on_city_telepipe_activated() -> void:
 	if snapshot.is_empty():
 		# Defensive: somehow lost the state between spawn and interact.
 		return
-	# Bring back the suspended quest/field session so quest objectives,
-	# companions, and section state come back with the player.
+	# Bring back the field run so quest objectives, companions, and section
+	# state come back with the player. A quest lives in the suspended-quest
+	# slot; a free field lives in the per-area Free-Roam store (spec
+	# /states/quest-vs-field) — restore from whichever holds this run.
 	if SessionManager.has_suspended_session():
 		SessionManager.resume_session()
+	elif SessionManager.has_free_roam_field(str(snapshot.get("area_id", ""))):
+		SessionManager.enter_free_roam_field(str(snapshot.get("area_id", "")))
 	# CRITICAL: override current_section to the telepipe's section_idx.
 	# Without this, if the player suspended from a DIFFERENT section than
 	# where the telepipe was placed (e.g. dropped telepipe in area B,

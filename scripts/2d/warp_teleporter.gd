@@ -88,8 +88,31 @@ func _build_visible_areas() -> void:
 				_visible_areas.append(area)
 				break
 	else:
+		# Free Roam (spec /states/quest-vs-field): list every unlocked field at
+		# the sections the player has reached. A field with retained run-state
+		# expands into one resume entry per visited section (Valley A, Valley E,
+		# …); an untouched field gets a single fresh entry. This is what keeps
+		# OTHER areas selectable after entering one — switching free fields must
+		# not hide them, and each field's progress is retained per area.
 		for area in AREAS:
-			if _is_area_unlocked(str(area["id"])):
+			var aid: String = str(area["id"])
+			if not _is_area_unlocked(aid):
+				continue
+			if SessionManager.has_free_roam_field(aid):
+				var sections: Array = SessionManager.get_free_roam_field_sections(aid)
+				for sidx in SessionManager.get_free_roam_visited_section_indices(aid):
+					var first_stage_id: String = ""
+					if sidx < sections.size():
+						var cells: Array = sections[sidx].get("cells", [])
+						if cells.size() > 0:
+							first_stage_id = str(cells[0].get("stage_id", ""))
+					_visible_areas.append({
+						"id": aid,
+						"name": derive_section_label(str(area["name"]), first_stage_id, sidx),
+						"section_idx": sidx,
+						"resume": true,
+					})
+			else:
 				_visible_areas.append(area)
 
 
@@ -220,44 +243,34 @@ func _warp_to_field() -> void:
 		_enter_3d_field()
 		return
 
-	# Telepipe resume: if the player has a suspended session AND picked the
-	# same area where their telepipe is dropped, resume that session and
-	# restore the saved cell state instead of starting a fresh expedition.
-	# This is what makes "drop telepipe → city → city teleporter → same
-	# area" preserve cleared rooms (issue #103). The telepipe stays active
-	# and gets re-spawned in its original cell by the field controller.
-	print("[TelepipeDEBUG] warp_to_field area=%s tp_active=%s suspended=%s" % [
-		area_id, str(TelepipeManager.is_active()), str(SessionManager.has_suspended_session())])
-	if TelepipeManager.is_active():
-		var tp_state: Dictionary = TelepipeManager.get_state()
-		print("[TelepipeDEBUG]   tp_state area=%s section=%d cell=%s" % [
-			str(tp_state.get("area_id", "?")),
-			int(tp_state.get("section_idx", -1)),
-			str(tp_state.get("cell_pos", "?"))])
-		if tp_state.get("area_id", "") == area_id and SessionManager.has_suspended_session():
-			print("[TelepipeDEBUG]   RESUMING suspended session")
-			SessionManager.resume_session()
-			# Resume the cell state for the telepipe's section so the room
-			# the player drops back into has the same cleared/looted state.
-			var section_idx: int = int(tp_state.get("section_idx", 0))
-			var section_state: Dictionary = SessionManager.get_section_state(section_idx)
-			print("[TelepipeDEBUG]   restoring section %d, cell_states keys=%s, target=%s" % [
-				section_idx, str(section_state.get("cell_states", {}).keys()), str(tp_state.get("cell_pos", "0,0"))])
-			SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-				"current_cell_pos": str(tp_state.get("cell_pos", "0,0")),
-				"spawn_edge": "",
-				"keys_collected": section_state.get("keys_collected", {}),
-				"gates_opened": section_state.get("gates_opened", {}),
-				"visited_cells": section_state.get("visited_cells", {}),
-				"cell_states": section_state.get("cell_states", {}),
-			})
-			return
-		# Different area — the telepipe (and the suspended session it points
-		# at) is being abandoned. Cancel before enter_field clears section
-		# states; otherwise the manager would be holding a stale pointer.
-		print("[TelepipeDEBUG]   area mismatch or no suspended session, cancelling")
+	# Picking a different area than where a telepipe is dropped abandons that
+	# pipe. Same-area picks keep it — the city-side telepipe pad still returns
+	# the player to the exact drop cell; here, picking a section resumes at that
+	# section's start (the player's explicit choice), so we don't force the pipe
+	# cell. Cancel before enter_free_roam_field/enter_field so no stale pointer.
+	if TelepipeManager.is_active() and str(TelepipeManager.get_state().get("area_id", "")) != area_id:
 		TelepipeManager.cancel("area_changed")
 
+	# Resume a retained free field at the chosen section, restoring its cleared
+	# rooms / drops / gates from the per-area Free-Roam store.
+	if bool(area.get("resume", false)) and SessionManager.has_free_roam_field(area_id):
+		SessionManager.enter_free_roam_field(area_id)
+		var section_idx: int = int(area.get("section_idx", 0))
+		SessionManager.set_current_section(section_idx)
+		var sections_r: Array = SessionManager.get_field_sections()
+		var section: Dictionary = sections_r[section_idx] if section_idx < sections_r.size() else sections_r[0]
+		var section_state: Dictionary = SessionManager.get_section_state(section_idx)
+		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+			"current_cell_pos": str(section.get("start_pos", "")),
+			"spawn_edge": "",
+			"keys_collected": section_state.get("keys_collected", {}),
+			"gates_opened": section_state.get("gates_opened", {}),
+			"visited_cells": section_state.get("visited_cells", {}),
+			"cell_states": section_state.get("cell_states", {}),
+		})
+		return
+
+	# Fresh expedition into this field.
 	SessionManager.enter_field(area_id, "normal")
 
 	# Try hand-authored field quest first, fall back to procedural generation

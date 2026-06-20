@@ -1817,9 +1817,10 @@ func _handle_attack_state(delta: float) -> void:
 	# Track animation elapsed for mid-animation combo window
 	_attack_anim_elapsed += delta
 
+	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+
 	# Open combo window at the rhythm point (% of animation)
 	if not _combo_window_opened and _attack_anim_length > 0:
-		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 		if combo_state > 0 and combo_state < max_combo:
 			var open_at: float = _attack_anim_length * COMBO_WINDOW_OPEN_PCT
 			if _attack_anim_elapsed >= open_at:
@@ -1837,6 +1838,20 @@ func _handle_attack_state(delta: float) -> void:
 			_deactivate_attack_hitbox()
 			_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Red flash on miss
 			transition_to(PlayerState.IDLE)
+	# Safety net for the FINAL combo step. The combo window only opens for steps
+	# BEFORE max (you can't chain past the last hit), so the final step has no
+	# window timer and its only exit is the animation_finished signal. A weapon
+	# whose attack animation loops — the mechgun's rapid-fire spray is imported
+	# looping — never emits animation_finished, stranding the player in ATTACKING
+	# with movement zeroed (Rozalin's mechgun root bug). Once the final step's
+	# animation has played its full length, end the attack regardless of the
+	# signal. Non-final steps already recover via the combo-window timer above.
+	elif combo_state >= max_combo and _attack_anim_length > 0 \
+			and _attack_anim_elapsed >= _attack_anim_length:
+		combo_state = 0
+		_deactivate_attack_hitbox()
+		transition_to(PlayerState.IDLE)
+		return
 
 	# Update visuals
 	_update_combo_ring(delta)

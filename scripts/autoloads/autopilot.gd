@@ -1544,19 +1544,20 @@ func _close_start_menu() -> void:
 # accept; assert acceptance succeeds. Guarded with a poll cap so a blocked/stuck
 # accept fails loudly instead of hanging (the #354 lesson).
 func _probe_freefield_accept() -> void:
-	# Clean slate, then leave a free field the way StartWarp does — this suspends
-	# a type-"field" session (mirrors test_freefield_quest_unblock).
+	# Clean slate, then leave a free field the way StartWarp does — this flushes
+	# a free run into the per-area Free-Roam store (mirrors test_freefield_quest_unblock).
 	SessionManager.return_to_city()
 	SessionManager._accepted_quest.clear()
 	SessionManager._suspended_session.clear()
+	SessionManager.clear_free_roam_state()
 	SessionManager.enter_field("gurhacia", "normal")
-	SessionManager.suspend_session()
-	if not SessionManager.has_suspended_session() or SessionManager.has_suspended_quest():
-		print("[sanity] FAIL: freefield-accept — couldn't set up a suspended FREE field (susp=%s quest=%s)" % [
-			str(SessionManager.has_suspended_session()), str(SessionManager.has_suspended_quest())])
+	SessionManager.flush_free_roam_field()
+	if not SessionManager.has_free_roam_field("gurhacia") or SessionManager.has_suspended_session():
+		print("[sanity] FAIL: freefield-accept — couldn't set up a free field in the store (freeroam=%s susp=%s)" % [
+			str(SessionManager.has_free_roam_field("gurhacia")), str(SessionManager.has_suspended_session())])
 		_after(STEP_DELAY, _save_and_quit)
 		return
-	print("[sanity] checkpoint: freefield-accept precondition (suspended field, not a quest)")
+	print("[sanity] checkpoint: freefield-accept precondition (free field in store, not a quest)")
 	# Reset the guild accept driver, then push the overlay — the _process overlay
 	# poll auto-detects it and runs _drive_guild_counter (the same accept-spam the
 	# matrix uses for every quest), exercising guild_counter._has_active_quest.
@@ -1570,14 +1571,15 @@ func _probe_freefield_accept() -> void:
 
 func _poll_freefield_accept(n: int) -> void:
 	if SessionManager.has_accepted_quest():
-		print("[sanity] checkpoint: freefield-accept — quest accepted despite suspended free field (#359)")
+		print("[sanity] checkpoint: freefield-accept — quest accepted despite a free field in progress (#359)")
 		SessionManager.cancel_accepted_quest()
 		SessionManager.return_to_city()
 		SessionManager._suspended_session.clear()
+		SessionManager.clear_free_roam_state()
 		_after(STEP_DELAY, _probe_field_quest_decouple)
 		return
 	if n > 12:
-		print("[sanity] FAIL: freefield-accept — guild never accepted (suspended free field blocked it? #359)")
+		print("[sanity] FAIL: freefield-accept — guild never accepted (free field in progress blocked it? #359)")
 		_after(STEP_DELAY, _save_and_quit)
 		return
 	_after(1.0, func() -> void: _poll_freefield_accept(n + 1))
