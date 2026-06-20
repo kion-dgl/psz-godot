@@ -48,6 +48,17 @@ var _action_log: Array = []            # [{text, color}] — persists across roo
 var _section_cell_states: Dictionary = {} # section_idx → {cell_states, keys_collected, gates_opened, visited_cells}
 var _activated_links: Dictionary = {} # link_id → true (cross-room fence-switch links, persists across cell transitions)
 
+## Free-Roam field run-state, persisted PER AREA in memory for the whole
+## Free-Roam period (spec /states/quest-vs-field). Travelling Valley → city →
+## Wetlands → city → Valley MUST retain each field's cleared cells, dead
+## enemies, opened gates, drops, and reached sections — and MUST NOT reset on
+## moving between free fields. Unlike a quest, a free field is NOT held in the
+## single _suspended_session slot (which one field would evict another from);
+## each area keeps its own entry here. Reset only on quest accept, on the
+## quest's exit (report/cancel), and on title return. Not saved to disk.
+## Shape: area_id → {sections, current_section, section_states, links}
+var _free_roam_state: Dictionary = {}
+
 
 func is_link_activated(link_id: String) -> bool:
 	return _activated_links.has(link_id)
@@ -78,6 +89,89 @@ func enter_field(area_id: String, difficulty: String) -> Dictionary:
 	_location = "field"
 	session_started.emit(_session)
 	return _session
+
+
+# ── Free-Roam per-area field state (spec /states/quest-vs-field) ──────────────
+
+## Snapshot the LIVE free field into the per-area store and drop the player in
+## the city WITHOUT clearing the store — this is how a free field's run-state
+## survives a city round-trip and switching to another free field. Replaces the
+## quest-only suspend_session()/return_to_city() at the free-field leave sites.
+## The caller MUST have flushed the current cell (save_section_state) first, the
+## same as the telepipe/StartWarp paths already do. Telepipe is intentionally
+## left active (a dropped pipe still returns the player here).
+func flush_free_roam_field() -> void:
+	var area_id: String = str(_session.get("area_id", ""))
+	if not area_id.is_empty():
+		_free_roam_state[area_id] = {
+			"sections": _session.get("sections", []).duplicate(true),
+			"current_section": int(_session.get("current_section", 0)),
+			"section_states": _section_cell_states.duplicate(true),
+			"links": _activated_links.duplicate(true),
+		}
+	_session.clear()
+	_section_cell_states.clear()
+	_activated_links.clear()
+	_location = "city"
+	session_ended.emit()
+
+
+## Re-enter a free field from its stored run-state. Returns false (and does
+## nothing) when the area has no retained state — the caller then takes the
+## fresh-generation path (enter_field + set_field_sections). Unlike enter_field
+## this does NOT cancel the telepipe or clear section state — it restores them.
+func enter_free_roam_field(area_id: String) -> bool:
+	var stored: Dictionary = _free_roam_state.get(area_id, {})
+	if stored.is_empty():
+		return false
+	_section_cell_states = stored.get("section_states", {}).duplicate(true)
+	_activated_links = stored.get("links", {}).duplicate(true)
+	_session = {
+		"type": "field",
+		"area_id": area_id,
+		"difficulty": "normal",
+		"stage": 1,
+		"wave": 1,
+		"total_exp": 0,
+		"total_meseta": 0,
+		"items_collected": [],
+		"sections": stored.get("sections", []).duplicate(true),
+		"current_section": int(stored.get("current_section", 0)),
+	}
+	_location = "field"
+	session_started.emit(_session)
+	return true
+
+
+func has_free_roam_field(area_id: String) -> bool:
+	return _free_roam_state.has(area_id)
+
+
+## Areas with retained free-roam run-state (ascending), for the teleporter.
+func get_free_roam_area_ids() -> Array:
+	var keys: Array = _free_roam_state.keys()
+	keys.sort()
+	return keys
+
+
+func get_free_roam_field_sections(area_id: String) -> Array:
+	return _free_roam_state.get(area_id, {}).get("sections", [])
+
+
+## Section indices the player has reached in a stored free field (ascending) —
+## the teleporter lists each as a resume warp point.
+func get_free_roam_visited_section_indices(area_id: String) -> Array:
+	var states: Dictionary = _free_roam_state.get(area_id, {}).get("section_states", {})
+	var keys: Array = states.keys()
+	keys.sort()
+	return keys
+
+
+## Wipe all retained free-roam run-state — every field back to its initial
+## state. Called when a quest is accepted (a fresh expedition replaces free
+## roam) and at the quest's exit (report/cancel returns to a fresh Free Roam).
+func clear_free_roam_state() -> void:
+	_free_roam_state.clear()
 
 
 ## Enter a quest (hand-authored fixed layout)
@@ -345,6 +439,8 @@ func reset_all_state() -> void:
 	_quest_accepted_shown = false
 	_section_cell_states.clear()
 	_activated_links.clear()
+	# Title return ends the Free-Roam period — drop every field's retained state.
+	_free_roam_state.clear()
 	# Reset HUD/log state too — otherwise the field action log carries
 	# across into the next session and the location flag stays "field"
 	# (per Copilot review on PR #194).
@@ -367,6 +463,9 @@ func accept_quest(quest_id: String, difficulty: String) -> Dictionary:
 	TelepipeManager.cancel("accept_quest")
 	if _suspended_session.get("type", "") == "field":
 		_suspended_session.clear()
+	# Spec /states/quest-vs-field: accepting a quest MUST clear all retained
+	# free-field run-state — the quest is a fresh expedition, not a free roam.
+	clear_free_roam_state()
 	_accepted_quest = {
 		"quest_id": quest_id,
 		"area_id": quest.get("area_id", "gurhacia"),
@@ -454,6 +553,11 @@ func _end_quest_field_context() -> void:
 	_quest_objectives.clear()
 	_quest_item_counts.clear()
 	clear_section_states()
+	# Spec /states/quest-vs-field: leaving a quest returns to Free Roam with
+	# every field reset to its initial state. The store is normally already
+	# empty (accept_quest cleared it), but clear here too so report/cancel is
+	# the single guaranteed reset chokepoint.
+	clear_free_roam_state()
 	_location = "city"
 	session_ended.emit()
 

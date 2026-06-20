@@ -343,7 +343,12 @@ func _use_selected_item() -> void:
 		Inventory.remove_item("telepipe", 1)
 		_add_log("Used Telepipe! Warping to city...")
 		_choosing_item = false
-		SessionManager.suspend_session()
+		# Quest run uses the suspended-quest slot; a free field flushes to its
+		# per-area Free-Roam store (spec /states/quest-vs-field).
+		if SessionManager.get_session().get("type") == "quest":
+			SessionManager.suspend_session()
+		else:
+			SessionManager.flush_free_roam_field()
 		SceneManager.goto_scene("res://scenes/3d/city/city_market.tscn")
 		return
 

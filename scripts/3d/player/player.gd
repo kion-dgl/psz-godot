@@ -1817,9 +1817,10 @@ func _handle_attack_state(delta: float) -> void:
 	# Track animation elapsed for mid-animation combo window
 	_attack_anim_elapsed += delta
 
+	var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
+
 	# Open combo window at the rhythm point (% of animation)
 	if not _combo_window_opened and _attack_anim_length > 0:
-		var max_combo: int = int(CombatManager.get_weapon_type_config(_get_equipped_weapon_type()).get("combo_steps", 3))
 		if combo_state > 0 and combo_state < max_combo:
 			var open_at: float = _attack_anim_length * COMBO_WINDOW_OPEN_PCT
 			if _attack_anim_elapsed >= open_at:
@@ -1837,6 +1838,20 @@ func _handle_attack_state(delta: float) -> void:
 			_deactivate_attack_hitbox()
 			_combo_ring_flash(Color(1.0, 0.2, 0.2))  # Red flash on miss
 			transition_to(PlayerState.IDLE)
+	# Safety net for the FINAL combo step. The combo window only opens for steps
+	# BEFORE max (you can't chain past the last hit), so the final step has no
+	# window timer and its only exit is the animation_finished signal. A weapon
+	# whose attack animation loops — the mechgun's rapid-fire spray is imported
+	# looping — never emits animation_finished, stranding the player in ATTACKING
+	# with movement zeroed (Rozalin's mechgun root bug). Once the final step's
+	# animation has played its full length, end the attack regardless of the
+	# signal. Non-final steps already recover via the combo-window timer above.
+	elif combo_state >= max_combo and _attack_anim_length > 0 \
+			and _attack_anim_elapsed >= _attack_anim_length:
+		combo_state = 0
+		_deactivate_attack_hitbox()
+		transition_to(PlayerState.IDLE)
+		return
 
 	# Update visuals
 	_update_combo_ring(delta)
@@ -1883,22 +1898,28 @@ func _play_attack_animation(attack_num: int) -> void:
 		_play_and_track_attack(anim_name)
 
 
-## Weapon type → SFX glob pattern
+## Weapon type → attack SFX. ONE canonical PSOBB sound per type (Rozalin's
+## audit). The glob patterns previously here played a random mix of several
+## commons per swing (e.g. saber rolled 35/36/37); each weapon should play its
+## single correct sound. The filenames under assets/sfx/weapons/ are
+## hash-identical renamed copies of the PSOBB common_0NN.wav noted in the
+## comments, so this maps to the right common without adding new pack assets.
+## Unarmed (common46) and the unimplemented types (GUN_BLADE, SHIELD, BAZOOKA,
+## LASER_CANNON) are intentionally omitted — common46 needs a pack republish
+## and lands as a follow-up.
 const WEAPON_SFX := {
-	WeaponData.WeaponType.SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SWORD: "res://assets/sfx/weapons/sword_swing_*.wav",
-	WeaponData.WeaponType.DAGGERS: "res://assets/sfx/weapons/dagger_swing_*.wav",
-	WeaponData.WeaponType.CLAW: "res://assets/sfx/weapons/dagger_swing_*.wav",
-	WeaponData.WeaponType.DOUBLE_SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SPEAR: "res://assets/sfx/weapons/spear_swing_*.wav",
-	WeaponData.WeaponType.SLICER: "res://assets/sfx/weapons/slicer_swing_*.wav",
-	WeaponData.WeaponType.GUN_BLADE: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SHIELD: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.HANDGUN: "res://assets/sfx/weapons/handgun_shot_*.wav",
-	WeaponData.WeaponType.RIFLE: "res://assets/sfx/weapons/rifle_shot_*.wav",
-	WeaponData.WeaponType.MECH_GUN: "res://assets/sfx/weapons/mechgun_shot_*.wav",
-	WeaponData.WeaponType.ROD: "res://assets/sfx/weapons/rod_swing_*.wav",
-	WeaponData.WeaponType.WAND: "res://assets/sfx/weapons/rod_swing_*.wav",
+	WeaponData.WeaponType.SABER: "res://assets/sfx/weapons/saber_swing_1.wav",        # common35
+	WeaponData.WeaponType.SWORD: "res://assets/sfx/weapons/sword_swing_1.wav",        # common36
+	WeaponData.WeaponType.DAGGERS: "res://assets/sfx/weapons/dagger_swing_1.wav",     # common38
+	WeaponData.WeaponType.CLAW: "res://assets/sfx/weapons/saber_swing_1.wav",         # common35
+	WeaponData.WeaponType.DOUBLE_SABER: "res://assets/sfx/weapons/saber_swing_1.wav", # common35
+	WeaponData.WeaponType.SPEAR: "res://assets/sfx/weapons/spear_swing_1.wav",        # common37
+	WeaponData.WeaponType.SLICER: "res://assets/sfx/weapons/slicer_swing_1.wav",      # common39
+	WeaponData.WeaponType.HANDGUN: "res://assets/sfx/weapons/handgun_shot_1.wav",     # common41
+	WeaponData.WeaponType.RIFLE: "res://assets/sfx/weapons/rifle_shot_1.wav",         # common43
+	WeaponData.WeaponType.MECH_GUN: "res://assets/sfx/weapons/mechgun_shot_1.wav",    # common42
+	WeaponData.WeaponType.ROD: "res://assets/sfx/weapons/saber_swing_1.wav",          # common35
+	WeaponData.WeaponType.WAND: "res://assets/sfx/weapons/rod_swing_1.wav",           # common45
 }
 
 func _play_and_track_attack(anim_name: String) -> void:
@@ -1911,11 +1932,10 @@ func _play_and_track_attack(anim_name: String) -> void:
 	else:
 		_attack_anim_length = 0.5  # Fallback
 	_activate_attack_hitbox()
-	# Play weapon SFX
-	var wtype: int = _get_equipped_weapon_type()
-	var sfx_pattern: String = WEAPON_SFX.get(wtype, "")
-	if not sfx_pattern.is_empty():
-		SfxManager.play_random_at(sfx_pattern, global_position)
+	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).
+	var sfx_path: String = WEAPON_SFX.get(_get_equipped_weapon_type(), "")
+	if not sfx_path.is_empty():
+		SfxManager.play_at(sfx_path, global_position)
 
 
 func _ensure_combo_ring() -> void:

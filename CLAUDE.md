@@ -63,13 +63,24 @@ If the user's exact words are "commit and merge", interpret it as
 like "skip the PR" or "force-push, I'll deal with it." When in doubt,
 ask — opening a PR is cheap, undoing a direct-merge is expensive.
 
-**Do not let PRs stack up.** Land each green PR before opening the next,
-and don't accumulate a queue of open PRs. Stacked PRs fight over `VERSION`
-(every PR must bump it, so the second to merge hits a conflict + a
-re-bump), drift out of sync with `main`, and make the merge order
-load-bearing. When several PRs are unavoidably open at once, merge them
-promptly in order and `git pull` / resolve each next branch against the
-new `main` right away — don't leave them parked.
+**Keep it to one open PR at a time.** This is a one-developer (+ Claude)
+project — there's no reason to have more than one PR open at once. Land the
+current green PR before opening the next. The point isn't "never combine
+work"; it's "don't accumulate a queue." Multiple open PRs fight over
+`VERSION` (every PR must bump it, so the second to merge hits a conflict +
+a re-bump), drift out of sync with `main`, and make the merge order
+load-bearing. If two are unavoidably open, merge them promptly in order and
+`git pull` / resolve the next branch against the new `main` right away.
+
+**Testing is the unit of a PR.** Bundle freely *as long as the bundle can
+be tested and verified together*. If several changes are exercised by the
+same build/test pass (same autopilot run, same manual round on the Mac),
+putting them in one PR is good — it's one verification, one review, one
+release. A change that's "basically free" (small, low-risk) is fine to fold
+into a larger related PR rather than spinning up a second one. The line to
+watch is *verifiability*, not topical purity: only split when a change
+needs its own distinct test/verification path, or is risky enough that you
+want it isolated so a revert is clean. When unsure, ask which way to package.
 
 ## Feature flow — spec-first, Godot-implemented, human-tested
 
@@ -232,9 +243,15 @@ the sidecar proves at sub-KB cost.
 
 ## Version bumping
 
-CI also requires `VERSION` and `project.godot` `config/version` to be
-bumped on every PR. Patch bump (0.x.y → 0.x.y+1) is fine for most
-changes; minor bump for notable features.
+CI's `version-check` requires **three** sources bumped and kept in
+sync on every PR — miss any one and CI fails:
+
+1. `VERSION`
+2. `project.godot` `config/version`
+3. `export_presets.cfg` `version/name` (Android `dumpsys` reads this)
+
+All three must equal the same string. Patch bump (0.x.y → 0.x.y+1) is
+fine for most changes; minor bump for notable features.
 
 ## "Run autopilot" — what the user means
 
