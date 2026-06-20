@@ -75,21 +75,36 @@ const chart = `stateDiagram-v2
 
   <h2 id="implemented-by">Implemented by</h2>
   <ul>
-    <li><a href={`${REPO}/scripts/autoloads/session_manager.gd`}><code>scripts/autoloads/session_manager.gd</code></a> (<strong>SessionManager</strong>) — owns both layers. Today they are conflated in a single <code>_session</code> dict; the target split makes Field Context and Quest State separable.</li>
+    <li><a href={`${REPO}/scripts/autoloads/session_manager.gd`}><code>scripts/autoloads/session_manager.gd</code></a> (<strong>SessionManager</strong>) — owns both layers. A quest run uses the single <code>_suspended_session</code> slot; a free field uses the per-area <code>_free_roam_state</code> store via <code>flush_free_roam_field()</code> / <code>enter_free_roam_field()</code> / <code>clear_free_roam_state()</code>. Both restore the live <code>_session</code> when the player returns to a field.</li>
     <li><a href={`${REPO}/scripts/autoloads/telepipe_manager.gd`}><code>scripts/autoloads/telepipe_manager.gd</code></a> (<strong>TelepipeManager</strong>) — the single placed-pipe slot. Should bind its return data to the Field Context, not be cancelled on quest end.</li>
     <li><a href={`${REPO}/scripts/3d/elements/telepipe.gd`}><code>scripts/3d/elements/telepipe.gd</code></a> (<strong>Telepipe</strong>) — the placed in-world pipe element.</li>
     <li><a href={`${REPO}/scripts/3d/field/valley_field_controller.gd`}><code>scripts/3d/field/valley_field_controller.gd</code></a> (<strong>ValleyField</strong>) — rebuilds a cell from the Field Context (<code>get_field_sections()</code> / <code>get_current_section()</code>). The <code>Invalid section index</code> guard fires when the context was wrongly cleared.</li>
     <li><a href={`${REPO}/scripts/3d/elements/quest_item_pickup.gd`}><code>scripts/3d/elements/quest_item_pickup.gd</code></a> (<strong>QuestItem</strong>) — runs pickup actions. <code>complete_quest</code> (clears) vs <code>end_quest</code> (marks complete, keeps context + spawns pipe) is the action-level expression of this split.</li>
   </ul>
 
-  <h2 id="current-divergence">Current divergence (the bug)</h2>
-  <p>The code does not yet implement this split:</p>
+  <h2 id="current-divergence">Divergence history (mostly resolved)</h2>
+  <p>The original single-dict design conflated the two layers and is what these
+  issues describe:</p>
   <ul>
     <li><code>_session</code> is one dict mixing Field Context (<code>sections</code>, <code>cell_states</code>, position) and Quest State (<code>quest_id</code>, objectives, completion), tagged with a <code>"type"</code> discriminator.</li>
     <li><code>SessionManager.complete_quest()</code> → <code>return_to_city()</code> → <code>_session.clear()</code> wipes the Field Context along with the Quest State.</li>
     <li>A pickup using <code>["complete_quest", "telepipe"]</code> therefore spawns a pipe into a cleared context; a subsequent cell move hits <code>Invalid section index</code> and tears down uncleanly.</li>
   </ul>
   <p>Tracked in the architecture issue, with the crash detail in <a href="https://github.com/kion-dgl/psz-godot/issues/378">#378</a> and the free-field/quest confusion in <a href="https://github.com/kion-dgl/psz-godot/issues/359">#359</a> / <a href="https://github.com/kion-dgl/psz-godot/issues/360">#360</a>.</p>
+
+  <h3>Resolved: Field Context now survives city round-trips</h3>
+  <p>The completion-vs-exit split (#384) keeps a <em>quest's</em> Field Context alive
+  through objective completion and city round-trips, tearing it down only at the
+  quest's exit. <strong>Free fields</strong> are now decoupled from the single
+  suspended-session slot entirely: each unlocked field keeps its own run-state in a
+  per-area <strong>Free-Roam store</strong> (<code>SessionManager._free_roam_state</code>),
+  in memory, retained across city returns <em>and switching between free fields</em>, and
+  reset only on quest <strong>accept</strong>, the quest's <strong>exit</strong>
+  (report/cancel), and <strong>title return</strong>. This is the normative behavior in
+  <a href="/states/quest-vs-field">Quest vs Field</a> (Free-Roam rules). The leftover
+  divergence is cosmetic — <code>_session</code> still carries a <code>"type"</code>
+  field — but a free field's context no longer rides in <code>_suspended_session</code>
+  (which would evict one field's progress when another was entered).</p>
 </Concept>
 
 <style>

@@ -48,7 +48,7 @@ func _ready() -> void:
 	_add_npc(
 		"ShopNPC", Vector3(-10.34, 0, 27.67), 1.4207,
 		"res://assets/npcs/item_shop/item_shop.glb",
-		"Shop",
+		"Item Shop",
 		"res://scenes/2d/shops/item_shop.tscn",
 		# VRM-targeted retargeted idle. See web/scripts/bake-retarget-vrm.mjs
 		# and assets/player/animations/npc_idles_vrm.glb.

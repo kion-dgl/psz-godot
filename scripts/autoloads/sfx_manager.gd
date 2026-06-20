@@ -62,15 +62,6 @@ func play_at(path: String, position: Vector3, volume_db: float = 0.0) -> void:
 	player.play()
 
 
-## Play a random file at a 3D position.
-func play_random_at(base_path: String, position: Vector3, volume_db: float = 0.0) -> void:
-	var files := _glob_cache(base_path)
-	if files.is_empty():
-		push_warning("[SfxManager] No files found for pattern: %s" % base_path)
-		return
-	play_at(files[randi() % files.size()], position, volume_db)
-
-
 func _load(path: String) -> AudioStream:
 	if _cache.has(path):
 		return _cache[path]
@@ -80,43 +71,3 @@ func _load(path: String) -> AudioStream:
 	if stream:
 		_cache[path] = stream
 	return stream
-
-
-var _glob_results: Dictionary = {}
-
-func _glob_cache(pattern: String) -> Array:
-	if _glob_results.has(pattern):
-		return _glob_results[pattern]
-
-	var last_slash: int = pattern.rfind("/")
-	if last_slash == -1 or not pattern.contains("*"):
-		_glob_results[pattern] = []
-		return []
-
-	var dir_path: String = pattern.substr(0, last_slash)
-	var file_pattern: String = pattern.substr(last_slash + 1)
-	var star_pos: int = file_pattern.find("*")
-	var prefix: String = file_pattern.substr(0, star_pos)
-	var suffix: String = file_pattern.substr(star_pos + 1)
-
-	var files: Array = []
-	var dir := DirAccess.open(dir_path)
-	if dir:
-		dir.list_dir_begin()
-		var fname := dir.get_next()
-		while fname != "":
-			if not dir.current_is_dir() and fname.begins_with(prefix) and fname.ends_with(suffix):
-				files.append("%s/%s" % [dir_path, fname])
-			fname = dir.get_next()
-		dir.list_dir_end()
-
-	# Fallback: DirAccess can fail in exported PCK builds — try numbered files directly
-	if files.is_empty():
-		for i in range(1, 10):
-			var candidate := "%s/%s%d%s" % [dir_path, prefix, i, suffix]
-			if ResourceLoader.exists(candidate):
-				files.append(candidate)
-
-	files.sort()
-	_glob_results[pattern] = files
-	return files

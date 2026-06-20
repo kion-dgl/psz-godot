@@ -5,6 +5,19 @@ import Concept from '../../layouts/Concept.astro';
 <Concept title="Difficulty Unlock Loop" section="States">
   <p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, and <strong>MAY</strong> are used as in RFC 2119.</p>
 
+  <aside class="status-note">
+    <strong>Status — picker temporarily removed.</strong> The per-quest difficulty
+    submenu has been removed from the guild counter; every quest is accepted on
+    <strong>Normal</strong> (the implied default). Difficulty selection will return at
+    <strong>character select</strong> (PSO-GC style), choosing the difficulty for the
+    whole session rather than per quest. The unlock loop, per-difficulty enemy/reward/
+    technique scaling, and the <code>unlocked_difficulties</code> persistence described
+    below all <strong>remain in place, dormant</strong> — keyed on the difficulty passed
+    into a run, which is currently always <code>"normal"</code>. This page stays the
+    contract for when the selector returns; only its UI surface (the guild submenu) is
+    gone for now.
+  </aside>
+
   <p>PSZ's replay structure: clearing the story raises the ceiling. Three tiers — <strong>Normal</strong>, <strong>Hard</strong>, <strong>Super-Hard</strong> — gate behind story completion, per character. The per-difficulty enemy scaling, rewards (<a href="/states/story-progression">#318</a> tiers), and technique levels already exist; this is the loop that gates access to them.</p>
 
   <h2>The rule</h2>
@@ -19,16 +32,33 @@ import Concept from '../../layouts/Concept.astro';
   <h2>Persistence</h2>
   <p>Unlock state is <strong>per character</strong>, mirroring <code>completed_missions</code> exactly: <code>GameState.unlocked_difficulties</code> is the runtime list, <code>CharacterManager</code> swaps it in/out per slot, <code>SaveManager</code> persists it in the character dict (save v7). Old saves migrate by seeding <code>["normal"]</code>; a character whose <code>completed_missions</code> already contains the finale retroactively keeps <strong>Hard</strong> (the cleared difficulty is unrecoverable from pre-v7 saves, so the grant is conservative — first tier up only).</p>
 
-  <h2>Guild counter gating</h2>
-  <p>The difficulty submenu <strong>MUST</strong> show all three tiers; locked ones render muted with a <code>[LOCKED]</code> tag (the same treatment locked quests get), and the hint names the unlock condition ("Clear the story on Normal"). The player <strong>MAY</strong> highlight a locked tier to read the condition but <strong>MUST NOT</strong> be able to accept a quest on it — both the input gate and the async confirm path re-check.</p>
+  <h2>Guild counter gating <span style="font-weight:normal;font-size:0.8em">(removed for now — see status note)</span></h2>
+  <p>When the selector returns (at character select), tiers locked for the
+  character <strong>MUST</strong> be presented as locked rather than silently
+  hidden, with the unlock condition surfaced ("Clear the story on Normal"), and a
+  locked tier <strong>MUST NOT</strong> be selectable. <em>Current state:</em> the
+  guild counter has no difficulty submenu at all — accepting a quest goes straight
+  to the confirm on Normal. The historical per-quest submenu (all three tiers, the
+  <code>[LOCKED]</code> tag, input-gate + async-confirm re-checks) is removed; this
+  gating contract moves to the character-select selector when it lands.</p>
 
   <h2>Implemented by</h2>
   <ul>
     <li><code>scripts/autoloads/game_state.gd</code> — <code>unlocked_difficulties</code>, <code>is_difficulty_unlocked</code>, <code>unlock_difficulty</code>, <code>apply_quest_clear_unlock</code>, and the progression constants.</li>
     <li><code>scripts/autoloads/character_manager.gd</code> — per-slot swap + the v7 seed migration.</li>
-    <li><code>scripts/2d/guild_counter.gd</code> — the submenu gating and the turn-in unlock message.</li>
+    <li><code>scripts/2d/guild_counter.gd</code> — accepts on the implied <code>DEFAULT_DIFFICULTY</code> ("normal"); the difficulty submenu + turn-in unlock message were removed (status note). <code>SessionManager.report_quest</code> still applies <code>apply_quest_clear_unlock</code>, so the dormant unlock state keeps tracking.</li>
   </ul>
 
   <h2>Testing</h2>
-  <p>Unit (<code>test_difficulty_unlock</code>): the finale-clear rule per tier, the non-finale no-op, the always-on Normal, and the counter's locked-tier predicate. Post-build: the regression matrix's <code>dark_castle</code> phase asserts Hard is unlocked in the post-finale save snapshot.</p>
+  <p>Unit (<code>test_difficulty_unlock</code>): the finale-clear rule per tier, the non-finale no-op, and the always-on Normal — all exercising <code>GameState</code>/<code>report_quest</code> directly, so they stay valid with the picker removed. Post-build: the regression matrix's <code>dark_castle</code> phase asserts Hard is unlocked in the post-finale save snapshot.</p>
 </Concept>
+
+<style>
+  .status-note {
+    border-left: 3px solid #d9a441;
+    background: rgba(217, 164, 65, 0.08);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    border-radius: 0 4px 4px 0;
+  }
+</style>
