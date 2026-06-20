@@ -95,7 +95,7 @@ func _can_use_techs() -> bool:
 	return true
 const SYSTEM_LABELS := ["Save", "Return to Title", "Options"]
 const SYSTEM_DESCS := ["Save your progress.", "Return to the title screen.", "Adjust game settings."]
-## Equipment slots are built dynamically based on equipped armor's max_slots
+## Equipment slots are built dynamically from the equipped frame instance's slots
 const TYPE_ICONS := {"weapon": "W", "armor": "A", "shield": "S", "unit": "U", "tool": "T", "tech": "M", "material": "R", "mag": "G"}
 const TYPE_COLORS := {
 	"weapon": Color(0.8, 0.27, 0.27), "armor": Color(0.27, 0.53, 0.8),
@@ -286,20 +286,11 @@ func _equip_from_inventory(item: Dictionary) -> void:
 		return
 	var equip: Dictionary = ch.get("equipment", {})
 	var item_id: String = str(item.get("id", ""))
+	# Changing to a different frame clears every equipped unit (spec: /mechanics/inventory).
+	if slot_key == "frame" and item_id != str(equip.get("frame", "")):
+		_clear_all_units(equip)
 	equip[slot_key] = item_id
-	if slot_key == "frame":
-		var armor = ArmorRegistry.get_armor(item_id)
-		var new_max: int = armor.max_slots if armor else 0
-		for i in range(4):
-			if i >= new_max:
-				equip["unit%d" % (i + 1)] = ""
-	ch["equipment"] = equip
-	var player_node = get_tree().get_first_node_in_group("player")
-	if slot_key == "weapon" and player_node and player_node.has_method("refresh_weapon"):
-		player_node.refresh_weapon()
-	if slot_key == "mag" and player_node and player_node.has_method("refresh_mag"):
-		player_node.refresh_mag()
-	_action_message = "Equipped %s." % str(item.get("name", item_id))
+	_commit_equipment(ch, equip, slot_key, "Equipped %s." % str(item.get("name", item_id)))
 
 
 func _unequip_from_inventory(item: Dictionary) -> void:
@@ -317,15 +308,26 @@ func _unequip_from_inventory(item: Dictionary) -> void:
 		return
 	equip[slot_key] = ""
 	if slot_key == "frame":
-		for i in range(4):
-			equip["unit%d" % (i + 1)] = ""
+		_clear_all_units(equip)
+	_commit_equipment(ch, equip, slot_key, "Unequipped %s." % str(item.get("name", item_id)))
+
+
+## Empty all four unit slots (frame changes clear units — spec /mechanics/inventory).
+func _clear_all_units(equip: Dictionary) -> void:
+	for i in range(4):
+		equip["unit%d" % (i + 1)] = ""
+
+
+## Write the equipment dict back to the character, refresh the held weapon/mag
+## model when those slots changed, and set the action-bar message.
+func _commit_equipment(ch: Dictionary, equip: Dictionary, slot_key: String, message: String) -> void:
 	ch["equipment"] = equip
 	var player_node = get_tree().get_first_node_in_group("player")
 	if slot_key == "weapon" and player_node and player_node.has_method("refresh_weapon"):
 		player_node.refresh_weapon()
 	if slot_key == "mag" and player_node and player_node.has_method("refresh_mag"):
 		player_node.refresh_mag()
-	_action_message = "Unequipped %s." % str(item.get("name", item_id))
+	_action_message = message
 
 
 func _drop_inventory_item(item: Dictionary) -> void:
@@ -460,12 +462,10 @@ func _do_equip() -> void:
 		pass  # Already equipped, no-op
 	else:
 		equip[slot_key] = item_id
+		# A frame change clears every equipped unit (spec: /mechanics/inventory).
 		if slot_key == "frame":
-			var armor = ArmorRegistry.get_armor(item_id)
-			var new_max: int = armor.max_slots if armor else 0
 			for i in range(4):
-				if i >= new_max:
-					equip["unit%d" % (i + 1)] = ""
+				equip["unit%d" % (i + 1)] = ""
 
 	ch["equipment"] = equip
 
@@ -755,14 +755,18 @@ func _category_to_type(category: String) -> String:
 
 
 func _get_item_category(item_id: String) -> String:
-	var norm_id: String = item_id.replace("-", "_").replace("/", "_")
-	if WeaponRegistry.get_weapon(item_id) or WeaponRegistry.get_weapon(norm_id):
+	# Strip the per-slot instance suffix (frame#2) before the registry lookups,
+	# then normalize dash/slash — else a same-stat copy mislabels as Other/tool
+	# (the #357 bug; mirrors Inventory.get_item_category).
+	var base_id: String = Inventory.get_base_id(item_id)
+	var norm_id: String = base_id.replace("-", "_").replace("/", "_")
+	if WeaponRegistry.get_weapon(base_id) or WeaponRegistry.get_weapon(norm_id):
 		return "Weapon"
-	if ArmorRegistry.get_armor(item_id) or ArmorRegistry.get_armor(norm_id):
+	if ArmorRegistry.get_armor(base_id) or ArmorRegistry.get_armor(norm_id):
 		return "Armor"
-	if UnitRegistry.get_unit(item_id) or UnitRegistry.get_unit(norm_id):
+	if UnitRegistry.get_unit(base_id) or UnitRegistry.get_unit(norm_id):
 		return "Unit"
-	if MagManager.is_mag(item_id) or MagManager.is_mag(norm_id):
+	if MagManager.is_mag(base_id) or MagManager.is_mag(norm_id):
 		return "Mag"
 	if item_id.begins_with("disk_"):
 		return "Disk"
@@ -840,7 +844,7 @@ func _is_in_field() -> bool:
 
 
 func _get_equip_slots() -> Array:
-	## Build equipment slot list dynamically based on armor's max_slots
+	## Build equipment slot list dynamically based on the frame instance's slots
 	var ch := _get_character()
 	var equip: Dictionary = ch.get("equipment", {})
 	var slots: Array = []
@@ -851,12 +855,8 @@ func _get_equip_slots() -> Array:
 	var frame_id: String = str(equip.get("frame", ""))
 	slots.append({"label": "Frame", "key": "frame", "type": "armor", "item": frame_id})
 
-	# Unit slots — count depends on equipped armor's max_slots
-	var unit_count: int = 0
-	if not frame_id.is_empty():
-		var armor_data = ArmorRegistry.get_armor(frame_id) if ArmorRegistry.has_method("get_armor") else null
-		if armor_data and "max_slots" in armor_data:
-			unit_count = int(armor_data.max_slots)
+	# Unit slots — count is the equipped frame instance's own rolled slot count
+	var unit_count: int = EquipmentUtils.get_unit_slot_count(frame_id, ch)
 	for i in range(unit_count):
 		var key: String = "unit%d" % (i + 1)
 		slots.append({"label": "Unit %d" % (i + 1), "key": key, "type": "unit", "item": str(equip.get(key, ""))})

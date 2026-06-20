@@ -1139,17 +1139,34 @@ func _probe_frame_dup_equip() -> void:
 		print("[sanity] FAIL: frame-dup — no active character")
 		_after(STEP_DELAY, _save_and_quit)
 		return
-	# Seed three copies of one frame. add_item gives the first the bare id and
-	# the rest "#N" suffixes — the suffix is what broke item_fits_slot pre-#357.
+	# Each sub-step prints its own checkpoint/FAIL and, on failure, schedules the
+	# save+quit and returns false so the chain stops. (#357/#363 + per-instance.)
+	if not _pf_list_and_equip_nonfirst(screen, character):
+		return
+	if not _pf_frame_change_clears_units(screen, character):
+		return
+	if not _pf_per_instance_slots(screen, character):
+		return
+	_pf_cleanup_and_finish(character)
+
+
+## Index of the always-present "frame" slot in the screen's visible slot list.
+func _pf_frame_slot_idx(screen: Node) -> int:
+	return (screen._get_visible_slots() as Array).find("frame")
+
+
+## Seed 3 same-type frames, assert all list as equippable, equip a #N-suffixed
+## (non-first) instance, and assert it sticks AND contributes full DEF (#357/#363).
+func _pf_list_and_equip_nonfirst(screen: Node, character) -> bool:
+	# add_item gives the first copy the bare id and the rest "#N" suffixes — the
+	# suffix is what broke item_fits_slot pre-#357.
 	for _i in range(3):
 		Inventory.add_item("armor", 1)
-	# Open the frame slot's equippable list through the screen itself.
-	var slots: Array = screen._get_visible_slots()
-	var frame_idx: int = slots.find("frame")
+	var frame_idx: int = _pf_frame_slot_idx(screen)
 	if frame_idx < 0:
 		print("[sanity] FAIL: frame-dup — no frame slot visible")
 		_after(STEP_DELAY, _save_and_quit)
-		return
+		return false
 	screen._selected_slot = frame_idx
 	screen._open_item_selection()
 	# Count the listed frame instances + locate a #N-suffixed (non-first) one.
@@ -1166,24 +1183,96 @@ func _probe_frame_dup_equip() -> void:
 		print("[sanity] FAIL: frame-dup — screen listed %d/3 frame copies, suffixed_idx=%d (the #357 regression)" % [
 			listed, suffixed_idx])
 		_after(STEP_DELAY, _save_and_quit)
-		return
+		return false
 	print("[sanity] checkpoint: frame-dup all 3 copies listed as equippable")
 	# Equip the non-first instance through the screen and assert it sticks.
 	var target_id: String = str(screen._equippable_items[suffixed_idx].get("id", ""))
 	screen._selected_item = suffixed_idx
 	screen._equip_selected_item()
 	var equipped_frame: String = str(character.get("equipment", {}).get("frame", ""))
-	if equipped_frame == target_id:
-		print("[sanity] checkpoint: frame-dup equipped non-first instance ('%s')" % target_id)
-	else:
+	if equipped_frame != target_id:
 		print("[sanity] FAIL: frame-dup — non-first frame did not equip (want '%s', got '%s')" % [
 			target_id, equipped_frame])
 		_after(STEP_DELAY, _save_and_quit)
-		return
-	# Leave a clean slate for storage (Inc 5): unequip + drop the seeded frames.
-	character["equipment"]["frame"] = ""
+		return false
+	print("[sanity] checkpoint: frame-dup equipped non-first instance ('%s')" % target_id)
+	# Rule 1 (/mechanics/inventory): a suffixed instance is a full, equal item —
+	# it must contribute its base type's DEF through the live screen, not read as
+	# 0 (the #363 raw-suffixed-id registry bug, distinct from "can't equip it").
+	var dup_def: int = int(screen._calc_equip_bonuses(character["equipment"], character).get("def", 0))
+	if dup_def <= 0:
+		print("[sanity] FAIL: frame-dup — suffixed frame gave 0 DEF (raw-suffixed-id lookup, #363)")
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: frame-dup suffixed frame full stats (def=%d)" % dup_def)
+	return true
+
+
+## Rule 2 (/mechanics/inventory): equip a unit, swap to a different frame instance
+## through the screen, and assert every unit slot comes back empty.
+func _pf_frame_change_clears_units(screen: Node, character) -> bool:
+	Inventory.add_item("ace_guard", 1)
+	character["equipment"]["unit1"] = "ace_guard"
+	screen._selected_slot = _pf_frame_slot_idx(screen)
+	screen._open_item_selection()
+	var swap_idx := -1
+	for i in range(screen._equippable_items.size()):
+		var r: Dictionary = screen._equippable_items[i]
+		if Inventory.get_base_id(str(r.get("id", ""))) == "armor" and not bool(r.get("equipped", false)):
+			swap_idx = i
+			break
+	if swap_idx < 0:
+		print("[sanity] FAIL: frame-change — no second frame instance to swap to")
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	screen._selected_item = swap_idx
+	screen._equip_selected_item()
+	var units_after: Array = []
+	for s in ["unit1", "unit2", "unit3", "unit4"]:
+		if not str(character["equipment"].get(s, "")).is_empty():
+			units_after.append(s)
+	if not units_after.is_empty():
+		print("[sanity] FAIL: frame-change — units survived a frame swap: %s" % str(units_after))
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: frame-change cleared all units")
+	return true
+
+
+## Per-instance slots (/mechanics/inventory): record a 1-slot roll on one instance
+## and assert the screen exposes exactly that count, not the base type's fallback.
+func _pf_per_instance_slots(screen: Node, character) -> bool:
+	var one_slot_id := ""
 	for iid in Inventory._items.keys():
 		if Inventory.get_base_id(iid) == "armor":
+			one_slot_id = str(iid)
+			break
+	if one_slot_id.is_empty():
+		return true  # nothing to assert — earlier steps already proved the path
+	if not character.has("armor_slots"):
+		character["armor_slots"] = {}
+	character["armor_slots"][one_slot_id] = 1
+	character["equipment"]["frame"] = one_slot_id
+	var vis: Array = screen._get_visible_slots()
+	var unit_slots := 0
+	for s in vis:
+		if str(s).begins_with("unit"):
+			unit_slots += 1
+	if unit_slots != 1 or not vis.has("unit1") or vis.has("unit2"):
+		print("[sanity] FAIL: armor-slots — 1-slot instance exposed %d unit slots: %s" % [unit_slots, str(vis)])
+		_after(STEP_DELAY, _save_and_quit)
+		return false
+	print("[sanity] checkpoint: armor-slots per-instance count = %d" % unit_slots)
+	return true
+
+
+## Leave a clean slate for storage (Inc 5): unequip + drop the seeded gear.
+func _pf_cleanup_and_finish(character) -> void:
+	character["equipment"]["frame"] = ""
+	for s in ["unit1", "unit2", "unit3", "unit4"]:
+		character["equipment"][s] = ""
+	for iid in Inventory._items.keys():
+		if Inventory.get_base_id(iid) == "armor" or Inventory.get_base_id(iid) == "ace_guard":
 			Inventory.remove_item(iid, Inventory.get_item_count(iid))
 	_finish_equipment()
 

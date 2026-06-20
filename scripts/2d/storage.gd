@@ -430,7 +430,7 @@ func _refresh_detail() -> void:
 		vbox.add_child(PszStyle.detail_label(armor_data.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
 		vbox.add_child(PszStyle.detail_label("DEF: %d-%d" % [armor_data.defense_base, armor_data.defense_max]))
 		vbox.add_child(PszStyle.detail_label("EVA: %d-%d" % [armor_data.evasion_base, armor_data.evasion_max]))
-		vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % armor_data.max_slots))
+		vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % EquipmentUtils.get_unit_slot_count(item_id, CharacterManager.get_active_character())))
 	elif unit_data:
 		vbox.add_child(PszStyle.detail_label("*".repeat(int(unit_data.rarity)), PszStyle.TEXT_HIGHLIGHT))
 		vbox.add_child(PszStyle.detail_label("Effect: %s" % unit_data.effect, PszStyle.TEXT_SUCCESS))

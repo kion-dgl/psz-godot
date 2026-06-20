@@ -124,9 +124,8 @@ func _generate_inventory() -> void:
 			continue
 		var slots: int = _roll_armor_slots()
 		var price: int = _armor_price(a)
-		var slot_label: String = " [%d slot%s]" % [slots, "" if slots == 1 else "s"]
 		_armors.append({
-			"id": a.id, "name": a.name + slot_label, "category": "armor",
+			"id": a.id, "name": a.name, "category": "armor",
 			"cost": price, "sell_price": int(price * 0.25),
 			"rolled_slots": slots,
 		})
@@ -363,13 +362,21 @@ func _buy_selected() -> void:
 
 	character["meseta"] = int(character["meseta"]) - cost
 	GameState.meseta = int(character["meseta"])
-	Inventory.add_item(item_id, 1)
 
-	# Store rolled slot count for armor purchases
-	if cat == "armor" and item.has("rolled_slots"):
+	# Armor mints its own instance id so the rolled per-instance unit-slot count
+	# can be recorded against *this* copy (two frames of the same base type may
+	# differ). Keying by instance id (not base id) is what makes per-instance
+	# slots work — the old base-id key collided across copies.
+	if cat == "armor":
+		var inst_id: String = Inventory.add_armor(item_id)
+		if inst_id.is_empty():
+			hint_label.text = "Inventory full!"
+			return
 		if not character.has("armor_slots"):
 			character["armor_slots"] = {}
-		character["armor_slots"][item_id] = int(item["rolled_slots"])
+		character["armor_slots"][inst_id] = int(item.get("rolled_slots", 0))
+	else:
+		Inventory.add_item(item_id, 1)
 
 	hint_label.text = "Bought %s for %d M!" % [str(item.get("name", "???")), cost]
 	_generate_sell_list()
@@ -510,7 +517,7 @@ func _refresh_detail() -> void:
 	vbox.add_theme_constant_override("separation", 4)
 
 	vbox.add_child(PszStyle.detail_label(str(item.get("name", "???")), PszStyle.TITLE_BG))
-	_append_gear_stats(vbox, cat, item_id)
+	_append_gear_stats(vbox, cat, item_id, int(item.get("rolled_slots", -1)))
 
 	# Price info
 	vbox.add_child(PszStyle.detail_label(""))
@@ -540,7 +547,7 @@ func _refresh_detail() -> void:
 
 ## Append the gear stat lines (weapon / armor / unit) to the detail panel.
 ## Extracted from _refresh_detail to keep it under the complexity bound.
-func _append_gear_stats(vbox: VBoxContainer, cat: String, item_id: String) -> void:
+func _append_gear_stats(vbox: VBoxContainer, cat: String, item_id: String, rolled_slots: int = -1) -> void:
 	if cat == "weapon":
 		var w = WeaponRegistry.get_weapon(item_id)
 		if w:
@@ -557,7 +564,10 @@ func _append_gear_stats(vbox: VBoxContainer, cat: String, item_id: String) -> vo
 			vbox.add_child(PszStyle.detail_label("Rarity: %s" % a.get_rarity_string(), PszStyle.TEXT_HIGHLIGHT))
 			vbox.add_child(PszStyle.detail_label("DEF: %d-%d" % [a.defense_base, a.defense_max]))
 			vbox.add_child(PszStyle.detail_label("EVA: %d-%d" % [a.evasion_base, a.evasion_max]))
-			vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % a.max_slots))
+			# Per-instance rolled count for this offer (not the resource max_slots,
+			# which is only the roll generator/cap). See EquipmentUtils.get_unit_slot_count.
+			var shown_slots: int = rolled_slots if rolled_slots >= 0 else a.max_slots
+			vbox.add_child(PszStyle.detail_label("Unit Slots: %d" % shown_slots))
 			# Level requirement removed — will switch to stat requirements later
 			var resists: Array = []
 			if a.resist_fire > 0: resists.append("Fire %d" % a.resist_fire)

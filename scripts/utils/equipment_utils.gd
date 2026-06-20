@@ -29,3 +29,21 @@ static func item_fits_slot(item_id: String, slot_key: String) -> bool:
 		"mag":
 			return MagManager.is_mag(base_id)
 	return false
+
+
+## How many unit slots an armor *instance* provides.
+## Unit slots are a per-instance rolled property (0–4): the count is recorded in
+## `character["armor_slots"]` keyed by the full instance id (e.g. "frame#2").
+## Instances with no recorded roll (starter gear, legacy saves, non-shop sources)
+## fall back to the armor resource's `max_slots`. See spec /mechanics/inventory.
+static func get_unit_slot_count(instance_id: String, character) -> int:
+	if instance_id.is_empty():
+		return 0
+	if character != null:
+		var armor_slots: Dictionary = character.get("armor_slots", {})
+		if armor_slots.has(instance_id):
+			return clampi(int(armor_slots[instance_id]), 0, 4)
+	var armor = ArmorRegistry.get_armor(Inventory.get_base_id(instance_id))
+	if armor == null:
+		return 0
+	return clampi(int(armor.max_slots), 0, 4)

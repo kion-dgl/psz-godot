@@ -17,7 +17,7 @@ func save_game() -> void:
 	CharacterManager.sync_inventory_to_active()
 
 	var save_data := {
-		"version": 7,
+		"version": 8,
 		"characters": CharacterManager.get_save_data(),
 		"shared_storage": GameState.shared_storage.duplicate(),
 		"stored_meseta": GameState.stored_meseta,
@@ -90,6 +90,12 @@ func load_game() -> void:
 	# on, so we grant conservatively — only the first tier up).
 	if version < 7:
 		CharacterManager.migrate_seed_unlocked_difficulties()
+
+	# Migrate v7: seed per-instance armor_slots dict for existing characters.
+	# Legacy armor instances have no recorded roll and fall back to the
+	# resource max_slots (EquipmentUtils.get_unit_slot_count) — no back-fill.
+	if version < 8:
+		CharacterManager.migrate_seed_armor_slots()
 
 	# Load shared storage
 	GameState.shared_storage = save_data.get("shared_storage", []).duplicate()
