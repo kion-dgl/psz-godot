@@ -3364,7 +3364,9 @@ func test_weapon_attack_sfx_mapping() -> void:
 		assert_true(path.ends_with(expected[wtype]),
 			"weapon type %d → %s (got '%s')" % [wtype, expected[wtype], path])
 		assert_true(not path.contains("*"), "weapon type %d sound is a single file, not a glob" % wtype)
-		assert_true(ResourceLoader.exists(path), "weapon SFX exists in pack: %s" % path)
+		# NB: file existence is check-asset-refs' job (greps res:// refs against
+		# asset_tree.txt) — CI doesn't check out pack assets, so we can't assert
+		# ResourceLoader.exists() here.
 	print("")
 
 

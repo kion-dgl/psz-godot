@@ -167,10 +167,6 @@ func get_free_roam_visited_section_indices(area_id: String) -> Array:
 	return keys
 
 
-func get_free_roam_section_state(area_id: String, section_idx: int) -> Dictionary:
-	return _free_roam_state.get(area_id, {}).get("section_states", {}).get(section_idx, {})
-
-
 ## Wipe all retained free-roam run-state — every field back to its initial
 ## state. Called when a quest is accepted (a fresh expedition replaces free
 ## roam) and at the quest's exit (report/cancel returns to a fresh Free Roam).

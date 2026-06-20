@@ -243,9 +243,15 @@ the sidecar proves at sub-KB cost.
 
 ## Version bumping
 
-CI also requires `VERSION` and `project.godot` `config/version` to be
-bumped on every PR. Patch bump (0.x.y → 0.x.y+1) is fine for most
-changes; minor bump for notable features.
+CI's `version-check` requires **three** sources bumped and kept in
+sync on every PR — miss any one and CI fails:
+
+1. `VERSION`
+2. `project.godot` `config/version`
+3. `export_presets.cfg` `version/name` (Android `dumpsys` reads this)
+
+All three must equal the same string. Patch bump (0.x.y → 0.x.y+1) is
+fine for most changes; minor bump for notable features.
 
 ## "Run autopilot" — what the user means
 

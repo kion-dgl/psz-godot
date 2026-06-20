@@ -210,34 +210,9 @@ func _warp_to_field() -> void:
 	var area: Dictionary = _visible_areas[_selected_area]
 	var area_id: String = str(area["id"])
 
-	# Section-selector path: pick which sub-area of the suspended session
-	# to drop back into. resume_session restores the session, then
-	# get_section_state hydrates the cell_states / keys / gates for the
-	# chosen section so cleared rooms stay cleared. Player always lands
-	# at the section's own start_pos — they walk from there to wherever
-	# their telepipe is, or to the next gate, etc.
 	if _section_select_mode:
-		var section_idx: int = int(area.get("section_idx", 0))
-		var sections: Array = SessionManager.get_suspended_field_sections()
-		if section_idx >= sections.size():
-			return
-		var section: Dictionary = sections[section_idx]
-		# Move the suspended session's current_section pointer to the
-		# selected one BEFORE resume_session, so the field controller's
-		# get_current_section() returns what the player picked.
-		SessionManager._suspended_session["current_section"] = section_idx
-		SessionManager.resume_session()
-		var section_state: Dictionary = SessionManager.get_section_state(section_idx)
-		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-			"current_cell_pos": str(section.get("start_pos", "")),
-			"spawn_edge": "",
-			"keys_collected": section_state.get("keys_collected", {}),
-			"gates_opened": section_state.get("gates_opened", {}),
-			"visited_cells": section_state.get("visited_cells", {}),
-			"cell_states": section_state.get("cell_states", {}),
-		})
+		_resume_suspended_section(area)
 		return
-
 	if _quest_mode:
 		SessionManager.start_accepted_quest()
 		_enter_3d_field()
@@ -251,44 +226,64 @@ func _warp_to_field() -> void:
 	if TelepipeManager.is_active() and str(TelepipeManager.get_state().get("area_id", "")) != area_id:
 		TelepipeManager.cancel("area_changed")
 
-	# Resume a retained free field at the chosen section, restoring its cleared
-	# rooms / drops / gates from the per-area Free-Roam store.
 	if bool(area.get("resume", false)) and SessionManager.has_free_roam_field(area_id):
-		SessionManager.enter_free_roam_field(area_id)
-		var section_idx: int = int(area.get("section_idx", 0))
-		SessionManager.set_current_section(section_idx)
-		var sections_r: Array = SessionManager.get_field_sections()
-		var section: Dictionary = sections_r[section_idx] if section_idx < sections_r.size() else sections_r[0]
-		var section_state: Dictionary = SessionManager.get_section_state(section_idx)
-		SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-			"current_cell_pos": str(section.get("start_pos", "")),
-			"spawn_edge": "",
-			"keys_collected": section_state.get("keys_collected", {}),
-			"gates_opened": section_state.get("gates_opened", {}),
-			"visited_cells": section_state.get("visited_cells", {}),
-			"cell_states": section_state.get("cell_states", {}),
-		})
+		_resume_free_roam_field(area_id, int(area.get("section_idx", 0)))
+	else:
+		_enter_fresh_field(area_id)
+
+
+## Section-selector: drop back into a chosen sub-area of the SUSPENDED quest
+## session. resume_session restores the run; the player always lands at the
+## section's own start_pos and walks from there. Cleared rooms persist via the
+## hydrated section state.
+func _resume_suspended_section(area: Dictionary) -> void:
+	var section_idx: int = int(area.get("section_idx", 0))
+	var sections: Array = SessionManager.get_suspended_field_sections()
+	if section_idx >= sections.size():
 		return
+	# Move the suspended pointer to the picked section BEFORE resume so the
+	# field controller's get_current_section() returns what the player chose.
+	SessionManager._suspended_session["current_section"] = section_idx
+	SessionManager.resume_session()
+	_goto_field(sections[section_idx], SessionManager.get_section_state(section_idx))
 
-	# Fresh expedition into this field.
+
+## Resume a retained FREE field at the chosen section from the per-area store.
+func _resume_free_roam_field(area_id: String, section_idx: int) -> void:
+	SessionManager.enter_free_roam_field(area_id)
+	SessionManager.set_current_section(section_idx)
+	var sections: Array = SessionManager.get_field_sections()
+	var section: Dictionary = sections[section_idx] if section_idx < sections.size() else sections[0]
+	_goto_field(section, SessionManager.get_section_state(section_idx))
+
+
+## Start a fresh expedition into a free field (hand-authored quest or generated).
+func _enter_fresh_field(area_id: String) -> void:
 	SessionManager.enter_field(area_id, "normal")
-
-	# Try hand-authored field quest first, fall back to procedural generation
 	var quest := QuestLoader.pick_field_quest(area_id)
 	var sections: Array
 	if not quest.is_empty() and quest.has("sections"):
 		sections = quest["sections"]
 	else:
-		var gen := GridGenerator.new()
-		var field: Dictionary = gen.generate_field("normal", area_id)
-		sections = field["sections"]
-
+		sections = GridGenerator.new().generate_field("normal", area_id)["sections"]
 	SessionManager.set_field_sections(sections)
-	var first_section: Dictionary = sections[0]
 	SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
-		"current_cell_pos": str(first_section["start_pos"]),
+		"current_cell_pos": str(sections[0]["start_pos"]),
 		"spawn_edge": "",
 		"keys_collected": {},
+	})
+
+
+## Load the field scene at a section's start, hydrating its saved cell state
+## (keys / gates / visited / cell_states) so cleared rooms stay cleared.
+func _goto_field(section: Dictionary, section_state: Dictionary) -> void:
+	SceneManager.goto_scene("res://scenes/3d/field/valley_field.tscn", {
+		"current_cell_pos": str(section.get("start_pos", "")),
+		"spawn_edge": "",
+		"keys_collected": section_state.get("keys_collected", {}),
+		"gates_opened": section_state.get("gates_opened", {}),
+		"visited_cells": section_state.get("visited_cells", {}),
+		"cell_states": section_state.get("cell_states", {}),
 	})
 
 
