@@ -150,3 +150,6 @@ web/public/assets/player
 
 # bun deps for the quest solver
 scripts/tools/quest_solver/node_modules/
+
+# macOS
+.DS_Store
