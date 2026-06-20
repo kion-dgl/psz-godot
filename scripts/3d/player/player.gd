@@ -1898,22 +1898,28 @@ func _play_attack_animation(attack_num: int) -> void:
 		_play_and_track_attack(anim_name)
 
 
-## Weapon type → SFX glob pattern
+## Weapon type → attack SFX. ONE canonical PSOBB sound per type (Rozalin's
+## audit). The glob patterns previously here played a random mix of several
+## commons per swing (e.g. saber rolled 35/36/37); each weapon should play its
+## single correct sound. The filenames under assets/sfx/weapons/ are
+## hash-identical renamed copies of the PSOBB common_0NN.wav noted in the
+## comments, so this maps to the right common without adding new pack assets.
+## Unarmed (common46) and the unimplemented types (GUN_BLADE, SHIELD, BAZOOKA,
+## LASER_CANNON) are intentionally omitted — common46 needs a pack republish
+## and lands as a follow-up.
 const WEAPON_SFX := {
-	WeaponData.WeaponType.SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SWORD: "res://assets/sfx/weapons/sword_swing_*.wav",
-	WeaponData.WeaponType.DAGGERS: "res://assets/sfx/weapons/dagger_swing_*.wav",
-	WeaponData.WeaponType.CLAW: "res://assets/sfx/weapons/dagger_swing_*.wav",
-	WeaponData.WeaponType.DOUBLE_SABER: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SPEAR: "res://assets/sfx/weapons/spear_swing_*.wav",
-	WeaponData.WeaponType.SLICER: "res://assets/sfx/weapons/slicer_swing_*.wav",
-	WeaponData.WeaponType.GUN_BLADE: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.SHIELD: "res://assets/sfx/weapons/saber_swing_*.wav",
-	WeaponData.WeaponType.HANDGUN: "res://assets/sfx/weapons/handgun_shot_*.wav",
-	WeaponData.WeaponType.RIFLE: "res://assets/sfx/weapons/rifle_shot_*.wav",
-	WeaponData.WeaponType.MECH_GUN: "res://assets/sfx/weapons/mechgun_shot_*.wav",
-	WeaponData.WeaponType.ROD: "res://assets/sfx/weapons/rod_swing_*.wav",
-	WeaponData.WeaponType.WAND: "res://assets/sfx/weapons/rod_swing_*.wav",
+	WeaponData.WeaponType.SABER: "res://assets/sfx/weapons/saber_swing_1.wav",        # common35
+	WeaponData.WeaponType.SWORD: "res://assets/sfx/weapons/sword_swing_1.wav",        # common36
+	WeaponData.WeaponType.DAGGERS: "res://assets/sfx/weapons/dagger_swing_1.wav",     # common38
+	WeaponData.WeaponType.CLAW: "res://assets/sfx/weapons/saber_swing_1.wav",         # common35
+	WeaponData.WeaponType.DOUBLE_SABER: "res://assets/sfx/weapons/saber_swing_1.wav", # common35
+	WeaponData.WeaponType.SPEAR: "res://assets/sfx/weapons/spear_swing_1.wav",        # common37
+	WeaponData.WeaponType.SLICER: "res://assets/sfx/weapons/slicer_swing_1.wav",      # common39
+	WeaponData.WeaponType.HANDGUN: "res://assets/sfx/weapons/handgun_shot_1.wav",     # common41
+	WeaponData.WeaponType.RIFLE: "res://assets/sfx/weapons/rifle_shot_1.wav",         # common43
+	WeaponData.WeaponType.MECH_GUN: "res://assets/sfx/weapons/mechgun_shot_1.wav",    # common42
+	WeaponData.WeaponType.ROD: "res://assets/sfx/weapons/saber_swing_1.wav",          # common35
+	WeaponData.WeaponType.WAND: "res://assets/sfx/weapons/rod_swing_1.wav",           # common45
 }
 
 func _play_and_track_attack(anim_name: String) -> void:
@@ -1926,11 +1932,10 @@ func _play_and_track_attack(anim_name: String) -> void:
 	else:
 		_attack_anim_length = 0.5  # Fallback
 	_activate_attack_hitbox()
-	# Play weapon SFX
-	var wtype: int = _get_equipped_weapon_type()
-	var sfx_pattern: String = WEAPON_SFX.get(wtype, "")
-	if not sfx_pattern.is_empty():
-		SfxManager.play_random_at(sfx_pattern, global_position)
+	# Play weapon SFX — one canonical sound per weapon type (see WEAPON_SFX).
+	var sfx_path: String = WEAPON_SFX.get(_get_equipped_weapon_type(), "")
+	if not sfx_path.is_empty():
+		SfxManager.play_at(sfx_path, global_position)
 
 
 func _ensure_combo_ring() -> void:

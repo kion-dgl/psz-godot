@@ -78,6 +78,7 @@ func _run_tests_core() -> void:
 	test_field_quest_decouple()
 	test_charge_drop_paths()
 	test_mechgun_final_step_no_root()
+	test_weapon_attack_sfx_mapping()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -3332,6 +3333,38 @@ func test_mechgun_final_step_no_root() -> void:
 		"non-final step stays attackable while its combo window is open")
 
 	pl.free()
+	print("")
+
+
+# ── Weapon attack SFX: one canonical sound per type (Rozalin's audit) ──
+# Each weapon MUST map to a single attack sound (no random multi-common glob),
+# and the file MUST exist in the pack. Pins the common-number mapping so it
+# can't silently drift back to globs.
+func test_weapon_attack_sfx_mapping() -> void:
+	print("── Weapon attack SFX mapping (single canonical sound per type) ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	const W := WeaponData.WeaponType
+	var sfx: Dictionary = PlayerScript.WEAPON_SFX
+	var expected := {
+		W.SABER: "saber_swing_1.wav",        # common35
+		W.SWORD: "sword_swing_1.wav",         # common36
+		W.DAGGERS: "dagger_swing_1.wav",      # common38
+		W.CLAW: "saber_swing_1.wav",          # common35
+		W.DOUBLE_SABER: "saber_swing_1.wav",  # common35
+		W.SPEAR: "spear_swing_1.wav",         # common37
+		W.SLICER: "slicer_swing_1.wav",       # common39
+		W.HANDGUN: "handgun_shot_1.wav",      # common41
+		W.RIFLE: "rifle_shot_1.wav",          # common43
+		W.MECH_GUN: "mechgun_shot_1.wav",     # common42
+		W.ROD: "saber_swing_1.wav",           # common35
+		W.WAND: "rod_swing_1.wav",            # common45
+	}
+	for wtype in expected:
+		var path: String = str(sfx.get(wtype, ""))
+		assert_true(path.ends_with(expected[wtype]),
+			"weapon type %d → %s (got '%s')" % [wtype, expected[wtype], path])
+		assert_true(not path.contains("*"), "weapon type %d sound is a single file, not a glob" % wtype)
+		assert_true(ResourceLoader.exists(path), "weapon SFX exists in pack: %s" % path)
 	print("")
 
 
