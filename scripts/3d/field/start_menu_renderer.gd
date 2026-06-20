@@ -135,6 +135,8 @@ func _draw_info_panel(c: Control, font: Font) -> void:
 	var armor_def: int = int(armor.defense_base) if armor else 0
 	var armor_eva: int = int(armor.evasion_base) if armor else 0
 	var frame_name: String = armor.name if armor else "--"
+	# Per-instance rolled slot count of the equipped frame (not resource max_slots).
+	var frame_slots: int = EquipmentUtils.get_unit_slot_count(frame_id, ch)
 
 	# Material bonuses
 	var mat_bonuses: Dictionary = ch.get("material_bonuses", {})
@@ -151,7 +153,7 @@ func _draw_info_panel(c: Control, font: Font) -> void:
 	var pages := [
 		[["Lv", str(level)], ["Type", class_data.name if class_data else class_id], ["Exp Pts", str(int(ch.get("experience", 0)))], ["To Next Lv", to_next], ["Meseta", str(int(ch.get("meseta", 0)))]],
 		[["ATP", str(base_atk + weapon_atk + int(mat_bonuses.get("attack", 0)))], ["ATA", str(base_acc + weapon_acc + int(mat_bonuses.get("accuracy", 0)))], ["Weapon", weapon_name], ["Grind", "+%d" % weapon_grind if weapon_grind > 0 else "--"], ["Special", special_str]],
-		[["DFP", str(base_def + armor_def + int(mat_bonuses.get("defense", 0)))], ["EVP", str(base_eva + armor_eva + int(mat_bonuses.get("evasion", 0)))], ["Frame", frame_name], ["Slots", str(armor.max_slots) if armor else "0"], ["Units", "%d / %d" % [_c._count_equipped_units(equip), armor.max_slots if armor else 0]]],
+		[["DFP", str(base_def + armor_def + int(mat_bonuses.get("defense", 0)))], ["EVP", str(base_eva + armor_eva + int(mat_bonuses.get("evasion", 0)))], ["Frame", frame_name], ["Slots", str(frame_slots)], ["Units", "%d / %d" % [_c._count_equipped_units(equip), frame_slots]]],
 		[["MST", str(base_mst + int(mat_bonuses.get("technique", 0)))], ["HP", "%d / %d" % [int(ch.get("hp", base_hp)), base_hp + int(mat_bonuses.get("hp", 0))]], ["PP", "%d / %d" % [int(ch.get("pp", base_pp)), base_pp + int(mat_bonuses.get("pp", 0))]]],
 	]
 	var rows: Array = pages[_c._info_page] if _c._info_page < pages.size() else []
@@ -266,7 +268,8 @@ func _draw_items(c: Control, font: Font) -> void:
 				desc += "\nElement: %s" % weapon.element
 		var armor = ArmorRegistry.get_armor(base_id)
 		if armor:
-			desc += "\nDEF: %d  EVA: %d\nSlots: %d" % [armor.defense_base, armor.evasion_base, armor.max_slots]
+			var slots: int = EquipmentUtils.get_unit_slot_count(item_id, CharacterManager.get_active_character())
+			desc += "\nDEF: %d  EVA: %d\nSlots: %d" % [armor.defense_base, armor.evasion_base, slots]
 		var consumable = ConsumableRegistry.get_consumable(item_id)
 		if consumable and not str(consumable.details).is_empty():
 			desc += "\n%s" % str(consumable.details)
@@ -361,7 +364,8 @@ func _draw_equip(c: Control, font: Font) -> void:
 					if not wdata.element.is_empty() and wdata.element != "None":
 						desc += "\nElement: %s" % wdata.element
 				elif adata:
-					desc += "\nDEF: %d  EVA: %d\nSlots: %d" % [adata.defense_base, adata.evasion_base, adata.max_slots]
+					var aslots: int = EquipmentUtils.get_unit_slot_count(item_id, CharacterManager.get_active_character())
+					desc += "\nDEF: %d  EVA: %d\nSlots: %d" % [adata.defense_base, adata.evasion_base, aslots]
 			else:
 				desc = "Empty slot\n\n[Enter] Equip"
 		_draw_bottom_desc(c, font, desc)

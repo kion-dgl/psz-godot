@@ -1,6 +1,6 @@
 extends Control
 ## Equipment screen — view and manage equipped items (weapon, frame, units, mag).
-## Unit slots are dynamic based on equipped armor's max_slots.
+## Unit slots are dynamic based on the equipped frame instance's slot count.
 
 const ALL_SLOTS := ["weapon", "frame", "mag", "unit1", "unit2", "unit3", "unit4"]
 const ALL_SLOT_NAMES := ["Weapon", "Frame", "Mag", "Unit 1", "Unit 2", "Unit 3", "Unit 4"]
@@ -28,7 +28,7 @@ func _ready() -> void:
 	_refresh_display()
 
 
-## Compute visible slots based on equipped armor's max_slots.
+## Compute visible slots based on the equipped frame instance's unit-slot count.
 func _get_visible_slots() -> Array:
 	var slots: Array = ["weapon", "frame", "mag"]
 	var character = CharacterManager.get_active_character()
@@ -37,10 +37,8 @@ func _get_visible_slots() -> Array:
 	var frame_id: String = str(character.get("equipment", {}).get("frame", ""))
 	if frame_id.is_empty():
 		return slots
-	var armor = ArmorRegistry.get_armor(Inventory.get_base_id(frame_id))
-	if armor == null:
-		return slots
-	for i in range(armor.max_slots):
+	var unit_slots: int = EquipmentUtils.get_unit_slot_count(frame_id, character)
+	for i in range(unit_slots):
 		slots.append("unit%d" % (i + 1))
 	return slots
 
@@ -145,10 +143,11 @@ func _open_item_selection() -> void:
 	_refresh_display()
 
 
-## Clear unit slots beyond max_slots of new armor (or all if no armor).
-func _auto_unequip_excess_units(equipment: Dictionary, new_max_slots: int) -> void:
+## Clear unit slots at/after `keep_slots` (callers pass 0 to clear every unit on
+## a frame change — see the equipping-gear contract, spec /mechanics/inventory).
+func _auto_unequip_excess_units(equipment: Dictionary, keep_slots: int) -> void:
 	for i in range(4):
-		if i >= new_max_slots:
+		if i >= keep_slots:
 			equipment["unit%d" % (i + 1)] = ""
 
 
@@ -317,7 +316,8 @@ func _get_item_brief(item_id: String) -> String:
 		return "ATK %d" % w.attack_base
 	var a = ArmorRegistry.get_armor(base_id)
 	if a:
-		return "DEF %d  Slots:%d" % [a.defense_base, a.max_slots]
+		var character = CharacterManager.get_active_character()
+		return "DEF %d  Slots:%d" % [a.defense_base, EquipmentUtils.get_unit_slot_count(item_id, character)]
 	var u = UnitRegistry.get_unit(base_id)
 	if u:
 		return u.effect

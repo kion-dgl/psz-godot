@@ -69,6 +69,8 @@ func _run_tests_core() -> void:
 	test_dup_equipment()
 	test_equipment_screen_dup_frame()
 	test_frame_change_clears_units()
+	test_armor_slots_per_instance()
+	test_shop_armor_purchase_records_slots()
 	test_telepipe_city_visual_cleared()
 	test_freefield_quest_unblock()
 	test_field_quest_decouple()
@@ -2920,7 +2922,7 @@ func test_equipment_screen_dup_frame() -> void:
 		"suffixed frame contributes its base type's full DEF (35), not 0")
 	var vis: Array = screen._get_visible_slots()
 	assert_true(vis.has("unit1") and vis.has("unit4"),
-		"suffixed frame exposes its 4 unit slots (max_slots resolves through the suffix)")
+		"suffixed frame exposes 4 unit slots (no shop roll → resolver falls back to the resource max_slots=4)")
 
 	screen.free()
 	Inventory.clear_inventory()
@@ -2979,6 +2981,113 @@ func test_frame_change_clears_units() -> void:
 	screen.free()
 	Inventory.clear_inventory()
 	character["equipment"] = {"weapon": "", "frame": "", "mag": ""}
+	print("")
+
+
+# ── Spec /mechanics/inventory: unit slots are a per-instance rolled property ──
+# Two frames of the same base type may differ in slot count; the count lives in
+# character["armor_slots"] keyed by instance id, falling back to the resource
+# max_slots when no roll is recorded (starter gear, legacy saves).
+func test_armor_slots_per_instance() -> void:
+	print("── Unit slots are per-instance (spec /mechanics/inventory) ──")
+	const EquipmentScreen := preload("res://scenes/2d/equipment.tscn")
+
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	CharacterManager.create_character(0, "humar", "ArmorSlotsTester")
+	CharacterManager.set_active_slot(0)
+	var character = CharacterManager.get_active_character()
+	assert_true(character != null, "active character set up")
+	character["equipment"] = {"weapon": "", "frame": "", "mag": ""}
+	character["armor_slots"] = {}
+
+	Inventory.clear_inventory()
+	for _i in range(2):
+		Inventory.add_item("armor", 1)  # armor.tres max_slots = 4
+	var ids: Array = []
+	for iid in Inventory._items:
+		if Inventory.get_base_id(iid) == "armor":
+			ids.append(iid)
+	assert_eq(ids.size(), 2, "2 distinct armor instances seeded")
+
+	# id_a gets a recorded roll of 1; id_b stays un-rolled (→ fallback to 4).
+	var id_a: String = str(ids[0])
+	var id_b: String = str(ids[1])
+	character["armor_slots"][id_a] = 1
+
+	assert_eq(EquipmentUtils.get_unit_slot_count(id_a, character), 1,
+		"recorded instance returns its rolled count (1)")
+	assert_eq(EquipmentUtils.get_unit_slot_count(id_b, character), 4,
+		"un-rolled instance falls back to resource max_slots (4)")
+	assert_eq(EquipmentUtils.get_unit_slot_count("", character), 0, "empty id → 0 slots")
+
+	# Clamp: a stored count above the cap resolves to 4.
+	character["armor_slots"][id_a] = 9
+	assert_eq(EquipmentUtils.get_unit_slot_count(id_a, character), 4, "stored count clamps to cap 4")
+	character["armor_slots"][id_a] = 1
+
+	# The visible equip slots must reflect the *instance's* count, not the base type.
+	var screen: Control = EquipmentScreen.instantiate()
+	add_child(screen)
+	character["equipment"]["frame"] = id_a
+	var vis_a: Array = screen._get_visible_slots()
+	assert_true(vis_a.has("unit1") and not vis_a.has("unit2"),
+		"1-slot frame exposes exactly one unit slot")
+	character["equipment"]["frame"] = id_b
+	var vis_b: Array = screen._get_visible_slots()
+	assert_true(vis_b.has("unit1") and vis_b.has("unit4"),
+		"same-base sibling with no roll exposes 4 unit slots")
+
+	screen.free()
+	Inventory.clear_inventory()
+	character["equipment"] = {"weapon": "", "frame": "", "mag": ""}
+	print("")
+
+
+# ── Buying armor records a per-instance slot roll on the minted instance id ──
+# Regression: the roll used to be keyed by BASE id, so two copies collided and
+# the dict was never read. Now each purchase mints its own instance and records
+# the roll against it; the shop row title carries no "[N slot]" suffix.
+func test_shop_armor_purchase_records_slots() -> void:
+	print("── Shop armor purchase records per-instance slots ──")
+	const WeaponShop := preload("res://scenes/2d/shops/weapon_shop.tscn")
+
+	CharacterManager._characters = [null, null, null, null]
+	CharacterManager._active_slot = -1
+	CharacterManager.create_character(0, "humar", "ShopArmorTester")
+	CharacterManager.set_active_slot(0)
+	var character = CharacterManager.get_active_character()
+	assert_true(character != null, "active character set up")
+	character["meseta"] = 1000000
+	character["armor_slots"] = {}
+	Inventory.clear_inventory()
+
+	var shop: Control = WeaponShop.instantiate()
+	add_child(shop)  # _ready → _generate_inventory populates _armors with rolls
+
+	assert_true(shop._armors.size() >= 1, "shop offers at least one armor")
+	# No "[N slot]" label baked into the row name anymore.
+	var first_name: String = str(shop._armors[0].get("name", ""))
+	assert_true(not ("slot" in first_name) and not ("[" in first_name),
+		"armor row name has no bracketed slot suffix")
+
+	# Buy the same armor row twice → two distinct instance keys, each carrying
+	# that row's rolled count.
+	shop._tab = shop.Tab.ARMOR
+	shop._selected_index = 0
+	var expected_roll: int = int(shop._armors[0].get("rolled_slots", -1))
+	var base_id: String = str(shop._armors[0].get("id", ""))
+	shop._buy_selected()
+	shop._buy_selected()
+
+	var keys: Array = character.get("armor_slots", {}).keys()
+	assert_eq(keys.size(), 2, "two purchases recorded two distinct instance keys")
+	for k in keys:
+		assert_eq(Inventory.get_base_id(str(k)), base_id, "recorded key %s is an instance of the bought armor" % str(k))
+		assert_eq(int(character["armor_slots"][k]), expected_roll, "recorded slot count matches the row roll")
+
+	shop.free()
+	Inventory.clear_inventory()
 	print("")
 
 

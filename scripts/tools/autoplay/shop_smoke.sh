@@ -74,6 +74,7 @@ check "frame: all same-stat copies listed" "[sanity] checkpoint: frame-dup all 3
 check "frame: non-first instance equips"  "[sanity] checkpoint: frame-dup equipped non-first instance"
 check "frame: suffixed gives full stats"  "[sanity] checkpoint: frame-dup suffixed frame full stats"
 check "frame change clears all units"     "[sanity] checkpoint: frame-change cleared all units"
+check "armor slots are per-instance"      "[sanity] checkpoint: armor-slots per-instance count"
 check "storage screen opened"             "[sanity] checkpoint: storage opened"
 check "storage deposited meseta"          "[sanity] checkpoint: storage deposited meseta"
 check "storage deposited an item"         "[sanity] checkpoint: storage deposited item"

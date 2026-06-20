@@ -50,6 +50,19 @@ func get_base_id(item_id: String) -> String:
 ## Add a weapon to inventory with a unique instance ID.
 ## Returns the instance ID, or "" if inventory is full.
 func add_weapon(base_id: String) -> String:
+	return _add_per_slot_instance(base_id)
+
+
+## Add an armor (frame) to inventory with a unique instance ID.
+## Returns the instance ID, or "" if inventory is full. Callers that roll a
+## per-instance unit-slot count record it against this returned id (see
+## weapon_shop.gd / EquipmentUtils.get_unit_slot_count).
+func add_armor(base_id: String) -> String:
+	return _add_per_slot_instance(base_id)
+
+
+## Mint a single per-slot item (weapon/armor) with a unique instance ID.
+func _add_per_slot_instance(base_id: String) -> String:
 	if capacity > 0 and get_total_slots() >= capacity:
 		inventory_full.emit()
 		SfxManager.play("res://assets/sfx/common/common_022.wav")

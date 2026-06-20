@@ -81,6 +81,7 @@ func create_character(slot: int, class_id: String, char_name: String, appearance
 		},
 		"techniques": {},
 		"weapon_grinds": {},
+		"armor_slots": {},
 		"unidentified_weapons": [],
 		"learned_recipes": [],
 		"weapon_elements": {},
@@ -243,6 +244,15 @@ func migrate_seed_unlocked_difficulties() -> void:
 		if GameState.STORY_FINALE_QUEST in _characters[i].get("completed_missions", []):
 			unlocked.append("hard")
 		_characters[i]["unlocked_difficulties"] = unlocked
+
+
+## Migrate v7→v8: seed the per-instance armor_slots dict for characters that
+## predate it. No roll back-fill — legacy armor instances fall back to the
+## resource max_slots via EquipmentUtils.get_unit_slot_count.
+func migrate_seed_armor_slots() -> void:
+	for i in range(_characters.size()):
+		if _characters[i] != null and not _characters[i].has("armor_slots"):
+			_characters[i]["armor_slots"] = {}
 
 
 ## Migrate v3 global completed_missions to all existing characters
