@@ -181,6 +181,20 @@ out of `/srv/packs/<sha256>.pck` with a matching `<sha256>.sidecar.json`.
   should point at Arweave. The same CI checks (`verify-assets` range-probe
   + sidecar, `check-asset-refs`) pass against either host; Caddy serves
   HTTP range requests (206) and the sidecar JSON.
+- **TLS: Caddy must serve an RSA cert (`tls { key_type rsa2048 }`).**
+  Godot's bundled mbedTLS *cannot* handshake Caddy's default ECDSA /
+  ISRG-Root-X2 cert — it fails with `TLS handshake error -30592` and the
+  bootstrap blacklists the host. curl/Python/CI all speak ECDSA fine, so
+  this is invisible unless tested through Godot's actual downloader (a
+  seeded pack cache also hides it). The Caddyfile pins `key_type rsa2048`.
+- **HTTP fallback:** Caddy also serves the packs over plain `http://`
+  (explicit `http://pck.psz.onl` block — no 308 redirect). `bootstrap.gd`
+  retries a pack URL over `http://` when the `https://` attempt gets no
+  HTTP reply (TLS handshake / connection failure). Safe because the pack
+  is sha256-verified after download (manifest is the trust anchor) and the
+  `GDPC` magic check rejects junk — HTTP only drops the TLS layer. (Desktop
+  only: Android's prebuilt export template blocks cleartext, so mobile
+  relies on the RSA HTTPS path.)
 
 ## Asset CI checks (the forcing function)
 
