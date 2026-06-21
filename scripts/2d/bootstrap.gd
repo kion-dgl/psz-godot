@@ -312,7 +312,42 @@ func _copy_local(file_url: String, dest: String) -> bool:
 	return true
 
 
+# Response code of the last _http_get attempt (0 = no HTTP reply: TLS handshake
+# aborted / DNS / connection reset). Drives the HTTP fallback + host blacklist.
+var _last_code: int = 0
+
+
 func _http_download(url: String, cache_path: String) -> bool:
+	if await _http_get(url, cache_path):
+		return true
+	# HTTP fallback: an https:// attempt that never got an HTTP reply
+	# (response_code 0 = TLS handshake aborted / connection reset) retries over
+	# plain HTTP. Safe because the pack is sha256-verified after download (the
+	# in-repo manifest is the trust anchor) and the GDPC magic check rejects
+	# junk — HTTP only drops the TLS layer that some clients can't negotiate
+	# (Godot's mbedTLS vs certain modern certs). Confidentiality is irrelevant
+	# for a public asset pack.
+	if url.begins_with("https://") and _last_code == 0:
+		var http_url: String = "http://" + url.substr(8)
+		print("[bootstrap] HTTPS failed (TLS/connection) — retrying over HTTP: %s" % http_url)
+		_file_ticker.text = "retrying over http…"
+		if await _http_get(http_url, cache_path):
+			return true
+	# Both schemes failed without an HTTP reply → blacklist the host so later
+	# attempts don't repeat the multi-second timeout. (A real HTTP error code
+	# or bad-magic leaves _last_code != 0, so the host stays retryable.)
+	if _last_code == 0:
+		var host: String = _url_host(url)
+		if host != "":
+			_bad_hosts[host] = true
+			print("[bootstrap] blacklisting host %s for this session" % host)
+	return false
+
+
+## One download attempt for exactly `url`. Returns true on a 200 carrying the
+## Godot pack magic; sets `_last_code` to the HTTP status (0 = no reply). The
+## caller (_http_download) owns the fallback + blacklist policy.
+func _http_get(url: String, cache_path: String) -> bool:
 	var dest_abs: String = ProjectSettings.globalize_path(cache_path)
 	_http.download_file = dest_abs
 	# Capture completion via a dictionary (shared by reference inside the
@@ -328,23 +363,16 @@ func _http_download(url: String, cache_path: String) -> bool:
 	if err != OK:
 		_http.request_completed.disconnect(cb)
 		push_warning("[bootstrap] http request failed: %s" % error_string(err))
+		_last_code = 0
 		return false
 	while not done["complete"]:
 		var got: int = _http.get_downloaded_bytes()
 		if _total_bytes > 0:
 			_set_progress(float(got) / float(_total_bytes) * 100.0)
 		await _yield_frame()
-	var response_code: int = int(done["response_code"])
-	if response_code != 200:
-		push_warning("[bootstrap] http %d on %s" % [response_code, url])
-		# response_code == 0 means the request never got an HTTP reply — TLS
-		# handshake aborted, DNS failure, or connection reset. Blacklist the
-		# host so subsequent attempts don't repeat the multi-second timeout.
-		if response_code == 0:
-			var host: String = _url_host(url)
-			if host != "":
-				_bad_hosts[host] = true
-				print("[bootstrap] blacklisting host %s for this session" % host)
+	_last_code = int(done["response_code"])
+	if _last_code != 200:
+		push_warning("[bootstrap] http %d on %s" % [_last_code, url])
 		# HTTPRequest streamed the error-body to dest_abs; drop it so a junk
 		# (e.g. nginx "502 Bad Gateway" HTML) page isn't left in the cache.
 		_discard_download(dest_abs)
