@@ -53,6 +53,7 @@ func _run_tests_core() -> void:
 	test_equipment_slot_names()
 	test_material_system()
 	test_set_bonuses()
+	test_technique_tier_listing()
 	test_technique_casting()
 	test_photon_art_usage()
 	test_tekker_grinding()
@@ -2141,6 +2142,38 @@ func test_set_bonuses() -> void:
 	# Scarred Horn also matches
 	var bonus2: Dictionary = SetBonusRegistry.get_set_bonus_for_equipment("Dragon Wing", "Scarred Horn")
 	assert_true(not bonus2.is_empty(), "Dragon Wing + Scarred Horn has set bonus")
+	print("")
+
+
+# Spec /mechanics/techs: only base-tier techniques are listed in the palette /
+# Start menu; gi-/ra- variants are charge-only (tier mid/advanced) and MUST NOT
+# appear as their own entries. Pins the data contract the start-menu filter
+# (pso_start_menu._get_techniques: skip tier != "basic") relies on.
+func test_technique_tier_listing() -> void:
+	print("── Technique tiers: gi-/ra- are charge-only, not listed ──")
+	var charge_only := ["gifoie", "rafoie", "gibarta", "rabarta", "gizonde", "razonde", "grants", "megid"]
+	var base := ["foie", "barta", "zonde", "resta", "anti", "shifta", "deband", "jellen", "zalure"]
+
+	for tid in base:
+		var d: Dictionary = TechniqueManager.TECHNIQUES.get(tid, {})
+		assert_eq(str(d.get("tier", "")), "basic", "%s is tier basic (listed/learnable)" % tid)
+	for tid in charge_only:
+		var d: Dictionary = TechniqueManager.TECHNIQUES.get(tid, {})
+		assert_true(str(d.get("tier", "basic")) != "basic", "%s is NOT tier basic (charge-only)" % tid)
+
+	# Apply the exact start-menu predicate and assert what survives.
+	var listed: Array = []
+	for tech_id in TechniqueManager.TECHNIQUES:
+		if str(TechniqueManager.TECHNIQUES[tech_id].get("tier", "basic")) != "basic":
+			continue
+		listed.append(tech_id)
+	for tid in charge_only:
+		assert_true(not listed.has(tid), "%s filtered out of the techniques list" % tid)
+	for tid in base:
+		assert_true(listed.has(tid), "%s kept in the techniques list" % tid)
+
+	# Charge map turns a base tech into its charged variant (the only way to it).
+	assert_eq(TechniqueManager.get_charged_technique("foie"), "rafoie", "foie charges into rafoie")
 	print("")
 
 

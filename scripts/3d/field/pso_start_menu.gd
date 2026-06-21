@@ -793,6 +793,11 @@ func _get_techniques() -> Array:
 	var result: Array = []
 	for tech_id in TechniqueManager.TECHNIQUES:
 		var data: Dictionary = TechniqueManager.TECHNIQUES[tech_id]
+		# Only base-tier techniques are learnable / shown. The gi-/ra- variants
+		# (tier "mid"/"advanced") are charge-only — produced by holding a base
+		# tech (CHARGE_MAP), never separate menu entries (matches ActionPalette).
+		if str(data.get("tier", "basic")) != "basic":
+			continue
 		var group: String = str(data.get("group", ""))
 		if not class_data.technique_limits.has(group):
 			continue
