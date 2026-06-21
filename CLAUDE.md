@@ -154,6 +154,34 @@ If the pack content hasn't changed (sha matches previous manifest)
 version, the publish script reuses both — no double-billing on Arweave
 for identical bytes.
 
+### DO pack host (dev channel) — `npm run upload-pack-do`
+
+Arweave is permanent but slow + billed, which is painful when you just
+need to ship one changed/added asset during development. So there's a
+self-hosted alternative: a DigitalOcean droplet running Caddy at
+**`https://pck.psz.onl`** (auto-HTTPS), serving content-addressed packs
+out of `/srv/packs/<sha256>.pck` with a matching `<sha256>.sidecar.json`.
+
+- **`npm run upload-pack-do`** (`scripts/publish/publish_do.ts`) builds
+  the pack, `rsync`s it + the sidecar to the droplet over SSH (your
+  existing key — no secrets), verifies the host serves the `GDPC` magic,
+  prunes old packs, and rewrites `assets_manifest.json` to point at the
+  DO URLs. Then commit `assets_manifest.json` + `asset_tree.txt` like any
+  publish. Flags: `--skip-build`, `--dry-run`. Config (with droplet
+  defaults) in `.env`: `DO_PACK_SSH`, `DO_PACK_DIR`, `DO_PACK_BASE`,
+  `DO_PACK_KEEP`.
+- **Rotation:** 25 GB disk, so only the newest `DO_PACK_KEEP` (default
+  15) packs are retained — the publish prunes, and a daily server cron
+  (`/usr/local/bin/prune-packs.sh`) is the safety net. Content-addressed
+  names make this safe: the in-repo manifest always points at the newest
+  pack, which is never pruned. **Caveat:** reverting the manifest to an
+  old sha whose pack was already rotated away → re-publish it.
+- **Use DO for dev iteration; use Arweave (`upload-pack`) for tagged
+  releases** — the droplet isn't permanent, so a shipped build's manifest
+  should point at Arweave. The same CI checks (`verify-assets` range-probe
+  + sidecar, `check-asset-refs`) pass against either host; Caddy serves
+  HTTP range requests (206) and the sidecar JSON.
+
 ## Asset CI checks (the forcing function)
 
 Two CI jobs guard against publishing one half of the pair (manifest or

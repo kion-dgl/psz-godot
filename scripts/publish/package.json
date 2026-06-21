@@ -7,6 +7,7 @@
   "scripts": {
     "hello": "tsx test_hello.ts",
     "upload-pack": "tsx publish_assets.ts",
+    "upload-pack-do": "tsx publish_do.ts",
     "recover-publish": "tsx recover_publish.ts",
     "sync-tree": "tsx sync_tree.ts"
   },
