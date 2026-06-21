@@ -1,0 +1,58 @@
+---
+import Concept from '../../layouts/Concept.astro';
+---
+
+<Concept title="Weapon Library (in-game roster)" section="Hierarchies">
+  <p>This page is the <strong>curated list of weapons that actually exist in the running game</strong> — the 3D models a player can equip and see. It is intentionally <em>not</em> the full weapon catalog: the 360 <code>WeaponData</code> rows (stats, names, drops) are data, and the complete model/variant browser lives in the <a href="http://192.168.10.36:5173/psz-godot/#/storybook/weapons">web storybook</a>. The roster here is two groups: the <strong>basic PSO weapon-type models</strong> (a handful of base meshes reused across most rows) and the <strong>few <code>ein-</code> weapons</strong> added for testing unique per-weapon models.</p>
+
+  <p>The key words <strong>MUST</strong> / <strong>SHOULD</strong> are used as in RFC 2119. The contract for <em>how</em> weapons are structured (data row vs. archetype) is on the <a href="/hierarchies/weapon">Weapon Hierarchy</a> page; this page is the <em>what</em>.</p>
+
+  <h2>Basic PSO weapon-type models</h2>
+  <p>Imported from PSO. ~81 weapon rows share these 14 base meshes (a row varies by stats + <code>tint_color</code>, not model). "Textured" counts surfaces whose material carries an albedo texture; energy weapons (claw, slicer, double saber) are deliberately solid-color/tinted, so 0 is expected for them. <strong>Raw PSO scale</strong> — these need <code>glb_scale ≈ 0.09</code> to match in-game size.</p>
+  <table>
+    <tr><th>Model</th><th>Type</th><th>Surfaces textured</th><th>Example rows</th></tr>
+    <tr><td><code>basic/Saber.glb</code></td><td>Saber</td><td>3 / 3</td><td>saber, brand, buster, pallasch</td></tr>
+    <tr><td><code>basic/Sword.glb</code></td><td>Sword</td><td>4 / 4</td><td>sword, breaker, claymore, gigush</td></tr>
+    <tr><td><code>basic/Dagger.glb</code></td><td>Dagger</td><td>2 / 2</td><td>dagger, blade, edge, knife</td></tr>
+    <tr><td><code>basic/Partisan.glb</code></td><td>Partisan</td><td>4 / 4</td><td>partisan, berdys, glaive, halberd</td></tr>
+    <tr><td><code>basic/Rod.glb</code></td><td>Rod</td><td>2 / 2</td><td>rod, pillar, pole, striker</td></tr>
+    <tr><td><code>basic/Wand.glb</code></td><td>Wand</td><td>1 / 1</td><td>wand, baton, cane, scepter, staff</td></tr>
+    <tr><td><code>basic/Handgun.glb</code></td><td>Handgun</td><td>1 / 2</td><td>handgun, autogun, lockgun, railgun</td></tr>
+    <tr><td><code>basic/Rifle.glb</code></td><td>Rifle</td><td>1 / 2</td><td>rifle, beam, blaster, sniper</td></tr>
+    <tr><td><code>basic/Mechgun.glb</code></td><td>Mechgun</td><td>1 / 2</td><td>mechgun, assault, gatling, repeater</td></tr>
+    <tr><td><code>Slicer.glb</code> (top-level)</td><td>Slicer</td><td>2 / 2</td><td>slicer, cutter, sawcer, spinner (+~18)</td></tr>
+    <tr><td><code>basic/Claw.glb</code></td><td>Claw</td><td>0 / 2 (energy)</td><td>d_fangs, orgaclaw, iron_claws</td></tr>
+    <tr><td><code>basic/DoubleSaber.glb</code></td><td>Double Saber</td><td>0 / 2 (energy)</td><td>double_blade</td></tr>
+    <tr><td><code>basic/Slicer.glb</code></td><td>Slicer</td><td>0 / 2 (energy)</td><td>deo_cutter, deo_slicer</td></tr>
+    <tr><td><code>basic/Launcher.glb</code></td><td>Launcher</td><td>0 / 2</td><td>pipe_bazooka <em>(untextured — review)</em></td></tr>
+  </table>
+
+  <h2>Ein weapons (test set)</h2>
+  <p>Thirteen weapons added to exercise <strong>unique per-weapon models</strong> (sourced from psz-sketch). Each has its own mesh under <code>assets/weapons/&lt;id&gt;/</code> and is already at correct in-game scale (no 0.09 factor). Materials bind their textures correctly (2 / 2 on every unique model) — but see the import note below.</p>
+  <table>
+    <tr><th>Weapon</th><th>Model</th><th>Textured</th></tr>
+    <tr><td>Ein Arm</td><td><code>wclc01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Bazooka</td><td><code>wbac02</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Blade</td><td><code>wsac01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Cannon</td><td><code>wlcc01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Cutter</td><td><code>wslc02</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Glaive</td><td><code>wspc01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Mazurka</td><td><code>wgbc01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Pistol</td><td><code>whgc01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Rifle</td><td><code>wrfc01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Ripper</td><td><code>wdac01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Rocket</td><td><code>wbac01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Tact</td><td><code>wwac01</code></td><td>2 / 2</td></tr>
+    <tr><td>Ein Slicer</td><td><code>basic/Slicer.glb</code> (reused)</td><td>0 / 2 (energy)</td></tr>
+  </table>
+
+  <h2>Texture import contract</h2>
+  <p>A weapon texture used in 3D <strong>MUST</strong> be imported as <strong>VRAM-compressed with mipmaps</strong> (<code>compress/mode=2</code>, <code>mipmaps/generate=true</code>) — the state Godot's editor produces automatically via <code>detect_3d</code> the first time a texture is used in a 3D scene. Every working basic model satisfies this (it ships <code>.s3tc</code>/<code>.etc2</code> variants).</p>
+  <p><strong>Known violation (the ein set).</strong> The ein textures were imported on a headless build box, so <code>detect_3d</code> never ran — they are stuck as plain 2D lossless (<code>compress/mode=0</code>, no mipmaps, <code>detect_3d/compress_to=1</code> still pending). They render correctly on the Forward+ path and on the macOS GL-over-Metal Compatibility path, but report as <strong>untextured on Windows/NVIDIA under the shipped <code>gl_compatibility</code> renderer</strong>. The fix is to normalize the ein texture imports to match the contract (VRAM + mipmaps) and republish the pack. Tracked against this page.</p>
+
+  <h2>Verification</h2>
+  <ul>
+    <li>Binding (which surfaces carry an albedo texture) is checked by loading each distinct model headlessly — renderer-agnostic, so it confirms data integrity but <em>not</em> on-GPU rendering.</li>
+    <li>Actual rendering is renderer- and driver-specific: the <code>gl_compatibility</code> backend on Windows/NVIDIA is the reference target (it is what ships). A Mac repro is necessary-but-not-sufficient — a texture that renders on Apple GL can still fail on native GL.</li>
+  </ul>
+</Concept>

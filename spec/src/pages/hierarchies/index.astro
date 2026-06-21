@@ -10,6 +10,7 @@ import Concept from '../../layouts/Concept.astro';
   <ul>
     <li><a href="/hierarchies/enemy">Enemy</a> — the <code>EnemyBase</code> contract: AI state machine, status intake, death/drops; where boss FSMs and movement-divergent enemies subclass.</li>
     <li><a href="/hierarchies/weapon">Weapon</a> — <code>WeaponData</code> + archetype behavior: what's a data row vs. an archetype class, and the CombatResolver interface (#157).</li>
+    <li><a href="/hierarchies/weapons-library">Weapon Library</a> — the curated in-game roster: which basic PSO type models + <code>ein-</code> test weapons actually ship, their texture state, and the VRAM texture-import contract.</li>
     <li><a href="/hierarchies/shop-screen">Shop / list screens</a> — the composition contract (<code>ShopNav</code> / <code>ShopUI</code> hooks): grouping without inheritance, because inheritance breaks the Android export here.</li>
   </ul>
 
