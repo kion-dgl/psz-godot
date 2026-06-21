@@ -559,7 +559,14 @@ func _toggle_option(idx: int) -> void:
 				mc.toggle()
 		4: InputConfig.toggle_invert_camera_x()
 		5: InputConfig.toggle_enable_camera_y()
-		6: Inventory.set_auto_sort(not Inventory.is_auto_sort())
+		6:
+			Inventory.set_auto_sort(not Inventory.is_auto_sort())
+			# Persist the toggle + the immediate re-sort it triggers. Without
+			# this the change lived only in memory: it survived a return-to-title
+			# (state not wiped) but a reboot loaded the old save — i.e. it never
+			# actually saved. Manual Sort/Move already save_game (above); the
+			# option toggle was the gap.
+			SaveManager.save_game()
 		7: DebugConfig.show_floor_collision = not DebugConfig.show_floor_collision
 		8: DebugConfig.show_gate_dots = not DebugConfig.show_gate_dots
 		9: DebugConfig.show_hitboxes = not DebugConfig.show_hitboxes
@@ -793,6 +800,11 @@ func _get_techniques() -> Array:
 	var result: Array = []
 	for tech_id in TechniqueManager.TECHNIQUES:
 		var data: Dictionary = TechniqueManager.TECHNIQUES[tech_id]
+		# Only base-tier techniques are learnable / shown. The gi-/ra- variants
+		# (tier "mid"/"advanced") are charge-only — produced by holding a base
+		# tech (CHARGE_MAP), never separate menu entries (matches ActionPalette).
+		if str(data.get("tier", "basic")) != "basic":
+			continue
 		var group: String = str(data.get("group", ""))
 		if not class_data.technique_limits.has(group):
 			continue

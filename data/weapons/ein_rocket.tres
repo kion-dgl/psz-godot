@@ -23,3 +23,4 @@ usable_by = PackedStringArray("Ranger Human", "Ranger Cast")
 pso_world_id = 245
 model_id = "wbac01"
 variant_id = "wbac01_1_b"
+glb_path = "res://assets/weapons/wbac01/wbac01/wbac01_1_b/wbac01_1_b.glb"

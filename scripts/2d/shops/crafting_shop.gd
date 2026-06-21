@@ -620,28 +620,22 @@ func _refresh_display() -> void:
 				var entry: Dictionary = _craft_recipes[i]
 				var recipe: RecipeBoardData = entry["recipe"]
 				var is_def: bool = entry["is_default"]
-				var stars: String = entry["stars"]
 
 				var can_craft: bool = _can_craft_recipe(recipe)
 				var text_color := Color.TRANSPARENT
 				if not can_craft:
 					text_color = PszStyle.TEXT_MUTED  # unified disabled style (#368)
 
-				var ing_parts: PackedStringArray = []
-				for ingredient in recipe.ingredients:
-					var mat = MaterialRegistry.get_material(ingredient["item_id"])
-					var mat_name: String = mat.name if mat else ingredient["item_id"]
-					var owned: int = Inventory.get_item_count(ingredient["item_id"])
-					var needed: int = int(ingredient["quantity"])
-					ing_parts.append("%s %d/%d" % [mat_name, owned, needed])
-
+				# Row shows NAME (+ uses tag) only. Rarity stars and material
+				# requirements live in the detail panel — the shared shop-row
+				# rule (psz_style.gd): stars/reqs never go in the label.
 				var weapon_name: String = recipe.name.replace(" Board", "")
 				var uses_tag: String = ""
 				if not is_def:
 					var uses_left: int = int(entry.get("uses", 0))
 					uses_tag = " [x%d]" % uses_left
 				var pill := PszStyle.create_pill(
-					"%s %s%s  (%s)" % [weapon_name, stars, uses_tag, ", ".join(ing_parts)],
+					"%s%s" % [weapon_name, uses_tag],
 					i == _selected_index, "%d M" % recipe.craft_cost, text_color)
 				vbox.add_child(pill)
 				_pill_nodes[i] = pill

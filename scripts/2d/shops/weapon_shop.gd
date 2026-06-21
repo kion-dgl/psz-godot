@@ -196,15 +196,8 @@ func _generate_sell_list() -> void:
 			"sell_price": sell_price, "quantity": qty,
 			"equipped": is_equipped,
 		})
-
-	var cat_order := ["Weapon", "Armor", "Unit", "Mag", "Item", "Material"]
-	_sell_items.sort_custom(func(a, b):
-		var ca: int = cat_order.find(a.get("category", "Item"))
-		var cb: int = cat_order.find(b.get("category", "Item"))
-		if ca != cb:
-			return ca < cb
-		return str(a.get("name", "")) < str(b.get("name", ""))
-	)
+	# No re-sort: keep Inventory.get_all_items() order so the sell list matches
+	# the player's inventory/storage ordering (pickup or auto-sort).
 
 
 func _weapon_price(w) -> int:

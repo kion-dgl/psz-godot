@@ -1,4 +1,6 @@
 shader_type spatial;
+// Double-sided: the animated warp surface must be visible from both sides.
+render_mode cull_disabled;
 
 uniform sampler2D albedo_texture : source_color, filter_linear_mipmap, repeat_enable;
 uniform vec2 uv_scale = vec2(1.0, 1.0);

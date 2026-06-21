@@ -25,6 +25,9 @@ func _apply_state() -> void:
 	apply_to_all_materials(func(mat: Material, _mesh: MeshInstance3D, _surface: int):
 		if mat is StandardMaterial3D:
 			var std_mat := mat as StandardMaterial3D
+			# Warp gate planes (o0s_warps) read from both sides — cull_back
+			# leaves them see-through from behind. Render double-sided.
+			std_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 			if element_state == "inactive":
 				std_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 				std_mat.albedo_color.a = 0.5

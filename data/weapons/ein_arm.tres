@@ -23,4 +23,4 @@ usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "R
 pso_world_id = 78
 model_id = "wclc01"
 variant_id = "wclc01_1_o"
-glb_path = "res://web/public/weapons/wclc01/wclc01/wclc01_1_o/wclc01_1_o.glb"
+glb_path = "res://assets/weapons/wclc01/wclc01/wclc01_1_o/wclc01_1_o.glb"

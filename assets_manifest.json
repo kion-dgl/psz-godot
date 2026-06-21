@@ -1,20 +1,16 @@
 {
-  "version": "0.32.31",
+  "version": "0.37.4",
   "godot_version": "4.5",
   "pack": {
-    "sha256": "8534657ca2ffadb584d32ec62473412b80e6adcb2fcef91d6e4471769c39bffd",
-    "size": 361325428,
+    "sha256": "34e6b129e143a19e47f53e02cf120be3e73cde46e9bc05d48098c983a481eafc",
+    "size": 325609056,
     "urls": [
-      "https://arweave.net/RdCa6Zs6haAxicfh09WJR3D_4Z-1kIQhkl6DqH_c3Fc",
-      "https://ar-io.dev/RdCa6Zs6haAxicfh09WJR3D_4Z-1kIQhkl6DqH_c3Fc",
-      "https://permagate.io/RdCa6Zs6haAxicfh09WJR3D_4Z-1kIQhkl6DqH_c3Fc"
+      "https://pck.psz.onl/34e6b129e143a19e47f53e02cf120be3e73cde46e9bc05d48098c983a481eafc.pck"
     ]
   },
   "sidecar": {
     "urls": [
-      "https://arweave.net/KMQgNP3wnKRWNx7FRIwgeACkeKlVtVMx9mVI7r602aw",
-      "https://ar-io.dev/KMQgNP3wnKRWNx7FRIwgeACkeKlVtVMx9mVI7r602aw",
-      "https://permagate.io/KMQgNP3wnKRWNx7FRIwgeACkeKlVtVMx9mVI7r602aw"
+      "https://pck.psz.onl/34e6b129e143a19e47f53e02cf120be3e73cde46e9bc05d48098c983a481eafc.sidecar.json"
     ]
   }
 }

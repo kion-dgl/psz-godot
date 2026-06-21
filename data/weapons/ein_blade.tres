@@ -22,5 +22,5 @@ photon_arts = []
 usable_by = PackedStringArray("Hunter Human", "Hunter Newman", "Hunter Cast", "Ranger Human", "Ranger Cast", "Force Human", "Force Newman")
 pso_world_id = 8
 model_id = "wsac01"
-variant_id = ""
-glb_path = "res://web/public/weapons/wsac01/wsac01/wsac01_1_o/wsac01_1_o.glb"
+variant_id = "wsac01_1_o"
+glb_path = "res://assets/weapons/wsac01/wsac01/wsac01_1_o/wsac01_1_o.glb"
