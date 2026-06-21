@@ -54,6 +54,7 @@ func _run_tests_core() -> void:
 	test_material_system()
 	test_set_bonuses()
 	test_technique_tier_listing()
+	test_shop_sell_list_inventory_order()
 	test_technique_casting()
 	test_photon_art_usage()
 	test_tekker_grinding()
@@ -2142,6 +2143,48 @@ func test_set_bonuses() -> void:
 	# Scarred Horn also matches
 	var bonus2: Dictionary = SetBonusRegistry.get_set_bonus_for_equipment("Dragon Wing", "Scarred Horn")
 	assert_true(not bonus2.is_empty(), "Dragon Wing + Scarred Horn has set bonus")
+	print("")
+
+
+# Selling at the item shop / weapon shop MUST list items in the same order as
+# the inventory (matching storage's deposit tab). Both shops iterate
+# Inventory.get_all_items() and previously re-sorted by category+name; the sort
+# was removed. Guards against it coming back.
+func test_shop_sell_list_inventory_order() -> void:
+	print("── Shop sell lists preserve inventory order ──")
+	var saved: Dictionary = Inventory._items.duplicate(true)
+	Inventory.clear_inventory()
+	# Deliberately non-alphabetical insertion order — a category/name re-sort
+	# would reorder these, so exact-match catches a regression.
+	Inventory.add_item("trimate", 1)
+	Inventory.add_item("monomate", 1)
+	Inventory.add_item("dimate", 1)
+
+	var expected: Array = []
+	for it in Inventory.get_all_items():
+		if int(it.get("quantity", 0)) > 0:
+			expected.append(str(it.get("id", "")))
+	assert_gt(expected.size(), 1, "set up multiple inventory items for the order check")
+
+	const ItemShopScript := preload("res://scripts/2d/shops/item_shop.gd")
+	var ishop = ItemShopScript.new()
+	ishop._generate_sell_list()
+	var ish_ids: Array = []
+	for e in ishop._sell_items:
+		ish_ids.append(str(e.get("id", "")))
+	assert_eq(ish_ids, expected, "item shop sell list matches inventory order")
+	ishop.free()
+
+	const WeaponShopScript := preload("res://scripts/2d/shops/weapon_shop.gd")
+	var wshop = WeaponShopScript.new()
+	wshop._generate_sell_list()
+	var wsh_ids: Array = []
+	for e in wshop._sell_items:
+		wsh_ids.append(str(e.get("id", "")))
+	assert_eq(wsh_ids, expected, "weapon shop sell list matches inventory order")
+	wshop.free()
+
+	Inventory._items = saved
 	print("")
 
 
