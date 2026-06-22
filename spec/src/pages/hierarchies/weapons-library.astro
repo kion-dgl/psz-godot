@@ -1,0 +1,58 @@
+---
+import Concept from '../../layouts/Concept.astro';
+import WeaponGallery from '../../components/weapon-gallery/WeaponGallery.tsx';
+---
+
+<Concept title="Weapon Library (in-game roster)" section="Hierarchies">
+  <h2>Model gallery</h2>
+  <p>Click through each modeled weapon to inspect its model, texture, and baked
+  orientation — no need to launch the game. <strong>Source: Local</strong> serves the
+  uncommitted working tree (baked/retextured edits under review); <strong>Published</strong>
+  serves the last R2 model — toggle to compare before/after. (Dev only: run
+  <code>npm run dev</code> in <code>spec/</code>; the <code>/local</code> middleware reads the repo's
+  <code>assets/</code>.)</p>
+  <WeaponGallery client:only="react" />
+
+  <p>This page is the <strong>curated list of weapons that actually exist in the running game</strong> — the 3D models a player can equip and see. It is intentionally <em>not</em> the full weapon catalog: the 360 <code>WeaponData</code> rows (stats, names, drops) are data, and the complete model/variant browser lives in the <a href="http://192.168.10.36:5173/psz-godot/#/storybook/weapons">web storybook</a>. The gallery above is the source of truth; the tables below annotate it.</p>
+
+  <h2>Naming convention</h2>
+  <p>The <code>ein-</code> weapons are named after their <strong>weapon category</strong> (<code>ein-saber</code>, <code>ein-spear</code>, <code>ein-claw</code>, …), not arbitrary flavor names. PSZ historically had no unified weapon-naming convention; this enforces one for the ein set. Where a category has more than one ein model, the second keeps a distinct name (e.g. <code>ein-cutter</code> alongside <code>ein-slicer</code>; <code>ein-rocket</code> alongside <code>ein-bazooka</code>).</p>
+
+  <h2>Roster</h2>
+  <p>Per weapon type: the PSO base model (shared across many <code>WeaponData</code> rows) and the unique <code>ein-</code> model(s). Content-identical dupes have been collapsed — the old <code>basic/Claw.glb</code> was a copy of the ein claw, and <code>basic/Launcher.glb</code> a copy of the ein rocket, so they fold into the ein entries.</p>
+  <table>
+    <tr><th>Type</th><th>PSO model</th><th>Ein model(s)</th></tr>
+    <tr><td>Saber</td><td>Saber</td><td>Ein Saber</td></tr>
+    <tr><td>Sword</td><td>Sword</td><td>—</td></tr>
+    <tr><td>Dagger</td><td>Dagger</td><td>Ein Dagger</td></tr>
+    <tr><td>Claw</td><td><em>(dupe of ein — removed)</em></td><td>Ein Claw</td></tr>
+    <tr><td>Double Saber</td><td>—</td><td>Ein D-Saber</td></tr>
+    <tr><td>Spear</td><td>Spear (partisan)</td><td>Ein Spear</td></tr>
+    <tr><td>Slicer</td><td>Slicer</td><td>Ein Slicer, Ein Cutter</td></tr>
+    <tr><td>Gun Blade</td><td>—</td><td>Ein Mazurka</td></tr>
+    <tr><td>Handgun</td><td>Handgun</td><td>Ein Pistol</td></tr>
+    <tr><td>Mechgun</td><td>Mechgun</td><td>—</td></tr>
+    <tr><td>Rifle</td><td>Rifle</td><td>Ein Rifle</td></tr>
+    <tr><td>Bazooka</td><td><em>(dupe of ein — removed)</em></td><td>Ein Bazooka, Ein Rocket</td></tr>
+    <tr><td>Laser Cannon</td><td>—</td><td>Ein Cannon</td></tr>
+    <tr><td>Rod</td><td>Rod</td><td>—</td></tr>
+    <tr><td>Wand</td><td>Wand</td><td>Ein Wand</td></tr>
+  </table>
+  <p>Gaps with no ein model yet: Sword, Mechgun, Rod (and the PSO Double Saber / Bazooka were dupes, so those categories are ein-only).</p>
+
+  <h2>Textures — the issue is Godot import, not the models</h2>
+  <p>Every weapon <code>.glb</code> carries its texture — the three.js gallery above renders them all correctly. So in-game bare-grey weapons are a <strong>Godot import/material bug, not a missing asset</strong>. Two distinct cases:</p>
+  <ul>
+    <li><strong>Bound but wrong format (ein set).</strong> Godot imported the ein textures as plain 2D lossless (<code>compress/mode=0</code>, no mipmaps) because <code>detect_3d</code> never ran on the headless build box. They render on Forward+/macOS-GL but untextured on Windows/NVIDIA <code>gl_compatibility</code>. Fix: reimport VRAM-compressed + mipmaps (<code>mode=2</code>). <em>Done.</em></li>
+    <li><strong>Not bound at all (some generic models).</strong> Godot's importer leaves models like the Double Saber with no albedo texture despite the <code>.glb</code> carrying one — likely its handling of <code>KHR_materials_unlit</code> materials. Fix is Godot-side (make the importer pick the texture up). <em>Pending.</em></li>
+  </ul>
+
+  <h2>Orientation &amp; scale (baked into the model)</h2>
+  <p>PSO models are authored ~90° off from the ein convention and at raw scale; the runtime compensated per-weapon-type via <code>WEAPON_HOLD</code> rotation + <code>glb_scale ≈ 0.09</code>. Those are being <strong>baked into the models</strong> (rotation into the skeleton root, scale via import) so the runtime needs no rotate/scale and one identity hold serves every weapon. Review via the gallery's <strong>Local vs Published</strong> toggle.</p>
+
+  <h2>Verification</h2>
+  <ul>
+    <li><strong>Model / texture / orientation:</strong> the three.js gallery above (renderer-agnostic) — fastest way to eyeball the whole roster.</li>
+    <li><strong>Actual in-game render:</strong> Godot's <code>gl_compatibility</code> backend on Windows/NVIDIA is the reference target (it is what ships). A Mac repro is necessary-but-not-sufficient — a texture that renders on Apple GL can still fail on native GL.</li>
+  </ul>
+</Concept>

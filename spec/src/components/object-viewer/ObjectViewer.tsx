@@ -11,6 +11,10 @@ interface Props {
   glb: string;
   scale?: number;
   cameraOffset?: [number, number, number];
+  /** Slow turntable autorotate. Default true; off for orientation comparison. */
+  autoRotate?: boolean;
+  /** Show world axes (X red, Y green, Z blue) as an orientation reference. */
+  showAxes?: boolean;
 }
 
 /**
@@ -26,7 +30,7 @@ interface Props {
  * memory across page navigations. Pages with no model render a static
  * placeholder instead of mounting this island (see [object].astro).
  */
-export default function ObjectViewer({ glb, scale = 1, cameraOffset }: Props) {
+export default function ObjectViewer({ glb, scale = 1, cameraOffset, autoRotate = true, showAxes = false }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,7 +56,7 @@ export default function ObjectViewer({ glb, scale = 1, cameraOffset }: Props) {
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.autoRotate = true;
+    controls.autoRotate = autoRotate;
     controls.autoRotateSpeed = 1.4;
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.7));
@@ -69,7 +73,17 @@ export default function ObjectViewer({ glb, scale = 1, cameraOffset }: Props) {
     (grid.material as THREE.Material).opacity = 0.5;
     scene.add(grid);
 
-    const url = assetUrl(glb);
+    // Orientation reference: X red, Y green, Z blue. Lets weapons be compared
+    // against a fixed frame when autorotate is off.
+    if (showAxes) {
+      const axes = new THREE.AxesHelper(1.5);
+      (axes.material as THREE.Material).depthTest = false;
+      scene.add(axes);
+    }
+
+    // Absolute paths (e.g. the /local working-tree middleware or /cdn) pass
+    // through untouched; bare "assets/..." paths resolve via the R2 helper.
+    const url = glb.startsWith('/') ? glb : assetUrl(glb);
     new GLTFLoader().load(
       url,
       (gltf) => {
@@ -171,7 +185,7 @@ export default function ObjectViewer({ glb, scale = 1, cameraOffset }: Props) {
       renderer.dispose();
       if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
     };
-  }, [glb, scale, cameraOffset?.[0], cameraOffset?.[1], cameraOffset?.[2]]);
+  }, [glb, scale, cameraOffset?.[0], cameraOffset?.[1], cameraOffset?.[2], autoRotate, showAxes]);
 
   return (
     <div

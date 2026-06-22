@@ -323,8 +323,8 @@ assets/npcs/cowgirl/Textures/Body.png
 assets/npcs/cowgirl/Textures/Clothe.png
 assets/npcs/cowgirl/Textures/Face.png
 assets/npcs/cowgirl/Textures/Hair.png
-assets/npcs/cowgirl/textures/Image_1.png
-assets/npcs/cowgirl/textures/Image_2.png
+assets/npcs/cowgirl/Textures/Image_1.png
+assets/npcs/cowgirl/Textures/Image_2.png
 assets/npcs/cowgirl/blackjack.glb
 assets/npcs/cowgirl/blackjack.png
 assets/npcs/cowgirl/blackjack_hat.glb

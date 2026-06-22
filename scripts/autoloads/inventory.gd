@@ -39,7 +39,7 @@ signal item_removed(item_id: String, quantity: int, remaining: int)
 signal inventory_full()
 
 
-## Extract base item ID from an instance ID (e.g., "ein_blade#3" → "ein_blade")
+## Extract base item ID from an instance ID (e.g., "ein_saber#3" → "ein_saber")
 func get_base_id(item_id: String) -> String:
 	var idx: int = item_id.rfind("#")
 	if idx >= 0:

@@ -22,7 +22,7 @@ func get_weapon(weapon_id: String):
 	var result = _weapons.get(weapon_id, null)
 	if result != null:
 		return result
-	# Strip instance suffix (e.g., "ein_blade#2" → "ein_blade")
+	# Strip instance suffix (e.g., "ein_saber#2" → "ein_saber")
 	var idx: int = weapon_id.rfind("#")
 	if idx >= 0:
 		return _weapons.get(weapon_id.substr(0, idx), null)

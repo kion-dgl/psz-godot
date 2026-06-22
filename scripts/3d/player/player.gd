@@ -100,9 +100,9 @@ const WEAPON_HOLD := {
 		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, -4, 0)},
 		"attack": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(0, -4, 0)},
 	},
-	9: {  # HANDGUN
-		"idle": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
-		"attack": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(16, -8, 78)},
+	9: {  # HANDGUN — rotation baked into the model (Handgun.glb); hold is identity
+		"idle": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(0, 0, 0)},
+		"attack": {"pos": Vector3(0.31, 0.015, 0), "rot": Vector3(0, 0, 0)},
 	},
 	10: {  # MECH_GUN
 		"idle": {"pos": Vector3(0.31, 0, 0), "rot": Vector3(8, -5, 98)},

@@ -8,6 +8,10 @@ static var show_hitboxes := false
 static var show_combo_timing := false  # Show rhythm combo window indicator
 static var profile_frames := false  # Log slow frame breakdowns to console
 static var show_player_position := false  # Top-of-screen overlay with player.global_position
+# Bypass equip legality so ANY weapon can be equipped — for verifying weapon
+# models/orientation regardless of class. Defaults on when the weapon-test flag
+# is set (pairs with storage's PSZ_DEBUG_WEAPONS seed). Toggle in System menu.
+static var equip_all := OS.has_environment("PSZ_DEBUG_WEAPONS")
 # Gate the verbose [ValleyField]/[FieldElements]/[CellObjects] field-controller
 # logs (see #215-E). Off in normal/release play so logcat isn't spammed; on
 # automatically during autopilot/regression runs so matrix failures stay

@@ -83,7 +83,7 @@ static var _cache: Dictionary = {}
 ## Disk / Consumable / Mag / etc.). Returns null if nothing matches.
 static func for_item(item_id: String, category: String = "") -> Texture2D:
 	# Per-item id (with base-id strip for weapons that have an instance
-	# suffix like "ein_blade#3").
+	# suffix like "ein_saber#3").
 	var base_id: String = item_id
 	var hash_idx: int = item_id.rfind("#")
 	if hash_idx >= 0:

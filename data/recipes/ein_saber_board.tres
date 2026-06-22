@@ -4,11 +4,11 @@
 
 [resource]
 script = ExtResource("1")
-id = "ein_arm_board"
-name = "Ein Arm Board"
-details = "A rare synthesis board for crafting an Ein Arm."
+id = "ein_saber_board"
+name = "Ein Saber Board"
+details = "A rare synthesis board for crafting an Ein Saber."
 rarity = 5
-output_weapon_id = "ein_arm"
+output_weapon_id = "ein_saber"
 ingredients = [{"item_id": "peparian", "quantity": 3}, {"item_id": "dianaline", "quantity": 2}, {"item_id": "grinder_base_b", "quantity": 1}]
 craft_cost = 800
 has_photon_slot = true
