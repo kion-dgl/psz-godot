@@ -19,7 +19,7 @@ static func item_fits_slot(item_id: String, slot_key: String) -> bool:
 			var character = CharacterManager.get_active_character()
 			if character:
 				var class_data = ClassRegistry.get_class_data(str(character.get("class_id", "")))
-				if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type):
+				if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type) and not DebugConfig.equip_all:
 					return false
 			return true
 		"frame":

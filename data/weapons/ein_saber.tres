@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1")
-id = "ein_blade"
-name = "Ein Blade"
+id = "ein_saber"
+name = "Ein Saber"
 japanese_name = "アインブレード"
 rarity = 3
 weapon_type = 0

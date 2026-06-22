@@ -363,7 +363,10 @@ func _slot_key_for_inventory_item(item: Dictionary) -> String:
 			if weapon == null:
 				return ""
 			var class_data = ClassRegistry.get_class_data(str(ch.get("class_id", "")))
-			if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type):
+			# DebugConfig.equip_all bypasses the class restriction so any weapon
+			# can be equipped to verify its model/orientation looks right.
+			if class_data and not class_data.can_equip_weapon_type(weapon.weapon_type) \
+					and not DebugConfig.equip_all:
 				return ""
 			return "weapon"
 		"Armor":
@@ -535,6 +538,7 @@ func _get_options_list() -> Array:
 		"Time + Room: %s" % (on if DebugConfig.show_time_room else off),
 		"Frame Profiler: %s" % (on if DebugConfig.profile_frames else off),
 		"Show Player Position: %s" % (on if DebugConfig.show_player_position else off),
+		"Equip All (debug): %s" % (on if DebugConfig.equip_all else off),
 	]
 
 
@@ -578,6 +582,8 @@ func _toggle_option(idx: int) -> void:
 			DebugConfig.profile_frames = not DebugConfig.profile_frames
 		13:
 			DebugConfig.show_player_position = not DebugConfig.show_player_position
+		14:
+			DebugConfig.equip_all = not DebugConfig.equip_all
 
 
 func _enter_sub(idx: int) -> void:

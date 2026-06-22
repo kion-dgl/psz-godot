@@ -1,0 +1,136 @@
+{
+  "basic": [
+    {
+      "glb": "assets/weapons/basic/Saber.glb",
+      "type": 0,
+      "label": "Saber (Saber.glb)",
+      "uses": 4
+    },
+    {
+      "glb": "assets/weapons/basic/Sword.glb",
+      "type": 1,
+      "label": "Sword (Sword.glb)",
+      "uses": 4
+    },
+    {
+      "glb": "assets/weapons/basic/Dagger.glb",
+      "type": 2,
+      "label": "Dagger (Dagger.glb)",
+      "uses": 4
+    },
+    {
+      "glb": "assets/weapons/basic/Partisan.glb",
+      "type": 5,
+      "label": "Spear (Partisan.glb)",
+      "uses": 4
+    },
+    {
+      "glb": "assets/weapons/Slicer.glb",
+      "type": 6,
+      "label": "Slicer (Slicer.glb)",
+      "uses": 22
+    },
+    {
+      "glb": "assets/weapons/basic/Handgun.glb",
+      "type": 9,
+      "label": "Handgun (Handgun.glb)",
+      "uses": 4
+    },
+    {
+      "glb": "assets/weapons/basic/Mechgun.glb",
+      "type": 10,
+      "label": "Mechgun (Mechgun.glb)",
+      "uses": 4
+    },
+    {
+      "glb": "assets/weapons/basic/Rifle.glb",
+      "type": 11,
+      "label": "Rifle (Rifle.glb)",
+      "uses": 4
+    },
+    {
+      "glb": "assets/weapons/basic/Rod.glb",
+      "type": 14,
+      "label": "Rod (Rod.glb)",
+      "uses": 4
+    },
+    {
+      "glb": "assets/weapons/basic/Wand.glb",
+      "type": 15,
+      "label": "Wand (Wand.glb)",
+      "uses": 5
+    }
+  ],
+  "ein": [
+    {
+      "glb": "assets/weapons/wsac01/wsac01/wsac01_1_o/wsac01_1_o.glb",
+      "label": "Ein Saber",
+      "type": 0
+    },
+    {
+      "glb": "assets/weapons/wdac01/wdac01/wdac01_1_r/wdac01_1_r.glb",
+      "label": "Ein Dagger",
+      "type": 2
+    },
+    {
+      "glb": "assets/weapons/wclc01/wclc01/wclc01_1_o/wclc01_1_o.glb",
+      "label": "Ein Claw",
+      "type": 3
+    },
+    {
+      "glb": "assets/weapons/basic/DoubleSaber.glb",
+      "label": "Ein Double Saber",
+      "type": 4
+    },
+    {
+      "glb": "assets/weapons/wspc01/wspc01/wspc01_1_b/wspc01_1_b.glb",
+      "label": "Ein Spear",
+      "type": 5
+    },
+    {
+      "glb": "assets/weapons/basic/Slicer.glb",
+      "label": "Ein Slicer",
+      "type": 6
+    },
+    {
+      "glb": "assets/weapons/wslc02/wslc02/wslc02_1_o/wslc02_1_o.glb",
+      "label": "Ein Cutter",
+      "type": 6
+    },
+    {
+      "glb": "assets/weapons/whgc01/whgc01/whgc01_1_o/whgc01_1_o.glb",
+      "label": "Ein Pistol",
+      "type": 9
+    },
+    {
+      "glb": "assets/weapons/wgbc01/wgbc01/wgbc01_1_o/wgbc01_1_o.glb",
+      "label": "Ein Mazurka",
+      "type": 11
+    },
+    {
+      "glb": "assets/weapons/wrfc01/wrfc01/wrfc01_1_b/wrfc01_1_b.glb",
+      "label": "Ein Rifle",
+      "type": 11
+    },
+    {
+      "glb": "assets/weapons/wbac02/wbac02/wbac02_1_b/wbac02_1_b.glb",
+      "label": "Ein Bazooka",
+      "type": 12
+    },
+    {
+      "glb": "assets/weapons/wbac01/wbac01/wbac01_1_b/wbac01_1_b.glb",
+      "label": "Ein Rocket",
+      "type": 12
+    },
+    {
+      "glb": "assets/weapons/wlcc01/wlcc01/wlcc01_1_b/wlcc01_1_b.glb",
+      "label": "Ein Cannon",
+      "type": 13
+    },
+    {
+      "glb": "assets/weapons/wwac01/wwac01/wwac01_1_o/wwac01_1_o.glb",
+      "label": "Ein Wand",
+      "type": 15
+    }
+  ]
+}

@@ -52,9 +52,33 @@ func _ready() -> void:
 	# Column ratios + detail placement are handled by setup_shop_portrait, which
 	# lifts storage_panel out of the inner HBox into the top-right detail slot.
 	_setup_portrait()
+	_debug_seed_all_weapons()
 	_load_items()
 	_refresh_display()
 	ShopPreviewSprite.attach(self, SHOP_PREVIEW_PATH)
+
+
+## Test aid (PSZ_DEBUG_WEAPONS=1): deposit one of every modeled weapon into
+## shared storage so each can be withdrawn, equipped, and eyeballed (weapon
+## orientation/scale + equip-legality). Modeled = has a glb_path; the data-only
+## stat rows are skipped. Idempotent — only adds ids not already in storage.
+func _debug_seed_all_weapons() -> void:
+	if not OS.has_environment("PSZ_DEBUG_WEAPONS"):
+		return
+	var existing: Dictionary = {}
+	for s in GameState.shared_storage:
+		existing[str(s.get("id", ""))] = true
+	var added: int = 0
+	for wid in WeaponRegistry.get_all_weapon_ids():
+		if existing.has(wid):
+			continue
+		var w = WeaponRegistry.get_weapon(wid)
+		if w == null or String(w.glb_path).is_empty():
+			continue
+		GameState.shared_storage.append({"id": wid, "name": w.name, "quantity": 1})
+		added += 1
+	if added > 0:
+		print("[debug] PSZ_DEBUG_WEAPONS: seeded %d modeled weapons into storage" % added)
 
 
 func _setup_portrait() -> void:
@@ -65,11 +89,48 @@ func _setup_portrait() -> void:
 
 
 func _load_items() -> void:
-	# Inventory iteration order is the source of truth — pickup order by
-	# default, or category-sorted if the player has flipped Auto-Sort on.
-	# Storage shows the same way for consistency.
+	# Deposit tab mirrors the inventory (pickup order, or Auto-Sort if on).
 	_inventory_items = Inventory.get_all_items()
+	# Withdraw tab is sorted by category → weapon type → rarity → name so a
+	# large stored set (esp. the debug-seeded weapon roster) is browsable.
 	_storage_items = GameState.shared_storage.duplicate(true)
+	_sort_by_type_rarity(_storage_items)
+
+
+## Sort `items` in place by category (CATEGORY_ORDER) → weapon type → rarity
+## (ascending) → name. Field-by-field so mixed-type keys compare cleanly.
+func _sort_by_type_rarity(items: Array) -> void:
+	items.sort_custom(func(a, b):
+		var ka: Array = _storage_sort_key(a)
+		var kb: Array = _storage_sort_key(b)
+		for i in ka.size():
+			if ka[i] != kb[i]:
+				return ka[i] < kb[i]
+		return false
+	)
+
+
+func _storage_sort_key(item: Dictionary) -> Array:
+	var id: String = str(item.get("id", ""))
+	var base: String = Inventory.get_base_id(id)
+	var cat_rank: int = Inventory.CATEGORY_ORDER.find(Inventory.get_item_category(id))
+	if cat_rank < 0:
+		cat_rank = 99
+	var type_rank: int = 0
+	var rarity: int = 0
+	var w = WeaponRegistry.get_weapon(base)
+	if w:
+		type_rank = int(w.weapon_type)
+		rarity = int(w.rarity)
+	else:
+		var ar = ArmorRegistry.get_armor(base)
+		if ar:
+			rarity = int(ar.rarity)
+		else:
+			var u = UnitRegistry.get_unit(base)
+			if u:
+				rarity = int(u.rarity)
+	return [cat_rank, type_rank, rarity, str(item.get("name", base))]
 
 
 # ── Input ──────────────────────────────────────────────────────────────────

@@ -31,7 +31,7 @@ var _pill_nodes: Array = []
 const SHOP_WEAPON_TIER1 := [
 	"saber", "sword", "dagger", "partisan",
 	"handgun", "rifle", "mechgun", "rod", "wand",
-	"d_fangs", "double_blade", "slicer",
+	"d_fangs", "ein_double_saber", "slicer",
 ]
 const SHOP_WEAPON_TIER2 := [
 	"brand", "gigush", "knife", "halberd",
