@@ -3810,6 +3810,15 @@ func test_shop_nav() -> void:
 	assert_true(ShopNav.handle(shop, _nav_event("ui_up"), bare), "unclaimed key reaches on_other")
 	assert_true(other_hit[0], "on_other fired")
 
+	# Feedback contract (spec /states/shops #feedback): one message vocabulary +
+	# a denied cue distinct from the close cue. Pins the constants every economy
+	# screen now routes through, so they can't drift back to per-screen literals.
+	assert_eq(ShopNav.MSG_NO_ROOM, "No room", "canonical full-inventory message")
+	assert_eq(ShopNav.MSG_NOT_ENOUGH_MESETA, "Not enough meseta", "canonical insufficient-meseta message")
+	assert_true(ShopNav.SFX_DENIED.ends_with("menu_invalid.wav"), "denied cue is the invalid sfx")
+	assert_true(ShopNav.SFX_DENIED != ShopNav.SFX_BACK, "denied cue is distinct from the close/back cue")
+	assert_true(ResourceLoader.exists(ShopNav.SFX_DENIED), "denied sfx resource exists in the project")
+
 	shop.free()
 	print("")
 

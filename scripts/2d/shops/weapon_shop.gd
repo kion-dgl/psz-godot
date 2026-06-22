@@ -308,7 +308,7 @@ func _open_confirm_modal() -> void:
 		var verdict: Dictionary = _can_buy(item)
 		if not verdict.get("ok", true):
 			hint_label.text = str(verdict.get("reason", ""))
-			SfxManager.play("res://assets/sfx/ui/menu_back.wav")
+			ShopNav.denied_sfx()
 			return
 		var cost: int = int(item.get("cost", 0))
 		prompt = "Buy %s for %d M?" % [str(item.get("name", "???")), cost]
@@ -343,14 +343,17 @@ func _buy_selected() -> void:
 
 	var equip_check: Dictionary = _check_equippability(item_id, cat)
 	if not equip_check.get("can_equip", true):
+		ShopNav.denied_sfx()
 		hint_label.text = "Your class cannot use this!"
 		return
 
 	if int(character.get("meseta", 0)) < cost:
-		hint_label.text = "Not enough meseta!"
+		ShopNav.denied_sfx()
+		hint_label.text = ShopNav.MSG_NOT_ENOUGH_MESETA
 		return
 	if not Inventory.can_add_item(item_id):
-		hint_label.text = "Inventory full!"
+		ShopNav.denied_sfx()
+		hint_label.text = ShopNav.MSG_NO_ROOM
 		return
 
 	character["meseta"] = int(character["meseta"]) - cost
@@ -363,7 +366,8 @@ func _buy_selected() -> void:
 	if cat == "armor":
 		var inst_id: String = Inventory.add_armor(item_id)
 		if inst_id.is_empty():
-			hint_label.text = "Inventory full!"
+			ShopNav.denied_sfx()
+			hint_label.text = ShopNav.MSG_NO_ROOM
 			return
 		if not character.has("armor_slots"):
 			character["armor_slots"] = {}

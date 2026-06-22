@@ -189,7 +189,7 @@ func _open_confirm_modal() -> void:
 	var verdict: Dictionary = _can_buy(item)
 	if not verdict.get("ok", true):
 		hint_label.text = str(verdict.get("reason", ""))
-		SfxManager.play("res://assets/sfx/ui/menu_back.wav")
+		ShopNav.denied_sfx()
 		return
 
 	# Bulk-buy aware: compute the maximum qty the player can both afford and
@@ -212,9 +212,9 @@ func _open_item_buy(item: Dictionary) -> void:
 		# info modal so the failure is unmissable — previously this was
 		# a silent hint_label update with no modal, which felt like the
 		# buy button was broken (psobb/dashgl playtest 2026-05-07).
-		var msg: String = "Not enough meseta!" if meseta_cap <= 0 else "Inventory full!"
+		var msg: String = ShopNav.MSG_NOT_ENOUGH_MESETA if meseta_cap <= 0 else ShopNav.MSG_NO_ROOM
 		hint_label.text = msg
-		ShopNav.info(self, msg, _update_hint)
+		ShopNav.deny(self, msg, _update_hint)
 		return
 
 	var modal := QuantityDialog.new()
@@ -268,12 +268,14 @@ func _buy_disk() -> void:
 		return
 
 	if int(character.get("meseta", 0)) < cost:
-		hint_label.text = "Not enough meseta!"
+		ShopNav.denied_sfx()
+		hint_label.text = ShopNav.MSG_NOT_ENOUGH_MESETA
 		return
 
 	var disk_id: String = "disk_%s_%d" % [technique_id, level]
 	if not Inventory.can_add_item(disk_id):
-		hint_label.text = "Inventory full!"
+		ShopNav.denied_sfx()
+		hint_label.text = ShopNav.MSG_NO_ROOM
 		return
 
 	character["meseta"] = int(character["meseta"]) - cost
