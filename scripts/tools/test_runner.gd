@@ -43,6 +43,7 @@ func _run_tests_core() -> void:
 	test_mag_evolution()
 	test_mag_personality_contract()
 	test_shops()
+	test_shop_buy_unequippable_gear()
 	test_start_menu_data()
 	test_damage_formulas()
 	test_ranger_playthrough()
@@ -1501,6 +1502,56 @@ func test_shops() -> void:
 	cs.free()
 
 	Inventory.clear_inventory()
+	print("")
+
+
+# ── #375: class-unequippable gear is purchasable (warning modal, not a block) ──
+# Pre-#375 the weapon shop hard-blocked buying gear the active class couldn't
+# equip. The states/shops spec makes equippability a SOFT caveat: the row stays
+# selectable and the buy goes through (behind a warning confirm) — only
+# affordability and inventory room are hard buy-blocks. This pins _can_buy's
+# contract so the block can't creep back in.
+func test_shop_buy_unequippable_gear() -> void:
+	print("── #375: class-unequippable gear stays purchasable ──")
+	var ws = load("res://scripts/2d/shops/weapon_shop.gd").new()
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		print("  INFO: no active character — skipped")
+		ws.free(); print(""); return
+	# Find a weapon the active character's class genuinely cannot equip.
+	var unequip_id := ""
+	for wid in WeaponRegistry.get_all_weapon_ids():
+		if not ws._check_equippability(str(wid), "weapon").get("can_equip", true):
+			unequip_id = str(wid)
+			break
+	if unequip_id.is_empty():
+		print("  INFO: active class can equip every weapon — skipped")
+		ws.free(); print(""); return
+
+	var saved_meseta: int = int(character.get("meseta", 0))
+	var saved_game_meseta: int = GameState.meseta
+	var item := {"id": unequip_id, "category": "weapon", "cost": 1000}
+	Inventory.clear_inventory()
+
+	# Affordable + room → buyable, despite the class being unable to equip it.
+	character["meseta"] = 999999
+	GameState.meseta = 999999
+	assert_true(not ws._check_equippability(unequip_id, "weapon").get("can_equip", true),
+		"#375: chosen weapon really is class-unequippable")
+	assert_true(ws._can_buy(item).get("ok", false),
+		"#375: unequippable-but-affordable weapon IS buyable")
+
+	# Hard buy-blocks (afford / room) still apply.
+	character["meseta"] = 0
+	GameState.meseta = 0
+	var broke: Dictionary = ws._can_buy(item)
+	assert_true(not broke.get("ok", true), "#375: still blocked when can't afford")
+	assert_eq(str(broke.get("reason", "")), "Can't afford", "#375: afford reason unchanged")
+
+	Inventory.clear_inventory()
+	character["meseta"] = saved_meseta
+	GameState.meseta = saved_game_meseta
+	ws.free()
 	print("")
 
 
