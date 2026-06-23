@@ -38,6 +38,14 @@ const SFX_DENIED := "res://assets/sfx/ui/menu_invalid.wav"
 const MSG_NO_ROOM := "No room"
 const MSG_NOT_ENOUGH_MESETA := "Not enough meseta"
 
+## Set by deny()/denied_sfx() so the accept branch can tell an Accept that
+## opened something apart from one that was immediately blocked. on_accept runs
+## synchronously inside handle(), so a deny during that call lands here before
+## handle() decides whether to play the accept cue — without it, a blocked buy
+## plays SFX_SELECT *and* SFX_DENIED stacked. Spec /states/shops #feedback:
+## a blocked action plays the denied cue once, never the accept cue.
+static var _denied_during_accept := false
+
 
 static func handle(shop: Control, event: InputEvent, opts: Dictionary) -> bool:
 	if is_instance_valid(opts.get("modal")):
@@ -72,9 +80,13 @@ static func handle(shop: Control, event: InputEvent, opts: Dictionary) -> bool:
 		_mark_handled(shop)
 		return true
 	if opts.has("on_accept") and event.is_action_pressed("ui_accept"):
-		if sfx:
-			SfxManager.play(SFX_SELECT)
+		# Play the accept cue *after* on_accept so a handler that blocks the
+		# action (deny/denied_sfx) suppresses it — otherwise the select cue and
+		# the denied cue stack on a rejected buy. Spec /states/shops #feedback.
+		_denied_during_accept = false
 		(opts["on_accept"] as Callable).call()
+		if sfx and not _denied_during_accept:
+			SfxManager.play(SFX_SELECT)
 		_mark_handled(shop)
 		return true
 	if opts.has("on_other"):
@@ -131,6 +143,7 @@ static func info(shop: Control, msg: String, on_dismiss := Callable()) -> void:
 ## on a greyed/un-actionable row whose reason already shows in the detail panel.
 ## Once, never the back/close or accept cue. Spec /states/shops #feedback.
 static func denied_sfx() -> void:
+	_denied_during_accept = true
 	SfxManager.play(SFX_DENIED)
 
 
@@ -138,6 +151,7 @@ static func denied_sfx() -> void:
 ## the denied cue + an info modal that states the reason. Use this instead of a
 ## silent hint when a confirmed action can't complete. Spec /states/shops #feedback.
 static func deny(shop: Control, reason: String, on_dismiss := Callable()) -> void:
+	_denied_during_accept = true
 	SfxManager.play(SFX_DENIED)
 	info(shop, reason, on_dismiss)
 

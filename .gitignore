@@ -45,6 +45,11 @@
 /assets/stages/*/*/lndmd/*
 !/assets/stages/*/*/lndmd/*-floor.glb
 !/assets/stages/*/*/lndmd/*-floor.glb.import
+# de_roll_le holds PSO-derived decorator meshes (the underground/sewer cave
+# pieces), same licensing footing as lndmd content + the SEGA weapon catalog:
+# pack + R2 only, never committed to the public repo. The !/assets/stages/*/*/
+# negation above would otherwise sweep them into git.
+/assets/stages/*/*/de_roll_le/*
 # Market dir is mostly pack-only PSO textures, but our authored assets are in-house.
 !/assets/stages/city_e/market/
 /assets/stages/city_e/market/*
