@@ -43,6 +43,7 @@ func _run_tests_core() -> void:
 	test_mag_evolution()
 	test_mag_personality_contract()
 	test_shops()
+	test_shop_buy_unequippable_gear()
 	test_start_menu_data()
 	test_damage_formulas()
 	test_ranger_playthrough()
@@ -81,6 +82,7 @@ func _run_tests_core() -> void:
 	test_charge_drop_paths()
 	test_mechgun_final_step_no_root()
 	test_weapon_attack_sfx_mapping()
+	test_weapon_anim_data_new_animation_sets()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -1500,6 +1502,56 @@ func test_shops() -> void:
 	cs.free()
 
 	Inventory.clear_inventory()
+	print("")
+
+
+# ── #375: class-unequippable gear is purchasable (warning modal, not a block) ──
+# Pre-#375 the weapon shop hard-blocked buying gear the active class couldn't
+# equip. The states/shops spec makes equippability a SOFT caveat: the row stays
+# selectable and the buy goes through (behind a warning confirm) — only
+# affordability and inventory room are hard buy-blocks. This pins _can_buy's
+# contract so the block can't creep back in.
+func test_shop_buy_unequippable_gear() -> void:
+	print("── #375: class-unequippable gear stays purchasable ──")
+	var ws = load("res://scripts/2d/shops/weapon_shop.gd").new()
+	var character = CharacterManager.get_active_character()
+	if character == null:
+		print("  INFO: no active character — skipped")
+		ws.free(); print(""); return
+	# Find a weapon the active character's class genuinely cannot equip.
+	var unequip_id := ""
+	for wid in WeaponRegistry.get_all_weapon_ids():
+		if not ws._check_equippability(str(wid), "weapon").get("can_equip", true):
+			unequip_id = str(wid)
+			break
+	if unequip_id.is_empty():
+		print("  INFO: active class can equip every weapon — skipped")
+		ws.free(); print(""); return
+
+	var saved_meseta: int = int(character.get("meseta", 0))
+	var saved_game_meseta: int = GameState.meseta
+	var item := {"id": unequip_id, "category": "weapon", "cost": 1000}
+	Inventory.clear_inventory()
+
+	# Affordable + room → buyable, despite the class being unable to equip it.
+	character["meseta"] = 999999
+	GameState.meseta = 999999
+	assert_true(not ws._check_equippability(unequip_id, "weapon").get("can_equip", true),
+		"#375: chosen weapon really is class-unequippable")
+	assert_true(ws._can_buy(item).get("ok", false),
+		"#375: unequippable-but-affordable weapon IS buyable")
+
+	# Hard buy-blocks (afford / room) still apply.
+	character["meseta"] = 0
+	GameState.meseta = 0
+	var broke: Dictionary = ws._can_buy(item)
+	assert_true(not broke.get("ok", true), "#375: still blocked when can't afford")
+	assert_eq(str(broke.get("reason", "")), "Can't afford", "#375: afford reason unchanged")
+
+	Inventory.clear_inventory()
+	character["meseta"] = saved_meseta
+	GameState.meseta = saved_game_meseta
+	ws.free()
 	print("")
 
 
@@ -3443,6 +3495,44 @@ func test_weapon_attack_sfx_mapping() -> void:
 		# NB: file existence is check-asset-refs' job (greps res:// refs against
 		# asset_tree.txt) — CI doesn't check out pack assets, so we can't assert
 		# ResourceLoader.exists() here.
+	print("")
+
+
+# ── New weapon animation sets imported from psz-asset-viewer ──
+# a_rifle / d_saver / l_cannon NDS extractions wired onto RIFLE / DOUBLE_SABER /
+# LASER_CANNON. Pins the WEAPON_ANIM_DATA wiring (GLB paths + prefixes) so the
+# male/female prefix convention can't silently drift. The GLBs are pack-only, so
+# existence is check-asset-refs' job — we can't ResourceLoader.exists() here.
+func test_weapon_anim_data_new_animation_sets() -> void:
+	print("── New weapon anim sets: rifle / double saber / laser cannon ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	const W := WeaponData.WeaponType
+	var anim: Dictionary = PlayerScript.WEAPON_ANIM_DATA
+	# weapon_type → [glb_basename, prefix_m, prefix_w]
+	var expected := {
+		W.RIFLE: ["rifle", "pmar", "pwars"],
+		W.DOUBLE_SABER: ["dsaver", "pmds", "pwdss"],
+		W.LASER_CANNON: ["cannon", "pmlc", "pwlcs"],
+	}
+	for wtype in expected:
+		assert_true(anim.has(wtype), "WEAPON_ANIM_DATA has weapon type %d" % wtype)
+		var data: Dictionary = anim.get(wtype, {})
+		var base: String = expected[wtype][0]
+		assert_eq(str(data.get("glb_m", "")),
+			"res://assets/player/animations/%s_m.glb" % base, "type %d male GLB" % wtype)
+		assert_eq(str(data.get("glb_w", "")),
+			"res://assets/player/animations/%s_w.glb" % base, "type %d female GLB" % wtype)
+		assert_eq(str(data.get("prefix_m", "")), expected[wtype][1], "type %d male prefix" % wtype)
+		assert_eq(str(data.get("prefix_w", "")), expected[wtype][2], "type %d female prefix" % wtype)
+
+	# Combat combo length must match the attack clips each set actually ships:
+	# rifle/double-saber have atk1..3 (3-step), laser cannon only atk1 (1-step,
+	# so it must NOT fall back to the SABER 3-step config and request atk2/atk3).
+	var expected_combo := {W.RIFLE: 3, W.DOUBLE_SABER: 3, W.LASER_CANNON: 1}
+	for wtype in expected_combo:
+		var cfg: Dictionary = CombatManager.get_weapon_type_config(wtype)
+		assert_eq(int(cfg.get("combo_steps", -1)), expected_combo[wtype],
+			"type %d combo_steps" % wtype)
 	print("")
 
 

@@ -36,13 +36,16 @@ const WEAPON_ANIM_DATA: Dictionary = {
 	WeaponData.WeaponType.SWORD: {"glb_m": "res://assets/player/animations/sword_m.glb", "glb_w": "res://assets/player/animations/sword_w.glb", "prefix_m": "pmsw", "prefix_w": "pwsw"},
 	WeaponData.WeaponType.DAGGERS: {"glb_m": "res://assets/player/animations/dagger_m.glb", "glb_w": "res://assets/player/animations/dagger_w.glb", "prefix_m": "pmda", "prefix_w": "pwda"},
 	WeaponData.WeaponType.CLAW: {"glb_m": "res://assets/player/animations/claw_m.glb", "glb_w": "res://assets/player/animations/claw_w.glb", "prefix_m": "pmcl", "prefix_w": "pwcl"},
+	WeaponData.WeaponType.DOUBLE_SABER: {"glb_m": "res://assets/player/animations/dsaver_m.glb", "glb_w": "res://assets/player/animations/dsaver_w.glb", "prefix_m": "pmds", "prefix_w": "pwdss"},
 	WeaponData.WeaponType.SPEAR: {"glb_m": "res://assets/player/animations/spear_m.glb", "glb_w": "res://assets/player/animations/spear_w.glb", "prefix_m": "pmsp", "prefix_w": "pwsp"},
 	WeaponData.WeaponType.SLICER: {"glb_m": "res://assets/player/animations/slicer_m.glb", "glb_w": "res://assets/player/animations/slicer_w.glb", "prefix_m": "pmsl", "prefix_w": "pwsls"},
 	WeaponData.WeaponType.GUN_BLADE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmgb", "prefix_w": "pwgbs"},
 	WeaponData.WeaponType.HANDGUN: {"glb_m": "res://assets/player/animations/handgun_m.glb", "glb_w": "res://assets/player/animations/handgun_w.glb", "prefix_m": "pmhg", "prefix_w": "pwhg"},
 	WeaponData.WeaponType.MECH_GUN: {"glb_m": "res://assets/player/animations/machinegun_m.glb", "glb_w": "res://assets/player/animations/machinegun_w.glb", "prefix_m": "pmmg", "prefix_w": "pwmgs"},
-	WeaponData.WeaponType.RIFLE: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmri", "prefix_w": "pwri"},
+	WeaponData.WeaponType.RIFLE: {"glb_m": "res://assets/player/animations/rifle_m.glb", "glb_w": "res://assets/player/animations/rifle_w.glb", "prefix_m": "pmar", "prefix_w": "pwars"},
+	# BAZOOKA has no dedicated animation set yet — keep the shotgun fallback.
 	WeaponData.WeaponType.BAZOOKA: {"glb_m": "res://assets/player/animations/shotgun_m.glb", "glb_w": "res://assets/player/animations/shotgun_w.glb", "prefix_m": "pmri", "prefix_w": "pwri"},
+	WeaponData.WeaponType.LASER_CANNON: {"glb_m": "res://assets/player/animations/cannon_m.glb", "glb_w": "res://assets/player/animations/cannon_w.glb", "prefix_m": "pmlc", "prefix_w": "pwlcs"},
 	WeaponData.WeaponType.ROD: {"glb_m": "res://assets/player/animations/rod_m.glb", "glb_w": "res://assets/player/animations/rod_w.glb", "prefix_m": "pmro", "prefix_w": "pwro"},
 	WeaponData.WeaponType.WAND: {"glb_m": "res://assets/player/animations/wand_m.glb", "glb_w": "res://assets/player/animations/wand_w.glb", "prefix_m": "pmwa", "prefix_w": "pwwa"},
 }

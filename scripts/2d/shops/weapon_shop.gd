@@ -274,16 +274,15 @@ func _check_equippability(item_id: String, cat: String) -> Dictionary:
 	return {"can_equip": true, "reason": ""}
 
 
-## Affordance override: a weapon/armor/unit row is buyable only if the
-## character's class can use it, can afford it, and has inventory room. Mirrors
-## _buy_selected's guards (which key off the registry id, not a name-derived
-## one), so the disabled-row rendering can't drift from what _buy_selected
-## accepts.
+## Affordance override: a weapon/armor/unit row is buyable when the character can
+## afford it and has inventory room. Class-equippability is deliberately NOT a
+## buy-block (states/shops spec, #375): gear a class can't equip stays selectable
+## and purchasable — the caveat is surfaced in the detail panel and a warning
+## confirmation modal (see _open_confirm_modal), not by greying the row. Mirrors
+## _buy_selected's hard guards (which key off the registry id, not a name-derived
+## one), so the disabled-row rendering can't drift from what _buy_selected accepts.
 func _can_buy(item: Dictionary) -> Dictionary:
 	var item_id: String = str(item.get("id", ""))
-	var cat: String = str(item.get("category", ""))
-	if not _check_equippability(item_id, cat).get("can_equip", true):
-		return {"ok": false, "reason": "Class can't use"}
 	if _get_meseta() < int(item.get("cost", 0)):
 		return {"ok": false, "reason": "Can't afford"}
 	if not Inventory.can_add_item(item_id):
@@ -311,7 +310,14 @@ func _open_confirm_modal() -> void:
 			ShopNav.denied_sfx()
 			return
 		var cost: int = int(item.get("cost", 0))
-		prompt = "Buy %s for %d M?" % [str(item.get("name", "???")), cost]
+		var name_str: String = str(item.get("name", "???"))
+		# Class-unequippable gear is still purchasable (#375) — warn before charging.
+		var equippable: bool = _check_equippability(
+			str(item.get("id", "")), str(item.get("category", ""))).get("can_equip", true)
+		if equippable:
+			prompt = "Buy %s for %d M?" % [name_str, cost]
+		else:
+			prompt = "Can't equip %s — buy anyway for %d M?" % [name_str, cost]
 		on_yes = _buy_selected
 
 	ShopNav.confirm(self, prompt, on_yes, _update_hint)
@@ -341,12 +347,9 @@ func _buy_selected() -> void:
 	if character == null:
 		return
 
-	var equip_check: Dictionary = _check_equippability(item_id, cat)
-	if not equip_check.get("can_equip", true):
-		ShopNav.denied_sfx()
-		hint_label.text = "Your class cannot use this!"
-		return
-
+	# Class-unequippable gear is purchasable (#375); the warning is delivered by
+	# the confirmation modal in _open_confirm_modal, not by blocking the buy here.
+	# Hard guards are affordability + inventory room only.
 	if int(character.get("meseta", 0)) < cost:
 		ShopNav.denied_sfx()
 		hint_label.text = ShopNav.MSG_NOT_ENOUGH_MESETA
