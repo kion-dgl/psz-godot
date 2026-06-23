@@ -81,6 +81,7 @@ func _run_tests_core() -> void:
 	test_charge_drop_paths()
 	test_mechgun_final_step_no_root()
 	test_weapon_attack_sfx_mapping()
+	test_weapon_anim_data_new_animation_sets()
 
 
 # Build/bootstrap, warp, scene/screen smoke, fields, quests, difficulty, misc.
@@ -3443,6 +3444,35 @@ func test_weapon_attack_sfx_mapping() -> void:
 		# NB: file existence is check-asset-refs' job (greps res:// refs against
 		# asset_tree.txt) — CI doesn't check out pack assets, so we can't assert
 		# ResourceLoader.exists() here.
+	print("")
+
+
+# ── New weapon animation sets imported from psz-asset-viewer ──
+# a_rifle / d_saver / l_cannon NDS extractions wired onto RIFLE / DOUBLE_SABER /
+# LASER_CANNON. Pins the WEAPON_ANIM_DATA wiring (GLB paths + prefixes) so the
+# male/female prefix convention can't silently drift. The GLBs are pack-only, so
+# existence is check-asset-refs' job — we can't ResourceLoader.exists() here.
+func test_weapon_anim_data_new_animation_sets() -> void:
+	print("── New weapon anim sets: rifle / double saber / laser cannon ──")
+	const PlayerScript := preload("res://scripts/3d/player/player.gd")
+	const W := WeaponData.WeaponType
+	var anim: Dictionary = PlayerScript.WEAPON_ANIM_DATA
+	# weapon_type → [glb_basename, prefix_m, prefix_w]
+	var expected := {
+		W.RIFLE: ["rifle", "pmar", "pwars"],
+		W.DOUBLE_SABER: ["dsaver", "pmds", "pwdss"],
+		W.LASER_CANNON: ["cannon", "pmlc", "pwlcs"],
+	}
+	for wtype in expected:
+		assert_true(anim.has(wtype), "WEAPON_ANIM_DATA has weapon type %d" % wtype)
+		var data: Dictionary = anim.get(wtype, {})
+		var base: String = expected[wtype][0]
+		assert_eq(str(data.get("glb_m", "")),
+			"res://assets/player/animations/%s_m.glb" % base, "type %d male GLB" % wtype)
+		assert_eq(str(data.get("glb_w", "")),
+			"res://assets/player/animations/%s_w.glb" % base, "type %d female GLB" % wtype)
+		assert_eq(str(data.get("prefix_m", "")), expected[wtype][1], "type %d male prefix" % wtype)
+		assert_eq(str(data.get("prefix_w", "")), expected[wtype][2], "type %d female prefix" % wtype)
 	print("")
 
 
