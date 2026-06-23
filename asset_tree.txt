@@ -9052,8 +9052,8 @@ assets/weapons/wbac02/wbac02/wbac02_1_b/wbac02_1_b.glb
 assets/weapons/wbac02/wbac02/wbac02_1_b/wbac02_1_b.png
 assets/weapons/wclc01/wclc01/wclc01_1_o/wclc01_1_o.glb
 assets/weapons/wclc01/wclc01/wclc01_1_o/wclc01_1_o.png
-assets/weapons/wclh02/wclh02/wclh02_1_o/wclh02_1_o.glb
-assets/weapons/wclh02/wclh02/wclh02_1_o/wclh02_1_o.png
+assets/weapons/wclc01/wclc01/wclc01_3_o/wclc01_3_o.glb
+assets/weapons/wclc01/wclc01/wclc01_3_o/wclc01_3_o.png
 assets/weapons/wdac01/wdac01/wdac01_1_r/wdac01_1_r.glb
 assets/weapons/wdac01/wdac01/wdac01_1_r/wdac01_1_r.png
 assets/weapons/wgbc01/wgbc01/wgbc01_1_o/wgbc01_1_o.glb
