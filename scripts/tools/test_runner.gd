@@ -3473,6 +3473,15 @@ func test_weapon_anim_data_new_animation_sets() -> void:
 			"res://assets/player/animations/%s_w.glb" % base, "type %d female GLB" % wtype)
 		assert_eq(str(data.get("prefix_m", "")), expected[wtype][1], "type %d male prefix" % wtype)
 		assert_eq(str(data.get("prefix_w", "")), expected[wtype][2], "type %d female prefix" % wtype)
+
+	# Combat combo length must match the attack clips each set actually ships:
+	# rifle/double-saber have atk1..3 (3-step), laser cannon only atk1 (1-step,
+	# so it must NOT fall back to the SABER 3-step config and request atk2/atk3).
+	var expected_combo := {W.RIFLE: 3, W.DOUBLE_SABER: 3, W.LASER_CANNON: 1}
+	for wtype in expected_combo:
+		var cfg: Dictionary = CombatManager.get_weapon_type_config(wtype)
+		assert_eq(int(cfg.get("combo_steps", -1)), expected_combo[wtype],
+			"type %d combo_steps" % wtype)
 	print("")
 
 
